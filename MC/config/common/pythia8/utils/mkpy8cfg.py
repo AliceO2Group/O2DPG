@@ -65,7 +65,7 @@ fout.write('\n')
 ### random
 if args.seed is not None:
     fout.write('### random \n')
-    fout.write('Random:setSeet = on \n')
+    fout.write('Random:setSeed = on \n')
     fout.write('Random:seed = %d \n' % (args.seed))
     fout.write('\n')
 
