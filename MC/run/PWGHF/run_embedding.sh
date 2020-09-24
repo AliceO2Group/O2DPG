@@ -32,9 +32,7 @@ ${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
 # embed signal into background
 
 o2-sim -j ${NWORKERS} -n ${SIGEVENTS} -g extgen -m ${MODULES} -o sgn \
-       --extGenFile ${O2DPG_ROOT}/MC/config/PWGHF/external/generator/GeneratorHF.C \
-       --extGenFunc "GeneratorHF()" \
        --configFile ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini \
-       --configKeyValues "Pythia8.config=pythia8.cfg" \
+       --configKeyValues "GeneratorPythia8.config=pythia8.cfg" \
        --embedIntoFile bkg_Kine.root \
        > logsgn 2>&1
