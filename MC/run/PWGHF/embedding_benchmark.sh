@@ -54,9 +54,10 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   # now run digitization phase
   echo "Running digitization for $intRate kHz interaction rate"
   
-  gloOpt="-b --run --shm-segment-size 10000000000" # TODO: decide shared mem based on event number
+  gloOpt="-b --run --shm-segment-size ${SHMSIZE:-20000000000}" # TODO: decide shared mem based on event number - default should be ok for 100PbPb timeframes
 
   taskwrapper tpcdigi_${tf}.log o2-sim-digitizer-workflow $gloOpt -n ${NSIGEVENTS} --sims bkg,sgn${tf} --onlyDet TPC --interactionRate 50000 --tpc-lanes ${NWORKERS} --outcontext ${CONTEXTFILE}
+  [ ! -f tpcdigits_${tf}.root ] && mv tpcdigits.root tpcdigits_${tf}.root
   # --> a) random seeding
   # --> b) propagation of collisioncontext and application in other digitization steps
 
@@ -67,12 +68,13 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   taskwrapper restdigi_${tf}.log o2-sim-digitizer-workflow $gloOpt -n ${NSIGEVENTS} --sims bkg,sgn${tf} --skipDet TRD,TPC,FT0 --interactionRate 50000 --incontext ${CONTEXTFILE}
   echo "Return status of OTHER digitization: $?"
 
-  taskwrapper tpcreco_${tf}.log o2-tpc-reco-workflow $gloOpt --tpc-digit-reader \"--infile tpcdigits.root\" --input-type digits --output-type clusters,tracks  --tpc-track-writer \"--treename events --track-branch-name Tracks --trackmc-branch-name TracksMCTruth\" --configKeyValues \"GPU_global.continuousMaxTimeBin=10000\"
+  # TODO: check value for MaxTimeBin; A large value had to be set tmp in order to avoid crashes bases on "exceeding timeframe limit"
+  taskwrapper tpcreco_${tf}.log o2-tpc-reco-workflow $gloOpt --tpc-digit-reader \"--infile tpcdigits_${tf}.root\" --input-type digits --output-type clusters,tracks  --tpc-track-writer \"--treename events --track-branch-name Tracks --trackmc-branch-name TracksMCTruth\" --configKeyValues \"GPU_global.continuousMaxTimeBin=100000\"
   echo "Return status of tpcreco: $?"
 
   # we need to move these products somewhere
   mv tpctracks.root tpctracks_${tf}.root
-  mv tpcdigits.root tpcdigits_${tf}.root
+
 done
 
 # We need to exit for the ALIEN JOB HANDLER!
