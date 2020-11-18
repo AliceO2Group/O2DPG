@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 # Embed jet-jet events in a pre-defined pT hard bin into HI events, both Pythia8
+# run_jets_embedding.sh n_pthatbin
+
 set -x
 
 MODULES="PIPE ITS TPC EMCAL"
@@ -23,7 +25,7 @@ pthatbin_loweredges=(0 5 7 9 12 16 21 28 36 45 57 70 85 99 115 132 150 169 190 2
 pthatbin_higheredges=( 5 7 9 12 16 21 28 36 45 57 70 85 99 115 132 150 169 190 212 235 -1)
 
 # Define environmental vars for pt binning
-PTHATBIN=5 #$1 set it here or externally? Add protection out of array?
+PTHATBIN=$1 #set it here or externally? Add protection out of array?
 
 PTHATMIN=${pthatbin_loweredges[$PTHATBIN]}
 PTHATMAX=${pthatbin_higheredges[$PTHATBIN]}

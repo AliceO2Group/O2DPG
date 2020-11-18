@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # Generate gamma-jet events, Pythia8 in a given pt hard bin.
+# run_dirgamma.sh n_pthatbin
 
 set -x
 
@@ -16,7 +17,7 @@ pthatbin_loweredges=(5 11 21 36 57 84)
 pthatbin_higheredges=(11 21 36 57 84 -1)
 
 # Define environmental vars for pt binning
-PTHATBIN=5 #$1 set it here or externally? Add protection out of array?
+PTHATBIN=$1 #set it here or externally? Add protection out of array?
 
 PTHATMIN=${pthatbin_loweredges[$PTHATBIN]}
 PTHATMAX=${pthatbin_higheredges[$PTHATBIN]}
