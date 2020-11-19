@@ -17,10 +17,21 @@ NWORKERS=${NWORKERS:-8}
 NBKGEVENTS=${NBKGEVENTS:-20}
 MODULES="--skipModules ZDC"
 
+# We will collect output files of the workflow in a dedicated output dir
+# (these are typically the files that should be left-over from a GRID job)
+[ ! -d output ] && mkdir output
+
+copypersistentsimfiles() {
+  simprefix=$1
+  outputdir=$2
+  cp ${simprefix}_Kine.root ${simprefix}_grp.root ${simprefix}*.ini ${outputdir}
+}
 
 # background task -------
 taskwrapper bkgsim.log o2-sim -j ${NWORKERS} -n ${NBKGEVENTS} -g pythia8hi ${MODULES} -o bkg \
             --configFile ${O2DPG_ROOT}/MC/config/common/ini/basic.ini
+# register some background output --> make this declarative
+copypersistentsimfiles bkg output
 
 # loop over timeframes
 for tf in `seq 1 ${NTIMEFRAMES}`; do
@@ -47,9 +58,12 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
        --embedIntoFile bkg_Kine.root                                                                  \
        -o sgn${tf}
 
-  CONTEXTFILE=collisioncontext_${tf}.root
-
+  # register some signal output --> make this declarative
+  copypersistentsimfiles sgn${tf} output
+  # we need to copy the current grp for tpc-reco
   cp sgn${tf}_grp.root o2sim_grp.root
+
+  CONTEXTFILE=collisioncontext_${tf}.root
 
   # now run digitization phase
   echo "Running digitization for $intRate kHz interaction rate"
@@ -75,6 +89,12 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   # we need to move these products somewhere
   mv tpctracks.root tpctracks_${tf}.root
 
+  # we essentially only keep tpctracks
+  mv tpctracks_${tf}.root output
+  cp ${CONTEXTFILE} output
+
+  # cleanup step for this timeframe (we cleanup disc space early so as to make possible checkpoint dumps smaller)
+  taskwrapper cleanup_${tf}.log "[ -f tpcreco_${tf}.log_done ] && rm sgn${tf}* && rm *digits*.root"
 done
 
 # We need to exit for the ALIEN JOB HANDLER!
