@@ -5,7 +5,7 @@
 
 import argparse
 
-parser = argparse.ArgumentParser(description='Make Pythia8 cofiguration',
+parser = argparse.ArgumentParser(description='Make Pythia8 configuration',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument('--seed', type=int, default=None,
@@ -20,7 +20,7 @@ parser.add_argument('--idB', type=int, default='2212',
 parser.add_argument('--eCM', type=float, default='13000.',
                     help='Centre-of-mass energy')
 
-parser.add_argument('--process', default='inel', choices=['none', 'inel', 'ccbar', 'bbbar', 'heavy'],
+parser.add_argument('--process', default='inel', choices=['none', 'inel', 'ccbar', 'bbbar', 'heavy', 'jets', 'dirgamma'],
                     help='Process to switch on')
 
 parser.add_argument('--ptHatMin', type=float,
@@ -84,6 +84,10 @@ if args.process == 'ccbar' or args.process == 'heavy':
     fout.write('HardQCD:hardccbar = on \n')
 if args.process == 'bbbar' or args.process == 'heavy':
     fout.write('HardQCD:hardbbbar = on \n')
+if args.process == 'jets':
+    fout.write('HardQCD:all = on \n')
+if args.process == 'dirgamma':
+    fout.write('PromptPhoton:all = on \n')
 fout.write('\n')
 
 ### phase space cuts
