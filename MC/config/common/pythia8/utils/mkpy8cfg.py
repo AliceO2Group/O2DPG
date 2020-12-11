@@ -78,6 +78,7 @@ fout.write('\n')
 
 ### processes
 fout.write('### processes \n')
+fout.write('SoftQCD:inelastic = off \n') ### we switch this off because it might be on by default
 if args.process == 'inel':
     fout.write('SoftQCD:inelastic = on \n')
 if args.process == 'ccbar' or args.process == 'heavy':
