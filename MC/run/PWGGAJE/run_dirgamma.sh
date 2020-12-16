@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 
-# Generate gamma-jet events, Pythia8 in a given pt hard bin.
+# Generate gamma-jet events, PYTHIA8 in a given pt hard bin.
+# Select the event depending detector acceptance and/or outgoing parton flavour.
 # Execute: ./run_dirgamma.sh 
 # Set at least before running PTHATBIN with 1 to 6
+# and CONFIG_DETECTOR_ACCEPTANCE, see 
+# $O2DPG_ROOT/MC/config/PWGGAJE/trigger/prompt_gamma.C
 
 #set -x 
 
@@ -35,7 +38,24 @@ fi
 PTHATMIN=${pthatbin_loweredges[$PTHATBIN]}
 PTHATMAX=${pthatbin_higheredges[$PTHATBIN]}
 
-# Generate Pythia8 gamma-jet configuration
+# Recover environmental vars for detector acceptance binning
+# accessed inside prompt_gamma.C
+#export CONFIG_DETECTOR_ACCEPTANCE=${CONFIG_DETECTOR_ACCEPTANCE:-1}
+
+if [ -z "$CONFIG_DETECTOR_ACCEPTANCE" ]; then
+    echo "Detector acceptance option (env. var. CONFIG_DETECTOR_ACCEPTANCE) not set, abort."
+    exit 1
+fi
+
+echo 'Detector acceptance option ' $CONFIG_DETECTOR_ACCEPTANCE
+
+# Recover environmental vars for outgoing parton flavour
+# accessed inside prompt_gamma.C
+export CONFIG_OUTPARTON_PDG=${CONFIG_OUTPARTON_PDG:-0}
+
+echo 'Parton PDG option ' $CONFIG_OUTPARTON_PDG
+
+# Generate PYTHIA8 gamma-jet configuration
 ${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
         --output=pythia8_dirgamma.cfg \
         --seed=${RNDSEED}             \
@@ -47,10 +67,9 @@ ${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
         --ptHatMax=${PTHATMAX}
 
 # Generate signal 
-taskwrapper sgnsim.log o2-sim -j ${NWORKERS} -n ${NSIGEVENTS}               \
-           -g pythia8 -m ${MODULES}                                         \
-           --configKeyValues "GeneratorPythia8.config=pythia8_dirgamma.cfg" \
-           -o sgn
- 
+taskwrapper sgnsim.log o2-sim -j ${NWORKERS} -n ${NSIGEVENTS}         \
+           -m ${MODULES}  -o sgn -g pythia8                           \
+           -t external --configFile $O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_prompt_gamma.ini
+
 # We need to exit for the ALIEN JOB HANDLER!
 exit 0
