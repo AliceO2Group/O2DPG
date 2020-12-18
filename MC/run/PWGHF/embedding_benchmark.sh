@@ -99,27 +99,27 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   echo "Return status of tpcreco: $?"
 
   echo "Running ITS reco flow"
-  taskwrapper itsreco.log  o2-its-reco-workflow --trackerCA --async-phase $gloOpt
+  taskwrapper itsreco_${tf}.log  o2-its-reco-workflow --trackerCA --async-phase $gloOpt
   echo "Return status of itsreco: $?"
 
   echo "Running FT0 reco flow"
   #needs FT0 digitized data
-  taskwrapper ft0reco.log o2-ft0-reco-workflow $gloOpt
+  taskwrapper ft0reco_${tf}.log o2-ft0-reco-workflow $gloOpt
   echo "Return status of ft0reco: $?"
 
   echo "Running ITS-TPC macthing flow"
   #needs results of o2-tpc-reco-workflow, o2-its-reco-workflow and o2-fit-reco-workflow
-  taskwrapper itstpcMatch.log o2-tpcits-match-workflow $gloOpt --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\"
+  taskwrapper itstpcMatch_${tf}.log o2-tpcits-match-workflow $gloOpt --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\"
   echo "Return status of itstpcMatch: $?"
 
   echo "Running ITSTPC-TOF macthing flow"
   #needs results of TOF digitized data and results of o2-tpcits-match-workflow
-  taskwrapper tofMatch.log o2-tof-reco-workflow $gloOpt
+  taskwrapper tofMatch_${tf}.log o2-tof-reco-workflow $gloOpt
   echo "Return status of its-tpc-tof match: $?"
 
   echo "Running primary vertex finding flow"
   #needs results of TPC-ITS matching and FIT workflows
-  taskwrapper pvfinder.log o2-primary-vertexing-workflow $gloOpt
+  taskwrapper pvfinder_${tf}.log o2-primary-vertexing-workflow $gloOpt
   echo "Return status of primary vertexing: $?"
 
   # -----------
@@ -127,7 +127,7 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   # -----------
   
   # enable later. It still has memory access problems 
-  #taskwrapper aod${tf}.log o2-aod-producer-workflow --aod-writer-keep dangling --aod-writer-resfile "AO2D" --aod-writer-resmode UPDATE --aod-timeframe-id ${tf} $gloOpt
+  # taskwrapper aod_${tf}.log o2-aod-producer-workflow --aod-writer-keep dangling --aod-writer-resfile "AO2D" --aod-writer-resmode UPDATE --aod-timeframe-id ${tf} $gloOpt
 
   cp ${CONTEXTFILE} output
 
