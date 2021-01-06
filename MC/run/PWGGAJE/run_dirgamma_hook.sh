@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
 # Generate gamma-jet events, PYTHIA8 in a given pt hard bin.
-# Select the event depending detector acceptance and/or outgoing parton flavour.
-# Execute: ./run_dirgamma.sh 
+# Select the event depending detector acceptance and/or outgoing parton flavour
+# using PYTHIA8 hooks.
+# Execute: ./run_dirgamma_hook.sh 
 # Set at least before running PTHATBIN with 1 to 6
 # and CONFIG_DETECTOR_ACCEPTANCE, see 
-# $O2DPG_ROOT/MC/config/PWGGAJE/trigger/prompt_gamma.C
+# $O2DPG_ROOT/MC/config/PWGGAJE/hooks/prompt_gamma_hook.C
 
 #set -x 
 
@@ -69,7 +70,7 @@ ${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
 # Generate signal 
 taskwrapper sgnsim.log o2-sim -j ${NWORKERS} -n ${NSIGEVENTS}         \
            -m ${MODULES}  -o sgn -g pythia8                           \
-           -t external --configFile $O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_prompt_gamma.ini
+           --configFile $O2DPG_ROOT/MC/config/PWGGAJE/ini/hook_prompt_gamma.ini
 
 # We need to exit for the ALIEN JOB HANDLER!
 exit 0

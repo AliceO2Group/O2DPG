@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
 
-# Generate gamma-jet events, PYTHIA8 in a given pt hard bin.
-# Select the event depending detector acceptance and/or outgoing parton flavour.
-# Execute: ./run_dirgamma.sh 
-# Set at least before running PTHATBIN with 1 to 6
-# and CONFIG_DETECTOR_ACCEPTANCE, see 
-# $O2DPG_ROOT/MC/config/PWGGAJE/trigger/prompt_gamma.C
+# Generate jet-jet events, Pythia8 in a pre-defined pt hard bin.
+# Execute: ./run_jets.sh
+# Set at least before running PTHATBIN with 1 to 21
 
-#set -x 
+#set -x
 
 # ----------- LOAD UTILITY FUNCTIONS --------------------------
 . ${O2_ROOT}/share/scripts/jobutils.sh
@@ -24,11 +21,11 @@ CONFIG_NUCLEUSA=${CONFIG_NUCLEUSA:-2212}
 CONFIG_NUCLEUSB=${CONFIG_NUCLEUSB:-2212}
 
 # Define the pt hat bin arrays
-pthatbin_loweredges=(5 11 21 36 57 84)
-pthatbin_higheredges=(11 21 36 57 84 -1)
+pthatbin_loweredges=(0 5 7 9 12 16 21 28 36 45 57 70 85 99 115 132 150 169 190 212 235)
+pthatbin_higheredges=( 5 7 9 12 16 21 28 36 45 57 70 85 99 115 132 150 169 190 212 235 -1)
 
 # Recover environmental vars for pt binning
-#PTHATBIN=${PTHATBIN:-1} 
+PTHATBIN=${PTHATBIN:-1} 
 
 if [ -z "$PTHATBIN" ]; then
     echo "Pt-hat bin (env. var. PTHATBIN) not set, abort."
@@ -40,7 +37,7 @@ PTHATMAX=${pthatbin_higheredges[$PTHATBIN]}
 
 # Recover environmental vars for detector acceptance binning
 # accessed inside prompt_gamma.C
-#export CONFIG_DETECTOR_ACCEPTANCE=${CONFIG_DETECTOR_ACCEPTANCE:-1}
+export CONFIG_DETECTOR_ACCEPTANCE=${CONFIG_DETECTOR_ACCEPTANCE:-0}
 
 if [ -z "$CONFIG_DETECTOR_ACCEPTANCE" ]; then
     echo "Detector acceptance option (env. var. CONFIG_DETECTOR_ACCEPTANCE) not set, abort."
@@ -55,21 +52,21 @@ export CONFIG_OUTPARTON_PDG=${CONFIG_OUTPARTON_PDG:-0}
 
 echo 'Parton PDG option ' $CONFIG_OUTPARTON_PDG
 
-# Generate PYTHIA8 gamma-jet configuration
+# Generate Pythia8 jet-jet configuration
 ${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
-        --output=pythia8_dirgamma.cfg \
-        --seed=${RNDSEED}             \
-        --idA=${CONFIG_NUCLEUSA}      \
-        --idB=${CONFIG_NUCLEUSB}      \
-        --eCM=${CONFIG_ENERGY}        \
-        --process=dirgamma            \
-        --ptHatMin=${PTHATMIN}        \
-        --ptHatMax=${PTHATMAX}
+              --output=pythia8_jets.cfg \
+              --seed=${RNDSEED}         \
+              --idA=${CONFIG_NUCLEUSA}  \
+              --idB=${CONFIG_NUCLEUSB}  \
+              --eCM=${CONFIG_ENERGY}    \
+              --process=jets            \
+              --ptHatMin=${PTHATMIN}    \
+              --ptHatMax=${PTHATMAX}
 
 # Generate signal 
-taskwrapper sgnsim.log o2-sim -j ${NWORKERS} -n ${NSIGEVENTS}         \
-           -m ${MODULES}  -o sgn -g pythia8                           \
-           -t external --configFile $O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_prompt_gamma.ini
+taskwrapper sgnsim.log o2-sim -j ${NWORKERS} -n ${NSIGEVENTS}          \
+           -m ${MODULES} -o sgn -g pythia8                             \
+           --configFile $O2DPG_ROOT/MC/config/PWGGAJE/ini/hook_jets.ini
 
 # We need to exit for the ALIEN JOB HANDLER!
 exit 0
