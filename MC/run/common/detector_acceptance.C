@@ -1,7 +1,7 @@
 #include <TMath.h>
 
 /// =================================================
-/// \file ConfigureCaloTrackCorrAnalysis.C
+/// \file detector_acceptance.C
 
 /// \brief Define particle acceptance cuts for predefined detectors and detector combinations
 ///
@@ -13,11 +13,12 @@
 
 enum EDetectorAcceptance_t {
   kAcceptance_FullDetector,
-  kAcceptance_EMC,
-  kAcceptance_PHS,
-  kAcceptance_DMC,
+  kAcceptance_EMCPHSDMC,
+  kAcceptance_EMCDMC,
   kAcceptance_PHSDMC,
-  kAcceptance_EMCPHSDMC
+  kAcceptance_EMC,
+  kAcceptance_DMC,
+  kAcceptance_PHS
 };
 
 /// Open selection, minimum particle eta cut.
@@ -81,6 +82,16 @@ bool phos(Float_t phi, Float_t eta)
 }
 
 /// Check if particle is in any of the lower central barrel calorimeters:
+/// EMCal or DCal.
+//
+bool emcal_dcal(Float_t phi, Float_t eta)
+{
+  if      ( emcal(phi,eta) ) return true ;
+  else if (  dcal(phi,eta) ) return true ;
+  else                       return false;
+}
+
+/// Check if particle is in any of the lower central barrel calorimeters:
 /// PHOS or DCal.
 //
 bool dcal_phos(Float_t phi, Float_t eta) 
@@ -126,7 +137,10 @@ detector_acceptance(Int_t acceptance, Float_t phi, Float_t eta)
       break; 
     case kAcceptance_PHSDMC:
       return dcal_phos(phi,eta);
-      break;    
+      break;
+    case kAcceptance_EMCDMC:
+      return emcal_dcal(phi,eta);
+      break;
     case kAcceptance_EMCPHSDMC:
       return barrel_calorimeters(phi,eta);
       break;
