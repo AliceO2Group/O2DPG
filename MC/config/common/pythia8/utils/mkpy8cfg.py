@@ -91,6 +91,12 @@ if args.process == 'dirgamma':
     fout.write('PromptPhoton:all = on \n')
 fout.write('\n')
 
+### decays
+fout.write('### decays \n')
+fout.write('ParticleDecays:limitTau0 = on \n') ### we will need to put some parameters for these settings
+fout.write('ParticleDecays:tau0Max = 10. \n')
+fout.write('\n')
+
 ### phase space cuts
 fout.write('### phase space cuts \n')
 if args.ptHatMin is not None :
