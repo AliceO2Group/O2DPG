@@ -77,11 +77,12 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   gloOpt="-b --run --shm-segment-size ${SHMSIZE:-50000000000}" # TODO: decide shared mem based on event number - default should be ok for 100PbPb timeframes
 
   taskwrapper tpcdigi_${tf}.log o2-sim-digitizer-workflow $gloOpt -n ${NSIGEVENTS} --sims bkg,sgn${tf} --onlyDet TPC --interactionRate 50000 --tpc-lanes ${NWORKERS} --outcontext ${CONTEXTFILE}
+  echo "Return status of TPC digitization: $?"
+
   [ ! -f tpcdigits_${tf}.root ] && mv tpcdigits.root tpcdigits_${tf}.root
   # --> a) random seeding
   # --> b) propagation of collisioncontext and application in other digitization steps
 
-  echo "Return status of TPC digitization: $?"
   taskwrapper trddigi_${tf}.log o2-sim-digitizer-workflow $gloOpt -n ${NSIGEVENTS} --sims bkg,sgn${tf} --onlyDet TRD --interactionRate 50000 --configKeyValues "TRDSimParams.digithreads=10" --incontext ${CONTEXTFILE}
   echo "Return status of TRD digitization: $?"
 
@@ -95,7 +96,7 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   # -----------
 
   # TODO: check value for MaxTimeBin; A large value had to be set tmp in order to avoid crashes bases on "exceeding timeframe limit"
-  taskwrapper tpcreco_${tf}.log o2-tpc-reco-workflow $gloOpt --tpc-digit-reader \"--infile tpcdigits_${tf}.root\" --input-type digits --output-type clusters,tracks  --tpc-track-writer \"--treename events --track-branch-name Tracks --trackmc-branch-name TracksMCTruth\" --configKeyValues \"GPU_global.continuousMaxTimeBin=100000\"
+  taskwrapper tpcreco_${tf}.log o2-tpc-reco-workflow $gloOpt --tpc-digit-reader \"--infile tpcdigits_${tf}.root\" --input-type digits --output-type clusters,tracks,send-clusters-per-sector  --tpc-track-writer \"--treename events --track-branch-name Tracks --trackmc-branch-name TracksMCTruth\" --configKeyValues "\"GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=${NWORKERS}\""
   echo "Return status of tpcreco: $?"
 
   echo "Running ITS reco flow"
@@ -132,7 +133,7 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   cp ${CONTEXTFILE} output
 
   # cleanup step for this timeframe (we cleanup disc space early so as to make possible checkpoint dumps smaller)
-  taskwrapper cleanup_${tf}.log "[ -f aod${tf}.log_done ] && rm sgn${tf}* && rm *digits*.root"
+  taskwrapper cleanup_${tf}.log "[ -f aod${tf}.log_done ] && rm sgn${tf}* && rm *digits*.root; exit 0"
 done
 
 # We need to exit for the ALIEN JOB HANDLER!
