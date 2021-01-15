@@ -96,7 +96,7 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   # -----------
 
   # TODO: check value for MaxTimeBin; A large value had to be set tmp in order to avoid crashes bases on "exceeding timeframe limit"
-  taskwrapper tpcreco_${tf}.log o2-tpc-reco-workflow $gloOpt --tpc-digit-reader \"--infile tpcdigits_${tf}.root\" --input-type digits --output-type clusters,tracks,send-clusters-per-sector  --tpc-track-writer \"--treename events --track-branch-name Tracks --trackmc-branch-name TracksMCTruth\" --configKeyValues "\"GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=${NWORKERS}\""
+  taskwrapper tpcreco_${tf}.log o2-tpc-reco-workflow $gloOpt --tpc-digit-reader \"--infile tpcdigits_${tf}.root\" --input-type digits --output-type clusters,tracks,send-clusters-per-sector  --configKeyValues "\"GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=${NWORKERS}\""
   echo "Return status of tpcreco: $?"
 
   echo "Running ITS reco flow"
