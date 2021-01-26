@@ -7,8 +7,8 @@
 # 
 
 # make sure O2DPG + O2 is loaded
-[ ! "{O2DPG_ROOT}" ] && echo "Error: This needs O2DPG loaded" && exit 1
-[ ! "{O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
+[ ! "${O2DPG_ROOT}" ] && echo "Error: This needs O2DPG loaded" && exit 1
+[ ! "${O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
 
 # ----------- LOAD UTILITY FUNCTIONS --------------------------
 . ${O2_ROOT}/share/scripts/jobutils.sh
@@ -47,7 +47,7 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   PTHATMAX=-1. # [default = -1]
 
   # produce the signal configuration
-  taskwrapper gensgnconf${tf}.log ${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
+  taskwrapper gensgnconf_${tf}.log ${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
     	     --output=pythia8.cfg \
 	     --seed=${RNDSEED} \
 	     --idA=2212 \
@@ -100,7 +100,7 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   echo "Return status of tpcreco: $?"
 
   echo "Running ITS reco flow"
-  taskwrapper itsreco_${tf}.log  o2-its-reco-workflow --trackerCA --async-phase $gloOpt
+  taskwrapper itsreco_${tf}.log  o2-its-reco-workflow --trackerCA --tracking-mode async $gloOpt
   echo "Return status of itsreco: $?"
 
   echo "Running FT0 reco flow"
