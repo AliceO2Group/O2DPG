@@ -194,7 +194,8 @@ while [ $# -gt 0 ] ; do
         --asuser) ASUSER=$2; shift 2 ;; #
         --label) JOBLABEL=$2; shift 2 ;; # label identifying the production (e.g. as a production identifier)
         --mattermost) MATTERMOSTHOOK=$2; shift 2 ;; # if given, status and metric information about the job will be sent to this hook
-        --controlserver) CONTROLSERVER=$2; shift 2 ;; # if given
+        --controlserver) CONTROLSERVER=$2; shift 2 ;; # allows to give a SERVER ADDRESS/IP which can act as controller for GRID jobs
+        --prodsplit) PRODSPLIT=$2; shift 2 ;; # allows to set JDL production split level (useful to easily replicate workflows)
 	-h) Usage ; exit ;;
         *) break ;;
     esac
@@ -203,6 +204,7 @@ export JOBTTL
 export JOBLABEL
 export MATTERMOSTHOOK
 export CONTROLSERVER
+export PRODSPLIT
 
 # analyse options:
 # we should either run with --script or with -c
@@ -265,16 +267,18 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
 
   cd "${WORKDIR}"
 
+  QUOT='"'
   # ---- Generate JDL ----------------
   # TODO: Make this configurable or read from a preamble section in the jobfile
   cat > "${MY_JOBNAMEDATE}.jdl" <<EOF
 Executable = "${MY_BINDIR}/${MY_JOBNAMEDATE}.sh";
 Arguments = "${CONTINUE_WORKDIR:+"-c ${CONTINUE_WORKDIR}"} --local ${O2TAG:+--o2tag ${O2TAG}} --ttl ${JOBTTL} --label ${JOBLABEL:-label} ${MATTERMOSTHOOK:+--mattermost ${MATTERMOSTHOOK}} ${CONTROLSERVER:+--controlserver ${CONTROLSERVER}}";
 InputFile = "LF:${MY_JOBWORKDIR}/alien_jobscript.sh";
-OutputDir = "${MY_JOBWORKDIR}";
 Output = {
   "logs*.zip@disk=2"
 };
+${PRODSPLIT:+Split = ${QUOT}production:1-${PRODSPLIT}${QUOT};}
+OutputDir = "${MY_JOBWORKDIR}/${PRODSPLIT:+#alien_counter_03i#}";
 Requirements = member(other.GridPartitions,"${GRIDPARTITION:-multicore_8}");
 MemorySize = "60GB";
 TTL=${JOBTTL};
