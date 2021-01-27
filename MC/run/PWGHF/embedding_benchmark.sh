@@ -11,7 +11,9 @@
 [ ! "${O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
 
 # ----------- LOAD UTILITY FUNCTIONS --------------------------
-. ${O2_ROOT}/share/scripts/jobutils.sh
+if [ $(typeset -F taskwrapper) ]; then
+ . ${O2_ROOT}/share/scripts/jobutils.sh
+done
 
 # ----------- START ACTUAL JOB  ----------------------------- 
 
