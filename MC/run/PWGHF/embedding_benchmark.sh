@@ -39,10 +39,12 @@ echo "Return status of background sim: $?"
 # register some background output --> make this declarative
 copypersistentsimfiles bkg output
 
-# loop over timeframes
-for tf in `seq 1 ${NTIMEFRAMES}`; do
-
-  RNDSEED=0
+# function encapsulating the signal sim part
+# first argument is timeframe id
+signalsim() {
+  tf=$1
+  nicevalue=${2:-0}
+  RNDSEED=0    # 0 means random seed !
   PTHATMIN=0.  # [default = 0]
   PTHATMAX=-1. # [default = -1]
 
@@ -58,11 +60,19 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
 	     --ptHatMax=${PTHATMAX}
  
   # simulate the signals for this timeframe
-  taskwrapper sgnsim_${tf}.log o2-sim -e ${SIMENGINE} ${MODULES} -n ${NSIGEVENTS} -j ${NWORKERS} -g extgen \
+  taskwrapper sgnsim_${tf}.log nice -n ${nicevalue} o2-sim -e ${SIMENGINE} ${MODULES} -n ${NSIGEVENTS} -j ${NWORKERS} -g extgen \
        --configFile ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini                                 \
        --configKeyValues "GeneratorPythia8.config=pythia8.cfg"                                        \
        --embedIntoFile bkg_Kine.root                                                                  \
        -o sgn${tf}
+}
+
+# loop over timeframes
+for tf in `seq 1 ${NTIMEFRAMES}`; do
+
+  if [ ! "${SIGNALSIMPID}" ]; then
+    signalsim ${tf}
+  fi
 
   # register some signal output --> make this declarative
   # copypersistentsimfiles sgn${tf} output
@@ -76,6 +86,11 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   
   gloOpt="-b --run --shm-segment-size ${SHMSIZE:-50000000000}" # TODO: decide shared mem based on event number - default should be ok for 100PbPb timeframes
 
+  if [ "${SIGNALSIMPID}" ]; then
+    wait $SIGNALSIMPID
+    unset SIGNALSIMPID
+  fi
+
   taskwrapper tpcdigi_${tf}.log o2-sim-digitizer-workflow $gloOpt -n ${NSIGEVENTS} --sims bkg,sgn${tf} --onlyDet TPC --interactionRate 50000 --tpc-lanes ${NWORKERS} --outcontext ${CONTEXTFILE}
   echo "Return status of TPC digitization: $?"
 
@@ -85,6 +100,14 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
 
   taskwrapper trddigi_${tf}.log o2-sim-digitizer-workflow $gloOpt -n ${NSIGEVENTS} --sims bkg,sgn${tf} --onlyDet TRD --interactionRate 50000 --configKeyValues "TRDSimParams.digithreads=10" --incontext ${CONTEXTFILE}
   echo "Return status of TRD digitization: $?"
+
+  # Attention: we can try to launch signal sim for the next stage (pipeline gain)
+  # in order to utilize the multi-core system efficiently. The transport will be given a higher
+  # nice value.
+  let nexttf=1+${tf}
+  signalsim ${nexttf} 19 &
+  SIGNALSIMPID=$!
+  echo "Transport for TF ${nexttf} backgrounded at ${SIGNALSIMPID}"
 
   taskwrapper restdigi_${tf}.log o2-sim-digitizer-workflow $gloOpt -n ${NSIGEVENTS} --sims bkg,sgn${tf} --skipDet TRD,TPC --interactionRate 50000 --incontext ${CONTEXTFILE}
   echo "Return status of OTHER digitization: $?"
