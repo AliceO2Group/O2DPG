@@ -87,25 +87,30 @@ A workflow doing a common background simulation, followed by 2 timeframes of sig
 
 ## Example usage
 
+Produce a simulation workflow (like in the graph), for example using https://github.com/AliceO2Group/O2DPG/blob/master/MC/run/PWGHF/create_embedding_workflow.py:
+```
+./create_embedding_workflow.py -e TGeant3 -nb 1 -ns 10 -j 8 -tf 2 
+```
+
 Run workflow in a given file
 ```
 alienv enter O2/latest O2DPG/latest
-o2_dpg_workflow_runner.py -f workflow_sim.json
+o2_dpg_workflow_runner.py -f workflow.json
 ```
 
 Show what you would run
 ```
-o2_dpg_workflow_runner.py -f workflow_sim.json --dry-run
+o2_dpg_workflow_runner.py -f workflow.json --dry-run
 ```
 
 ## Future targeted features:
 
 Run until everyting marked "RECO" is done
 ```
-o2_dpg_workflow_runner.py -f workflow_sim.json --stages RECO
+o2_dpg_workflow_runner.py -f workflow.json --stages RECO
 ```
 
 Rerun worflow until AOD, skipping all tasks already done
 ```
-o2_dpg_workflow_runner.py -f workflow_sim.json --stages AOD --skip-done
+o2_dpg_workflow_runner.py -f workflow.json --stages AOD --skip-done
 ```
