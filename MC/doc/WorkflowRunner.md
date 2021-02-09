@@ -97,22 +97,22 @@ Produce a simulation workflow (like in the graph), for example using [create_emb
 Run workflow in a given file
 ```
 alienv enter O2/latest O2DPG/latest
-o2_dpg_workflow_runner.py -f workflow.json
+${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json
 ```
 
 Show what you would run
 ```
-o2_dpg_workflow_runner.py -f workflow.json --dry-run
+${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json --dry-run
 ```
 
 ## Future targeted features:
 
 Run until everyting marked "RECO" is done
 ```
-o2_dpg_workflow_runner.py -f workflow.json --stages RECO
+${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json --stages RECO
 ```
 
 Rerun worflow until AOD, skipping all tasks already done
 ```
-o2_dpg_workflow_runner.py -f workflow.json --stages AOD --skip-done
+${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json --stages AOD --skip-done
 ```
