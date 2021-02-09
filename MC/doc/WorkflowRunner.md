@@ -107,6 +107,12 @@ Show what you would run
 ${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json --dry-run
 ```
 
+Execute workflow in serialized manner (only 1 task at a time)
+```
+${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json -jmax 1
+```
+
+
 ## Future targeted features:
 
 Run until everyting marked "RECO" is done
