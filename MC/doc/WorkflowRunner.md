@@ -1,5 +1,7 @@
 This is the documentation for the `o2_dpg_workflow_runner.py` tool.
 
+**This is a draft document expressing ideas. Everything is to be understood as prototype and open for changes/adaptions.**
+
 # Purpose
 
 Execution of O2 DPG workflows under resource constraints, where possibly tasks
