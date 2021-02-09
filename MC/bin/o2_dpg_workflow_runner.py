@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# started February 2021, sandro.wenzel@cern.ch
+
 import re
 import subprocess
 import shlex
@@ -6,7 +9,12 @@ import time
 import json
 import logging
 import os
-from graphviz import Digraph
+try:
+    from graphviz import Digraph
+    havegraphviz=True
+except ImportError:
+    havegraphviz=False
+
 
 #
 # Code section to find all topological orderings
@@ -130,6 +138,10 @@ def analyseGraph(edges, nodes):
 
 
 def draw_workflow(workflowspec):
+    if not havegraphviz:
+        print('graphviz not installed, cannot draw workflow')
+        return
+
     dot = Digraph(comment='MC workflow')
     nametoindex={}
     index=0
@@ -360,15 +372,21 @@ class WorkflowExecutor:
                 break
 
 import argparse
-from psutil import virtual_memory
+try:
+    from psutil import virtual_memory
+    max_system_mem=virtual_memory().total
+except ImportError:
+    # let's assume 16GB
+    max_system_mem=16*1024*1024*1024
 
-parser = argparse.ArgumentParser(description='Parellel execute of a DAG data pipeline under resource contraints.')
+parser = argparse.ArgumentParser(description='Parellel execution of a (O2-DPG) DAG data pipeline under resource contraints.')
 parser.add_argument('-f','--workflowfile', help='Input workflow file name', required=True)
 parser.add_argument('-jmax','--maxjobs', help='number of maximal parallel tasks', default=100)
 parser.add_argument('--dry-run', action='store_true', help='show what you would do')
 parser.add_argument('--visualize-workflow', action='store_true', help='saves a graph visualization of workflow')
 parser.add_argument('--target-stages', help='Runs the pipeline by target labels (example "TPC" or "digi")')
-parser.add_argument('--mem-limit', help='set memory limit as scheduling constraint', default=virtual_memory().total)
+
+parser.add_argument('--mem-limit', help='set memory limit as scheduling constraint', default=max_system_mem)
 args = parser.parse_args()
 print (args)            
 print (args.workflowfile)
