@@ -15,7 +15,7 @@ not **what** is executed or how it is configured.
 The tool provides features of a typical data/task pipelining environment
 using a DAG approach. It allows to separate the concerns of workflow setup and workflow running - and as such
 allows to optimize workflow deployment during execution.
-It is inspired by similar ideas in ALICE alibuild and the ALILE Data Processing Layer (DPL) but differs in some aspects:
+It is inspired by similar ideas in ALICE alibuild and the ALICE Data Processing Layer (DPL) but differs in some aspects:
 
    * allow to schedule tasks in parallel
    * be resource aware (e.g., don't schedule 2 tasks requiring large memory at the same time)
