@@ -99,17 +99,17 @@ Produce a simulation workflow (like in the graph), for example using [create_emb
 Run workflow in a given file
 ```
 alienv enter O2/latest O2DPG/latest
-${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
 ```
 
 Show what you would run
 ```
-${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json --dry-run
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --dry-run
 ```
 
 Execute workflow in serialized manner (only 1 task at a time)
 ```
-${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json -jmax 1
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -jmax 1
 ```
 
 
@@ -117,10 +117,10 @@ ${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json -jmax 1
 
 Run until everyting marked "RECO" is done
 ```
-${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json --stages RECO
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --stages RECO
 ```
 
 Rerun worflow until AOD, skipping all tasks already done
 ```
-${O2DPG_ROOT}/bin/o2_dpg_workflow_runner.py -f workflow.json --stages AOD --skip-done
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --stages AOD --skip-done
 ```
