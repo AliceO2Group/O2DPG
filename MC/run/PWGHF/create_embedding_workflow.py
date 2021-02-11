@@ -92,7 +92,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if doembedding:
        # link background files to current working dir for this timeframe
        LinkBKGtask=createTask(name='linkbkg_'+str(tf), needs=[BKGtask['name']], tf=tf, cwd=timeframeworkdir)
-       LinkBKGtask['cmd']='ln -s ../bkg*.root .'
+       LinkBKGtask['cmd']='ln -nsf ../bkg*.root .'
        workflow['stages'].append(LinkBKGtask) 
 
    # transport signals
@@ -113,7 +113,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
    # Alternatively, since we have timeframe isolation, we could just work with standard o2sim_ files
    LinkGRPFileTask=createTask(name='linkGRP_'+str(tf), needs=[SGNtask['name']], tf=tf, cwd=timeframeworkdir)
-   LinkGRPFileTask['cmd']='ln -s ' + signalprefix + '_grp.root o2sim_grp.root ; ln -s ' + signalprefix + '_geometry.root o2sim_geometry.root'
+   LinkGRPFileTask['cmd']='ln -nsf ' + signalprefix + '_grp.root o2sim_grp.root ; ln -nsf ' + signalprefix + '_geometry.root o2sim_geometry.root'
    workflow['stages'].append(LinkGRPFileTask)
 
 
