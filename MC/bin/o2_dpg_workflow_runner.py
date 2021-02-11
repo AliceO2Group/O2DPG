@@ -46,8 +46,8 @@ class Graph:
  
  
 # Recursive function to find all topological orderings of a given DAG
-def findAllTopologicalOrders(graph, path, discovered, N, allpaths):
-    if len(allpaths) >= 2000:
+def findAllTopologicalOrders(graph, path, discovered, N, allpaths, maxnumber=1):
+    if len(allpaths) >= maxnumber:
         # print ('More than 2000 paths found')
         return
     
@@ -84,7 +84,7 @@ def findAllTopologicalOrders(graph, path, discovered, N, allpaths):
  
  
 # get all topological orderings of a given DAG as a list
-def printAllTopologicalOrders(graph):
+def printAllTopologicalOrders(graph, maxnumber=1):
     # get number of nodes in the graph
     N = len(graph.adjList)
  
@@ -95,7 +95,7 @@ def printAllTopologicalOrders(graph):
     path = []
     allpaths = []
     # find all topological ordering and print them
-    findAllTopologicalOrders(graph, path, discovered, N, allpaths)
+    findAllTopologicalOrders(graph, path, discovered, N, allpaths, maxnumber=maxnumber)
     return allpaths
 
 # wrapper taking some edges, constructing the graph,
@@ -116,9 +116,8 @@ def analyseGraph(edges, nodes):
     
     # find topological orderings of the graph -> not used for moment
     # create a graph from edges
-    # graph = Graph(edges, N)
-    # allorderings = printAllTopologicalOrders(graph)
-    allorderings=[[]]
+    graph = Graph(edges, N)
+    orderings = printAllTopologicalOrders(graph)
     # find out "can be followed by" for each node
     # can be followed does not mean that all requirements are met though
     # nextjob={}
@@ -134,7 +133,7 @@ def analyseGraph(edges, nodes):
             
     # print(nextjob)
             
-    return (allorderings, nextjobtrivial)
+    return (orderings, nextjobtrivial)
 
 
 def draw_workflow(workflowspec):
@@ -165,7 +164,7 @@ def draw_workflow(workflowspec):
 # builds accompagnying structures tasktoid and idtotask
 def build_graph(taskuniverse, workflowspec):
     tasktoid={ t[0]['name']:i for i, t in enumerate(taskuniverse, 0) }
-    print (tasktoid)
+    # print (tasktoid)
 
     nodes = []
     edges = []
@@ -208,8 +207,8 @@ def build_topological_orderings(workflowspec):
 
     task_weights = [ getweight(tid) for tid in range(len(globaltaskuniverse)) ]
         
-    print (global_next_tasks)
-    return { 'nexttasks' : global_next_tasks, 'weights' : task_weights }
+    # print (global_next_tasks)
+    return { 'nexttasks' : global_next_tasks, 'weights' : task_weights, 'topological_ordering' : tup[0] }
 
 
 #
@@ -226,7 +225,7 @@ class WorkflowExecutor:
           draw_workflow(self.workflowspec)
       self.possiblenexttask = workflow['nexttasks']
       self.taskweights = workflow['weights']
-      print (self.possiblenexttask)
+      self.topological_orderings = workflow['topological_ordering']
       self.taskuniverse = [ l['name'] for l in self.workflowspec['stages'] ]
       self.idtotask = [ 0 for l in self.taskuniverse ]
       self.tasktoid = {}
@@ -242,13 +241,37 @@ class WorkflowExecutor:
       self.stoponfailure = True
       self.max_jobs_parallel = int(jmax)
       self.scheduling_iteration = 0
-                         
+
     def getallrequirements(self, t):
         l=[]
         for r in self.workflowspec['stages'][self.tasktoid[t]]['needs']:
             l.append(r)
             l=l+self.getallrequirements(r)
         return l
+
+    # find all tasks that depend on a given task (id)
+    def find_all_dependent_tasks(self, tid):
+       daughterlist=[tid]
+       # possibly recurse
+       for n in self.possiblenexttask[tid]:
+         daughterlist = daughterlist + self.find_all_dependent_tasks(n)
+
+       return list(set(daughterlist))
+
+    # removes the done flag from tasks that need to be run again
+    def remove_done_flag(self, listoftaskids):
+       for tid in listoftaskids:
+          name = self.workflowspec['stages'][tid]['name']
+          workdir = self.workflowspec['stages'][tid]['cwd']
+          # name and workdir define the "done" file as used by taskwrapper
+          # this assumes that taskwrapper is used to actually check if something is to be rerun
+          done_filename = workdir + '/' + name + '.log_done'
+          if args.dry_run:
+              print ("Would mark task " + name + " as to be done again")
+          else:
+              print ("Marking task " + name + " as to be done again")
+              if os.path.exists(done_filename) and os.path.isfile(done_filename):
+                  os.remove(done_filename)
       
     # submits a task as subprocess and records Popen instance
     def submit(self, tid):
@@ -257,11 +280,11 @@ class WorkflowExecutor:
       workdir = self.workflowspec['stages'][tid]['cwd']
       if not workdir=='':
           if os.path.exists(workdir) and not os.path.isdir(workdir):
-              logging.error('Cannot create working dir ... some other resource exists already')
-              return None
+                  logging.error('Cannot create working dir ... some other resource exists already')
+                  return None
 
           if not os.path.isdir(workdir):
-              os.mkdir(workdir)
+                  os.mkdir(workdir)
 
       self.procstatus[tid]='Running'
       if args.dry_run:
@@ -329,7 +352,61 @@ class WorkflowExecutor:
             return True
         return False
 
+    def emit_code_for_task(self, tid, lines):
+        logging.debug("Submitting task " + str(self.idtotask[tid]))
+        c = self.workflowspec['stages'][tid]['cmd']
+        workdir = self.workflowspec['stages'][tid]['cwd']
+        # in general:
+        # try to make folder
+        lines.append('[ ! -d ' + workdir + ' ] && mkdir ' + workdir + '\n')
+        # cd folder
+        lines.append('cd ' + workdir + '\n')
+        # do command
+        lines.append(c + '\n')
+        # cd back
+        lines.append('cd $OLDPWD\n')
+
+
+    # produce a bash script that runs workflow standalone
+    def produce_script(self, filename):
+        # pick one of the correct task orderings
+        taskorder = self.topological_orderings[0]
+        outF = open(filename, "w")
+
+        lines=[]
+        # header
+        lines.append('#!/usr/bin/env bash\n')
+        lines.append('#THIS FILE IS AUTOGENERATED\n')
+        lines.append('JOBUTILS_SKIPDONE=ON\n')
+        for tid in taskorder:
+            print ('Doing task ' + self.idtotask[tid])
+            self.emit_code_for_task(tid, lines)
+
+        outF.writelines(lines)
+        outF.close()
+
+
     def execute(self):
+        os.environ['JOBUTILS_SKIPDONE'] = "ON"
+        # some maintenance / init work
+        if args.list_tasks:
+          print ('List of tasks in this workflow:')
+          for i in self.workflowspec['stages']:
+              print (i['name'])
+          exit (0)
+ 
+        if args.produce_script:
+            self.produce_script(args.produce_script)
+            exit (0)
+
+        if args.rerun_from:
+          if self.tasktoid.get(args.rerun_from)!=None:
+              taskid=self.tasktoid[args.rerun_from]
+              self.remove_done_flag(self.find_all_dependent_tasks(taskid))
+          else:
+              print('task ' + args.rerun_from + ' not found; cowardly refusing to do anything ')
+              exit (1) 
+
         # main control loop
         currenttimeframe=1
         candidates = [ tid for tid in self.possiblenexttask[-1] ]
@@ -379,17 +456,21 @@ except ImportError:
     # let's assume 16GB
     max_system_mem=16*1024*1024*1024
 
-parser = argparse.ArgumentParser(description='Parellel execution of a (O2-DPG) DAG data pipeline under resource contraints.')
+parser = argparse.ArgumentParser(description='Parallel execution of a (O2-DPG) DAG data/job pipeline under resource contraints.', 
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
 parser.add_argument('-f','--workflowfile', help='Input workflow file name', required=True)
 parser.add_argument('-jmax','--maxjobs', help='number of maximal parallel tasks', default=100)
 parser.add_argument('--dry-run', action='store_true', help='show what you would do')
 parser.add_argument('--visualize-workflow', action='store_true', help='saves a graph visualization of workflow')
 parser.add_argument('--target-stages', help='Runs the pipeline by target labels (example "TPC" or "digi")')
+parser.add_argument('--produce-script', help='Produces a shell script that runs the workflow in serialized manner and quits.', default='workflow_script.sh')
+parser.add_argument('--rerun-from', help='Reruns the workflow starting from given task. All dependent jobs will be rerun.')
+parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit.', action='store_true')
 
-parser.add_argument('--mem-limit', help='set memory limit as scheduling constraint', default=max_system_mem)
+parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint', default=max_system_mem)
 args = parser.parse_args()
 print (args)            
-print (args.workflowfile)
 
 logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
 executor=WorkflowExecutor(args.workflowfile,jmax=args.maxjobs,args=args)
