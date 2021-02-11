@@ -112,10 +112,16 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
    # Alternatively, since we have timeframe isolation, we could just work with standard o2sim_ files
-   LinkGRPFileTask=createTask(name='linkGRP_'+str(tf), needs=[SGNtask['name']], tf=tf, cwd=timeframeworkdir)
-   LinkGRPFileTask['cmd']='ln -nsf ' + signalprefix + '_grp.root o2sim_grp.root ; ln -nsf ' + signalprefix + '_geometry.root o2sim_geometry.root'
-   workflow['stages'].append(LinkGRPFileTask)
 
+   # We need to be careful here and distinguish between embedding and non-embedding cases 
+   # (otherwise it can confuse itstpcmatching, see O2-2026). This is because only one of the GRPs is updated during digitization.
+   if doembedding:
+      LinkGRPFileTask=createTask(name='linkGRP_'+str(tf), needs=[BKGtask['name']], tf=tf, cwd=timeframeworkdir)
+      LinkGRPFileTask['cmd']='ln -nsf bkg_grp.root o2sim_grp.root ; ln -nsf bkg_geometry.root o2sim_geometry.root'
+   else:
+      LinkGRPFileTask=createTask(name='linkGRP_'+str(tf), needs=[SGNtask['name']], tf=tf, cwd=timeframeworkdir)
+      LinkGRPFileTask['cmd']='ln -nsf ' + signalprefix + '_grp.root o2sim_grp.root ; ln -nsf ' + signalprefix + '_geometry.root o2sim_geometry.root'
+   workflow['stages'].append(LinkGRPFileTask)
 
    CONTEXTFILE='collisioncontext.root'
  
