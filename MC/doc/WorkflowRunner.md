@@ -112,6 +112,16 @@ Execute workflow in serialized manner (only 1 task at a time)
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -jmax 1
 ```
 
+Produce a shell script that can run the workflow (serialized)
+```
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --produce-script foo.sh
+```
+
+Redo a certain task in the workflow and all its direct or indirect dependencies
+(This makes sense only if this not the first pass of the workflow)
+```
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --rerun-from tpcdigi_1
+```
 
 ## Future targeted features:
 
@@ -122,5 +132,5 @@ ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --stages RECO
 
 Rerun worflow until AOD, skipping all tasks already done
 ```
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --stages AOD --skip-done
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --stages AOD
 ```
