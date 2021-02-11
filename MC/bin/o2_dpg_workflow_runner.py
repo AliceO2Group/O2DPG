@@ -395,7 +395,7 @@ class WorkflowExecutor:
               print (i['name'])
           exit (0)
  
-        if args.produce_script:
+        if args.produce_script != None:
             self.produce_script(args.produce_script)
             exit (0)
 
@@ -464,7 +464,7 @@ parser.add_argument('-jmax','--maxjobs', help='number of maximal parallel tasks'
 parser.add_argument('--dry-run', action='store_true', help='show what you would do')
 parser.add_argument('--visualize-workflow', action='store_true', help='saves a graph visualization of workflow')
 parser.add_argument('--target-stages', help='Runs the pipeline by target labels (example "TPC" or "digi")')
-parser.add_argument('--produce-script', help='Produces a shell script that runs the workflow in serialized manner and quits.', default='workflow_script.sh')
+parser.add_argument('--produce-script', help='Produces a shell script that runs the workflow in serialized manner and quits.')
 parser.add_argument('--rerun-from', help='Reruns the workflow starting from given task. All dependent jobs will be rerun.')
 parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit.', action='store_true')
 
