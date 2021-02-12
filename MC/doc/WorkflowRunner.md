@@ -144,3 +144,4 @@ ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-stages 
 # ToDo / Wanted feature list
 
 * handle environment and environment variables
+* decide skipping tasks directly in runner and not in taskwrapper (for speedup)
