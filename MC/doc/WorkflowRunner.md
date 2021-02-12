@@ -21,6 +21,9 @@ It is inspired by similar ideas in ALICE alibuild and the ALICE Data Processing 
    * be resource aware (e.g., don't schedule 2 tasks requiring large memory at the same time)
    * allow to schedule any task, be it a simple executable, bash script, ROOT macro, or DPL workflow.
 
+Typical workflows targeted by the tool are complex bash scripts of interdependent sections, with a mix of
+DPL workflows, transport simulation, QA, file-operations, validation steps, etc.
+
 The goals of the tool are:
 
    * automatic task parallelization (within or across timeframes)
@@ -137,3 +140,7 @@ Rerun worflow until AOD, skipping all tasks already done (task skipping is defau
 ```
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-stages AOD
 ```
+
+# ToDo / Wanted feature list
+
+* handle environment and environment variables
