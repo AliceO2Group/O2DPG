@@ -45,10 +45,10 @@ workflow={}
 workflow['stages'] = []
 
 taskcounter=0
-def createTask(name='', needs=[], tf=-1, cwd='./'):
+def createTask(name='', needs=[], tf=-1, cwd='./', lab=[]):
     global taskcounter
     taskcounter = taskcounter + 1
-    return { 'name': name, 'cmd':'', 'needs': needs, 'resources': { 'cpu': -1 , 'mem': -1 }, 'timeframe' : tf, 'labels' : [], 'cwd' : cwd }
+    return { 'name': name, 'cmd':'', 'needs': needs, 'resources': { 'cpu': -1 , 'mem': -1 }, 'timeframe' : tf, 'labels' : lab, 'cwd' : cwd }
 
 def getDPL_global_options():
    if args.noIPC!=None:
@@ -60,7 +60,7 @@ doembedding=True if args.embedding=='True' or args.embedding==True else False
 
 if doembedding:
     # ---- background transport task -------
-    BKGtask=createTask(name='bkgsim')
+    BKGtask=createTask(name='bkgsim', lab=["GEANT"])
     BKGtask['cmd']='o2-sim -e ' + SIMENGINE + ' -j ' + str(NWORKERS) + ' -n ' + str(NBKGEVENTS) + ' -g pythia8hi ' +  str(MODULES) + ' -o bkg --configFile ${O2DPG_ROOT}/MC/config/common/ini/basic.ini'
     workflow['stages'].append(BKGtask)
 
@@ -101,11 +101,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    embeddinto= "--embedIntoFile bkg_Kine.root" if doembedding else ""
    if doembedding:
        signalneeds = signalneeds + [ BKGtask['name'], LinkBKGtask['name'] ]
-   SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf))
-   #SGNtask['cmd']='o2-sim -e '+str(SIMENGINE) + ' ' + str(MODULES) + ' -n ' + str(NSIGEVENTS) +  ' -j ' + str(NWORKERS) + ' -g extgen \
-   #    --configFile ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini                    \
-   #    --configKeyValues \"GeneratorPythia8.config=pythia8_'+ str(tf) +'.cfg\"'          \
-   #    + ' -o ' + signalprefix + ' ' + embeddinto
+   SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"])
    SGNtask['cmd']='o2-sim -e '+str(SIMENGINE) + ' ' + str(MODULES) + ' -n ' + str(NSIGEVENTS) +  ' -j ' + str(NWORKERS) + ' -g pythia8 '\
        + ' -o ' + signalprefix + ' ' + embeddinto
    workflow['stages'].append(SGNtask)
@@ -126,17 +122,18 @@ for tf in range(1, NTIMEFRAMES + 1):
    CONTEXTFILE='collisioncontext.root'
  
    simsoption=' --sims ' + ('bkg,'+signalprefix if doembedding else signalprefix)
-   TPCDigitask=createTask(name='tpcdigi_'+str(tf), needs=[SGNtask['name'], LinkGRPFileTask['name']], tf=tf, cwd=timeframeworkdir)
+   TPCDigitask=createTask(name='tpcdigi_'+str(tf), needs=[SGNtask['name'], LinkGRPFileTask['name']],
+                          tf=tf, cwd=timeframeworkdir, lab=["DIGI"])
    TPCDigitask['cmd'] = 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TPC --interactionRate 50000 --tpc-lanes ' + str(NWORKERS) + ' --outcontext ' + str(CONTEXTFILE)
    workflow['stages'].append(TPCDigitask)
 
    # The TRD digi task has a dependency on TPC only because of the digitization context (and because they both use CPU efficiently)
    # TODO: activate only if TRD present
-   TRDDigitask=createTask(name='trddigi_'+str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir)
+   TRDDigitask=createTask(name='trddigi_'+str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["DIGI"])
    TRDDigitask['cmd'] = 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TRD --interactionRate 50000 --configKeyValues \"TRDSimParams.digithreads=' + str(NWORKERS) + '\" --incontext ' + str(CONTEXTFILE)
    workflow['stages'].append(TRDDigitask)
 
-   RESTDigitask=createTask(name='restdigi_'+str(tf), needs=[TPCDigitask['name'], LinkGRPFileTask['name']], tf=tf, cwd=timeframeworkdir)
+   RESTDigitask=createTask(name='restdigi_'+str(tf), needs=[TPCDigitask['name'], LinkGRPFileTask['name']], tf=tf, cwd=timeframeworkdir, lab=["DIGI"])
    RESTDigitask['cmd'] = 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --skipDet TRD,TPC --interactionRate 50000 --incontext ' + str(CONTEXTFILE)
    workflow['stages'].append(RESTDigitask)
 
@@ -145,36 +142,36 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------
 
    # TODO: check value for MaxTimeBin; A large value had to be set tmp in order to avoid crashes bases on "exceeding timeframe limit"
-   TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir)
+   TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
    TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options() + ' --tpc-digit-reader "--infile tpcdigits.root" --input-type digits --output-type clusters,tracks,send-clusters-per-sector  --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads='+str(NWORKERS)+'"'
    workflow['stages'].append(TPCRECOtask)
 
-   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[RESTDigitask['name']], tf=tf, cwd=timeframeworkdir)
+   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[RESTDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
    ITSRECOtask['cmd'] = 'o2-its-reco-workflow --trackerCA --tracking-mode async ' + getDPL_global_options()
    workflow['stages'].append(ITSRECOtask)
 
-   FT0RECOtask=createTask(name='ft0reco_'+str(tf), needs=[RESTDigitask['name']], tf=tf, cwd=timeframeworkdir)
+   FT0RECOtask=createTask(name='ft0reco_'+str(tf), needs=[RESTDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
    FT0RECOtask['cmd'] = 'o2-ft0-reco-workflow ' + getDPL_global_options()
    workflow['stages'].append(FT0RECOtask)
 
-   ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir)
+   ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
    ITSTPCMATCHtask['cmd']= 'o2-tpcits-match-workflow ' + getDPL_global_options() + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\"'
    workflow['stages'].append(ITSTPCMATCHtask)
 
    # this can be combined with TRD digitization if benefical
-   TRDTRAPtask = createTask(name='trdtrap_'+str(tf), needs=[TRDDigitask['name']], tf=tf, cwd=timeframeworkdir)
+   TRDTRAPtask = createTask(name='trdtrap_'+str(tf), needs=[TRDDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["DIGI"])
    TRDTRAPtask['cmd'] = 'o2-trd-trap-sim'
    workflow['stages'].append(TRDTRAPtask)
 
-   TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDTRAPtask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir)
+   TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDTRAPtask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
    TRDTRACKINGtask['cmd'] = 'o2-trd-global-tracking'
    workflow['stages'].append(TRDTRACKINGtask)
 
-   TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], RESTDigitask['name']], tf=tf, cwd=timeframeworkdir)
+   TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], RESTDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
    TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options()
    workflow['stages'].append(TOFRECOtask)
 
-   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=[ITSTPCMATCHtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir)
+   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=[ITSTPCMATCHtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
    PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' + getDPL_global_options()
    workflow['stages'].append(PVFINDERtask)
  
@@ -184,7 +181,7 @@ for tf in range(1, NTIMEFRAMES + 1):
   
   # enable later. It still has memory access problems 
   # taskwrapper aod_${tf}.log o2-aod-producer-workflow --aod-writer-keep dangling --aod-writer-resfile "AO2D" --aod-writer-resmode UPDATE --aod-timeframe-id ${tf} $gloOpt
-   AODtask = createTask(name='aod_'+str(tf), needs=[PVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir)
+   AODtask = createTask(name='aod_'+str(tf), needs=[PVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["AOD"])
    AODtask['cmd'] = ' echo "Would do AOD (enable later)" '
    workflow['stages'].append(AODtask)
 
