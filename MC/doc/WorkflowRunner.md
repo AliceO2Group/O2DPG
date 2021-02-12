@@ -123,14 +123,17 @@ Redo a certain task in the workflow and all its direct or indirect dependencies
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --rerun-from tpcdigi_1
 ```
 
-## Future targeted features:
-
-Run until everyting marked "RECO" is done
+Run workflow for targets matching trdtrap (regular expression works)
 ```
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --stages RECO
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-tasks trdtrap
 ```
 
-Rerun worflow until AOD, skipping all tasks already done
+Run everyting marked "RECO"
 ```
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --stages AOD
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-stages RECO
+```
+
+Rerun worflow until AOD, skipping all tasks already done (task skipping is default)
+```
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-stages AOD
 ```

@@ -48,7 +48,6 @@ class Graph:
 # Recursive function to find all topological orderings of a given DAG
 def findAllTopologicalOrders(graph, path, discovered, N, allpaths, maxnumber=1):
     if len(allpaths) >= maxnumber:
-        # print ('More than 2000 paths found')
         return
     
     # do for every vertex
@@ -103,7 +102,6 @@ def printAllTopologicalOrders(graph, maxnumber=1):
 def analyseGraph(edges, nodes):
     # Number of nodes in the graph
     N = len(nodes)
-            
 
     # candidate list trivial
     nextjobtrivial = { n:[] for n in nodes }
@@ -114,24 +112,10 @@ def analyseGraph(edges, nodes):
         if nextjobtrivial[-1].count(e[1]):
             nextjobtrivial[-1].remove(e[1])
     
-    # find topological orderings of the graph -> not used for moment
+    # find topological orderings of the graph
     # create a graph from edges
     graph = Graph(edges, N)
     orderings = printAllTopologicalOrders(graph)
-    # find out "can be followed by" for each node
-    # can be followed does not mean that all requirements are met though
-    # nextjob={}
-    # for plan in allorderings:
-    #    previous = -1 # means start
-    #    for e in plan:
-    #        if nextjob.get(previous)!=None:
-    #            nextjob[previous].add(e)
-    #        else:
-    #            nextjob[previous]=set()
-    #            nextjob[previous].add(e)
-    #        previous=e
-            
-    # print(nextjob)
             
     return (orderings, nextjobtrivial)
 
@@ -177,27 +161,90 @@ def build_graph(taskuniverse, workflowspec):
         
 
 # loads the workflow specification
-# returns a tuple of (all_topological_ordering, possible_next_job_dict, nodeset)
 def load_workflow(workflowfile):
     fp=open(workflowfile)
     workflowspec=json.load(fp)
     return workflowspec
 
 
+# filters the original workflowspec according to wanted targets or labels
+# returns a new workflowspec
+def filter_workflow(workflowspec, targets=[], targetlabels=[]):
+    if len(targets)==0:
+       return workflowspec
+    if len(targetlabels)==0 and len(targets)==1 and targets[0]=="*":
+       return workflowspec
+
+    transformedworkflowspec = workflowspec
+
+    def task_matches(t):
+        for filt in targets:
+            if filt=="*":
+                return True
+            if re.match(filt, t)!=None:
+                return True
+        return False
+
+    def task_matches_labels(t):
+        # when no labels are given at all it's ok
+        if len(targetlabels)==0:
+            return True
+
+        for l in t['labels']:
+            if targetlabels.count(l)!=0:
+                return True
+        return False
+    
+    # The following sequence of operations works and is somewhat structured.
+    # However, it builds lookups used elsewhere as well, so some CPU might be saved by reusing
+    # some structures across functions or by doing less passes on the data.
+
+    # helper lookup
+    tasknametoid = { t['name']:i for i, t in enumerate(workflowspec['stages'],0) }
+
+    # build full target list
+    full_target_list = [ t for t in workflowspec['stages'] if task_matches(t['name']) and task_matches_labels(t) ]
+    full_target_name_list = [ t['name'] for t in full_target_list ]
+
+    # build full dependency list for a task t
+    def getallrequirements(t):
+        _l=[]
+        for r in t['needs']:
+            fulltask = workflowspec['stages'][tasknametoid[r]]
+            _l.append(fulltask)
+            _l=_l+getallrequirements(fulltask)
+        return _l
+
+    full_requirements_list = [ getallrequirements(t) for t in full_target_list ]
+
+    # make flat and fetch names only
+    full_requirements_name_list = list(set([ item['name'] for sublist in full_requirements_list for item in sublist ]))
+
+    # inner "lambda" helper answering if a task "name" is needed by given targets
+    def needed_by_targets(name):
+        if full_target_name_list.count(name)!=0:
+            return True
+        if full_requirements_name_list.count(name)!=0:
+            return True
+        return False
+
+    # we finaly copy everything matching the targets as well
+    # as all their requirements
+    transformedworkflowspec['stages']=[ l for l in workflowspec['stages'] if needed_by_targets(l['name']) ]
+    return transformedworkflowspec
+
+
 # builds topological orderings (for each timeframe)    
-def build_topological_orderings(workflowspec):
+def build_dag_properties(workflowspec):
     globaltaskuniverse = [ (l, i) for i, l in enumerate(workflowspec['stages'], 1) ]
     timeframeset = set( l['timeframe'] for l in workflowspec['stages'] )
 
-    # timeframes are independent so we can restrict graph to them
-    # (this makes the graph analysis less computational/combinatorial)
-    timeframe_task_universe = { tf:[ (l, i) for i, l in enumerate(workflowspec['stages'], 1) if (l['timeframe']==tf or l['timeframe']==-1) ]  for tf in timeframeset if tf!=-1 } 
     edges, nodes = build_graph(globaltaskuniverse, workflowspec)
     tup = analyseGraph(edges, nodes)
     # 
     global_next_tasks = tup[1]
 
-    # weight can be anything ... for the moment we just prefer to stay within a timeframe
+    # weight influences scheduling order can be anything user defined ... for the moment we just prefer to stay within a timeframe
     def getweight(tid):
         return globaltaskuniverse[tid][0]['timeframe']
     
@@ -220,7 +267,13 @@ class WorkflowExecutor:
       self.args=args
       self.workflowfile = workflowfile
       self.workflowspec = load_workflow(workflowfile)
-      workflow = build_topological_orderings(self.workflowspec)
+      self.workflowspec = filter_workflow(self.workflowspec, args.target_tasks, args.target_labels)
+
+      if len(self.workflowspec['stages']) == 0:
+          print ('Workflow is empty. Nothing to do')
+          exit (0)
+      
+      workflow = build_dag_properties(self.workflowspec)
       if args.visualize_workflow:
           draw_workflow(self.workflowspec)
       self.possiblenexttask = workflow['nexttasks']
@@ -392,7 +445,7 @@ class WorkflowExecutor:
         if args.list_tasks:
           print ('List of tasks in this workflow:')
           for i in self.workflowspec['stages']:
-              print (i['name'])
+              print (i['name'] + '  (' + str(i['labels']) + ')')
           exit (0)
  
         if args.produce_script != None:
@@ -460,17 +513,19 @@ parser = argparse.ArgumentParser(description='Parallel execution of a (O2-DPG) D
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument('-f','--workflowfile', help='Input workflow file name', required=True)
-parser.add_argument('-jmax','--maxjobs', help='number of maximal parallel tasks', default=100)
-parser.add_argument('--dry-run', action='store_true', help='show what you would do')
-parser.add_argument('--visualize-workflow', action='store_true', help='saves a graph visualization of workflow')
-parser.add_argument('--target-stages', help='Runs the pipeline by target labels (example "TPC" or "digi")')
+parser.add_argument('-jmax','--maxjobs', help='Number of maximal parallel tasks.', default=100)
+parser.add_argument('--dry-run', action='store_true', help='Show what you would do.')
+parser.add_argument('--visualize-workflow', action='store_true', help='Saves a graph visualization of workflow.')
+parser.add_argument('--target-labels', nargs='+', help='Runs the pipeline by target labels (example "TPC" or "DIGI").\
+                    This condition is used as logical AND together with --target-tasks.', default=[])
+parser.add_argument('-tt','--target-tasks', nargs='+', help='Runs the pipeline by target tasks (example "tpcdigi"). By default everything in the graph is run. Regular expressions supported.', default=["*"])
 parser.add_argument('--produce-script', help='Produces a shell script that runs the workflow in serialized manner and quits.')
 parser.add_argument('--rerun-from', help='Reruns the workflow starting from given task. All dependent jobs will be rerun.')
 parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit.', action='store_true')
 
 parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint', default=max_system_mem)
 args = parser.parse_args()
-print (args)            
+print (args)
 
 logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
 executor=WorkflowExecutor(args.workflowfile,jmax=args.maxjobs,args=args)
