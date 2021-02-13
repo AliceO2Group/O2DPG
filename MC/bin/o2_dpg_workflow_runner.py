@@ -20,7 +20,7 @@ except ImportError:
 # Code section to find all topological orderings
 # of a DAG. This is used to know when we can schedule
 # things in parallel.
-#
+# Taken from https://www.geeksforgeeks.org/all-topological-sorts-of-a-directed-acyclic-graph/
 
 # class to represent a graph object
 class Graph:
@@ -96,6 +96,8 @@ def printAllTopologicalOrders(graph, maxnumber=1):
     # find all topological ordering and print them
     findAllTopologicalOrders(graph, path, discovered, N, allpaths, maxnumber=maxnumber)
     return allpaths
+
+# <--- end code section for topological sorts
 
 # wrapper taking some edges, constructing the graph,
 # obtain all topological orderings and some other helper data structures
@@ -311,14 +313,18 @@ class WorkflowExecutor:
 
        return list(set(daughterlist))
 
+    def get_done_filename(self, tid):
+        name = self.workflowspec['stages'][tid]['name']
+        workdir = self.workflowspec['stages'][tid]['cwd']
+        # name and workdir define the "done" file as used by taskwrapper
+        # this assumes that taskwrapper is used to actually check if something is to be rerun
+        done_filename = workdir + '/' + name + '.log_done'
+        return done_filename
+
     # removes the done flag from tasks that need to be run again
     def remove_done_flag(self, listoftaskids):
        for tid in listoftaskids:
-          name = self.workflowspec['stages'][tid]['name']
-          workdir = self.workflowspec['stages'][tid]['cwd']
-          # name and workdir define the "done" file as used by taskwrapper
-          # this assumes that taskwrapper is used to actually check if something is to be rerun
-          done_filename = workdir + '/' + name + '.log_done'
+          done_filename = self.get_done_filename(tid)
           if args.dry_run:
               print ("Would mark task " + name + " as to be done again")
           else:
@@ -343,8 +349,13 @@ class WorkflowExecutor:
       if args.dry_run:
           drycommand="echo \' " + str(self.scheduling_iteration) + " : would do " + str(self.workflowspec['stages'][tid]['name']) + "\'"
           return subprocess.Popen(['/bin/bash','-c',drycommand], cwd=workdir)
-                                  
-      return subprocess.Popen(['/bin/bash','-c',c], cwd=workdir)
+
+      taskenv = os.environ.copy()
+      # add task specific environment
+      if self.workflowspec['stages'][tid].get('env')!=None:
+          taskenv.update(self.workflowspec['stages'][tid]['env'])
+
+      return subprocess.Popen(['/bin/bash','-c',c], cwd=workdir, env=taskenv)
 
     def ok_to_submit(self, tid):
       if self.curmembooked + self.maxmemperid[tid] < self.memlimit:
@@ -352,12 +363,25 @@ class WorkflowExecutor:
       else:
         return False
 
-    def try_job_from_candidates(self, taskcandidates, process_list):
+    def ok_to_skip(self, tid):
+        done_filename = self.get_done_filename(tid)
+        if os.path.exists(done_filename) and os.path.isfile(done_filename):
+            return True
+        return False
+
+    def try_job_from_candidates(self, taskcandidates, process_list, finished):
        self.scheduling_iteration = self.scheduling_iteration + 1
        initialcandidates=taskcandidates.copy()
        for tid in initialcandidates:
           logging.debug ("trying to submit" + str(tid))
-          if self.ok_to_submit(tid) and len(process_list) < self.max_jobs_parallel:
+          # check early if we could skip
+          # better to do it here (instead of relying on taskwrapper)
+          if self.ok_to_skip(tid):
+              finished.append(tid)
+              taskcandidates.remove(tid)
+              continue
+
+          elif self.ok_to_submit(tid) and len(process_list) < self.max_jobs_parallel:
             p=self.submit(tid)
             if p!=None:
                 self.curmembooked+=self.maxmemperid[tid]
@@ -375,8 +399,10 @@ class WorkflowExecutor:
 
     def waitforany(self, process_list, finished):
        failuredetected = False
+       if len(process_list)==0:
+           return False
+
        for p in list(process_list):
-          logging.debug ("polling" + str(p))
           returncode = 0
           if not self.args.dry_run:
               returncode = p[1].poll()
@@ -407,15 +433,26 @@ class WorkflowExecutor:
 
     def emit_code_for_task(self, tid, lines):
         logging.debug("Submitting task " + str(self.idtotask[tid]))
-        c = self.workflowspec['stages'][tid]['cmd']
-        workdir = self.workflowspec['stages'][tid]['cwd']
+        taskspec = self.workflowspec['stages'][tid]
+        c = taskspec['cmd']
+        workdir = taskspec['cwd']
+        env = taskspec.get('env')
         # in general:
         # try to make folder
         lines.append('[ ! -d ' + workdir + ' ] && mkdir ' + workdir + '\n')
         # cd folder
         lines.append('cd ' + workdir + '\n')
+        # set local environment
+        if env!=None:
+            for e in env.items():
+                lines.append('export ' + e[0] + '=' + str(e[1]) + '\n')
         # do command
         lines.append(c + '\n')
+        # unset local environment
+        if env!=None:
+            for e in env.items():
+                lines.append('unset ' + e[0] + '\n')
+
         # cd back
         lines.append('cd $OLDPWD\n')
 
@@ -473,16 +510,18 @@ class WorkflowExecutor:
             # remove weights
             candidates = [ tid for tid,_ in candidates ]
 
-            logging.debug(candidates)
-            self.try_job_from_candidates(candidates, process_list)
-        
             finished = []
-            while self.waitforany(process_list, finished):
+            logging.debug(candidates)
+            self.try_job_from_candidates(candidates, process_list, finished)
+
+            finished_from_started = []
+            while self.waitforany(process_list, finished_from_started):
                 if not args.dry_run:
-                    time.sleep(1)
+                    time.sleep(1) # <--- make this incremental (small wait at beginning)
                 else:
                     time.sleep(0.01)
-    
+
+            finished = finished + finished_from_started
             logging.debug("finished " + str( finished))
             finishedtasks=finishedtasks + finished
     
