@@ -9,6 +9,8 @@ import time
 import json
 import logging
 import os
+import signal
+import sys
 try:
     from graphviz import Digraph
     havegraphviz=True
@@ -286,16 +288,46 @@ class WorkflowExecutor:
       self.tasktoid = {}
       for i in range(len(self.taskuniverse)):
           self.tasktoid[self.taskuniverse[i]]=i
-          self.idtotask[i]=self.taskuniverse[i] 
+          self.idtotask[i]=self.taskuniverse[i]
 
       self.maxmemperid = [ self.workflowspec['stages'][tid]['resources']['mem'] for tid in range(len(self.taskuniverse)) ]
+      self.cpuperid = [ self.workflowspec['stages'][tid]['resources']['cpu'] for tid in range(len(self.taskuniverse)) ]
       self.curmembooked = 0
-      self.memlimit = args.mem_limit # some configurable number
+      self.curcpubooked = 0
+      self.memlimit = float(args.mem_limit) # some configurable number
+      self.cpulimit = float(args.cpu_limit)
       self.procstatus = { tid:'ToDo' for tid in range(len(self.workflowspec['stages'])) }
       self.taskneeds= { t:set(self.getallrequirements(t)) for t in self.taskuniverse }
       self.stoponfailure = True
       self.max_jobs_parallel = int(jmax)
       self.scheduling_iteration = 0
+      self.process_list = []  # list of currently scheduled tasks with normal priority
+      self.backfill_process_list = [] # list of curently scheduled tasks with low backfill priority (not sure this is needed)
+      self.pid_to_psutilsproc = {}  # cache of putilsproc for resource monitoring
+      self.pid_to_files = {} # we can auto-detect what files are produced by which task (at least to some extent)
+      self.pid_to_connections = {} # we can auto-detect what connections are opened by which task (at least to some extent)
+      signal.signal(signal.SIGINT, self.SIGHandler)
+      signal.siginterrupt(signal.SIGINT, False)
+      self.nicevalues = [ 0 for tid in range(len(self.taskuniverse)) ]
+
+    def SIGHandler(self, signum, frame):
+       # basically forcing shut down of all child processes
+       logging.info("Signal " + str(signum) + " caught")
+       procs = psutil.Process().children(recursive=True)
+       for p in procs:
+           logging.info("Terminating " + str(p))
+           try:
+               p.terminate()
+           except psutil.NoSuchProcess:
+               pass
+       gone, alive = psutil.wait_procs(procs, timeout=3)
+       for p in alive:
+           logging.info("Killing " + str(p))
+           try:
+               p.kill()
+           except psutil.NoSuchProcess:
+               pass
+       exit (1)
 
     def getallrequirements(self, t):
         l=[]
@@ -325,6 +357,7 @@ class WorkflowExecutor:
     def remove_done_flag(self, listoftaskids):
        for tid in listoftaskids:
           done_filename = self.get_done_filename(tid)
+          name=self.workflowspec['stages'][tid]['name']
           if args.dry_run:
               print ("Would mark task " + name + " as to be done again")
           else:
@@ -333,8 +366,8 @@ class WorkflowExecutor:
                   os.remove(done_filename)
       
     # submits a task as subprocess and records Popen instance
-    def submit(self, tid):
-      logging.debug("Submitting task " + str(self.idtotask[tid]))
+    def submit(self, tid, nice=0):
+      logging.debug("Submitting task " + str(self.idtotask[tid]) + " with nice value " + str(nice))
       c = self.workflowspec['stages'][tid]['cmd']
       workdir = self.workflowspec['stages'][tid]['cwd']
       if not workdir=='':
@@ -355,13 +388,17 @@ class WorkflowExecutor:
       if self.workflowspec['stages'][tid].get('env')!=None:
           taskenv.update(self.workflowspec['stages'][tid]['env'])
 
-      return subprocess.Popen(['/bin/bash','-c',c], cwd=workdir, env=taskenv)
+      p = psutil.Popen(['/bin/bash','-c',c], cwd=workdir, env=taskenv)
+      p.nice(nice)
+      return p
 
-    def ok_to_submit(self, tid):
-      if self.curmembooked + self.maxmemperid[tid] < self.memlimit:
-        return True
-      else:
-        return False
+    def ok_to_submit(self, tid, softcpufactor=1, softmemfactor=1):
+      # analyse CPU
+      okcpu = (self.curcpubooked + float(self.cpuperid[tid]) <= softcpufactor*self.cpulimit)
+      # analyse MEM
+      okmem = (self.curmembooked + float(self.maxmemperid[tid]) <= softmemfactor*self.memlimit)
+      logging.debug ('Condition check for  ' + str(tid) + ':' + str(self.idtotask[tid]) + ' CPU ' + str(okcpu) + ' MEM ' + str(okmem))
+      return (okcpu and okmem)
 
     def ok_to_skip(self, tid):
         done_filename = self.get_done_filename(tid)
@@ -371,9 +408,11 @@ class WorkflowExecutor:
 
     def try_job_from_candidates(self, taskcandidates, process_list, finished):
        self.scheduling_iteration = self.scheduling_iteration + 1
+
+       # the ordinary process list part
        initialcandidates=taskcandidates.copy()
        for tid in initialcandidates:
-          logging.debug ("trying to submit" + str(tid))
+          logging.debug ("trying to submit " + str(tid) + ':' + str(self.idtotask[tid]))
           # check early if we could skip
           # better to do it here (instead of relying on taskwrapper)
           if self.ok_to_skip(tid):
@@ -381,14 +420,34 @@ class WorkflowExecutor:
               taskcandidates.remove(tid)
               continue
 
-          elif self.ok_to_submit(tid) and len(process_list) < self.max_jobs_parallel:
+          elif self.ok_to_submit(tid) and (len(self.process_list) + len(self.backfill_process_list) < self.max_jobs_parallel):
             p=self.submit(tid)
             if p!=None:
-                self.curmembooked+=self.maxmemperid[tid]
-                process_list.append((tid,p))
+                self.curmembooked+=float(self.maxmemperid[tid])
+                self.curcpubooked+=float(self.cpuperid[tid])
+                self.process_list.append((tid,p))
                 taskcandidates.remove(tid)
+                # minimal delay
+                time.sleep(0.1)
           else:
-             break
+             break #---> we break at first failure assuming some priority (other jobs may come in via backfill)
+
+       # the backfill part for remaining candidates
+       initialcandidates=taskcandidates.copy()
+       for tid in initialcandidates:
+          logging.debug ("trying to backfill submit" + str(tid) + ':' + str(self.idtotask[tid]))
+
+          if self.ok_to_submit(tid, softcpufactor=1.5) and (len(self.process_list) + len(self.backfill_process_list)) < self.max_jobs_parallel:
+            p=self.submit(tid, 19)
+            if p!=None:
+                self.curmembooked+=float(self.maxmemperid[tid])
+                self.curcpubooked+=float(self.cpuperid[tid])
+                self.process_list.append((tid,p))
+                taskcandidates.remove(tid) #-> not sure about this one
+                # minimal delay
+                time.sleep(0.1)
+          else:
+             continue
 
     def stop_pipeline_and_exit(self, process_list):
         # kill all remaining jobs
@@ -396,6 +455,78 @@ class WorkflowExecutor:
            p[1].kill()
 
         exit(1)
+
+
+    def monitor(self, process_list):
+        globalCPU=0.
+        globalPSS=0.
+        resources_per_task = {}
+        for tid, proc in process_list:
+            # proc is Popen object
+            pid=proc.pid
+            if self.pid_to_files.get(pid)==None:
+                self.pid_to_files[pid]=set()
+                self.pid_to_connections[pid]=set()
+            try:
+                psutilProcs = [ proc ]
+                # use psutil for CPU measurement
+                psutilProcs = psutilProcs + proc.children(recursive=True)
+            except psutil.NoSuchProcess:
+                continue
+
+            # accumulate total metrics (CPU, memory)
+            totalCPU = 0.
+            totalPSS = 0.
+            totalSWAP = 0.
+            totalUSS = 0.
+            for p in psutilProcs:
+                try:
+                    for f in p.open_files():
+                        self.pid_to_files[pid].add(str(f.path)+'_'+str(f.mode))
+                    for f in p.connections(kind="all"):
+                        remote=f.raddr
+                        if remote==None:
+                            remote='none'
+                        self.pid_to_connections[pid].add(str(f.type)+"_"+str(f.laddr)+"_"+str(remote))
+                except Exception:
+                    pass
+
+                # MEMORY part
+                try:
+                    fullmem=p.memory_full_info()
+                    totalPSS=totalPSS + fullmem.pss
+                    totalSWAP=totalPSS + fullmem.swap
+                    totalUSS=totalUSS + fullmem.uss
+                except psutil.NoSuchProcess:
+                    pass
+
+                # CPU part
+                # fetch existing proc or insert
+                cachedproc = self.pid_to_psutilsproc.get(p.pid)
+                if cachedproc!=None:
+                    try:
+                        thiscpu = cachedproc.cpu_percent(interval=None)
+                    except psutil.NoSuchProcess:
+                        thiscpu = 0.
+                    totalCPU = totalCPU + thiscpu
+                else:
+                    self.pid_to_psutilsproc[p.pid] = p
+                    try:
+                        self.pid_to_psutilsproc[p.pid].cpu_percent()
+                    except psutil.NoSuchProcess:
+                        pass
+
+            resources_per_task[tid]={'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS/1024./1024., 'pss':totalPSS/1024./1024, 'nice':proc.nice(), 'swap':totalSWAP}
+            # print (resources_per_task[tid])
+            globalCPU=globalCPU + totalCPU
+            globalPSS=globalPSS + totalPSS
+
+        # print ("globalCPU " + str(globalCPU) + ' in ' + str(len(process_list)) + ' tasks ' + str(self.curmembooked) + ',' + str(self.curcpubooked))
+        globalPSS = globalPSS/1024./1024.
+        # print ("globalPSS " + str(globalPSS))
+        if globalPSS > self.memlimit:
+            print('*** MEMORY LIMIT PASSED !! ***')
+            # --> We could use this for corrective actions such as killing jobs currently back-filling
 
     def waitforany(self, process_list, finished):
        failuredetected = False
@@ -407,9 +538,10 @@ class WorkflowExecutor:
           if not self.args.dry_run:
               returncode = p[1].poll()
           if returncode!=None:
-            logging.info ('Task' + str(self.idtotask[p[0]]) + ' finished with status ' + str(returncode))
+            logging.info ('Task' + str(p[1].pid) + ' ' + str(self.idtotask[p[0]]) + ' finished with status ' + str(returncode))
             # account for cleared resources
-            self.curmembooked-=self.maxmemperid[p[0]]
+            self.curmembooked-=float(self.maxmemperid[p[0]])
+            self.curcpubooked-=float(self.cpuperid[p[0]])
             self.procstatus[p[0]]='Done'
             finished.append(p[0])
             process_list.remove(p)
@@ -417,11 +549,60 @@ class WorkflowExecutor:
                failuredetected = True      
     
        if failuredetected and self.stoponfailure:
-          logging.info('Stoping pipeline due to failure in a stage')
+          logging.info('Stoping pipeline due to failure in a stage PID')
+          # self.analyse_files_and_connections()
           self.stop_pipeline_and_exit(process_list)
 
        # empty finished means we have to wait more        
        return len(finished)==0
+
+    def analyse_files_and_connections(self):
+        for p,s in self.pid_to_files.items():
+            for f in s:
+                print("F" + str(f) + " : " + str(p))
+        for p,s in self.pid_to_connections.items():
+            for c in s:
+               print("C" + str(c) + " : " + str(p))
+            #print(str(p) + " CONS " + str(c))
+        try:
+            # check for intersections
+            for p1, s1 in self.pid_to_files.items():
+                for p2, s2 in self.pid_to_files.items():
+                    if p1!=p2:
+                        if type(s1) is set and type(s2) is set:
+                            if len(s1)>0 and len(s2)>0:
+                                try:
+                                    inters = s1.intersection(s2)
+                                except Exception:
+                                    print ('Exception during intersect inner')
+                                    pass
+                                if (len(inters)>0):
+                                    print ('FILE Intersection ' + str(p1) + ' ' + str(p2) + ' ' + str(inters))
+          # check for intersections
+            for p1, s1 in self.pid_to_connections.items():
+                for p2, s2 in self.pid_to_connections.items():
+                    if p1!=p2:
+                        if type(s1) is set and type(s2) is set:
+                            if len(s1)>0 and len(s2)>0:
+                                try:
+                                    inters = s1.intersection(s2)
+                                except Exception:
+                                    print ('Exception during intersect inner')
+                                    pass
+                                if (len(inters)>0):
+                                    print ('CON Intersection ' + str(p1) + ' ' + str(p2) + ' ' + str(inters))
+
+            # check for intersections
+            #for p1, s1 in slf.pid_to_files.items():
+            #    for p2, s2 in self.pid_to_files.items():
+            #        if p1!=p2 and len(s1.intersection(s2))!=0:
+            #            print ('Intersection found files ' + str(p1) + ' ' + str(p2) + ' ' + s1.intersection(s2))
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            print('Exception during intersect outer')
+            pass
 
     def is_good_candidate(self, candid, finishedtasks):
         if self.procstatus[candid] != 'ToDo':
@@ -477,6 +658,7 @@ class WorkflowExecutor:
 
 
     def execute(self):
+        psutil.cpu_percent(interval=None)
         os.environ['JOBUTILS_SKIPDONE'] = "ON"
         # some maintenance / init work
         if args.list_tasks:
@@ -497,56 +679,68 @@ class WorkflowExecutor:
               print('task ' + args.rerun_from + ' not found; cowardly refusing to do anything ')
               exit (1) 
 
+        # *****************
         # main control loop
+        # *****************
         currenttimeframe=1
         candidates = [ tid for tid in self.possiblenexttask[-1] ]
 
-        process_list=[] # list of tuples of nodes ids and Popen subprocess instances
+        self.process_list=[] # list of tuples of nodes ids and Popen subprocess instances
+
         finishedtasks=[]
-        while True:
-            # sort candidate list occurding to task weights
-            candidates = [ (tid, self.taskweights[tid]) for tid in candidates ]
-            candidates.sort(key=lambda tup: tup[1])
-            # remove weights
-            candidates = [ tid for tid,_ in candidates ]
+        try:
 
-            finished = []
-            logging.debug(candidates)
-            self.try_job_from_candidates(candidates, process_list, finished)
+            while True:
+                # sort candidate list according to task weights
+                candidates = [ (tid, self.taskweights[tid]) for tid in candidates ]
+                candidates.sort(key=lambda tup: tup[1])
+                # remove weights
+                candidates = [ tid for tid,_ in candidates ]
 
-            finished_from_started = []
-            while self.waitforany(process_list, finished_from_started):
-                if not args.dry_run:
-                    time.sleep(1) # <--- make this incremental (small wait at beginning)
-                else:
-                    time.sleep(0.01)
+                finished = []
+                logging.debug(candidates)
+                self.try_job_from_candidates(candidates, self.process_list, finished)
+            
+                finished_from_started = []
+                while self.waitforany(self.process_list, finished_from_started):
+                    if not args.dry_run:
+                        self.monitor(self.process_list) #  ---> make async to normal operation?
+                        time.sleep(1) # <--- make this incremental (small wait at beginning)
+                    else:
+                        time.sleep(0.01)
 
-            finished = finished + finished_from_started
-            logging.debug("finished " + str( finished))
-            finishedtasks=finishedtasks + finished
+                finished = finished + finished_from_started
+                logging.debug("finished " + str( finished))
+                finishedtasks=finishedtasks + finished
     
-            # someone returned
-            # new candidates
-            for tid in finished:
-                if self.possiblenexttask.get(tid)!=None:
-                    potential_candidates=list(self.possiblenexttask[tid])
-                    for candid in potential_candidates:
-                    # try to see if this is really a candidate:
-                        if self.is_good_candidate(candid, finishedtasks) and candidates.count(candid)==0:
-                            candidates.append(candid)
+                # someone returned
+                # new candidates
+                for tid in finished:
+                    if self.possiblenexttask.get(tid)!=None:
+                        potential_candidates=list(self.possiblenexttask[tid])
+                        for candid in potential_candidates:
+                        # try to see if this is really a candidate:
+                            if self.is_good_candidate(candid, finishedtasks) and candidates.count(candid)==0:
+                                candidates.append(candid)
     
-            logging.debug("New candidates " + str( candidates))
+                logging.debug("New candidates " + str( candidates))
     
-            if len(candidates)==0 and len(process_list)==0:
-                break
+                if len(candidates)==0 and len(self.process_list)==0:
+                   break
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            print ('Cleaning up ')
+
+            self.SIGHandler(0,0)
+
+        print ('\n**** Pipeline done *****\n')
+        # self.analyse_files_and_connections()
 
 import argparse
-try:
-    from psutil import virtual_memory
-    max_system_mem=virtual_memory().total
-except ImportError:
-    # let's assume 16GB
-    max_system_mem=16*1024*1024*1024
+import psutil
+max_system_mem=psutil.virtual_memory().total
 
 parser = argparse.ArgumentParser(description='Parallel execution of a (O2-DPG) DAG data/job pipeline under resource contraints.', 
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -563,9 +757,17 @@ parser.add_argument('--rerun-from', help='Reruns the workflow starting from give
 parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit.', action='store_true')
 
 parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint', default=max_system_mem)
+parser.add_argument('--cpu-limit', help='Set CPU limit (core count)', default=8)
+parser.add_argument('--cgroup', help='Execute pipeline under a given cgroup (e.g., 8coregrid) emulating resource constraints. This must exist and the tasks file must be writable to with the current user.')
 args = parser.parse_args()
 print (args)
 
-logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
+if args.cgroup!=None:
+    myPID=os.getpid()
+    command="echo " + str(myPID) + " > /sys/fs/cgroup/cpuset/"+args.cgroup+"/tasks"
+    logging.info("applying cgroups " + command)
+    os.system(command)
+
+logging.basicConfig(filename='pipeliner_runner.log', filemode='w', level=logging.DEBUG)
 executor=WorkflowExecutor(args.workflowfile,jmax=args.maxjobs,args=args)
 executor.execute()
