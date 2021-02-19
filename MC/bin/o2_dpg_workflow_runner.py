@@ -101,6 +101,16 @@ def printAllTopologicalOrders(graph, maxnumber=1):
 
 # <--- end code section for topological sorts
 
+# find all tasks that depend on a given task (id)
+def find_all_dependent_tasks(possiblenexttask, tid):
+    daughterlist=[tid]
+    # possibly recurse
+    for n in possiblenexttask[tid]:
+        daughterlist = daughterlist + find_all_dependent_tasks(n)
+
+    return list(set(daughterlist))
+
+
 # wrapper taking some edges, constructing the graph,
 # obtain all topological orderings and some other helper data structures
 def analyseGraph(edges, nodes):
@@ -335,15 +345,6 @@ class WorkflowExecutor:
             l.append(r)
             l=l+self.getallrequirements(r)
         return l
-
-    # find all tasks that depend on a given task (id)
-    def find_all_dependent_tasks(self, tid):
-       daughterlist=[tid]
-       # possibly recurse
-       for n in self.possiblenexttask[tid]:
-         daughterlist = daughterlist + self.find_all_dependent_tasks(n)
-
-       return list(set(daughterlist))
 
     def get_done_filename(self, tid):
         name = self.workflowspec['stages'][tid]['name']
@@ -674,7 +675,7 @@ class WorkflowExecutor:
         if args.rerun_from:
           if self.tasktoid.get(args.rerun_from)!=None:
               taskid=self.tasktoid[args.rerun_from]
-              self.remove_done_flag(self.find_all_dependent_tasks(taskid))
+              self.remove_done_flag(find_all_dependent_tasks(self.possiblenexttask, taskid))
           else:
               print('task ' + args.rerun_from + ' not found; cowardly refusing to do anything ')
               exit (1) 
