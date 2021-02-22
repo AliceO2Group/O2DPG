@@ -52,11 +52,11 @@ def createTask(name='', needs=[], tf=-1, cwd='./', lab=[], cpu=0, mem=0):
 
 def getDPL_global_options(bigshm=False):
    if args.noIPC!=None:
-      return "-b --run --rate 1 --no-IPC"
+      return "-b --run --no-IPC"
    if bigshm:
-      return "-b --run --rate 1 --shm-segment-size ${SHMSIZE:-50000000000} --session " + str(taskcounter) + ' --driver-client-backend ws://'
+      return "-b --run --shm-segment-size ${SHMSIZE:-50000000000} --session " + str(taskcounter) + ' --driver-client-backend ws://'
    else:
-      return "-b --run --rate 1 --session " + str(taskcounter) + ' --driver-client-backend ws://'
+      return "-b --run --session " + str(taskcounter) + ' --driver-client-backend ws://'
 
 doembedding=True if args.embedding=='True' or args.embedding==True else False
 
@@ -193,7 +193,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options()
    workflow['stages'].append(TOFRECOtask)
 
-   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=[ITSTPCMATCHtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='4')
+   TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
+   TOFTPCMATCHERtask['cmd'] = 'o2-tof-matcher-tpc ' + getDPL_global_options()
+   workflow['stages'].append(TOFTPCMATCHERtask)
+
+   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=[ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='4')
    PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' + getDPL_global_options()
    workflow['stages'].append(PVFINDERtask)
  
@@ -204,7 +208,7 @@ for tf in range(1, NTIMEFRAMES + 1):
   # enable later. It still has memory access problems 
   # taskwrapper aod_${tf}.log o2-aod-producer-workflow --aod-writer-keep dangling --aod-writer-resfile "AO2D" --aod-writer-resmode UPDATE --aod-timeframe-id ${tf} $gloOpt
    AODtask = createTask(name='aod_'+str(tf), needs=[PVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["AOD"])
-   AODtask['cmd'] = ' echo "Would do AOD (enable later)" '
+   AODtask['cmd'] = 'o2-aod-producer-workflow --aod-writer-keep dangling --aod-writer-resfile \"AO2D\" --aod-writer-resmode UPDATE --aod-timeframe-id ' + str(tf) + ' ' + getDPL_global_options() # echo "Would do AOD (enable later)" '
    workflow['stages'].append(AODtask)
 
    # cleanup step for this timeframe (we cleanup disc space early so as to make possible checkpoint dumps smaller)
