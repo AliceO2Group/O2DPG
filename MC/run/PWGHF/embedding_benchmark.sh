@@ -118,6 +118,11 @@ for tf in `seq 1 ${NTIMEFRAMES}`; do
   taskwrapper tofMatch_${tf}.log o2-tof-reco-workflow $gloOpt
   echo "Return status of its-tpc-tof match: $?"
 
+  echo "Running TPC-TOF macthing flow"
+  #needs results of TOF clusters data from o2-tof-reco-workflow and results of o2-tpc-reco-workflow
+  taskwrapper tofMatchTPC.log o2-tof-matcher-tpc $gloOpt
+  echo "Return status of o2-tof-matcher-tpc: $?"
+
   echo "Running primary vertex finding flow"
   #needs results of TPC-ITS matching and FIT workflows
   taskwrapper pvfinder_${tf}.log o2-primary-vertexing-workflow $gloOpt
