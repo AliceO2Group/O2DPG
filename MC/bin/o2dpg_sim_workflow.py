@@ -298,7 +298,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options()
    workflow['stages'].append(TOFRECOtask)
 
-   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=[ITSTPCMATCHtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='4')
+   TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
+   TOFTPCMATCHERtask['cmd'] = 'o2-tof-matcher-tpc ' + getDPL_global_options()
+   workflow['stages'].append(TOFTPCMATCHERtask)
+
+   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=[ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='4')
    PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' + getDPL_global_options()
    workflow['stages'].append(PVFINDERtask)
  
