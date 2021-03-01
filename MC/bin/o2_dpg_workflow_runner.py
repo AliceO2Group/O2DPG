@@ -749,12 +749,16 @@ class WorkflowExecutor:
             exit (0)
 
         if args.rerun_from:
-          if self.tasktoid.get(args.rerun_from)!=None:
-              taskid=self.tasktoid[args.rerun_from]
-              self.remove_done_flag(find_all_dependent_tasks(self.possiblenexttask, taskid))
-          else:
-              print('task ' + args.rerun_from + ' not found; cowardly refusing to do anything ')
-              exit (1) 
+          reruntaskfound=False
+          for task in self.workflowspec['stages']:
+              taskname=task['name']
+              if re.match(args.rerun_from, taskname):
+                reruntaskfound=True
+                taskid=self.tasktoid[taskname]
+                self.remove_done_flag(find_all_dependent_tasks(self.possiblenexttask, taskid))
+          if not reruntaskfound:
+              print('No task matching ' + args.rerun_from + ' found; cowardly refusing to do anything ')
+              exit (1)
 
         # *****************
         # main control loop
@@ -784,7 +788,7 @@ class WorkflowExecutor:
                         self.monitor(self.process_list) #  ---> make async to normal operation?
                         time.sleep(1) # <--- make this incremental (small wait at beginning)
                     else:
-                        time.sleep(0.01)
+                        time.sleep(0.001)
 
                 finished = finished + finished_from_started
                 actionlogger.debug("finished now :" + str(finished_from_started))
@@ -831,7 +835,7 @@ parser.add_argument('--target-labels', nargs='+', help='Runs the pipeline by tar
                     This condition is used as logical AND together with --target-tasks.', default=[])
 parser.add_argument('-tt','--target-tasks', nargs='+', help='Runs the pipeline by target tasks (example "tpcdigi"). By default everything in the graph is run. Regular expressions supported.', default=["*"])
 parser.add_argument('--produce-script', help='Produces a shell script that runs the workflow in serialized manner and quits.')
-parser.add_argument('--rerun-from', help='Reruns the workflow starting from given task. All dependent jobs will be rerun.')
+parser.add_argument('--rerun-from', help='Reruns the workflow starting from given task (or pattern). All dependent jobs will be rerun.')
 parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit.', action='store_true')
 
 parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint', default=max_system_mem)
