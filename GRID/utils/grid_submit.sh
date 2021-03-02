@@ -133,6 +133,7 @@ checkpoint_hook_ttlbased() {
   # do calculation with AWK
   CHECKPOINT=$(awk -v S="${SECONDS}" -v T="${JOBTTL}" '//{} END{if(S/T>0.8){print "OK"}}' < /dev/null);
   if [ "$CHECKPOINT" = "OK" ]; then
+    echo "**** TTL CLOSE - CHECKPOINTING *****"
     # upload
     text="CHECKPOINTING NOW"
     # resubmit
@@ -178,7 +179,7 @@ if [[ $ALIEN_PROC_ID ]]; then
   exec &> >(tee -a alien_log_${ALIEN_PROC_ID}.txt)
 fi
 
-JOBTTL=600
+JOBTTL=82000
 # this tells us to continue an existing job --> in this case we don't create a new workdir
 while [ $# -gt 0 ] ; do
     case $1 in
