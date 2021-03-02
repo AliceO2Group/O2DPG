@@ -430,8 +430,11 @@ class WorkflowExecutor:
           taskenv.update(self.workflowspec['stages'][tid]['env'])
 
       p = psutil.Popen(['/bin/bash','-c',c], cwd=workdir, env=taskenv)
-      p.nice(nice)
-      self.nicevalues[tid]=nice
+      try:
+          p.nice(nice)
+          self.nicevalues[tid]=nice
+      except (psutil.NoSuchProcess, psutil.AccessDenied):
+          self.nicevalues[tid]=0
       return p
 
     def ok_to_submit(self, tid, backfill=False):
