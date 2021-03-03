@@ -391,7 +391,7 @@ class WorkflowExecutor:
       self.pid_to_connections = {} # we can auto-detect what connections are opened by which task (at least to some extent)
       signal.signal(signal.SIGINT, self.SIGHandler)
       signal.siginterrupt(signal.SIGINT, False)
-      self.nicevalues = [ 0 for tid in range(len(self.taskuniverse)) ]
+      self.nicevalues = [ os.nice(0) for tid in range(len(self.taskuniverse)) ]
       self.internalmonitorcounter = 0
 
     def SIGHandler(self, signum, frame):
@@ -449,7 +449,7 @@ class WorkflowExecutor:
                   os.remove(done_filename)
       
     # submits a task as subprocess and records Popen instance
-    def submit(self, tid, nice=0):
+    def submit(self, tid, nice=os.nice(0)):
       actionlogger.debug("Submitting task " + str(self.idtotask[tid]) + " with nice value " + str(nice))
       c = self.workflowspec['stages'][tid]['cmd']
       workdir = self.workflowspec['stages'][tid]['cwd']
@@ -477,7 +477,7 @@ class WorkflowExecutor:
           self.nicevalues[tid]=nice
       except (psutil.NoSuchProcess, psutil.AccessDenied):
           actionlogger.error('Couldn\'t set nice value of ' + str(p.pid) + ' to ' + str(nice) + ' -- current value is ' + str(p.nice()))
-          self.nicevalues[tid]=0
+          self.nicevalues[tid]=os.nice(0)
       return p
 
     def ok_to_submit(self, tid, backfill=False):
@@ -635,7 +635,7 @@ class WorkflowExecutor:
             metriclogger.info(resources_per_task[tid])
             
         for r in resources_per_task.values():
-            if r['nice']==0:
+            if r['nice']==os.nice(0):
                 globalCPU+=r['cpu']
                 globalPSS+=r['pss']
             else:
