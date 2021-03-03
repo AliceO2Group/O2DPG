@@ -31,7 +31,7 @@ notify_mattermost() {
   set +x
   if [ "$MATTERMOSTHOOK" ]; then
     text=$1
-    COMMAND="curl -X POST -H 'Content-type: application/json' --data '{\"text\":\""${text}"\"}' "${MATTERMOSTHOOK}
+    COMMAND="curl -X POST -H 'Content-type: application/json' --data '{\"text\":\""${text}"\"}' "${MATTERMOSTHOOK}" &> /dev/null"
     eval "${COMMAND}"  
   fi
 }
@@ -42,13 +42,13 @@ starthook() {
 
 uploadlogs() {
   # MOMENTARILY WE ZIP ALL LOG FILES
-  zip logs_PROCID${ALIEN_PROC_ID:-0}_failure.zip *.log* *mergerlog* *serverlog* *workerlog* alien_log_${ALIEN_PROC_ID}_failure.txt
+  zip logs_PROCID${ALIEN_PROC_ID:-0}_failure.zip *.log* *mergerlog* *serverlog* *workerlog* alien_log_${ALIEN_PROC_ID:-0}_failure.txt
   [ "${ALIEN_JOB_OUTPUTDIR}" ] && upload_to_Alien logs_PROCID${ALIEN_PROC_ID:-0}_failure.zip  ${ALIEN_JOB_OUTPUTDIR}/
 }
 export -f uploadlogs
 failhook() {
   notify_mattermost "${ALIEN_PROC_ID}: **Failure** in stage $2"
-  cp alien_log_${ALIEN_PROC_ID}.txt logtmp_${ALIEN_PROC_ID}_failure.txt
+  cp alien_log_${ALIEN_PROC_ID:-0}.txt logtmp_${ALIEN_PROC_ID:-0}_failure.txt
 
   # MOMENTARILY WE ZIP ALL LOG FILES
   uploadlogs
@@ -121,11 +121,12 @@ checkpoint_hook_ttlbased() {
 
   # analyse CPU utilization
   corecount=$(grep "processor" /proc/cpuinfo | wc -l)
-  cpuusage=$(./analyse_CPU.py $2_cpuusage ${corecount})
+  path=$PWD
+  cpuusage=$(analyse_CPU.py $PWD/$2_cpuusage ${corecount} 2>/dev/null)
 
   # analyse memory util
-  maxmem=$(grep "PROCESS MAX MEM" $2 | awk '//{print $5}')
-  avgmem=$(grep "PROCESS AVG MEM" $2 | awk '//{print $5}')
+  maxmem=$(grep "PROCESS MAX MEM" ${path}/$2 | awk '//{print $5}')
+  avgmem=$(grep "PROCESS AVG MEM" ${path}/$2 | awk '//{print $5}')
 
   metrictext="#pdpmetric:${JOBLABEL},procid:${ALIEN_PROC_ID},CPU:${cpumodel},stage:$2,RC:${RC:-1},walltime:${walltime},${cpuusage},MAXMEM:${maxmem},AVGMEM:${avgmem}"
   notify_mattermost "${metrictext}"
@@ -174,10 +175,6 @@ export JOBUTILS_JOB_ENDHOOK=checkpoint_hook_ttlbased
 ONGRID=0
 [ "${JALIEN_TOKEN_CERT}" ] && ONGRID=1
 
-# All is redirected to log.txt but kept on stdout as well
-if [[ $ALIEN_PROC_ID ]]; then
-  exec &> >(tee -a alien_log_${ALIEN_PROC_ID}.txt)
-fi
 
 JOBTTL=82000
 # this tells us to continue an existing job --> in this case we don't create a new workdir
@@ -334,6 +331,10 @@ if [[ "${ONGRID}" == 0 ]]; then
   cd "${WORKDIR}" 2> /dev/null
 fi
 
+# All is redirected to log.txt but kept on stdout as well
+#if [[ $ALIEN_PROC_ID ]]; then
+ exec &> >(tee -a alien_log_${ALIEN_PROC_ID:-0}.txt)
+#fi
 
 # ----------- START JOB PREAMBLE  ----------------------------- 
 banner "Environment"
@@ -398,11 +399,12 @@ if [ "${ONGRID}" = "1" ]; then
 fi
 
 # ----------- DOWNLOAD ADDITIONAL HELPERS ----------------------------
-curl -o analyse_CPU.py https://raw.githubusercontent.com/sawenzel/AliceO2/swenzel/cpuana/Utilities/Tools/analyse_CPU.py
+curl -o analyse_CPU.py https://raw.githubusercontent.com/sawenzel/AliceO2/swenzel/cpuana/Utilities/Tools/analyse_CPU.py &> /dev/null
 chmod +x analyse_CPU.py
+export PATH=$PATH:$PWD
 export JOBUTILS_MONITORCPU=ON
 export JOBUTILS_WRAPPER_SLEEP=5
-export JOBUTILS_JOB_KILLINACTIVE=180 # kill inactive jobs after 3 minutes
+#export JOBUTILS_JOB_KILLINACTIVE=180 # kill inactive jobs after 3 minutes --> will be the task of pipeline runner? (or make it optional)
 export JOBUTILS_MONITORMEM=ON 
 
 # ----------- EXECUTE ACTUAL JOB  ------------------------------------ 
@@ -411,11 +413,16 @@ chmod +x ./alien_jobscript.sh
 ./alien_jobscript.sh
 
 # just to be sure that we get the logs
-cp alien_log_${ALIEN_PROC_ID}.txt logtmp_${ALIEN_PROC_ID}.txt
-[ "${ALIEN_JOB_OUTPUTDIR}" ] && upload_to_Alien logtmp_${ALIEN_PROC_ID}.txt ${ALIEN_JOB_OUTPUTDIR}/
+cp alien_log_${ALIEN_PROC_ID:-0}.txt logtmp_${ALIEN_PROC_ID:-0}.txt
+[ "${ALIEN_JOB_OUTPUTDIR}" ] && upload_to_Alien logtmp_${ALIEN_PROC_ID:-0}.txt ${ALIEN_JOB_OUTPUTDIR}/
 
-# MOMENTARILU WE ZIP ALL LOG FILES
-zip logs_PROCID${ALIEN_PROC_ID:-0}.zip *.log* *mergerlog* *serverlog* *workerlog* alien_log_${ALIEN_PROC_ID}.txt
+# MOMENTARILY WE ZIP ALL LOG FILES
+ziparchive=logs_PROCID${ALIEN_PROC_ID:-0}.zip
+find ./ -name "*.log*" -exec zip ${ziparchive} {} ';'
+find ./ -name "*mergerlog*" -exec zip ${ziparchive} {} ';'
+find ./ -name "*serverlog*" -exec zip ${ziparchive} {} ';'
+find ./ -name "*workerlog*" -exec zip ${ziparchive} {} ';'
+find ./ -name "alien_log*.txt" -exec zip ${ziparchive} {} ';'
 
 # We need to exit for the ALIEN JOB HANDLER!
 exit 0
