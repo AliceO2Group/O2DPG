@@ -15,8 +15,11 @@ parser.add_argument('-tf',help='number of timeframes', default=2)
 parser.add_argument('-j',help='number of workers (if applicable)', default=8)
 parser.add_argument('-e',help='simengine', default='TGeant4')
 parser.add_argument('-o',help='output workflow file', default='workflow.json')
+parser.add_argument('--rest-digi',action='store_true',help='treat smaller sensors in a single digitization')
 parser.add_argument('--embedding',help='whether to embedd into background', default=True) 
-parser.add_argument('--noIPC',help='disable shared memory in DPL') 
+parser.add_argument('--noIPC',help='disable shared memory in DPL')
+parser.add_argument('--upload-bkg-to',help='where to upload background files (alien)')
+parser.add_argument('--use-bkg-from',help='use background from GRID instead of simulating from scratch')
 args = parser.parse_args()
 print (args)
 
@@ -59,12 +62,51 @@ def getDPL_global_options(bigshm=False,nosmallrate=False):
       return "-b --run --session " + str(taskcounter) + ' --driver-client-backend ws://' + (' --rate 1','')[nosmallrate]
 
 doembedding=True if args.embedding=='True' or args.embedding==True else False
+usebkgcache=args.use_bkg_from!=None
 
 if doembedding:
-    # ---- background transport task -------
-    BKGtask=createTask(name='bkgsim', lab=["GEANT"], cpu='8')
-    BKGtask['cmd']='o2-sim -e ' + SIMENGINE + ' -j ' + str(NWORKERS) + ' -n ' + str(NBKGEVENTS) + ' -g pythia8hi ' +  str(MODULES) + ' -o bkg --configFile ${O2DPG_ROOT}/MC/config/common/ini/basic.ini'
-    workflow['stages'].append(BKGtask)
+    if not usebkgcache:
+       # ---- background transport task -------
+       BKGtask=createTask(name='bkgsim', lab=["GEANT"], cpu='8')
+       BKGtask['cmd']='o2-sim -e ' + SIMENGINE + ' -j ' + str(NWORKERS) + ' -n ' + str(NBKGEVENTS) + ' -g pythia8hi ' +  str(MODULES) + ' -o bkg --configFile ${O2DPG_ROOT}/MC/config/common/ini/basic.ini; for d in tf*; do ln -nfs bkg* ${d}/; done'
+       workflow['stages'].append(BKGtask)
+
+       if args.upload_bkg_to!=None:
+         BKGuploadtask=createTask(name='bkgupload', needs=[BKGtask['name']], cpu='0')
+         BKGuploadtask['cmd']='alien.py mkdir ' + args.upload_bkg_to + ';'
+         BKGuploadtask['cmd']+='alien.py cp -f bkg* ' + args.upload_bkg_to + ';'
+         workflow['stages'].append(BKGuploadtask)
+
+    else:
+       # when using background caches, we have multiple smaller tasks
+       # this split makes sense as they are needed at different stages
+       # 1: --> download bkg_MCHeader.root + grp + geometry
+       # 2: --> download bkg_Hit files (individually)
+       # 3: --> download bkg_Kinematics
+
+       # Step 1: header and link files
+       BKG_HEADER_task=createTask(name='bkgdownloadheader', cpu='0', lab=['BKGCACHE'])
+       BKG_HEADER_task['cmd']='alien.py cp ' + args.use_bkg_from + 'bkg_MCHeader.root .'
+       BKG_HEADER_task['cmd']=BKG_HEADER_task['cmd'] + ';alien.py cp ' + args.use_bkg_from + 'bkg_geometry.root .'
+       BKG_HEADER_task['cmd']=BKG_HEADER_task['cmd'] + ';alien.py cp ' + args.use_bkg_from + 'bkg_grp.root .'
+       workflow['stages'].append(BKG_HEADER_task)
+
+# we split some detectors for improved load balancing --> the precise list needs to be made consistent with geometry and active sensors
+smallsensorlist = [ "ITS", "TOF", "FT0", "FV0", "FDD", "MCH", "MID", "MFT", "HMP", "EMC", "PHS", "CPV" ]
+
+BKG_HITDOWNLOADER_TASKS={}
+for det in [ 'TPC', 'TRD' ] + smallsensorlist:
+   if usebkgcache:
+      BKG_HITDOWNLOADER_TASKS[det] = createTask(str(det) + 'hitdownload', cpu='0', lab=['BKGCACHE'])
+      BKG_HITDOWNLOADER_TASKS[det]['cmd'] = 'alien.py cp ' + args.use_bkg_from + 'bkg_Hits' + str(det) + '.root .' 
+      workflow['stages'].append(BKG_HITDOWNLOADER_TASKS[det])
+   else:
+      BKG_HITDOWNLOADER_TASKS[det] = None
+
+if usebkgcache:
+   BKG_KINEDOWNLOADER_TASK = createTask(name='bkgkinedownload', cpu='0', lab=['BKGCACHE'])
+   BKG_KINEDOWNLOADER_TASK['cmd'] = 'alien.py cp ' + args.use_bkg_from + 'bkg_Kine.root .'
+   workflow['stages'].append(BKG_KINEDOWNLOADER_TASK)
 
 # loop over timeframes
 for tf in range(1, NTIMEFRAMES + 1):
@@ -91,18 +133,15 @@ for tf in range(1, NTIMEFRAMES + 1):
 	     --ptHatMax=' + str(PTHATMAX)
    workflow['stages'].append(SGN_CONFIG_task) 
 
-   if doembedding:
-       # link background files to current working dir for this timeframe
-       LinkBKGtask=createTask(name='linkbkg_'+str(tf), needs=[BKGtask['name']], tf=tf, cwd=timeframeworkdir)
-       LinkBKGtask['cmd']='ln -nsf ../bkg*.root .'
-       workflow['stages'].append(LinkBKGtask) 
-
    # transport signals
    signalprefix='sgn_' + str(tf)
    signalneeds=[ SGN_CONFIG_task['name'] ]
-   embeddinto= "--embedIntoFile bkg_Kine.root" if doembedding else ""
+   embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if doembedding else ""
    if doembedding:
-       signalneeds = signalneeds + [ BKGtask['name'], LinkBKGtask['name'] ]
+      if not usebkgcache:
+        signalneeds = signalneeds + [ BKGtask['name'] ]
+      else:
+        signalneeds = signalneeds + [ BKG_HEADER_task['name'] ]
    SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"], cpu='5.')
    SGNtask['cmd']='o2-sim -e '+str(SIMENGINE) + ' ' + str(MODULES) + ' -n ' + str(NSIGEVENTS) +  ' -j ' + str(NWORKERS) + ' -g pythia8 '\
        + ' -o ' + signalprefix + ' ' + embeddinto
@@ -114,8 +153,13 @@ for tf in range(1, NTIMEFRAMES + 1):
    # We need to be careful here and distinguish between embedding and non-embedding cases 
    # (otherwise it can confuse itstpcmatching, see O2-2026). This is because only one of the GRPs is updated during digitization.
    if doembedding:
-      LinkGRPFileTask=createTask(name='linkGRP_'+str(tf), needs=[BKGtask['name']], tf=tf, cwd=timeframeworkdir)
-      LinkGRPFileTask['cmd']='ln -nsf bkg_grp.root o2sim_grp.root ; ln -nsf bkg_geometry.root o2sim_geometry.root'
+      LinkGRPFileTask=createTask(name='linkGRP_'+str(tf), needs=[BKG_HEADER_task['name'] if usebkgcache else BKGtask['name'] ], tf=tf, cwd=timeframeworkdir)
+      LinkGRPFileTask['cmd']='''
+                             ln -nsf ../bkg_grp.root o2sim_grp.root;
+                             ln -nsf ../bkg_geometry.root o2sim_geometry.root;
+                             ln -nsf ../bkg_geometry.root bkg_geometry.root;
+                             ln -nsf ../bkg_grp.root bkg_grp.root
+                             '''
    else:
       LinkGRPFileTask=createTask(name='linkGRP_'+str(tf), needs=[SGNtask['name']], tf=tf, cwd=timeframeworkdir)
       LinkGRPFileTask['cmd']='ln -nsf ' + signalprefix + '_grp.root o2sim_grp.root ; ln -nsf ' + signalprefix + '_geometry.root o2sim_geometry.root'
@@ -126,37 +170,61 @@ for tf in range(1, NTIMEFRAMES + 1):
    simsoption=' --sims ' + ('bkg,'+signalprefix if doembedding else signalprefix)
 
    ContextTask=createTask(name='digicontext_'+str(tf), needs=[SGNtask['name'], LinkGRPFileTask['name']], tf=tf, 
-                          cwd=timeframeworkdir, lab=["DIGI"], cpu='8')
+                          cwd=timeframeworkdir, lab=["DIGI"], cpu='1')
    ContextTask['cmd'] = 'o2-sim-digitizer-workflow --only-context --interactionRate 50000 ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption
    workflow['stages'].append(ContextTask)
 
-   TPCDigitask=createTask(name='tpcdigi_'+str(tf), needs=[ContextTask['name'], LinkGRPFileTask['name']],
+   tpcdigineeds=[ContextTask['name'], LinkGRPFileTask['name']]
+   if usebkgcache:
+      tpcdigineeds += [ BKG_HITDOWNLOADER_TASKS['TPC']['name'] ]
+
+   TPCDigitask=createTask(name='tpcdigi_'+str(tf), needs=tpcdigineeds,
                           tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='8', mem='16000')
-   TPCDigitask['cmd'] = 'o2-sim-digitizer-workflow ' + getDPL_global_options(bigshm=True) + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TPC --interactionRate 50000 --tpc-lanes ' + str(NWORKERS) + ' --incontext ' + str(CONTEXTFILE)
+   TPCDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTPC.root . ;')[doembedding]
+   TPCDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options(bigshm=True) + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TPC --interactionRate 50000 --tpc-lanes ' + str(NWORKERS) + ' --incontext ' + str(CONTEXTFILE)
    workflow['stages'].append(TPCDigitask)
 
-   TRDDigitask=createTask(name='trddigi_'+str(tf), needs=[ContextTask['name']], tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='8', mem='8000')
-   TRDDigitask['cmd'] = 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TRD --interactionRate 50000 --configKeyValues \"TRDSimParams.digithreads=' + str(NWORKERS) + '\" --incontext ' + str(CONTEXTFILE)
+   trddigineeds = [ContextTask['name']]
+   if usebkgcache: 
+      trddigineeds += [ BKG_HITDOWNLOADER_TASKS['TRD']['name'] ]
+   TRDDigitask=createTask(name='trddigi_'+str(tf), needs=trddigineeds, 
+                          tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='8', mem='8000')
+   TRDDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTRD.root . ;')[doembedding]
+   TRDDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TRD --interactionRate 50000 --configKeyValues \"TRDSimParams.digithreads=' + str(NWORKERS) + '\" --incontext ' + str(CONTEXTFILE)
    workflow['stages'].append(TRDDigitask)
 
-#   RESTDigitask=createTask(name='restdigi_'+str(tf), needs=[ContextTask['name'], LinkGRPFileTask['name']], tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='medium', mem='8000')
-#   RESTDigitask['cmd'] = 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --skipDet TRD,TPC --interactionRate 50000 --incontext ' + str(CONTEXTFILE)
-#   workflow['stages'].append(RESTDigitask)
-
-   # we split the digitizers for improved load balancing --> the precise list needs to be made consistent with geometry and active sensors
-   sensorlist = [ "ITS", "TOF", "FT0", "FV0", "FDD", "MCH", "MID", "MFT", "HMP", "EMC", "PHS", "CPV" ]
    # these are digitizers which are single threaded
-   def createRestDigiTask(name):
-      t = createTask(name=name, needs=[ContextTask['name']], tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
-      t['cmd'] = 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet ' + str(det) + ' --interactionRate 50000 --incontext ' + str(CONTEXTFILE)
-      workflow['stages'].append(t)
-      return t
+   def createRestDigiTask(name, det='ALLSMALLER'):
+      tneeds = needs=[ContextTask['name']]
+      if det=='ALLSMALLER':
+         if usebkgcache:
+            for d in smallsensorlist:
+               tneeds += [ BKG_HITDOWNLOADER_TASKS[d]['name'] ]
+         t = createTask(name=name, needs=tneeds,
+                     tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='8')
+         t['cmd'] = ('','ln -nfs ../bkg_Hits*.root . ;')[doembedding]
+         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options(nosmallrate=True) + ' -n ' + str(args.ns) + simsoption + ' --skipDet TPC,TRD --interactionRate 50000 --incontext ' + str(CONTEXTFILE)
+         workflow['stages'].append(t)
+         return t
+
+      else:
+         if usebkgcache:
+            tneeds += [ BKG_HITDOWNLOADER_TASKS[det]['name'] ]
+         t = createTask(name=name, needs=tneeds,
+                     tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
+         t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
+         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet ' + str(det) + ' --interactionRate 50000 --incontext ' + str(CONTEXTFILE)
+         workflow['stages'].append(t)
+         return t
 
    det_to_digitask={}
 
-   for det in sensorlist:
-      name=str(det).lower() + "digi_"+str(tf)
-      t=createRestDigiTask(name)
+   if args.rest_digi==True:
+      det_to_digitask['ALLSMALLER']=createRestDigiTask("restdigi_"+str(tf))
+
+   for det in smallsensorlist:
+      name=str(det).lower() + "digi_" + str(tf)
+      t = det_to_digitask['ALLSMALLER'] if args.rest_digi==True else createRestDigiTask(name, det)
       det_to_digitask[det]=t
 
    # -----------
@@ -204,11 +272,15 @@ for tf in range(1, NTIMEFRAMES + 1):
   # -----------
   # produce AOD
   # -----------
-  
-   AODtask = createTask(name='aod_'+str(tf), needs=[PVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["AOD"])
-   AODtask['cmd'] = 'o2-aod-producer-workflow --aod-writer-keep dangling --aod-writer-resfile \"AO2D\" --aod-writer-resmode UPDATE --aod-timeframe-id ' + str(tf) + ' ' + getDPL_global_options(bigshm=True)
-   workflow['stages'].append(AODtask)
+   aodneeds = [PVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name']]
+   if usebkgcache:
+     aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
+   AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='16000', cpu='1')
+   AODtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
+   AODtask['cmd'] += 'o2-aod-producer-workflow --aod-writer-keep dangling --aod-writer-resfile \"AO2D\" --aod-writer-resmode UPDATE --aod-timeframe-id ' + str(tf) + ' ' + getDPL_global_options(bigshm=True)
+   AODtask['cmd'] = 'echo \"hello\"' #-> skipping for moment since not optimized
+   workflow['stages'].append(AODtask)
 
 def trimString(cmd):
   return ' '.join(cmd.split())
