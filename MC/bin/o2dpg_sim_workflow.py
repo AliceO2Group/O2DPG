@@ -30,6 +30,8 @@ parser.add_argument('-col',help='collision sytem: pp, PbPb, pPb, Pbp, ...', defa
 parser.add_argument('-ptHatBin',help='pT hard bin number', default=-1)
 parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
 parser.add_argument('-ptHatMax',help='pT hard maximum when no bin requested', default=-1)
+parser.add_argument('-weightPow',help='Flatten pT hard spectrum with power', default=-1)
+
 parser.add_argument('-ptTrigMin',help='generated pT trigger minimum', default=0)
 parser.add_argument('-ptTrigMax',help='generated pT trigger maximum', default=-1)
 
@@ -122,6 +124,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    PTTRIGMIN=float(args.ptTrigMin)  
    PTTRIGMAX=float(args.ptTrigMax) 
 
+   ## Pt Hat productions
+   WEIGHTPOW=int(args.weightPow)
+
    # Recover PTHATMIN and PTHATMAX from pre-defined array depending bin number PTHATBIN
    # or just the ones passed
    PTHATBIN=int(args.ptHatBin)  
@@ -185,7 +190,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)
    if GENERATOR == 'pythia8':
       SGN_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
-                --output=pythia8_'+ str(tf) +'.cfg \
+                --output=pythia8.cfg \
 	              --seed='+str(RNDSEED)+' \
 	              --idA='+str(PDGA)+' \
 	              --idB='+str(PDGB)+' \
@@ -193,6 +198,8 @@ for tf in range(1, NTIMEFRAMES + 1):
 	              --process='+str(PROCESS)+' \
 	              --ptHatMin=' + str(PTHATMIN) + ' \
 	              --ptHatMax=' + str(PTHATMAX)
+      if WEIGHTPOW   > -1:
+            SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
       workflow['stages'].append(SGN_CONFIG_task) 
    # elif GENERATOR == 'extgen': what do we do if generator is not pythia8?
                    
