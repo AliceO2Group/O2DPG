@@ -20,6 +20,7 @@ except ImportError:
 
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 
+sys.setrecursionlimit(100000)
 
 def setup_logger(name, log_file, level=logging.INFO):
     """To setup as many loggers as you want"""
@@ -392,7 +393,8 @@ class WorkflowExecutor:
       signal.signal(signal.SIGINT, self.SIGHandler)
       signal.siginterrupt(signal.SIGINT, False)
       self.nicevalues = [ os.nice(0) for tid in range(len(self.taskuniverse)) ]
-      self.internalmonitorcounter = 0
+      self.internalmonitorcounter = 0 # internal use
+      self.internalmonitorid = 0 # internal use
 
     def SIGHandler(self, signum, frame):
        # basically forcing shut down of all child processes
@@ -495,8 +497,16 @@ class WorkflowExecutor:
           actionlogger.debug ('Condition check --normal-- for  ' + str(tid) + ':' + str(self.idtotask[tid]) + ' CPU ' + str(okcpu) + ' MEM ' + str(okmem))
           return (okcpu and okmem)
       else:
+          # not backfilling jobs which either take much memory or use lot's of CPU anyway
+          # conditions are somewhat arbitrary and can be played with
+          if float(self.cpuperid[tid]) > 0.9*float(self.args.cpu_limit):
+              return False
+          if float(self.maxmemperid[tid])/float(self.args.cpu_limit) >= 1900:
+              return False
+
           # analyse CPU
-          okcpu = (self.curcpubooked + self.curcpubooked_backfill + float(self.cpuperid[tid]) <= softcpufactor*self.cpulimit)
+          okcpu = (self.curcpubooked_backfill + float(self.cpuperid[tid]) <= self.cpulimit)
+          okcpu = okcpu and (self.curcpubooked + self.curcpubooked_backfill + float(self.cpuperid[tid]) <= softcpufactor*self.cpulimit)
           # analyse MEM
           okmem = (self.curmembooked + self.curmembooked_backfill + float(self.maxmemperid[tid]) <= softmemfactor*self.memlimit)
           actionlogger.debug ('Condition check --backfill-- for  ' + str(tid) + ':' + str(self.idtotask[tid]) + ' CPU ' + str(okcpu) + ' MEM ' + str(okmem))
@@ -563,10 +573,11 @@ class WorkflowExecutor:
 
     def monitor(self, process_list):
         self.internalmonitorcounter+=1
-        if self.internalmonitorcounter!=5:
+        if self.internalmonitorcounter % 5 != 0:
             return
 
-        self.internalmonitorcounter=0
+        self.internalmonitorid+=1
+
         globalCPU=0.
         globalPSS=0.
         globalCPU_backfill=0.
@@ -606,12 +617,16 @@ class WorkflowExecutor:
                 except Exception:
                     pass
                 """
+                thispss=0
+                thisuss=0
                 # MEMORY part
                 try:
                     fullmem=p.memory_full_info()
-                    totalPSS=totalPSS + getattr(fullmem,'pss',0) #<-- pss not available on MacOS
+                    thispss=getattr(fullmem,'pss',0) #<-- pss not available on MacOS
+                    totalPSS=totalPSS + thispss
                     totalSWAP=totalSWAP + fullmem.swap
-                    totalUSS=totalUSS + fullmem.uss
+                    thisuss=fullmem.uss
+                    totalUSS=totalUSS + thisuss
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     pass
 
@@ -624,6 +639,8 @@ class WorkflowExecutor:
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         thiscpu = 0.
                     totalCPU = totalCPU + thiscpu
+                    # thisresource = {'iter':self.internalmonitorid, 'pid': p.pid, 'cpu':thiscpu, 'uss':thisuss/1024./1024., 'pss':thispss/1024./1024.}
+                    # metriclogger.info(thisresource)
                 else:
                     self.pid_to_psutilsproc[p.pid] = p
                     try:
@@ -631,7 +648,7 @@ class WorkflowExecutor:
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         pass
 
-            resources_per_task[tid]={'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS/1024./1024., 'pss':totalPSS/1024./1024, 'nice':proc.nice(), 'swap':totalSWAP}
+            resources_per_task[tid]={'iter':self.internalmonitorid, 'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS/1024./1024., 'pss':totalPSS/1024./1024, 'nice':proc.nice(), 'swap':totalSWAP, 'label':self.workflowspec['stages'][tid]['labels']}
             metriclogger.info(resources_per_task[tid])
             
         for r in resources_per_task.values():
@@ -642,9 +659,6 @@ class WorkflowExecutor:
                 globalCPU_backfill+=r['cpu']
                 globalPSS_backfill+=r['pss']
 
-        # print ("globalCPU " + str(globalCPU) + ' in ' + str(len(process_list)) + ' tasks ' + str(self.curmembooked) + ',' + str(self.curcpubooked))
-        # print ("globalPSS " + str(globalPSS))
-        metriclogger.info( "CPU-normal " + str(globalCPU) + " CPU-backfill " + str(globalCPU_backfill))
         if globalPSS > self.memlimit:
             metriclogger.info('*** MEMORY LIMIT PASSED !! ***')
             # --> We could use this for corrective actions such as killing jobs currently back-filling
