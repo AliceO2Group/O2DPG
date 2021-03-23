@@ -106,7 +106,7 @@ if doembedding:
         GENBKG=args.genBkg
         INIBKG=args.iniBkg
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], cpu='8')
-        BKGtask['cmd']='o2-sim -e ' + SIMENGINE + ' -j ' + str(NWORKERS) + ' -n ' + str(NBKGEVENTS) + ' -g  ' + str(GENBKG) +  str(MODULES) + ' -o bkg --configFile ' + str(INIBKG)
+        BKGtask['cmd']='o2-sim -e ' + SIMENGINE + ' -j ' + str(NWORKERS) + ' -n ' + str(NBKGEVENTS) + ' -g  ' + str(GENBKG) + ' ' + str(MODULES) + ' -o bkg --configFile ' + str(INIBKG)
         workflow['stages'].append(BKGtask)
 
         # check if we should upload background event
