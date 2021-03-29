@@ -12,13 +12,19 @@ parser.add_argument('--seed', type=int, default=None,
                    help='The random seed')
 
 parser.add_argument('--idA', type=int, default='2212',
-                   help='PDG code of projectile beam')
+                   help='PDG code of projectile beam A')
 
 parser.add_argument('--idB', type=int, default='2212',
-                   help='PDG code of target beam')
+                   help='PDG code of target beam B')
 
-parser.add_argument('--eCM', type=float, default='13000.',
-                    help='Centre-of-mass energy')
+parser.add_argument('--eBeamA', type=float, default='6499.',
+                    help='Energy of beam A')
+
+parser.add_argument('--eBeamB', type=float, default='6499.',
+                    help='Energy of beam B')
+
+parser.add_argument('--eCM', type=float, default='-1',
+                    help='Centre-of-mass energy (careful!, better use beam energy)')
 
 parser.add_argument('--process', default='inel', choices=['none', 'inel', 'ccbar', 'bbbar', 'heavy', 'jets', 'dirgamma'],
                     help='Process to switch on')
@@ -76,7 +82,14 @@ if args.seed is not None:
 fout.write('### beams \n')
 fout.write('Beams:idA = %d \n' % (args.idA))
 fout.write('Beams:idB = %d \n' % (args.idB))
-fout.write('Beams:eCM = %f \n' % (args.eCM))
+if args.eCM > 0:
+   fout.write('Beams:eCM = %f \n' % (args.eCM))
+elif args.eBeamA > 0 and args.eBeamB > 0:
+   fout.write('Beams:eA = %f \n' % (args.eBeamA))
+   fout.write('Beams:eB = %f \n' % (args.eBeamB))
+else:
+   print('mkpy8cfg.py: Error, CM or Beam Energy not set!!!')
+   exit(1)
 fout.write('\n')
 
 ### processes

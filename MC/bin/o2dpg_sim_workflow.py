@@ -26,6 +26,8 @@ parser.add_argument('-ini',help='generator init parameters file, for example: ${
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: GeneratorPythia8.config=pythia8.cfg', default='')
 
 parser.add_argument('-eCMS',help='CMS energy', default=-1)
+parser.add_argument('-eBeamA',help='Beam A energy', default=6499.) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
+parser.add_argument('-eBeamB',help='Beam B energy', default=-1)
 parser.add_argument('-col',help='collision sytem: pp, PbPb, pPb, Pbp, ...', default='pp')
 parser.add_argument('-ptHatBin',help='pT hard bin number', default=-1)
 parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
@@ -160,7 +162,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    # function encapsulating the signal sim part
    # first argument is timeframe id
    RNDSEED=args.seed    # 0 means random seed !
-   ECMS=args.eCMS
+   ECMS=float(args.eCMS)
+   EBEAMA=float(args.eBeamA)
+   EBEAMB=float(args.eBeamB)
    NSIGEVENTS=args.ns
    GENERATOR=args.gen
    INIFILE=''
@@ -231,7 +235,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       PDGA=1000822080 # Pb
       PDGB=1000822080 # Pb
       if ECMS < 0:    # assign 5.02 TeV to Pb-Pb
-         print('>>> Set CM Energy to PbPb case 5.02 TeV')
+         print('o2dpg_sim_workflow: Set CM Energy to PbPb case 5.02 TeV')
          ECMS=5020.0
 
    if COLTYPE == 'pPb':
@@ -242,8 +246,19 @@ for tf in range(1, NTIMEFRAMES + 1):
       PDGA=1000822080 # Pb
       PDGB=2212       # proton
 
-   if ECMS < 0:
-      print('Error: Collision Energy not set!!!')
+   # If not set previously, set beam energy B equal to A
+   if EBEAMB < 0 and ECMS < 0:
+      EBEAMB=EBEAMA
+      print('o2dpg_sim_workflow: Set beam energy same in A and B beams')
+      if COLTYPE=="pPb" or COLTYPE=="Pbp":
+         print('o2dpg_sim_workflow: Careful! both beam energies are the same')
+
+   if ECMS > 0:
+      if COLTYPE=="pPb" or COLTYPE=="Pbp":
+         print('o2dpg_sim_workflow: Careful! ECM set for pPb/Pbp collisions!')
+
+   if ECMS < 0 and EBEAMA < 0 and EBEAMB < 0:
+      print('o2dpg_sim_workflow: Error! CM or Beam Energy not set!!!')
       exit(1)
 
    # produce the signal configuration
