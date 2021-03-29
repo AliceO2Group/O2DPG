@@ -177,6 +177,7 @@ ONGRID=0
 
 
 JOBTTL=82000
+CPUCORES=8
 # this tells us to continue an existing job --> in this case we don't create a new workdir
 while [ $# -gt 0 ] ; do
     case $1 in
@@ -187,6 +188,7 @@ while [ $# -gt 0 ] ; do
         --topworkdir) ALIEN_TOPWORKDIR=$2; shift 2 ;; # the top workdir relative to GRID home
         --ttl) JOBTTL=$2; shift 2 ;; # allows to specifiy ttl for job
         --partition) GRIDPARTITION=$2; shift 2 ;; # allows to specificy a GRID partition for the job
+        --cores) CPUCORES=$2; shift 2 ;; # allow to specify the CPU cores (check compatibility with partition !)
         --dry) DRYRUN="ON"; shift 1 ;; # do a try run and not actually interact with the GRID (just produce local jdl file)
         --o2tag) O2TAG=$2; shift 2 ;; # 
         --asuser) ASUSER=$2; shift 2 ;; #
@@ -278,6 +280,7 @@ Output = {
 ${PRODSPLIT:+Split = ${QUOT}production:1-${PRODSPLIT}${QUOT};}
 OutputDir = "${MY_JOBWORKDIR}/${PRODSPLIT:+#alien_counter_03i#}";
 Requirements = member(other.GridPartitions,"${GRIDPARTITION:-multicore_8}");
+CPUCores = "${CPUCORES}";
 MemorySize = "60GB";
 TTL=${JOBTTL};
 EOF
