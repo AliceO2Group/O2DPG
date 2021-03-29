@@ -25,7 +25,7 @@ parser.add_argument('-trigger',help='event selection: particle, external', defau
 parser.add_argument('-ini',help='generator init parameters file, for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: GeneratorPythia8.config=pythia8.cfg', default='')
 
-parser.add_argument('-eCMS',help='CMS energy', default=5200.0)
+parser.add_argument('-eCMS',help='CMS energy', default=-1)
 parser.add_argument('-col',help='collision sytem: pp, PbPb, pPb, Pbp, ...', default='pp')
 parser.add_argument('-ptHatBin',help='pT hard bin number', default=-1)
 parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
@@ -221,7 +221,6 @@ for tf in range(1, NTIMEFRAMES + 1):
            PTHATMAX=hig_edge[PTHATBIN]
            
    # translate here collision type to PDG
-   # not sure this is what we want to do (GCB)
    COLTYPE=args.col
 
    if COLTYPE == 'pp':
@@ -231,6 +230,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    if COLTYPE == 'PbPb':
       PDGA=1000822080 # Pb
       PDGB=1000822080 # Pb
+      if ECMS < 0:    # assign 5.02 TeV to Pb-Pb
+         print('>>> Set CM Energy to PbPb case 5.02 TeV')
+         ECMS=5020.0
 
    if COLTYPE == 'pPb':
       PDGA=2212       # proton
@@ -239,6 +241,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    if COLTYPE == 'Pbp':
       PDGA=1000822080 # Pb
       PDGB=2212       # proton
+
+   if ECMS < 0:
+      print('Error: Collision Energy not set!!!')
+      exit(1)
 
    # produce the signal configuration
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)
