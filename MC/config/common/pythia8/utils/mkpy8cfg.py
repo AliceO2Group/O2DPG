@@ -94,6 +94,14 @@ if args.process == 'dirgamma':
     fout.write('PromptPhoton:all = on \n')
 fout.write('\n')
 
+### heavy ion  settings (valid for Pb-Pb 5520 only)
+if args.idA==1000822080 and args.idB==1000822080:
+    fout.write('### heavy-ion settings (valid for Pb-Pb 5520 only) \n')
+    fout.write('HeavyIon:SigFitNGen = 0 \n')
+    fout.write('HeavyIon:SigFitDefPar = 13.88,1.84,0.22,0.0,0.0,0.0,0.0,0.0 \n')
+    fout.write('HeavyIon:bWidth = 14.48 \n')
+fout.write('\n')
+
 ### decays
 fout.write('### decays \n')
 fout.write('ParticleDecays:limitTau0 = on \n') ### we will need to put some parameters for these settings
