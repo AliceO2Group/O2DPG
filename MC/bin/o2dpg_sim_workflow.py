@@ -229,16 +229,16 @@ for tf in range(1, NTIMEFRAMES + 1):
       PDGB=2212 # proton
 
    if COLTYPE == 'PbPb':
-      PDGA=2212 # Pb???? #---> to be checked (seems same as pp case)
-      PDGB=2212 # Pb????
+      PDGA=1000822080 # Pb
+      PDGB=1000822080 # Pb
 
    if COLTYPE == 'pPb':
-      PDGA=2212 # proton
-      PDGB=2212 # Pb????
+      PDGA=2212       # proton
+      PDGB=1000822080 # Pb
 
    if COLTYPE == 'Pbp':
-      PDGA=2212 # Pb????
-      PDGB=2212 # proton
+      PDGA=1000822080 # Pb
+      PDGB=2212       # proton
 
    # produce the signal configuration
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)
