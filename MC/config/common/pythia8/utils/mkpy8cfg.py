@@ -17,10 +17,10 @@ parser.add_argument('--idA', type=int, default='2212',
 parser.add_argument('--idB', type=int, default='2212',
                    help='PDG code of target beam B')
 
-parser.add_argument('--eBeamA', type=float, default='6499.',
+parser.add_argument('--eA', type=float, default='6499.',
                     help='Energy of beam A')
 
-parser.add_argument('--eBeamB', type=float, default='6499.',
+parser.add_argument('--eB', type=float, default='6499.',
                     help='Energy of beam B')
 
 parser.add_argument('--eCM', type=float, default='-1',
@@ -84,9 +84,9 @@ fout.write('Beams:idA = %d \n' % (args.idA))
 fout.write('Beams:idB = %d \n' % (args.idB))
 if args.eCM > 0:
    fout.write('Beams:eCM = %f \n' % (args.eCM))
-elif args.eBeamA > 0 and args.eBeamB > 0:
-   fout.write('Beams:eA = %f \n' % (args.eBeamA))
-   fout.write('Beams:eB = %f \n' % (args.eBeamB))
+elif args.eA > 0 and args.eB > 0:
+   fout.write('Beams:eA = %f \n' % (args.eA))
+   fout.write('Beams:eB = %f \n' % (args.eB))
 else:
    print('mkpy8cfg.py: Error, CM or Beam Energy not set!!!')
    exit(1)

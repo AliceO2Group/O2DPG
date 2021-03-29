@@ -25,9 +25,9 @@ parser.add_argument('-trigger',help='event selection: particle, external', defau
 parser.add_argument('-ini',help='generator init parameters file, for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: GeneratorPythia8.config=pythia8.cfg', default='')
 
-parser.add_argument('-eCMS',help='CMS energy', default=-1)
-parser.add_argument('-eBeamA',help='Beam A energy', default=6499.) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
-parser.add_argument('-eBeamB',help='Beam B energy', default=-1)
+parser.add_argument('-eCM',help='CMS energy', default=-1)
+parser.add_argument('-eA',help='Beam A energy', default=6499.) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
+parser.add_argument('-eB',help='Beam B energy', default=-1)
 parser.add_argument('-col',help='collision sytem: pp, PbPb, pPb, Pbp, ...', default='pp')
 parser.add_argument('-ptHatBin',help='pT hard bin number', default=-1)
 parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
@@ -162,9 +162,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    # function encapsulating the signal sim part
    # first argument is timeframe id
    RNDSEED=args.seed    # 0 means random seed !
-   ECMS=float(args.eCMS)
-   EBEAMA=float(args.eBeamA)
-   EBEAMB=float(args.eBeamB)
+   ECMS=float(args.eCM)
+   EBEAMA=float(args.eA)
+   EBEAMB=float(args.eB)
    NSIGEVENTS=args.ns
    GENERATOR=args.gen
    INIFILE=''
