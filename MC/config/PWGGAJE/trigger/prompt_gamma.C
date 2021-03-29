@@ -71,8 +71,8 @@ o2::eventgen::Trigger prompt_gamma( )
     // Select photons within acceptance
     //
     Int_t acceptance = 0;
-    if ( gSystem->Getenv("CONFIG_DETECTOR_ACCEPTANCE") )
-      acceptance = atoi(gSystem->Getenv("CONFIG_DETECTOR_ACCEPTANCE"));
+    if ( gSystem->Getenv("PARTICLE_ACCEPTANCE") )
+      acceptance = atoi(gSystem->Getenv("PARTICLE_ACCEPTANCE"));
     //printf("Requested acceptance %d\n",acceptance);
     
     if ( detector_acceptance(acceptance, gamma.Phi(),gamma.Eta()) ) 

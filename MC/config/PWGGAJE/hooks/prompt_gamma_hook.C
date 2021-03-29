@@ -121,9 +121,9 @@ Pythia8::UserHooks*
     printf("Select outgoing partons with pdg = %d\n",pdgPar);
   }
   
-  if ( !acc && gSystem->Getenv("CONFIG_DETECTOR_ACCEPTANCE") )
+  if ( !acc && gSystem->Getenv("PARTICLE_ACCEPTANCE") )
   {
-    acc = atoi(gSystem->Getenv("CONFIG_DETECTOR_ACCEPTANCE"));
+    acc = atoi(gSystem->Getenv("PARTICLE_ACCEPTANCE"));
     printf("Requested acceptance %d\n",acc);
   }
   

@@ -34,6 +34,7 @@ parser.add_argument('-weightPow',help='Flatten pT hard spectrum with power', def
 
 parser.add_argument('-ptTrigMin',help='generated pT trigger minimum', default=0)
 parser.add_argument('-ptTrigMax',help='generated pT trigger maximum', default=-1)
+parser.add_argument('-acceptance',help='select particles within predefined acceptance in ${O2DPG_ROOT}/MC/run/common/detector_acceptance.C', default=0)
 
 parser.add_argument('--embedding',action='store_true', help='With embedding into background')
 parser.add_argument('-nb',help='number of background events / timeframe', default=20)
@@ -175,6 +176,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    
    PTTRIGMIN=float(args.ptTrigMin)  
    PTTRIGMAX=float(args.ptTrigMax) 
+   PARTICLE_ACCEPTANCE=int(args.acceptance)
 
    ## Pt Hat productions
    WEIGHTPOW=int(args.weightPow)
