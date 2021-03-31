@@ -23,7 +23,7 @@ MODULES="--skipModules ZDC"
 SIMENGINE=${SIMENGINE:-TGeant4}
 
 # create workflow
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCMS 13000 -col pp -proc ccbar -tf ${NTIMEFRAMES} -nb ${NBKGEVENTS} \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13000 -col pp -proc ccbar -tf ${NTIMEFRAMES} -nb ${NBKGEVENTS} \
                                                         -ns ${NSIGEVENTS} -e ${SIMENGINE}    \
                                                         -j ${NWORKERS} --embedding
 
