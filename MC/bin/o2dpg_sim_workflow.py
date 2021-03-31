@@ -5,10 +5,16 @@
 # It aims to handle the different MC possible configurations 
 # It just creates a workflow.json txt file, to execute the workflow one must execute right after
 #   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json 
-# Execution examples:
-#   ./o2dpg_sim_workflow.py -e TGeant3 -nb 0 -ns 2 -j 8 -tf 1 -mod "-m TPC" -proc "jets" -ptTrigMin 3.5 -ptHatBin 3 -trigger "external" -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_decay_gamma.ini" --embedding False 
 #
-#  ./o2dpg_sim_workflow.py -e TGeant3 -nb 0 -ns 2 -j 8 -tf 1 -mod "--skipModules ZDC" -proc "ccbar"  --embedding True 
+# Execution examples:
+#  - pp PYTHIA jets, 2 events, triggered on high pT decay photons on EMCal acceptance, eCMS 13 TeV
+#     ./o2dpg_sim_workflow.py -e TGeant3 -ns 2 -j 8 -tf 1 -mod "--skipModules ZDC" -col pp -eCM 13000 \
+#                             -proc "jets" -ptTrigMin 3.5 -acceptance 4 -ptHatBin 3 \
+#                             -trigger "external" -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_decay_gamma.ini"
+#
+#  - pp PYTHIA ccbar events embedded into heavy-ion environment, 2 PYTHIA events into 1 bkg event, beams energy 2.510
+#     ./o2dpg_sim_workflow.py -e TGeant3 -nb 1 -ns 2 -j 8 -tf 1 -mod "--skipModules ZDC"  \
+#                             -col pp -eA 2.510 -proc "ccbar"  --embedding
 # 
 
 import argparse
@@ -25,7 +31,9 @@ parser.add_argument('-trigger',help='event selection: particle, external', defau
 parser.add_argument('-ini',help='generator init parameters file, for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: GeneratorPythia8.config=pythia8.cfg', default='')
 
-parser.add_argument('-eCMS',help='CMS energy', default=5200.0)
+parser.add_argument('-eCM',help='CMS energy', default=-1)
+parser.add_argument('-eA',help='Beam A energy', default=6499.) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
+parser.add_argument('-eB',help='Beam B energy', default=-1)
 parser.add_argument('-col',help='collision sytem: pp, PbPb, pPb, Pbp, ...', default='pp')
 parser.add_argument('-ptHatBin',help='pT hard bin number', default=-1)
 parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
@@ -34,6 +42,7 @@ parser.add_argument('-weightPow',help='Flatten pT hard spectrum with power', def
 
 parser.add_argument('-ptTrigMin',help='generated pT trigger minimum', default=0)
 parser.add_argument('-ptTrigMax',help='generated pT trigger maximum', default=-1)
+parser.add_argument('-acceptance',help='select particles within predefined acceptance in ${O2DPG_ROOT}/MC/run/common/detector_acceptance.C', default=0)
 
 parser.add_argument('--embedding',action='store_true', help='With embedding into background')
 parser.add_argument('-nb',help='number of background events / timeframe', default=20)
@@ -159,7 +168,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    # function encapsulating the signal sim part
    # first argument is timeframe id
    RNDSEED=args.seed    # 0 means random seed !
-   ECMS=args.eCMS
+   ECMS=float(args.eCM)
+   EBEAMA=float(args.eA)
+   EBEAMB=float(args.eB)
    NSIGEVENTS=args.ns
    GENERATOR=args.gen
    INIFILE=''
@@ -175,6 +186,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    
    PTTRIGMIN=float(args.ptTrigMin)  
    PTTRIGMAX=float(args.ptTrigMax) 
+   PARTICLE_ACCEPTANCE=int(args.acceptance)
 
    ## Pt Hat productions
    WEIGHTPOW=int(args.weightPow)
@@ -219,7 +231,6 @@ for tf in range(1, NTIMEFRAMES + 1):
            PTHATMAX=hig_edge[PTHATBIN]
            
    # translate here collision type to PDG
-   # not sure this is what we want to do (GCB)
    COLTYPE=args.col
 
    if COLTYPE == 'pp':
@@ -227,16 +238,34 @@ for tf in range(1, NTIMEFRAMES + 1):
       PDGB=2212 # proton
 
    if COLTYPE == 'PbPb':
-      PDGA=2212 # Pb???? #---> to be checked (seems same as pp case)
-      PDGB=2212 # Pb????
+      PDGA=1000822080 # Pb
+      PDGB=1000822080 # Pb
+      if ECMS < 0:    # assign 5.02 TeV to Pb-Pb
+         print('o2dpg_sim_workflow: Set CM Energy to PbPb case 5.02 TeV')
+         ECMS=5020.0
 
    if COLTYPE == 'pPb':
-      PDGA=2212 # proton
-      PDGB=2212 # Pb????
+      PDGA=2212       # proton
+      PDGB=1000822080 # Pb
 
    if COLTYPE == 'Pbp':
-      PDGA=2212 # Pb????
-      PDGB=2212 # proton
+      PDGA=1000822080 # Pb
+      PDGB=2212       # proton
+
+   # If not set previously, set beam energy B equal to A
+   if EBEAMB < 0 and ECMS < 0:
+      EBEAMB=EBEAMA
+      print('o2dpg_sim_workflow: Set beam energy same in A and B beams')
+      if COLTYPE=="pPb" or COLTYPE=="Pbp":
+         print('o2dpg_sim_workflow: Careful! both beam energies are the same')
+
+   if ECMS > 0:
+      if COLTYPE=="pPb" or COLTYPE=="Pbp":
+         print('o2dpg_sim_workflow: Careful! ECM set for pPb/Pbp collisions!')
+
+   if ECMS < 0 and EBEAMA < 0 and EBEAMB < 0:
+      print('o2dpg_sim_workflow: Error! CM or Beam Energy not set!!!')
+      exit(1)
 
    # produce the signal configuration
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)

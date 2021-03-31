@@ -12,13 +12,19 @@ parser.add_argument('--seed', type=int, default=None,
                    help='The random seed')
 
 parser.add_argument('--idA', type=int, default='2212',
-                   help='PDG code of projectile beam')
+                   help='PDG code of projectile beam A')
 
 parser.add_argument('--idB', type=int, default='2212',
-                   help='PDG code of target beam')
+                   help='PDG code of target beam B')
 
-parser.add_argument('--eCM', type=float, default='13000.',
-                    help='Centre-of-mass energy')
+parser.add_argument('--eA', type=float, default='6499.',
+                    help='Energy of beam A')
+
+parser.add_argument('--eB', type=float, default='6499.',
+                    help='Energy of beam B')
+
+parser.add_argument('--eCM', type=float, default='-1',
+                    help='Centre-of-mass energy (careful!, better use beam energy)')
 
 parser.add_argument('--process', default='inel', choices=['none', 'inel', 'ccbar', 'bbbar', 'heavy', 'jets', 'dirgamma'],
                     help='Process to switch on')
@@ -76,7 +82,14 @@ if args.seed is not None:
 fout.write('### beams \n')
 fout.write('Beams:idA = %d \n' % (args.idA))
 fout.write('Beams:idB = %d \n' % (args.idB))
-fout.write('Beams:eCM = %f \n' % (args.eCM))
+if args.eCM > 0:
+   fout.write('Beams:eCM = %f \n' % (args.eCM))
+elif args.eA > 0 and args.eB > 0:
+   fout.write('Beams:eA = %f \n' % (args.eA))
+   fout.write('Beams:eB = %f \n' % (args.eB))
+else:
+   print('mkpy8cfg.py: Error, CM or Beam Energy not set!!!')
+   exit(1)
 fout.write('\n')
 
 ### processes
@@ -92,6 +105,14 @@ if args.process == 'jets':
     fout.write('HardQCD:all = on \n')
 if args.process == 'dirgamma':
     fout.write('PromptPhoton:all = on \n')
+fout.write('\n')
+
+### heavy ion  settings (valid for Pb-Pb 5520 only)
+if args.idA==1000822080 and args.idB==1000822080:
+    fout.write('### heavy-ion settings (valid for Pb-Pb 5520 only) \n')
+    fout.write('HeavyIon:SigFitNGen = 0 \n')
+    fout.write('HeavyIon:SigFitDefPar = 13.88,1.84,0.22,0.0,0.0,0.0,0.0,0.0 \n')
+    fout.write('HeavyIon:bWidth = 14.48 \n')
 fout.write('\n')
 
 ### decays
