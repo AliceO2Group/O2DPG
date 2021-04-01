@@ -390,12 +390,26 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------
 
    # TODO: check value for MaxTimeBin; A large value had to be set tmp in order to avoid crashes based on "exceeding timeframe limit"
-   TPCRECOtask1=createTask(name='tpccluster_'+str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='3', mem='16000')
-   TPCRECOtask1['cmd'] = 'o2-tpc-chunkeddigit-merger --rate 1 --tpc-lanes ' + str(NWORKERS) + ' --session ' + str(taskcounter)
-   TPCRECOtask1['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True, nosmallrate=True) + ' --input-type digitizer --output-type clusters,send-clusters-per-sector  --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads='+str(NWORKERS)+'"'
-   workflow['stages'].append(TPCRECOtask1)
 
-   TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=[TPCRECOtask1['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='3', mem='16000')
+   # We treat TPC clusterization in multiple (sector) steps in order to stay within the memory limit
+   TPCCLUStask1=createTask(name='tpcclusterpart1_'+str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='8', mem='16000')
+   TPCCLUStask1['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-sectors 0-17 --rate 1 --tpc-lanes ' + str(NWORKERS) + ' --session ' + str(taskcounter)
+   TPCCLUStask1['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True, nosmallrate=True) + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --tpc-sectors 0-17 --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads='+str(NWORKERS)+'"'
+   TPCCLUStask1['cmd'] += ' ; mv tpc-native-clusters.root tpc-native-clusters-part1.root'
+   workflow['stages'].append(TPCCLUStask1)
+
+   TPCCLUStask2=createTask(name='tpcclusterpart2_'+str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='8', mem='16000')
+   TPCCLUStask2['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-sectors 18-35 --rate 1 --tpc-lanes ' + str(NWORKERS) + ' --session ' + str(taskcounter)
+   TPCCLUStask2['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True, nosmallrate=True) + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --tpc-sectors 18-35 --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads='+str(NWORKERS)+'"'
+   TPCCLUStask2['cmd'] += ' ; mv tpc-native-clusters.root tpc-native-clusters-part2.root'
+   workflow['stages'].append(TPCCLUStask2)
+
+   # additional file merge step (TODO: generalize to arbitrary number of files)
+   TPCCLUSMERGEtask=createTask(name='tpcclustermerge_'+str(tf), needs=[TPCCLUStask1['name'], TPCCLUStask2['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1')
+   TPCCLUSMERGEtask['cmd']='root -q -b -l "$O2DPG_ROOT/MC/utils/merge_TTrees.C(\\"tpc-native-clusters-part1.root\\", \\"tpc-native-clusters-part2.root\\", \\"tpcrec\\", \\"tpc-native-clusters.root\\")"'
+   workflow['stages'].append(TPCCLUSMERGEtask)
+
+   TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=[TPCCLUSMERGEtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='3', mem='16000')
    TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True, nosmallrate=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads='+str(NWORKERS)+'"'
    workflow['stages'].append(TPCRECOtask)
 
@@ -421,14 +435,14 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TRDTRACKINGtask)
 
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], det_to_digitask["TOF"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
-   TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options()
+   TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options(nosmallrate=True)
    workflow['stages'].append(TOFRECOtask)
 
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
    TOFTPCMATCHERtask['cmd'] = 'o2-tof-matcher-tpc ' + getDPL_global_options()
    workflow['stages'].append(TOFTPCMATCHERtask)
 
-   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=[ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='4')
+   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=[ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='8', mem='4000')
    PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' + getDPL_global_options(nosmallrate=True)
    workflow['stages'].append(PVFINDERtask)
  
@@ -439,7 +453,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
-   AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='5000', cpu='1')
+   AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='4000', cpu='1')
    AODtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
    AODtask['cmd'] += 'o2-aod-producer-workflow --reco-mctracks-only 1 --aod-writer-keep dangling --aod-writer-resfile \"AO2D\" --aod-writer-resmode UPDATE --aod-timeframe-id ' + str(tf) + ' ' + getDPL_global_options(bigshm=True)
    workflow['stages'].append(AODtask)
