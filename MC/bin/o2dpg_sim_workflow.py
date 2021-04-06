@@ -425,11 +425,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    ITSTPCMATCHtask['cmd']= 'o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True, nosmallrate=True) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\"'
    workflow['stages'].append(ITSTPCMATCHtask)
 
-   # this can be combined with TRD digitization if benefical
-   TRDTRAPtask = createTask(name='trdtrap_'+str(tf), needs=[TRDDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["DIGI"])
-   TRDTRAPtask['cmd'] = 'o2-trd-trap-sim'
-   workflow['stages'].append(TRDTRAPtask)
-
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDTRAPtask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"])
    TRDTRACKINGtask['cmd'] = 'echo "would do TRD tracking"' # 'o2-trd-global-tracking'
    workflow['stages'].append(TRDTRACKINGtask)
