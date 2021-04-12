@@ -76,10 +76,10 @@ public:
   int findAncestor(Pythia8::Event& event) {
     for (int ipa = 0; ipa < event.size(); ++ipa) {
       auto daughterList = event[ipa].daughterList();
-      bool hasc = false, hascbar = false, atmidy = false;
+      bool hasq = false, hasqbar = false, atmidy = false;
       for (auto ida : daughterList) {
-	if (event[ida].id() == 4) hasc = true;
-	if (event[ida].id() == -4) hascbar = true;
+	if (event[ida].id() == mPDG) hasq = true;
+	if (event[ida].id() == -mPDG) hasqbar = true;
 	if (fabs(event[ida].y()) < mRapidity) atmidy = true;
       }
       if (hasc && hascbar && atmidy)
@@ -88,6 +88,7 @@ public:
     return -1;
   };
   
+  int setPDG(int val) { mPDG = val; };
   void setRapidity(double val) { mRapidity = val; };
   void setVerbose(bool val) { mVerbose = val; };
   void setFormula(std::string val) { mFormula.Compile(val.c_str()); };
@@ -97,6 +98,7 @@ private:
   TFormula mFormula;
   int mEvents = 1;
   Pythia8::Event mOutputEvent;
+  int mPDG = 4;
   double mRapidity = 1.5;
   bool mVerbose = false;
   
@@ -117,4 +119,27 @@ GeneratorHF(double rapidity = 1.5, bool verbose = false)
   return gen;
 }
 
+FairGenerator*
+GeneratorHF_ccbar(double rapidity = 1.5, bool verbose = false)
+{
+  auto gen = new o2::eventgen::GeneratorHF();
+  gen->setPDG(4);
+  gen->setRapidity(rapidity);
+  gen->setVerbose(verbose);
+  gen->setFormula("max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.))");
+  
+  return gen;
+}
+
+FairGenerator*
+GeneratorHF_bbbar(double rapidity = 1.5, bool verbose = false)
+{
+  auto gen = new o2::eventgen::GeneratorHF();
+  gen->setPDG(5);
+  gen->setRapidity(rapidity);
+  gen->setVerbose(verbose);
+  gen->setFormula("max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.))");
+  
+  return gen;
+}
 
