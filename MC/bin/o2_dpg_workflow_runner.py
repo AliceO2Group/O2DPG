@@ -667,6 +667,7 @@ class WorkflowExecutor:
     def waitforany(self, process_list, finished):
        failuredetected = False
        failingpids = []
+       failingtasks = []
        if len(process_list)==0:
            return False
 
@@ -690,14 +691,31 @@ class WorkflowExecutor:
             if returncode!=0:
                failuredetected = True
                failingpids.append(pid)
+               failingtasks.append(p[0])
     
        if failuredetected and self.stoponfailure:
           actionlogger.info('Stoping pipeline due to failure in stages with PID ' + str(failingpids))
           # self.analyse_files_and_connections()
+          self.cat_logfiles_tostdout(failingtasks)
+
           self.stop_pipeline_and_exit(process_list)
 
        # empty finished means we have to wait more        
        return len(finished)==0
+
+    def cat_logfiles_tostdout(self, taskids):
+        # In case of errors we can cat the logfiles for this taskname
+        # to stdout. Assuming convention that "taskname" translates to "taskname.log" logfile.
+        for tid in taskids:
+            taskspec = self.workflowspec['stages'][tid]
+            taskname = taskspec['name']
+            filename = taskname + '.log'
+            directory = taskspec['cwd']
+            path = directory + '/' + filename
+            if os.path.exists(path):
+                print (' ----> START OF LOGFILE ', path, ' -----')
+                os.system('cat ' + path)
+                print (' <---- END OF LOGFILE ', path, ' -----')
 
     def analyse_files_and_connections(self):
         for p,s in self.pid_to_files.items():
@@ -906,7 +924,10 @@ parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit
 
 parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint', default=max_system_mem)
 parser.add_argument('--cpu-limit', help='Set CPU limit (core count)', default=8)
-parser.add_argument('--cgroup', help='Execute pipeline under a given cgroup (e.g., 8coregrid) emulating resource constraints. This must exist and the tasks file must be writable to with the current user.')
+parser.add_argument('--cgroup', help='Execute pipeline under a given cgroup (e.g., 8coregrid) emulating resource constraints. This m\
+ust exist and the tasks file must be writable to with the current user.')
+parser.add_argument('--stdout-on-failure', action='store_true', help='Print log files of failing tasks to stdout,')
+
 args = parser.parse_args()
 print (args)
 
