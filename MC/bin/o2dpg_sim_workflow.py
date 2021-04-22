@@ -403,7 +403,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # additional file merge step (TODO: generalize to arbitrary number of files)
    TPCCLUSMERGEtask=createTask(name='tpcclustermerge_'+str(tf), needs=[TPCCLUStask1['name'], TPCCLUStask2['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1')
-   TPCCLUSMERGEtask['cmd']='o2-commonutils-treemergertool -i tpc-native-clusters-part*.root -o tpc-native-clusters.root -t tpcrec --asfriend'
+   TPCCLUSMERGEtask['cmd']='o2-commonutils-treemergertool -i tpc-native-clusters-part*.root -o tpc-native-clusters.root -t tpcrec' #--asfriend preferable but does not work
    workflow['stages'].append(TPCCLUSMERGEtask)
 
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=[TPCCLUSMERGEtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='3', mem='16000')
