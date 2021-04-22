@@ -29,6 +29,3 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13000 -col pp -proc ccbar -tf ${
 
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
-
-exit 0
-

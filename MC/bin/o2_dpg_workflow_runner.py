@@ -666,15 +666,17 @@ class WorkflowExecutor:
 
     def waitforany(self, process_list, finished):
        failuredetected = False
+       failingpids = []
        if len(process_list)==0:
            return False
 
        for p in list(process_list):
+          pid = p[1].pid
           returncode = 0
           if not self.args.dry_run:
               returncode = p[1].poll()
           if returncode!=None:
-            actionlogger.info ('Task ' + str(p[1].pid) + ' ' + str(p[0])+':'+str(self.idtotask[p[0]]) + ' finished with status ' + str(returncode))
+            actionlogger.info ('Task ' + str(pid) + ' ' + str(p[0])+':'+str(self.idtotask[p[0]]) + ' finished with status ' + str(returncode))
             # account for cleared resources
             if self.nicevalues[p[0]]==0: # --> change for a more robust way
                 self.curmembooked-=float(self.maxmemperid[p[0]])
@@ -686,10 +688,11 @@ class WorkflowExecutor:
             finished.append(p[0])
             process_list.remove(p)
             if returncode!=0:
-               failuredetected = True      
+               failuredetected = True
+               failingpids.append(pid)
     
        if failuredetected and self.stoponfailure:
-          actionlogger.info('Stoping pipeline due to failure in a stage PID')
+          actionlogger.info('Stoping pipeline due to failure in stages with PID ' + str(failingpids))
           # self.analyse_files_and_connections()
           self.stop_pipeline_and_exit(process_list)
 
