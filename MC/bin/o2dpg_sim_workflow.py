@@ -31,6 +31,7 @@ parser.add_argument('-trigger',help='event selection: particle, external', defau
 parser.add_argument('-ini',help='generator init parameters file, for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: GeneratorPythia8.config=pythia8.cfg', default='')
 
+parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
 parser.add_argument('-eCM',help='CMS energy', default=-1)
 parser.add_argument('-eA',help='Beam A energy', default=6499.) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
 parser.add_argument('-eB',help='Beam B energy', default=-1)
@@ -325,11 +326,22 @@ for tf in range(1, NTIMEFRAMES + 1):
    # ------------------
    CONTEXTFILE='collisioncontext.root'
  
+   INTRATE=int(args.interactionRate)
+
+   #it should be taken from CDB, meanwhile some default values
+   if INTRATE < 0:
+      if   COLTYPE=="PbPb":
+         INTRATE=50000 #Hz
+      elif COLTYPE=="pp":
+         INTRATE=400000 #Hz
+      else: #pPb?
+         INTRATE=200000 #Hz ???
+
    simsoption=' --sims ' + ('bkg,'+signalprefix if doembedding else signalprefix)
 
    ContextTask=createTask(name='digicontext_'+str(tf), needs=[SGNtask['name'], LinkGRPFileTask['name']], tf=tf,
                           cwd=timeframeworkdir, lab=["DIGI"], cpu='1')
-   ContextTask['cmd'] = 'o2-sim-digitizer-workflow --only-context --interactionRate 50000 ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption
+   ContextTask['cmd'] = 'o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) + ' ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption
    workflow['stages'].append(ContextTask)
 
    tpcdigineeds=[ContextTask['name'], LinkGRPFileTask['name']]
@@ -339,7 +351,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCDigitask=createTask(name='tpcdigi_'+str(tf), needs=tpcdigineeds,
                           tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='8', mem='9000')
    TPCDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTPC.root . ;')[doembedding]
-   TPCDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TPC --interactionRate 50000 --tpc-lanes ' + str(NWORKERS) + ' --incontext ' + str(CONTEXTFILE) + ' --tpc-chunked-writer'
+   TPCDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TPC --interactionRate ' + str(INTRATE) + '  --tpc-lanes ' + str(NWORKERS) + ' --incontext ' + str(CONTEXTFILE) + ' --tpc-chunked-writer'
    workflow['stages'].append(TPCDigitask)
 
    trddigineeds = [ContextTask['name']]
@@ -348,7 +360,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TRDDigitask=createTask(name='trddigi_'+str(tf), needs=trddigineeds,
                           tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='8', mem='8000')
    TRDDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTRD.root . ;')[doembedding]
-   TRDDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TRD --interactionRate 50000 --configKeyValues \"TRDSimParams.digithreads=' + str(NWORKERS) + '\" --incontext ' + str(CONTEXTFILE)
+   TRDDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TRD --interactionRate ' + str(INTRATE) + '  --configKeyValues \"TRDSimParams.digithreads=' + str(NWORKERS) + '\" --incontext ' + str(CONTEXTFILE)
    workflow['stages'].append(TRDDigitask)
 
    # these are digitizers which are single threaded
@@ -361,7 +373,7 @@ for tf in range(1, NTIMEFRAMES + 1):
          t = createTask(name=name, needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='8')
          t['cmd'] = ('','ln -nfs ../bkg_Hits*.root . ;')[doembedding]
-         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options(nosmallrate=True) + ' -n ' + str(args.ns) + simsoption + ' --skipDet TPC,TRD --interactionRate 50000 --incontext ' + str(CONTEXTFILE)
+         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options(nosmallrate=True) + ' -n ' + str(args.ns) + simsoption + ' --skipDet TPC,TRD --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE)
          workflow['stages'].append(t)
          return t
 
@@ -371,7 +383,7 @@ for tf in range(1, NTIMEFRAMES + 1):
          t = createTask(name=name, needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
          t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
-         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet ' + str(det) + ' --interactionRate 50000 --incontext ' + str(CONTEXTFILE)
+         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet ' + str(det) + ' --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE)
          workflow['stages'].append(t)
          return t
 
