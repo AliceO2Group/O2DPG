@@ -9,7 +9,7 @@ import os
 import sys
 
 # we simply delegate to main script with some PWGHF settings
-command='${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13000 -col pp -proc ccbar --embedding '
+command='${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13000 -col pp -proc ccbar --embedding -interactionRate 50000 '
 
 # and add given user options
 for i in range(1, len(sys.argv)):
