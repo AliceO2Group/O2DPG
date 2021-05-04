@@ -25,7 +25,7 @@ SIMENGINE=${SIMENGINE:-TGeant4}
 # create workflow
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13000 -col pp -proc ccbar -tf ${NTIMEFRAMES} -nb ${NBKGEVENTS} \
                                                         -ns ${NSIGEVENTS} -e ${SIMENGINE}    \
-                                                        -j ${NWORKERS} --embedding --interactionRate 50000
+                                                        -j ${NWORKERS} --embedding -interactionRate 50000
 
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
