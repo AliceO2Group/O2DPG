@@ -35,7 +35,7 @@ parser.add_argument('-interactionRate',help='Interaction rate, used in digitizat
 parser.add_argument('-eCM',help='CMS energy', default=-1)
 parser.add_argument('-eA',help='Beam A energy', default=6499.) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
 parser.add_argument('-eB',help='Beam B energy', default=-1)
-parser.add_argument('-col',help='collision sytem: pp, PbPb, pPb, Pbp, ...', default='pp')
+parser.add_argument('-col',help='collision system: pp, PbPb, pPb, Pbp, ..., in case of embedding collision system of signal', default='pp')
 parser.add_argument('-ptHatBin',help='pT hard bin number', default=-1)
 parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
 parser.add_argument('-ptHatMax',help='pT hard maximum when no bin requested', default=-1)
@@ -49,6 +49,7 @@ parser.add_argument('--embedding',action='store_true', help='With embedding into
 parser.add_argument('-nb',help='number of background events / timeframe', default=20)
 parser.add_argument('-genBkg',help='generator', default='pythia8hi')
 parser.add_argument('-iniBkg',help='generator init parameters file', default='${O2DPG_ROOT}/MC/config/common/ini/basic.ini')
+parser.add_argument('-colBkg',help='collision system: collision type of bkg in case of embedding', default='PbPb')
 
 parser.add_argument('-e',help='simengine', default='TGeant4')
 parser.add_argument('-tf',help='number of timeframes', default=2)
@@ -326,13 +327,19 @@ for tf in range(1, NTIMEFRAMES + 1):
    # ------------------
    CONTEXTFILE='collisioncontext.root'
  
+   # Determine interation rate
+   # it should be taken from CDB, meanwhile some default values
    INTRATE=int(args.interactionRate)
 
-   #it should be taken from CDB, meanwhile some default values
+   # in case of embedding take intended bkg collision type not the signal
+   COLTYPEIR=COLTYPE
+   if doembedding:
+      COLTYPEIR=args.colBkg
+
    if INTRATE < 0:
-      if   COLTYPE=="PbPb":
+      if   COLTYPEIR=="PbPb":
          INTRATE=50000 #Hz
-      elif COLTYPE=="pp":
+      elif COLTYPEIR=="pp":
          INTRATE=400000 #Hz
       else: #pPb?
          INTRATE=200000 #Hz ???
