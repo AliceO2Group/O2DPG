@@ -404,6 +404,7 @@ class WorkflowExecutor:
       self.internalmonitorid = 0 # internal use
       self.tids_marked_toretry = [] # sometimes we might want to retry a failed task (simply because it was "unlucky") and we put them here
       self.retry_counter = [ 0 for tid in range(len(self.taskuniverse)) ] # we keep track of many times retried already
+      self.semaphore_values = { self.workflowspec['stages'][tid].get('semaphore'):0 for tid in range(len(self.taskuniverse)) if self.workflowspec['stages'][tid].get('semaphore')!=None } # keeps current count of semaphores (defined in the json workflow). used to achieve user-defined "critical sections".
 
     def SIGHandler(self, signum, frame):
        # basically forcing shut down of all child processes
@@ -498,6 +499,13 @@ class WorkflowExecutor:
           softcpufactor=1.5
           sotmemfactor=1.5
 
+      # check semaphore
+      sem = self.workflowspec['stages'][tid].get('semaphore')
+      if sem != None:
+        if self.semaphore_values[sem] > 0:
+           return False
+
+      # check other resources
       if not backfill:
           # analyse CPU
           okcpu = (self.curcpubooked + float(self.cpuperid[tid]) <= self.cpulimit)
@@ -529,6 +537,37 @@ class WorkflowExecutor:
             return True
         return False
 
+    def book_resources(self, tid, backfill = False):
+        # books the resources used by a certain task
+        # semaphores
+        sem = self.workflowspec['stages'][tid].get('semaphore')
+        if sem != None:
+          self.semaphore_values[sem]+=1
+
+        # CPU + MEM
+        if not backfill:
+          self.curmembooked+=float(self.maxmemperid[tid])
+          self.curcpubooked+=float(self.cpuperid[tid])
+        else:
+          self.curmembooked_backfill+=float(self.maxmemperid[tid])
+          self.curcpubooked_backfill+=float(self.cpuperid[tid])
+
+    def unbook_resources(self, tid, backfill = False):
+        # "frees" the nominal resources used by a certain task from the accounting
+        # so that other jobs can be scheduled
+        sem = self.workflowspec['stages'][tid].get('semaphore')
+        if sem != None:
+          self.semaphore_values[sem]-=1
+
+        # CPU + MEM
+        if not backfill:
+          self.curmembooked-=float(self.maxmemperid[tid])
+          self.curcpubooked-=float(self.cpuperid[tid])
+        else:
+          self.curmembooked_backfill-=float(self.maxmemperid[tid])
+          self.curcpubooked_backfill-=float(self.cpuperid[tid])
+
+
     def try_job_from_candidates(self, taskcandidates, process_list, finished):
        self.scheduling_iteration = self.scheduling_iteration + 1
 
@@ -551,8 +590,7 @@ class WorkflowExecutor:
           if (len(self.process_list) + len(self.backfill_process_list) < self.max_jobs_parallel) and self.ok_to_submit(tid):
             p=self.submit(tid)
             if p!=None:
-                self.curmembooked+=float(self.maxmemperid[tid])
-                self.curcpubooked+=float(self.cpuperid[tid])
+                self.book_resources(tid)
                 self.process_list.append((tid,p))
                 taskcandidates.remove(tid)
                 # minimal delay
@@ -568,8 +606,7 @@ class WorkflowExecutor:
           if (len(self.process_list) + len(self.backfill_process_list) < self.max_jobs_parallel) and self.ok_to_submit(tid, backfill=True):
             p=self.submit(tid, 19)
             if p!=None:
-                self.curmembooked_backfill+=float(self.maxmemperid[tid])
-                self.curcpubooked_backfill+=float(self.cpuperid[tid])
+                self.book_resources(tid, backfill=True)
                 self.process_list.append((tid,p))
                 taskcandidates.remove(tid) #-> not sure about this one
                 # minimal delay
@@ -694,12 +731,7 @@ class WorkflowExecutor:
           if returncode!=None:
             actionlogger.info ('Task ' + str(pid) + ' ' + str(tid)+':'+str(self.idtotask[tid]) + ' finished with status ' + str(returncode))
             # account for cleared resources
-            if self.nicevalues[tid]==os.nice(0):
-                self.curmembooked-=float(self.maxmemperid[tid])
-                self.curcpubooked-=float(self.cpuperid[tid])
-            else:
-                self.curmembooked_backfill-=float(self.maxmemperid[tid])
-                self.curcpubooked_backfill-=float(self.cpuperid[tid])
+            self.unbook_resources(tid, backfill = self.nicevalues[tid]!=os.nice(0) )
             self.procstatus[tid]='Done'
             finished.append(tid)
             process_list.remove(p)
