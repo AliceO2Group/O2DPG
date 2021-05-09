@@ -283,10 +283,11 @@ for tf in range(1, NTIMEFRAMES + 1):
 	              --ptHatMax=' + str(PTHATMAX)
       if WEIGHTPOW   > -1:
             SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
-      workflow['stages'].append(SGN_CONFIG_task) 
    # elif GENERATOR == 'extgen': what do we do if generator is not pythia8?
        # NOTE: Generator setup might be handled in a different file or different files (one per
        # possible generator)
+
+   workflow['stages'].append(SGN_CONFIG_task)
 
    # -----------------
    # transport signals
@@ -465,10 +466,23 @@ for tf in range(1, NTIMEFRAMES + 1):
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
+   aod_df_id = '{0:03}'.format(tf)
+
    AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='4000', cpu='1')
    AODtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
-   AODtask['cmd'] += 'o2-aod-producer-workflow --reco-mctracks-only 1 --aod-writer-keep dangling --aod-writer-resfile \"AO2D\" --aod-writer-resmode UPDATE --aod-timeframe-id ' + str(tf) + ' ' + getDPL_global_options(bigshm=True)
+   AODtask['cmd'] += 'o2-aod-producer-workflow --reco-mctracks-only 1 --aod-writer-keep dangling --aod-writer-resfile AO2D'
+   AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id + ' ' + getDPL_global_options(bigshm=True)
    workflow['stages'].append(AODtask)
+
+   # AOD merging / combination step
+   AOD_merge_task = createTask(name='aodmerge_'+str(tf), needs= [ AODtask['name'] ], tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='2000', cpu='1')
+   AOD_merge_task['cmd'] = '[ -f ../AO2D.root ] && mv ../AO2D.root ../AO2D_old.root;'
+   AOD_merge_task['cmd'] += ' echo "./AO2D.root" > input.txt;'
+   AOD_merge_task['cmd'] += ' [ -f ../AO2D_old.root ] && echo "../AO2D_old.root" >> input.txt;'
+   AOD_merge_task['cmd'] += ' o2-aod-merger --output ../AO2D.root;'
+   AOD_merge_task['cmd'] += ' rm ../AO2D_old.root || true'
+   AOD_merge_task['semaphore'] = 'aodmerge' #<---- this is making sure that only one merge is running at any time
+   workflow['stages'].append(AOD_merge_task)
 
 def trimString(cmd):
   return ' '.join(cmd.split())
