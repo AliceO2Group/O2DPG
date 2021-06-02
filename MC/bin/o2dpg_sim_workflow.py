@@ -412,6 +412,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # TODO: check value for MaxTimeBin; A large value had to be set tmp in order to avoid crashes based on "exceeding timeframe limit"
    # We treat TPC clusterization in multiple (sector) steps in order to stay within the memory limit
+   tpcclustertasks=[]
    for s in range(0,35):
      taskname = 'tpcclusterpart' + str(s) + '_' + str(tf)
      tpcclustertasks.append(taskname)
