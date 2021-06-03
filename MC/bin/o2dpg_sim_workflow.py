@@ -273,16 +273,20 @@ for tf in range(1, NTIMEFRAMES + 1):
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)
    if GENERATOR == 'pythia8':
       SGN_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
-                --output=pythia8.cfg \
-	              --seed='+str(RNDSEED)+' \
-	              --idA='+str(PDGA)+' \
-	              --idB='+str(PDGB)+' \
-	              --eCM='+str(ECMS)+' \
-	              --process='+str(PROCESS)+' \
-	              --ptHatMin=' + str(PTHATMIN) + ' \
-	              --ptHatMax=' + str(PTHATMAX)
+                                --output=pythia8.cfg                                     \
+	                        --seed='+str(RNDSEED)+'                                  \
+	                        --idA='+str(PDGA)+'                                      \
+	                        --idB='+str(PDGB)+'                                      \
+	                        --eCM='+str(ECMS)+'                                      \
+	                        --process='+str(PROCESS)+'                               \
+	                        --ptHatMin=' + str(PTHATMIN) + '                         \
+	                        --ptHatMax=' + str(PTHATMAX)
       if WEIGHTPOW   > -1:
             SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
+      # if we configure pythia8 here --> we also need to adjust the configuration
+      # TODO: we need a proper config container/manager so as to combine these local configs with external configs etc.
+      CONFKEY='--configKeyValues "GeneratorPythia8.config=pythia8.cfg"'
+
    # elif GENERATOR == 'extgen': what do we do if generator is not pythia8?
        # NOTE: Generator setup might be handled in a different file or different files (one per
        # possible generator)
@@ -302,7 +306,7 @@ for tf in range(1, NTIMEFRAMES + 1):
             signalneeds = signalneeds + [ BKG_HEADER_task['name'] ]
    SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"], cpu='5.')
    SGNtask['cmd']='o2-sim -e ' + str(SIMENGINE) + ' ' + str(MODULES) + ' -n ' + str(NSIGEVENTS) +  ' -j ' \
-                  + str(NWORKERS) + ' -g ' + str(GENERATOR) + ' ' + str(TRIGGER)+ ' ' + str(CONFKEY) \
+                  + str(NWORKERS) + ' -g ' + str(GENERATOR) + ' ' + str(TRIGGER)+ ' ' + str(CONFKEY)      \
                   + ' ' + str(INIFILE) + ' -o ' + signalprefix + ' ' + embeddinto
    workflow['stages'].append(SGNtask)
 
