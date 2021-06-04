@@ -25,7 +25,7 @@ import array as arr
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
 
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
-parser.add_argument('-gen',help='generator: pythia8, extgen', default='pythia8')
+parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
 parser.add_argument('-proc',help='process type: dirgamma, jets, ccbar', default='')
 parser.add_argument('-trigger',help='event selection: particle, external', default='')
 parser.add_argument('-ini',help='generator init parameters file, for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
@@ -47,9 +47,9 @@ parser.add_argument('-acceptance',help='select particles within predefined accep
 
 parser.add_argument('--embedding',action='store_true', help='With embedding into background')
 parser.add_argument('-nb',help='number of background events / timeframe', default=20)
-parser.add_argument('-genBkg',help='generator', default='pythia8hi')
-parser.add_argument('-iniBkg',help='generator init parameters file', default='${O2DPG_ROOT}/MC/config/common/ini/basic.ini')
-parser.add_argument('-colBkg',help='collision system: collision type of bkg in case of embedding', default='PbPb')
+parser.add_argument('-genBkg',help='embedding background generator', default='pythia8hi')
+parser.add_argument('-iniBkg',help='embedding background generator init parameters file', default='${O2DPG_ROOT}/MC/config/common/ini/basic.ini')
+parser.add_argument('-colBkg',help='embedding background collision system', default='PbPb')
 
 parser.add_argument('-e',help='simengine', default='TGeant4')
 parser.add_argument('-tf',help='number of timeframes', default=2)
@@ -115,6 +115,10 @@ if doembedding:
         # ---- do background transport task -------
         NBKGEVENTS=args.nb
         GENBKG=args.genBkg
+        if GENBKG =='':
+           print('o2dpg_sim_workflow: Error! embedding background generator name not provided')
+           exit(1)
+
         INIBKG=args.iniBkg
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], cpu='8')
         BKGtask['cmd']='o2-sim -e ' + SIMENGINE + ' -j ' + str(NWORKERS) + ' -n ' + str(NBKGEVENTS) + ' -g  ' + str(GENBKG) + ' ' + str(MODULES) + ' -o bkg --configFile ' + str(INIBKG)
@@ -175,6 +179,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    EBEAMB=float(args.eB)
    NSIGEVENTS=args.ns
    GENERATOR=args.gen
+   if GENERATOR =='':
+      print('o2dpg_sim_workflow: Error! generator name not provided')
+      exit(1)
+
    INIFILE=''
    if args.ini!= '':
       INIFILE=' --configFile ' + args.ini
@@ -271,7 +279,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # produce the signal configuration
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)
-   if GENERATOR == 'pythia8':
+   if GENERATOR == 'pythia8' and PROCESS!='':
       SGN_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
                                 --output=pythia8.cfg                                     \
 	                        --seed='+str(RNDSEED)+'                                  \
@@ -290,6 +298,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    # elif GENERATOR == 'extgen': what do we do if generator is not pythia8?
        # NOTE: Generator setup might be handled in a different file or different files (one per
        # possible generator)
+
+   if CONFKEY=='':
+      print('o2dpg_sim_workflow: Error! configuration file not provided')
+      exit(1)
 
    workflow['stages'].append(SGN_CONFIG_task)
 
