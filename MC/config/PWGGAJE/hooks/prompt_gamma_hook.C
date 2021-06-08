@@ -25,17 +25,6 @@ class UserHooks_promptgamma : public Pythia8::UserHooks
   bool doVetoPartonLevel(const Pythia8::Event& event) override {
     
 //    printf("Event,  size %d\n", event.size());
-//
-//    for (Int_t ida = 0; ida < 10; ida++) {    
-//      printf("parton %d, PDG %d, status %d, mother %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n", ida, 
-//             event[ida].id(), 
-//             event[ida].status(), 
-//             event[ida].mother1(),
-//             event[ida].e(), 
-//             event[ida].pT(),
-//             event[ida].eta(),
-//             event[ida].phi()*TMath::RadToDeg());
-//    }
      
     // Get the outgoing 2->2 partons. 
     // The photon and the associated outgoing parton are in position 5 or 6.
@@ -51,6 +40,18 @@ class UserHooks_promptgamma : public Pythia8::UserHooks
     if ( event[idGam].id() != 22 )
     {
       printf("No direct photon found in the parton list!\n");
+
+      for (Int_t ida = 0; ida < 10; ida++) {
+        printf("parton %d, PDG %d, status %d, mother %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n", ida,
+               event[ida].id(),
+               event[ida].status(),
+               event[ida].mother1(),
+               event[ida].e(),
+               event[ida].pT(),
+               event[ida].eta(),
+               event[ida].phi()*TMath::RadToDeg());
+      }
+
       return true;
     }
     
@@ -69,18 +70,18 @@ class UserHooks_promptgamma : public Pythia8::UserHooks
     //    
     if ( detector_acceptance(mAcceptance, event[idGam].phi(), event[idGam].eta()) ) 
     {
-      printf("+++ Accepted event +++ \n");
-      printf("gamma, PDG %d, status %d, mother %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n", 
+      //printf("+++ Accepted event +++ \n");
+      printf("Selected gamma, id %d, PDG %d, status %d, mother %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n", idGam,
              event[idGam].id() , event[idGam].status(), event[idGam].mother1(),
              event[idGam].e()  , event[idGam].pT(),
              event[idGam].eta(), event[idGam].phi()*TMath::RadToDeg());
       
-//     printf("parton, PDG %d, status %d, mother %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n", 
+//     printf("Back-to-back parton, id  %d, PDG %d, status %d, mother %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n", idPar,
 //                 event[idPar].id() , event[idPar].status(), event[idPar].mother1(),
 //                 event[idPar].e()  , event[idPar].pT(),
 //                 event[idPar].eta(), event[idPar].phi()*TMath::RadToDeg());
-      
-      // Check difference in pT and azimuthal angle, it should be 0 and +-180 degrees, respectively.
+//
+//      // Check difference in pT and azimuthal angle, it should be 0 and +-180 degrees, respectively.
 //      printf("parton-photon, Delta E %2.2f, Delta pT %2.2f, Delta eta %2.2f, Delta phi %2.2f\n", 
 //             event[idPar].e()  - event[idGam].e(), 
 //             event[idPar].pT() - event[idGam].pT(),
