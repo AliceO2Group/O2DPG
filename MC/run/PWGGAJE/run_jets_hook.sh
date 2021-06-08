@@ -37,14 +37,14 @@ PTHATMAX=${pthatbin_higheredges[$PTHATBIN]}
 
 # Recover environmental vars for detector acceptance binning
 # accessed inside prompt_gamma.C
-export CONFIG_DETECTOR_ACCEPTANCE=${CONFIG_DETECTOR_ACCEPTANCE:-0}
+export PARTICLE_ACCEPTANCE=${PARTICLE_ACCEPTANCE:-0}
 
-if [ -z "$CONFIG_DETECTOR_ACCEPTANCE" ]; then
-    echo "Detector acceptance option (env. var. CONFIG_DETECTOR_ACCEPTANCE) not set, abort."
+if [ -z "$PARTICLE_ACCEPTANCE" ]; then
+    echo "Detector acceptance option (env. var. PARTICLE_ACCEPTANCE) not set, abort."
     exit 1
 fi
 
-echo 'Detector acceptance option ' $CONFIG_DETECTOR_ACCEPTANCE
+echo 'Detector acceptance option ' $PARTICLE_ACCEPTANCE
 
 # Recover environmental vars for outgoing parton flavour
 # accessed inside prompt_gamma.C

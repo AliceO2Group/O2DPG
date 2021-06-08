@@ -4,7 +4,7 @@
 # Select the event depending min Pt and acceptance of decay photons.
 # Execute: ./run_decaygammajets.sh 
 # Set at least before running PTHATBIN with 1 to 6
-# CONFIG_DETECTOR_ACCEPTANCE and CONFIG_DECAYGAMMA_PTMIN, see 
+# PARTICLE_ACCEPTANCE and CONFIG_DECAYGAMMA_PTMIN, see 
 # $O2DPG_ROOT/MC/config/PWGGAJE/trigger/decay_gamma_jet.C
 
 #set -x 
@@ -63,14 +63,14 @@ echo "Set Pt hard bin " $PTHATBIN ": [" $PTHATMIN " , "  $PTHATMAX "]"
 
 # Recover environmental vars for detector acceptance binning
 # accessed inside prompt_gamma.C
-export CONFIG_DETECTOR_ACCEPTANCE=${CONFIG_DETECTOR_ACCEPTANCE:-1}
+export PARTICLE_ACCEPTANCE=${PARTICLE_ACCEPTANCE:-1}
 
-if [ -z "$CONFIG_DETECTOR_ACCEPTANCE" ]; then
-    echo "Detector acceptance option (env. var. CONFIG_DETECTOR_ACCEPTANCE) not set, abort."
+if [ -z "$PARTICLE_ACCEPTANCE" ]; then
+    echo "Detector acceptance option (env. var. PARTICLE_ACCEPTANCE) not set, abort."
     exit 1
 fi
 
-echo 'Detector acceptance option ' $CONFIG_DETECTOR_ACCEPTANCE
+echo 'Detector acceptance option ' $PARTICLE_ACCEPTANCE
 
 # Generate PYTHIA8 gamma-jet configuration
 ${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
