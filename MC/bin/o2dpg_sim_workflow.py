@@ -7,10 +7,10 @@
 #   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json 
 #
 # Execution examples:
-#  - pp PYTHIA jets, 2 events, triggered on high pT decay photons on EMCal acceptance, eCMS 13 TeV
+#  - pp PYTHIA jets, 2 events, triggered on high pT decay photons on all barrel calorimeters acceptance, eCMS 13 TeV
 #     ./o2dpg_sim_workflow.py -e TGeant3 -ns 2 -j 8 -tf 1 -mod "--skipModules ZDC" -col pp -eCM 13000 \
-#                             -proc "jets" -ptTrigMin 3.5 -acceptance 4 -ptHatBin 3 \
-#                             -trigger "external" -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_decay_gamma.ini"
+#                             -proc "jets" -ptHatBin 3 \
+#                             -trigger "external" -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_decay_gamma_allcalo_TrigPt3_5.ini"
 #
 #  - pp PYTHIA ccbar events embedded into heavy-ion environment, 2 PYTHIA events into 1 bkg event, beams energy 2.510
 #     ./o2dpg_sim_workflow.py -e TGeant3 -nb 1 -ns 2 -j 8 -tf 1 -mod "--skipModules ZDC"  \
@@ -40,10 +40,6 @@ parser.add_argument('-ptHatBin',help='pT hard bin number', default=-1)
 parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
 parser.add_argument('-ptHatMax',help='pT hard maximum when no bin requested', default=-1)
 parser.add_argument('-weightPow',help='Flatten pT hard spectrum with power', default=-1)
-
-parser.add_argument('-ptTrigMin',help='generated pT trigger minimum', default=0)
-parser.add_argument('-ptTrigMax',help='generated pT trigger maximum', default=-1)
-parser.add_argument('-acceptance',help='select particles within predefined acceptance in ${O2DPG_ROOT}/MC/run/common/detector_acceptance.C', default=0)
 
 parser.add_argument('--embedding',action='store_true', help='With embedding into background')
 parser.add_argument('-nb',help='number of background events / timeframe', default=20)
@@ -193,19 +189,19 @@ for tf in range(1, NTIMEFRAMES + 1):
    TRIGGER=''
    if args.trigger != '':
       TRIGGER=' -t ' + args.trigger
-   
-   PTTRIGMIN=float(args.ptTrigMin)  
-   PTTRIGMAX=float(args.ptTrigMax) 
-   PARTICLE_ACCEPTANCE=int(args.acceptance)
 
    ## Pt Hat productions
    WEIGHTPOW=int(args.weightPow)
-
-   # Recover PTHATMIN and PTHATMAX from pre-defined array depending bin number PTHATBIN
-   # or just the ones passed
-   PTHATBIN=int(args.ptHatBin)  
    PTHATMIN=int(args.ptHatMin)  
    PTHATMAX=int(args.ptHatMax) 
+
+   # Recover PTHATMIN and PTHATMAX from pre-defined array depending bin number PTHATBIN
+   # I think these arrays can be removed and rely on scripts where the arrays are hardcoded
+   # it depends how this will be handled on grid execution
+   # like in run/PWGGAJE/run_decaygammajets.sh run/PWGGAJE/run_jets.sh, run/PWGGAJE/run_dirgamma.sh
+   # Also, if flat pT hard weigthing become standard this will become obsolete. Let's keep it for the moment.
+   PTHATBIN=int(args.ptHatBin)
+
    # I would move next lines to a external script, not sure how to do it (GCB)
    if PTHATBIN > -1:
            # gamma-jet 
@@ -218,12 +214,12 @@ for tf in range(1, NTIMEFRAMES + 1):
       elif PROCESS == 'jets': 
           # Biased jet-jet
           # Define the pt hat bin arrays and set bin depending threshold
-           if   PTTRIGMIN == 3.5:
+           if   "TrigPt3_5" in INIFILE:
                 low_edge = arr.array('l', [5, 7,  9, 12, 16, 21])
                 hig_edge = arr.array('l', [7, 9, 12, 16, 21, -1])
                 PTHATMIN=low_edge[PTHATBIN]
                 PTHATMAX=hig_edge[PTHATBIN]
-           elif PTTRIGMIN == 7:
+           elif  "TrigPt7" in INIFILE:
                 low_edge = arr.array('l', [ 8, 10, 14, 19, 26, 35, 48, 66])
                 hig_edge = arr.array('l', [10, 14, 19, 26, 35, 48, 66, -1])
                 PTHATMIN=low_edge[PTHATBIN]
