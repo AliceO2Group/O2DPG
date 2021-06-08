@@ -21,9 +21,10 @@ NWORKERS=${NWORKERS:-8}
 NBKGEVENTS=${NBKGEVENTS:-20}
 MODULES="--skipModules ZDC"
 SIMENGINE=${SIMENGINE:-TGeant4}
+PYPROCESS=${PYPROCESS:-ccbar} #ccbar, bbar, ...
 
 # create workflow
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13000 -col pp -proc ccbar -tf ${NTIMEFRAMES} -nb ${NBKGEVENTS} \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 5020 -col pp -gen pythia8 -proc ${PYPROCESS} -tf ${NTIMEFRAMES} -nb ${NBKGEVENTS} \
                                                         -ns ${NSIGEVENTS} -e ${SIMENGINE}    \
                                                         -j ${NWORKERS} --embedding -interactionRate 50000
 
