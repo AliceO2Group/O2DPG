@@ -14,20 +14,20 @@ R__ADD_INCLUDE_PATH($O2DPG_ROOT)
 /// \author Gustavo Conesa Balbastre (LPSC-IN2P3-CNRS)
 /// =================================================
 
-o2::eventgen::Trigger decay_gamma_jets( )
+o2::eventgen::Trigger decay_gamma_jets(int acceptanceIn = 0, float ptminIn = 0)
 {
-  return [](const std::vector<TParticle>& particles) -> bool {
+  return [acceptanceIn,ptminIn](const std::vector<TParticle>& particles) -> bool {
     
     // Select decay photon with min pT
-    Float_t ptmin = 0;
-    if ( !ptmin && gSystem->Getenv("CONFIG_DECAYGAMMA_PTMIN") )
-      ptmin = atof(gSystem->Getenv("CONFIG_DECAYGAMMA_PTMIN"));
+    Float_t ptmin = ptminIn;
+    if ( ptmin <= 0 && gSystem->Getenv("PTTRIGMIN") )
+      ptmin = atof(gSystem->Getenv("PTTRIGMIN"));
     //printf("Requested minimum pT %2.2f\n",ptmin);
 
     // Select photons within acceptance
     //
-    Int_t acceptance = 0;
-    if ( gSystem->Getenv("PARTICLE_ACCEPTANCE") )
+    Int_t acceptance = acceptanceIn;
+    if ( acceptance <= 0 && gSystem->Getenv("PARTICLE_ACCEPTANCE") )
       acceptance = atoi(gSystem->Getenv("PARTICLE_ACCEPTANCE"));
     //printf("Requested acceptance %d\n",acceptance);
     
@@ -60,21 +60,21 @@ o2::eventgen::Trigger decay_gamma_jets( )
       if ( !detector_acceptance(acceptance, part.Phi(), part.Eta()) ) 
            continue;
       
-      printf("index %d, PDG %d, status %d, mother %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n", 
+      printf("Selected photon index %d, PDG %d, status %d, mother %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n",
              ipart-1, part.GetPdgCode(), 
              part.GetStatusCode(), 
              part.GetFirstMother(),
              part.Energy(), part.Pt(),
              part.Eta(),    part.Phi()*TMath::RadToDeg());
       
-      printf("mother %d, PDG %d, status %d, 1st daugh %d, last daugh %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n", 
-             part.GetFirstMother(), mother.GetPdgCode(), 
-             mother.GetStatusCode(), 
-             mother.GetFirstDaughter(), mother.GetLastDaughter(),
-             mother.Energy(), mother.Pt(),
-             mother.Eta(),    mother.Phi()*TMath::RadToDeg());
-      
-      printf("+++ Accepted event +++ \n");
+//      printf("mother %d, PDG %d, status %d, 1st daugh %d, last daugh %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n",
+//             part.GetFirstMother(), mother.GetPdgCode(),
+//             mother.GetStatusCode(),
+//             mother.GetFirstDaughter(), mother.GetLastDaughter(),
+//             mother.Energy(), mother.Pt(),
+//             mother.Eta(),    mother.Phi()*TMath::RadToDeg());
+//
+//      printf("+++ Accepted event +++ \n");
 
       return true;
       
