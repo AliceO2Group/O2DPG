@@ -49,7 +49,7 @@ parser.add_argument('-colBkg',help='embedding background collision system', defa
 
 parser.add_argument('-e',help='simengine', default='TGeant4')
 parser.add_argument('-tf',help='number of timeframes', default=2)
-parser.add_argument('-j',help='number of workers (if applicable)', default=8)
+parser.add_argument('-j',help='number of workers (if applicable)', default=8, type=int)
 parser.add_argument('-mod',help='Active modules', default='--skipModules ZDC')
 parser.add_argument('-seed',help='random seed number', default=0)
 parser.add_argument('-o',help='output workflow file', default='workflow.json')
@@ -89,8 +89,17 @@ SIMENGINE=args.e
 workflow={}
 workflow['stages'] = []
 
+def relativeCPU(n_rel, n_workers=NWORKERS):
+    # compute number of CPUs from a given number of workers
+    # n_workers and a fraction n_rel
+    # catch cases where n_rel > 1
+    return min(n_workers, n_workers * n_rel)
+
 taskcounter=0
-def createTask(name='', needs=[], tf=-1, cwd='./', lab=[], cpu=1, mem=500):
+def createTask(name='', needs=[], tf=-1, cwd='./', lab=[], cpu=1, relative_cpu=None, mem=500):
+    if relative_cpu is not None:
+        # Re-compute, if relative number of CPUs requested
+        cpu = relativeCPU(relative_cpu)
     global taskcounter
     taskcounter = taskcounter + 1
     return { 'name': name, 'cmd':'', 'needs': needs, 'resources': { 'cpu': cpu , 'mem': mem }, 'timeframe' : tf, 'labels' : lab, 'cwd' : cwd }
@@ -116,7 +125,7 @@ if doembedding:
            exit(1)
 
         INIBKG=args.iniBkg
-        BKGtask=createTask(name='bkgsim', lab=["GEANT"], cpu='8')
+        BKGtask=createTask(name='bkgsim', lab=["GEANT"], cpu=NWORKERS)
         BKGtask['cmd']='o2-sim -e ' + SIMENGINE + ' -j ' + str(NWORKERS) + ' -n ' + str(NBKGEVENTS) + ' -g  ' + str(GENBKG) + ' ' + str(MODULES) + ' -o bkg --configFile ' + str(INIBKG)
         workflow['stages'].append(BKGtask)
 
@@ -313,7 +322,7 @@ for tf in range(1, NTIMEFRAMES + 1):
             signalneeds = signalneeds + [ BKGtask['name'] ]
        else:
             signalneeds = signalneeds + [ BKG_HEADER_task['name'] ]
-   SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"], cpu='5.', mem='2000')
+   SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"], relative_cpu=5/8, mem='2000')
    SGNtask['cmd']='o2-sim -e ' + str(SIMENGINE) + ' ' + str(MODULES) + ' -n ' + str(NSIGEVENTS) +  ' -j ' \
                   + str(NWORKERS) + ' -g ' + str(GENERATOR) + ' ' + str(TRIGGER)+ ' ' + str(CONFKEY)      \
                   + ' ' + str(INIFILE) + ' -o ' + signalprefix + ' ' + embeddinto
@@ -371,7 +380,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       tpcdigineeds += [ BKG_HITDOWNLOADER_TASKS['TPC']['name'] ]
 
    TPCDigitask=createTask(name='tpcdigi_'+str(tf), needs=tpcdigineeds,
-                          tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='8', mem='9000')
+                          tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu=NWORKERS, mem='9000')
    TPCDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTPC.root . ;')[doembedding]
    TPCDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TPC --interactionRate ' + str(INTRATE) + '  --tpc-lanes ' + str(NWORKERS) + ' --incontext ' + str(CONTEXTFILE) + ' --tpc-chunked-writer --disable-write-ini'
    workflow['stages'].append(TPCDigitask)
@@ -380,7 +389,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if usebkgcache:
       trddigineeds += [ BKG_HITDOWNLOADER_TASKS['TRD']['name'] ]
    TRDDigitask=createTask(name='trddigi_'+str(tf), needs=trddigineeds,
-                          tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='8', mem='8000')
+                          tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu=NWORKERS, mem='8000')
    TRDDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTRD.root . ;')[doembedding]
    TRDDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TRD --interactionRate ' + str(INTRATE) + '  --configKeyValues \"TRDSimParams.digithreads=' + str(NWORKERS) + '\" --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini'
    workflow['stages'].append(TRDDigitask)
@@ -393,7 +402,7 @@ for tf in range(1, NTIMEFRAMES + 1):
             for d in smallsensorlist:
                tneeds += [ BKG_HITDOWNLOADER_TASKS[d]['name'] ]
          t = createTask(name=name, needs=tneeds,
-                     tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='8')
+                     tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu=NWORKERS)
          t['cmd'] = ('','ln -nfs ../bkg_Hits*.root . ;')[doembedding]
          t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options(nosmallrate=True) + ' -n ' + str(args.ns) + simsoption + ' --skipDet TPC,TRD --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini'
          workflow['stages'].append(t)
@@ -438,7 +447,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCCLUSMERGEtask['cmd']='o2-commonutils-treemergertool -i tpc-native-clusters-part*.root -o tpc-native-clusters.root -t tpcrec' #--asfriend preferable but does not work
    workflow['stages'].append(TPCCLUSMERGEtask)
 
-   TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=[TPCCLUSMERGEtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='3', mem='16000')
+   TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=[TPCCLUSMERGEtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
    TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True, nosmallrate=False) + ' --input-type clusters --output-type tracks,send-clusters-per-sector --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads='+str(NWORKERS)+'"'
    workflow['stages'].append(TPCRECOtask)
 
@@ -450,7 +459,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    FT0RECOtask['cmd'] = 'o2-ft0-reco-workflow ' + getDPL_global_options()
    workflow['stages'].append(FT0RECOtask)
 
-   ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', cpu='3')
+   ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
    ITSTPCMATCHtask['cmd']= 'o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True, nosmallrate=False) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\"'
    workflow['stages'].append(ITSTPCMATCHtask)
 
@@ -471,7 +480,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(MFTRECOtask)
 
    pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name']]
-   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='8', mem='4000')
+   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' + getDPL_global_options(nosmallrate=False)
    # PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TOF" --vetex-track-matching-sources "ITS,ITS-TPC,ITS-TPC-TOF"'
    workflow['stages'].append(PVFINDERtask)
