@@ -175,7 +175,6 @@ export JOBUTILS_JOB_ENDHOOK=checkpoint_hook_ttlbased
 ONGRID=0
 [ "${JALIEN_TOKEN_CERT}" ] && ONGRID=1
 
-
 JOBTTL=82000
 CPUCORES=8
 # this tells us to continue an existing job --> in this case we don't create a new workdir
@@ -196,6 +195,7 @@ while [ $# -gt 0 ] ; do
         --mattermost) MATTERMOSTHOOK=$2; shift 2 ;; # if given, status and metric information about the job will be sent to this hook
         --controlserver) CONTROLSERVER=$2; shift 2 ;; # allows to give a SERVER ADDRESS/IP which can act as controller for GRID jobs
         --prodsplit) PRODSPLIT=$2; shift 2 ;; # allows to set JDL production split level (useful to easily replicate workflows)
+        --singularity) SINGULARITY=ON; shift 1 ;; # run everything inside singularity
 	-h) Usage ; exit ;;
         *) break ;;
     esac
@@ -275,7 +275,8 @@ Executable = "${MY_BINDIR}/${MY_JOBNAMEDATE}.sh";
 Arguments = "${CONTINUE_WORKDIR:+"-c ${CONTINUE_WORKDIR}"} --local ${O2TAG:+--o2tag ${O2TAG}} --ttl ${JOBTTL} --label ${JOBLABEL:-label} ${MATTERMOSTHOOK:+--mattermost ${MATTERMOSTHOOK}} ${CONTROLSERVER:+--controlserver ${CONTROLSERVER}}";
 InputFile = "LF:${MY_JOBWORKDIR}/alien_jobscript.sh";
 Output = {
-  "logs*.zip@disk=2"
+  "logs*.zip@disk=2",
+  "AO2D.root@disk=1"
 };
 ${PRODSPLIT:+Split = ${QUOT}production:1-${PRODSPLIT}${QUOT};}
 OutputDir = "${MY_JOBWORKDIR}/${PRODSPLIT:+#alien_counter_03i#}";
@@ -324,22 +325,35 @@ EOF
   fi
 
   exit 0
-fi
+fi  # <---- end if ALIEN_JOB_SUBMITTER
 
 ####################################################################################################
 # The following part is executed on the worker node or locally
 ####################################################################################################
+if [[ ${SINGULARITY} ]]; then
+  # if singularity was asked we restart this script within a container
+  # it's actually much like the GRID mode --> which is why we set JALIEN_TOKEN_CERT
+  set -x
+  cp $0 ${WORKDIR}
+  singularity exec -C -B /cvmfs:/cvmfs,${WORKDIR}:/workdir --env JALIEN_TOKEN_CERT="foo" --pwd /workdir /cvmfs/alice.cern.ch/containers/fs/singularity/centos7 $0 \
+  ${CONTINUE_WORKDIR:+"-c ${CONTINUE_WORKDIR}"} --local ${O2TAG:+--o2tag ${O2TAG}} --ttl ${JOBTTL} --label ${JOBLABEL:-label} ${MATTERMOSTHOOK:+--mattermost ${MATTERMOSTHOOK}} ${CONTROLSERVER:+--controlserver ${CONTROLSERVER}}
+  set +x
+  exit $?
+fi
+
 if [[ "${ONGRID}" == 0 ]]; then
   banner "Executing job in directory ${WORKDIR}"
   cd "${WORKDIR}" 2> /dev/null
 fi
 
-# All is redirected to log.txt but kept on stdout as well
-#if [[ $ALIEN_PROC_ID ]]; then
- exec &> >(tee -a alien_log_${ALIEN_PROC_ID:-0}.txt)
-#fi
+exec &> >(tee -a alien_log_${ALIEN_PROC_ID:-0}.txt)
 
 # ----------- START JOB PREAMBLE  ----------------------------- 
+env | grep "SINGULARITY" &> /dev/null
+if [ "$?" = "0" ]; then
+  echo "Singularity containerized execution detected"
+fi
+
 banner "Environment"
 env
 

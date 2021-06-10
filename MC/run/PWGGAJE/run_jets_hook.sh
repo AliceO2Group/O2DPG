@@ -14,18 +14,18 @@
 RNDSEED=${RNDSEED:-0}   # [default = 0] time-based random seed
 
 NSIGEVENTS=${NSIGEVENTS:-20}
+NTIMEFRAMES=${NTIMEFRAMES:-5}
 NWORKERS=${NWORKERS:-8}
 MODULES="--skipModules ZDC" #"PIPE ITS TPC EMCAL"
-CONFIG_ENERGY=${CONFIG_ENERGY:-5020.0}
-CONFIG_NUCLEUSA=${CONFIG_NUCLEUSA:-2212}
-CONFIG_NUCLEUSB=${CONFIG_NUCLEUSB:-2212}
+CONFIG_ENERGY=${CONFIG_ENERGY:-13000.0}
+SIMENGINE=${SIMENGINE:-TGeant4}
 
 # Define the pt hat bin arrays
 pthatbin_loweredges=(0 5 7 9 12 16 21 28 36 45 57 70 85 99 115 132 150 169 190 212 235)
 pthatbin_higheredges=( 5 7 9 12 16 21 28 36 45 57 70 85 99 115 132 150 169 190 212 235 -1)
 
 # Recover environmental vars for pt binning
-PTHATBIN=${PTHATBIN:-1} 
+#PTHATBIN=${PTHATBIN:-1}
 
 if [ -z "$PTHATBIN" ]; then
     echo "Pt-hat bin (env. var. PTHATBIN) not set, abort."
@@ -37,14 +37,14 @@ PTHATMAX=${pthatbin_higheredges[$PTHATBIN]}
 
 # Recover environmental vars for detector acceptance binning
 # accessed inside prompt_gamma.C
-export CONFIG_DETECTOR_ACCEPTANCE=${CONFIG_DETECTOR_ACCEPTANCE:-0}
+export PARTICLE_ACCEPTANCE=${PARTICLE_ACCEPTANCE:-0}
 
-if [ -z "$CONFIG_DETECTOR_ACCEPTANCE" ]; then
-    echo "Detector acceptance option (env. var. CONFIG_DETECTOR_ACCEPTANCE) not set, abort."
+if [ -z "$PARTICLE_ACCEPTANCE" ]; then
+    echo "Detector acceptance option (env. var. PARTICLE_ACCEPTANCE) not set, abort."
     exit 1
 fi
 
-echo 'Detector acceptance option ' $CONFIG_DETECTOR_ACCEPTANCE
+echo 'Detector acceptance option ' $PARTICLE_ACCEPTANCE
 
 # Recover environmental vars for outgoing parton flavour
 # accessed inside prompt_gamma.C
@@ -52,21 +52,14 @@ export CONFIG_OUTPARTON_PDG=${CONFIG_OUTPARTON_PDG:-0}
 
 echo 'Parton PDG option ' $CONFIG_OUTPARTON_PDG
 
-# Generate Pythia8 jet-jet configuration
-${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
-              --output=pythia8_jets.cfg \
-              --seed=${RNDSEED}         \
-              --idA=${CONFIG_NUCLEUSA}  \
-              --idB=${CONFIG_NUCLEUSB}  \
-              --eCM=${CONFIG_ENERGY}    \
-              --process=jets            \
-              --ptHatMin=${PTHATMIN}    \
-              --ptHatMax=${PTHATMAX}
+# create workflow
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen pythia8 -proc "jets"     \
+                                            -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}                \
+                                            -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}       \
+                                            -j ${NWORKERS} -mod "--skipModules ZDC"                    \
+                                            -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/hook_jets.ini"
 
-# Generate signal 
-taskwrapper sgnsim.log o2-sim -j ${NWORKERS} -n ${NSIGEVENTS}          \
-           -m ${MODULES} -o sgn -g pythia8                             \
-           --configFile $O2DPG_ROOT/MC/config/PWGGAJE/ini/hook_jets.ini
+# run workflow
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
 
-# We need to exit for the ALIEN JOB HANDLER!
 exit 0
