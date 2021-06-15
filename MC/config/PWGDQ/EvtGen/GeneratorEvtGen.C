@@ -40,6 +40,7 @@ public:
   void PrintDebug(bool deg=kTRUE){ mDebug = deg; };
   void SetDecayTable(TString decTab){ mDecayTablePath = decTab; };
   void SetForceDecay(DecayModeEvt forceDec){ mDecayMode = forceDec; };
+  void SetPolarization(Int_t polar){ mPolarization = polar; };
 
 protected:
   
@@ -82,7 +83,7 @@ protected:
 	if(mDebug) std::cout << "particles in the array (before decay): PDG "<< particle.GetPdgCode() << " STATUS " << particle.GetStatusCode() << " position in the array" << iparticle << " First daughter" << particle.GetFirstDaughter() << " Last daughter " << particle.GetLastDaughter() << std::endl;
 	TLorentzVector *momentum=new TLorentzVector();
 	momentum->SetPxPyPzE(particle.Px(),particle.Py(),particle.Pz(),particle.Energy()); 
-	DecayEvtGen(particle.GetPdgCode(),momentum);
+	DecayEvtGen(particle.GetPdgCode(),momentum,mPolarization);
 	if(!ImportParticlesEvtGen(iparticle)) { std::cout << "Attention: Import Particles failed" << std::endl; return kFALSE; }
 	if(mDebug) std::cout << "particles in the array (after decay): PDG "<< particle.GetPdgCode() << " STATUS " << particle.GetStatusCode() << " position in the array" << iparticle << " First daughter" << particle.GetFirstDaughter() << " Last daughter " << particle.GetLastDaughter() << std::endl;
 	
@@ -91,26 +92,57 @@ protected:
     return kTRUE;
   }
   
+ 
   // decay particle
-  void DecayEvtGen(Int_t ipart, TLorentzVector *p)
+  void DecayEvtGen(Int_t ipart, TLorentzVector *p, Int_t alpha)
   {
     //
     //Decay a particle
     //input: pdg code and momentum of the particle to be decayed  
     //all informations about decay products are stored in mEvtstdhep 
     //
+    // for particles with spin 1 (e.g. jpsi) is possible to set 
+    // the polarization status (fully transversal alpha=1 / longitudinal alpha=-1) 
+    // through spin density matrix
+    //
     EvtId IPART=EvtPDL::evtIdFromStdHep(ipart);
     EvtVector4R p_init(p->E(),p->Px(),p->Py(),p->Pz());
     EvtParticle *froot_part=EvtParticleFactory::particleFactory(IPART,p_init);
+    
+    if(TMath::Abs(alpha) == 1){
+   
+      // check if particle has spin 1 (i.e. 3 states)
+      if(froot_part->getSpinStates() != 3 ) 
+         { 
+	 std::cout << "Error: Polarization settings available for spin 1 particles" << std::endl; 
+         return;
+         }
+
+      EvtSpinDensity rho;
+      //transversal
+      if(alpha == 1){
+      rho.setDiag(3);
+      rho.set(1,1,EvtComplex(0.0,0.0)); //eps00 = 0, eps++ = 1, eps-- = 1 
+      }
+      else{
+      //longitudinal
+      rho.setDiag(3);
+      rho.set(0,0,EvtComplex(0.0,0.0)); //eps++ = 0
+      rho.set(2,2,EvtComplex(0.0,0.0)); //eps-- = 0
+      }
+
+    froot_part->setSpinDensityForwardHelicityBasis(rho,p->Phi(),p->Theta(),0);
+    } // close polarization settings
+
     mEvtGen->generateDecay(froot_part);
     mEvtstdhep->init();
     froot_part->makeStdHep(*mEvtstdhep);
     if(mDebug) froot_part->printTree(); //to print the decay chain 
-    froot_part->deleteTree(); 
+    froot_part->deleteTree();
     return;
   }
-  
-  
+
+
   Bool_t ImportParticlesEvtGen(Int_t indexMother)
   {
     //
@@ -288,6 +320,7 @@ void ForceDecay()
   bool mDebug = kFALSE; 
   TString mDecayTablePath;  
   DecayModeEvt mDecayMode = kEvtAll; 
+  Int_t mPolarization = -999;
 };
   
 }}
