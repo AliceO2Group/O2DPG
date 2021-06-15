@@ -58,7 +58,7 @@ still in development. Currently, it follows the following scheme:
     },
     {
       "name": "task2",
-      "env": { "MY_ENV":1 }
+      "env": { "MY_ENV": "1" }
       "cmd": "o2-sim-digitizer-workflow"
       "needs": [ "task1" ],
       "resources": {
