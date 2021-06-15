@@ -58,6 +58,10 @@ parser.add_argument('--noIPC',help='disable shared memory in DPL')
 # arguments for background event caching
 parser.add_argument('--upload-bkg-to',help='where to upload background event files (alien path)')
 parser.add_argument('--use-bkg-from',help='take background event from given alien path')
+
+# argument for early cleanup
+parser.add_argument('--early-tf-cleanup',action='store_true', help='whether to cleanup intermediate artefacts after each timeframe is done')
+
 # power feature (for playing) --> does not appear in help message
 #  help='Treat smaller sensors in a single digitization')
 parser.add_argument('--combine-smaller-digi', action='store_true', help=argparse.SUPPRESS)
@@ -441,6 +445,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      tpcclussect = createTask(name=taskname, needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
      tpcclussect['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s) + ' --rate 1000 --tpc-lanes ' + str(NWORKERS)
      tpcclussect['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str(s) + '.root --tpc-sectors ' + str(s) + ' --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=1"'
+     tpcclussect['env'] = { "OMP_NUM_THREADS" : "1" }   # we disable OpenMP since running in scalar mode anyway
      workflow['stages'].append(tpcclussect)
 
    TPCCLUSMERGEtask=createTask(name='tpcclustermerge_'+str(tf), needs=tpcclustertasks, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1')
@@ -509,6 +514,19 @@ for tf in range(1, NTIMEFRAMES + 1):
    AOD_merge_task['cmd'] += ' rm ../AO2D_old.root || true'
    AOD_merge_task['semaphore'] = 'aodmerge' #<---- this is making sure that only one merge is running at any time
    workflow['stages'].append(AOD_merge_task)
+
+  # cleanup
+  # --------
+  # On the GRID it may be important to cleanup as soon as possible because disc space
+  # is limited (which would restrict the number of timeframes). We offer a timeframe cleanup function
+  # taking away digits, clusters and other stuff as soon as possible.
+  # TODO: cleanup by labels or task names
+   if args.early_tf_cleanup == True:
+     TFcleanup = createTask(name='tfcleanup_'+str(tf), needs= [ AOD_merge_task['name'] ], tf=tf, cwd=timeframeworkdir, lab=["CLEANUP"], mem='0', cpu='1')
+     TFcleanup['cmd'] = 'rm *digi*.root;'
+     TFcleanup['cmd'] += 'rm *cluster*.root'
+     workflow['stages'].append(TFcleanup);
+
 
 def trimString(cmd):
   return ' '.join(cmd.split())
