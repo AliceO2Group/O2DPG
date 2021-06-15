@@ -109,12 +109,13 @@ def createTask(name='', needs=[], tf=-1, cwd='./', lab=[], cpu=1, relative_cpu=N
     return { 'name': name, 'cmd':'', 'needs': needs, 'resources': { 'cpu': cpu , 'mem': mem }, 'timeframe' : tf, 'labels' : lab, 'cwd' : cwd }
 
 def getDPL_global_options(bigshm=False,nosmallrate=False):
+   common="-b --run --fairmq-ipc-prefix ${FAIRMQ_IPC_PREFIX:-./} --driver-client-backend ws:// " + ('--rate 1000','')[nosmallrate]
    if args.noIPC!=None:
-      return "-b --run --no-IPC " + ('--rate 1000','')[nosmallrate]
+      return common + " --no-IPC "
    if bigshm:
-      return "-b --run --shm-segment-size ${SHMSIZE:-50000000000} --driver-client-backend ws://" + (' --rate 1000','')[nosmallrate]
+      return common + " --shm-segment-size ${SHMSIZE:-50000000000} "
    else:
-      return "-b --run " + ' --driver-client-backend ws://' + (' --rate 1000','')[nosmallrate]
+      return common
 
 doembedding=True if args.embedding=='True' or args.embedding==True else False
 usebkgcache=args.use_bkg_from!=None

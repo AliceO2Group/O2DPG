@@ -938,6 +938,17 @@ class WorkflowExecutor:
     def execute(self):
         psutil.cpu_percent(interval=None)
         os.environ['JOBUTILS_SKIPDONE'] = "ON"
+
+        # we make our own "tmp" folder
+        # where we can put stuff such as tmp socket files etc (for instance DPL FAIR-MQ sockets)
+        # (In case of running within docker/singularity, this may not be so important)
+        if not os.path.isdir("./.tmp"):
+          os.mkdir("./.tmp")
+        if os.environ.get('FAIRMQ_IPC_PREFIX')==None:
+          socketpath = os.getcwd() + "/.tmp"
+          actionlogger.info("Setting FAIRMQ socket path to " + socketpath)
+          os.environ['FAIRMQ_IPC_PREFIX'] = socketpath
+
         # some maintenance / init work
         if args.list_tasks:
           print ('List of tasks in this workflow:')
