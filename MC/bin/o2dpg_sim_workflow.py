@@ -92,8 +92,8 @@ workflow['stages'] = []
 def relativeCPU(n_rel, n_workers=NWORKERS):
     # compute number of CPUs from a given number of workers
     # n_workers and a fraction n_rel
-    # catch cases where n_rel > 1
-    return min(n_workers, n_workers * n_rel)
+    # catch cases where n_rel > 1 or n_workers * n_rel
+    return round(min(n_workers, n_workers * n_rel), 2)
 
 taskcounter=0
 def createTask(name='', needs=[], tf=-1, cwd='./', lab=[], cpu=1, relative_cpu=None, mem=500):
