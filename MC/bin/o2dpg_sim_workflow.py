@@ -4,7 +4,7 @@
 # A script producing a consistent MC->RECO->AOD workflow 
 # It aims to handle the different MC possible configurations 
 # It just creates a workflow.json txt file, to execute the workflow one must execute right after
-#   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json 
+#   ${O2_ROOT}/bin/o2-workflow-runner.py -f workflow.json 
 #
 # Execution examples:
 #  - pp PYTHIA jets, 2 events, triggered on high pT decay photons on all barrel calorimeters acceptance, eCMS 13 TeV

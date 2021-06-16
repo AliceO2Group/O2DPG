@@ -63,6 +63,6 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen py
                                             -trigger "external" -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_prompt_gamma.ini"
 
 # run workflow
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
+${O2_ROOT}/bin/o2-workflow-runner.py -f workflow.json
 
 exit 0

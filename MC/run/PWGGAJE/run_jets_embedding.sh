@@ -42,6 +42,6 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen py
                                             -j ${NWORKERS} -mod "--skipModules ZDC"
 
 # run workflow
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
+${O2_ROOT}/bin/o2-workflow-runner.py -f workflow.json
 
 exit 0

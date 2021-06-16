@@ -1,4 +1,4 @@
-This is the documentation for the `o2_dpg_workflow_runner.py` tool.
+This is the documentation for the `o2-workflow-runner.py` tool.
 
 **This is a draft document expressing ideas. Everything is to be understood as prototype and open for changes/adaptions.**
 
@@ -106,43 +106,43 @@ Produce a simulation workflow (like in the graph), for example using [create_emb
 Run workflow in a given file
 ```
 alienv enter O2/latest O2DPG/latest
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
+${O2_ROOT}/bin/o2-workflow-runner.py -f workflow.json
 ```
 
 Show what you would run
 ```
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --dry-run
+${O2_ROOT}/bin/o2-workflow-runner.py -f workflow.json --dry-run
 ```
 
 Execute workflow in serialized manner (only 1 task at a time)
 ```
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -jmax 1
+${O2_ROOT}/bin/o2-workflow-runner.py -f workflow.json -jmax 1
 ```
 
 Produce a shell script that can run the workflow (serialized)
 ```
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --produce-script foo.sh
+${O2_ROOT}/bin/o2-workflow-runner.py -f workflow.json --produce-script foo.sh
 ```
 
 Redo a certain task in the workflow and all its direct or indirect dependencies
 (This makes sense only if this not the first pass of the workflow)
 ```
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --rerun-from tpcdigi_1
+${O2_ROOT}/bin/o2-workflow-runner.py -f workflow.json --rerun-from tpcdigi_1
 ```
 
 Run workflow for targets matching trdtrap (regular expression works)
 ```
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-tasks trdtrap
+${O2_ROOT}/bin/o2-workflow-runner.py -f workflow.json --target-tasks trdtrap
 ```
 
 Run everyting marked "RECO"
 ```
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-stages RECO
+${O2_ROOT}bin/o2-workflow-runner.py -f workflow.json --target-stages RECO
 ```
 
 Rerun worflow until AOD, skipping all tasks already done (task skipping is default)
 ```
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-stages AOD
+${O2_ROOT}/bin/o2-workflow-runner.py -f workflow.json --target-stages AOD
 ```
 
 # ToDo / Wanted feature list
