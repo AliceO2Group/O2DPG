@@ -17,10 +17,16 @@
 #                             -col pp -eA 2.510 -proc "ccbar"  --embedding
 # 
 
+import sys
 import argparse
 from os import environ
+from os.path import join, dirname
 import json
 import array as arr
+
+sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
+
+from o2dpg_workflow_utils import createTask, dump_workflow
 
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
 
@@ -96,20 +102,6 @@ BFIELD=args.field
 workflow={}
 workflow['stages'] = []
 
-def relativeCPU(n_rel, n_workers=NWORKERS):
-    # compute number of CPUs from a given number of workers
-    # n_workers and a fraction n_rel
-    # catch cases where n_rel > 1 or n_workers * n_rel
-    return round(min(n_workers, n_workers * n_rel), 2)
-
-taskcounter=0
-def createTask(name='', needs=[], tf=-1, cwd='./', lab=[], cpu=1, relative_cpu=None, mem=500):
-    if relative_cpu is not None:
-        # Re-compute, if relative number of CPUs requested
-        cpu = relativeCPU(relative_cpu)
-    global taskcounter
-    taskcounter = taskcounter + 1
-    return { 'name': name, 'cmd':'', 'needs': needs, 'resources': { 'cpu': cpu , 'mem': mem }, 'timeframe' : tf, 'labels' : lab, 'cwd' : cwd }
 
 def getDPL_global_options(bigshm=False,nosmallrate=False):
    common="-b --run --fairmq-ipc-prefix ${FAIRMQ_IPC_PREFIX:-./} --driver-client-backend ws:// " + ('--rate 1000','')[nosmallrate]
@@ -535,21 +527,6 @@ for tf in range(1, NTIMEFRAMES + 1):
      workflow['stages'].append(TFcleanup);
 
 
-def trimString(cmd):
-  return ' '.join(cmd.split())
-
-# insert taskwrapper stuff
-for s in workflow['stages']:
-  s['cmd']='. ${O2_ROOT}/share/scripts/jobutils.sh; taskwrapper ' + s['name']+'.log \'' + s['cmd'] + '\''
-
-# remove whitespaces etc
-for s in workflow['stages']:
-  s['cmd']=trimString(s['cmd'])
-
-
-# write workflow to json
-workflowfile=args.o
-with open(workflowfile, 'w') as outfile:
-    json.dump(workflow, outfile, indent=2)
+dump_workflow(workflow["stages"], args.o)
 
 exit (0)
