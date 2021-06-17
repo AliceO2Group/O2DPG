@@ -36,6 +36,8 @@ parser.add_argument('-eCM',help='CMS energy', default=-1)
 parser.add_argument('-eA',help='Beam A energy', default=6499.) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
 parser.add_argument('-eB',help='Beam B energy', default=-1)
 parser.add_argument('-col',help='collision system: pp, PbPb, pPb, Pbp, ..., in case of embedding collision system of signal', default='pp')
+parser.add_argument('-field',help='L3 field rounded to kGauss, allowed: values +-2,+-5 and 0; +-5U for uniform field', default='-5')
+
 parser.add_argument('-ptHatBin',help='pT hard bin number', default=-1)
 parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
 parser.add_argument('-ptHatMax',help='pT hard maximum when no bin requested', default=-1)
@@ -87,6 +89,7 @@ NTIMEFRAMES=int(args.tf)
 NWORKERS=args.j
 MODULES=args.mod #"--skipModules ZDC"
 SIMENGINE=args.e
+BFIELD=args.field
 
 # add here other possible types
 
@@ -131,7 +134,9 @@ if doembedding:
 
         INIBKG=args.iniBkg
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], cpu=NWORKERS)
-        BKGtask['cmd']='o2-sim -e ' + SIMENGINE + ' -j ' + str(NWORKERS) + ' -n ' + str(NBKGEVENTS) + ' -g  ' + str(GENBKG) + ' ' + str(MODULES) + ' -o bkg --configFile ' + str(INIBKG)
+        BKGtask['cmd']='o2-sim -e ' + SIMENGINE + ' -j ' + str(NWORKERS) + ' -n ' + str(NBKGEVENTS)              \
+                     + ' -g  '      + str(GENBKG) + ' '  + str(MODULES)  + ' -o bkg --configFile ' + str(INIBKG) \
+                     + ' --field '  + str(BFIELD)
         workflow['stages'].append(BKGtask)
 
         # check if we should upload background event
@@ -328,9 +333,10 @@ for tf in range(1, NTIMEFRAMES + 1):
        else:
             signalneeds = signalneeds + [ BKG_HEADER_task['name'] ]
    SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"], relative_cpu=5/8, mem='2000')
-   SGNtask['cmd']='o2-sim -e ' + str(SIMENGINE) + ' ' + str(MODULES) + ' -n ' + str(NSIGEVENTS) +  ' -j ' \
-                  + str(NWORKERS) + ' -g ' + str(GENERATOR) + ' ' + str(TRIGGER)+ ' ' + str(CONFKEY)      \
-                  + ' ' + str(INIFILE) + ' -o ' + signalprefix + ' ' + embeddinto
+   SGNtask['cmd']='o2-sim -e '  + str(SIMENGINE) + ' '    + str(MODULES)  + ' -n ' + str(NSIGEVENTS)  \
+                  + ' --field ' + str(BFIELD)    + ' -j ' + str(NWORKERS) + ' -g ' + str(GENERATOR)   \
+                  + ' '         + str(TRIGGER)   + ' '    + str(CONFKEY)  + ' '    + str(INIFILE)     \
+                  + ' -o '      + signalprefix   + ' '    + embeddinto
    workflow['stages'].append(SGNtask)
 
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
