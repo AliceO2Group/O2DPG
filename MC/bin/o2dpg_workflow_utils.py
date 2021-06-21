@@ -133,7 +133,7 @@ def check_workflow_dependencies(workflow, collect_warnings, collect_errors):
     for n in needed:
         if n not in names:
             # For now, only add a warning since tasks might still be added
-            collect_warnings.append(f"WARNING: Task {n} is needed but is not in tasks")
+            collect_warnings.append(f"WARNING: Task {n} is needed but is not in tasks (might be added later)")
             is_sane = False
 
     return is_sane

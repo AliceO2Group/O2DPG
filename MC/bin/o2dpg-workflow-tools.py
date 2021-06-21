@@ -26,10 +26,10 @@ def extend(args):
     dump_workflow(workflow_orig, filename)
 
 
-def create_modify(args):
-    """create an empty workflow skeleton or modify it
+def create(args):
+    """create an empty workflow skeleton or add task skeletons to existing workflow
     """
-    if args.create:
+    if args.workflow:
         # empty workflow
         dump_workflow([], args.file)
     if args.add_task:
@@ -38,10 +38,38 @@ def create_modify(args):
         for name in args.add_task:
             workflow.append(createTask(name=name))
         dump_workflow(workflow, args.file)
-    if args.jobs:
+
+
+def find_task(workflow, task_name):
+    for s in workflow:
+        if s["name"] == task_name:
+            return s
+    return None
+
+
+def modify(args):
+
+    if args.task:
         workflow = read_workflow(args.file)
-        update_workflow_resource_requirements(workflow, args.jobs)
+        # try to find the requested task
+        task = find_task(workflow, args.task)
+        if not task:
+            print(f"Task with name {args.task} does not exist")
+            exit(1)
+        for attr in ("name", "needs", "timeframe", "cwd", "labels", "cmd"):
+            if hasattr(args, attr) and getattr(args, attr) is not None:
+                task[attr] = getattr(args, attr)
+        for attr in ("cpu", "relative_cpu", "mem"):
+            if hasattr(args, attr) and getattr(args, attr) is not None:
+                task["resources"][attr] = getattr(args, attr)
+
         dump_workflow(workflow, args.file)
+
+
+def nworkers(args):
+    workflow = read_workflow(args.file)
+    update_workflow_resource_requirements(workflow, args.jobs)
+    dump_workflow(workflow, args.file)
 
 
 def inspect(args):
@@ -54,6 +82,13 @@ def inspect(args):
         check_workflow(workflow)
     if args.summary:
         summary_workflow(workflow)
+    if args.task:
+        task = find_task(workflow, args.task)
+        if not task:
+            print(f"Task with name {args.task}")
+            exit(1)
+        print("Here are the requested task information")
+        print(task)
 
 
 def main():
@@ -69,12 +104,31 @@ def main():
     merge_parser.add_argument("extend_wf", help="workflow JSON to be merged to orig")
     merge_parser.add_argument("--output", "-o", help="extended workflow output file name", default="workflow_merged.json")
 
-    create_modify_parser = sub_parsers.add_parser("modify", help="manage a workflow")
-    create_modify_parser.set_defaults(func=create_modify)
-    create_modify_parser.add_argument("file", help="workflow file to be created or modifed")
-    create_modify_parser.add_argument("--create", action="store_true", help="name of workflow file to be created")
-    create_modify_parser.add_argument("--add-task", dest="add_task", nargs="+", help="add named tasks to workflow file")
-    create_modify_parser.add_argument("--jobs", "-j", type=int, help="number of workers in case it should be recomputed")
+    create_parser = sub_parsers.add_parser("create", help="manage a workflow")
+    create_parser.set_defaults(func=create)
+    create_parser.add_argument("file", help="workflow file to be created or modifed")
+    create_parser.add_argument("--workflow", action="store_true")
+    create_parser.add_argument("--add-task", dest="add_task", nargs="+", help="add named tasks to workflow file")
+
+    nworker_parser = sub_parsers.add_parser("nworkers", help="update number of workers")
+    nworker_parser.set_defaults(func=nworkers)
+    nworker_parser.add_argument("file", help="the workflow file to be modified")
+    nworker_parser.add_argument("jobs", type=int, help="number of workers to recompute relative cpu")
+
+    modify_parser = sub_parsers.add_parser("modify", help="modify a task")
+    modify_parser.set_defaults(func=modify)
+    modify_parser.add_argument("file", help="the workflow file to be modified")
+    modify_parser.add_argument("task", help="name of task to be modified")
+    # not allowing for changing the name at the moment as this also goes into the log-file name
+    #modify_parser.add_argument("--name", help="new name of this task")
+    modify_parser.add_argument("--needs", nargs="+", help="required tasks to be executed before this one")
+    modify_parser.add_argument("--timeframe", type=int, help="timeframe")
+    modify_parser.add_argument("--cwd", help="current working directory of this task")
+    modify_parser.add_argument("--labels", nargs="+", help="attached labels")
+    modify_parser.add_argument("--cpu", type=int, help="absolute number of workers to be used for this task")
+    modify_parser.add_argument("--relative-cpu", dest="relative_cpu", type=float, help="realtive fraction of maximum number of available workers")
+    modify_parser.add_argument("--mem", type=int, help="estimated memory")
+    modify_parser.add_argument("--cmd", help="command line to be executed")
 
     inspect_parser = sub_parsers.add_parser("inspect", help="inspect a workflow")
     inspect_parser.set_defaults(func=inspect)
