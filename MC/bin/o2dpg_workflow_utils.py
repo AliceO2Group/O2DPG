@@ -15,6 +15,12 @@ def trimString(cmd):
   return ' '.join(cmd.split())
 
 
+def make_workflow_filename(filename):
+    if filename.lower().rfind(".json") < 0:
+        # append extension if not there
+        return filename + ".json"
+    return filename
+
 def update_workflow_resource_requirements(workflow, n_workers):
     """Update resource requirements/settings
     """
@@ -89,9 +95,7 @@ def dump_workflow(workflow, filename):
     # make the final dict to be dumped
     dump_workflow = {"stages": dump_workflow}
 
-    if filename.lower().rfind(".json") < 0:
-        # append extension if not there
-        filename += ".json"
+    filename = make_workflow_filename(filename)
     
     with open(filename, 'w') as outfile:
         json.dump(dump_workflow, outfile, indent=2)
@@ -101,9 +105,7 @@ def dump_workflow(workflow, filename):
 
 def read_workflow(filename):
     workflow = None
-    if filename.lower().rfind(".json") < 0:
-        # append extension if not there
-        filename += ".json"
+    filename = make_workflow_filename(filename)
     with open(filename, "r") as wf_file:
         workflow = json.load(wf_file)["stages"]
     return workflow

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import sys
-from os.path import join, dirname
+from os.path import join, dirname, exists
 import argparse
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
-from o2dpg_workflow_utils import createTask, read_workflow, dump_workflow, check_workflow, update_workflow_resource_requirements
+from o2dpg_workflow_utils import createTask, read_workflow, dump_workflow, check_workflow, update_workflow_resource_requirements, make_workflow_filename
 
 def extend(args):
     """extend a workflow by another one
@@ -29,15 +29,19 @@ def extend(args):
 def create(args):
     """create an empty workflow skeleton or add task skeletons to existing workflow
     """
-    if args.workflow:
-        # empty workflow
-        dump_workflow([], args.file)
+    filename = make_workflow_filename(args.file)
+    if not args.add_task and exists(filename):
+        print(f"Workflow file {filename} does already exist. Delete it and try again")
+        return
+    if not args.add_task or not exists(filename):
+        # just create an empty workflow
+        dump_workflow([], filename)
     if args.add_task:
         # add another task skeleton with name
-        workflow = read_workflow(args.file)
+        workflow = read_workflow(filename)
         for name in args.add_task:
             workflow.append(createTask(name=name))
-        dump_workflow(workflow, args.file)
+        dump_workflow(workflow, filename)
 
 
 def find_task(workflow, task_name):
@@ -97,18 +101,17 @@ def main():
 
     sub_parsers = parser.add_subparsers(dest="command")
 
+    create_parser = sub_parsers.add_parser("create", help="manage a workflow")
+    create_parser.set_defaults(func=create)
+    create_parser.add_argument("file", help="workflow file to be created or modifed")
+    create_parser.add_argument("--add-task", dest="add_task", nargs="+", help="add named tasks to workflow file")
+
     # Append to (sim) workflow
     merge_parser = sub_parsers.add_parser("merge", help="append stages")
     merge_parser.set_defaults(func=extend)
     merge_parser.add_argument("orig_wf", help="original workflow")
     merge_parser.add_argument("extend_wf", help="workflow JSON to be merged to orig")
     merge_parser.add_argument("--output", "-o", help="extended workflow output file name", default="workflow_merged.json")
-
-    create_parser = sub_parsers.add_parser("create", help="manage a workflow")
-    create_parser.set_defaults(func=create)
-    create_parser.add_argument("file", help="workflow file to be created or modifed")
-    create_parser.add_argument("--workflow", action="store_true")
-    create_parser.add_argument("--add-task", dest="add_task", nargs="+", help="add named tasks to workflow file")
 
     nworker_parser = sub_parsers.add_parser("nworkers", help="update number of workers")
     nworker_parser.set_defaults(func=nworkers)
