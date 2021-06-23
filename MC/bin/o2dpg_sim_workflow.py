@@ -491,7 +491,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options(nosmallrate=False)
    workflow['stages'].append(MFTRECOtask)
 
-   pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name']]
+   pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], TRDTRACKINGtask['name']]
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' + getDPL_global_options(nosmallrate=False)
    # PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TOF" --vetex-track-matching-sources "ITS,ITS-TPC,ITS-TPC-TOF"'
