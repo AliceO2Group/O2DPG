@@ -500,6 +500,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    # PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TOF" --vetex-track-matching-sources "ITS,ITS-TPC,ITS-TPC-TOF"'
    workflow['stages'].append(PVFINDERtask)
  
+   vertexQCneeds = [PVFINDERtask['name']]
+   vertexQCtask = createTask(name='vertexQC_'+str(tf), needs=vertexQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
+   vertexQCtask['cmd'] = 'o2-primary-vertex-reader-workflow | o2-qc --config json:///home/pkonopka/alice/vertexing-qc-direct-mc.json ' + getDPL_global_options(nosmallrate=False)
+   workflow['stages'].append(vertexQCtask)
+ 
   # -----------
   # produce AOD
   # -----------
