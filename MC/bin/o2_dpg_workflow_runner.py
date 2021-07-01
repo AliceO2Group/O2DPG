@@ -23,6 +23,37 @@ formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 
 sys.setrecursionlimit(100000)
 
+import argparse
+import psutil
+max_system_mem=psutil.virtual_memory().total
+
+# defining command line options
+parser = argparse.ArgumentParser(description='Parallel execution of a (O2-DPG) DAG data/job pipeline under resource contraints.', 
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+parser.add_argument('-f','--workflowfile', help='Input workflow file name', required=True)
+parser.add_argument('-jmax','--maxjobs', help='Number of maximal parallel tasks.', default=100)
+parser.add_argument('--dry-run', action='store_true', help='Show what you would do.')
+parser.add_argument('--visualize-workflow', action='store_true', help='Saves a graph visualization of workflow.')
+parser.add_argument('--target-labels', nargs='+', help='Runs the pipeline by target labels (example "TPC" or "DIGI").\
+                    This condition is used as logical AND together with --target-tasks.', default=[])
+parser.add_argument('-tt','--target-tasks', nargs='+', help='Runs the pipeline by target tasks (example "tpcdigi"). By default everything in the graph is run. Regular expressions supported.', default=["*"])
+parser.add_argument('--produce-script', help='Produces a shell script that runs the workflow in serialized manner and quits.')
+parser.add_argument('--rerun-from', help='Reruns the workflow starting from given task (or pattern). All dependent jobs will be rerun.')
+parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit.', action='store_true')
+
+parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint', default=max_system_mem)
+parser.add_argument('--cpu-limit', help='Set CPU limit (core count)', default=8)
+parser.add_argument('--cgroup', help='Execute pipeline under a given cgroup (e.g., 8coregrid) emulating resource constraints. This m\
+ust exist and the tasks file must be writable to with the current user.')
+parser.add_argument('--stdout-on-failure', action='store_true', help='Print log files of failing tasks to stdout,')
+parser.add_argument('--webhook', help=argparse.SUPPRESS) # log some infos to this webhook channel
+parser.add_argument('--checkpoint-on-failure', help=argparse.SUPPRESS) # debug option making a debug-tarball and sending to specified address
+                                                                       # argument is alien-path
+parser.add_argument('--action-logfile', help='Logfilename for action logs. If none given, pipeline_action_#PID.log will be used')
+parser.add_argument('--metric-logfile', help='Logfilename for metric logs. If none given, pipeline_metric_#PID.log will be used')
+args = parser.parse_args()
+
 def setup_logger(name, log_file, level=logging.INFO):
     """To setup as many loggers as you want"""
 
@@ -36,10 +67,10 @@ def setup_logger(name, log_file, level=logging.INFO):
     return logger
 
 # first file logger
-actionlogger = setup_logger('pipeline_action_logger', 'pipeline_action.log', level=logging.DEBUG)
+actionlogger = setup_logger('pipeline_action_logger', ('pipeline_action_' + str(os.getpid()) + '.log', args.action_logfile)[args.action_logfile!=None], level=logging.DEBUG)
 
 # second file logger
-metriclogger = setup_logger('pipeline_metric_logger', 'pipeline_metric.log')
+metriclogger = setup_logger('pipeline_metric_logger', ('pipeline_metric_' + str(os.getpid()) + '.log', args.action_logfile)[args.action_logfile!=None])
 
 # for debugging without terminal access
 # TODO: integrate into standard logger
@@ -752,7 +783,8 @@ class WorkflowExecutor:
        if failuredetected and self.stoponfailure:
           actionlogger.info('Stoping pipeline due to failure in stages with PID ' + str(failingpids))
           # self.analyse_files_and_connections()
-          self.cat_logfiles_tostdout(failingtasks)
+          if self.args.stdout_on_failure:
+             self.cat_logfiles_tostdout(failingtasks)
           self.send_checkpoint(failingtasks, self.args.checkpoint_on_failure)
           self.stop_pipeline_and_exit(process_list)
 
@@ -1041,35 +1073,8 @@ class WorkflowExecutor:
         print ('\n**** Pipeline done *****\n')
         # self.analyse_files_and_connections()
 
-import argparse
-import psutil
-max_system_mem=psutil.virtual_memory().total
 
-parser = argparse.ArgumentParser(description='Parallel execution of a (O2-DPG) DAG data/job pipeline under resource contraints.', 
-                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument('-f','--workflowfile', help='Input workflow file name', required=True)
-parser.add_argument('-jmax','--maxjobs', help='Number of maximal parallel tasks.', default=100)
-parser.add_argument('--dry-run', action='store_true', help='Show what you would do.')
-parser.add_argument('--visualize-workflow', action='store_true', help='Saves a graph visualization of workflow.')
-parser.add_argument('--target-labels', nargs='+', help='Runs the pipeline by target labels (example "TPC" or "DIGI").\
-                    This condition is used as logical AND together with --target-tasks.', default=[])
-parser.add_argument('-tt','--target-tasks', nargs='+', help='Runs the pipeline by target tasks (example "tpcdigi"). By default everything in the graph is run. Regular expressions supported.', default=["*"])
-parser.add_argument('--produce-script', help='Produces a shell script that runs the workflow in serialized manner and quits.')
-parser.add_argument('--rerun-from', help='Reruns the workflow starting from given task (or pattern). All dependent jobs will be rerun.')
-parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit.', action='store_true')
-
-parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint', default=max_system_mem)
-parser.add_argument('--cpu-limit', help='Set CPU limit (core count)', default=8)
-parser.add_argument('--cgroup', help='Execute pipeline under a given cgroup (e.g., 8coregrid) emulating resource constraints. This m\
-ust exist and the tasks file must be writable to with the current user.')
-parser.add_argument('--stdout-on-failure', action='store_true', help='Print log files of failing tasks to stdout,')
-parser.add_argument('--webhook', help=argparse.SUPPRESS) # log some infos to this webhook channel
-parser.add_argument('--checkpoint-on-failure', help=argparse.SUPPRESS) # debug option making a debug-tarball and sending to specified address
-                                                                       # argument is alien-path
-
-args = parser.parse_args()
-print (args)
 
 if args.cgroup!=None:
     myPID=os.getpid()
