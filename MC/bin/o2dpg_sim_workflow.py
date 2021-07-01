@@ -73,6 +73,7 @@ parser.add_argument('--early-tf-cleanup',action='store_true', help='whether to c
 # power feature (for playing) --> does not appear in help message
 #  help='Treat smaller sensors in a single digitization')
 parser.add_argument('--combine-smaller-digi', action='store_true', help=argparse.SUPPRESS)
+parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 
 args = parser.parse_args()
 print (args)
@@ -434,24 +435,32 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------
    # reco
    # -----------
+   tpcreconeeds=[]
+   if not args.combine_tpc_clusterization:
+     # TODO: check value for MaxTimeBin; A large value had to be set tmp in order to avoid crashes based on "exceeding timeframe limit"
+     # We treat TPC clusterization in multiple (sector) steps in order to stay within the memory limit
+     tpcclustertasks=[]
+     for s in range(0,35):
+       taskname = 'tpcclusterpart' + str(s) + '_' + str(tf)
+       tpcclustertasks.append(taskname)
+       tpcclussect = createTask(name=taskname, needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
+       tpcclussect['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s) + ' --rate 1000 --tpc-lanes ' + str(NWORKERS)
+       tpcclussect['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str(s) + '.root --tpc-sectors ' + str(s) + ' --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=1"'
+       tpcclussect['env'] = { "OMP_NUM_THREADS" : "1" }   # we disable OpenMP since running in scalar mode anyway
+       workflow['stages'].append(tpcclussect)
 
-   # TODO: check value for MaxTimeBin; A large value had to be set tmp in order to avoid crashes based on "exceeding timeframe limit"
-   # We treat TPC clusterization in multiple (sector) steps in order to stay within the memory limit
-   tpcclustertasks=[]
-   for s in range(0,35):
-     taskname = 'tpcclusterpart' + str(s) + '_' + str(tf)
-     tpcclustertasks.append(taskname)
-     tpcclussect = createTask(name=taskname, needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
-     tpcclussect['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s) + ' --rate 1000 --tpc-lanes ' + str(NWORKERS)
-     tpcclussect['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str(s) + '.root --tpc-sectors ' + str(s) + ' --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=1"'
-     tpcclussect['env'] = { "OMP_NUM_THREADS" : "1" }   # we disable OpenMP since running in scalar mode anyway
-     workflow['stages'].append(tpcclussect)
+     TPCCLUSMERGEtask=createTask(name='tpcclustermerge_'+str(tf), needs=tpcclustertasks, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1')
+     TPCCLUSMERGEtask['cmd']='o2-commonutils-treemergertool -i tpc-native-clusters-part*.root -o tpc-native-clusters.root -t tpcrec' #--asfriend preferable but does not work
+     workflow['stages'].append(TPCCLUSMERGEtask)
+     tpcreconeeds.append(TPCCLUSMERGEtask['name'])
+   else:
+     tpcclus = createTask(name='tpccluster_' + str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='2000')
+     tpcclus['cmd'] = 'o2-tpc-chunkeddigit-merger --rate 1000 --tpc-lanes ' + str(NWORKERS)
+     tpcclus['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=1"'
+     workflow['stages'].append(tpcclus)
+     tpcreconeeds.append(tpcclus['name'])
 
-   TPCCLUSMERGEtask=createTask(name='tpcclustermerge_'+str(tf), needs=tpcclustertasks, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1')
-   TPCCLUSMERGEtask['cmd']='o2-commonutils-treemergertool -i tpc-native-clusters-part*.root -o tpc-native-clusters.root -t tpcrec' #--asfriend preferable but does not work
-   workflow['stages'].append(TPCCLUSMERGEtask)
-
-   TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=[TPCCLUSMERGEtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
+   TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
    TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True, nosmallrate=False) + ' --input-type clusters --output-type tracks,send-clusters-per-sector --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads='+str(NWORKERS)+'"'
    workflow['stages'].append(TPCRECOtask)
 
