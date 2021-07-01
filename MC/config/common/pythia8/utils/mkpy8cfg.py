@@ -26,7 +26,7 @@ parser.add_argument('--eB', type=float, default='6499.',
 parser.add_argument('--eCM', type=float, default='-1',
                     help='Centre-of-mass energy (careful!, better use beam energy)')
 
-parser.add_argument('--process', default='inel', choices=['none', 'inel', 'ccbar', 'bbbar', 'heavy', 'jets', 'dirgamma'],
+parser.add_argument('--process', default='inel', choices=['none', 'inel', 'ccbar', 'bbbar', 'heavy', 'jets', 'dirgamma', 'cdiff'],
                     help='Process to switch on')
 
 parser.add_argument('--ptHatMin', type=float,
@@ -105,6 +105,10 @@ if args.process == 'jets':
     fout.write('HardQCD:all = on \n')
 if args.process == 'dirgamma':
     fout.write('PromptPhoton:all = on \n')
+if args.process == 'cdiff':
+    fout.write('SoftQCD:inelastic = on \n')
+    # enable non-zero cross section for CEP
+    fout.write('SigmaTotal:zeroAXB = off \n')
 fout.write('\n')
 
 ### heavy ion  settings (valid for Pb-Pb 5520 only)
