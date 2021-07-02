@@ -18,43 +18,44 @@ class UserHooks_qqbar : public Pythia8::UserHooks
     // search for c-cbar mother with at least one c at midrapidity
     for (int ipa = 0; ipa < event.size(); ++ipa) {
       auto daughterList = event[ipa].daughterList();
-      bool hasc = false, hascbar = false, atmidy = false;
+      bool hasc = false, hascbar = false, atSelectedY = false;
       for (auto ida : daughterList) {
 	if (event[ida].id() == mPDG) hasc = true;
 	if (event[ida].id() == -mPDG) hascbar = true;
-	if (fabs(event[ida].y()) < mRapidity) atmidy = true;
+	if ( (event[ida].y() > mRapidityMin) && (event[ida].y() < mRapidityMax) ) atSelectedY = true;
       }
-      if (hasc && hascbar && atmidy)
+      if (hasc && hascbar && atSelectedY)
 	return false; // found it, do not veto event
     }
     return true; // did not find it, veto event
   };
 
   void setPDG(int val) { mPDG = val; };
-  void setRapidity(double val) { mRapidity = val; };
+  void setRapidity(double valMin, double valMax) { mRapidityMin = valMin; mRapidityMax = valMax; };
   
 private:
 
   int mPDG = 4;
-  double mRapidity = 1.5;
+  double mRapidityMin = -1.5;
+  double mRapidityMax = 1.5;
   
 };
 
 Pythia8::UserHooks*
-  pythia8_userhooks_ccbar(double rapidity = 1.5)
+  pythia8_userhooks_ccbar(double rapidityMin = -1.5, double rapidityMax=1.5)
 {
   auto hooks = new UserHooks_qqbar();
   hooks->setPDG(4);
-  hooks->setRapidity(rapidity);
+  hooks->setRapidity(rapidityMin,rapidityMax);
   return hooks;
 }
 
 Pythia8::UserHooks*
-  pythia8_userhooks_bbbar(double rapidity = 1.5)
+  pythia8_userhooks_bbbar(double rapidityMin = -1.5, double rapidityMax = 1.5)
 {
   auto hooks = new UserHooks_qqbar();
   hooks->setPDG(5);
-  hooks->setRapidity(rapidity);
+  hooks->setRapidity(rapidityMin,rapidityMax);
   return hooks;
 }
 

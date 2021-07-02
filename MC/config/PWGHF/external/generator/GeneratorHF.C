@@ -76,20 +76,20 @@ public:
   int findAncestor(Pythia8::Event& event) {
     for (int ipa = 0; ipa < event.size(); ++ipa) {
       auto daughterList = event[ipa].daughterList();
-      bool hasq = false, hasqbar = false, atmidy = false;
+      bool hasq = false, hasqbar = false, atSelectedY = false;
       for (auto ida : daughterList) {
 	if (event[ida].id() == mPDG) hasq = true;
 	if (event[ida].id() == -mPDG) hasqbar = true;
-	if (fabs(event[ida].y()) < mRapidity) atmidy = true;
+	if ( (event[ida].y() > mRapidityMin) && (event[ida].y() < mRapidityMax) ) atSelectedY = true;
       }
-      if (hasc && hascbar && atmidy)
+      if (hasq && hasqbar && atSelectedY)
 	return ipa;
     }
     return -1;
   };
   
-  int setPDG(int val) { mPDG = val; };
-  void setRapidity(double val) { mRapidity = val; };
+  void setPDG(int val) { mPDG = val; };
+  void setRapidity(double valMin, double valMax) { mRapidityMin = valMin; mRapidityMax = valMax; };
   void setVerbose(bool val) { mVerbose = val; };
   void setFormula(std::string val) { mFormula.Compile(val.c_str()); };
   
@@ -99,7 +99,8 @@ private:
   int mEvents = 1;
   Pythia8::Event mOutputEvent;
   int mPDG = 4;
-  double mRapidity = 1.5;
+  double mRapidityMin = -1.5;
+  double mRapidityMax = 1.5;
   bool mVerbose = false;
   
 };
@@ -109,10 +110,10 @@ private:
 /** generator instance and settings **/
 
 FairGenerator*
-GeneratorHF(double rapidity = 1.5, bool verbose = false)
+GeneratorHF(double rapidityMin = -1.5, double rapidityMax = 1.5, bool verbose = false)
 {
   auto gen = new o2::eventgen::GeneratorHF();
-  gen->setRapidity(rapidity);
+  gen->setRapidity(rapidityMin,rapidityMax);
   gen->setVerbose(verbose);
   gen->setFormula("max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.))");
   
@@ -120,11 +121,11 @@ GeneratorHF(double rapidity = 1.5, bool verbose = false)
 }
 
 FairGenerator*
-GeneratorHF_ccbar(double rapidity = 1.5, bool verbose = false)
+GeneratorHF_ccbar(double rapidityMin = -1.5, double rapidityMax = 1.5, bool verbose = false)
 {
   auto gen = new o2::eventgen::GeneratorHF();
   gen->setPDG(4);
-  gen->setRapidity(rapidity);
+  gen->setRapidity(rapidityMin,rapidityMax);
   gen->setVerbose(verbose);
   gen->setFormula("max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.))");
   
@@ -132,14 +133,14 @@ GeneratorHF_ccbar(double rapidity = 1.5, bool verbose = false)
 }
 
 FairGenerator*
-GeneratorHF_bbbar(double rapidity = 1.5, bool verbose = false)
+GeneratorHF_bbbar(double rapidityMin = -1.5, double rapidityMax = 1.5, bool verbose = false)
 {
   auto gen = new o2::eventgen::GeneratorHF();
   gen->setPDG(5);
-  gen->setRapidity(rapidity);
+  gen->setRapidity(rapidityMin,rapidityMax);
   gen->setVerbose(verbose);
   gen->setFormula("max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.))");
-  
+
   return gen;
 }
 
