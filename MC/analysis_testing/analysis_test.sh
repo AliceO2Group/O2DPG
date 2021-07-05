@@ -18,7 +18,7 @@ NTF=$(find ./ -name "tf*" -type d | wc | awk '//{print $1}')
 
 # commonDPL="-b --run --fairmq-ipc-prefix ${FAIRMQ_IPC_PREFIX:-./.tmp} --driver-client-backend ws:// --rate 1000"
 commonDPL="-b --run --driver-client-backend ws:// --rate 1000"
-annaCMD="${testanalysis} ${commonDPL} --aod-file AO2D.root; RC=\$?; [ -f AnalysisResults.root ] && mv AnalysisResults.root AnalysisResults_${testanalysis}.root; [ -f QAResult.root ] && mv QAResults.root QAResults_${testanalysis}.root; [ \${RC} -eq 0 ]"
+annaCMD="RC=0; if [ -f AO2D.root ]; then ${testanalysis} ${commonDPL} --aod-file AO2D.root; RC=\$?; fi; [ -f AnalysisResults.root ] && mv AnalysisResults.root AnalysisResults_${testanalysis}.root; [ -f QAResult.root ] && mv QAResults.root QAResults_${testanalysis}.root; [ \${RC} -eq 0 ]"
 
 rm workflow_ana.json
 # this is to analyse the global (merged) AOD
