@@ -308,9 +308,9 @@ for tf in range(1, NTIMEFRAMES + 1):
        # NOTE: Generator setup might be handled in a different file or different files (one per
        # possible generator)
 
-   if CONFKEY=='':
-      print('o2dpg_sim_workflow: Error! configuration file not provided')
-      exit(1)
+   #if CONFKEY=='':
+   #   print('o2dpg_sim_workflow: Error! configuration file not provided')
+   #   exit(1)
 
    workflow['stages'].append(SGN_CONFIG_task)
 
