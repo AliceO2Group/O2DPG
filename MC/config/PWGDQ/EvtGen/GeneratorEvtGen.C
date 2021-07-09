@@ -1,6 +1,7 @@
 R__LOAD_LIBRARY(EvtGen)
 R__ADD_INCLUDE_PATH($EVTGEN_ROOT/include)
 
+
 #include "EvtGenBase/EvtStdHep.hh"
 #include "EvtGenBase/EvtRandomEngine.hh"
 #include "EvtGenBase/EvtSimpleRandomEngine.hh" 
@@ -228,84 +229,85 @@ void ForceDecay()
   // different decay table. case kAll read the default decay table only   
   //
   DecayModeEvt decay = mDecayMode;
+  TString pathO2 = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
   switch(decay)
     {
      case kEvtAll: // particles decayed "naturally" according to $ALICE_ROOT/TEvtGen/EvtGen/DECAY.DEC
       break;
      case kEvtBJpsiDiElectron:
-      SetDecayTable("DecayTablesEvtgen/BTOJPSITOELE.DEC");
+      SetDecayTable(Form("%s/BTOJPSITOELE.DEC",pathO2.Data()));
       break;
      case kEvtBJpsi:
-      SetDecayTable("DecayTablesEvtgen/BTOJPSI.DEC");
+      SetDecayTable(Form("%s/BTOJPSI.DEC",pathO2.Data()));
       break;
      case kEvtBJpsiDiMuon:
-      SetDecayTable("DecayTablesEvtgen/BTOJPSITOMU.DEC");
+      SetDecayTable(Form("%s/BTOJPSITOMU.DEC",pathO2.Data()));
       break;
      case kEvtBSemiElectronic:
-      SetDecayTable("DecayTablesEvtgen/BTOELE.DEC");
+      SetDecayTable(Form("%s/BTOELE.DEC",pathO2.Data()));
       break;
      case kEvtHadronicD:
-      SetDecayTable("DecayTablesEvtgen/HADRONICD.DEC");
+      SetDecayTable(Form("%s/HADRONICD.DEC",pathO2.Data()));
       break;
      case kEvtHadronicDWithout4Bodies:
-      SetDecayTable("DecayTablesEvtgen/HADRONICDWITHOUT4BODIES.DEC");
+      SetDecayTable(Form("%s/HADRONICDWITHOUT4BODIES.DEC",pathO2.Data()));
       break;
      case kEvtChiToJpsiGammaToElectronElectron:
-      SetDecayTable("DecayTablesEvtgen/CHICTOJPSITOELE.DEC");
+      SetDecayTable(Form("%s/CHICTOJPSITOELE.DEC",pathO2.Data()));
       break;
      case kEvtChiToJpsiGammaToMuonMuon:
-      SetDecayTable("DecayTablesEvtgen/CHICTOJPSITOMUON.DEC");
+      SetDecayTable(Form("%s/CHICTOJPSITOMUON.DEC",pathO2.Data()));
       break;
      case kEvtSemiElectronic:
-      SetDecayTable("DecayTablesEvtgen/BANDCTOELE.DEC");
+      SetDecayTable(Form("%s/BANDCTOELE.DEC",pathO2.Data()));
       break;
      case kEvtBSemiMuonic:
-      SetDecayTable("DecayTablesEvtgen/BTOMU.DEC");
+      SetDecayTable(Form("%s/BTOMU.DEC",pathO2.Data()));
       break;
      case kEvtSemiMuonic:
-      SetDecayTable("DecayTablesEvtgen/BANDCTOMU.DEC");
+      SetDecayTable(Form("%s/BANDCTOMU.DEC",pathO2.Data()));
       break;
      case kEvtDiElectron:
-      SetDecayTable("DecayTablesEvtgen/DIELECTRON.DEC");
+      SetDecayTable(Form("%s/DIELECTRON.DEC",pathO2.Data()));
       break;
      case kEvtDiMuon:
-      SetDecayTable("DecayTablesEvtgen/DIMUON.DEC");
+      SetDecayTable(Form("%s/DIMUON.DEC",pathO2.Data()));
       break;
      case kEvtBPsiPrimeDiMuon:
-      SetDecayTable("DecayTablesEvtgen/BTOPSIPRIMETODIMUON.DEC");
+      SetDecayTable(Form("%s/BTOPSIPRIMETODIMUON.DEC",pathO2.Data()));
       break;
      case kEvtBPsiPrimeDiElectron:
-      SetDecayTable("DecayTablesEvtgen/BTOPSIPRIMETODIELECTRON.DEC");
+      SetDecayTable(Form("%s/BTOPSIPRIMETODIELECTRON.DEC",pathO2.Data()));
       break;
      case kEvtJpsiDiMuon:
-      SetDecayTable("DecayTablesEvtgen/JPSIDIMUON.DEC");
+      SetDecayTable(Form("%s/JPSIDIMUON.DEC",pathO2.Data()));
       break;
      case kEvtPsiPrimeJpsiDiElectron:
-      SetDecayTable("DecayTablesEvtgen/PSIPRIMETOJPSITOMU.DEC");
+      SetDecayTable(Form("%s/PSIPRIMETOJPSITOMU.DEC",pathO2.Data()));
       break;
      case kEvtPhiKK:
-      SetDecayTable("DecayTablesEvtgen/PHITOK.DEC");
+      SetDecayTable(Form("%s/PHITOK.DEC",pathO2.Data()));
       break;
      case kEvtOmega:
-      SetDecayTable("DecayTablesEvtgen/OMEGATOLAMBDAK.DEC");
+      SetDecayTable(Form("%s/OMEGATOLAMBDAK.DEC",pathO2.Data()));
       break;
      case kEvtLambda:
-      SetDecayTable("DecayTablesEvtgen/LAMBDATOPROTPI.DEC");
+      SetDecayTable(Form("%s/LAMBDATOPROTPI.DEC",pathO2.Data()));
       break;
      case kEvtHardMuons:
-      SetDecayTable("DecayTablesEvtgen/HARDMUONS.DEC");
+      SetDecayTable(Form("%s/HARDMUONS.DEC",pathO2.Data()));
       break;
      case kEvtElectronEM:
-      SetDecayTable("DecayTablesEvtgen/ELECTRONEM.DEC");
+      SetDecayTable(Form("%s/ELECTRONEM.DEC",pathO2.Data()));
       break;
      case kEvtDiElectronEM:
-      SetDecayTable("DecayTablesEvtgen/DIELECTRONEM.DEC");
+      SetDecayTable(Form("%s/DIELECTRONEM.DEC",pathO2.Data()));
       break;
      case kEvtGammaEM:
-      SetDecayTable("DecayTablesEvtgen/GAMMAEM.DEC");
+      SetDecayTable(Form("%s/GAMMAEM.DEC",pathO2.Data()));
       break;
      case kEvtBeautyUpgrade:
-      SetDecayTable("DecayTablesEvtgen/BEAUTYUPGRADE.DEC");
+      SetDecayTable(Form("%s/BEAUTYUPGRADE.DEC",pathO2.Data()));
       break; 
     }
     return;
