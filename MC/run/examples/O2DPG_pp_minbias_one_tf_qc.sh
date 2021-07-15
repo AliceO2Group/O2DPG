@@ -18,12 +18,14 @@ MODULES="--skipModules ZDC"
 SIMENGINE=${SIMENGINE:-TGeant4}
 
 # create workflow
-./o2dpg_sim_workflow.py -eCM 14000  -col pp -gen pythia8 -proc inel -tf 1    \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 14000  -col pp -gen pythia8 -proc inel -tf 1    \
                                                        -ns 20 -e ${SIMENGINE}                   \
-                                                       -j ${NWORKERS} -interactionRate 500000
+                                                       -j ${NWORKERS} -interactionRate 500000   \
+                                                       --include-qc
 
 # run workflow
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt vertexQC
+# ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt vertexQC
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
 
 # publish the current dir to ALIEN
 # copy_ALIEN
