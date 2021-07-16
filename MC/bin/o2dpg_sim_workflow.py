@@ -501,10 +501,15 @@ for tf in range(1, NTIMEFRAMES + 1):
    # PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TOF" --vetex-track-matching-sources "ITS,ITS-TPC,ITS-TPC-TOF"'
    workflow['stages'].append(PVFINDERtask)
  
+   #secondary vertexer
+   SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=1, mem='2000')
+   SVFINDERtask['cmd'] = 'o2-secondary-vertexing-workflow ' + getDPL_global_options(nosmallrate=False)
+   workflow['stages'].append(SVFINDERtask)
+
   # -----------
   # produce AOD
   # -----------
-   aodneeds = [PVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name']]
+   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name']]
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
