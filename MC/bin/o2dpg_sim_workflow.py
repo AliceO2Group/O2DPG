@@ -200,7 +200,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       INIFILE=' --configFile ' + args.ini
    CONFKEY=''
    if args.confKey!= '':
-      CONFKEY=' --configKeyValue ' + args.confKey
+      CONFKEY=' --configKeyValues ' + args.confKey
    PROCESS=args.proc
    TRIGGER=''
    if args.trigger != '':
@@ -444,13 +444,14 @@ for tf in range(1, NTIMEFRAMES + 1):
    if not args.combine_tpc_clusterization:
      # TODO: check value for MaxTimeBin; A large value had to be set tmp in order to avoid crashes based on "exceeding timeframe limit"
      # We treat TPC clusterization in multiple (sector) steps in order to stay within the memory limit
+     # We seem to be needing to ask for 2 sectors at least, otherwise there is a problem with the branch naming.
      tpcclustertasks=[]
-     for s in range(0,35):
-       taskname = 'tpcclusterpart' + str(s) + '_' + str(tf)
+     for s in range(0,35,2):
+       taskname = 'tpcclusterpart' + str((int)(s/2)) + '_' + str(tf)
        tpcclustertasks.append(taskname)
        tpcclussect = createTask(name=taskname, needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
-       tpcclussect['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s) + ' --rate 1000 --tpc-lanes ' + str(NWORKERS)
-       tpcclussect['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str(s) + '.root --tpc-sectors ' + str(s) + ' --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=1"'
+       tpcclussect['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s)+','+str(s+1) + ' --rate 1000 --tpc-lanes ' + str(NWORKERS)
+       tpcclussect['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str((int)(s/2)) + '.root --tpc-sectors ' + str(s)+','+str(s+1) + ' --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=1"'
        tpcclussect['env'] = { "OMP_NUM_THREADS" : "1" }   # we disable OpenMP since running in scalar mode anyway
        workflow['stages'].append(tpcclussect)
 
@@ -549,11 +550,16 @@ for tf in range(1, NTIMEFRAMES + 1):
      workflow['stages'].append(vertexQCtask)
 
      
+ 
+   #secondary vertexer
+   SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=1, mem='2000')
+   SVFINDERtask['cmd'] = 'o2-secondary-vertexing-workflow ' + getDPL_global_options(nosmallrate=False)
+   workflow['stages'].append(SVFINDERtask)
 
   # -----------
   # produce AOD
   # -----------
-   aodneeds = [PVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name']]
+   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name']]
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
