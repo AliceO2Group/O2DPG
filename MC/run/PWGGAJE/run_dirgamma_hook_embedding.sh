@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
-# Generate gamma-jet events, PYTHIA8 in a given pt hard bin and weighted.
-# Select the event depending detector acceptance and/or outgoing parton flavour.
-# Execute: ./run_dirgamma.sh 
-# Set at least before running PTHATBIN with 1 to 6
+# Embed gamma-jet events, PYTHIA8 in a given pt hard bin and weighted
+# into HI events, both Pythia8
+# Select the event depending detector acceptance and/or outgoing parton flavour
+# using PYTHIA8 hooks.
+# Execute: ./run_dirgamma_hook.sh 
 # and PARTICLE_ACCEPTANCE, see 
-# $O2DPG_ROOT/MC/config/PWGGAJE/trigger/prompt_gamma.C
+# $O2DPG_ROOT/MC/config/PWGGAJE/hooks/prompt_gamma_hook.C
 
 #set -x 
 
@@ -15,12 +16,12 @@
 # ----------- START ACTUAL JOB  ----------------------------- 
 
 RNDSEED=${RNDSEED:-0}   # [default = 0] time-based random seed
-
-NSIGEVENTS=${NSIGEVENTS:-20}
+NSIGEVENTS=${NSIGEVENTS:-2}
+NBKGEVENTS=${NBKGEVENTS:-1}
 NTIMEFRAMES=${NTIMEFRAMES:-5}
 NWORKERS=${NWORKERS:-8}
 MODULES="--skipModules ZDC" #"PIPE ITS TPC EMCAL"
-CONFIG_ENERGY=${CONFIG_ENERGY:-13000.0}
+CONFIG_ENERGY=${CONFIG_ENERGY:-5200.0}
 SIMENGINE=${SIMENGINE:-TGeant4}
 WEIGHTPOW=${WEIGHTPOW:-6.0}
 
@@ -63,9 +64,10 @@ echo 'Parton PDG option ' $CONFIG_OUTPARTON_PDG
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen pythia8 -proc "dirgamma" \
                                             -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}                \
                                             -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}       \
+                                            -nb ${NBKGEVENTS} --embedding                              \
                                             -j ${NWORKERS} -mod "--skipModules ZDC"                    \
                                             -weightPow ${WEIGHTPOW}                                    \
-                                            -trigger "external" -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_prompt_gamma.ini"
+                                            -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/hook_prompt_gamma.ini"
 
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json

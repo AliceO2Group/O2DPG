@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Embed gamma-jet events in a pre-defined pT hard bin into HI events, both Pythia8
+# Embed gamma-jet events in a pre-defined pT hard bin and weighted
+# into HI events, both Pythia8
 # Execute: ./run_dirgamma_embedding.sh 
-# Set at least before running PTHATBIN with 1 to 6
 
 #set -x
 
@@ -16,8 +16,14 @@ NSIGEVENTS=${NSIGEVENTS:-2}
 NBKGEVENTS=${NBKGEVENTS:-1}
 NTIMEFRAMES=${NTIMEFRAMES:-5}
 NWORKERS=${NWORKERS:-8}
+MODULES="--skipModules ZDC" #"PIPE ITS TPC EMCAL"
 CONFIG_ENERGY=${CONFIG_ENERGY:-5020.0}
 SIMENGINE=${SIMENGINE:-TGeant4}
+WEIGHTPOW=${WEIGHTPOW:-6.0}
+
+# Default for weighted productions
+PTHATMIN=${PTHATMIN:-5.0}
+PTHATMAX=${PTHATMAX:-300.0}
 
 # Define the pt hat bin arrays
 pthatbin_loweredges=(5 11 21 36 57 84)
@@ -27,12 +33,11 @@ pthatbin_higheredges=(11 21 36 57 84 -1)
 #PTHATBIN=${PTHATBIN:-1} 
 
 if [ -z "$PTHATBIN" ]; then
-    echo "Pt-hat bin (env. var. PTHATBIN) not set, abort."
-    exit 1
+    echo "Open Pt-hat range set"
+else
+  PTHATMIN=${pthatbin_loweredges[$PTHATBIN]}
+  PTHATMAX=${pthatbin_higheredges[$PTHATBIN]}
 fi
-
-PTHATMIN=${pthatbin_loweredges[$PTHATBIN]}
-PTHATMAX=${pthatbin_higheredges[$PTHATBIN]}
 
 # Recover environmental vars for detector acceptance binning
 # accessed inside prompt_gamma.C
@@ -55,6 +60,7 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen py
                                             -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}       \
                                             -nb ${NBKGEVENTS} --embedding                              \
                                             -j ${NWORKERS} -mod "--skipModules ZDC"                    \
+                                            -weightPow ${WEIGHTPOW}                                    \
                                             -trigger "external" -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_prompt_gamma.ini"
 
 # run workflow

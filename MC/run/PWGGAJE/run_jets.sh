@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-# Generate jet-jet events, Pythia8 in a pre-defined pt hard bin.
+# Generate jet-jet events, Pythia8 in a pre-defined pt hard bin and weighted.
 # Execute: ./run_jets.sh
-# Set at least before running PTHATBIN with 1 to 21
 
 #set -x
 
@@ -19,6 +18,11 @@ NWORKERS=${NWORKERS:-8}
 MODULES="--skipModules ZDC" #"PIPE ITS TPC EMCAL"
 CONFIG_ENERGY=${CONFIG_ENERGY:-13000.0}
 SIMENGINE=${SIMENGINE:-TGeant4}
+WEIGHTPOW=${WEIGHTPOW:-6.0}
+
+# Default for weighted productions
+PTHATMIN=${PTHATMIN:-5.0}
+PTHATMAX=${PTHATMAX:-300.0}
 
 # Define the pt hat bin arrays
 pthatbin_loweredges=(0 5 7 9 12 16 21 28 36 45 57 70 85 99 115 132 150 169 190 212 235)
@@ -28,18 +32,18 @@ pthatbin_higheredges=( 5 7 9 12 16 21 28 36 45 57 70 85 99 115 132 150 169 190 2
 #PTHATBIN=${PTHATBIN:-1} 
 
 if [ -z "$PTHATBIN" ]; then
-    echo "Pt-hat bin (env. var. PTHATBIN) not set, abort."
-    exit 1
+    echo "Open Pt-hat range set"
+else
+  PTHATMIN=${pthatbin_loweredges[$PTHATBIN]}
+  PTHATMAX=${pthatbin_higheredges[$PTHATBIN]}
 fi
-
-PTHATMIN=${pthatbin_loweredges[$PTHATBIN]}
-PTHATMAX=${pthatbin_higheredges[$PTHATBIN]}
 
 # create workflow
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen pythia8 -proc "jets" \
-                                            -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}                \
-                                            -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}       \
-                                            -j ${NWORKERS} -mod "--skipModules ZDC"
+                                            -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}            \
+                                            -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}   \
+                                            -j ${NWORKERS} -mod "--skipModules ZDC"                \
+                                            -weightPow ${WEIGHTPOW}
 
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
