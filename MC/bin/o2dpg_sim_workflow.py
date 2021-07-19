@@ -215,9 +215,9 @@ for tf in range(1, NTIMEFRAMES + 1):
       TRIGGER=' -t ' + args.trigger
 
    ## Pt Hat productions
-   WEIGHTPOW=int(args.weightPow)
-   PTHATMIN=int(args.ptHatMin)  
-   PTHATMAX=int(args.ptHatMax) 
+   WEIGHTPOW=float(args.weightPow)
+   PTHATMIN=float(args.ptHatMin)
+   PTHATMAX=float(args.ptHatMax)
 
    # Recover PTHATMIN and PTHATMAX from pre-defined array depending bin number PTHATBIN
    # I think these arrays can be removed and rely on scripts where the arrays are hardcoded
@@ -310,7 +310,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 	                        --process='+str(PROCESS)+'                               \
 	                        --ptHatMin=' + str(PTHATMIN) + '                         \
 	                        --ptHatMax=' + str(PTHATMAX)
-      if WEIGHTPOW   > -1:
+      if WEIGHTPOW   > 0:
             SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
       # if we configure pythia8 here --> we also need to adjust the configuration
       # TODO: we need a proper config container/manager so as to combine these local configs with external configs etc.
