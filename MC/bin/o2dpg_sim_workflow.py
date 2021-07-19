@@ -53,6 +53,7 @@ parser.add_argument('--embedding',action='store_true', help='With embedding into
 parser.add_argument('-nb',help='number of background events / timeframe', default=20)
 parser.add_argument('-genBkg',help='embedding background generator', default='pythia8hi')
 parser.add_argument('-iniBkg',help='embedding background generator init parameters file', default='${O2DPG_ROOT}/MC/config/common/ini/basic.ini')
+parser.add_argument('-confKeyBkg',help='embedding background configuration key values, for example: GeneratorPythia8.config=pythia8.cfg', default='')
 parser.add_argument('-colBkg',help='embedding background collision system', default='PbPb')
 
 parser.add_argument('-e',help='simengine', default='TGeant4')
@@ -129,11 +130,18 @@ if doembedding:
            print('o2dpg_sim_workflow: Error! embedding background generator name not provided')
            exit(1)
 
-        INIBKG=args.iniBkg
+        INIBKG=''
+        if args.iniBkg!= '':
+           INIBKG=' --configFile ' + args.iniBkg
+
+        CONFKEYBKG=''
+        if args.confKeyBkg!= '':
+           CONFKEYBKG=' --configKeyValues ' + args.CONFKEYBKG
+
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], cpu=NWORKERS)
-        BKGtask['cmd']='o2-sim -e ' + SIMENGINE + ' -j ' + str(NWORKERS) + ' -n ' + str(NBKGEVENTS)              \
-                     + ' -g  '      + str(GENBKG) + ' '  + str(MODULES)  + ' -o bkg --configFile ' + str(INIBKG) \
-                     + ' --field '  + str(BFIELD)
+        BKGtask['cmd']='o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
+                     + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)     \
+                     + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG)
         workflow['stages'].append(BKGtask)
 
         # check if we should upload background event
