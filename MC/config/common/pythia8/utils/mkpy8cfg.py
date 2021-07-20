@@ -94,7 +94,9 @@ fout.write('\n')
 
 ### processes
 fout.write('### processes \n')
-fout.write('SoftQCD:inelastic = off \n') ### we switch this off because it might be on by default
+if args.idA == 2212 or args.idB == 2212:
+    fout.write('SoftQCD:inelastic = off \n') ### we switch this off because it might be on by default, but only for pp or pPb,
+    #in PbPb let's not force it in case it is needed in Angantyr
 if args.process == 'inel':
     fout.write('SoftQCD:inelastic = on \n')
 if args.process == 'ccbar' or args.process == 'heavy':

@@ -61,13 +61,15 @@ export CONFIG_OUTPARTON_PDG=${CONFIG_OUTPARTON_PDG:-0}
 echo 'Parton PDG option ' $CONFIG_OUTPARTON_PDG
 
 # create workflow
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen pythia8 -proc "dirgamma" \
-                                            -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}                \
-                                            -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}       \
-                                            -nb ${NBKGEVENTS} --embedding                              \
-                                            -j ${NWORKERS} -mod "--skipModules ZDC"                    \
-                                            -weightPow ${WEIGHTPOW}                                    \
-                                            -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/hook_prompt_gamma.ini"
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY}                                      \
+                                           -nb ${NBKGEVENTS} --embedding                              \
+                                           -colBkg PbPb -genBkg pythia8 -procBkg "none"               \
+                                           -col    pp   -gen    pythia8 -proc    "dirgamma"           \
+                                           -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}                \
+                                           -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}       \
+                                           -j ${NWORKERS} -mod "--skipModules ZDC"                    \
+                                           -weightPow ${WEIGHTPOW}                                    \
+                                           -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/hook_prompt_gamma.ini"
 
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json

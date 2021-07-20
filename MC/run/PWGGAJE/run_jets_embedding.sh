@@ -15,7 +15,7 @@
 RNDSEED=${RNDSEED:-0}   # [default = 0] time-based random seed
 NSIGEVENTS=${NSIGEVENTS:-2}
 NBKGEVENTS=${NBKGEVENTS:-1}
-NTIMEFRAMES=${NTIMEFRAMES:-5}
+NTIMEFRAMES=${NTIMEFRAMES:-1}
 NWORKERS=${NWORKERS:-8}
 MODULES="--skipModules ZDC" #"PIPE ITS TPC EMCAL"
 CONFIG_ENERGY=${CONFIG_ENERGY:-5020.0}
@@ -41,12 +41,14 @@ else
 fi
 
 # create workflow
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen pythia8 -proc "jets" \
-                                            -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}            \
-                                            -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}   \
-                                            -nb ${NBKGEVENTS} --embedding                          \
-                                            -j ${NWORKERS} -mod "--skipModules ZDC"                \
-                                            -weightPow ${WEIGHTPOW}
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} \
+                                           -nb ${NBKGEVENTS} --embedding                          \
+                                           -colBkg PbPb -genBkg pythia8 -procBkg "none"           \
+                                           -col    pp   -gen    pythia8 -proc    "jets"           \
+                                           -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}            \
+                                           -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}   \
+                                           -j ${NWORKERS} -mod "--skipModules ZDC"                \
+                                           -weightPow ${WEIGHTPOW}
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
 

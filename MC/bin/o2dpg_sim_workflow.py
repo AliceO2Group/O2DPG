@@ -32,14 +32,14 @@ parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulati
 
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
-parser.add_argument('-proc',help='process type: dirgamma, jets, ccbar', default='')
+parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...', default='')
 parser.add_argument('-trigger',help='event selection: particle, external', default='')
 parser.add_argument('-ini',help='generator init parameters file, for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: GeneratorPythia8.config=pythia8.cfg', default='')
 
 parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
 parser.add_argument('-eCM',help='CMS energy', default=-1)
-parser.add_argument('-eA',help='Beam A energy', default=6499.) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
+parser.add_argument('-eA',help='Beam A energy', default=-1) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
 parser.add_argument('-eB',help='Beam B energy', default=-1)
 parser.add_argument('-col',help='collision system: pp, PbPb, pPb, Pbp, ..., in case of embedding collision system of signal', default='pp')
 parser.add_argument('-field',help='L3 field rounded to kGauss, allowed: values +-2,+-5 and 0; +-5U for uniform field', default='-5')
@@ -51,9 +51,10 @@ parser.add_argument('-weightPow',help='Flatten pT hard spectrum with power', def
 
 parser.add_argument('--embedding',action='store_true', help='With embedding into background')
 parser.add_argument('-nb',help='number of background events / timeframe', default=20)
-parser.add_argument('-genBkg',help='embedding background generator', default='pythia8hi')
+parser.add_argument('-genBkg',help='embedding background generator', default='') #pythia8, not recomended: pythia8hi, pythia8pp
+parser.add_argument('-procBkg',help='process type: inel, ..., do not set it for Pythia8 PbPb', default='none')
 parser.add_argument('-iniBkg',help='embedding background generator init parameters file', default='${O2DPG_ROOT}/MC/config/common/ini/basic.ini')
-parser.add_argument('-confKeyBkg',help='embedding background configuration key values, for example: GeneratorPythia8.config=pythia8.cfg', default='')
+parser.add_argument('-confKeyBkg',help='embedding background configuration key values, for example: GeneratorPythia8.config=pythia8bkg.cfg', default='')
 parser.add_argument('-colBkg',help='embedding background collision system', default='PbPb')
 
 parser.add_argument('-e',help='simengine', default='TGeant4')
@@ -101,6 +102,7 @@ NWORKERS=args.j
 MODULES=args.mod #"--skipModules ZDC"
 SIMENGINE=args.e
 BFIELD=args.field
+RNDSEED=args.seed    # 0 means random seed ! Should we set different seed for Bkg and signal?
 
 # add here other possible types
 
@@ -130,13 +132,76 @@ if doembedding:
            print('o2dpg_sim_workflow: Error! embedding background generator name not provided')
            exit(1)
 
-        INIBKG=''
-        if args.iniBkg!= '':
-           INIBKG=' --configFile ' + args.iniBkg
+        PROCESSBKG=args.procBkg
+        COLTYPEBKG=args.colBkg
+        ECMSBKG=float(args.eCM)
+        EBEAMABKG=float(args.eA)
+        EBEAMBBKG=float(args.eB)
+
+        if COLTYPEBKG == 'pp':
+           PDGABKG=2212 # proton
+           PDGBBKG=2212 # proton
+
+        if COLTYPEBKG == 'PbPb':
+           PDGABKG=1000822080 # Pb
+           PDGBBKG=1000822080 # Pb
+           if ECMSBKG < 0:    # assign 5.02 TeV to Pb-Pb
+              print('o2dpg_sim_workflow: Set BKG CM Energy to PbPb case 5.02 TeV')
+              ECMSBKG=5020.0
+           if GENBKG == 'pythia8':
+              PROCESSBKG = 'none'
+              print('o2dpg_sim_workflow: Process type not considered for Pythia8 PbPb')
+
+        if COLTYPEBKG == 'pPb':
+           PDGABKG=2212       # proton
+           PDGBBKG=1000822080 # Pb
+
+        if COLTYPEBKG == 'Pbp':
+           PDGABKG=1000822080 # Pb
+           PDGBBKG=2212       # proton
+
+        # If not set previously, set beam energy B equal to A
+        if EBEAMBBKG < 0 and ECMSBKG < 0:
+           EBEAMBBKG=EBEAMABKG
+           print('o2dpg_sim_workflow: Set beam energy same in A and B beams')
+           if COLTYPEBKG=="pPb" or COLTYPEBKG=="Pbp":
+              print('o2dpg_sim_workflow: Careful! both beam energies in bkg are the same')
+
+        if ECMSBKG > 0:
+           if COLTYPEBKG=="pPb" or COLTYPEBKG=="Pbp":
+              print('o2dpg_sim_workflow: Careful! bkg ECM set for pPb/Pbp collisions!')
+
+        if ECMSBKG < 0 and EBEAMABKG < 0 and EBEAMBBKG < 0:
+           print('o2dpg_sim_workflow: Error! bkg ECM or Beam Energy not set!!!')
+           exit(1)
 
         CONFKEYBKG=''
         if args.confKeyBkg!= '':
            CONFKEYBKG=' --configKeyValues ' + args.CONFKEYBKG
+
+        # Background PYTHIA configuration
+        BKG_CONFIG_task=createTask(name='genbkgconf')
+        BKG_CONFIG_task['cmd'] = 'echo "placeholder / dummy task"'
+        if  GENBKG == 'pythia8':
+            BKG_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
+                                   --output=pythia8bkg.cfg                                     \
+                                   --seed='+str(RNDSEED)+'                                     \
+                                   --idA='+str(PDGABKG)+'                                      \
+                                   --idB='+str(PDGBBKG)+'                                      \
+                                   --eCM='+str(ECMSBKG)+'                                      \
+                                   --eA='+str(EBEAMABKG)+'                                     \
+                                   --eB='+str(EBEAMBBKG)+'                                     \
+                                   --process='+str(PROCESSBKG)
+            # if we configure pythia8 here --> we also need to adjust the configuration
+            # TODO: we need a proper config container/manager so as to combine these local configs with external configs etc.
+            CONFKEYBKG='--configKeyValues "GeneratorPythia8.config=pythia8bkg.cfg"'
+
+        workflow['stages'].append(BKG_CONFIG_task)
+
+        # background task configuration
+        INIBKG=''
+        if args.iniBkg!= '':
+           INIBKG=' --configFile ' + args.iniBkg
 
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], cpu=NWORKERS)
         BKGtask['cmd']='o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
@@ -193,7 +258,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    # ----  transport task -------
    # function encapsulating the signal sim part
    # first argument is timeframe id
-   RNDSEED=args.seed    # 0 means random seed !
    ECMS=float(args.eCM)
    EBEAMA=float(args.eA)
    EBEAMB=float(args.eB)
@@ -303,13 +367,15 @@ for tf in range(1, NTIMEFRAMES + 1):
    if GENERATOR == 'pythia8' and PROCESS!='':
       SGN_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
                                 --output=pythia8.cfg                                     \
-	                        --seed='+str(RNDSEED)+'                                  \
-	                        --idA='+str(PDGA)+'                                      \
-	                        --idB='+str(PDGB)+'                                      \
-	                        --eCM='+str(ECMS)+'                                      \
-	                        --process='+str(PROCESS)+'                               \
-	                        --ptHatMin=' + str(PTHATMIN) + '                         \
-	                        --ptHatMax=' + str(PTHATMAX)
+                                --seed='+str(RNDSEED)+'                                  \
+                                --idA='+str(PDGA)+'                                      \
+                                --idB='+str(PDGB)+'                                      \
+                                --eCM='+str(ECMS)+'                                      \
+                                --eA='+str(EBEAMA)+'                                     \
+                                --eB='+str(EBEAMB)+'                                     \
+                                --process='+str(PROCESS)+'                               \
+                                --ptHatMin='+str(PTHATMIN)+'                             \
+                                --ptHatMax='+str(PTHATMAX)
       if WEIGHTPOW   > 0:
             SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
       # if we configure pythia8 here --> we also need to adjust the configuration
