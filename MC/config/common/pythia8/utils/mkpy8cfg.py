@@ -26,7 +26,7 @@ parser.add_argument('--eB', type=float, default='6499.',
 parser.add_argument('--eCM', type=float, default='-1',
                     help='Centre-of-mass energy (careful!, better use beam energy)')
 
-parser.add_argument('--process', default='inel', choices=['none', 'inel', 'ccbar', 'bbbar', 'heavy', 'jets', 'dirgamma', 'cdiff'],
+parser.add_argument('--process', default='inel', choices=['none', 'inel', 'ccbar', 'bbbar', 'heavy_q', 'jets', 'dirgamma', 'cdiff','heavy_ion'],
                     help='Process to switch on')
 
 parser.add_argument('--ptHatMin', type=float,
@@ -94,14 +94,14 @@ fout.write('\n')
 
 ### processes
 fout.write('### processes \n')
-if args.idA == 2212 or args.idB == 2212:
+if args.process != 'heavy_ion':
     fout.write('SoftQCD:inelastic = off \n') ### we switch this off because it might be on by default, but only for pp or pPb,
     #in PbPb let's not force it in case it is needed in Angantyr
 if args.process == 'inel':
     fout.write('SoftQCD:inelastic = on \n')
-if args.process == 'ccbar' or args.process == 'heavy':
+if args.process == 'ccbar' or args.process == 'heavy_q':
     fout.write('HardQCD:hardccbar = on \n')
-if args.process == 'bbbar' or args.process == 'heavy':
+if args.process == 'bbbar' or args.process == 'heavy_q':
     fout.write('HardQCD:hardbbbar = on \n')
 if args.process == 'jets':
     fout.write('HardQCD:all = on \n')
@@ -114,7 +114,7 @@ if args.process == 'cdiff':
 fout.write('\n')
 
 ### heavy ion  settings (valid for Pb-Pb 5520 only)
-if args.idA==1000822080 and args.idB==1000822080:
+if args.process == 'heavy_ion':
     fout.write('### heavy-ion settings (valid for Pb-Pb 5520 only) \n')
     fout.write('HeavyIon:SigFitNGen = 0 \n')
     fout.write('HeavyIon:SigFitDefPar = 13.88,1.84,0.22,0.0,0.0,0.0,0.0,0.0 \n')

@@ -63,7 +63,7 @@ echo 'Parton PDG option ' $CONFIG_OUTPARTON_PDG
 # create workflow
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY}                                      \
                                            -nb ${NBKGEVENTS} --embedding                              \
-                                           -colBkg PbPb -genBkg pythia8 -procBkg "none"               \
+                                           -colBkg PbPb -genBkg pythia8 -procBkg "heavy_ion"          \
                                            -col    pp   -gen    pythia8 -proc    "dirgamma"           \
                                            -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}                \
                                            -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}       \

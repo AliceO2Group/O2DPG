@@ -25,7 +25,7 @@ PYPROCESS=${PYPROCESS:-ccbar} #ccbar, bbar, ...
 
 # create workflow
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 5020 -col pp -gen pythia8 -proc ${PYPROCESS} \
-                                           -colBkg PbPb -genBkg pythia8 -procBkg "none"      \
+                                           -colBkg PbPb -genBkg pythia8 -procBkg "heavy_ion" \
                                            -tf ${NTIMEFRAMES} -nb ${NBKGEVENTS}              \
                                            -ns ${NSIGEVENTS} -e ${SIMENGINE}                 \
                                            -j ${NWORKERS} --embedding -interactionRate 50000
