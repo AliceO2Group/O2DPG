@@ -110,8 +110,8 @@ workflow={}
 workflow['stages'] = []
 
 
-def getDPL_global_options(bigshm=False,nosmallrate=False):
-   common="-b --run --fairmq-ipc-prefix ${FAIRMQ_IPC_PREFIX:-./} --driver-client-backend ws:// " + ('--rate 1000','')[nosmallrate]
+def getDPL_global_options(bigshm=False):
+   common="-b --run --fairmq-ipc-prefix ${FAIRMQ_IPC_PREFIX:-./} --driver-client-backend ws:// "
    if args.noIPC!=None:
       return common + " --no-IPC "
    if bigshm:
@@ -487,7 +487,7 @@ for tf in range(1, NTIMEFRAMES + 1):
          t = createTask(name=name, needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu=NWORKERS)
          t['cmd'] = ('','ln -nfs ../bkg_Hits*.root . ;')[doembedding]
-         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options(nosmallrate=True) + ' -n ' + str(args.ns) + simsoption + ' --skipDet TPC,TRD --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini'
+         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --skipDet TPC,TRD --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini'
          workflow['stages'].append(t)
          return t
 
@@ -520,16 +520,17 @@ for tf in range(1, NTIMEFRAMES + 1):
      # We treat TPC clusterization in multiple (sector) steps in order to stay within the memory limit
      # We seem to be needing to ask for 2 sectors at least, otherwise there is a problem with the branch naming.
      tpcclustertasks=[]
-     for s in range(0,35,2):
-       taskname = 'tpcclusterpart' + str((int)(s/2)) + '_' + str(tf)
+     sectorpertask=6
+     for s in range(0,35,sectorpertask):
+       taskname = 'tpcclusterpart' + str((int)(s/sectorpertask)) + '_' + str(tf)
        tpcclustertasks.append(taskname)
-       tpcclussect = createTask(name=taskname, needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
-       tpcclussect['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s)+','+str(s+1) + ' --rate 1000 --tpc-lanes ' + str(NWORKERS)
-       tpcclussect['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str((int)(s/2)) + '.root --tpc-sectors ' + str(s)+','+str(s+1) + ' --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=1"'
-       tpcclussect['env'] = { "OMP_NUM_THREADS" : "1" }   # we disable OpenMP since running in scalar mode anyway
+       tpcclussect = createTask(name=taskname, needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='2', mem='8000')
+       tpcclussect['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' --tpc-lanes ' + str(NWORKERS)
+       tpcclussect['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str((int)(s/sectorpertask)) + '.root --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=4"'
+       tpcclussect['env'] = { "OMP_NUM_THREADS" : "4", "SHMSIZE" : "5000000000" }
        workflow['stages'].append(tpcclussect)
 
-     TPCCLUSMERGEtask=createTask(name='tpcclustermerge_'+str(tf), needs=tpcclustertasks, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1')
+     TPCCLUSMERGEtask=createTask(name='tpcclustermerge_'+str(tf), needs=tpcclustertasks, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='10000')
      TPCCLUSMERGEtask['cmd']='o2-commonutils-treemergertool -i tpc-native-clusters-part*.root -o tpc-native-clusters.root -t tpcrec' #--asfriend preferable but does not work
      workflow['stages'].append(TPCCLUSMERGEtask)
      tpcreconeeds.append(TPCCLUSMERGEtask['name'])
@@ -541,7 +542,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      tpcreconeeds.append(tpcclus['name'])
 
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
-   TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True, nosmallrate=False) + ' --input-type clusters --output-type tracks,send-clusters-per-sector --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads='+str(NWORKERS)+'"'
+   TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads='+str(NWORKERS)+'"'
    workflow['stages'].append(TPCRECOtask)
 
    ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[det_to_digitask["ITS"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
@@ -553,7 +554,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(FT0RECOtask)
 
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
-   ITSTPCMATCHtask['cmd']= 'o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True, nosmallrate=False) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\"'
+   ITSTPCMATCHtask['cmd']= 'o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\"'
    workflow['stages'].append(ITSTPCMATCHtask)
 
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
@@ -562,7 +563,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TRDTRACKINGtask)
 
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], det_to_digitask["TOF"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options(nosmallrate=False)
+   TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options()
    workflow['stages'].append(TOFRECOtask)
 
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
@@ -570,12 +571,12 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TOFTPCMATCHERtask)
 
    MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[det_to_digitask["MFT"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options(nosmallrate=False)
+   MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options()
    workflow['stages'].append(MFTRECOtask)
 
    pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], TRDTRACKINGtask['name']]
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
-   PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' + getDPL_global_options(nosmallrate=False)
+   PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' + getDPL_global_options()
    # PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TOF" --vetex-track-matching-sources "ITS,ITS-TPC,ITS-TPC-TOF"'
    workflow['stages'].append(PVFINDERtask)
 
@@ -585,49 +586,49 @@ for tf in range(1, NTIMEFRAMES + 1):
      # fixme: not working yet, ITS will prepare a way to read clusters and tracks. Also ITSDictionary will be needed. 
      # ITSClustersTracksQCneeds = [ITSRECOtask['name']] 
      # ITSClustersTracksQCtask = createTask(name='itsClustersTracksQC_'+str(tf), needs=ITSClustersTracksQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     # ITSClustersTracksQCtask['cmd'] = 'o2-missing-reader | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json ' + getDPL_global_options(nosmallrate=False)
+     # ITSClustersTracksQCtask['cmd'] = 'o2-missing-reader | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json ' + getDPL_global_options()
      # workflow['stages'].append(ITSClustersTracksQCtask)
 
      ### MFT
      # fixme: there is a bug in Check which causes a segfault, uncomment when the fix is merged
      # MFTDigitsQCneeds = [det_to_digitask["MFT"]['name']]
      # MFTDigitsQCtask = createTask(name='mftDigitsQC_'+str(tf), needs=MFTDigitsQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     # MFTDigitsQCtask['cmd'] = 'o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit.json ' + getDPL_global_options(nosmallrate=False)
+     # MFTDigitsQCtask['cmd'] = 'o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit.json ' + getDPL_global_options()
      # workflow['stages'].append(MFTDigitsQCtask)
 
      MFTClustersQCneeds = [MFTRECOtask['name']]
      MFTClustersQCtask = createTask(name='mftClustersQC_'+str(tf), needs=MFTClustersQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     MFTClustersQCtask['cmd'] = 'o2-qc-mft-clusters-root-file-reader --mft-cluster-infile=mftclusters.root | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json ' + getDPL_global_options(nosmallrate=False)
+     MFTClustersQCtask['cmd'] = 'o2-qc-mft-clusters-root-file-reader --mft-cluster-infile=mftclusters.root | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json ' + getDPL_global_options()
      workflow['stages'].append(MFTClustersQCtask)
 
      MFTTracksQCneeds = [MFTRECOtask['name']]
      MFTTracksQCtask = createTask(name='mftTracksQC_'+str(tf), needs=MFTTracksQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     MFTTracksQCtask['cmd'] = 'o2-qc-mft-tracks-root-file-reader --mft-track-infile=mfttracks.root | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-track.json ' + getDPL_global_options(nosmallrate=False)
+     MFTTracksQCtask['cmd'] = 'o2-qc-mft-tracks-root-file-reader --mft-track-infile=mfttracks.root | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-track.json ' + getDPL_global_options()
      workflow['stages'].append(MFTTracksQCtask)
 
      ### TPC
      TPCTrackingQCneeds = [TPCRECOtask['name']]
      TPCTrackingQCtask = createTask(name='tpcTrackingQC_'+str(tf), needs=TPCTrackingQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=2, mem='2000')
-     TPCTrackingQCtask['cmd'] = 'o2-tpc-track-reader | o2-tpc-reco-workflow --input-type clusters --infile tpc-native-clusters.root --output-type disable-writer | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-tracking-direct.json ' + getDPL_global_options(nosmallrate=False)
+     TPCTrackingQCtask['cmd'] = 'o2-tpc-track-reader | o2-tpc-reco-workflow --input-type clusters --infile tpc-native-clusters.root --output-type disable-writer | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-tracking-direct.json ' + getDPL_global_options()
      workflow['stages'].append(TPCTrackingQCtask)
 
      ### TRD
      TRDDigitsQCneeds = [TRDDigitask['name']]
      TRDDigitsQCtask = createTask(name='trdDigitsQC_'+str(tf), needs=TRDDigitsQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     TRDDigitsQCtask['cmd'] = 'o2-trd-trap-sim | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json ' + getDPL_global_options(nosmallrate=False)
+     TRDDigitsQCtask['cmd'] = 'o2-trd-trap-sim | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json ' + getDPL_global_options()
      workflow['stages'].append(TRDDigitsQCtask)
 
      ### RECO
      vertexQCneeds = [PVFINDERtask['name']]
      vertexQCtask = createTask(name='vertexQC_'+str(tf), needs=vertexQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     vertexQCtask['cmd'] = 'o2-primary-vertex-reader-workflow | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json ' + getDPL_global_options(nosmallrate=False)
+     vertexQCtask['cmd'] = 'o2-primary-vertex-reader-workflow | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json ' + getDPL_global_options()
      workflow['stages'].append(vertexQCtask)
 
      
  
    #secondary vertexer
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=1, mem='2000')
-   SVFINDERtask['cmd'] = 'o2-secondary-vertexing-workflow ' + getDPL_global_options(nosmallrate=False)
+   SVFINDERtask['cmd'] = 'o2-secondary-vertexing-workflow ' + getDPL_global_options()
    workflow['stages'].append(SVFINDERtask)
 
   # -----------
