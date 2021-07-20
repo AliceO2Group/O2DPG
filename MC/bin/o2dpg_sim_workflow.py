@@ -496,12 +496,17 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TRDTRACKINGtask)
 
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], det_to_digitask["TOF"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options(nosmallrate=False)
+   TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options(nosmallrate=False) + ' --calib-cluster'
+   TOFRECOtask['cmd'] += ' | o2-tof-cluster-calib-workflow ' + getDPL_global_options(nosmallrate=False)
    workflow['stages'].append(TOFRECOtask)
 
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
-   TOFTPCMATCHERtask['cmd'] = 'o2-tof-matcher-workflow ' + getDPL_global_options()
+   TOFTPCMATCHERtask['cmd'] = 'o2-tof-matcher-workflow ' + getDPL_global_options() + ' --output-type matching-info'
    workflow['stages'].append(TOFTPCMATCHERtask)
+
+   TOFTPCMATCHERtaskCalib = createTask(name='tofitstpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
+   TOFTPCMATCHERtaskCalib['cmd'] = 'o2-tof-matcher-workflow ' + getDPL_global_options() + ' --output-type calib-info --track-sources ITS-TPC'
+   workflow['stages'].append(TOFTPCMATCHERtaskCalib)
 
    MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[det_to_digitask["MFT"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options(nosmallrate=False)
