@@ -52,7 +52,7 @@ parser.add_argument('-weightPow',help='Flatten pT hard spectrum with power', def
 parser.add_argument('--embedding',action='store_true', help='With embedding into background')
 parser.add_argument('-nb',help='number of background events / timeframe', default=20)
 parser.add_argument('-genBkg',help='embedding background generator', default='') #pythia8, not recomended: pythia8hi, pythia8pp
-parser.add_argument('-procBkg',help='process type: inel, ..., do not set it for Pythia8 PbPb', default='none')
+parser.add_argument('-procBkg',help='process type: inel, ..., do not set it for Pythia8 PbPb', default='heavy_ion')
 parser.add_argument('-iniBkg',help='embedding background generator init parameters file', default='${O2DPG_ROOT}/MC/config/common/ini/basic.ini')
 parser.add_argument('-confKeyBkg',help='embedding background configuration key values, for example: GeneratorPythia8.config=pythia8bkg.cfg', default='')
 parser.add_argument('-colBkg',help='embedding background collision system', default='PbPb')
@@ -149,7 +149,7 @@ if doembedding:
               print('o2dpg_sim_workflow: Set BKG CM Energy to PbPb case 5.02 TeV')
               ECMSBKG=5020.0
            if GENBKG == 'pythia8':
-              PROCESSBKG = 'none'
+              PROCESSBKG = 'heavy_ion'
               print('o2dpg_sim_workflow: Process type not considered for Pythia8 PbPb')
 
         if COLTYPEBKG == 'pPb':
@@ -203,7 +203,7 @@ if doembedding:
         if args.iniBkg!= '':
            INIBKG=' --configFile ' + args.iniBkg
 
-        BKGtask=createTask(name='bkgsim', lab=["GEANT"], cpu=NWORKERS)
+        BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=[BKG_CONFIG_task['name']], cpu=NWORKERS )
         BKGtask['cmd']='o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
                      + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)     \
                      + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG)

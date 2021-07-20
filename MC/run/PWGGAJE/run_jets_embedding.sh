@@ -15,7 +15,7 @@
 RNDSEED=${RNDSEED:-0}   # [default = 0] time-based random seed
 NSIGEVENTS=${NSIGEVENTS:-2}
 NBKGEVENTS=${NBKGEVENTS:-1}
-NTIMEFRAMES=${NTIMEFRAMES:-1}
+NTIMEFRAMES=${NTIMEFRAMES:-5}
 NWORKERS=${NWORKERS:-8}
 MODULES="--skipModules ZDC" #"PIPE ITS TPC EMCAL"
 CONFIG_ENERGY=${CONFIG_ENERGY:-5020.0}
@@ -43,7 +43,7 @@ fi
 # create workflow
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} \
                                            -nb ${NBKGEVENTS} --embedding                          \
-                                           -colBkg PbPb -genBkg pythia8 -procBkg "none"           \
+                                           -colBkg PbPb -genBkg pythia8 -procBkg "heavy_ion"      \
                                            -col    pp   -gen    pythia8 -proc    "jets"           \
                                            -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}            \
                                            -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}   \
