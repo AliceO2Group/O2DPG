@@ -16,8 +16,8 @@ testanalysis=$1 # o2-analysistutorial-mc-histograms o2-analysis-spectra-tof-tiny
 NTF=$(find ./ -name "tf*" -type d | wc | awk '//{print $1}')
 #
 
-commonDPL="-b --run --driver-client-backend ws:// --aod-memory-rate-limit 1000000000 --fairmq-ipc-prefix ${FAIRMQ_IPC_PREFIX:-./.tmp}"
-annaCMD="RC=0; if [ -f AO2D.root ]; then ${testanalysis} ${commonDPL} --aod-file AO2D.root; RC=\$?; fi; [ -f AnalysisResults.root ] && mv AnalysisResults.root AnalysisResults_${testanalysis}.root; [ -f QAResult.root ] && mv QAResults.root QAResults_${testanalysis}.root; [ \${RC} -eq 0 ]"
+commonDPL="-b --run --driver-client-backend ws:// --aod-memory-rate-limit 4000000000 --fairmq-ipc-prefix ${FAIRMQ_IPC_PREFIX:-./.tmp}"
+annaCMD="RC=0; if [ -f AO2D.root ]; then timeout 600s ${testanalysis} ${commonDPL} --aod-file AO2D.root; RC=\$?; fi; [ -f AnalysisResults.root ] && mv AnalysisResults.root AnalysisResults_${testanalysis}.root; [ -f QAResult.root ] && mv QAResults.root QAResults_${testanalysis}.root; [ \${RC} -eq 0 ]"
 
 rm workflow_ana.json
 # this is to analyse the global (merged) AOD
@@ -41,9 +41,9 @@ do
 done
 
 # run the individual AOD part
-$O2DPG_ROOT/MC/bin/o2_dpg_workflow_runner.py -f workflow_ana.json -tt ${testanalysis}_.*$ --rerun-from ${testanalysis}_.*$
-RC1=$?
-echo "EXIT 1: $RC1"
+# $O2DPG_ROOT/MC/bin/o2_dpg_workflow_runner.py -f workflow_ana.json -tt ${testanalysis}_.*$ --rerun-from ${testanalysis}_.*$
+# RC1=$?
+# echo "EXIT 1: $RC1"
 
 # run on the merged part
 $O2DPG_ROOT/MC/bin/o2_dpg_workflow_runner.py -f workflow_ana.json -tt ${testanalysis}$ --rerun-from ${testanalysis}$
