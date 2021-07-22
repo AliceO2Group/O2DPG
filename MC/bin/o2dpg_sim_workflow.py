@@ -34,8 +34,8 @@ parser.add_argument('-ns',help='number of signal events / timeframe', default=20
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
 parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...', default='')
 parser.add_argument('-trigger',help='event selection: particle, external', default='')
-parser.add_argument('-ini',help='generator init parameters file, for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
-parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: GeneratorPythia8.config=pythia8.cfg', default='')
+parser.add_argument('-ini',help='generator init parameters file (full paths required), for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
+parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
 
 parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
 parser.add_argument('-eCM',help='CMS energy', default=-1)
@@ -53,8 +53,8 @@ parser.add_argument('--embedding',action='store_true', help='With embedding into
 parser.add_argument('-nb',help='number of background events / timeframe', default=20)
 parser.add_argument('-genBkg',help='embedding background generator', default='') #pythia8, not recomended: pythia8hi, pythia8pp
 parser.add_argument('-procBkg',help='process type: inel, ..., do not set it for Pythia8 PbPb', default='heavy_ion')
-parser.add_argument('-iniBkg',help='embedding background generator init parameters file', default='${O2DPG_ROOT}/MC/config/common/ini/basic.ini')
-parser.add_argument('-confKeyBkg',help='embedding background configuration key values, for example: GeneratorPythia8.config=pythia8bkg.cfg', default='')
+parser.add_argument('-iniBkg',help='embedding background generator init parameters file (full path required)', default='${O2DPG_ROOT}/MC/config/common/ini/basic.ini')
+parser.add_argument('-confKeyBkg',help='embedding background configuration key values, for example: "GeneratorPythia8.config=pythia8bkg.cfg"', default='')
 parser.add_argument('-colBkg',help='embedding background collision system', default='PbPb')
 
 parser.add_argument('-e',help='simengine', default='TGeant4')
@@ -177,7 +177,7 @@ if doembedding:
 
         CONFKEYBKG=''
         if args.confKeyBkg!= '':
-           CONFKEYBKG=' --configKeyValues ' + args.CONFKEYBKG
+           CONFKEYBKG=' --configKeyValues "' + args.CONFKEYBKG + '"'
 
         # Background PYTHIA configuration
         BKG_CONFIG_task=createTask(name='genbkgconf')
@@ -272,7 +272,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       INIFILE=' --configFile ' + args.ini
    CONFKEY=''
    if args.confKey!= '':
-      CONFKEY=' --configKeyValues ' + args.confKey
+      CONFKEY=' --configKeyValues "' + args.confKey + '"'
    PROCESS=args.proc
    TRIGGER=''
    if args.trigger != '':
