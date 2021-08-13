@@ -559,7 +559,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    TRDTRACKINGtask['cmd'] = 'o2-trd-tracklet-transformer ' + getDPL_global_options()
-   TRDTRACKINGtask['cmd'] += ' | o2-trd-global-tracking ' + getDPL_global_options() + ' --disable-mc' # TRD tracker cannot handle MC labels yet
+   TRDTRACKINGtask['cmd'] += ' | o2-trd-global-tracking ' + getDPL_global_options()
    workflow['stages'].append(TRDTRACKINGtask)
 
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], det_to_digitask["TOF"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
