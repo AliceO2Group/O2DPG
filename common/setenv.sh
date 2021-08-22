@@ -11,9 +11,9 @@ if [ -z "$NTIMEFRAMES" ];   then export NTIMEFRAMES=1; fi              # Number 
 if [ -z "$TFDELAY" ];       then export TFDELAY=100; fi                # Delay in seconds between publishing time frames
 if [ -z "$NGPUS" ];         then export NGPUS=1; fi                    # Number of GPUs to use, data distributed round-robin
 if [ -z "$GPUTYPE" ];       then export GPUTYPE=CPU; fi                # GPU Tracking backend to use, can be CPU / CUDA / HIP / OCL / OCL2
-if [ -z "$SHMSIZE" ];       then export SHMSIZE=$(( 128 << 30 )); fi   # Size of shared memory for messages
-if [ -z "$DDSHMSIZE" ];     then export DDSHMSIZE=$(( 32 << 10 )); fi  # Size of shared memory for DD Input
-if [ -z "$GPUMEMSIZE" ];    then export GPUMEMSIZE=$(( 13 << 30 )); fi # Size of allocated GPU memory (if GPUTYPE != CPU)
+if [ -z "$SHMSIZE" ];       then export SHMSIZE=$(( 8 << 30 )); fi     # Size of shared memory for messages
+if [ -z "$DDSHMSIZE" ];     then export DDSHMSIZE=$(( 8 << 10 )); fi   # Size of shared memory for DD Input
+if [ -z "$GPUMEMSIZE" ];    then export GPUMEMSIZE=$(( 24 << 30 )); fi # Size of allocated GPU memory (if GPUTYPE != CPU)
 if [ -z "$HOSTMEMSIZE" ];   then export HOSTMEMSIZE=0; fi              # Size of allocated host memory for GPU reconstruction (0 = default)
 if [ -z "$CREATECTFDICT" ]; then export CREATECTFDICT=0; fi            # Create CTF dictionary
 if [ -z "$SAVECTF" ];       then export SAVECTF=0; fi                  # Save the CTF to a ROOT file
