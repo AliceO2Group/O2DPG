@@ -29,6 +29,7 @@ if [ -z "$SEVERITY" ];      then export SEVERITY="info"; fi            # Log ver
 if [ -z "$SHMTHROW" ];      then export SHMTHROW=1; fi                 # Throw exception when running out of SHM
 if [ -z "$NORATELOG" ];     then export NORATELOG=1; fi                # Disable FairMQ Rate Logging
 if [ -z "$INRAWCHANNAME" ]; then export INRAWCHANNAME=stfb-to-dpl; fi  # Raw channel name used to communicate with DataDistribution
+if [ -z "$WORKFLOWMODE" ];  then export WORKFLOWMODE=run; fi           # Workflow mode, must be run, print, od dds
 
 SEVERITY_TPC="info" # overrides severity for the tpc workflow
 DISABLE_MC="--disable-mc"
@@ -43,5 +44,9 @@ if [ $SAVECTF == 1 ] && [ $CTFINPUT == 1 ]; then
 fi
 if [ $SYNCMODE == 1 ] && [ $CTFINPUT == 1 ]; then
   echo SYNCMODE and CTFINPUT are incompatible
+  exit 1
+fi
+if [ $WORKFLOWMODE != "run" ] && [ $WORKFLOWMODE != "print" ] && [ $WORKFLOWMODE != "dds" ]; then
+  echo Invalid workflow mode
   exit 1
 fi

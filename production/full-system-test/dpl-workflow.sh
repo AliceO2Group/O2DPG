@@ -204,12 +204,13 @@ if [ "0$RUN_EVENT_DISPLAY" == "01" ]; then
 fi
 
 # DPL run binary
-WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT --run"
+WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
 
-if [ "0$PRINT_WORKFLOW_ONLY" == "01" ]; then
+if [ $WORKFLOWMODE == "print" ]; then
   echo Workflow command:
   echo $WORKFLOW | sed "s/| */|\n/g"
 else
   # Execute the command we have assembled
+  WORKFLOW+=" --$WORKFLOWMODE"
   eval $WORKFLOW
 fi
