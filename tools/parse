@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+import os
+import sys
+import shlex
+import tempfile
+
+if len(sys.argv) != 4:
+    print("Incorrect number of arguments provided, syntax is parse [description library file] [topology name] [output file name]")
+    exit(1)
+
+if not "FILEWORKDIR" in os.environ:
+    print("$FILEWORKDIR env variable missing")
+    exit(1)
+
+print("Using topology", sys.argv[2], "of library", sys.argv[1])
+
+os.environ['WORKFLOWMODE'] = 'dds'
+if 'GLOBALDPLOPT' in os.environ:
+    os.environ['GLOBALDPLOPT'] += " -b"
+else:
+    os.environ['GLOBALDPLOPT'] = "-b"
+
+f = open(sys.argv[1], "r")
+for line in f:
+    line = line.strip()
+    if len(line) == 0:
+        continue
+    if line[0] == '#':
+        continue
+    args = shlex.split(line)
+    if len(args) <= 1:
+        print("Toplogy must have at least name and O2 version")
+        raise
+    if len(args[0]) == 0:
+        print("Empty topology name forbitten")
+        raise
+    if not args[0].endswith(':'):
+        print("Topology name ", args[0], "not followed by ':'")
+        raise
+    if args[0] == sys.argv[2] + ":":
+        reconodes = 0
+        reconodesmin = 0
+        recoworkflows = []
+        calibworkflows = []
+        print("Found topology", sys.argv[2], "-", args)
+        with tempfile.TemporaryDirectory(prefix="o2_workflow") as tmpdir:
+            for i in range(2, len(args)):
+                filename = tmpdir + "/wf" + str(i) + ".dds"
+                if args[i].startswith("reco"):
+                    wf = args[i].split(",", 4)
+                    recoworkflows.append(filename)
+                elif args[i].startswith("calib"):
+                    wf = args[i].split(",", 3)
+                    wf[3] = wf[2]
+                    wf[2] = wf[1]
+                    calibworkflows.append(filename)
+                else:
+                    print("Invalid workflow type", args[i])
+                    raise
+                print("Adding", wf[0], "workflow (", wf[2], "-", wf[1], "nodes):", wf[3])
+                reconodes = max(reconodes, int(wf[1]))
+                reconodesmin = max(reconodesmin, int(wf[2]))
+                command = wf[3] + " | grep -v \"^\[\" > " + filename
+                print("Running DPL command", command)
+                if os.system(command) != 0:
+                    print("Error running command", command)
+                    raise
+            odccommand = "odc-epn-topo"
+            if len(recoworkflows):
+                odccommand += " --dd " + os.environ['DDWORKFLOW'] + " --reco " + " ".join(recoworkflows)
+            odccommand += " --n " + str(reconodes)
+            if len(calibworkflows):
+                odccommand += " --calib " + " ".join(calibworkflows)
+            odccommand += " -o " + sys.argv[3]
+            if os.system(odccommand) != 0:
+                print("\nError running odc: ", odccommand)
+                raise
+        print("Done")
+        exit(0)
+
+print("Could not find workflow", sys.argv[2])
+exit(1)
