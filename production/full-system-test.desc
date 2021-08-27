@@ -1,3 +1,3 @@
 #Full system test workflows
-full-system-test-async: nightly-20210819 reco,128,126,"CTFINPUT=1 SHMSIZE=64000000000 HOSTMEMSIZE=30000000000 production/full-system-test/dpl-workflow.sh"
-full-system-test-sync:  nightly-20210819 reco,128,126,"SYNCMODE=1 SHMSIZE=64000000000 HOSTMEMSIZE=30000000000 production/full-system-test/dpl-workflow.sh"
+full-system-test-async: O2PDPSuite/latest reco,128,126,"CTFINPUT=1 SHMSIZE=64000000000 HOSTMEMSIZE=30000000000 production/full-system-test/dpl-workflow.sh"
+full-system-test-sync:  O2PDPSuite/latest reco,128,126,"SYNCMODE=1 SHMSIZE=64000000000 HOSTMEMSIZE=30000000000 production/full-system-test/dpl-workflow.sh"

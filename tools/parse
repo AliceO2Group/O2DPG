@@ -3,6 +3,9 @@ import os
 import sys
 import shlex
 import tempfile
+if 'EPNMODE' in os.environ and int(os.environ['EPNMODE']):
+    sys.path.insert(0, '/usr/share/Modules/init')
+    import python as mod
 
 if len(sys.argv) != 4:
     print("Incorrect number of arguments provided, syntax is parse [description library file] [topology name] [output file name]")
@@ -43,6 +46,13 @@ for line in f:
         recoworkflows = []
         calibworkflows = []
         print("Found topology", sys.argv[2], "-", args)
+        if 'EPNMODE' in os.environ and int(os.environ['EPNMODE']):
+            for i in args[1].split():
+                print("Loading module", i)
+                mod.module('load', i)
+        if not 'O2_ROOT' in os.environ:
+            print("O2 not loaded")
+            raise
         with tempfile.TemporaryDirectory(prefix="o2_workflow") as tmpdir:
             for i in range(2, len(args)):
                 filename = tmpdir + "/wf" + str(i) + ".dds"
