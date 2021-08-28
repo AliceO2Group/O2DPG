@@ -83,6 +83,8 @@ for line in f:
             odccommand += " --n " + str(reconodes)
             if len(calibworkflows):
                 odccommand += " --calib " + " ".join(calibworkflows)
+            if args[1] != "":
+                odccommand += " --prependexe \"module load " + args[1] + "; \""
             odccommand += " -o " + sys.argv[3]
             if os.system(odccommand) != 0:
                 print("\nError running odc: ", odccommand)
