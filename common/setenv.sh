@@ -32,6 +32,11 @@ if [ -z "$INRAWCHANNAME" ]; then export INRAWCHANNAME=stfb-to-dpl; fi  # Raw cha
 if [ -z "$WORKFLOWMODE" ];  then export WORKFLOWMODE=run; fi           # Workflow mode, must be run, print, od dds
 if [ -z "$FILEWORKDIR" ];   then export FILEWORKDIR=`pwd`; fi          # Override folder where to find grp, etc.
 if [ -z "$EPNMODE" ];       then export EPNMODE=0; fi                  # Is this workflow supposed to run on EPN? Will enable InfoLogger / metrics / ...
+# Detectors used in the workflow / enabled parameters
+if [ -z "${WORKFLOW_DETECTORS+x}" ] || [ $WORKFLOW_DETECTORS == "ALL" ]; then export WORKFLOW_DETECTORS="ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH"; fi
+if [ -z "${WORKFLOW_DETECTORS_QC+x}" ] || [ $WORKFLOW_DETECTORS_QC == "ALL" ]; then export WORKFLOW_DETECTORS_QC=$WORKFLOW_DETECTORS; fi
+if [ -z "${WORKFLOW_DETECTORS_CALIB+x}" ] || [ $WORKFLOW_DETECTORS_CALIB == "ALL" ]; then export WORKFLOW_DETECTORS_CALIB=$WORKFLOW_DETECTORS; fi
+if [ -z "$WORKFLOW_PARAMETERS" ]; then export WORKFLOW_PARAMETERS=; fi
 
 SEVERITY_TPC="info" # overrides severity for the tpc workflow
 DISABLE_MC="--disable-mc"
@@ -52,3 +57,59 @@ if [ $WORKFLOWMODE != "run" ] && [ $WORKFLOWMODE != "print" ] && [ $WORKFLOWMODE
   echo Invalid workflow mode
   exit 1
 fi
+
+has_detector()
+{
+  [[ $WORKFLOW_DETECTORS =~ (^|,)"$1"(,|$) ]]
+}
+
+has_detectors()
+{
+  while true; do
+    if [ "0$1" == "0" ]; then return 0; fi
+    if ! has_detector $1; then return 1; fi
+    shift
+  done
+}
+
+has_detector_qc()
+{
+  has_detector $1 && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"$1"(,|$) ]]
+}
+
+has_detectors_qc()
+{
+  while true; do
+    if [ "0$1" == "0" ]; then return 0; fi
+    if ! has_detector_qc $1; then return 1; fi
+    shift
+  done
+}
+
+has_detector_calib()
+{
+  has_detector $1 && [[ $WORKFLOW_DETECTORS_CALIB =~ (^|,)"$1"(,|$) ]]
+}
+
+has_detectors_calib()
+{
+  while true; do
+    if [ "0$1" == "0" ]; then return 0; fi
+    if ! has_detector_calib $1; then return 1; fi
+    shift
+  done
+}
+
+workflow_has_parameter()
+{
+  [[ $WORKFLOW_PARAMETERS =~ (^|,)"$1"(,|$) ]]
+}
+
+workflow_has_parameters()
+{
+  while true; do
+    if [ "0$1" == "0" ]; then return 0; fi
+    if ! workflow_has_parameter $1; then return 1; fi
+    shift
+  done
+}
