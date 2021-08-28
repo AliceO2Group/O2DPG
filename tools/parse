@@ -75,6 +75,8 @@ for line in f:
                 if os.system(command) != 0:
                     print("Error running command", command)
                     raise
+            if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRIDE'] != "" and int(os.environ['RECO_NUM_NODES_OVERRIDE']) > 0:
+                reconodes = int(os.environ['RECO_NUM_NODES_OVERRIDE'])
             odccommand = "odc-epn-topo"
             if len(recoworkflows):
                 odccommand += " --dd " + os.environ['DDWORKFLOW'] + " --reco " + " ".join(recoworkflows)
