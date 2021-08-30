@@ -33,9 +33,9 @@ if [ -z "$WORKFLOWMODE" ];  then export WORKFLOWMODE=run; fi           # Workflo
 if [ -z "$FILEWORKDIR" ];   then export FILEWORKDIR=`pwd`; fi          # Override folder where to find grp, etc.
 if [ -z "$EPNMODE" ];       then export EPNMODE=0; fi                  # Is this workflow supposed to run on EPN? Will enable InfoLogger / metrics / ...
 # Detectors used in the workflow / enabled parameters
-if [ -z "${WORKFLOW_DETECTORS+x}" ] || [ $WORKFLOW_DETECTORS == "ALL" ]; then export WORKFLOW_DETECTORS="ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH"; fi
-if [ -z "${WORKFLOW_DETECTORS_QC+x}" ] || [ $WORKFLOW_DETECTORS_QC == "ALL" ]; then export WORKFLOW_DETECTORS_QC=$WORKFLOW_DETECTORS; fi
-if [ -z "${WORKFLOW_DETECTORS_CALIB+x}" ] || [ $WORKFLOW_DETECTORS_CALIB == "ALL" ]; then export WORKFLOW_DETECTORS_CALIB=$WORKFLOW_DETECTORS; fi
+if [ -z "${WORKFLOW_DETECTORS+x}" ] || [ "0$WORKFLOW_DETECTORS" == "0ALL" ]; then export WORKFLOW_DETECTORS="ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH"; fi
+if [ -z "${WORKFLOW_DETECTORS_QC+x}" ] || [ "0$WORKFLOW_DETECTORS_QC" == "0ALL" ]; then export WORKFLOW_DETECTORS_QC=$WORKFLOW_DETECTORS; fi
+if [ -z "${WORKFLOW_DETECTORS_CALIB+x}" ] || [ "0$WORKFLOW_DETECTORS_CALIB" == "0ALL" ]; then export WORKFLOW_DETECTORS_CALIB=$WORKFLOW_DETECTORS; fi
 if [ -z "$WORKFLOW_PARAMETERS" ]; then export WORKFLOW_PARAMETERS=; fi
 
 SEVERITY_TPC="info" # overrides severity for the tpc workflow
