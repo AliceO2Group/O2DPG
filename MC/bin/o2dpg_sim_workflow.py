@@ -177,7 +177,7 @@ if doembedding:
 
         CONFKEYBKG=''
         if args.confKeyBkg!= '':
-           CONFKEYBKG=' --configKeyValues "' + args.CONFKEYBKG + '"'
+           CONFKEYBKG=' --configKeyValues "' + args.confKeyBkg + '"'
 
         # Background PYTHIA configuration
         BKG_CONFIG_task=createTask(name='genbkgconf')
@@ -194,7 +194,7 @@ if doembedding:
                                    --process='+str(PROCESSBKG)
             # if we configure pythia8 here --> we also need to adjust the configuration
             # TODO: we need a proper config container/manager so as to combine these local configs with external configs etc.
-            CONFKEYBKG='--configKeyValues "GeneratorPythia8.config=pythia8bkg.cfg"'
+            CONFKEYBKG='--configKeyValues "GeneratorPythia8.config=pythia8bkg.cfg;' + args.confKeyBkg + '"'
 
         workflow['stages'].append(BKG_CONFIG_task)
 
@@ -380,7 +380,7 @@ for tf in range(1, NTIMEFRAMES + 1):
             SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
       # if we configure pythia8 here --> we also need to adjust the configuration
       # TODO: we need a proper config container/manager so as to combine these local configs with external configs etc.
-      CONFKEY='--configKeyValues "GeneratorPythia8.config=pythia8.cfg"'
+      CONFKEY='--configKeyValues "GeneratorPythia8.config=pythia8.cfg'+';'+args.confKey+'"'
 
    # elif GENERATOR == 'extgen': what do we do if generator is not pythia8?
        # NOTE: Generator setup might be handled in a different file or different files (one per
