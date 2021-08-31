@@ -58,6 +58,10 @@ for line in f:
         print("Found topology", sys.argv[2], "-", args)
         if 'EPNMODE' in os.environ and int(os.environ['EPNMODE']):
             for i in args[1].split():
+                if "GEN_TOPO_CACHEABLE" in os.environ and os.environ['GEN_TOPO_CACHEABLE'] == "1":
+                    if i.find("/") == -1 or i.find("/latest") != -1:
+                        print("Must not use non-versioned module", i, "in cacheable workflow (i.e. with repository hash)")
+                        raise
                 print("Loading module", i)
                 mod.module('load', i)
         if len(args) > 2 and not 'O2_ROOT' in os.environ:
