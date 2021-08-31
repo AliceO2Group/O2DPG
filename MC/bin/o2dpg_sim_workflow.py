@@ -50,6 +50,7 @@ parser.add_argument('-ptHatMax',help='pT hard maximum when no bin requested', de
 parser.add_argument('-weightPow',help='Flatten pT hard spectrum with power', default=-1)
 
 parser.add_argument('--embedding',action='store_true', help='With embedding into background')
+parser.add_argument('--embeddPattern',help='How signal is to be injected into background', default='@0:e1')
 parser.add_argument('-nb',help='number of background events / timeframe', default=20)
 parser.add_argument('-genBkg',help='embedding background generator', default='') #pythia8, not recomended: pythia8hi, pythia8pp
 parser.add_argument('-procBkg',help='process type: inel, ..., do not set it for Pythia8 PbPb', default='heavy_ion')
@@ -457,10 +458,19 @@ for tf in range(1, NTIMEFRAMES + 1):
    simsoption=' --sims ' + ('bkg,'+signalprefix if doembedding else signalprefix)
 
    # This task creates the basic setup for all digitizers! all digitization configKeyValues need to be given here
-   ContextTask=createTask(name='digicontext_'+str(tf), needs=[SGNtask['name'], LinkGRPFileTask['name']], tf=tf,
-                          cwd=timeframeworkdir, lab=["DIGI"], cpu='1')
+   # ContextTask=createTask(name='digicontext_'+str(tf), needs=[SGNtask['name'], LinkGRPFileTask['name']], tf=tf,
+                          # cwd=timeframeworkdir, lab=["DIGI"], cpu='1')
+   # ContextTask['cmd'] = 'o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) + ' ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption
+   # workflow['stages'].append(ContextTask)
+   ContextTask = createTask(name='digicontext_'+str(tf), needs=[SGNtask['name'], LinkGRPFileTask['name']], tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='1')
+   # this is just to have the digitizer ini file
    ContextTask['cmd'] = 'o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) + ' ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption
-   workflow['stages'].append(ContextTask)
+
+   # in case of embedding we engineer the context directly and allow the user to provide an embedding pattern
+   # The :r flag means to shuffle the background events randomly
+   if doembedding:
+      ContextTask['cmd'] += ';o2-steer-colcontexttool -i bkg,' + str(INTRATE) + ',' + str(args.nb) + ':r' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern + ' --show-context'
+      workflow['stages'].append(ContextTask)
 
    tpcdigineeds=[ContextTask['name'], LinkGRPFileTask['name']]
    if usebkgcache:
