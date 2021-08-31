@@ -83,10 +83,12 @@ for line in f:
                 print("Adding", wf[0], "workflow (", wf[2], "-", wf[1], "nodes):", wf[3])
                 reconodes = max(reconodes, int(wf[1]))
                 reconodesmin = max(reconodesmin, int(wf[2]))
-                command = wf[3] + " | grep -v \"^\[\" > " + filename
+                command = wf[3] + " | grep -v \"^\[INFO\" > " + filename + " && [ `grep \"^\[\" " + filename + " | wc -l` == 0 ]"
                 print("Running DPL command", command)
                 if os.system(command) != 0:
                     print("Error running command", command)
+                    ftmp = open(filename, 'r')
+                    print(ftmp.read())
                     raise
             if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRIDE'] != "" and int(os.environ['RECO_NUM_NODES_OVERRIDE']) > 0:
                 reconodes = int(os.environ['RECO_NUM_NODES_OVERRIDE'])
