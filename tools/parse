@@ -12,8 +12,18 @@ if len(sys.argv) != 4:
     exit(1)
 
 if not "FILEWORKDIR" in os.environ:
-    print("$FILEWORKDIR env variable missing")
+    print("\$FILEWORKDIR env variable missing")
     exit(1)
+
+if not "DDWORKFLOW" in os.environ and not "DDMODE" in os.environ:
+    print("Need either \$DDWORKFLOW or \$DDMODE env variable")
+    exit(1)
+
+NO_PROCESSING_MODE=0
+if not "DDWORKFLOW" in os.environ:
+    os.environ['DDWORKFLOW'] = "tools/datadistribution_workflows/dd-" + os.environ['DDMODE'] + ".xml"
+    if os.environ['DDMODE'] == 'discard' or os.environ['DDMODE'] == 'disk':
+        NO_PROCESSING_MODE=1
 
 print("Using topology", sys.argv[2], "of library", sys.argv[1])
 
@@ -54,6 +64,9 @@ for line in f:
             print("O2 not loaded")
             raise
         with tempfile.TemporaryDirectory(prefix="o2_workflow") as tmpdir:
+            if NO_PROCESSING_MODE and len(args) > 2:
+                print("Cannot use DPL workflow together with DD mode", os.environ['DDMODE'])
+                raise
             for i in range(2, len(args)):
                 filename = tmpdir + "/wf" + str(i) + ".dds"
                 if args[i].startswith("reco"):
