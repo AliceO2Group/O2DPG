@@ -60,7 +60,7 @@ for line in f:
             for i in args[1].split():
                 print("Loading module", i)
                 mod.module('load', i)
-        if not 'O2_ROOT' in os.environ:
+        if len(args) > 2 and not 'O2_ROOT' in os.environ:
             print("O2 not loaded")
             raise
         with tempfile.TemporaryDirectory(prefix="o2_workflow") as tmpdir:
@@ -91,8 +91,10 @@ for line in f:
             if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRIDE'] != "" and int(os.environ['RECO_NUM_NODES_OVERRIDE']) > 0:
                 reconodes = int(os.environ['RECO_NUM_NODES_OVERRIDE'])
             odccommand = "odc-epn-topo"
+            if reconodes:
+                odccommand += " --dd " + os.environ['DDWORKFLOW']
             if len(recoworkflows):
-                odccommand += " --dd " + os.environ['DDWORKFLOW'] + " --reco " + " ".join(recoworkflows)
+                odccommand += " --reco " + " ".join(recoworkflows)
             odccommand += " --n " + str(reconodes)
             if len(calibworkflows):
                 odccommand += " --calib " + " ".join(calibworkflows)
