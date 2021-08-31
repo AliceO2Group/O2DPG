@@ -578,8 +578,14 @@ for tf in range(1, NTIMEFRAMES + 1):
    MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options()
    workflow['stages'].append(MFTRECOtask)
 
+   # MCH reco: needing access to kinematics ... so some extra logic needed here
+   mchreconeeds = [det_to_digitask["MCH"]['name']]
+   if usebkgcache:
+      mchreconeeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
+
    MCHRECOtask = createTask(name='mchreco_'+str(tf), needs=[det_to_digitask["MCH"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MCHRECOtask['cmd'] = 'o2-mch-reco-workflow ' + getDPL_global_options()
+   MCHRECOtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
+   MCHRECOtask['cmd'] += 'o2-mch-reco-workflow ' + getDPL_global_options()
    workflow['stages'].append(MCHRECOtask)
 
    MIDRECOtask = createTask(name='midreco_'+str(tf), needs=[det_to_digitask["MID"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
