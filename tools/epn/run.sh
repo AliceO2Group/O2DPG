@@ -1,5 +1,23 @@
 #!/bin/bash
-COMMAND="GEN_TOPO_PARTITION=test DDMODE=processing GEN_TOPO_HASH=1 GEN_TOPO_SOURCE=v0.5 GEN_TOPO_LIBRARY_FILE=production/production.desc GEN_TOPO_WORKFLOW_NAME=synchronous-workflow WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_QC= WORKFLOW_DETECTORS_CALIB= WORKFLOW_PARAMETERS=EVENT_DISPLAY RECO_NUM_NODES_OVERRIDE= ./gen_topo.sh"
-#COMMAND="GEN_TOPO_PARTITION=test DDMODE=processing GEN_TOPO_HASH=0 GEN_TOPO_SOURCE=$HOME/alice/O2DataProcessing GEN_TOPO_LIBRARY_FILE=production/production.desc GEN_TOPO_WORKFLOW_NAME=synchronous-workflow WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_QC= WORKFLOW_DETECTORS_CALIB= WORKFLOW_PARAMETERS=EVENT_DISPLAY RECO_NUM_NODES_OVERRIDE= ./gen_topo.sh"
-echo Running $COMMAND 1>&2
-eval $COMMAND
+
+export GEN_TOPO_PARTITION=TPC                                        # ECS Partition
+export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
+
+# Use these settings to fetch the Workflow Repository using a hash / tag
+#export GEN_TOPO_HASH=1                                              # Fetch O2DataProcessing repository using a git hash
+#export GEN_TOPO_SOURCE=v0.5                                         # Git hash to fetch
+
+# Use these settings to specify a path to the workflow repository in your home dir
+export GEN_TOPO_HASH=0                                               # Specify path to O2DataProcessing repository
+export GEN_TOPO_SOURCE=/home/drohr/alice/O2DataProcessing            # Path to O2DataProcessing repository
+
+export GEN_TOPO_LIBRARY_FILE=testing/detectors/TPC/workflows.desc    # Topology description library file to load
+export GEN_TOPO_WORKFLOW_NAME=ctf-and-display                        # Name of workflow in topology description library
+export WORKFLOW_DETECTORS=ALL                                        # Optional parameter for the workflow: Detectors to run reconstruction for (comma-separated list)
+export WORKFLOW_DETECTORS_QC=                                        # Optional parameter for the workflow: Detectors to run QC for
+export WORKFLOW_DETECTORS_CALIB=                                     # Optional parameters for the workflow: Detectors to run calibration for
+export WORKFLOW_PARAMETERS=                                          # Additional paramters for the workflow
+export RECO_NUM_NODES_OVERRIDE=59                                    # Override the number of EPN compute nodes to use (default is specified in description library file)
+export NHBPERTF=256                                                  # Number of HBF per TF
+
+/home/epn/pdp/gen_topo.sh > $HOME/gen_topo_output.xml
