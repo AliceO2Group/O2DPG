@@ -1,0 +1,2 @@
+ctf-and-display: "DataDistribution QualityControl" reco,128,128,"SHMSIZE=128000000000 testing/detectors/TPC/tpc-workflow.sh"
+ctf-and-display-gpu: "DataDistribution QualityControl" reco,128,128,"GPUTYPE=HIP SHMSIZE=128000000000 testing/detectors/TPC/tpc-workflow.sh"
