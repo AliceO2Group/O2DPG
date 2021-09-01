@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export GEN_TOPO_PARTITION=TPC                                        # ECS Partition
+export GEN_TOPO_PARTITION=test                                       # ECS Partition
 export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 
 # Use these settings to fetch the Workflow Repository using a hash / tag
@@ -17,7 +17,7 @@ export WORKFLOW_DETECTORS=ALL                                        # Optional 
 export WORKFLOW_DETECTORS_QC=                                        # Optional parameter for the workflow: Detectors to run QC for
 export WORKFLOW_DETECTORS_CALIB=                                     # Optional parameters for the workflow: Detectors to run calibration for
 export WORKFLOW_PARAMETERS=                                          # Additional paramters for the workflow
-export RECO_NUM_NODES_OVERRIDE=59                                    # Override the number of EPN compute nodes to use (default is specified in description library file)
+export RECO_NUM_NODES_OVERRIDE=0                                     # Override the number of EPN compute nodes to use (default is specified in description library file)
 export NHBPERTF=256                                                  # Number of HBF per TF
 
 /home/epn/pdp/gen_topo.sh > $HOME/gen_topo_output.xml
