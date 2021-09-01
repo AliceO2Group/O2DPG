@@ -1,0 +1,1 @@
+example-workflow: "DataDistribution QualityControl" reco,10,10,"SHMSIZE=128000000000 testing/examples/example-workflow.sh"
