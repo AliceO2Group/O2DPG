@@ -153,6 +153,7 @@ elif [ $EPNPIPELINES != 0 ]; then
   N_TRDTRK=$(($(expr 3 \* $EPNPIPELINES \* $NGPUS / 4) > 0 ? $(expr 3 \* $EPNPIPELINES \* $NGPUS / 4) : 1))
   if [ $GPUTYPE == "CPU" ]; then
     N_TPCTRK=8
+    GPU_CONFIG_KEY+="GPU_proc.ompThreads=4;"
   else
     N_TPCTRK=$NGPUS
   fi
