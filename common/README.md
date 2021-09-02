@@ -36,7 +36,8 @@ The `setenv-sh` script sets the following environment options
   The multiplicities are scaled with the `NGPUS` setting, i.e. with 1 GPU only 1/4th are applied.
   You can pass an option different to 1, and than it will be applied as factor on top of the multiplicities.
   It is auto-selected by `start-tmux.sh`.
-* `SEVERITY`: Log verbosity (e.g. info or error)
+* `SEVERITY`: Log verbosity (e.g. info or error, default: info)
+* `INFOLOGGER_SEVERITY`: Min severity for messages sent to Infologger. (default: `$SEVERITY`)
 * `SHMTHROW`: Throw exception when running out of SHM memory.
   It is suggested to leave this enabled (default) on tests on the laptop to get an actual error when it runs out of memory.
   This is disabled in `start_tmux.sh`, to avoid breaking the processing while there is a chance that another process might free memory and we can continue.
