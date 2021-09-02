@@ -120,10 +120,13 @@ FILEWORKDIR=/home/epn/odc/files EPNMODE=1 DDWORKFLOW=tools/datadistribution_work
   - The `WORKFLOW_DETECTORS` and `WORKFLOW_PARAMETERS` options are optional, your workflow does not need to use them. They are mostly for more complex workflows, so you can ignore them for now`.
   - Leave `DDMODE=processing` in order to run a workflow.
   - `GEN_TOPO_PARTITION` and `NHBPERTF` will be set by AliECS later automatically, no need to change them.
-  - Change the output filename to a file somewhere in your `$HOME`, this will be the file you have to enter in AliECS as topology.
+  - Change the output filename to a file somewhere in your `$HOME`, the default is `$HOME`/gen_topo_output.xml. This will be the file you have to enter in AliECS as topology.
 - Run `run.sh`
+- Put the output file (default is `$HOME/gen_topo_output.xml`) as EPN DDS topology in the AliECS GUI.
 
 When adapting your workflow, please try to follow the style of the existing workflows. The [testing/examples/example-workflow.sh](testing/examples/example-workflow.sh) should be a simple start, for a more complex example you can have a look at [testing/detectors/TPC/tpc-workflow.sh](testing/detectors/TPC/tpc-workflow.sh), and as a fulll complex example of a global workflow please look at [production/full-system-test/dpl-workflow_local.sh](production/full-system-test/dpl-workflow_local.sh)
+
+**Please note that currently when creating a workflow that contains QC, ERROR messages will be written to the console. The workflow creation scripts sees these error messages and then fails. These failures can be ignored using the `GEN_TOPO_IGNORE_ERROR=1` env variable, which is thus temporarily mandatory for all workflows containing QC.**
 
 For reference, the `run.sh` script internally uses the `parser` to create the XML file, it essentially sets some environment variables and then calls the *parser*  with all options set. So in principle, you can also use the *parser* directly to create the workflow as described [here](Creating-a-full-topology-DDS-XML-file-manually).
 
@@ -143,7 +146,7 @@ Receiving objects: 100% (182/182), 36.42 KiB | 5.20 MiB/s, done.
 Resolving deltas: 100% (64/64), done.
 [drohr@epn245 ~]$ cd O2DataProcessing/testing/
 [drohr@epn245 testing]$ mkdir -p private/drohr
-[drohr@epn245 testing]$ cp examples/
+[drohr@epn245 testing]$ ls examples/
 example-workflow.sh  workflows.desc       
 [drohr@epn245 testing]$ cp examples/* private/drohr/
 [drohr@epn245 testing]$ vi private/drohr/workflows.desc
