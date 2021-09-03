@@ -67,7 +67,7 @@ commit=xxxx|path=xxxx file=topologies.desc topology=demo-full-topology parameter
 # The parser script:
 The **parser** is a simple python script that parses a *topology description* and generates the DDS XML file with the *full topology*. To do so, it runs all the DPL workflows with the `--dds` option and then uses the `odc-topo-epn` tool to merge the *partial topology*  into the final *full topology*.
 The *parser* is steered by some command line options and by some environment variables (note that the env variables get also passed through to the workflows).
-- The *parser* needs a DataDistribution topology file. An example file is shipped with the parse in the `tools/datadistribution_workflows` folder.
+- The *parser* needs a DataDistribution topology file. Example files are shipped with the parser in the `tools/datadistribution_workflows` folder for: just discarding the TF, store the TF to disk, forward the TF to DPL processing (what we need for a DPL workflow), and forward to processing while storing to disk in parallel.
 - *Parser* command line options:
   - The parser is supposed to be executed from the root folder of the `O2DataProcessing` repository.
   - The syntax is:
@@ -76,7 +76,7 @@ The *parser* is steered by some command line options and by some environment var
 ```
   - In the above example, this could be:
 ```
-DDWORKFLOW=tools/datadistribution_workflows/dd-data.xml WORKFLOW_DETECTORS=TPC,ITS WORKFLOW_DETECTORS_QC=TPC WORKFLOW_DETECTORS_CALIB=ALL ./tools/parse topologies.desc demo-full-topology /tmp/output.xml
+DDWORKFLOW=tools/datadistribution_workflows/dd-processing.xml WORKFLOW_DETECTORS=TPC,ITS WORKFLOW_DETECTORS_QC=TPC WORKFLOW_DETECTORS_CALIB=ALL ./tools/parse topologies.desc demo-full-topology /tmp/output.xml
 ```
 - The following environment variables steer the *Parser*:
   - `$FILEWORKDIR`: This variable must be set and is used by the workflows to specify where all required files (grp, geometry, dictionaries, etc) are located.
@@ -84,8 +84,9 @@ DDWORKFLOW=tools/datadistribution_workflows/dd-data.xml WORKFLOW_DETECTORS=TPC,I
   - `$INRAWCHANNAME`: Propagated to the workflow, defines the raw FMQ channel name used for the communication with DataDistribution.
   - `$RECO_NUM_NODES_OVERRIDE`: Overrides the number of nodes used for reconstruction (empty or 0 to disable)
   - `$DDMODE`: How to operate DataDistribution: **discard** (build TF and discard them), **disk** (build TF and store to disk), **processing** (build TF and run DPL workflow on TF data), **processing-disk** (both store TF to disk and run processing).
-  - `$DDWORKFLOW` (*alternative*): Explicit path to the XML file with the partial workflow for *DataDistribution*.
-- When run on the EPN farm (indicated by the `EPNMODE` variable), the *parser* will automaticall `module load` the modules specified in the *topology description*. Otherwise the user must load the respective O2 / QC version by himself.
+  - `$DDWORKFLOW`: (*alternative*): Explicit path to the XML file with the partial workflow for *DataDistribution*.
+  - `$GEN_TOPO_IGNORE_ERROR`: Ignore ERROR messages during workflow creation.
+- When run on the EPN farm (indicated by the `$EPNMODE=1` variable), the *parser* will automaticall `module load` the modules specified in the *topology description*. Otherwise the user must load the respective O2 / QC version by himself.
 
 # Creating a full topology DDS XML file manually:
 - Check out the `O2DataProcessing` repository, adjust the workflows and topology description to your need.
@@ -93,7 +94,7 @@ DDWORKFLOW=tools/datadistribution_workflows/dd-data.xml WORKFLOW_DETECTORS=TPC,I
 - Make sure the `odc-topo-epn` is in your path (e.g. `module load ODC` / `alienv enter ODC/latest`).
 - Set the required environment variables, e.g.
 ```
-FILEWORKDIR=/home/epn/odc/files EPNMODE=1 DDWORKFLOW=tools/datadistribution_workflows/dd-data.xml INRAWCHANNAME=tf-builder-pipe-0 WORKFLOW_DETECTORS=TPC,ITS,TRD,TOF,FT0
+FILEWORKDIR=/home/epn/odc/files EPNMODE=1 DDWORKFLOW=tools/datadistribution_workflows/dd-processing.xml INRAWCHANNAME=tf-builder-pipe-0 WORKFLOW_DETECTORS=TPC,ITS,TRD,TOF,FT0
 ```
 - If you are not on the EPN farm and have NOT set `EPNMODE=1`: Load the required modules for O2 / QC (`alienv load O2/latest QualityControl/latest`)
 - Run the parser, e.g.:
