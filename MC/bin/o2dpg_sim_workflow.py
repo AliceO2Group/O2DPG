@@ -653,8 +653,8 @@ for tf in range(1, NTIMEFRAMES + 1):
      
  
    #secondary vertexer
-   SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=1, mem='2000')
-   SVFINDERtask['cmd'] = 'o2-secondary-vertexing-workflow ' + getDPL_global_options()
+   SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=1, mem='5000')
+   SVFINDERtask['cmd'] = 'o2-secondary-vertexing-workflow ' + getDPL_global_options(bigshm=True)
    workflow['stages'].append(SVFINDERtask)
 
   # -----------
