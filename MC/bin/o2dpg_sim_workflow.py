@@ -664,12 +664,20 @@ for tf in range(1, NTIMEFRAMES + 1):
      workflow['stages'].append(TRDDigitsQCtask)
 
      ### RECO
+     ### Primary vertex
      vertexQCneeds = [PVFINDERtask['name']]
      vertexQCtask = createTask(name='vertexQC_local'+str(tf), needs=vertexQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
      vertexQCtask['cmd'] = 'o2-primary-vertex-reader-workflow | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json --local-batch ../' + qcdir + '/vertexQC.root ' + getDPL_global_options()
      vertexQCtask['semaphore'] = 'vertexQC'
      workflow['stages'].append(vertexQCtask)
-     
+
+     ### TOF matching
+     TOFMatchQCneeds = [TOFTPCMATCHERtask['name']]
+     TOFMatchQCtask = createTask(name='TOFMatchQC_local'+str(tf), needs=TOFMatchQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
+     TOFMatchQCtask['cmd'] = 'o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC" --cluster-types none | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF.json --local-batch ../' + qcdir + '/TOFMatchQC.root ' + getDPL_global_options()
+     TOFMatchQCtask['semaphore'] = 'TOFMatchQC'
+     workflow['stages'].append(TOFMatchQCtask)
+
  
    #secondary vertexer
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=1, mem='5000')
@@ -748,6 +756,11 @@ if includeQC:
   vertexQCtask = createTask(name='vertexQC_finalize', needs=vertexQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
   vertexQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json --remote-batch vertexQC.root ' + getDPL_global_options()
   workflow['stages'].append(vertexQCtask)
+
+  TOFMatchQCneeds = ['TOFMatchQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
+  TOFMatchQCtask = createTask(name='TOFMatchQC_finalize', needs=TOFMatchQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
+  TOFMatchQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF.json --remote-batch TOFMatchQC.root ' + getDPL_global_options()
+  workflow['stages'].append(TOFMatchQCtask)
 
 
 dump_workflow(workflow["stages"], args.o)
