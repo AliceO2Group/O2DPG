@@ -470,7 +470,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    # The :r flag means to shuffle the background events randomly
    if doembedding:
       ContextTask['cmd'] += ';o2-steer-colcontexttool -i bkg,' + str(INTRATE) + ',' + str(args.nb) + ':r' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern + ' --show-context'
-      workflow['stages'].append(ContextTask)
+
+   workflow['stages'].append(ContextTask)
 
    tpcdigineeds=[ContextTask['name'], LinkGRPFileTask['name']]
    if usebkgcache:
