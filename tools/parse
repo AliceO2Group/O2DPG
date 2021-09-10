@@ -74,10 +74,10 @@ for line in f:
             for i in range(2, len(args)):
                 filename = tmpdir + "/wf" + str(i) + ".dds"
                 if args[i].startswith("reco"):
-                    wf = args[i].split(",", 4)
+                    wf = args[i].split(",", 3)
                     recoworkflows.append(filename)
                 elif args[i].startswith("calib"):
-                    wf = args[i].split(",", 3)
+                    wf = args[i].split(",", 2)
                     wf[3] = wf[2]
                     wf[2] = wf[1]
                     calibworkflows.append(filename)
