@@ -25,6 +25,7 @@ else
 fi
 export EPNMODE=1
 export O2DATAPROCESSING_ROOT=`pwd`
+echo Running topology generation to temporary file $GEN_TOPO_WORKDIR/output.xml 1>&2
 ./tools/parse "$GEN_TOPO_LIBRARY_FILE" $GEN_TOPO_WORKFLOW_NAME $GEN_TOPO_WORKDIR/output.xml 1>&2 || { echo Error during workflow description parsing 1>&2; exit 1; }
 if [ "0$GEN_TOPO_CACHEABLE" == "01" ]; then
   cd $GEN_TOPO_WORKDIR
@@ -34,4 +35,5 @@ if [ "0$GEN_TOPO_CACHEABLE" == "01" ]; then
   cp $GEN_TOPO_WORKDIR/output.xml cache/$CACHE_HASH
 fi
 cat $GEN_TOPO_WORKDIR/output.xml
+echo Removing temporary output file $GEN_TOPO_WORKDIR/output.xml 1>&2
 rm $GEN_TOPO_WORKDIR/output.xml
