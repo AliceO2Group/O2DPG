@@ -607,6 +607,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    FDDRECOtask['cmd'] = 'o2-fdd-reco-workflow ' + getDPL_global_options()
    workflow['stages'].append(FDDRECOtask)
 
+   FV0RECOtask = createTask(name='fv0reco_'+str(tf), needs=[det_to_digitask["FV0"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+   FV0RECOtask['cmd'] = 'o2-fv0-reco-workflow ' + getDPL_global_options()
+   workflow['stages'].append(FV0RECOtask)
+
    pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], MCHRECOtask['name'], TRDTRACKINGtask['name'], FDDRECOtask['name'], MIDRECOtask['name']]
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' + getDPL_global_options()
@@ -671,7 +675,7 @@ for tf in range(1, NTIMEFRAMES + 1):
   # -----------
   # produce AOD
   # -----------
-   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name']]
+   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name'], FV0RECOtask['name']]
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
