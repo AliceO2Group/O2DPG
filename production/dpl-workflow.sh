@@ -179,7 +179,20 @@ if [ $CTFINPUT == 1 ]; then
   CTFName=`ls -t $FILEWORKDIR/o2_ctf_*.root | head -n1`
   WORKFLOW="o2-ctf-reader-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --delay $TFDELAY --loop $NTIMEFRAMES --ctf-input ${CTFName} --ctf-dict ${CTF_DICT_DIR}/ctf_dictionary.root --onlyDet $WORKFLOW_DETECTORS --pipeline tpc-entropy-decoder:$N_TPCENTDEC | "
 elif [ $EXTINPUT == 1 ]; then
-  WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --dataspec \"FLP:FLP/DISTSUBTIMEFRAME/0;B:TPC/RAWDATA;C:ITS/RAWDATA;D:TOF/RAWDATA;D:MFT/RAWDATA;E:FT0/RAWDATA;F:MID/RAWDATA;G:EMC/RAWDATA;H:PHS/RAWDATA;I:CPV/RAWDATA;J:ZDC/RAWDATA;K:HMP/RAWDATA;L:FDD/RAWDATA;M:TRD/RAWDATA;N:FV0/RAWDATA;O:MCH/RAWDATA\" --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=0\" | "
+  PROXY_CHANNEL="name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=0"
+  PROXY_INSPEC="dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
+  PROXY_IN_N=0
+  for i in `echo "$WORKFLOW_DETECTORS" | sed "s/,/ /g"`; do
+    if [ $EPNMODE == 1 ] && [ $i == "TOF" ]; then
+      PROXY_INTYPE=CRAWDATA
+    else
+      PROXY_INTYPE=RAWDATA
+    fi
+    PROXY_INNAME="RAWIN$PROXY_IN_N"
+    let PROXY_IN_N=$PROXY_IN_N+1
+    PROXY_INSPEC+=";$PROXY_INNAME:$i/$PROXY_INTYPE"
+  done
+  WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --dataspec \"$PROXY_INSPEC\" --channel-config \"$PROXY_CHANNEL\" | "
 else
   WORKFLOW="o2-raw-file-reader-workflow --detect-tf0 $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;HBFUtils.nHBFPerTF=$NHBPERTF;\" --delay $TFDELAY --loop $NTIMEFRAMES --max-tf 0 --input-conf $FILEWORKDIR/rawAll.cfg | "
 fi
