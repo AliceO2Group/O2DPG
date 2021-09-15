@@ -37,7 +37,12 @@ if [ -z "${WORKFLOW_DETECTORS+x}" ] || [ "0$WORKFLOW_DETECTORS" == "0ALL" ]; the
 if [ -z "${WORKFLOW_DETECTORS_QC+x}" ] || [ "0$WORKFLOW_DETECTORS_QC" == "0ALL" ]; then export WORKFLOW_DETECTORS_QC=$WORKFLOW_DETECTORS; fi
 if [ -z "${WORKFLOW_DETECTORS_CALIB+x}" ] || [ "0$WORKFLOW_DETECTORS_CALIB" == "0ALL" ]; then export WORKFLOW_DETECTORS_CALIB=$WORKFLOW_DETECTORS; fi
 if [ -z "$WORKFLOW_PARAMETERS" ]; then export WORKFLOW_PARAMETERS=; fi
-if [ -z "$INFOLOGGER_SEVERITY" ]; then export INFOLOGGER_SEVERITY=$SEVERITY; fi
+# Some more options for running on the EPN
+if [ -z "$INFOLOGGER_SEVERITY" ]; then export INFOLOGGER_SEVERITY="warning"; fi
+if [ -z "$MULTIPLICITY_FACTOR_RAWDECODERS" ]; then export MULTIPLICITY_FACTOR_RAWDECODERS=1; fi
+if [ -z "$MULTIPLICITY_FACTOR_CTFENCODERS" ]; then export MULTIPLICITY_FACTOR_CTFENCODERS=1; fi
+if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then export MULTIPLICITY_FACTOR_REST=1; fi
+
 
 SEVERITY_TPC="info" # overrides severity for the tpc workflow
 DISABLE_MC="--disable-mc"

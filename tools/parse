@@ -33,6 +33,12 @@ if 'GLOBALDPLOPT' in os.environ:
 else:
     os.environ['GLOBALDPLOPT'] = "-b"
 
+if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRIDE'] != "" and int(os.environ['RECO_NUM_NODES_OVERRIDE']) > 0:
+    reco_num_nodes_override = int(os.environ['RECO_NUM_NODES_OVERRIDE'])
+    os.environ['RECO_NUM_NODES_WORKFLOW'] = str(reco_num_nodes_override)
+else:
+    reco_num_nodes_override = 0
+
 f = open(sys.argv[1], "r")
 for line in f:
     line = line.strip()
@@ -93,13 +99,15 @@ for line in f:
                     command_log_filter = "\"^\[INFO\""
                 command = wf[3] + " | grep -v " + command_log_filter + " > " + filename + " && [ `grep \"^\[\" " + filename + " | wc -l` == 0 ]"
                 print("Running DPL command", command)
+                if reco_num_nodes_override == 0:
+                  os.environ['RECO_NUM_NODES_WORKFLOW'] = wf[1]
                 if os.system(command) != 0:
                     print("Error running command", command)
                     ftmp = open(filename, 'r')
                     print(ftmp.read())
                     raise
-            if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRIDE'] != "" and int(os.environ['RECO_NUM_NODES_OVERRIDE']) > 0:
-                reconodes = int(os.environ['RECO_NUM_NODES_OVERRIDE'])
+            if reco_num_nodes_override > 0:
+                reconodes = reco_num_nodes_override
             odccommand = "odc-epn-topo"
             if reconodes:
                 odccommand += " --dd " + os.environ['DDWORKFLOW']
