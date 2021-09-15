@@ -24,7 +24,7 @@ o2-dpl-raw-proxy ${ARGS_ALL} --dataspec "${PROXY_INSPEC}" \
 --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=1'" \
 | o2-tof-reco-workflow --input-type raw --output-type clusters,ctf \
 ${ARGS_ALL} ${CTF_DICT} --configKeyValues "$ARGS_ALL_CONFIG;" \
---disable-root-output --calib-cluster --cluster-time-window 5000 --cosmics \
+--disable-root-output --calib-cluster --cluster-time-window 10000 --cosmics \
 --pipeline "tof-compressed-decoder:${NTHREADS},TOFClusterer:${NTHREADS},tof-entropy-encoder:${NTHREADS}" \
 | o2-ctf-writer-workflow ${ARGS_ALL} --configKeyValues "$ARGS_ALL_CONFIG;" --onlyDet TOF  --output-dir  $CTFOUT  \
 | o2-dpl-output-proxy ${ARGS_ALL} --channel-config ${OUT_CHANNEL} --dataspec ${PROXY_OUTSPEC} \
