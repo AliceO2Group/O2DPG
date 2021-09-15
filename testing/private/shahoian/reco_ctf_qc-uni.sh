@@ -28,6 +28,7 @@ PROXY_INSPEC="dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 has_detector ITS && PROXY_INSPEC+=";I:ITS/RAWDATA"
 has_detector MFT && PROXY_INSPEC+=";M:MFT/RAWDATA"
 has_detector TPC && PROXY_INSPEC+=";T:TPC/RAWDATA"
+has_detector TOF && PROXY_INSPEC+=";X:TOF/CRAWDATA"
 
 TPC_INSPEC="dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION;T:TPC/RAWDATA"
 TPC_OUTPUT="clusters,tracks,disable-writer"
@@ -63,10 +64,12 @@ NMFTDECTHREADS=2
 # number of reconstruction pipelines and threads per pipeline
 NITSRECPIPELINES=2
 NMFTRECPIPELINES=2
+NTOFRECPIPELINES=1
 
 # number of compression pipelines
 NITSENCODERPIPELINES=1
 NMFTENCODERPIPELINES=1
+NTOFENCODERPIPELINES=1
 
 # uncomment this to disable intermediate reconstruction output
 #DISABLE_RECO_OUTPUT=" --disable-root-output "
@@ -82,9 +85,12 @@ has_detector MFT && WORKFLOW+="o2-itsmft-stf-decoder-workflow -b ${ARGS_ALL} --n
 has_detector TPC && WORKFLOW+="o2-tpc-raw-to-digits-workflow -b ${ARGS_ALL} --input-spec \"${TPC_INSPEC}\" --configKeyValues \"TPCDigitDump.LastTimeBin=1000\" --pipeline tpc-raw-to-digits-0:6 | "
 has_detector TPC && WORKFLOW+="o2-tpc-reco-workflow -b ${ARGS_ALL} --input-type digitizer --output-type $TPC_OUTPUT --disable-mc --pipeline tpc-tracker:4 --environment ROCR_VISIBLE_DEVICES={timeslice0} --configKeyValues \"align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.forceMemoryPoolSize=$GPUMEMSIZE;GPU_proc.forceHostMemoryPoolSize=$HOSTMEMSIZE;GPU_proc.deviceNum=0;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;GPU_proc.memoryScalingFactor=3;${CONFKEYVAL}\" | "
 #
+has_detector TOF && WORKFLOW+="o2-tof-reco-workflow -b ${ARGS_ALL} --input-type raw --output-type clusters --pipeline TOFClusterer:${NTOFRECPIPELINES} --configKeyValues \"${CONFKEYVAL}\" | "
+
 if [ $SAVECTF == 1 ]; then  
   has_detector ITS && WORKFLOW+="o2-itsmft-entropy-encoder-workflow -b ${ARGS_ALL} --ctf-dict \"${CTF_DICT}\"  --pipeline its-entropy-encoder:${NITSENCODERPIPELINES} | "
   has_detector MFT && WORKFLOW+="o2-itsmft-entropy-encoder-workflow -b ${ARGS_ALL} --ctf-dict \"${CTF_DICT}\"  --pipeline mft-entropy-encoder:${NMFTENCODERPIPELINES} --runmft | "
+  has_detector TOF && WORKFLOW+="o2-tof-entropy-encoder-workflow    -b ${ARGS_ALL} --ctf-dict \"${CTF_DICT}\"  --pipeline tof-entropy-encoder:${NTOFENCODERPIPELINES} | "
   WORKFLOW+="o2-ctf-writer-workflow -b ${ARGS_ALL} --configKeyValues \"${CONFKEYVAL}\" --no-grp --onlyDet $WORKFLOW_DETECTORS --ctf-dict \"${CTF_DICT}\" --output-dir \"$CTF_DIR\" --min-file-size ${CTF_MINSIZE} | "
 fi
 
