@@ -1,26 +1,31 @@
 #!/bin/bash
 
-# In order to use o2sim_grp.root, o2sim_geometry.root or matbud.root from arbitrary directory one can provide to the workflow
-# --configKeyValues "NameConf.mDirGRP=<dirname1>;NameConf.mDirGeom=<dirname2>;NameConf.mDirMatLUT=<dirname3>;"
-# All workflows currently running in the FST parce the configKeyValues option, so the NameConf.mDirXXX keys can be added via global env.var.
-
-# Get this script's directory : use zsh first (e.g. on Mac) and fallback
-# on `readlink -f` if zsh is not there
+# ---------------------------------------------------------------------------------------------------------------------
+# Get this script's directory and load common settings (use zsh first (e.g. on Mac) and fallback on `readlink -f` if zsh is not there)
 command -v zsh > /dev/null 2>&1 && MYDIR=$(dirname $(zsh -c 'echo ${0:A}' "$0"))
 test -z ${MYDIR+x} && MYDIR="$(dirname $(readlink -f $0))"
-
 source $MYDIR/setenv.sh
 
+# ---------------------------------------------------------------------------------------------------------------------
+#Some additional settings used in this workflow
 if [ -z $OPTIMIZED_PARALLEL_ASYNC ]; then OPTIMIZED_PARALLEL_ASYNC=0; fi
+if [ -z $CTF_DIR ];                  then CTF_DIR=$FILEWORKDIR; fi
+if [ -z $CTF_DICT_DIR ];             then CTF_DICT_DIR=$FILEWORKDIR; fi
 
 workflow_has_parameter CTF && export SAVECTF=1
 workflow_has_parameter GPU && { export GPUTYPE=HIP; export NGPUS=4; }
+
+ITSCLUSDICT="${FILEWORKDIR}/ITSdictionary.bin"
+MFTCLUSDICT="${FILEWORKDIR}/MFTdictionary.bin"
+MFT_NOISE="${FILEWORKDIR}/mft_noise_220721_R3C-520.root"
+CTF_MINSIZE="2000000"
 
 if [ "0$O2_ROOT" == "0" ]; then
   eval "`alienv shell-helper`"
   alienv --no-refresh load O2/latest
 fi
 
+# ---------------------------------------------------------------------------------------------------------------------
 # Set general arguments
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
 if [ $EPNMODE == 1 ]; then
@@ -47,9 +52,8 @@ if [ $GPUTYPE != "CPU" ] || [ $OPTIMIZED_PARALLEL_ASYNC != 0 ]; then
 fi
 ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
 
+# ---------------------------------------------------------------------------------------------------------------------
 # Set some individual workflow arguments depending on configuration
-if [ -z $CTF_DIR ]; then CTF_DIR=$FILEWORKDIR; fi
-if [ -z $CTF_DICT_DIR ]; then CTF_DICT_DIR=$FILEWORKDIR; fi
 GPU_INPUT=zsraw
 GPU_OUTPUT=tracks,clusters
 GPU_CONFIG=
@@ -62,6 +66,8 @@ TRD_CONFIG=
 TRD_CONFIG_KEY=
 TRD_TRANSFORMER_CONFIG=
 EVE_CONFIG=
+MFTDEC_CONFIG=
+
 if [ $SYNCMODE == 1 ]; then
   ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=30;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
   GPU_CONFIG_KEY+="GPU_global.synchronousProcessing=1;GPU_proc.clearO2OutputFromGPU=1;"
@@ -71,6 +77,7 @@ if [ $SYNCMODE == 1 ]; then
 else
   TRD_CONFIG+=" --track-sources TPC,ITS-TPC"
 fi
+
 if [ $CTFINPUT == 1 ]; then
   ITS_CONFIG+=" --tracking-mode async"
 else
@@ -78,8 +85,10 @@ else
   TOF_OUTPUT+=",ctf"
   GPU_OUTPUT+=",compressed-clusters-ctf"
 fi
+
 if [ $EPNMODE == 1 ]; then
   EVE_CONFIG+=" --eve-dds-collection-index 0"
+  MFTDEC_CONFIG+=" --noise-file \"${MFT_NOISE}\""
 fi
 
 if [ $GPUTYPE == "HIP" ]; then
@@ -106,10 +115,13 @@ if [ $GPUTYPE != "CPU" ]; then
     HOSTMEMSIZE=$(( 1 << 30 ))
   fi
 fi
+
 if [ $HOSTMEMSIZE != "0" ]; then
   GPU_CONFIG_KEY+="GPU_proc.forceHostMemoryPoolSize=$HOSTMEMSIZE;"
 fi
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Process multiplicities
 N_TPCTRK=1
 N_TPCENT=1
 N_TPCITS=1
@@ -131,7 +143,7 @@ if [ $OPTIMIZED_PARALLEL_ASYNC != 0 ]; then
     N_TPCENTDEC=$(expr 2 \* $N_NUMAFACTOR)
     N_MFTTRK=$(expr 3 \* $N_NUMAFACTOR)
     N_ITSTRK=$(expr 3 \* $N_NUMAFACTOR)
-    N_TPCITS=$(expr 2 \* $N_NUMAFACTOR)
+    N_TPCITS=$(expr 2 \* $N_NUMAFACTOR)CTF_DICT_DIR
     N_MCHTRK=$(expr 1 \* $N_NUMAFACTOR)
     N_TOFMATCH=$(expr 9 \* $N_NUMAFACTOR)
     N_TPCTRK=$(expr 6 \* $N_NUMAFACTOR)
@@ -159,6 +171,7 @@ elif [ $EPNPIPELINES != 0 ]; then
   fi
 fi
 
+# ---------------------------------------------------------------------------------------------------------------------
 # Input workflow
 if [ $CTFINPUT == 1 ]; then
   GPU_INPUT=compressed-clusters-ctf
@@ -171,16 +184,16 @@ else
   WORKFLOW="o2-raw-file-reader-workflow --detect-tf0 $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;HBFUtils.nHBFPerTF=$NHBPERTF;\" --delay $TFDELAY --loop $NTIMEFRAMES --max-tf 0 --input-conf $FILEWORKDIR/rawAll.cfg | "
 fi
 
-if [ $EPNMODE == 1 ]; then
-  GPU_INPUT=zsonthefly
-  WORKFLOW+="o2-tpc-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-spec \"A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0\" --remove-duplicates --pipeline tpc-raw-to-digits-0:6 | "
-  WORKFLOW+="o2-tpc-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type digitizer --output-type zsraw,disable-writer --pipeline tpc-zsEncoder:6 | "
-fi
-
-#Decoder workflows
+# ---------------------------------------------------------------------------------------------------------------------
+# Raw decoder workflows
 if [ $CTFINPUT == 0 ]; then
-  has_detector ITS && WORKFLOW+="o2-itsmft-stf-decoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --dict-file $FILEWORKDIR/ITSdictionary.bin --pipeline its-stf-decoder:$N_ITSDEC | "
-  has_detector MFT && WORKFLOW+="o2-itsmft-stf-decoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --dict-file $FILEWORKDIR/MFTdictionary.bin --runmft true | "
+  if has_detector TPC && [ $EPNMODE == 1 ]; then
+    GPU_INPUT=zsonthefly
+    WORKFLOW+="o2-tpc-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-spec \"A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0\" --remove-duplicates --pipeline tpc-raw-to-digits-0:6 | "
+    WORKFLOW+="o2-tpc-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type digitizer --output-type zsraw,disable-writer --pipeline tpc-zsEncoder:6 | "
+  fi
+  has_detector ITS && WORKFLOW+="o2-itsmft-stf-decoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --dict-file \"${ITSCLUSDICT}\" --pipeline its-stf-decoder:$N_ITSDEC | "
+  has_detector MFT && WORKFLOW+="o2-itsmft-stf-decoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --dict-file \"${MFTCLUSDICT}\" ${MFTDEC_CONFIG} --runmft true | "
   has_detector FT0 && [ $EPNMODE == 0 ] && WORKFLOW+="o2-ft0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output | "
   has_detector FV0 && [ $EPNMODE == 0 ] && WORKFLOW+="o2-fv0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output | "
   has_detector MID && [ $EPNMODE == 0 ] && WORKFLOW+="o2-mid-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" | "
@@ -192,7 +205,8 @@ if [ $CTFINPUT == 0 ]; then
   has_detector HMP && WORKFLOW+="o2-hmpid-raw-to-digits-stream-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" | "
 fi
 
-# Common workflows
+# ---------------------------------------------------------------------------------------------------------------------
+# Common reconstruction workflows
 has_detector ITS && WORKFLOW+="o2-its-reco-workflow $ARGS_ALL --trackerCA $DISABLE_MC --clusters-from-upstream --disable-root-output $ITS_CONFIG --configKeyValues \"$ARGS_ALL_CONFIG;$ITS_CONFIG_KEY\" --its-dictionary-path $FILEWORKDIR --pipeline its-tracker:$N_ITSTRK | "
 has_detector TPC && WORKFLOW+="o2-gpu-reco-workflow ${ARGS_ALL//-severity $SEVERITY/-severity $SEVERITY_TPC} --input-type=$GPU_INPUT $DISABLE_MC --output-type $GPU_OUTPUT --pipeline gpu-reconstruction:$N_TPCTRK $GPU_CONFIG --configKeyValues \"$ARGS_ALL_CONFIG;GPU_global.deviceType=$GPUTYPE;GPU_proc.debugLevel=0;$GPU_CONFIG_KEY;$GPU_EXTRA_CONFIG\" | "
 has_detectors ITS TPC && WORKFLOW+="o2-tpcits-match-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --its-dictionary-path $FILEWORKDIR --pipeline itstpc-track-matcher:$N_TPCITS | "
@@ -201,6 +215,7 @@ has_detector TOF && WORKFLOW+="o2-tof-reco-workflow $ARGS_ALL --configKeyValues 
 has_detector TRD && WORKFLOW+="o2-trd-tracklet-transformer $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC $TRD_TRANSFORMER_CONFIG --pipeline TRDTRACKLETTRANSFORMER:$N_TRDTRK | "
 has_detectors TRD TPC ITS && WORKFLOW+="o2-trd-global-tracking $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$TRD_CONFIG_KEY\" --disable-root-input --disable-root-output $DISABLE_MC $TRD_CONFIG | "
 
+# ---------------------------------------------------------------------------------------------------------------------
 # Workflows disabled in sync mode
 if [ $SYNCMODE == 0 ]; then
   has_detectors TOF TRD TPC ITS && WORKFLOW+="o2-tof-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --track-sources \"TPC,ITS-TPC\" --pipeline tof-matcher:$N_TOFMATCH | "
@@ -213,8 +228,10 @@ if [ $SYNCMODE == 0 ]; then
   has_detector ZDC && WORKFLOW+="o2-zdc-digits-reco $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output  $DISABLE_MC | "
 fi
 
+# ---------------------------------------------------------------------------------------------------------------------
 # Workflows disabled in async mode
 if [ $CTFINPUT == 0 ]; then
+  # Reconstruction workflows
   if [ $SYNCMODE == 1 ]; then # Otherwise already present in async setup
     has_detectors TOF TRD TPC ITS && WORKFLOW+="o2-tof-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --track-sources \"ITS-TPC\" | "
   fi
@@ -222,6 +239,7 @@ if [ $CTFINPUT == 0 ]; then
   has_detector CPV && WORKFLOW+="o2-cpv-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type clusters --disable-root-input --disable-root-output $DISABLE_MC | "
   has_detector EMC && WORKFLOW+="o2-emcal-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells --disable-root-output $DISABLE_MC --pipeline EMCALRawToCellConverterSpec:$N_EMC | "
 
+  # Entropy encoder workflows
   has_detector MFT && WORKFLOW+="o2-itsmft-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --runmft true | "
   has_detector FT0 && WORKFLOW+="o2-ft0-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" | "
   has_detector FV0 && WORKFLOW+="o2-fv0-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" | "
@@ -236,9 +254,10 @@ if [ $CTFINPUT == 0 ]; then
   has_detector TRD && WORKFLOW+="o2-trd-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline trd-entropy-encoder:$N_TRDENT | "
   has_detector TPC && WORKFLOW+="o2-tpc-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type compressed-clusters-flat --output-type encoded-clusters,disable-writer --pipeline tpc-entropy-encoder:$N_TPCENT | "
 
-  has_detectors TPC ITS TRD TOF && WORKFLOW+="o2-tpc-scdcalib-interpolation-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --disable-root-input | "
+  # Calibration workflows
+  has_detector_calib TPC && has_detectors TPC ITS TRD TOF && WORKFLOW+="o2-tpc-scdcalib-interpolation-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --disable-root-input | "
 
-  # Output workflow
+  # CTF / dictionary writer workflow
   if [ $SAVECTF == 1 ]; then
     mkdir -p $CTF_DIR
   fi
@@ -250,18 +269,25 @@ if [ $CTFINPUT == 0 ]; then
   if [ $CREATECTFDICT == 1 ] && [ $SAVECTF == 1 ]; then CTF_OUTPUT_TYPE="both"; fi
   if [ $CREATECTFDICT == 1 ] && [ $SAVECTF == 0 ]; then CTF_OUTPUT_TYPE="dict"; fi
   if [ $CREATECTFDICT == 0 ] && [ $SAVECTF == 1 ]; then CTF_OUTPUT_TYPE="ctf"; fi
-  CMD_CTF="o2-ctf-writer-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --output-dir $CTF_DIR --ctf-dict-dir $CTF_DICT_DIR --output-type $CTF_OUTPUT_TYPE --onlyDet $WORKFLOW_DETECTORS"
+  CMD_CTF="o2-ctf-writer-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --output-dir \"$CTF_DIR\" --ctf-dict-dir \"$CTF_DICT_DIR\" --output-type $CTF_OUTPUT_TYPE --min-file-size ${CTF_MINSIZE} --onlyDet $WORKFLOW_DETECTORS"
   if [ $CREATECTFDICT == 1 ] && [ $EXTINPUT == 1 ]; then CMD_CTF+=" --save-dict-after $NTIMEFRAMES"; fi
   WORKFLOW+="$CMD_CTF | "
 fi
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Event display
 workflow_has_parameter EVENT_DISPLAY && [ $NUMAID == 0 ] && WORKFLOW+="o2-eve-display $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --display-tracks TPC --display-clusters TPC $EVE_CONFIG $DISABLE_MC | "
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Quality Control
 workflow_has_parameter QC && source $MYDIR/qc-workflow.sh
 
+# ---------------------------------------------------------------------------------------------------------------------
 # DPL run binary
 WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Run / create / print workflow
 if [ $WORKFLOWMODE == "print" ]; then
   echo Workflow command:
   echo $WORKFLOW | sed "s/| */|\n/g"
@@ -270,3 +296,5 @@ else
   WORKFLOW+=" --$WORKFLOWMODE"
   eval $WORKFLOW
 fi
+
+# ---------------------------------------------------------------------------------------------------------------------
