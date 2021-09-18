@@ -19,6 +19,7 @@ workflow_has_parameter GPU && { export GPUTYPE=HIP; export NGPUS=4; }
 ITSCLUSDICT="${FILEWORKDIR}/ITSdictionary.bin"
 MFTCLUSDICT="${FILEWORKDIR}/MFTdictionary.bin"
 MFT_NOISE="${FILEWORKDIR}/mft_noise_220721_R3C-520.root"
+MID_FEEID_MAP="$FILEWORKDIR/mid-feeId_mapper.txt"
 CTF_MINSIZE="2000000"
 NITSDECTHREADS=2
 NMFTDECTHREADS=2
@@ -71,6 +72,7 @@ TRD_CONFIG_KEY=
 TRD_TRANSFORMER_CONFIG=
 EVE_CONFIG=
 MFTDEC_CONFIG=
+MIDDEC_CONFIG=
 
 if [ $SYNCMODE == 1 ]; then
   ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=30;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
@@ -92,6 +94,7 @@ fi
 if [ $EPNMODE == 1 ]; then
   EVE_CONFIG+=" --eve-dds-collection-index 0"
   MFTDEC_CONFIG+=" --noise-file \"${MFT_NOISE}\""
+  MIDDEC_CONFIG+=" --feeId-config-file \"$MID_FEEID_MAP\""
 fi
 
 if [ $GPUTYPE == "HIP" ]; then
@@ -240,7 +243,7 @@ if [ $CTFINPUT == 0 ]; then
   has_detector MFT && WORKFLOW+="o2-itsmft-stf-decoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --dict-file \"${MFTCLUSDICT}\" --nthreads ${NMFTDECTHREADS} --pipeline its-stf-decoder:$N_MFTRAWDEC ${MFTDEC_CONFIG} --runmft true | "
   has_detector FT0 && WORKFLOW+="o2-ft0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline ft0-datareader-dpl:$N_F_RAW | "
   has_detector FV0 && WORKFLOW+="o2-fv0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline fv0-datareader-dpl:$N_F_RAW | "
-  has_detector MID && WORKFLOW+="o2-mid-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline MIDRawDecoder:$N_F_RAW,MIDDecodedDataAggregator:$N_F_RAW | "
+  has_detector MID && WORKFLOW+="o2-mid-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $MIDDEC_CONFIG --pipeline MIDRawDecoder:$N_F_RAW,MIDDecodedDataAggregator:$N_F_RAW | "
   has_detector MCH && WORKFLOW+="o2-mch-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline DataDecoder:$N_F_RAW | "
   has_detector TOF && [ $EPNMODE == 0 ] && WORKFLOW+="o2-tof-compressor $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" | "
   has_detector FDD && WORKFLOW+="o2-fdd-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline fdd-datareader-dpl:$N_F_RAW | "
