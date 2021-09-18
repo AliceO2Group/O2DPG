@@ -1,2 +1,2 @@
 # Empty workflow for no processing at all
-no-processing: ""
+no-processing: "DataDistribution"

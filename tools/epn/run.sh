@@ -19,5 +19,13 @@ export WORKFLOW_DETECTORS_CALIB=                                     # Optional 
 export WORKFLOW_PARAMETERS=                                          # Additional paramters for the workflow
 export RECO_NUM_NODES_OVERRIDE=0                                     # Override the number of EPN compute nodes to use (default is specified in description library file)
 export NHBPERTF=256                                                  # Number of HBF per TF
+export MULTIPLICITY_FACTOR_RAWDECODERS=1                             # Factor to scale number of raw decoders with
+export MULTIPLICITY_FACTOR_CTFENCODERS=1                             # Factor to scale number of CTF encoders with
+export MULTIPLICITY_FACTOR_REST=1                                    # Factor to scale number of other processes with
 
-/home/epn/pdp/gen_topo.sh > $HOME/gen_topo_output.xml
+export OUTPUT_FILE_NAME=$HOME/gen_topo_output.xml
+
+/home/epn/pdp/gen_topo.sh > $OUTPUT_FILE_NAME
+if [ $? == 0 ]; then
+  echo Generated XML topology $OUTPUT_FILE_NAME
+fi

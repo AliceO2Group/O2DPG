@@ -10,7 +10,10 @@ if [ -z ${WORKFLOW_DETECTORS_QC+x} ]; then echo \$WORKFLOW_DETECTORS_QC missing;
 if [ -z ${WORKFLOW_DETECTORS_CALIB+x} ]; then echo \$WORKFLOW_DETECTORS_CALIB missing; exit 1; fi # Comma-separated list of detectors to run calibration for
 if [ -z ${WORKFLOW_PARAMETERS+x} ]; then echo \$WORKFLOW_PARAMETERS missing; exit 1; fi # Additional parameters for workflow
 if [ -z ${RECO_NUM_NODES_OVERRIDE+x} ]; then echo \$RECO_NUM_NODES_OVERRIDE missing; exit 1; fi # Override number of nodes
-if [ -z $DDMODE ] && [ -z $DDWORKFLOW ]; then echo Either \$DDMODE or \$DDWORKFLOW must be set; exit 1; fi #Select data distribution workflow
+if [ -z $DDMODE ] && [ -z $DDWORKFLOW ]; then echo Either \$DDMODE or \$DDWORKFLOW must be set; exit 1; fi # Select data distribution workflow
+if [ -z "$MULTIPLICITY_FACTOR_RAWDECODERS" ]; then echo \$MULTIPLICITY_FACTOR_RAWDECODERS missing; exit 1; fi # Process multiplicity scaling parameter
+if [ -z "$MULTIPLICITY_FACTOR_CTFENCODERS" ]; then echo \$MULTIPLICITY_FACTOR_CTFENCODERS missing; exit 1; fi # Process multiplicity scaling parameter
+if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then echo \$MULTIPLICITY_FACTOR_REST missing; exit 1; fi # Process multiplicity scaling parameter
 
 # Settings for some EPN paths / names / etc.
 export FILEWORKDIR=/home/epn/odc/files # Path to common grp / geometry / etc files
