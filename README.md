@@ -1,4 +1,6 @@
-This repository contains the PDP workflows to run on the EPN (in the future also on the FLP) and the parse script which parses the description files and creates the DDS XML files. For only a quick introduction and an example how to create a workflow on the EPN click [here](#Quick-guide-to-create-and-deploy-detector-workflow)
+This repository contains the PDP workflows to run on the EPN (in the future also on the FLP) and the parse script which parses the description files and creates the DDS XML files.
+For only a quick introduction and an example how to create a workflow on the EPN click [here](#Quick-guide-to-create-and-deploy-detector-workflow).
+The options for the production workflow are described [here](production/README.md).
 
 # Terminology:
 - A **workflow** refers to a single DPL workflow binary, or multiple workflows binaries merged with the `|` syntax, or a shell script starting such a workflow.
@@ -23,7 +25,12 @@ Another abstraction layer above the *workflows* are **topology descriptions**. T
   - **run** (default): run the workflow
   - **print**: print the final workflow command to the console
   - **dds**: create a partial topology.
-- If applicable, workflows shall use the settings from the `common/setenv.sh` script instead of implementing their own options. Mandatory env variables to respect are `SHMSIZE`, `GPUTYPE` (if the workflow supports GPUs),... (to be continued).
+- If applicable, workflows shall use the settings from the `common/setenv.sh` script instead of implementing their own options. Mandatory env variables to respect are
+  - `SHMSIZE`
+  - `SEVERITY` and `INFOLOGGER_SEVERITY` or they must be set to `warning`
+  - `NORATELOG` or the fmq rate logging must be disabled
+  - `GPUTYPE` (if the workflow supports GPUs)
+  - ... (to be continued).
 
 # Configuring and selecting workflow in AliECS:
 There are 3 ways foreseenm to configure the *full topology* in AliECS: (currently only the manual XML option exists)
