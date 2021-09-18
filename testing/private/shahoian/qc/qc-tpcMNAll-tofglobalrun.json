@@ -127,123 +127,101 @@
         "remotePort": "32626",
         "mergingMode": "delta"
       },
-      "ITSClusterTask": {
+      "TaskRaw": {
         "active": "true",
-        "className": "o2::quality_control_modules::its::ITSClusterTask",
-        "moduleName": "QcITS",
-        "detectorName": "ITS",
-        "cycleDurationSeconds": "180",
+        "className": "o2::quality_control_modules::tof::TaskRaw",
+        "moduleName": "QcTOF",
+        "detectorName": "TOF",
+        "cycleDurationSeconds": "10",
         "maxNumberCycles": "-1",
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
           "type": "dataSamplingPolicy",
-          "name": "compclus"
+          "name": "raw-local"
         },
         "location": "local",
         "localMachines": [
-          "localhost"
+          "alio2-cr1-flp178-ib",
+          "alio2-cr1-flp179-ib"
         ],
-        "remoteMachine": "epn102-ib",
-        "remotePort": "32630",
-        "taskParameters": {
-          "layer": "1111111",
-          "clusterDictionaryPath": "/home/epn/odc/files/ITSdictionary.bin",
-          "runNumberPath": "/home/its/QC/workdir/infiles/RunNumber.dat",
-          "geomPath": "/home/epn/odc/files/o2sim_geometry.root",
-          "nThreads": "4"
-        }
+        "remoteMachine": "localhost",
+        "remotePort": "30132",
+        "mergingMode": "delta"
       },
-      "ITSTrackTask": {
+      "TaskDigits": {
         "active": "true",
-        "className": "o2::quality_control_modules::its::ITSTrackTask",
-        "moduleName": "QcITS",
-        "detectorName": "ITS",
-        "cycleDurationSeconds": "30",
+        "className": "o2::quality_control_modules::tof::TaskDigits",
+        "moduleName": "QcTOF",
+        "detectorName": "TOF",
+        "cycleDurationSeconds": "10",
         "maxNumberCycles": "-1",
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
           "type": "dataSamplingPolicy",
-          "name": "tracks"
+          "name": "digi-local"
         },
         "location": "local",
         "localMachines": [
+          "epn",
           "localhost"
         ],
         "remoteMachine": "epn102-ib",
-        "remotePort": "32631"
-      },
-      "QcMFTClusterTask": {
-        "active": "true",
-        "className": "o2::quality_control_modules::mft::QcMFTClusterTask",
-        "moduleName": "QcMFT",
-        "detectorName": "MFT",
-        "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
-        "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
-        "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "mft-clusters"
-        },
-        "taskParameters": {
-          "myOwnKey": "myOwnValue"
-        },
-        "location": "local",
-        "localMachines": [
-          "localhost"
-        ],
-        "remoteMachine": "epn102-ib",
-        "remotePort": "32640",
+        "remotePort": "47708",
+        "mergingMode": "delta",
         "localControl": "odc"
       }
     },
     "checks": {
-      "ITSClusterCheck": {
+      "CheckDiagnostics": {
         "active": "true",
-        "className": "o2::quality_control_modules::its::ITSClusterCheck",
-        "moduleName": "QcITS",
+        "className": "o2::quality_control_modules::tof::CheckDiagnostics",
+        "moduleName": "QcTOF",
+        "detectorName": "TOF",
         "policy": "OnAny",
-        "detectorName": "ITS",
         "dataSource": [
           {
             "type": "Task",
-            "name": "ITSClusterTask",
+            "name": "TaskRaw",
             "MOs": [
-              "Layer0/AverageClusterSize"
+              "RDHCounterCrate0"
             ]
           }
         ]
       },
-      "ITSTrackCheck": {
+      "CheckCompressedData": {
         "active": "true",
-        "className": "o2::quality_control_modules::its::ITSTrackCheck",
-        "moduleName": "QcITS",
+        "className": "o2::quality_control_modules::tof::CheckCompressedData",
+        "moduleName": "QcTOF",
+        "detectorName": "TOF",
         "policy": "OnAny",
-        "detectorName": "ITS",
+        "checkParameters": {
+          "DiagnosticThresholdPerSlot": "10"
+        },
         "dataSource": [
           {
             "type": "Task",
-            "name": "ITSTrackTask",
+            "name": "TaskRaw",
             "MOs": [
-              "NClusters"
+              "hDiagnostic"
             ]
           }
         ]
       },
-      "QcMFTClusterCheck": {
+      "CheckRawMultiplicity": {
         "active": "true",
+        "className": "o2::quality_control_modules::tof::CheckRawMultiplicity",
+        "moduleName": "QcTOF",
+        "policy": "OnAny",
+        "detectorName": "TOF",
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcMFTClusterTask",
+            "name": "TaskDigits",
             "MOs": [
-              "mMFTClusterSensorIndex"
+              "TOFRawsMulti"
             ]
           }
-        ],
-        "className": "o2::quality_control_modules::mft::QcMFTClusterCheck",
-        "moduleName": "QcMFT",
-        "detectorName": "MFT",
-        "policy": "OnAny"
+        ]
       }
     },
     "externalTasks": null,
@@ -287,42 +265,18 @@
       "blocking": "false"
     },
     {
-      "id": "compclus",
+      "id": "digi-local",
       "active": "true",
-      "machines": [],
-      "query": "compclus:ITS/COMPCLUSTERS/0;clustersrof:ITS/CLUSTERSROF/0",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.3",
-          "seed": "1441"
-        }
+      "machines": [
+        "epn",
+        "localhost"
       ],
-      "blocking": "false"
-    },
-    {
-      "id": "tracks",
-      "active": "true",
-      "machines": [],
-      "query": "tracks:ITS/TRACKS/0;rofs:ITS/ITSTrackROF/0;compclus:ITS/COMPCLUSTERS/0",
+      "port": "30333",
+      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0",
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.3",
-          "seed": "1441"
-        }
-      ],
-      "blocking": "false"
-    },
-    {
-      "id": "mft-clusters",
-      "active": "true",
-      "machines": [],
-      "query": "randomcluster:MFT/COMPCLUSTERS/0;clustersrof:MFT/CLUSTERSROF/0",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.01",
+          "fraction": "0.1",
           "seed": "1234"
         }
       ],
