@@ -9,7 +9,7 @@ source $MYDIR/setenv.sh
 # ---------------------------------------------------------------------------------------------------------------------
 #Some additional settings used in this workflow
 if [ -z $OPTIMIZED_PARALLEL_ASYNC ]; then OPTIMIZED_PARALLEL_ASYNC=0; fi  # Enable tuned process multiplicities for async processing on the EPN
-if [ -z $CTF_DIR ];                  then CTF_DIR=$FILEWORKDIR; fi        # Directory where to store dictionary files
+if [ -z $CTF_DIR ];                  then CTF_DIR=$FILEWORKDIR; fi        # Directory where to store CTFs
 if [ -z $CTF_DICT_DIR ];             then CTF_DICT_DIR=$FILEWORKDIR; fi   # Directory of CTF dictionaries
 if [ -z $RECO_NUM_NODES_WORKFLOW ];  then RECO_NUM_NODES_WORKFLOW=250; fi # Number of EPNs running this workflow in parallel, to increase multiplicities if necessary, by default assume we are 1 out of 250 servers
 
@@ -22,6 +22,7 @@ MFT_NOISE="${FILEWORKDIR}/mft_noise_220721_R3C-520.root"
 CTF_MINSIZE="2000000"
 NITSDECTHREADS=2
 NMFTDECTHREADS=2
+CTF_DICT=${CTF_DICT_DIR}/ctf_dictionary.root
 
 
 if [ "0$O2_ROOT" == "0" ]; then
@@ -207,7 +208,7 @@ if [ $CTFINPUT == 1 ]; then
   GPU_INPUT=compressed-clusters-ctf
   TOF_INPUT=digits
   CTFName=`ls -t $FILEWORKDIR/o2_ctf_*.root | head -n1`
-  WORKFLOW="o2-ctf-reader-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --delay $TFDELAY --loop $NTIMEFRAMES --ctf-input ${CTFName} --ctf-dict ${CTF_DICT_DIR}/ctf_dictionary.root --onlyDet $WORKFLOW_DETECTORS --pipeline tpc-entropy-decoder:$N_TPCENTDEC | "
+  WORKFLOW="o2-ctf-reader-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --delay $TFDELAY --loop $NTIMEFRAMES --ctf-input ${CTFName} --ctf-dict ${CTF_DICT} --onlyDet $WORKFLOW_DETECTORS --pipeline tpc-entropy-decoder:$N_TPCENTDEC | "
 elif [ $EXTINPUT == 1 ]; then
   PROXY_CHANNEL="name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=0"
   PROXY_INSPEC="dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
@@ -283,21 +284,21 @@ if [ $CTFINPUT == 0 ]; then
   has_detector EMC && WORKFLOW+="o2-emcal-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells --disable-root-output $DISABLE_MC --pipeline EMCALRawToCellConverterSpec:$N_EMC | "
 
   # Entropy encoder workflows
-  has_detector MFT && WORKFLOW+="o2-itsmft-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --runmft true --pipeline mft-entropy-encoder:$N_F_CTF| "
-  has_detector FT0 && WORKFLOW+="o2-ft0-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline ft0-entropy-encoder:$N_F_CTF| "
-  has_detector FV0 && WORKFLOW+="o2-fv0-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline fv0-entropy-encoder:$N_F_CTF| "
-  has_detector MID && WORKFLOW+="o2-mid-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline mid-entropy-encoder:$N_F_CTF| "
-  has_detector MCH && WORKFLOW+="o2-mch-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline mch-entropy-encoder:$N_F_CTF| "
-  has_detector PHS && WORKFLOW+="o2-phos-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline phos-entropy-encoder:$N_F_CTF| "
-  has_detector CPV && WORKFLOW+="o2-cpv-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline cpv-entropy-encoder:$N_F_CTF| "
-  has_detector EMC && WORKFLOW+="o2-emcal-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline emcal-entropy-encoder:$N_F_CTF| "
-  has_detector ZDC && WORKFLOW+="o2-zdc-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline zdc-entropy-encoder:$N_F_CTF| "
-  has_detector FDD && WORKFLOW+="o2-fdd-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline fdd-entropy-encoder:$N_F_CTF| "
-  has_detector HMP && WORKFLOW+="o2-hmpid-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline hmpid-entropy-encoder:$N_F_CTF| "
-  has_detector TOF && WORKFLOW+="o2-tof-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline tof-entropy-encoder:$N_F_CTF| "
-  has_detector ITS && WORKFLOW+="o2-itsmft-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline its-entropy-encoder:$N_F_CTF| "
-  has_detector TRD && WORKFLOW+="o2-trd-entropy-encoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline trd-entropy-encoder:$N_TRDENT | "
-  has_detector TPC && WORKFLOW+="o2-tpc-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type compressed-clusters-flat --output-type encoded-clusters,disable-writer --pipeline tpc-entropy-encoder:$N_TPCENT | "
+  has_detector MFT && WORKFLOW+="o2-itsmft-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --runmft true --pipeline mft-entropy-encoder:$N_F_CTF| "
+  has_detector FT0 && WORKFLOW+="o2-ft0-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline ft0-entropy-encoder:$N_F_CTF| "
+  has_detector FV0 && WORKFLOW+="o2-fv0-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline fv0-entropy-encoder:$N_F_CTF| "
+  has_detector MID && WORKFLOW+="o2-mid-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline mid-entropy-encoder:$N_F_CTF| "
+  has_detector MCH && WORKFLOW+="o2-mch-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline mch-entropy-encoder:$N_F_CTF| "
+  has_detector PHS && WORKFLOW+="o2-phos-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline phos-entropy-encoder:$N_F_CTF| "
+  has_detector CPV && WORKFLOW+="o2-cpv-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline cpv-entropy-encoder:$N_F_CTF| "
+  has_detector EMC && WORKFLOW+="o2-emcal-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline emcal-entropy-encoder:$N_F_CTF| "
+  has_detector ZDC && WORKFLOW+="o2-zdc-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline zdc-entropy-encoder:$N_F_CTF| "
+  has_detector FDD && WORKFLOW+="o2-fdd-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline fdd-entropy-encoder:$N_F_CTF| "
+  has_detector HMP && WORKFLOW+="o2-hmpid-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline hmpid-entropy-encoder:$N_F_CTF| "
+  has_detector TOF && WORKFLOW+="o2-tof-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline tof-entropy-encoder:$N_F_CTF| "
+  has_detector ITS && WORKFLOW+="o2-itsmft-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline its-entropy-encoder:$N_F_CTF| "
+  has_detector TRD && WORKFLOW+="o2-trd-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline trd-entropy-encoder:$N_TRDENT | "
+  has_detector TPC && WORKFLOW+="o2-tpc-reco-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type compressed-clusters-flat --output-type encoded-clusters,disable-writer --pipeline tpc-entropy-encoder:$N_TPCENT | "
 
   # Calibration workflows
   has_detector_calib TPC && has_detectors TPC ITS TRD TOF && WORKFLOW+="o2-tpc-scdcalib-interpolation-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --disable-root-input --pipeline tpc-track-interpolation:$N_F_REST | "
@@ -308,7 +309,7 @@ if [ $CTFINPUT == 0 ]; then
   fi
   if [ $CREATECTFDICT == 1 ] ; then
     mkdir -p $CTF_DICT_DIR;
-    rm -f $CTF_DICT_DIR/ctf_dictionary.root
+    rm -f $CTF_DICT
   fi
   CTF_OUTPUT_TYPE="none"
   if [ $CREATECTFDICT == 1 ] && [ $SAVECTF == 1 ]; then CTF_OUTPUT_TYPE="both"; fi
