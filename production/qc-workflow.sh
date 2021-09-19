@@ -16,15 +16,21 @@ if [ -z "$GEN_TOPO_WORKDIR" ]; then
 fi
 
 JSON_FILES=
+OUTPUT_SUFFIX=
 for i in ITS MFT TPC TOF FT0 MID EMC PHS CPV ZDC FDD HMP FV0 TRD MCH; do
   DET_JSON_FILE="QC_JSON_$i"
-  has_detector $i && JSON_FILES+=" ${!DET_JSON_FILE}"
+  if has_detector $i && [ ! -z "${!DET_JSON_FILE}" ]; then
+     JSON_FILES+=" ${!DET_JSON_FILE}"
+     OUTPUT_SUFFIX+="-$i"
+  fi
 done
 
 if [ ! -z "$JSON_FILES" ]; then
   mkdir -p $GEN_TOPO_WORKDIR/json_cache
-  find $GEN_TOPO_WORKDIR/json_cache/ -maxdepth 1 -type f -mtime +3 | xargs rm -f
-  MERGED_JSON_FILENAME=$GEN_TOPO_WORKDIR/json_cache/`date +%Y%m%d-%H%M%S`-$$-$RANDOM.json
+  if [ "0$GEN_TOPO_ONTHEFLY" == "01" ]; then
+    find $GEN_TOPO_WORKDIR/json_cache/ -maxdepth 1 -type f -mtime +30 | xargs rm -f
+  fi
+  MERGED_JSON_FILENAME=$GEN_TOPO_WORKDIR/json_cache/`date +%Y%m%d-%H%M%S`-$$-$RANDOM-$OUTPUT_SUFFIX.json
   jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $JSON_FILES > $MERGED_JSON_FILENAME
   if [ $? != 0 ]; then
     echo Merging QC workflow failed 1>&2
