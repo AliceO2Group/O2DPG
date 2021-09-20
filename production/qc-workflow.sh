@@ -19,7 +19,7 @@ JSON_FILES=
 OUTPUT_SUFFIX=
 for i in ITS MFT TPC TOF FT0 MID EMC PHS CPV ZDC FDD HMP FV0 TRD MCH; do
   DET_JSON_FILE="QC_JSON_$i"
-  if has_detector $i && [ ! -z "${!DET_JSON_FILE}" ]; then
+  if has_detector_qc $i && [ ! -z "${!DET_JSON_FILE}" ]; then
      JSON_FILES+=" ${!DET_JSON_FILE}"
      OUTPUT_SUFFIX+="-$i"
   fi
