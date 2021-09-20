@@ -8,7 +8,7 @@ SEVERITY=warning
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
 ARGS_ALL+=" --infologger-severity $SEVERITY"
 #ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock"
-ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
+ARGS_ALL_CONFIG="HBFUtils.nHBFPerTF=128;NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
 CTF_DICT="--ctf-dict $FILEWORKDIR/ctf_dictionary.root"
 PROXY_INSPEC="x:TOF/CRAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
 NTHREADS=2
