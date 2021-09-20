@@ -21,6 +21,11 @@ You can use the following options to change the workflow behavior:
 - `MULTIPLICITY_FACTOR_CTFENCODERS` (default `1`) : Scales the number of parallel processes used for CTF encoding by this factor.
 - `MULTIPLICITY_FACTOR_REST` (default `1`) : Scales the number of other reconstruction processes by this factor.
 
+For user modification of the workflow, the folloing *EXTRA* environment variables exist:
+- `ARGS_ALL_EXTRA` : Extra command line options added to all workflows
+- `ALL_EXTRA_CONFIG` : Extra config key values added to all workflows
+- `GPU_EXTRA_CONFIG` : Extra options added to the configKeyValues of the GPU workflow
+
 Some remarks for the QC:
 The JSON files for the individual detectors are merged into one JSON file, which is cached during the run on the shared EPN home folder.
 The default JSON file per detector is defined in `qc-workflow.sh`.
