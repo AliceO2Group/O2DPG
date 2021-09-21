@@ -1,0 +1,17 @@
+
+tpc-ctf-qcTPC-59: "DataDistribution QualityControl" reco,59,59," WORKFLOW_DETECTORS=TPC production/dpl-workflow.sh"
+tof-ctf-qcTOF-59: "DataDistribution QualityControl" reco,59,59,"WORKFLOW_DETECTORS=TOF production/dpl-workflow.sh"
+its-ctf-qcITS-20: "DataDistribution QualityControl" reco,20,20,"WORKFLOW_DETECTORS=ITS production/dpl-workflow.sh"
+mft-ctf-qcMFT-30: "DataDistribution QualityControl" reco,30,30,"WORKFLOW_DETECTORS=MFT production/dpl-workflow.sh"
+its-mft-tpc-tof-CTF-QC-tpc-59: "DataDistribution QualityControl" reco,59,59,"WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF WORKFLOW_DETECTORS_QC=TPC production/dpl-workflow.sh"
+mft-tpc-tof-CTF-QC-tpc-59: "DataDistribution QualityControl" reco,59,59,"WORKFLOW_DETECTORS=MFT,TPC,TOF WORKFLOW_DETECTORS_QC=TPC production/dpl-workflow.sh" 
+its-mft-tpc-tof-CTF-QC-its-mft-tpc-tof-59: "DataDistribution QualityControl" reco,59,59,"WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF production/dpl-workflow.sh"
+mft-tpc-tof-CTF-QC-mft-tpc-tof-59: "DataDistribution QualityControl" reco,59,59,"WORKFLOW_DETECTORS=MFT,TPC,TOF production/dpl-workflow.sh"
+
+
+tpcCPU-ctf-qcTPC-59: "DataDistribution QualityControl" reco,59,59,"WORKFLOW_PARAMETERS=QC,CTF WORKFLOW_DETECTORS=TPC production/dpl-workflow.sh"
+its-mft-tpcCPU-tof-CTF-QC-tpc-59: "DataDistribution QualityControl" reco,59,59,"WORKFLOW_PARAMETERS=QC,CTF WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF WORKFLOW_DETECTORS_QC=TPC production/dpl-workflow.sh"
+mft-tpcCPU-tof-CTF-QC-tpc-59: "DataDistribution QualityControl" reco,59,59,"WORKFLOW_PARAMETERS=QC,CTF WORKFLOW_DETECTORS=MFT,TPC,TOF WORKFLOW_DETECTORS_QC=TPC production/dpl-workflow.sh" 
+its-mft-tpcCPU-tof-CTF-QC-its-mft-tpc-tof-59: "DataDistribution QualityControl" reco,59,59,"WORKFLOW_PARAMETERS=QC,CTF WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF production/dpl-workflow.sh"
+mft-tpcCPU-tof-CTF-QC-mft-tpc-tof-59: "DataDistribution QualityControl" reco,59,59,"WORKFLOW_PARAMETERS=QC,CTF WORKFLOW_DETECTORS=MFT,TPC,TOF production/dpl-workflow.sh"
+mft-tof-CTF-QC-mft-tof-59: "DataDistribution QualityControl" reco,59,59,"WORKFLOW_PARAMETERS=QC,CTF WORKFLOW_DETECTORS=MFT,TOF WORKFLOW_DETECTORS_QC=MFT,TOF production/dpl-workflow.sh" 
