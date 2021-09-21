@@ -42,7 +42,7 @@ parser.add_argument('--produce-script', help='Produces a shell script that runs 
 parser.add_argument('--rerun-from', help='Reruns the workflow starting from given task (or pattern). All dependent jobs will be rerun.')
 parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit.', action='store_true')
 
-parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint', default=max_system_mem)
+parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint (in MB)', default=0.9*max_system_mem/1024./1024)
 parser.add_argument('--cpu-limit', help='Set CPU limit (core count)', default=8)
 parser.add_argument('--cgroup', help='Execute pipeline under a given cgroup (e.g., 8coregrid) emulating resource constraints. This m\
 ust exist and the tasks file must be writable to with the current user.')
