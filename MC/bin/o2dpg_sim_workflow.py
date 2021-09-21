@@ -457,14 +457,18 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    simsoption=' --sims ' + ('bkg,'+signalprefix if doembedding else signalprefix)
 
+   # each digitization should be done for a different bunch crossing range, depending on the timeframe id
+   orbitsPerTF = 256
+   startOrbit = (tf-1)*orbitsPerTF
+   globaldigitizeroptions = '--configKeyValues "HBFUtils.orbitFirstSampled=' + str(startOrbit) \
+                            + ';HBFUtils.nHBFPerTF=' + str(orbitsPerTF) + '"'
+
    # This task creates the basic setup for all digitizers! all digitization configKeyValues need to be given here
-   # ContextTask=createTask(name='digicontext_'+str(tf), needs=[SGNtask['name'], LinkGRPFileTask['name']], tf=tf,
-                          # cwd=timeframeworkdir, lab=["DIGI"], cpu='1')
-   # ContextTask['cmd'] = 'o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) + ' ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption
-   # workflow['stages'].append(ContextTask)
    ContextTask = createTask(name='digicontext_'+str(tf), needs=[SGNtask['name'], LinkGRPFileTask['name']], tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='1')
    # this is just to have the digitizer ini file
-   ContextTask['cmd'] = 'o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) + ' ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption
+   ContextTask['cmd'] = 'o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) \
+                        + ' ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption         \
+                        + ' ' + globaldigitizeroptions
 
    # in case of embedding we engineer the context directly and allow the user to provide an embedding pattern
    # The :r flag means to shuffle the background events randomly
