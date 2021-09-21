@@ -16,6 +16,7 @@ You can use the following options to change the workflow behavior:
   - `EVENT_DISPLAY` : Enable JSON export for event display.
   - `QC` : Enable QC.
   - `CALIB` : Enable calibration (not yet working!)
+  - `CTF_ONLY` : Disables all processing except what is needed for the CTF (currently partially incompatible to `QC` and `CALIB` depending on the detectors).
 - `RECO_NUM_NODES_OVERRIDE` (default `0`) : Overrides the number of EPN nodes used for the reconstruction (`0` or empty means default).
 - `MULTIPLICITY_FACTOR_RAWDECODERS` (default `1`) : Scales the number of parallel processes used for raw decoding by this factor.
 - `MULTIPLICITY_FACTOR_CTFENCODERS` (default `1`) : Scales the number of parallel processes used for CTF encoding by this factor.
