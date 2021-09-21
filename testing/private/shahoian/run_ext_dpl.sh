@@ -13,6 +13,9 @@ export GEN_TOPO_SOURCE=/home/shahoian/alice/O2DataProcessing         # Path to O
 
 export EXTINPUT=1
 export EPNMODE=1
+export SYNCMODE=1
+export SHMSIZE=128000000000
+export INFOLOGGER_SEVERITY=warning
 
 export GEN_TOPO_LIBRARY_FILE=testing/private/shahoian/workflows_dpl.desc # Topology description library file to load
 export WORKFLOW_DETECTORS=ALL                                        # Optional parameter for the workflow: Detectors to run reconstruction for (comma-separated list)
