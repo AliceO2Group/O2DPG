@@ -75,7 +75,9 @@ MFTDEC_CONFIG=
 MIDDEC_CONFIG=
 
 if [ $SYNCMODE == 1 ]; then
-  ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=30;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
+  if [ $BEAMTYPE == "PbPb" ] || [ $BEAMTYPE == "pp" ]; then
+    ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=30;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
+  fi
   GPU_CONFIG_KEY+="GPU_global.synchronousProcessing=1;GPU_proc.clearO2OutputFromGPU=1;"
   TRD_CONFIG+=" --track-sources ITS-TPC --filter-trigrec"
   TRD_CONFIG_KEY+="GPU_proc.ompThreads=1;"
