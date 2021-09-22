@@ -457,18 +457,36 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    simsoption=' --sims ' + ('bkg,'+signalprefix if doembedding else signalprefix)
 
-   # each digitization should be done for a different bunch crossing range, depending on the timeframe id
+   # each timeframe should be done for a different bunch crossing range, depending on the timeframe id
    orbitsPerTF = 256
    startOrbit = (tf-1)*orbitsPerTF
-   globaldigitizeroptions = '--configKeyValues "HBFUtils.orbitFirstSampled=' + str(startOrbit) \
-                            + ';HBFUtils.nHBFPerTF=' + str(orbitsPerTF) + '"'
+   globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : startOrbit, "HBFUtils.nHBFPerTF" : orbitsPerTF}
+
+   def putConfigValues(localCF = {}):
+     """
+     Creates the final --configValues string to be passed to the workflows.
+     Uses the globalTFConfigValues and merges/overrides them with the local settings.
+     localCF is supposed to be a dictionary mapping key to param
+     """
+     returnstring = ' --configKeyValues "'
+     cf = globalTFConfigValues.copy()
+     isfirst=True
+     for e in localCF:
+       cf[e] = localCF[e]
+
+     for e in cf:
+       returnstring += (';','')[isfirst] + str(e) + "=" + str(cf[e])
+       isfirst=False
+
+     returnstring = returnstring + '"'
+     return returnstring
 
    # This task creates the basic setup for all digitizers! all digitization configKeyValues need to be given here
    ContextTask = createTask(name='digicontext_'+str(tf), needs=[SGNtask['name'], LinkGRPFileTask['name']], tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='1')
    # this is just to have the digitizer ini file
    ContextTask['cmd'] = 'o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) \
                         + ' ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption         \
-                        + ' ' + globaldigitizeroptions
+                        + ' ' + putConfigValues()
 
    # in case of embedding we engineer the context directly and allow the user to provide an embedding pattern
    # The :r flag means to shuffle the background events randomly
@@ -484,7 +502,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCDigitask=createTask(name='tpcdigi_'+str(tf), needs=tpcdigineeds,
                           tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu=NWORKERS, mem='9000')
    TPCDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTPC.root . ;')[doembedding]
-   TPCDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TPC --interactionRate ' + str(INTRATE) + '  --tpc-lanes ' + str(NWORKERS) + ' --incontext ' + str(CONTEXTFILE) + ' --tpc-chunked-writer --disable-write-ini'
+   TPCDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TPC --interactionRate ' + str(INTRATE) + '  --tpc-lanes ' + str(NWORKERS) + ' --incontext ' + str(CONTEXTFILE) + ' --tpc-chunked-writer --disable-write-ini ' + putConfigValues()
    workflow['stages'].append(TPCDigitask)
 
    trddigineeds = [ContextTask['name']]
@@ -493,7 +511,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TRDDigitask=createTask(name='trddigi_'+str(tf), needs=trddigineeds,
                           tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu=NWORKERS, mem='8000')
    TRDDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTRD.root . ;')[doembedding]
-   TRDDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TRD --interactionRate ' + str(INTRATE) + '  --configKeyValues \"TRDSimParams.digithreads=' + str(NWORKERS) + '\" --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini'
+   TRDDigitask['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TRD --interactionRate ' + str(INTRATE) + putConfigValues({"TRDSimParams.digithreads" : NWORKERS}) + ' --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini'
    workflow['stages'].append(TRDDigitask)
 
    # these are digitizers which are single threaded
@@ -506,7 +524,7 @@ for tf in range(1, NTIMEFRAMES + 1):
          t = createTask(name=name, needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu=NWORKERS)
          t['cmd'] = ('','ln -nfs ../bkg_Hits*.root . ;')[doembedding]
-         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --skipDet TPC,TRD --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini'
+         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --skipDet TPC,TRD --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValues()
          workflow['stages'].append(t)
          return t
 
@@ -516,7 +534,7 @@ for tf in range(1, NTIMEFRAMES + 1):
          t = createTask(name=name, needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
          t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
-         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet ' + str(det) + ' --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini'
+         t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet ' + str(det) + ' --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValues()
          workflow['stages'].append(t)
          return t
 
@@ -545,7 +563,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        tpcclustertasks.append(taskname)
        tpcclussect = createTask(name=taskname, needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='2', mem='8000')
        tpcclussect['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' --tpc-lanes ' + str(NWORKERS)
-       tpcclussect['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str((int)(s/sectorpertask)) + '.root --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=4"'
+       tpcclussect['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str((int)(s/sectorpertask)) + '.root --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' ' + putConfigValues({"GPU_global.continuousMaxTimeBin":100000 , "GPU_proc.ompThreads" : 4})
        tpcclussect['env'] = { "OMP_NUM_THREADS" : "4", "SHMSIZE" : "5000000000" }
        workflow['stages'].append(tpcclussect)
 
@@ -555,21 +573,22 @@ for tf in range(1, NTIMEFRAMES + 1):
      tpcreconeeds.append(TPCCLUSMERGEtask['name'])
    else:
      tpcclus = createTask(name='tpccluster_' + str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='2000')
-     tpcclus['cmd'] = 'o2-tpc-chunkeddigit-merger --rate 1000 --tpc-lanes ' + str(NWORKERS)
-     tpcclus['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads=1"'
+     tpcclus['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-lanes ' + str(NWORKERS)
+     tpcclus['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector ' + putConfigValues({"GPU_global.continuousMaxTimeBin":100000 , "GPU_proc.ompThreads" : 1})
      workflow['stages'].append(tpcclus)
      tpcreconeeds.append(tpcclus['name'])
 
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
-   TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector --configKeyValues "GPU_global.continuousMaxTimeBin=100000;GPU_proc.ompThreads='+str(NWORKERS)+'"'
+   TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' + putConfigValues({"GPU_global.continuousMaxTimeBin":100000,"GPU_proc.ompThreads":NWORKERS })
    workflow['stages'].append(TPCRECOtask)
 
    ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[det_to_digitask["ITS"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
-   ITSRECOtask['cmd'] = 'o2-its-reco-workflow --trackerCA --tracking-mode async ' + getDPL_global_options()
+   ITSRECOtask['cmd'] = 'o2-its-reco-workflow --trackerCA --tracking-mode async ' + getDPL_global_options() \
+                        + putConfigValues()
    workflow['stages'].append(ITSRECOtask)
 
    FT0RECOtask=createTask(name='ft0reco_'+str(tf), needs=[det_to_digitask["FT0"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
-   FT0RECOtask['cmd'] = 'o2-ft0-reco-workflow ' + getDPL_global_options()
+   FT0RECOtask['cmd'] = 'o2-ft0-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(FT0RECOtask)
 
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
@@ -577,20 +596,20 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(ITSTPCMATCHtask)
 
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
-   TRDTRACKINGtask['cmd'] = 'o2-trd-tracklet-transformer ' + getDPL_global_options()
-   TRDTRACKINGtask['cmd'] += ' | o2-trd-global-tracking ' + getDPL_global_options()
+   TRDTRACKINGtask['cmd'] = 'o2-trd-tracklet-transformer ' + getDPL_global_options() + putConfigValues()
+   TRDTRACKINGtask['cmd'] += ' | o2-trd-global-tracking ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(TRDTRACKINGtask)
 
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], det_to_digitask["TOF"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options()
+   TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(TOFRECOtask)
 
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
-   TOFTPCMATCHERtask['cmd'] = 'o2-tof-matcher-workflow ' + getDPL_global_options()
+   TOFTPCMATCHERtask['cmd'] = 'o2-tof-matcher-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(TOFTPCMATCHERtask)
 
    MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[det_to_digitask["MFT"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options()
+   MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(MFTRECOtask)
 
    # MCH reco: needing access to kinematics ... so some extra logic needed here
@@ -600,24 +619,24 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    MCHRECOtask = createTask(name='mchreco_'+str(tf), needs=[det_to_digitask["MCH"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MCHRECOtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
-   MCHRECOtask['cmd'] += 'o2-mch-reco-workflow ' + getDPL_global_options()
+   MCHRECOtask['cmd'] += 'o2-mch-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(MCHRECOtask)
 
    MIDRECOtask = createTask(name='midreco_'+str(tf), needs=[det_to_digitask["MID"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MIDRECOtask['cmd'] = 'o2-mid-digits-reader-workflow | o2-mid-reco-workflow ' + getDPL_global_options()
+   MIDRECOtask['cmd'] = 'o2-mid-digits-reader-workflow | o2-mid-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(MIDRECOtask)
 
    FDDRECOtask = createTask(name='fddreco_'+str(tf), needs=[det_to_digitask["FDD"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   FDDRECOtask['cmd'] = 'o2-fdd-reco-workflow ' + getDPL_global_options()
+   FDDRECOtask['cmd'] = 'o2-fdd-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(FDDRECOtask)
 
    FV0RECOtask = createTask(name='fv0reco_'+str(tf), needs=[det_to_digitask["FV0"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   FV0RECOtask['cmd'] = 'o2-fv0-reco-workflow ' + getDPL_global_options()
+   FV0RECOtask['cmd'] = 'o2-fv0-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(FV0RECOtask)
 
    pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], MCHRECOtask['name'], TRDTRACKINGtask['name'], FDDRECOtask['name'], MIDRECOtask['name']]
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
-   PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' + getDPL_global_options()
+   PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' + getDPL_global_options() + putConfigValues()
    # PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TOF" --vetex-track-matching-sources "ITS,ITS-TPC,ITS-TPC-TOF"'
    workflow['stages'].append(PVFINDERtask)
 
