@@ -108,6 +108,10 @@ SIMENGINE=args.e
 BFIELD=args.field
 RNDSEED=args.seed    # 0 means random seed ! Should we set different seed for Bkg and signal?
 
+Q2PTCUTOFF=20 # nominal q/Pt cut-off for TPC
+if float(BFIELD)!=0:
+   Q2PTCUTOFF*=5/abs(float(BFIELD));
+
 # add here other possible types
 
 workflow={}
@@ -582,7 +586,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      tpcreconeeds.append(tpcclus['name'])
 
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
-   TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' + putConfigValues({"GPU_global.continuousMaxTimeBin":100000,"GPU_proc.ompThreads":NWORKERS })
+   TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' + putConfigValues({"GPU_global.continuousMaxTimeBin":100000,"GPU_proc.ompThreads":NWORKERS, "GPU_rec.maxTrackQPt":Q2PTCUTOFF })
    workflow['stages'].append(TPCRECOtask)
 
    ITSConfig = {}
