@@ -137,6 +137,7 @@ fi
 N_TPCTRK=1
 N_TPCENT=1
 N_TPCITS=1
+N_MFTMCH=1
 N_ITSRAWDEC=1
 N_MFTRAWDEC=1
 N_TPCRAWDEC=$NGPUS
@@ -251,7 +252,7 @@ if [ $CTFINPUT == 0 ]; then
   has_detector FT0 && WORKFLOW+="o2-ft0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline ft0-datareader-dpl:$N_F_RAW | "
   has_detector FV0 && WORKFLOW+="o2-fv0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline fv0-datareader-dpl:$N_F_RAW | "
   has_detector MID && WORKFLOW+="o2-mid-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $MIDDEC_CONFIG --pipeline MIDRawDecoder:$N_F_RAW,MIDDecodedDataAggregator:$N_F_RAW | "
-  has_detector MCH && WORKFLOW+="o2-mch-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline DataDecoder:$N_F_RAW | "
+  has_detector MCH && WORKFLOW+="o2-mch-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline mch-data-decoder:$N_F_RAW | "
   has_detector TOF && [ $EPNMODE == 0 ] && WORKFLOW+="o2-tof-compressor $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" | "
   has_detector FDD && WORKFLOW+="o2-fdd-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline fdd-datareader-dpl:$N_F_RAW | "
   has_detector TRD && WORKFLOW+="o2-trd-datareader $ARGS_ALL --pipeline trd-datareader:$N_F_RAW | "
@@ -278,8 +279,9 @@ if [ $SYNCMODE == 0 ]; then
   has_detector MID && WORKFLOW+="o2-mid-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output $DISABLE_MC --pipeline MIDClusterizer:$N_F_REST,MIDTracker:$N_F_REST | "
   has_detector MCH && WORKFLOW+="o2-mch-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --pipeline mch-track-finder:$N_MCHTRK,mch-cluster-finder:$N_F_REST,mch-cluster-transformer:$N_F_REST | "
   has_detector MFT && WORKFLOW+="o2-mft-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --clusters-from-upstream $DISABLE_MC --disable-root-output --pipeline mft-tracker:$N_MFTTRK --mft-dictionary-path $FILEWORKDIR | "
-  has_detectors ITS TPC TRD TOF FT0 MCH && WORKFLOW+="o2-primary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_MC --disable-root-input --disable-root-output --validate-with-ft0 --pipeline primary-vertexing:$N_F_REST | "
-  has_detectors ITS TPC TRD TOF FT0 MCH && WORKFLOW+="o2-secondary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output --pipeline secondary-vertexing:$N_F_REST | "
+  has_detectors MFT MCH && WORKFLOW+="o2-globalfwd-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --pipeline globalfwd-track-matcher:$N_MFTMCH | "
+  has_detectors ITS TPC TRD TOF FT0 MCH MFT && WORKFLOW+="o2-primary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_MC --disable-root-input --disable-root-output --validate-with-ft0 --pipeline primary-vertexing:$N_F_REST | "
+  has_detectors ITS TPC TRD TOF FT0 MCH MFT && WORKFLOW+="o2-secondary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output --pipeline secondary-vertexing:$N_F_REST | "
   has_detector FDD && WORKFLOW+="o2-fdd-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
   has_detector FDD && WORKFLOW+="o2-fv0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
   has_detector ZDC && WORKFLOW+="o2-zdc-digits-reco $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
