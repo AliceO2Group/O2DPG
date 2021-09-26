@@ -17,6 +17,8 @@ export SYNCMODE=1
 export SHMSIZE=128000000000
 export INFOLOGGER_SEVERITY=warning
 
+export EDJSONS_DIR="/home/ed/jsons"
+
 export GEN_TOPO_LIBRARY_FILE=testing/private/shahoian/workflows_dpl.desc # Topology description library file to load
 export WORKFLOW_DETECTORS=ALL                                        # Optional parameter for the workflow: Detectors to run reconstruction for (comma-separated list)
 export WORKFLOW_DETECTORS_QC=ALL                                     # Optional parameter for the workflow: Detectors to run QC for
