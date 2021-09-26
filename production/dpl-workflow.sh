@@ -70,13 +70,15 @@ ITS_CONFIG_KEY=
 TRD_CONFIG=
 TRD_CONFIG_KEY=
 TRD_TRANSFORMER_CONFIG=
-EVE_CONFIG=
+EVE_CONFIG=" --jsons-folder $EDJSONS_DIR"
 MFTDEC_CONFIG=
 MIDDEC_CONFIG=
 
 if [ $SYNCMODE == 1 ]; then
-  if [ $BEAMTYPE == "PbPb" ] || [ $BEAMTYPE == "pp" ]; then
+  if [ $BEAMTYPE == "PbPb" ]; then
     ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=30;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
+  elif [ $BEAMTYPE == "pp" ]; then
+    ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=1;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
   fi
   GPU_CONFIG_KEY+="GPU_global.synchronousProcessing=1;GPU_proc.clearO2OutputFromGPU=1;"
   TRD_CONFIG+=" --track-sources ITS-TPC --filter-trigrec"

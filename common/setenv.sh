@@ -28,6 +28,7 @@ if [ -z "$WORKFLOWMODE" ];  then export WORKFLOWMODE=run; fi           # Workflo
 if [ -z "$FILEWORKDIR" ];   then export FILEWORKDIR=`pwd`; fi          # Override folder where to find grp, etc.
 if [ -z "$EPNMODE" ];       then export EPNMODE=0; fi                  # Is this workflow supposed to run on EPN? Will enable InfoLogger / metrics / ...
 if [ -z "$BEAMTYPE" ];      then export BEAMTYPE=PbPb; fi              # Beam type, must be PbPb, pp, pPb, cosmic, technical
+if [ -z "$EDJSONS_DIR" ];   then export EDJSONS_DIR="jsons"; fi        # output directory for ED json files
 if [ $EPNMODE == 0 ]; then
   if [ -z "$SHMSIZE" ];       then export SHMSIZE=$(( 8 << 30 )); fi   # Size of shared memory for messages
   if [ -z "$NGPUS" ];         then export NGPUS=1; fi                  # Number of GPUs to use, data distributed round-robin
@@ -126,5 +127,24 @@ workflow_has_parameters()
     if [ "0$1" == "0" ]; then return 0; fi
     if ! workflow_has_parameter $1; then return 1; fi
     shift
+  done
+}
+
+add_comma_separated()
+{
+  if (( $# < 2 )); then
+    echo "$# parameters received"
+    echo "Function name: ${FUNCNAME} expects at least 2 parameters:"
+    echo "it concatenates the string in 1st parameter by the following"
+    echo "ones, forming comma-separated string. $# parameters received"
+    exit 1
+  fi
+
+  for ((i = 2; i <= $#; i++ )); do
+    if [ -z $VAR ]; then
+      VAR+="${!i}"
+    else
+      VAR+=",${!i}"
+    fi
   done
 }
