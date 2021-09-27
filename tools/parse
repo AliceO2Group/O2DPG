@@ -84,7 +84,7 @@ for line in f:
                     recoworkflows.append(filename)
                 elif args[i].startswith("calib"):
                     wf = args[i].split(",", 2)
-                    wf[3] = wf[2]
+                    wf.append(wf[2])
                     wf[2] = wf[1]
                     calibworkflows.append(filename)
                 else:
