@@ -639,7 +639,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    FV0RECOtask['cmd'] = 'o2-fv0-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(FV0RECOtask)
 
-   pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], MCHRECOtask['name'], TRDTRACKINGtask['name'], FDDRECOtask['name'], MIDRECOtask['name']]
+   MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHRECOtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+   MFTMCHMATCHtask['cmd'] = 'o2-globalfwd-matcher-workflow ' + getDPL_global_options() + putConfigValues()
+   workflow['stages'].append(MFTMCHMATCHtask)
+
+   pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], MCHRECOtask['name'], TRDTRACKINGtask['name'], FDDRECOtask['name'], MIDRECOtask['name'], MFTMCHMATCHtask['name']]
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' \
                          + getDPL_global_options()        \
