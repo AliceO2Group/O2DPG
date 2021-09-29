@@ -730,10 +730,16 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(AODtask)
 
    # AOD merging / combination step
-   AOD_merge_task = createTask(name='aodmerge_'+str(tf), needs= [ AODtask['name'] ], tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='2000', cpu='1')
+   aodmergerneeds = [ AODtask['name'] ]
+   if tf > 1:
+      # we can only merge this of the previous timeframe was already merged in order
+      # keep time ordering of BCs intact
+      aodmergerneeds = [ 'aodmerge_' + str(tf-1) ]
+
+   AOD_merge_task = createTask(name='aodmerge_'+str(tf), needs = aodmergerneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='2000', cpu='1')
    AOD_merge_task['cmd'] = '[ -f ../AO2D.root ] && mv ../AO2D.root ../AO2D_old.root;'
-   AOD_merge_task['cmd'] += ' echo "./AO2D.root" > input.txt;'
-   AOD_merge_task['cmd'] += ' [ -f ../AO2D_old.root ] && echo "../AO2D_old.root" >> input.txt;'
+   AOD_merge_task['cmd'] += ' [ -f ../AO2D_old.root ] && echo "../AO2D_old.root" > input.txt;'
+   AOD_merge_task['cmd'] += ' echo "./AO2D.root" >> input.txt;'
    AOD_merge_task['cmd'] += ' o2-aod-merger --output ../AO2D.root;'
    AOD_merge_task['cmd'] += ' rm ../AO2D_old.root || true'
    AOD_merge_task['semaphore'] = 'aodmerge' #<---- this is making sure that only one merge is running at any time
