@@ -113,7 +113,7 @@ FILEWORKDIR=/home/epn/odc/files EPNMODE=1 DDWORKFLOW=tools/datadistribution_work
 
 # Quick guide to create and deploy detector workflow:
 ** Note: this is the current state of the EPN, not all configuration features (see [here](#Configuring-and-selecting-workflow-in-AliECS)) are available in AliECS yet, thus this guide shows only how to create the XML file for DDS. That XML file must then still be entered in the AliECS GUI as topology. This will be simplified in the future!**
-- **Temporarily** only `epn245` has the correct O2 installed, so please connect from the EPN head node to epn245 `ssh epn245`.
+- **Note** the topology must be created on an epn, which has the O2 version installed, which is requested by the topology. In principle any node should do since the installed O2 version should be the same on all nodes.
 - Check out the [O2DataProcessing](https://github.com/AliceO2Group/O2DataProcessing) repository to your home folder on the EPN (`$HOME` in the following).
 - Copy the content of `O2DataProcessing/testing/examples` (description library file `workflows.desc` and workflow script `example-workflow.sh`) to another place INSIDE the repository, usually under `testing/detectors/[DETECTOR]` or `testing/private/[USERNAME]`.
 - Edit the workflow script to your needs, adjust / rename the workflow in the description library file.
