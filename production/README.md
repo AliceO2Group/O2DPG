@@ -11,8 +11,9 @@ You can use the following options to change the workflow behavior:
 - `WORKFLOW_DETECTORS_QC` (default `ALL`) : Comma-separated list of detectors for which to run QC, can be a subset of `WORKFLOW_DETECTORS`. If a detector is not listed in `WORKFLOW_DETECTORS`, the QC is automatically disabled for that detector. Only active if the `WORKFLOW_PARAMETER=QC` is set.
 - `WORKFLOW_DETECTORS_CALIB` (default `ALL`) : Comma-separated list of detectors for which to run calibration, can be a subset of `WORKFLOW_DETECTORS`. If a detector is not listed in `WORKFLOW_DETECTORS`, the calibration is automatically disabled for that detector. Only active if the `WORKFLOW_PARAMETER=CALIB` is set.
 - `WORKFLOW_DETECTORS_FLP_PROCESSING` (default `TOF` for sync processing on EPN, `NONE` otherwise) : Signals that these detectors have processing on the FLP enabled. The corresponding steps are thus inactive in the EPN epl-workflow, and the raw-proxy is configured to receive the FLP-processed data instead of the raw data in that case.
-- `WORKFLOW_DETECTORS_RECO` (default `ALL`) : Comma-sepated list of detectors for which to run reconstruction.
-- `WORKFLOW_DETECTORS_CTF` (default `ALL`) : Comma-sepated list of detectors to include in CTF. If a detectors requires the reconstruction to generate its CTF part, the detector must also be present in `WORKFLOW_DETECTORS_RECO`.
+- `WORKFLOW_DETECTORS_RECO` (default `ALL`) : Comma-separated list of detectors for which to run reconstruction.
+- `WORKFLOW_DETECTORS_CTF` (default `ALL`) : Comma-separated list of detectors to include in CTF.
+- `WORKFLOW_DETECTORS_MATCHING` (default selected corresponding to default workflow for sync or async mode respectively) : Comma-separated list of matching / vertexing algorithms to run. Use `ALL` to enable all of them. Currently supported options: `ITSTPC`, `TPCTRD`, `ITSTPCTRD`, `TPCTOF`, `ITSTPCTOF`, `MFTMCH`, `PRIMVTX`, `SECVTX`.
 - `WORKFLOW_PARAMETERS` (default `NONE`) : Comma-separated list, enables additional features of the workflow. Currently the following features are available:
   - `GPU` : Performs the TPC processing on the GPU, otherwise everything is processed on the CPU.
   - `CTF` : Write the CTF to disk (CTF creation is always enabled, but if this parameter is missing, it is not stored).
@@ -24,7 +25,7 @@ You can use the following options to change the workflow behavior:
 - `MULTIPLICITY_FACTOR_CTFENCODERS` (default `1`) : Scales the number of parallel processes used for CTF encoding by this factor.
 - `MULTIPLICITY_FACTOR_REST` (default `1`) : Scales the number of other reconstruction processes by this factor.
 
-Most of these settings are configurable in the AliECS GUI. But some of the uncommon settings (`WORKFLOW_DETECTORS_FLP_PROCESSING`) can only be set via the "Additional environment variables field" in the GUI using bash syntax, e.g. `WORKFLOW_DETECTORS_FLP_PROCESSING=TPC`.
+Most of these settings are configurable in the AliECS GUI. But some of the uncommon settings (`WORKFLOW_DETECTORS_FLP_PROCESSING`, `WORKFLOW_DETECTORS_CTF`, `WORKFLOW_DETECTORS_RECO`, `WORKFLOW_DETECTORS_MATCHING`) can only be set via the "Additional environment variables field" in the GUI using bash syntax, e.g. `WORKFLOW_DETECTORS_FLP_PROCESSING=TPC`.
 
 For user modification of the workflow settings, the folloing *EXTRA* environment variables exist:
 - `ARGS_ALL_EXTRA` : Extra command line options added to all workflows

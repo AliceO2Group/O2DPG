@@ -111,6 +111,11 @@ has_detector_flp_processing()
   has_detector $1 && [[ $WORKFLOW_DETECTORS_FLP_PROCESSING =~ (^|,)"$1"(,|$) ]]
 }
 
+has_detector_matching()
+{
+  [[ $WORKFLOW_DETECTORS_MATCHING =~ (^|,)"ALL"(,|$) ]] || [[ $WORKFLOW_DETECTORS_MATCHING =~ (^|,)"$1"(,|$) ]]
+}
+
 workflow_has_parameter()
 {
   [[ $WORKFLOW_PARAMETERS =~ (^|,)"$1"(,|$) ]]
