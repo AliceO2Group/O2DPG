@@ -141,10 +141,10 @@ add_comma_separated()
   fi
 
   for ((i = 2; i <= $#; i++ )); do
-    if [ -z $VAR ]; then
-      VAR+="${!i}"
+    if [ -z ${!1} ]; then
+      eval $1+="${!i}"
     else
-      VAR+=",${!i}"
+      eval $1+=",${!i}"
     fi
   done
 }
