@@ -17,7 +17,7 @@ fi
 
 JSON_FILES=
 OUTPUT_SUFFIX=
-for i in ITS MFT TPC TOF FT0 MID EMC PHS CPV ZDC FDD HMP FV0 TRD MCH; do
+for i in `echo $LIST_OF_DETECTORS | sed "s/,/ /g"`; do
   DET_JSON_FILE="QC_JSON_$i"
   if has_detector_qc $i && [ ! -z "${!DET_JSON_FILE}" ]; then
      JSON_FILES+=" ${!DET_JSON_FILE}"
@@ -33,7 +33,7 @@ if [ ! -z "$JSON_FILES" ]; then
   MERGED_JSON_FILENAME=$GEN_TOPO_WORKDIR/json_cache/`date +%Y%m%d-%H%M%S`-$$-$RANDOM-$OUTPUT_SUFFIX.json
   jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $JSON_FILES > $MERGED_JSON_FILENAME
   if [ $? != 0 ]; then
-    echo Merging QC workflow failed 1>&2
+    echo Merging QC workflow with JSON files $JSON_FILES failed 1>&2
     exit 1
   fi
   MERGED_JSON_FILENAME=`realpath $MERGED_JSON_FILENAME`
