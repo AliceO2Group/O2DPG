@@ -13,6 +13,7 @@ if [ -z "${WORKFLOW_DETECTORS+x}" ] || [ "0$WORKFLOW_DETECTORS" == "0ALL" ]; the
 if [ -z "${WORKFLOW_DETECTORS_QC+x}" ] || [ "0$WORKFLOW_DETECTORS_QC" == "0ALL" ]; then export WORKFLOW_DETECTORS_QC=$WORKFLOW_DETECTORS; fi
 if [ -z "${WORKFLOW_DETECTORS_CALIB+x}" ] || [ "0$WORKFLOW_DETECTORS_CALIB" == "0ALL" ]; then export WORKFLOW_DETECTORS_CALIB=$WORKFLOW_DETECTORS; fi
 if [ -z "${WORKFLOW_DETECTORS_RECO+x}" ] || [ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
+if [ -z "${WORKFLOW_DETECTORS_CTF+x}" ] || [ "0$WORKFLOW_DETECTORS_CTF" == "0ALL" ]; then export WORKFLOW_DETECTORS_CTF=$WORKFLOW_DETECTORS; fi
 if [ "0$WORKFLOW_DETECTORS_FLP_PROCESSING" == "0ALL" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=$WORKFLOW_DETECTORS; fi
 if [ -z "$WORKFLOW_PARAMETERS" ]; then export WORKFLOW_PARAMETERS=; fi
 
@@ -100,6 +101,11 @@ has_detector_reco()
   has_detector $1 && [[ $WORKFLOW_DETECTORS_RECO =~ (^|,)"$1"(,|$) ]]
 }
 
+has_detector_ctf()
+{
+  has_detector $1 && [[ $WORKFLOW_DETECTORS_CTF =~ (^|,)"$1"(,|$) ]]
+}
+
 has_detector_flp_processing()
 {
   has_detector $1 && [[ $WORKFLOW_DETECTORS_FLP_PROCESSING =~ (^|,)"$1"(,|$) ]]
@@ -134,6 +140,21 @@ has_detectors_qc()
 has_detectors_calib()
 {
   _check_multiple has_detector_calib $@
+}
+
+has_detectors_reco()
+{
+  _check_multiple has_detector_reco $@
+}
+
+has_detectors_ctf()
+{
+  _check_multiple has_detector_ctf $@
+}
+
+has_detectors_flp_processing()
+{
+  _check_multiple has_detector_flp_processing $@
 }
 
 workflow_has_parameters()

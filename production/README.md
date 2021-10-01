@@ -11,13 +11,14 @@ You can use the following options to change the workflow behavior:
 - `WORKFLOW_DETECTORS_QC` (default `ALL`) : Comma-separated list of detectors for which to run QC, can be a subset of `WORKFLOW_DETECTORS`. If a detector is not listed in `WORKFLOW_DETECTORS`, the QC is automatically disabled for that detector. Only active if the `WORKFLOW_PARAMETER=QC` is set.
 - `WORKFLOW_DETECTORS_CALIB` (default `ALL`) : Comma-separated list of detectors for which to run calibration, can be a subset of `WORKFLOW_DETECTORS`. If a detector is not listed in `WORKFLOW_DETECTORS`, the calibration is automatically disabled for that detector. Only active if the `WORKFLOW_PARAMETER=CALIB` is set.
 - `WORKFLOW_DETECTORS_FLP_PROCESSING` (default `TOF` for sync processing on EPN, `NONE` otherwise) : Signals that these detectors have processing on the FLP enabled. The corresponding steps are thus inactive in the EPN epl-workflow, and the raw-proxy is configured to receive the FLP-processed data instead of the raw data in that case.
+- `WORKFLOW_DETECTORS_RECO` (default `ALL`) : Comma-sepated list of detectors for which to run reconstruction.
+- `WORKFLOW_DETECTORS_CTF` (default `ALL`) : Comma-sepated list of detectors to include in CTF. If a detectors requires the reconstruction to generate its CTF part, the detector must also be present in `WORKFLOW_DETECTORS_RECO`.
 - `WORKFLOW_PARAMETERS` (default `NONE`) : Comma-separated list, enables additional features of the workflow. Currently the following features are available:
   - `GPU` : Performs the TPC processing on the GPU, otherwise everything is processed on the CPU.
   - `CTF` : Write the CTF to disk (CTF creation is always enabled, but if this parameter is missing, it is not stored).
   - `EVENT_DISPLAY` : Enable JSON export for event display.
   - `QC` : Enable QC.
   - `CALIB` : Enable calibration (not yet working!)
-  - `CTF_ONLY` : Disables all processing except what is needed for the CTF (currently partially incompatible to `QC` and `CALIB` depending on the detectors).
 - `RECO_NUM_NODES_OVERRIDE` (default `0`) : Overrides the number of EPN nodes used for the reconstruction (`0` or empty means default).
 - `MULTIPLICITY_FACTOR_RAWDECODERS` (default `1`) : Scales the number of parallel processes used for raw decoding by this factor.
 - `MULTIPLICITY_FACTOR_CTFENCODERS` (default `1`) : Scales the number of parallel processes used for CTF encoding by this factor.
