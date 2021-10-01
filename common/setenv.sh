@@ -79,27 +79,9 @@ has_detector()
   [[ $WORKFLOW_DETECTORS =~ (^|,)"$1"(,|$) ]]
 }
 
-has_detectors()
-{
-  while true; do
-    if [ "0$1" == "0" ]; then return 0; fi
-    if ! has_detector $1; then return 1; fi
-    shift
-  done
-}
-
 has_detector_qc()
 {
   has_detector $1 && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"$1"(,|$) ]]
-}
-
-has_detectors_qc()
-{
-  while true; do
-    if [ "0$1" == "0" ]; then return 0; fi
-    if ! has_detector_qc $1; then return 1; fi
-    shift
-  done
 }
 
 has_detector_calib()
@@ -107,27 +89,40 @@ has_detector_calib()
   has_detector $1 && [[ $WORKFLOW_DETECTORS_CALIB =~ (^|,)"$1"(,|$) ]]
 }
 
-has_detectors_calib()
-{
-  while true; do
-    if [ "0$1" == "0" ]; then return 0; fi
-    if ! has_detector_calib $1; then return 1; fi
-    shift
-  done
-}
-
 workflow_has_parameter()
 {
   [[ $WORKFLOW_PARAMETERS =~ (^|,)"$1"(,|$) ]]
 }
 
-workflow_has_parameters()
+_check_multiple()
 {
+  CHECKER=$1
+  shift
   while true; do
     if [ "0$1" == "0" ]; then return 0; fi
-    if ! workflow_has_parameter $1; then return 1; fi
+    if ! $CHECKER $1; then return 1; fi
     shift
   done
+}
+
+has_detectors()
+{
+  _check_multiple has_detector $@
+}
+
+has_detectors_qc()
+{
+  _check_multiple has_detector_qc $@
+}
+
+has_detectors_calib()
+{
+  _check_multiple has_detector_calib $@
+}
+
+workflow_has_parameters()
+{
+  _check_multiple workflow_has_parameter $@
 }
 
 add_comma_separated()
