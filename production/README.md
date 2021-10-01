@@ -10,6 +10,7 @@ You can use the following options to change the workflow behavior:
 - `WORKFLOW_DETECTORS` (default `ALL`) : Comma-separated list of detectors for which the processing is enabled. If these are less detectors than participating in the run, data of the other detectors is ignored. If these are more detectors than participating in the run, the processes for the additional detectors will be started but will not do anything.
 - `WORKFLOW_DETECTORS_QC` (default `ALL`) : Comma-separated list of detectors for which to run QC, can be a subset of `WORKFLOW_DETECTORS`. If a detector is not listed in `WORKFLOW_DETECTORS`, the QC is automatically disabled for that detector. Only active if the `WORKFLOW_PARAMETER=QC` is set.
 - `WORKFLOW_DETECTORS_CALIB` (default `ALL`) : Comma-separated list of detectors for which to run calibration, can be a subset of `WORKFLOW_DETECTORS`. If a detector is not listed in `WORKFLOW_DETECTORS`, the calibration is automatically disabled for that detector. Only active if the `WORKFLOW_PARAMETER=CALIB` is set.
+- `WORKFLOW_DETECTORS_FLP_PROCESSING` (default `TOF` for sync processing on EPN, `NONE` otherwise) : Signals that these detectors have processing on the FLP enabled. The corresponding steps are thus inactive in the EPN epl-workflow, and the raw-proxy is configured to receive the FLP-processed data instead of the raw data in that case.
 - `WORKFLOW_PARAMETERS` (default `NONE`) : Comma-separated list, enables additional features of the workflow. Currently the following features are available:
   - `GPU` : Performs the TPC processing on the GPU, otherwise everything is processed on the CPU.
   - `CTF` : Write the CTF to disk (CTF creation is always enabled, but if this parameter is missing, it is not stored).
@@ -22,7 +23,9 @@ You can use the following options to change the workflow behavior:
 - `MULTIPLICITY_FACTOR_CTFENCODERS` (default `1`) : Scales the number of parallel processes used for CTF encoding by this factor.
 - `MULTIPLICITY_FACTOR_REST` (default `1`) : Scales the number of other reconstruction processes by this factor.
 
-For user modification of the workflow, the folloing *EXTRA* environment variables exist:
+Most of these settings are configurable in the AliECS GUI. But some of the uncommon settings (`WORKFLOW_DETECTORS_FLP_PROCESSING`) can only be set via the "Additional environment variables field" in the GUI using bash syntax, e.g. `WORKFLOW_DETECTORS_FLP_PROCESSING=TPC`.
+
+For user modification of the workflow settings, the folloing *EXTRA* environment variables exist:
 - `ARGS_ALL_EXTRA` : Extra command line options added to all workflows
 - `ALL_EXTRA_CONFIG` : Extra config key values added to all workflows
 - `GPU_EXTRA_CONFIG` : Extra options added to the configKeyValues of the GPU workflow

@@ -8,6 +8,13 @@ if [ $? != 0 ]; then
 fi
 
 LIST_OF_DETECTORS="ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP"
+# Detectors used in the workflow / enabled parameters
+if [ -z "${WORKFLOW_DETECTORS+x}" ] || [ "0$WORKFLOW_DETECTORS" == "0ALL" ]; then export WORKFLOW_DETECTORS=$LIST_OF_DETECTORS; fi
+if [ -z "${WORKFLOW_DETECTORS_QC+x}" ] || [ "0$WORKFLOW_DETECTORS_QC" == "0ALL" ]; then export WORKFLOW_DETECTORS_QC=$WORKFLOW_DETECTORS; fi
+if [ -z "${WORKFLOW_DETECTORS_CALIB+x}" ] || [ "0$WORKFLOW_DETECTORS_CALIB" == "0ALL" ]; then export WORKFLOW_DETECTORS_CALIB=$WORKFLOW_DETECTORS; fi
+if [ -z "${WORKFLOW_DETECTORS_RECO+x}" ] || [ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
+if [ "0$WORKFLOW_DETECTORS_FLP_PROCESSING" == "0ALL" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=$WORKFLOW_DETECTORS; fi
+if [ -z "$WORKFLOW_PARAMETERS" ]; then export WORKFLOW_PARAMETERS=; fi
 
 if [ -z "$NTIMEFRAMES" ];   then export NTIMEFRAMES=1; fi              # Number of time frames to process
 if [ -z "$TFDELAY" ];       then export TFDELAY=100; fi                # Delay in seconds between publishing time frames
@@ -37,18 +44,15 @@ if [ $EPNMODE == 0 ]; then
   if [ -z "$EXTINPUT" ];      then export EXTINPUT=0; fi               # Receive input from raw FMQ channel instead of running o2-raw-file-reader
   if [ -z "$EPNPIPELINES" ];  then export EPNPIPELINES=0; fi           # Set default EPN pipeline multiplicities
   if [ -z "$SHMTHROW" ];      then export SHMTHROW=1; fi               # Throw exception when running out of SHM
+  if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=""; fi # No FLP processing by default when we do not run the sync EPN workflow, e.g. full system test will also run full FLP processing
 else # Defaults when running on the EPN
   if [ -z "$SHMSIZE" ];       then export SHMSIZE=$(( 256 << 30 )); fi
   if [ -z "$NGPUS" ];         then export NGPUS=4; fi
   if [ -z "$EXTINPUT" ];      then export EXTINPUT=1; fi
   if [ -z "$EPNPIPELINES" ];  then export EPNPIPELINES=1; fi
   if [ -z "$SHMTHROW" ];      then export SHMTHROW=1; fi               # NOTE: SHMTHROW SHOULD BE 0 FOR EPN, BUT IS =1 FOR TESTS DURING COMMISSIONING WHILE WE HAVE NO MEMORY MONITORING
+  if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
 fi
-# Detectors used in the workflow / enabled parameters
-if [ -z "${WORKFLOW_DETECTORS+x}" ] || [ "0$WORKFLOW_DETECTORS" == "0ALL" ]; then export WORKFLOW_DETECTORS=$LIST_OF_DETECTORS; fi
-if [ -z "${WORKFLOW_DETECTORS_QC+x}" ] || [ "0$WORKFLOW_DETECTORS_QC" == "0ALL" ]; then export WORKFLOW_DETECTORS_QC=$WORKFLOW_DETECTORS; fi
-if [ -z "${WORKFLOW_DETECTORS_CALIB+x}" ] || [ "0$WORKFLOW_DETECTORS_CALIB" == "0ALL" ]; then export WORKFLOW_DETECTORS_CALIB=$WORKFLOW_DETECTORS; fi
-if [ -z "$WORKFLOW_PARAMETERS" ]; then export WORKFLOW_PARAMETERS=; fi
 # Some more options for running on the EPN
 if [ -z "$INFOLOGGER_SEVERITY" ]; then export INFOLOGGER_SEVERITY="warning"; fi
 if [ -z "$MULTIPLICITY_FACTOR_RAWDECODERS" ]; then export MULTIPLICITY_FACTOR_RAWDECODERS=1; fi
@@ -89,6 +93,16 @@ has_detector_qc()
 has_detector_calib()
 {
   has_detector $1 && [[ $WORKFLOW_DETECTORS_CALIB =~ (^|,)"$1"(,|$) ]]
+}
+
+has_detector_reco()
+{
+  has_detector $1 && [[ $WORKFLOW_DETECTORS_RECO =~ (^|,)"$1"(,|$) ]]
+}
+
+has_detector_flp_processing()
+{
+  has_detector $1 && [[ $WORKFLOW_DETECTORS_FLP_PROCESSING =~ (^|,)"$1"(,|$) ]]
 }
 
 workflow_has_parameter()

@@ -231,8 +231,14 @@ elif [ $EXTINPUT == 1 ]; then
   PROXY_INSPEC="dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
   PROXY_IN_N=0
   for i in `echo "$WORKFLOW_DETECTORS" | sed "s/,/ /g"`; do
-    if [ $EPNMODE == 1 ] && [ $i == "TOF" ]; then
-      PROXY_INTYPE=CRAWDATA
+    if has_detector_flp_processing $i; then
+      case $i in
+        TOF)
+          PROXY_INTYPE=CRAWDATA;;
+        *)
+          echo Input type for detector $i with FLP processing not defined 1>&2
+          exit 1;;
+      esac
     else
       PROXY_INTYPE=RAWDATA
     fi
@@ -259,7 +265,7 @@ if [ $CTFINPUT == 0 ]; then
   has_detector FV0 && WORKFLOW+="o2-fv0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline fv0-datareader-dpl:$N_F_RAW | "
   has_detector MID && WORKFLOW+="o2-mid-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $MIDDEC_CONFIG --pipeline MIDRawDecoder:$N_F_RAW,MIDDecodedDataAggregator:$N_F_RAW | "
   has_detector MCH && WORKFLOW+="o2-mch-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline mch-data-decoder:$N_F_RAW | "
-  has_detector TOF && [ $EPNMODE == 0 ] && WORKFLOW+="o2-tof-compressor $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" | "
+  has_detector TOF && ! has_detector_flp_processing TOF && WORKFLOW+="o2-tof-compressor $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" | "
   has_detector FDD && WORKFLOW+="o2-fdd-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline fdd-datareader-dpl:$N_F_RAW | "
   has_detector TRD && WORKFLOW+="o2-trd-datareader $ARGS_ALL $TRD_DECODER_OPTIONS --pipeline trd-datareader:$N_F_RAW | "
   has_detector ZDC && WORKFLOW+="o2-zdc-raw2digits $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline zdc-datareader-dpl:$N_F_RAW | "
