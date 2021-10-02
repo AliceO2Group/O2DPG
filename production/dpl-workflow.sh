@@ -78,6 +78,7 @@ TRD_CONFIG_KEY=
 TRD_TRANSFORMER_CONFIG=
 TRD_SOURCES=
 TOF_SOURCES=
+CPV_INPUT=raw
 EVE_CONFIG=" --jsons-folder $EDJSONS_DIR"
 MFTDEC_CONFIG=
 MIDDEC_CONFIG=
@@ -97,6 +98,8 @@ has_detector_matching TPCTRD && add_comma_separated TRD_SOURCES TPC
 has_detector_matching ITSTPCTRD && add_comma_separated TRD_SOURCES ITS-TPC
 has_detector_matching TPCTOF && add_comma_separated TOF_SOURCES TPC
 has_detector_matching ITSTPCTOF && add_comma_separated TOF_SOURCES ITS-TPC
+
+has_detector_flp_processing CPV && CPV_INPUT=digits
 
 if [ $CTFINPUT == 1 ]; then
   ITS_CONFIG+=" --tracking-mode async"
@@ -211,7 +214,7 @@ N_ITSRAWDEC=$((6 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_ITSRAWDEC ? 6 * 30 / $
 N_MFTRAWDEC=$((6 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_MFTRAWDEC ? 6 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_MFTRAWDEC))
 N_ITSTRK=$((2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_ITSTRK ? 2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_ITSTRK))
 N_MFTTRK=$((2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_MFTTRK ? 2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_MFTTRK))
-N_CTPRAWDEC=$((30 / $RECO_NUM_NODES_WORKFLOW_CMP > N_CTPRAWDEC ? 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_CTPRAWDEC))
+N_CTPRAWDEC=$((30 / $RECO_NUM_NODES_WORKFLOW_CMP > N_CTPRAWDEC ? 30 / $RECO_NUM_NODhas_detector_flp_processing CPVES_WORKFLOW_CMP : $N_CTPRAWDEC))
 # Apply external multiplicity factors
 N_TPCTRK=$((N_TPCTRK * $N_F_REST))
 N_TPCITS=$((N_TPCITS * $N_F_REST))
@@ -244,7 +247,15 @@ elif [ $EXTINPUT == 1 ]; then
     if has_detector_flp_processing $i; then
       case $i in
         TOF)
-          PROXY_INTYPE=CRAWDATA;;
+          PROXY_INTYPE="CRAWDATA";;
+        FT0 | FV0 | FDD)
+          PROXY_INTYPE="DIGITSBC/0 DIGITSCH/0";;
+        PHS)
+          PROXY_INTYPE="CELLS CELLTRIGREC";;
+        CPV)
+          PROXY_INTYPE="DIGITS/0 DIGITTRIGREC/0 RAWHWERRORS";;
+        EMC)
+          PROXY_INTYPE="CELLS/0 CELLSTRGR/0 DECODERERR";;
         *)
           echo Input type for detector $i with FLP processing not defined 1>&2
           exit 1;;
@@ -252,9 +263,11 @@ elif [ $EXTINPUT == 1 ]; then
     else
       PROXY_INTYPE=RAWDATA
     fi
-    PROXY_INNAME="RAWIN$PROXY_IN_N"
-    let PROXY_IN_N=$PROXY_IN_N+1
-    PROXY_INSPEC+=";$PROXY_INNAME:$i/$PROXY_INTYPE"
+    for j in $PROXY_INTYPE; do
+      PROXY_INNAME="RAWIN$PROXY_IN_N"
+      let PROXY_IN_N=$PROXY_IN_N+1
+      PROXY_INSPEC+=";$PROXY_INNAME:$i/$j"
+    done
   done
   WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --dataspec \"$PROXY_INSPEC\" --channel-config \"$PROXY_CHANNEL\" | "
 else
@@ -267,23 +280,24 @@ if [ $CTFINPUT == 0 ]; then
   if has_detector TPC && [ $EPNMODE == 1 ]; then
     GPU_INPUT=zsonthefly
     WORKFLOW+="o2-tpc-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-spec \"A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0\" --remove-duplicates --pipeline tpc-raw-to-digits-0:$N_TPCRAWDEC | "
-    WORKFLOW+="o2-tpc-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type digitizer --output-type zsraw,disable-writer --pipeline tpc-zsEncoder:$N_TPCRAWDEC | "
+    WORKFLOW+="o2-tpc-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS[ -z "$QC_JSON_FT0" ] && QC_JSON_FT0=/home/afurs/work/epn/configs/qc/ft0-digits-qc-ds.json
+[ -z "$QC_JSON_FV0" ] && QC_JSON_FV0=/home/afurs/work/epn/configs/qc/fv0-digits-qc-ds.json_ALL_CONFIG\" --input-type digitizer --output-type zsraw,disable-writer --pipeline tpc-zsEncoder:$N_TPCRAWDEC | "
   fi
   has_detector ITS && WORKFLOW+="o2-itsmft-stf-decoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --dict-file \"${ITSCLUSDICT}\" --nthreads ${NITSDECTHREADS} --pipeline its-stf-decoder:$N_ITSRAWDEC | "
   has_detector MFT && WORKFLOW+="o2-itsmft-stf-decoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --dict-file \"${MFTCLUSDICT}\" --nthreads ${NMFTDECTHREADS} --pipeline mft-stf-decoder:$N_MFTRAWDEC ${MFTDEC_CONFIG} --runmft true | "
-  has_detector FT0 && WORKFLOW+="o2-ft0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline ft0-datareader-dpl:$N_F_RAW | "
-  has_detector FV0 && WORKFLOW+="o2-fv0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline fv0-datareader-dpl:$N_F_RAW | "
+  has_detector FT0 && ! has_detector_flp_processing FT0 && WORKFLOW+="o2-ft0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline ft0-datareader-dpl:$N_F_RAW | "
+  has_detector FV0 && ! has_detector_flp_processing FV0 && WORKFLOW+="o2-fv0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline fv0-datareader-dpl:$N_F_RAW | "
   has_detector MID && WORKFLOW+="o2-mid-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $MIDDEC_CONFIG --pipeline MIDRawDecoder:$N_F_RAW,MIDDecodedDataAggregator:$N_F_RAW | "
   has_detector MCH && WORKFLOW+="o2-mch-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline mch-data-decoder:$N_F_RAW | "
   has_detector TOF && ! has_detector_flp_processing TOF && WORKFLOW+="o2-tof-compressor $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" | "
-  has_detector FDD && WORKFLOW+="o2-fdd-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline fdd-datareader-dpl:$N_F_RAW | "
+  has_detector FDD && ! has_detector_flp_processing FDD && WORKFLOW+="o2-fdd-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline fdd-datareader-dpl:$N_F_RAW | "
   has_detector TRD && WORKFLOW+="o2-trd-datareader $ARGS_ALL $TRD_DECODER_OPTIONS --pipeline trd-datareader:$N_F_RAW | "
   has_detector ZDC && WORKFLOW+="o2-zdc-raw2digits $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline zdc-datareader-dpl:$N_F_RAW | "
   has_detector HMP && WORKFLOW+="o2-hmpid-raw-to-digits-stream-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline HMP-RawStreamDecoder:$N_F_RAW | "
   has_detector CTP && WORKFLOW+="o2-ctp-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline CTP-RawStreamDecoder:$N_CTPRAWDEC | "
-  has_detector PHS && WORKFLOW+="o2-phos-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells --disable-root-input --disable-root-output --pipeline PHOSRawToCellConverterSpec:$N_F_REST $DISABLE_MC | "
-  has_detector CPV && WORKFLOW+="o2-cpv-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type clusters --disable-root-input --disable-root-output --pipeline CPVRawToDigitConverterSpec:$N_F_REST,CPVClusterizerSpec:$N_F_REST $DISABLE_MC | "
-  has_detector EMC && WORKFLOW+="o2-emcal-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells --disable-root-output $DISABLE_MC --pipeline EMCALRawToCellConverterSpec:$N_EMC | "
+  has_detector PHS && ! has_detector_flp_processing PHS && WORKFLOW+="o2-phos-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells --disable-root-input --disable-root-output --pipeline PHOSRawToCellConverterSpec:$N_F_REST $DISABLE_MC | "
+  has_detector CPV && WORKFLOW+="o2-cpv-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type $CPV_INPUT --output-type clusters --disable-root-input --disable-root-output --pipeline CPVRawToDigitConverterSpec:$N_F_REST,CPVClusterizerSpec:$N_F_REST $DISABLE_MC | "
+  has_detector EMC && ! has_detector_flp_processing EMC && WORKFLOW+="o2-emcal-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells --disable-root-output $DISABLE_MC --pipeline EMCALRawToCellConverterSpec:$N_EMC | "
 fi
 
 # ---------------------------------------------------------------------------------------------------------------------
