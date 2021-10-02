@@ -609,7 +609,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TOFRECOtask['cmd'] = 'o2-tof-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(TOFRECOtask)
 
-   TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
+   TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name'], TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    TOFTPCMATCHERtask['cmd'] = 'o2-tof-matcher-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(TOFTPCMATCHERtask)
 
@@ -738,7 +738,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    AOD_merge_task = createTask(name='aodmerge_'+str(tf), needs = aodmergerneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='2000', cpu='1')
    AOD_merge_task['cmd'] = '[ -f ../AO2D.root ] && mv ../AO2D.root ../AO2D_old.root;'
-   AOD_merge_task['cmd'] += ' [ -f input.txt ] && rm input.txt '
+   AOD_merge_task['cmd'] += ' [ -f input.txt ] && rm input.txt; '
    AOD_merge_task['cmd'] += ' [ -f ../AO2D_old.root ] && echo "../AO2D_old.root" > input.txt;'
    AOD_merge_task['cmd'] += ' echo "./AO2D.root" >> input.txt;'
    AOD_merge_task['cmd'] += ' o2-aod-merger --output ../AO2D.root;'
