@@ -304,7 +304,7 @@ if [ $SYNCMODE == 0 ]; then
   has_detector_reco MCH && WORKFLOW+="o2-mch-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --pipeline mch-track-finder:$N_MCHTRK,mch-cluster-finder:$N_F_REST,mch-cluster-transformer:$N_F_REST | "
   has_detector_reco MFT && WORKFLOW+="o2-mft-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --clusters-from-upstream $DISABLE_MC --disable-root-output --pipeline mft-tracker:$N_MFTTRK --mft-dictionary-path $FILEWORKDIR | "
   has_detector_reco FDD && WORKFLOW+="o2-fdd-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
-  has_detector_reco FDD && WORKFLOW+="o2-fv0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
+  has_detector_reco FV0 && WORKFLOW+="o2-fv0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
   has_detector_reco ZDC && WORKFLOW+="o2-zdc-digits-reco $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
 fi
 
