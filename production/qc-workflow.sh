@@ -4,6 +4,8 @@
 [ -z "$QC_JSON_ITS" ] && QC_JSON_ITS=/home/epn/jliu/itsEPNv2.json
 [ -z "$QC_JSON_MFT" ] && QC_JSON_MFT=/home/epn/odc/files/qc-mft-cluster.json
 [ -z "$QC_JSON_TOF" ] && QC_JSON_TOF=/home/fnoferin/public/tof-qc-globalrun.json
+[ -z "$QC_JSON_FT0" ] && QC_JSON_FT0=/home/afurs/work/epn/configs/qc/ft0-digits-qc-ds.json
+[ -z "$QC_JSON_FV0" ] && QC_JSON_FV0=/home/afurs/work/epn/configs/qc/fv0-digits-qc-ds.json
 
 if [ -z "$WORKFLOW" ]; then
   echo This script must be called from the dpl-workflow.sh and not standalone 1>&2
