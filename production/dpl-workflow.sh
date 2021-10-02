@@ -76,8 +76,6 @@ ITS_CONFIG_KEY=
 TRD_CONFIG=
 TRD_CONFIG_KEY=
 TRD_TRANSFORMER_CONFIG=
-TRD_SOURCES=
-TOF_SOURCES=
 CPV_INPUT=raw
 EVE_CONFIG=" --jsons-folder $EDJSONS_DIR"
 MFTDEC_CONFIG=
@@ -94,10 +92,6 @@ if [ $SYNCMODE == 1 ]; then
   TRD_CONFIG_KEY+="GPU_proc.ompThreads=1;"
   TRD_TRANSFORMER_CONFIG+=" --filter-trigrec"
 fi
-has_detector_matching TPCTRD && add_comma_separated TRD_SOURCES TPC
-has_detector_matching ITSTPCTRD && add_comma_separated TRD_SOURCES ITS-TPC
-has_detector_matching TPCTOF && add_comma_separated TOF_SOURCES TPC
-has_detector_matching ITSTPCTOF && add_comma_separated TOF_SOURCES ITS-TPC
 
 has_detector_flp_processing CPV && CPV_INPUT=digits
 
@@ -148,6 +142,24 @@ fi
 if ! has_detector_reco TOF; then
   TOF_OUTPUT=digits
 fi
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Assemble matching sources
+TRD_SOURCES=
+TOF_SOURCES=
+VTX_SOURCES=ITS
+has_detector_matching ITSTPC && VTX_SOURCES+=",ITS-TPC"
+has_detector_matching TPCTRD && (add_comma_separated TRD_SOURCES TPC; VTX_SOURCES+=",TPC-TRD")
+has_detector_matching ITSTPCTRD && (add_comma_separated TRD_SOURCES ITS-TPC; VTX_SOURCES+=",ITS-TPC-TRD")
+has_detector_matching TPCTOF && (add_comma_separated TOF_SOURCES TPC; VTX_SOURCES+=",TPC-TOF")
+has_detector_matching ITSTPCTOF && (add_comma_separated TOF_SOURCES ITS-TPC; VTX_SOURCES+=",ITS-TPC-TOF")
+has_detector_matching MFTMCH && VTX_SOURCES+=",MFT-MCH"
+for det in `echo $LIST_OF_DETECTORS | sed "s/,/ /g" | grep -v "CTP"`; do
+  has_detector_reco $det && VTX_SOURCES+=",$det"
+done
+PVERTEX_CONFIG="--vertexing-sources $VTX_SOURCES --vetex-track-matching-sources $VTX_SOURCES"
+has_detector_reco FT0 && PVERTEX_CONFIG+=" --validate-with-ft0"
+SECVERTEX_CONFIG="--vertexing-sources $VTX_SOURCES"
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Process multiplicities
@@ -323,8 +335,8 @@ if [ $SYNCMODE == 0 ]; then
 fi
 
 has_detectors_reco MFT MCH && has_detector_matching MFTMCH && WORKFLOW+="o2-globalfwd-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --pipeline globalfwd-track-matcher:$N_F_REST | "
-has_detectors_reco ITS TPC TRD TOF FT0 MCH MFT && has_detector_matching PRIMVTX && WORKFLOW+="o2-primary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_MC --disable-root-input --disable-root-output --validate-with-ft0 --pipeline primary-vertexing:$N_F_REST | "
-has_detectors_reco ITS TPC TRD TOF FT0 MCH MFT && has_detector_matching SECVTX && WORKFLOW+="o2-secondary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output --pipeline secondary-vertexing:$N_F_REST | "
+has_detectors_reco ITS && has_detector_matching PRIMVTX && WORKFLOW+="o2-primary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_MC --disable-root-input --disable-root-output $PVERTEX_CONFIG --pipeline primary-vertexing:$N_F_REST | "
+has_detectors_reco ITS && has_detector_matching SECVTX && WORKFLOW+="o2-secondary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $SECVERTEX_CONFIG --pipeline secondary-vertexing:$N_F_REST | "
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Entropy encoding / ctf creation workflows - disabled in async mode
