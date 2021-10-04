@@ -1,2 +1,2 @@
-synchronous-workflow: "DataDistribution QualityControl" reco,128,128,"SYNCMODE=1 NUMAGPUIDS=1 NUMAID=0 SHMSIZE=128000000000 production/dpl-workflow.sh" reco,128,128,"SYNCMODE=1 NUMAGPUIDS=1 NUMAID=1 SHMSIZE=128000000000 production/dpl-workflow.sh"
-synchronous-workflow-1numa: "DataDistribution QualityControl" reco,128,128,"SYNCMODE=1 production/dpl-workflow.sh"
+synchronous-workflow: "O2PDPSuite" reco,128,128,"SYNCMODE=1 NUMAGPUIDS=1 NUMAID=0 SHMSIZE=128000000000 production/dpl-workflow.sh" reco,128,128,"SYNCMODE=1 NUMAGPUIDS=1 NUMAID=1 SHMSIZE=128000000000 production/dpl-workflow.sh"
+synchronous-workflow-1numa: "O2PDPSuite" reco,128,128,"SYNCMODE=1 production/dpl-workflow.sh"

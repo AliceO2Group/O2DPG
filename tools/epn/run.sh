@@ -5,22 +5,22 @@ export DDMODE=processing                                             # DataDistr
 
 # Use these settings to fetch the Workflow Repository using a hash / tag
 #export GEN_TOPO_HASH=1                                              # Fetch O2DataProcessing repository using a git hash
-#export GEN_TOPO_SOURCE=v0.5                                         # Git hash to fetch
+#export GEN_TOPO_SOURCE=v0.13                                        # Git hash to fetch
 
 # Use these settings to specify a path to the workflow repository in your home dir
 export GEN_TOPO_HASH=0                                               # Specify path to O2DataProcessing repository
 export GEN_TOPO_SOURCE=/home/drohr/alice/O2DataProcessing            # Path to O2DataProcessing repository
 
-export GEN_TOPO_LIBRARY_FILE=testing/detectors/TPC/workflows.desc    # Topology description library file to load
-export GEN_TOPO_WORKFLOW_NAME=ctf-and-display                        # Name of workflow in topology description library
+export GEN_TOPO_LIBRARY_FILE=production/production.desc              # Topology description library file to load
+export GEN_TOPO_WORKFLOW_NAME=synchronous-workflow                   # Name of workflow in topology description library
 export WORKFLOW_DETECTORS=ALL                                        # Optional parameter for the workflow: Detectors to run reconstruction for (comma-separated list)
-export WORKFLOW_DETECTORS_QC=                                        # Optional parameter for the workflow: Detectors to run QC for
-export WORKFLOW_DETECTORS_CALIB=                                     # Optional parameters for the workflow: Detectors to run calibration for
-export WORKFLOW_DETECTORS_RECO=                                      # Optional parameters for the workflow: Detectors to run calibration for
-export WORKFLOW_DETECTORS_FLP_PROCESSING=                            # Optional parameters for the workflow: Detectors to run calibration for
-export WORKFLOW_PARAMETERS=                                          # Additional paramters for the workflow
+export WORKFLOW_DETECTORS_QC=ALL                                     # Optional parameter for the workflow: Detectors to run QC for
+export WORKFLOW_DETECTORS_CALIB=ALL                                  # Optional parameters for the workflow: Detectors to run calibration for
+export WORKFLOW_DETECTORS_RECO=ALL                                   # Optional parameters for the workflow: Detectors to run calibration for
+export WORKFLOW_DETECTORS_FLP_PROCESSING=ALL                         # Optional parameters for the workflow: Detectors to run calibration for
+export WORKFLOW_PARAMETERS=QC,CALIB,GPU,CTF,EVENT_DISPLAY            # Additional paramters for the workflow
 export RECO_NUM_NODES_OVERRIDE=0                                     # Override the number of EPN compute nodes to use (default is specified in description library file)
-export NHBPERTF=256                                                  # Number of HBF per TF
+export NHBPERTF=128                                                  # Number of HBF per TF
 export MULTIPLICITY_FACTOR_RAWDECODERS=1                             # Factor to scale number of raw decoders with
 export MULTIPLICITY_FACTOR_CTFENCODERS=1                             # Factor to scale number of CTF encoders with
 export MULTIPLICITY_FACTOR_REST=1                                    # Factor to scale number of other processes with

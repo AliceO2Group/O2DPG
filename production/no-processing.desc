@@ -1,2 +1,2 @@
 # Empty workflow for no processing at all
-no-processing: "DataDistribution"
+no-processing: "O2PDPSuite"
