@@ -1,9 +1,11 @@
 #!/bin/bash
-mkdir -p $GEN_TOPO_WORKDIR/cache
+mkdir -p $GEN_TOPO_WORKDIR/cache || { echo Error creating directory 1>&2; exit 1; }
 cd $GEN_TOPO_WORKDIR || { echo Cannot enter work dir 1>&2; exit 1; }
 if [ ! -d O2DataProcessing ]; then git clone https://github.com/AliceO2Group/O2DataProcessing.git 1>&2 || { echo O2DataProcessing checkout failed 1>&2; exit 1; }; fi
 if [ $GEN_TOPO_HASH == 1 ]; then
-  export GEN_TOPO_CACHEABLE=1
+  if [ "0$GEN_TOPO_ONTHEFLY" == "01" ]; then
+    export GEN_TOPO_CACHEABLE=1
+  fi
   CACHE_HASH=`echo $GEN_TOPO_PARTITION $GEN_TOPO_SOURCE $GEN_TOPO_LIBRARY_FILE $GEN_TOPO_WORKFLOW_NAME $WORKFLOW_DETECTORS $WORKFLOW_DETECTORS_QC $WORKFLOW_DETECTORS_CALIB $WORKFLOW_PARAMETERS $RECO_NUM_NODES_OVERRIDE $DDMODE $DDWORKFLOW $INRAWCHANNAME $FILEWORKDIR $CTF_DIR | md5sum | awk '{print $1}'`
   if [ -f cache/$CACHE_HASH ]; then
     echo Reusing cached XML topology 1>&2

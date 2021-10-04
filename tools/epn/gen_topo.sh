@@ -18,8 +18,8 @@ if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then echo \$MULTIPLICITY_FACTOR_REST miss
 # Settings for some EPN paths / names / etc.
 export FILEWORKDIR=/home/epn/odc/files # Path to common grp / geometry / etc files
 export INRAWCHANNAME=tf-builder-pipe-0 # Pipe name to get data from TfBuilder
-export CTF_DIR=/tmp/datadist/ctf # Output directory for CTFs
-export GEN_TOPO_WORKDIR=/home/epn/gen_topo/${GEN_TOPO_PARTITION}_${GEN_TOPO_ONTHEFLY} # Persistent working directory for checkout O2DataProcessing repository and for XML cache. Must be per partition. This script must not run twice in parallel with the same workdir
+export CTF_DIR=/data/tf/compressed # Output directory for CTFs
+export GEN_TOPO_WORKDIR=$HOME/gen_topo/${GEN_TOPO_PARTITION}_${GEN_TOPO_ONTHEFLY} # Persistent working directory for checkout O2DataProcessing repository and for XML cache. Must be per partition. This script must not run twice in parallel with the same workdir
 
 # Load required module and run gen_topo_o2dataprocessing (PDP part of this script)
 module load ODC O2DataProcessing 1>&2 || { echo Error loading ODC / O2DataProcessing 1>&2; exit 1; }
