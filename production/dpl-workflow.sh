@@ -226,7 +226,7 @@ N_ITSRAWDEC=$((6 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_ITSRAWDEC ? 6 * 30 / $
 N_MFTRAWDEC=$((6 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_MFTRAWDEC ? 6 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_MFTRAWDEC))
 N_ITSTRK=$((2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_ITSTRK ? 2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_ITSTRK))
 N_MFTTRK=$((2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_MFTTRK ? 2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_MFTTRK))
-N_CTPRAWDEC=$((30 / $RECO_NUM_NODES_WORKFLOW_CMP > N_CTPRAWDEC ? 30 / $RECO_NUM_NODhas_detector_flp_processing CPVES_WORKFLOW_CMP : $N_CTPRAWDEC))
+N_CTPRAWDEC=$((30 / $RECO_NUM_NODES_WORKFLOW_CMP > N_CTPRAWDEC ? 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_CTPRAWDEC))
 # Apply external multiplicity factors
 N_TPCTRK=$((N_TPCTRK * $N_F_REST))
 N_TPCITS=$((N_TPCITS * $N_F_REST))
@@ -292,8 +292,7 @@ if [ $CTFINPUT == 0 ]; then
   if has_detector TPC && [ $EPNMODE == 1 ]; then
     GPU_INPUT=zsonthefly
     WORKFLOW+="o2-tpc-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-spec \"A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0\" --remove-duplicates --pipeline tpc-raw-to-digits-0:$N_TPCRAWDEC | "
-    WORKFLOW+="o2-tpc-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS[ -z "$QC_JSON_FT0" ] && QC_JSON_FT0=/home/afurs/work/epn/configs/qc/ft0-digits-qc-ds.json
-[ -z "$QC_JSON_FV0" ] && QC_JSON_FV0=/home/afurs/work/epn/configs/qc/fv0-digits-qc-ds.json_ALL_CONFIG\" --input-type digitizer --output-type zsraw,disable-writer --pipeline tpc-zsEncoder:$N_TPCRAWDEC | "
+    WORKFLOW+="o2-tpc-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type digitizer --output-type zsraw,disable-writer --pipeline tpc-zsEncoder:$N_TPCRAWDEC | "
   fi
   has_detector ITS && WORKFLOW+="o2-itsmft-stf-decoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --dict-file \"${ITSCLUSDICT}\" --nthreads ${NITSDECTHREADS} --pipeline its-stf-decoder:$N_ITSRAWDEC | "
   has_detector MFT && WORKFLOW+="o2-itsmft-stf-decoder-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --dict-file \"${MFTCLUSDICT}\" --nthreads ${NMFTDECTHREADS} --pipeline mft-stf-decoder:$N_MFTRAWDEC ${MFTDEC_CONFIG} --runmft true | "
