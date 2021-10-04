@@ -157,7 +157,7 @@ has_detector_matching MFTMCH && VTX_SOURCES+=",MFT-MCH"
 for det in `echo $LIST_OF_DETECTORS | sed "s/,/ /g" | grep -v "CTP"`; do
   has_detector_reco $det && VTX_SOURCES+=",$det"
 done
-PVERTEX_CONFIG="--vertexing-sources $VTX_SOURCES --vetex-track-matching-sources $VTX_SOURCES"
+PVERTEX_CONFIG="--vertexing-sources $VTX_SOURCES --vertex-track-matching-sources $VTX_SOURCES"
 has_detector_reco FT0 && PVERTEX_CONFIG+=" --validate-with-ft0"
 SECVERTEX_CONFIG="--vertexing-sources $VTX_SOURCES"
 
