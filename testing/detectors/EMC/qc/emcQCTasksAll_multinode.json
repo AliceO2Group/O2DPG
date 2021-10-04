@@ -1,0 +1,216 @@
+{
+	"qc": {
+	    "config": {
+		"database": {
+		    "implementation": "CCDB",
+		    "host": "alio2-cr1-hv-qcdb1.cern.ch:8083",
+		    "username": "not_applicable",
+		    "password": "not_applicable",
+		    "name": "not_applicable"
+		},
+		"Activity": {
+		    "number": "42",
+		    "type": "2"
+		},
+		"monitoring": {
+		    "url": "infologger:///debug?qc"
+		},
+		"consul": {
+		    "url": "http://consul-test.cern.ch:8500"
+		},
+		"conditionDB": {
+		    "url": "ccdb-test.cern.ch:8080"
+		}
+	    },
+	    "tasks": {
+		"RawTask": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::RawTask",
+		    "moduleName": "QcEMCAL",
+		    "detectorName": "EMC",
+		    "cycleDurationSeconds": "60",
+		    "maxNumberCycles": "-1",
+		    "dataSource": {
+		      "type": "dataSamplingPolicy",
+		      "name": "emcrawdata"
+		    },
+		    "location": "local",
+		    "localMachines": [
+			"epn"
+		    ],
+		    "remoteMachine": "alio2-cr1-qc02.cern.ch",
+		    "remotePort": "47701",
+		    "mergingMode": "delta",
+		    "localControl": "odc"
+		},
+		"DigitsTask": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::DigitsQcTask",
+		    "moduleName": "QcEMCAL",
+		    "detectorName": "EMC",
+		    "cycleDurationSeconds": "60",
+		    "maxNumberCycles": "-1",
+		    "dataSource": {
+			"type": "dataSamplingPolicy",
+			"name": "emccells"
+		    },
+		    "taskParameters": {
+			"nothing": "rien"
+		    },
+		    "location": "local",
+		    "localMachines": [
+			"epn"
+		    ],
+		    "remoteMachine": "alio2-cr1-qc02.cern.ch",
+		    "remotePort": "47702",
+		    "mergingMode": "delta",
+		    "localControl": "odc"
+		}
+	    },
+	    "checks": {
+		"RawCheck": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::RawCheck",
+		    "moduleName": "QcEMCAL",
+		    "policy": "OnAny",
+		    "dataSource": [{
+			  "type": "Task",
+			  "name": "RawTask",
+			  "MOs": "all"
+		    }]
+		},
+		"checkAmplHighG": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::DigitCheck",
+		    "moduleName": "QcEMCAL",
+		    "policy": "OnAny",
+		    "detectorName": "EMC",
+		    "dataSource": [
+			{
+			    "type": "Task",
+			    "name": "DigitsTask",
+			    "MOs": [
+				"digitAmplitudeHG_CAL",
+				"digitAmplitudeHG_PHYS"
+			    ]
+			}
+		    ]
+		},
+		"checkAmplLowG": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::DigitCheck",
+		    "moduleName": "QcEMCAL",
+		    "policy": "OnAny",
+		    "detectorName": "EMC",
+		    "dataSource": [
+			{
+			    "type": "Task",
+			    "name": "DigitsTask",
+			    "MOs": [
+				"digitAmplitudeLG_CAL",
+				"digitAmplitudeLG_PHYS"
+			    ]
+			}
+		    ]
+		},
+		"checkDigitTimeHighG": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::DigitCheck",
+		    "moduleName": "QcEMCAL",
+		    "policy": "OnAny",
+		    "detectorName": "EMC",
+		    "dataSource": [
+			{
+			    "type": "Task",
+			    "name": "DigitsTask",
+			    "MOs": [
+				"digitTimeHG_CAL",
+				"digitTimeHG_PHYS"
+			    ]
+			}
+		    ]
+		},
+		"checkDigitTimeLowG": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::DigitCheck",
+		    "moduleName": "QcEMCAL",
+		    "policy": "OnAny",
+		    "detectorName": "EMC",
+		    "dataSource": [
+			{
+			    "type": "Task",
+			    "name": "DigitsTask",
+			    "MOs": [
+				"digitTimeLG_CAL",
+				"digitTimeLG_PHYS"
+			    ]
+			}
+		    ]
+		},
+		"checkAmplEMCAL": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::DigitCheck",
+		    "moduleName": "QcEMCAL",
+		    "policy": "OnAny",
+		    "detectorName": "EMC",
+		    "dataSource": [
+			{
+			    "type": "Task",
+			    "name": "DigitsTask",
+			    "MOs": [
+				"digitAmplitudeEMCAL_CAL",
+				"digitAmplitudeEMCAL_PHYS"
+			    ]
+			}
+		    ]
+		},
+		"checkAmplDCAL": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::DigitCheck",
+		    "moduleName": "QcEMCAL",
+		    "policy": "OnAny",
+		    "detectorName": "EMC",
+		    "dataSource": [
+			{
+			    "type": "Task",
+			    "name": "DigitsTask",
+			    "MOs": [
+				"digitAmplitudeDCAL_CAL",
+				"digitAmplitudeDCAL_PHYS"
+			    ]
+			}
+		    ]
+		}
+	    }
+	},
+	"dataSamplingPolicies": [
+	    {
+		"id": "emcrawdata",
+		"active": "true",
+		"machines": ["epn"],
+		"query": "readout:EMC/RAWDATA",
+		"samplingConditions": [
+		    {
+			"condition": "random",
+			"fraction": "0.01",
+			"seed": "1248"
+		    }
+		],
+		"blocking": "false"
+		},
+	  {
+		"id": "emccells",
+		"active": "true",
+		"machines": ["epn"],
+		"query": "emcal-digits:EMC/CELLS;emcal-triggerecords:EMC/CELLSTRGR",
+		"samplingConditions": [
+		    {
+			"condition": "random",
+			"fraction": "0.1",
+			"seed": "1248"
+		    }
+		],
+		"blocking": "false"
+	    }
+	]
+    }
