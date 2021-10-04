@@ -395,7 +395,7 @@ WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
 # ---------------------------------------------------------------------------------------------------------------------
 # Run / create / print workflow
 if [ $WORKFLOWMODE == "print" ]; then
-  echo Workflow command:
+  echo "#Workflow command:"
   echo $WORKFLOW | sed "s/| */|\n/g"
 else
   # Execute the command we have assembled

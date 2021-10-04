@@ -27,7 +27,12 @@ if not "DDWORKFLOW" in os.environ:
 
 print("Using topology", sys.argv[2], "of library", sys.argv[1])
 
-os.environ['WORKFLOWMODE'] = 'dds'
+if 'WORKFLOWMODE' in os.environ:
+    if not os.environ['WORKFLOWMODE'] in ['dds', 'print']:
+        print("Invalid WORKFLOWMODE provided")
+        raise
+else:
+    os.environ['WORKFLOWMODE'] = 'dds'
 if 'GLOBALDPLOPT' in os.environ:
     os.environ['GLOBALDPLOPT'] += " -b"
 else:
@@ -108,20 +113,27 @@ for line in f:
                     raise
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
-            odccommand = "odc-epn-topo"
-            if reconodes:
-                odccommand += " --dd " + os.environ['DDWORKFLOW']
-            if len(recoworkflows):
-                odccommand += " --reco " + " ".join(recoworkflows)
-            odccommand += " --n " + str(reconodes)
-            if len(calibworkflows):
-                odccommand += " --calib " + " ".join(calibworkflows)
-            if args[1] != "":
-                odccommand += " --prependexe \"module load " + args[1] + "; \""
-            odccommand += " -o " + sys.argv[3]
-            if os.system(odccommand) != 0:
-                print("\nError running odc: ", odccommand)
-                raise
+            if os.environ['WORKFLOWMODE'] == 'dds':
+                odccommand = "odc-epn-topo"
+                if reconodes:
+                    odccommand += " --dd " + os.environ['DDWORKFLOW']
+                if len(recoworkflows):
+                    odccommand += " --reco " + " ".join(recoworkflows)
+                odccommand += " --n " + str(reconodes)
+                if len(calibworkflows):
+                    odccommand += " --calib " + " ".join(calibworkflows)
+                if args[1] != "":
+                    odccommand += " --prependexe \"module load " + args[1] + "; \""
+                odccommand += " -o " + sys.argv[3]
+                if os.system(odccommand) != 0:
+                    print("\nError running odc: ", odccommand)
+                    raise
+            else:
+                outf = open(sys.argv[3], "w+")
+                for i in recoworkflows:
+                    outf.write("# RECO workflow\n\n" + open(i, 'r').read() + "\n\n")
+                for i in calibworkflows:
+                    outf.write("# CALIB workflow\n\n" + open(i, 'r').read() + "\n\n")
         print("Done")
         exit(0)
 
