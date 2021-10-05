@@ -60,6 +60,9 @@ parser.add_argument('-colBkg',help='embedding background collision system', defa
 
 parser.add_argument('-e',help='simengine', default='TGeant4')
 parser.add_argument('-tf',help='number of timeframes', default=2)
+parser.add_argument('--production-offset',help='Offset determining bunch-crossing '
+                     + ' range within a (GRID) production. This number sets first orbit to '
+                     + 'Offset x Number of TimeFrames x OrbitsPerTimeframe (up for further sophistication)', default=0)
 parser.add_argument('-j',help='number of workers (if applicable)', default=8, type=int)
 parser.add_argument('-mod',help='Active modules', default='--skipModules ZDC')
 parser.add_argument('-seed',help='random seed number', default=0)
@@ -459,7 +462,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # each timeframe should be done for a different bunch crossing range, depending on the timeframe id
    orbitsPerTF = 256
-   startOrbit = (tf-1)*orbitsPerTF
+   startOrbit = (tf-1 + int(args.production_offset)*NTIMEFRAMES)*orbitsPerTF
    globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : startOrbit, "HBFUtils.nHBFPerTF" : orbitsPerTF}
 
    def putConfigValues(localCF = {}):
