@@ -1,2 +1,2 @@
-+emc-qcall-ctf-5: "O2PDPSuite" reco,5,5,"SHMSIZE=64000000000 testing/detectors/EMC/runEMCRawToDigitsRecoPilelineQCAlllocalCTF.sh"
-+emc-qcall-ctf-9: "O2PDPSuite" reco,9,9,"SHMSIZE=64000000000 testing/detectors/EMC/runEMCRawToDigitsRecoPilelineQCAlllocalCTF.sh"
+emc-qcall-ctf-5: "O2PDPSuite" reco,5,5,"SHMSIZE=64000000000 testing/detectors/EMC/runEMCRawToDigitsRecoPilelineQCAlllocalCTF.sh"
+emc-qcall-ctf-9: "O2PDPSuite" reco,9,9,"SHMSIZE=64000000000 testing/detectors/EMC/runEMCRawToDigitsRecoPilelineQCAlllocalCTF.sh"
