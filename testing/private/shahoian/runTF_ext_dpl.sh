@@ -1,8 +1,8 @@
 #!/bin/bash
 
 export GEN_TOPO_PARTITION=test                                       # ECS Partition
-#export DDMODE=processing-disk                                        # DataDistribution mode - possible options: processing, disk, processing-disk, discard
-export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
+export DDMODE=processing-disk                                        # DataDistribution mode - possible options: processing, disk, processing-disk, discard
+#export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 
 # Use these settings to fetch the Workflow Repository using a hash / tag
 #export GEN_TOPO_HASH=1                                              # Fetch O2DataProcessing repository using a git hash
@@ -29,7 +29,7 @@ export RECO_NUM_NODES_OVERRIDE=0                                     # Override 
 export NHBPERTF=128                                                  # Number of HBF per TF
 export ALL_EXTRA_CONFIG="HBFUtils.nHBFPerTF=$NHBPERTF"
 #export GPU_EXTRA_CONFIG=""
-export GPU_EXTRA_CONFIG="GPU_proc.debugLevel=1;GPU_proc.memoryScalingFactor=2;"
+export GPU_EXTRA_CONFIG="GPU_proc.debugLevel=1;"
 
 export GEN_TOPO_IGNORE_ERROR=1
 

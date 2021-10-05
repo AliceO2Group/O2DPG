@@ -132,7 +132,7 @@
         "className": "o2::quality_control_modules::mft::QcMFTClusterTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
         "maxNumberCycles": "-1",
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
@@ -203,7 +203,7 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.005",
+          "fraction": "0.001",
           "seed": "0"
         }
       ],
