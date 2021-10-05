@@ -31,4 +31,4 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 5020 -col pp -gen pythia8 -proc 
                                            -j ${NWORKERS} --embedding -interactionRate 50000
 
 # run workflow
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit ${CPULIMIT:-8} ${TARGET+-tt ${TARGET}}
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit ${CPULIMIT:-8} -tt aod
