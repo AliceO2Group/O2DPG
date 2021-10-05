@@ -808,13 +808,15 @@ class WorkflowExecutor:
         # or a regular expression to use. For now we just put a hard coded list
         logfile = self.get_logfile(tid)
         
+        return True #! --> for now we just retry tasks a few times
+
         # 1) ZMQ_EVENT + interrupted system calls (DPL bug during shutdown)
         # Not sure if grep is faster than native Python text search ...
-        status = os.system('grep "failed setting ZMQ_EVENTS" ' + logfile + ' &> /dev/null')
-        if os.WEXITSTATUS(status) == 0:
-           return True
+        # status = os.system('grep "failed setting ZMQ_EVENTS" ' + logfile + ' &> /dev/null')
+        # if os.WEXITSTATUS(status) == 0:
+        #   return True
 
-        return False
+        # return False
          
 
     def cat_logfiles_tostdout(self, taskids):
@@ -1044,8 +1046,14 @@ class WorkflowExecutor:
 
                 # if a task was marked as "retry" we simply put it back into the candidate list
                 if len(self.tids_marked_toretry) > 0:
+                    # we need to remove these first of all from those marked finished
+                    for t in self.tids_marked_toretry:
+                        finished = [ x for x in finished if x != t ]
+                        finishedtasks = [ x for x in finishedtasks if x != t ]
+
                     candidates = candidates + self.tids_marked_toretry
                     self.tids_marked_toretry = []
+
 
                 # new candidates
                 for tid in finished:
