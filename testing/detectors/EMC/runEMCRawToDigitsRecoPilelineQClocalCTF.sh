@@ -17,8 +17,11 @@ INFOLOGGER_SEVERITY=warning
 SEVERITY=warning
 INFOLOGGER_SEVERITY_QC=warning
 SEVERITY_QC=warning
-CTF_OUTDIR=/tmp/datadist/ctf
-CTF_DICTDIR=/home/epn/odc/files/ctf_dictionary.root
+
+# CTF compression dictionary
+CTF_DICT="${FILEWORKDIR}/ctf_dictionary.root"
+# min file size for CTF (accumulate CTFs until it is reached)
+CTF_MINSIZE="2000000"
 
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \
@@ -42,9 +45,12 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --severity $SEVERITY_QC \
     --infologger-severity $INFOLOGGER_SEVERITY_QC \
     | o2-emcal-entropy-encoder-workflow $ARGS_ALL \
-    --ctf-dict $CTF_DICTDIR \
+    --ctf-dict "${CTF_DICT}" \
     | o2-ctf-writer-workflow $ARGS_ALL \
-    --onlyDet EMC \
+    --configKeyValues "${CONFKEYVAL}" \
     --no-grp \
-    --output-dir $CTF_OUTDIR \
+    --onlyDet $WORKFLOW_DETECTORS \
+    --ctf-dict "${CTF_DICT}" \
+    --output-dir $CTF_DIR \
+    --min-file-size "${CTF_MINSIZE}" \\
     | o2-dpl-run $ARGS_ALL --dds
