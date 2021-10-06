@@ -11,7 +11,7 @@ The options for the production workflow are described [here](production/README.m
 - **common** contains common scripts that can be used by all workflows, most importantly common environment variable scripts.
 - **production** contains the production workflows for global runs, which are maintained by PDP experts.
 - **tools** contains the **parser** script and auxiliary tools.
-- **testing** contains scripts for tests / standalone runs maintained by detectors or privately.
+- **testing** contains scripts for tests / standalone runs maintained by detectors or privately. Subfolders are **examples** for example workflows provided, **detectors** for standalone detector workflows, and **private** for workflows of users.
 
 # Topology descriptions and description library files:
 Another abstraction layer above the *workflows* are **topology descriptions**. The *parser* tool can generate the *full topology* XML file from such a *description*, using the `–dds` option of DPL and the `odc-topo-epn` tool. *Topology descriptions* are stored in **description library files** in the `O2DataProcessing` repository. A *description library file* can contain multiple *topology descriptions* each identified by a **topology name**
@@ -34,20 +34,23 @@ Another abstraction layer above the *workflows* are **topology descriptions**. T
 
 # Configuring and selecting workflow in AliECS:
 There are 3 ways foreseenm to configure the *full topology* in AliECS: (currently only the manual XML option exists)
-- **hash of workflow repository**: In this mode, the following settings are configured in AliECS, and they uniquely identify a *full topology*. The *parser* will then create the final DDS XML file with the *full topology*:
+- **version of workflow repository**: In this mode, the following settings are configured in AliECS, and they uniquely identify a *full topology*. The *parser* will then create the final DDS XML file with the *full topology*:
   - A **commit hash** identifying a state of the `O2DataProcessing` repository (this can also be a tag, and in the case of production workflows it is required to be a tag).
   - The path of a **description library file** (relative path inside the `O2DataProcessing` repository).
   - The **workflow name** inside the *description library file*.
-  - **detector list**: Three comma-separated lists of detectors participating in the run (global list, list for qc, list for calibration), defaulting to `ALL` for all detectors.
+  - **detector list**: Multiple comma-separated lists of detectors participating in the run (global list, list for qc, list for calibration, list of detectors to run reconstruction for, list of detectors to include in the CTF, list of detectors that have processing on the FLP), defaulting to `ALL` for all detectors.
   - **workflow parameters**: text field passed to workflow as environment variable for additional options.
   - **number of nodes override**: Overrides the setting for the number of nodes required in the workflow (meant so quickly increase / decrease the EPN partition size).
+  - **process multiplicity overrides**: Scaling factors for the process multiplicities for raw decoders, ctf encoders, and other processes.
+  - **extra environment options**: Free text field where the operator can put additional environment variables, that will be forwarded to the workflow.
+  - **wipe workflow cache**: Normally the XMLs are cached, when they are created from the same repository version / same workflow / same O2 version. This option clears the cache for the current partition.
 - **repository directory**: This is almost identical to the case above, but instead of the commit hash, there is the **repository path** specified, pointing to a checked out repository on the shared home folder in the EPN farm. The procedure is the same as before, the parser will create the full topology XML file from the specified workflow in the repository.
 - **manual XML file**: In this mode the `O2DataProcessing` repository is not used at all, but the absolute path of a *full topology* XML file in the EPN's shared home folder is specified. Such an XML file must be prepared manually by the same means as the *parser* would usually do (see paragraph on manual XML file below).
 
 # Topology descriptions:
 A *topology description* consists of
 - A list of modules to load, both for generating the DDS XML file with DPL's `--dds` option and when running the workflow. It can either be a single module, or a space-separated list of modules in double-quotes. In particular, this setting identifies the O2 version. We provide the `O2PDPSuite` package, which has the same versions as O2 itself, and which contain also corresponding versions `DataDistribution` and `QualityControl`, thus it is usually sufficient to just load `O2PDPSuite/[version]`.
-- A list of workflows, in the form of commands to run to create XML files by the `–dds` option. The command is executed with the `O2DataProcessing` path as working directory. The env options used to configure the workflow are prepended in normal shell syntax.
+- A list of workflows, in the form of commands to run to create XML files by the `–dds` option. The command is executed with the `O2DataProcessing` path as working directory. The env options used to configure the workflow are prepended in normal shell syntax. Certain env options are set by the EPN and must not be overridden: `FILEWORKDIR`, `INRAWCHANNAME`, `CTF_DIR`.
   - Each workflow is amended with the following parameters (the parameters stand in front of the workflow command, and are separated by commas without spaces, the workflow command must be in double-quotes):
     - Zone where to run the workflow (calib / reco)
     - For reco:
@@ -93,10 +96,12 @@ DDWORKFLOW=tools/datadistribution_workflows/dd-processing.xml WORKFLOW_DETECTORS
   - `$DDMODE`: How to operate DataDistribution: **discard** (build TF and discard them), **disk** (build TF and store to disk), **processing** (build TF and run DPL workflow on TF data), **processing-disk** (both store TF to disk and run processing).
   - `$DDWORKFLOW`: (*alternative*): Explicit path to the XML file with the partial workflow for *DataDistribution*.
   - `$GEN_TOPO_IGNORE_ERROR`: Ignore ERROR messages during workflow creation.
+  - `$WORKFLOWMODE`: Can be set to print. In that case the parser will not create the DDS topology output, but the list of shell commands to start to run the workflows locally.
 - When run on the EPN farm (indicated by the `$EPNMODE=1` variable), the *parser* will automaticall `module load` the modules specified in the *topology description*. Otherwise the user must load the respective O2 / QC version by himself.
 - The parser exports the env variable `$RECO_NUM_NODES_WORKFLOW` that contains on how many nodes the workflow will be running when running the workflow script. This can be used to tune the process multiplicities.
 
-# Creating a full topology DDS XML file manually:
+# Creating a full topology DDS XML file manually using the parser:
+- **NOTE** This is only for reference, or for running on a private PC. For creating XMLs on the EPN, please refer to [here](#Quick-guide-to-create-and-deploy-detector-workflow).
 - Check out the `O2DataProcessing` repository, adjust the workflows and topology description to your need.
 - Open a shell and go to the root folder of `O2DataProcessing`.
 - Make sure the `odc-topo-epn` is in your path (e.g. `module load ODC` / `alienv enter ODC/latest`).
@@ -112,12 +117,12 @@ FILEWORKDIR=/home/epn/odc/files EPNMODE=1 DDWORKFLOW=tools/datadistribution_work
 - Now you can use `/tmp/dds-topology.xml` to start the workflow via DDS.
 
 # Quick guide to create and deploy detector workflow:
-** Note: this is the current state of the EPN, not all configuration features (see [here](#Configuring-and-selecting-workflow-in-AliECS)) are available in AliECS yet, thus this guide shows only how to create the XML file for DDS. That XML file must then still be entered in the AliECS GUI as topology. This will be simplified in the future!**
+- **Note**: Not all configuration features (see [here](#Configuring-and-selecting-workflow-in-AliECS)) are available in AliECS yet, thus this guide shows only how to create the XML file for DDS. That XML file must then still be entered in the AliECS GUI as topology. While this option will remain also for the future, i.e. you will always be able to create XMLs manually and then run them, the default way will become that the options are configured in AliECS and then the XML is created on-the-fly.
 - **Note** the topology must be created on an epn, which has the O2 version installed, which is requested by the topology. In principle any node should do since the installed O2 version should be the same on all nodes.
 - Check out the [O2DataProcessing](https://github.com/AliceO2Group/O2DataProcessing) repository to your home folder on the EPN (`$HOME` in the following).
 - Copy the content of `O2DataProcessing/testing/examples` (description library file `workflows.desc` and workflow script `example-workflow.sh`) to another place INSIDE the repository, usually under `testing/detectors/[DETECTOR]` or `testing/private/[USERNAME]`.
 - Edit the workflow script to your needs, adjust / rename the workflow in the description library file.
-  - See [here](#Topology-descriptions) for the syntax of the lbirary file (in case it is not obvious), the workflow script is just a bash script that starts a DPL workflow, which must have the `--dds` parameter in order to create a partial DDS topology.
+  - See [here](#Topology-descriptions) for the syntax of the library file (in case it is not obvious), and make sure not to override the listed protected environment variables. The workflow script is just a bash script that starts a DPL workflow, which must have the `--dds` parameter in order to create a partial DDS topology. Make sure that the workflow script fullfils the [requirements](#Workflow-requirements)
   - Please note that the modules to load must be exactly `"DataDistribution QualityControl"`. Later it will be possible to use `O2PDPSuite` and specify the version, but for now that must not be used as it would create a module collision!
 - Create an empty folder in your `$HOME` on the EPN, in the following `$HOME/test`.
 - Copy the topology generation template from `O2DataProcessing/tools/epn/run.sh` to your folder.
