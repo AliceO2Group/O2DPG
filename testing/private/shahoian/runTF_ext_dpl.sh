@@ -33,6 +33,11 @@ export GPU_EXTRA_CONFIG="GPU_proc.debugLevel=1;"
 
 export GEN_TOPO_IGNORE_ERROR=1
 
+                                                                                                                                                                                                                                                                                                                                                               
+export MULTIPLICITY_FACTOR_RAWDECODERS=1
+export MULTIPLICITY_FACTOR_CTFENCODERS=1
+export MULTIPLICITY_FACTOR_REST=1
+
 for wf in "$@"
 do
  export GEN_TOPO_WORKFLOW_NAME=$wf

@@ -29,9 +29,13 @@ export RECO_NUM_NODES_OVERRIDE=0                                     # Override 
 export NHBPERTF=128                                                  # Number of HBF per TF
 export ALL_EXTRA_CONFIG="HBFUtils.nHBFPerTF=$NHBPERTF"
 #export GPU_EXTRA_CONFIG=""
-export GPU_EXTRA_CONFIG="GPU_proc.debugLevel=1;GPU_proc.memoryScalingFactor=2;"
+export GPU_EXTRA_CONFIG="GPU_proc.debugLevel=1;"
 
 export GEN_TOPO_IGNORE_ERROR=1
+
+export MULTIPLICITY_FACTOR_RAWDECODERS=1
+export MULTIPLICITY_FACTOR_CTFENCODERS=1
+export MULTIPLICITY_FACTOR_REST=1
 
 for wf in "$@"
 do

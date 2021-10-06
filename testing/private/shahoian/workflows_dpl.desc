@@ -107,8 +107,10 @@ its_notracking-mft-tpc-tof-CTF-QC-its-mft-tof-ED-50: "O2PDPSuite" reco,50,50,"WO
 its_notracking-tpc-tof-CTF-QC-its-tof-ED-70: "O2PDPSuite" reco,70,70,"WORKFLOW_DETECTORS_RECO=  WORKFLOW_PARAMETERS=QC,CTF,GPU,EVENT_DISPLAY WORKFLOW_DETECTORS=ITS,TPC,TOF WORKFLOW_DETECTORS_QC=ITS,TOF QC_JSON_ITS=/home/epn/jliu/itsCluster.json production/dpl-workflow.sh"
 its_notracking-tpc-tof-CTF-QC-its-tof-ED-50: "O2PDPSuite" reco,50,50,"WORKFLOW_DETECTORS_RECO=  WORKFLOW_PARAMETERS=QC,CTF,GPU,EVENT_DISPLAY WORKFLOW_DETECTORS=ITS,TPC,TOF WORKFLOW_DETECTORS_QC=ITS,TOF QC_JSON_ITS=/home/epn/jliu/itsCluster.json production/dpl-workflow.sh"
 
-its_notracking-mft-tpc-tof-CTF-QC-its-mft-tof-70: "O2PDPSuite" reco,70,70,"WORKFLOW_DETECTORS_RECO=  WORKFLOW_PARAMETERS=QC,CTF ,GPU WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF WORKFLOW_DETECTORS_QC=MFT,ITS,TOF QC_JSON_ITS=/home/epn/jliu/itsCluster.json production/dpl-workflow.sh"
-its_notracking-mft-tpc-tof-CTF-QC-its-mft-tof-50: "O2PDPSuite" reco,50,50,"WORKFLOW_DETECTORS_RECO=  WORKFLOW_PARAMETERS=QC,CTF ,GPU WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF WORKFLOW_DETECTORS_QC=MFT,ITS,TOF QC_JSON_ITS=/home/epn/jliu/itsCluster.json production/dpl-workflow.sh"
+its_notracking-mft-tpc-tof-CTF-QC-its-mft-tof-70: "O2PDPSuite" reco,70,70,"WORKFLOW_DETECTORS_RECO=  WORKFLOW_PARAMETERS=QC,CTF,GPU WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF WORKFLOW_DETECTORS_QC=MFT,ITS,TOF QC_JSON_ITS=/home/epn/jliu/itsCluster.json production/dpl-workflow.sh"
+its_notracking-mft-tpc-tof-CTF-QC-its-mft-tof-50: "O2PDPSuite" reco,50,50,"WORKFLOW_DETECTORS_RECO=  WORKFLOW_PARAMETERS=QC,CTF,GPU WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF WORKFLOW_DETECTORS_QC=MFT,ITS,TOF QC_JSON_ITS=/home/epn/jliu/itsCluster.json production/dpl-workflow.sh"
+
+its_notracking-mft-tpc-tof-CTF-QC-its-mft-tof-50-ctfmeta: "O2PDPSuite" reco,50,50,"CTF_METAFILES_DIR=/data/epn2eos_tool/epn2eos WORKFLOW_DETECTORS_RECO=  WORKFLOW_PARAMETERS=QC,CTF,GPU WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF WORKFLOW_DETECTORS_QC=MFT,ITS,TOF QC_JSON_ITS=/home/epn/jliu/itsCluster.json production/dpl-workflow.sh"
 
 its_notracking-mft-CTF-QC-its-mft-50: "O2PDPSuite" reco,50,50,"WORKFLOW_PARAMETERS=QC,CTF  WORKFLOW_DETECTORS_RECO= WORKFLOW_DETECTORS=ITS,MFT WORKFLOW_DETECTORS_QC=MFT,ITS QC_JSON_ITS=/home/epn/jliu/itsCluster.json production/dpl-workflow.sh"
 its_notracking-mft-TF-CTF-QC-its-mft-50: "O2PDPSuite" reco,50,50,"WORKFLOW_DETECTORS_RECO=  WORKFLOW_PARAMETERS=QC,CTF WORKFLOW_DETECTORS=ITS,MFT WORKFLOW_DETECTORS_QC=MFT,ITS QC_JSON_ITS=/home/epn/jliu/itsCluster.json production/dpl-workflow.sh"
