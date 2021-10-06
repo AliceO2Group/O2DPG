@@ -11,6 +11,7 @@ source $MYDIR/setenv.sh
 if [ -z $OPTIMIZED_PARALLEL_ASYNC ]; then OPTIMIZED_PARALLEL_ASYNC=0; fi  # Enable tuned process multiplicities for async processing on the EPN
 if [ -z $CTF_DIR ];                  then CTF_DIR=$FILEWORKDIR; fi        # Directory where to store CTFs
 if [ -z $CTF_DICT_DIR ];             then CTF_DICT_DIR=$FILEWORKDIR; fi   # Directory of CTF dictionaries
+if [ -z $CTF_METAFILES_DIR ];        then CTF_METAFILES_DIR="/dev/null"; fi  # Directory where to store CTF files metada, /dev/null : skip their writing
 if [ -z $RECO_NUM_NODES_WORKFLOW ];  then RECO_NUM_NODES_WORKFLOW=250; fi # Number of EPNs running this workflow in parallel, to increase multiplicities if necessary, by default assume we are 1 out of 250 servers
 if [ $SYNCMODE == 1 ]; then
   if [ -z "${WORKFLOW_DETECTORS_MATCHING+x}" ]; then export WORKFLOW_DETECTORS_MATCHING="ITSTPC,ITSTPCTRD,ITSTPCTOF"; fi # Select matchings that are enabled in sync mode
@@ -372,7 +373,7 @@ if [ $CTFINPUT == 0 ] && [ ! -z "$WORKFLOW_DETECTORS_CTF" ]; then
   if [ $CREATECTFDICT == 1 ] && [ $SAVECTF == 1 ]; then CTF_OUTPUT_TYPE="both"; fi
   if [ $CREATECTFDICT == 1 ] && [ $SAVECTF == 0 ]; then CTF_OUTPUT_TYPE="dict"; fi
   if [ $CREATECTFDICT == 0 ] && [ $SAVECTF == 1 ]; then CTF_OUTPUT_TYPE="ctf"; fi
-  CMD_CTF="o2-ctf-writer-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --output-dir \"$CTF_DIR\" --ctf-dict-dir \"$CTF_DICT_DIR\" --output-type $CTF_OUTPUT_TYPE --min-file-size ${CTF_MINSIZE} --onlyDet $WORKFLOW_DETECTORS"
+  CMD_CTF="o2-ctf-writer-workflow $ARGS_ALL  --configKeyValues \"$ARGS_ALL_CONFIG\" --output-dir \"$CTF_DIR\" --ctf-dict-dir \"$CTF_DICT_DIR\" --output-type $CTF_OUTPUT_TYPE --min-file-size ${CTF_MINSIZE} --onlyDet $WORKFLOW_DETECTORS --meta-output-dir $CTF_METAFILES_DIR "
   if [ $CREATECTFDICT == 1 ] && [ $EXTINPUT == 1 ]; then CMD_CTF+=" --save-dict-after $NTIMEFRAMES"; fi
   WORKFLOW+="$CMD_CTF | "
 fi
