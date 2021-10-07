@@ -68,117 +68,54 @@
 		}
 	    },
 	    "checks": {
-		"RawCheck": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::RawCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "dataSource": [{
-			  "type": "Task",
-			  "name": "RawTask",
-			  "MOs": "all"
-		    }]
+		"RawBunchMinAmplitude": {
+			"active": "true",
+			"className": "o2::quality_control_modules::emcal::RawCheck",
+			"moduleName": "QcEMCAL",
+			"policy": "OnEachSeparately",
+			"dataSource": [
+				{
+					"type": "Task",
+					"name": "RawTask",
+					"MOs": ["BunchMinRawAmplitudeFull_PHYS", "BunchMinRawAmplitudeEMCAL_PHYS", "BunchMinRawAmplitudeDCAL_PHYS",
+							"BunchMinRawAmplitude_SM0_PHYS", "BunchMinRawAmplitude_SM1_PHYS", "BunchMinRawAmplitude_SM2_PHYS",
+							"BunchMinRawAmplitude_SM3_PHYS", "BunchMinRawAmplitude_SM4_PHYS", "BunchMinRawAmplitude_SM5_PHYS",
+							"BunchMinRawAmplitude_SM6_PHYS", "BunchMinRawAmplitude_SM7_PHYS", "BunchMinRawAmplitude_SM8_PHYS",
+							"BunchMinRawAmplitude_SM9_PHYS", "BunchMinRawAmplitude_SM10_PHYS", "BunchMinRawAmplitude_SM11_PHYS",
+							"BunchMinRawAmplitude_SM12_PHYS", "BunchMinRawAmplitude_SM13_PHYS", "BunchMinRawAmplitude_SM14_PHYS",
+							"BunchMinRawAmplitude_SM15_PHYS", "BunchMinRawAmplitude_SM16_PHYS", "BunchMinRawAmplitude_SM17_PHYS",
+							"BunchMinRawAmplitude_SM18_PHYS", "BunchMinRawAmplitude_SM19_PHYS"
+					]
+				}
+			]
 		},
-		"checkAmplHighG": {
+		"RawErrorCheck": {
+			"active": "true",
+			"className": "o2::quality_control_modules::emcal::RawCheck",
+			"moduleName": "QcEMCAL",
+			"policy": "OnEachSeparately",
+			"dataSource": [
+				{
+					"type": "Task",
+					"name": "RawTask",
+					"MOs": ["ErrorTypePerSM"]
+				}
+			]
+		},
+    		"DigitsCheckAmplitude": {
 		    "active": "true",
 		    "className": "o2::quality_control_modules::emcal::DigitCheck",
 		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
+		    "policy": "OnEachSeparately",
 		    "detectorName": "EMC",
 		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitAmplitudeHG_CAL",
-				"digitAmplitudeHG_PHYS"
-			    ]
-			}
-		    ]
-		},
-		"checkAmplLowG": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::DigitCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "detectorName": "EMC",
-		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitAmplitudeLG_CAL",
-				"digitAmplitudeLG_PHYS"
-			    ]
-			}
-		    ]
-		},
-		"checkDigitTimeHighG": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::DigitCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "detectorName": "EMC",
-		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitTimeHG_CAL",
-				"digitTimeHG_PHYS"
-			    ]
-			}
-		    ]
-		},
-		"checkDigitTimeLowG": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::DigitCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "detectorName": "EMC",
-		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitTimeLG_CAL",
-				"digitTimeLG_PHYS"
-			    ]
-			}
-		    ]
-		},
-		"checkAmplEMCAL": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::DigitCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "detectorName": "EMC",
-		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitAmplitudeEMCAL_CAL",
-				"digitAmplitudeEMCAL_PHYS"
-			    ]
-			}
-		    ]
-		},
-		"checkAmplDCAL": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::DigitCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "detectorName": "EMC",
-		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitAmplitudeDCAL_CAL",
-				"digitAmplitudeDCAL_PHYS"
-			    ]
-			}
+				{
+				    "type": "Task",
+				    "name": "DigitsTask",
+				    "MOs": ["digitAmplitudeEMCAL_CAL", "digitAmplitudeEMCAL_PHYS", "digitAmplitudeDCAL_CAL", "digitAmplitudeDCAL_PHYS",
+							"digitAmplitude_CAL", "digitAmplitude_PHYS"	
+				    ]
+				}
 		    ]
 		}
 	    }

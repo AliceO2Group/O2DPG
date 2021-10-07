@@ -48,108 +48,22 @@
 		}
 	    },
 	    "checks": {
-		"checkAmplHighG": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::DigitCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "detectorName": "EMC",
-		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitAmplitudeHG_CAL",
-				"digitAmplitudeHG_PHYS"
-			    ]
-			}
-		    ]
-		},
-		"checkAmplLowG": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::DigitCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "detectorName": "EMC",
-		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitAmplitudeLG_CAL",
-				"digitAmplitudeLG_PHYS"
-			    ]
-			}
-		    ]
-		},
-		"checkDigitTimeHighG": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::DigitCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "detectorName": "EMC",
-		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitTimeHG_CAL",
-				"digitTimeHG_PHYS"
-			    ]
-			}
-		    ]
-		},
-		"checkDigitTimeLowG": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::DigitCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "detectorName": "EMC",
-		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitTimeLG_CAL",
-				"digitTimeLG_PHYS"
-			    ]
-			}
-		    ]
-		},
-		"checkAmplEMCAL": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::DigitCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "detectorName": "EMC",
-		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitAmplitudeEMCAL_CAL",
-				"digitAmplitudeEMCAL_PHYS"
-			    ]
-			}
-		    ]
-		},
-		"checkAmplDCAL": {
-		    "active": "true",
-		    "className": "o2::quality_control_modules::emcal::DigitCheck",
-		    "moduleName": "QcEMCAL",
-		    "policy": "OnAny",
-		    "detectorName": "EMC",
-		    "dataSource": [
-			{
-			    "type": "Task",
-			    "name": "DigitsTask",
-			    "MOs": [
-				"digitAmplitudeDCAL_CAL",
-				"digitAmplitudeDCAL_PHYS"
-			    ]
-			}
-		    ]
-		}
+		"DigitsCheckAmplitude": {
+			"active": "true",
+			"className": "o2::quality_control_modules::emcal::DigitCheck",
+			"moduleName": "QcEMCAL",
+			"policy": "OnEachSeparately",
+			"detectorName": "EMC",
+			"dataSource": [
+				    {
+					"type": "Task",
+					"name": "DigitsTask",
+					"MOs": ["digitAmplitudeEMCAL_CAL", "digitAmplitudeEMCAL_PHYS", "digitAmplitudeDCAL_CAL", "digitAmplitudeDCAL_PHYS",
+							    "digitAmplitude_CAL", "digitAmplitude_PHYS"	
+					]
+				    }
+			]
+		    }
 	    }
 	},
 	"dataSamplingPolicies": [
