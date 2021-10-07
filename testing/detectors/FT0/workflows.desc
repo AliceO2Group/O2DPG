@@ -1,0 +1,3 @@
+ft0-ctf: "O2PDPSuite" reco,5,5,"SHMSIZE=20000000000 testing/detectors/FT0/ft0-ctf.sh"
+ft0-digits-ctf: "O2PDPSuite" reco,5,5,"SHMSIZE=20000000000 testing/detectors/FT0/ft0-digits-ctf.sh"
+ft0-digits-qc-ctf: "O2PDPSuite" reco,5,5,"SHMSIZE=20000000000 testing/detectors/FT0/ft0-digits-qc-ctf.sh"

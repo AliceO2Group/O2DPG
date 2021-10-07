@@ -1,0 +1,69 @@
+{
+    "qc": {
+      "config": {
+        "database": {
+          "implementation": "CCDB",
+          "host": "qcdb.cern.ch:8083",
+          "username": "not_applicable",
+          "password": "not_applicable",
+          "name": "not_applicable"
+        },
+        "Activity": {
+          "number": "42",
+          "type": "2"
+        },
+        "monitoring": {
+          "url": "influxdb-unix:///tmp/telegraf.sock"
+        },
+        "consul": {
+          "url": "alio2-cr1-hv-aliecs.cern.ch:8500"
+        },
+        "conditionDB": {
+          "url": "qcdb.cern.ch:8083"
+        }
+      },
+      "tasks": {
+        "DigitQcTaskFV0": {
+          "active": "true",
+          "className": "o2::quality_control_modules::fv0::DigitQcTask",
+          "moduleName": "QcFV0",
+          "detectorName": "FV0",
+          "cycleDurationSeconds": "60",
+          "maxNumberCycles": "-1",
+          "resetAfterCycles": "1",
+          "dataSource": {
+            "type": "dataSamplingPolicy",
+            "name": "fv0-digits"
+            },
+          "taskParameters": {
+            "ChannelIDs": "0,1,2,3,4,5,6,7,8,9,10,11"
+          },
+          "location": "local",
+          "localMachines": [
+            "epn"
+          ],
+          "remoteMachine": "epn102-ib",
+          "remotePort": "65018",
+          "mergingMode": "delta",
+          "localControl" : "odc"
+        }
+      }
+    },
+    "dataSamplingPolicies": [
+    {
+      "id": "fv0-digits",
+      "active": "true",
+      "machines": [],
+      "query_comment" : "query is in the format of binding1:origin1/description1/subSpec1[;binding2:...]",
+      "query": "digits:FV0/DIGITSBC/0;channels:FV0/DIGITSCH/0",
+      "samplingConditions": [
+        {
+          "condition": "random",
+          "fraction": "0.01",
+          "seed": "4533"
+        }
+      ],
+      "blocking": "false"
+    }
+  ]
+}

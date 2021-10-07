@@ -4,8 +4,8 @@
 [ -z "$QC_JSON_ITS" ] && QC_JSON_ITS=/home/epn/jliu/itsEPNv2.json
 [ -z "$QC_JSON_MFT" ] && QC_JSON_MFT=/home/epn/odc/files/qc-mft-cluster.json
 [ -z "$QC_JSON_TOF" ] && QC_JSON_TOF=/home/fnoferin/public/tof-qc-globalrun.json
-[ -z "$QC_JSON_FT0" ] && QC_JSON_FT0=/home/afurs/work/epn/configs/qc/ft0-digits-qc-ds.json
-[ -z "$QC_JSON_FV0" ] && QC_JSON_FV0=/home/afurs/work/epn/configs/qc/fv0-digits-qc-ds.json
+[ -z "$QC_JSON_FT0" ] && QC_JSON_FT0=/home/afurs/O2DataProcessing/testing/detectors/FT0/ft0-digits-ds.json
+[ -z "$QC_JSON_FV0" ] && QC_JSON_FV0=/home/afurs/O2DataProcessing/testing/detectors/FV0/fv0-digits-ds.json
 [ -z "$QC_JSON_EMC" ] && QC_JSON_EMC=/home/mfasel/alice/O2DataProcessing/testing/detectors/EMC/qc/emcQCTasksAll_multinode.json
 
 if [ -z "$WORKFLOW" ]; then
