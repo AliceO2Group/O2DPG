@@ -734,13 +734,15 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
    AODtask['cmd'] += 'o2-aod-producer-workflow --reco-mctracks-only 1 --aod-writer-keep dangling --aod-writer-resfile AO2D'
    AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id + ' ' + getDPL_global_options(bigshm=True)
-   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,TPC-TRD,ITS-TPC-TRD'
+   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,TPC-TRD,ITS-TPC-TRD;'
+   AODtask['cmd'] += ' root -q -b -l ${O2DPG_ROOT}/UTILS/repairAOD.C\\(\\"AO2D.root\\",\\"AO2D_repaired.root\\"\\)'
    workflow['stages'].append(AODtask)
 
-   # AOD merging / combination step
+   # AOD merging / combination step (as individual stages) --> for the moment deactivated in favor or more stable global merging
+   """
    aodmergerneeds = [ AODtask['name'] ]
    if tf > 1:
-      # we can only merge this of the previous timeframe was already merged in order
+      # we can only merge this if the previous timeframe was already merged in order
       # to keep time ordering of BCs intact
       aodmergerneeds += [ 'aodmerge_' + str(tf-1) ]
 
@@ -755,6 +757,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    AOD_merge_task['cmd'] += ' rm ../AO2D_old.root || true'
    AOD_merge_task['semaphore'] = 'aodmerge' #<---- this is making sure that only one merge is running at any time
    workflow['stages'].append(AOD_merge_task)
+   """
 
   # cleanup
   # --------
@@ -767,6 +770,14 @@ for tf in range(1, NTIMEFRAMES + 1):
      TFcleanup['cmd'] = 'rm *digi*.root;'
      TFcleanup['cmd'] += 'rm *cluster*.root'
      workflow['stages'].append(TFcleanup);
+
+# AOD merging as one global final step
+aodmergerneeds = ['aod_' + str(tf) for tf in range(1, NTIMEFRAMES + 1)]
+AOD_merge_task = createTask(name='aodmerge', needs = aodmergerneeds, lab=["AOD"], mem='2000', cpu='1')
+AOD_merge_task['cmd'] = ' [ -f aodmerge_input.txt ] && rm aodmerge_input.txt; '
+AOD_merge_task['cmd'] += ' for i in `seq 1 ' + str(NTIMEFRAMES) + '`; do echo "tf${i}/AO2D_repaired.root" >> aodmerge_input.txt; done; '
+AOD_merge_task['cmd'] += ' o2-aod-merger --input aodmerge_input.txt --output AO2D.root'
+workflow['stages'].append(AOD_merge_task)
 
 
 if includeQC:
