@@ -84,12 +84,18 @@ parser.add_argument('--combine-tpc-clusterization', action='store_true', help=ar
 # QC related arguments
 parser.add_argument('--include-qc', action='store_true', help='a flag to include QC in the workflow')
 
+# O2 Analysis related arguments
+parser.add_argument('--include-analysis', '--include-an', '--analysis',
+                    action='store_true', help='a flag to include O2 analysis in the workflow')
+
 args = parser.parse_args()
 print (args)
 
 # make sure O2DPG + O2 is loaded
 O2DPG_ROOT=environ.get('O2DPG_ROOT')
 O2_ROOT=environ.get('O2_ROOT')
+QUALITYCONTROL_ROOT=environ.get('QUALITYCONTROL_ROOT')
+O2PHYSICS_ROOT=environ.get('O2PHYSICS_ROOT')
 
 if O2DPG_ROOT == None: 
    print('Error: This needs O2DPG loaded')
@@ -97,6 +103,14 @@ if O2DPG_ROOT == None:
 
 if O2_ROOT == None: 
    print('Error: This needs O2 loaded')
+#   exit(1)
+
+if args.include_qc and QUALITYCONTROL_ROOT is None:
+   print('Error: Argument --include-qc needs QUALITYCONTROL_ROOT loaded')
+#   exit(1)
+
+if args.include_analysis and (QUALITYCONTROL_ROOT is None or O2PHYSICS_ROOT is None):
+   print('Error: Argument --include-analysis needs O2PHYSICS_ROOT and QUALITYCONTROL_ROOT loaded')
 #   exit(1)
 
 # ----------- START WORKFLOW CONSTRUCTION ----------------------------- 
@@ -130,6 +144,7 @@ def getDPL_global_options(bigshm=False):
 doembedding=True if args.embedding=='True' or args.embedding==True else False
 usebkgcache=args.use_bkg_from!=None
 includeQC=True if args.include_qc=='True' or args.include_qc==True else False
+includeAnalysis = args.include_analysis
 
 qcdir = "QC"
 if includeQC and not isdir(qcdir):
@@ -806,6 +821,57 @@ if includeQC:
   TOFMatchQCtask = createTask(name='TOFMatchQC_finalize', needs=TOFMatchQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
   TOFMatchQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF.json --remote-batch TOFMatchQC.root ' + getDPL_global_options()
   workflow['stages'].append(TOFMatchQCtask)
+
+if includeAnalysis:
+   # Configuration
+   analysisdir = "Analysis"
+   analysislabel = "Analysis"
+   if not isdir(analysisdir):
+      mkdir(analysisdir)
+
+   def addAnalysisTask(tag, cmd, output, needs=[AOD_merge_task['name']],
+                       shmsegmentsize="--shm-segment-size 2000000000",
+                       aodmemoryratelimit="--aod-memory-rate-limit 1000000000",
+                       readers="--readers 1",
+                       aodfile="--aod-file ../AO2D.root",
+                       extraarguments="-b"):
+      """
+      Function to add O2Physics analysis task to the workflow and upload the results on the CCDB
+      """
+      if type(output) == str:
+         output = [output]
+      AnalysisTasks = createTask(name=f"Analysis_{tag}",
+                                      needs=needs,
+                                      cwd=analysisdir,
+                                      lab=[analysislabel, tag],
+                                      cpu=1,
+                                      mem='2000')
+      renameOutput = ""
+      AnalysisTaskOutput = []
+      for i in output:
+         i = i.strip(".root")
+         renameOutput += f" && mv {i}.root {i}_{tag}.root "
+         AnalysisTaskOutput.append(f"{i}_{tag}.root")
+      AnalysisTasks['cmd'] = f"{cmd} {shmsegmentsize} {aodmemoryratelimit} {readers} {aodfile} {extraarguments} {renameOutput}"
+      workflow['stages'].append(AnalysisTasks)
+
+      # Uploading results to ccdb
+      if QUALITYCONTROL_ROOT is None:
+         return
+      for i in AnalysisTaskOutput:
+         AnalysisFinalizetask = createTask(name=f"Analysis_finalize_{tag}_{i}",
+                                           needs=[AnalysisTasks['name']],
+                                           cwd=analysisdir, lab=[analysislabel+"Upload"], cpu=1, mem='2000')
+         AnalysisFinalizetask['cmd'] = f"o2-qc-upload-root-objects --input-file ./{i} --qcdb-url ccdb-test.cern.ch:8080 --task-name Analysis{tag} --detector-code AOD --provenance qc_mc --pass-name passMC --period-name SimChallenge --run-number 49999"
+         workflow['stages'].append(AnalysisFinalizetask)
+
+   # Efficiency
+   addAnalysisTask(tag="Efficiency",
+                   cmd="o2-analysis-pp-qa-efficiency --make-eff 1 --eff-pi 1 --eff-el 1 --eff-ka 1 --eff-pr 1 --eff-mu 1 --eff-de 1 --eff-he 1 --eff-tr 1 --eta-min -0.8 --eta-max 0.8 --log-pt 1 --pt-bins 100 --pt-min 0.01 --pt-max 10. --sel-prim 1", output="AnalysisResults.root")
+
+   # Event and track QA
+   addAnalysisTask(tag="EventTrackQA",
+                   cmd="o2-analysis-pp-qa-event-track --etaMin -0.8 --etaMax 0.8 --numberOfContributorsMin 1 --vertexPositionBins 200 --vertexPositionZMin -20 --vertexPositionZMax 20 --vertexPositionXYMin -0.1 --vertexPositionXYMax 0.1 --checkPrimaries 1 --numbersOfContributorsToPVBins 500 --numbersOfContributorsToPVMax 500", output="AnalysisResults.root")
 
 
 dump_workflow(workflow["stages"], args.o)
