@@ -25,6 +25,15 @@ You can use the following options to change the workflow behavior:
 - `MULTIPLICITY_FACTOR_CTFENCODERS` (default `1`) : Scales the number of parallel processes used for CTF encoding by this factor.
 - `MULTIPLICITY_FACTOR_REST` (default `1`) : Scales the number of other reconstruction processes by this factor.
 
+Application of multiplicity factors:
+- The production workflow has internally a default value how many instances of a process to run in parallel (which was tuned for Pb-Pb processing)
+- Some critical processes for synchronous pp processing are automatically scaled by the inverse of the number of nodes, i.e. the multiplicity is increased by a factor of 2 if 125 instead of 250 nodes are used, to enable the processing using only a subset of the nodes.
+- Factors can be provided externally to scale the multiplicity of processes further. All these factors are multiplied.
+  - One factor can be provided based on the type of the processes: raw decoder (`MULTIPLICITY_FACTOR_RAWDECODERS`), CTF encoder (`MULTIPLICITY_FACTOR_CTFENCODERS`), or other reconstruction process (`MULTIPLICITY_FACTOR_REST`)
+  - One factor can be provided per detector via `MULTIPLICITY_FACTOR_DETECTOR_[DET]` using the 3 character detector representation, or `MATCH` for the global matching and vertexing workflows.
+- The multiplicity of an individual process can be overridden externally (this is an override, no scaling factor) by using `MULTIPLICITY_FACTOR_PROCESS_[PROCESS_NAME]`. In the process name, dashes `-` must be replaced by underscores `_`.
+- For example, creating the workflow with `MULTIPLICITY_FACTOR_RAWDECODERS=2 MULTIPLICITY_FACTOR_DETECTOR_ITS=3 MULTIPLICITY_FACTOR_PROCESS_mft_stf_decoder=5` will scale the number of ITS raw decoders by 6, of other ITS processes by 3, of other raw decoders by 2, and will run exactly 5 `mft-stf-decoder` processes.
+
 Most of these settings are configurable in the AliECS GUI. But some of the uncommon settings (`WORKFLOW_DETECTORS_FLP_PROCESSING`, `WORKFLOW_DETECTORS_CTF`, `WORKFLOW_DETECTORS_RECO`, `WORKFLOW_DETECTORS_MATCHING`) can only be set via the "Additional environment variables field" in the GUI using bash syntax, e.g. `WORKFLOW_DETECTORS_FLP_PROCESSING=TPC`.
 
 For user modification of the workflow settings, the folloing *EXTRA* environment variables exist:
