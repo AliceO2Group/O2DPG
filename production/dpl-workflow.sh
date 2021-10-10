@@ -176,6 +176,7 @@ N_TPCITS=1
 N_ITSRAWDEC=1
 N_MFTRAWDEC=1
 N_CTPRAWDEC=1
+N_TRDRAWDEC=1
 N_TPCRAWDEC=$NGPUS
 N_EMC=1
 N_TRDENT=1
@@ -229,11 +230,13 @@ elif [ $EPNPIPELINES != 0 ]; then
 fi
 # Scale some multiplicities with the number of nodes
 RECO_NUM_NODES_WORKFLOW_CMP=$(($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15)) # Limit the scaling factor
-N_ITSRAWDEC=$((6 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_ITSRAWDEC ? 6 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_ITSRAWDEC))
-N_MFTRAWDEC=$((6 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_MFTRAWDEC ? 6 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_MFTRAWDEC))
-N_ITSTRK=$((2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_ITSTRK ? 2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_ITSTRK))
-N_MFTTRK=$((2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_MFTTRK ? 2 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_MFTTRK))
-N_CTPRAWDEC=$((30 / $RECO_NUM_NODES_WORKFLOW_CMP > N_CTPRAWDEC ? 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_CTPRAWDEC))
+[ $NUMAGPUIDS == 1 ] && RECO_NUM_NODES_WORKFLOW_CMP=$(($RECO_NUM_NODES_WORKFLOW_CMP * 2)) # If we have 2 NUMA Domains, we have each process twice anyway
+N_ITSRAWDEC=$((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_ITSRAWDEC ? 3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_ITSRAWDEC))
+N_MFTRAWDEC=$((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_MFTRAWDEC ? 3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_MFTRAWDEC))
+N_ITSTRK=$((1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_ITSTRK ? 1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_ITSTRK))
+N_MFTTRK=$((1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_MFTTRK ? 1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_MFTTRK))
+N_CTPRAWDEC=$((1 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_CTPRAWDEC ? 1 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_CTPRAWDEC))
+N_TRDRAWDEC=$((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP > $N_TRDRAWDEC ? 3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP : $N_TRDRAWDEC))
 # Apply external multiplicity factors
 N_TPCTRK=$((N_TPCTRK * $N_F_REST))
 N_TPCITS=$((N_TPCITS * $N_F_REST))
@@ -309,7 +312,7 @@ if [ $CTFINPUT == 0 ]; then
   has_detector MCH && WORKFLOW+="o2-mch-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline mch-data-decoder:$N_F_RAW | "
   has_detector TOF && ! has_detector_flp_processing TOF && WORKFLOW+="o2-tof-compressor $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" | "
   has_detector FDD && ! has_detector_flp_processing FDD && WORKFLOW+="o2-fdd-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline fdd-datareader-dpl:$N_F_RAW | "
-  has_detector TRD && WORKFLOW+="o2-trd-datareader $ARGS_ALL $TRD_DECODER_OPTIONS --pipeline trd-datareader:$N_F_RAW | "
+  has_detector TRD && WORKFLOW+="o2-trd-datareader $ARGS_ALL $TRD_DECODER_OPTIONS --pipeline trd-datareader:$N_TRDRAWDEC | "
   has_detector ZDC && WORKFLOW+="o2-zdc-raw2digits $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline zdc-datareader-dpl:$N_F_RAW | "
   has_detector HMP && WORKFLOW+="o2-hmpid-raw-to-digits-stream-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline HMP-RawStreamDecoder:$N_F_RAW | "
   has_detector CTP && WORKFLOW+="o2-ctp-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline CTP-RawStreamDecoder:$N_CTPRAWDEC | "
