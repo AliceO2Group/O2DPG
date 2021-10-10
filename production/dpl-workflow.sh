@@ -109,8 +109,9 @@ fi
 
 if [ $EPNMODE == 1 ]; then
   EVE_CONFIG+=" --eve-dds-collection-index 0"
-  ITSMFT_FILES+=";ITSClustererParam.noiseFilePath=$ITS_NOISE;MFTClustererParam.noiseFilePath=$MFT_NOISE";
+  ITSMFT_FILES+=";ITSClustererParam.noiseFilePath=$ITS_NOISE;MFTClustererParam.noiseFilePath=$MFT_NOISE"
   MIDDEC_CONFIG+=" --feeId-config-file \"$MID_FEEID_MAP\""
+  GPU_CONFIG_KEY+="GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;"
   # Options for decoding current TRD real raw data (not needed for data converted from MC)
   if [ -z $TRD_DECODER_OPTIONS ]; then TRD_DECODER_OPTIONS=" --tracklethcheader 2  --ignore-digithcheader --halfchamberwords 2 --halfchambermajor 33 "; fi
   if [ $EXTINPUT == 1 ] && [ $GPUTYPE != "CPU" ] && [ -z "$GPU_NUM_MEM_REG_CALLBACKS" ]; then GPU_NUM_MEM_REG_CALLBACKS=4; fi
