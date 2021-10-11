@@ -22,7 +22,6 @@ else
   if [ -z "${WORKFLOW_DETECTORS_MATCHING+x}" ]; then export WORKFLOW_DETECTORS_MATCHING="ALL"; fi # All matching / vertexing enabled in async mode
 fi
 
-
 workflow_has_parameter CTF && export SAVECTF=1
 workflow_has_parameter GPU && { export GPUTYPE=HIP; export NGPUS=4; }
 
@@ -38,9 +37,26 @@ CTF_DICT=${CTF_DICT_DIR}/ctf_dictionary.root
 
 ITSMFT_FILES="ITSClustererParam.dictFilePath=$ITSCLUSDICT;MFTClustererParam.dictFilePath=$MFTCLUSDICT";
 
-if [ "0$O2_ROOT" == "0" ]; then
-  eval "`alienv shell-helper`"
-  alienv --no-refresh load O2/latest
+# ---------------------------------------------------------------------------------------------------------------------
+# Set active reconstruction steps (defaults added according to SYNCMODE)
+
+has_processing_step()
+{
+  [[ $WORKFLOW_EXTRA_PROCESSING_STEPS =~ (^|,)"$1"(,|$) ]]
+}
+
+for i in ITSTPC TPCTRD ITSTPCTRD TPCTOF ITSTPCTOF MFTMCH MFTMCH PRIMVTX SECVTX; do
+  has_processing_step MATCH_$i && add_comma_separated WORKFLOW_DETECTORS_MATCHING $i # Enable extra matchings requested via WORKFLOW_EXTRA_PROCESSING_STEPS
+done
+if [ $SYNCMODE == 1 ]; then # Add default steps for synchronous mode
+  add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS ENTROPY_ENCODER
+else # Add default steps for async mode
+  has_detector_reco MID && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS MID_RECO
+  has_detector_reco MCH && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS MCH_RECO
+  has_detector_reco MFT && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS MFT_RECO
+  has_detector_reco FDD && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS FDD_RECO
+  has_detector_reco FV0 && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS FV0_RECO
+  has_detector_reco ZDC && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS ZDC_RECO
 fi
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -93,14 +109,14 @@ if [ $SYNCMODE == 1 ]; then
     ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=1;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
   fi
   ITS_CONFIG+=" --tracking-mode sync"
-  GPU_OUTPUT+=",compressed-clusters-ctf"
   GPU_CONFIG_KEY+="GPU_global.synchronousProcessing=1;GPU_proc.clearO2OutputFromGPU=1;"
   TRD_CONFIG+=" --filter-trigrec"
   TRD_CONFIG_KEY+="GPU_proc.ompThreads=1;"
   TRD_TRANSFORMER_CONFIG+=" --filter-trigrec"
 else
-  ITS_CONFIG+=" --tracking-mode async"  
+  ITS_CONFIG+=" --tracking-mode async"
 fi
+has_processing_step ENTROPY_ENCODER && GPU_OUTPUT+=",compressed-clusters-ctf"
 
 has_detector_flp_processing CPV && CPV_INPUT=digits
 
@@ -312,23 +328,20 @@ has_detectors_reco TRD TPC ITS && [ ! -z "$TRD_SOURCES" ] && WORKFLOW+="o2-trd-g
 has_detectors_reco TOF TRD TPC ITS && [ ! -z "$TOF_SOURCES" ] && WORKFLOW+="o2-tof-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --track-sources $TOF_SOURCES --pipeline $(get_N tof-matcher TOF REST TOFMATCH) | "
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Reconstruction workflows in async mode
-if [ $SYNCMODE == 0 ]; then
-  has_detector_reco MID && WORKFLOW+="o2-mid-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output $DISABLE_MC --pipeline $(get_N MIDClusterizer MID REST),$(get_N MIDTracker MID REST) | "
-  has_detector_reco MCH && WORKFLOW+="o2-mch-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --pipeline $(get_N mch-track-finder MCH REST MCHTRK),$(get_N mch-cluster-finder MCH REST),$(get_N mch-cluster-transformer MCH REST) | "
-  has_detector_reco MFT && WORKFLOW+="o2-mft-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" --clusters-from-upstream $DISABLE_MC --disable-root-output --pipeline $(get_N mft-tracker MFT REST MFTTRK) | "
-  has_detector_reco FDD && WORKFLOW+="o2-fdd-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
-  has_detector_reco FV0 && WORKFLOW+="o2-fv0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
-  has_detector_reco ZDC && WORKFLOW+="o2-zdc-digits-reco $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
-fi
-
+# Reconstruction workflows normally active only in async mode in async mode, but can be forced via $WORKFLOW_EXTRA_PROCESSING_STEPS
+has_processing_step MID_RECO && WORKFLOW+="o2-mid-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output $DISABLE_MC --pipeline $(get_N MIDClusterizer MID REST),$(get_N MIDTracker MID REST) | "
+has_processing_step MCH_RECO && WORKFLOW+="o2-mch-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --pipeline $(get_N mch-track-finder MCH REST MCHTRK),$(get_N mch-cluster-finder MCH REST),$(get_N mch-cluster-transformer MCH REST) | "
+has_processing_step MFT_RECO && WORKFLOW+="o2-mft-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" --clusters-from-upstream $DISABLE_MC --disable-root-output --pipeline $(get_N mft-tracker MFT REST MFTTRK) | "
+has_processing_step FDD_RECO && WORKFLOW+="o2-fdd-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
+has_processing_step FV0_RECO && WORKFLOW+="o2-fv0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
+has_processing_step ZDC_RECO && WORKFLOW+="o2-zdc-digits-reco $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
 has_detectors_reco MFT MCH && has_detector_matching MFTMCH && WORKFLOW+="o2-globalfwd-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --pipeline $(get_N globalfwd-track-matcher MATCH REST) | "
 has_detectors_reco ITS && has_detector_matching PRIMVTX && WORKFLOW+="o2-primary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_MC --disable-root-input --disable-root-output $PVERTEX_CONFIG --pipeline $(get_N primary-vertexing MATCH REST) | "
 has_detectors_reco ITS && has_detector_matching SECVTX && WORKFLOW+="o2-secondary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $SECVERTEX_CONFIG --pipeline $(get_N secondary-vertexing MATCH REST) | "
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Entropy encoding / ctf creation workflows - disabled in async mode
-if [ $SYNCMODE == 1 ] && [ ! -z "$WORKFLOW_DETECTORS_CTF" ]; then
+if has_processing_step ENTROPY_ENCODER && [ ! -z "$WORKFLOW_DETECTORS_CTF" ]; then
   # Entropy encoder workflows
   has_detector_ctf MFT && WORKFLOW+="o2-itsmft-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --runmft true --pipeline $(get_N mft-entropy-encoder MFT CTF) | "
   has_detector_ctf FT0 && WORKFLOW+="o2-ft0-entropy-encoder-workflow $ARGS_ALL --ctf-dict \"${CTF_DICT}\" --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline $(get_N ft0-entropy-encoder FT0 CTF) | "
