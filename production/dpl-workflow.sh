@@ -51,12 +51,9 @@ done
 if [ $SYNCMODE == 1 ]; then # Add default steps for synchronous mode
   add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS ENTROPY_ENCODER
 else # Add default steps for async mode
-  has_detector_reco MID && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS MID_RECO
-  has_detector_reco MCH && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS MCH_RECO
-  has_detector_reco MFT && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS MFT_RECO
-  has_detector_reco FDD && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS FDD_RECO
-  has_detector_reco FV0 && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS FV0_RECO
-  has_detector_reco ZDC && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS ZDC_RECO
+  for i in MID MCH MFT FDD FV0 ZDC; do
+    has_detector_reco $i && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS ${i}_RECO
+  done
 fi
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -167,19 +164,18 @@ fi
 # Assemble matching sources
 TRD_SOURCES=
 TOF_SOURCES=
-VTX_SOURCES=ITS
-has_detector_matching ITSTPC && VTX_SOURCES+=",ITS-TPC"
-has_detector_matching TPCTRD && (add_comma_separated TRD_SOURCES TPC; VTX_SOURCES+=",TPC-TRD")
-has_detector_matching ITSTPCTRD && (add_comma_separated TRD_SOURCES ITS-TPC; VTX_SOURCES+=",ITS-TPC-TRD")
-has_detector_matching TPCTOF && (add_comma_separated TOF_SOURCES TPC; VTX_SOURCES+=",TPC-TOF")
-has_detector_matching ITSTPCTOF && (add_comma_separated TOF_SOURCES ITS-TPC; VTX_SOURCES+=",ITS-TPC-TOF")
-has_detector_matching MFTMCH && VTX_SOURCES+=",MFT-MCH"
-for det in `echo $LIST_OF_DETECTORS | sed "s/,/ /g" | grep -v "CTP"`; do
-  has_detector_reco $det && VTX_SOURCES+=",$det"
+TRACK_SOURCES=
+has_detector_matching ITSTPC && add_comma_separated TRACK_SOURCES "ITS-TPC"
+has_detector_matching TPCTRD && { add_comma_separated TRD_SOURCES TPC; add_comma_separated TRACK_SOURCES "TPC-TRD"; }
+has_detector_matching ITSTPCTRD && { add_comma_separated TRD_SOURCES ITS-TPC; add_comma_separated TRACK_SOURCES "ITS-TPC-TRD"; }
+has_detector_matching TPCTOF && { add_comma_separated TOF_SOURCES TPC; add_comma_separated TRACK_SOURCES "TPC-TOF"; }
+has_detector_matching ITSTPCTOF && { add_comma_separated TOF_SOURCES ITS-TPC; add_comma_separated TRACK_SOURCES "ITS-TPC-TOF"; }
+has_detector_matching MFTMCH && add_comma_separated TRACK_SOURCES "MFT-MCH"
+for det in `echo $LIST_OF_DETECTORS | sed "s/,/ /g"`; do
+  has_detector_reco $det && add_comma_separated TRACK_SOURCES "$det"
 done
-PVERTEX_CONFIG="--vertexing-sources $VTX_SOURCES --vertex-track-matching-sources $VTX_SOURCES"
+PVERTEX_CONFIG="--vertexing-sources $TRACK_SOURCES --vertex-track-matching-sources $TRACK_SOURCES"
 has_detector_reco FT0 && PVERTEX_CONFIG+=" --validate-with-ft0"
-SECVERTEX_CONFIG="--vertexing-sources $VTX_SOURCES"
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Process multiplicities
@@ -337,7 +333,7 @@ has_processing_step FV0_RECO && WORKFLOW+="o2-fv0-reco-workflow $ARGS_ALL --conf
 has_processing_step ZDC_RECO && WORKFLOW+="o2-zdc-digits-reco $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC | "
 has_detectors_reco MFT MCH && has_detector_matching MFTMCH && WORKFLOW+="o2-globalfwd-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N globalfwd-track-matcher MATCH REST) | "
 has_detectors_reco ITS && has_detector_matching PRIMVTX && WORKFLOW+="o2-primary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_MC --disable-root-input $DISABLE_ROOT_OUTPUT $PVERTEX_CONFIG --pipeline $(get_N primary-vertexing MATCH REST) | "
-has_detectors_reco ITS && has_detector_matching SECVTX && WORKFLOW+="o2-secondary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $SECVERTEX_CONFIG --pipeline $(get_N secondary-vertexing MATCH REST) | "
+has_detectors_reco ITS && has_detector_matching SECVTX && WORKFLOW+="o2-secondary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT --vertexing-sources $TRACK_SOURCES --pipeline $(get_N secondary-vertexing MATCH REST) | "
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Entropy encoding / ctf creation workflows - disabled in async mode
