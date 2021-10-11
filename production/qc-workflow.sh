@@ -8,7 +8,7 @@
 [ -z "$QC_JSON_FV0" ] && QC_JSON_FV0=/home/afurs/O2DataProcessing/testing/detectors/FV0/fv0-digits-ds.json
 [ -z "$QC_JSON_EMC" ] && QC_JSON_EMC=/home/mfasel/alice/O2DataProcessing/testing/detectors/EMC/qc/emcQCTasksAll_multinode.json
 
-if [ -z "$WORKFLOW" ]; then
+if [ -z "$WORKFLOW" ] || [ -z "$MYDIR" ]; then
   echo This script must be called from the dpl-workflow.sh and not standalone 1>&2
   exit 1
 fi
@@ -34,7 +34,7 @@ if [ ! -z "$JSON_FILES" ]; then
     find $GEN_TOPO_WORKDIR/json_cache/ -maxdepth 1 -type f -mtime +30 | xargs rm -f
   fi
   MERGED_JSON_FILENAME=$GEN_TOPO_WORKDIR/json_cache/`date +%Y%m%d-%H%M%S`-$$-$RANDOM-$OUTPUT_SUFFIX.json
-  jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $JSON_FILES > $MERGED_JSON_FILENAME
+  jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $MYDIR/qc_global.json $JSON_FILES > $MERGED_JSON_FILENAME
   if [ $? != 0 ]; then
     echo Merging QC workflow with JSON files $JSON_FILES failed 1>&2
     exit 1

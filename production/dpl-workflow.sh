@@ -181,7 +181,6 @@ get_N() # USAGE: get_N [processor-name] [DETECTOR_NAME] [RAW|CTF|REST] [optional
   local NAME_DET="MULTIPLICITY_FACTOR_DETECTOR_$2"
   local NAME_PROC="MULTIPLICITY_FACTOR_PROCESS_${1//-/_}"
   local NAME_DEFAULT="N_$4"
-  echo $1:${!NAME_PROC:-$((${!NAME_FACTOR} * ${!NAME_DET:-1} * ${!NAME_DEFAULT:-1}))} 1>&2
   echo $1:${!NAME_PROC:-$((${!NAME_FACTOR} * ${!NAME_DET:-1} * ${!NAME_DEFAULT:-1}))}
 }
 math_max()
