@@ -92,20 +92,17 @@ if [ $SYNCMODE == 1 ]; then
   elif [ $BEAMTYPE == "pp" ]; then
     ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=1;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
   fi
+  ITS_CONFIG+=" --tracking-mode sync"
+  GPU_OUTPUT+=",compressed-clusters-ctf"
   GPU_CONFIG_KEY+="GPU_global.synchronousProcessing=1;GPU_proc.clearO2OutputFromGPU=1;"
   TRD_CONFIG+=" --filter-trigrec"
   TRD_CONFIG_KEY+="GPU_proc.ompThreads=1;"
   TRD_TRANSFORMER_CONFIG+=" --filter-trigrec"
+else
+  ITS_CONFIG+=" --tracking-mode async"  
 fi
 
 has_detector_flp_processing CPV && CPV_INPUT=digits
-
-if [ $CTFINPUT == 1 ]; then
-  ITS_CONFIG+=" --tracking-mode async"
-else
-  ITS_CONFIG+=" --tracking-mode sync"
-  GPU_OUTPUT+=",compressed-clusters-ctf"
-fi
 
 if [ $EPNMODE == 1 ]; then
   EVE_CONFIG+=" --eve-dds-collection-index 0"
