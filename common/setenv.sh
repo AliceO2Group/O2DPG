@@ -60,9 +60,9 @@ if [ -z "$MULTIPLICITY_FACTOR_RAWDECODERS" ]; then export MULTIPLICITY_FACTOR_RA
 if [ -z "$MULTIPLICITY_FACTOR_CTFENCODERS" ]; then export MULTIPLICITY_FACTOR_CTFENCODERS=1; fi
 if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then export MULTIPLICITY_FACTOR_REST=1; fi
 
-
-SEVERITY_TPC="info" # overrides severity for the tpc workflow
-DISABLE_MC="--disable-mc"
+[ -z "${SEVERITY_TPC+x}" ] && SEVERITY_TPC="info" # overrides severity for the tpc workflow
+[ -z "${DISABLE_MC+x}" ] && DISABLE_MC="--disable-mc"
+[ -z "${DISABLE_ROOT_OUTPUT+x}" ] && DISABLE_ROOT_OUTPUT="--disable-root-output"
 
 if [ $EXTINPUT == 1 ] && [ $CTFINPUT == 1 ]; then
   echo EXTINPUT and CTFINPUT are incompatible

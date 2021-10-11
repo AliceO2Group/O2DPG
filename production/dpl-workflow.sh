@@ -301,43 +301,43 @@ if [ $CTFINPUT == 0 ]; then
   fi
   has_detector ITS && WORKFLOW+="o2-itsmft-stf-decoder-workflow $ARGS_ALL --configKeyValues \"${ARGS_ALL_CONFIG};$ITSMFT_FILES\" --nthreads ${NITSDECTHREADS} --pipeline $(get_N its-stf-decoder ITS RAW ITSRAWDEC) | "
   has_detector MFT && WORKFLOW+="o2-itsmft-stf-decoder-workflow $ARGS_ALL --configKeyValues \"${ARGS_ALL_CONFIG};$ITSMFT_FILES\" --nthreads ${NMFTDECTHREADS} --pipeline $(get_N mft-stf-decoder MFT RAW MFTRAWDEC) --runmft true | "
-  has_detector FT0 && ! has_detector_flp_processing FT0 && WORKFLOW+="o2-ft0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline $(get_N ft0-datareader-dpl FT0 RAW) | "
-  has_detector FV0 && ! has_detector_flp_processing FV0 && WORKFLOW+="o2-fv0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline $(get_N fv0-datareader-dpl FV0 RAW) | "
+  has_detector FT0 && ! has_detector_flp_processing FT0 && WORKFLOW+="o2-ft0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_ROOT_OUTPUT --pipeline $(get_N ft0-datareader-dpl FT0 RAW) | "
+  has_detector FV0 && ! has_detector_flp_processing FV0 && WORKFLOW+="o2-fv0-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_ROOT_OUTPUT --pipeline $(get_N fv0-datareader-dpl FV0 RAW) | "
   has_detector MID && WORKFLOW+="o2-mid-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $MIDDEC_CONFIG --pipeline $(get_N MIDRawDecoder MID RAW),$(get_N MIDDecodedDataAggregator MID RAW) | "
   has_detector MCH && WORKFLOW+="o2-mch-raw-to-digits-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline $(get_N mch-data-decoder MCH RAW) | "
   has_detector TOF && ! has_detector_flp_processing TOF && WORKFLOW+="o2-tof-compressor $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline $(get_N tof-compressor TOF RAW)| "
-  has_detector FDD && ! has_detector_flp_processing FDD && WORKFLOW+="o2-fdd-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline $(get_N fdd-datareader-dpl FDD RAW) | "
+  has_detector FDD && ! has_detector_flp_processing FDD && WORKFLOW+="o2-fdd-flp-dpl-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_ROOT_OUTPUT --pipeline $(get_N fdd-datareader-dpl FDD RAW) | "
   has_detector TRD && WORKFLOW+="o2-trd-datareader $ARGS_ALL $TRD_DECODER_OPTIONS --pipeline $(get_N trd-datareader TRD RAW TRDRAWDEC) | "
-  has_detector ZDC && WORKFLOW+="o2-zdc-raw2digits $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline $(get_N zdc-datareader-dpl ZDC RAW) | "
+  has_detector ZDC && WORKFLOW+="o2-zdc-raw2digits $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_ROOT_OUTPUT --pipeline $(get_N zdc-datareader-dpl ZDC RAW) | "
   has_detector HMP && WORKFLOW+="o2-hmpid-raw-to-digits-stream-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --pipeline $(get_N HMP-RawStreamDecoder HMP RAW) | "
-  has_detector CTP && WORKFLOW+="o2-ctp-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --pipeline $(get_N CTP-RawStreamDecoder CTP RAW) | "
-  has_detector PHS && ! has_detector_flp_processing PHS && WORKFLOW+="o2-phos-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells --disable-root-input --disable-root-output --pipeline $(get_N PHOSRawToCellConverterSpec PHS REST) $DISABLE_MC | "
-  has_detector CPV && WORKFLOW+="o2-cpv-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type $CPV_INPUT --output-type clusters --disable-root-input --disable-root-output --pipeline $(get_N CPVRawToDigitConverterSpec CPV REST),$(get_N CPVClusterizerSpec CPV REST) $DISABLE_MC | "
-  has_detector EMC && ! has_detector_flp_processing EMC && WORKFLOW+="o2-emcal-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells --disable-root-output $DISABLE_MC --pipeline $(get_N EMCALRawToCellConverterSpec EMC REST RMCREC) | "
+  has_detector CTP && WORKFLOW+="o2-ctp-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_ROOT_OUTPUT --pipeline $(get_N CTP-RawStreamDecoder CTP RAW) | "
+  has_detector PHS && ! has_detector_flp_processing PHS && WORKFLOW+="o2-phos-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells --disable-root-input $DISABLE_ROOT_OUTPUT --pipeline $(get_N PHOSRawToCellConverterSpec PHS REST) $DISABLE_MC | "
+  has_detector CPV && WORKFLOW+="o2-cpv-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type $CPV_INPUT --output-type clusters --disable-root-input $DISABLE_ROOT_OUTPUT --pipeline $(get_N CPVRawToDigitConverterSpec CPV REST),$(get_N CPVClusterizerSpec CPV REST) $DISABLE_MC | "
+  has_detector EMC && ! has_detector_flp_processing EMC && WORKFLOW+="o2-emcal-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N EMCALRawToCellConverterSpec EMC REST RMCREC) | "
 fi
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Common reconstruction workflows
 (has_detector_reco TPC || has_detector_ctf TPC) && WORKFLOW+="o2-gpu-reco-workflow ${ARGS_ALL//-severity $SEVERITY/-severity $SEVERITY_TPC} --input-type=$GPU_INPUT $DISABLE_MC --output-type $GPU_OUTPUT --pipeline gpu-reconstruction:${N_TPCTRK:-1} $GPU_CONFIG --configKeyValues \"$ARGS_ALL_CONFIG;GPU_global.deviceType=$GPUTYPE;GPU_proc.debugLevel=0;$GPU_CONFIG_KEY;$GPU_EXTRA_CONFIG\" | "
-(has_detector_reco TOF || has_detector_ctf TOF) && WORKFLOW+="o2-tof-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type $TOF_INPUT --output-type $TOF_OUTPUT --disable-root-input --disable-root-output $DISABLE_MC --pipeline $(get_N tof-compressed-decoder TOF RAW),$(get_N TOFClusterer TOF REST) | "
-has_detector_reco ITS && WORKFLOW+="o2-its-reco-workflow $ARGS_ALL --trackerCA $DISABLE_MC --clusters-from-upstream --disable-root-output $ITS_CONFIG --configKeyValues \"$ARGS_ALL_CONFIG;$ITS_CONFIG_KEY;$ITSMFT_FILES\" --pipeline $(get_N its-tracker ITS REST ITSTRK) | "
-has_detectors_reco ITS TPC && has_detector_matching ITSTPC && WORKFLOW+="o2-tpcits-match-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" --disable-root-input --disable-root-output $DISABLE_MC --pipeline $(get_N itstpc-track-matcher MATCH REST TPCITS) | "
-has_detector_reco FT0 && WORKFLOW+="o2-ft0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --pipeline $(get_N ft0-reconstructor FT0 REST) | "
-has_detector_reco TRD && WORKFLOW+="o2-trd-tracklet-transformer $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC $TRD_TRANSFORMER_CONFIG --pipeline $(get_N TRDTRACKLETTRANSFORMER TRD REST TRDTRK) | "
-has_detectors_reco TRD TPC ITS && [ ! -z "$TRD_SOURCES" ] && WORKFLOW+="o2-trd-global-tracking $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$TRD_CONFIG_KEY\" --disable-root-input --disable-root-output $DISABLE_MC $TRD_CONFIG --track-sources $TRD_SOURCES | "
-has_detectors_reco TOF TRD TPC ITS && [ ! -z "$TOF_SOURCES" ] && WORKFLOW+="o2-tof-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --track-sources $TOF_SOURCES --pipeline $(get_N tof-matcher TOF REST TOFMATCH) | "
+(has_detector_reco TOF || has_detector_ctf TOF) && WORKFLOW+="o2-tof-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type $TOF_INPUT --output-type $TOF_OUTPUT --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N tof-compressed-decoder TOF RAW),$(get_N TOFClusterer TOF REST) | "
+has_detector_reco ITS && WORKFLOW+="o2-its-reco-workflow $ARGS_ALL --trackerCA $DISABLE_MC --clusters-from-upstream $DISABLE_ROOT_OUTPUT $ITS_CONFIG --configKeyValues \"$ARGS_ALL_CONFIG;$ITS_CONFIG_KEY;$ITSMFT_FILES\" --pipeline $(get_N its-tracker ITS REST ITSTRK) | "
+has_detectors_reco ITS TPC && has_detector_matching ITSTPC && WORKFLOW+="o2-tpcits-match-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N itstpc-track-matcher MATCH REST TPCITS) | "
+has_detector_reco FT0 && WORKFLOW+="o2-ft0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N ft0-reconstructor FT0 REST) | "
+has_detector_reco TRD && WORKFLOW+="o2-trd-tracklet-transformer $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC $TRD_TRANSFORMER_CONFIG --pipeline $(get_N TRDTRACKLETTRANSFORMER TRD REST TRDTRK) | "
+has_detectors_reco TRD TPC ITS && [ ! -z "$TRD_SOURCES" ] && WORKFLOW+="o2-trd-global-tracking $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$TRD_CONFIG_KEY\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC $TRD_CONFIG --track-sources $TRD_SOURCES | "
+has_detectors_reco TOF TRD TPC ITS && [ ! -z "$TOF_SOURCES" ] && WORKFLOW+="o2-tof-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --track-sources $TOF_SOURCES --pipeline $(get_N tof-matcher TOF REST TOFMATCH) | "
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Reconstruction workflows normally active only in async mode in async mode, but can be forced via $WORKFLOW_EXTRA_PROCESSING_STEPS
-has_processing_step MID_RECO && WORKFLOW+="o2-mid-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output $DISABLE_MC --pipeline $(get_N MIDClusterizer MID REST),$(get_N MIDTracker MID REST) | "
-has_processing_step MCH_RECO && WORKFLOW+="o2-mch-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --pipeline $(get_N mch-track-finder MCH REST MCHTRK),$(get_N mch-cluster-finder MCH REST),$(get_N mch-cluster-transformer MCH REST) | "
-has_processing_step MFT_RECO && WORKFLOW+="o2-mft-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" --clusters-from-upstream $DISABLE_MC --disable-root-output --pipeline $(get_N mft-tracker MFT REST MFTTRK) | "
-has_processing_step FDD_RECO && WORKFLOW+="o2-fdd-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
-has_processing_step FV0_RECO && WORKFLOW+="o2-fv0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
-has_processing_step ZDC_RECO && WORKFLOW+="o2-zdc-digits-reco $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC | "
-has_detectors_reco MFT MCH && has_detector_matching MFTMCH && WORKFLOW+="o2-globalfwd-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $DISABLE_MC --pipeline $(get_N globalfwd-track-matcher MATCH REST) | "
-has_detectors_reco ITS && has_detector_matching PRIMVTX && WORKFLOW+="o2-primary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_MC --disable-root-input --disable-root-output $PVERTEX_CONFIG --pipeline $(get_N primary-vertexing MATCH REST) | "
-has_detectors_reco ITS && has_detector_matching SECVTX && WORKFLOW+="o2-secondary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input --disable-root-output $SECVERTEX_CONFIG --pipeline $(get_N secondary-vertexing MATCH REST) | "
+has_processing_step MID_RECO && WORKFLOW+="o2-mid-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N MIDClusterizer MID REST),$(get_N MIDTracker MID REST) | "
+has_processing_step MCH_RECO && WORKFLOW+="o2-mch-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N mch-track-finder MCH REST MCHTRK),$(get_N mch-cluster-finder MCH REST),$(get_N mch-cluster-transformer MCH REST) | "
+has_processing_step MFT_RECO && WORKFLOW+="o2-mft-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" --clusters-from-upstream $DISABLE_MC $DISABLE_ROOT_OUTPUT --pipeline $(get_N mft-tracker MFT REST MFTTRK) | "
+has_processing_step FDD_RECO && WORKFLOW+="o2-fdd-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC | "
+has_processing_step FV0_RECO && WORKFLOW+="o2-fv0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC | "
+has_processing_step ZDC_RECO && WORKFLOW+="o2-zdc-digits-reco $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC | "
+has_detectors_reco MFT MCH && has_detector_matching MFTMCH && WORKFLOW+="o2-globalfwd-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N globalfwd-track-matcher MATCH REST) | "
+has_detectors_reco ITS && has_detector_matching PRIMVTX && WORKFLOW+="o2-primary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_MC --disable-root-input $DISABLE_ROOT_OUTPUT $PVERTEX_CONFIG --pipeline $(get_N primary-vertexing MATCH REST) | "
+has_detectors_reco ITS && has_detector_matching SECVTX && WORKFLOW+="o2-secondary-vertexing-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $SECVERTEX_CONFIG --pipeline $(get_N secondary-vertexing MATCH REST) | "
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Entropy encoding / ctf creation workflows - disabled in async mode
@@ -379,7 +379,7 @@ fi
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Calibration workflows
-workflow_has_parameter CALIB && has_detector_calib TPC && has_detectors TPC ITS TRD TOF && WORKFLOW+="o2-tpc-scdcalib-interpolation-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-output --disable-root-input --pipeline tpc-track-interpolation:$N_F_REST | "
+workflow_has_parameter CALIB && has_detector_calib TPC && has_detectors TPC ITS TRD TOF && WORKFLOW+="o2-tpc-scdcalib-interpolation-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_ROOT_OUTPUT --disable-root-input --pipeline tpc-track-interpolation:$N_F_REST | "
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Event display
