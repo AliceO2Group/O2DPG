@@ -107,7 +107,7 @@ if [ $SYNCMODE == 1 ]; then
     ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=1;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
     ITS_CONFIG+=" --tracking-mode sync"
   elif [ $BEAMTYPE == "cosmic" ]; then
-    ITS_CONFIG+=" --tracking-mode cosmic"
+    ITS_CONFIG+=" --tracking-mode cosmics"
   else
     ITS_CONFIG+=" --tracking-mode sync"
   fi
