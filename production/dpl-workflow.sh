@@ -45,7 +45,7 @@ has_processing_step()
   [[ $WORKFLOW_EXTRA_PROCESSING_STEPS =~ (^|,)"$1"(,|$) ]]
 }
 
-for i in ITSTPC TPCTRD ITSTPCTRD TPCTOF ITSTPCTOF MFTMCH MFTMCH PRIMVTX SECVTX; do
+for i in ITSTPC TPCTRD ITSTPCTRD TPCTOF ITSTPCTOF MFTMCH PRIMVTX SECVTX; do
   has_processing_step MATCH_$i && add_comma_separated WORKFLOW_DETECTORS_MATCHING $i # Enable extra matchings requested via WORKFLOW_EXTRA_PROCESSING_STEPS
 done
 if [ $SYNCMODE == 1 ]; then # Add default steps for synchronous mode
