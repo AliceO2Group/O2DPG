@@ -102,10 +102,15 @@ MIDDEC_CONFIG=
 if [ $SYNCMODE == 1 ]; then
   if [ $BEAMTYPE == "PbPb" ]; then
     ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=30;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
+    ITS_CONFIG+=" --tracking-mode sync"
   elif [ $BEAMTYPE == "pp" ]; then
     ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=1;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
+    ITS_CONFIG+=" --tracking-mode sync"
+  elif [ $BEAMTYPE == "cosmic" ]; then
+    ITS_CONFIG+=" --tracking-mode cosmic"
+  else
+    ITS_CONFIG+=" --tracking-mode sync"
   fi
-  ITS_CONFIG+=" --tracking-mode sync"
   GPU_CONFIG_KEY+="GPU_global.synchronousProcessing=1;GPU_proc.clearO2OutputFromGPU=1;"
   TRD_CONFIG+=" --filter-trigrec"
   TRD_CONFIG_KEY+="GPU_proc.ompThreads=1;"
