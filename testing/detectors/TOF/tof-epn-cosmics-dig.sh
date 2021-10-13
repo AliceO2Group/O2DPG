@@ -2,7 +2,7 @@
 
 source common/setenv.sh
 
-calibration_node="epn003-ib:30453"
+calibration_node="epn007-ib:30453"
 
 SEVERITY=warning
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
