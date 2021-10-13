@@ -325,8 +325,8 @@ has_detector_reco ITS && WORKFLOW+="o2-its-reco-workflow $ARGS_ALL --trackerCA $
 has_detectors_reco ITS TPC && has_detector_matching ITSTPC && WORKFLOW+="o2-tpcits-match-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N itstpc-track-matcher MATCH REST TPCITS) | "
 has_detector_reco FT0 && WORKFLOW+="o2-ft0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N ft0-reconstructor FT0 REST) | "
 has_detector_reco TRD && WORKFLOW+="o2-trd-tracklet-transformer $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC $TRD_TRANSFORMER_CONFIG --pipeline $(get_N TRDTRACKLETTRANSFORMER TRD REST TRDTRK) | "
-has_detectors_reco TRD TPC ITS && [ ! -z "$TRD_SOURCES" ] && WORKFLOW+="o2-trd-global-tracking $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$TRD_CONFIG_KEY\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC $TRD_CONFIG --track-sources $TRD_SOURCES | "
-has_detectors_reco TOF TRD TPC ITS && [ ! -z "$TOF_SOURCES" ] && WORKFLOW+="o2-tof-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --track-sources $TOF_SOURCES --pipeline $(get_N tof-matcher TOF REST TOFMATCH) | "
+has_detectors_reco TRD TPC ITS && [ ! -z "$TRD_SOURCES" ] && WORKFLOW+="o2-trd-global-tracking $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$TRD_CONFIG_KEY;$ITSMFT_FILES\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC $TRD_CONFIG --track-sources $TRD_SOURCES | "
+has_detectors_reco TOF TRD TPC ITS && [ ! -z "$TOF_SOURCES" ] && WORKFLOW+="o2-tof-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --track-sources $TOF_SOURCES --pipeline $(get_N tof-matcher TOF REST TOFMATCH) | "
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Reconstruction workflows normally active only in async mode in async mode, but can be forced via $WORKFLOW_EXTRA_PROCESSING_STEPS
@@ -380,7 +380,7 @@ fi
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Calibration workflows
-workflow_has_parameter CALIB && has_detector_calib TPC && has_detectors TPC ITS TRD TOF && WORKFLOW+="o2-tpc-scdcalib-interpolation-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_ROOT_OUTPUT --disable-root-input --pipeline tpc-track-interpolation:$N_F_REST | "
+workflow_has_parameter CALIB && has_detector_calib TPC && has_detectors TPC ITS TRD TOF && WORKFLOW+="o2-tpc-scdcalib-interpolation-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" $DISABLE_ROOT_OUTPUT --disable-root-input --pipeline tpc-track-interpolation:$N_F_REST | "
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Event display
