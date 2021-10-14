@@ -9,7 +9,7 @@
 [ -z "$QC_JSON_EMC" ] && QC_JSON_EMC=/home/mfasel/alice/O2DataProcessing/testing/detectors/EMC/qc/emcQCTasksAll_multinode.json
 [ -z "$QC_JSON_MCH" ] && QC_JSON_MCH=/home/laphecet/qc_configs/mch-qc-physics.json
 
-[ -z "$QC_HOST" ] && QC_HOST=local
+[ -z "$QC_HOST" ] && QC_HOST=localhost
 
 if [ -z "$WORKFLOW" ] || [ -z "$MYDIR" ]; then
   echo This script must be called from the dpl-workflow.sh and not standalone 1>&2
