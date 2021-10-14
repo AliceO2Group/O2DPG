@@ -48,5 +48,6 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --onlyDet $WORKFLOW_DETECTORS \
     --ctf-dict "${CTF_DICT}" \
     --output-dir $CTF_DIR \
+    --meta-output-dir ${CTF_METAFILES_DIR} \
     --min-file-size "${CTF_MINSIZE}" \
     | o2-dpl-run $ARGS_ALL --dds
