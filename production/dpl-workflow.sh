@@ -25,10 +25,10 @@ fi
 workflow_has_parameter CTF && export SAVECTF=1
 workflow_has_parameter GPU && { export GPUTYPE=HIP; export NGPUS=4; }
 
-ITSCLUSDICT="${FILEWORKDIR}/ITSdictionary.bin"
-MFTCLUSDICT="${FILEWORKDIR}/MFTdictionary.bin"
-ITS_NOISE="${FILEWORKDIR}"
-MFT_NOISE="${FILEWORKDIR}/mft_noise_220721_R3C-520.root"
+[ -z $ITSCLUSDICT ] && ITSCLUSDICT="${FILEWORKDIR}/ITSdictionary.bin"
+[ -z $MFTCLUSDICT ] && MFTCLUSDICT="${FILEWORKDIR}/MFTdictionary.bin"
+[ -z $ITS_NOISE ] && ITS_NOISE="${FILEWORKDIR}"
+[ -z $MFT_NOISE ] && MFT_NOISE="${FILEWORKDIR}/mft_noise_220721_R3C-520.root"
 
 MID_FEEID_MAP="$FILEWORKDIR/mid-feeId_mapper.txt"
 NITSDECTHREADS=2
