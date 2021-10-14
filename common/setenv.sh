@@ -51,7 +51,7 @@ else # Defaults when running on the EPN
   if [ -z "$NGPUS" ];         then export NGPUS=4; fi
   if [ -z "$EXTINPUT" ];      then export EXTINPUT=1; fi
   if [ -z "$EPNPIPELINES" ];  then export EPNPIPELINES=1; fi
-  if [ -z "$SHMTHROW" ];      then export SHMTHROW=1; fi               # NOTE: SHMTHROW SHOULD BE 0 FOR EPN, BUT IS =1 FOR TESTS DURING COMMISSIONING WHILE WE HAVE NO MEMORY MONITORING
+  if [ -z "$SHMTHROW" ];      then export SHMTHROW=0; fi
   if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
 fi
 # Some more options for running on the EPN
