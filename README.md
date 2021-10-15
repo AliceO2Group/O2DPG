@@ -78,6 +78,22 @@ other-topology: O2PDPSuite/v1.0.0 reco,2,1,"tpc-test/tpc-standalone-test-1.sh"
 commit=xxxx|path=xxxx file=topologies.desc topology=demo-full-topology parameters="EVENT_DISPLAY" detectors="TPC,ITS" detectors_qc="TPC" [...]
 ```
 
+# Calibration workflows with aggregator
+Calibration workflows can be different when they use an aggregator. In that case, there is processing running on each EPN, and the output is sent to an aggregator node. Communication happens via the `o2-dpl-raw-proxy` and the `o2-dpl-output-proxy`.
+To set up such a workflow, a couple of points must be followed:
+- There are 2 different shell scripts, one for the "reco" part running on each EPN, and one for the calibration aggregator "reco" part on the calibration node. There may be more than one aggregator in the topology, in that case it is one *reco* script and multiple *calib* scripts.
+- The *reco* script must contain an `o2-dpl-output-proxy` to send the output and each calib script must contain an `o2-dpl-raw-proxy` for the input.
+- Each of the input "raw" proxies must be assigned a unique name via the `--proxy-name [NAME]` option. Note that the *reco* script also contains an input raw proxy, with the default name `readout-proxy`.
+- The channel-name of each input proxy must match the proxy name. The *calib* input proxies' channels must use `method=bind`. The output proxies must use `method=connect` and the channel name must match the name of the input proxy they are connecting to.
+- The `dataspec` of the proxies is configured in the same way as for the `readout-proxy` and the specs must be equal for corresponding input and output proxies.
+- The channels of input and output proxies (except for the *reco* `readout-proxy`) must be configured without address!
+- The output proxies must use the command line option `--proxy-channel-name [name]` with `name` being the configured channel name.
+- To run on the EPN, the *calib* input proxies must have the command line option `--network-interface ib0` (this ensures data is sent via InfiniBand not via Ethernet).
+
+For an example, chek the calibration workflows [here](testing/examples)
+
+*NOTE* For reference, to run a workflow with calib aggregator on the EPN with AliECS, currently a node from the `online-calib` zone must be requested, by setting `odc_resources` to `[ {"zone":"online", "n":10}, {"zone":"online-calib", "n":1 } ]` (adjust the `10` to the number of required reconstruction nodes). This will be improved later and then this extra setting will not be needed any more.
+
 # The parser script:
 The **parser** is a simple python script that parses a *topology description* and generates the DDS XML file with the *full topology*. To do so, it runs all the DPL workflows with the `--dds` option and then uses the `odc-topo-epn` tool to merge the *partial topology*  into the final *full topology*.
 The *parser* is steered by some command line options and by some environment variables (note that the env variables get also passed through to the workflows).

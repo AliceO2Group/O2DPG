@@ -1,0 +1,1 @@
+ITS-noise-calibration: "O2PDPSuite" reco,10,10,"testing/examples/example-calib-processing.sh" calib,10,"testing/examples/example-calib-aggregator.sh"
