@@ -33,10 +33,6 @@ if 'WORKFLOWMODE' in os.environ:
         raise
 else:
     os.environ['WORKFLOWMODE'] = 'dds'
-if 'GLOBALDPLOPT' in os.environ:
-    os.environ['GLOBALDPLOPT'] += " -b"
-else:
-    os.environ['GLOBALDPLOPT'] = "-b"
 
 if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRIDE'] != "" and int(os.environ['RECO_NUM_NODES_OVERRIDE']) > 0:
     reco_num_nodes_override = int(os.environ['RECO_NUM_NODES_OVERRIDE'])
@@ -102,7 +98,7 @@ for line in f:
                     command_log_filter = "\"^\[\""
                 else:
                     command_log_filter = "\"^\[INFO\""
-                command = wf[3] + " | grep -v " + command_log_filter + " > " + filename + " && [ `grep \"^\[\" " + filename + " | wc -l` == 0 ]"
+                command = "GLOBALDPLOPT+=\" -b --dds-workflow-suffix _" + wf[0] + str(i) + "\" " + wf[3] + " | grep -v " + command_log_filter + " > " + filename + " && [ `grep \"^\[\" " + filename + " | wc -l` == 0 ]"
                 print("Running DPL command", command)
                 if reco_num_nodes_override == 0:
                   os.environ['RECO_NUM_NODES_WORKFLOW'] = wf[1]
@@ -121,7 +117,7 @@ for line in f:
                     odccommand += " --reco " + " ".join(recoworkflows)
                 odccommand += " --n " + str(reconodes)
                 if len(calibworkflows):
-                    odccommand += " --calib " + " ".join(calibworkflows)
+                    odccommand += " --calibwn 'wn_online-calib_.*' --calib " + " ".join(calibworkflows)
                 if args[1] != "":
                     odccommand += " --prependexe \"module load " + args[1] + " 2>&1 ; \""
                 odccommand += " -o " + sys.argv[3]
