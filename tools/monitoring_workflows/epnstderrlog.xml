@@ -1,14 +1,14 @@
 <topology name="o2-stderr-monitoring">
    <declrequirement name="EPNstderrMonitorRequirement" type="maxinstances" value="1"/>
-   <decltask name="EPNstderrMonitorTask">
-     <exe reachable="true">o2-epn-epn-stderr-monitor -P ODC --infologger 1</exe>
+   <decltask name="ErrorMonitorTask">
+     <exe reachable="true">o2-epn-stderr-monitor -P odc --infologger 1</exe>
        <requirements>
            <name>EPNstderrMonitorRequirement</name>
        </requirements>
    </decltask>
    <main name="main">
-       <group name="EPNstderrMonitorGroup" n="10">
-           <task>EPNstderrMonitorTask</task>
+       <group name="EPNstderrMonitorGroup" n="1">
+           <task>ErrorMonitorTask</task>
        </group>
    </main>
 </topology>

@@ -20,6 +20,7 @@ export FILEWORKDIR=/home/epn/odc/files # Path to common grp / geometry / etc fil
 export INRAWCHANNAME=tf-builder-pipe-0 # Pipe name to get data from TfBuilder
 export CTF_DIR=/data/tf/compressed # Output directory for CTFs
 export GEN_TOPO_WORKDIR=$HOME/gen_topo/${GEN_TOPO_PARTITION}_${GEN_TOPO_ONTHEFLY} # Persistent working directory for checkout O2DataProcessing repository and for XML cache. Must be per partition. This script must not run twice in parallel with the same workdir
+export GEN_TOPO_STDERR_LOGGING=1
 
 # Load required module and run gen_topo_o2dataprocessing (PDP part of this script)
 module load ODC O2DataProcessing 1>&2 || { echo Error loading ODC / O2DataProcessing 1>&2; exit 1; }

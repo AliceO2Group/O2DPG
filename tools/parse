@@ -118,6 +118,8 @@ for line in f:
                 odccommand += " --n " + str(reconodes)
                 if len(calibworkflows):
                     odccommand += " --calibwn 'wn_online-calib_.*' --calib " + " ".join(calibworkflows)
+                if "GEN_TOPO_STDERR_LOGGING" in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
+                    odccommand += " --mon tools/monitoring_workflows/epnstderrlog.xml"
                 if args[1] != "":
                     odccommand += " --prependexe \"module load " + args[1] + " 2>&1 ; \""
                 odccommand += " -o " + sys.argv[3]

@@ -7,7 +7,7 @@
        </requirements>
    </decltask>
    <main name="main">
-       <group name="TfBuilderGroup" n="10">
+       <group name="TfBuilderGroup" n="1">
            <task>TfBuilderTask</task>
        </group>
    </main>
