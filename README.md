@@ -32,6 +32,9 @@ Another abstraction layer above the *workflows* are **topology descriptions**. T
   - `GPUTYPE` (if the workflow supports GPUs)
   - `GLOBALDPLOPT` This option must be appended to the the workflow (to the final binary if merged with `|` syntax)
   - ... (to be continued).
+- DPL metrics and InfoLogger (not a requirement in the sense that something would fail, but without it is difficult to debug):
+  - The workflow commands should contain `--monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 60` for the DPL metrics.
+  - `--infologger-severity $INFOLOGGER_SEVERITY` enables the infologger.
 
 # Configuring and selecting workflow in AliECS:
 There are 3 ways foreseenm to configure the *full topology* in AliECS: (currently only the manual XML option exists)
