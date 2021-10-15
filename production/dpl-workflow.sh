@@ -229,8 +229,9 @@ elif [ $EPNPIPELINES != 0 ]; then
   # Tuned multiplicities for sync Pb-Pb processing
   N_TPCENT=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
   N_TPCITS=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
+  N_ITSTRK=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
   N_ITSRAWDEC=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
-  N_EMCREC=$(math_max $((7 * $EPNPIPELINES * $NGPUS / 4)) 1)
+  N_EMCREC=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
   N_TRDENT=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
   N_TRDTRK=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
   N_TPCRAWDEC=$(math_max $((8 * $EPNPIPELINES * $NGPUS / 4)) 1)
@@ -243,9 +244,9 @@ elif [ $EPNPIPELINES != 0 ]; then
 fi
 # Scale some multiplicities with the number of nodes
 RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15) * ($NUMAGPUIDS == 1 ? 2 : 1))) # Limit the lowert scaling factor, multiply by 2 if we have 2 NUMA domains
-N_ITSRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSRAWDEC:-1})
+N_ITSRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSRAWDEC:-1}) # This means, if we have 60 EPN nodes, we need at least 3 ITS RAW decoders
 N_MFTRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTRAWDEC:-1})
-N_ITSTRK=$(math_max $((1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
+N_ITSTRK=$(math_max $((1 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
 N_MFTTRK=$(math_max $((1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTTRK:-1})
 N_CTPRAWDEC=$(math_max $((1 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_CTPRAWDEC:-1})
 N_TRDRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_TRDRAWDEC:-1})
@@ -314,7 +315,7 @@ if [ $CTFINPUT == 0 ]; then
   has_detector CTP && WORKFLOW+="o2-ctp-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_ROOT_OUTPUT --pipeline $(get_N CTP-RawStreamDecoder CTP RAW) | "
   has_detector PHS && ! has_detector_flp_processing PHS && WORKFLOW+="o2-phos-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells --disable-root-input $DISABLE_ROOT_OUTPUT --pipeline $(get_N PHOSRawToCellConverterSpec PHS REST) $DISABLE_MC | "
   has_detector CPV && WORKFLOW+="o2-cpv-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type $CPV_INPUT --output-type clusters --disable-root-input $DISABLE_ROOT_OUTPUT --pipeline $(get_N CPVRawToDigitConverterSpec CPV REST),$(get_N CPVClusterizerSpec CPV REST) $DISABLE_MC | "
-  has_detector EMC && ! has_detector_flp_processing EMC && WORKFLOW+="o2-emcal-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N EMCALRawToCellConverterSpec EMC REST RMCREC) | "
+  has_detector EMC && ! has_detector_flp_processing EMC && WORKFLOW+="o2-emcal-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --input-type raw --output-type cells $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N EMCALRawToCellConverterSpec EMC REST EMCREC) | "
 fi
 
 # ---------------------------------------------------------------------------------------------------------------------
