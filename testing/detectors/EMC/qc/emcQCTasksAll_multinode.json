@@ -8,6 +8,10 @@
 		    "password": "not_applicable",
 		    "name": "not_applicable"
 		},
+		"infologger": {
+			"filterDiscardDebug": "true",
+			"filterDiscardLevel": "1"
+		},
 		"Activity": {
 		    "number": "42",
 		    "type": "2"
