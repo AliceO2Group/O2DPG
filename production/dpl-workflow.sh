@@ -104,7 +104,7 @@ if [ $SYNCMODE == 1 ]; then
     ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=30;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
     ITS_CONFIG+=" --tracking-mode sync"
   elif [ $BEAMTYPE == "pp" ]; then
-    ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=1;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
+    ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=1;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2"
     ITS_CONFIG+=" --tracking-mode sync"
   elif [ $BEAMTYPE == "cosmic" ]; then
     ITS_CONFIG+=" --tracking-mode cosmics"
@@ -116,8 +116,18 @@ if [ $SYNCMODE == 1 ]; then
   TRD_CONFIG_KEY+="GPU_proc.ompThreads=1;"
   TRD_TRANSFORMER_CONFIG+=" --filter-trigrec"
 else
-  ITS_CONFIG+=" --tracking-mode async"
+  if [ $BEAMTYPE == "PbPb" ]; then
+    ITS_CONFIG+=" --tracking-mode async"
+  elif [ $BEAMTYPE == "pp" ]; then
+    ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=1;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2"
+    ITS_CONFIG+=" --tracking-mode async"
+  elif [ $BEAMTYPE == "cosmic" ]; then
+    ITS_CONFIG+=" --tracking-mode cosmics"
+  else
+    ITS_CONFIG+=" --tracking-mode async"
+  fi
 fi
+
 has_processing_step ENTROPY_ENCODER && GPU_OUTPUT+=",compressed-clusters-ctf"
 
 has_detector_flp_processing CPV && CPV_INPUT=digits
