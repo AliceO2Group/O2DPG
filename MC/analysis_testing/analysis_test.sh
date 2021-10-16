@@ -16,7 +16,7 @@ testanalysis=$1 # o2-analysistutorial-mc-histograms o2-analysis-spectra-tof-tiny
 NTF=$(find ./ -name "tf*" -type d | wc | awk '//{print $1}')
 #
 
-commonDPL="-b --run --driver-client-backend ws:// --aod-memory-rate-limit 4000000000 --fairmq-ipc-prefix ${FAIRMQ_IPC_PREFIX:-./.tmp}"
+commonDPL="-b --run --driver-client-backend ws:// --fairmq-ipc-prefix ${FAIRMQ_IPC_PREFIX:-./.tmp}"
 annaCMD="RC=0; if [ -f AO2D.root ]; then timeout 600s ${testanalysis} ${commonDPL} --aod-file AO2D.root; RC=\$?; fi; [ -f AnalysisResults.root ] && mv AnalysisResults.root AnalysisResults_${testanalysis}.root; [ -f QAResult.root ] && mv QAResults.root QAResults_${testanalysis}.root; [ \${RC} -eq 0 ]"
 
 rm workflow_ana.json
