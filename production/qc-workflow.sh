@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[ -z "$QC_JSON_TPC" ] && QC_JSON_TPC=/home/rmunzer/odc/config/tpcQCTasks_multimode_ALL.json
+[ -z "$QC_JSON_TPC" ] && QC_JSON_TPC=/home/rmunzer/odc/config/tpcQCTasks_multinode_ALL.json
 [ -z "$QC_JSON_ITS" ] && QC_JSON_ITS=/home/epn/jliu/itsEPNv2.json
 [ -z "$QC_JSON_MFT" ] && QC_JSON_MFT=/home/epn/odc/files/qc-mft-cluster.json
 [ -z "$QC_JSON_TOF" ] && QC_JSON_TOF=/home/fnoferin/public/tof-qc-globalrun.json
