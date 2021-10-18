@@ -11,7 +11,6 @@ source $MYDIR/setenv.sh
 if [ -z $OPTIMIZED_PARALLEL_ASYNC ]; then OPTIMIZED_PARALLEL_ASYNC=0; fi     # Enable tuned process multiplicities for async processing on the EPN
 if [ -z $CTF_DIR ];                  then CTF_DIR=$FILEWORKDIR; fi           # Directory where to store CTFs
 if [ -z $CTF_DICT_DIR ];             then CTF_DICT_DIR=$FILEWORKDIR; fi      # Directory of CTF dictionaries
-if [ -z $CTF_METAFILES_DIR ];        then CTF_METAFILES_DIR="/dev/null"; fi  # Directory where to store CTF files metada, /dev/null : skip their writing
 if [ -z $RECO_NUM_NODES_WORKFLOW ];  then RECO_NUM_NODES_WORKFLOW=250; fi    # Number of EPNs running this workflow in parallel, to increase multiplicities if necessary, by default assume we are 1 out of 250 servers
 if [ -z $CTF_MINSIZE ];              then CTF_MINSIZE="500000000"; fi        # accumulate CTFs until file size reached
 if [ -z $CTF_MAX_PER_FILE ];         then CTF_MAX_PER_FILE="200"; fi         # but no more than given number of CTFs per file
@@ -137,6 +136,7 @@ has_processing_step ENTROPY_ENCODER && GPU_OUTPUT+=",compressed-clusters-ctf"
 has_detector_flp_processing CPV && CPV_INPUT=digits
 
 if [ $EPNMODE == 1 ]; then
+  [ -z $CTF_METAFILES_DIR ] && CTF_METAFILES_DIR="/data/epn2eos_tool/epn2eos"
   EVE_CONFIG+=" --eve-dds-collection-index 0"
   ITSMFT_FILES+=";ITSClustererParam.noiseFilePath=$ITS_NOISE;MFTClustererParam.noiseFilePath=$MFT_NOISE"
   MIDDEC_CONFIG+=" --feeId-config-file \"$MID_FEEID_MAP\""
@@ -180,6 +180,7 @@ if ! has_detector_reco TOF; then
 fi
 
 [ $IS_SIMULATED_DATA == "1" ] && EMCRAW2C_CONFIG+=" --no-mergeHGLG"
+[ -z $CTF_METAFILES_DIR ] && CTF_METAFILES_DIR="/dev/null"
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Assemble matching sources
