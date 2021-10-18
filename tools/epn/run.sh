@@ -9,7 +9,7 @@ export DDMODE=processing                                             # DataDistr
 
 # Use these settings to specify a path to the workflow repository in your home dir
 export GEN_TOPO_HASH=0                                               # Specify path to O2DataProcessing repository
-export GEN_TOPO_SOURCE=/home/drohr/alice/O2DataProcessing            # Path to O2DataProcessing repository
+export GEN_TOPO_SOURCE=$HOME/alice/O2DataProcessing                  # Path to O2DataProcessing repository
 
 export GEN_TOPO_LIBRARY_FILE=production/production.desc              # Topology description library file to load
 export GEN_TOPO_WORKFLOW_NAME=synchronous-workflow                   # Name of workflow in topology description library
