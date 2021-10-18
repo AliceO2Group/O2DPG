@@ -654,11 +654,24 @@ for tf in range(1, NTIMEFRAMES + 1):
    FV0RECOtask['cmd'] = 'o2-fv0-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(FV0RECOtask)
 
+   # calorimeters
+   EMCRECOtask = createTask(name='emcalreco_'+str(tf), needs=[det_to_digitask["EMC"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+   EMCRECOtask['cmd'] = 'o2-emcal-reco-workflow --infile emcaldigits.root ' + getDPL_global_options() + putConfigValues()
+   workflow['stages'].append(EMCRECOtask)
+
+   PHSRECOtask = createTask(name='phsreco_'+str(tf), needs=[det_to_digitask["PHS"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+   PHSRECOtask['cmd'] = 'o2-phos-reco-workflow ' + getDPL_global_options() + putConfigValues()
+   workflow['stages'].append(PHSRECOtask)
+ 
+   CPVRECOtask = createTask(name='cpvreco_'+str(tf), needs=[det_to_digitask["CPV"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+   CPVRECOtask['cmd'] = 'o2-cpv-reco-workflow ' + getDPL_global_options() + putConfigValues()
+   workflow['stages'].append(CPVRECOtask)
+
    MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHRECOtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MFTMCHMATCHtask['cmd'] = 'o2-globalfwd-matcher-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(MFTMCHMATCHtask)
 
-   pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], MCHRECOtask['name'], TRDTRACKINGtask['name'], FDDRECOtask['name']]
+   pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], MCHRECOtask['name'], TRDTRACKINGtask['name'], FDDRECOtask['name'], MFTMCHMATCHtask['name']]
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' \
                          + getDPL_global_options()        \
@@ -739,7 +752,8 @@ for tf in range(1, NTIMEFRAMES + 1):
   # -----------
   # produce AOD
   # -----------
-   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'], TOFRECOtask['name'], TRDTRACKINGtask['name'], FV0RECOtask['name']]
+   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'], TOFRECOtask['name'], 
+               TRDTRACKINGtask['name'], FV0RECOtask['name'], EMCRECOtask['name'], CPVRECOtask['name'], PHSRECOtask['name']]
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
