@@ -14,13 +14,14 @@ export GEN_TOPO_SOURCE=/home/shahoian/alice/O2DataProcessing         # Path to O
 
 export EXTINPUT=1
 export EPNMODE=1
-export SYNCMODE=1
+export SYNCMODE=0
+export CTFINPUT=0
 export SHMSIZE=128000000000
 export INFOLOGGER_SEVERITY=warning
 
 export EDJSONS_DIR="/home/ed/jsons"
 
-export GEN_TOPO_LIBRARY_FILE=testing/private/shahoian/workflows_dpl.desc # Topology description library file to load
+export GEN_TOPO_LIBRARY_FILE=testing/private/shahoian/workflows_test.desc # Topology description library file to load
 export WORKFLOW_DETECTORS=ALL                                        # Optional parameter for the workflow: Detectors to run reconstruction for (comma-separated list)
 export WORKFLOW_DETECTORS_QC=ALL                                     # Optional parameter for the workflow: Detectors to run QC for
 export WORKFLOW_DETECTORS_CALIB=                                     # Optional parameters for the workflow: Detectors to run calibration for
@@ -33,15 +34,16 @@ export GPU_EXTRA_CONFIG="GPU_proc.debugLevel=1;"
 
 export GEN_TOPO_IGNORE_ERROR=1
 
+export CTF_METAFILES_DIR=/data/epn2eos_tool/epn2eos
+
 export MULTIPLICITY_FACTOR_RAWDECODERS=1
 export MULTIPLICITY_FACTOR_CTFENCODERS=1
 export MULTIPLICITY_FACTOR_REST=1
 
+export WORKFLOWMODE=print
+
 for wf in "$@"
 do
  export GEN_TOPO_WORKFLOW_NAME=$wf
- export WORKFLOWMODE=dds
- /home/epn/pdp/gen_topo.sh > $HOME/gen_topo/dpl/${GEN_TOPO_WORKFLOW_NAME}.xml
-# export WORKFLOWMODE=print
-#  /home/epn/pdp/gen_topo.sh > $HOME/gen_topo/dpl/${GEN_TOPO_WORKFLOW_NAME}.sh 
+ /home/epn/pdp/gen_topo.sh > $HOME/gen_topo/test/${GEN_TOPO_WORKFLOW_NAME}.xml
 done
