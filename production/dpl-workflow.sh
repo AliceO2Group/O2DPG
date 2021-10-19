@@ -53,7 +53,7 @@ done
 if [ $SYNCMODE == 1 ]; then # Add default steps for synchronous mode
   add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS ENTROPY_ENCODER
 else # Add default steps for async mode
-  for i in $LIST_OF_ASYNC_RECO_STEPSMID; do
+  for i in $LIST_OF_ASYNC_RECO_STEPS; do
     has_detector_reco $i && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS ${i}_RECO
   done
 fi
