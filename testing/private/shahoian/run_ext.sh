@@ -9,7 +9,7 @@ export DDMODE=processing                                             # DataDistr
 
 # Use these settings to specify a path to the workflow repository in your home dir
 export GEN_TOPO_HASH=0                                               # Specify path to O2DataProcessing repository
-export GEN_TOPO_SOURCE=/home/shahoian/alice/O2DataProcessing         # Path to O2DataProcessing repository
+export GEN_TOPO_SOURCE=$HOME/alice/O2DataProcessing                  # Path to O2DataProcessing repository
 
 export GEN_TOPO_LIBRARY_FILE=testing/private/shahoian/workflows.desc # Topology description library file to load
 export WORKFLOW_DETECTORS=ALL                                        # Optional parameter for the workflow: Detectors to run reconstruction for (comma-separated list)

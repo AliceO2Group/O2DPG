@@ -10,7 +10,7 @@ export DDMODE=processing                                             # DataDistr
 
 # Use these settings to specify a path to the workflow repository in your home dir
 export GEN_TOPO_HASH=0                                               # Specify path to O2DataProcessing repository
-export GEN_TOPO_SOURCE=/home/shahoian/alice/O2DataProcessing         # Path to O2DataProcessing repository
+export GEN_TOPO_SOURCE=$HOME/alice/O2DataProcessing                  # Path to O2DataProcessing repository
 
 export EXTINPUT=1
 export EPNMODE=1
