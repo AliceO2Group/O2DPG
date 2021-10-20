@@ -38,6 +38,7 @@ parser.add_argument('-ini',help='generator init parameters file (full paths requ
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
 
 parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
+parser.add_argument('-bcPatternFile',help='Bunch crossing patter file, used in digitization', default='')
 parser.add_argument('-eCM',help='CMS energy', default=-1)
 parser.add_argument('-eA',help='Beam A energy', default=-1) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
 parser.add_argument('-eB',help='Beam B energy', default=-1)
@@ -389,7 +390,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                                 --ptHatMin='+str(PTHATMIN)+'                             \
                                 --ptHatMax='+str(PTHATMAX)
       if WEIGHTPOW   > 0:
-            SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
+         SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
       # if we configure pythia8 here --> we also need to adjust the configuration
       # TODO: we need a proper config container/manager so as to combine these local configs with external configs etc.
       CONFKEY='--configKeyValues "GeneratorPythia8.config=pythia8.cfg'+';'+args.confKey+'"'
@@ -448,6 +449,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # Determine interation rate
    # it should be taken from CDB, meanwhile some default values
    INTRATE=int(args.interactionRate)
+   BCPATTERN=iargs.bcPatternFile
 
    # in case of embedding take intended bkg collision type not the signal
    COLTYPEIR=COLTYPE
@@ -494,6 +496,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    ContextTask['cmd'] = 'o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) \
                         + ' ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption         \
                         + ' ' + putConfigValues()
+
+   if BCPATTERN != '':
+      ContextTask['cmd'] += ' --bcPatternFile "' + BCPATTERN + '"'
 
    # in case of embedding we engineer the context directly and allow the user to provide an embedding pattern
    # The :r flag means to shuffle the background events randomly
