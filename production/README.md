@@ -12,12 +12,12 @@ If processing is to be disabled, please use the `no-processing` workflow in `no-
 You can use the following options to change the workflow behavior:
 - `DDMODE` (default `processing`) : Must be `processing` (synchronous processing) or `processing-disk` (synchronous processing + storing of raw time frames to disk, not that this is the raw time frame not the CTF!). The `DDMODE` `discard` and `disk` are not compatible with the synchronous processing workflow, you must use the `no-processing.desc` workflow instead!.
 - `WORKFLOW_DETECTORS` (default `ALL`) : Comma-separated list of detectors for which the processing is enabled. If these are less detectors than participating in the run, data of the other detectors is ignored. If these are more detectors than participating in the run, the processes for the additional detectors will be started but will not do anything.
-- `WORKFLOW_DETECTORS_QC` (default `ALL`) : Comma-separated list of detectors for which to run QC, can be a subset of `WORKFLOW_DETECTORS`. If a detector is not listed in `WORKFLOW_DETECTORS`, the QC is automatically disabled for that detector. Only active if the `WORKFLOW_PARAMETER=QC` is set.
+- `WORKFLOW_DETECTORS_QC` (default `ALL`) : Comma-separated list of detectors for which to run QC, can be a subset of `WORKFLOW_DETECTORS` (for standalone detectors QC) and `WORKFLOW_DETECTORS_MATCHING` (for matching/vertexing QC). If a detector (matching/vertexing step) is not listed in `WORKFLOW_DETECTORS` (`WORKFLOW_DETECTORS_MATCHING`), the QC is automatically disabled for that detector. Only active if the `WORKFLOW_PARAMETER=QC` is set.
 - `WORKFLOW_DETECTORS_CALIB` (default `ALL`) : Comma-separated list of detectors for which to run calibration, can be a subset of `WORKFLOW_DETECTORS`. If a detector is not listed in `WORKFLOW_DETECTORS`, the calibration is automatically disabled for that detector. Only active if the `WORKFLOW_PARAMETER=CALIB` is set.
 - `WORKFLOW_DETECTORS_FLP_PROCESSING` (default `TOF` for sync processing on EPN, `NONE` otherwise) : Signals that these detectors have processing on the FLP enabled. The corresponding steps are thus inactive in the EPN epl-workflow, and the raw-proxy is configured to receive the FLP-processed data instead of the raw data in that case.
 - `WORKFLOW_DETECTORS_RECO` (default `ALL`) : Comma-separated list of detectors for which to run reconstruction.
 - `WORKFLOW_DETECTORS_CTF` (default `ALL`) : Comma-separated list of detectors to include in CTF.
-- `WORKFLOW_DETECTORS_MATCHING` (default selected corresponding to default workflow for sync or async mode respectively) : Comma-separated list of matching / vertexing algorithms to run. Use `ALL` to enable all of them. Currently supported options: `ITSTPC`, `TPCTRD`, `ITSTPCTRD`, `TPCTOF`, `ITSTPCTOF`, `MFTMCH`, `PRIMVTX`, `SECVTX`.
+- `WORKFLOW_DETECTORS_MATCHING` (default selected corresponding to default workflow for sync or async mode respectively) : Comma-separated list of matching / vertexing algorithms to run. Use `ALL` to enable all of them. Currently supported options (see LIST_OF_GLORECO in common/setenv.h): `ITSTPC`, `TPCTRD`, `ITSTPCTRD`, `TPCTOF`, `ITSTPCTOF`, `MFTMCH`, `PRIMVTX`, `SECVTX`.
 - `WORKFLOW_EXTRA_PROCESSING_STEPS` Enable additional processing steps not in the preset for the SYNC / ASYNC mode. Possible values are: `MID_RECO` `MCH_RECO` `MFT_RECO` `FDD_RECO` `FV0_RECO` `ZDC_RECO` `ENTROPY_ENCODER` `MATCH_ITSTPC` `MATCH_TPCTRD` `MATCH_ITSTPCTRD` `MATCH_TPCTOF` `MATCH_ITSTPCTOF` `MATCH_MFTMCH` `MATCH_MFTMCH` `MATCH_PRIMVTX` `MATCH_SECVTX`. (Here `_RECO` means full async reconstruction, and can be used to enable it also in sync mode.)
 - `WORKFLOW_PARAMETERS` (default `NONE`) : Comma-separated list, enables additional features of the workflow. Currently the following features are available:
   - `GPU` : Performs the TPC processing on the GPU, otherwise everything is processed on the CPU.
@@ -29,7 +29,7 @@ You can use the following options to change the workflow behavior:
 - `MULTIPLICITY_FACTOR_RAWDECODERS` (default `1`) : Scales the number of parallel processes used for raw decoding by this factor.
 - `MULTIPLICITY_FACTOR_CTFENCODERS` (default `1`) : Scales the number of parallel processes used for CTF encoding by this factor.
 - `MULTIPLICITY_FACTOR_REST` (default `1`) : Scales the number of other reconstruction processes by this factor.
-
+- `QC_JSON_EXTRA` (default `NONE`) : extra QC jsons to add (if does not fit to those defined in WORKFLOW_DETECTORS_QC & (WORKFLOW_DETECTORS | WORKFLOW_DETECTORS_MATCHING) 
 Most of these settings are configurable in the AliECS GUI. But some of the uncommon settings (`WORKFLOW_DETECTORS_FLP_PROCESSING`, `WORKFLOW_DETECTORS_CTF`, `WORKFLOW_DETECTORS_RECO`, `WORKFLOW_DETECTORS_MATCHING`, `WORKFLOW_EXTRA_PROCESSING_STEPS`, advanced `MULTIPLICITY_FACTOR` settings) can only be set via the "Additional environment variables field" in the GUI using bash syntax, e.g. `WORKFLOW_DETECTORS_FLP_PROCESSING=TPC`.
 
 # Process multiplicity factors
@@ -46,6 +46,8 @@ For user modification of the workflow settings, the folloing *EXTRA* environment
 - `ARGS_ALL_EXTRA` : Extra command line options added to all workflows
 - `ALL_EXTRA_CONFIG` : Extra config key values added to all workflows
 - `GPU_EXTRA_CONFIG` : Extra options added to the configKeyValues of the GPU workflow
+
+In case the CTF dictionaries were created from the data drastically different from the one being compressed, the default memory allocation for the CTF buffer might be insufficient. One can apply scaling factor to the buffer size estimate (default=1.5) of particular detector by defining variable e.g. `TPC_ENC_MEMFACT=3.5`
 
 # Remarks on QC
 The JSON files for the individual detectors are merged into one JSON file, which is cached during the run on the shared EPN home folder.
