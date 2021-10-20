@@ -8,6 +8,9 @@ if [ $? != 0 ]; then
 fi
 
 LIST_OF_DETECTORS="ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP"
+
+LIST_OF_GLORECO="ITSTPC,TPCTRD,ITSTPCTRD,TPCTOF,ITSTPCTOF,MFTMCH,PRIMVTX,SECVTX"
+
 # Detectors used in the workflow / enabled parameters
 if [ -z "${WORKFLOW_DETECTORS+x}" ] || [ "0$WORKFLOW_DETECTORS" == "0ALL" ]; then export WORKFLOW_DETECTORS=$LIST_OF_DETECTORS; fi
 if [ -z "${WORKFLOW_DETECTORS_QC+x}" ] || [ "0$WORKFLOW_DETECTORS_QC" == "0ALL" ]; then export WORKFLOW_DETECTORS_QC=$WORKFLOW_DETECTORS; fi
@@ -86,11 +89,6 @@ has_detector()
   [[ $WORKFLOW_DETECTORS =~ (^|,)"$1"(,|$) ]]
 }
 
-has_detector_qc()
-{
-  has_detector $1 && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"$1"(,|$) ]]
-}
-
 has_detector_calib()
 {
   has_detector $1 && [[ $WORKFLOW_DETECTORS_CALIB =~ (^|,)"$1"(,|$) ]]
@@ -114,6 +112,16 @@ has_detector_flp_processing()
 has_detector_matching()
 {
   [[ $WORKFLOW_DETECTORS_MATCHING =~ (^|,)"ALL"(,|$) ]] || [[ $WORKFLOW_DETECTORS_MATCHING =~ (^|,)"$1"(,|$) ]]
+}
+
+has_detector_qc()
+{
+  has_detector $1 && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"$1"(,|$) ]]
+}
+
+has_matching_qc()
+{
+  has_detector_matching $1 && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"$1"(,|$) ]]
 }
 
 workflow_has_parameter()

@@ -9,6 +9,9 @@
 [ -z "$QC_JSON_EMC" ] && QC_JSON_EMC=/home/mfasel/alice/O2DataProcessing/testing/detectors/EMC/qc/emcQCTasksAll_multinode.json
 [ -z "$QC_JSON_MCH" ] && QC_JSON_MCH=/home/laphecet/qc_configs/mch-qc-physics.json
 
+[ -z "$QC_JSON_PRIMVTX" ] && QC_JSON_PRIMVTX=/home/shahoian/jsons/vertexing-qc.json
+
+
 [ -z "$QC_HOST" ] && QC_HOST=localhost
 
 if [ -z "$WORKFLOW" ] || [ -z "$MYDIR" ]; then
@@ -30,6 +33,21 @@ for i in `echo $LIST_OF_DETECTORS | sed "s/,/ /g"`; do
      OUTPUT_SUFFIX+="-$i"
   fi
 done
+
+# matching / vertexing QC
+for i in `echo $LIST_OF_GLORECO | sed "s/,/ /g"`; do
+  GLO_JSON_FILE="QC_JSON_$i"
+  if has_detector_matching $i && has_matching_qc $i && [ ! -z "${!GLO_JSON_FILE}" ]; then
+     JSON_FILES+=" ${!GLO_JSON_FILE}"
+     OUTPUT_SUFFIX+="-$i"
+  fi
+done
+
+# arbitrary extra QC
+if [ ! -z $QC_JSON_EXTRA ]; then
+    JSON_FILES+=" ${QC_JSON_EXTRA}"
+    OUTPUT_SUFFIX+="-EXTRA"
+fi
 
 if [ ! -z "$JSON_FILES" ]; then
   mkdir -p $GEN_TOPO_WORKDIR/json_cache
