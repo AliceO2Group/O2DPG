@@ -38,7 +38,7 @@ parser.add_argument('-ini',help='generator init parameters file (full paths requ
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
 
 parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
-parser.add_argument('-bcPatternFile',help='Bunch crossing patter file, used in digitization', default='')
+parser.add_argument('-bcPatternFile',help='Bunch crossing pattern file, used in digitization', default='')
 parser.add_argument('-eCM',help='CMS energy', default=-1)
 parser.add_argument('-eA',help='Beam A energy', default=-1) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
 parser.add_argument('-eB',help='Beam B energy', default=-1)
@@ -504,6 +504,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    # The :r flag means to shuffle the background events randomly
    if doembedding:
       ContextTask['cmd'] += ';o2-steer-colcontexttool -i bkg,' + str(INTRATE) + ',' + str(args.nb) + ':r' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF)
+
+      if BCPATTERN != '':
+         ContextTask['cmd'] += ' --bcPatternFile "' + BCPATTERN + '"'
 
    workflow['stages'].append(ContextTask)
 
