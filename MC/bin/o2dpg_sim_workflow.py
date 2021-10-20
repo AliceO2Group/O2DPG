@@ -718,7 +718,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      ### TOF matching
      TOFMatchQCneeds = [TOFTPCMATCHERtask['name']]
      TOFMatchQCtask = createTask(name='TOFMatchQC_local'+str(tf), needs=TOFMatchQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     TOFMatchQCtask['cmd'] = 'o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC" --cluster-types none | o2-qc --config json://${QUALITYCONTROL_ROOT}/etc/tofMatchedTracks_ITSTPCTOF_TPCTOF_direct.json --local-batch ../' + qcdir + '/TOFMatchQC.root ' + getDPL_global_options()
+     TOFMatchQCtask['cmd'] = 'o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC" --cluster-types none | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF_direct_MC.json --local-batch ../' + qcdir + '/TOFMatchQC.root ' + getDPL_global_options()
      TOFMatchQCtask['semaphore'] = 'TOFMatchQC'
      workflow['stages'].append(TOFMatchQCtask)
 
@@ -832,7 +832,7 @@ if includeQC:
   ### TOF matching
   TOFMatchQCneeds = ['TOFMatchQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
   TOFMatchQCtask = createTask(name='TOFMatchQC_finalize', needs=TOFMatchQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-  TOFMatchQCtask['cmd'] = 'o2-qc --config json://${QUALITYCONTROL_ROOT}/etc/tofMatchedTracks_ITSTPCTOF_TPCTOF_direct.json --remote-batch TOFMatchQC.root ' + getDPL_global_options()
+  TOFMatchQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF_direct_MC.json --remote-batch TOFMatchQC.root ' + getDPL_global_options()
   workflow['stages'].append(TOFMatchQCtask)
 
 
