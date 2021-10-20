@@ -1,8 +1,8 @@
 #!/bin/bash
 
 export GEN_TOPO_PARTITION=test                                       # ECS Partition
-export DDMODE=processing-disk                                        # DataDistribution mode - possible options: processing, disk, processing-disk, discard
-#export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
+#export DDMODE=processing-disk                                        # DataDistribution mode - possible options: processing, disk, processing-disk, discard
+export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 
 # Use these settings to fetch the Workflow Repository using a hash / tag
 #export GEN_TOPO_HASH=1                                              # Fetch O2DataProcessing repository using a git hash
@@ -20,7 +20,7 @@ export INFOLOGGER_SEVERITY=warning
 
 export EDJSONS_DIR="/home/ed/jsons"
 
-export GEN_TOPO_LIBRARY_FILE=testing/private/shahoian/workflows_dpl.desc # Topology description library file to load
+export GEN_TOPO_LIBRARY_FILE=testing/private/shahoian/workflows_PB.desc # Topology description library file to load: Pilot Beam
 export WORKFLOW_DETECTORS=ALL                                        # Optional parameter for the workflow: Detectors to run reconstruction for (comma-separated list)
 export WORKFLOW_DETECTORS_QC=ALL                                     # Optional parameter for the workflow: Detectors to run QC for
 export WORKFLOW_DETECTORS_CALIB=                                     # Optional parameters for the workflow: Detectors to run calibration for

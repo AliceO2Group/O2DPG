@@ -5,7 +5,7 @@ tof-ctf-qcTOF-59: "O2PDPSuite" reco,59,59,"WORKFLOW_DETECTORS=TOF production/dpl
 its-ctf-qcITS-20: "O2PDPSuite" reco,20,20,"WORKFLOW_DETECTORS=ITS production/dpl-workflow.sh"
 mft-ctf-qcMFT-30: "O2PDPSuite" reco,30,30,"WORKFLOW_DETECTORS=MFT production/dpl-workflow.sh"
 
-its-ctf-qcITSMRG-20: "O2PDPSuite" reco,20,20,"WORKFLOW_DETECTORS=ITS QC_JSON_ITS=/home/jian/jliu/itsEPN-merger.json production/dpl-workflow.sh"
+its-ctf-qcITSMRG-20: "O2PDPSuite" reco,20,20,"WORKFLOW_DETECTORS=ITS QC_HOST=epn QC_JSON_ITS=/home/jian/jliu/itsEPN-merger.json production/dpl-workflow.sh"
 
 mftHR-ctf-qcMFT-30: "O2PDPSuite" reco,30,30,"WORKFLOW_DETECTORS=MFT MULTIPLICITY_FACTOR_CTFENCODERS=3 MULTIPLICITY_FACTOR_RAWDECODERS=3 production/dpl-workflow.sh"
 

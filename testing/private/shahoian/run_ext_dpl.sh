@@ -40,8 +40,7 @@ export MULTIPLICITY_FACTOR_REST=1
 for wf in "$@"
 do
  export GEN_TOPO_WORKFLOW_NAME=$wf
- export WORKFLOWMODE=dds
- /home/epn/pdp/gen_topo.sh > $HOME/gen_topo/dpl/${GEN_TOPO_WORKFLOW_NAME}.xml
-# export WORKFLOWMODE=print
-#  /home/epn/pdp/gen_topo.sh > $HOME/gen_topo/dpl/${GEN_TOPO_WORKFLOW_NAME}.sh 
+ EXT="xml"   
+ [ $WORKFLOWMODE == "print" ] && EXT="sh"
+ /home/epn/pdp/gen_topo.sh > "$HOME/gen_topo/PB/${GEN_TOPO_WORKFLOW_NAME}.${EXT}"
 done
