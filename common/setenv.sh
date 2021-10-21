@@ -20,7 +20,10 @@ if [ -z "${WORKFLOW_DETECTORS_CTF+x}" ] || [ "0$WORKFLOW_DETECTORS_CTF" == "0ALL
 if [ "0$WORKFLOW_DETECTORS_FLP_PROCESSING" == "0ALL" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=$WORKFLOW_DETECTORS; fi
 if [ -z "$WORKFLOW_PARAMETERS" ]; then export WORKFLOW_PARAMETERS=; fi
 
-if [ -z "$NTIMEFRAMES" ];   then export NTIMEFRAMES=1; fi              # Number of time frames to process
+if [ -z "$TFLOOP" ];        then export TFLOOP=0; fi                   # loop over timeframes
+if [ -z "$NTIMEFRAMES" ];   then export NTIMEFRAMES=-1; fi             # max number of time frames to process, <=0 : unlimited
+if [ -z "$CTFDICT_NTF" ];   then export CTFDICT_NTF=100; fi            # auto-save CTF dictionary after each CTFDICT_NTF TFs (if > 0)
+if [ -z "$CTF_MAXDETEXT" ]; then export CTF_MAXDETEXT=0; fi            # extend CTF output dir.name by detectors names if their number does not exceed this
 if [ -z "$TFDELAY" ];       then export TFDELAY=100; fi                # Delay in seconds between publishing time frames
 if [ -z "$GPUTYPE" ];       then export GPUTYPE=CPU; fi                # GPU Tracking backend to use, can be CPU / CUDA / HIP / OCL / OCL2
 if [ -z "$DDSHMSIZE" ];     then export DDSHMSIZE=$(( 8 << 10 )); fi   # Size of shared memory for DD Input
@@ -31,7 +34,8 @@ if [ -z "$SAVECTF" ];       then export SAVECTF=0; fi                  # Save th
 if [ -z "$SYNCMODE" ];      then export SYNCMODE=0; fi                 # Run only reconstruction steps of the synchronous reconstruction
 if [ -z "$NUMAID" ];        then export NUMAID=0; fi                   # SHM segment id to use for shipping data as well as set of GPUs to use (use 0 / 1 for 2 NUMA domains)
 if [ -z "$NUMAGPUIDS" ];    then export NUMAGPUIDS=0; fi               # NUMAID-aware GPU id selection
-if [ -z "$CTFINPUT" ];      then export CTFINPUT=0; fi                 # Read input from CTF (incompatible to EXTINPUT=1)
+if [ -z "$CTFINPUT" ];      then export CTFINPUT=0; fi                 # Read input from CTF using o2-ctf-reader (incompatible to EXTINPUT=1 and RAWTFINPUT)
+if [ -z "$RAWTFINPUT" ];    then export RAWTFINPUT=0; fi               # Read input from raw TFs using o2-raw-tf-reader (incompatible to EXTINPUT=1 and CTFINPUT=1)
 if [ -z "$NHBPERTF" ];      then export NHBPERTF=128; fi               # Time frame length (in HBF)
 if [ -z "$GLOBALDPLOPT" ];  then export GLOBALDPLOPT=; fi              # Global DPL workflow options appended at the end
 if [ -z "$SEVERITY" ];      then export SEVERITY="info"; fi            # Log verbosity
@@ -69,6 +73,14 @@ if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then export MULTIPLICITY_FACTOR_REST=1; f
 
 if [ $EXTINPUT == 1 ] && [ $CTFINPUT == 1 ]; then
   echo EXTINPUT and CTFINPUT are incompatible
+  exit 1
+fi
+if [ $EXTINPUT == 1 ] && [ $RAWTFINPUT == 1 ]; then
+  echo EXTINPUT and RAWTFINPUT are incompatible
+  exit 1
+fi
+if [ $CTFINPUT == 1 ] && [ $RAWTFINPUT == 1 ]; then
+  echo CTFINPUT and RAWTFINPUT are incompatible
   exit 1
 fi
 if [ $SAVECTF == 1 ] && [ $CTFINPUT == 1 ]; then
