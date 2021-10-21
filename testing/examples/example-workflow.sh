@@ -4,8 +4,12 @@ source common/setenv.sh
 
 SEVERITY=warning
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-size $SHMSIZE"
-ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
-ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 60"
+if [ $EPNMODE == 1 ]; then
+  ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
+  ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 15"
+elif [ "0$ENABLE_METRICS" != "01" ]; then
+  ARGS_ALL+=" --monitoring-backend no-op://"
+fi
 [ $NORATELOG == 1 ] && ARGS_ALL+=" --fairmq-rate-logging 0"
 
 ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
