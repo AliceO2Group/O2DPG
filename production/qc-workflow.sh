@@ -9,6 +9,7 @@
 [ -z "$QC_JSON_FV0" ] && QC_JSON_FV0=/home/afurs/O2DataProcessing/testing/detectors/FV0/fv0-digits-ds.json
 [ -z "$QC_JSON_EMC" ] && QC_JSON_EMC=/home/mfasel/alice/O2DataProcessing/testing/detectors/EMC/qc/emcQCTasksAll_multinode.json
 [ -z "$QC_JSON_MCH" ] && QC_JSON_MCH=/home/laphecet/qc_configs/mch-qc-physics.json
+[ -z "$QC_JSON_MID" ] && QC_JSON_MID=/home/dstocco/config/mid-qcmn-epn-digits.json
 
 [ -z "$QC_JSON_PRIMVTX" ] && QC_JSON_PRIMVTX=/home/shahoian/jsons/vertexing-qc.json
 
