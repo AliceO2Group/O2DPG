@@ -1,7 +1,7 @@
 #!/bin/bash
 
 [ -z "$QC_JSON_TPC" ] && QC_JSON_TPC=/home/rmunzer/odc/config/tpcQCTasks_multinode_ALL.json
-[ -z "$QC_JSON_ITS" ] && QC_JSON_ITS=/home/epn/jliu/itsEPNv2.json
+[ -z "$QC_JSON_ITS" ] && QC_JSON_ITS=/home/jian/jliu/itsEPN-merger.json
 [ -z "$QC_JSON_MFT" ] && QC_JSON_MFT=/home/epn/odc/files/qc-mft-cluster-merger-raw-cluster.json
 [ -z "$QC_JSON_TOF" ] && QC_JSON_TOF=/home/fnoferin/public/tof-qc-globalrun.json
 [ -z "$QC_JSON_FT0" ] && QC_JSON_FT0=/home/afurs/O2DataProcessing/testing/detectors/FT0/ft0-digits-ds.json
