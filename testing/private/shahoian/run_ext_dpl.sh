@@ -37,10 +37,12 @@ export MULTIPLICITY_FACTOR_RAWDECODERS=1
 export MULTIPLICITY_FACTOR_CTFENCODERS=1
 export MULTIPLICITY_FACTOR_REST=1
 
+#[ -z $WORKFLOWMODE ] && export WORKFLOWMODE="dds"
+
 for wf in "$@"
 do
  export GEN_TOPO_WORKFLOW_NAME=$wf
- EXT="xml"   
- [ $WORKFLOWMODE == "print" ] && EXT="sh"
+ EXT="xml"
+ [ ! -z $WORKFLOWMODE ] && [ $WORKFLOWMODE == "print" ] && EXT="sh"
  /home/epn/pdp/gen_topo.sh > "$HOME/gen_topo/dpl/${GEN_TOPO_WORKFLOW_NAME}.${EXT}"
 done

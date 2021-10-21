@@ -189,7 +189,7 @@ itsCOSM-CTF-QC-its-ED-20: "O2PDPSuite" reco,20,20,"BEAMTYPE=cosmic WORKFLOW_PARA
 itsCOSM-TF-CTF-QC-its-ED-20: "O2PDPSuite" reco,20,20,"BEAMTYPE=cosmic WORKFLOW_PARAMETERS=QC,CTF,EVENT_DISPLAY WORKFLOW_DETECTORS=ITS WORKFLOW_DETECTORS_QC=ITS N_ITSTRK=25 ITS_NOISE=/home/epn/odc/files/ITS_noise_230921.root production/dpl-workflow.sh"
 
 #----
-mft_decoder2digits_for_noise_calib-30: "O2PDPSuite" reco,30,30,"testing/private/shahoian/mft_decoder2digits_for_noise_calib.sh"
+#mft_decoder2digits_for_noise_calib-30: "O2PDPSuite" reco,30,30,"testing/private/shahoian/mft_decoder2digits_for_noise_calib.sh"
 
 its-mftTR-tpc-trd-tof-TF-CTF-QC-its-mft-tpc-tof-ED-20: "O2PDPSuite" reco,20,20,"BEAMTYPE=pp WORKFLOW_PARAMETERS=QC,CTF,GPU,EVENT_DISPLAY WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF,TRD WORKFLOW_DETECTORS_QC=ITS,MFT,TPC,TOF WORKFLOW_EXTRA_PROCESSING_STEPS=MFT_RECO  N_ITSTRK=10 ED_TRACKS=ITS,MFT,TPC,ITS-TPC ED_CLUSTERS=ITS,MFT,TPC production/dpl-workflow.sh"
 its-mftTR-tpc-trd-tof-CTF-QC-its-mft-tpc-tof-ED-20: "O2PDPSuite" reco,20,20,"BEAMTYPE=pp WORKFLOW_PARAMETERS=QC,CTF,GPU,EVENT_DISPLAY WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF,TRD WORKFLOW_DETECTORS_QC=ITS,MFT,TPC,TOF WORKFLOW_EXTRA_PROCESSING_STEPS=MFT_RECO  N_ITSTRK=10  ED_TRACKS=ITS,MFT,TPC,ITS-TPC ED_CLUSTERS=ITS,MFT,TPC production/dpl-workflow.sh"
@@ -200,6 +200,11 @@ its-mftTR-tpc-trd-tof-mid-TF-CTF-QC-its-mft-tpc-ED-20: "O2PDPSuite" reco,20,20,"
 mft-ctf-qc-raw-cluster-MFT-30: "O2PDPSuite" reco,30,30,"WORKFLOW_DETECTORS=MFT production/dpl-workflow.sh"
 mft-ctf-qc-raw-digit-cluster-MFT-30: "O2PDPSuite" reco,30,30,"WORKFLOW_DETECTORS=MFT  production/dpl-workflow.sh"
 
+hmp-TF-CTF-1: "O2PDPSuite" reco,1,1,"WORKFLOW_DETECTORS=HMP WORKFLOW_PARAMETERS=CTF production/dpl-workflow.sh"
+hmp-TF-CTF-2: "O2PDPSuite" reco,1,1,"WORKFLOW_DETECTORS=HMP WORKFLOW_PARAMETERS=CTF production/dpl-workflow.sh"
+
+hmp-CTF-1: "O2PDPSuite" reco,1,1,"WORKFLOW_DETECTORS=HMP WORKFLOW_PARAMETERS=CTF production/dpl-workflow.sh"
+hmp-CTF-2: "O2PDPSuite" reco,1,1,"WORKFLOW_DETECTORS=HMP WORKFLOW_PARAMETERS=CTF production/dpl-workflow.sh"
 
 ctf_itsCOSM-mftTR-tpc-trd-tof-mid-ED-1: "O2PDPSuite" reco,1,1,"BEAMTYPE=cosmic SYNCMODE=0 EXTINPUT=0 WORKFLOW_PARAMETERS=GPU,EVENT_DISPLAY WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF,TRD,MID CTFINPUT=1 WORKFLOW_EXTRA_PROCESSING_STEPS=MFT_RECO N_ITSTRK=12 ITS_NOISE=/home/epn/odc/files/ITS_noise_230921.root ED_TRACKS=ITS,MFT,TPC,ITS-TPC ED_CLUSTERS=ITS,MFT,TPC production/dpl-workflow.sh"
 ctf_itsCOSM-mftTR-tpcCPU-trd-tof-mid-ED-1: "O2PDPSuite" reco,1,1,"BEAMTYPE=cosmic SYNCMODE=0 EXTINPUT=0 WORKFLOW_PARAMETERS=EVENT_DISPLAY WORKFLOW_DETECTORS=ITS,MFT,TPC,TOF,TRD,MID CTFINPUT=1 WORKFLOW_EXTRA_PROCESSING_STEPS=MFT_RECO N_ITSTRK=12 ITS_NOISE=/home/epn/odc/files/ITS_noise_230921.root ED_TRACKS=ITS,MFT,TPC,ITS-TPC ED_CLUSTERS=ITS,MFT,TPC production/dpl-workflow.sh"
