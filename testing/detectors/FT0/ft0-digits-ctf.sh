@@ -12,7 +12,7 @@ CTF_DICT="--ctf-dict $FILEWORKDIR/ctf_dictionary.root"
 NTHREADS=2
 # Output directory for the CTF, to write to the current dir., remove `--output-dir  $CTFOUT` from o2-ctf-writer-workflow or set to `CTFOUT=\"""\"`
 # The directory must exist
-ARGS_CTF="--min-file-size 500000000 --max-ctf-per-file 200 --meta-output-dir /data/epn2eos_tool/epn2eos"
+ARGS_CTF="--min-file-size 500000000 --max-ctf-per-file 200 --meta-output-dir /data/epn2eos_tool/epn2eos --append-det-to-period 0"
 
 MYDIR="$(dirname $(readlink -f $0))"
 PROXY_INSPEC="x:FT0/RAWDATA;eos:***/INFORMATION;dd:FLP/DISTSUBTIMEFRAME/0"

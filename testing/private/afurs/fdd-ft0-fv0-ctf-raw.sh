@@ -19,7 +19,7 @@ NTHREADS=2
 # The directory must exist
 # ARGS_CTF=""
 
-ARGS_CTF="--min-file-size 500000000 --max-ctf-per-file 200 --meta-output-dir /data/epn2eos_tool/epn2eos"
+ARGS_CTF="--min-file-size 500000000 --max-ctf-per-file 200 --meta-output-dir /data/epn2eos_tool/epn2eos --append-det-to-period 0"
 MYDIR="$(dirname $(readlink -f $0))"
 PROXY_INSPEC="x:FT0/RAWDATA;y:FV0/RAWDATA;z:FDD/RAWDATA;digfdd:FDD/DIGITSBC/0;chanfdd:FDD/DIGITSCH/0;digft0:FT0/DIGITSBC/0;chanft0:FT0/DIGITSCH/0;digfv0:FV0/DIGITSBC/0;chanfv0:FV0/DIGITSCH/0;eos:***/INFORMATION;dd:FLP/DISTSUBTIMEFRAME"
 IN_CHANNEL="--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=1'"
