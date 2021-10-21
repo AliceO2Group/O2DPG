@@ -449,7 +449,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # Determine interation rate
    # it should be taken from CDB, meanwhile some default values
    INTRATE=int(args.interactionRate)
-   BCPATTERN=iargs.bcPatternFile
+   BCPATTERN=args.bcPatternFile
 
    # in case of embedding take intended bkg collision type not the signal
    COLTYPEIR=COLTYPE
