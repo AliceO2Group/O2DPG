@@ -31,6 +31,7 @@
           "cycleDurationSeconds": "60",
           "maxNumberCycles": "-1",
           "resetAfterCycles": "1",
+          "mergerCycleMultiplier": "2",
           "dataSource": {
             "type": "dataSamplingPolicy",
             "name": "fv0-digits"
@@ -42,10 +43,10 @@
           "localMachines": [
             "epn"
           ],
-          "remoteMachine": "epn102-ib",
-          "remotePort": "65018",
+          "remoteMachine": "alio2-cr1-qme02.cern.ch",
+          "remotePort": "47722",
           "mergingMode": "delta",
-          "localControl" : "odc"
+          "localControl": "odc"
         }
       }
     },
@@ -59,7 +60,7 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.01",
+          "fraction": "1.",
           "seed": "4533"
         }
       ],

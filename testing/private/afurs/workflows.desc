@@ -1,2 +1,7 @@
-ft0-fv0-ctf: "O2PDPSuite" reco,5,5,"SHMSIZE=20000000000 testing/private/afurs/ft0-fv0-ctf.sh"
-ft0-fv0-digits-qc-ctf: "O2PDPSuite" reco,5,5,"SHMSIZE=20000000000 testing/private/afurs/ft0-fv0-digits-qc-ctf.sh"
+ft0-fv0-ctf: "O2PDPSuite" reco,2,2,"SHMSIZE=20000000000 testing/private/afurs/ft0-fv0-ctf.sh"
+ft0-fv0-ctf-raw: "O2PDPSuite" reco,2,2,"SHMSIZE=20000000000 testing/private/afurs/ft0-fv0-ctf-raw.sh"
+ft0-fv0-digits-qc-ctf: "O2PDPSuite" reco,2,2,"SHMSIZE=20000000000 testing/private/afurs/ft0-fv0-digits-qc-ctf.sh"
+fdd-ft0-fv0-ctf: "O2PDPSuite" reco,2,2,"SHMSIZE=20000000000 testing/private/afurs/fdd-ft0-fv0-ctf.sh"
+fdd-ft0-fv0-ctf-raw: "O2PDPSuite" reco,2,2,"SHMSIZE=20000000000 testing/private/afurs/fdd-ft0-fv0-ctf-raw.sh"
+fdd-ft0-fv0-digits-qc-ctf: "O2PDPSuite" reco,2,2,"SHMSIZE=20000000000 testing/private/afurs/fdd-ft0-fv0-digits-qc-ctf.sh"
+

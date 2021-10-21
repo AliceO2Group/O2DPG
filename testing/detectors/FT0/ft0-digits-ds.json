@@ -42,10 +42,12 @@
           "localMachines": [
             "epn"
           ],
-          "remoteMachine": "epn102-ib",
-          "remotePort": "65019",
+          "remoteMachine": "alio2-cr1-qme02.cern.ch",
+          "remotePort": "47721",
           "mergingMode": "delta",
-          "localControl" : "odc"
+          "mergerCycleMultiplier": "2",
+          "localControl": "odc"
+
         }
       }
     },
@@ -59,7 +61,7 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.01",
+          "fraction": "1.",
           "seed": "4533"
         }
       ],

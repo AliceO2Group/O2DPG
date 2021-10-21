@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export GEN_TOPO_PARTITION=test                                       # ECS Partition
-export DDMODE=processing                                            # DataDistribution mode - possible options: processing, disk, processing-disk, discard
+export DDMODE=processing-disk                                            # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 # Use these settings to fetch the Workflow Repository using a hash / tag
 export GEN_TOPO_HASH=1                                              # Fetch O2DataProcessing repository using a git hash
 export GEN_TOPO_SOURCE=v1.3                                         # Git hash to fetch
