@@ -14,7 +14,7 @@ if [ -z $CTF_DICT_DIR ];             then CTF_DICT_DIR=$FILEWORKDIR; fi      # D
 if [ -z $CTF_METAFILES_DIR ];        then CTF_METAFILES_DIR="/dev/null"; fi  # Directory where to store CTF files metada, /dev/null : skip their writing
 if [ -z $RECO_NUM_NODES_WORKFLOW ];  then RECO_NUM_NODES_WORKFLOW=250; fi    # Number of EPNs running this workflow in parallel, to increase multiplicities if necessary, by default assume we are 1 out of 250 servers
 if [ -z $CTF_MINSIZE ];              then CTF_MINSIZE="500000000"; fi        # accumulate CTFs until file size reached
-if [ -z $CTF_MAX_PER_FILE ];         then CTF_MAX_PER_FILE="500"; fi         # but no more than given number of CTFs per file
+if [ -z $CTF_MAX_PER_FILE ];         then CTF_MAX_PER_FILE="10000"; fi       # but no more than given number of CTFs per file
 if [ -z $IS_SIMULATED_DATA ];        then IS_SIMULATED_DATA=1; fi            # processing simulated data
 
 if [ $SYNCMODE == 1 ]; then
