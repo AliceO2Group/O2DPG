@@ -29,7 +29,9 @@ workflow_has_parameter GPU && { export GPUTYPE=HIP; export NGPUS=4; }
 [ -z $ITSCLUSDICT ] && ITSCLUSDICT="${FILEWORKDIR}/ITSdictionary.bin"
 [ -z $MFTCLUSDICT ] && MFTCLUSDICT="${FILEWORKDIR}/MFTdictionary.bin"
 [ -z $ITS_NOISE ] && ITS_NOISE="${FILEWORKDIR}"
-[ -z $MFT_NOISE ] && MFT_NOISE="${FILEWORKDIR}/mft_noise_220721_R3C-520.root"
+[ -z $MFT_NOISE ] && MFT_NOISE="${FILEWORKDIR}"
+[ -z $ITS_STROBE ] && ITS_STROBE="891"
+[ -z $MFT_STROBE ] && MFT_STROBE="198"
 
 MID_FEEID_MAP="$FILEWORKDIR/mid-feeId_mapper.txt"
 NITSDECTHREADS=2
@@ -140,7 +142,7 @@ has_detector_flp_processing CPV && CPV_INPUT=digits
 
 if [ $EPNMODE == 1 ]; then
   EVE_CONFIG+=" --eve-dds-collection-index 0"
-  ITSMFT_FILES+=";ITSClustererParam.noiseFilePath=$ITS_NOISE;MFTClustererParam.noiseFilePath=$MFT_NOISE"
+  ITSMFT_FILES+=";ITSClustererParam.noiseFilePath=$ITS_NOISE;MFTClustererParam.noiseFilePath=$MFT_NOISE;ITSAlpideParam.roFrameLengthInBC=$ITS_STROBE;MFTAlpideParam.roFrameLengthInBC=$MFT_STROBE;"
   MIDDEC_CONFIG+=" --feeId-config-file \"$MID_FEEID_MAP\""
   GPU_CONFIG_KEY+="GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;"
   # Options for decoding current TRD real raw data (not needed for data converted from MC)
