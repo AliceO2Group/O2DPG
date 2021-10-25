@@ -1,1 +1,5 @@
 ITS-noise-calibration: "O2PDPSuite" reco,10,10,"production/calib/its-noise-processing.sh" calib,10,"production/calib/its-noise-aggregator.sh"
+
+TOF-diagnostic-calibration: "O2PDPSuite" reco,10,10,"SHMSIZE=64000000000 production/calib/tof-standalone-reco.sh" calib,4,"production/calib/tof-diagn-aggregator.sh" 
+
+TOF-time-calibration: "O2PDPSuite" reco,10,10,"SHMSIZE=64000000000 production/calib/tof-standalone-cosmic-reco-time-calib.sh" calib,4,"production/calib/tof-time-calib-aggregator.sh" 

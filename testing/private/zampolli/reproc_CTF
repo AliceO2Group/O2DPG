@@ -1,0 +1,1 @@
+cat ../shahoian/workflows_dpl.desc | grep -v '#' | grep -v '\-TF\-' | grep 'tof' | cut -d':' -f1  | xargs ./run_ext_dpl.sh 
