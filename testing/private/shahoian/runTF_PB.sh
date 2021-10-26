@@ -37,6 +37,18 @@ export MULTIPLICITY_FACTOR_RAWDECODERS=1
 export MULTIPLICITY_FACTOR_CTFENCODERS=1
 export MULTIPLICITY_FACTOR_REST=1
 
+export GPU_EXTRA_CONFIG="GPU_proc.memoryScalingFactor=1.5"
+export ITSTPC_EXTRA_CONFIG="tpcitsMatch.maxVDriftUncertainty=0.2;tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=1000;tpcitsMatch.crudeAbsDiffCut[0]=5;tpcitsMatch.crudeAbsDiffCut[1]=5;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=10;tpcitsMatch.crudeNSigma2Cut[0]=200;tpcitsMatch.crudeNSigma2Cut[1]=200;tpcitsMatch.crudeNSigma2Cut[2]=200;tpcitsMatch.crudeNSigma2Cut[3]=200;tpcitsMatch.crudeNSigma2Cut[4]=900;"
+export MULTIPLICITY_FACTOR_PROCESS_its_tracker=4
+export MULTIPLICITY_FACTOR_PROCESS_its_stf_decoder=4
+export MULTIPLICITY_FACTOR_PROCESS_mft_stf_decoder=2
+export MULTIPLICITY_FACTOR_PROCESS_itstpc_track_matcher=2
+export MULTIPLICITY_FACTOR_PROCESS_tof_matcher=2 
+export ITS_CONFIG=" --tracking-mode sync_misaligned "
+
+export WORKFLOW_EXTRA_PROCESSING_STEPS="MFT_RECO,MID_RECO"  #,MATCH_ITSTPC,MATCH_TPCTRD,MATCH_ITSTPCTRD,MATCH_TPCTOF,MATCH_ITSTPCTOF"
+export WORKFLOW_DETECTORS_FLP_PROCESSING="FT0,FV0"
+
 for wf in "$@"
 do
  export GEN_TOPO_WORKFLOW_NAME=$wf
