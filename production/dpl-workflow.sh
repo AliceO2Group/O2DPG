@@ -96,7 +96,6 @@ GPU_CONFIG_KEY=
 TOF_CONFIG=
 TOF_INPUT=raw
 TOF_OUTPUT=clusters
-ITS_CONFIG=
 ITS_CONFIG_KEY=
 TRD_CONFIG=
 TRD_CONFIG_KEY=
@@ -109,14 +108,14 @@ EMCRAW2C_CONFIG=
 if [ $SYNCMODE == 1 ]; then
   if [ $BEAMTYPE == "PbPb" ]; then
     ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=30;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
-    ITS_CONFIG+=" --tracking-mode sync"
+    [ -z ${ITS_CONFIG+x} ] && ITS_CONFIG=" --tracking-mode sync"
   elif [ $BEAMTYPE == "pp" ]; then
     ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=1;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2"
-    ITS_CONFIG+=" --tracking-mode sync"
+    [ -z ${ITS_CONFIG+x} ] && ITS_CONFIG=" --tracking-mode sync"
   elif [ $BEAMTYPE == "cosmic" ]; then
-    ITS_CONFIG+=" --tracking-mode cosmics"
+    [ -z ${ITS_CONFIG+x} ] && ITS_CONFIG=" --tracking-mode cosmics"
   else
-    ITS_CONFIG+=" --tracking-mode sync"
+    [ -z ${ITS_CONFIG+x} ] && ITS_CONFIG=" --tracking-mode sync"
   fi
   GPU_CONFIG_KEY+="GPU_global.synchronousProcessing=1;GPU_proc.clearO2OutputFromGPU=1;"
   TRD_CONFIG+=" --filter-trigrec"
@@ -124,14 +123,14 @@ if [ $SYNCMODE == 1 ]; then
   TRD_TRANSFORMER_CONFIG+=" --filter-trigrec"
 else
   if [ $BEAMTYPE == "PbPb" ]; then
-    ITS_CONFIG+=" --tracking-mode async"
+    [ -z ${ITS_CONFIG+x} ] && ITS_CONFIG=" --tracking-mode async"
   elif [ $BEAMTYPE == "pp" ]; then
     ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=1;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2"
-    ITS_CONFIG+=" --tracking-mode async"
+    [ -z ${ITS_CONFIG+x} ] && ITS_CONFIG=" --tracking-mode async"
   elif [ $BEAMTYPE == "cosmic" ]; then
-    ITS_CONFIG+=" --tracking-mode cosmics"
+    [ -z ${ITS_CONFIG+x} ] && ITS_CONFIG=" --tracking-mode cosmics"
   else
-    ITS_CONFIG+=" --tracking-mode async"
+    [ -z ${ITS_CONFIG+x} ] && ITS_CONFIG=" --tracking-mode async"
   fi
 fi
 
@@ -198,7 +197,7 @@ has_detectors_reco ITS TPC TOF && has_detector_matching ITSTPCTOF && { add_comma
 has_detectors_reco MFT MCH && has_detector_matching MFTMCH && add_comma_separated TRACK_SOURCES "MFT-MCH"
 for det in `echo $LIST_OF_DETECTORS | sed "s/,/ /g"`; do
   if [[ $LIST_OF_ASYNC_RECO_STEPS =~ (^| )${det}( |$) ]]; then
-    has_processing_step ${det}_RECO && add_comma_separated TRACK_SOURCES "$det"
+    has_detector ${det} && has_processing_step ${det}_RECO && add_comma_separated TRACK_SOURCES "$det"
   else
     has_detector_reco $det && add_comma_separated TRACK_SOURCES "$det"
   fi
@@ -259,7 +258,7 @@ elif [ $EPNPIPELINES != 0 ]; then
   N_EMCREC=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
   N_TRDENT=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
   N_TRDTRK=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
-  N_TPCRAWDEC=$(math_max $((8 * $EPNPIPELINES * $NGPUS / 4)) 1)
+  N_TPCRAWDEC=$(math_max $((12 * $EPNPIPELINES * $NGPUS / 4)) 1)
   if [ $GPUTYPE == "CPU" ]; then
     N_TPCTRK=8
     GPU_CONFIG_KEY+="GPU_proc.ompThreads=4;"
@@ -358,8 +357,8 @@ fi
 # Common reconstruction workflows
 (has_detector_reco TPC || has_detector_ctf TPC) && WORKFLOW+="o2-gpu-reco-workflow ${ARGS_ALL//-severity $SEVERITY/-severity $SEVERITY_TPC} --input-type=$GPU_INPUT $DISABLE_MC --output-type $GPU_OUTPUT --pipeline gpu-reconstruction:${N_TPCTRK:-1} $GPU_CONFIG --configKeyValues \"$ARGS_ALL_CONFIG;GPU_global.deviceType=$GPUTYPE;GPU_proc.debugLevel=0;$GPU_CONFIG_KEY;$GPU_EXTRA_CONFIG\" | "
 (has_detector_reco TOF || has_detector_ctf TOF) && WORKFLOW+="o2-tof-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $TOF_CONFIG --input-type $TOF_INPUT --output-type $TOF_OUTPUT --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N tof-compressed-decoder TOF RAW),$(get_N TOFClusterer TOF REST) | "
-has_detector_reco ITS && WORKFLOW+="o2-its-reco-workflow $ARGS_ALL --trackerCA $DISABLE_MC --clusters-from-upstream $DISABLE_ROOT_OUTPUT $ITS_CONFIG --configKeyValues \"$ARGS_ALL_CONFIG;$ITS_CONFIG_KEY;$ITSMFT_FILES\" --pipeline $(get_N its-tracker ITS REST ITSTRK) | "
-has_detectors_reco ITS TPC && has_detector_matching ITSTPC && WORKFLOW+="o2-tpcits-match-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N itstpc-track-matcher MATCH REST TPCITS) | "
+has_detector_reco ITS && WORKFLOW+="o2-its-reco-workflow $ARGS_ALL --trackerCA $ITS_CONFIG $DISABLE_MC --clusters-from-upstream $DISABLE_ROOT_OUTPUT --configKeyValues \"$ARGS_ALL_CONFIG;$ITS_CONFIG_KEY;$ITSMFT_FILES\" --pipeline $(get_N its-tracker ITS REST ITSTRK) | "
+has_detectors_reco ITS TPC && has_detector_matching ITSTPC && WORKFLOW+="o2-tpcits-match-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSTPC_EXTRA_CONFIG;$ITSMFT_FILES\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N itstpc-track-matcher MATCH REST TPCITS) | "
 has_detector_reco FT0 && WORKFLOW+="o2-ft0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N ft0-reconstructor FT0 REST) | "
 has_detector_reco TRD && WORKFLOW+="o2-trd-tracklet-transformer $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC $TRD_TRANSFORMER_CONFIG --pipeline $(get_N TRDTRACKLETTRANSFORMER TRD REST TRDTRK) | "
 has_detectors_reco TRD TPC ITS && [ ! -z "$TRD_SOURCES" ] && WORKFLOW+="o2-trd-global-tracking $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$TRD_CONFIG_KEY;$ITSMFT_FILES\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC $TRD_CONFIG --track-sources $TRD_SOURCES | "
@@ -367,12 +366,12 @@ has_detectors_reco TOF TRD TPC ITS && [ ! -z "$TOF_SOURCES" ] && WORKFLOW+="o2-t
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Reconstruction workflows normally active only in async mode in async mode ($LIST_OF_ASYNC_RECO_STEPS), but can be forced via $WORKFLOW_EXTRA_PROCESSING_STEPS
-has_processing_step MID_RECO && WORKFLOW+="o2-mid-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N MIDClusterizer MID REST),$(get_N MIDTracker MID REST) | "
-has_processing_step MCH_RECO && WORKFLOW+="o2-mch-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N mch-track-finder MCH REST MCHTRK),$(get_N mch-cluster-finder MCH REST),$(get_N mch-cluster-transformer MCH REST) | "
-has_processing_step MFT_RECO && WORKFLOW+="o2-mft-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" --clusters-from-upstream $DISABLE_MC $DISABLE_ROOT_OUTPUT --pipeline $(get_N mft-tracker MFT REST MFTTRK) | "
-has_processing_step FDD_RECO && WORKFLOW+="o2-fdd-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC | "
-has_processing_step FV0_RECO && WORKFLOW+="o2-fv0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC | "
-has_processing_step ZDC_RECO && WORKFLOW+="o2-zdc-digits-reco $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC | "
+has_detector MID && has_processing_step MID_RECO && WORKFLOW+="o2-mid-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N MIDClusterizer MID REST),$(get_N MIDTracker MID REST) | "
+has_detector MCH && has_processing_step MCH_RECO && WORKFLOW+="o2-mch-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N mch-track-finder MCH REST MCHTRK),$(get_N mch-cluster-finder MCH REST),$(get_N mch-cluster-transformer MCH REST) | "
+has_detector MFT && has_processing_step MFT_RECO && WORKFLOW+="o2-mft-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;$ITSMFT_FILES\" --clusters-from-upstream $DISABLE_MC $DISABLE_ROOT_OUTPUT --pipeline $(get_N mft-tracker MFT REST MFTTRK) | "
+has_detector FDD && has_processing_step FDD_RECO && WORKFLOW+="o2-fdd-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC | "
+has_detector FV0 && has_processing_step FV0_RECO && WORKFLOW+="o2-fv0-reco-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC | "
+has_detector ZDC && has_processing_step ZDC_RECO && WORKFLOW+="o2-zdc-digits-reco $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC | "
 has_detectors_reco MFT MCH && has_detector_matching MFTMCH && WORKFLOW+="o2-globalfwd-matcher-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --disable-root-input $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N globalfwd-track-matcher MATCH REST) | "
 
 if [ $BEAMTYPE != "cosmic" ]; then
