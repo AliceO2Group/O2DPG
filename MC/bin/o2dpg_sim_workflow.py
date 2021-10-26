@@ -834,7 +834,7 @@ if includeQC:
   ### ITSTPC matching
   ITSTPCmatchQCneeds = ['ITSTPCmatchQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
   ITSTPCmatchQCtask = createTask(name='ITSTPCmatchQC_finalize', needs=ITSTPCmatchQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-  ITSTPCmatchQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/ITSTPCmatchedTracks_direct_MC.json --remote-batch/ITSTPCmatchQC.root ' + getDPL_global_options()
+  ITSTPCmatchQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/ITSTPCmatchedTracks_direct_MC.json --remote-batch ITSTPCmatchQC.root ' + getDPL_global_options()
   workflow['stages'].append(ITSTPCmatchQCtask)
 
   ### TOF matching
