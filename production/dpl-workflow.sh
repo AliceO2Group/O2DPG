@@ -283,16 +283,16 @@ if [ $CTFINPUT == 1 ]; then
   GPU_INPUT=compressed-clusters-ctf
   TOF_INPUT=digits
   CTFName=`ls -t $FILEWORKDIR/o2_ctf_*.root 2> /dev/null | head -n1`
-  if [[ -z $CTFName && $WORKFLOWMODE == "print" ]]; then
-    CTFName='$CTFName'
-  fi
-  WORKFLOW="o2-ctf-reader-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --delay $TFDELAY --loop $TFLOOP --max-tf $NTIMEFRAMES --ctf-input ${CTFName} --ctf-dict ${CTF_DICT} --onlyDet $WORKFLOW_DETECTORS --pipeline tpc-entropy-decoder:$N_TPCENTDEC | "
+  [[ -z $CTFName && $WORKFLOWMODE == "print" ]] && CTFName='$CTFName'
+  [[ ! -z $INPUT_FILE_LIST ]] && CTFName=$INPUT_FILE_LIST
+  if [ $NTIMEFRAMES == -1 ]; then NTIMEFRAMES_CMD= ; else NTIMEFRAMES_CMD="--max-tf $NTIMEFRAMES"; fi
+  WORKFLOW="o2-ctf-reader-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --delay $TFDELAY --loop $TFLOOP $NTIMEFRAMES_CMD --ctf-input ${CTFName} ${INPUT_FILE_COPY_CMD+--copy-cmd} ${INPUT_FILE_COPY_CMD} --ctf-dict ${CTF_DICT} --onlyDet $WORKFLOW_DETECTORS --pipeline tpc-entropy-decoder:$N_TPCENTDEC | "
 elif [ $RAWTFINPUT == 1 ]; then
   TFName=`ls -t $FILEWORKDIR/o2_*.tf 2> /dev/null | head -n1`
-  if [[ -z $TFName && $WORKFLOWMODE == "print" ]]; then
-    TFName='$TFName'
-  fi
-  WORKFLOW="o2-raw-tf-reader-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --delay $TFDELAY --loop $TFLOOP --max-tf $NTIMEFRAMES --input-data ${TFName} --onlyDet $WORKFLOW_DETECTORS | "
+  [[ -z $TFName && $WORKFLOWMODE == "print" ]] && TFName='$TFName'
+  [[ ! -z $INPUT_FILE_LIST ]] && TFName=$INPUT_FILE_LIST
+  if [ $NTIMEFRAMES == -1 ]; then NTIMEFRAMES_CMD= ; else NTIMEFRAMES_CMD="--max-tf $NTIMEFRAMES"; fi
+  WORKFLOW="o2-raw-tf-reader-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --delay $TFDELAY --loop $TFLOOP $NTIMEFRAMES_CMD --input-data ${TFName} ${INPUT_FILE_COPY_CMD+--copy-cmd} ${INPUT_FILE_COPY_CMD} --onlyDet $WORKFLOW_DETECTORS | "
 elif [ $EXTINPUT == 1 ]; then
   PROXY_CHANNEL="name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=0"
   PROXY_INSPEC="dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
@@ -325,7 +325,8 @@ elif [ $EXTINPUT == 1 ]; then
   done
   WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --dataspec \"$PROXY_INSPEC\" --channel-config \"$PROXY_CHANNEL\" | "
 else
-  WORKFLOW="o2-raw-file-reader-workflow --detect-tf0 $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;HBFUtils.nHBFPerTF=$NHBPERTF;\" --delay $TFDELAY --loop $NTIMEFRAMES --max-tf 0 --input-conf $FILEWORKDIR/rawAll.cfg | "
+  if [ $NTIMEFRAMES == -1 ]; then NTIMEFRAMES_CMD= ; else NTIMEFRAMES_CMD="--loop $NTIMEFRAMES"; fi
+  WORKFLOW="o2-raw-file-reader-workflow --detect-tf0 $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG;HBFUtils.nHBFPerTF=$NHBPERTF;\" --delay $TFDELAY $NTIMEFRAMES_CMD --max-tf 0 --input-conf $FILEWORKDIR/rawAll.cfg | "
 fi
 
 # ---------------------------------------------------------------------------------------------------------------------
