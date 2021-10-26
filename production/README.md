@@ -49,8 +49,45 @@ For user modification of the workflow settings, the folloing *EXTRA* environment
 
 In case the CTF dictionaries were created from the data drastically different from the one being compressed, the default memory allocation for the CTF buffer might be insufficient. One can apply scaling factor to the buffer size estimate (default=1.5) of particular detector by defining variable e.g. `TPC_ENC_MEMFACT=3.5`
 
+# File input for ctf-reader / raw-tf-reader
+- The variable `$INPUT_FILE_LIST` can be a comma-seperated list of file, or a file with a file-list of CTFs/raw TFs.
+- The variable `$INPUT_FILE_COPY_CMD` can provide a custom copy command (default is to fetch the files from EOS).
+
 # Remarks on QC
 The JSON files for the individual detectors are merged into one JSON file, which is cached during the run on the shared EPN home folder.
 The default JSON file per detector is defined in `qc-workflow.sh`.
 JSONs per detector can be overridden by exporting `QC_JSON_[DETECTOR_NAME]`, e.g. `QC_JSON_TPC`, when creating the workflow.
 The global section of the merged qc JSON config is taken from qc_global.json
+
+# run-workflow-on-inputlist.sh
+`O2/prodtests/full-system-test/run-workflow-on-inputlist.sh` is a small tool to run the `dpl-workflow.sh` on a list of files.
+Technically, it is a small wrapper which just launches `dpl-workflow.sh`, and optionally the `StfBuilder` in parallel.
+
+*NOTE*: Currently it uses the `dpl-workflow.sh` in the O2 repo, not the O2DataProcessing repo. During development, there are 2 copies of this script. This will be cleaned up soon.
+
+The syntax is:
+```
+run-workflow-on-inputlist.sh [CTF | DD | TF] [name of file with list of files to be processed] [Timeout in seconds (optional: default = disabled)] [Log to stdout (optional: default = enabled)]
+```
+The modes are:
+- DD: Read raw timeframes using DataDistribution / StfBuilder
+- TF: Read raw timeframes using o2-raw-tf-reader-workflow
+- CTF: Read CTFs using the o2-ctf-reader-workflow
+
+The second argument is the name of a list-files containing a list of files to be processed.
+In the CTF and TF modes, it can also be a comma-separated list, but this is not supported in the DD mode.
+- (The work `LOCAL` may be used to fetch files from the local folder.)
+- (In case the copy command must be adjusted, use `$INPUT_FILE_COPY_CMD`)
+
+The third parameter is an optional timeout in seconds, after which the processing is aborted.
+
+The forth parameter enables writing of all workflow output to stdout in addition.
+In any case the output is logged to files log_[date]_*.log.
+
+The tool passes all env variables on to `dpl-workflow.sh` thus it can be used in the same way.
+*Note* Not that when running in `DD` mode, the SHM size for the StfBuilder must be provided. *NOTE* that this is in MB not in bytes.
+
+An example command line is:
+```
+EPNMODE=1 WORKFLOW_DETECTORS=TPC XrdSecSSSKT=~/.eos/my.key TFDELAY=10 NTIMEFRAMES=10 SHMSIZE=32000000000 DDSHMSIZE=32000 ~/alice/O2/prodtests/full-system-test/run-workflow-on-inputlist.sh DD file_list.txt 500 1
+```
