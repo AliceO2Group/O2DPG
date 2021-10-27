@@ -725,7 +725,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      ### Primary vertex
      vertexQCneeds = [PVFINDERtask['name']]
      vertexQCtask = createTask(name='vertexQC_local'+str(tf), needs=vertexQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     vertexQCtask['cmd'] = 'o2-primary-vertex-reader-workflow | o2-qc --config json://${QUALITYCONTROL_ROOT}/etc/vertexing-qc-direct-mc.json --local-batch ../' + qcdir + '/vertexQC.root ' + getDPL_global_options()
+     vertexQCtask['cmd'] = 'o2-primary-vertex-reader-workflow | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json --local-batch ../' + qcdir + '/vertexQC.root ' + getDPL_global_options()
      vertexQCtask['semaphore'] = 'vertexQC'
      workflow['stages'].append(vertexQCtask)
 
@@ -842,7 +842,7 @@ if includeQC:
   ### vertexing
   vertexQCneeds = ['vertexQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
   vertexQCtask = createTask(name='vertexQC_finalize', needs=vertexQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-  vertexQCtask['cmd'] = 'o2-qc --config json://${QUALITYCONTROL_ROOT}/etc/vertexing-qc-direct-mc.json --remote-batch vertexQC.root ' + getDPL_global_options()
+  vertexQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json --remote-batch vertexQC.root ' + getDPL_global_options()
   workflow['stages'].append(vertexQCtask)
 
   ### ITSTPC matching
