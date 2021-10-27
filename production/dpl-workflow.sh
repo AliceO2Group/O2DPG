@@ -110,7 +110,7 @@ if [ $SYNCMODE == 1 ]; then
     ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=30;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;"
     [ -z ${ITS_CONFIG+x} ] && ITS_CONFIG=" --tracking-mode sync"
   elif [ $BEAMTYPE == "pp" ]; then
-    ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=1;fastMultConfig.cutMultClusHigh=2000;fastMultConfig.cutMultVtxHigh=500;ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2"
+    ITS_CONFIG_KEY+="fastMultConfig.cutMultClusLow=-1;fastMultConfig.cutMultClusHigh=-1;fastMultConfig.cutMultVtxHigh=-1;ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2"
     [ -z ${ITS_CONFIG+x} ] && ITS_CONFIG=" --tracking-mode sync"
   elif [ $BEAMTYPE == "cosmic" ]; then
     [ -z ${ITS_CONFIG+x} ] && ITS_CONFIG=" --tracking-mode cosmics"
