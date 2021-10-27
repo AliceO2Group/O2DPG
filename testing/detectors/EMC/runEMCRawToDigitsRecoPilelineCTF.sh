@@ -18,7 +18,8 @@ ARGS_ALL="-b --session default --shm-segment-size $SHMSIZE"
 # CTF compression dictionary
 CTF_DICT="${FILEWORKDIR}/ctf_dictionary.root"
 # min file size for CTF (accumulate CTFs until it is reached)
-CTF_MINSIZE="2000000"t
+CTF_MINSIZE="500000000"
+CTF_MAX_PER_FILE=10000
 
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \
@@ -37,6 +38,9 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --pipeline EMCALRawToCellConverterSpec:8 \
     | o2-emcal-entropy-encoder-workflow $ARGS_ALL \
     --ctf-dict "${CTF_DICT}" \
+    --mem-factor 5 \
+    --severity info \
+    --infologger-severity warning \
     | o2-ctf-writer-workflow $ARGS_ALL \
     --configKeyValues "${CONFKEYVAL}" \
     --no-grp \
@@ -45,4 +49,5 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --output-dir $CTF_DIR \
     --meta-output-dir ${CTF_METAFILES_DIR} \
     --min-file-size "${CTF_MINSIZE}" \
+    --max-ctf-per-file "${CTF_MAX_PER_FILE}" \
     | o2-dpl-run $ARGS_ALL --dds
