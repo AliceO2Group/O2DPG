@@ -29,7 +29,7 @@ You can use the following options to change the workflow behavior:
 - `MULTIPLICITY_FACTOR_RAWDECODERS` (default `1`) : Scales the number of parallel processes used for raw decoding by this factor.
 - `MULTIPLICITY_FACTOR_CTFENCODERS` (default `1`) : Scales the number of parallel processes used for CTF encoding by this factor.
 - `MULTIPLICITY_FACTOR_REST` (default `1`) : Scales the number of other reconstruction processes by this factor.
-- `QC_JSON_EXTRA` (default `NONE`) : extra QC jsons to add (if does not fit to those defined in WORKFLOW_DETECTORS_QC & (WORKFLOW_DETECTORS | WORKFLOW_DETECTORS_MATCHING) 
+- `QC_JSON_EXTRA` (default `NONE`) : extra QC jsons to add (if does not fit to those defined in WORKFLOW_DETECTORS_QC & (WORKFLOW_DETECTORS | WORKFLOW_DETECTORS_MATCHING)
 Most of these settings are configurable in the AliECS GUI. But some of the uncommon settings (`WORKFLOW_DETECTORS_FLP_PROCESSING`, `WORKFLOW_DETECTORS_CTF`, `WORKFLOW_DETECTORS_RECO`, `WORKFLOW_DETECTORS_MATCHING`, `WORKFLOW_EXTRA_PROCESSING_STEPS`, advanced `MULTIPLICITY_FACTOR` settings) can only be set via the "Additional environment variables field" in the GUI using bash syntax, e.g. `WORKFLOW_DETECTORS_FLP_PROCESSING=TPC`.
 
 # Process multiplicity factors
@@ -46,6 +46,8 @@ For user modification of the workflow settings, the folloing *EXTRA* environment
 - `ARGS_ALL_EXTRA` : Extra command line options added to all workflows
 - `ALL_EXTRA_CONFIG` : Extra config key values added to all workflows
 - `GPU_EXTRA_CONFIG` : Extra options added to the configKeyValues of the GPU workflow
+- `ARGS_EXTRA_PROCESS_[WORKFLOW_NAME]` : Extra command line arguments for the workflow binary `WORKFLOW_NAME`. Dashes `-` must be replaced by underscores `_` in the name! E.g. `ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--output-type clusters"`
+- `CONFIG_EXTRA_PROCESS_[WORKFLOW_NAME]` : Extra `--configKeyValues` arguments for the workflow binary `WORKFLOW_NAME`. Dashes `-` must be replaced by underscores `_` in the name! E.g. `CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="GPU_proc.debugLevel=1;GPU_proc.ompKernels=0;"`
 
 In case the CTF dictionaries were created from the data drastically different from the one being compressed, the default memory allocation for the CTF buffer might be insufficient. One can apply scaling factor to the buffer size estimate (default=1.5) of particular detector by defining variable e.g. `TPC_ENC_MEMFACT=3.5`
 

@@ -64,5 +64,5 @@ if [ ! -z "$JSON_FILES" ]; then
   fi
   MERGED_JSON_FILENAME=`realpath $MERGED_JSON_FILENAME`
 
-  WORKFLOW+="o2-qc $ARGS_ALL --config json://$MERGED_JSON_FILENAME --local --host $QC_HOST | "
+  add_W o2-qc "--config json://$MERGED_JSON_FILENAME --local --host $QC_HOST" "" 0
 fi
