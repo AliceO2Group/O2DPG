@@ -290,3 +290,8 @@ New DDS topology successfully created and saved to a file "/home/drohr/gen_topo/
 DDS topology "topology" successfully opened from file "/home/drohr/gen_topo/test/output.xml"
 Done
 ```
+
+# Creating a script to run a workflow locally
+- The workflow scripts should support the `WORKFLOWMODE=print` option, in which case they do not start the workflow, but print the command line to start the workflow.
+- The parser also supports `WORKFLOWMODE=print` and will in that case write the command line to the output file, in case the full topology will be composed of multiple commands, it will write all command lines.
+- Finally the `run.sh` wrapper to simulate the AliECS GUI does support the mode `WORKFLOWMODE=print`. In order to run it locally on your laptop at home, please also set `GEN_TOPO_RUN_HOME=1`.

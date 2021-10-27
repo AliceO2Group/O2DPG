@@ -23,8 +23,12 @@ if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then echo \$MULTIPLICITY_FACTOR_REST miss
 [ -z "$GEN_TOPO_WORKDIR" ] && export GEN_TOPO_WORKDIR=$HOME/gen_topo/${GEN_TOPO_PARTITION}_${GEN_TOPO_ONTHEFLY} # Persistent working directory for checkout O2DataProcessing repository and for XML cache. Must be per partition. This script must not run twice in parallel with the same workdir
 [ -z "$GEN_TOPO_STDERR_LOGGING" ] && export GEN_TOPO_STDERR_LOGGING=1
 
-# Load required module and run gen_topo_o2dataprocessing (PDP part of this script)
-module load ODC O2DataProcessing 1>&2 || { echo Error loading ODC / O2DataProcessing 1>&2; exit 1; }
+if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
+  [[ $WORKFLOWMODE != "print" ]] && { echo "ERROR: GEN_TOPO_RUN_HOME is only supported with WORKFLOWMODE=print!" 1>&2; exit 1; }
+else
+  # Load required module and run gen_topo_o2dataprocessing (PDP part of this script)
+  module load ODC O2DataProcessing 1>&2 || { echo Error loading ODC / O2DataProcessing 1>&2; exit 1; }
+fi
 $O2DATAPROCESSING_ROOT/tools/epn/gen_topo_o2dataprocessing.sh
 if [ $? != 0 ]; then
   echo topology generation failed 1>&2

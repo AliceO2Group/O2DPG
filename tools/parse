@@ -63,7 +63,7 @@ for line in f:
         recoworkflows = []
         calibworkflows = []
         print("Found topology", sys.argv[2], "-", args)
-        if 'EPNMODE' in os.environ and int(os.environ['EPNMODE']):
+        if 'EPNMODE' in os.environ and int(os.environ['EPNMODE']) and (not 'GEN_TOPO_RUN_HOME' in os.environ or not int(os.environ['GEN_TOPO_RUN_HOME'])):
             for i in args[1].split():
                 if "GEN_TOPO_CACHEABLE" in os.environ and os.environ['GEN_TOPO_CACHEABLE'] == "1":
                     if i.find("/") == -1 or i.find("/latest") != -1:

@@ -1,8 +1,8 @@
 #!/bin/bash
 mkdir -p $GEN_TOPO_WORKDIR/cache || { echo Error creating directory 1>&2; exit 1; }
-cd $GEN_TOPO_WORKDIR || { echo Cannot enter work dir 1>&2; exit 1; }
-if [ ! -d O2DataProcessing ]; then git clone https://github.com/AliceO2Group/O2DataProcessing.git 1>&2 || { echo O2DataProcessing checkout failed 1>&2; exit 1; }; fi
 if [ $GEN_TOPO_HASH == 1 ]; then
+  cd $GEN_TOPO_WORKDIR || { echo Cannot enter work dir 1>&2; exit 1; }
+  if [ ! -d O2DataProcessing ]; then git clone https://github.com/AliceO2Group/O2DataProcessing.git 1>&2 || { echo O2DataProcessing checkout failed 1>&2; exit 1; }; fi
   if [ "0$GEN_TOPO_ONTHEFLY" == "01" ]; then
     export GEN_TOPO_CACHEABLE=1
   fi

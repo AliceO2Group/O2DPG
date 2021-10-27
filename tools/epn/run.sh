@@ -25,9 +25,14 @@ export MULTIPLICITY_FACTOR_RAWDECODERS=1                             # Factor to
 export MULTIPLICITY_FACTOR_CTFENCODERS=1                             # Factor to scale number of CTF encoders with
 export MULTIPLICITY_FACTOR_REST=1                                    # Factor to scale number of other processes with
 
-export OUTPUT_FILE_NAME=$HOME/gen_topo_output.xml
-
-/home/epn/pdp/gen_topo.sh > $OUTPUT_FILE_NAME
-if [ $? == 0 ]; then
+export OUTPUT_FILE_NAME=gen_topo_output.xml
+if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
+  [[ -z $O2DATAPROCESSING_ROOT || -z $O2_ROOT ]] && { echo "ERROR: O2 and O2DataProcessing must be in the environment!"; exit 1; }
+  $O2DATAPROCESSING_ROOT/tools/epn/gen_topo.sh > $OUTPUT_FILE_NAME
+else
+  [[ ! -f /home/epn/pdp/gen_topo.sh ]] && { echo "ERROR: EPN installation of gen_topo.sh missing. Are you trying to run at home? Then please set GEN_TOPO_RUN_HOME=1!"; exit 1; }
+  /home/epn/pdp/gen_topo.sh > $OUTPUT_FILE_NAME
+fi
+if [[ $? == 0 ]]; then
   echo Generated XML topology $OUTPUT_FILE_NAME
 fi

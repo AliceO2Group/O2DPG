@@ -418,10 +418,10 @@ if has_processing_step ENTROPY_ENCODER && [ ! -z "$WORKFLOW_DETECTORS_CTF" ] && 
   has_detector_ctf CTP && add_W o2-ctp-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${CTP_ENC_MEMFACT:-1.5} --pipeline $(get_N its-entropy-encoder CTP CTF)"
 
   # CTF / dictionary writer workflow
-  if [ $SAVECTF == 1 ]; then
+  if [[ $SAVECTF == 1 && $WORKFLOWMODE == "run" ]]; then
     mkdir -p $CTF_DIR
   fi
-  if [ $CREATECTFDICT == 1 ] ; then
+  if [[ $CREATECTFDICT == 1 && $WORKFLOWMODE == "run" ]] ; then
     mkdir -p $CTF_DICT_DIR;
     rm -f $CTF_DICT
   fi
