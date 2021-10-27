@@ -768,7 +768,7 @@ class WorkflowExecutor:
             process_list.remove(p)
             if returncode != 0:
                print (str(tid) + ' failed ... checking retry')
-               # we inspect if this is something "unlucky" which could be resolved by a simple rebsumit
+               # we inspect if this is something "unlucky" which could be resolved by a simple resubmit
                if self.is_worth_retrying(tid) and self.retry_counter[tid] < 2:
                  print (str(tid) + ' to be retried')
                  actionlogger.info ('Task ' + str(self.idtotask[tid]) + ' failed but marked to be retried ')
@@ -832,7 +832,7 @@ class WorkflowExecutor:
     def send_checkpoint(self, taskids, location):
         # Makes a tarball containing all files in the base dir
         # (timeframe independent) and the dir with corrupted timeframes
-        # and copies it to a specific ALIEN location. Not are core function
+        # and copies it to a specific ALIEN location. Not a core function
         # just some tool get hold on error conditions appearing on the GRID.
 
         def get_tar_command(dir='./', flags='cf', filename='checkpoint.tar'):
