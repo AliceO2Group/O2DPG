@@ -2,7 +2,7 @@
 
 source common/setenv.sh
 
-SEVERITY=INFO
+SEVERITY=WARNING
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
 ARGS_ALL+=" --infologger-severity $SEVERITY"
 #CTFOUT="/home/afurs/public/out/"
