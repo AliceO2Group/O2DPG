@@ -64,5 +64,9 @@ if [ ! -z "$JSON_FILES" ]; then
   fi
   MERGED_JSON_FILENAME=`realpath $MERGED_JSON_FILENAME`
 
+  if [[ "0$QC_REDIRECT_MERGER_TO_LOCALHOST" == "01" ]]; then
+    sed -i -E 's/( *)"remoteMachine" *: *".*"(,|) *$/\1"remoteMachine": "127.0.0.1"\2/' $MERGED_JSON_FILENAME
+  fi
+
   add_W o2-qc "--config json://$MERGED_JSON_FILENAME --local --host $QC_HOST" "" 0
 fi

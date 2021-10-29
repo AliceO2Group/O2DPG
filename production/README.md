@@ -93,3 +93,7 @@ An example command line is:
 ```
 EPNMODE=1 WORKFLOW_DETECTORS=TPC XrdSecSSSKT=~/.eos/my.key TFDELAY=10 NTIMEFRAMES=10 SHMSIZE=32000000000 DDSHMSIZE=32000 ~/alice/O2/prodtests/full-system-test/run-workflow-on-inputlist.sh DD file_list.txt 500 1
 ```
+
+# Local QC testing
+For testing a workflow with QC locally, the sending of data to QC mergers must be disabled. For this, the qc-workflow.sh supports the option `QC_REDIRECT_MERGER_TO_LOCALHOST=1` which redirects all messages to the remote machines to `localhost`.
+Since the channels are `pub/sub` they are non-blocking.
