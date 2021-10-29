@@ -518,7 +518,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # in case of embedding we engineer the context directly and allow the user to provide an embedding pattern
    # The :r flag means to shuffle the background events randomly
    if doembedding:
-      ContextTask['cmd'] += ';o2-steer-colcontexttool -i bkg,' + str(INTRATE) + ',' + str(args.nb) + ':r' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF)
+      ContextTask['cmd'] += ';o2-steer-colcontexttool -i bkg,' + str(INTRATE) + ',' + str(args.nb) + ':' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF)
 
       if BCPATTERN != '':
          ContextTask['cmd'] += ' --bcPatternFile "' + BCPATTERN + '"'
