@@ -265,6 +265,8 @@ elif [ $EPNPIPELINES != 0 ]; then
   else
     N_TPCTRK=$NGPUS
   fi
+else
+  N_TPCTRK=$NGPUS
 fi
 # Scale some multiplicities with the number of nodes
 RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15) * ($NUMAGPUIDS == 1 ? 2 : 1))) # Limit the lowert scaling factor, multiply by 2 if we have 2 NUMA domains
