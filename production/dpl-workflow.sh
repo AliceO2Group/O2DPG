@@ -13,7 +13,7 @@ if [ -z $CTF_DIR ];                  then CTF_DIR=$FILEWORKDIR; fi           # D
 if [ -z $CTF_DICT_DIR ];             then CTF_DICT_DIR=$FILEWORKDIR; fi      # Directory of CTF dictionaries
 if [ -z $CTF_METAFILES_DIR ];        then CTF_METAFILES_DIR="/dev/null"; fi  # Directory where to store CTF files metada, /dev/null : skip their writing
 if [ -z $RECO_NUM_NODES_WORKFLOW ];  then RECO_NUM_NODES_WORKFLOW=250; fi    # Number of EPNs running this workflow in parallel, to increase multiplicities if necessary, by default assume we are 1 out of 250 servers
-if [ -z $CTF_MINSIZE ];              then CTF_MINSIZE="500000000"; fi        # accumulate CTFs until file size reached
+if [ -z $CTF_MINSIZE ];              then CTF_MINSIZE="2000000000"; fi        # accumulate CTFs until file size reached
 if [ -z $CTF_MAX_PER_FILE ];         then CTF_MAX_PER_FILE="10000"; fi       # but no more than given number of CTFs per file
 if [ -z $IS_SIMULATED_DATA ];        then IS_SIMULATED_DATA=1; fi            # processing simulated data
 
@@ -406,7 +406,7 @@ if has_processing_step ENTROPY_ENCODER && [ ! -z "$WORKFLOW_DETECTORS_CTF" ] && 
   has_detector_ctf FT0 && add_W o2-ft0-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${FT0_ENC_MEMFACT:-1.5} --pipeline $(get_N ft0-entropy-encoder FT0 CTF)"
   has_detector_ctf FV0 && add_W o2-fv0-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${FV0_ENC_MEMFACT:-1.5} --pipeline $(get_N fv0-entropy-encoder FV0 CTF)"
   has_detector_ctf MID && add_W o2-mid-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${MID_ENC_MEMFACT:-1.5} --pipeline $(get_N mid-entropy-encoder MID CTF)"
-  has_detector_ctf MCH && add_W o2-mch-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${MCH_ENC_MEMFACT:-1.5} --pipeline $(get_N mch-entropy-encoder MCH CTF)"
+  has_detector_ctf MCH && add_W o2-mch-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\"  --pipeline $(get_N mch-entropy-encoder MCH CTF)"
   has_detector_ctf PHS && add_W o2-phos-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${PHS_ENC_MEMFACT:-1.5} --pipeline $(get_N phos-entropy-encoder PHS CTF)"
   has_detector_ctf CPV && add_W o2-cpv-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${CPV_ENC_MEMFACT:-1.5} --pipeline $(get_N cpv-entropy-encoder CPV CTF)"
   has_detector_ctf EMC && add_W o2-emcal-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${EMC_ENC_MEMFACT:-1.5} --pipeline $(get_N emcal-entropy-encoder EMC CTF)"
