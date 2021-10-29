@@ -76,6 +76,8 @@ The modes are:
 - TF: Read raw timeframes using o2-raw-tf-reader-workflow
 - CTF: Read CTFs using the o2-ctf-reader-workflow
 
+> **NOTE:** The DD mode does not support a list of local files as input. For processing a few local files one should use the TF mode.
+
 The second argument is the name of a list-files containing a list of files to be processed.
 In the CTF and TF modes, it can also be a comma-separated list, but this is not supported in the DD mode.
 - (The work `LOCAL` may be used to fetch files from the local folder.)
