@@ -406,7 +406,7 @@ if has_processing_step ENTROPY_ENCODER && [ ! -z "$WORKFLOW_DETECTORS_CTF" ] && 
   has_detector_ctf FT0 && add_W o2-ft0-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${FT0_ENC_MEMFACT:-1.5} --pipeline $(get_N ft0-entropy-encoder FT0 CTF)"
   has_detector_ctf FV0 && add_W o2-fv0-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${FV0_ENC_MEMFACT:-1.5} --pipeline $(get_N fv0-entropy-encoder FV0 CTF)"
   has_detector_ctf MID && add_W o2-mid-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${MID_ENC_MEMFACT:-1.5} --pipeline $(get_N mid-entropy-encoder MID CTF)"
-  has_detector_ctf MCH && add_W o2-mch-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\"  --pipeline $(get_N mch-entropy-encoder MCH CTF)"
+  has_detector_ctf MCH && add_W o2-mch-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${MCH_ENC_MEMFACT:-1.5} --pipeline $(get_N mch-entropy-encoder MCH CTF)"
   has_detector_ctf PHS && add_W o2-phos-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${PHS_ENC_MEMFACT:-1.5} --pipeline $(get_N phos-entropy-encoder PHS CTF)"
   has_detector_ctf CPV && add_W o2-cpv-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${CPV_ENC_MEMFACT:-1.5} --pipeline $(get_N cpv-entropy-encoder CPV CTF)"
   has_detector_ctf EMC && add_W o2-emcal-entropy-encoder-workflow "--ctf-dict \"${CTF_DICT}\" --mem-factor ${EMC_ENC_MEMFACT:-1.5} --pipeline $(get_N emcal-entropy-encoder EMC CTF)"
@@ -446,6 +446,11 @@ workflow_has_parameter CALIB && has_detector_calib TPC && has_detectors TPC ITS 
 [ -z "$ED_TRACKS" ] && ED_TRACKS=$TRACK_SOURCES
 [ -z "$ED_CLUSTERS" ] && ED_CLUSTERS=$TRACK_SOURCES
 workflow_has_parameter EVENT_DISPLAY && [ $NUMAID == 0 ] && add_W o2-eve-display "--display-tracks $ED_TRACKS --display-clusters $ED_CLUSTERS $EVE_CONFIG $DISABLE_MC" "$ITSMFT_FILES"
+
+# ---------------------------------------------------------------------------------------------------------------------
+# AOD
+[ -z "$AOD_INPUT" ] && AOD_INPUT=$TRACK_SOURCES
+has_detector_matching AOD && add_W o2-aod-producer-workflow "--info-sources $AOD_INPUT --disable-root-input --aod-writer-keep dangling --aod-writer-resfile "AO2D" --aod-writer-resmode UPDATE $DISABLE_MC"
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Quality Control
