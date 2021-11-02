@@ -22,7 +22,6 @@ import argparse
 from os import environ, mkdir
 from os.path import join, dirname, isdir
 import json
-import array as arr
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
@@ -45,7 +44,6 @@ parser.add_argument('-eB',help='Beam B energy', default=-1)
 parser.add_argument('-col',help='collision system: pp, PbPb, pPb, Pbp, ..., in case of embedding collision system of signal', default='pp')
 parser.add_argument('-field',help='L3 field rounded to kGauss, allowed: values +-2,+-5 and 0; +-5U for uniform field', default='-5')
 
-parser.add_argument('-ptHatBin',help='pT hard bin number', default=-1)
 parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
 parser.add_argument('-ptHatMax',help='pT hard maximum when no bin requested', default=-1)
 parser.add_argument('-weightPow',help='Flatten pT hard spectrum with power', default=-1)
@@ -310,47 +308,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    WEIGHTPOW=float(args.weightPow)
    PTHATMIN=float(args.ptHatMin)
    PTHATMAX=float(args.ptHatMax)
-
-   # Recover PTHATMIN and PTHATMAX from pre-defined array depending bin number PTHATBIN
-   # I think these arrays can be removed and rely on scripts where the arrays are hardcoded
-   # it depends how this will be handled on grid execution
-   # like in run/PWGGAJE/run_decaygammajets.sh run/PWGGAJE/run_jets.sh, run/PWGGAJE/run_dirgamma.sh
-   # Also, if flat pT hard weigthing become standard this will become obsolete. Let's keep it for the moment.
-   PTHATBIN=int(args.ptHatBin)
-
-   # I would move next lines to a external script, not sure how to do it (GCB)
-   if PTHATBIN > -1:
-           # gamma-jet 
-      if   PROCESS == 'dirgamma': 
-           low_edge = arr.array('l', [5,  11, 21, 36, 57, 84])
-           hig_edge = arr.array('l', [11, 21, 36, 57, 84, -1])
-           PTHATMIN=low_edge[PTHATBIN]
-           PTHATMAX=hig_edge[PTHATBIN]
-           # jet-jet
-      elif PROCESS == 'jets': 
-          # Biased jet-jet
-          # Define the pt hat bin arrays and set bin depending threshold
-           if   "TrigPt3_5" in INIFILE:
-                low_edge = arr.array('l', [5, 7,  9, 12, 16, 21])
-                hig_edge = arr.array('l', [7, 9, 12, 16, 21, -1])
-                PTHATMIN=low_edge[PTHATBIN]
-                PTHATMAX=hig_edge[PTHATBIN]
-           elif  "TrigPt7" in INIFILE:
-                low_edge = arr.array('l', [ 8, 10, 14, 19, 26, 35, 48, 66])
-                hig_edge = arr.array('l', [10, 14, 19, 26, 35, 48, 66, -1])
-                PTHATMIN=low_edge[PTHATBIN]
-                PTHATMAX=hig_edge[PTHATBIN]
-           #unbiased
-           else:
-                low_edge = arr.array('l', [ 0, 5, 7,  9, 12, 16, 21, 28, 36, 45, 57, 70, 85,  99, 115, 132, 150, 169, 190, 212, 235])
-                hig_edge = arr.array('l', [ 5, 7, 9, 12, 16, 21, 28, 36, 45, 57, 70, 85, 99, 115, 132, 150, 169, 190, 212, 235,  -1])
-                PTHATMIN=low_edge[PTHATBIN]
-                PTHATMAX=hig_edge[PTHATBIN]
-      else:
-           low_edge = arr.array('l', [ 0, 5, 7,  9, 12, 16, 21, 28, 36, 45, 57, 70, 85,  99, 115, 132, 150, 169, 190, 212, 235])
-           hig_edge = arr.array('l', [ 5, 7, 9, 12, 16, 21, 28, 36, 45, 57, 70, 85, 99, 115, 132, 150, 169, 190, 212, 235,  -1])
-           PTHATMIN=low_edge[PTHATBIN]
-           PTHATMAX=hig_edge[PTHATBIN]
            
    # translate here collision type to PDG
    COLTYPE=args.col
@@ -475,7 +432,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       if   COLTYPEIR=="PbPb":
          INTRATE=50000 #Hz
       elif COLTYPEIR=="pp":
-         INTRATE=400000 #Hz
+         INTRATE=500000 #Hz
       else: #pPb?
          INTRATE=200000 #Hz ???
 
