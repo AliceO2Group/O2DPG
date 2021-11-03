@@ -110,14 +110,14 @@ DDWORKFLOW=tools/datadistribution_workflows/dd-processing.xml WORKFLOW_DETECTORS
 ```
 - The following environment variables steer the *Parser*:
   - `$FILEWORKDIR`: This variable must be set and is used by the workflows to specify where all required files (grp, geometry, dictionaries, etc) are located.
-  - `$EPNMODE`: If set the parser assumes it is running on the EPN. If so it will automatically load the modules specified in the topology description. This variable is further used by the workflows themselves, e.g. to activate the InfoLogger and the Metrics monitoring.
+  - `$EPNSYNCMODE`: If set the parser assumes it is running on the EPN for synchronous processing. If so it will automatically load the modules specified in the topology description. This variable is further used by the workflows themselves, e.g. to activate the InfoLogger and the Metrics monitoring.
   - `$INRAWCHANNAME`: Propagated to the workflow, defines the raw FMQ channel name used for the communication with DataDistribution.
   - `$RECO_NUM_NODES_OVERRIDE`: Overrides the number of nodes used for reconstruction (empty or 0 to disable)
   - `$DDMODE`: How to operate DataDistribution: **discard** (build TF and discard them), **disk** (build TF and store to disk), **processing** (build TF and run DPL workflow on TF data), **processing-disk** (both store TF to disk and run processing).
   - `$DDWORKFLOW`: (*alternative*): Explicit path to the XML file with the partial workflow for *DataDistribution*.
   - `$GEN_TOPO_IGNORE_ERROR`: Ignore ERROR messages during workflow creation.
   - `$WORKFLOWMODE`: Can be set to print. In that case the parser will not create the DDS topology output, but the list of shell commands to start to run the workflows locally.
-- When run on the EPN farm (indicated by the `$EPNMODE=1` variable), the *parser* will automaticall `module load` the modules specified in the *topology description*. Otherwise the user must load the respective O2 / QC version by himself.
+- When run on the EPN farm for synchronous processing (indicated by the `$EPNSYNCMODE=1` variable), the *parser* will automaticall `module load` the modules specified in the *topology description*. Otherwise the user must load the respective O2 / QC version by himself.
 - The parser exports the env variable `$RECO_NUM_NODES_WORKFLOW` that contains on how many nodes the workflow will be running when running the workflow script. This can be used to tune the process multiplicities.
 
 # Creating a full topology DDS XML file manually using the parser:
@@ -127,9 +127,9 @@ DDWORKFLOW=tools/datadistribution_workflows/dd-processing.xml WORKFLOW_DETECTORS
 - Make sure the `odc-topo-epn` is in your path (e.g. `module load ODC` / `alienv enter ODC/latest`).
 - Set the required environment variables, e.g.
 ```
-FILEWORKDIR=/home/epn/odc/files EPNMODE=1 DDWORKFLOW=tools/datadistribution_workflows/dd-processing.xml INRAWCHANNAME=tf-builder-pipe-0 WORKFLOW_DETECTORS=TPC,ITS,TRD,TOF,FT0
+FILEWORKDIR=/home/epn/odc/files EPNSYNCMODE=1 DDWORKFLOW=tools/datadistribution_workflows/dd-processing.xml INRAWCHANNAME=tf-builder-pipe-0 WORKFLOW_DETECTORS=TPC,ITS,TRD,TOF,FT0
 ```
-- If you are not on the EPN farm and have NOT set `EPNMODE=1`: Load the required modules for O2 / QC (`alienv load O2PDPSuite/latest`)
+- If you are not on the EPN farm and have NOT set `EPNSYNCMODE=1`: Load the required modules for O2 / QC (`alienv load O2PDPSuite/latest`)
 - Run the parser, e.g.:
 ```
 ./tools/parse production/production.desc synchronous-workflow /tmp/dds-topology.xml

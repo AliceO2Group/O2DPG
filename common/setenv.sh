@@ -43,10 +43,10 @@ if [ -z "$NORATELOG" ];     then export NORATELOG=1; fi                # Disable
 if [ -z "$INRAWCHANNAME" ]; then export INRAWCHANNAME=stfb-to-dpl; fi  # Raw channel name used to communicate with DataDistribution
 if [ -z "$WORKFLOWMODE" ];  then export WORKFLOWMODE=run; fi           # Workflow mode, must be run, print, od dds
 if [ -z "$FILEWORKDIR" ];   then export FILEWORKDIR=`pwd`; fi          # Override folder where to find grp, etc.
-if [ -z "$EPNMODE" ];       then export EPNMODE=0; fi                  # Is this workflow supposed to run on EPN? Will enable InfoLogger / metrics / ...
+if [ -z "$EPNSYNCMODE" ];       then export EPNSYNCMODE=0; fi                  # Is this workflow supposed to run on EPN? Will enable InfoLogger / metrics / ...
 if [ -z "$BEAMTYPE" ];      then export BEAMTYPE=PbPb; fi              # Beam type, must be PbPb, pp, pPb, cosmic, technical
 if [ -z "$EDJSONS_DIR" ];   then export EDJSONS_DIR="jsons"; fi        # output directory for ED json files
-if [ $EPNMODE == 0 ]; then
+if [ $EPNSYNCMODE == 0 ]; then
   if [ -z "$SHMSIZE" ];       then export SHMSIZE=$(( 8 << 30 )); fi   # Size of shared memory for messages
   if [ -z "$NGPUS" ];         then export NGPUS=1; fi                  # Number of GPUs to use, data distributed round-robin
   if [ -z "$EXTINPUT" ];      then export EXTINPUT=0; fi               # Receive input from raw FMQ channel instead of running o2-raw-file-reader

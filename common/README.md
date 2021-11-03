@@ -46,4 +46,4 @@ The `setenv-sh` script sets the following environment options
 * `WORKFLOWMODE`: run (run the workflow (default)), print (print the command to stdout), dds (create partial DDS topology)
 * `FILEWORKDIR`: directory for all input / output files. E.g. grp / geometry / dictionaries etc. are read from here, and dictionaries / ctf / etc. are written to there.
   Some files have more fine grained control via other environment variables (e.g. to store the CTF to somewhere else). Such variables are initialized to `$FILEWORKDIR` by default but can be overridden.
-* `EPNMODE`: Specify that this is a workflow running on the EPN, e.g. logging goes to InfoLogger, DPL metrics to to the AliECS monitoring, etc.
+* `EPNSYNCMODE`: Specify that this is a workflow running on the EPN for synchronous processing, e.g. logging goes to InfoLogger, DPL metrics to to the AliECS monitoring, etc.

@@ -4,7 +4,7 @@ source common/setenv.sh
 
 SEVERITY=warning
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-size $SHMSIZE"
-if [ $EPNMODE == 1 ]; then
+if [ $EPNSYNCMODE == 1 ]; then
   ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
   ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 15"
 elif [ "0$ENABLE_METRICS" != "01" ]; then

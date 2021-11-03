@@ -93,7 +93,7 @@ The tool passes all env variables on to `dpl-workflow.sh` thus it can be used in
 
 An example command line is:
 ```
-EPNMODE=1 WORKFLOW_DETECTORS=TPC XrdSecSSSKT=~/.eos/my.key TFDELAY=10 NTIMEFRAMES=10 SHMSIZE=32000000000 DDSHMSIZE=32000 ~/alice/O2/prodtests/full-system-test/run-workflow-on-inputlist.sh DD file_list.txt 500 1
+EPNSYNCMODE=1 WORKFLOW_DETECTORS=TPC XrdSecSSSKT=~/.eos/my.key TFDELAY=10 NTIMEFRAMES=10 SHMSIZE=32000000000 DDSHMSIZE=32000 ~/alice/O2/prodtests/full-system-test/run-workflow-on-inputlist.sh DD file_list.txt 500 1
 ```
 
 # Local QC testing

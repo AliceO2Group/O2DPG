@@ -13,7 +13,7 @@ export GEN_TOPO_HASH=0                                               # Specify p
 export GEN_TOPO_SOURCE=$HOME/alice/O2DataProcessing                  # Path to O2DataProcessing repository
 
 export EXTINPUT=1
-export EPNMODE=1
+export EPNSYNCMODE=1
 export SYNCMODE=0
 export CTFINPUT=0
 export SHMSIZE=128000000000
