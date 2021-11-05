@@ -16,7 +16,7 @@ R__ADD_INCLUDE_PATH($EVTGEN_ROOT/include)
 #include "EvtGenBase/EvtReport.hh"
 #include "EvtGenExternal/EvtExternalGenList.hh"
 
-enum DecayModeEvt {kEvtAll=0, kEvtBJpsiDiElectron, kEvtBJpsi, kEvtBJpsiDiMuon, kEvtBSemiElectronic, kEvtHadronicD, kEvtHadronicDWithout4Bodies, kEvtChiToJpsiGammaToElectronElectron, kEvtChiToJpsiGammaToMuonMuon, kEvtSemiElectronic, kEvtBSemiMuonic, kEvtSemiMuonic, kEvtDiElectron, kEvtDiMuon, kEvtBPsiPrimeDiMuon, kEvtBPsiPrimeDiElectron, kEvtJpsiDiMuon, kEvtPsiPrimeJpsiDiElectron, kEvtPhiKK, kEvtOmega, kEvtLambda, kEvtHardMuons, kEvtElectronEM, kEvtDiElectronEM, kEvtGammaEM, kEvtBeautyUpgrade};
+enum DecayModeEvt {kEvtAll=0, kEvtBJpsiDiElectron, kEvtBJpsi, kEvtBJpsiDiMuon, kEvtBPsiDiElectron, kEvtBPsiDiMuon, kEvtBSemiElectronic, kEvtHadronicD, kEvtHadronicDWithout4Bodies, kEvtChiToJpsiGammaToElectronElectron, kEvtChiToJpsiGammaToMuonMuon, kEvtSemiElectronic, kEvtBSemiMuonic, kEvtSemiMuonic, kEvtDiElectron, kEvtDiMuon, kEvtBPsiPrimeDiMuon, kEvtBPsiPrimeDiElectron, kEvtJpsiDiMuon, kEvtPsiPrimeJpsiDiElectron, kEvtPhiKK, kEvtOmega, kEvtLambda, kEvtHardMuons, kEvtElectronEM, kEvtDiElectronEM, kEvtGammaEM, kEvtBeautyUpgrade};
 
 
 namespace o2 {
