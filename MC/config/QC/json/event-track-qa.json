@@ -1,0 +1,26 @@
+{
+    "bc-selection-task": {
+        "processRun2": "false",
+        "processRun3": "true"
+    },
+    "event-selection-task": {
+        "syst": "pp",
+        "muonSelection": "0",
+        "isMC": "true",
+        "processRun2": "false",
+        "processRun3": "true"
+    },
+    "track-extension": {
+        "processRun2": "false",
+        "processRun3": "true"
+    },
+    "track-selection": {
+        "isRun3": "true"
+    },
+    "qa-event-track": {
+        "isMC": "true",
+        "isRun3": "true",
+        "processData": "false",
+        "processMC": "true"
+    }
+}
