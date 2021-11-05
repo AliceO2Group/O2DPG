@@ -847,7 +847,7 @@ if includeAnalysis:
 
    # Event and track QA
    addAnalysisTask(tag="EventTrackQA",
-                   cmd="o2-analysis-pp-qa-event-track --etaMin -0.8 --etaMax 0.8 --numberOfContributorsMin 1 --vertexPositionBins 200 --vertexPositionZMin -20 --vertexPositionZMax 20 --vertexPositionXYMin -0.1 --vertexPositionXYMax 0.1 --checkPrimaries 1 --numbersOfContributorsToPVBins 500 --numbersOfContributorsToPVMax 500", output="AnalysisResults.root")
+                   cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-pp-qa-event-track --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json', output="QAResults.root")
 
 
 dump_workflow(workflow["stages"], args.o)
