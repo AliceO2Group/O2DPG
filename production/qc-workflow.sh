@@ -46,7 +46,7 @@ for i in `echo $LIST_OF_GLORECO | sed "s/,/ /g"`; do
 done
 
 # arbitrary extra QC
-if [ ! -z $QC_JSON_EXTRA ]; then
+if [ ! -z "$QC_JSON_EXTRA" ]; then
     JSON_FILES+=" ${QC_JSON_EXTRA}"
     OUTPUT_SUFFIX+="-EXTRA"
 fi
