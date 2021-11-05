@@ -243,6 +243,12 @@ void ForceDecay()
      case kEvtBJpsiDiMuon:
       SetDecayTable(Form("%s/BTOJPSITOMU.DEC",pathO2.Data()));
       break;
+     case kEvtBPsiDiElectron:
+      SetDecayTable(Form("%s/BTOPSITOELE.DEC",pathO2.Data()));
+      break;
+     case kEvtBPsiDiMuon:
+      SetDecayTable(Form("%s/BTOPSITOMU.DEC",pathO2.Data()));
+      break;
      case kEvtBSemiElectronic:
       SetDecayTable(Form("%s/BTOELE.DEC",pathO2.Data()));
       break;
