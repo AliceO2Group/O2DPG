@@ -43,7 +43,7 @@ if [ -z "$NORATELOG" ];     then export NORATELOG=1; fi                # Disable
 if [ -z "$INRAWCHANNAME" ]; then export INRAWCHANNAME=stfb-to-dpl; fi  # Raw channel name used to communicate with DataDistribution
 if [ -z "$WORKFLOWMODE" ];  then export WORKFLOWMODE=run; fi           # Workflow mode, must be run, print, od dds
 if [ -z "$FILEWORKDIR" ];   then export FILEWORKDIR=`pwd`; fi          # Override folder where to find grp, etc.
-if [ -z "$EPNSYNCMODE" ];       then export EPNSYNCMODE=0; fi                  # Is this workflow supposed to run on EPN? Will enable InfoLogger / metrics / ...
+if [ -z "$EPNSYNCMODE" ];   then export EPNSYNCMODE=0; fi                  # Is this workflow supposed to run on EPN? Will enable InfoLogger / metrics / ...
 if [ -z "$BEAMTYPE" ];      then export BEAMTYPE=PbPb; fi              # Beam type, must be PbPb, pp, pPb, cosmic, technical
 if [ -z "$EDJSONS_DIR" ];   then export EDJSONS_DIR="jsons"; fi        # output directory for ED json files
 if [ $EPNSYNCMODE == 0 ]; then
@@ -54,11 +54,13 @@ if [ $EPNSYNCMODE == 0 ]; then
   if [ -z "$SHMTHROW" ];      then export SHMTHROW=1; fi               # Throw exception when running out of SHM
   if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=""; fi # No FLP processing by default when we do not run the sync EPN workflow, e.g. full system test will also run full FLP processing
 else # Defaults when running on the EPN
-  if [ -z "$SHMSIZE" ];       then export SHMSIZE=$(( 256 << 30 )); fi
-  if [ -z "$NGPUS" ];         then export NGPUS=4; fi
-  if [ -z "$EXTINPUT" ];      then export EXTINPUT=1; fi
-  if [ -z "$EPNPIPELINES" ];  then export EPNPIPELINES=1; fi
-  if [ -z "$SHMTHROW" ];      then export SHMTHROW=0; fi
+  if [ -z "$SHMSIZE" ];              then export SHMSIZE=$(( 256 << 30 )); fi
+  if [ -z "$NGPUS" ];                then export NGPUS=4; fi
+  if [ -z "$EXTINPUT" ];             then export EXTINPUT=1; fi
+  if [ -z "$EPNPIPELINES" ];         then export EPNPIPELINES=1; fi
+  if [ -z "$SHMTHROW" ];             then export SHMTHROW=0; fi
+  if [ -z "$TIMEFRAME_SHM_LIMIT" ];  then export TIMEFRAME_SHM_LIMIT=$(( 64 << 30 )); fi
+  if [ -z "$TIMEFRAME_RATE_LIMIT" ]; then export TIMEFRAME_RATE_LIMIT=10; fi
   if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
 fi
 # Some more options for running on the EPN
