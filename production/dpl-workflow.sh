@@ -226,6 +226,7 @@ math_max()
   echo $(($1 > $2 ? $1 : $2))
 }
 
+N_TPCTRK=$NGPUS
 if [ $OPTIMIZED_PARALLEL_ASYNC != 0 ]; then
   # Tuned multiplicities for async Pb-Pb processing
   if [ $SYNCMODE == "1" ]; then echo "Must not use OPTIMIZED_PARALLEL_ASYNC with GPU or SYNCMODE" 1>&2; exit 1; fi
@@ -247,7 +248,6 @@ if [ $OPTIMIZED_PARALLEL_ASYNC != 0 ]; then
     N_TPCITS=$(math_max $((4 * $NGPUS * $OPTIMIZED_PARALLEL_ASYNC * $N_NUMAFACTOR / 4)) 1)
     N_MCHTRK=$(math_max $((2 * $NGPUS * $OPTIMIZED_PARALLEL_ASYNC * $N_NUMAFACTOR / 4)) 1)
     N_TOFMATCH=$(math_max $((20 * $NGPUS * $OPTIMIZED_PARALLEL_ASYNC * $N_NUMAFACTOR / 4)) 1)
-    N_TPCTRK=$NGPUS
   fi
 elif [ $EPNPIPELINES != 0 ]; then
   # Tuned multiplicities for sync Pb-Pb processing
@@ -262,25 +262,21 @@ elif [ $EPNPIPELINES != 0 ]; then
   if [ $GPUTYPE == "CPU" ]; then
     N_TPCTRK=8
     GPU_CONFIG_KEY+="GPU_proc.ompThreads=4;"
-  else
-    N_TPCTRK=$NGPUS
   fi
-else
-  N_TPCTRK=$NGPUS
+  # Scale some multiplicities with the number of nodes
+  RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15) * ($NUMAGPUIDS == 1 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
+  N_ITSRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSRAWDEC:-1}) # This means, if we have 60 EPN nodes, we need at least 3 ITS RAW decoders
+  N_MFTRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTRAWDEC:-1})
+  N_ITSTRK=$(math_max $((1 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
+  N_MFTTRK=$(math_max $((1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTTRK:-1})
+  N_CTPRAWDEC=$(math_max $((1 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_CTPRAWDEC:-1})
+  N_TRDRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_TRDRAWDEC:-1})
 fi
-# Scale some multiplicities with the number of nodes
-RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15) * ($NUMAGPUIDS == 1 ? 2 : 1))) # Limit the lowert scaling factor, multiply by 2 if we have 2 NUMA domains
-N_ITSRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSRAWDEC:-1}) # This means, if we have 60 EPN nodes, we need at least 3 ITS RAW decoders
-N_MFTRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTRAWDEC:-1})
-N_ITSTRK=$(math_max $((1 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
-N_MFTTRK=$(math_max $((1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTTRK:-1})
-N_CTPRAWDEC=$(math_max $((1 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_CTPRAWDEC:-1})
-N_TRDRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_TRDRAWDEC:-1})
-[ -z $N_TPCENTDEC ] && N_TPCENTDEC=1
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Helper to add binaries to workflow adding automatic and custom arguments
 WORKFLOW= # Make sure we start with an empty workflow
+[[ "0$GEN_TOPO_ONTHEFLY" == "01" ]] && WORKFLOW="echo '{}' | "
 
 add_W() # Add binarry to workflow command USAGE: add_W [BINARY] [COMMAND_LINE_OPTIONS] [CONFIG_KEY_VALUES] [Add ARGS_ALL_CONFIG, optional, default = 1]
 {
@@ -304,7 +300,7 @@ if [ $CTFINPUT == 1 ]; then
   [[ -z $CTFName && $WORKFLOWMODE == "print" ]] && CTFName='$CTFName'
   [[ ! -z $INPUT_FILE_LIST ]] && CTFName=$INPUT_FILE_LIST
   if [ $NTIMEFRAMES == -1 ]; then NTIMEFRAMES_CMD= ; else NTIMEFRAMES_CMD="--max-tf $NTIMEFRAMES"; fi
-  add_W o2-ctf-reader-workflow "--delay $TFDELAY --loop $TFLOOP $NTIMEFRAMES_CMD --ctf-input ${CTFName} ${INPUT_FILE_COPY_CMD+--copy-cmd} ${INPUT_FILE_COPY_CMD} --ctf-dict ${CTF_DICT} --onlyDet $WORKFLOW_DETECTORS --pipeline tpc-entropy-decoder:$N_TPCENTDEC"
+  add_W o2-ctf-reader-workflow "--delay $TFDELAY --loop $TFLOOP $NTIMEFRAMES_CMD --ctf-input ${CTFName} ${INPUT_FILE_COPY_CMD+--copy-cmd} ${INPUT_FILE_COPY_CMD} --ctf-dict ${CTF_DICT} --onlyDet $WORKFLOW_DETECTORS --pipeline $(get_N tpc-entropy-decoder TPC REST TPCENTDEC)"
 elif [ $RAWTFINPUT == 1 ]; then
   TFName=`ls -t $FILEWORKDIR/o2_*.tf 2> /dev/null | head -n1`
   [[ -z $TFName && $WORKFLOWMODE == "print" ]] && TFName='$TFName'
@@ -313,7 +309,7 @@ elif [ $RAWTFINPUT == 1 ]; then
   add_W o2-raw-tf-reader-workflow "--delay $TFDELAY --loop $TFLOOP $NTIMEFRAMES_CMD --input-data ${TFName} ${INPUT_FILE_COPY_CMD+--copy-cmd} ${INPUT_FILE_COPY_CMD} --onlyDet $WORKFLOW_DETECTORS"
 elif [ $EXTINPUT == 1 ]; then
   PROXY_CHANNEL="name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=$EPNSYNCMODE"
-  PROXY_INSPEC="dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
+  PROXY_INSPEC="dd:FLP/DISTSUBTIMEFRAME/0"
   PROXY_IN_N=0
   for i in `echo "$WORKFLOW_DETECTORS" | sed "s/,/ /g"`; do
     if has_detector_flp_processing $i; then
@@ -366,7 +362,7 @@ if [ $CTFINPUT == 0 ]; then
   has_detector TRD && add_W o2-trd-datareader "$TRD_DECODER_OPTIONS --pipeline $(get_N trd-datareader TRD RAW TRDRAWDEC)" "" 0
   has_detector ZDC && add_W o2-zdc-raw2digits "$DISABLE_ROOT_OUTPUT --pipeline $(get_N zdc-datareader-dpl ZDC RAW)"
   has_detector HMP && add_W o2-hmpid-raw-to-digits-stream-workflow "--pipeline $(get_N HMP-RawStreamDecoder HMP RAW)"
-  has_detector CTP && add_W o2-ctp-reco-workflow "$DISABLE_ROOT_OUTPUT --pipeline $(get_N CTP-RawStreamDecoder CTP RAW)"
+  has_detector CTP && add_W o2-ctp-reco-workflow "--pipeline $(get_N CTP-RawStreamDecoder CTP RAW)"
   has_detector PHS && ! has_detector_flp_processing PHS && add_W o2-phos-reco-workflow "--input-type raw --output-type cells --disable-root-input $DISABLE_ROOT_OUTPUT --pipeline $(get_N PHOSRawToCellConverterSpec PHS REST) $DISABLE_MC"
   has_detector CPV && add_W o2-cpv-reco-workflow "--input-type $CPV_INPUT --output-type clusters --disable-root-input $DISABLE_ROOT_OUTPUT --pipeline $(get_N CPVRawToDigitConverterSpec CPV REST),$(get_N CPVClusterizerSpec CPV REST) $DISABLE_MC"
   has_detector EMC && ! has_detector_flp_processing EMC && add_W o2-emcal-reco-workflow "--input-type raw --output-type cells $EMCRAW2C_CONFIG $DISABLE_ROOT_OUTPUT $DISABLE_MC --pipeline $(get_N EMCALRawToCellConverterSpec EMC REST EMCREC)"
@@ -438,7 +434,7 @@ fi
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Calibration workflows
-workflow_has_parameter CALIB && has_detector_calib TPC && has_detectors TPC ITS TRD TOF && add_W o2-tpc-scdcalib-interpolation-workflow "$DISABLE_ROOT_OUTPUT --disable-root-input --pipeline tpc-track-interpolation:$N_F_REST" "$ITSMFT_FILES"
+workflow_has_parameter CALIB && has_detector_calib TPC && has_detectors TPC ITS TRD TOF && add_W o2-tpc-scdcalib-interpolation-workflow "$DISABLE_ROOT_OUTPUT --disable-root-input --pipeline $(get_N tpc-track-interpolation TPC REST)" "$ITSMFT_FILES"
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Event display
@@ -450,7 +446,7 @@ workflow_has_parameter EVENT_DISPLAY && [ $NUMAID == 0 ] && add_W o2-eve-display
 # ---------------------------------------------------------------------------------------------------------------------
 # AOD
 [ -z "$AOD_INPUT" ] && AOD_INPUT=$TRACK_SOURCES
-has_detector_matching AOD && add_W o2-aod-producer-workflow "--info-sources $AOD_INPUT --disable-root-input --aod-writer-keep dangling --aod-writer-resfile "AO2D" --aod-writer-resmode UPDATE $DISABLE_MC"
+workflow_has_parameter AOD && add_W o2-aod-producer-workflow "--info-sources $AOD_INPUT --disable-root-input --aod-writer-keep dangling --aod-writer-resfile "AO2D" --aod-writer-resmode UPDATE $DISABLE_MC"
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Quality Control
@@ -462,13 +458,8 @@ WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Run / create / print workflow
-if [ $WORKFLOWMODE == "print" ]; then
-  echo "#Workflow command:"
-  echo $WORKFLOW | sed "s/| */|\n/g"
-else
-  # Execute the command we have assembled
-  WORKFLOW+=" --$WORKFLOWMODE"
-  eval $WORKFLOW
-fi
+[[ $WORKFLOWMODE != "print" ]] && WORKFLOW+=" --${WORKFLOWMODE}"
+[[ $WORKFLOWMODE == "print" || "0$PRINT_WORKFLOW" == "01" ]] && echo "#Workflow command:\n\n${WORKFLOW}\n" | sed -e "s/\\\\n/\n/g" -e"s/| */| \\\\\n/g" | eval cat $( [[ $WORKFLOWMODE == "dds" ]] && echo '1>&2')
+[[ $WORKFLOWMODE != "print" ]] && eval $WORKFLOW
 
 # ---------------------------------------------------------------------------------------------------------------------
