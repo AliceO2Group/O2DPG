@@ -290,6 +290,10 @@ MFT_DICT_DOWNLOADER_TASK = createTask(name='mftdictdownloader', cpu='0')
 MFT_DICT_DOWNLOADER_TASK['cmd'] = 'curl https://cernbox.cern.ch/index.php/s/rLGi2KDCKAckRQb/download -o MFTdictionary.bin'
 workflow['stages'].append(MFT_DICT_DOWNLOADER_TASK)
 
+MATBUD_DOWNLOADER_TASK = createTask(name='matbuddownloader', cpu='0')
+MATBUD_DOWNLOADER_TASK['cmd'] = 'curl https://cernbox.cern.ch/index.php/s/Q7vUKGzlSQOJLL0/download -o matbud.root'
+workflow['stages'].append(MATBUD_DOWNLOADER_TASK)
+
 # loop over timeframes
 for tf in range(1, NTIMEFRAMES + 1):
    timeframeworkdir='tf'+str(tf)
@@ -454,7 +458,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # each timeframe should be done for a different bunch crossing range, depending on the timeframe id
    orbitsPerTF = 256
    startOrbit = (tf-1 + int(args.production_offset)*NTIMEFRAMES)*orbitsPerTF
-   globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : startOrbit, "HBFUtils.nHBFPerTF" : orbitsPerTF}
+   globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : startOrbit, "HBFUtils.nHBFPerTF" : orbitsPerTF, "NameConf.mDirMatLUT" : "../" }
 
    def putConfigValues(localCF = {}):
      """
@@ -587,7 +591,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       ITSConfig.update({"ITSVertexerParam.phiCut" : 0.5,
                         "ITSVertexerParam.clusterContributorsCut" : 3,
                         "ITSVertexerParam.tanLambdaCut" : 0.2})
-   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[ITS_DICT_DOWNLOADER_TASK['name'], det_to_digitask["ITS"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
+   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[MATBUD_DOWNLOADER_TASK['name'], ITS_DICT_DOWNLOADER_TASK['name'], det_to_digitask["ITS"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    ITSRECOtask['cmd'] = 'o2-its-reco-workflow --trackerCA --tracking-mode async ' + getDPL_global_options() \
                         + putConfigValues(ITSConfig)
    workflow['stages'].append(ITSRECOtask)
@@ -731,7 +735,7 @@ for tf in range(1, NTIMEFRAMES + 1):
  
    #secondary vertexer
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=1, mem='5000')
-   SVFINDERtask['cmd'] = 'o2-secondary-vertexing-workflow ' + getDPL_global_options(bigshm=True)
+   SVFINDERtask['cmd'] = 'o2-secondary-vertexing-workflow ' + getDPL_global_options(bigshm=True) + putConfigValues()
    workflow['stages'].append(SVFINDERtask)
 
   # -----------
