@@ -843,11 +843,11 @@ if includeAnalysis:
 
    # Efficiency
    addAnalysisTask(tag="Efficiency",
-                   cmd="o2-analysis-pp-qa-efficiency --make-eff 1 --eff-pi 1 --eff-el 1 --eff-ka 1 --eff-pr 1 --eff-mu 1 --eff-de 1 --eff-he 1 --eff-tr 1 --eta-min -0.8 --eta-max 0.8 --log-pt 1 --pt-bins 100 --pt-min 0.01 --pt-max 10. --sel-prim 1", output="AnalysisResults.root")
+                   cmd="o2-analysis-qa-efficiency --make-eff 1 --eff-pi 1 --eff-el 1 --eff-ka 1 --eff-pr 1 --eff-mu 1 --eff-de 1 --eff-he 1 --eff-tr 1 --eta-min -0.8 --eta-max 0.8 --log-pt 1 --pt-bins 100 --pt-min 0.01 --pt-max 10. --sel-prim 1", output="AnalysisResults.root")
 
    # Event and track QA
    addAnalysisTask(tag="EventTrackQA",
-                   cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-pp-qa-event-track --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json', output="QAResults.root")
+                   cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-event-track --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json', output="QAResults.root")
 
 
 dump_workflow(workflow["stages"], args.o)
