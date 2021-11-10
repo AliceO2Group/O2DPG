@@ -279,17 +279,6 @@ if usebkgcache:
    BKG_KINEDOWNLOADER_TASK['cmd'] = 'alien.py cp ' + args.use_bkg_from + 'bkg_Kine.root .'
    workflow['stages'].append(BKG_KINEDOWNLOADER_TASK)
 
-
-# We download some binary files, necessary for processing
-# Eventually, these files should come from CCDB (rather than from shared links on EOS)
-ITS_DICT_DOWNLOADER_TASK = createTask(name='itsdictdownloader', cpu='0')
-ITS_DICT_DOWNLOADER_TASK['cmd'] = 'curl https://cernbox.cern.ch/index.php/s/kk4iIju2GwNeEro/download -o ITSdictionary.bin'
-workflow['stages'].append(ITS_DICT_DOWNLOADER_TASK)
-
-MFT_DICT_DOWNLOADER_TASK = createTask(name='mftdictdownloader', cpu='0')
-MFT_DICT_DOWNLOADER_TASK['cmd'] = 'curl https://cernbox.cern.ch/index.php/s/rLGi2KDCKAckRQb/download -o MFTdictionary.bin'
-workflow['stages'].append(MFT_DICT_DOWNLOADER_TASK)
-
 # loop over timeframes
 for tf in range(1, NTIMEFRAMES + 1):
    timeframeworkdir='tf'+str(tf)
@@ -582,12 +571,12 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' + putConfigValues({"GPU_global.continuousMaxTimeBin":100000,"GPU_proc.ompThreads":NWORKERS, "GPU_rec.maxTrackQPt":Q2PTCUTOFF })
    workflow['stages'].append(TPCRECOtask)
 
-   ITSConfig = {"ITSClustererParam.dictFilePath":"../"}
+   ITSConfig = {}
    if COLTYPEIR == 'pp':
-      ITSConfig.update({"ITSVertexerParam.phiCut" : 0.5,
-                        "ITSVertexerParam.clusterContributorsCut" : 3,
-                        "ITSVertexerParam.tanLambdaCut" : 0.2})
-   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[ITS_DICT_DOWNLOADER_TASK['name'], det_to_digitask["ITS"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
+      ITSConfig = {"ITSVertexerParam.phiCut" : 0.5,
+                   "ITSVertexerParam.clusterContributorsCut" : 3,
+                   "ITSVertexerParam.tanLambdaCut" : 0.2}
+   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[det_to_digitask["ITS"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    ITSRECOtask['cmd'] = 'o2-its-reco-workflow --trackerCA --tracking-mode async ' + getDPL_global_options() \
                         + putConfigValues(ITSConfig)
    workflow['stages'].append(ITSRECOtask)
@@ -597,12 +586,12 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(FT0RECOtask)
 
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
-   ITSTPCMATCHtask['cmd']= 'o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\" --use-ft0' + putConfigValues({"ITSClustererParam.dictFilePath":"../"})
+   ITSTPCMATCHtask['cmd']= 'o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\" --use-ft0'
    workflow['stages'].append(ITSTPCMATCHtask)
 
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    TRDTRACKINGtask['cmd'] = 'o2-trd-tracklet-transformer ' + getDPL_global_options() + putConfigValues()
-   TRDTRACKINGtask['cmd'] += ' | o2-trd-global-tracking ' + getDPL_global_options(bigshm=True) + putConfigValues({"ITSClustererParam.dictFilePath":"../"})
+   TRDTRACKINGtask['cmd'] += ' | o2-trd-global-tracking ' + getDPL_global_options(bigshm=True) + putConfigValues()
    workflow['stages'].append(TRDTRACKINGtask)
 
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], det_to_digitask["TOF"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -610,11 +599,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TOFRECOtask)
 
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name'], TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
-   TOFTPCMATCHERtask['cmd'] = 'o2-tof-matcher-workflow ' + getDPL_global_options() + putConfigValues({"ITSClustererParam.dictFilePath":"../"})
+   TOFTPCMATCHERtask['cmd'] = 'o2-tof-matcher-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(TOFTPCMATCHERtask)
 
-   MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[det_to_digitask["MFT"]['name'], MFT_DICT_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValues({"MFTClustererParam.dictFilePath" : "../"})
+   MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[det_to_digitask["MFT"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+   MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(MFTRECOtask)
 
    # MCH reco: needing access to kinematics ... so some extra logic needed here
@@ -653,7 +642,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(CPVRECOtask)
 
    MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHRECOtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTMCHMATCHtask['cmd'] = 'o2-globalfwd-matcher-workflow ' + getDPL_global_options() + putConfigValues({"MFTClustererParam.dictFilePath" : "../"})
+   MFTMCHMATCHtask['cmd'] = 'o2-globalfwd-matcher-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(MFTMCHMATCHtask)
 
    pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], MCHRECOtask['name'], TRDTRACKINGtask['name'], FDDRECOtask['name'], MFTMCHMATCHtask['name']]
