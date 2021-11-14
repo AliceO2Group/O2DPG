@@ -36,6 +36,7 @@ if [ -z "$NUMAID" ];        then export NUMAID=0; fi                   # SHM seg
 if [ -z "$NUMAGPUIDS" ];    then export NUMAGPUIDS=0; fi               # NUMAID-aware GPU id selection
 if [ -z "$CTFINPUT" ];      then export CTFINPUT=0; fi                 # Read input from CTF using o2-ctf-reader (incompatible to EXTINPUT=1 and RAWTFINPUT)
 if [ -z "$RAWTFINPUT" ];    then export RAWTFINPUT=0; fi               # Read input from raw TFs using o2-raw-tf-reader (incompatible to EXTINPUT=1 and CTFINPUT=1)
+if [ -z "$DIGITINPUT" ];    then export DIGITINPUT=0; fi               # Read input from digit files (incompatible to EXTINPUT / CTFINPUT / RAWTFINPUT)
 if [ -z "$NHBPERTF" ];      then export NHBPERTF=128; fi               # Time frame length (in HBF)
 if [ -z "$GLOBALDPLOPT" ];  then export GLOBALDPLOPT=; fi              # Global DPL workflow options appended at the end
 if [ -z "$SEVERITY" ];      then export SEVERITY="info"; fi            # Log verbosity
@@ -73,16 +74,8 @@ if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then export MULTIPLICITY_FACTOR_REST=1; f
 [ -z "${DISABLE_MC+x}" ] && DISABLE_MC="--disable-mc"
 [ -z "${DISABLE_ROOT_OUTPUT+x}" ] && DISABLE_ROOT_OUTPUT="--disable-root-output"
 
-if [ $EXTINPUT == 1 ] && [ $CTFINPUT == 1 ]; then
-  echo EXTINPUT and CTFINPUT are incompatible
-  exit 1
-fi
-if [ $EXTINPUT == 1 ] && [ $RAWTFINPUT == 1 ]; then
-  echo EXTINPUT and RAWTFINPUT are incompatible
-  exit 1
-fi
-if [ $CTFINPUT == 1 ] && [ $RAWTFINPUT == 1 ]; then
-  echo CTFINPUT and RAWTFINPUT are incompatible
+if [[ $(( $EXTINPUT + $CTFINPUT + $RAWTFINPUT + $DIGITINPUT )) -ge 2 ]]; then
+  echo Only one of EXTINPUT / CTFINPUT / RAWTFINPUT / DIGITINPUT must be set
   exit 1
 fi
 if [ $SAVECTF == 1 ] && [ $CTFINPUT == 1 ]; then
