@@ -12,11 +12,11 @@ if len(sys.argv) != 4:
     exit(1)
 
 if not "FILEWORKDIR" in os.environ:
-    print("\$FILEWORKDIR env variable missing")
+    print("$FILEWORKDIR env variable missing")
     exit(1)
 
 if not "DDWORKFLOW" in os.environ and not "DDMODE" in os.environ:
-    print("Need either \$DDWORKFLOW or \$DDMODE env variable")
+    print("Need either $DDWORKFLOW or $DDMODE env variable")
     exit(1)
 
 NO_PROCESSING_MODE=0
