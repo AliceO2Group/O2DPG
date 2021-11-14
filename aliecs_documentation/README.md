@@ -29,14 +29,21 @@ This method uses the [O2DataProcessing repository](../) to generate the topology
 <p align="center"><img src='gui_path.png' width=80%></p>
 
 - **O2 Data Processing Path**: Absolute path on the EPN farm to the O2DataProcessing repository to be used.
-- **# of EPNs**: Number of EPN nodes to allocate from the *online* zone. Identical to the [manual XML file](#manual-xml-file-configuration-method) case. Since in this case the workflow is generated on the fly, a workflow for the specified number of EPNs is created automatically.
+- **# of EPNs**: Number of EPN nodes to allocate from the *online* zone. Identical to the [manual XML file](#manual-xml-file-configuration-method) case. In this case the workflow is generated on the fly, so a workflow for the specified number of EPNs is created automatically.
 
 For all other configuration options see the [expert panel](#expert-panel).
 
 <hr>
 
 # O2DataProcessing hash configuration method
-This is mostly identical to the [O2DataProcessing path](#o2dataprocessing-path-configuration-method) method. The only difference is that a repository version is specified instead of the path to the repository on the EPN farm. This ensures proper versioning and reproducibility. While the [O2DataProcessing path](#o2dataprocessing-path-configuration-method) method can generate topologies from any privated O2DataProcessing fork on the EPN farm, the **O2DataProcessing hash** method only supports workflows that are checked in into the official [O2DataProcessing](../) repository. The referred version can be either a commit or a tag. Tags will be used for official tagged version of the production workflow, while detectors may use just commit hashes for standalone runs without the need to create / wait for an official tag. This method will become the default method when the workflows have stabilized and do no longer change on a daily basis. In the following screenshot, the *tag* `0.20` is selected:
+This is mostly identical to the [O2DataProcessing path](#o2dataprocessing-path-configuration-method) method.
+The only difference is that a repository version is specified instead of the path to the repository on the EPN farm.
+This ensures proper versioning and reproducibility.
+While the [O2DataProcessing path](#o2dataprocessing-path-configuration-method) method can generate topologies from any private O2DataProcessing fork on the EPN farm, the **O2DataProcessing hash** method only supports workflows that are checked in into the official [O2DataProcessing](../) repository.
+The referred version can be either a commit or a tag.
+Tags will be used for official tagged versions of the production workflow, while detectors may use just commit hashes for standalone runs without the need to create / wait for an official tag.
+This method will become the default method when the workflows have stabilized and do no longer change on a daily basis.
+In the following screenshot, the *tag* `v0.20` is selected:
 
 <p align="center"><img src='gui_version.png' width=80%></p>
 
@@ -52,18 +59,18 @@ The expert panel provides plenty of additional configuration options for both O2
 
 <p align="center"><img src='gui_expert_default.png' width=80%></p>
 
-- **# of EPNs** (also available in shifter view): This option configures the number of EPNs used for the partition. To be more precise, it only sets the default of the number of EPNs. Other options (**Resources**, **# of compute nodes**) related to the number of EPN nodes may override the value specified here. If these other options are set to their * default*, this is the only configuration option for the number of EPN nodes.
+- **# of EPNs** (also available in shifter view): This option configures the number of EPNs used for the partition. To be more precise, it only sets the default of the number of EPNs. Other options (**Resources**, **# of compute nodes**) related to the number of EPN nodes may override the value specified here. If these other options are set to their *default*, **# of EPNs** controls how many EPNs are used exclusively.
 - **Workflow configuraiton mode**: This option allows to switch between the *Manual XML file* mode, *O2DataProcessing path* mode, and *O2DataProcessing hash* mode.
-- **O2DataProcessing Path** (also available in shifter few, since the workflow configuration mode is set to *O2DataProcessing path* in the example): Select the path of the O2DataProcessing repository.
-- **Resources** (default: `default`): ODC resources to be used for the partition. If this field is set to the string `default`, which is the default setting, the ODC resources are requested automatically according to the setting in *# of EPNs*. Otherwise an ODC resource request may be inserted manually. E.g. `{"zone": "online", "n": "10"}` will request 10 nodes from the `online` zone, `[ {"zone": "online", "n": "10"}, {"zone": "online-calib", "n": "1"} ]` will request 1 node from the zone 
+- **O2DataProcessing Path** (also available in shifter few. Since in the example above the workflow configuration mode is set to *O2DataProcessing path* in the example, this setting is visible instead of e.g. the field to enter the manual XML file): Select the path of the O2DataProcessing repository.
+- **Resources** (default: `default`): ODC resources to be used for the partition. If this field is set to the string `default`, which is the default setting, the ODC resources are requested automatically according to the setting in *# of EPNs*. Otherwise an ODC resource request may be inserted manually. E.g. `{"zone": "online", "n": "10"}` will request 10 nodes from the `online` zone, `[ {"zone": "online", "n": "10"}, {"zone": "online-calib", "n": "1"} ]` will request 1 node from the zone online-calib in addition.
 - **Data Distribution mode** (default: `physics`): By default physics should be used. Other modes are needed for special cases. Refer to the EPN experts for details.
-- **TF Builder mode** (default: `processing`): This specifies the DataDistribution TfBuilder mode. The following 4 modes are supported, the default is `processing` and for additional raw TF writing `processing-disk` should be used. Note in the cases `discard` and `disk` the *topology library file* `production/no-processing.desc` and the *workflow name* `no-processing` must be used.
+- **TF Builder mode** (default: `processing`): This specifies the DataDistribution TfBuilder mode. The following 4 modes are supported, the default is `processing`, and for additional raw TF writing `processing-disk` should be used. Note that in the cases `discard` and `disk` the *topology library file* `production/no-processing.desc` and the *workflow name* `no-processing` must be used.
   - **discard**: TfBuilder builds the time frame on the EPN but discards it immediate without storing it or running any further processing.
   - **disk**: The raw time frame is stored to disk, no processing.
   - **processing**: Time frames are built and passed to DPL for processing. The raw time frame is not stored. The CTF may be stored depending on the DPL workflow configuration (see *Workflow parameters*).
   - **processing-disk**: Combination of `disk` and `processing`: Time frames are built, raw TFs are stored to disk, DPL processing is active.
-- **Topology description library file** (default: `production/production.desc`): Selects the file in the O2DataProcessing repository with the topology description for the partition. By default the GUI uses the default production workflow.
-- **Workflow name** (default: `synchronous-workflow-1numa`): Selects the *workflow name* to use inside the *topology library file*. See [here](../README.md)  for details. There are 2 default workflows:
+- **Topology description library file** (default: `production/production.desc`): Selects the file in the O2DataProcessing repository with the topology description for the partition. By default the GUI uses the default production workflow. In case of detector standalone tests, the detectors can either use their own library files here, or stick to the default global workflow if that provides all the processes they need.
+- **Workflow name** (default: `synchronous-workflow-1numa`): Selects the *workflow name* to use inside the *topology library file*. See [here](../README.md)  for details. There are 2 default global workflows:
   - `synchronous-workflow-1numa`: Default production workflow using 4 GPUs and only 1 NUMA domain on the EPN. This provides less processing power, but the startup is faster, so it is currently used as default.
   - `synchronous-workflow`: Production workflow using all 8 GPUs and both NUMA domains of the EPN. Provides the full processing power but has significantly longer start of run time, thus it is currently not used by default. Will be needed for Pb-Pb.
 - **Detector list (Global)**: Comma-separated list of the detectors used for processing in the DPL workflow. If this field is set to the string `default`, which is the default setting, the list is auto-generated by AliECS from the detectors in the partition. If this list contains detectors not in the partition, the synchronous reconstruction processes for such detectors will be started, but they will only process empty dummy data, which can be used for tests. If the list contains less detectors than are in the partition, processing for missing detectors is disabled completely. In case the *TF Builder mode* is set to `disk` or `processing-disk`, raw TFs for such detectors would still be stored, but such detectors would miss in the CTF. The abbreviation `ALL` may be used for all ALICE detectors (not only those in the partition).
