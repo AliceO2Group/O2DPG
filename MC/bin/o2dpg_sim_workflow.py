@@ -26,6 +26,7 @@ import json
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
 from o2dpg_workflow_utils import createTask, dump_workflow
+from o2dpg_qc_finalization_workflow import include_all_QC_finalization
 
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
 
@@ -83,7 +84,8 @@ parser.add_argument('--combine-smaller-digi', action='store_true', help=argparse
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 
 # QC related arguments
-parser.add_argument('--include-qc', action='store_true', help='a flag to include QC in the workflow')
+parser.add_argument('--include-qc', '--include-full-qc', action='store_true', help='includes QC in the workflow, both per-tf processing and finalization')
+parser.add_argument('--include-local-qc', action='store_true', help='includes the per-tf QC, but skips the finalization (e.g. to allow for subjob merging first)')
 
 # O2 Analysis related arguments
 parser.add_argument('--include-analysis', '--include-an', '--analysis',
@@ -106,8 +108,8 @@ if O2_ROOT == None:
    print('Error: This needs O2 loaded')
 #   exit(1)
 
-if args.include_qc and QUALITYCONTROL_ROOT is None:
-   print('Error: Argument --include-qc needs QUALITYCONTROL_ROOT loaded')
+if (args.include_qc or args.include_local_qc) and QUALITYCONTROL_ROOT is None:
+   print('Error: Arguments --include-qc and --include-local-qc need QUALITYCONTROL_ROOT loaded')
 #   exit(1)
 
 if args.include_analysis and (QUALITYCONTROL_ROOT is None or O2PHYSICS_ROOT is None):
@@ -144,11 +146,12 @@ def getDPL_global_options(bigshm=False):
 
 doembedding=True if args.embedding=='True' or args.embedding==True else False
 usebkgcache=args.use_bkg_from!=None
-includeQC=True if args.include_qc=='True' or args.include_qc==True else False
+includeFullQC=args.include_qc=='True' or args.include_qc==True
+includeLocalQC=args.include_local_qc=='True' or args.include_local_qc==True
 includeAnalysis = args.include_analysis
 
 qcdir = "QC"
-if includeQC and not isdir(qcdir):
+if (includeLocalQC or includeFullQC) and not isdir(qcdir):
     mkdir(qcdir)
 
 if doembedding:
@@ -665,70 +668,65 @@ for tf in range(1, NTIMEFRAMES + 1):
    PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF" --vertex-track-matching-sources "ITS,MFT,TPC,ITS-TPC,MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF"'
    workflow['stages'].append(PVFINDERtask)
 
-   if includeQC:
+   if includeFullQC or includeLocalQC:
 
-     ### ITS
-     # fixme: not working yet, ITS will prepare a way to read clusters and tracks. Also ITSDictionary will be needed. 
-     # ITSClustersTracksQCneeds = [ITSRECOtask['name']] 
-     # ITSClustersTracksQCtask = createTask(name='itsClustersTracksQC_'+str(tf), needs=ITSClustersTracksQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     # ITSClustersTracksQCtask['cmd'] = 'o2-missing-reader | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json ' + getDPL_global_options()
-     # workflow['stages'].append(ITSClustersTracksQCtask)
-
-     ### MFT
-     MFTDigitsQCneeds = [det_to_digitask["MFT"]['name']]
-     MFTDigitsQCtask = createTask(name='mftDigitsQC_local'+str(tf), needs=MFTDigitsQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     MFTDigitsQCtask['cmd'] = 'o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit.json --local-batch ../' + qcdir + '/mftDigitsQC.root ' + getDPL_global_options()
-     MFTDigitsQCtask['semaphore'] = 'mftDigitsQC'
-     workflow['stages'].append(MFTDigitsQCtask)
-
-     MFTClustersQCneeds = [MFTRECOtask['name']]
-     MFTClustersQCtask = createTask(name='mftClustersQC_local'+str(tf), needs=MFTClustersQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     MFTClustersQCtask['cmd'] = 'o2-qc-mft-clusters-root-file-reader --mft-cluster-infile=mftclusters.root | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json --local-batch ../' + qcdir + '/mftClustersQC.root ' + getDPL_global_options()
-     MFTClustersQCtask['semaphore'] = 'mftClustersQC'
-     workflow['stages'].append(MFTClustersQCtask)
-
-     MFTTracksQCneeds = [MFTRECOtask['name']]
-     MFTTracksQCtask = createTask(name='mftTracksQC_local'+str(tf), needs=MFTTracksQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     MFTTracksQCtask['cmd'] = 'o2-qc-mft-tracks-root-file-reader --mft-track-infile=mfttracks.root | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-track.json --local-batch ../' + qcdir + '/mftTracksQC.root ' + getDPL_global_options()
-     MFTTracksQCtask['semaphore'] = 'mftTracksQC'
-     workflow['stages'].append(MFTTracksQCtask)
+     def addQCPerTF(taskName, needs, readerCommand, configFilePath, objectsFile=''):
+       task = createTask(name=taskName + '_local' + str(tf), needs=needs, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
+       objectsFile = objectsFile if len(objectsFile) > 0 else taskName + '.root' 
+       # the --local-batch argument will make QC Tasks store their results in a file and merge with any existing objects
+       task['cmd'] = readerCommand + ' | o2-qc --config ' + configFilePath + ' --local-batch ../' + qcdir + '/' + objectsFile + ' ' + getDPL_global_options()
+       # Prevents this task from being run for multiple TimeFrames at the same time, thus trying to modify the same file.
+       task['semaphore'] = objectsFile
+       workflow['stages'].append(task)
+ 
+     ### MFT     
+     
+     # to be enabled once MFT Digits should run 5 times with different configurations
+     #for flp in range(5):
+     #  addQCPerTF(taskName='mftDigitsQC' + str(flp),
+     #             needs=[det_to_digitask["MFT"]['name']],
+     #             readerCommand='o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root',
+     #             configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-' + str(flp) + '.json',
+     #             objectsFile='mftDigitsQC.root')
+     
+     addQCPerTF(taskName='mftDigitsQC',
+                needs=[det_to_digitask["MFT"]['name']],
+                readerCommand='o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit.json')
+     addQCPerTF(taskName='mftClustersQC',
+                needs=[MFTRECOtask['name']],
+                readerCommand='o2-qc-mft-clusters-root-file-reader --mft-cluster-infile=mftclusters.root',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json')
+     addQCPerTF(taskName='mftTracksQC',
+                needs=[MFTRECOtask['name']],
+                readerCommand='o2-qc-mft-tracks-root-file-reader --mft-track-infile=mfttracks.root',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-track.json')
 
      ### TPC
-     TPCTrackingQCneeds = [TPCRECOtask['name']]
-     TPCTrackingQCtask = createTask(name='tpcTrackingQC_local'+str(tf), needs=TPCTrackingQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=2, mem='2000')
-     TPCTrackingQCtask['cmd'] = 'o2-tpc-track-reader | o2-tpc-reco-workflow --input-type clusters --infile tpc-native-clusters.root --output-type disable-writer | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-tracking-direct.json --local-batch ../' + qcdir + '/tpcTrackingQC.root ' + getDPL_global_options()
-     TPCTrackingQCtask['semaphore'] = 'tpcTrackingQC'
-     #workflow['stages'].append(TPCTrackingQCtask)
+     # addQCPerTF(taskName='tpcTrackingQC',
+     #           needs=,
+     #           readerCommand=,
+     #           configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-tracking-direct.json')
 
      ### TRD
-     TRDDigitsQCneeds = [TRDDigitask['name']]
-     TRDDigitsQCtask = createTask(name='trdDigitsQC_local'+str(tf), needs=TRDDigitsQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     TRDDigitsQCtask['cmd'] = 'o2-trd-trap-sim | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json --local-batch ../' + qcdir + '/trdDigitsQC.root ' + getDPL_global_options()
-     TRDDigitsQCtask['semaphore'] = 'trdDigitsQC'
-     workflow['stages'].append(TRDDigitsQCtask)
+     addQCPerTF(taskName='trdDigitsQC',
+                needs=[TRDDigitask['name']],
+                readerCommand='o2-trd-trap-sim',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json')
 
      ### GLO + RECO
-     ### Primary vertex
-     vertexQCneeds = [PVFINDERtask['name']]
-     vertexQCtask = createTask(name='vertexQC_local'+str(tf), needs=vertexQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     vertexQCtask['cmd'] = 'o2-primary-vertex-reader-workflow | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json --local-batch ../' + qcdir + '/vertexQC.root ' + getDPL_global_options()
-     vertexQCtask['semaphore'] = 'vertexQC'
-     workflow['stages'].append(vertexQCtask)
-
-     ### ITSTPC matching
-     ITSTPCmatchQCneeds = [ITSTPCMATCHtask['name']]
-     ITSTPCmatchQCtask = createTask(name='ITSTPCmatchQC_local'+str(tf), needs=ITSTPCmatchQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     ITSTPCmatchQCtask['cmd'] = 'o2-global-track-cluster-reader --track-types "TPC,ITS-TPC" | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/ITSTPCmatchedTracks_direct_MC.json --local-batch ../' + qcdir + '/ITSTPCmatchQC.root ' + getDPL_global_options()
-     ITSTPCmatchQCtask['semaphore'] = 'ITSTPCmatchQC'
-     workflow['stages'].append(ITSTPCmatchQCtask)
-
-     ### TOF matching
-     TOFMatchQCneeds = [TOFTPCMATCHERtask['name']]
-     TOFMatchQCtask = createTask(name='TOFMatchQC_local'+str(tf), needs=TOFMatchQCneeds, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-     TOFMatchQCtask['cmd'] = 'o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC" --cluster-types none | o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF_direct_MC.json --local-batch ../' + qcdir + '/TOFMatchQC.root ' + getDPL_global_options()
-     TOFMatchQCtask['semaphore'] = 'TOFMatchQC'
-     workflow['stages'].append(TOFMatchQCtask)
-
+     addQCPerTF(taskName='vertexQC',
+                needs=[PVFINDERtask['name']],
+                readerCommand='o2-primary-vertex-reader-workflow',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json')
+     addQCPerTF(taskName='ITSTPCmatchQC',
+                needs=[ITSTPCMATCHtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "TPC,ITS-TPC"',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/ITSTPCmatchedTracks_direct_MC.json')
+     addQCPerTF(taskName='TOFMatchQC',
+                needs=[TOFTPCMATCHERtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC" --cluster-types none',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF_direct_MC.json')
  
    #secondary vertexer
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=1, mem='5000')
@@ -795,54 +793,10 @@ AOD_merge_task['cmd'] += ' for i in `seq 1 ' + str(NTIMEFRAMES) + '`; do echo "t
 AOD_merge_task['cmd'] += ' o2-aod-merger --input aodmerge_input.txt --output AO2D.root'
 workflow['stages'].append(AOD_merge_task)
 
+job_merging = False
+if includeFullQC:
+  workflow['stages'].extend(include_all_QC_finalization(ntimeframes=NTIMEFRAMES, standalone=False))
 
-if includeQC:
-  #MFT
-  MFTDigitsQCneeds = ['mftDigitsQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
-  MFTDigitsQCtask = createTask(name='mftDigitsQC_finalize', needs=MFTDigitsQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-  MFTDigitsQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit.json --remote-batch mftDigitsQC.root ' + getDPL_global_options()
-  workflow['stages'].append(MFTDigitsQCtask)
-
-  MFTClustersQCneeds = ['mftClustersQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
-  MFTClustersQCtask = createTask(name='mftClustersQC_finalize', needs=MFTClustersQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-  MFTClustersQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json --remote-batch mftClustersQC.root ' + getDPL_global_options()
-  workflow['stages'].append(MFTClustersQCtask)
-
-  MFTTracksQCneeds = ['mftTracksQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
-  MFTTracksQCtask = createTask(name='mftTracksQC_finalize', needs=MFTTracksQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-  MFTTracksQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-track.json --remote-batch mftTracksQC.root ' + getDPL_global_options()
-  workflow['stages'].append(MFTTracksQCtask)
-
-  ### TPC
-  TPCTrackingQCneeds = ['tpcTrackingQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
-  TPCTrackingQCtask = createTask(name='tpcTrackingQC_finalize', needs=TPCTrackingQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-  TPCTrackingQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-tracking-direct.json --remote-batch tpcTrackingQC.root ' + getDPL_global_options()
-  #workflow['stages'].append(TPCTrackingQCtask)
-
-  ### TRD
-  TRDDigitsQCneeds = ['trdDigitsQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
-  TRDDigitsQCtask = createTask(name='trdDigitsQC_finalize', needs=TRDDigitsQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-  TRDDigitsQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json --remote-batch trdDigitsQC.root ' + getDPL_global_options()
-  workflow['stages'].append(TRDDigitsQCtask)
-
-  ### GLO + RECO
-  ### vertexing
-  vertexQCneeds = ['vertexQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
-  vertexQCtask = createTask(name='vertexQC_finalize', needs=vertexQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-  vertexQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json --remote-batch vertexQC.root ' + getDPL_global_options()
-  workflow['stages'].append(vertexQCtask)
-
-  ### ITSTPC matching
-  ITSTPCmatchQCneeds = ['ITSTPCmatchQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
-  ITSTPCmatchQCtask = createTask(name='ITSTPCmatchQC_finalize', needs=ITSTPCmatchQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-  ITSTPCmatchQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/ITSTPCmatchedTracks_direct_MC.json --remote-batch ITSTPCmatchQC.root ' + getDPL_global_options()
-  workflow['stages'].append(ITSTPCmatchQCtask)
-
-  ### TOF matching
-  TOFMatchQCneeds = ['TOFMatchQC_local'+str(tf) for tf in range(1, NTIMEFRAMES + 1)]
-  TOFMatchQCtask = createTask(name='TOFMatchQC_finalize', needs=TOFMatchQCneeds, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-  TOFMatchQCtask['cmd'] = 'o2-qc --config json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF_direct_MC.json --remote-batch TOFMatchQC.root ' + getDPL_global_options()
-  workflow['stages'].append(TOFMatchQCtask)
 
 if includeAnalysis:
    # Configuration
