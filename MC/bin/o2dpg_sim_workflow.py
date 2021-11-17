@@ -615,7 +615,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TOFTPCMATCHERtask)
 
    MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[det_to_digitask["MFT"]['name'], MFT_DICT_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValues({"MFTClustererParam.dictFilePath" : "../"})
+   MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValues({"MFTClustererParam.dictFilePath" : "../", "MFTTracking.forceZeroField": 0, "MFTTracking.LTFclsRCut" : 0.0100})
    workflow['stages'].append(MFTRECOtask)
 
    # MCH reco: needing access to kinematics ... so some extra logic needed here
