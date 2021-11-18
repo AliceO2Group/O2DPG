@@ -97,5 +97,14 @@ The following example shows a screenshot of the expert panel with some custom op
 <p align="center"><img src='gui_expert_example.png' width=80%></p>
 
 # Extra ENV Variables
-This section contains a list of relevant `Extra ENV Variables` setting to be used in the AliECS GUI:
- - `ARGS_EXTRA_PROCESS_o2_gpu_reco_workflow=‘GPU_proc.debugLevel=1;’` : Enable the GPU serialization workaround that avoids the random crash.
+This section contains a list of relevant `Extra ENV Variables` setting to be used in the AliECS GUI. In case multiple settings are needed for the `CONFIG_EXTRA_PROCESS_XXX` or `ARGS_EXTRA_PROCESS_XXX` of the same workflow `XXX`, they should be concatenated:
+with `;` or with space respectively.
+
+ - `CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow=GPU_proc.debugLevel=1;` : Enable the GPU serialization workaround that avoids the random crash.
+ - `CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow=TPCGasParam.DriftV=2.69;` : To pass non-default TPC VDrift to TPC tracking
+    If DriftV is modified, it should be set also in `CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow`, `CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow`, `CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow` and `CONFIG_EXTRA_PROCESS_o2_trd_global_tracking`.
+ - `CONFIG_EXTRA_PROCESS_o2_its_reco_workflow=ITSCATrackerParam.sysErrY2[0]=9e-4;ITSCATrackerParam.sysErrZ2[0]=9e-4;ITSCATrackerParam.sysErrY2[1]=9e-4;ITSCATrackerParam.sysErrZ2[1]=9e-4;ITSCATrackerParam.sysErrY2[2]=9e-4;ITSCATrackerParam.sysErrZ2[2]=9e-4;ITSCATrackerParam.sysErrY2[3]=1e-2;ITSCATrackerParam.sysErrZ2[3]=1e-2;ITSCATrackerParam.sysErrY2[4]=1e-2;ITSCATrackerParam.sysErrZ2[4]=1e-2;ITSCATrackerParam.sysErrY2[5]=1e-2;ITSCATrackerParam.sysErrZ2[5]=1e-2;ITSCATrackerParam.sysErrY2[6]=1e-2;ITSCATrackerParam.sysErrZ2[6]=1e-2;` : add extra systematic errors to ITS clusters to account for misalignment
+    If these error are applied, it is advised to apply them also in `CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow`, `CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow` and `CONFIG_EXTRA_PROCESS_o2_trd_global_tracking` which do ITS refit
+ - `CONFIG_EXTRA_PROCESS_o2_itsmft_stf_decoder_workflow="ITSTAlpideParam.roFrameLengthInBC=891;MFTAlpideParam.roFrameLengthInBC=198` : ITS and MFT readout frame lengths in bunches (defaults are shown). If these settings 
+ - `ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow=" --ignore-bc-check "` : Do not validate time of matched tracks by interacting BC's (useful if the timings are not well calibrated).
+ - `ITS_STROBE="891"`, `MFT_STROBE="198"` : ITS and MFT readout frame lenghts in number of bunches (current default are shown)
