@@ -95,3 +95,7 @@ The expert panel provides plenty of additional configuration options for both O2
 The following example shows a screenshot of the expert panel with some custom options selected.
 
 <p align="center"><img src='gui_expert_example.png' width=80%></p>
+
+# Extra ENV Variables
+This section contains a list of relevant `Extra ENV Variables` setting to be used in the AliECS GUI:
+ - `ARGS_EXTRA_PROCESS_o2_gpu_reco_workflow=‘GPU_proc.debugLevel=1;’` : Enable the GPU serialization workaround that avoids the random crash.
