@@ -91,6 +91,9 @@ parser.add_argument('--include-local-qc', action='store_true', help='includes th
 parser.add_argument('--include-analysis', '--include-an', '--analysis',
                     action='store_true', help='a flag to include O2 analysis in the workflow')
 
+# MFT reconstruction configuration
+parser.add_argument('--mft-reco-full', action='store_true', help='enables complete mft reco instead of simplified misaligned version')
+
 args = parser.parse_args()
 print (args)
 
@@ -616,8 +619,12 @@ for tf in range(1, NTIMEFRAMES + 1):
    TOFTPCMATCHERtask['cmd'] = 'o2-tof-matcher-workflow ' + getDPL_global_options() + putConfigValues({"ITSClustererParam.dictFilePath":"../"})
    workflow['stages'].append(TOFTPCMATCHERtask)
 
+   MFTConfig = {"MFTClustererParam.dictFilePath":"../"}
+   if args.mft_reco_full == True:
+      MFTConfig.update({"MFTTracking.forceZeroField" : 0,
+                        "MFTTracking.LTFclsRCut" : 0.0100})
    MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[det_to_digitask["MFT"]['name'], MFT_DICT_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValues({"MFTClustererParam.dictFilePath" : "../", "MFTTracking.forceZeroField": 0, "MFTTracking.LTFclsRCut" : 0.0100})
+   MFTRECOtask['cmd'] = 'o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValues(MFTConfig)
    workflow['stages'].append(MFTRECOtask)
 
    # MCH reco: needing access to kinematics ... so some extra logic needed here
