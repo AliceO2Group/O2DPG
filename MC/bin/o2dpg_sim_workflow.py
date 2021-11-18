@@ -557,7 +557,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------
    tpcreconeeds=[]
    if not args.combine_tpc_clusterization:
-     # TODO: check value for MaxTimeBin; A large value had to be set tmp in order to avoid crashes based on "exceeding timeframe limit"
      # We treat TPC clusterization in multiple (sector) steps in order to stay within the memory limit
      # We seem to be needing to ask for 2 sectors at least, otherwise there is a problem with the branch naming.
      tpcclustertasks=[]
@@ -567,7 +566,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        tpcclustertasks.append(taskname)
        tpcclussect = createTask(name=taskname, needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='2', mem='8000')
        tpcclussect['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' --tpc-lanes ' + str(NWORKERS)
-       tpcclussect['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str((int)(s/sectorpertask)) + '.root --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' ' + putConfigValues({"GPU_global.continuousMaxTimeBin":100000 , "GPU_proc.ompThreads" : 4})
+       tpcclussect['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str((int)(s/sectorpertask)) + '.root --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' ' + putConfigValues({"GPU_proc.ompThreads" : 4})
        tpcclussect['env'] = { "OMP_NUM_THREADS" : "4", "SHMSIZE" : "5000000000" }
        workflow['stages'].append(tpcclussect)
 
@@ -578,12 +577,12 @@ for tf in range(1, NTIMEFRAMES + 1):
    else:
      tpcclus = createTask(name='tpccluster_' + str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='2000')
      tpcclus['cmd'] = 'o2-tpc-chunkeddigit-merger --tpc-lanes ' + str(NWORKERS)
-     tpcclus['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector ' + putConfigValues({"GPU_global.continuousMaxTimeBin":100000 , "GPU_proc.ompThreads" : 1})
+     tpcclus['cmd'] += ' | o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector ' + putConfigValues({"GPU_proc.ompThreads" : 1})
      workflow['stages'].append(tpcclus)
      tpcreconeeds.append(tpcclus['name'])
 
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
-   TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' + putConfigValues({"GPU_global.continuousMaxTimeBin":100000,"GPU_proc.ompThreads":NWORKERS, "GPU_rec.maxTrackQPt":Q2PTCUTOFF })
+   TPCRECOtask['cmd'] = 'o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' + putConfigValues({"GPU_proc.ompThreads":NWORKERS, "GPU_rec.maxTrackQPt":Q2PTCUTOFF })
    workflow['stages'].append(TPCRECOtask)
 
    ITSConfig = {"ITSClustererParam.dictFilePath":"../"}
