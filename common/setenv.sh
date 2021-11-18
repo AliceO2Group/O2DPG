@@ -61,7 +61,7 @@ else # Defaults when running on the EPN
   if [ -z "$EPNPIPELINES" ];         then export EPNPIPELINES=1; fi
   if [ -z "$SHMTHROW" ];             then export SHMTHROW=0; fi
   if [ -z "$TIMEFRAME_SHM_LIMIT" ];  then export TIMEFRAME_SHM_LIMIT=$(( 64 << 30 )); fi
-  if [ -z "$TIMEFRAME_RATE_LIMIT" ]; then export TIMEFRAME_RATE_LIMIT=10; fi
+  if [ -z "$TIMEFRAME_RATE_LIMIT" ]; then export TIMEFRAME_RATE_LIMIT=0; fi
   if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
 fi
 # Some more options for running on the EPN
