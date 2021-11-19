@@ -1,2 +1,3 @@
 # Empty workflow for no processing at all
 no-processing: "O2PDPSuite"
+minimal-dpl: "O2PDPSuite" reco,1,1,"WORKFLOW_DETECTORS=NONE WORKFLOW_PARAMETERS=NONE SYNCMODE=1 SHMSIZE=2000000000 SYNCMODE=1 production/dpl-workflow.sh"
