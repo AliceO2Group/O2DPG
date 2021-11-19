@@ -114,7 +114,7 @@ for line in f:
                 if reconodes:
                     odccommand += " --dd " + os.environ['DDWORKFLOW']
                 if len(recoworkflows):
-                    odccommand += " --reco " + " ".join(recoworkflows)
+                    odccommand += " --recown 'wn_(?!online-calib).*_.*' --reco " + " ".join(recoworkflows)
                 odccommand += " --n " + str(reconodes)
                 if len(calibworkflows):
                     odccommand += " --calibwn 'wn_online-calib_.*' --calib " + " ".join(calibworkflows)
