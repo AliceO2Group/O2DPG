@@ -28,6 +28,9 @@ GeneratorBeautyToJpsi_EvtGenMidY(double rapidityMin = -1.5, double rapidityMax =
    printf("PDG %d \n",std::stoi(spdg));
   }
   gen->SetForceDecay(kEvtBJpsiDiElectron);
+  // set random seed
+  gen->readString("Random:setSeed on");
+  gen->readString("Random:seed = 0");
   // print debug
   // gen->PrintDebug();
 
@@ -53,6 +56,9 @@ GeneratorBeautyToJpsi_EvtGenFwdY(double rapidityMin = -4.3, double rapidityMax =
    printf("PDG %d \n",std::stoi(spdg));
   }
   gen->SetForceDecay(kEvtBJpsiDiMuon);
+  // set random seed
+  gen->readString("Random:setSeed on");
+  gen->readString("Random:seed = 0");
   // print debug
   // gen->PrintDebug();
 
