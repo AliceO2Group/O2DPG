@@ -31,7 +31,7 @@ from o2dpg_qc_finalization_workflow import include_all_QC_finalization
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
 
 # the run-number of data taking or default if unanchored
-parser.add_argument('-run',help="Run number for this MC", default=30000)
+parser.add_argument('-run',help="Run number for this MC", default=300000)
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
 parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...', default='')
