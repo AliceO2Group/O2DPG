@@ -50,6 +50,7 @@ parser.add_argument('--stdout-on-failure', action='store_true', help='Print log 
 parser.add_argument('--webhook', help=argparse.SUPPRESS) # log some infos to this webhook channel
 parser.add_argument('--checkpoint-on-failure', help=argparse.SUPPRESS) # debug option making a debug-tarball and sending to specified address
                                                                        # argument is alien-path
+parser.add_argument('--retry-on-failure', help=argparse.SUPPRESS, default=2) # number of times a failing task is retried
 parser.add_argument('--action-logfile', help='Logfilename for action logs. If none given, pipeline_action_#PID.log will be used')
 parser.add_argument('--metric-logfile', help='Logfilename for metric logs. If none given, pipeline_metric_#PID.log will be used')
 args = parser.parse_args()
@@ -769,7 +770,7 @@ class WorkflowExecutor:
             if returncode != 0:
                print (str(tid) + ' failed ... checking retry')
                # we inspect if this is something "unlucky" which could be resolved by a simple resubmit
-               if self.is_worth_retrying(tid) and self.retry_counter[tid] < 2:
+               if self.is_worth_retrying(tid) and self.retry_counter[tid] < int(args.retry_on_failure):
                  print (str(tid) + ' to be retried')
                  actionlogger.info ('Task ' + str(self.idtotask[tid]) + ' failed but marked to be retried ')
                  self.tids_marked_toretry.append(tid)
