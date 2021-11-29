@@ -22,6 +22,7 @@ import argparse
 from os import environ, mkdir
 from os.path import join, dirname, isdir
 import json
+import itertools
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
@@ -269,10 +270,12 @@ if doembedding:
         workflow['stages'].append(BKG_HEADER_task)
 
 # a list of smaller sensors (used to construct digitization tasks in a parametrized way)
-smallsensorlist = [ "ITS", "TOF", "FT0", "FV0", "FDD", "MCH", "MID", "MFT", "HMP", "EMC", "PHS", "CPV" ]
+smallsensorlist = [ "ITS", "TOF", "FDD", "MCH", "MID", "MFT", "HMP", "EMC", "PHS", "CPV" ]
+# a list of detectors that serve as input for the trigger processor CTP --> these need to be processed together for now
+ctp_trigger_inputlist = [ "FT0", "FV0" ]
 
 BKG_HITDOWNLOADER_TASKS={}
-for det in [ 'TPC', 'TRD' ] + smallsensorlist:
+for det in [ 'TPC', 'TRD' ] + smallsensorlist + ctp_trigger_inputlist:
    if usebkgcache:
       BKG_HITDOWNLOADER_TASKS[det] = createTask(str(det) + 'hitdownload', cpu='0', lab=['BKGCACHE'])
       BKG_HITDOWNLOADER_TASKS[det]['cmd'] = 'alien.py cp ' + args.use_bkg_from + 'bkg_Hits' + str(det) + '.root .'
@@ -526,7 +529,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       tneeds = needs=[ContextTask['name']]
       if det=='ALLSMALLER':
          if usebkgcache:
-            for d in smallsensorlist:
+            for d in itertools.chain(smallsensorlist, ctp_trigger_inputlist):
                tneeds += [ BKG_HITDOWNLOADER_TASKS[d]['name'] ]
          t = createTask(name=name, needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu=NWORKERS)
@@ -554,6 +557,19 @@ for tf in range(1, NTIMEFRAMES + 1):
       name=str(det).lower() + "digi_" + str(tf)
       t = det_to_digitask['ALLSMALLER'] if args.combine_smaller_digi==True else createRestDigiTask(name, det)
       det_to_digitask[det]=t
+
+   if args.combine_smaller_digi==False:
+      # detectors serving CTP need to be treated somewhat special since CTP needs
+      # these inputs at the same time --> still need to be made better
+      tneeds = [ContextTask['name']]
+      t = createTask(name="ft0fv0ctp_digi_" + str(tf), needs=tneeds,
+                     tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
+      t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
+      t['cmd'] += 'o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValues()
+      workflow['stages'].append(t)
+      det_to_digitask["FT0"]=t
+      det_to_digitask["FV0"]=t
+
 
    # -----------
    # reco
@@ -754,7 +770,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += 'o2-aod-producer-workflow --reco-mctracks-only 1 --aod-writer-keep dangling --aod-writer-resfile AO2D'
    AODtask['cmd'] += ' --run-number ' + str(args.run)
    AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id + ' ' + getDPL_global_options(bigshm=True)
-   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,TPC-TRD,ITS-TPC-TRD;'
+   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD;'
    AODtask['cmd'] += ' root -q -b -l ${O2DPG_ROOT}/UTILS/repairAOD.C\\(\\"AO2D.root\\",\\"AO2D_repaired.root\\"\\)'
    workflow['stages'].append(AODtask)
 
