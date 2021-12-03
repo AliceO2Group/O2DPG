@@ -36,11 +36,11 @@
         "resetAfterCycles": "1",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "random-cluster"
+          "type": "direct",
+          "query": "inputClus:TPC/CLUSTERNATIVE"
         },
         "taskParameters": {
-          "myOwnKey": "myOwnValue",
+          "mergeableOutput": "true",
           "NClustersNBins": "100",  "NClustersXMin": "0", "NClustersXMax": "100",
           "QmaxNBins":      "200",  "QmaxXMin":      "0", "QmaxXMax":      "200",
           "QtotNBins":      "600",  "QtotXMin":      "10", "QtotXMax":      "600",
@@ -55,7 +55,7 @@
         "moduleName": "QcTPC",
         "detectorName": "TPC",
         "cycleDurationSeconds": "60",
-        "resetAfterCycles": "10",
+        "resetAfterCycles": "1",
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
@@ -68,7 +68,7 @@
         "moduleName": "QcTPC",
         "detectorName": "TPC",
         "cycleDurationSeconds": "60",
-        "resetAfterCycles": "10",
+        "resetAfterCycles": "1",
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
@@ -78,23 +78,5 @@
     }
   },
   "dataSamplingPolicies": [
-    {
-      "id": "random-cluster",
-      "active": "true",
-      "machines": [
-        "localhost"
-      ],
-      "port": "32627",
-      "query": "inputClus:TPC/CLUSTERNATIVE",
-      "outputs": "sampled-clusters:DS/CLUSTERNATIVE",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.01",
-          "seed": "0"
-        }
-      ],
-      "blocking": "false"
-    }
   ]
 }
