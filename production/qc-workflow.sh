@@ -6,17 +6,31 @@ if [[ -z "$WORKFLOW" ]] || [[ -z "$MYDIR" ]]; then
 fi
 
 if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
-  [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=/home/rmunzer/odc/config/tpcQCTasks_multinode_ALL.json
-  [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=/home/jian/jliu/itsEPN-merger.json
-  [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=/home/epn/odc/files/qc-mft-cluster-merger-raw-digit-cluster.json
-  [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=/home/fnoferin/public/tof-qc-globalrun.json
-  [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=/home/afurs/O2DataProcessing/testing/detectors/FDD/fdd-digits-ds.json
-  [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=/home/afurs/O2DataProcessing/testing/detectors/FT0/ft0-digits-ds.json
-  [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=/home/afurs/O2DataProcessing/testing/detectors/FV0/fv0-digits-ds.json
-  [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=/home/mfasel/alice/O2DataProcessing/testing/detectors/EMC/qc/emcQCTasksAll_multinode.json
-  [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=/home/laphecet/qc_configs/mch-qc-physics.json
-  [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=/home/dstocco/config/mid-qcmn-epn-digits.json
-  [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=/home/shahoian/jsons/vertexing-qc.json
+  if [[ $SYNCMODE == 1 ]]; then
+    [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=/home/rmunzer/odc/config/tpcQCTasks_multinode_ALL.json
+    [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=/home/jian/jliu/itsEPN-merger.json
+    [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=/home/epn/odc/files/qc-mft-cluster-merger-raw-digit-cluster.json
+    [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=/home/fnoferin/public/tof-qc-globalrun.json
+    [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=/home/afurs/O2DataProcessing/testing/detectors/FDD/fdd-digits-ds.json
+    [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=/home/afurs/O2DataProcessing/testing/detectors/FT0/ft0-digits-ds.json
+    [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=/home/afurs/O2DataProcessing/testing/detectors/FV0/fv0-digits-ds.json
+    [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=/home/mfasel/alice/O2DataProcessing/testing/detectors/EMC/qc/emcQCTasksAll_multinode.json
+    [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=/home/laphecet/qc_configs/mch-qc-physics.json
+    [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=/home/dstocco/config/mid-qcmn-epn-digits.json
+    [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=/home/shahoian/jsons/vertexing-qc.json
+  else
+    [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=~/qc-async/tpc.json
+    [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=~/qc-async/its.json
+    [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=~/qc-async/mft.json
+    [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=~/qc-async/tof.json
+    [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=~/qc-async/ft0.json
+    [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=~/qc-async/fv0.json
+    [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=~/qc-async/mid.json
+    [[ -z "$QC_JSON_GLO" ]] && QC_JSON_GLO=~/qc-async/glo.json
+    [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=~/qc-async/primvtx.json
+    [[ -z "$QC_JSON_ITSTPC" ]] && QC_JSON_ITSTPC=~/qc-async/itstpc.json
+    [[ -z "$QC_JSON_ITSTPCTOF" ]] && QC_JSON_ITSTPCTOF=~/qc-async/itstpctof.json
+  fi
 
   if [[ -z "$GEN_TOPO_WORKDIR" ]]; then
     echo This script must be run via the gen_topo scripts, or a GEN_TOPO_WORKDIR must be provided where merged JSONS are stored 1>&2
