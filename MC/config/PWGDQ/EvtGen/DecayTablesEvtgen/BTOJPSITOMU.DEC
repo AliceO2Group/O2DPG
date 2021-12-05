@@ -121,7 +121,7 @@ Decay B_s0
 0.0002    J/psi   pi+      pi-       PHSP;
 0.0002    J/psi   pi0      pi0       PHSP;
 # PR LHCb 04/08/2004 : add Bs -> phi mu mu, phi e e
-0.0000023   phi    e+     e-                   BTOSLLALI;
+0.0000023   phi    mu+    mu-                  BTOSLLALI;
 Enddecay
 
 Decay anti-B_s0
@@ -146,7 +146,7 @@ Decay anti-B_s0
 0.0002    J/psi   pi+      pi-       PHSP;
 0.0002    J/psi   pi0      pi0       PHSP;
 # PR LHCb 04/08/2004 : add Bs -> phi mu mu, phi e e
-0.0000023   phi    e-     e+                   BTOSLLALI;
+0.0000023   phi    mu+    mu-                  BTOSLLALI;
 
 Enddecay
 
@@ -184,9 +184,36 @@ Decay anti-Omega_b+
   0.00047    anti-Omega+        J/psi                     PHSP;
 Enddecay
 
+Decay B_c-
+#                  SemiLeptonic Decays
+0.01900    J/psi      mu-     anti-nu_mu        PHOTOS  PHSP;
+#                  Hadronic Decays
+0.00130    J/psi      pi-                   SVS;
+0.00400    J/psi      rho-                  SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+0.00011    J/psi      K-                    SVS;
+0.00022    J/psi      K*-                   SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+0.00170    J/psi      D_s-                  SVS;
+0.00670    J/psi      D_s*-                 SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+0.00009    J/psi      D-                    SVS;
+0.00028    J/psi      D*-                   SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+Enddecay
+
+Decay B_c+
+#                  SemiLeptonic Decays
+0.01900    J/psi      mu+         nu_mu        PHOTOS  PHSP;
+#                  Hadronic Decays
+0.00130    J/psi      pi+                   SVS;
+0.00400    J/psi      rho+                  SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+0.00011    J/psi      K+                    SVS;
+0.00022    J/psi      K*+                   SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+0.00170    J/psi      D_s+                  SVS;
+0.00670    J/psi      D_s*+                 SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+0.00009    J/psi      D+                    SVS;
+0.00028    J/psi      D*+                   SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+Enddecay
+
 Decay J/psi
 1.000 mu+   mu-                PHOTOS VLL;
 Enddecay
-
 
 End
