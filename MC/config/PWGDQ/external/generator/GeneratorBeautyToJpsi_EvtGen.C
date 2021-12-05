@@ -10,7 +10,7 @@ R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGHF/external/generator)
 #include "GeneratorHF.C"
 
 FairGenerator*
-GeneratorBeautyToJpsi_EvtGenMidY(double rapidityMin = -1.5, double rapidityMax = 1.5, bool ispp = true, bool verbose = false, TString pdgs = "511;521;531;5112;5122;5232;5132")
+GeneratorBeautyToJpsi_EvtGenMidY(double rapidityMin = -1.5, double rapidityMax = 1.5, bool ispp = true, bool verbose = false, TString pdgs = "511;521;531;541;5112;5122;5232;5132;5332")
 {
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorHF>(); 
   gen->setRapidity(rapidityMin,rapidityMax);
@@ -38,7 +38,7 @@ GeneratorBeautyToJpsi_EvtGenMidY(double rapidityMin = -1.5, double rapidityMax =
 }
 
 FairGenerator*
-GeneratorBeautyToJpsi_EvtGenFwdY(double rapidityMin = -4.3, double rapidityMax = -2.2, bool ispp = true, bool verbose = false, TString pdgs = "511;521;531;5112;5122;5232;5132")
+GeneratorBeautyToJpsi_EvtGenFwdY(double rapidityMin = -4.3, double rapidityMax = -2.2, bool ispp = true, bool verbose = false, TString pdgs = "511;521;531;541;5112;5122;5232;5132;5332")
 {
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorHF>();
   gen->setRapidity(rapidityMin,rapidityMax);
