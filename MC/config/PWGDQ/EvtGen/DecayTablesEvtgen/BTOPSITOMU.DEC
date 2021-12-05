@@ -93,7 +93,7 @@ Decay B_s0
 0.0002    psi(2S) pi0      pi0       PHSP;
 #
 # PR LHCb 04/08/2004 : add Bs -> phi mu mu, phi e e
-0.0000023   phi    e+     e-                   BTOSLLALI;
+0.0000023   phi    mu+    mu-                  BTOSLLALI;
 Enddecay
 
 Decay anti-B_s0
@@ -117,7 +117,7 @@ Decay anti-B_s0
 0.0002    psi(2S) pi0      pi0       PHSP;
 #
 # PR LHCb 04/08/2004 : add Bs -> phi mu mu, phi e e
-0.0000023   phi    e-     e+                   BTOSLLALI;
+0.0000023   phi    mu+    mu-                  BTOSLLALI;
 
 Enddecay
 
@@ -133,11 +133,9 @@ Decay Xi_b-
   0.00038    Xi-        psi(2S)                           PHSP;
 Enddecay
 
-
 Decay anti-Xi_b+
   0.00038    anti-Xi+        psi(2S)                      PHSP;
 Enddecay
-
 
 Decay Omega_b-
   0.00038    Omega-        psi(2S)                        PHSP;
@@ -145,6 +143,16 @@ Enddecay
 
 Decay anti-Omega_b+
   0.00038    anti-Omega+        psi(2S)                   PHSP;
+Enddecay
+
+Decay B_c-
+#                  SemiLeptonic Decays
+0.00094    psi(2S)    mu-     anti-nu_mu        PHOTOS  PHSP;
+Enddecay
+
+Decay B_c+
+#                  SemiLeptonic Decays
+0.00094    psi(2S)    mu+         nu_mu        PHOTOS  PHSP;
 Enddecay
 
 Decay psi(2S)

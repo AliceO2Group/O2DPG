@@ -133,11 +133,9 @@ Decay Xi_b-
   0.00038    Xi-        psi(2S)                           PHSP;
 Enddecay
 
-
 Decay anti-Xi_b+
   0.00038    anti-Xi+        psi(2S)                      PHSP;
 Enddecay
-
 
 Decay Omega_b-
   0.00038    Omega-        psi(2S)                        PHSP;
@@ -145,6 +143,16 @@ Enddecay
 
 Decay anti-Omega_b+
   0.00038    anti-Omega+        psi(2S)                   PHSP;
+Enddecay
+
+Decay B_c-
+#                  SemiLeptonic Decays
+0.00094    psi(2S)    e-      anti-nu_e         PHOTOS  PHSP;
+Enddecay
+
+Decay B_c+
+#                  SemiLeptonic Decays
+0.00094    psi(2S)    e+          nu_e         PHOTOS  PHSP;
 Enddecay
 
 Decay psi(2S)
