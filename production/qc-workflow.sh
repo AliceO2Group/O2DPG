@@ -6,7 +6,7 @@ if [[ -z "$WORKFLOW" ]] || [[ -z "$MYDIR" ]]; then
 fi
 
 if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
-  if [[ $SYNCMODE == 1 ]]; then
+  if [[ $SYNCMODE == 1 ]] && [[ $EPNMODE == 1 ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=/home/rmunzer/odc/config/tpcQCTasks_multinode_ALL.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=/home/jian/jliu/itsEPN-merger.json
     [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=/home/epn/odc/files/qc-mft-cluster-merger-raw-digit-cluster.json
@@ -18,6 +18,18 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=/home/laphecet/qc_configs/mch-qc-physics.json
     [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=/home/dstocco/config/mid-qcmn-epn-digits.json
     [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=/home/shahoian/jsons/vertexing-qc.json
+  elif [[ $SYNCMODE == 1 ]]; then
+    [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DATAPROCESSING_ROOT/production/qc-sync/tpc.json
+    [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DATAPROCESSING_ROOT/production/qc-sync/its.json
+    [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=$O2DATAPROCESSING_ROOT/production/qc-sync/mft.json
+    [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=$O2DATAPROCESSING_ROOT/production/qc-sync/tof.json
+    [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=$O2DATAPROCESSING_ROOT/production/qc-sync/fdd.json
+    [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=$O2DATAPROCESSING_ROOT/production/qc-sync/ft0.json
+    [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=$O2DATAPROCESSING_ROOT/production/qc-sync/fv0.json
+    [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=$O2DATAPROCESSING_ROOT/production/qc-sync/emc.json
+    [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=$O2DATAPROCESSING_ROOT/production/qc-sync/mch.json
+    [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DATAPROCESSING_ROOT/production/qc-sync/mid.json
+    [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=$O2DATAPROCESSING_ROOT/production/qc-sync/pvtx.json
   else
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DATAPROCESSING_ROOT/production/qc-async/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DATAPROCESSING_ROOT/production/qc-async/its.json
