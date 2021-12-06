@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # Make sure we can open sufficiently many files / allocate enough memory
-ulimit -n 4096 && ulimit -m unlimited && ulimit -v unlimited && [ -z "$GPUTYPE" ] || [ "$GPUTYPE" == "CPU" ] || ulimit -l unlimited
-if [ $? != 0 ]; then
-  echo Error setting ulimits
-  exit 1
+if [ "0$SETENV_NO_ULIMIT" != "01" ]; then
+  ulimit -S -n 4096 && ulimit -S -m unlimited && ulimit -S -v unlimited && [ -z "$GPUTYPE" ] || [ "$GPUTYPE" == "CPU" ] || ulimit -S -l unlimited
+  if [ $? != 0 ]; then
+    echo Error setting ulimits
+    exit 1
+  fi
 fi
 
 LIST_OF_DETECTORS="ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP"
