@@ -82,7 +82,7 @@ def dump_workflow(workflow, filename):
 
     # Sanity checks
     check_workflow(workflow)
-    taskwrapper_string = "${O2_ROOT}/share/scripts/jobutils.sh; taskwrapper"
+    taskwrapper_string = "${O2_ROOT}/share/scripts/jobutils2.sh; taskwrapper"
     # prepare for dumping, deepcopy to detach from this instance
     dump_workflow = deepcopy(workflow)
 
