@@ -1,1 +1,1 @@
-full-system-test/setenv.sh
+../common/setenv.sh
