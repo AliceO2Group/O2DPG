@@ -65,8 +65,6 @@ The global section of the merged qc JSON config is taken from qc_global.json
 `O2/prodtests/full-system-test/run-workflow-on-inputlist.sh` is a small tool to run the `dpl-workflow.sh` on a list of files.
 Technically, it is a small wrapper which just launches `dpl-workflow.sh`, and optionally the `StfBuilder` in parallel.
 
-*NOTE*: Currently it uses the `dpl-workflow.sh` in the O2 repo, not the O2DataProcessing repo. During development, there are 2 copies of this script. This will be cleaned up soon.
-
 The syntax is:
 ```
 run-workflow-on-inputlist.sh [CTF | DD | TF] [name of file with list of files to be processed] [Timeout in seconds (optional: default = disabled)] [Log to stdout (optional: default = enabled)]

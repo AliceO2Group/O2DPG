@@ -19,29 +19,29 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=/home/dstocco/config/mid-qcmn-epn-digits.json
     [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=/home/shahoian/jsons/vertexing-qc.json
   elif [[ $SYNCMODE == 1 ]]; then
-    [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DATAPROCESSING_ROOT/production/qc-sync/tpc.json
-    [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DATAPROCESSING_ROOT/production/qc-sync/its.json
-    [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=$O2DATAPROCESSING_ROOT/production/qc-sync/mft.json
-    [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=$O2DATAPROCESSING_ROOT/production/qc-sync/tof.json
-    [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=$O2DATAPROCESSING_ROOT/production/qc-sync/fdd.json
-    [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=$O2DATAPROCESSING_ROOT/production/qc-sync/ft0.json
-    [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=$O2DATAPROCESSING_ROOT/production/qc-sync/fv0.json
-    [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=$O2DATAPROCESSING_ROOT/production/qc-sync/emc.json
-    [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=$O2DATAPROCESSING_ROOT/production/qc-sync/mch.json
-    [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DATAPROCESSING_ROOT/production/qc-sync/mid.json
-    [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=$O2DATAPROCESSING_ROOT/production/qc-sync/pvtx.json
+    [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
+    [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
+    [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft.json
+    [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=$O2DPG_ROOT/DATA/production/qc-sync/tof.json
+    [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=$O2DPG_ROOT/DATA/production/qc-sync/fdd.json
+    [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=$O2DPG_ROOT/DATA/production/qc-sync/ft0.json
+    [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=$O2DPG_ROOT/DATA/production/qc-sync/fv0.json
+    [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-sync/emc.json
+    [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=$O2DPG_ROOT/DATA/production/qc-sync/mch.json
+    [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid.json
+    [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=$O2DPG_ROOT/DATA/production/qc-sync/pvtx.json
   else
-    [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DATAPROCESSING_ROOT/production/qc-async/tpc.json
-    [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DATAPROCESSING_ROOT/production/qc-async/its.json
-    [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=$O2DATAPROCESSING_ROOT/production/qc-async/mft.json
-    [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=$O2DATAPROCESSING_ROOT/production/qc-async/tof.json
-    [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=$O2DATAPROCESSING_ROOT/production/qc-async/ft0.json
-    [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=$O2DATAPROCESSING_ROOT/production/qc-async/fv0.json
-    [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DATAPROCESSING_ROOT/production/qc-async/mid.json
-    [[ -z "$QC_JSON_GLO" ]] && QC_JSON_GLO=$O2DATAPROCESSING_ROOT/production/qc-async/glo.json
-    [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=$O2DATAPROCESSING_ROOT/production/qc-async/primvtx.json
-    [[ -z "$QC_JSON_ITSTPC" ]] && QC_JSON_ITSTPC=$O2DATAPROCESSING_ROOT/production/qc-async/itstpc.json
-    [[ -z "$QC_JSON_ITSTPCTOF" ]] && QC_JSON_ITSTPCTOF=$O2DATAPROCESSING_ROOT/production/qc-async/itstpctof.json
+    [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-async/tpc.json
+    [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-async/its.json
+    [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-async/mft.json
+    [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=$O2DPG_ROOT/DATA/production/qc-async/tof.json
+    [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=$O2DPG_ROOT/DATA/production/qc-async/ft0.json
+    [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=$O2DPG_ROOT/DATA/production/qc-async/fv0.json
+    [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-async/mid.json
+    [[ -z "$QC_JSON_GLO" ]] && QC_JSON_GLO=$O2DPG_ROOT/DATA/production/qc-async/glo.json
+    [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=$O2DPG_ROOT/DATA/production/qc-async/primvtx.json
+    [[ -z "$QC_JSON_ITSTPC" ]] && QC_JSON_ITSTPC=$O2DPG_ROOT/DATA/production/qc-async/itstpc.json
+    [[ -z "$QC_JSON_ITSTPCTOF" ]] && QC_JSON_ITSTPCTOF=$O2DPG_ROOT/DATA/production/qc-async/itstpctof.json
   fi
 
   if [[ -z "$GEN_TOPO_WORKDIR" ]]; then

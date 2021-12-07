@@ -14,7 +14,7 @@ The options for the production workflow are described [here](production/README.m
 - **testing** contains scripts for tests / standalone runs maintained by detectors or privately. Subfolders are **examples** for example workflows provided, **detectors** for standalone detector workflows, and **private** for workflows of users.
 
 # Topology descriptions and description library files:
-Another abstraction layer above the *workflows* are **topology descriptions**. The *parser* tool can generate the *full topology* XML file from such a *description*, using the `–dds` option of DPL and the `odc-topo-epn` tool. *Topology descriptions* are stored in **description library files** in the `O2DataProcessing` repository. A *description library file* can contain multiple *topology descriptions* each identified by a **topology name**
+Another abstraction layer above the *workflows* are **topology descriptions**. The *parser* tool can generate the *full topology* XML file from such a *description*, using the `–dds` option of DPL and the `odc-topo-epn` tool. *Topology descriptions* are stored in **description library files** in the `DATA` folder of the `O2DPG` repository. A *description library file* can contain multiple *topology descriptions* each identified by a **topology name**
 
 # Remarks:
 - The repository does not store *full topologies*, but they are created on the fly. Users can cache the resulting full topology XML files.
@@ -39,8 +39,8 @@ Another abstraction layer above the *workflows* are **topology descriptions**. T
 # Configuring and selecting workflow in AliECS:
 There are 3 ways foreseenm to configure the *full topology* in AliECS: (currently only the manual XML option exists)
 - **version of workflow repository**: In this mode, the following settings are configured in AliECS, and they uniquely identify a *full topology*. The *parser* will then create the final DDS XML file with the *full topology*:
-  - A **commit hash** identifying a state of the `O2DataProcessing` repository (this can also be a tag, and in the case of production workflows it is required to be a tag).
-  - The path of a **description library file** (relative path inside the `O2DataProcessing` repository).
+  - A **commit hash** identifying a state of the `O2DPG` repository (this can also be a tag, and in the case of production workflows it is required to be a tag).
+  - The path of a **description library file** (path relative to the DATA folder inside the `O2DPG` repository).
   - The **workflow name** inside the *description library file*.
   - **detector list**: Multiple comma-separated lists of detectors participating in the run (global list, list for qc, list for calibration, list of detectors to run reconstruction for, list of detectors to include in the CTF, list of detectors that have processing on the FLP), defaulting to `ALL` for all detectors.
   - **workflow parameters**: text field passed to workflow as environment variable for additional options.
@@ -49,12 +49,12 @@ There are 3 ways foreseenm to configure the *full topology* in AliECS: (currentl
   - **extra environment options**: Free text field where the operator can put additional environment variables, that will be forwarded to the workflow.
   - **wipe workflow cache**: Normally the XMLs are cached, when they are created from the same repository version / same workflow / same O2 version. This option clears the cache for the current partition.
 - **repository directory**: This is almost identical to the case above, but instead of the commit hash, there is the **repository path** specified, pointing to a checked out repository on the shared home folder in the EPN farm. The procedure is the same as before, the parser will create the full topology XML file from the specified workflow in the repository.
-- **manual XML file**: In this mode the `O2DataProcessing` repository is not used at all, but the absolute path of a *full topology* XML file in the EPN's shared home folder is specified. Such an XML file must be prepared manually by the same means as the *parser* would usually do (see paragraph on manual XML file below).
+- **manual XML file**: In this mode the `O2DPG` repository is not used at all, but the absolute path of a *full topology* XML file in the EPN's shared home folder is specified. Such an XML file must be prepared manually by the same means as the *parser* would usually do (see paragraph on manual XML file below).
 
 # Topology descriptions:
 A *topology description* consists of
 - A list of modules to load, both for generating the DDS XML file with DPL's `--dds` option and when running the workflow. It can either be a single module, or a space-separated list of modules in double-quotes. In particular, this setting identifies the O2 version. We provide the `O2PDPSuite` package, which has the same versions as O2 itself, and which contain also corresponding versions `DataDistribution`,`QualityControl` and `ODC`. Thus by default one should just load `O2PDPSuite/[version]`.
-- A list of workflows, in the form of commands to run to create XML files by the `–dds` option. The command is executed with the `O2DataProcessing` path as working directory. The env options used to configure the workflow are prepended in normal shell syntax. Certain env options are set by the EPN and must not be overridden: `FILEWORKDIR`, `INRAWCHANNAME`, `CTF_DIR`.
+- A list of workflows, in the form of commands to run to create XML files by the `–dds` option. The command is executed with the `O2DPG/DATA` path as working directory. The env options used to configure the workflow are prepended in normal shell syntax. Certain env options are set by the EPN and must not be overridden: `FILEWORKDIR`, `INRAWCHANNAME`, `CTF_DIR`.
   - Each workflow is amended with the following parameters (the parameters stand in front of the workflow command, and are separated by commas without spaces, the workflow command must be in double-quotes):
     - Zone where to run the workflow (calib / reco)
     - For reco:
@@ -99,7 +99,7 @@ The **parser** is a simple python script that parses a *topology description* an
 The *parser* is steered by some command line options and by some environment variables (note that the env variables get also passed through to the workflows).
 - The *parser* needs a DataDistribution topology file. Example files are shipped with the parser in the `tools/datadistribution_workflows` folder for: just discarding the TF, store the TF to disk, forward the TF to DPL processing (what we need for a DPL workflow), and forward to processing while storing to disk in parallel.
 - *Parser* command line options:
-  - The parser is supposed to be executed from the root folder of the `O2DataProcessing` repository.
+  - The parser is supposed to be executed from the `DATA` folder of the `O2DPG` repository.
   - The syntax is:
 ```
 [ENV_VARIABLES] ./tools/parse [DESCRIPTION_LIBRARY_FILE] [TOPOLOGY_NAME] [OUTPUT_NAME]
@@ -122,8 +122,8 @@ DDWORKFLOW=tools/datadistribution_workflows/dd-processing.xml WORKFLOW_DETECTORS
 
 # Creating a full topology DDS XML file manually using the parser:
 - **NOTE** This is only for reference, or for running on a private PC. For creating XMLs on the EPN, please refer to [here](#Quick-guide-to-create-and-deploy-detector-workflow).
-- Check out the `O2DataProcessing` repository, adjust the workflows and topology description to your need.
-- Open a shell and go to the root folder of `O2DataProcessing`.
+- Check out the `O2DPG` repository, adjust the workflows and topology description in the `DATA` folder to your need.
+- Open a shell and go to the `DATA` folder of `O2DataProcessing`.
 - Make sure the `odc-topo-epn` is in your path (e.g. `module load ODC` / `alienv enter ODC/latest`).
 - Set the required environment variables, e.g.
 ```
@@ -139,18 +139,18 @@ FILEWORKDIR=/home/epn/odc/files EPNSYNCMODE=1 DDWORKFLOW=tools/datadistribution_
 # Quick guide to create and deploy detector workflow:
 - **Note**: Not all configuration features (see [here](#Configuring-and-selecting-workflow-in-AliECS)) are available in AliECS yet, thus this guide shows only how to create the XML file for DDS. That XML file must then still be entered in the AliECS GUI as topology. While this option will remain also for the future, i.e. you will always be able to create XMLs manually and then run them, the default way will become that the options are configured in AliECS and then the XML is created on-the-fly.
 - **Note** the topology must be created on an epn, which has the O2 version installed, which is requested by the topology. In principle any node should do since the installed O2 version should be the same on all nodes.
-- Check out the [O2DataProcessing](https://github.com/AliceO2Group/O2DataProcessing) repository to your home folder on the EPN (`$HOME` in the following).
-- Copy the content of `O2DataProcessing/testing/examples` (description library file `workflows.desc` and workflow script `example-workflow.sh`) to another place INSIDE the repository, usually under `testing/detectors/[DETECTOR]` or `testing/private/[USERNAME]`.
+- Check out the [O2DPG](https://github.com/AliceO2Group/O2DPG) repository to your home folder on the EPN (`$HOME` in the following).
+- Copy the content of `O2DPG/DATA/testing/examples` (description library file `workflows.desc` and workflow script `example-workflow.sh`) to another place INSIDE the repository, usually under `testing/detectors/[DETECTOR]` or `testing/private/[USERNAME]`.
 - Edit the workflow script to your needs, adjust / rename the workflow in the description library file.
   - See [here](#Topology-descriptions) for the syntax of the library file (in case it is not obvious), and make sure not to override the listed protected environment variables. The workflow script is just a bash script that starts a DPL workflow, which must have the `--dds` parameter in order to create a partial DDS topology.
   - Make sure that the workflow script fullfils the [requirements](#Workflow-requirements), particularly that it respects the requested environment variables.
   - Use `O2PDPSuite` for the modules to load to have the latest installed version, or `O2PDPSuite/[version]` to specify a version.
 - Create an empty folder in your `$HOME` on the EPN, in the following `$HOME/test`.
-- Copy the topology generation template from `O2DataProcessing/tools/epn/run.sh` to your folder.
+- Copy the topology generation template from `O2DPG/DATA/tools/epn/run.sh` to your folder.
   - N.B.: this template script contains all the options that will be provided via AliECS automatically as environment variables. Eventually this file will not be needed any more, but the XML file will be automatically created from the AliECS GUI.
 - Edit your copy of the `run.sh` file. The following parameters are relevant for you:
   - Leave the `GEN_TOPO_HASH` setting to 0 and use the respective section of the file, the outcommented part with `GEN_TOPO_HASH=1` will become relevant once AliECS is updated.
-  - Place the path to your copy of `O2DataProcessing` in `GEN_TOPO_SOURCE` and put your newly created description library file and the workflow in there as `GEN_TOPO_LIBRARY_FILE` and `GEN_TOPO_WORKFLOW_NAME`.
+  - Place the path to the `DATA` folder of your copy of `O2DPG` in `GEN_TOPO_SOURCE` and put your newly created description library file and the workflow in there as `GEN_TOPO_LIBRARY_FILE` and `GEN_TOPO_WORKFLOW_NAME`.
   - If you want to specify the number of reconstruction nodes to use here, you can use `RECO_NUM_NODES_OVERRIDE`, otherwise the default from your description library file will be used (leave it empty or `=0`).
   - The `WORKFLOW_DETECTORS` and `WORKFLOW_PARAMETERS` options are optional, your workflow does not need to use them. They are mostly for more complex workflows, so you can ignore them for now`.
   - Leave `DDMODE=processing` in order to run a workflow.
@@ -171,15 +171,15 @@ For comparison, see my console output below:
 Activate the web console with: systemctl enable --now cockpit.socket
 
 Last login: Wed Sep  1 19:11:47 2021 from 10.162.32.2
-[drohr@epn245 ~]$ git clone https://github.com/AliceO2Group/O2DataProcessing
-Cloning into 'O2DataProcessing'...
+[drohr@epn245 ~]$ git clone https://github.com/AliceO2Group/O2DPG
+Cloning into 'O2DPG'...
 remote: Enumerating objects: 182, done.
 remote: Counting objects: 100% (182/182), done.
 remote: Compressing objects: 100% (112/112), done.
 remote: Total 182 (delta 64), reused 135 (delta 48), pack-reused 0
 Receiving objects: 100% (182/182), 36.42 KiB | 5.20 MiB/s, done.
 Resolving deltas: 100% (64/64), done.
-[drohr@epn245 ~]$ cd O2DataProcessing/testing/
+[drohr@epn245 ~]$ cd O2DPG/DATA/testing/
 [drohr@epn245 testing]$ mkdir -p private/drohr
 [drohr@epn245 testing]$ ls examples/
 example-workflow.sh  workflows.desc       
@@ -191,7 +191,7 @@ example-workflow.sh  workflows.desc
 drohr-workflow: "O2PDPSuite" reco,10,10,"SHMSIZE=128000000000 testing/private/drohr/my-workflow.sh"
 [drohr@epn245 testing]$ mkdir ~/test
 [drohr@epn245 testing]$ cd ~/test
-[drohr@epn245 test]$ cp ~/O2DataProcessing/tools/epn/run.sh .
+[drohr@epn245 test]$ cp ~/O2DPG/DATA/tools/epn/run.sh .
 [drohr@epn245 test]$ vi run.sh
 [drohr@epn245 test]$ cat run.sh
 #!/bin/bash
@@ -200,12 +200,12 @@ export GEN_TOPO_PARTITION=test                                       # ECS Parti
 export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 
 # Use these settings to fetch the Workflow Repository using a hash / tag
-#export GEN_TOPO_HASH=1                                              # Fetch O2DataProcessing repository using a git hash
+#export GEN_TOPO_HASH=1                                              # Fetch O2DPG repository using a git hash
 #export GEN_TOPO_SOURCE=v0.5                                         # Git hash to fetch
 
 # Use these settings to specify a path to the workflow repository in your home dir
-export GEN_TOPO_HASH=0                                               # Specify path to O2DataProcessing repository
-export GEN_TOPO_SOURCE=/home/drohr/O2DataProcessing                  # Path to O2DataProcessing repository
+export GEN_TOPO_HASH=0                                               # Specify path to O2DPG repository
+export GEN_TOPO_SOURCE=/home/drohr/O2DPG/DATA                        # Path to O2DPG repository
 
 export GEN_TOPO_LIBRARY_FILE=testing/private/drohr/workflows.desc    # Topology description library file to load
 export GEN_TOPO_WORKFLOW_NAME=drohr-workflow                         # Name of workflow in topology description library
@@ -251,12 +251,12 @@ export GEN_TOPO_PARTITION=test                                       # ECS Parti
 export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 
 # Use these settings to fetch the Workflow Repository using a hash / tag
-#export GEN_TOPO_HASH=1                                              # Fetch O2DataProcessing repository using a git hash
+#export GEN_TOPO_HASH=1                                              # Fetch O2DPG repository using a git hash
 #export GEN_TOPO_SOURCE=v0.5                                         # Git hash to fetch
 
 # Use these settings to specify a path to the workflow repository in your home dir
-export GEN_TOPO_HASH=0                                               # Specify path to O2DataProcessing repository
-export GEN_TOPO_SOURCE=/home/drohr/O2DataProcessing                  # Path to O2DataProcessing repository
+export GEN_TOPO_HASH=0                                               # Specify path to O2DPG repository
+export GEN_TOPO_SOURCE=/home/drohr/O2DPG/DATA                        # Path to O2DPG repository
 
 export GEN_TOPO_LIBRARY_FILE=production/production.desc              # Topology description library file to load
 export GEN_TOPO_WORKFLOW_NAME=synchronous-workflow                   # Name of workflow in topology description library

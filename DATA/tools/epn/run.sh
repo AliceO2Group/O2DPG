@@ -4,12 +4,12 @@ export GEN_TOPO_PARTITION=test                                       # ECS Parti
 export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 
 # Use these settings to fetch the Workflow Repository using a hash / tag
-#export GEN_TOPO_HASH=1                                              # Fetch O2DataProcessing repository using a git hash
+#export GEN_TOPO_HASH=1                                              # Fetch O2DPG repository using a git hash
 #export GEN_TOPO_SOURCE=v0.13                                        # Git hash to fetch
 
 # Use these settings to specify a path to the workflow repository in your home dir
-export GEN_TOPO_HASH=0                                               # Specify path to O2DataProcessing repository
-export GEN_TOPO_SOURCE=$HOME/alice/O2DataProcessing                  # Path to O2DataProcessing repository
+export GEN_TOPO_HASH=0                                               # Specify path to O2DPG repository
+export GEN_TOPO_SOURCE=$HOME/alice/O2DPG                             # Path to O2DPG repository
 
 export GEN_TOPO_LIBRARY_FILE=production/production.desc              # Topology description library file to load
 export GEN_TOPO_WORKFLOW_NAME=synchronous-workflow                   # Name of workflow in topology description library
@@ -27,8 +27,8 @@ export MULTIPLICITY_FACTOR_REST=1                                    # Factor to
 
 export OUTPUT_FILE_NAME=gen_topo_output.xml
 if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
-  [[ -z $O2DATAPROCESSING_ROOT || -z $O2_ROOT ]] && { echo "ERROR: O2 and O2DataProcessing must be in the environment!"; exit 1; }
-  $O2DATAPROCESSING_ROOT/tools/epn/gen_topo.sh > $OUTPUT_FILE_NAME
+  [[ -z $O2DPG_ROOT || -z $O2_ROOT ]] && { echo "ERROR: O2 and O2DPG must be in the environment!"; exit 1; }
+  $O2DPG_ROOT/DATA/tools/epn/gen_topo.sh > $OUTPUT_FILE_NAME
 else
   [[ ! -f /home/epn/pdp/gen_topo.sh ]] && { echo "ERROR: EPN installation of gen_topo.sh missing. Are you trying to run at home? Then please set GEN_TOPO_RUN_HOME=1!"; exit 1; }
   /home/epn/pdp/gen_topo.sh > $OUTPUT_FILE_NAME
