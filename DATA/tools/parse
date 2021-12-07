@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+import os
+import sys
+import shlex
+import tempfile
+if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']):
+    sys.path.insert(0, '/usr/share/Modules/init')
+    import python as mod
+
+if len(sys.argv) != 4:
+    print("Incorrect number of arguments provided, syntax is parse [description library file] [topology name] [output file name]")
+    exit(1)
+
+if not "FILEWORKDIR" in os.environ:
+    print("$FILEWORKDIR env variable missing")
+    exit(1)
+
+if not "DDWORKFLOW" in os.environ and not "DDMODE" in os.environ:
+    print("Need either $DDWORKFLOW or $DDMODE env variable")
+    exit(1)
+
+NO_PROCESSING_MODE=0
+if not "DDWORKFLOW" in os.environ:
+    os.environ['DDWORKFLOW'] = "tools/datadistribution_workflows/dd-" + os.environ['DDMODE'] + ".xml"
+    if os.environ['DDMODE'] == 'discard' or os.environ['DDMODE'] == 'disk':
+        NO_PROCESSING_MODE=1
+
+print("Using topology", sys.argv[2], "of library", sys.argv[1])
+
+if 'WORKFLOWMODE' in os.environ:
+    if not os.environ['WORKFLOWMODE'] in ['dds', 'print']:
+        print("Invalid WORKFLOWMODE provided")
+        raise
+else:
+    os.environ['WORKFLOWMODE'] = 'dds'
+
+if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRIDE'] != "" and int(os.environ['RECO_NUM_NODES_OVERRIDE']) > 0:
+    reco_num_nodes_override = int(os.environ['RECO_NUM_NODES_OVERRIDE'])
+    os.environ['RECO_NUM_NODES_WORKFLOW'] = str(reco_num_nodes_override)
+else:
+    reco_num_nodes_override = 0
+
+f = open(sys.argv[1], "r")
+for line in f:
+    line = line.strip()
+    if len(line) == 0:
+        continue
+    if line[0] == '#':
+        continue
+    args = shlex.split(line)
+    if len(args) <= 1:
+        print("Toplogy must have at least name and O2 version")
+        raise
+    if len(args[0]) == 0:
+        print("Empty topology name forbitten")
+        raise
+    if not args[0].endswith(':'):
+        print("Topology name ", args[0], "not followed by ':'")
+        raise
+    if args[0] == sys.argv[2] + ":":
+        reconodes = 0
+        reconodesmin = 0
+        recoworkflows = []
+        calibworkflows = []
+        print("Found topology", sys.argv[2], "-", args)
+        if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']) and (not 'GEN_TOPO_RUN_HOME' in os.environ or not int(os.environ['GEN_TOPO_RUN_HOME'])):
+            for i in args[1].split():
+                if "GEN_TOPO_CACHEABLE" in os.environ and os.environ['GEN_TOPO_CACHEABLE'] == "1":
+                    if i.find("/") == -1 or i.find("/latest") != -1:
+                        print("Must not use non-versioned module", i, "in cacheable workflow (i.e. with repository hash)")
+                        raise
+                print("Loading module", i)
+                mod.module('load', i)
+        if len(args) > 2 and not 'O2_ROOT' in os.environ:
+            print("O2 not loaded")
+            raise
+        with tempfile.TemporaryDirectory(prefix="o2_workflow_") as tmpdir:
+            if NO_PROCESSING_MODE and len(args) > 2:
+                print("Cannot use DPL workflow together with DD mode", os.environ['DDMODE'])
+                raise
+            for i in range(2, len(args)):
+                filename = tmpdir + "/wf" + str(i) + ".dds"
+                if args[i].startswith("reco"):
+                    wf = args[i].split(",", 3)
+                    recoworkflows.append(filename)
+                elif args[i].startswith("calib"):
+                    wf = args[i].split(",", 2)
+                    wf.append(wf[2])
+                    wf[2] = wf[1]
+                    calibworkflows.append(filename)
+                else:
+                    print("Invalid workflow type", args[i])
+                    raise
+                print("Adding", wf[0], "workflow (", wf[2], "-", wf[1], "nodes):", wf[3])
+                reconodes = max(reconodes, int(wf[1]))
+                reconodesmin = max(reconodesmin, int(wf[2]))
+                if 'GEN_TOPO_IGNORE_ERROR' in os.environ and int(os.environ['GEN_TOPO_IGNORE_ERROR']):
+                    command_log_filter = "\"^\[\""
+                else:
+                    command_log_filter = "\"^\[INFO\""
+                command = "GLOBALDPLOPT+=\" -b --dds-workflow-suffix _" + wf[0] + str(i) + "\" " + wf[3] + " | grep -v " + command_log_filter + " > " + filename + " && [ `grep \"^\[\" " + filename + " | wc -l` == 0 ]"
+                print("Running DPL command", command)
+                if reco_num_nodes_override == 0:
+                  os.environ['RECO_NUM_NODES_WORKFLOW'] = wf[1]
+                if os.system(command) != 0:
+                    print("Error running command", command)
+                    ftmp = open(filename, 'r')
+                    print(ftmp.read())
+                    raise
+            if reco_num_nodes_override > 0:
+                reconodes = reco_num_nodes_override
+            if os.environ['WORKFLOWMODE'] == 'dds':
+                odccommand = "odc-epn-topo"
+                if reconodes:
+                    odccommand += " --dd " + os.environ['DDWORKFLOW']
+                if len(recoworkflows):
+                    odccommand += " --recown 'wn_(?!online-calib).*_.*' --reco " + " ".join(recoworkflows)
+                odccommand += " --n " + str(reconodes)
+                if len(calibworkflows):
+                    odccommand += " --calibwn 'wn_online-calib_.*' --calib " + " ".join(calibworkflows)
+                if "GEN_TOPO_STDERR_LOGGING" in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
+                    odccommand += " --mon tools/monitoring_workflows/epnstderrlog.xml"
+                if args[1] != "":
+                    odccommand += " --prependexe \"module load " + args[1] + " 2>&1 ; \""
+                odccommand += " -o " + sys.argv[3]
+                if os.system(odccommand) != 0:
+                    print("\nError running odc: ", odccommand)
+                    raise
+            else:
+                outf = open(sys.argv[3], "w+")
+                for i in recoworkflows:
+                    outf.write("# RECO workflow\n\n" + open(i, 'r').read() + "\n\n")
+                for i in calibworkflows:
+                    outf.write("# CALIB workflow\n\n" + open(i, 'r').read() + "\n\n")
+        print("Done")
+        exit(0)
+
+print("Could not find workflow", sys.argv[2])
+exit(1)

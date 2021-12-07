@@ -1,0 +1,1 @@
+cat workflows_dpl.desc | grep -v '#' | grep -v '\-TF\-' | cut -d':' -f1  | xargs ./run_ext_dpl.sh 

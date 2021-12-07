@@ -1,0 +1,81 @@
+{
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "alio2-cr1-hv-qcdb1.cern.ch:8083",
+        "username": "not_applicable",
+        "password": "not_applicable",
+        "name": "not_applicable"
+      },
+      "Activity": {
+        "number": "42",
+        "type": "2"
+      },
+      "monitoring": {
+        "url": "influxdb-unix:///tmp/telegraf.sock"
+      },
+      "consul": {
+        "url": "null:8500"
+      },
+      "conditionDB": {
+        "url": "null:8083"
+      }
+    },
+    "tasks": {
+      "Digits": {
+        "active": "true",
+        "className": "o2::quality_control_modules::muonchambers::PhysicsTaskDigits",
+        "moduleName": "QcMuonChambers",
+        "detectorName": "MCH",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "dataSamplingPolicy",
+          "name": "mch-digits"
+        },
+        "location": "local",
+        "mergingMode": "delta",
+        "localControl": "odc",
+        "localMachines": [
+          "epn",
+          "localhost"
+        ],
+        "remotePort": "47790",
+        "remoteMachine": "alio2-cr1-qc01.cern.ch"
+      }
+    },
+    "checks": {
+      "QcCheckMCHPhysics": {
+        "active": "true",
+        "className": "o2::quality_control_modules::muonchambers::PhysicsOccupancyCheck",
+        "moduleName": "QcMuonChambers",
+        "policy": "OnAll",
+        "detectorName": "MCH",
+        "dataSource": [
+          {
+            "type": "Task",
+            "name": "Digits",
+            "MOs": "all"
+          }
+        ]
+      }
+    }
+  },
+  "dataSamplingPolicies": [
+    {
+      "id": "mch-digits",
+      "active": "true",
+      "machines": [],
+      "query": "digits:MCH/DIGITS/0;orbits:MCH/ORBITS/0",
+      "samplingConditions": [
+        {
+          "condition": "random",
+          "fraction": "0.5",
+          "seed": "1441"
+        }
+      ],
+      "blocking": "false"
+    }
+  ]
+}

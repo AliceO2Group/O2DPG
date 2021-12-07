@@ -1,0 +1,157 @@
+{
+	"qc": {
+	    "config": {
+		"database": {
+		    "implementation": "CCDB",
+		    "host": "alio2-cr1-hv-qcdb1.cern.ch:8083",
+		    "username": "not_applicable",
+		    "password": "not_applicable",
+		    "name": "not_applicable"
+		},
+		"infologger": {
+			"filterDiscardDebug": "true",
+			"filterDiscardLevel": "1"
+		},
+		"Activity": {
+		    "number": "42",
+		    "type": "2"
+		},
+		"monitoring": {
+		    "url": "infologger:///debug?qc"
+		},
+		"consul": {
+		    "url": "http://consul-test.cern.ch:8500"
+		},
+		"conditionDB": {
+		    "url": "ccdb-test.cern.ch:8080"
+		}
+	    },
+	    "tasks": {
+		"RawTask": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::RawTask",
+		    "moduleName": "QcEMCAL",
+		    "detectorName": "EMC",
+		    "cycleDurationSeconds": "60",
+		    "maxNumberCycles": "-1",
+		    "dataSource": {
+		      "type": "dataSamplingPolicy",
+		      "name": "emcrawdata"
+		    },
+		    "location": "local",
+		    "localMachines": [
+			"epn"
+		    ],
+		    "remoteMachine": "alio2-cr1-qc02.cern.ch",
+		    "remotePort": "47701",
+		    "mergingMode": "delta",
+		    "localControl": "odc"
+		},
+		"DigitsTask": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::DigitsQcTask",
+		    "moduleName": "QcEMCAL",
+		    "detectorName": "EMC",
+		    "cycleDurationSeconds": "60",
+		    "maxNumberCycles": "-1",
+		    "dataSource": {
+			"type": "dataSamplingPolicy",
+			"name": "emccells"
+		    },
+		    "taskParameters": {
+			"nothing": "rien"
+		    },
+		    "location": "local",
+		    "localMachines": [
+			"epn"
+		    ],
+		    "remoteMachine": "alio2-cr1-qc02.cern.ch",
+		    "remotePort": "47702",
+		    "mergingMode": "delta",
+		    "localControl": "odc"
+		}
+	    },
+	    "checks": {
+		"RawBunchMinAmplitude": {
+			"active": "true",
+			"className": "o2::quality_control_modules::emcal::RawCheck",
+			"moduleName": "QcEMCAL",
+			"policy": "OnEachSeparately",
+			"dataSource": [
+				{
+					"type": "Task",
+					"name": "RawTask",
+					"MOs": ["BunchMinRawAmplitudeFull_PHYS", "BunchMinRawAmplitudeEMCAL_PHYS", "BunchMinRawAmplitudeDCAL_PHYS",
+							"BunchMinRawAmplitude_SM0_PHYS", "BunchMinRawAmplitude_SM1_PHYS", "BunchMinRawAmplitude_SM2_PHYS",
+							"BunchMinRawAmplitude_SM3_PHYS", "BunchMinRawAmplitude_SM4_PHYS", "BunchMinRawAmplitude_SM5_PHYS",
+							"BunchMinRawAmplitude_SM6_PHYS", "BunchMinRawAmplitude_SM7_PHYS", "BunchMinRawAmplitude_SM8_PHYS",
+							"BunchMinRawAmplitude_SM9_PHYS", "BunchMinRawAmplitude_SM10_PHYS", "BunchMinRawAmplitude_SM11_PHYS",
+							"BunchMinRawAmplitude_SM12_PHYS", "BunchMinRawAmplitude_SM13_PHYS", "BunchMinRawAmplitude_SM14_PHYS",
+							"BunchMinRawAmplitude_SM15_PHYS", "BunchMinRawAmplitude_SM16_PHYS", "BunchMinRawAmplitude_SM17_PHYS",
+							"BunchMinRawAmplitude_SM18_PHYS", "BunchMinRawAmplitude_SM19_PHYS"
+					]
+				}
+			]
+		},
+		"RawErrorCheck": {
+			"active": "true",
+			"className": "o2::quality_control_modules::emcal::RawCheck",
+			"moduleName": "QcEMCAL",
+			"policy": "OnEachSeparately",
+			"dataSource": [
+				{
+					"type": "Task",
+					"name": "RawTask",
+					"MOs": ["ErrorTypePerSM"]
+				}
+			]
+		},
+    		"DigitsCheckAmplitude": {
+		    "active": "true",
+		    "className": "o2::quality_control_modules::emcal::DigitCheck",
+		    "moduleName": "QcEMCAL",
+		    "policy": "OnEachSeparately",
+		    "detectorName": "EMC",
+		    "dataSource": [
+				{
+				    "type": "Task",
+				    "name": "DigitsTask",
+				    "MOs": ["digitAmplitudeEMCAL_CAL", "digitAmplitudeEMCAL_PHYS", "digitAmplitudeDCAL_CAL", "digitAmplitudeDCAL_PHYS",
+							"digitAmplitude_CAL", "digitAmplitude_PHYS"	
+				    ]
+				}
+		    ]
+		}
+	    }
+	},
+	"dataSamplingPolicies": [
+	    {
+		"id": "emcrawdata",
+		"active": "true",
+		"machines": ["epn"],
+		"query": "readout:EMC/RAWDATA",
+		"samplingConditions": [
+		    {
+			"condition": "random",
+			"fraction": "0.01",
+			"seed": "1248"
+		    }
+		],
+		"blocking": "false"
+		},
+	  {
+		"id": "emccells",
+		"active": "true",
+		"machines": ["epn"],
+		"query": "emcal-digits:EMC/CELLS;emcal-triggerecords:EMC/CELLSTRGR",
+		"samplingConditions": [
+		    {
+			"condition": "random",
+			"fraction": "0.1",
+			"seed": "1248"
+		    }
+		],
+		"blocking": "false"
+	    }
+	]
+    }
