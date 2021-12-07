@@ -678,16 +678,22 @@ for tf in range(1, NTIMEFRAMES + 1):
    CPVRECOtask['cmd'] = 'o2-cpv-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(CPVRECOtask)
 
-   MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHRECOtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTMCHMATCHtask['cmd'] = 'o2-globalfwd-matcher-workflow ' + getDPL_global_options() + putConfigValues({"MFTClustererParam.dictFilePath" : "../"})
+   ## forward matching 
+   MCHMIDMATCHtask = createTask(name='mchmidMatch_'+str(tf), needs=[MCHRECOtask['name'], MIDRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+   MCHMIDMATCHtask['cmd'] = 'o2-mch-tracks-reader-workflow | o2-mid-tracks-reader-workflow | o2-muon-tracks-matcher-workflow | o2-muon-tracks-writer-workflow ' + getDPL_global_options()
+   workflow['stages'].append(MCHMIDMATCHtask)
+
+   MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+   MFTMCHMATCHtask['cmd'] = 'o2-globalfwd-matcher-workflow ' + getDPL_global_options() + putConfigValues({"MFTClustererParam.dictFilePath" : "../", "FwdMatching.useMIDMatch":"true"})
    workflow['stages'].append(MFTMCHMATCHtask)
 
+   ## Vertexing
    pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], MCHRECOtask['name'], TRDTRACKINGtask['name'], FDDRECOtask['name'], MFTMCHMATCHtask['name']]
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = 'o2-primary-vertexing-workflow ' \
                          + getDPL_global_options()        \
                          + putConfigValues(({},{"pvertexer.maxChi2TZDebris" : 10})[COLTYPEIR == 'pp'])
-   PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF" --vertex-track-matching-sources "ITS,MFT,TPC,ITS-TPC,MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF"'
+   PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF" --vertex-track-matching-sources "ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF"'
    workflow['stages'].append(PVFINDERtask)
 
    if includeFullQC or includeLocalQC:
@@ -701,7 +707,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        task['semaphore'] = objectsFile
        workflow['stages'].append(task)
  
-     ### MFT     
+     ### MFT
      
      # to be enabled once MFT Digits should run 5 times with different configurations
      #for flp in range(5):
@@ -770,7 +776,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += 'o2-aod-producer-workflow --reco-mctracks-only 1 --aod-writer-keep dangling --aod-writer-resfile AO2D'
    AODtask['cmd'] += ' --run-number ' + str(args.run)
    AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id + ' ' + getDPL_global_options(bigshm=True)
-   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD;'
+   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD;'
    AODtask['cmd'] += ' root -q -b -l ${O2DPG_ROOT}/UTILS/repairAOD.C\\(\\"AO2D.root\\",\\"AO2D_repaired.root\\"\\)'
    workflow['stages'].append(AODtask)
 
