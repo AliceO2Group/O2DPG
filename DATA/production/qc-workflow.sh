@@ -80,7 +80,7 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
       find $GEN_TOPO_WORKDIR/json_cache/ -maxdepth 1 -type f -mtime +30 | xargs rm -f
     fi
     MERGED_JSON_FILENAME=$GEN_TOPO_WORKDIR/json_cache/`date +%Y%m%d-%H%M%S`-$$-$RANDOM-$OUTPUT_SUFFIX.json
-    jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $MYDIR/qc_global.json $JSON_FILES > $MERGED_JSON_FILENAME
+    jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $O2DPG_ROOT/DATA/qc_global.json $JSON_FILES > $MERGED_JSON_FILENAME
     if [[ $? != 0 ]]; then
       echo Merging QC workflow with JSON files $JSON_FILES failed 1>&2
       exit 1
