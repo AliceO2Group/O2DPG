@@ -1,0 +1,83 @@
+{
+  "qc" : {
+    "config" : {
+      "database" : {
+        "implementation" : "CCDB",
+        "host" : "ali-qcdb.cern.ch:8083",
+        "username" : "not_applicable",
+        "password" : "not_applicable",
+        "name" : "not_applicable"
+      },
+      "Activity" : {
+        "number" : "42",
+        "type" : "2"
+      },
+      "monitoring" : {
+        "url" : "influxdb-unix:///tmp/telegraf.sock"
+      },
+      "consul" : {
+        "url" : ""
+      },
+      "conditionDB" : {
+        "url" : "ali-qcdb.cern.ch:8083"
+      },
+      "infologger" : { "" : "Configuration of the Infologger (optional).",
+                       "filterDiscardDebug" : "1",
+                       "" : "Set to true to discard debug and trace messages (default: false)",
+                       "filterDiscardLevel" : "21",
+                       "" : "Message at this level or above are discarded (default: 21 - Trace)" }
+    },
+    "tasks" : {
+      "Vertexing" : {
+        "active" : "true",
+        "className" : "o2::quality_control_modules::glo::VertexingQcTask",
+        "moduleName" : "QcGLO",
+        "detectorName" : "GLO",
+        "cycleDurationSeconds" : "10",
+        "maxNumberCycles" : "-1",
+        "" : "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
+        "dataSource" : {
+          "type" : "dataSamplingPolicy",
+          "name" : "tst-raw"
+        },
+        "taskParameters" : {
+          "myOwnKey" : "myOwnValue"
+        },
+        "location" : "local",
+        "localMachines": [ "localhost", "epn" ],
+	"remoteMachine": "alio2-cr1-qme04.cern.ch",
+        "remotePort": "47706"
+      }
+    },
+    "checks" : {
+      "QcCheck" : {
+        "active" : "false",
+        "className" : "o2::quality_control_modules::skeleton::SkeletonCheck",
+        "moduleName" : "QcSkeleton",
+        "policy" : "OnAny",
+        "detectorName" : "GLO",
+        "dataSource" : [ {
+          "type" : "Task",
+          "name" : "Vertexing",
+          "MOs" : ["example"]
+        } ]
+      }
+    }
+  },
+  "dataSamplingPolicies" : [
+   {
+     "id" : "tst-raw",
+     "active" : "true",
+     "machines" : [],
+     "query" : "pvtx:GLO/PVTX/0",
+     "samplingConditions" : [
+       {
+         "condition" : "random",
+         "fraction" : "0.1",
+         "seed" : "1234"
+       }
+     ],
+     "blocking" : "false"
+   }
+  ]
+}

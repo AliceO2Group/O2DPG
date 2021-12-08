@@ -1,0 +1,17 @@
+/DATA/production @davidrohr @martenole @shahor02 @chiarazampolli
+
+/DATA/testing/detectors/CPV
+/DATA/testing/detectors/EMC
+/DATA/testing/detectors/FDD
+/DATA/testing/detectors/FT0
+/DATA/testing/detectors/FV0
+/DATA/testing/detectors/HMP
+/DATA/testing/detectors/ITS
+/DATA/testing/detectors/MCH @aphecethce
+/DATA/testing/detectors/MFT
+/DATA/testing/detectors/MID @aphecethce
+/DATA/testing/detectors/PHS
+/DATA/testing/detectors/TOF @noferini @chiarazampolli
+/DATA/testing/detectors/TPC @wiechula
+/DATA/testing/detectors/TRD @martenole
+/DATA/testing/detectors/ZDC

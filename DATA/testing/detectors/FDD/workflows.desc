@@ -1,0 +1,3 @@
+fdd-ctf: "O2PDPSuite" reco,2,2,"SHMSIZE=20000000000 testing/detectors/FDD/fdd-ctf.sh"
+fdd-digits-ctf: "O2PDPSuite" reco,2,2,"SHMSIZE=20000000000 testing/detectors/FDD/fdd-digits-ctf.sh"
+fdd-digits-qc-ctf: "O2PDPSuite" reco,2,2,"SHMSIZE=20000000000 testing/detectors/FDD/fdd-digits-qc-ctf.sh"

@@ -1,0 +1,42 @@
+{
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "ali-qcdb.cern.ch:8083",
+        "username": "not_applicable",
+        "password": "not_applicable",
+        "name": "not_applicable"
+      },
+      "Activity": {
+        "number": "42",
+        "type": "2"
+      },
+      "monitoring": {
+        "url": "influxdb-unix:///tmp/telegraf.sock"
+      },
+      "consul": {
+        "url": "null:8500"
+      },
+      "conditionDB": {
+        "url": "null:8083"
+      }
+    },
+    "tasks": {
+      "QcTaskMIDDigits": {
+        "active": "true",
+        "className": "o2::quality_control_modules::mid::DigitsQcTask",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "digits:MID/DATA/0;digitrofs:MID/DATAROF/0;calib:MID/DATA/1;calibrofs:MID/DATAROF/1;fet:MID/DATA/2;fetrofs:MID/DATAROF/2"
+        }
+      }
+    }
+  },
+  "dataSamplingPolicies": [
+  ]
+}
