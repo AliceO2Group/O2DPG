@@ -20,7 +20,7 @@ sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 from o2dpg_workflow_utils import createTask, dump_workflow
 
 def getDPL_global_options(bigshm=False, noIPC=None):
-   common="-b --run --fairmq-ipc-prefix ${FAIRMQ_IPC_PREFIX:-./} --driver-client-backend ws:// "
+   common="-b --run --driver-client-backend ws:// "
    if noIPC != None:
       return common + " --no-IPC "
    if bigshm:

@@ -140,7 +140,7 @@ workflow['stages'] = []
 
 
 def getDPL_global_options(bigshm=False):
-   common="-b --run --fairmq-ipc-prefix ${FAIRMQ_IPC_PREFIX:-./} --driver-client-backend ws:// "
+   common="-b --run --driver-client-backend ws:// "
    if args.noIPC!=None:
       return common + " --no-IPC "
    if bigshm:
