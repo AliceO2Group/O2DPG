@@ -834,7 +834,7 @@ if includeAnalysis:
    if not isdir(analysisdir):
       mkdir(analysisdir)
 
-   def addAnalysisTask(tag, cmd, output, needs=[AOD_merge_task['name']],
+   def addAnalysisTask(tag, cmd, output=None, needs=[AOD_merge_task['name']],
                        shmsegmentsize="--shm-segment-size 2000000000",
                        aodmemoryratelimit="--aod-memory-rate-limit 1000000000",
                        readers="--readers 1",
@@ -843,8 +843,6 @@ if includeAnalysis:
       """
       Function to add O2Physics analysis task to the workflow and upload the results on the CCDB
       """
-      if type(output) == str:
-         output = [output]
       AnalysisTasks = createTask(name=f"Analysis_{tag}",
                                       needs=needs,
                                       cwd=analysisdir,
@@ -853,10 +851,14 @@ if includeAnalysis:
                                       mem='2000')
       renameOutput = ""
       AnalysisTaskOutput = []
-      for i in output:
-         i = i.strip(".root")
-         renameOutput += f" && mv {i}.root {i}_{tag}.root "
-         AnalysisTaskOutput.append(f"{i}_{tag}.root")
+      if output is not None:
+         if isinstance(output, str):
+            output = [output]
+         for i in output:
+            # output MUST BE the one produced by the task, so it has to be known beforehand
+            i = i.strip(".root")
+            renameOutput += f" && mv {i}.root {i}_{tag}.root "
+            AnalysisTaskOutput.append(f"{i}_{tag}.root")
       AnalysisTasks['cmd'] = f"{cmd} {shmsegmentsize} {aodmemoryratelimit} {readers} {aodfile} {extraarguments} {renameOutput}"
       workflow['stages'].append(AnalysisTasks)
 
@@ -872,11 +874,23 @@ if includeAnalysis:
 
    # Efficiency
    addAnalysisTask(tag="Efficiency",
-                   cmd="o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-efficiency --eff-el 1 --eff-mu 1 --eff-pi 1 --eff-ka 1 --eff-pr 1 --eff-de 1 --eff-tr 1 --eff-he 1 --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json ", output="AnalysisResults.root")
+                   cmd="o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-efficiency --eff-el 1 --eff-mu 1 --eff-pi 1 --eff-ka 1 --eff-pr 1 --eff-de 1 --eff-tr 1 --eff-he 1 --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json ", output="AnalysisResults.root")
 
    # Event and track QA
    addAnalysisTask(tag="EventTrackQA",
                    cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-event-track --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json', output="QAResults.root")
+
+   # MCHistograms (no complex workflow / piping required atm)
+   addAnalysisTask(tag="MCHistograms", cmd='o2-analysistutorial-mc-histograms', output="AnalysisResults.root")
+
+   # Valitation (no complex workflow / piping required atm)
+   addAnalysisTask(tag="Validation", cmd='o2-analysis-validation', output="AnalysisResults.root")
+
+   # PID TOF (no complex workflow / piping required atm), NOTE: produces no output
+   addAnalysisTask(tag="PIDTOF", cmd='o2-analysis-pid-tof')
+
+   # PID TPC (no complex workflow / piping required atm), NOTE: produces no output
+   addAnalysisTask(tag="PIDTPC", cmd='o2-analysis-pid-tpc')
 
 
 dump_workflow(workflow["stages"], args.o)
