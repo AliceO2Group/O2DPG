@@ -394,7 +394,10 @@ class WorkflowExecutor:
       self.workflowspec = load_workflow(workflowfile)
       self.workflowspec = filter_workflow(self.workflowspec, args.target_tasks, args.target_labels)
 
-      if len(self.workflowspec['stages']) == 0:
+      if not self.workflowspec['stages']:
+          if args.target_tasks:
+              print ('Apparently some of the chosen target tasks are not in the workflow')
+              exit (0)
           print ('Workflow is empty. Nothing to do')
           exit (0)
       
