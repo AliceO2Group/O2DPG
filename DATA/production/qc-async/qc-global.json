@@ -12,7 +12,7 @@
         "number": "REPLACE_ME_RUNNUMBER",
         "type": "2",
         "passName": "REPLACE_ME_PASS",
-        "periodName": "OCT",
+        "periodName": "REPLACE_ME_PERIOD",
         "provenance": "qc_async"
       },
       "monitoring": {
