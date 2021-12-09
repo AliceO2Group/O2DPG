@@ -428,6 +428,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                              ln -nsf ../bkg_grp.root o2sim_grp.root;
                              ln -nsf ../bkg_geometry.root o2sim_geometry.root;
                              ln -nsf ../bkg_geometry.root bkg_geometry.root;
+                             ln -nsf ../bkg_geometry-aligned.root bkg_geometry-aligned.root;
+                             ln -nsf ../bkg_geometry-aligned.root o2sim_geometry-aligned.root;
                              ln -nsf ../bkg_MCHeader.root bkg_MCHeader.root;
                              ln -nsf ../bkg_grp.root bkg_grp.root
                              '''
