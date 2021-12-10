@@ -29,7 +29,7 @@ else
   # Load required module and run gen_topo_o2dpg (PDP part of this script)
   module load ODC O2DPG 1>&2 || { echo Error loading ODC / O2DPG 1>&2; exit 1; }
 fi
-$O2DPG_ROOT/tools/epn/gen_topo_o2dpg.sh
+$O2DPG_ROOT/DATA/tools/epn/gen_topo_o2dpg.sh
 if [ $? != 0 ]; then
   echo topology generation failed 1>&2
   exit 1
