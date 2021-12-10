@@ -27,7 +27,7 @@ else
   cd $GEN_TOPO_SOURCE || { echo Directory missing 1>&2; exit 1; }
 fi
 export EPNSYNCMODE=1
-export O2DPG_ROOT=`pwd`
+export O2DPG_ROOT=`realpath \`pwd\`/../`
 echo Running topology generation to temporary file $GEN_TOPO_WORKDIR/output.xml 1>&2
 ./tools/parse "$GEN_TOPO_LIBRARY_FILE" $GEN_TOPO_WORKFLOW_NAME $GEN_TOPO_WORKDIR/output.xml 1>&2 || { echo Error during workflow description parsing 1>&2; exit 1; }
 if [ "0$GEN_TOPO_CACHEABLE" == "01" ]; then
