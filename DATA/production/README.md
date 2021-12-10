@@ -59,7 +59,7 @@ In case the CTF dictionaries were created from the data drastically different fr
 The JSON files for the individual detectors are merged into one JSON file, which is cached during the run on the shared EPN home folder.
 The default JSON file per detector is defined in `qc-workflow.sh`.
 JSONs per detector can be overridden by exporting `QC_JSON_[DETECTOR_NAME]`, e.g. `QC_JSON_TPC`, when creating the workflow.
-The global section of the merged qc JSON config is taken from qc_global.json
+The global section of the merged qc JSON config is taken from qc-sync/qc-global.json
 
 # run-workflow-on-inputlist.sh
 `O2/prodtests/full-system-test/run-workflow-on-inputlist.sh` is a small tool to run the `dpl-workflow.sh` on a list of files.
