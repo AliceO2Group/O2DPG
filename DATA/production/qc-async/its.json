@@ -37,9 +37,9 @@
         },
         "taskParameters": {
           "layer": "1111111",
-          "clusterDictionaryPath": "/home/epn/odc/files/ITSdictionary.bin",
-          "runNumberPath": "/home/its/QC/workdir/infiles/RunNumber.dat",
-          "geomPath": "/home/epn/odc/files/o2sim_geometry.root",
+          "clusterDictionaryPath": "./ITSdictionary.bin",
+          "runNumberPath": "",
+          "geomPath": "./o2sim_geometry.root",
           "nThreads": "4"
         }
       },
@@ -56,7 +56,7 @@
           "name": "tracks"
         },
         "taskParameters" : {
-          "runNumberPath" : "/home/its/QC/workdir/infiles/RunNumber.dat",
+          "runNumberPath" : "",
 	  "vertexXYsize" : "0.1",
 	  "vertexZsize": "15",
 	  "vertexRsize": "0.1"
