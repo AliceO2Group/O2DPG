@@ -55,11 +55,11 @@
           "type": "dataSamplingPolicy",
           "name": "tracks"
         },
-        "taskParameters" : {
-          "runNumberPath" : "",
-	  "vertexXYsize" : "0.1",
-	  "vertexZsize": "15",
-	  "vertexRsize": "0.1"
+        "taskParameters": {
+          "runNumberPath": "",
+          "vertexXYsize": "0.1",
+          "vertexZsize": "15",
+          "vertexRsize": "0.1"
         }
       }
     },
@@ -75,7 +75,20 @@
             "type": "Task",
             "name": "ITSClusterTask",
             "MOs": [
-              "Layer0/AverageClusterSize"
+              "Layer0/AverageClusterSize",
+              "Layer1/AverageClusterSize",
+              "Layer2/AverageClusterSize",
+              "Layer3/AverageClusterSize",
+              "Layer4/AverageClusterSize",
+              "Layer5/AverageClusterSize",
+              "Layer6/AverageClusterSize",
+              "Layer0/ClusterOccupation",
+              "Layer1/ClusterOccupation",
+              "Layer2/ClusterOccupation",
+              "Layer3/ClusterOccupation",
+              "Layer4/ClusterOccupation",
+              "Layer5/ClusterOccupation",
+              "Layer6/ClusterOccupation"
             ]
           }
         ]
@@ -91,7 +104,14 @@
             "type": "Task",
             "name": "ITSTrackTask",
             "MOs": [
-              "NClusters"
+              "NClusters",
+              "PhiDistribution",
+              "AngularDistribution",
+              "ClusterUsage",
+              "EtaDistribution",
+              "VertexCoordinates",
+              "VertexRvsZ",
+              "VertexZ"
             ]
           }
         ]
@@ -117,7 +137,7 @@
       "id": "tracks",
       "active": "true",
       "machines": [],
-      "query" : "Vertices:ITS/VERTICES/0;tracks:ITS/TRACKS/0;rofs:ITS/ITSTrackROF/0;compclus:ITS/COMPCLUSTERS/0",
+      "query": "Vertices:ITS/VERTICES/0;tracks:ITS/TRACKS/0;rofs:ITS/ITSTrackROF/0;compclus:ITS/COMPCLUSTERS/0",
       "samplingConditions": [
         {
           "condition": "random",
