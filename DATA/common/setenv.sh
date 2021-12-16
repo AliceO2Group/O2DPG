@@ -7,6 +7,17 @@ if [ "0$SETENV_NO_ULIMIT" != "01" ]; then
     echo Error setting ulimits
     exit 1
   fi
+else
+  ULIMIT_S=`ulimit -S -n`
+  ULIMIT_H=`ulimit -H -n`
+  ULIMIT_REQ=4000
+  if [[ $ULIMIT_H -gt $ULIMIT_S ]] && [[ $ULIMIT_S -lt $ULIMIT_REQ ]]; then
+    ulimit -S -n $(($ULIMIT_H > $ULIMIT_REQ ? $ULIMIT_REQ : $ULIMIT_H))
+  fi
+  ULIMIT_FINAL=`ulimit -n`
+  if [[ $ULIMIT_FINAL -lt $ULIMIT_REQ ]]; then
+    echo "Could not raise 'ulimit -n' to $ULIMIT_REQ, running with $ULIMIT_FINAL" 1>&2
+  fi
 fi
 
 LIST_OF_DETECTORS="ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP"
