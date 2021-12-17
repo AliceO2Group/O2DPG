@@ -699,10 +699,44 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(MFTMCHMATCHtask)
 
    ## Vertexing
+   PVConfig = {**AlpideConfig} # start with Alpide config which is relevant here
+   if COLTYPEIR == 'pp': 
+      if 301000 <= int(args.run) and int(args.run) <= 301999:
+         # put specific pp tunes for pilot beam
+         # taken from JIRA https://alice.its.cern.ch/jira/browse/O2-2691
+         PVConfig.update({"pvertexer.acceptableScale2" : 9,
+                          "pvertexer.minScale2" : 2.,
+                          "pvertexer.nSigmaTimeTrack" : 4.,
+                          "pvertexer.timeMarginTrackTime" : 0.5,
+                          "pvertexer.timeMarginVertexTime" : 7.,
+                          "pvertexer.nSigmaTimeCut" : 10,
+                          "pvertexer.dbscanMaxDist2" : 36,
+                          "pvertexer.dcaTolerance" : 3.,
+                          "pvertexer.pullIniCut" : 100,
+                          "pvertexer.addZSigma2" : 0.1,
+                          "pvertexer.tukey" : 20., 
+                          "pvertexer.addZSigma2Debris" : 0.01,
+                          "pvertexer.addTimeSigma2Debris" : 1.,
+                          "pvertexer.maxChi2Mean" : 30,
+                          "pvertexer.timeMarginReattach" : 3.,
+                          "pvertexer.addTimeSigma2Debris" : 1.,
+                          "pvertexer.dbscanDeltaT" : 24,
+                          "pvertexer.maxChi2TZDebris" : 100,
+                          "pvertexer.maxMultRatDebris" : 1.,
+                          "pvertexer.dbscanAdaptCoef" : 20.})
+      else:
+        # generic pp
+         PVConfig.update({"pvertexer.acceptableScale2" : 9,
+                          "pvertexer.dbscanMaxDist2" : 36,
+                          "pvertexer.dbscanDeltaT" : 24,
+                          "pvertexer.maxChi2TZDebris" : 100,
+                          "pvertexer.maxMultRatDebris" : 1.,
+                          "pvertexer.dbscanAdaptCoef" : 20.})
+      
    pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], MCHRECOtask['name'], TRDTRACKINGtask['name'], FDDRECOtask['name'], MFTMCHMATCHtask['name']]
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-primary-vertexing-workflow ' \
-                         + getDPL_global_options() + putConfigValues({**AlpideConfig , **({},{"pvertexer.maxChi2TZDebris" : 10})[COLTYPEIR == 'pp']})
+                         + getDPL_global_options() + putConfigValues(PVConfig)
    PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF" --vertex-track-matching-sources "ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF"'
    workflow['stages'].append(PVFINDERtask)
 
@@ -844,7 +878,7 @@ if includeAnalysis:
 
    def addAnalysisTask(tag, cmd, output=None, needs=[AOD_merge_task['name']],
                        shmsegmentsize="--shm-segment-size 2000000000",
-                       aodmemoryratelimit="--aod-memory-rate-limit 1000000000",
+                       aodmemoryratelimit="--aod-memory-rate-limit 500000000",
                        readers="--readers 1",
                        aodfile="--aod-file ../AO2D.root",
                        extraarguments="-b"):
