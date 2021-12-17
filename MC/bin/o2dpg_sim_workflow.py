@@ -694,16 +694,16 @@ for tf in range(1, NTIMEFRAMES + 1):
    MCHMIDMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-mch-tracks-reader-workflow | ${O2_ROOT}/bin/o2-mid-tracks-reader-workflow | ${O2_ROOT}/bin/o2-muon-tracks-matcher-workflow | ${O2_ROOT}/bin/o2-muon-tracks-writer-workflow ' + getDPL_global_options()
    workflow['stages'].append(MCHMIDMATCHtask)
 
-   MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTMCHMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + getDPL_global_options() + putConfigValues({**{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.useMIDMatch":"true"} , **AlpideConfig})
-   workflow['stages'].append(MFTMCHMATCHtask)
+   MFTMCHMIDMATCHtask = createTask(name='mftmchmidMatch_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+   MFTMCHMIDMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + getDPL_global_options() + putConfigValues({**{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.useMIDMatch":"true"} , **AlpideConfig})
+   workflow['stages'].append(MFTMCHMIDMATCHtask)
 
    ## Vertexing
-   pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], MCHRECOtask['name'], TRDTRACKINGtask['name'], FDDRECOtask['name'], MFTMCHMATCHtask['name']]
+   pvfinderneeds = [ITSTPCMATCHtask['name'], FT0RECOtask['name'], TOFTPCMATCHERtask['name'], MFTRECOtask['name'], MCHRECOtask['name'], TRDTRACKINGtask['name'], FDDRECOtask['name'], MFTMCHMIDMATCHtask['name']]
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-primary-vertexing-workflow ' \
                          + getDPL_global_options() + putConfigValues({**AlpideConfig , **({},{"pvertexer.maxChi2TZDebris" : 10})[COLTYPEIR == 'pp']})
-   PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF" --vertex-track-matching-sources "ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF"'
+   PVFINDERtask['cmd'] += ' --vertexing-sources "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF" --vertex-track-matching-sources "ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH-MID,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF"'
    workflow['stages'].append(PVFINDERtask)
 
    if includeFullQC or includeLocalQC:
