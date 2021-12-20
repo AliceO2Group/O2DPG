@@ -23,56 +23,33 @@
       },
       "conditionDB": {
         "url": "ccdb-test.cern.ch:8080"
+      },
+      "infologger": { 
+        "filterDiscardDebug": "false",
+        "filterDiscardLevel": "2"
       }
     },
     "tasks": {
-      "QcTask": {
+      "DigitTask": {
         "active": "true",
         "className": "o2::quality_control_modules::trd::DigitsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
-        "cycleDurationSeconds": "10",
+        "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
-        "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "tst-raw"
+          "type": "direct",
+          "query": "digits:TRD/DIGITS;tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
         },
         "taskParameters": {
-          "trdDigits": "myOwnValue"
-        },
-        "location": "remote"
+          "peakregionstart": "7.0",
+          "peakregionend": "20.0",
+          "pulseheightpeaklower": "1.0",
+          "pulseheightpeakupper": "5.0"
+        }
       }
     },
-    "checks": {
-      "QcCheck": {
-        "active": "true",
-        "className": "o2::quality_control_modules::trd::DigitsCheck",
-        "moduleName": "QcTRD",
-        "policy": "OnAny",
-        "detectorName": "TRD",
-        "dataSource": [{
-          "type": "Task",
-          "name": "QcTask",
-          "MOs": ["mADC"]
-        }]
-      }
-    }
-  },
   "dataSamplingPolicies": [
-    {
-      "id": "tst-raw",
-      "active": "true",
-      "machines": [],
-      "query": "random:TRD/DIGITS/0",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "1",
-          "seed": "1234"
-        }
-      ],
-      "blocking": "false"
-    }
-   ]
-  }
+  ]
+}
+}
