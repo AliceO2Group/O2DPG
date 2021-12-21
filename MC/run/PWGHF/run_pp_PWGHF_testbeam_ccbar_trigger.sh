@@ -23,7 +23,7 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 900 -col pp -gen pythia8 -proc "
 	                                            -ns 110 -e ${SIMENGINE}                  \
 						    -j ${NWORKERS} -interactionRate 10000 \
 						    -confKey "Diamond.width[2]=6."        \
-						    -trigger "external" -ini "/home/mmazzill/trigger/trigger_hf.ini" #"$O2DPG_ROOT/MC/config/PWGHF/ini/trigger_hf.ini"
+						    -trigger "external" -ini "$O2DPG_ROOT/MC/config/PWGHF/ini/trigger_hf.ini"
 
 
 # run workflow
