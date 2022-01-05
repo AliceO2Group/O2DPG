@@ -746,7 +746,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        task = createTask(name=taskName + '_local' + str(tf), needs=needs, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
        objectsFile = objectsFile if len(objectsFile) > 0 else taskName + '.root' 
        # the --local-batch argument will make QC Tasks store their results in a file and merge with any existing objects
-       task['cmd'] = readerCommand + ' | o2-qc --config ' + configFilePath + ' --local-batch ../' + qcdir + '/' + objectsFile + ' ' + getDPL_global_options()
+       task['cmd'] = readerCommand + ' | o2-qc --config ' + configFilePath + ' --local-batch ../' + qcdir + '/' + objectsFile + ' --override-values "qc.config.Activity.number=' + str(args.run) + '" ' + getDPL_global_options()
        # Prevents this task from being run for multiple TimeFrames at the same time, thus trying to modify the same file.
        task['semaphore'] = objectsFile
        workflow['stages'].append(task)
@@ -866,7 +866,7 @@ workflow['stages'].append(AOD_merge_task)
 
 job_merging = False
 if includeFullQC:
-  workflow['stages'].extend(include_all_QC_finalization(ntimeframes=NTIMEFRAMES, standalone=False))
+  workflow['stages'].extend(include_all_QC_finalization(ntimeframes=NTIMEFRAMES, standalone=False, run=args.run))
 
 
 if includeAnalysis:

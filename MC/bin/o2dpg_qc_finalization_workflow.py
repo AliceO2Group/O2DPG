@@ -29,14 +29,14 @@ def getDPL_global_options(bigshm=False, noIPC=None):
       return common
 
 qcdir = "QC"
-def include_all_QC_finalization(ntimeframes, standalone):
+def include_all_QC_finalization(ntimeframes, standalone, run):
 
   stages = []
   def add_QC_finalization(taskName, qcConfigPath, needs=[]):
     if len(needs) == 0 and standalone == False:
       needs = [taskName + '_local' + str(tf) for tf in range(1, ntimeframes + 1)]
     task = createTask(name=taskName + '_finalize', needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-    task['cmd'] = 'o2-qc --config ' + qcConfigPath + ' --remote-batch ' + taskName + '.root ' + getDPL_global_options()
+    task['cmd'] = 'o2-qc --config ' + qcConfigPath + ' --remote-batch ' + taskName + '.root --override-values "qc.config.Activity.number=' + str(run) + '" ' + getDPL_global_options()
     stages.append(task)
 
 
@@ -64,6 +64,7 @@ def main() -> int:
 
   parser.add_argument('--noIPC',help='disable shared memory in DPL')
   parser.add_argument('-o',help='output workflow file', default='workflow.json')
+  parser.add_argument('-run',help="Run number for this MC", default=300000)
 
   args = parser.parse_args()
   print (args)
@@ -86,7 +87,7 @@ def main() -> int:
     mkdir(qcdir)
 
   workflow={}
-  workflow['stages'] = include_all_QC_finalization(ntimeframes=1, standalone=True)
+  workflow['stages'] = include_all_QC_finalization(ntimeframes=1, standalone=True, run=args.run)
   
   dump_workflow(workflow["stages"], args.o)
   
