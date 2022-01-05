@@ -474,7 +474,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       # for pp we adjust the strobe lengths to
       # These numbers must be a divisor of 3564 (orbit duration in BCs)
       AlpideConfig.update({"ITSAlpideParam.roFrameLengthInBC" : 198,
-                           "MFTAlpideParam.roFrameLengthInBC" : 297})
+                           "MFTAlpideParam.roFrameLengthInBC" : 198})
 
 
    def putConfigValues(localCF = {}):
@@ -767,12 +767,12 @@ for tf in range(1, NTIMEFRAMES + 1):
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit.json')
      addQCPerTF(taskName='mftClustersQC',
                 needs=[MFTRECOtask['name']],
-                readerCommand='o2-qc-mft-clusters-root-file-reader --mft-cluster-infile=mftclusters.root',
+                readerCommand='o2-global-track-cluster-reader --track-types none --cluster-types MFT',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json')
-     addQCPerTF(taskName='mftTracksQC',
+     addQCPerTF(taskName='mftAsyncQC',
                 needs=[MFTRECOtask['name']],
-                readerCommand='o2-qc-mft-tracks-root-file-reader --mft-track-infile=mfttracks.root',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-track.json')
+                readerCommand='o2-global-track-cluster-reader --track-types MFT --cluster-types MFT',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-async.json')
 
      ### TPC
      # addQCPerTF(taskName='tpcTrackingQC',
