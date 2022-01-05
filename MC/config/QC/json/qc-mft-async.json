@@ -26,38 +26,29 @@
       }
     },
     "tasks": {
-      "QcMFTTrackTask": {
+      "QcMFTAsync": {
         "active": "true",
-        "className": "o2::quality_control_modules::mft::QcMFTTrackTask",
+        "className": "o2::quality_control_modules::mft::QcMFTAsyncTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
-        "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
           "type": "direct",
-          "query": "randomtrack:MFT/TRACKS/0;tracksrof:MFT/MFTTrackROF/0"
+          "query": "tracks:MFT/TRACKS/0;tracksrofs:MFT/MFTTrackROF/0;clusters:MFT/COMPCLUSTERS/0;clustersrofs:MFT/CLUSTERSROF/0"
         },
         "taskParameters": {
-          "myOwnKey": "myOwnValue"
+          "ROFLengthInBC": "198",
+          "MaxTrackROFSize": "1000",
+          "MaxClusterROFSize": "5000",
+          "MaxDuration": "60000",
+          "TimeBinSize": "0.1",
+          "RefOrbit": "0"
         },
         "location": "remote"
       }
     },
-    "checks": {
-      "QcMFTTrackCheck": {
-        "active": "false",
-        "dataSource": [{
-          "type": "Task",
-          "name": "QcMFTTrackTask",
-          "MOs": ["mMFTTrackCharge"]
-        }],
-        "className": "o2::quality_control_modules::mft::QcMFTTrackCheck",
-        "moduleName": "QcMFT",
-        "detectorName": "MFT",
-        "policy": "OnAny"
-      }
-    }    
+    "checks": {}    
   },
   "dataSamplingPolicies": [
   ]
