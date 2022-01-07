@@ -40,7 +40,7 @@
 		    },
 		    "location": "local",
 		    "localMachines": [
-			"epn"
+			"localhost"
 		    ],
 		    "remoteMachine": "alio2-cr1-qc02.cern.ch",
 		    "remotePort": "47701",
@@ -63,7 +63,7 @@
 		    },
 		    "location": "local",
 		    "localMachines": [
-			"epn"
+			"localhost"
 		    ],
 		    "remoteMachine": "alio2-cr1-qc02.cern.ch",
 		    "remotePort": "47702",
@@ -128,7 +128,7 @@
 	    {
 		"id": "emcrawdata",
 		"active": "true",
-		"machines": ["epn"],
+		"machines": ["localhost"],
 		"query": "readout:EMC/RAWDATA",
 		"samplingConditions": [
 		    {
@@ -142,7 +142,7 @@
 	  {
 		"id": "emccells",
 		"active": "true",
-		"machines": ["epn"],
+		"machines": ["localhost"],
 		"query": "emcal-digits:EMC/CELLS;emcal-triggerecords:EMC/CELLSTRGR",
 		"samplingConditions": [
 		    {
