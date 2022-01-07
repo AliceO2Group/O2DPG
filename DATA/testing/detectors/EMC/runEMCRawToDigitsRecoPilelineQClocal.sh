@@ -31,5 +31,8 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --severity $SEVERITY \
     --infologger-severity $INFOLOGGER_SEVERITY \
     --pipeline EMCALRawToCellConverterSpec:$NCPU \
-    | o2-qc $ARGS_ALL $QC_CONFIG --local --host $HOST \
+    | o2-qc $ARGS_ALL \
+    --config $QC_CONFIG \
+    --local \
+    --host $HOST \
     | o2-dpl-run $ARGS_ALL --dds

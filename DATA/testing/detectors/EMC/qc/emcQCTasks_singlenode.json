@@ -3,7 +3,7 @@
 	    "config": {
 		"database": {
 		    "implementation": "CCDB",
-		    "host": "alio2-cr1-hv-qcdb1-gpn.cern.ch:8083",
+		    "host": "alio2-cr1-hv-qcdb1.cern.ch:8083",
 		    "username": "not_applicable",
 		    "password": "not_applicable",
 		    "name": "not_applicable"
