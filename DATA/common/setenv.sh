@@ -60,6 +60,7 @@ if [ -z "$FILEWORKDIR" ];   then export FILEWORKDIR=`pwd`; fi          # Overrid
 if [ -z "$RAWINPUTDIR" ];   then export RAWINPUTDIR=$FILEWORKDIR; fi   # Directory where to find input files (raw files / raw tf files / ctf files)
 if [ -z "$EPNSYNCMODE" ];   then export EPNSYNCMODE=0; fi              # Is this workflow supposed to run on EPN? Will enable InfoLogger / metrics / ...
 if [ -z "$BEAMTYPE" ];      then export BEAMTYPE=PbPb; fi              # Beam type, must be PbPb, pp, pPb, cosmic, technical
+if [[ -z $IS_SIMULATED_DATA ]]; then IS_SIMULATED_DATA=1; fi           # processing simulated data
 if [ -z "$EDJSONS_DIR" ];   then export EDJSONS_DIR="jsons"; fi        # output directory for ED json files
 if [ $EPNSYNCMODE == 0 ]; then
   if [ -z "$SHMSIZE" ];       then export SHMSIZE=$(( 8 << 30 )); fi   # Size of shared memory for messages
