@@ -38,8 +38,8 @@
         "taskParameters": {
           "GID": "ITS-TPC,TPC,ITS-TPC-TOF,TPC-TOF",
           "verbose": "false",
-          "minPtCut": "0.1f",
-          "etaCut": "1.4f",
+          "minPtCut": "0.3f",
+          "etaCut": "0.8f",
           "minNTPCClustersCut": "40",
           "minDCACut": "100.f",
           "minDCACutY": "10.f",
