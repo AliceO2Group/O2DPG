@@ -11,9 +11,9 @@
       "Activity" : {
         "number" : "42",
         "type" : "2",
-        "provenance": "qc_mc",
-        "passName": "passMC",
-        "periodName": "SimChallenge"
+        "provenance" : "qc_mc",
+        "passName" : "passMC",
+        "periodName" : "SimChallenge"
       },
       "monitoring" : {
         "url" : "infologger:///debug?qc"
@@ -25,10 +25,10 @@
         "url" : "ccdb-test.cern.ch:8080"
       },
       "infologger" : { "" : "Configuration of the Infologger (optional).",
-                       "filterDiscardDebug" : "false",
-                       "" : "Set to true to discard debug and trace messages (default: false)",
-                       "filterDiscardLevel" : "21",
-                       "" : "Message at this level or above are discarded (default: 21 - Trace)" }
+        "filterDiscardDebug" : "false",
+        "" : "Set to true to discard debug and trace messages (default: false)",
+        "filterDiscardLevel" : "21",
+        "" : "Message at this level or above are discarded (default: 21 - Trace)" }
     },
     "tasks" : {
       "MatchedTracksITSTPCTOF_TPCTOF" : {
@@ -75,6 +75,5 @@
       }
     }
   },
-         "dataSamplingPolicies" : [
-         ]
+         "dataSamplingPolicies" : []
 }
