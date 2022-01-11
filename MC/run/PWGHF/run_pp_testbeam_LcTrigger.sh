@@ -23,7 +23,7 @@ NBKGEVENTS=${NBKGEVENTS:-1}
 
 #Lc trigger
 
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 900 -col pp -gen pythia8 -proc "ccbar" -tf 1 -ns 100 -e ${SIMENGINE} -j ${NWORKERS} -interactionRate 10000 -trigger "particle" -confKey "Diamond.width[2]=6.;TriggerParticle.pdg=4122;TriggerParticle.ptMin=0.5;TriggerParticle.yMin=-0.5;TriggerParticle.yMax=0.5" -ini /home/mmazzill/ini/GeneratorHF_decay.ini 
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 900 -col pp -gen pythia8 -proc "ccbar" -tf 1 -ns 100 -e ${SIMENGINE} -j ${NWORKERS} -interactionRate 10000 -trigger "particle" -confKey "Diamond.width[2]=6.;TriggerParticle.pdg=4122;TriggerParticle.ptMin=0.5;TriggerParticle.yMin=-0.5;TriggerParticle.yMax=0.5" -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHF_decay.ini 
 
 # run workflow
 # allow increased timeframe parallelism with --cpu-limit 32 
