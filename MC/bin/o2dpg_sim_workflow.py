@@ -473,9 +473,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    if COLTYPEIR == 'pp':
       # for pp we adjust the strobe lengths to
       # These numbers must be a divisor of 3564 (orbit duration in BCs)
-      AlpideConfig.update({"ITSAlpideParam.roFrameLengthInBC" : 198,
-                           "MFTAlpideParam.roFrameLengthInBC" : 198})
-
+      AlpideConfig.update({"MFTAlpideParam.roFrameLengthInBC" : 198})
+      if 302000 <= int(args.run) and int(args.run) <= 309999: # high energy pp
+        AlpideConfig.update({"ITSAlpideParam.roFrameLengthInBC" : 198})
 
    def putConfigValues(localCF = {}):
      """
