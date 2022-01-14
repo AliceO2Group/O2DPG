@@ -57,9 +57,10 @@
         },
         "taskParameters": {
           "runNumberPath": "",
-          "vertexXYsize": "0.1",
+          "vertexXYsize": "0.5",
           "vertexZsize": "15",
-          "vertexRsize": "0.1",
+          "vertexRsize": "0.8",
+          "NtracksMAX"  : "100",
           "doTTree": "0"
         }
       }
@@ -108,7 +109,6 @@
               "NClusters",
               "PhiDistribution",
               "AngularDistribution",
-              "ClusterUsage",
               "EtaDistribution",
               "VertexCoordinates",
               "VertexRvsZ",
