@@ -111,6 +111,11 @@ if args.process == 'cdiff':
     fout.write('SoftQCD:inelastic = on \n')
     # enable non-zero cross section for CEP
     fout.write('SigmaTotal:zeroAXB = off \n')
+    # enable diffraction for pp
+    if args.idA == '2212' and args.idA == args.idB:
+        fout.write('SoftQCD:nonDiffractive = on \n')
+        fout.write('SoftQCD:singleDiffractive = on \n')
+        fout.write('SoftQCD:doubleDiffractive = on \n')
 fout.write('\n')
 
 ### heavy ion  settings (valid for Pb-Pb 5520 only)
