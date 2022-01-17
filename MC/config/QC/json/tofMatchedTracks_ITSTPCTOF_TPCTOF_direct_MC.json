@@ -11,9 +11,9 @@
       "Activity" : {
         "number" : "42",
         "type" : "2",
-        "provenance": "qc_mc",
-        "passName": "passMC",
-        "periodName": "SimChallenge"
+        "provenance" : "qc_mc",
+        "passName" : "passMC",
+        "periodName" : "SimChallenge"
       },
       "monitoring" : {
         "url" : "infologger:///debug?qc"
@@ -25,10 +25,10 @@
         "url" : "ccdb-test.cern.ch:8080"
       },
       "infologger" : { "" : "Configuration of the Infologger (optional).",
-                       "filterDiscardDebug" : "false",
-                       "" : "Set to true to discard debug and trace messages (default: false)",
-                       "filterDiscardLevel" : "21",
-                       "" : "Message at this level or above are discarded (default: 21 - Trace)" }
+        "filterDiscardDebug" : "false",
+        "" : "Set to true to discard debug and trace messages (default: false)",
+        "filterDiscardLevel" : "21",
+        "" : "Message at this level or above are discarded (default: 21 - Trace)" }
     },
     "tasks" : {
       "MatchedTracksITSTPCTOF_TPCTOF" : {
@@ -47,9 +47,9 @@
           "GID" : "ITS-TPC,TPC,ITS-TPC-TOF,TPC-TOF",
           "verbose" : "false",
           "isMC" : "true",
-          "minPtCut" : "0.1f",
-          "etaCut" : "1.4f",
-          "minNTPCClustersCut" : "40",
+          "minPtCut" : "0.3f",
+          "etaCut" : "0.8f",
+          "minNTPCClustersCut" : "60",
           "minDCACut" : "100.f",
           "minDCACutY" : "10.f",
           "grpFileName" : "o2sim_grp.root",
@@ -75,6 +75,5 @@
       }
     }
   },
-         "dataSamplingPolicies" : [
-         ]
+         "dataSamplingPolicies" : []
 }

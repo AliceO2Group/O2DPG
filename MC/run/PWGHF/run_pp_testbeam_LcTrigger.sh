@@ -16,18 +16,26 @@
 NWORKERS=${NWORKERS:-8}
 MODULES="--skipModules ZDC"
 SIMENGINE=${SIMENGINE:-TGeant4}
-NSIGEVENTS=${NSIGEVENTS:-1}
 NBKGEVENTS=${NBKGEVENTS:-1}
-NTIMEFRAMES=${NTIMEFRAMES:-1}
 
 # create workflow
+# with a low interaction rate, the number of signals per tf is low (~11ms timeframe)
 
-#ccbar filter
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 900 -col pp -gen pythia8 -proc "inel" -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 10000 -confKey "Diamond.width[2]=6." -e TGeant4 -mod "--skipModules ZDC" \
-        -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHF_ccbar.ini \
+#Lc trigger
+
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 900 -col pp -gen pythia8 -proc "ccbar" -tf 1 -ns 100 -e ${SIMENGINE} -j ${NWORKERS} -interactionRate 10000 -trigger "particle" -confKey "Diamond.width[2]=6.;TriggerParticle.pdg=4122;TriggerParticle.ptMin=0.5;TriggerParticle.yMin=-0.5;TriggerParticle.yMax=0.5" -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHF_decay.ini 
 
 # run workflow
 # allow increased timeframe parallelism with --cpu-limit 32 
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt aod --cpu-limit 32
+MCRC=$?  # <--- we'll report back this code
+
+# publish the current dir to ALIEN
+#copy_ALIEN "*AO2D*"
+
+# perform some analysis testing
+#DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+#. ${DIR}/analysis_testing.sh
 
 
+return ${MCRC} 2>/dev/null || exit ${MCRC}

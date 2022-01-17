@@ -473,9 +473,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    if COLTYPEIR == 'pp':
       # for pp we adjust the strobe lengths to
       # These numbers must be a divisor of 3564 (orbit duration in BCs)
-      AlpideConfig.update({"ITSAlpideParam.roFrameLengthInBC" : 198,
-                           "MFTAlpideParam.roFrameLengthInBC" : 198})
-
+      AlpideConfig.update({"MFTAlpideParam.roFrameLengthInBC" : 198})
+      if 302000 <= int(args.run) and int(args.run) <= 309999: # high energy pp
+        AlpideConfig.update({"ITSAlpideParam.roFrameLengthInBC" : 198})
 
    def putConfigValues(localCF = {}):
      """
@@ -703,6 +703,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if COLTYPEIR == 'pp': 
       if 301000 <= int(args.run) and int(args.run) <= 301999:
          # put specific pp tunes for pilot beam
+         # (this should at some moment come from CCDB)
          # taken from JIRA https://alice.its.cern.ch/jira/browse/O2-2691
          PVConfig.update({"pvertexer.acceptableScale2" : 9,
                           "pvertexer.minScale2" : 2.,
@@ -724,6 +725,16 @@ for tf in range(1, NTIMEFRAMES + 1):
                           "pvertexer.maxChi2TZDebris" : 100,
                           "pvertexer.maxMultRatDebris" : 1.,
                           "pvertexer.dbscanAdaptCoef" : 20.})
+      elif 302000 <= int(args.run) and int(args.run) <= 309999:
+         # specific tunes for high pp
+         # run range taken from https://twiki.cern.ch/twiki/bin/viewauth/ALICE/O2DPGMCSamplingSchema
+         # taken from JIRA https://alice.its.cern.ch/jira/browse/O2-2691
+         PVConfig.update({"pvertexer.dbscanDeltaT" : 7,
+                          "pvertexer.maxChi2TZDebris": 50,
+                          "pvertexer.maxMultRatDebris": 1.,
+                          "pvertexer.dbscanAdaptCoef" : 20,
+                          "pvertexer.maxVerticesPerCluster" : 20,
+                          "pvertexer.dbscanMaxDist2" : 36})
       else:
         # generic pp
          PVConfig.update({"pvertexer.acceptableScale2" : 9,
