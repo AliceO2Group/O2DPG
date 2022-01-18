@@ -112,7 +112,7 @@ if args.process == 'cdiff':
     # enable non-zero cross section for CEP
     fout.write('SigmaTotal:zeroAXB = off \n')
     # enable diffraction for pp
-    if args.idA == '2212' and args.idA == args.idB:
+    if args.idA == 2212 and args.idB == 2212:
         fout.write('SoftQCD:nonDiffractive = on \n')
         fout.write('SoftQCD:singleDiffractive = on \n')
         fout.write('SoftQCD:doubleDiffractive = on \n')
