@@ -47,3 +47,5 @@ The `setenv-sh` script sets the following environment options
 * `FILEWORKDIR`: directory for all input / output files. E.g. grp / geometry / dictionaries etc. are read from here, and dictionaries / ctf / etc. are written to there.
   Some files have more fine grained control via other environment variables (e.g. to store the CTF to somewhere else). Such variables are initialized to `$FILEWORKDIR` by default but can be overridden.
 * `EPNSYNCMODE`: Specify that this is a workflow running on the EPN for synchronous processing, e.g. logging goes to InfoLogger, DPL metrics to to the AliECS monitoring, etc.
+* `BEAMTYPE`: Beam type, must be PbPb, pp, pPb, cosmic, technical.
+* `IS_SIMULATED_DATA` : 1 for MC data, 0 for RAW data.
