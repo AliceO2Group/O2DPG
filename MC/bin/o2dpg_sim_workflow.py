@@ -405,7 +405,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------------
    signalprefix='sgn_' + str(tf)
    signalneeds=[ SGN_CONFIG_task['name'] ]
-   embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if doembedding else ""
+   
+   # add embedIntoFile only if embeddPattern does contain a '@'
+   embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if (doembedding & ("@" in args.embeddPattern)) else ""
+   #embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if doembedding else ""
    if doembedding:
        if not usebkgcache:
             signalneeds = signalneeds + [ BKGtask['name'] ]
