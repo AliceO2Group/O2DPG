@@ -15,7 +15,7 @@ if [ $NORATELOG == 1 ]; then
 fi
 ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;$ALL_EXTRA_CONFIG"
 
-PROXY_INSPEC="digits:ITS/DIGITS/0;digitsrof:ITS/DIGITSROF/0;calib:ITS/CALIB/0;eos:***/INFORMATION"
+PROXY_INSPEC="digits:ITS/DIGITS/0;digitsrof:ITS/DIGITSROF/0;calib:ITS/GBTCALIB/0;eos:***/INFORMATION"
 
 WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --proxy-name its-thr-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=its-thr-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\" | "
 WORKFLOW+="o2-its-threshold-calib-workflow -b --fittype derivative --output-dir \"/data/calibration\" --meta-output-dir \"/data/epn2eos_tool/epn2eos\" $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" | "
