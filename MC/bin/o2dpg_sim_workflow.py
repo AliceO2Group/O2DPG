@@ -183,7 +183,7 @@ if doembedding:
            if ECMSBKG < 0:    # assign 5.02 TeV to Pb-Pb
               print('o2dpg_sim_workflow: Set BKG CM Energy to PbPb case 5.02 TeV')
               ECMSBKG=5020.0
-           if GENBKG == 'pythia8':
+           if GENBKG == 'pythia8' and PROCESSBKG != 'heavy_ion':
               PROCESSBKG = 'heavy_ion'
               print('o2dpg_sim_workflow: Process type not considered for Pythia8 PbPb')
 
@@ -293,11 +293,11 @@ if usebkgcache:
 # Eventually, these files/objects should be queried directly from within these tasks?
 # TODO: add correct timestamp for query
 ITS_DICT_DOWNLOADER_TASK = createTask(name='itsdictdownloader', cpu='0')
-ITS_DICT_DOWNLOADER_TASK['cmd'] = '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ITS/Calib/ClusterDictionary -o ITSdictionary.bin --no-preserve-path'
+ITS_DICT_DOWNLOADER_TASK['cmd'] = '[ -f ITSdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ITS/Calib/ClusterDictionary -o ITSdictionary.bin --no-preserve-path'
 workflow['stages'].append(ITS_DICT_DOWNLOADER_TASK)
 
 MFT_DICT_DOWNLOADER_TASK = createTask(name='mftdictdownloader', cpu='0')
-MFT_DICT_DOWNLOADER_TASK['cmd'] = '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p MFT/Calib/ClusterDictionary -o MFTdictionary.bin --no-preserve-path'
+MFT_DICT_DOWNLOADER_TASK['cmd'] = '[ -f MFTdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p MFT/Calib/ClusterDictionary -o MFTdictionary.bin --no-preserve-path'
 workflow['stages'].append(MFT_DICT_DOWNLOADER_TASK)
 
 # loop over timeframes
