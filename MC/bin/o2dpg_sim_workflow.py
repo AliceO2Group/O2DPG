@@ -94,6 +94,11 @@ parser.add_argument('--include-analysis', '--include-an', '--analysis',
 
 # MFT reconstruction configuration
 parser.add_argument('--mft-reco-full', action='store_true', help='enables complete mft reco instead of simplified misaligned version')
+parser.add_argument('--mft-assessment-full', action='store_true', help='enables complete assessment of mft reco')
+
+# Global Forward reconstruction configuration
+parser.add_argument('--fwdmatching-assessment-full', action='store_true', help='enables complete assessment of global forward reco')
+
 
 args = parser.parse_args()
 print (args)
@@ -655,6 +660,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                         "MFTTracking.LTFclsRCut" : 0.0100})
    MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[det_to_digitask["MFT"]['name'], MFT_DICT_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MFTRECOtask['cmd'] = '${O2_ROOT}/bin/o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValues({**MFTConfig, **AlpideConfig})
+   if args.mft_assessment_full == True:
+      MFTRECOtask['cmd']+= ' --run-assessment '
    workflow['stages'].append(MFTRECOtask)
 
    # MCH reco: needing access to kinematics ... so some extra logic needed here
@@ -698,7 +705,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(MCHMIDMATCHtask)
 
    MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTMCHMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + getDPL_global_options() + putConfigValues({**{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.useMIDMatch":"true"} , **AlpideConfig})
+   MFTMCHMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValues({**{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.useMIDMatch":"true"} , **AlpideConfig})
+   if args.fwdmatching_assessment_full == True:
+      MFTMCHMATCHtask['cmd']+= ' |  o2-globalfwd-assessment-workflow '
+   MFTMCHMATCHtask['cmd']+= getDPL_global_options()
    workflow['stages'].append(MFTMCHMATCHtask)
 
    ## Vertexing
