@@ -22,7 +22,13 @@ NTF=$(find ./ -name "tf*" -type d | wc | awk '//{print $1}')
 # echo "EXIT 1: $RC1"
 
 # run on the merged part
-$O2DPG_ROOT/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt Analysis_${testanalysis}$ --rerun-from Analysis_${testanalysis}$
+wf_name="workflow_test_analysis.json"
+# remove if present...
+rm ${wf_name} 2>/dev/null
+# ...and recreate
+$O2DPG_ROOT/MC/analysis_testing/o2dpg_analysis_test_workflow.py -o ${wf_name}
+# run requested analysis
+$O2DPG_ROOT/MC/bin/o2_dpg_workflow_runner.py -f ${wf_name} -tt Analysis_${testanalysis}$ --rerun-from Analysis_${testanalysis}$
 RC2=$?
 echo "EXIT 2: $RC2"
 
