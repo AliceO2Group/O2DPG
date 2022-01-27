@@ -832,9 +832,15 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='4000', cpu='1')
    AODtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
    AODtask['cmd'] += '${O2_ROOT}/bin/o2-aod-producer-workflow --reco-mctracks-only 1 --aod-writer-keep dangling --aod-writer-resfile AO2D'
+   # next line needed for meta data writing (otherwise lost)
+   AODtask['cmd'] += ' --aod-writer-resmode "UPDATE"'
    AODtask['cmd'] += ' --run-number ' + str(args.run)
    AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id + ' ' + getDPL_global_options(bigshm=True)
    AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD'
+   AODtask['cmd'] += ' --lpmp-prod-tag ${ALICE_JDL_LPMPRODUCTIONTAG:-unknown}'
+   AODtask['cmd'] += ' --anchor-pass ${ALICE_JDL_LPMANCHORPASSNAME:-unknown}'
+   AODtask['cmd'] += ' --anchor-prod ${ALICE_JDL_MCANCHOR:-unknown}'
+
    workflow['stages'].append(AODtask)
 
    # AOD merging / combination step (as individual stages) --> for the moment deactivated in favor or more stable global merging
