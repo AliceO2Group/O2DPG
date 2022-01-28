@@ -19,8 +19,8 @@ SIMENGINE=${SIMENGINE:-TGeant4}
 #NBKGEVENTS=${NBKGEVENTS:-1}
 
 #ccbar trigger
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 900 -col pp -gen pythia8 -proc "inel" -tf 1 \
-	                                            -ns 110 -e ${SIMENGINE}                  \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 900 -col pp -gen pythia8 -proc "inel" -tf 25 \
+	                                            -ns 22 -e ${SIMENGINE}                  \
 						    -j ${NWORKERS} -interactionRate 10000 \
 						    -confKey "Diamond.width[2]=6."        \
 						    -trigger "external" -ini "$O2DPG_ROOT/MC/config/PWGHF/ini/trigger_hf.ini"
