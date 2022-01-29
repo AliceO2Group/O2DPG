@@ -3,6 +3,7 @@ import os
 import sys
 import shlex
 import tempfile
+import re
 if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']):
     sys.path.insert(0, '/usr/share/Modules/init')
     import python as mod
@@ -110,7 +111,11 @@ for line in f:
                 if os.system(command) != 0:
                     print("Error running command", command)
                     ftmp = open(filename, 'r')
-                    print(ftmp.read())
+                    rg = re.compile("^<topology")
+                    for line in ftmp:
+                        if re.match(rg, line):
+                            break
+                        print(line)
                     raise
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
