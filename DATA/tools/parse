@@ -91,7 +91,7 @@ for line in f:
                     filenamecore = filename
                     # filenamecore = filenamecore+ ":" + wf[1] # Currently disabled, since odc-epn-topo does not accept :[ncores]
                     wf.append(wf[2])
-                    wf[1] = 1;
+                    wf[1] = "1";
                     wf[2] = wf[1]
                     calibworkflows.append(filenamecore)
                 else:
