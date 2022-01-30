@@ -24,7 +24,7 @@ NTIMEFRAMES=${NTIMEFRAMES:-1}
 
 #ccbar filter
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13500 -col pp -gen pythia8 -proc "inel" -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 500000 -confKey "Diamond.width[2]=6." -e TGeant4 -mod "--skipModules ZDC" \
-        -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHF_bbbar.ini \
+        -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHFTrigger_bbbar.ini \
 
 # run workflow
 # allow increased timeframe parallelism with --cpu-limit 32 
