@@ -79,6 +79,9 @@ def run(args):
     # PID TPC (no complex workflow / piping required atm), NOTE: produces no output
     workflow.append(create_ana_task("PIDTPC", 'o2-analysis-pid-tpc', output_dir, input_file))
 
+    # weak decay tutorial task (no complex workflow / piping required atm), NOTE: produces no output
+    workflow.append(create_ana_task("WeakDecayTutorial", 'o2-analysistutorial-weak-decay-iteration', output_dir, input_file))
+
     dump_workflow(workflow, args.output)
 
 

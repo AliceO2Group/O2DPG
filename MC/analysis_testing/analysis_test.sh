@@ -10,7 +10,7 @@
 # (using the "needs" variable and doing a "merge" operation with the original workflow)
 
 # to be eventually given externally
-testanalysis=$1 # Efficiency, EventTrackQA, MCHistograms, Validation, PIDTOF, PIDTPC
+testanalysis=$1 # Efficiency, EventTrackQA, MCHistograms, Validation, PIDTOF, PIDTPC, WeakDecayTutorial
 
 # find out number of timeframes
 NTF=$(find ./ -name "tf*" -type d | wc | awk '//{print $1}')
