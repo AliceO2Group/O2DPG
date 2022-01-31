@@ -81,7 +81,7 @@ else # Defaults when running on the EPN
   if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
 fi
 # Some more options for running on the EPN
-if [ -z "$INFOLOGGER_SEVERITY" ]; then export INFOLOGGER_SEVERITY="warning"; fi
+if [ -z "$INFOLOGGER_SEVERITY" ]; then export INFOLOGGER_SEVERITY="important"; fi
 if [ -z "$MULTIPLICITY_FACTOR_RAWDECODERS" ]; then export MULTIPLICITY_FACTOR_RAWDECODERS=1; fi
 if [ -z "$MULTIPLICITY_FACTOR_CTFENCODERS" ]; then export MULTIPLICITY_FACTOR_CTFENCODERS=1; fi
 if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then export MULTIPLICITY_FACTOR_REST=1; fi
