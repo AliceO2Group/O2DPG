@@ -964,6 +964,8 @@ if includeAnalysis:
    # PID TPC (no complex workflow / piping required atm), NOTE: produces no output
    addAnalysisTask(tag="PIDTPC", cmd='o2-analysis-pid-tpc')
 
+   # weak decay tutorial task (no complex workflow / piping required atm), NOTE: produces no output
+   addAnalysisTask(tag="WeakDecayTutorial", cmd='o2-analysistutorial-weak-decay-iteration')
 
 dump_workflow(workflow["stages"], args.o)
 
