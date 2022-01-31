@@ -974,6 +974,7 @@ class WorkflowExecutor:
 
 
     def execute(self):
+        starttime = time.perf_counter()
         psutil.cpu_percent(interval=None)
         os.environ['JOBUTILS_SKIPDONE'] = "ON"
 
@@ -1082,8 +1083,9 @@ class WorkflowExecutor:
 
             self.SIGHandler(0,0)
 
-        print ('\n**** Pipeline done *****\n')
-        # self.analyse_files_and_connections()
+        endtime = time.perf_counter()
+        print ('\n**** Pipeline done (global_runtime : {:.3f}s) *****\n'.format(endtime-starttime))
+
 
 
 
