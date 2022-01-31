@@ -43,7 +43,7 @@
           "clusterDictionaryPath": "./ITSdictionary.bin",
           "runNumberPath": "",
           "geomPath": "./o2sim_geometry.root",
-          "nThreads": "4"
+          "nThreads": "1"
         }
       },
       "ITSTrackTask": {
@@ -127,7 +127,7 @@
       "id": "compclus",
       "active": "true",
       "machines": [],
-      "query": "compclus:ITS/COMPCLUSTERS/0;clustersrof:ITS/CLUSTERSROF/0",
+      "query": "compclus:ITS/COMPCLUSTERS/0;clustersrof:ITS/CLUSTERSROF/0;patterns:ITS/PATTERNS/0",
       "samplingConditions": [
         {
           "condition": "random",
@@ -141,7 +141,7 @@
       "id": "tracks",
       "active": "true",
       "machines": [],
-      "query": "Vertices:ITS/VERTICES/0;tracks:ITS/TRACKS/0;rofs:ITS/ITSTrackROF/0;compclus:ITS/COMPCLUSTERS/0",
+      "query": "Vertices:ITS/VERTICES/0;tracks:ITS/TRACKS/0;rofs:ITS/ITSTrackROF/0;clustersrof:ITS/CLUSTERSROF/0;compclus:ITS/COMPCLUSTERS/0",
       "samplingConditions": [
         {
           "condition": "random",
