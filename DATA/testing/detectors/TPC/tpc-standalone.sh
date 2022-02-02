@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+<<<<<<< HEAD
 source common/setenv.sh
 
 export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM
@@ -55,13 +56,34 @@ fi
 if [ $HOSTMEMSIZE != "0" ]; then
   GPU_CONFIG_KEY+="GPU_proc.forceHostMemoryPoolSize=$HOSTMEMSIZE;"
 fi
+=======
+export GLOBAL_SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM
+export NHBPERTF=256
+export GPUTYPE=HIP
+export GPUMEMSIZE=$(( 24 << 30 ))
+export HOSTMEMSIZE=$(( 5 << 30 ))
+DISPLAY=0
+>>>>>>> 3112c5b... Change Naming of TPC workflows
 
 PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
 ### Comment: MAKE SURE the channels match address=ipc://@tf-builder-pipe-0
 
+<<<<<<< HEAD
 NCPU=12 #$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
+=======
+hash=$1
+
+module load QualityControl DataDistribution ODC > /dev/null
+
+
+VERBOSE=""
+NCPU=12 #$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
+ARGS_ALL="-b --session default --shm-segment-size $GLOBAL_SHMSIZE"
+ARGS_FILES="NameConf.mDirGRP=/home/epn/odc/files/;NameConf.mDirGeom=/home/epn/odc/files/;keyval.output_dir=/dev/null"
+#HOST='$(hostname -s)-ib'
+>>>>>>> 3112c5b... Change Naming of TPC workflows
 HOST=localhost
 
 o2-dpl-raw-proxy $ARGS_ALL \
