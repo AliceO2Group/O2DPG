@@ -850,6 +850,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += ' --lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}'
    AODtask['cmd'] += ' --anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}'
    AODtask['cmd'] += ' --anchor-prod ${ALIEN_JDL_MCANCHOR:-unknown}'
+   if environ.get('O2DPG_AOD_NOTRUNCATE') != None or environ.get('ALIEN_JDL_O2DPG_AOD_NOTRUNCATE') != None:
+      AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
 
    workflow['stages'].append(AODtask)
 
