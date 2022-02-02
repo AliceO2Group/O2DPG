@@ -94,5 +94,3 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --ccdb-path http://ccdb-test.cern.ch:8080 \
     | o2-dpl-run $ARGS_ALL --dds
 
-
-#    --configKeyValues "align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.forceMemoryPoolSize=$GPUMEMSIZE;GPU_proc.forceHostMemoryPoolSize=$HOSTMEMSIZE;GPU_proc.deviceNum=0;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$ARGS_FILES;keyval.output_dir=/dev/null" \

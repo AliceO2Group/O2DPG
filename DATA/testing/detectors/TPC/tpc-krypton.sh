@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 source common/setenv.sh
