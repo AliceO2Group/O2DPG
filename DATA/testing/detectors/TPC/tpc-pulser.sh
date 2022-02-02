@@ -56,26 +56,18 @@ CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 CALIB_CONFIG="TPCCalibPulser.FirstTimeBin=80;TPCCalibPulser.LastTimeBin=160;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=10;TPCCalibPulser.XmaxQtot=510;TPCCalibPulser.NbinsWidth=100;TPCCalibPulser.XminWidth=0.3;TPCCalibPulser.XmaxWidth=0.7;TPCCalibPulser.MinimumQtot=30;TPCCalibPulser.MinimumQmax=25;TPCCalibPulser.XminT0=115;TPCCalibPulser.XmaxT0=130;TPCCalibPulser.NbinsT0=600"
 
 EXTRA_CONFIG=" "
-EXTRA_CONFIG=" --publish-after-tfs 1000 --max-events 1200"
-#EXTRA_CONFIG="--publish-after-tfs 50 --direct-file-dump"
+EXTRA_CONFIG="--calib-type pulser --publish-after-tfs 1000 --max-events 1200 --lanes 36"
 
-### Comment: MAKE SURE the channels match address=ipc://@tf-builder-pipe-0
+CCDB_PATH="--ccdb-path http://ccdb-test.cern.ch:8080"
 
-VERBOSE=""
-#NCPU=$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
-NCPU=36
-ARGS_ALL="-b --session default"
 
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \
     --readout-proxy '--channel-config "name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1"' \
     | o2-tpc-calib-pad-raw $ARGS_ALL \
-    --severity warning \
     --input-spec "$CALIB_INSPEC" \
     --configKeyValues "$CALIB_CONFIG;keyval.output_dir=/dev/null" \
-    --calib-type pulser \
     $EXTRA_CONFIG \
-    --lanes $NCPU \
     | o2-calibration-ccdb-populator-workflow $ARGS_ALL \
-    --ccdb-path http://ccdb-test.cern.ch:8080 \
+    $CCDB_PATH \
     | o2-dpl-run $ARGS_ALL --dds
