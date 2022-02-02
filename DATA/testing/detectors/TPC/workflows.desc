@@ -1,2 +1,3 @@
 ctf-and-display: "DataDistribution QualityControl" reco,128,128,"SHMSIZE=128000000000 INFOLOGGER_SEVERITY=warning testing/detectors/TPC/tpc-workflow.sh"
 ctf-and-display-gpu: "DataDistribution QualityControl" reco,128,128,"GPUTYPE=HIP SHMSIZE=128000000000 INFOLOGGER_SEVERITY=warning testing/detectors/TPC/tpc-workflow.sh"
+pulser: O2PDPSuite reco,1,1,"SHMSIZE=128000000000 testing/detectors/TPC/runTPC_Pulser.sh"
