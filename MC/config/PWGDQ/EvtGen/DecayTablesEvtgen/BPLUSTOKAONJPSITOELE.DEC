@@ -1,0 +1,36 @@
+##################
+Decay B-
+#
+#   B -> cc= s          sum = 1.92%
+#
+0.001014000 J/psi   K-                                      SVS; #[Reconstructed PDG2011]
+#0.001430000 J/psi   K*-                                     SVV_HELAMP PKHminus PKphHminus PKHzero PKphHzero PKHplus PKphHplus; #[Reconstructed PDG2011]
+#0.0001   J/psi K-  pi0                    PHSP;
+#0.000052000 J/psi   phi     K-                              PHSP; #[Reconstructed PDG2011]
+#
+#0.001070000 J/psi   K-      pi-     pi+                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
+#0.000108000 J/psi   eta     K-                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
+#0.000350000 J/psi   omega   K-                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
+Enddecay
+
+Decay B+
+#
+#   B -> cc= s          sum = 1.92%
+#
+0.001014000 J/psi   K+                                      SVS; #[Reconstructed PDG2011]
+#0.001430000 J/psi   K*+                                     SVV_HELAMP PKHplus PKphHplus PKHzero PKphHzero PKHminus PKphHminus; #[Reconstructed PDG2011]
+#0.0001   J/psi K+  pi0                    PHSP;
+#0.000052000 J/psi   phi     K+                              PHSP; #[Reconstructed PDG2011]
+#
+####
+#0.001070000 J/psi   K+      pi+     pi-                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
+#0.000108000 J/psi   eta     K+                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
+#0.000350000 J/psi   omega   K+                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
+Enddecay
+
+Decay J/psi
+1.000 e+   e-                PHOTOS VLL;
+Enddecay
+
+
+End

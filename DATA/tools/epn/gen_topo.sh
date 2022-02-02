@@ -22,7 +22,12 @@ if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then echo \$MULTIPLICITY_FACTOR_REST miss
 [ -z "$CTF_METAFILES_DIR" ] && [ "0$WORKFLOWMODE" != "0print" ] && export CTF_METAFILES_DIR=/data/epn2eos_tool/epn2eos #CTF Metafiles directory
 [ -z "$GEN_TOPO_WORKDIR" ] && export GEN_TOPO_WORKDIR=$HOME/gen_topo/${GEN_TOPO_PARTITION}_${GEN_TOPO_ONTHEFLY} # Persistent working directory for checkout of O2DPG repository and for XML cache. Must be per partition. This script must not run twice in parallel with the same workdir
 [ -z "$GEN_TOPO_STDERR_LOGGING" ] && export GEN_TOPO_STDERR_LOGGING=1
-[ -z "$IS_SIMULATED_DATA" ] && IS_SIMULATED_DATA=0 # by default we are processing raw data
+[ -z "$IS_SIMULATED_DATA" ] && export IS_SIMULATED_DATA=0 # by default we are processing raw data
+
+if [[ "0$DDMODE" == "0discard" ]] || [[ "0$DDMODE" == "0disk" ]]; then
+  export GEN_TOPO_LIBRARY_FILE="production/no-processing.desc"
+  export GEN_TOPO_WORKFLOW_NAME="no-processing"
+fi
 
 if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
   [[ $WORKFLOWMODE != "print" ]] && { echo "ERROR: GEN_TOPO_RUN_HOME is only supported with WORKFLOWMODE=print!" 1>&2; exit 1; }

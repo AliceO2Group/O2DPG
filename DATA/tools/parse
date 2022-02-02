@@ -3,6 +3,7 @@ import os
 import sys
 import shlex
 import tempfile
+import re
 if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']):
     sys.path.insert(0, '/usr/share/Modules/init')
     import python as mod
@@ -64,6 +65,8 @@ for line in f:
         calibworkflows = []
         print("Found topology", sys.argv[2], "-", args)
         if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']) and (not 'GEN_TOPO_RUN_HOME' in os.environ or not int(os.environ['GEN_TOPO_RUN_HOME'])):
+            if 'OVERRIDE_PDPSUITE_VERSION' in os.environ and os.environ['OVERRIDE_PDPSUITE_VERSION'] != "":
+                args[1] = os.environ['OVERRIDE_PDPSUITE_VERSION']
             for i in args[1].split():
                 if "GEN_TOPO_CACHEABLE" in os.environ and os.environ['GEN_TOPO_CACHEABLE'] == "1":
                     if i.find("/") == -1 or i.find("/latest") != -1:
@@ -85,9 +88,12 @@ for line in f:
                     recoworkflows.append(filename)
                 elif args[i].startswith("calib"):
                     wf = args[i].split(",", 2)
+                    filenamecore = filename
+                    # filenamecore = filenamecore+ ":" + wf[1] # Currently disabled, since odc-epn-topo does not accept :[ncores]
                     wf.append(wf[2])
+                    wf[1] = "1";
                     wf[2] = wf[1]
-                    calibworkflows.append(filename)
+                    calibworkflows.append(filenamecore)
                 else:
                     print("Invalid workflow type", args[i])
                     raise
@@ -105,10 +111,16 @@ for line in f:
                 if os.system(command) != 0:
                     print("Error running command", command)
                     ftmp = open(filename, 'r')
-                    print(ftmp.read())
+                    rg = re.compile("^<topology")
+                    for line in ftmp:
+                        if re.match(rg, line):
+                            break
+                        print(line)
                     raise
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
+            if 'RECO_MAX_FAIL_NODES_OVERRIDE' in os.environ and os.environ['RECO_MAX_FAIL_NODES_OVERRIDE'] != "":
+                reconodesmin = max(1, reconodes - int(os.environ['RECO_NUM_NODES_OVERRIDE']))
             if os.environ['WORKFLOWMODE'] == 'dds':
                 odccommand = "odc-epn-topo"
                 if reconodes:
@@ -116,6 +128,7 @@ for line in f:
                 if len(recoworkflows):
                     odccommand += " --recown 'wn_(?!online-calib).*_.*' --reco " + " ".join(recoworkflows)
                 odccommand += " --n " + str(reconodes)
+                # odccommand += " --nmin " + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
                 if len(calibworkflows):
                     odccommand += " --calibwn 'wn_online-calib_.*' --calib " + " ".join(calibworkflows)
                 if "GEN_TOPO_STDERR_LOGGING" in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):

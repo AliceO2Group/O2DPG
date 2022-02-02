@@ -16,7 +16,7 @@ fi
 ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;$ALL_EXTRA_CONFIG"
 
 PROXY_INSPEC="A:ITS/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
-PROXY_OUTSPEC="downstreamdigits:ITS/DIGITS/0;downstreamdigitsrof:ITS/DIGITSROF/0;downstreamcalib:ITS/CALIB/0"
+PROXY_OUTSPEC="downstreamdigits:ITS/DIGITS/0;downstreamdigitsrof:ITS/DIGITSROF/0;downstreamcalib:ITS/GBTCALIB/0"
 
 WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --dataspec \"$PROXY_INSPEC\" --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,rateLogging=0,transport=shmem\" | "
 WORKFLOW+="o2-itsmft-stf-decoder-workflow ${ARGS_ALL} --configKeyValues \"$ARGS_ALL_CONFIG\" --nthreads 4 --no-clusters --no-cluster-patterns --enable-calib-data --digits | "
