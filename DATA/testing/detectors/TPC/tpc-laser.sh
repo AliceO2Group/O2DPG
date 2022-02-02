@@ -93,4 +93,3 @@ o2-dpl-raw-proxy $ARGS_ALL \
     | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
     --ccdb-path http://ccdb-test.cern.ch:8080 \
     | o2-dpl-run $ARGS_ALL --dds
-

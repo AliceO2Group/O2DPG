@@ -20,14 +20,29 @@ if [ $NUMAGPUIDS != 0 ]; then
   ARGS_ALL+=" --child-driver 'numactl --membind $NUMAID --cpunodebind $NUMAID'"
 fi
 
-PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
-CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
+if [ $GPUTYPE != "CPU" ]; then
+  ARGS_ALL+="  --shm-mlock-segment-on-creation 1"
+fi
+ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
 
-
+if [ $GPUTYPE == "HIP" ]; then
+  if [ $NUMAID == 0 ] || [ $NUMAGPUIDS == 0 ]; then
+    export TIMESLICEOFFSET=0
+  else
+    export TIMESLICEOFFSET=$NGPUS
+  fi
+  GPU_CONFIG_KEY+="GPU_proc.deviceNum=0;GPU_global.mutexMemReg=true;"
+  GPU_CONFIG+=" --environment \"ROCR_VISIBLE_DEVICES={timeslice${TIMESLICEOFFSET}}\""
+  export HSA_NO_SCRATCH_RECLAIM=1
+  #export HSA_TOOLS_LIB=/opt/rocm/lib/librocm-debug-agent.so.2
+else
+  GPU_CONFIG_KEY+="GPU_proc.deviceNum=-2;"
+fi
 
 CALIB_CONFIG="TPCCalibPedestal.LastTimeBin=12000"
 EXTRA_CONFIG=" "
 EXTRA_CONFIG=" --publish-after-tfs 100 --max-events 120 --lanes 36"
+
 CCDB_PATH="--ccdb-path http://ccdb-test.cern.ch:8080"
 
 o2-dpl-raw-proxy $ARGS_ALL \
