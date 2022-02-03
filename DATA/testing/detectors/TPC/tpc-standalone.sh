@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-<<<<<<< HEAD
 source common/setenv.sh
 
 export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM
@@ -56,34 +55,15 @@ fi
 if [ $HOSTMEMSIZE != "0" ]; then
   GPU_CONFIG_KEY+="GPU_proc.forceHostMemoryPoolSize=$HOSTMEMSIZE;"
 fi
-=======
-export GLOBAL_SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM
-export NHBPERTF=256
-export GPUTYPE=HIP
-export GPUMEMSIZE=$(( 24 << 30 ))
-export HOSTMEMSIZE=$(( 5 << 30 ))
-DISPLAY=0
->>>>>>> 3112c5b... Change Naming of TPC workflows
 
 PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
 ### Comment: MAKE SURE the channels match address=ipc://@tf-builder-pipe-0
 
-<<<<<<< HEAD
 NCPU=12 #$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
-=======
-hash=$1
-
-module load QualityControl DataDistribution ODC > /dev/null
-
-
-VERBOSE=""
-NCPU=12 #$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
-ARGS_ALL="-b --session default --shm-segment-size $GLOBAL_SHMSIZE"
 ARGS_FILES="NameConf.mDirGRP=/home/epn/odc/files/;NameConf.mDirGeom=/home/epn/odc/files/;keyval.output_dir=/dev/null"
 #HOST='$(hostname -s)-ib'
->>>>>>> 3112c5b... Change Naming of TPC workflows
 HOST=localhost
 
 o2-dpl-raw-proxy $ARGS_ALL \
@@ -98,7 +78,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --input-type digitizer  \
     --output-type clusters,tracks,disable-writer \
     --disable-mc \
-    --pipeline tpc-tracker:4 \
+    --pipeline tpc-tracker:8 \
     $GPU_CONFIG \
     --configKeyValues "$ARGS_ALL_CONFIG;$GPU_CONFIG_KEYS;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1" \
     | o2-qc $ARGS_ALL --config consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-full-qcmn --local --host $HOST \
