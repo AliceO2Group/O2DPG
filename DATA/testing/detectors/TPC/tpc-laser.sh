@@ -2,6 +2,12 @@
 
 source common/setenv.sh
 
+export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM
+export GPUTYPE=HIP
+export GPUMEMSIZE=$(( 24 << 30 ))
+export HOSTMEMSIZE=$(( 5 << 30 ))
+
+
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
 if [ $EPNSYNCMODE == 1 ]; then
   ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
@@ -53,10 +59,6 @@ fi
 
 
 
-export GLOBAL_SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM
-export GPUTYPE=HIP
-export GPUMEMSIZE=$(( 24 << 30 ))
-export HOSTMEMSIZE=$(( 5 << 30 ))
 
 
 #source /home/epn/runcontrol/tpc/qc_test_env.sh > /dev/null
@@ -66,9 +68,7 @@ CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 ### Comment: MAKE SURE the channels match address=ipc://@tf-builder-pipe-0
 
 #VERBOSE=""
-#ARGS_ALL="-b --session default --shm-segment-size $GLOBAL_SHMSIZE"
-#ARGS_FILES="NameConf.mDirGRP=/home/wiechula/processData/inputFilesTracking/triggeredLaser;NameConf.mDirGeom=/home/epn/odc/files/;keyval.output_dir=/dev/null"
-#ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 15"
+ARGS_FILES="NameConf.mDirGRP=/home/wiechula/processData/inputFilesTracking/triggeredLaser;NameConf.mDirGeom=/home/epn/odc/files/;keyval.output_dir=/dev/null"
 
 
 o2-dpl-raw-proxy $ARGS_ALL \
