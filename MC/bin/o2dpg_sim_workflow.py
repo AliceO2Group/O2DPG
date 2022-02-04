@@ -99,6 +99,8 @@ parser.add_argument('--mft-assessment-full', action='store_true', help='enables 
 # Global Forward reconstruction configuration
 parser.add_argument('--fwdmatching-assessment-full', action='store_true', help='enables complete assessment of global forward reco')
 
+# Matching training for machine learning
+parser.add_argument('--fwdmatching-save-trainingdata', action='store_true', help='enables saving parameters at plane for matching training with machine learning')
 
 args = parser.parse_args()
 print (args)
@@ -711,6 +713,12 @@ for tf in range(1, NTIMEFRAMES + 1):
    MFTMCHMATCHtask['cmd']+= getDPL_global_options()
    workflow['stages'].append(MFTMCHMATCHtask)
 
+   if args.fwdmatching_save_trainingdata == True:
+      MFTMCHMATCHTraintask = createTask(name='mftmchMatchTrain_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+      MFTMCHMATCHTraintask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValues({**{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.saveMode" : 2, "FwdMatching.useMIDMatch":"true"} , **AlpideConfig})
+      MFTMCHMATCHTraintask['cmd']+= getDPL_global_options()
+      workflow['stages'].append(MFTMCHMATCHTraintask)
+
    ## Vertexing
    PVConfig = {**AlpideConfig} # start with Alpide config which is relevant here
    if COLTYPEIR == 'pp': 
@@ -837,6 +845,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
+   if args.fwdmatching_save_trainingdata == True: # Hack
+     aodneeds += [ MFTMCHMATCHTraintask['name'] ]
    aod_df_id = '{0:03}'.format(tf)
 
    AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='4000', cpu='1')
