@@ -15,9 +15,9 @@ if [ $NORATELOG == 1 ]; then
 fi
 ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;$ALL_EXTRA_CONFIG"
 
-PROXY_INSPEC=A:MFT/DIGITS/0;B:MFT/DIGITSROF/0"
+PROXY_INSPEC="A:MFT/DIGITS/0;B:MFT/DIGITSROF/0"
 
-WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --proxy-name mft-noise-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=readout-proxy,method=bind,type=pull,rateLogging=1,transport=zeromq" | "
+WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --proxy-name mft-noise-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=mft-noise-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\" | "
 WORKFLOW+="o2-calibration-mft-calib-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --useDigits --prob-threshold 1e-5 | "
 WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"http://ccdb-test.cern.ch:8080\" | "
 WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
