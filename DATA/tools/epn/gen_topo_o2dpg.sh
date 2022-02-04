@@ -19,7 +19,7 @@ if [ $GEN_TOPO_HASH == 1 ]; then
     git fetch origin 1>&2 || { echo Repository update failed 1>&2; exit 1; }
     git checkout $GEN_TOPO_SOURCE &> /dev/null || { echo commit does not exist 1>&2; exit 1; }
   fi
-  if ! git describe --exact-match --tags HEAD; then
+  if ! git describe --exact-match --tags HEAD &> /dev/null; then
     unset GEN_TOPO_CACHEABLE
   fi
   cd DATA
