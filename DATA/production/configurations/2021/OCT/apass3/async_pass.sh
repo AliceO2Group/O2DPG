@@ -166,9 +166,9 @@ ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
 
 # reco and matching
 # print workflow
-WORKFLOWMODE=print DISABLE_ROOT_OUTPUT="" TFDELAY=40 NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list > workflowconfig.log
+IS_SIMULATED_DATA=0 WORKFLOWMODE=print DISABLE_ROOT_OUTPUT="" TFDELAY=40 NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list > workflowconfig.log
 # run it
-WORKFLOWMODE=run DISABLE_ROOT_OUTPUT="" TFDELAY=40 NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list 
+IS_SIMULATED_DATA=0 WORKFLOWMODE=run DISABLE_ROOT_OUTPUT="" TFDELAY=40 NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list 
 
 # now extract all performance metrics
 IFS=$'\n'
