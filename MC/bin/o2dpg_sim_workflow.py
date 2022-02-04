@@ -23,6 +23,7 @@ from os import environ, mkdir
 from os.path import join, dirname, isdir
 import json
 import itertools
+import time
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
@@ -33,6 +34,11 @@ parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulati
 
 # the run-number of data taking or default if unanchored
 parser.add_argument('-run',help="Run number for this MC", default=300000)
+# the timestamp at which this MC workflow will be run
+# - in principle it should be consistent with the time of the "run" number above
+# - some external tool should sample it within
+# - we can also sample it ourselfs here
+parser.add_argument('--timestamp',help="Anchoring timestamp (defaults to now)", default=-1)
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
 parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...', default='')
@@ -127,6 +133,12 @@ if args.include_analysis and (QUALITYCONTROL_ROOT is None or O2PHYSICS_ROOT is N
 #   exit(1)
 
 # ----------- START WORKFLOW CONSTRUCTION ----------------------------- 
+
+# set the time
+if args.timestamp==-1:
+   # 1000 to convert seconds into milliseconds.
+   args.timestamp = int(time.time() * 1000)
+   print("Setting timestamp to ", args.timestamp)
 
 NTIMEFRAMES=int(args.tf)
 NWORKERS=args.j
@@ -247,7 +259,7 @@ if doembedding:
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=[BKG_CONFIG_task['name']], cpu=NWORKERS )
         BKGtask['cmd']='${O2_ROOT}/bin/o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
                      + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)     \
-                     + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG)
+                     + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG) + ' --timestamp ' + str(args.timestamp)
         workflow['stages'].append(BKGtask)
 
         # check if we should upload background event
@@ -301,11 +313,11 @@ if usebkgcache:
 # Eventually, these files/objects should be queried directly from within these tasks?
 # TODO: add correct timestamp for query
 ITS_DICT_DOWNLOADER_TASK = createTask(name='itsdictdownloader', cpu='0')
-ITS_DICT_DOWNLOADER_TASK['cmd'] = '[ -f ITSdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ITS/Calib/ClusterDictionary -o ITSdictionary.bin --no-preserve-path'
+ITS_DICT_DOWNLOADER_TASK['cmd'] = '[ -f ITSdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ITS/Calib/ClusterDictionary -o ITSdictionary.bin --no-preserve-path --timestamp ' + str(args.timestamp)
 workflow['stages'].append(ITS_DICT_DOWNLOADER_TASK)
 
 MFT_DICT_DOWNLOADER_TASK = createTask(name='mftdictdownloader', cpu='0')
-MFT_DICT_DOWNLOADER_TASK['cmd'] = '[ -f MFTdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p MFT/Calib/ClusterDictionary -o MFTdictionary.bin --no-preserve-path'
+MFT_DICT_DOWNLOADER_TASK['cmd'] = '[ -f MFTdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p MFT/Calib/ClusterDictionary -o MFTdictionary.bin --no-preserve-path --timestamp ' + str(args.timestamp)
 workflow['stages'].append(MFT_DICT_DOWNLOADER_TASK)
 
 # loop over timeframes
@@ -426,7 +438,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    SGNtask['cmd']='${O2_ROOT}/bin/o2-sim -e '  + str(SIMENGINE) + ' '    + str(MODULES)  + ' -n ' + str(NSIGEVENTS)  \
                   + ' --field ' + str(BFIELD)    + ' -j ' + str(NWORKERS) + ' -g ' + str(GENERATOR)   \
                   + ' '         + str(TRIGGER)   + ' '    + str(CONFKEY)  + ' '    + str(INIFILE)     \
-                  + ' -o '      + signalprefix   + ' '    + embeddinto
+                  + ' -o '      + signalprefix   + ' '    + embeddinto + ' --timestamp ' + str(args.timestamp)
    workflow['stages'].append(SGNtask)
 
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
@@ -477,7 +489,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    # each timeframe should be done for a different bunch crossing range, depending on the timeframe id
    orbitsPerTF = 256
    startOrbit = (tf-1 + int(args.production_offset)*NTIMEFRAMES)*orbitsPerTF
-   globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : startOrbit, "HBFUtils.nHBFPerTF" : orbitsPerTF}
+   globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : startOrbit,
+                            "HBFUtils.nHBFPerTF" : orbitsPerTF,
+                            "HBFUtils.startTime" : args.timestamp }
 
    # we adjust some detector readout properties based on the collision system (until these things come fully from CCDB)
    AlpideConfig = {}
