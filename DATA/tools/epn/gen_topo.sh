@@ -24,6 +24,11 @@ if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then echo \$MULTIPLICITY_FACTOR_REST miss
 [ -z "$GEN_TOPO_STDERR_LOGGING" ] && export GEN_TOPO_STDERR_LOGGING=1
 [ -z "$IS_SIMULATED_DATA" ] && export IS_SIMULATED_DATA=0 # by default we are processing raw data
 
+if [[ "0$DDMODE" == "0discard" ]] || [[ "0$DDMODE" == "0disk" ]]; then
+  export GEN_TOPO_LIBRARY_FILE="production/no-processing.desc"
+  export GEN_TOPO_WORKFLOW_NAME="no-processing"
+fi
+
 if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
   [[ $WORKFLOWMODE != "print" ]] && { echo "ERROR: GEN_TOPO_RUN_HOME is only supported with WORKFLOWMODE=print!" 1>&2; exit 1; }
 else
