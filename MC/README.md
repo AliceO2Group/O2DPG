@@ -6,9 +6,9 @@ Withing this directory structure are located the scripts and configuration to ru
 
 Below are the steps to integrate a new QC Task to the main simulation, reco and QC workflow.
 
-1. Build O2, QualityControl and O2DPG with with `o2` defaults:
+1. Build O2, QualityControl, O2Physics and O2DPG with `o2` defaults:
 ```
-aliBuild build O2 QualityControl O2DPG --defaults o2 -j <jobs>
+aliBuild build O2 QualityControl O2Physics O2DPG --defaults o2 -j <jobs>
 ```
 
 2. Make sure that the setup works by loading the environment and running the example script.
@@ -16,7 +16,7 @@ It runs a series of tasks, which are usually DPL workflows that depend on each o
 It will simulate 3 TimeFrames, reconstruct them and run any QC.
 Corresponding files will be created in the current directory, QC objects will be also uploaded to QCDB. 
 ```
-alienv enter O2/latest QualityControl/latest O2DPG/latest
+alienv enter O2/latest O2Physics/latest QualityControl/latest O2DPG/latest
 cd MC/run/examples
 ./O2DPG_pp_minbias_multiple_tf_qc.sh
 ```
