@@ -814,6 +814,12 @@ for tf in range(1, NTIMEFRAMES + 1):
                 readerCommand='o2-trd-trap-sim',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json')
 
+     ### EMCAL
+     addQCPerTF(taskName='emcDigitsQC',
+                needs=[EMCRECOtask['name']],
+                readerCommand='o2-emcal-reco-workflow --input-type cells --output-type cells --infile emccells.root --disable-root-output',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-digits-task.json')
+
      ### GLO + RECO
      addQCPerTF(taskName='vertexQC',
                 needs=[PVFINDERtask['name']],
