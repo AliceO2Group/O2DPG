@@ -53,6 +53,26 @@ o2::eventgen::Trigger selectDaughterFromHFwithinAcc(Int_t pdgPartForAccCut=443, 
 
 }
 
+o2::eventgen::Trigger selectHFwithinAcc(Int_t pdgPartForAccCut=521, Bool_t cutonSinglePart=kTRUE, double rapidityMin = -1., double rapidityMax = -1.)
+{
+  return [pdgPartForAccCut,cutonSinglePart,rapidityMin,rapidityMax](const std::vector<TParticle>& particles) -> bool {
+
+  int nsig = 0; double rapidity = -999.;
+  //Bool_t isSelectedY = kFALSE; if(!cutOnSinglePart) isSelectedY = kTRUE;
+  for (const auto& particle : particles) {
+          if(TMath::Abs(particle.GetPdgCode()) == pdgPartForAccCut){
+             rapidity = particle.Y();
+             if( (rapidity > rapidityMin) && (rapidity < rapidityMax) ) nsig++;
+            }
+          }
+    //
+    if(!cutonSinglePart && (nsig < 2)) return kFALSE;
+    return kTRUE;
+  };
+
+}
+
+
 Int_t GetFlavour(Int_t pdgCode)
   {
   //

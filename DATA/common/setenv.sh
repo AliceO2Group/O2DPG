@@ -40,6 +40,7 @@ if [ -z "$CTF_MAXDETEXT" ]; then export CTF_MAXDETEXT=0; fi            # extend 
 if [ -z "$TFDELAY" ];       then export TFDELAY=100; fi                # Delay in seconds between publishing time frames
 if [ -z "$GPUTYPE" ];       then export GPUTYPE=CPU; fi                # GPU Tracking backend to use, can be CPU / CUDA / HIP / OCL / OCL2
 if [ -z "$DDSHMSIZE" ];     then export DDSHMSIZE=$(( 8 << 10 )); fi   # Size of shared memory for DD Input
+if [ -z "$DDHDRSIZE" ];     then export DDHDRSIZE=$(( 2 << 10 )); fi   # Size of shared memory for DD Input
 if [ -z "$GPUMEMSIZE" ];    then export GPUMEMSIZE=$(( 24 << 30 )); fi # Size of allocated GPU memory (if GPUTYPE != CPU)
 if [ -z "$HOSTMEMSIZE" ];   then export HOSTMEMSIZE=0; fi              # Size of allocated host memory for GPU reconstruction (0 = default)
 if [ -z "$CREATECTFDICT" ]; then export CREATECTFDICT=0; fi            # Create CTF dictionary
@@ -80,7 +81,7 @@ else # Defaults when running on the EPN
   if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
 fi
 # Some more options for running on the EPN
-if [ -z "$INFOLOGGER_SEVERITY" ]; then export INFOLOGGER_SEVERITY="warning"; fi
+if [ -z "$INFOLOGGER_SEVERITY" ]; then export INFOLOGGER_SEVERITY="important"; fi
 if [ -z "$MULTIPLICITY_FACTOR_RAWDECODERS" ]; then export MULTIPLICITY_FACTOR_RAWDECODERS=1; fi
 if [ -z "$MULTIPLICITY_FACTOR_CTFENCODERS" ]; then export MULTIPLICITY_FACTOR_CTFENCODERS=1; fi
 if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then export MULTIPLICITY_FACTOR_REST=1; fi

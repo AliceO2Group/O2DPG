@@ -94,6 +94,11 @@ parser.add_argument('--include-analysis', '--include-an', '--analysis',
 
 # MFT reconstruction configuration
 parser.add_argument('--mft-reco-full', action='store_true', help='enables complete mft reco instead of simplified misaligned version')
+parser.add_argument('--mft-assessment-full', action='store_true', help='enables complete assessment of mft reco')
+
+# Global Forward reconstruction configuration
+parser.add_argument('--fwdmatching-assessment-full', action='store_true', help='enables complete assessment of global forward reco')
+
 
 args = parser.parse_args()
 print (args)
@@ -183,7 +188,7 @@ if doembedding:
            if ECMSBKG < 0:    # assign 5.02 TeV to Pb-Pb
               print('o2dpg_sim_workflow: Set BKG CM Energy to PbPb case 5.02 TeV')
               ECMSBKG=5020.0
-           if GENBKG == 'pythia8':
+           if GENBKG == 'pythia8' and PROCESSBKG != 'heavy_ion':
               PROCESSBKG = 'heavy_ion'
               print('o2dpg_sim_workflow: Process type not considered for Pythia8 PbPb')
 
@@ -293,11 +298,11 @@ if usebkgcache:
 # Eventually, these files/objects should be queried directly from within these tasks?
 # TODO: add correct timestamp for query
 ITS_DICT_DOWNLOADER_TASK = createTask(name='itsdictdownloader', cpu='0')
-ITS_DICT_DOWNLOADER_TASK['cmd'] = '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ITS/Calib/ClusterDictionary -o ITSdictionary.bin --no-preserve-path'
+ITS_DICT_DOWNLOADER_TASK['cmd'] = '[ -f ITSdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ITS/Calib/ClusterDictionary -o ITSdictionary.bin --no-preserve-path'
 workflow['stages'].append(ITS_DICT_DOWNLOADER_TASK)
 
 MFT_DICT_DOWNLOADER_TASK = createTask(name='mftdictdownloader', cpu='0')
-MFT_DICT_DOWNLOADER_TASK['cmd'] = '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p MFT/Calib/ClusterDictionary -o MFTdictionary.bin --no-preserve-path'
+MFT_DICT_DOWNLOADER_TASK['cmd'] = '[ -f MFTdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p MFT/Calib/ClusterDictionary -o MFTdictionary.bin --no-preserve-path'
 workflow['stages'].append(MFT_DICT_DOWNLOADER_TASK)
 
 # loop over timeframes
@@ -405,13 +410,16 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------------
    signalprefix='sgn_' + str(tf)
    signalneeds=[ SGN_CONFIG_task['name'] ]
-   embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if doembedding else ""
+   
+   # add embedIntoFile only if embeddPattern does contain a '@'
+   embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if (doembedding & ("@" in args.embeddPattern)) else ""
+   #embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if doembedding else ""
    if doembedding:
        if not usebkgcache:
             signalneeds = signalneeds + [ BKGtask['name'] ]
        else:
             signalneeds = signalneeds + [ BKG_HEADER_task['name'] ]
-   SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"], relative_cpu=5/8, mem='2000')
+   SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"], relative_cpu=5/8, n_workers=NWORKERS, mem='2000')
    SGNtask['cmd']='${O2_ROOT}/bin/o2-sim -e '  + str(SIMENGINE) + ' '    + str(MODULES)  + ' -n ' + str(NSIGEVENTS)  \
                   + ' --field ' + str(BFIELD)    + ' -j ' + str(NWORKERS) + ' -g ' + str(GENERATOR)   \
                   + ' '         + str(TRIGGER)   + ' '    + str(CONFKEY)  + ' '    + str(INIFILE)     \
@@ -652,6 +660,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                         "MFTTracking.LTFclsRCut" : 0.0100})
    MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[det_to_digitask["MFT"]['name'], MFT_DICT_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MFTRECOtask['cmd'] = '${O2_ROOT}/bin/o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValues({**MFTConfig, **AlpideConfig})
+   if args.mft_assessment_full == True:
+      MFTRECOtask['cmd']+= ' --run-assessment '
    workflow['stages'].append(MFTRECOtask)
 
    # MCH reco: needing access to kinematics ... so some extra logic needed here
@@ -695,7 +705,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(MCHMIDMATCHtask)
 
    MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTMCHMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + getDPL_global_options() + putConfigValues({**{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.useMIDMatch":"true"} , **AlpideConfig})
+   MFTMCHMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValues({**{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.useMIDMatch":"true"} , **AlpideConfig})
+   if args.fwdmatching_assessment_full == True:
+      MFTMCHMATCHtask['cmd']+= ' |  o2-globalfwd-assessment-workflow '
+   MFTMCHMATCHtask['cmd']+= getDPL_global_options()
    workflow['stages'].append(MFTMCHMATCHtask)
 
    ## Vertexing
@@ -790,6 +803,10 @@ for tf in range(1, NTIMEFRAMES + 1):
      #           needs=,
      #           readerCommand=,
      #           configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-tracking-direct.json')
+     addQCPerTF(taskName='tpcStandardQC',
+                 needs=[TPCRECOtask['name']],
+                 readerCommand='o2-tpc-file-reader --tpc-track-reader "--infile tpctracks.root" --tpc-native-cluster-reader "--infile tpc-native-clusters.root" --input-type clusters,tracks',
+                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-standard-direct.json')
 
      ### TRD
      addQCPerTF(taskName='trdDigitsQC',
@@ -829,9 +846,17 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='4000', cpu='1')
    AODtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
    AODtask['cmd'] += '${O2_ROOT}/bin/o2-aod-producer-workflow --reco-mctracks-only 1 --aod-writer-keep dangling --aod-writer-resfile AO2D'
+   # next line needed for meta data writing (otherwise lost)
+   AODtask['cmd'] += ' --aod-writer-resmode "UPDATE"'
    AODtask['cmd'] += ' --run-number ' + str(args.run)
    AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id + ' ' + getDPL_global_options(bigshm=True)
    AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD'
+   AODtask['cmd'] += ' --lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}'
+   AODtask['cmd'] += ' --anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}'
+   AODtask['cmd'] += ' --anchor-prod ${ALIEN_JDL_MCANCHOR:-unknown}'
+   if environ.get('O2DPG_AOD_NOTRUNCATE') != None or environ.get('ALIEN_JDL_O2DPG_AOD_NOTRUNCATE') != None:
+      AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
+
    workflow['stages'].append(AODtask)
 
    # AOD merging / combination step (as individual stages) --> for the moment deactivated in favor or more stable global merging
@@ -945,6 +970,8 @@ if includeAnalysis:
    # PID TPC (no complex workflow / piping required atm), NOTE: produces no output
    addAnalysisTask(tag="PIDTPC", cmd='o2-analysis-pid-tpc')
 
+   # weak decay tutorial task (no complex workflow / piping required atm), NOTE: produces no output
+   addAnalysisTask(tag="WeakDecayTutorial", cmd='o2-analysistutorial-weak-decay-iteration')
 
 dump_workflow(workflow["stages"], args.o)
 
