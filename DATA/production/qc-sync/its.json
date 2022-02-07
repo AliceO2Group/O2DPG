@@ -64,9 +64,9 @@
         "location": "local",
         "taskParameters" : {
           "runNumberPath" : "/home/its/QC/workdir/infiles/RunNumber.dat",
-	  "vertexXYsize" : "0.5",
+	  "vertexXYsize" : "0.1",
 	  "vertexZsize": "15",
-	  "vertexRsize": "0.8",
+	  "vertexRsize": "0.1",
           "NtracksMAX"  : "100",
           "doTTree": "0"
         },
