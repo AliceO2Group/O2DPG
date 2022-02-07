@@ -3,8 +3,6 @@
 source common/setenv.sh
 
 export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM
-export NHBPERTF=256
-export GPUTYPE=HIP
 export GPUMEMSIZE=$(( 24 << 30 ))
 export HOSTMEMSIZE=$(( 5 << 30 ))
 

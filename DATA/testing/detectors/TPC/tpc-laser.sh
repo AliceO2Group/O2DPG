@@ -3,10 +3,11 @@
 source common/setenv.sh
 
 export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM
-export GPUTYPE=HIP
 export GPUMEMSIZE=$(( 24 << 30 ))
 export HOSTMEMSIZE=$(( 5 << 30 ))
 
+FILEWORKDIR="/home/wiechula/processData/inputFilesTracking/triggeredLaser"
+FILEWORKDIR2="/home/epn/odc/files/"
 
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
 if [ $EPNSYNCMODE == 1 ]; then
@@ -28,8 +29,10 @@ fi
 if [ $GPUTYPE != "CPU" ]; then
   ARGS_ALL+="  --shm-mlock-segment-on-creation 1"
 fi
-ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKD
-IR;keyval.output_dir=/dev/null"
+ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR2;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
+
+#ARGS_ALL_CONFIG="NameConf.mDirGRP=/home/wiechula/processData/inputFilesTracking/triggeredLaser;NameConf.mDirGeom=/home/epn/odc/files/;keyval.output_dir=/dev/null"
+
 
 if [ $GPUTYPE == "HIP" ]; then
   if [ $NUMAID == 0 ] || [ $NUMAGPUIDS == 0 ]; then
@@ -37,7 +40,7 @@ if [ $GPUTYPE == "HIP" ]; then
   else
     export TIMESLICEOFFSET=$NGPUS
   fi
-  GPU_CONFIG_KEY+="GPU_proc.deviceNum=0;GPU_global.mutexMemReg=true;"
+  GPU_CONFIG_KEY+="GPU_proc.deviceNum=0;"
   GPU_CONFIG+=" --environment \"ROCR_VISIBLE_DEVICES={timeslice${TIMESLICEOFFSET}}\""
   export HSA_NO_SCRATCH_RECLAIM=1
   #export HSA_TOOLS_LIB=/opt/rocm/lib/librocm-debug-agent.so.2
@@ -55,12 +58,6 @@ if [ $HOSTMEMSIZE != "0" ]; then
   GPU_CONFIG_KEY+="GPU_proc.forceHostMemoryPoolSize=$HOSTMEMSIZE;"
 fi
 
-
-
-
-
-
-
 #source /home/epn/runcontrol/tpc/qc_test_env.sh > /dev/null
 PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
@@ -68,7 +65,6 @@ CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 ### Comment: MAKE SURE the channels match address=ipc://@tf-builder-pipe-0
 
 #VERBOSE=""
-ARGS_FILES="NameConf.mDirGRP=/home/wiechula/processData/inputFilesTracking/triggeredLaser;NameConf.mDirGeom=/home/epn/odc/files/;keyval.output_dir=/dev/null"
 
 
 o2-dpl-raw-proxy $ARGS_ALL \
@@ -76,7 +72,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
     --input-spec "$CALIB_INSPEC"  \
-    --configKeyValues "TPCDigitDump.LastTimeBin=600;$ARGS_FILES" \
+    --configKeyValues "TPCDigitDump.LastTimeBin=600;$ARGS_ALL_CONFIG" \
     --pipeline tpc-raw-to-digits-0:32 \
     --remove-duplicates \
     --send-ce-digits \
@@ -85,8 +81,8 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --output-type "tracks,disable-writer" \
     --disable-mc \
     --pipeline tpc-tracker:4 \
-    --environment "ROCR_VISIBLE_DEVICES={timeslice0}" \
-    --configKeyValues "align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.forceMemoryPoolSize=$GPUMEMSIZE;GPU_proc.forceHostMemoryPoolSize=$HOSTMEMSIZE;GPU_proc.deviceNum=0;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$ARGS_FILES;keyval.output_dir=/dev/null" \
+    $GPU_CONFIG \
+    --configKeyValues "$ARGS_ALL_FILES;$GPU_CONFIG_KEYS;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1" \
     | o2-tpc-laser-track-filter $ARGS_ALL \
     | o2-tpc-calib-laser-tracks  $ARGS_ALL --use-filtered-tracks --min-tfs 50 \
     | o2-tpc-calib-pad-raw $ARGS_ALL \
@@ -98,3 +94,6 @@ o2-dpl-raw-proxy $ARGS_ALL \
     | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
     --ccdb-path http://ccdb-test.cern.ch:8080 \
     | o2-dpl-run $ARGS_ALL --dds
+
+
+#    --configKeyValues "align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.forceMemoryPoolSize=$GPUMEMSIZE;GPU_proc.forceHostMemoryPoolSize=$HOSTMEMSIZE;GPU_proc.deviceNum=0;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$ARGS_FILES;keyval.output_dir=/dev/null" \
