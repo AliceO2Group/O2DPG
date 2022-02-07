@@ -119,7 +119,8 @@
             "type": "Task",
             "name": "ITSTrackTask",
             "MOs": [
-              "NClusters","PhiDistribution",
+              "NClusters",
+              "PhiDistribution",
               "AngularDistribution",
               "EtaDistribution",
               "VertexCoordinates",
