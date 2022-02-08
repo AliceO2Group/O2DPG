@@ -856,7 +856,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += ' --aod-writer-resmode "UPDATE"'
    AODtask['cmd'] += ' --run-number ' + str(args.run)
    AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id + ' ' + getDPL_global_options(bigshm=True)
-   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD'
+   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD,EMC'
    AODtask['cmd'] += ' --lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}'
    AODtask['cmd'] += ' --anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}'
    AODtask['cmd'] += ' --anchor-prod ${ALIEN_JDL_MCANCHOR:-unknown}'
