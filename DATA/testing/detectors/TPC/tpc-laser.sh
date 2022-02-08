@@ -7,6 +7,7 @@ export GPUMEMSIZE=$(( 24 << 30 ))
 export HOSTMEMSIZE=$(( 5 << 30 ))
 
 FILEWORKDIR="/home/wiechula/processData/inputFilesTracking/triggeredLaser"
+
 FILEWORKDIR2="/home/epn/odc/files/"
 
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
@@ -30,8 +31,6 @@ if [ $GPUTYPE != "CPU" ]; then
   ARGS_ALL+="  --shm-mlock-segment-on-creation 1"
 fi
 ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR2;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
-
-#ARGS_ALL_CONFIG="NameConf.mDirGRP=/home/wiechula/processData/inputFilesTracking/triggeredLaser;NameConf.mDirGeom=/home/epn/odc/files/;keyval.output_dir=/dev/null"
 
 
 if [ $GPUTYPE == "HIP" ]; then
@@ -82,7 +81,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --disable-mc \
     --pipeline tpc-tracker:4 \
     $GPU_CONFIG \
-    --configKeyValues "$ARGS_ALL_FILES;$GPU_CONFIG_KEYS;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1" \
+    --configKeyValues "$ARGS_ALL_CONFIG;$GPU_CONFIG_KEYS;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1" \
     | o2-tpc-laser-track-filter $ARGS_ALL \
     | o2-tpc-calib-laser-tracks  $ARGS_ALL --use-filtered-tracks --min-tfs 50 \
     | o2-tpc-calib-pad-raw $ARGS_ALL \
@@ -90,7 +89,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --lanes 36 \
     --calib-type ce \
     --publish-after-tfs 50 \
-    --max-events 50 \
+    --max-events 90 \
     | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
     --ccdb-path http://ccdb-test.cern.ch:8080 \
     | o2-dpl-run $ARGS_ALL --dds
