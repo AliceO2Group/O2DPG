@@ -7,6 +7,7 @@ export GPUMEMSIZE=$(( 24 << 30 ))
 export HOSTMEMSIZE=$(( 5 << 30 ))
 
 FILEWORKDIR="/home/wiechula/processData/inputFilesTracking/triggeredLaser"
+
 FILEWORKDIR2="/home/epn/odc/files/"
 
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
