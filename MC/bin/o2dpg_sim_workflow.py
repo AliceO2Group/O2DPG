@@ -67,7 +67,8 @@ parser.add_argument('--production-offset',help='Offset determining bunch-crossin
                      + ' range within a (GRID) production. This number sets first orbit to '
                      + 'Offset x Number of TimeFrames x OrbitsPerTimeframe (up for further sophistication)', default=0)
 parser.add_argument('-j',help='number of workers (if applicable)', default=8, type=int)
-parser.add_argument('-mod',help='Active modules', default='--skipModules ZDC')
+parser.add_argument('-mod',help='Active modules (deprecated)', default='--skipModules ZDC')
+parser.add_argument('--with-ZDC', action='store_true', help='Enable ZDC in workflow')
 parser.add_argument('-seed',help='random seed number', default=0)
 parser.add_argument('-o',help='output workflow file', default='workflow.json')
 parser.add_argument('--noIPC',help='disable shared memory in DPL')
@@ -129,7 +130,7 @@ if args.include_analysis and (QUALITYCONTROL_ROOT is None or O2PHYSICS_ROOT is N
 
 NTIMEFRAMES=int(args.tf)
 NWORKERS=args.j
-MODULES=args.mod #"--skipModules ZDC"
+MODULES = "--skipModules ZDC" if not args.with_ZDC else ""
 SIMENGINE=args.e
 BFIELD=args.field
 RNDSEED=args.seed    # 0 means random seed ! Should we set different seed for Bkg and signal?
@@ -276,6 +277,8 @@ if doembedding:
 
 # a list of smaller sensors (used to construct digitization tasks in a parametrized way)
 smallsensorlist = [ "ITS", "TOF", "FDD", "MCH", "MID", "MFT", "HMP", "EMC", "PHS", "CPV" ]
+if args.with_ZDC:
+   smallsensorlist += [ "ZDC" ]
 # a list of detectors that serve as input for the trigger processor CTP --> these need to be processed together for now
 ctp_trigger_inputlist = [ "FT0", "FV0" ]
 
@@ -699,6 +702,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    CPVRECOtask['cmd'] = '${O2_ROOT}/bin/o2-cpv-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(CPVRECOtask)
 
+   if args.with_ZDC:
+      ZDCRECOtask = createTask(name='zdcreco_'+str(tf), needs=[det_to_digitask["ZDC"]['name']], tf=tf, cwd=timeframeworkdir, lab=["ZDC"])
+      ZDCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-zdc-digits-reco ' + getDPL_global_options() + putConfigValues()
+      workflow['stages'].append(ZDCRECOtask)
+
    ## forward matching 
    MCHMIDMATCHtask = createTask(name='mchmidMatch_'+str(tf), needs=[MCHRECOtask['name'], MIDRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MCHMIDMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-mch-tracks-reader-workflow | ${O2_ROOT}/bin/o2-mid-tracks-reader-workflow | ${O2_ROOT}/bin/o2-muon-tracks-matcher-workflow | ${O2_ROOT}/bin/o2-muon-tracks-writer-workflow ' + getDPL_global_options()
@@ -846,6 +854,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                TRDTRACKINGtask['name'], FV0RECOtask['name'], EMCRECOtask['name'], CPVRECOtask['name'], PHSRECOtask['name']]
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
+   if args.with_ZDC:
+     aodneeds += [ ZDCRECOtask['name'] ]
 
    aod_df_id = '{0:03}'.format(tf)
 
@@ -857,6 +867,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += ' --run-number ' + str(args.run)
    AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id + ' ' + getDPL_global_options(bigshm=True)
    AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD,EMC'
+   if args.with_ZDC:
+      AODtask['cmd'] += ',ZDC'
    AODtask['cmd'] += ' --lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}'
    AODtask['cmd'] += ' --anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}'
    AODtask['cmd'] += ' --anchor-prod ${ALIEN_JDL_MCANCHOR:-unknown}'
