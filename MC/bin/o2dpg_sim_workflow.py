@@ -847,7 +847,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      ### EMCAL
      addQCPerTF(taskName='emcDigitsQC',
                 needs=[EMCRECOtask['name']],
-                readerCommand='o2-emcal-reco-workflow --input-type cells --output-type cells --infile emccells.root --disable-root-output',
+                readerCommand='o2-emcal-cell-reader-workflow --infile emccells.root',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-digits-task.json')
 
      ### GLO + RECO
