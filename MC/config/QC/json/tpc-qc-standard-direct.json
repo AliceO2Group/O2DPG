@@ -32,7 +32,7 @@
     },
     "tasks": {
       "Clusters": {
-        "active": "true",
+        "active": "false",
         "className": "o2::quality_control_modules::tpc::Clusters",
         "moduleName": "QcTPC",
         "detectorName": "TPC",
