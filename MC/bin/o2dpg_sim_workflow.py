@@ -691,7 +691,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # calorimeters
    EMCRECOtask = createTask(name='emcalreco_'+str(tf), needs=[det_to_digitask["EMC"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   EMCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-emcal-reco-workflow --infile emcaldigits.root ' + getDPL_global_options() + putConfigValues()
+   EMCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-emcal-reco-workflow --input-type digits --output-type cells --infile emcaldigits.root ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(EMCRECOtask)
 
    PHSRECOtask = createTask(name='phsreco_'+str(tf), needs=[det_to_digitask["PHS"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -822,6 +822,12 @@ for tf in range(1, NTIMEFRAMES + 1):
                 readerCommand='o2-trd-trap-sim',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json')
 
+     ### EMCAL
+     addQCPerTF(taskName='emcDigitsQC',
+                needs=[EMCRECOtask['name']],
+                readerCommand='o2-emcal-reco-workflow --input-type cells --output-type cells --infile emccells.root --disable-root-output',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-digits-task.json')
+
      ### GLO + RECO
      addQCPerTF(taskName='vertexQC',
                 needs=[PVFINDERtask['name']],
@@ -860,7 +866,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += ' --aod-writer-resmode "UPDATE"'
    AODtask['cmd'] += ' --run-number ' + str(args.run)
    AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id + ' ' + getDPL_global_options(bigshm=True)
-   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD'
+   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD,EMC'
    if args.with_ZDC:
       AODtask['cmd'] += ',ZDC'
    AODtask['cmd'] += ' --lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}'
