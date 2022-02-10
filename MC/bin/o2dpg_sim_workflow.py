@@ -845,6 +845,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
+   if args.fwdmatching_save_trainingdata == True: # Hack
+     aodneeds += [ MFTMCHMATCHTraintask['name'] ]
    aod_df_id = '{0:03}'.format(tf)
 
    AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='4000', cpu='1')
