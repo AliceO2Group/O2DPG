@@ -7,6 +7,7 @@
 # make sure O2DPG + O2 is loaded
 [ ! "${O2DPG_ROOT}" ] && echo "Error: This needs O2DPG loaded" && exit 1
 [ ! "${O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
+[ ! "${O2PHYSICS_ROOT}" ] && echo "Error: This needs O2Physics loaded" && exit 1
 [ ! "${QUALITYCONTROL_ROOT}" ] && echo "Error: This needs QualityControl loaded" && exit 1
 
 # ----------- LOAD UTILITY FUNCTIONS --------------------------

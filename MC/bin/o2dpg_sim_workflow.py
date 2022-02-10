@@ -23,6 +23,7 @@ from os import environ, mkdir
 from os.path import join, dirname, isdir
 import json
 import itertools
+import time
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
@@ -33,6 +34,11 @@ parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulati
 
 # the run-number of data taking or default if unanchored
 parser.add_argument('-run',help="Run number for this MC", default=300000)
+# the timestamp at which this MC workflow will be run
+# - in principle it should be consistent with the time of the "run" number above
+# - some external tool should sample it within
+# - we can also sample it ourselfs here
+parser.add_argument('--timestamp',help="Anchoring timestamp (defaults to now)", default=-1)
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
 parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...', default='')
@@ -67,7 +73,8 @@ parser.add_argument('--production-offset',help='Offset determining bunch-crossin
                      + ' range within a (GRID) production. This number sets first orbit to '
                      + 'Offset x Number of TimeFrames x OrbitsPerTimeframe (up for further sophistication)', default=0)
 parser.add_argument('-j',help='number of workers (if applicable)', default=8, type=int)
-parser.add_argument('-mod',help='Active modules', default='--skipModules ZDC')
+parser.add_argument('-mod',help='Active modules (deprecated)', default='--skipModules ZDC')
+parser.add_argument('--with-ZDC', action='store_true', help='Enable ZDC in workflow')
 parser.add_argument('-seed',help='random seed number', default=0)
 parser.add_argument('-o',help='output workflow file', default='workflow.json')
 parser.add_argument('--noIPC',help='disable shared memory in DPL')
@@ -129,9 +136,15 @@ if args.include_analysis and (QUALITYCONTROL_ROOT is None or O2PHYSICS_ROOT is N
 
 # ----------- START WORKFLOW CONSTRUCTION ----------------------------- 
 
+# set the time
+if args.timestamp==-1:
+   # 1000 to convert seconds into milliseconds.
+   args.timestamp = int(time.time() * 1000)
+   print("Setting timestamp to ", args.timestamp)
+
 NTIMEFRAMES=int(args.tf)
 NWORKERS=args.j
-MODULES=args.mod #"--skipModules ZDC"
+MODULES = "--skipModules ZDC" if not args.with_ZDC else ""
 SIMENGINE=args.e
 BFIELD=args.field
 RNDSEED=args.seed    # 0 means random seed ! Should we set different seed for Bkg and signal?
@@ -248,7 +261,7 @@ if doembedding:
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=[BKG_CONFIG_task['name']], cpu=NWORKERS )
         BKGtask['cmd']='${O2_ROOT}/bin/o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
                      + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)     \
-                     + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG)
+                     + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG) + ' --timestamp ' + str(args.timestamp)
         workflow['stages'].append(BKGtask)
 
         # check if we should upload background event
@@ -278,6 +291,8 @@ if doembedding:
 
 # a list of smaller sensors (used to construct digitization tasks in a parametrized way)
 smallsensorlist = [ "ITS", "TOF", "FDD", "MCH", "MID", "MFT", "HMP", "EMC", "PHS", "CPV" ]
+if args.with_ZDC:
+   smallsensorlist += [ "ZDC" ]
 # a list of detectors that serve as input for the trigger processor CTP --> these need to be processed together for now
 ctp_trigger_inputlist = [ "FT0", "FV0" ]
 
@@ -300,11 +315,11 @@ if usebkgcache:
 # Eventually, these files/objects should be queried directly from within these tasks?
 # TODO: add correct timestamp for query
 ITS_DICT_DOWNLOADER_TASK = createTask(name='itsdictdownloader', cpu='0')
-ITS_DICT_DOWNLOADER_TASK['cmd'] = '[ -f ITSdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ITS/Calib/ClusterDictionary -o ITSdictionary.bin --no-preserve-path'
+ITS_DICT_DOWNLOADER_TASK['cmd'] = '[ -f ITSdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ITS/Calib/ClusterDictionary -o ITSdictionary.bin --no-preserve-path --timestamp ' + str(args.timestamp)
 workflow['stages'].append(ITS_DICT_DOWNLOADER_TASK)
 
 MFT_DICT_DOWNLOADER_TASK = createTask(name='mftdictdownloader', cpu='0')
-MFT_DICT_DOWNLOADER_TASK['cmd'] = '[ -f MFTdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p MFT/Calib/ClusterDictionary -o MFTdictionary.bin --no-preserve-path'
+MFT_DICT_DOWNLOADER_TASK['cmd'] = '[ -f MFTdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p MFT/Calib/ClusterDictionary -o MFTdictionary.bin --no-preserve-path --timestamp ' + str(args.timestamp)
 workflow['stages'].append(MFT_DICT_DOWNLOADER_TASK)
 
 # loop over timeframes
@@ -425,7 +440,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    SGNtask['cmd']='${O2_ROOT}/bin/o2-sim -e '  + str(SIMENGINE) + ' '    + str(MODULES)  + ' -n ' + str(NSIGEVENTS)  \
                   + ' --field ' + str(BFIELD)    + ' -j ' + str(NWORKERS) + ' -g ' + str(GENERATOR)   \
                   + ' '         + str(TRIGGER)   + ' '    + str(CONFKEY)  + ' '    + str(INIFILE)     \
-                  + ' -o '      + signalprefix   + ' '    + embeddinto
+                  + ' -o '      + signalprefix   + ' '    + embeddinto + ' --timestamp ' + str(args.timestamp)
    workflow['stages'].append(SGNtask)
 
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
@@ -476,7 +491,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    # each timeframe should be done for a different bunch crossing range, depending on the timeframe id
    orbitsPerTF = 256
    startOrbit = (tf-1 + int(args.production_offset)*NTIMEFRAMES)*orbitsPerTF
-   globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : startOrbit, "HBFUtils.nHBFPerTF" : orbitsPerTF}
+   globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : startOrbit,
+                            "HBFUtils.nHBFPerTF" : orbitsPerTF,
+                            "HBFUtils.startTime" : args.timestamp }
 
    # we adjust some detector readout properties based on the collision system (until these things come fully from CCDB)
    AlpideConfig = {}
@@ -690,7 +707,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # calorimeters
    EMCRECOtask = createTask(name='emcalreco_'+str(tf), needs=[det_to_digitask["EMC"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   EMCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-emcal-reco-workflow --infile emcaldigits.root ' + getDPL_global_options() + putConfigValues()
+   EMCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-emcal-reco-workflow --input-type digits --output-type cells --infile emcaldigits.root ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(EMCRECOtask)
 
    PHSRECOtask = createTask(name='phsreco_'+str(tf), needs=[det_to_digitask["PHS"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -700,6 +717,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    CPVRECOtask = createTask(name='cpvreco_'+str(tf), needs=[det_to_digitask["CPV"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    CPVRECOtask['cmd'] = '${O2_ROOT}/bin/o2-cpv-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(CPVRECOtask)
+
+   if args.with_ZDC:
+      ZDCRECOtask = createTask(name='zdcreco_'+str(tf), needs=[det_to_digitask["ZDC"]['name']], tf=tf, cwd=timeframeworkdir, lab=["ZDC"])
+      ZDCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-zdc-digits-reco ' + getDPL_global_options() + putConfigValues()
+      workflow['stages'].append(ZDCRECOtask)
 
    ## forward matching 
    MCHMIDMATCHtask = createTask(name='mchmidMatch_'+str(tf), needs=[MCHRECOtask['name'], MIDRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -811,12 +833,23 @@ for tf in range(1, NTIMEFRAMES + 1):
      #           needs=,
      #           readerCommand=,
      #           configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-tracking-direct.json')
+     addQCPerTF(taskName='tpcStandardQC',
+                 needs=[TPCRECOtask['name']],
+     #            readerCommand='o2-tpc-file-reader --tpc-track-reader "--infile tpctracks.root" --tpc-native-cluster-reader "--infile tpc-native-clusters.root" --input-type clusters,tracks',
+                 readerCommand='o2-tpc-file-reader --tpc-track-reader "--infile tpctracks.root" --input-type tracks',
+                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-standard-direct.json')
 
      ### TRD
      addQCPerTF(taskName='trdDigitsQC',
                 needs=[TRDDigitask['name']],
                 readerCommand='o2-trd-trap-sim',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json')
+
+     ### EMCAL
+     addQCPerTF(taskName='emcDigitsQC',
+                needs=[EMCRECOtask['name']],
+                readerCommand='o2-emcal-reco-workflow --input-type cells --output-type cells --infile emccells.root --disable-root-output',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-digits-task.json')
 
      ### GLO + RECO
      addQCPerTF(taskName='vertexQC',
@@ -844,6 +877,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                TRDTRACKINGtask['name'], FV0RECOtask['name'], EMCRECOtask['name'], CPVRECOtask['name'], PHSRECOtask['name']]
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
+   if args.with_ZDC:
+     aodneeds += [ ZDCRECOtask['name'] ]
 
    if args.fwdmatching_save_trainingdata == True: # Hack
      aodneeds += [ MFTMCHMATCHTraintask['name'] ]
@@ -856,10 +891,14 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += ' --aod-writer-resmode "UPDATE"'
    AODtask['cmd'] += ' --run-number ' + str(args.run)
    AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id + ' ' + getDPL_global_options(bigshm=True)
-   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD'
+   AODtask['cmd'] += ' --info-sources ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD,EMC'
+   if args.with_ZDC:
+      AODtask['cmd'] += ',ZDC'
    AODtask['cmd'] += ' --lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}'
    AODtask['cmd'] += ' --anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}'
    AODtask['cmd'] += ' --anchor-prod ${ALIEN_JDL_MCANCHOR:-unknown}'
+   if environ.get('O2DPG_AOD_NOTRUNCATE') != None or environ.get('ALIEN_JDL_O2DPG_AOD_NOTRUNCATE') != None:
+      AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
 
    workflow['stages'].append(AODtask)
 
@@ -956,7 +995,7 @@ if includeAnalysis:
 
    # Efficiency
    addAnalysisTask(tag="Efficiency",
-                   cmd="o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-efficiency --eff-el 1 --eff-mu 1 --eff-pi 1 --eff-ka 1 --eff-pr 1 --eff-de 1 --eff-tr 1 --eff-he 1 --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json ", output="AnalysisResults.root")
+                   cmd="o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-efficiency --eff-mc 1 --eff-mc-pos 1 --eff-mc-neg 1 --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json ", output="AnalysisResults.root")
 
    # Event and track QA
    addAnalysisTask(tag="EventTrackQA",

@@ -15,12 +15,13 @@ if [ $NORATELOG == 1 ]; then
 fi
 ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;$ALL_EXTRA_CONFIG"
 
-PROXY_INSPEC="tunestring:ITS/TSTR/0;runtype:ITS/RUNT/0;fittype:ITS/FITT/0;scantype:ITS/SCANT/0;eos:***/INFORMATION"
+PROXY_INSPEC="A:MFT/RAWDATA;B:FLP/DISTSUBTIMEFRAME/0"
+PROXY_OUTSPEC="downstream:MFT/DIGITS/0;downstream:MFT/DIGITSROF/0"
 
-WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --proxy-name its-thr-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=its-thr-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\" | "
-WORKFLOW+="o2-its-threshold-aggregator-workflow -b --ccdb-url=\"http://alio2-cr1-flp199.cern.ch:8083\" $ARGS_ALL | "
-WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"http://alio2-cr1-flp199.cern.ch:8083\" | "
-WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
+WORKFLOW="o2-dpl-raw-proxy ${ARGS_ALL} --dataspec \"$PROXY_INSPEC\" --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=0\" | "
+WORKFLOW+="o2-itsmft-stf-decoder-workflow ${ARGS_ALL} --configKeyValues \"$ARGS_ALL_CONFIG\" --runmft --digits --no-clusters --no-cluster-patterns --nthreads 5 | "
+WORKFLOW+="o2-dpl-output-proxy ${ARGS_ALL} --dataspec \"$PROXY_OUTSPEC\" --proxy-channel-name mft-noise-input-proxy --channel-config \"name=mft-noise-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0\" | "
+WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
 
 if [ $WORKFLOWMODE == "print" ]; then
   echo Workflow command:

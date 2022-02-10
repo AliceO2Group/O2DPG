@@ -7,6 +7,9 @@ if [ $GEN_TOPO_HASH == 1 ]; then
     export GEN_TOPO_CACHEABLE=1
   fi
   CACHE_HASH=`echo $GEN_TOPO_PARTITION $GEN_TOPO_SOURCE $GEN_TOPO_LIBRARY_FILE $GEN_TOPO_WORKFLOW_NAME $OVERRIDE_PDPSUITE_VERSION $SET_QCJSON_VERSION $DD_DISK_FRACTION $SHM_MANAGER_SHMID $WORKFLOW_DETECTORS $WORKFLOW_DETECTORS_QC $WORKFLOW_DETECTORS_CALIB $WORKFLOW_PARAMETERS $RECO_NUM_NODES_OVERRIDE $DDMODE $DDWORKFLOW $INRAWCHANNAME $FILEWORKDIR $CTF_DIR | md5sum | awk '{print $1}'`
+  if [ "0$GEN_TOPO_WIPE_CACHE" == "01" ]; then
+    rm -f cache/$CACHE_HASH
+  fi
   if [ -f cache/$CACHE_HASH ]; then
     echo Reusing cached XML topology 1>&2
     touch cache/$CACHE_HASH
@@ -19,7 +22,7 @@ if [ $GEN_TOPO_HASH == 1 ]; then
     git fetch origin 1>&2 || { echo Repository update failed 1>&2; exit 1; }
     git checkout $GEN_TOPO_SOURCE &> /dev/null || { echo commit does not exist 1>&2; exit 1; }
   fi
-  if ! git describe --exact-match --tags HEAD; then
+  if ! git describe --exact-match --tags HEAD &> /dev/null; then
     unset GEN_TOPO_CACHEABLE
   fi
   cd DATA

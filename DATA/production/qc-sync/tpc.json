@@ -3,7 +3,7 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "al-qcdb.cern.ch:8083",
+        "host": "ali-qcdb.cern.ch:8083",
         "username": "not_applicable",
         "password": "not_applicable",
         "name": "not_applicable"
@@ -12,18 +12,14 @@
         "number": "42",
         "type": "2"
       },
-      "infologger": {
-        "filterDiscardDebug": "true",
-        "filterDiscardLevel": "1"
-      },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "influxdb-unix:///tmp/telegraf.sock"
       },
       "consul": {
-        "url": "http://consul-test.cern.ch:8500"
+        "url": "http://ali-consul.cern.ch:8500"
       },
       "conditionDB": {
-        "url": "ccdb-test.cern.ch:8080"
+        "url": "http://localhost:8084"
       }
     },
     "tasks": {
@@ -37,20 +33,35 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "dataSamplingPolicy",
-          "name": "random-rawdata"
+          "name": "random-rawdata",
+          "query_blubb": "input:TPC/RAWDATA"
         },
         "taskParameters": {
-	  "NRawDigitsNBins": "100",  "NRawDigitsXMin": "0", "NRawDigitsXMax": "100",
-          "QmaxNBins":       "200",  "QmaxXMin":       "0", "QmaxXMax":       "200",
-          "TimeBinNBins":    "600",  "TimeBinXMin":    "0", "TimeBinXMax":    "600"
-	},
-        "location": "remote",
-        "remoteMachine": "epn102-ib"
+          "NRawDigitsNBins": "100",
+          "NRawDigitsXMin": "0",
+          "NRawDigitsXMax": "100",
+          "QmaxNBins": "200",
+          "QmaxXMin": "0",
+          "QmaxXMax": "200",
+          "TimeBinNBins": "600",
+          "TimeBinXMin": "0",
+          "TimeBinXMax": "600",
+          "mergeableOutput": "true"
+        },
+        "location": "local",
+        "localMachines": [
+          "localhost",
+          "epn"
+        ],
+        "remotePort": "47731",
+        "mergingMode": "delta",
+        "remoteMachine": "alio2-cr1-qts01.cern.ch",
+        "localControl": "odc"
       },
       "DummyTask": {
-        "active": "true",
+        "active": "true", "" : "this dummy task is to redirect sampled data to a TPC machine which performs additional monitoring",
         "className": "o2::quality_control_modules::skeleton::SkeletonTask",
-        "moduleName": "Dummy",
+        "moduleName": "QcSkeleton",
         "detectorName": "TST",
         "cycleDurationSeconds": "10000000",
         "maxNumberCycles": "-1",
@@ -59,7 +70,8 @@
           "name": "random-rawdata-om"
         },
         "location": "remote",
-        "remoteMachine": "tpc-login-ib" 
+        "remoteMachine": "tpc-login-ib",
+        "localControl": "odc"
       },
       "Clusters": {
         "active": "true",
@@ -75,15 +87,34 @@
         },
         "taskParameters": {
           "myOwnKey": "myOwnValue",
-          "NClustersNBins": "100",  "NClustersXMin": "0", "NClustersXMax": "100",
-          "QmaxNBins":      "200",  "QmaxXMin":      "0", "QmaxXMax":      "200",
-          "QtotNBins":      "600",  "QtotXMin":      "10", "QtotXMax":      "600",
-          "SigmaPadNBins":  "200",  "SigmaPadXMin":  "0", "SigmaPadXMax":  "2",
-          "SigmaTimeNBins": "200",  "SigmaTimeXMin": "0", "SigmaTimeXMax": "2",
-          "TimeBinNBins":   "1000", "TimeBinXMin":   "0", "TimeBinXMax":   "100000"
+          "NClustersNBins": "100",
+          "NClustersXMin": "0",
+          "NClustersXMax": "100",
+          "QmaxNBins": "200",
+          "QmaxXMin": "0",
+          "QmaxXMax": "200",
+          "QtotNBins": "600",
+          "QtotXMin": "10",
+          "QtotXMax": "600",
+          "SigmaPadNBins": "200",
+          "SigmaPadXMin": "0",
+          "SigmaPadXMax": "2",
+          "SigmaTimeNBins": "200",
+          "SigmaTimeXMin": "0",
+          "SigmaTimeXMax": "2",
+          "TimeBinNBins": "1000",
+          "TimeBinXMin": "0",
+          "TimeBinXMax": "100000",
+          "mergeableOutput": "true"
         },
-        "location": "remote",
-        "remoteMachine": "epn102-ib"
+        "location": "local",
+        "localMachines": [
+          "localhost",
+          "epn"
+        ],
+        "remotePort": "47730",
+        "remoteMachine": "alio2-cr1-qts01.cern.ch",
+        "localControl": "odc"
       },
       "PID": {
         "active": "true",
@@ -95,16 +126,18 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query" : "inputTracks:TPC/TRACKS/0"
+          "query": "inputTracks:TPC/TRACKS/0"
         },
         "taskParameters": {},
         "location": "local",
         "localMachines": [
-          "localhost"
+          "localhost",
+          "epn"
         ],
-        "remoteMachine": "epn102-ib",
-        "remotePort": "32625",
-        "mergingMode": "delta"
+        "remoteMachine": "alio2-cr1-qts01.cern.ch",
+        "remotePort": "47732",
+        "mergingMode": "delta",
+        "localControl": "odc"
       },
       "Tracks": {
         "active": "true",
@@ -116,16 +149,18 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query" : "inputTracks:TPC/TRACKS/0"
+          "query": "inputTracks:TPC/TRACKS/0"
         },
         "taskParameters": {},
         "location": "local",
         "localMachines": [
-          "localhost"
+          "localhost",
+          "epn"
         ],
-        "remoteMachine": "epn102-ib",
-        "remotePort": "32626",
-        "mergingMode": "delta"
+        "remoteMachine": "alio2-cr1-qts01.cern.ch",
+        "remotePort": "47733",
+        "mergingMode": "delta",
+        "localControl": "odc"
       }
     }
   },
@@ -134,16 +169,17 @@
       "id": "random-cluster",
       "active": "true",
       "machines": [
-        "localhost"
+        "localhost",
+        "epn"
       ],
-      "port": "32627",
       "query": "inputClus:TPC/CLUSTERNATIVE",
       "outputs": "sampled-clusters:DS/CLUSTERNATIVE",
       "samplingConditions": [
         {
           "condition": "random",
           "fraction": "0.01",
-          "seed": "0"
+          "seed": "0",
+          "timesliceId": "tfCounter"
         }
       ],
       "blocking": "false"
@@ -152,16 +188,17 @@
       "id": "random-rawdata",
       "active": "true",
       "machines": [
-        "localhost"
+        "localhost",
+        "epn"
       ],
-      "port": "32628",
       "query": "inputRaw:TPC/RAWDATA",
       "outputs": "sampled-rawdata:DS/RAWDATA",
       "samplingConditions": [
         {
           "condition": "random",
           "fraction": "0.001",
-          "seed": "0"
+          "seed": "0",
+          "timesliceId": "tfCounter"
         }
       ],
       "blocking": "false"
@@ -170,7 +207,8 @@
       "id": "random-rawdata-om",
       "active": "true",
       "machines": [
-        "localhost"
+        "localhost",
+        "epn"
       ],
       "port": "32629",
       "query": "inputRaw:TPC/RAWDATA",
@@ -179,10 +217,11 @@
         {
           "condition": "random",
           "fraction": "0.0005",
-          "seed": "0"
+          "seed": "0",
+          "timesliceId": "tfCounter"
         }
       ],
       "blocking": "false"
-    }
+    }   
   ]
 }

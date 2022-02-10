@@ -1,2 +1,8 @@
 ctf-and-display: "DataDistribution QualityControl" reco,128,128,"SHMSIZE=128000000000 INFOLOGGER_SEVERITY=warning testing/detectors/TPC/tpc-workflow.sh"
 ctf-and-display-gpu: "DataDistribution QualityControl" reco,128,128,"GPUTYPE=HIP SHMSIZE=128000000000 INFOLOGGER_SEVERITY=warning testing/detectors/TPC/tpc-workflow.sh"
+tpc-pulser: "O2PDPSuite" reco,1,1," testing/detectors/TPC/tpc-pulser.sh"
+tpc-pedestal: "O2PDPSuite" reco,1,1,"testing/detectors/TPC/tpc-pedestal.sh"
+tpc-laser: "O2PDPSuite" reco,1,1,"SHMSIZE=$((128 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) STMEMSIZE=$(( 5 << 30 ))  testing/detectors/TPC/tpc-laser.sh"
+tpc-krypton: "O2PDPSuite" reco,60,60,"SHMSIZE=128000000000 testing/detectors/TPC/tpc-krypton.sh"
+tpc-krypton-raw: "O2PDPSuite" reco,80,80,"SHMSIZE=128000000000 testing/detectors/TPC/tpc-krypton-raw.sh"
+tpc-standalone: "O2PDPSuite" reco,60,60,"SHMSIZE=128000000000 testing/detectors/TPC/tpc-standalone.sh"
