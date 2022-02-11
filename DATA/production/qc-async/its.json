@@ -112,7 +112,8 @@
               "EtaDistribution",
               "VertexCoordinates",
               "VertexRvsZ",
-              "VertexZ"
+              "VertexZ",
+	      "BunchCrossingIDvsClusterRatio"
             ]
           }
         ]
