@@ -3,7 +3,7 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "alio2-cr1-hv-qcdb1.cern.ch:8083",
+        "host": "ali-qcdb.cern.ch:8083",
         "username": "not_applicable",
         "password": "not_applicable",
         "name": "not_applicable"
@@ -23,7 +23,7 @@
       }
     },
     "tasks": {
-      "Digits": {
+      "QcTaskMCHDigits": {
         "active": "true",
         "className": "o2::quality_control_modules::muonchambers::PhysicsTaskDigits",
         "moduleName": "QcMuonChambers",
@@ -34,32 +34,20 @@
           "type": "dataSamplingPolicy",
           "name": "mch-digits"
         },
+        "taskParameters": {
+          "Diagnostic": "false"
+        },
         "location": "local",
         "mergingMode": "delta",
         "localControl": "odc",
         "localMachines": [
-          "epn",
-          "localhost"
+          "localhost","epn"
         ],
         "remotePort": "47790",
         "remoteMachine": "alio2-cr1-qc01.cern.ch"
       }
     },
     "checks": {
-      "QcCheckMCHPhysics": {
-        "active": "true",
-        "className": "o2::quality_control_modules::muonchambers::PhysicsOccupancyCheck",
-        "moduleName": "QcMuonChambers",
-        "policy": "OnAll",
-        "detectorName": "MCH",
-        "dataSource": [
-          {
-            "type": "Task",
-            "name": "Digits",
-            "MOs": "all"
-          }
-        ]
-      }
     }
   },
   "dataSamplingPolicies": [
@@ -71,8 +59,8 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.5",
-          "seed": "1441"
+          "fraction": "0.1",
+          "seed": "1234"
         }
       ],
       "blocking": "false"
