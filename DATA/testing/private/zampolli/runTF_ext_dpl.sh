@@ -28,8 +28,8 @@ export WORKFLOW_PARAMETERS=QC,CTF,GPU                                # Additiona
 export RECO_NUM_NODES_OVERRIDE=0                                     # Override the number of EPN compute nodes to use (default is specified in description library file)
 export NHBPERTF=128                                                  # Number of HBF per TF
 export ALL_EXTRA_CONFIG="HBFUtils.nHBFPerTF=$NHBPERTF"
-#export GPU_EXTRA_CONFIG=""
-export GPU_EXTRA_CONFIG="GPU_proc.debugLevel=1;"
+#export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow=""
+export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="GPU_proc.debugLevel=1;"
 
 export GEN_TOPO_IGNORE_ERROR=1
 
