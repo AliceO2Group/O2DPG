@@ -707,15 +707,17 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(MCHMIDMATCHtask)
 
    MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-
-   if args.fwdmatching_save_trainingdata == True:
-       MFTMCHMATCHtask['cmd'] ='${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValues({**{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.saveMode" : 2, "FwdMatching.useMIDMatch":"true"} , **AlpideConfig})
-   else:
-       MFTMCHMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValues({**{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.useMIDMatch":"true"} , **AlpideConfig})
+   MFTMCHMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValues({**{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.useMIDMatch":"true"} , **AlpideConfig})
    if args.fwdmatching_assessment_full == True:
       MFTMCHMATCHtask['cmd']+= ' |  o2-globalfwd-assessment-workflow '
    MFTMCHMATCHtask['cmd']+= getDPL_global_options()
    workflow['stages'].append(MFTMCHMATCHtask)
+
+   if args.fwdmatching_save_trainingdata == True:
+      MFTMCHMATCHTraintask = createTask(name='mftmchMatchTrain_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+      MFTMCHMATCHTraintask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValues({**{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.saveMode" : 2, "FwdMatching.useMIDMatch":"true"} , **AlpideConfig})
+      MFTMCHMATCHTraintask['cmd']+= getDPL_global_options()
+      workflow['stages'].append(MFTMCHMATCHTraintask)
 
    ## Vertexing
    PVConfig = {**AlpideConfig} # start with Alpide config which is relevant here
@@ -843,8 +845,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
-   if args.fwdmatching_save_trainingdata == True: # Hack
-     aodneeds += [ MFTMCHMATCHtask['name'] ]
    aod_df_id = '{0:03}'.format(tf)
 
    AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='4000', cpu='1')
