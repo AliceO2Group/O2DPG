@@ -41,12 +41,16 @@ def include_all_QC_finalization(ntimeframes, standalone, run):
 
 
   # to be enabled once MFT Digits should be ran 5 times with different settings
-  #MFTDigitsQCneeds = []
-  #for flp in range(5):
-  #  MFTDigitsQCneeds.extend(['mftDigitsQC_local_'+str(flp)+'_'+str(tf) for tf in range(1, ntimeframes + 1)])
+  MFTDigitsQCneeds = []
+  for flp in range(5):
+    MFTDigitsQCneeds.extend(['mftDigitsQC'+str(flp)+'_local'+str(tf) for tf in range(1, ntimeframes + 1)])
   #
-  #add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit.json', MFTDigitsQCneeds)
-  add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit.json')
+  add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-0.json', MFTDigitsQCneeds)
+  add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-1.json', MFTDigitsQCneeds)
+  add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-2.json', MFTDigitsQCneeds)
+  add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-3.json', MFTDigitsQCneeds)
+  add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-4.json', MFTDigitsQCneeds)
+#add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit.json')
   add_QC_finalization('mftClustersQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json')
   add_QC_finalization('mftAsyncQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-async.json')
   add_QC_finalization('emcDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/emc-digits-task.json')
