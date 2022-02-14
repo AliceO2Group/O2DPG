@@ -806,11 +806,6 @@ for tf in range(1, NTIMEFRAMES + 1):
                   readerCommand='o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root',
                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-' + str(flp) + '.json',
                   objectsFile='mftDigitsQC.root')
-     
-     #addQCPerTF(taskName='mftDigitsQC',
-     #           needs=[det_to_digitask["MFT"]['name']],
-     #           readerCommand='o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root',
-     #           configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit.json')
      addQCPerTF(taskName='mftClustersQC',
                 needs=[MFTRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types none --cluster-types MFT',
