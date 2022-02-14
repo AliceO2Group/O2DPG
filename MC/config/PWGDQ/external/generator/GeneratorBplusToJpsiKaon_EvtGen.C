@@ -7,14 +7,15 @@ R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGHF/external/generator)
 #include "GeneratorHF.C"
 
 FairGenerator*
-GeneratorBplusToJpsiKaon_EvtGen(double rapidityMin = -1.5, double rapidityMax = 1.5, bool verbose = false, TString pdgs = "521")
+GeneratorBplusToJpsiKaon_EvtGen(double rapidityMin = -1.5, double rapidityMax = 1.5, bool ispp = true, bool verbose = false, TString pdgs = "521")
 {
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorHF>(); 
   gen->setRapidity(rapidityMin,rapidityMax);
   gen->setPDG(5);
 
   gen->setVerbose(verbose);
-  gen->setFormula("max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.))");
+  if(ispp) gen->setFormula("1");
+  else gen->setFormula("max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.))");
   std::string spdg;
   TObjArray *obj = pdgs.Tokenize(";");
   gen->SetSizePdg(obj->GetEntriesFast());
@@ -28,6 +29,9 @@ GeneratorBplusToJpsiKaon_EvtGen(double rapidityMin = -1.5, double rapidityMax = 
   gen->SetDecayTable(Form("%s/BPLUSTOKAONJPSITOELE.DEC",pathO2.Data()));
   // print debug
   //gen->PrintDebug();
+  // set random seed
+  gen->readString("Random:setSeed on");
+  gen->readString("Random:seed = 0");
 
   return gen;
 }
