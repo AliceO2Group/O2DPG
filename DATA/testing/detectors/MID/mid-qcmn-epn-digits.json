@@ -32,23 +32,27 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "dataSamplingPolicy",
-          "name": "middigits"
+          "name": "mid-digits"
+        },
+        "taskParameters": {
+          "Diagnostic": "false"
         },
         "location": "local",
         "mergingMode": "delta",
         "localControl": "odc",
         "localMachines": [
-          "epn",
-          "localhost"
+          "localhost",
+          "epn"
         ],
         "remotePort": "47780",
         "remoteMachine": "alio2-cr1-qme02.cern.ch"
       }
-    }
+    },
+    "checks": {}
   },
   "dataSamplingPolicies": [
     {
-      "id": "middigits",
+      "id": "mid-digits",
       "active": "true",
       "machines": [],
       "query": "digits:MID/DATA/0;digitrofs:MID/DATAROF/0;calib:MID/DATA/1;calibrofs:MID/DATAROF/1;fet:MID/DATA/2;fetrofs:MID/DATAROF/2",
