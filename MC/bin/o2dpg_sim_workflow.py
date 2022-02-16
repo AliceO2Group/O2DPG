@@ -34,6 +34,7 @@ parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulati
 
 # the run-number of data taking or default if unanchored
 parser.add_argument('-run',help="Run number for this MC", default=300000)
+parser.add_argument('-productionTag',help="Production tag for this MC", default='unknown')
 # the timestamp at which this MC workflow will be run
 # - in principle it should be consistent with the time of the "run" number above
 # - some external tool should sample it within
@@ -800,7 +801,10 @@ for tf in range(1, NTIMEFRAMES + 1):
        task = createTask(name=taskName + '_local' + str(tf), needs=needs, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
        objectsFile = objectsFile if len(objectsFile) > 0 else taskName + '.root' 
        # the --local-batch argument will make QC Tasks store their results in a file and merge with any existing objects
-       task['cmd'] = readerCommand + ' | o2-qc --config ' + configFilePath + ' --local-batch ../' + qcdir + '/' + objectsFile + ' --override-values "qc.config.Activity.number=' + str(args.run) + '" ' + getDPL_global_options()
+       task['cmd'] = f'{readerCommand} | o2-qc --config {configFilePath}' + \
+                     f' --local-batch ../{qcdir}/{objectsFile}' + \
+                     f' --override-values "qc.config.Activity.number={args.run};qc.config.Activity.periodName={args.productionTag}"' + \
+                     ' ' + getDPL_global_options()
        # Prevents this task from being run for multiple TimeFrames at the same time, thus trying to modify the same file.
        task['semaphore'] = objectsFile
        workflow['stages'].append(task)
@@ -938,7 +942,7 @@ workflow['stages'].append(AOD_merge_task)
 
 job_merging = False
 if includeFullQC:
-  workflow['stages'].extend(include_all_QC_finalization(ntimeframes=NTIMEFRAMES, standalone=False, run=args.run))
+  workflow['stages'].extend(include_all_QC_finalization(ntimeframes=NTIMEFRAMES, standalone=False, run=args.run, productionTag=args.productionTag))
 
 
 if includeAnalysis:
@@ -983,7 +987,7 @@ if includeAnalysis:
          AnalysisFinalizetask = createTask(name=f"Analysis_finalize_{tag}_{i}",
                                            needs=[AnalysisTasks['name']],
                                            cwd=analysisdir, lab=[analysislabel+"Upload"], cpu=1, mem='2000')
-         AnalysisFinalizetask['cmd'] = f"o2-qc-upload-root-objects --input-file ./{i} --qcdb-url ccdb-test.cern.ch:8080 --task-name Analysis{tag} --detector-code AOD --provenance qc_mc --pass-name passMC --period-name SimChallenge --run-number 49999"
+         AnalysisFinalizetask['cmd'] = f"o2-qc-upload-root-objects --input-file ./{i} --qcdb-url ccdb-test.cern.ch:8080 --task-name Analysis{tag} --detector-code AOD --provenance qc_mc --pass-name passMC --period-name {args.productionTag} --run-number {args.run}"
          workflow['stages'].append(AnalysisFinalizetask)
 
    # Efficiency
