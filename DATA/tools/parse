@@ -124,7 +124,19 @@ for line in f:
             if os.environ['WORKFLOWMODE'] == 'dds':
                 odccommand = "odc-epn-topo"
                 if reconodes:
-                    odccommand += " --dd " + os.environ['DDWORKFLOW']
+                    replacestring = ""
+                    dd_env_variables = ['DD_DISK_FRACTION']
+                    for i in dd_env_variables:
+                        if i in os.environ:
+                            replacestring += " " + i + "=" + os.environ[i]
+                    fddin = open(os.environ['DDWORKFLOW'], "rt")
+                    filename = tmpdir + "/wf_dd.dds";
+                    fddout = open(filename, "wt")
+                    for line in fddin:
+                        fddout.write(line.replace('GEN_TOPO_TFBUILDER_ENV_VARIABLES', replacestring))
+                    fddin.close()
+                    fddout.close()
+                    odccommand += " --dd " + filename
                 if len(recoworkflows):
                     odccommand += " --recown 'wn_(?!online-calib).*_.*' --reco " + " ".join(recoworkflows)
                 odccommand += " --n " + str(reconodes)
