@@ -52,13 +52,29 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     exit 1
   fi
 
+  TMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXXXXXXXXXXXXXX)
+
+  add_QC_JSON()
+  {
+    if [[ ${2} =~ ^consul://.* ]]; then
+      curl -s -o $TMPDIR/$1.json "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
+      if [[ $? != 0 ]]; then
+        echo "Error fetching QC JSON $2"
+        exit 1
+      fi
+      JSON_FILES+=" $TMPDIR/$1.json"
+    else
+      JSON_FILES+=" ${2}"
+    fi
+    OUTPUT_SUFFIX+="-$1"
+  }
+
   JSON_FILES=
   OUTPUT_SUFFIX=
   for i in `echo $LIST_OF_DETECTORS | sed "s/,/ /g"`; do
     DET_JSON_FILE="QC_JSON_$i"
     if has_detector_qc $i && [ ! -z "${!DET_JSON_FILE}" ]; then
-       JSON_FILES+=" ${!DET_JSON_FILE}"
-       OUTPUT_SUFFIX+="-$i"
+      add_QC_JSON $i ${!DET_JSON_FILE}
     fi
   done
 
@@ -66,15 +82,13 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
   for i in `echo $LIST_OF_GLORECO | sed "s/,/ /g"`; do
     GLO_JSON_FILE="QC_JSON_$i"
     if has_detector_matching $i && has_matching_qc $i && [ ! -z "${!GLO_JSON_FILE}" ]; then
-       JSON_FILES+=" ${!GLO_JSON_FILE}"
-       OUTPUT_SUFFIX+="-$i"
+       add_QC_JSON $i ${!GLO_JSON_FILE}
     fi
   done
 
   # arbitrary extra QC
   if [[ ! -z "$QC_JSON_EXTRA" ]]; then
-      JSON_FILES+=" ${QC_JSON_EXTRA}"
-      OUTPUT_SUFFIX+="-EXTRA"
+    add_QC_JSON EXTRA ${QC_JSON_EXTRA}
   fi
 
   if [[ ! -z "$JSON_FILES" ]]; then
@@ -95,6 +109,8 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     fi
     QC_JSON_FROM_OUTSIDE="$MERGED_JSON_FILENAME"
   fi
+
+  rm -Rf $TMPDIR
 fi
 
 if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
