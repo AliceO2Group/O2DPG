@@ -110,7 +110,7 @@ DDWORKFLOW=tools/datadistribution_workflows/dd-processing.xml WORKFLOW_DETECTORS
 ```
 - The following environment variables steer the *Parser*:
   - `$FILEWORKDIR`: This variable must be set and is used by the workflows to specify where all required files (grp, geometry, dictionaries, etc) are located.
-  - `$EPNSYNCMODE`: If set the parser assumes it is running on the EPN for synchronous processing. If so it will automatically load the modules specified in the topology description. This variable is further used by the workflows themselves, e.g. to activate the InfoLogger and the Metrics monitoring.
+  - `$EPNSYNCMODE`: If set the parser assumes it is running on the EPN for synchronous processing. If so it will automatically load the modules specified in the topology description. This variable is further used by the workflows themselves, e.g. to activate the InfoLogger and the Metrics monitoring, and to fetch QC JSONs from consul.
   - `$INRAWCHANNAME`: Propagated to the workflow, defines the raw FMQ channel name used for the communication with DataDistribution.
   - `$RECO_NUM_NODES_OVERRIDE`: Overrides the number of nodes used for reconstruction (empty or 0 to disable)
   - `$DDMODE`: How to operate DataDistribution: **discard** (build TF and discard them), **disk** (build TF and store to disk), **processing** (build TF and run DPL workflow on TF data), **processing-disk** (both store TF to disk and run processing).
