@@ -6,7 +6,7 @@ if [[ -z "$WORKFLOW" ]] || [[ -z "$MYDIR" ]]; then
 fi
 
 if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
-  if [[ $SYNCMODE == 1 ]] && [[ $EPNMODE == 1 ]]; then
+  if [[ $EPNSYNCMODE == 1 ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=/home/rmunzer/odc/config/tpcQCTasks_multinode_ALL.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=/home/jian/jliu/itsEPN-merger.json
     [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=/home/epn/odc/files/qc-mft-cluster-merger-raw-digit-cluster.json
