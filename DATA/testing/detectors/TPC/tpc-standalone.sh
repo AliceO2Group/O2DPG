@@ -9,7 +9,6 @@ export HOSTMEMSIZE=$(( 5 << 30 ))
 
 FILEWORKDIR="/home/epn/odc/files/"
 
-
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
 if [ $EPNSYNCMODE == 1 ]; then
   ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
@@ -39,7 +38,7 @@ if [ $GPUTYPE == "HIP" ]; then
     export TIMESLICEOFFSET=$NGPUS
   fi
   GPU_CONFIG_KEY+="GPU_proc.deviceNum=0;"
-  GPU_CONFIG+=" --environment \"ROCR_VISIBLE_DEVICES={timeslice${TIMESLICEOFFSET}}\""
+  GPU_CONFIG+=" --environment ROCR_VISIBLE_DEVICES={timeslice${TIMESLICEOFFSET}}"
   export HSA_NO_SCRATCH_RECLAIM=1
   #export HSA_TOOLS_LIB=/opt/rocm/lib/librocm-debug-agent.so.2
 else
@@ -81,7 +80,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --disable-mc \
     --pipeline tpc-tracker:8 \
     $GPU_CONFIG \
-    --configKeyValues "$ARGS_ALL_CONFIG;$GPU_CONFIG_KEYS;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1" \
+    --configKeyValues "$ARGS_ALL_CONFIG;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY" \
     | o2-qc $ARGS_ALL --config consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-full-qcmn --local --host $HOST \
     | o2-dpl-run $ARGS_ALL --dds | grep -v ERROR
 
