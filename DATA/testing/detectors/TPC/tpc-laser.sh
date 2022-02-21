@@ -5,6 +5,7 @@ source common/setenv.sh
 export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM
 export GPUMEMSIZE=$(( 24 << 30 ))
 export HOSTMEMSIZE=$(( 5 << 30 ))
+export GPUTYPE="HIP"
 
 FILEWORKDIR="/home/wiechula/processData/inputFilesTracking/triggeredLaser"
 
@@ -39,7 +40,7 @@ if [ $GPUTYPE == "HIP" ]; then
     export TIMESLICEOFFSET=$NGPUS
   fi
   GPU_CONFIG_KEY+="GPU_proc.deviceNum=0;"
-  GPU_CONFIG+=" --environment \"ROCR_VISIBLE_DEVICES={timeslice${TIMESLICEOFFSET}}\""
+  GPU_CONFIG+=" --environment ROCR_VISIBLE_DEVICES={timeslice${TIMESLICEOFFSET}}"
   export HSA_NO_SCRATCH_RECLAIM=1
   #export HSA_TOOLS_LIB=/opt/rocm/lib/librocm-debug-agent.so.2
 else
@@ -64,6 +65,8 @@ CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
 #VERBOSE=""
 
+#echo GPU_CONFIG $GPU_CONFIG_KEYS;
+
 
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \
@@ -80,7 +83,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --disable-mc \
     --pipeline tpc-tracker:4 \
     $GPU_CONFIG \
-    --configKeyValues "$ARGS_ALL_CONFIG;$GPU_CONFIG_KEYS;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1" \
+    --configKeyValues "$ARGS_ALL_CONFIG;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY" \
     | o2-tpc-laser-track-filter $ARGS_ALL \
     | o2-tpc-calib-laser-tracks  $ARGS_ALL --use-filtered-tracks --min-tfs 50 \
     | o2-tpc-calib-pad-raw $ARGS_ALL \
