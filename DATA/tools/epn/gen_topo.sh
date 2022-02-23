@@ -33,7 +33,12 @@ if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
   [[ $WORKFLOWMODE != "print" ]] && { echo "ERROR: GEN_TOPO_RUN_HOME is only supported with WORKFLOWMODE=print!" 1>&2; exit 1; }
 else
   # Load required module and run gen_topo_o2dpg (PDP part of this script)
-  module load ODC O2DPG 1>&2 || { echo Error loading ODC / O2DPG 1>&2; exit 1; }
+  if [[ `module info-loaded ODC 2> /dev/null | grep ODC | wc -l` == 0 ]]; then
+    module load ODC 1>&2 || { echo Error loading ODC / O2DPG 1>&2; exit 1; }
+  fi
+  if [[ -z $O2DPG_ROOT ]]; then
+    O2DPG_ROOT=`bash -c "module load O2DPG > /dev/null; echo \\\$O2DPG_ROOT;"`
+  fi
 fi
 $O2DPG_ROOT/DATA/tools/epn/gen_topo_o2dpg.sh
 if [ $? != 0 ]; then
