@@ -1008,7 +1008,7 @@ if includeAnalysis:
    addAnalysisTask(tag="PIDTOF", cmd='o2-analysis-pid-tof')
 
    # PID TPC (no complex workflow / piping required atm), NOTE: produces no output
-   addAnalysisTask(tag="PIDTPC", cmd='o2-analysis-pid-tpc')
+   addAnalysisTask(tag="PIDTPC", cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-pid-tpc')
 
    # weak decay tutorial task (no complex workflow / piping required atm), NOTE: produces no output
    addAnalysisTask(tag="WeakDecayTutorial", cmd='o2-analysistutorial-weak-decay-iteration')
