@@ -1013,6 +1013,10 @@ if includeAnalysis:
    # weak decay tutorial task (no complex workflow / piping required atm), NOTE: produces no output
    addAnalysisTask(tag="WeakDecayTutorial", cmd='o2-analysistutorial-weak-decay-iteration')
 
+   # Event selection QA
+   addAnalysisTask(tag="EventSelectionQA",
+                   cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-selection-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-selection-qa.json | o2-analysis-event-selection-qa --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-selection-qa.json', output="AnalysisResults.root")
+
 dump_workflow(workflow["stages"], args.o)
 
 exit (0)
