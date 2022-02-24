@@ -77,7 +77,7 @@ def run(args):
     workflow.append(create_ana_task("PIDTOF", 'o2-analysis-pid-tof', output_dir, input_file))
 
     # PID TPC (no complex workflow / piping required atm), NOTE: produces no output
-    workflow.append(create_ana_task("PIDTPC", 'o2-analysis-pid-tpc', output_dir, input_file))
+    workflow.append(create_ana_task("PIDTPC", 'o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-pid-tpc', output_dir, input_file))
 
     # weak decay tutorial task (no complex workflow / piping required atm), NOTE: produces no output
     workflow.append(create_ana_task("WeakDecayTutorial", 'o2-analysistutorial-weak-decay-iteration', output_dir, input_file))
