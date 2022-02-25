@@ -1,0 +1,5 @@
+export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF"
+export WORKFLOW_DETECTORS="ITS,TPC,TRD,TOF" 
+export WORKFLOW_DETECTORS_CTF="ITS,TPC,TRD,TOF" 
+export ARGS_EXTRA_PROCESS_o2_trd_datareader="--fixsm1617"
+export ARGS_EXTRA_PROCESS_o2_raw_tf_reader_workflow="--max-cached-tf 1"
