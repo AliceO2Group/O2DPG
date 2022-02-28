@@ -53,7 +53,7 @@
       "id": "phos-clu",
       "active": "true",
       "machines": [
-        "epn"
+        "localhost"
       ],
       "query": "clusters:PHS/CLUSTERS/0;clustertr:PHS/CLUSTERTRIGREC/0",
       "samplingConditions": [
