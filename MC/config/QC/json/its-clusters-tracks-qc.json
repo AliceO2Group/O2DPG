@@ -43,7 +43,8 @@
           "clusterDictionaryPath": "./ITSdictionary.bin",
           "runNumberPath": "",
           "geomPath": "./o2sim_geometry.root",
-          "nThreads": "1"
+          "nThreads": "1",
+	  "nBCbins" : "103"
         }
       },
       "ITSTrackTask": {
@@ -64,7 +65,8 @@
           "vertexZsize": "15",
           "vertexRsize": "0.8",
           "NtracksMAX"  : "100",
-          "doTTree": "0"
+          "doTTree": "0",
+	  "nBCbins" : "103"
         }
       }
     },
