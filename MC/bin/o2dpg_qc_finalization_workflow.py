@@ -32,15 +32,17 @@ qcdir = "QC"
 def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
 
   stages = []
-  def add_QC_finalization(taskName, qcConfigPath, needs=[]):
-    if len(needs) == 0 and standalone == False:
+  def add_QC_finalization(taskName, qcConfigPath, needs=None):
+    if standalone == True:
+      needs = []
+    elif needs == None:
       needs = [taskName + '_local' + str(tf) for tf in range(1, ntimeframes + 1)]
+
     task = createTask(name=taskName + '_finalize', needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
     task['cmd'] = f'o2-qc --config {qcConfigPath} --remote-batch {taskName}.root' + \
                   f' --override-values "qc.config.Activity.number={run};qc.config.Activity.periodName={productionTag}"' + \
                   ' ' + getDPL_global_options()
     stages.append(task)
-
 
   # to be enabled once MFT Digits should be ran 5 times with different settings
   MFTDigitsQCneeds = []
