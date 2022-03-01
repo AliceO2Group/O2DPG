@@ -65,6 +65,9 @@ for line in f:
         calibworkflows = []
         print("Found topology", sys.argv[2], "-", args)
         if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']) and (not 'GEN_TOPO_RUN_HOME' in os.environ or not int(os.environ['GEN_TOPO_RUN_HOME'])):
+            restore_O2DPG_ROOT = 'O2DPG_ROOT' in os.environ
+            if restore_O2DPG_ROOT:
+                restore_O2DPG_ROOT_val = os.environ['O2DPG_ROOT']
             if 'OVERRIDE_PDPSUITE_VERSION' in os.environ and os.environ['OVERRIDE_PDPSUITE_VERSION'] != "":
                 args[1] = os.environ['OVERRIDE_PDPSUITE_VERSION']
             for i in args[1].split():
@@ -74,6 +77,8 @@ for line in f:
                         raise
                 print("Loading module", i)
                 mod.module('load', i)
+            if restore_O2DPG_ROOT:
+                os.environ['O2DPG_ROOT'] = restore_O2DPG_ROOT_val
         if len(args) > 2 and not 'O2_ROOT' in os.environ:
             print("O2 not loaded")
             raise
