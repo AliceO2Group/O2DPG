@@ -865,8 +865,13 @@ for tf in range(1, NTIMEFRAMES + 1):
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF_direct_MC.json')
  
    #secondary vertexer
-   SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=1, mem='5000')
-   SVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-secondary-vertexing-workflow ' + getDPL_global_options(bigshm=True)
+   svfinder_threads = ' --threads 1 '
+   svfinder_cpu = 1
+   if COLTYPE == "PbPb" or (doembedding and COLTYPEBKG == "PbPb"):
+     svfinder_threads = ' --threads 3 '
+     svfinder_cpu = 3
+   SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
+   SVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-secondary-vertexing-workflow ' + getDPL_global_options(bigshm=True) + svfinder_threads
    workflow['stages'].append(SVFINDERtask)
 
   # -----------
