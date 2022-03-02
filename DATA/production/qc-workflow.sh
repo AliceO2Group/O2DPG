@@ -15,7 +15,7 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=/home/afurs/O2DataProcessing/testing/detectors/FT0/ft0-digits-ds.json
     [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=/home/afurs/O2DataProcessing/testing/detectors/FV0/fv0-digits-ds.json
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall
-    [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=/home/laphecet/qc_configs/mch-qc-physics.json
+    [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-digits
     [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=/home/dstocco/config/mid-qcmn-epn-digits.json
     [[ -z "$QC_JSON_CPV" ]] && QC_JSON_CPV=consul://o2/components/qc/ANY/any/cpv-physics-qcmn-epn
     #[[ -z "$QC_JSON_PHS" ]] && QC_JSON_PHS=/home/sevdokim/O2DPG/DATA/production/qc-sync/phs.json
