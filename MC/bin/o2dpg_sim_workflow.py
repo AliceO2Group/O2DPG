@@ -871,7 +871,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      svfinder_threads = ' --threads 3 '
      svfinder_cpu = 3
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
-   SVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-secondary-vertexing-workflow ' + getDPL_global_options(bigshm=True) + svfinder_threads
+   SVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-secondary-vertexing-workflow ' +  ' --vertexing-sources ITS,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF ' + getDPL_global_options(bigshm=True) + svfinder_threads
    workflow['stages'].append(SVFINDERtask)
 
   # -----------
