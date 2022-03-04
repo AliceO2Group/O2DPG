@@ -62,13 +62,13 @@ if [ -z "$RAWINPUTDIR" ];   then export RAWINPUTDIR=$FILEWORKDIR; fi   # Directo
 if [ -z "$EPNSYNCMODE" ];   then export EPNSYNCMODE=0; fi              # Is this workflow supposed to run on EPN for sync processing? Will enable InfoLogger / metrics / fetching QC JSONs from consul...
 if [ -z "$BEAMTYPE" ];      then export BEAMTYPE=PbPb; fi              # Beam type, must be PbPb, pp, pPb, cosmic, technical
 if [[ -z $IS_SIMULATED_DATA ]]; then IS_SIMULATED_DATA=1; fi           # processing simulated data
-if [ -z "$EDJSONS_DIR" ];   then export EDJSONS_DIR="jsons"; fi        # output directory for ED json files
 if [ $EPNSYNCMODE == 0 ]; then
   if [ -z "$SHMSIZE" ];       then export SHMSIZE=$(( 8 << 30 )); fi   # Size of shared memory for messages
   if [ -z "$NGPUS" ];         then export NGPUS=1; fi                  # Number of GPUs to use, data distributed round-robin
   if [ -z "$EXTINPUT" ];      then export EXTINPUT=0; fi               # Receive input from raw FMQ channel instead of running o2-raw-file-reader
   if [ -z "$EPNPIPELINES" ];  then export EPNPIPELINES=0; fi           # Set default EPN pipeline multiplicities
   if [ -z "$SHMTHROW" ];      then export SHMTHROW=1; fi               # Throw exception when running out of SHM
+  if [ -z "$EDJSONS_DIR" ];   then export EDJSONS_DIR="jsons"; fi      # output directory for ED json files
   if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=""; fi # No FLP processing by default when we do not run the sync EPN workflow, e.g. full system test will also run full FLP processing
 else # Defaults when running on the EPN
   if [ -z "$SHMSIZE" ];              then export SHMSIZE=$(( 256 << 30 )); fi
@@ -78,6 +78,7 @@ else # Defaults when running on the EPN
   if [ -z "$SHMTHROW" ];             then export SHMTHROW=0; fi
   if [ -z "$TIMEFRAME_SHM_LIMIT" ];  then export TIMEFRAME_SHM_LIMIT=$(( $SHMSIZE / 2 )); fi
   if [ -z "$TIMEFRAME_RATE_LIMIT" ]; then export TIMEFRAME_RATE_LIMIT=0; fi
+  if [ -z "$EDJSONS_DIR" ];          then export EDJSONS_DIR="/home/ed/jsons"; fi
   if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
 fi
 # Some more options for running on the EPN
