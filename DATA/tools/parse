@@ -127,7 +127,7 @@ for line in f:
             if 'RECO_MAX_FAIL_NODES_OVERRIDE' in os.environ and os.environ['RECO_MAX_FAIL_NODES_OVERRIDE'] != "":
                 reconodesmin = max(1, reconodes - int(os.environ['RECO_NUM_NODES_OVERRIDE']))
             if os.environ['WORKFLOWMODE'] == 'dds':
-                odccommand = "odc-epn-topo"
+                odccommand = "odc-epn-topo " + os.environ['GEN_TOPO_ODC_EPN_TOPO_ARGS']
                 if reconodes:
                     replacestring = ""
                     dd_env_variables = ['DD_DISK_FRACTION']
@@ -143,11 +143,11 @@ for line in f:
                     fddout.close()
                     odccommand += " --dd " + filename
                 if len(recoworkflows):
-                    odccommand += " --recown 'wn_(?!online-calib).*_.*' --reco " + " ".join(recoworkflows)
+                    odccommand += " --reco " + " ".join(recoworkflows)
                 odccommand += " --n " + str(reconodes)
                 # odccommand += " --nmin " + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
                 if len(calibworkflows):
-                    odccommand += " --calibwn 'wn_online-calib_.*' --calib " + " ".join(calibworkflows)
+                    odccommand += " --calib " + " ".join(calibworkflows)
                 if "GEN_TOPO_STDERR_LOGGING" in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
                     odccommand += " --mon tools/monitoring_workflows/epnstderrlog.xml"
                 if args[1] != "":
