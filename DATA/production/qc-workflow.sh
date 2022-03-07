@@ -122,3 +122,5 @@ fi
 if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
   add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM:---local --host ${QC_HOST:-localhost}}" "" 0
 fi
+
+true # everything OK up to this point, so the script should return 0 (it is !=0 if the last check failed)
