@@ -27,7 +27,6 @@ if [ -z "$IS_SIMULATED_DATA" ]; then echo \$IS_SIMULATED_DATA missing; exit 1; f
 if [ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]; then echo \$GEN_TOPO_ODC_EPN_TOPO_ARGS missing; exit 1; fi
 if [ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]; then echo \$GEN_TOPO_EPN_CCDB_SERVER missing; exit 1; fi
 
-
 export GEN_TOPO_WORKDIR=$GEN_TOPO_WORKDIR/${GEN_TOPO_PARTITION}_${GEN_TOPO_ONTHEFLY}
 
 if [[ "0$DDMODE" == "0discard" ]] || [[ "0$DDMODE" == "0disk" ]]; then
