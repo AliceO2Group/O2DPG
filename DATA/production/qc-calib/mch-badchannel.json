@@ -1,0 +1,31 @@
+{
+        "qc": {
+                "config": {
+                        "database": {
+                                "implementation": "CCDB",
+                                "host": "ali-qcdb.cern.ch:8083",
+                                "username": "not_applicable",
+                                "password": "not_applicable",
+                                "name": "not_applicable"
+                        },
+                        "Activity": {
+                                "number": "42",
+                                "type": "2"
+                        }
+                },
+                "tasks": {
+                        "Pedestals": {
+                                "active": "true",
+                                "className": "o2::quality_control_modules::muonchambers::PedestalsTask",
+                                "moduleName": "QcMuonChambers",
+                                "detectorName": "MCH",
+                                "cycleDurationSeconds": "60",
+                                "maxNumberCycles": "-1",
+                                "dataSource": {
+                                        "type": "direct",
+                                        "query": "pedestals:MCH/PEDESTALS"
+                                }
+                        }
+                }
+        }
+}
