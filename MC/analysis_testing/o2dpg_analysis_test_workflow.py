@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 #
-# A script producing a consistent MC->RECO->AOD workflow 
-# It aims to handle the different MC possible configurations 
+# A script producing a consistent MC->RECO->AOD workflow
+# It aims to handle the different MC possible configurations
 # It just creates a workflow.json txt file, to execute the workflow one must execute right after
-#   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json 
+#   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
 #
 # Execution examples:
 #  - pp PYTHIA jets, 2 events, triggered on high pT decay photons on all barrel calorimeters acceptance, eCMS 13 TeV
@@ -15,7 +15,7 @@
 #  - pp PYTHIA ccbar events embedded into heavy-ion environment, 2 PYTHIA events into 1 bkg event, beams energy 2.510
 #     ./o2dpg_sim_workflow.py -e TGeant3 -nb 1 -ns 2 -j 8 -tf 1 -mod "--skipModules ZDC"  \
 #                             -col pp -eA 2.510 -proc "ccbar"  --embedding
-# 
+#
 
 import sys
 import importlib.util
@@ -62,10 +62,10 @@ def run(args):
     workflow = []
 
     # Efficiency
-    workflow.append(create_ana_task("Efficiency", "o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-efficiency --eff-mc 1 --eff-mc-pos 1 --eff-mc-neg 1 --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json ", output_dir, input_file))
+    workflow.append(create_ana_task("Efficiency", "o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-efficiency --eff-mc 1 --eff-mc-pos 1 --eff-mc-neg 1 --configuration json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing.json ", output_dir, input_file))
 
     # Event and track QA
-    workflow.append(create_ana_task("EventTrackQA", 'o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-event-track --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json', output_dir, input_file))
+    workflow.append(create_ana_task("EventTrackQA", 'o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-event-track --configuration json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing.json', output_dir, input_file))
 
     # MCHistograms (no complex workflow / piping required atm)
     workflow.append(create_ana_task("MCHistograms", 'o2-analysistutorial-mc-histograms', output_dir, input_file))
@@ -77,7 +77,7 @@ def run(args):
     workflow.append(create_ana_task("PIDTOF", 'o2-analysis-pid-tof', output_dir, input_file))
 
     # PID TPC (no complex workflow / piping required atm), NOTE: produces no output
-    workflow.append(create_ana_task("PIDTPC", 'o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-pid-tpc', output_dir, input_file))
+    workflow.append(create_ana_task("PIDTPC", 'o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing.json | o2-analysis-multiplicity-table --configuration json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing.json | o2-analysis-pid-tpc', output_dir, input_file))
 
     # weak decay tutorial task (no complex workflow / piping required atm), NOTE: produces no output
     workflow.append(create_ana_task("WeakDecayTutorial", 'o2-analysistutorial-weak-decay-iteration', output_dir, input_file))
