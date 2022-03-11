@@ -316,11 +316,11 @@ if usebkgcache:
 # Eventually, these files/objects should be queried directly from within these tasks?
 # TODO: add correct timestamp for query
 ITS_DICT_DOWNLOADER_TASK = createTask(name='itsdictdownloader', cpu='0')
-ITS_DICT_DOWNLOADER_TASK['cmd'] = '[ -f ITSdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ITS/Calib/ClusterDictionary -o ITSdictionary.bin --no-preserve-path --timestamp ' + str(args.timestamp)
+ITS_DICT_DOWNLOADER_TASK['cmd'] = '[ -f ITSdictionary.root ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ITS/Calib/ClusterDictionary -o ITSdictionary.root --no-preserve-path --timestamp ' + str(args.timestamp)
 workflow['stages'].append(ITS_DICT_DOWNLOADER_TASK)
 
 MFT_DICT_DOWNLOADER_TASK = createTask(name='mftdictdownloader', cpu='0')
-MFT_DICT_DOWNLOADER_TASK['cmd'] = '[ -f MFTdictionary.bin ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p MFT/Calib/ClusterDictionary -o MFTdictionary.bin --no-preserve-path --timestamp ' + str(args.timestamp)
+MFT_DICT_DOWNLOADER_TASK['cmd'] = '[ -f MFTdictionary.root ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p MFT/Calib/ClusterDictionary -o MFTdictionary.root --no-preserve-path --timestamp ' + str(args.timestamp)
 workflow['stages'].append(MFT_DICT_DOWNLOADER_TASK)
 
 # loop over timeframes
