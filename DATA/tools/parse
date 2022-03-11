@@ -4,6 +4,11 @@ import sys
 import shlex
 import tempfile
 import re
+
+if not os.path.exists("tools/parse"):
+    print("Running from incorrect directory")
+    exit(1)
+
 if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']):
     sys.path.insert(0, '/usr/share/Modules/init')
     import python as mod
@@ -131,7 +136,8 @@ for line in f:
                   odccommand = os.environ['GEN_TOPO_ODC_EPN_TOPO_CMD']
                 else:
                   odccommand = 'odc-epn-topo'
-                odccommand += ' ' + os.environ['GEN_TOPO_ODC_EPN_TOPO_ARGS']
+                if 'GEN_TOPO_ODC_EPN_TOPO_ARGS' in os.environ:
+                  odccommand += ' ' + os.environ['GEN_TOPO_ODC_EPN_TOPO_ARGS']
                 if reconodes:
                     replacestring = ""
                     dd_env_variables = ['DD_DISK_FRACTION']
