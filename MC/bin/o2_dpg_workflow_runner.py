@@ -322,8 +322,28 @@ def filter_workflow(workflowspec, targets=[], targetlabels=[]):
     # helper lookup
     tasknametoid = { t['name']:i for i, t in enumerate(workflowspec['stages'],0) }
 
+    # check if a task can be run at all 
+    # or not due to missing requirements
+    def canBeDone(t,cache={}):
+       ok = True
+       c = cache.get(t['name'])
+       if c != None:
+           return c
+       for r in t['needs']:
+           taskid = tasknametoid.get(r)
+           if taskid != None:
+             if not canBeDone(workflowspec['stages'][taskid], cache):
+                ok = False
+                break
+           else:
+             ok = False
+             break
+       cache[t['name']] = ok
+       return ok
+
+    okcache = {}
     # build full target list
-    full_target_list = [ t for t in workflowspec['stages'] if task_matches(t['name']) and task_matches_labels(t) ]
+    full_target_list = [ t for t in workflowspec['stages'] if task_matches(t['name']) and task_matches_labels(t) and canBeDone(t,okcache) ]
     full_target_name_list = [ t['name'] for t in full_target_list ]
 
     # build full dependency list for a task t
