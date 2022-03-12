@@ -631,6 +631,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TRDDigitask)
 
    # these are digitizers which are single threaded
+   # TOF (TO BE DONE once ccdb fetcher ready) -> "--use-ccdb-tof" (alternatively with CCCDBManager "--ccdb-tof-sa")
    def createRestDigiTask(name, det='ALLSMALLER'):
       tneeds = needs=[ContextTask['name']]
       if det=='ALLSMALLER':
@@ -738,6 +739,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], det_to_digitask["TOF"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    TOFRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tof-reco-workflow ' + getDPL_global_options() + putConfigValuesNew()
    workflow['stages'].append(TOFRECOtask)
+   # option to be added once ccdb fetcher ready "--use-ccdb" (TO BE DONE)
 
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name'], TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    TOFTPCMATCHERtask['cmd'] = '${O2_ROOT}/bin/o2-tof-matcher-workflow ' + getDPL_global_options() \
@@ -884,6 +886,13 @@ for tf in range(1, NTIMEFRAMES + 1):
                 readerCommand='o2-trd-trap-sim',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json')
 
+     ### TOF
+     addQCPerTF(taskName='tofDigitsQC',
+                needs=[det_to_digitask["TOF"]['name']],
+                readerCommand='${O2_ROOT}/bin/o2-tof-reco-workflow --input-type digits --output-type none',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofdigits.json',
+                objectsFile='TOFDigitsQC.root')
+
      ### EMCAL
      if isActive('EMC'):
         addQCPerTF(taskName='emcDigitsQC',
@@ -904,7 +913,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[TOFTPCMATCHERtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC" --cluster-types none',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF_direct_MC.json')
- 
+
    #secondary vertexer
    svfinder_threads = ' --threads 1 '
    svfinder_cpu = 1
