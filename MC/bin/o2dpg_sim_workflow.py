@@ -530,7 +530,8 @@ for tf in range(1, NTIMEFRAMES + 1):
       else: #pPb?
          INTRATE=200000 #Hz ???
 
-   simsoption=' --sims ' + ('bkg,'+signalprefix if doembedding else signalprefix)
+   # TOF -> "--use-ccdb-tof" (alternatively with CCCDBManager "--ccdb-tof-sa")
+   simsoption=' --sims ' + ('bkg,'+signalprefix if doembedding else signalprefix) + ' --use-ccdb-tof '
 
    # each timeframe should be done for a different bunch crossing range, depending on the timeframe id
    orbitsPerTF = 256
@@ -631,7 +632,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TRDDigitask)
 
    # these are digitizers which are single threaded
-   # TOF (TO BE DONE once ccdb fetcher ready) -> "--use-ccdb-tof" (alternatively with CCCDBManager "--ccdb-tof-sa")
    def createRestDigiTask(name, det='ALLSMALLER'):
       tneeds = needs=[ContextTask['name']]
       if det=='ALLSMALLER':
@@ -737,9 +737,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TRDTRACKINGtask)
 
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], det_to_digitask["TOF"]['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   TOFRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tof-reco-workflow ' + getDPL_global_options() + putConfigValuesNew()
+   TOFRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tof-reco-workflow --use-ccdb ' + getDPL_global_options() + putConfigValuesNew()
    workflow['stages'].append(TOFRECOtask)
-   # option to be added once ccdb fetcher ready "--use-ccdb" (TO BE DONE)
 
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=[TOFRECOtask['name'], TPCRECOtask['name'], TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    TOFTPCMATCHERtask['cmd'] = '${O2_ROOT}/bin/o2-tof-matcher-workflow ' + getDPL_global_options() \
