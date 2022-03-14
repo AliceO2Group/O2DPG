@@ -302,7 +302,6 @@ if doembedding:
                      + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG) + ' --timestamp ' + str(args.timestamp)
         if not "all" in activeDetectors:
            BKGtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
-        workflow['stages'].append(SGNtask)
 
         workflow['stages'].append(BKGtask)
 
