@@ -33,6 +33,9 @@
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "digi-local"
+        },
+        "taskParameters": {
+          "Diagnostic": "true"
         }
       }
     },
@@ -64,7 +67,7 @@
         "localhost"
       ],
       "port": "30333",
-      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0",
+      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS",
       "samplingConditions": [
         {
           "condition": "random",

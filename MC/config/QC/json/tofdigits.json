@@ -36,7 +36,7 @@
           "name": "tof-digits"
         },
         "taskParameters": {
-          "Diagnostic": "false"
+          "Diagnostic": "true"
         },
         "location": "remote"
       }
@@ -111,20 +111,6 @@
   "dataSamplingPolicies": [
     {
       "id": "tof-digits",
-      "active": "true",
-      "machines": [],
-      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.1",
-          "seed": "1234"
-        }
-      ],
-      "blocking": "false"
-    },
-    {
-      "id": "tof-digits-dia",
       "active": "true",
       "machines": [],
       "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS",
