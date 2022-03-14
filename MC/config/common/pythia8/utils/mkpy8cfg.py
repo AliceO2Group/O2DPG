@@ -94,11 +94,11 @@ fout.write('\n')
 
 ### processes
 fout.write('### processes \n')
-if args.process != 'heavy_ion':
-    fout.write('SoftQCD:inelastic = off \n') ### we switch this off because it might be on by default, but only for pp or pPb,
-    #in PbPb let's not force it in case it is needed in Angantyr
 if args.process == 'inel':
     fout.write('SoftQCD:inelastic = on \n')
+if args.process != 'inel' and args.process != 'heavy_ion':
+    fout.write('SoftQCD:inelastic = off \n') ### we switch this off because it might be on by default, but only for pp or pPb,
+    #in PbPb let's not force it in case it is needed in Angantyr
 if args.process == 'ccbar' or args.process == 'heavy_q':
     fout.write('HardQCD:hardccbar = on \n')
 if args.process == 'bbbar' or args.process == 'heavy_q':
