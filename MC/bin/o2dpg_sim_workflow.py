@@ -531,7 +531,7 @@ for tf in range(1, NTIMEFRAMES + 1):
          INTRATE=200000 #Hz ???
 
    # TOF -> "--use-ccdb-tof" (alternatively with CCCDBManager "--ccdb-tof-sa")
-   simsoption=' --sims ' + ('bkg,'+signalprefix if doembedding else signalprefix) + ' --use-ccdb-tof '
+   simsoption=' --sims ' + ('bkg,'+signalprefix if doembedding else signalprefix)
 
    # each timeframe should be done for a different bunch crossing range, depending on the timeframe id
    orbitsPerTF = 256
@@ -642,6 +642,16 @@ for tf in range(1, NTIMEFRAMES + 1):
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu=NWORKERS)
          t['cmd'] = ('','ln -nfs ../bkg_Hits*.root . ;')[doembedding]
          t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --skipDet TPC,TRD --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew(["MFTAlpideParam, ITSAlpideParam, ITSDigitizerParam"])
+         workflow['stages'].append(t)
+         return t
+
+      elif det=='TOF':
+         if usebkgcache:
+            tneeds += [ BKG_HITDOWNLOADER_TASKS[det]['name'] ]
+         t = createTask(name=name, needs=tneeds,
+                     tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
+         t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
+         t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow --use-ccdb-tof ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet ' + str(det) + ' --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew(["MFTAlpideParam, ITSAlpideParam, ITSDigitizerParam"])
          workflow['stages'].append(t)
          return t
 
