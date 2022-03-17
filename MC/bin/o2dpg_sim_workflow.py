@@ -634,34 +634,29 @@ for tf in range(1, NTIMEFRAMES + 1):
    # these are digitizers which are single threaded
    def createRestDigiTask(name, det='ALLSMALLER'):
       tneeds = needs=[ContextTask['name']]
-      if det=='ALLSMALLER':
+      commondigicmd = '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew(["MFTAlpideParam, ITSAlpideParam, ITSDigitizerParam"])
+
+      if det=='ALLSMALLER': # here we combine all smaller digits in one DPL workflow
          if usebkgcache:
             for d in itertools.chain(smallsensorlist, ctp_trigger_inputlist):
                tneeds += [ BKG_HITDOWNLOADER_TASKS[d]['name'] ]
          t = createTask(name=name, needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu=NWORKERS)
          t['cmd'] = ('','ln -nfs ../bkg_Hits*.root . ;')[doembedding]
-         t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --skipDet TPC,TRD --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew(["MFTAlpideParam, ITSAlpideParam, ITSDigitizerParam"])
+         t['cmd'] += commondigicmd + ' --skipDet TPC,TRD '
+         t['cmd'] += ' --ccdb-tof-sa'
          workflow['stages'].append(t)
          return t
 
-      elif det=='TOF':
+      else: # here we create individual digitizers
          if usebkgcache:
             tneeds += [ BKG_HITDOWNLOADER_TASKS[det]['name'] ]
          t = createTask(name=name, needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
          t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
-         t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow --use-ccdb-tof ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet ' + str(det) + ' --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew(["MFTAlpideParam, ITSAlpideParam, ITSDigitizerParam"])
-         workflow['stages'].append(t)
-         return t
-
-      else:
-         if usebkgcache:
-            tneeds += [ BKG_HITDOWNLOADER_TASKS[det]['name'] ]
-         t = createTask(name=name, needs=tneeds,
-                     tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
-         t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
-         t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet ' + str(det) + ' --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew(["MFTAlpideParam, ITSAlpideParam, ITSDigitizerParam"])
+         t['cmd'] += commondigicmd + ' --onlyDet ' + str(det)
+         if det == 'TOF':
+            t['cmd'] += ' --ccdb-tof-sa'
          workflow['stages'].append(t)
          return t
 
