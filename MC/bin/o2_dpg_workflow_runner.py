@@ -73,6 +73,9 @@ actionlogger = setup_logger('pipeline_action_logger', ('pipeline_action_' + str(
 # second file logger
 metriclogger = setup_logger('pipeline_metric_logger', ('pipeline_metric_' + str(os.getpid()) + '.log', args.action_logfile)[args.action_logfile!=None])
 
+# Immediately log imposed memory and CPU limit as well as further useful meta info
+metriclogger.info({"cpu_limit": args.cpu_limit, "mem_limit": args.mem_limit, "workflow_file": os.path.abspath(args.workflowfile), "target_task": args.target_tasks, "rerun_from": args.rerun_from, "target_labels": args.target_labels})
+
 # for debugging without terminal access
 # TODO: integrate into standard logger
 def send_webhook(hook, t):
