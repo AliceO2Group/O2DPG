@@ -8,7 +8,7 @@
 export SETENV_NO_ULIMIT=1
 
 # detector list
-export WORKFLOW_DETECTORS=ITS,TPC,TOF,TRD,FV0,FT0,FDD,MID,MFT
+export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT
 
 # ad-hoc settings for CTF reader: we are on the grid, we read the files remotely
 echo "*********************** mode = ${MODE}"
