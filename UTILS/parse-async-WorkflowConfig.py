@@ -13,6 +13,7 @@
 
 import re
 import json
+import os
 
 def get_topology_cmd(filename):
    """
@@ -243,6 +244,19 @@ def extract_commands(commandlist):
 
    return commands
 
+# some manual intervention (could and should be done from outside)
+def postadjust_ConfigValues(flat_config):
+  # for now we reset the TPC calibration things
+  gpuglobal = flat_config.get("GPU_global")
+  if gpuglobal != None:
+     gpuglobal.pop("dEdxCorrFile", None)
+     gpuglobal.pop("gainCalibFile", None)
+     gpuglobal.pop("dEdxPolTopologyCorrFile", None)
+     d=os.getcwd()
+     gpuglobal["dEdxSplineTopologyCorrFile"]=d+"/splines_for_dedx_threshold_3.5.root"
+     gpuglobal["thresholdCalibFile"]=d+"/NoiseThresholds.3.5s.physics.root"
+
+
 cmdlist = get_topology_cmd("workflowconfig.log")
 #print (cmdlist)
 cmds = extract_commands(cmdlist)
@@ -250,5 +264,6 @@ cmds = extract_commands(cmdlist)
 print_principalconfigkeys_pertask(cmds)
 flat_config = flatten_config_values(cmds)
 #print (flat_config)
+postadjust_ConfigValues(flat_config)
 parse_important_DPL_args(cmds, flat_config)
 configValues_to_json(flat_config)
