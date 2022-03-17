@@ -188,10 +188,11 @@ BFIELD=args.field
 RNDSEED=args.seed    # 0 means random seed ! Should we set different seed for Bkg and signal?
 
 Q2PTCUTOFF=20 # nominal q/Pt cut-off for TPC
-if float(BFIELD)!=0:
+if BFIELD == 'ccdb':
+   # a hack valid for pilot beam (but TPC will calc this internally in the future)
+   Q2PTCUTOFF*=5/abs(float(2.));
+elif float(BFIELD)!=0:
    Q2PTCUTOFF*=5/abs(float(BFIELD));
-
-# add here other possible types
 
 workflow={}
 workflow['stages'] = []
