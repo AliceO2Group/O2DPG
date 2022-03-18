@@ -929,7 +929,11 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[TOFTPCMATCHERtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC" --cluster-types none',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF_direct_MC.json')
-
+     addQCPerTF(taskName='TOFMatchWithTRDQC',
+                needs=[TOFTPCMATCHERtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF,TPC-TRD,TPC-TRD-TOF" --cluster-types none',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_AllTypes_direct_MC.json')
+ 
    #secondary vertexer
    svfinder_threads = ' --threads 1 '
    svfinder_cpu = 1
