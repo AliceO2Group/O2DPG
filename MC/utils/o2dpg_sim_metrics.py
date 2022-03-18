@@ -105,6 +105,10 @@ def make_cat_map(pipeline_path):
       elif "meta" not in current_pipeline and "mem_limit" in d:
         current_pipeline["meta"] = d
 
+  # protect against potential str values there
+  current_pipeline["meta"]["cpu_limit"] = float(current_pipeline["meta"]["cpu_limit"])
+  current_pipeline["meta"]["mem_limit"] = float(current_pipeline["meta"]["mem_limit"])
+
   cpu_limit = current_pipeline["meta"]["cpu_limit"]
   # scale by constraint number of CPUs
   current_pipeline["cpu_efficiencies"] = [e / cpu_limit for e in extract_cpu_usage(current_pipeline_metrics)]
@@ -472,8 +476,6 @@ def run(args):
     effs = save_map["cpu_efficiencies"]
     if effs:
       pipeline_name = basename(full_path)
-      cpu_limit = save_map["meta"]["cpu_limit"]
-      effs = [e / cpu_limit for e in effs]
       figure, ax = make_plot(range(len(effs)), effs, "sampling iteration", "CPU efficiency [%]", title=pipeline_name)
       global_eff = sum(effs) / len(effs)
       ax.axhline(global_eff, color="black")
