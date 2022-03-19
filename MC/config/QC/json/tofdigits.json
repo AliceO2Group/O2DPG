@@ -91,7 +91,7 @@
         ]
       },
       "TOFRawHitMap": {
-        "active": "true",
+        "active": "false",
         "className": "o2::quality_control_modules::tof::CheckHitMap",
         "moduleName": "QcTOF",
         "policy": "OnAny",
