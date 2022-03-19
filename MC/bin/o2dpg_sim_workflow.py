@@ -182,7 +182,7 @@ if args.timestamp==-1:
 
 NTIMEFRAMES=int(args.tf)
 NWORKERS=args.j
-MODULES = "--skipModules ZDC" if not args.with_ZDC else ""
+MODULES = "--skipModules ZDC TPC CPV TRD TOF PHOS" if not args.with_ZDC else ""
 SIMENGINE=args.e
 BFIELD=args.field
 RNDSEED=args.seed    # 0 means random seed ! Should we set different seed for Bkg and signal?
@@ -889,6 +889,12 @@ for tf in range(1, NTIMEFRAMES + 1):
                    needs=[EMCRECOtask['name']],
                    readerCommand='o2-emcal-cell-reader-workflow --infile emccells.root',
                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-digits-task.json')
+     ### FT0
+     if isActive('FT0'):
+        addQCPerTF(taskName='RecPointsQC',
+                   needs=[FT0RECOtask['name']],
+                   readerCommand='o2-ft0-recpoints-reader-workflow  --infile o2reco_ft0.root',
+                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/ft0-reconstruction-config.json')
 
      ### GLO + RECO
      addQCPerTF(taskName='vertexQC',
