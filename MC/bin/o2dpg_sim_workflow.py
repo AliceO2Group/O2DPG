@@ -187,13 +187,6 @@ SIMENGINE=args.e
 BFIELD=args.field
 RNDSEED=args.seed    # 0 means random seed ! Should we set different seed for Bkg and signal?
 
-Q2PTCUTOFF=20 # nominal q/Pt cut-off for TPC
-if BFIELD == 'ccdb':
-   # a hack valid for pilot beam (but TPC will calc this internally in the future)
-   Q2PTCUTOFF*=5/abs(float(2.));
-elif float(BFIELD)!=0:
-   Q2PTCUTOFF*=5/abs(float(BFIELD));
-
 workflow={}
 workflow['stages'] = []
 
@@ -720,7 +713,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      tpcreconeeds.append(tpcclus['name'])
 
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
-   TPCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' + putConfigValuesNew(["GPU_global"], {"GPU_proc.ompThreads":NWORKERS, "GPU_rec.maxTrackQPt":Q2PTCUTOFF })
+   TPCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' + putConfigValuesNew(["GPU_global"], {"GPU_proc.ompThreads":NWORKERS})
    workflow['stages'].append(TPCRECOtask)
 
    ITSConfig = {"ITSClustererParam.dictFilePath":"../"}
