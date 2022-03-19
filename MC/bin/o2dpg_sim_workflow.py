@@ -900,7 +900,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[getDigiTaskName("TOF")],
                 readerCommand='${O2_ROOT}/bin/o2-tof-reco-workflow --input-type digits --output-type none',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofdigits.json',
-                objectsFile='TOFDigitsQC.root')
+                objectsFile='tofDigitsQC.root')
 
      ### EMCAL
      if isActive('EMC'):
