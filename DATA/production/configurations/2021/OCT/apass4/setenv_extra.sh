@@ -47,7 +47,7 @@ export ITS_CONFIG=" --tracking-mode sync_misaligned"
 export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2"
 
 # ad-hoc options for GPU reco workflow
-export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="$VDRIFT;GPU_global.gainCalibFile=GainMap_2021-12-15_krypton_0.5T.v2.root;GPU_global.dEdxSplineTopologyCorrFile=splines_for_dedx_threshold_3.5.root;GPU_global.dEdxCorrFile=calibdEdx.${RUNNUMBER}.root;GPU_global.dEdxPolTopologyCorrFile=polynomials_for_dedx_V1.root;GPU_global.thresholdCalibFile=NoiseThresholds.3.5s.physics.root"
+export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="$VDRIFT;GPU_global.dEdxUseFullGainMap=1;GPU_global.dEdxDisableResidualGainMap=1"
 
 # ad-hoc settings for TOF reco
 # export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"http://alice-ccdb.cern.ch\""
