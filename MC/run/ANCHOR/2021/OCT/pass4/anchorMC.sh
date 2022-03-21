@@ -43,16 +43,9 @@ sed -i 's/JDL_ANCHORYEAR/JDL_LPMANCHORYEAR/' async_pass.sh
 # set number of timeframes to xx if necessary
 # sed -i 's/NTIMEFRAMES=-1/NTIMEFRAMES=xx/' async_pass.sh
 
-alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/commonInput.tgz file:.
-alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/runInput_${RUNNUMBER}.tgz file:.
-alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/TPC_calibdEdx.220301.tgz file:.
-
-# hack to fake presence of StfBuilder (in fact not needed; but checked by the reco script
-if [ `which StfBuilder 2> /dev/null | wc -l` == "0" ]; then
-  touch StfBuilder
-  chmod +x StfBuilder
-  export PATH=$PATH:$PWD
-fi
+[[ ! -f commonInput.tgz ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/commonInput.tgz file:.
+[[ ! -f runInput_${RUNNUMBER} ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/runInput_${RUNNUMBER}.tgz file:.
+[[ ! -f TPC_calibdEdx.220301.tgz ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/TPC_calibdEdx.220301.tgz file:.
 
 # create workflow ---> creates the file that can be parsed
 export IGNORE_EXISTING_SHMFILES=1
@@ -61,6 +54,12 @@ touch list.list
 
 # now create the local MC config file --> config-config.json
 ${O2DPG_ROOT}/UTILS/parse-async-WorkflowConfig.py
+
+# check if config reasonably created
+if [[ `grep "o2-ctf-reader-workflow-options" config-json.json 2> /dev/null | wc` == "0" ]]; then
+  echo "Problem in anchor config creation"
+  exit 1
+fi
 
 # -- CREATE THE MC JOB DESCRIPTION ANCHORED TO RUN --
 
