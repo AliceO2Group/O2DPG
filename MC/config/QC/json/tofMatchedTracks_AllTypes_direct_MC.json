@@ -56,7 +56,7 @@
           "geomFileName" : "o2sim_geometry.root"
         },
         "location" : "remote",
-        "saveObjectsToFile" : "TOFmatchedITSTPCTOF_TPCTOF_ITSTPCTRD_MC.root",
+        "saveObjectsToFile" : "TOFmatchedTracks_AllTypes_MC.root",
         "" : "For debugging, path to the file where to save. If empty or missing it won't save."
       }
     },
