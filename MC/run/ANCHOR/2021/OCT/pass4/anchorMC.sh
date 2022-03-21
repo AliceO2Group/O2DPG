@@ -27,6 +27,8 @@ RUNNUMBER=${ALIEN_JDL_LPMRUNNUMBER:-505673}
 # the script location can be configured with a JDL option
 cp ${ALIEN_JDL_ASYNCRECOSCRIPT:-$O2DPG_ROOT/DATA/production/configurations/2021/OCT/apass4/async_pass.sh} async_pass.sh
 cp $O2DPG_ROOT/DATA/production/configurations/2021/OCT/${ALIEN_JDL_LPMPASSNAME:-apass4}/setenv_extra.sh .
+#settings that are MC-specific
+sed -i 's/GPU_global.dEdxUseFullGainMap=1;GPU_global.dEdxDisableResidualGainMap=1/GPU_global.dEdxSplineTopologyCorrFile=splines_for_dedx_V1_MC_iter0_PP.root;GPU_global.dEdxDisableTopologyPol=1;GPU_global.dEdxDisableGainMap=1;GPU_global.dEdxDisableResidualGainMap=1;GPU_global.dEdxDisableResidualGain=1/' setenv_extra.sh
 chmod +x async_pass.sh
 
 # take out line running the workflow (we don't have data input)
