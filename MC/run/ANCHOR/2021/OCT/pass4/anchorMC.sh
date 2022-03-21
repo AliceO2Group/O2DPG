@@ -43,6 +43,8 @@ sed -i 's/JDL_ANCHORYEAR/JDL_LPMANCHORYEAR/' async_pass.sh
 # set number of timeframes to xx if necessary
 # sed -i 's/NTIMEFRAMES=-1/NTIMEFRAMES=xx/' async_pass.sh
 
+alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/commonInput.tgz file:.
+alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/runInput_${RUNNUMBER}.tgz file:.
 alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/TPC_calibdEdx.220301.tgz file:.
 
 # hack to fake presence of StfBuilder (in fact not needed; but checked by the reco script
