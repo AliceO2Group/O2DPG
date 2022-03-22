@@ -3,7 +3,7 @@
       "config": {
         "database": {
           "implementation": "CCDB",
-          "host": "http://localhost:8083",
+          "host": "ccdb-test.cern.ch:8080",
           "username": "not_applicable",
           "password": "not_applicable",
           "name": "not_applicable"
@@ -19,10 +19,10 @@
           "url": "infologger:///debug?qc"
         },
         "consul": {
-          "url":  "http://localhost:8083"
+          "url": "ccdb-test.cern.ch:8080"
         },
         "conditionDB": {
-          "url":  "http://localhost:8083"
+          "url":  "ccdb-test.cern.ch:8080"
         }
       },
       "tasks": {
@@ -36,15 +36,7 @@
           "dataSource": {
               "type": "direct",
               "query": "recpoints:FT0/RECPOINTS/0;channels:FT0/RECCHDATA/0"
-            },
-          "location": "local",
-          "localMachines": [
-            "localhost"
-          ],
-          "remoteMachine": "localhost",
-          "remotePort": "30132",
-            "mergingMode": "entire",
-            "saveObjectsToFile":"qcrootobjects.root"
+            }
         }
       
       }

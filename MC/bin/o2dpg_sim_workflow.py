@@ -890,8 +890,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                    readerCommand='o2-emcal-cell-reader-workflow --infile emccells.root',
                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-digits-task.json')
      ### FT0
-     if isActive('FT0'):
-        addQCPerTF(taskName='RecPointsQC',
+     addQCPerTF(taskName='RecPointsQC',
                    needs=[FT0RECOtask['name']],
                    readerCommand='o2-ft0-recpoints-reader-workflow  --infile o2reco_ft0.root',
                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/ft0-reconstruction-config.json')
