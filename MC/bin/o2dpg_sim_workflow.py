@@ -182,7 +182,7 @@ if args.timestamp==-1:
 
 NTIMEFRAMES=int(args.tf)
 NWORKERS=args.j
-MODULES = "--skipModules ZDC TPC CPV TRD TOF PHOS" if not args.with_ZDC else ""
+MODULES = "--skipModules ZDC" if not args.with_ZDC else ""
 SIMENGINE=args.e
 BFIELD=args.field
 RNDSEED=args.seed    # 0 means random seed ! Should we set different seed for Bkg and signal?
