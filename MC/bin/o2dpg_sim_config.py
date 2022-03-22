@@ -71,7 +71,7 @@ def create_sim_config(args):
 
     # MFT tracking settings
     if args.mft_reco_full == True:
-        add({"MFTTracking.forceZeroField" : 0,
-             "MFTTracking.LTFclsRCut" : 0.0100})
+        add(config, {"MFTTracking.forceZeroField" : 0,
+                     "MFTTracking.LTFclsRCut" : 0.0100})
 
     return config
