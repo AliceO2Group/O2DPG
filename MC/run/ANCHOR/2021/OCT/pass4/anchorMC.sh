@@ -94,11 +94,25 @@ remainingargs="${remainingargs} --anchor-config config-json.json"
 echo "baseargs: ${baseargs}"
 echo "remainingargs: ${remainingargs}"
               
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs}
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs} &> timestampsampling.log
+
+TIMESTAMP=`grep "Determined timestamp to be" timestampsampling.log | awk '//{print $6}'`
+echo "TIMESTAMP IS ${TIMESTAMP}"
+
+# -- PREFETCH CCDB OBJECTS TO DISC      --
+# (make sure the right objects at the right timestamp are fetched
+#  until https://alice.its.cern.ch/jira/browse/O2-2852 is fixed)
+export ALICEO2_CCDB_LOCALCACHE=$PWD/.ccdb
+[ ! -d .ccdb ] && mkdir .ccdb
+
+for p in /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Align /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Align /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TRD/Align /TOF/Align /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /PHS/Align /CPV/Align /EMC/Align /HMP/Align /MFT/Align /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /MCH/Align /MID/Align /FT0/Align /FT0/Calibration/ChannelTimeOffset /FV0/Align /FV0/Calibration/ChannelTimeOffset /FDD/Align /CTP/Calib/OrbitReset; do
+  ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${p} -d .ccdb --timestamp ${TIMESTAMP}
+done
+
 # -- RUN THE MC WORKLOAD TO PRODUCE AOD --
 
 export FAIRMQ_IPC_PREFIX=./
-export ALICEO2_CCDB_LOCALCACHE=$PWD/.ccdb
+
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
 MCRC=$?  # <--- we'll report back this code
 
@@ -137,7 +151,6 @@ fi
 #
 if [[ -n "$ALIEN_PROC_ID" ]]; then
   find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" \) | tar -czvf debug_log_archive.tgz -T -
-  #find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" \) | tar cfJ debug_log_archive.xz -T -
 fi
 
 unset FAIRMQ_IPC_PREFIX
