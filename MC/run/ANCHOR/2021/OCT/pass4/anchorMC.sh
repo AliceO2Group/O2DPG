@@ -61,8 +61,8 @@ echo "Setting back ALIEN_JDL_LPMPRODUCTIONTAG to $ALIEN_JDL_LPMPRODUCTIONTAG"
 ${O2DPG_ROOT}/UTILS/parse-async-WorkflowConfig.py
 
 # check if config reasonably created
-if [[ `grep "o2-ctf-reader-workflow-options" config-json.json 2> /dev/null | wc` == "0" ]]; then
-  echo "Problem in anchor config creation"
+if [[ `grep "o2-ctf-reader-workflow-options" config-json.json 2> /dev/null | wc -l` == "0" ]]; then
+  echo "Problem in anchor config creation. Stopping."
   exit 1
 fi
 
