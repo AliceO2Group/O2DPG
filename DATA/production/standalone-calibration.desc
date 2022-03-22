@@ -17,3 +17,7 @@ TPC-laser: "O2PDPSuite" reco,1,1,"SHMSIZE=$((128 << 30)) GPUTYPE=HIP GPUMEMSIZE=
 MFT-noise-calibration: "O2PDPSuite" reco,20,20,"production/calib/mft-noise-processing.sh" calib,20,"production/calib/mft-noise-aggregator.sh"
 
 MCH-badchannel-calibration: "O2PDPSuite" reco,5,5,"production/calib/mch-badchannel-processing.sh" calib,1,"production/calib/mch-badchannel-aggregator.sh"
+
+PHS-pedestal-calibration: "O2PDPSuite" reco,1,1," production/calib/phs-pedestal.sh"
+
+PHS-led-calibration: "O2PDPSuite" reco,1,1," production/calib/phs-led.sh"
