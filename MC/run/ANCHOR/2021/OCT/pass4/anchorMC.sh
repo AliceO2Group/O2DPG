@@ -50,14 +50,19 @@ sed -i 's/JDL_ANCHORYEAR/JDL_LPMANCHORYEAR/' async_pass.sh
 # create workflow ---> creates the file that can be parsed
 export IGNORE_EXISTING_SHMFILES=1
 touch list.list
+ALIEN_JDL_LPMPRODUCTIONTAG_KEEP=$ALIEN_JDL_LPMPRODUCTIONTAG
+echo "Substituting ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG with ALIEN_JDL_LPMANCHORPRODUCTION=$ALIEN_JDL_LPMANCHORPRODUCTION for simulating reco pass..."
+ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMANCHORPRODUCTION
 ./async_pass.sh
+ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG_KEEP
+echo "Setting back ALIEN_JDL_LPMPRODUCTIONTAG to $ALIEN_JDL_LPMPRODUCTIONTAG"
 
 # now create the local MC config file --> config-config.json
 ${O2DPG_ROOT}/UTILS/parse-async-WorkflowConfig.py
 
 # check if config reasonably created
-if [[ `grep "o2-ctf-reader-workflow-options" config-json.json 2> /dev/null | wc` == "0" ]]; then
-  echo "Problem in anchor config creation"
+if [[ `grep "o2-ctf-reader-workflow-options" config-json.json 2> /dev/null | wc -l` == "0" ]]; then
+  echo "Problem in anchor config creation. Stopping."
   exit 1
 fi
 
@@ -80,17 +85,34 @@ baseargs="-tf ${NTIMEFRAMES} --split-id ${ALIEN_JDL_SPLITID:-0} --prod-split ${A
 remainingargs="-eCM 900 -col pp -gen pythia8 -proc inel -ns ${NSIGEVENTS}                                                                                                 \
                -interactionRate 2000                                                                                                                                      \
                -confKey \"Diamond.width[2]=6.0;Diamond.width[0]=0.01;Diamond.width[1]=0.01;Diamond.position[0]=0.0;Diamond.position[1]=-0.035;Diamond.position[2]=0.41\"  \
-              --include-qc --include-analysis"
+              --include-local-qc --include-analysis"
 
 remainingargs="${remainingargs} -e ${SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
 remainingargs="${remainingargs} --anchor-config config-json.json"
+
+echo "baseargs: ${baseargs}"
+echo "remainingargs: ${remainingargs}"
               
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs}
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs} &> timestampsampling.log
+
+TIMESTAMP=`grep "Determined timestamp to be" timestampsampling.log | awk '//{print $6}'`
+echo "TIMESTAMP IS ${TIMESTAMP}"
+
+# -- PREFETCH CCDB OBJECTS TO DISC      --
+# (make sure the right objects at the right timestamp are fetched
+#  until https://alice.its.cern.ch/jira/browse/O2-2852 is fixed)
+export ALICEO2_CCDB_LOCALCACHE=$PWD/.ccdb
+[ ! -d .ccdb ] && mkdir .ccdb
+
+for p in /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Align /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Align /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TRD/Align /TOF/Align /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /PHS/Align /CPV/Align /EMC/Align /HMP/Align /MFT/Align /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /MCH/Align /MID/Align /FT0/Align /FT0/Calibration/ChannelTimeOffset /FV0/Align /FV0/Calibration/ChannelTimeOffset /FDD/Align /CTP/Calib/OrbitReset; do
+  ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${p} -d .ccdb --timestamp ${TIMESTAMP}
+done
+
 # -- RUN THE MC WORKLOAD TO PRODUCE AOD --
 
 export FAIRMQ_IPC_PREFIX=./
-export ALICEO2_CCDB_LOCALCACHE=$PWD/.ccdb
+
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
 MCRC=$?  # <--- we'll report back this code
 
@@ -99,7 +121,7 @@ if [ "${MCRC}" = "0" ]; then
   [ ${ALIBI_EXECUTOR_FRAMEWORK} ] && copy_ALIEN "*AO2D*"
 
   # do QC tasks
-  if [[ "${remainingargs}" == *"--include-qc"* ]]; then
+  if [[ "${remainingargs}" == *"--include-local-qc"* ]]; then
     echo "Doing QC"
     ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
     RC=$?
@@ -122,6 +144,13 @@ if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then
   find ./ -name "localhos*_*" -delete
   tar -czf mcarchive.tar.gz workflow.json tf* QC pipeline*
   copy_ALIEN mcarchive.tar.gz
+fi
+
+#
+# full logs tar-ed for output, regardless the error code or validation - to catch also QC logs...
+#
+if [[ -n "$ALIEN_PROC_ID" ]]; then
+  find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" \) | tar -czvf debug_log_archive.tgz -T -
 fi
 
 unset FAIRMQ_IPC_PREFIX
