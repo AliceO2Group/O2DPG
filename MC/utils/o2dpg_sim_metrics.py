@@ -210,12 +210,17 @@ def make_histo(x, y, xlabel, ylabel, ax=None, cmap=None, norm=True, title=None, 
   """
   figure, ax = make_default_figure(ax)
 
+  if not len(x) or not len(y):
+    print("No data for plotting...")
+    return figure, ax
+
   y = y.copy()
   x = [i for _, i in sorted(zip(y, x))]
   y.sort()
   if norm:
     total = sum(y)
-    y = [i / total for i in y]
+    if total > 0:
+      y = [i / total for i in y]
   colors = None
   if cmap:
     step = 1. / len(y)
@@ -254,6 +259,10 @@ def make_plot(x, y, xlabel, ylabel, ax=None, title=None, **kwargs):
   """
   figure, ax = make_default_figure(ax)
 
+  if not len(x) or not len(y):
+    print("No data for plotting...")
+    return figure, ax
+
   ax.plot(x, y)
   ax.tick_params("both", labelsize=30)
   ax.tick_params("x", rotation=45)
@@ -281,6 +290,11 @@ def make_pie(labels, y, ax=None, cmap=None, title=None, **kwargs):
       title to be put for figure
   """
   figure, ax = make_default_figure(ax)
+
+  if not len(labels) or not len(y):
+    print("No data for plotting...")
+    return figure, ax
+
   y = y.copy()
   labels = [l for _, l in sorted(zip(y, labels))]
   y.sort()
@@ -319,6 +333,11 @@ def plot_histo_and_pie(x, y, xlabel, ylabel, path, **kwargs):
         scale before plotting
   """
   figure, axes = plt.subplots(1, 3, figsize=(60, 20))
+
+  if not len(x) or not len(y):
+    print("No data for plotting...")
+    return
+
   title = kwargs.pop("title", None)
   scale = kwargs.pop("scale", 1.)
   y = [i * scale for i in y]
@@ -391,10 +410,13 @@ def make_for_influxDB(full_map, table_base_name, save_path):
       fields = ",".join([f"{k}={v}" for k, v in tags.items()])
       db_string = f"{tab_name},{fields}"
       total = 0
+      # fields are separated from the tags by a whitespace
+      fields = []
       for cat, val in metrics.items():
-        db_string += f",{cat}={val['sum'][metric_id]}"
+        fields.append(f"{cat}={val['sum'][metric_id]}")
         total += val["sum"][metric_id]
-      db_string += f",total={total}"
+      fields = ",".join(fields)
+      db_string += f" {fields},total={total}"
       f.write(f"{db_string}\n")
 
 
