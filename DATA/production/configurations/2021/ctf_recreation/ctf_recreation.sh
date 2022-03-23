@@ -8,8 +8,8 @@
 # export ALIEN_JDL_LPMINTERACTIONTYPE=pp
 # export ALIEN_JDL_LPMPRODUCTIONTAG=OCT
 # export ALIEN_JDL_LPMPASSNAME=apass3
-# export ALIEN_JDL_ANCHORYEAR=2021
-# export ALIEN_JDL_DETCONFIG=calo [muon, centralBarrel]
+# export ALIEN_JDL_LPMANCHORYEAR=2021
+# export ALIEN_JDL_DETCONFIG=centralBarrel [muon, cpv, emcal, phos]
 
 
 if [[ "${1##*.}" == "root" ]]; then
