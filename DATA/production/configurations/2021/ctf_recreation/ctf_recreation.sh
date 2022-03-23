@@ -141,7 +141,7 @@ fi
 
 if [[ -z $DPL_WORKFLOW_FROM_OUTSIDE ]]; then
     echo "Use dpl-workflow.sh from O2"
-    cp ~/SOFT/alibuild/ali-o2-dev/O2/prodtests/full-system-test/dpl-workflow.sh .
+    cp $O2_ROOT/prodtests/full-system-test/dpl-workflow.sh .
 else
     echo "Use dpl-workflow.sh passed as input"
     cp $DPL_WORKFLOW_FROM_OUTSIDE .
