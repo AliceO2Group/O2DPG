@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # script to set extra env variables
 # taking some stuff from alien
 

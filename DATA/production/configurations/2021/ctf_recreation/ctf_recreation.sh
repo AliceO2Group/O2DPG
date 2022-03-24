@@ -8,8 +8,8 @@
 # export ALIEN_JDL_LPMINTERACTIONTYPE=pp
 # export ALIEN_JDL_LPMPRODUCTIONTAG=OCT
 # export ALIEN_JDL_LPMPASSNAME=apass3
-# export ALIEN_JDL_ANCHORYEAR=2021
-# export ALIEN_JDL_DETCONFIG=calo [muon, centralBarrel]
+# export ALIEN_JDL_LPMANCHORYEAR=2021
+# export ALIEN_JDL_DETCONFIG=centralBarrel [muon, cpv, emcal, phos]
 
 
 if [[ "${1##*.}" == "root" ]]; then
@@ -141,7 +141,7 @@ fi
 
 if [[ -z $DPL_WORKFLOW_FROM_OUTSIDE ]]; then
     echo "Use dpl-workflow.sh from O2"
-    cp ~/SOFT/alibuild/ali-o2-dev/O2/prodtests/full-system-test/dpl-workflow.sh .
+    cp $O2_ROOT/prodtests/full-system-test/dpl-workflow.sh .
 else
     echo "Use dpl-workflow.sh passed as input"
     cp $DPL_WORKFLOW_FROM_OUTSIDE .
