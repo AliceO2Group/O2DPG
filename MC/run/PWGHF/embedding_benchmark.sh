@@ -23,6 +23,8 @@ MODULES="--skipModules ZDC"
 SIMENGINE=${SIMENGINE:-TGeant4}
 PYPROCESS=${PYPROCESS:-ccbar} #ccbar, bbar, ...
 
+export ALICEO2_CCDB_LOCALCACHE=$PWD/.ccdb
+
 # create workflow
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 5020 -col pp -gen pythia8 -proc ${PYPROCESS} \
                                            -colBkg PbPb -genBkg pythia8 -procBkg "heavy_ion" \
@@ -33,3 +35,5 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 5020 -col pp -gen pythia8 -proc 
 
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit ${CPULIMIT:-8} -tt aod
+
+unset ALICEO2_CCDB_LOCALCACHE
