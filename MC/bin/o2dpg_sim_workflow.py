@@ -931,7 +931,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      ### ITS
      addQCPerTF(taskName='ITSTrackSimTask',
                 needs=[ITSRECOtask['name']],
-                readerCommand='o2-its-reco-workflow',
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
  
    #secondary vertexer
