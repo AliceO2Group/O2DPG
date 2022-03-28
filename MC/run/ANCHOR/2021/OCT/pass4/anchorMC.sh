@@ -111,6 +111,9 @@ for p in /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Align /ITS/Calib/Dea
   ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${p} -d .ccdb --timestamp ${TIMESTAMP}
 done
 
+# -- DO AD-HOC ADJUSTMENTS TO WORKFLOWS (UNTIL THIS CAN BE DONE NATIVELY) --
+sed -i 's/--onlyDet TPC/--onlyDet TPC --TPCuseCCDB/' workflow.json # enables CCDB during TPC digitization
+
 # -- RUN THE MC WORKLOAD TO PRODUCE AOD --
 
 export FAIRMQ_IPC_PREFIX=./
@@ -141,7 +144,7 @@ if [ "${MCRC}" = "0" ]; then
 fi
 
 # could take this way finally
-if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then 
+if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then
   # publish the original data to ALIEN
   find ./ -name "localhos*_*" -delete
   tar -czf mcarchive.tar.gz workflow.json tf* QC pipeline*
