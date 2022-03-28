@@ -144,7 +144,7 @@ if [ "${MCRC}" = "0" ]; then
 fi
 
 # could take this way finally
-if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then 
+if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then
   # publish the original data to ALIEN
   find ./ -name "localhos*_*" -delete
   tar -czf mcarchive.tar.gz workflow.json tf* QC pipeline*
