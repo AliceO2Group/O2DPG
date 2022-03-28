@@ -98,27 +98,9 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 	echo "No runInput_$RUNNUMBER.tgz found returning"
 	return 2
     fi
-    if [[ ! -f TPC_calibdEdx.220301.tgz ]]; then
-	echo "No TPC_calibdEdx.220301.tgz found returning"
-	return 2
-    fi
     tar -xzvf commonInput.tgz
     ln -s o2sim_geometry.root o2sim_geometry-aligned.root
     tar -xzvf runInput_$RUNNUMBER.tgz
-    tar -xzvf TPC_calibdEdx.220301.tgz
-    mv calibdEdx.pol/*.* .
-    if [[ ! -f calibdEdx.$RUNNUMBER.root ]]; then
-	echo "No calibdEdx.$RUNNUMBER.root found returning"
-	return 2
-    fi
-    if [[ ! -f splines_for_dedx_threshold_3.5.root ]]; then
-	echo "No splines_for_dedx_threshold_3.5.root found returning"
-	return 2
-    fi
-    if [[ ! -f GainMap_2021-12-15_krypton_0.5T.v2.root ]]; then
-	echo "GainMap_2021-12-15_krypton_0.5T.v2.root"
-	return 2
-    fi
 ###fi
 
 echo "Checking current directory content"
