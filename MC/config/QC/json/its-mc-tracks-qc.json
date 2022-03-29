@@ -38,7 +38,10 @@
           "type" : "direct",
           "query" : "tracks:ITS/TRACKS/0;mstruth:ITS/TRACKSMCTR/0;compclus:ITS/COMPCLUSTERS/0;mcclustruth:ITS/CLUSTERSMCTR/0"
         },
-        "taskParameters" : { }
+        "taskParameters" : {
+                     "O2GrpPath" : "./o2sim_grp.root",
+                     "collisionsContextPath": "./collisioncontext.root"
+          }
 
       }
     }
