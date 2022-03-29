@@ -2,7 +2,7 @@ ITS-noise-calibration: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELIN
 
 ITS-noise-calibration-clusters: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 USECLUSTERS=1 production/calib/its-noise-processing.sh" calib,20,"USECLUSTERS=1 NTHREADS=32 production/calib/its-noise-aggregator.sh"
 
-ITS-thr-calibration: "O2PDPSuite" reco,20,20,"production/calib/its-threshold-processing.sh" calib,20,"production/calib/its-threshold-aggregator.sh"
+ITS-thr-calibration: "O2PDPSuite" reco,40,40,"production/calib/its-threshold-processing.sh" calib,40,"production/calib/its-threshold-aggregator.sh"
 
 TOF-diagnostic-calibration: "O2PDPSuite" reco,10,10,"SHMSIZE=64000000000 production/calib/tof-standalone-reco.sh" calib,4,"production/calib/tof-diagn-aggregator.sh" 
 
