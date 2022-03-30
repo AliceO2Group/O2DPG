@@ -23,7 +23,7 @@ NTIMEFRAMES=${NTIMEFRAMES:-1}
 # create workflow
 
 #ccbar filter
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13500 -col pp -gen pythia8 -proc "inel" -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 500000 -confKey "Diamond.width[2]=6." -e TGeant4 -mod "--skipModules ZDC" \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13500 -col pp -gen pythia8 -proc "inel" -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 500000 -confKey "Diamond.width[2]=6.;GeneratorPythia8.config=${O2DPG_ROOT}/MC/config/PWGHF/pythia8/generator/pythia8_charmtriggers_with_decays.cfg" -e TGeant4 -mod "--skipModules ZDC" \
         -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHFTrigger_ccbar.ini \
 
 # run workflow
