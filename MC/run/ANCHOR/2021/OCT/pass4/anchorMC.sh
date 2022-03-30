@@ -48,6 +48,8 @@ sed -i 's/JDL_ANCHORYEAR/JDL_LPMANCHORYEAR/' async_pass.sh
 [[ ! -f commonInput.tgz ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/commonInput.tgz file:.
 [[ ! -f runInput_${RUNNUMBER} ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/runInput_${RUNNUMBER}.tgz file:.
 [[ ! -f TPC_calibdEdx.220301.tgz ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/TPC_calibdEdx.220301.tgz file:.
+tar -xzf TPC_calibdEdx.220301.tgz
+cp calibdEdx.pol/*.root .
 
 # create workflow ---> creates the file that can be parsed
 export IGNORE_EXISTING_SHMFILES=1
@@ -67,6 +69,9 @@ if [[ `grep "o2-ctf-reader-workflow-options" config-json.json 2> /dev/null | wc 
   echo "Problem in anchor config creation. Stopping."
   exit 1
 fi
+
+# check if important input file is here
+[ ! -f splines_for_dedx_V1_MC_iter0_PP.root ] && echo "TPC calib input file not found" && exit 1
 
 # -- CREATE THE MC JOB DESCRIPTION ANCHORED TO RUN --
 
@@ -107,13 +112,13 @@ echo "TIMESTAMP IS ${TIMESTAMP}"
 export ALICEO2_CCDB_LOCALCACHE=$PWD/.ccdb
 [ ! -d .ccdb ] && mkdir .ccdb
 
-for p in /CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Align /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Align /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TRD/Align /TOF/Align /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /PHS/Align /CPV/Align /EMC/Align /HMP/Align /MFT/Align /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /MCH/Align /MID/Align /FT0/Align /FT0/Calibration/ChannelTimeOffset /FV0/Align /FV0/Calibration/ChannelTimeOffset /FDD/Align ; do
-  ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${p} -d .ccdb --timestamp ${TIMESTAMP}
-  if [ ! "$?" == "0" ]; then
-    echo "Problem during CCDB prefetching of ${p}. Exiting."
-    exit 1
-  fi
-done
+CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Align /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Align /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TRD/Align /TOF/Align /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /PHS/Align /CPV/Align /EMC/Align /HMP/Align /MFT/Align /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /MCH/Align /MID/Align /FT0/Align /FT0/Calibration/ChannelTimeOffset /FV0/Align /FV0/Calibration/ChannelTimeOffset /FDD/Align"
+
+${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS} -d .ccdb --timestamp ${TIMESTAMP}
+if [ ! "$?" == "0" ]; then
+  echo "Problem during CCDB prefetching of ${CCDBOBJECTS}. Exiting."
+  exit 1
+fi
 
 # -- DO AD-HOC ADJUSTMENTS TO WORKFLOWS (UNTIL THIS CAN BE DONE NATIVELY) --
 sed -i 's/--onlyDet TPC/--onlyDet TPC --TPCuseCCDB/' workflow.json # enables CCDB during TPC digitization
