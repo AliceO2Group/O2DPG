@@ -9,6 +9,9 @@ from os.path import split as ossplit
 from copy import deepcopy
 import array as arr
 import os
+import requests
+import re
+import json
 
 # Creates a time anchored MC workflow; positioned within a given run-number (as function of production size etc)
 
@@ -23,7 +26,7 @@ import os
 
 
 # this is PyROOT; enables reading ROOT C++ objects
-from ROOT import o2, TFile, TString, std
+from ROOT import o2, TFile, TString, TBufferJSON, TClass, std
 
 
 # these need to go into a module / support layer
@@ -52,14 +55,14 @@ class CCDBAccessor:
         """
 
         if not timestamp:
-            timestamp = self.mgr.getTimestamp()
+            timestamp = o2.ccdb.BasicCCDBManager.instance().getTimestamp()
         else:
-            self.mgr.setTimestamp(timestamp)
+            o2.ccdb.BasicCCDBManager.instance().setTimestamp(timestamp)
 
         if not meta_info:
-            obj = self.mgr.get[obj_type](path)
+            obj = o2.ccdb.BasicCCDBManager.instance().get[obj_type](path)
         else:
-            obj = self.mgr.getSpecific[obj_type](path, meta_info)
+            obj = o2.ccdb.BasicCCDBManager.instance().get[obj_type](path, meta_info)
 
         return timestamp, obj
 
@@ -75,6 +78,7 @@ class CCDBAccessor:
 def retrieve_sor_eor(ccdbreader, run_number):
     """
     retrieves start of run (sor) and end of run (eor) given a run number
+    from the RCT/RunInformation table
     """
 
     path_run_info = "RCT/RunInformation"
@@ -85,6 +89,67 @@ def retrieve_sor_eor(ccdbreader, run_number):
     # return this a dictionary
     return {"SOR": int(header["SOR"]), "EOR": int(header["EOR"])}
 
+
+def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp):
+    """
+    Retrieves a CCDB object as a JSON/dictionary.
+    No need to know the type of the object a-priori.
+    """
+    header = ccdbreader.fetch_header(path, timestamp)
+    if not header:
+       print(f"WARNING: Could not get header for path ${path} and timestamp {timestamp}")
+       return None
+    objtype=header["ObjectType"]
+    print (objtype)
+    ts, obj = ccdbreader.fetch(path, objtype, timestamp)
+    print (obj)
+    # convert object to json
+    jsonTString = TBufferJSON.ConvertToJSON(obj, TClass.GetClass(objtype))
+    return json.loads(jsonTString.Data())
+
+def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
+    """
+    Retrieves start of run (sor) and end of run (eor) given a run number
+    from via the GRPECS object. We first need to find the right object
+    ... but this is possible with a browsing request and meta_data filtering.
+    """
+
+    # make a simple HTTP request on the "browsing" endpoint
+    url="http://alice-ccdb.cern.ch/browse/GLO/Config/GRPECS/run_number="+str(run_number)
+    ansobject=requests.get(url)
+    tokens=ansobject.text.split("\n")
+    # look for the validity token
+
+    # look for the ID token
+    ID=None
+    VALIDITY=None
+    for t in tokens:
+      if t.count("ID:") > 0:
+        ID=t.split(":")[1]
+      if t.count("Validity:") > 0:
+        VALIDITY=t.split(":")[1]
+      if ID!=None and VALIDITY!=None:
+        break
+
+    assert(ID != None)
+    assert(VALIDITY != None)
+
+    match_object=re.match("\s*([0-9]*)\s*-\s*([0-9]*)\s*.*", VALIDITY)
+    SOV = -1  # start of object validity (not necessarily the same as actual run-start)
+    EOV = -1  # end of object validity (not the same as actual run-end)
+    if match_object != None:
+      SOV=match_object[1]
+      EOV=match_object[2]
+
+    # we make a suitable request (at the start time) --> this gives the actual
+    # object, with which we can query the end time as well
+    grp=retrieve_CCDBObject_asJSON(ccdbreader, "/GLO/Config/GRPECS", int(SOV))
+
+    # check that this object is really the one we wanted based on run-number
+    assert(int(grp["mRun"]) == int(run_number))
+
+    print ("SOR GRP (internal) is ", grp["mTimeStart"], " EOR is ", grp["mTimeEnd"])
+    return {"SOR": int(grp["mTimeStart"]), "EOR": int(grp["mTimeEnd"])}
 
 def retrieve_GRP(ccdbreader, timestamp):
     """
@@ -151,7 +216,8 @@ def main():
     # make a CCDB accessor object
     ccdbreader = CCDBAccessor(args.ccdb_url)
     # fetch the EOR/SOR
-    sor_eor = retrieve_sor_eor(ccdbreader, args.run_number)
+    # retrieve_sor_eor(ccdbreader, args.run_number) # <-- from RCT/Info
+    sor_eor = retrieve_sor_eor_fromGRPECS(ccdbreader, args.run_number)
     if not sor_eor:
        print ("No time info found")
        sys.exit(1)

@@ -246,16 +246,12 @@ def extract_commands(commandlist):
 
 # some manual intervention (could and should be done from outside)
 def postadjust_ConfigValues(flat_config):
-  # for now we reset the TPC calibration things
   gpuglobal = flat_config.get("GPU_global")
-  if gpuglobal != None:
-     gpuglobal.pop("dEdxCorrFile", None)
-     gpuglobal.pop("gainCalibFile", None)
-     gpuglobal.pop("dEdxPolTopologyCorrFile", None)
-     d=os.getcwd()
-     gpuglobal["dEdxSplineTopologyCorrFile"]=d+"/splines_for_dedx_threshold_3.5.root"
-     gpuglobal["thresholdCalibFile"]=d+"/NoiseThresholds.3.5s.physics.root"
-
+  # fix location of root files for TPC
+  d=os.getcwd()
+  for key in gpuglobal:
+      if gpuglobal[key].count(".root") > 0:
+         gpuglobal[key] = d + "/" + gpuglobal[key]
 
 cmdlist = get_topology_cmd("workflowconfig.log")
 #print (cmdlist)
