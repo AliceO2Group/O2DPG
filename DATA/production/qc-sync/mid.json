@@ -20,6 +20,10 @@
       },
       "conditionDB": {
         "url": "null:8083"
+      },
+      "infologger": {
+        "filterDiscardDebug": "true",
+        "filterDiscardLevel": "1"
       }
     },
     "tasks": {
