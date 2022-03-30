@@ -192,11 +192,14 @@ def determine_timestamp(sor, eor, splitinfo, cycle, ntf):
 
     # ntimeframes is the total number of timeframes possible
     # if we have totaljobs number of jobs
-    timeframesperjob = ntimeframes // totaljobs
+    maxtimeframesperjob = ntimeframes // totaljobs
     orbitsperjob = norbits // totaljobs
-    print (f"Each job can do {timeframesperjob} maximally at a prod split of {totaljobs}")
-    print (f"With each job doing {ntf} timeframes, this corresponds to a filling rate of ", ntf/timeframesperjob)
-    maxcycles = timeframesperjob // ntf
+    print (f"Each job can do {maxtimeframesperjob} maximally at a prod split of {totaljobs}")
+    print (f"With each job doing {ntf} timeframes, this corresponds to a filling rate of ", ntf/maxtimeframesperjob)
+    # filling rate should be smaller than 100%
+    assert(ntf <= maxtimeframesperjob)
+
+    maxcycles = maxtimeframesperjob // ntf
     print (f"We can do this amount of cycle iterations to achieve 100%: ", maxcycles)
     
     return sor, int(thisjobID * maxcycles) + cycle
@@ -212,6 +215,9 @@ def main():
     parser.add_argument("-tf", type=int, help="number of timeframes per job", default=1)
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
+
+    # split id should not be larger than production id
+    assert(args.split_id < args.prod_split)
 
     # make a CCDB accessor object
     ccdbreader = CCDBAccessor(args.ccdb_url)
