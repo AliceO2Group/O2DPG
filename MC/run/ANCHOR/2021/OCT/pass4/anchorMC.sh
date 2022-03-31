@@ -102,6 +102,7 @@ echo "baseargs: ${baseargs}"
 echo "remainingargs: ${remainingargs}"
               
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs} &> timestampsampling.log
+[ "$?" != "0" ] && echo "Problem during anchor timestamp sampling " && exit 1
 
 TIMESTAMP=`grep "Determined timestamp to be" timestampsampling.log | awk '//{print $6}'`
 echo "TIMESTAMP IS ${TIMESTAMP}"

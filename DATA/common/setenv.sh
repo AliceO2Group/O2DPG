@@ -91,6 +91,8 @@ if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then export MULTIPLICITY_FACTOR_REST=1; f
 [ -z "${DISABLE_MC+x}" ] && DISABLE_MC="--disable-mc"
 [ -z "${DISABLE_ROOT_OUTPUT+x}" ] && DISABLE_ROOT_OUTPUT="--disable-root-output"
 
+if [ `uname` == Darwin ]; then export UDS_PREFIX=; else export UDS_PREFIX="@"; fi
+
 if [[ $(( $EXTINPUT + $CTFINPUT + $RAWTFINPUT + $DIGITINPUT )) -ge 2 ]]; then
   echo Only one of EXTINPUT / CTFINPUT / RAWTFINPUT / DIGITINPUT must be set
   exit 1
