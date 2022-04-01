@@ -28,6 +28,14 @@ import json
 # this is PyROOT; enables reading ROOT C++ objects
 from ROOT import o2, TFile, TString, TBufferJSON, TClass, std
 
+# some global constants
+# this should be taken from the C++ code (via PyROOT and library access to these constants)
+LHCMaxBunches = 3564;                           # max N bunches
+LHCRFFreq = 400.789e6;                          # LHC RF frequency in Hz
+LHCBunchSpacingNS = 10 * 1.e9 / LHCRFFreq;      # bunch spacing in ns (10 RFbuckets)
+LHCOrbitNS = LHCMaxBunches * LHCBunchSpacingNS; # orbit duration in ns
+LHCOrbitMUS = LHCOrbitNS * 1e-3;                # orbit duration in \mus
+LHCBunchSpacingMUS = LHCBunchSpacingNS * 1e-3   # bunch spacing in mus
 
 # these need to go into a module / support layer
 class CCDBAccessor:
@@ -90,7 +98,7 @@ def retrieve_sor_eor(ccdbreader, run_number):
     return {"SOR": int(header["SOR"]), "EOR": int(header["EOR"])}
 
 
-def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp):
+def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp, objtype_external = None):
     """
     Retrieves a CCDB object as a JSON/dictionary.
     No need to know the type of the object a-priori.
@@ -100,6 +108,11 @@ def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp):
        print(f"WARNING: Could not get header for path ${path} and timestamp {timestamp}")
        return None
     objtype=header["ObjectType"]
+    if objtype == None:
+       objtype = objtype_external
+    if objtype == None:
+       return None
+
     print (objtype)
     ts, obj = ccdbreader.fetch(path, objtype, timestamp)
     print (obj)
@@ -148,8 +161,18 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
     # check that this object is really the one we wanted based on run-number
     assert(int(grp["mRun"]) == int(run_number))
 
-    print ("SOR GRP (internal) is ", grp["mTimeStart"], " EOR is ", grp["mTimeEnd"])
-    return {"SOR": int(grp["mTimeStart"]), "EOR": int(grp["mTimeEnd"])}
+    SOR=int(grp["mTimeStart"]) # in milliseconds
+    EOR=int(grp["mTimeEnd"])
+    # fetch orbit reset to calculate orbitFirst
+    ts, oreset = ccdbreader.fetch("CTP/Calib/OrbitReset", "vector<Long64_t>", timestamp = SOR)
+    print ("OrbitReset:", int(oreset[0]))
+    print ("RunStart:", SOR)
+
+    orbitFirst = int((1000*SOR - oreset[0])//LHCOrbitMUS)  # calc done in microseconds
+    print ("OrbitFirst", orbitFirst)
+
+    # orbitReset.get(run_number)
+    return {"SOR": SOR, "EOR": EOR, "FirstOrbit" : orbitFirst}
 
 def retrieve_GRP(ccdbreader, timestamp):
     """
@@ -174,16 +197,9 @@ def determine_timestamp(sor, eor, splitinfo, cycle, ntf):
     thisjobID = splitinfo[0]
     print (f"Start-of-run : {sor}")
     print (f"End-of-run : {eor}")
-    time_length_inmus = 1000.*(eor - sor) # time length in micro seconds
+    time_length_inmus = 1000*(eor - sor) # time length in micro seconds
     timestamp_delta = time_length_inmus / totaljobs
     HBF_per_timeframe = 256 # 256 orbits per timeframe --> should be taken from GRP or common constant in all O2DPG
-
-    # this should be taken from the C++ code (via PyROOT and library access to these constants)
-    LHCMaxBunches = 3564;                           # max N bunches
-    LHCRFFreq = 400.789e6;                          # LHC RF frequency in Hz
-    LHCBunchSpacingNS = 10 * 1.e9 / LHCRFFreq;      # bunch spacing in ns (10 RFbuckets)
-    LHCOrbitNS = LHCMaxBunches * LHCBunchSpacingNS; # orbit duration in ns
-    LHCOrbitMUS = LHCOrbitNS * 1e-3;                # orbit duration in \mus
 
     ntimeframes = time_length_inmus / (HBF_per_timeframe * LHCOrbitMUS)
     norbits = time_length_inmus / LHCOrbitMUS
@@ -237,7 +253,7 @@ def main():
 
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
-    forwardargs = " ".join([ a for a in args.forward if a != '--' ]) + " -tf " + str(args.tf) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " -field ccdb -bcPatternFile ccdb"
+    forwardargs = " ".join([ a for a in args.forward if a != '--' ]) + " -tf " + str(args.tf) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(sor_eor["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb"
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
     print ("Creating time-anchored workflow...")
     os.system(cmd)

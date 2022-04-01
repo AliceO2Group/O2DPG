@@ -93,6 +93,9 @@ parser.add_argument('--early-tf-cleanup',action='store_true', help='whether to c
 #  help='Treat smaller sensors in a single digitization')
 parser.add_argument('--combine-smaller-digi', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
+parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring)
+                                                            # (consider doing this rather in O2 digitization code directly)
+parser.add_argument('--run-anchored', action='store_true', help=argparse.SUPPRESS)
 
 # QC related arguments
 parser.add_argument('--include-qc', '--include-full-qc', action='store_true', help='includes QC in the workflow, both per-tf processing and finalization')
@@ -529,9 +532,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    # each timeframe should be done for a different bunch crossing range, depending on the timeframe id
    orbitsPerTF = 256
    startOrbit = (tf-1 + int(args.production_offset)*NTIMEFRAMES)*orbitsPerTF
-   globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : startOrbit,
+   globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : args.first_orbit + startOrbit,
                             "HBFUtils.nHBFPerTF" : orbitsPerTF,
-                            "HBFUtils.startTime" : args.timestamp }
+                            "HBFUtils.startTime" : args.timestamp,
+                            "HBFUtils.orbitFirst" : args.first_orbit}
 
 
    def putConfigValues(localCF = {}):
@@ -980,7 +984,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    # next line needed for meta data writing (otherwise lost)
    AODtask['cmd'] += ' --aod-writer-resmode "UPDATE"'
    AODtask['cmd'] += ' --run-number ' + str(args.run)
-   AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id + ' ' + getDPL_global_options(bigshm=True)
+   # only in non-anchored runs
+   if args.run_anchored == False:
+      AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id
+   AODtask['cmd'] += ' ' + getDPL_global_options(bigshm=True)
    AODtask['cmd'] += ' --info-sources ' + anchorConfig.get("o2-aod-producer-workflow-options",{}).get("info-sources",str(aodinfosources)) 
    AODtask['cmd'] += ' --lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}'
    AODtask['cmd'] += ' --anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}'
