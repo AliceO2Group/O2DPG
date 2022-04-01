@@ -27,9 +27,6 @@ else
     echo "************************************************************"
 fi
 
-# to have better logging
-export DDS_SESSION_ID=foo
-
 # remove monitoring-backend
 export ENABLE_METRICS=1
 
