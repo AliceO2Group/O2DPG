@@ -18,6 +18,7 @@
 # 
 
 import sys
+import importlib.util
 import argparse
 from os import environ, mkdir
 from os.path import join, dirname, isdir
@@ -139,6 +140,14 @@ if (args.include_qc or args.include_local_qc) and QUALITYCONTROL_ROOT is None:
 if args.include_analysis and (QUALITYCONTROL_ROOT is None or O2PHYSICS_ROOT is None):
    print('Error: Argument --include-analysis needs O2PHYSICS_ROOT and QUALITYCONTROL_ROOT loaded')
 #   exit(1)
+
+module_name = "o2dpg_analysis_test_workflow"
+spec = importlib.util.spec_from_file_location(module_name, join(O2DPG_ROOT, "MC", "analysis_testing", f"{module_name}.py"))
+o2dpg_analysis_test_workflow = importlib.util.module_from_spec(spec)
+sys.modules[module_name] = o2dpg_analysis_test_workflow
+spec.loader.exec_module(o2dpg_analysis_test_workflow)
+
+from o2dpg_analysis_test_workflow import add_analysis_tasks, add_analysis_qc_upload_tasks
 
 # fetch an external configuration if given
 # loads the workflow specification
@@ -1044,76 +1053,10 @@ if includeFullQC:
 
 
 if includeAnalysis:
-   # Configuration
-   analysisdir = "Analysis"
-   analysislabel = "Analysis"
-   if not isdir(analysisdir):
-      mkdir(analysisdir)
-
-   def addAnalysisTask(tag, cmd, output=None, needs=[AOD_merge_task['name']],
-                       shmsegmentsize="--shm-segment-size 2000000000",
-                       aodmemoryratelimit="--aod-memory-rate-limit 500000000",
-                       readers="--readers 1",
-                       aodfile="--aod-file ../AO2D.root",
-                       extraarguments="-b"):
-      """
-      Function to add O2Physics analysis task to the workflow and upload the results on the CCDB
-      """
-      AnalysisTasks = createTask(name=f"Analysis_{tag}",
-                                      needs=needs,
-                                      cwd=analysisdir,
-                                      lab=[analysislabel, tag],
-                                      cpu=1,
-                                      mem='2000')
-      renameOutput = ""
-      AnalysisTaskOutput = []
-      if output is not None:
-         if isinstance(output, str):
-            output = [output]
-         for i in output:
-            # output MUST BE the one produced by the task, so it has to be known beforehand
-            i = i.strip(".root")
-            renameOutput += f" && mv {i}.root {i}_{tag}.root "
-            AnalysisTaskOutput.append(f"{i}_{tag}.root")
-      AnalysisTasks['cmd'] = f"{cmd} {shmsegmentsize} {aodmemoryratelimit} {readers} {aodfile} {extraarguments} {renameOutput}"
-      workflow['stages'].append(AnalysisTasks)
-
-      # Uploading results to ccdb
-      if QUALITYCONTROL_ROOT is None:
-         return
-      for i in AnalysisTaskOutput:
-         AnalysisFinalizetask = createTask(name=f"Analysis_finalize_{tag}_{i}",
-                                           needs=[AnalysisTasks['name']],
-                                           cwd=analysisdir, lab=[analysislabel+"Upload"], cpu=1, mem='2000')
-         AnalysisFinalizetask['cmd'] = f"o2-qc-upload-root-objects --input-file ./{i} --qcdb-url ccdb-test.cern.ch:8080 --task-name Analysis{tag} --detector-code AOD --provenance qc_mc --pass-name passMC --period-name {args.productionTag} --run-number {args.run}"
-         workflow['stages'].append(AnalysisFinalizetask)
-
-   # Efficiency
-   addAnalysisTask(tag="Efficiency",
-                   cmd="o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-efficiency --eff-mc 1 --eff-mc-pos 1 --eff-mc-neg 1 --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json ", output="AnalysisResults.root")
-
-   # Event and track QA
-   addAnalysisTask(tag="EventTrackQA",
-                   cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-event-track --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json', output="AnalysisResults.root")
-
-   # MCHistograms (no complex workflow / piping required atm)
-   addAnalysisTask(tag="MCHistograms", cmd='o2-analysistutorial-mc-histograms', output="AnalysisResults.root")
-
-   # Valitation (no complex workflow / piping required atm)
-   addAnalysisTask(tag="Validation", cmd='o2-analysis-validation', output="AnalysisResults.root")
-
-   # PID TOF (no complex workflow / piping required atm), NOTE: produces no output
-   addAnalysisTask(tag="PIDTOF", cmd='o2-analysis-pid-tof')
-
-   # PID TPC (no complex workflow / piping required atm), NOTE: produces no output
-   addAnalysisTask(tag="PIDTPC", cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-pid-tpc')
-
-   # weak decay tutorial task (no complex workflow / piping required atm), NOTE: produces no output
-   addAnalysisTask(tag="WeakDecayTutorial", cmd='o2-analysistutorial-weak-decay-iteration')
-
-   # Event selection QA
-   addAnalysisTask(tag="EventSelectionQA",
-                   cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-selection-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-selection-qa.json | o2-analysis-event-selection-qa --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-selection-qa.json', output="AnalysisResults.root")
+   # include analyses and potentially final QC upload tasks
+    add_analysis_tasks(workflow["stages"], needs=[AOD_merge_task["name"]])
+    if QUALITYCONTROL_ROOT:
+        add_analysis_qc_upload_tasks(workflow["stages"], args.productionTag, args.run)
 
 dump_workflow(workflow["stages"], args.o)
 
