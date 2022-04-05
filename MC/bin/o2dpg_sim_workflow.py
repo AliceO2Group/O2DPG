@@ -737,13 +737,17 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    TRDTRACKINGtask['cmd'] = '${O2_ROOT}/bin/o2-trd-tracklet-transformer ' + getDPL_global_options() + putConfigValues()
-   TRDTRACKINGtask['cmd'] += ' | ${O2_ROOT}/bin/o2-trd-global-tracking ' + getDPL_global_options(bigshm=True) \
-                             + putConfigValuesNew(['ITSClustererParam',
+   workflow['stages'].append(TRDTRACKINGtask)
+   
+   # FIXME This is so far a workaround to avoud a race condition for trdcalibratedtracklets.root
+   TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
+   TRDTRACKINGtask2['cmd'] = '${O2_ROOT}/bin/o2-trd-global-tracking ' + getDPL_global_options(bigshm=True) \
+                              + putConfigValuesNew(['ITSClustererParam',
                                                    'ITSCATrackerParam',
                                                    'TPCGasParam'],
                                                   {"ITSClustererParam.dictFilePath":"../"})                   \
                              + " --track-sources " + anchorConfig.get("o2-trd-global-tracking-options",{}).get("track-sources","all")
-   workflow['stages'].append(TRDTRACKINGtask)
+   workflow['stages'].append(TRDTRACKINGtask2)
 
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], getDigiTaskName("TOF")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    TOFRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tof-reco-workflow --use-ccdb ' + getDPL_global_options() + putConfigValuesNew()
@@ -752,7 +756,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    toftpcmatchneeds = [TOFRECOtask['name'], TPCRECOtask['name']]
    toftracksrcdefault = "TPC,ITS-TPC"
    if isActive('TRD'):
-      toftpcmatchneeds.append(TRDTRACKINGtask['name'])
+      toftpcmatchneeds.append(TRDTRACKINGtask2['name'])
       toftracksrcdefault+=",TPC-TRD,ITS-TPC-TRD"
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=toftpcmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    TOFTPCMATCHERtask['cmd'] = '${O2_ROOT}/bin/o2-tof-matcher-workflow ' + getDPL_global_options() \
@@ -838,7 +842,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if isActive('MCH'):
       pvfinderneeds += [MCHRECOtask['name']]
    if isActive('TRD'):
-      pvfinderneeds += [TRDTRACKINGtask['name']]
+      pvfinderneeds += [TRDTRACKINGtask2['name']]
    if isActive('FDD'):
       pvfinderneeds += [FDDRECOtask['name']]
    if isActive('MFT') and isActive('MCH'):
@@ -960,7 +964,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if isActive('TOF'):
      aodneeds += [ TOFRECOtask['name'] ]
    if isActive('TRD'):
-     aodneeds += [ TRDTRACKINGtask['name'] ]
+     aodneeds += [ TRDTRACKINGtask2['name'] ]
    if isActive('EMC'):
      aodneeds += [ EMCRECOtask['name'] ]
    if isActive('CPV'):
