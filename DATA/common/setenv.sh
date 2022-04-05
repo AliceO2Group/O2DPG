@@ -105,7 +105,7 @@ if [ $SYNCMODE == 1 ] && [ $CTFINPUT == 1 ]; then
   echo SYNCMODE and CTFINPUT are incompatible
   exit 1
 fi
-if [ $WORKFLOWMODE != "run" ] && [ $WORKFLOWMODE != "print" ] && [ $WORKFLOWMODE != "dds" ]; then
+if [ $WORKFLOWMODE != "run" ] && [ $WORKFLOWMODE != "print" ] && [ $WORKFLOWMODE != "dds" ] && [ $WORKFLOWMODE != "dump" ]; then
   echo Invalid workflow mode
   exit 1
 fi
