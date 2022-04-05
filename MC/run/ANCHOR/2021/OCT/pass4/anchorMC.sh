@@ -22,6 +22,7 @@
 #   point to an existing config (O2DPG repo or local disc or whatever)
 
 RUNNUMBER=${ALIEN_JDL_LPMRUNNUMBER:-505673}
+INTERACTIONRATE=${INTERACTIONRATE:-2000}
 
 # get the async script (we need to modify it)
 # the script location can be configured with a JDL option
@@ -89,10 +90,10 @@ NSIGEVENTS=${NSIGEVENTS:-22}
 baseargs="-tf ${NTIMEFRAMES} --split-id ${ALIEN_JDL_SPLITID:-0} --prod-split ${ALIEN_JDL_PRODSPLIT:-100} --run-number ${RUNNUMBER}"
 
 # THIS NEEDS TO COME FROM OUTSIDE
-remainingargs="-eCM 900 -col pp -gen pythia8 -proc inel -ns ${NSIGEVENTS}                                                                                                 \
-               -interactionRate 2000                                                                                                                                      \
+remainingargs="-eCM 900 -col pp -gen pythia8 -proc cdiff -ns ${NSIGEVENTS}                                                                                                \
+               -interactionRate ${INTERACTIONRATE}                                                                                                                        \
                -confKey \"Diamond.width[2]=6.0;Diamond.width[0]=0.01;Diamond.width[1]=0.01;Diamond.position[0]=0.0;Diamond.position[1]=-0.035;Diamond.position[2]=0.41\"  \
-              --include-local-qc --include-analysis"
+              --include-local-qc --include-analysis --mft-reco-full"
 
 remainingargs="${remainingargs} -e ${SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
