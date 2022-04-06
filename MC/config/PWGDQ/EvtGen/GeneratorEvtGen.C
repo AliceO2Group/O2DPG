@@ -3,18 +3,16 @@ R__ADD_INCLUDE_PATH($EVTGEN_ROOT/include)
 
 
 #include "EvtGenBase/EvtStdHep.hh"
-#include "EvtGenBase/EvtRandomEngine.hh"
-#include "EvtGenBase/EvtSimpleRandomEngine.hh" 
 #include "EvtGen/EvtGen.hh"
 #include "EvtGenBase/EvtParticle.hh"
 #include "EvtGenBase/EvtPDL.hh"
 #include "EvtGenBase/EvtParticleFactory.hh"
 #include "EvtGenExternal/EvtExternalGenList.hh"
 #include "EvtGenBase/EvtAbsRadCorr.hh"
-#include "EvtGenBase/EvtMTRandomEngine.hh"
 #include "EvtGenBase/EvtRandom.hh"
 #include "EvtGenBase/EvtReport.hh"
 #include "EvtGenExternal/EvtExternalGenList.hh"
+#include "EvtTRandomEngine.hh"
 
 enum DecayModeEvt {kEvtAll=0, kEvtBJpsiDiElectron, kEvtBJpsi, kEvtBJpsiDiMuon, kEvtBPsiDiElectron, kEvtBPsiDiMuon, kEvtBSemiElectronic, kEvtHadronicD, kEvtHadronicDWithout4Bodies, kEvtChiToJpsiGammaToElectronElectron, kEvtChiToJpsiGammaToMuonMuon, kEvtSemiElectronic, kEvtBSemiMuonic, kEvtSemiMuonic, kEvtDiElectron, kEvtDiMuon, kEvtBPsiPrimeDiMuon, kEvtBPsiPrimeDiElectron, kEvtJpsiDiMuon, kEvtPsiPrimeJpsiDiElectron, kEvtPhiKK, kEvtOmega, kEvtLambda, kEvtHardMuons, kEvtElectronEM, kEvtDiElectronEM, kEvtGammaEM, kEvtBeautyUpgrade};
 
@@ -52,12 +50,7 @@ protected:
     std::cout << "EVTGEN INITIALIZATION" << std::endl;
     mEvtstdhep = new EvtStdHep();
     
-#ifdef EVTGEN_CPP11
-    // Use the Mersenne-Twister generator (C++11 only)
-    mEng = new EvtMTRandomEngine();
-#else
-    mEng = new EvtSimpleRandomEngine();
-#endif
+    mEng = new EvtTRandomEngine(); //the default seed of gRandom is 0
     
     EvtRandom::setRandomEngine(mEng);
     
@@ -195,8 +188,8 @@ protected:
       py=p4.get(2);
       pz=p4.get(3);
       e=p4.get(0);
-      const Float_t kconvT=0.001/2.999792458e8; // mm/c to seconds conversion
-      const Float_t kconvL=1./10; // mm to cm conversion
+      const Float_t kconvT=0.01/2.999792458e8; // cm/c to seconds conversion
+      const Float_t kconvL=1.; // dummy conversion
       // shift time / position
       x=x4.get(1)*kconvL + T::mParticles[indexMother].Vx(); //[cm]
       y=x4.get(2)*kconvL + T::mParticles[indexMother].Vy(); //[cm]
