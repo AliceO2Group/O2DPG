@@ -3,8 +3,6 @@
 # shellcheck disable=SC1091
 source common/setenv.sh
 
-SEVERITY=warning
-INFOLOGGER_SEVERITY=warning
 ARGS_ALL="--session default --severity $SEVERITY --shm-segment-size $SHMSIZE"
 ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
 ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 60"
