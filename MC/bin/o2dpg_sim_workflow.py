@@ -933,6 +933,11 @@ for tf in range(1, NTIMEFRAMES + 1):
                    needs=[TOFTPCMATCHERtask['name']],
                    readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF,TPC-TRD,TPC-TRD-TOF" --cluster-types none',
                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_AllTypes_direct_MC.json')
+     ### ITS
+     addQCPerTF(taskName='ITSTrackSimTask',
+                needs=[ITSRECOtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
  
    #secondary vertexer
    svfinder_threads = ' --threads 1 '
