@@ -539,7 +539,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : args.first_orbit + startOrbit,
                             "HBFUtils.nHBFPerTF" : orbitsPerTF,
                             "HBFUtils.startTime" : args.timestamp,
-                            "HBFUtils.orbitFirst" : args.first_orbit}
+                            "HBFUtils.orbitFirst" : args.first_orbit
+                            "HBFUtils.runNumber" : args.run}
 
 
    def putConfigValues(localCF = {}):
