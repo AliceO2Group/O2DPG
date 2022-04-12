@@ -315,7 +315,7 @@ void ForceDecay()
   /// evtgen pointers
   EvtGen *mEvtGen=0x0; 
   EvtStdHep *mEvtstdhep=0x0;
-  EvtRandomEngine* mEng = 0;
+  EvtTRandomEngine* mEng = 0;
   // pdg particles to be decayed
   TArrayI mPdgString;
   bool mDebug = kFALSE; 
