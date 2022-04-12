@@ -152,6 +152,14 @@ if [ "${MCRC}" = "0" ]; then
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     . ${DIR}/analysis_testing.sh
   fi
+
+  # do analysis tasks
+  if [[ "${remainingargs}" == *"--include-analysis"* ]]; then
+    echo "Doing Analysis"
+    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels Analysis --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
+    RC=$?
+  fi
+
 fi
 
 # could take this way finally

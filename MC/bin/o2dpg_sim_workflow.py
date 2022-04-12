@@ -18,6 +18,7 @@
 # 
 
 import sys
+import importlib.util
 import argparse
 from os import environ, mkdir
 from os.path import join, dirname, isdir
@@ -140,6 +141,14 @@ if args.include_analysis and (QUALITYCONTROL_ROOT is None or O2PHYSICS_ROOT is N
    print('Error: Argument --include-analysis needs O2PHYSICS_ROOT and QUALITYCONTROL_ROOT loaded')
 #   exit(1)
 
+module_name = "o2dpg_analysis_test_workflow"
+spec = importlib.util.spec_from_file_location(module_name, join(O2DPG_ROOT, "MC", "analysis_testing", f"{module_name}.py"))
+o2dpg_analysis_test_workflow = importlib.util.module_from_spec(spec)
+sys.modules[module_name] = o2dpg_analysis_test_workflow
+spec.loader.exec_module(o2dpg_analysis_test_workflow)
+
+from o2dpg_analysis_test_workflow import add_analysis_tasks, add_analysis_qc_upload_tasks
+
 # fetch an external configuration if given
 # loads the workflow specification
 def load_external_config(configfile):
@@ -195,7 +204,7 @@ workflow['stages'] = []
 
 
 def getDPL_global_options(bigshm=False):
-   common="-b --run --driver-client-backend ws:// "
+   common=" -b --run --driver-client-backend ws:// "
    if args.noIPC!=None:
       return common + " --no-IPC "
    if bigshm:
@@ -351,14 +360,9 @@ if usebkgcache:
 
 # We download some binary files, necessary for processing
 # Eventually, these files/objects should be queried directly from within these tasks?
-# TODO: add correct timestamp for query
-ITS_DICT_DOWNLOADER_TASK = createTask(name='itsdictdownloader', cpu='0')
-ITS_DICT_DOWNLOADER_TASK['cmd'] = '[ -f ITSdictionary.root ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ITS/Calib/ClusterDictionary -o ITSdictionary.root --no-preserve-path --timestamp ' + str(args.timestamp)
-workflow['stages'].append(ITS_DICT_DOWNLOADER_TASK)
-
-MFT_DICT_DOWNLOADER_TASK = createTask(name='mftdictdownloader', cpu='0')
-MFT_DICT_DOWNLOADER_TASK['cmd'] = '[ -f MFTdictionary.root ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p MFT/Calib/ClusterDictionary -o MFTdictionary.root --no-preserve-path --timestamp ' + str(args.timestamp)
-workflow['stages'].append(MFT_DICT_DOWNLOADER_TASK)
+MATBUD_DOWNLOADER_TASK = createTask(name='matbuddownloader', cpu='0')
+MATBUD_DOWNLOADER_TASK['cmd'] = '[ -f matbud.root ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p GLO/Param/MatLUT -o matbud.root --no-preserve-path --timestamp ' + str(args.timestamp)
+workflow['stages'].append(MATBUD_DOWNLOADER_TASK)
 
 # loop over timeframes
 for tf in range(1, NTIMEFRAMES + 1):
@@ -720,11 +724,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' + putConfigValuesNew(["GPU_global","TPCGasParam"], {"GPU_proc.ompThreads":NWORKERS})
    workflow['stages'].append(TPCRECOtask)
 
-   ITSConfig = {"ITSClustererParam.dictFilePath":"../"}
-   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[ITS_DICT_DOWNLOADER_TASK['name'], getDigiTaskName("ITS")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
+   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS"), MATBUD_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    ITSRECOtask['cmd'] = '${O2_ROOT}/bin/o2-its-reco-workflow --trackerCA --tracking-mode async ' + getDPL_global_options() \
                         + putConfigValuesNew(["ITSVertexerParam", "ITSAlpideParam",
-                                              'ITSClustererParam'], localCF=ITSConfig)
+                                              'ITSClustererParam'], {"NameConf.mDirMatLUT" : ".."})
    workflow['stages'].append(ITSRECOtask)
 
    FT0RECOtask=createTask(name='ft0reco_'+str(tf), needs=[getDigiTaskName("FT0")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
@@ -732,7 +735,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(FT0RECOtask)
 
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
-   ITSTPCMATCHtask['cmd']= '${O2_ROOT}/bin/o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\" --use-ft0' + putConfigValuesNew(['MFTClustererParam', 'ITSCATrackerParam', 'tpcitsMatch', 'TPCGasParam', 'ITSClustererParam'],{"ITSClustererParam.dictFilePath":"../"})
+   ITSTPCMATCHtask['cmd']= '${O2_ROOT}/bin/o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\" --use-ft0' + putConfigValuesNew(['MFTClustererParam', 'ITSCATrackerParam', 'tpcitsMatch', 'TPCGasParam', 'ITSClustererParam'], {"NameConf.mDirMatLUT" : ".."})
    workflow['stages'].append(ITSTPCMATCHtask)
 
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
@@ -740,12 +743,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TRDTRACKINGtask)
    
    # FIXME This is so far a workaround to avoud a race condition for trdcalibratedtracklets.root
-   TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
+   TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name'],MATBUD_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    TRDTRACKINGtask2['cmd'] = '${O2_ROOT}/bin/o2-trd-global-tracking ' + getDPL_global_options(bigshm=True) \
                               + putConfigValuesNew(['ITSClustererParam',
                                                    'ITSCATrackerParam',
-                                                   'TPCGasParam'],
-                                                  {"ITSClustererParam.dictFilePath":"../"})                   \
+                                                    'TPCGasParam'], {"NameConf.mDirMatLUT" : ".."})                                    \
                              + " --track-sources " + anchorConfig.get("o2-trd-global-tracking-options",{}).get("track-sources","all")
    workflow['stages'].append(TRDTRACKINGtask2)
 
@@ -763,13 +765,12 @@ for tf in range(1, NTIMEFRAMES + 1):
                               + putConfigValuesNew(["ITSClustererParam",
                                                     'TPCGasParam',
                                                     'ITSCATrackerParam',
-                                                    'MFTClustererParam'],{"ITSClustererParam.dictFilePath":"../"}) \
+                                                    'MFTClustererParam'])                         \
                               + " --track-sources " + anchorConfig.get("o2-tof-matcher-workflow-options",{}).get("track-sources",toftracksrcdefault)
    workflow['stages'].append(TOFTPCMATCHERtask)
 
-   MFTConfig = {"MFTClustererParam.dictFilePath":"../"}
-   MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[getDigiTaskName("MFT"), MFT_DICT_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTRECOtask['cmd'] = '${O2_ROOT}/bin/o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValuesNew(['MFTTracking', 'MFTAlpideParam', 'ITSClustererParam','MFTClustererParam'],MFTConfig)
+   MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[getDigiTaskName("MFT")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+   MFTRECOtask['cmd'] = '${O2_ROOT}/bin/o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValuesNew(['MFTTracking', 'MFTAlpideParam', 'ITSClustererParam','MFTClustererParam'])
    if args.mft_assessment_full == True:
       MFTRECOtask['cmd']+= ' --run-assessment '
    workflow['stages'].append(MFTRECOtask)
@@ -820,7 +821,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(MCHMIDMATCHtask)
 
    MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MFTMCHMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValuesNew(['ITSAlpideConfig','MFTAlpideConfig'],{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.useMIDMatch":"true"})
+   MFTMCHMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValuesNew(['ITSAlpideConfig','MFTAlpideConfig'],{"FwdMatching.useMIDMatch":"true"})
    if args.fwdmatching_assessment_full == True:
       MFTMCHMATCHtask['cmd']+= ' |  o2-globalfwd-assessment-workflow '
    MFTMCHMATCHtask['cmd']+= getDPL_global_options()
@@ -828,7 +829,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    if args.fwdmatching_save_trainingdata == True:
       MFTMCHMATCHTraintask = createTask(name='mftmchMatchTrain_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-      MFTMCHMATCHTraintask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValuesNew(['ITSAlpideConfig','MFTAlpideConfig'],{"MFTClustererParam.dictFilePath" : "../", "FwdMatching.useMIDMatch":"true"})
+      MFTMCHMATCHTraintask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValuesNew(['ITSAlpideConfig','MFTAlpideConfig'],{"FwdMatching.useMIDMatch":"true"})
       MFTMCHMATCHTraintask['cmd']+= getDPL_global_options()
       workflow['stages'].append(MFTMCHMATCHTraintask)
 
@@ -849,7 +850,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       pvfinderneeds += [MFTMCHMATCHtask['name']]
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-primary-vertexing-workflow ' \
-                         + getDPL_global_options() + putConfigValuesNew(['ITSAlpideParam','MFTAlpideParam', 'pvertexer', 'TPCGasParam'])
+                         + getDPL_global_options() + putConfigValuesNew(['ITSAlpideParam','MFTAlpideParam', 'pvertexer', 'TPCGasParam'], {"NameConf.mDirMatLUT" : ".."})
    PVFINDERtask['cmd'] += ' --vertexing-sources ' + anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertexing-sources", "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF") \
                           + ' --vertex-track-matching-sources ' + anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertex-track-matching-sources","ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF")
    workflow['stages'].append(PVFINDERtask)
@@ -941,6 +942,11 @@ for tf in range(1, NTIMEFRAMES + 1):
                    needs=[TOFTPCMATCHERtask['name']],
                    readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF,TPC-TRD,TPC-TRD-TOF" --cluster-types none',
                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_AllTypes_direct_MC.json')
+     ### ITS
+     addQCPerTF(taskName='ITSTrackSimTask',
+                needs=[ITSRECOtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
  
    #secondary vertexer
    svfinder_threads = ' --threads 1 '
@@ -950,7 +956,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      svfinder_cpu = 3
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
    SVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-secondary-vertexing-workflow '
-   SVFINDERtask['cmd'] += getDPL_global_options(bigshm=True) + svfinder_threads + putConfigValuesNew(['svertexer'])
+   SVFINDERtask['cmd'] += getDPL_global_options(bigshm=True) + svfinder_threads + putConfigValuesNew(['svertexer'], {"NameConf.mDirMatLUT" : ".."})
    SVFINDERtask['cmd'] += ' --vertexing-sources ' + anchorConfig.get("o2-secondary-vertexing-workflow-options",{}).get("vertexing-sources","ITS,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF")
    workflow['stages'].append(SVFINDERtask)
 
@@ -1048,76 +1054,10 @@ if includeFullQC:
 
 
 if includeAnalysis:
-   # Configuration
-   analysisdir = "Analysis"
-   analysislabel = "Analysis"
-   if not isdir(analysisdir):
-      mkdir(analysisdir)
-
-   def addAnalysisTask(tag, cmd, output=None, needs=[AOD_merge_task['name']],
-                       shmsegmentsize="--shm-segment-size 2000000000",
-                       aodmemoryratelimit="--aod-memory-rate-limit 500000000",
-                       readers="--readers 1",
-                       aodfile="--aod-file ../AO2D.root",
-                       extraarguments="-b"):
-      """
-      Function to add O2Physics analysis task to the workflow and upload the results on the CCDB
-      """
-      AnalysisTasks = createTask(name=f"Analysis_{tag}",
-                                      needs=needs,
-                                      cwd=analysisdir,
-                                      lab=[analysislabel, tag],
-                                      cpu=1,
-                                      mem='2000')
-      renameOutput = ""
-      AnalysisTaskOutput = []
-      if output is not None:
-         if isinstance(output, str):
-            output = [output]
-         for i in output:
-            # output MUST BE the one produced by the task, so it has to be known beforehand
-            i = i.strip(".root")
-            renameOutput += f" && mv {i}.root {i}_{tag}.root "
-            AnalysisTaskOutput.append(f"{i}_{tag}.root")
-      AnalysisTasks['cmd'] = f"{cmd} {shmsegmentsize} {aodmemoryratelimit} {readers} {aodfile} {extraarguments} {renameOutput}"
-      workflow['stages'].append(AnalysisTasks)
-
-      # Uploading results to ccdb
-      if QUALITYCONTROL_ROOT is None:
-         return
-      for i in AnalysisTaskOutput:
-         AnalysisFinalizetask = createTask(name=f"Analysis_finalize_{tag}_{i}",
-                                           needs=[AnalysisTasks['name']],
-                                           cwd=analysisdir, lab=[analysislabel+"Upload"], cpu=1, mem='2000')
-         AnalysisFinalizetask['cmd'] = f"o2-qc-upload-root-objects --input-file ./{i} --qcdb-url ccdb-test.cern.ch:8080 --task-name Analysis{tag} --detector-code AOD --provenance qc_mc --pass-name passMC --period-name {args.productionTag} --run-number {args.run}"
-         workflow['stages'].append(AnalysisFinalizetask)
-
-   # Efficiency
-   addAnalysisTask(tag="Efficiency",
-                   cmd="o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-efficiency --eff-mc 1 --eff-mc-pos 1 --eff-mc-neg 1 --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json ", output="AnalysisResults.root")
-
-   # Event and track QA
-   addAnalysisTask(tag="EventTrackQA",
-                   cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackextension --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-trackselection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-qa-event-track --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json', output="AnalysisResults.root")
-
-   # MCHistograms (no complex workflow / piping required atm)
-   addAnalysisTask(tag="MCHistograms", cmd='o2-analysistutorial-mc-histograms', output="AnalysisResults.root")
-
-   # Valitation (no complex workflow / piping required atm)
-   addAnalysisTask(tag="Validation", cmd='o2-analysis-validation', output="AnalysisResults.root")
-
-   # PID TOF (no complex workflow / piping required atm), NOTE: produces no output
-   addAnalysisTask(tag="PIDTOF", cmd='o2-analysis-pid-tof')
-
-   # PID TPC (no complex workflow / piping required atm), NOTE: produces no output
-   addAnalysisTask(tag="PIDTPC", cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-track-qa.json | o2-analysis-pid-tpc')
-
-   # weak decay tutorial task (no complex workflow / piping required atm), NOTE: produces no output
-   addAnalysisTask(tag="WeakDecayTutorial", cmd='o2-analysistutorial-weak-decay-iteration')
-
-   # Event selection QA
-   addAnalysisTask(tag="EventSelectionQA",
-                   cmd='o2-analysis-timestamp --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-selection-qa.json | o2-analysis-event-selection --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-selection-qa.json | o2-analysis-event-selection-qa --configuration json://${O2DPG_ROOT}/MC/config/QC/json/event-selection-qa.json', output="AnalysisResults.root")
+   # include analyses and potentially final QC upload tasks
+    add_analysis_tasks(workflow["stages"], needs=[AOD_merge_task["name"]])
+    if QUALITYCONTROL_ROOT:
+        add_analysis_qc_upload_tasks(workflow["stages"], args.productionTag, args.run)
 
 dump_workflow(workflow["stages"], args.o)
 
