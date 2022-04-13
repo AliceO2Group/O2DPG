@@ -256,7 +256,7 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         print(f"Analysis {ana['name']} not added since not compatible with isMC={is_mc} and filetred analyses {analyses_only}")
     if add_merged_task:
         analyses_only = [] if not analyses_only else analyses_only
-        ana = make_merged_analysis(add_merged_task, *analyses_only, accept_data_or_mc=data_or_mc)
+        ana = make_merged_analysis(*analyses_only, accept_data_or_mc=data_or_mc)
         ANALYSES.append(ana)
         task = create_ana_task(ana["name"], ana["cmd"].format(CONFIG=f"--configuration {configuration}", AOD=f"--aod-file {input_aod}"), output_dir, needs=needs, is_mc=is_mc)
         task["labels"].append(ANALYSIS_LABEL_MERGED)
