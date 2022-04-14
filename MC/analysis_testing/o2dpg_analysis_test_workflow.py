@@ -109,7 +109,7 @@ ANALYSES.append(analysis_EventTrackQA)
 analysis_Validation = {"name": "Validation",
                        "expected_output": ["AnalysisResults.root"],
                        "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
-                       "cmd": "o2-analysis-validation {AOD}"}
+                       "cmd": "o2-analysis-validation {CONFIG} {AOD}"}
 ANALYSES.append(analysis_Validation)
 analysis_PIDFull = {"name": "PIDFull",
                     "expected_output": ["AnalysisResults.root"],
