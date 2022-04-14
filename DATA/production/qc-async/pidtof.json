@@ -54,7 +54,7 @@
                     "geomFileName": "o2sim_geometry.root"
                 },
                 "location": "remote",
-                "saveObjectsToFile": "TOFPID.root",
+                "saveObjectsToFile": "tofPIDQC.root",
                 "": "For debugging, path to the file where to save. If empty or missing it won't save."
             }
         },
