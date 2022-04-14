@@ -170,6 +170,9 @@ if [[ -f "AO2D.root" ]]; then
 	echo "exit code from AO2D check is " $exitcode
 	exit $exitcode
     fi
+    ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py --merged-task -f ../../AO2D.root
+    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json
+    mv Analysis/MergedAnalyses/AnalysisResults.root .
 fi
 
 # copying the QC json file here
