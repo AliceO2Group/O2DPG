@@ -912,6 +912,20 @@ for tf in range(1, NTIMEFRAMES + 1):
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofdigits.json',
                 objectsFile='tofDigitsQC.root')
 
+     if isActive('TOF'):
+         if isActive('FT0'):
+            addQCPerTF(taskName='tofft0PIDQC',
+                     needs=[ITSTPCMATCHtask['name']],
+                     readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC,TPC,ITS-TPC-TOF,TPC-TOF" --cluster-types FT0',
+                     configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tof.json',
+                     objectsFile='tofft0PIDQC.root')
+         else:
+            addQCPerTF(taskName='tofPIDQC',
+                    needs=[ITSTPCMATCHtask['name']],
+                    readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC,TPC,ITS-TPC-TOF,TPC-TOF" --cluster-types none',
+                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/pidtof.json',
+                    objectsFile='tofPIDQC.root')
+
      ### EMCAL
      if isActive('EMC'):
         addQCPerTF(taskName='emcDigitsQC',
