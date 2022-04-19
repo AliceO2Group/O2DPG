@@ -142,15 +142,13 @@ for line in f:
                     raise
                 if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
                     command = 'cat ' + filename + ' | o2-dpl-run -b --dds --dds-workflow-suffix _' + wf[0] + str(i) + ' --resources-monitoring 15 '  + ' | grep -v ' + command_log_filter + ' > ' + filename_xml
-                    print('Running DPL command', command)
+                    print('Running CAT command', command)
                     if os.system(command) != 0:
                         print('Error running command', command)
                     command = 'sed -i \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ' + filename + ' \\2,\' ' + filename_xml
-                    os.system('cat ' + filename_xml)
                     print('Running SED command', command)
                     if os.system(command) != 0:
                         print('Error running sed on XML file')
-                    os.system('cat ' + filename_xml)
                     filename = filename_xml
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
