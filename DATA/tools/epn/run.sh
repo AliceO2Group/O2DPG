@@ -41,4 +41,6 @@ else
 fi
 if [[ $? == 0 ]]; then
   echo Generated XML topology $OUTPUT_FILE_NAME
+else
+  cat $OUTPUT_FILE_NAME
 fi
