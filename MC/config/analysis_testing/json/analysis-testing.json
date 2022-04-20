@@ -122,7 +122,8 @@
     "event-selection-qa-task": {
         "isMC": "true",
         "processRun2": "false",
-        "processRun3": "true"
+        "processRun3": "true",
+        "processMCRun3": "true"
     },
     "event-selection-task": {
         "syst": "pp",
