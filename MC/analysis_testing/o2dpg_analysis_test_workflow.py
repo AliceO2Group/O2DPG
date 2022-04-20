@@ -263,7 +263,7 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         task["labels"].append(ANALYSIS_LABEL_MERGED)
         workflow.append(task)
         
-def add_analysis_qc_upload_tasks(workflow, prodcution_tag, run_number):
+def add_analysis_qc_upload_tasks(workflow, production_tag, run_number, pass_name):
     """add o2-qc-upload-root-objects to specified analysis tasks
 
     The analysis name has simply to be present in the workflow. Then adding these upload tasks works
@@ -294,7 +294,7 @@ def add_analysis_qc_upload_tasks(workflow, prodcution_tag, run_number):
         cwd = pot_ana["cwd"]
         qc_tag = f"Analysis{ana_name_raw}"
         needs = [ana_name]
-        provenance, pass_name = ("qc_mc", "passMC") if ANALYSIS_LABEL_ON_MC in pot_ana["labels"] else ("qc_data", "pass_data")
+        provenance = "qc_mc" if ANALYSIS_LABEL_ON_MC in pot_ana["labels"] else "qc_async"
         for eo in ana["expected_output"]:
             # this seems unnecessary but to ensure backwards compatible behaviour...
             rename_output = eo.strip(".root")
@@ -304,15 +304,18 @@ def add_analysis_qc_upload_tasks(workflow, prodcution_tag, run_number):
             # This has now to be renamed for upload, as soon as that is done, the output is renamed back to its original, there is in general no point of renaming it on disk only because one specific tasks needs a renamed version of it
             rename_cmd = f"mv {eo} {rename_output}"
             rename_back_cmd = f"mv {rename_output} {eo}"
-            task["cmd"] = f"{rename_cmd} && o2-qc-upload-root-objects --input-file ./{rename_output} --qcdb-url ccdb-test.cern.ch:8080 --task-name Analysis{ana_name_raw} --detector-code AOD --provenance {provenance} --pass-name {pass_name} --period-name {prodcution_tag} --run-number {run_number} && {rename_back_cmd} "
+            task["cmd"] = f"{rename_cmd} && o2-qc-upload-root-objects --input-file ./{rename_output} --qcdb-url ccdb-test.cern.ch:8080 --task-name Analysis{ana_name_raw} --detector-code AOD --provenance {provenance} --pass-name {pass_name} --period-name {production_tag} --run-number {run_number} && {rename_back_cmd} "
             workflow.append(task)
 
 def run(args):
     """digesting what comes from the command line"""
     workflow = []
     add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, add_merged_task=args.merged_task)
-    if args.with_qc_upload:
-        add_analysis_qc_upload_tasks(workflow, args.with_qc_upload[0], args.with_qc_upload[1])
+    if args.with_qc_upload and args.pass_name:
+        add_analysis_qc_upload_tasks(workflow, args.production_tag, args.run_number, args.pass_name)
+    elif args.with_qc_upload:
+        # so we don't have a pass name ==> print a warning
+        print("ERROR: QC upload was requested, however in that case a pass name is required")
     if not workflow:
         print("WARNING: Nothing was added")
     dump_workflow(workflow, args.output)
@@ -324,7 +327,10 @@ def main():
     parser.add_argument("-a", "--analysis-dir", dest="analysis_dir", default="./Analysis", help="the analysis output and working directory")
     parser.add_argument("-o", "--output", default="workflow_analysis_test.json", help="the workflow file name")
     parser.add_argument("--is-mc", dest="is_mc", action="store_true", help="whether the input comes from MC (data assumed otherwise)")
-    parser.add_argument("--with-qc-upload", dest="with_qc_upload", nargs=2, help="2. args: production tag and run number number")
+    parser.add_argument("--with-qc-upload", dest="with_qc_upload", action="store_true")
+    parser.add_argument("--run-number", dest="run_number", type=int, default=300000, help="the run number")
+    parser.add_argument("--pass-name", dest="pass_name", help="pass name")
+    parser.add_argument("--production-tag", dest="production_tag", help="prodcution tag")
     parser.add_argument("--only-analyses", dest="only_analyses", nargs="*", help="filter only on these analyses")
     parser.add_argument("--merged-task", dest="merged_task", action="store_true", help="add merged analysis task (one pipe for all) with name \"MergedAnalyses\"")
     parser.set_defaults(func=run)
