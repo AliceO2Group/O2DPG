@@ -15,7 +15,7 @@
 [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=$HOME/gen_topo/ # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
 [[ -z "$GEN_TOPO_STDERR_LOGGING" ]] && export GEN_TOPO_STDERR_LOGGING=1 # Enable logging of stderr messages
 [[ -z "$IS_SIMULATED_DATA" ]] && export IS_SIMULATED_DATA=0 # by default we are processing raw data
-[[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]] && export GEN_TOPO_ODC_EPN_TOPO_ARGS="--recown 'wn_(?"'!'"online-calib).*_.*' --calibwn 'wn_online-calib_.*'" # Arguments to pass to odc-epn-topo command
+[[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]] && export GEN_TOPO_ODC_EPN_TOPO_ARGS="--recown 'wn_(?"'!'"calib).*_.*' --calibwn 'wn_calib_.*'" # Arguments to pass to odc-epn-topo command
 [[ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]] && export GEN_TOPO_EPN_CCDB_SERVER="http://localhost:8084" # CCDB server to use
 
 # GEN_TOPO_RUN_HOME is a debug setting used in some tests. This is not needed for online running.

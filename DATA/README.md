@@ -92,7 +92,7 @@ To set up such a workflow, a couple of points must be followed:
 
 For an example, chek the calibration workflows [here](testing/examples)
 
-*NOTE* For reference, to run a workflow with calib aggregator on the EPN with AliECS, currently a node from the `online-calib` zone must be requested, by setting `odc_resources` to `[ {"zone":"online", "n":10}, {"zone":"online-calib", "n":1 } ]` (adjust the `10` to the number of required reconstruction nodes). This will be improved later and then this extra setting will not be needed anymore.
+*NOTE* For reference, to run a workflow with calib aggregator on the EPN with AliECS, currently a node from the `calib` zone must be requested, by setting `odc_resources` to `[ {"zone":"online", "n":10}, {"zone":"calib", "n":1 } ]` (adjust the `10` to the number of required reconstruction nodes). This will be improved later and then this extra setting will not be needed anymore.
 
 # The parser script:
 The **parser** is a simple python script that parses a *topology description* and generates the DDS XML file with the *full topology*. To do so, it runs all the DPL workflows with the `--dds` option and then uses the `odc-topo-epn` tool to merge the *partial topology*  into the final *full topology*.
