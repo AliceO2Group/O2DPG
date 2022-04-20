@@ -818,7 +818,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    ## forward matching 
    MCHMIDMATCHtask = createTask(name='mchmidMatch_'+str(tf), needs=[MCHRECOtask['name'], MIDRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   MCHMIDMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-mch-tracks-reader-workflow | ${O2_ROOT}/bin/o2-mid-tracks-reader-workflow | ${O2_ROOT}/bin/o2-muon-tracks-matcher-workflow | ${O2_ROOT}/bin/o2-muon-tracks-writer-workflow ' + getDPL_global_options()
+   MCHMIDMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-muon-tracks-matcher-workflow ' + getDPL_global_options()
    workflow['stages'].append(MCHMIDMATCHtask)
 
    MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
