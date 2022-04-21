@@ -11,7 +11,7 @@
 # --> create a stand-alone workflow file with only analyses <--
 #
 # Help message:
-# usage: o2dpg_analysis_test_workflow.py [-h] -f INPUT_FILE [-a ANALYSIS_DIR] [-o OUTPUT] [--is-mc] [--with-qc-upload WITH_QC_UPLOAD WITH_QC_UPLOAD] [--only-analyses [ONLY_ANALYSES [ONLY_ANALYSES ...]]] [--merged-task MERGED_TASK]
+# usage: o2dpg_analysis_test_workflow.py [-h] -f INPUT_FILE [-a ANALYSIS_DIR] [-o OUTPUT] [--is-mc] [--with-qc-upload] [--run-number RUN_NUMBER] [--pass-name PASS_NAME] [--production-tag PRODUCTION_TAG] [--config CONFIG] [--only-analyses [ONLY_ANALYSES [ONLY_ANALYSES ...]]] [--merged-task]
 # 
 # Create analysi test workflow
 # 
@@ -22,21 +22,27 @@
 #   -a ANALYSIS_DIR, --analysis-dir ANALYSIS_DIR
 #                         the analysis output and working directory
 #   -o OUTPUT, --output OUTPUT
-#                         the workflow output directory
+#                         the workflow file name
 #   --is-mc               whether the input comes from MC (data assumed otherwise)
-#   --with-qc-upload WITH_QC_UPLOAD WITH_QC_UPLOAD
-#                         2. args: production tag and run number number
+#   --with-qc-upload
+#   --run-number RUN_NUMBER
+#                         the run number
+#   --pass-name PASS_NAME
+#                         pass name
+#   --production-tag PRODUCTION_TAG
+#                         prodcution tag
+#   --config CONFIG       overwrite thee default config JSON. Pass as json://<path/to/file>
 #   --only-analyses [ONLY_ANALYSES [ONLY_ANALYSES ...]]
 #                         filter only on these analyses
-#   --merged-task MERGED_TASK
-#                         if given, the name of the merged analysis task (one pipe for all)
+#   --merged-task         add merged analysis task (one pipe for all) with name "MergedAnalyses"
 #
-# Only the -f/--input-file argument is required, everything else is optional
+# Only the -f/--input-file argument is required in both cases, MC or data
+# If run --with-upload-qc is enabled, --production-tag is required as well; in addition, when running on data, also --pass-name is required; for MC that is set to passMC
 #
 # Example for data
 # 1. o2dpg_analysis_test_workflow.py -f </path/to/AO2D.root>
 # This constructs all analysis workflows compatible with data
-# 2. o2dpg_analysis_test_workflow.py -f </path/to/AO2D.root> --with-qc-upload <tag> <run_number>
+# 2. o2dpg_analysis_test_workflow.py -f </path/to/AO2D.root> --with-qc-upload --pass-name <some-pass-name> --production-tag <some-prod-tag>
 # This in addition adds tasks to upload data the analysis results to the CCDB
 # 3. o2dpg_analysis_test_workflow.py -f </path/to/AO2D.root> --only-analyses MCHistograms EventTrackQA EventSelectionQA
 # Filter only desired analyses. NOTE in this case: The analysis MCHistograms would automatically be taken out again by the script since it is not compatible with data
@@ -227,7 +233,7 @@ def create_ana_task(name, cmd, output_dir, *, needs=None, shmsegmentsize="--shm-
     task['cmd'] = f"{cmd} {shmsegmentsize} {aodmemoryratelimit} {readers} {extraarguments}"
     return task
 
-def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, add_merged_task=False, needs=None):
+def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, add_merged_task=False, config=None, needs=None):
     """Add default analyses to user workflow
 
     Args:
@@ -249,7 +255,7 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
     """
     input_aod = abspath(input_aod)
     data_or_mc = ANALYSIS_VALID_MC if is_mc else ANALYSIS_VALID_DATA
-    configuration = ANALYSIS_CONFIGS[data_or_mc]
+    configuration = ANALYSIS_CONFIGS[data_or_mc] if config is None else config
     for ana in ANALYSES:
         if data_or_mc in ana["valid_for"] and (not analyses_only or (ana["name"] in analyses_only)): 
             workflow.append(create_ana_task(ana["name"], ana["cmd"].format(CONFIG=f"--configuration {configuration}", AOD=f"--aod-file {input_aod}"), output_dir, needs=needs, is_mc=is_mc))
@@ -308,12 +314,12 @@ def add_analysis_qc_upload_tasks(workflow, production_tag, run_number, pass_name
 
 def run(args):
     """digesting what comes from the command line"""
-    if args.with_qc_upload and not args.pass_name:
-        print("ERROR: QC upload was requested, however in that case a pass name is required")
+    if args.with_qc_upload and (not args.pass_name or not args.production_tag):
+        print("ERROR: QC upload was requested, however in that case a --pass-name and --production-tag are required")
         return 1
     
     workflow = []
-    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, add_merged_task=args.merged_task)
+    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, add_merged_task=args.merged_task, config=args.config)
     if args.with_qc_upload:
         add_analysis_qc_upload_tasks(workflow, args.production_tag, args.run_number, args.pass_name)
     if not workflow:
@@ -332,6 +338,7 @@ def main():
     parser.add_argument("--run-number", dest="run_number", type=int, default=300000, help="the run number")
     parser.add_argument("--pass-name", dest="pass_name", help="pass name")
     parser.add_argument("--production-tag", dest="production_tag", help="prodcution tag")
+    parser.add_argument("--config", help="overwrite the default config JSON. Pass as json://</path/to/file>")
     parser.add_argument("--only-analyses", dest="only_analyses", nargs="*", help="filter only on these analyses")
     parser.add_argument("--merged-task", dest="merged_task", action="store_true", help="add merged analysis task (one pipe for all) with name \"MergedAnalyses\"")
     parser.set_defaults(func=run)
