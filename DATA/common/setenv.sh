@@ -79,7 +79,7 @@ else # Defaults when running on the EPN
   if [ -z "$TIMEFRAME_SHM_LIMIT" ];  then export TIMEFRAME_SHM_LIMIT=$(( $SHMSIZE / 2 )); fi
   if [ -z "$TIMEFRAME_RATE_LIMIT" ]; then export TIMEFRAME_RATE_LIMIT=0; fi
   if [ -z "$EDJSONS_DIR" ];          then export EDJSONS_DIR="/home/ed/jsons"; fi
-  if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
+  if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF,FT0"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
   if [ -z "$GEN_TOPO_AUTOSCALE_PROCESSES" ];          then export GEN_TOPO_AUTOSCALE_PROCESSES=1; fi # On the EPN we should make sure to always use the node to the full extent
 fi
 # Some more options for running on the EPN
