@@ -12,7 +12,7 @@ hash=$1
 
 VERBOSE=""
 NCPU=12 #$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
-ARGS_ALL="-b --session default --shm-segment-size $SHMSIZE"
+source common/getCommonArgs.sh
 #HOST='$(hostname -s)-ib'
 
 # CTF compression dictionary

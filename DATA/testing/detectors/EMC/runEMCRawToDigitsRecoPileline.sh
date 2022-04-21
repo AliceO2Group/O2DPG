@@ -3,7 +3,7 @@
 PROXY_INSPEC="A:EMC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
 NCPU=12 #$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
-ARGS_ALL="-b --session default --shm-segment-size $SHMSIZE"
+source common/getCommonArgs.sh
 #HOST='$(hostname -s)-ib'
 
 INFOLOGGER_SEVERITY_RAWPROXY=warning

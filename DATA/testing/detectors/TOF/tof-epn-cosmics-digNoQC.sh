@@ -5,17 +5,14 @@ source common/setenv.sh
 calibration_node="epn003-ib:30453"
 
 SEVERITY=warning
-ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
-ARGS_ALL+=" --infologger-severity $SEVERITY"
-#ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock"
-ARGS_ALL_CONFIG="HBFUtils.nHBFPerTF=128;NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
+source common/getCommonArgs.sh
 CTF_DICT="--ctf-dict $FILEWORKDIR/ctf_dictionary.root"
 PROXY_INSPEC="x:TOF/CRAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
 NTHREADS=2
 # Output directory for the CTF, to write to the current dir., remove `--output-dir  $CTFOUT` from o2-ctf-writer-workflow or set to `CTFOUT=\"""\"`
 # The directory must exist
 CTFOUT="/home/fnoferin/public/out/"
-MYDIR="$(dirname $(readlink -f $0))" 
+MYDIR="$(dirname $(readlink -f $0))"
 OUT_CHANNEL="name=downstream,method=connect,address=tcp://${calibration_node},type=push,transport=zeromq"
 PROXY_OUTSPEC="dd:FLP/DISTSUBTIMEFRAME;dig:TOF/DIGITS;head:TOF/DIGITHEADER;row:TOF/READOUTWINDOW;patt:TOF/PATTERNS"
 
