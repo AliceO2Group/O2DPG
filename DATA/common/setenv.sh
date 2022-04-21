@@ -71,7 +71,11 @@ if [ $EPNSYNCMODE == 0 ]; then
   if [ -z "$EDJSONS_DIR" ];   then export EDJSONS_DIR="jsons"; fi      # output directory for ED json files
   if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=""; fi # No FLP processing by default when we do not run the sync EPN workflow, e.g. full system test will also run full FLP processing
 else # Defaults when running on the EPN
-  if [ -z "$SHMSIZE" ];              then export SHMSIZE=$(( 256 << 30 )); fi
+  if [[ "0$GEN_TOPO_CALIB_WORKFLOW" != "01" ]]; then
+    if [ -z "$SHMSIZE" ];              then export SHMSIZE=$(( 32 << 30 )); fi
+  else
+    if [ -z "$SHMSIZE" ];              then export SHMSIZE=$(( 256 << 30 )); fi
+  fi
   if [ -z "$NGPUS" ];                then export NGPUS=4; fi
   if [ -z "$EXTINPUT" ];             then export EXTINPUT=1; fi
   if [ -z "$EPNPIPELINES" ];         then export EPNPIPELINES=1; fi
