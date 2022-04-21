@@ -289,7 +289,6 @@ def add_analysis_qc_upload_tasks(workflow, production_tag, run_number, pass_name
         if ana_name not in analyses_to_add_for:
             continue
         # search through workflow stages if we can find the requested analysis
-        print(f"Adding QC upload task for analysis {ana_name_raw}")
         pot_ana = analyses_to_add_for[ana_name]
         cwd = pot_ana["cwd"]
         qc_tag = f"Analysis{ana_name_raw}"
@@ -309,16 +308,18 @@ def add_analysis_qc_upload_tasks(workflow, production_tag, run_number, pass_name
 
 def run(args):
     """digesting what comes from the command line"""
+    if args.with_qc_upload and not args.pass_name:
+        print("ERROR: QC upload was requested, however in that case a pass name is required")
+        return 1
+    
     workflow = []
     add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, add_merged_task=args.merged_task)
-    if args.with_qc_upload and args.pass_name:
+    if args.with_qc_upload:
         add_analysis_qc_upload_tasks(workflow, args.production_tag, args.run_number, args.pass_name)
-    elif args.with_qc_upload:
-        # so we don't have a pass name ==> print a warning
-        print("ERROR: QC upload was requested, however in that case a pass name is required")
     if not workflow:
         print("WARNING: Nothing was added")
     dump_workflow(workflow, args.output)
+    return 0
 
 def main():
     """entry point when run directly from command line"""
