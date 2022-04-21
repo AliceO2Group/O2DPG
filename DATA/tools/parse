@@ -98,6 +98,7 @@ for line in f:
                 if args[i].startswith('reco'):
                     wf = args[i].split(',', 3)
                     recoworkflows.append(filename)
+                    is_calib_workflow = 0
                 elif args[i].startswith('calib'):
                     wf = args[i].split(',', 2)
                     filenamecore = filename
@@ -106,6 +107,7 @@ for line in f:
                     wf[1] = '1';
                     wf[2] = wf[1]
                     calibworkflows.append(filenamecore)
+                    is_calib_workflow = 1
                 else:
                     print('Invalid workflow type', args[i])
                     raise
@@ -116,7 +118,7 @@ for line in f:
                     command_log_filter = '"^\["'
                 else:
                     command_log_filter = '"^\[INFO"'
-                command_preopt = ''
+                command_preopt = 'GEN_TOPO_CALIB_WORKFLOW=' + str(is_calib_workflow)
                 if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
                     json_cache_path = os.environ['GEN_TOPO_WORKDIR'] + '/json_cache'
                     filename_xml = filename
