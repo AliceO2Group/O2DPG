@@ -11,7 +11,7 @@
 # --> create a stand-alone workflow file with only analyses <--
 #
 # Help message:
-# usage: o2dpg_analysis_test_workflow.py [-h] -f INPUT_FILE [-a ANALYSIS_DIR] [-o OUTPUT] [--is-mc] [--with-qc-upload] [--run-number RUN_NUMBER] [--pass-name PASS_NAME] [--production-tag PRODUCTION_TAG] [--config CONFIG] [--only-analyses [ONLY_ANALYSES [ONLY_ANALYSES ...]]] [--merged-task]
+# usage: o2dpg_analysis_test_workflow.py [-h] -f INPUT_FILE [-a ANALYSIS_DIR] [-o OUTPUT] [--is-mc] [--with-qc-upload] [--run-number RUN_NUMBER] [--pass-name PASS_NAME] [--period-name PERIOD_NAME] [--config CONFIG] [--only-analyses [ONLY_ANALYSES [ONLY_ANALYSES ...]]] [--merged-task]
 # 
 # Create analysi test workflow
 # 
@@ -29,7 +29,7 @@
 #                         the run number
 #   --pass-name PASS_NAME
 #                         pass name
-#   --production-tag PRODUCTION_TAG
+#   --period-name PERIOD_NAME
 #                         prodcution tag
 #   --config CONFIG       overwrite thee default config JSON. Pass as json://<path/to/file>
 #   --only-analyses [ONLY_ANALYSES [ONLY_ANALYSES ...]]
@@ -37,12 +37,12 @@
 #   --merged-task         add merged analysis task (one pipe for all) with name "MergedAnalyses"
 #
 # Only the -f/--input-file argument is required in both cases, MC or data
-# If run --with-upload-qc is enabled, --production-tag is required as well; in addition, when running on data, also --pass-name is required; for MC that is set to passMC
+# If run --with-upload-qc is enabled, --period-name is required as well; in addition, when running on data, also --pass-name is required; for MC that is set to passMC
 #
 # Example for data
 # 1. o2dpg_analysis_test_workflow.py -f </path/to/AO2D.root>
 # This constructs all analysis workflows compatible with data
-# 2. o2dpg_analysis_test_workflow.py -f </path/to/AO2D.root> --with-qc-upload --pass-name <some-pass-name> --production-tag <some-prod-tag>
+# 2. o2dpg_analysis_test_workflow.py -f </path/to/AO2D.root> --with-qc-upload --pass-name <some-pass-name> --period-name <some-period-name>
 # This in addition adds tasks to upload data the analysis results to the CCDB
 # 3. o2dpg_analysis_test_workflow.py -f </path/to/AO2D.root> --only-analyses MCHistograms EventTrackQA EventSelectionQA
 # Filter only desired analyses. NOTE in this case: The analysis MCHistograms would automatically be taken out again by the script since it is not compatible with data
@@ -269,7 +269,7 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         task["labels"].append(ANALYSIS_LABEL_MERGED)
         workflow.append(task)
         
-def add_analysis_qc_upload_tasks(workflow, production_tag, run_number, pass_name):
+def add_analysis_qc_upload_tasks(workflow, period_name, run_number, pass_name):
     """add o2-qc-upload-root-objects to specified analysis tasks
 
     The analysis name has simply to be present in the workflow. Then adding these upload tasks works
@@ -299,7 +299,7 @@ def add_analysis_qc_upload_tasks(workflow, production_tag, run_number, pass_name
         cwd = pot_ana["cwd"]
         qc_tag = f"Analysis{ana_name_raw}"
         needs = [ana_name]
-        provenance = "qc_mc" if ANALYSIS_LABEL_ON_MC in pot_ana["labels"] else "qc_async"
+        provenance = "qc_mc" if ANALYSIS_LABEL_ON_MC in pot_ana["labels"] else "qc"
         for eo in ana["expected_output"]:
             # this seems unnecessary but to ensure backwards compatible behaviour...
             rename_output = eo.strip(".root")
@@ -309,19 +309,19 @@ def add_analysis_qc_upload_tasks(workflow, production_tag, run_number, pass_name
             # This has now to be renamed for upload, as soon as that is done, the output is renamed back to its original, there is in general no point of renaming it on disk only because one specific tasks needs a renamed version of it
             rename_cmd = f"mv {eo} {rename_output}"
             rename_back_cmd = f"mv {rename_output} {eo}"
-            task["cmd"] = f"{rename_cmd} && o2-qc-upload-root-objects --input-file ./{rename_output} --qcdb-url ccdb-test.cern.ch:8080 --task-name Analysis{ana_name_raw} --detector-code AOD --provenance {provenance} --pass-name {pass_name} --period-name {production_tag} --run-number {run_number} && {rename_back_cmd} "
+            task["cmd"] = f"{rename_cmd} && o2-qc-upload-root-objects --input-file ./{rename_output} --qcdb-url ccdb-test.cern.ch:8080 --task-name Analysis{ana_name_raw} --detector-code AOD --provenance {provenance} --pass-name {pass_name} --period-name {period_name} --run-number {run_number} && {rename_back_cmd} "
             workflow.append(task)
 
 def run(args):
     """digesting what comes from the command line"""
-    if args.with_qc_upload and (not args.pass_name or not args.production_tag):
-        print("ERROR: QC upload was requested, however in that case a --pass-name and --production-tag are required")
+    if args.with_qc_upload and (not args.pass_name or not args.period_name):
+        print("ERROR: QC upload was requested, however in that case a --pass-name and --period-name are required")
         return 1
     
     workflow = []
     add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, add_merged_task=args.merged_task, config=args.config)
     if args.with_qc_upload:
-        add_analysis_qc_upload_tasks(workflow, args.production_tag, args.run_number, args.pass_name)
+        add_analysis_qc_upload_tasks(workflow, args.period_name, args.run_number, args.pass_name)
     if not workflow:
         print("WARNING: Nothing was added")
     dump_workflow(workflow, args.output)
@@ -337,7 +337,7 @@ def main():
     parser.add_argument("--with-qc-upload", dest="with_qc_upload", action="store_true")
     parser.add_argument("--run-number", dest="run_number", type=int, default=300000, help="the run number")
     parser.add_argument("--pass-name", dest="pass_name", help="pass name")
-    parser.add_argument("--production-tag", dest="production_tag", help="prodcution tag")
+    parser.add_argument("--period-name", dest="period_name", help="period name")
     parser.add_argument("--config", help="overwrite the default config JSON. Pass as json://</path/to/file>")
     parser.add_argument("--only-analyses", dest="only_analyses", nargs="*", help="filter only on these analyses")
     parser.add_argument("--merged-task", dest="merged_task", action="store_true", help="add merged analysis task (one pipe for all) with name \"MergedAnalyses\"")
