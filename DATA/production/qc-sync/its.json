@@ -38,9 +38,8 @@
         "location": "local",
         "taskParameters": {
           "layer": "1111111",
-          "clusterDictionaryPath": "/home/epn/odc/files/ITSdictionary.bin",
-          "geomPath": "/home/epn/odc/files/o2sim_geometry.root",
           "nThreads": "1",
+          "dicttimestamp": "0",
           "nBCbins" : "103"
         },
           "localMachines": [
