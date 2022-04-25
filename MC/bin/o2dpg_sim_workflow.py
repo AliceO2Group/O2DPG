@@ -1056,9 +1056,9 @@ if includeFullQC:
 
 if includeAnalysis:
    # include analyses and potentially final QC upload tasks
-    add_analysis_tasks(workflow["stages"], needs=[AOD_merge_task["name"]])
+    add_analysis_tasks(workflow["stages"], needs=[AOD_merge_task["name"]], is_mc=True)
     if QUALITYCONTROL_ROOT:
-        add_analysis_qc_upload_tasks(workflow["stages"], args.productionTag, args.run)
+        add_analysis_qc_upload_tasks(workflow["stages"], args.productionTag, args.run, "passMC")
 
 dump_workflow(workflow["stages"], args.o)
 

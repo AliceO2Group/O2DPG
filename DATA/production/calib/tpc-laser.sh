@@ -11,28 +11,12 @@ FILEWORKDIR="/home/wiechula/processData/inputFilesTracking/triggeredLaser"
 
 FILEWORKDIR2="/home/epn/odc/files/"
 
-ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
-if [ $EPNSYNCMODE == 1 ]; then
-  ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
-  #ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock"
-  ARGS_ALL+=" --monitoring-backend no-op://"
-else
-  ARGS_ALL+=" --monitoring-backend no-op://"
-fi
-if [ $SHMTHROW == 0 ]; then
-  ARGS_ALL+=" --shm-throw-bad-alloc 0"
-fi
-if [ $NORATELOG == 1 ]; then
-  ARGS_ALL+=" --fairmq-rate-logging 0"
-fi
+source common/getCommonArgs.sh
+ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR2;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
+
 if [ $NUMAGPUIDS != 0 ]; then
   ARGS_ALL+=" --child-driver 'numactl --membind $NUMAID --cpunodebind $NUMAID'"
 fi
-if [ $GPUTYPE != "CPU" ]; then
-  ARGS_ALL+="  --shm-mlock-segment-on-creation 1"
-fi
-ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR2;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
-
 
 if [ $GPUTYPE == "HIP" ]; then
   if [ $NUMAID == 0 ] || [ $NUMAGPUIDS == 0 ]; then
