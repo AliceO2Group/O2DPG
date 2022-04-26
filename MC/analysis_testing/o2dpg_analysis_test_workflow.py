@@ -100,7 +100,7 @@ ANALYSES = []
 analysis_MCHistograms = {"name": "MCHistograms",
                          "expected_output": None,
                          "valid_for": [ANALYSIS_VALID_MC],
-                         "cmd": "o2-analysistutorial-mc-histograms {AOD}"}
+                         "cmd": "o2-analysistutorial-mc-histograms {CONFIG} {AOD}"}
 ANALYSES.append(analysis_MCHistograms)
 analysis_Efficiency = {"name": "Efficiency",
                        "expected_output": ["AnalysisResults.root"],
@@ -125,7 +125,7 @@ ANALYSES.append(analysis_PIDFull)
 analysis_PWGMMMFT = {"name": "PWGMMMFT",
                      "expected_output": ["AnalysisResults.root"],
                      "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
-                     "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-mm-dndeta-mft {CONFIG} {AOD}"}
+                     "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-mm-dndeta-mft {CONFIG} {AOD}"}
 ANALYSES.append(analysis_PWGMMMFT)
 analysis_EventSelectionQA = {"name": "EventSelectionQA",
                          "expected_output": ["AnalysisResults.root"],
@@ -135,7 +135,7 @@ ANALYSES.append(analysis_EventSelectionQA)
 analysis_WeakDecayTutorial = {"name": "WeakDecayTutorial",
                               "expected_output": None,
                               "valid_for": [ANALYSIS_VALID_MC],
-                              "cmd": "o2-analysistutorial-weak-decay-iteration {AOD}"}
+                              "cmd": "o2-analysistutorial-weak-decay-iteration {CONFIG} {AOD}"}
 ANALYSES.append(analysis_WeakDecayTutorial)
 
 def make_merged_analysis(*analysis_names, accept_data_or_mc=ANALYSIS_VALID_MC):
