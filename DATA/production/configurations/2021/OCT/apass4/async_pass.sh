@@ -99,7 +99,6 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 	return 2
     fi
     tar -xzvf commonInput.tgz
-    ln -s o2sim_geometry.root o2sim_geometry-aligned.root
     tar -xzvf runInput_$RUNNUMBER.tgz
 ###fi
 
