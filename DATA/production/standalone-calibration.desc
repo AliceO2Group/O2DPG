@@ -18,6 +18,8 @@ MFT-noise-calibration: "O2PDPSuite" reco,20,20,"production/calib/mft-noise-proce
 
 MCH-badchannel-calibration: "O2PDPSuite" reco,5,5,"production/calib/mch-badchannel-processing.sh" calib,1,"production/calib/mch-badchannel-aggregator.sh"
 
+MID-calib-workflow: "O2PDPSuite" reco,1,1,"production/calib/mid-badchannels.sh"
+
 PHS-pedestal-calibration: "O2PDPSuite" reco,1,1," production/calib/phs-pedestal.sh"
 
 PHS-led-calibration: "O2PDPSuite" reco,1,1," production/calib/phs-led.sh"
