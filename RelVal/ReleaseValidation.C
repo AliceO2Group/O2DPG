@@ -9,7 +9,7 @@ TFile *fileSummaryOutput = nullptr;
 TFile *fileTestSummary = nullptr;
 
 TString prefix = "";
-int correlationCase = 0; // at the moment I assume no error collation ... Later I need to check that
+int correlationCase = 0; // at the moment I assume no error correlation ..
 
 struct results
 {
@@ -20,16 +20,16 @@ struct results
   bool e;
 };
 
-// define "a monte" the possible available tests
+// define the possible available tests
 enum options {
   Chi2    = 0x01,
-  BinCont     = 0x02,
-  BinContInt   = 0x04, //BinContInt is similar to BinCont, but the bin content is normalized by the integral 
+  BinContNorm     = 0x02,
+  Nentries = 0x04, 
   // ...
 };
 
 
-void ProcessFile(TString fname, TString dirToAnalyse); 
+void ProcessFile(TString const& fname, TString const& dirToAnalyse); 
 void ProcessMonitorObjectCollection(
     o2::quality_control::core::MonitorObjectCollection *o2MonObjColl);
 void ProcessDirCollection(TDirectoryFile *dirCollect);
@@ -39,31 +39,31 @@ void WriteHisto2D(TObject *obj);
 void WriteProfile(TObject *obj);
 void WriteTEfficiency(TObject *obj);
 bool AreIdenticalHistos(TH1 *hA, TH1 *hB);
-void CompareHistos(TH1 *hA, TH1 *hB, TString monobj, int whichTest, double valChi2, double valMeanDiff,
+void CompareHistos(TH1 *hA, TH1 *hB, TString  const& monobj, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
 		   bool firstComparison, bool finalComparison, TH2F *hSum, TH2F *hTests);
-struct results CompareChiSquareBinContentNentr(TH1 *hA, TH1 *hB, options whichTest, double varChi2, double varMeanDiff);
+struct results CompareChiSquareBinContentNentr(TH1 *hA, TH1 *hB, options whichTest, double varChi2, double varMeanDiff, double valEntriesDiff);
 void DrawRatio(TH1 *hR);
 void DrawRelativeDifference(TH1 *hR);
-void SelectCriticalHistos(TString whichdir);
-void createTestsSummaryPlot(TFile *file, TString obj);
+void SelectCriticalHistos(TString const& whichdir);
+void createTestsSummaryPlot(TFile *file, TString const& obj);
 
 // what to give as input:
 // 1) name and path of first file,
 // 2) name and path of second file,
-// 3) object to analyse (it can be a MonitorObject or a TDirectory); when left  empty, loop on all objects; 4) which test to perform: 1->Chi-square; 2--> ContBinDiff; 3 --> Chi-square + MeanDiff; 4-> MeanDiffInt (Integral normalization); 5--> MeanDiffInt + Chi2; 6 -->  MeanDiffInt + MeanDiff; 7 --> MeanDiffInt + Chi2 + MeanDiff;
-// 4) and 5) threshold values for chi2 and mean diff checks;
+// 3) object to analyse (it can be a MonitorObject or a TDirectory); when left  empty, loop on all objects; 4) which test to perform: 1->Chi-square; 2--> BinContDiff; 3 --> Chi-square + BinContDiff; 4-> EntriesDiff; 5--> EntriesDiff + Chi2; 6 -->  EntriesDiff + BinContDiff; 7 --> EntriesDiff + Chi2 + BinContDiff;
+// 4), 5) and 6) threshold values for chi2, bin cont and N entries checks;
 // 6) select if files have to be taken from the grid or not
 // 7) choose if specific critic plots have to be saved in a second .pdf file
 
 void ReleaseValidation(TString filename1 = "QCpass3",
                        TString filename2 = "QCpass2",
-                       TString ObjectToAnalyse = "", int whichTest = 1, double valueChi2 = 1.5, double valueMeanDiff = 0.01, 
+                       TString ObjectToAnalyse = "", int whichTest = 1, double valueChi2 = 1.5, double valueMeanDiff = 0.01, double valueEntriesDiff = 0.01, 
                        bool isOnGrid = false,
                        bool selectCritical = false) {
 
   if (whichTest < 1 || whichTest > 7) {
     printf("Error, please select which test you want to perform: \n");
-    printf("1->Chi-square; 2--> ContBinDiff; 3 --> Chi-square+MeanDiff; 4->MeanDiffInt; 5--> MeanDiffInt + Chi2; 6 -->  MeanDiffInt + MeanDiff; 7 --> MeanDiffInt + Chi2 + MeanDiff");
+    printf("1->Chi-square; 2--> ContBinDiff; 3 --> Chi-square+MeanDiff; 4->EntriesDiff; 5--> EntriesDiff + Chi2; 6 -->  EntriesDiff + MeanDiff; 7 --> EntriesDiff + Chi2 + MeanDiff");
     return;
   }
  
@@ -76,10 +76,8 @@ void ReleaseValidation(TString filename1 = "QCpass3",
   // open files to be read in
   if (isOnGrid) {
     TGrid::Connect("alien://");
-    inFile1 = TFile::Open("alien:" + filename1 + ".root", "READ");
-    inFile2 = TFile::Open("alien:" + filename2 + ".root", "READ");
-    inFile1->ls();
-    inFile2->ls();
+    inFile1 = TFile::Open("alien:///" + filename1 + ".root", "READ");
+    inFile2 = TFile::Open("alien:///" + filename2 + ".root", "READ");
   } else {
     inFile1 = TFile::Open(filename1 + ".root", "READ");
     inFile2 = TFile::Open(filename2 + ".root", "READ");
@@ -88,14 +86,16 @@ void ReleaseValidation(TString filename1 = "QCpass3",
   inFile1->ls();
   inFile2->ls();
 
-  fileOut = new TFile("newfile1.root", "recreate");
-  ProcessFile(filename1 + ".root", ObjectToAnalyse);
-  fileOut->Close();
-  delete fileOut; // do I need to remove it?? //
-  fileOut = new TFile("newfile2.root", "recreate");
-  
   // process the input files and save the corresponding histograms in two files, newfile1.root and newfile2.root
-  ProcessFile(filename2 + ".root", ObjectToAnalyse);
+  fileOut = new TFile("newfile1.root", "recreate");
+  if (isOnGrid) ProcessFile("alien:///" + filename1 + ".root", ObjectToAnalyse);
+  else ProcessFile(filename1 + ".root", ObjectToAnalyse);
+  fileOut->Close();
+  delete fileOut;
+  
+  fileOut = new TFile("newfile2.root", "recreate");
+  if (isOnGrid) ProcessFile("alien:///" + filename2 + ".root", ObjectToAnalyse);
+  else ProcessFile(filename2 + ".root", ObjectToAnalyse);
   fileOut->Close();
   delete fileOut;
 
@@ -128,9 +128,11 @@ void ReleaseValidation(TString filename1 = "QCpass3",
     TKey *k = (TKey *)lkeys->At(j);
     TString cname = k->GetClassName();
     TString oname = k->GetName();
+    cout << cname << "  " << oname << endl;
     if (cname.BeginsWith("TH")) {
       TH1 *hA = static_cast<TH1 *>(fileA->Get(oname.Data()));
       TH1 *hB = static_cast<TH1 *>(fileB->Get(oname.Data()));
+      cout << hA->GetName() << "  " << hB->GetName() << endl;
       if (hA && hB) {
 	printf("%s and %s compared \n", hA->GetName(), hB->GetName());
         bool ok = AreIdenticalHistos(hA, hB);
@@ -138,7 +140,7 @@ void ReleaseValidation(TString filename1 = "QCpass3",
           printf("%s       ---> IDENTICAL\n", oname.Data());
         else {
 	  // if two histograms are not identical, compare them according to the choosed test:
-          CompareHistos(hA, hB, ObjectToAnalyse, whichTest, valueChi2, valueMeanDiff, isFirstComparison, isLastComparison, hSummaryCheck, hSummaryTests);
+          CompareHistos(hA, hB, ObjectToAnalyse, whichTest, valueChi2, valueMeanDiff, valueEntriesDiff, isFirstComparison, isLastComparison, hSummaryCheck, hSummaryTests);
         }
       } else {
         if (!hA)
@@ -181,7 +183,7 @@ void ReleaseValidation(TString filename1 = "QCpass3",
 
 
 // Process File: method that looks at the content of the file and find all different TObjects there. In case of MonitorCollectionObjects, the methods "ProcessMonitorObjectCollection" and "ProcessMonitorObjects" are subsequently used; In case of TDirectories, the method "ProcessDirCollection" is invoched.
-void ProcessFile(TString fname, TString dirToAnalyse) {
+void ProcessFile(TString const& fname, TString const& dirToAnalyse) {
 
   TFile *fileBase = TFile::Open(fname.Data());
   int nkeys = fileBase->GetNkeys();
@@ -230,7 +232,7 @@ void ProcessMonitorObjectCollection(
   printf("--- Process o2 Monitor Object Collection %s ---\n",
          o2MonObjColl->GetName());
   int nent = o2MonObjColl->GetEntries();
-  int Counts = 0;
+  int counts = 0;
   for (int j = 0; j < nent; j++) {
     TObject *o = (TObject *)o2MonObjColl->At(j);
     TString clname = o->ClassName();
@@ -242,24 +244,24 @@ void ProcessMonitorObjectCollection(
               olname.Data());
       // prefix.Append(Form("%s_",monObj->GetName()));
       ProcessMonitorObject(monObj);
-      Counts++;
-      if (Counts == 40)
+      counts++;
+      if (counts == 40)
         break; // to avoid crushes
     } else if (clname.BeginsWith("TH")) {
       TObject *o = (TObject *)o2MonObjColl->FindObject(olname.Data());
       WriteHisto(o);
-      Counts++;
+      counts++;
        }else if(clname.BeginsWith("TProfile")){
       TObject* o=(TObject*)o2MonObjColl->FindObject(olname.Data());
        WriteProfile(o);
-       Counts++;
+       counts++;
     } else if(clname.BeginsWith("TEfficiency")){
       TObject* o=(TObject*)o2MonObjColl->FindObject(olname.Data());
        WriteTEfficiency(o);
-       Counts++;
+       counts++;
     }
   }
-  printf("%d objects processed \n", Counts);
+  printf("%d objects processed \n", counts);
   return;
 }
 
@@ -269,7 +271,7 @@ void ProcessDirCollection(TDirectoryFile *dirCollect) {
   dirCollect->ls();
   int nkeys = dirCollect->GetNkeys();
   TList *lkeys = dirCollect->GetListOfKeys();
-  int Counts = 0;
+  int counts = 0;
   for (int j = 0; j < nkeys; j++) {
     TKey *k = (TKey *)lkeys->At(j);
     TString clname = k->GetClassName();
@@ -283,18 +285,17 @@ void ProcessDirCollection(TDirectoryFile *dirCollect) {
     } else if (clname.BeginsWith("TH")) {
       printf("--- Process histograms in %s ---\n", dirname.Data());
       printf("--- %s ---\n", olname.Data());
-      TObject *o = (TObject *)dirCollect->Get(olname.Data());
-      WriteHisto(o);
+      WriteHisto(dirCollect->Get(olname.Data()));
     }else if(clname.BeginsWith("TProfile")){
       TObject* o=(TObject*)dirCollect->Get(olname.Data());
-      WriteProfile(o);
+      WriteProfile(dirCollect->Get(olname.Data()));
     } else if(clname.BeginsWith("TEfficiency")){
       TObject* o=(TObject*)dirCollect->Get(olname.Data());
-      WriteTEfficiency(o);
+      WriteTEfficiency(dirCollect->Get(olname.Data()));
     }
-     Counts++;
+     counts++;
   }
-  printf("%d objects processed \n", Counts);
+  printf("%d objects processed \n", counts);
   return;
 }
 
@@ -345,45 +346,66 @@ void WriteHisto2D(TObject *obj) {
 }
 
 void WriteTEfficiency(TObject *obj) { // should I further develop that?
+
   TEfficiency *hEff = static_cast<TEfficiency *>(obj);
+
+  // separate numerator and denominator of the efficiency
   TH1 *hEffNomin  = (TH1*)hEff->GetPassedHistogram(); // eff nominator
   TH1 *hEffDenom = (TH1*)hEff->GetTotalHistogram();   // eff denominator
+
+  // recreate the efficiency dividing numerator for denominator:
+  TH1* heff = dynamic_cast<TH1*>(hEffNomin->Clone("heff"));
+  heff->Divide(hEffNomin, hEffDenom, 1.0, 1.0, "B");
   TDirectory *current = gDirectory;
 
   // save nominator and denominator of the efficiency, to compare these plots from the two input files
-  TCanvas *cc = new TCanvas(Form("%s_%s", fileOut->GetName(),hEff->GetName()),Form("%s_%s", fileOut->GetName(),hEff->GetName()));
-  hEff->Draw("AP");
-  TCanvas *cnom = new TCanvas(Form("%s_%s_nomin", fileOut->GetName(),hEffNomin->GetName()),Form("%s_%s_nomin", fileOut->GetName(),hEffNomin->GetName()));
-  hEffNomin->Draw();
-  cnom->SaveAs(Form("%s_%s_nomin.png", fileOut->GetName(),hEffNomin->GetName()));
-  TCanvas *cden = new TCanvas(Form("%s_%s_nomin", fileOut->GetName(),hEffDenom->GetName()),Form("%s_%s_denom", fileOut->GetName(),hEffDenom->GetName()));
-  hEffDenom->Draw();
-  cden->SaveAs(Form("%s_%s_denom.png", fileOut->GetName(),hEffDenom->GetName()));
 
-  // make also a bin-to-bin comparison of the value of the efficiency (To do)?
+  TCanvas *cc = new TCanvas("Efficiency",Form("%s_%s", fileOut->GetName(),hEff->GetName()));	       
+  hEff->Draw("AP");
+  cc->SaveAs(Form("%s_%s.png", fileOut->GetName(),hEff->GetName()));
+  
+  TCanvas *cnom = new TCanvas("eff numerator",Form("%s_%s_effnominator", fileOut->GetName(),hEffNomin->GetName()));
+  hEffNomin->Draw();
+  cnom->SaveAs(Form("%s_%s_effnominator.png", fileOut->GetName(),hEffNomin->GetName()));
+			    
+  TCanvas *cden = new TCanvas("eff denominator",Form("%s_%s_effdenominator", fileOut->GetName(),hEffDenom->GetName()));
+  hEffDenom->Draw();
+  cden->SaveAs(Form("%s_%s_effdenominator.png", fileOut->GetName(),hEffDenom->GetName()));
+
+  TCanvas *cEff = new TCanvas("reconstructed efficiency",Form("%s_%s_effrec", fileOut->GetName(),hEff->GetName()));
+  heff->Draw();
+  cEff->SaveAs(Form("%s_%s_effrec.png", fileOut->GetName(),hEff->GetName()));
+
   fileOut->cd();
   hEff->Write(Form("%s%s", prefix.Data(), hEff->GetName()));
-  hEffNomin->Write(Form("%s%s_nomin", prefix.Data(), hEffNomin->GetName()));
-  hEffDenom->Write(Form("%s%s_denom", prefix.Data(), hEffDenom->GetName()));
+  hEffNomin->SetName(Form("%s_effnominator", hEffNomin->GetName()));
+  hEffDenom->SetName(Form("%s_effdenominator",hEffDenom->GetName()));
+  hEffNomin->Write(Form("%s%s", prefix.Data(), hEffNomin->GetName()));
+  hEffDenom->Write(Form("%s%s", prefix.Data(), hEffDenom->GetName()));
+  heff->SetTitle(Form("%s", hEff->GetTitle()));
+  heff->SetName(Form("%s", hEff->GetName()));
+  heff->Write(Form("%s%s_effrec", prefix.Data(), heff->GetName()));
   current->cd();
   return;
 }
 
 void WriteProfile(TObject *obj) { // should I further develop that?
-  // similar to what done for TEfficiency
   TProfile *hProf = static_cast<TProfile *>(obj);
-  TH1D *hProjx  = (TH1D*)hProf->ProjectionX();
-    TDirectory *current = gDirectory;
-  TCanvas *cc = new TCanvas(Form("%s_%s", fileOut->GetName(),hProf->GetName()),Form("%s_%s", fileOut->GetName(),hProf->GetName()));
-  hProf->Draw();
+  TH1D *hprofx  = (TH1D*)hProf->ProjectionX();
+  TDirectory *current = gDirectory;
+
+  TCanvas *cc = new TCanvas("profile histo",Form("%s_%s", fileOut->GetName(),hProf->GetName()));
+  hProf->Draw("");
   cc->SaveAs(Form("%s_%s.png", fileOut->GetName(),hProf->GetName()));
-  // save also x- and y-projections 
-  TCanvas *cprojx = new TCanvas(Form("%s_%s_projX", fileOut->GetName(),hProjx->GetName()),Form("%s_%s_projX", fileOut->GetName(),hProjx->GetName()));
-  hProjx->Draw();
-  cprojx->SaveAs(Form("%s_%s_projectionX.png", fileOut->GetName(),hProjx->GetName()));
+  
+  // save the x-projection of the TProfile 
+  TCanvas *cprofx = new TCanvas("profile histo proj",Form("%s_%s", fileOut->GetName(),hprofx->GetName()));
+  hprofx->Draw();
+  cprofx->SaveAs(Form("%s_%s.png", fileOut->GetName(),hprofx->GetName()));
   fileOut->cd();
   hProf->Write(Form("%s%s", prefix.Data(), hProf->GetName()));
-  hProjx->Write(Form("%s%s_projX", prefix.Data(), hProjx->GetName()));
+  //hProjx->SetName(Form("%s", hProjx->GetName()));
+  hprofx->Write(Form("%s%s", prefix.Data(), hprofx->GetName()));
   current->cd();
   return;
 }
@@ -413,7 +435,7 @@ bool AreIdenticalHistos(TH1 *hA, TH1 *hB) {
   return true;
 }
 
-void CompareHistos(TH1 *hA, TH1 *hB, TString monobj, int whichTest, double valChi2, double valMeanDiff,
+void CompareHistos(TH1 *hA, TH1 *hB, TString const& monobj, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
                    bool firstComparison, bool finalComparison, TH2F *hSum, TH2F * hTests) {
   // method to evaluate and draw the result of the comparison between plots
   hSum->SetStats(000);
@@ -434,7 +456,7 @@ void CompareHistos(TH1 *hA, TH1 *hB, TString monobj, int whichTest, double valCh
   int colt = 1;
   
   // Bit Mask
-  // my 3 possible tests are: 1) chi2;  2) meandiff; 3) meandiffint.  These tests can be combined in 7 different ways
+  // my 3 possible tests are: 1) chi2;  2) meandiff; 3) entriesdiff.  These tests can be combined in 7 different ways
   // std::vector<std::string> tests;
   
   vector<bool> test_results;
@@ -445,7 +467,7 @@ void CompareHistos(TH1 *hA, TH1 *hB, TString monobj, int whichTest, double valCh
   // test if each of the 3 bits is turned on in subset ‘i = whichTest’?
   // if yes, process the bit
   if ( (whichTest & Chi2) == Chi2) {
-    testResult = CompareChiSquareBinContentNentr(hA, hB, Chi2 , valChi2, valMeanDiff);
+    testResult = CompareChiSquareBinContentNentr(hA, hB, Chi2 , valChi2, valMeanDiff, valEntriesDiff);
     test_results.push_back(testResult.a);
     criticaltest_results.push_back(testResult.e);
     
@@ -459,34 +481,34 @@ void CompareHistos(TH1 *hA, TH1 *hB, TString monobj, int whichTest, double valCh
       hTests->Fill("Chi2 test", Form("%s",hA->GetName()),1); // GOOD--> histo bin cont = 0 
     }      
   }
-  if ( (whichTest & BinCont) == BinCont) {
-    testResult = CompareChiSquareBinContentNentr(hA, hB, BinCont , valChi2, valMeanDiff);
+  if ( (whichTest & BinContNorm) == BinContNorm) {
+    testResult = CompareChiSquareBinContentNentr(hA, hB, BinContNorm , valChi2, valMeanDiff, valEntriesDiff);
     test_results.push_back(testResult.a);
     criticaltest_results.push_back(testResult.e);
     
     if(testResult.a == false) { 
       if(testResult.e == true) { // if the BAD test is critical (true), then we have BAD, otherwise just a WARNING
-	hTests->Fill("Bin Cont test", Form("%s",hA->GetName()),0); // BAD--> histo bin cont = 0
+	hTests->Fill("Bin cont test", Form("%s",hA->GetName()),0); // BAD--> histo bin cont = 0
       } else { 
-	hTests->Fill("Bin Cont test", Form("%s",hA->GetName()),0.5); // WARNING--> histo bin cont = 0.5
+	hTests->Fill("Bin cont test", Form("%s",hA->GetName()),0.5); // WARNING--> histo bin cont = 0.5
       }
     } else {
-      hTests->Fill("Bin Cont test", Form("%s",hA->GetName()),1); // GOOD--> histo bin cont = 1 
+      hTests->Fill("Bin cont test", Form("%s",hA->GetName()),1); // GOOD--> histo bin cont = 1 
     }      
   }
-  if ( (whichTest & BinContInt) == BinContInt) {
-    testResult = CompareChiSquareBinContentNentr(hA, hB, BinContInt , valChi2, valMeanDiff);
+  if ( (whichTest & Nentries) == Nentries) {
+    testResult = CompareChiSquareBinContentNentr(hA, hB, Nentries , valChi2, valMeanDiff, valEntriesDiff);
     test_results.push_back(testResult.a);
     criticaltest_results.push_back(testResult.e);
     
     if(testResult.a == false) { 
       if(testResult.e == true) { // if the BAD test is critical (true), then we have BAD, otherwise just a WARNING
-	hTests->Fill("Bin Cont Int test", Form("%s",hA->GetName()),0); // BAD--> histo bin cont = 0
+	hTests->Fill("Num entries test", Form("%s",hA->GetName()),0); // BAD--> histo bin cont = 0
       } else { 
-	hTests->Fill("Bin Cont Int test", Form("%s",hA->GetName()),0.5); // WARNING--> histo bin cont = 0.5
+	hTests->Fill("Num entries test", Form("%s",hA->GetName()),0.5); // WARNING--> histo bin cont = 0.5
       }
     } else {
-      hTests->Fill("Bin Cont Int test", Form("%s",hA->GetName()),1); // GOOD--> histo bin cont = 1 
+      hTests->Fill("Num entries test", Form("%s",hA->GetName()),1); // GOOD--> histo bin cont = 1 
     }      
   }
   //}
@@ -597,9 +619,9 @@ void CompareHistos(TH1 *hA, TH1 *hB, TString monobj, int whichTest, double valCh
   // draw text
   TLegend *more = new TLegend(0.6,0.6,.9,.8);
   more->SetBorderSize(1);
-  more->AddEntry((TObject*)0, Form("#chi^{2} / Nbins = %f", testResult.b),"");
-  more->AddEntry((TObject*)0, Form("meandiff = %f", testResult.c),"");
-  more->AddEntry((TObject*)0, Form("meandiffInt = %f", testResult.d),"");
+  more->AddEntry((TObject*)nullptr, Form("#chi^{2} / Nbins = %f", testResult.b),"");
+  more->AddEntry((TObject*)nullptr, Form("meandiff = %f", testResult.c),"");
+  more->AddEntry((TObject*)nullptr, Form("entriesdiff = %f", testResult.d),"");
   more->Draw("same");
  
   c->SaveAs(Form("%s_Ratio.png", hA->GetName()));
@@ -728,7 +750,7 @@ void DrawRelativeDifference(TH1 *hR) {
   return;
 }
 
-void SelectCriticalHistos(TString whichdir) {
+void SelectCriticalHistos(TString const& whichdir) {
   printf("Select all critical plots..... \n");
 
   vector<string> NamesFromTheList;
@@ -781,19 +803,19 @@ void SelectCriticalHistos(TString whichdir) {
   return;
 }
 
-struct results CompareChiSquareBinContentNentr(TH1 *hA, TH1 *hB, options whichTest, double valChi2, double valMeanDiff) {
+struct results CompareChiSquareBinContentNentr(TH1 *hA, TH1 *hB, options whichTest, double valChi2, double valMeanDiff, double valEntriesDiff) {
   // implement here some simple checks that the two histograms are statistically compatible
   int nEventsA = hA->GetEntries();
   int nEventsB = hB->GetEntries();
-  int integralA = hA->Integral();
-  int integralB = hB->Integral();
+  double integralA = hA->Integral();
+  double integralB = hB->Integral();
   
   TString oname = hA->GetEntries();
 
   double chi2 = 0;
   double meandiff = 0;
-  double meandiffInt = 0;
-  struct results res; // "res" will collect values of chi2, meandiff and final test result
+  double entriesdiff = (integralA - integralB)/((integralA + integralB)/2);
+  struct results res; // "res" will collect values of chi2, meandiff, entriesdiff, final test result and criticality of the test
   if (nEventsA == 0 && nEventsB == 0) {
     printf("%s histos have both zero entries!", hA->GetName());
     res.a =  false;
@@ -843,8 +865,7 @@ struct results CompareChiSquareBinContentNentr(TH1 *hA, TH1 *hB, options whichTe
           }
           double sigma2 =
               eA * eA + eB * eB - 2 * correl * eA * eB; // maybe to be improved
-          meandiff += (cA / nEventsA - cB / nEventsB);
-	  meandiffInt += (cA / integralA - cB / integralB);
+	  meandiff += (cA / integralA - cB / integralB);
           if (sigma2 > 0)
             chi2 += diff * diff / sigma2;
           nBins++;
@@ -853,8 +874,8 @@ struct results CompareChiSquareBinContentNentr(TH1 *hA, TH1 *hB, options whichTe
     }
   }
   if (nBins > 1) {
-    printf(" -> Different contents: %s  chi2/nBins=%f   meanreldiff=%f \n   meanreldiffInt=%f \n", 
-           hA->GetName(), chi2 / nBins, meandiff, meandiffInt);
+    printf(" -> Different contents: %s  chi2/nBins=%f   meanreldiff=%f \n   entriesdiff=%f \n", 
+           hA->GetName(), chi2 / nBins, meandiff, entriesdiff);
     bool retVal = true;
     switch (whichTest) {
     case Chi2:
@@ -869,11 +890,11 @@ struct results CompareChiSquareBinContentNentr(TH1 *hA, TH1 *hB, options whichTe
       res.a = retVal;
       res.b = chi2 / nBins;
       res.c = TMath::Abs(meandiff);
-      res.d = TMath::Abs(meandiffInt);
+      res.d = TMath::Abs(entriesdiff);
       res.e = true; // critical
       break;
-      
-    case BinCont:
+
+    case BinContNorm:
       printf("bin-content test performed. \n");
       if (TMath::Abs(meandiff) < valMeanDiff) {
         printf("%s       ---> COMPATIBLE\n", oname.Data());
@@ -885,13 +906,13 @@ struct results CompareChiSquareBinContentNentr(TH1 *hA, TH1 *hB, options whichTe
       res.a = retVal;
       res.b = chi2 / nBins;
       res.c = TMath::Abs(meandiff);
-      res.d = TMath::Abs(meandiffInt);
+      res.d = TMath::Abs(entriesdiff);
       res.e = true; // critical
       break;
       
-    case BinContInt:
-      printf("bin-content (Integral instead of GetEntries) test performed. \n");
-      if (TMath::Abs(meandiffInt) < valMeanDiff) {
+    case Nentries:
+      printf("Test on number of entries performed. \n");
+      if (TMath::Abs(entriesdiff) < valEntriesDiff) {
         printf("%s       ---> COMPATIBLE\n", oname.Data());
         retVal = true;
       } else {
@@ -901,9 +922,11 @@ struct results CompareChiSquareBinContentNentr(TH1 *hA, TH1 *hB, options whichTe
       res.a = retVal;
       res.b = chi2 / nBins;
       res.c = TMath::Abs(meandiff);
-      res.d = TMath::Abs(meandiffInt);
-      res.e = true; // critical
+      res.d = TMath::Abs(entriesdiff);
+      res.e = false; // no critical
       break;
+      
+
       
     }
     return res;
