@@ -20,7 +20,7 @@
 import sys
 import importlib.util
 import argparse
-from os import environ, mkdir, getcwd
+from os import environ, mkdir
 from os.path import join, dirname, isdir
 import json
 import itertools
@@ -79,7 +79,7 @@ parser.add_argument('--production-offset',help='Offset determining bunch-crossin
 parser.add_argument('-j',help='number of workers (if applicable)', default=8, type=int)
 parser.add_argument('-mod',help='Active modules (deprecated)', default='--skipModules ZDC')
 parser.add_argument('--with-ZDC', action='store_true', help='Enable ZDC in workflow')
-parser.add_argument('-seed',help='random seed number', default=None)
+parser.add_argument('-seed',help='random seed number', default=0)
 parser.add_argument('-o',help='output workflow file', default='workflow.json')
 parser.add_argument('--noIPC',help='disable shared memory in DPL')
 
@@ -197,7 +197,7 @@ NWORKERS=args.j
 MODULES = "--skipModules ZDC" if not args.with_ZDC else ""
 SIMENGINE=args.e
 BFIELD=args.field
-RNDSEED=args.seed if args.seed is not None else abs(hash(getcwd()))
+RNDSEED=args.seed    # 0 means random seed ! Should we set different seed for Bkg and signal?
 
 workflow={}
 workflow['stages'] = []
