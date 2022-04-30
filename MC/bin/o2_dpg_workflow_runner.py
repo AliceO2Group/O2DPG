@@ -529,7 +529,7 @@ class WorkflowExecutor:
                   return None
 
           if not os.path.isdir(workdir):
-                  os.mkdir(workdir)
+                  os.makedirs(workdir)
 
       self.procstatus[tid]='Running'
       if args.dry_run:

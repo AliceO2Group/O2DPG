@@ -32,7 +32,8 @@
     "event-selection-qa-task": {
         "isMC": "true",
         "processRun2": "false",
-        "processRun3": "true"
+        "processRun3": "true",
+        "processMCRun3": "true"
     },
     "internal-dpl-injected-dummy-sink": "",
     "internal-dpl-aod-global-analysis-file-sink": ""

@@ -1,0 +1,229 @@
+{
+    "bc-selection-task": {
+        "processRun2": "false",
+        "processRun3": "true"
+    },
+    "qa-tracking-efficiency-data": {
+        "eta-min": "-0.8",
+        "eta-max": "0.8",
+        "pt-min": "0.1",
+        "pt-max": "10",
+        "track-sel": "true",
+        "pt-bins": "500",
+        "log-pt": "1",
+        "eta-bins": "500",
+        "phi-bins": "500",
+        "make-eff": "true"
+    },
+    "qa-tracking-efficiency-muon": {
+        "eta-min": "-0.8",
+        "eta-max": "0.8",
+        "pt-min": "0.1",
+        "pt-max": "10",
+        "track-sel": "true",
+        "pt-bins": "500",
+        "log-pt": "1",
+        "eta-bins": "500",
+        "phi-bins": "500",
+        "make-eff": "true",
+        "sel-prim": "true"
+    },
+    "qa-tracking-efficiency-pion": {
+        "eta-min": "-0.8",
+        "eta-max": "0.8",
+        "pt-min": "0.1",
+        "pt-max": "10",
+        "track-sel": "true",
+        "pt-bins": "500",
+        "log-pt": "1",
+        "eta-bins": "500",
+        "phi-bins": "500",
+        "make-eff": "true",
+        "sel-prim": "true"
+    },
+    "qa-tracking-efficiency-electron": {
+        "eta-min": "-0.8",
+        "eta-max": "0.8",
+        "pt-min": "0.1",
+        "pt-max": "10",
+        "track-sel": "true",
+        "pt-bins": "500",
+        "log-pt": "1",
+        "eta-bins": "500",
+        "phi-bins": "500",
+        "make-eff": "true",
+        "sel-prim": "true"
+    },
+    "qa-tracking-efficiency-kaon": {
+        "eta-min": "-0.8",
+        "eta-max": "0.8",
+        "pt-min": "0.1",
+        "pt-max": "10",
+        "track-sel": "true",
+        "pt-bins": "500",
+        "log-pt": "1",
+        "eta-bins": "500",
+        "phi-bins": "500",
+        "make-eff": "true",
+        "sel-prim": "true"
+    },
+    "qa-tracking-efficiency-proton": {
+        "eta-min": "-0.8",
+        "eta-max": "0.8",
+        "pt-min": "0.1",
+        "pt-max": "10",
+        "track-sel": "true",
+        "pt-bins": "500",
+        "log-pt": "1",
+        "eta-bins": "500",
+        "phi-bins": "500",
+        "make-eff": "true",
+        "sel-prim": "true"
+    },
+    "qa-tracking-efficiency-deuteron": {
+        "eta-min": "-0.8",
+        "eta-max": "0.8",
+        "pt-min": "0.1",
+        "pt-max": "10",
+        "track-sel": "true",
+        "pt-bins": "500",
+        "log-pt": "1",
+        "eta-bins": "500",
+        "phi-bins": "500",
+        "make-eff": "true",
+        "sel-prim": "true"
+    },
+    "qa-tracking-efficiency-triton": {
+        "eta-min": "-0.8",
+        "eta-max": "0.8",
+        "pt-min": "0.1",
+        "pt-max": "10",
+        "track-sel": "true",
+        "pt-bins": "500",
+        "log-pt": "1",
+        "eta-bins": "500",
+        "phi-bins": "500",
+        "make-eff": "true",
+        "sel-prim": "true"
+    },
+    "qa-tracking-efficiency-helium3": {
+        "eta-min": "-0.8",
+        "eta-max": "0.8",
+        "pt-min": "0.1",
+        "pt-max": "10",
+        "track-sel": "true",
+        "pt-bins": "500",
+        "log-pt": "1",
+        "eta-bins": "500",
+        "phi-bins": "500",
+        "make-eff": "true",
+        "sel-prim": "true"
+    },
+    "event-selection-qa-task": {
+        "isMC": "true",
+        "processRun2": "false",
+        "processRun3": "true",
+        "processMCRun3": "true"
+    },
+    "event-selection-task": {
+        "syst": "pp",
+        "muonSelection": "0",
+        "isMC": "true",
+        "processRun2": "false",
+        "processRun3": "true"
+    },
+    "track-extension": {
+        "processRun2": "false",
+        "processRun3": "true"
+    },
+    "multiplicity-table": {
+        "processRun2": "false",
+        "processRun3": "true"
+    },
+    "track-selection": {
+        "isRun3": "true"
+    },
+    "tpc-pid-full": {
+        "param-file": "",
+        "param-signal": "BetheBloch",
+        "param-sigma": "TPCReso",
+        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
+        "ccdbPath": "Analysis\/PID\/TPC\/Response",
+        "ccdb-timestamp": "-1",
+        "pid-el": "1",
+        "pid-mu": "1",
+        "pid-pi": "1",
+        "pid-ka": "1",
+        "pid-pr": "1",
+        "pid-de": "-1",
+        "pid-tr": "-1",
+        "pid-he": "-1",
+        "pid-al": "-1"
+    },
+    "tof-signal": "",
+    "track-extension": {
+        "processRun2": "false",
+        "processRun3": "true"
+    },
+    "tof-pid": {
+        "param-file": "",
+        "param-sigma": "TOFReso",
+        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
+        "ccdbPath": "Analysis\/PID\/TOF",
+        "ccdb-timestamp": "-1",
+        "pid-el": "1",
+        "pid-mu": "1",
+        "pid-pi": "1",
+        "pid-ka": "1",
+        "pid-pr": "1",
+        "pid-de": "-1",
+        "pid-tr": "-1",
+        "pid-he": "-1",
+        "pid-al": "-1"
+    },
+    "tof-pid-beta": {
+        "tof-expreso": "80"
+    },
+    "tof-pid-full": {
+        "param-file": "",
+        "param-sigma": "TOFReso",
+        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
+        "ccdbPath": "Analysis\/PID\/TOF",
+        "ccdb-timestamp": "-1",
+        "pid-el": "1",
+        "pid-mu": "1",
+        "pid-pi": "1",
+        "pid-ka": "1",
+        "pid-pr": "1",
+        "pid-de": "-1",
+        "pid-tr": "-1",
+        "pid-he": "-1",
+        "pid-al": "-1",
+        "processEvTime": "false",
+        "processNoEvTime": "true"
+    },
+    "table-maker-m-c": {
+        "cfgEventCuts": "eventStandardNoINT7",
+        "cfgBarrelTrackCuts": "jpsiO2MCdebugCuts,kaonPID",
+        "cfgMuonCuts": "muonQualityCuts,muonTightQualityCutsForTests",
+        "cfgBarrelLowPt": "1",
+        "cfgMuonLowPt": "1",
+        "cfgMCsignals": "anyBeautyHadron,everythingFromBeauty,everythingFromEverythingFromBeauty",
+        "cfgIsRun2": "false",
+        "cfgNoQA": "false",
+        "cfgDetailedQA": "true",
+        "processFull": "false",
+        "processBarrelOnly": "false",
+        "processBarrelOnlyWithCent": "false",
+        "processBarrelOnlyWithCov": "true",
+        "processMuonOnlyWithCov": "false",
+        "processMuonOnlyWithCent": "false",
+        "processOnlyBCs": "true"
+    },
+    "qa-event-track": {
+        "isMC": "true",
+        "isRun3": "true",
+        "processData": "false",
+        "processMC": "true"
+    }
+}

@@ -99,7 +99,6 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 	return 2
     fi
     tar -xzvf commonInput.tgz
-    ln -s o2sim_geometry.root o2sim_geometry-aligned.root
     tar -xzvf runInput_$RUNNUMBER.tgz
 ###fi
 
@@ -169,6 +168,13 @@ if [[ -f "AO2D.root" ]]; then
 	echo "exit code from AO2D check is " $exitcode > validation_error.message
 	echo "exit code from AO2D check is " $exitcode
 	exit $exitcode
+    fi
+    ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py --merged-task -f AO2D.root
+    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json
+    if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
+       mv Analysis/MergedAnalyses/AnalysisResults.root .
+    else
+	echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
     fi
 fi
 

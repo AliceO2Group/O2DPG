@@ -16,8 +16,8 @@ NSIGEVENTS=${NSIGEVENTS:-5}
 NBKGEVENTS=${NBKGEVENTS:-5}
 NTIMEFRAMES=${NTIMEFRAMES:-2}
 SIMENGINE=TGeant4 
-NWORKERS=4
-CPULIMIT=4
+NWORKERS=${NWORKERS:-4}
+CPULIMIT=${CPULIMIT:-4}
 MODULES="--skipModules ZDC"
 PYPROCESS=ccbar 
 #
@@ -26,7 +26,10 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 5020 -col pp -gen pythia8 -proc 
                                            -colBkg PbPb -genBkg pythia8 -procBkg "heavy_ion" \
                                            -tf ${NTIMEFRAMES} -nb ${NBKGEVENTS}              \
                                            -ns ${NSIGEVENTS} -e ${SIMENGINE}                 \
-                                           -j ${NWORKERS} --embedding -interactionRate 50000
+                                           -j ${NWORKERS} --embedding -interactionRate 50000 \
+                                           --timestamp 1635659148972 -seed 1
+
+# timestamp chosen to correspond to a real data taking run
 
 # enable (or point to) CCDB cache
 if [ -d ${HEPSCORE_CCDB_ROOT}/.ccdb ]; then
@@ -35,6 +38,7 @@ if [ -d ${HEPSCORE_CCDB_ROOT}/.ccdb ]; then
   export ALICEO2_CCDB_LOCALCACHE=${HEPSCORE_CCDB_ROOT}/.ccdb
   # fetch bin files (cluster dictionaries)
   cp ${HEPSCORE_CCDB_ROOT}/data/*.bin .
+  cp ${HEPSCORE_CCDB_ROOT}/data/*.root .
 else
   # benchmark is run in production mode: We fetch objects from server and cache them here.
   export ALICEO2_CCDB_LOCALCACHE=${PWD}/.ccdb

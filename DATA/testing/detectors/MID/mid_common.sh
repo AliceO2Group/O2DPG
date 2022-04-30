@@ -3,13 +3,7 @@
 # shellcheck disable=SC1091
 source common/setenv.sh
 
-SEVERITY=warning
-INFOLOGGER_SEVERITY=warning
-ARGS_ALL="--session default --severity $SEVERITY --shm-segment-size $SHMSIZE"
-ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
-ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 60"
-
-ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;$ALL_EXTRA_CONFIG"
+source common/getCommonArgs.sh
 
 MID_PROXY_INSPEC_EOS="eos:***/INFORMATION"
 MID_PROXY_INSPEC_DD="dd:FLP/DISTSUBTIMEFRAME/0"

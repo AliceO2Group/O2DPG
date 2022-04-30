@@ -27,9 +27,6 @@ else
     echo "************************************************************"
 fi
 
-# to have better logging
-export DDS_SESSION_ID=foo
-
 # remove monitoring-backend
 export ENABLE_METRICS=1
 
@@ -68,7 +65,7 @@ export ITSTPCMATCH="tpcitsMatch.maxVDriftUncertainty=0.2;tpcitsMatch.safeMarginT
 export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow="$VDRIFT;$ITSEXTRAERR;$ITSTPCMATCH"
 
 # ad-hoc settings for TOF matching
-export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="--output-type matching-info"
+export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="--output-type matching-info,calib-info --enable-dia"
 export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow="$VDRIFT;$ITSEXTRAERR"
 
 # ad-hoc settings for TRD matching
@@ -85,6 +82,7 @@ export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="--fv0-reconstructor"
 
 # ad-hoc settings for MFT 
 export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="$MFT_STROBELGT"
+export ARGS_EXTRA_PROCESS_o2_mft_reco_workflow=" --run-assessment "
 
 # Enabling AOD
 export WORKFLOW_PARAMETERS="AOD,${WORKFLOW_PARAMETERS}"

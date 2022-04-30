@@ -119,10 +119,15 @@
         "make-eff": "true",
         "sel-prim": "true"
     },
+    "event-selection-qa-task": {
+        "isMC": "false",
+        "processRun2": "false",
+        "processRun3": "true"
+    },
     "event-selection-task": {
         "syst": "pp",
         "muonSelection": "0",
-        "isMC": "true",
+        "isMC": "false",
         "processRun2": "false",
         "processRun3": "true"
     },
@@ -196,28 +201,10 @@
         "processEvTime": "false",
         "processNoEvTime": "true"
     },
-    "table-maker-m-c": {
-        "cfgEventCuts": "eventStandardNoINT7",
-        "cfgBarrelTrackCuts": "jpsiO2MCdebugCuts,kaonPID",
-        "cfgMuonCuts": "muonQualityCuts,muonTightQualityCutsForTests",
-        "cfgBarrelLowPt": "1",
-        "cfgMuonLowPt": "1",
-        "cfgMCsignals": "anyBeautyHadron,everythingFromBeauty,everythingFromEverythingFromBeauty",
-        "cfgIsRun2": "false",
-        "cfgNoQA": "false",
-        "cfgDetailedQA": "true",
-        "processFull": "false",
-        "processBarrelOnly": "false",
-        "processBarrelOnlyWithCent": "false",
-        "processBarrelOnlyWithCov": "true",
-        "processMuonOnlyWithCov": "false",
-        "processMuonOnlyWithCent": "false",
-        "processOnlyBCs": "true"
-    },
     "qa-event-track": {
-        "isMC": "true",
+        "isMC": "false",
         "isRun3": "true",
-        "processData": "false",
-        "processMC": "true"
+        "processData": "true",
+        "processMC": "false"
     }
 }

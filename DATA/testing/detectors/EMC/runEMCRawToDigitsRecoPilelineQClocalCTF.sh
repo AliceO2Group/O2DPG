@@ -5,7 +5,7 @@ source /home/mfasel/alice/O2DataProcessing/common/setenv.sh
 PROXY_INSPEC="A:EMC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
 NCPU=20 #$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
-ARGS_ALL="-b --session default --shm-segment-size $SHMSIZE"
+source common/getCommonArgs.sh
 #HOST='$(hostname -s)-ib'
 HOST=epn
 

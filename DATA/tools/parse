@@ -4,9 +4,11 @@ import sys
 import shlex
 import tempfile
 import re
+import datetime
+import random
 
-if not os.path.exists("tools/parse"):
-    print("Running from incorrect directory")
+if not os.path.exists('tools/parse'):
+    print('Running from incorrect directory')
     exit(1)
 
 if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']):
@@ -14,39 +16,39 @@ if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']):
     import python as mod
 
 if len(sys.argv) != 4:
-    print("Incorrect number of arguments provided, syntax is parse [description library file] [topology name] [output file name]")
+    print('Incorrect number of arguments provided, syntax is parse [description library file] [topology name] [output file name]')
     exit(1)
 
-if not "FILEWORKDIR" in os.environ:
-    print("$FILEWORKDIR env variable missing")
+if not 'FILEWORKDIR' in os.environ:
+    print('$FILEWORKDIR env variable missing')
     exit(1)
 
-if not "DDWORKFLOW" in os.environ and not "DDMODE" in os.environ:
-    print("Need either $DDWORKFLOW or $DDMODE env variable")
+if not 'DDWORKFLOW' in os.environ and not 'DDMODE' in os.environ:
+    print('Need either $DDWORKFLOW or $DDMODE env variable')
     exit(1)
 
 NO_PROCESSING_MODE=0
-if not "DDWORKFLOW" in os.environ:
-    os.environ['DDWORKFLOW'] = "tools/datadistribution_workflows/dd-" + os.environ['DDMODE'] + ".xml"
+if not 'DDWORKFLOW' in os.environ:
+    os.environ['DDWORKFLOW'] = 'tools/datadistribution_workflows/dd-' + os.environ['DDMODE'] + '.xml'
     if os.environ['DDMODE'] == 'discard' or os.environ['DDMODE'] == 'disk':
         NO_PROCESSING_MODE=1
 
-print("Using topology", sys.argv[2], "of library", sys.argv[1])
+print('Using topology', sys.argv[2], 'of library', sys.argv[1])
 
 if 'WORKFLOWMODE' in os.environ:
     if not os.environ['WORKFLOWMODE'] in ['dds', 'print']:
-        print("Invalid WORKFLOWMODE provided")
+        print('Invalid WORKFLOWMODE provided')
         raise
 else:
     os.environ['WORKFLOWMODE'] = 'dds'
 
-if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRIDE'] != "" and int(os.environ['RECO_NUM_NODES_OVERRIDE']) > 0:
+if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRIDE'] != '' and int(os.environ['RECO_NUM_NODES_OVERRIDE']) > 0:
     reco_num_nodes_override = int(os.environ['RECO_NUM_NODES_OVERRIDE'])
     os.environ['RECO_NUM_NODES_WORKFLOW'] = str(reco_num_nodes_override)
 else:
     reco_num_nodes_override = 0
 
-f = open(sys.argv[1], "r")
+f = open(sys.argv[1], 'r')
 for line in f:
     line = line.strip()
     if len(line) == 0:
@@ -55,81 +57,104 @@ for line in f:
         continue
     args = shlex.split(line)
     if len(args) <= 1:
-        print("Toplogy must have at least name and O2 version")
+        print('Toplogy must have at least name and O2 version')
         raise
     if len(args[0]) == 0:
-        print("Empty topology name forbitten")
+        print('Empty topology name forbitten')
         raise
     if not args[0].endswith(':'):
-        print("Topology name ", args[0], "not followed by ':'")
+        print('Topology name ', args[0], "not followed by ':'")
         raise
-    if args[0] == sys.argv[2] + ":":
+    if args[0] == sys.argv[2] + ':':
         reconodes = 0
         reconodesmin = 0
         recoworkflows = []
         calibworkflows = []
-        print("Found topology", sys.argv[2], "-", args)
+        print('Found topology', sys.argv[2], '-', args)
         if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']) and (not 'GEN_TOPO_RUN_HOME' in os.environ or not int(os.environ['GEN_TOPO_RUN_HOME'])):
             restore_O2DPG_ROOT = 'O2DPG_ROOT' in os.environ
             if restore_O2DPG_ROOT:
                 restore_O2DPG_ROOT_val = os.environ['O2DPG_ROOT']
-            if 'OVERRIDE_PDPSUITE_VERSION' in os.environ and os.environ['OVERRIDE_PDPSUITE_VERSION'] != "":
+            if 'OVERRIDE_PDPSUITE_VERSION' in os.environ and os.environ['OVERRIDE_PDPSUITE_VERSION'] != '':
                 args[1] = os.environ['OVERRIDE_PDPSUITE_VERSION']
             for i in args[1].split():
-                if "GEN_TOPO_CACHEABLE" in os.environ and os.environ['GEN_TOPO_CACHEABLE'] == "1":
-                    if i.find("/") == -1 or i.find("/latest") != -1:
-                        print("Must not use non-versioned module", i, "in cacheable workflow (i.e. with repository hash)")
+                if 'GEN_TOPO_CACHEABLE' in os.environ and os.environ['GEN_TOPO_CACHEABLE'] == '1':
+                    if i.find('/') == -1 or i.find('/latest') != -1:
+                        print('Must not use non-versioned module', i, 'in cacheable workflow (i.e. with repository hash)')
                         raise
-                print("Loading module", i)
+                print('Loading module', i)
                 mod.module('load', i)
             if restore_O2DPG_ROOT:
                 os.environ['O2DPG_ROOT'] = restore_O2DPG_ROOT_val
         if len(args) > 2 and not 'O2_ROOT' in os.environ:
-            print("O2 not loaded")
+            print('O2 not loaded')
             raise
-        with tempfile.TemporaryDirectory(prefix="o2_workflow_") as tmpdir:
+        with tempfile.TemporaryDirectory(prefix='o2_workflow_') as tmpdir:
             if NO_PROCESSING_MODE and len(args) > 2:
-                print("Cannot use DPL workflow together with DD mode", os.environ['DDMODE'])
+                print('Cannot use DPL workflow together with DD mode', os.environ['DDMODE'])
                 raise
             for i in range(2, len(args)):
-                filename = tmpdir + "/wf" + str(i) + ".dds"
-                if args[i].startswith("reco"):
-                    wf = args[i].split(",", 3)
+                filename = tmpdir + '/wf' + str(i) + '.dds'
+                if args[i].startswith('reco'):
+                    wf = args[i].split(',', 3)
                     recoworkflows.append(filename)
-                elif args[i].startswith("calib"):
-                    wf = args[i].split(",", 2)
+                    is_calib_workflow = 0
+                elif args[i].startswith('calib'):
+                    wf = args[i].split(',', 2)
                     filenamecore = filename
-                    # filenamecore = filenamecore+ ":" + wf[1] # Currently disabled, since odc-epn-topo does not accept :[ncores]
+                    # filenamecore = filenamecore+ ':' + wf[1] # Currently disabled, since odc-epn-topo does not accept :[ncores]
                     wf.append(wf[2])
-                    wf[1] = "1";
+                    wf[1] = '1';
                     wf[2] = wf[1]
                     calibworkflows.append(filenamecore)
+                    is_calib_workflow = 1
                 else:
-                    print("Invalid workflow type", args[i])
+                    print('Invalid workflow type', args[i])
                     raise
-                print("Adding", wf[0], "workflow (", wf[2], "-", wf[1], "nodes):", wf[3])
+                print('Adding', wf[0], 'workflow (', wf[2], '-', wf[1], 'nodes):', wf[3])
                 reconodes = max(reconodes, int(wf[1]))
                 reconodesmin = max(reconodesmin, int(wf[2]))
                 if 'GEN_TOPO_IGNORE_ERROR' in os.environ and int(os.environ['GEN_TOPO_IGNORE_ERROR']):
-                    command_log_filter = "\"^\[\""
+                    command_log_filter = '"^\["'
                 else:
-                    command_log_filter = "\"^\[INFO\""
-                command = "GLOBALDPLOPT+=\" -b --dds-workflow-suffix _" + wf[0] + str(i) + "\" " + wf[3] + " | grep -v " + command_log_filter + " > " + filename + " && [ `grep \"^\[\" " + filename + " | wc -l` == 0 ]"
-                print("Running DPL command", command)
+                    command_log_filter = '"^\[INFO"'
+                command_preopt = 'GEN_TOPO_CALIB_WORKFLOW=' + str(is_calib_workflow)
+                if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
+                    json_cache_path = os.environ['GEN_TOPO_WORKDIR'] + '/json_cache'
+                    filename_xml = filename
+                    if not 'GEN_TOPO_WORKDIR' in os.environ:
+                        print('$GEN_TOPO_WORKDIR not set')
+                        raise
+                    if not os.path.exists(json_cache_path):
+                        os.makedirs(json_cache_path, 0o770)
+                    filename = json_cache_path + '/dpl_tmp_' + datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S') + wf[0] + str(i) + '_' + str(random.randrange(100000000)) + '.json'
+                    command_preopt += ' WORKFLOWMODE=dump'
+                command = command_preopt + ' GLOBALDPLOPT+=" -b --dds-workflow-suffix _' + wf[0] + str(i) + '" ' + wf[3] + ' | grep -v ' + command_log_filter + ' > ' + filename + ' && [ `grep "^\[" ' + filename + ' | wc -l` == 0 ]'
+                print('Running DPL command', command)
                 if reco_num_nodes_override == 0:
                   os.environ['RECO_NUM_NODES_WORKFLOW'] = wf[1]
                 if os.system(command) != 0:
-                    print("Error running command", command)
+                    print('Error running command', command)
                     ftmp = open(filename, 'r')
-                    rg = re.compile("^<topology")
+                    rg = re.compile('^<topology')
                     for line in ftmp:
                         if re.match(rg, line):
                             break
                         print(line)
                     raise
+                if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
+                    command = 'cat ' + filename + ' | o2-dpl-run -b --dds --dds-workflow-suffix _' + wf[0] + str(i) + ' --resources-monitoring 15 '  + ' | grep -v ' + command_log_filter + ' > ' + filename_xml
+                    print('Running CAT command', command)
+                    if os.system(command) != 0:
+                        print('Error running command', command)
+                    command = 'sed -i \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ' + filename + ' \\2,\' ' + filename_xml
+                    print('Running SED command', command)
+                    if os.system(command) != 0:
+                        print('Error running sed on XML file')
+                    filename = filename_xml
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
-            if 'RECO_MAX_FAIL_NODES_OVERRIDE' in os.environ and os.environ['RECO_MAX_FAIL_NODES_OVERRIDE'] != "":
+            if 'RECO_MAX_FAIL_NODES_OVERRIDE' in os.environ and os.environ['RECO_MAX_FAIL_NODES_OVERRIDE'] != '':
                 reconodesmin = max(1, reconodes - int(os.environ['RECO_NUM_NODES_OVERRIDE']))
             if os.environ['WORKFLOWMODE'] == 'dds':
                 if 'GEN_TOPO_ODC_EPN_TOPO_CMD' in os.environ:
@@ -139,41 +164,41 @@ for line in f:
                 if 'GEN_TOPO_ODC_EPN_TOPO_ARGS' in os.environ:
                   odccommand += ' ' + os.environ['GEN_TOPO_ODC_EPN_TOPO_ARGS']
                 if reconodes:
-                    replacestring = ""
-                    dd_env_variables = ['DD_DISK_FRACTION']
+                    replacestring = ''
+                    dd_env_variables = ['DD_DISK_FRACTION', 'EPN_DD_TEST', 'EPN_DD_TEST_2', 'EPN_DD_TEST_3', 'SHM_MANAGER_SHMID']
                     for i in dd_env_variables:
                         if i in os.environ:
-                            replacestring += " " + i + "=" + os.environ[i]
-                    fddin = open(os.environ['DDWORKFLOW'], "rt")
-                    filename = tmpdir + "/wf_dd.dds";
-                    fddout = open(filename, "wt")
+                            replacestring += ' ' + i + '=' + os.environ[i]
+                    fddin = open(os.environ['DDWORKFLOW'], 'rt')
+                    filename = tmpdir + '/wf_dd.dds';
+                    fddout = open(filename, 'wt')
                     for line in fddin:
                         fddout.write(line.replace('GEN_TOPO_TFBUILDER_ENV_VARIABLES', replacestring))
                     fddin.close()
                     fddout.close()
-                    odccommand += " --dd " + filename
+                    odccommand += ' --dd ' + filename
                 if len(recoworkflows):
-                    odccommand += " --reco " + " ".join(recoworkflows)
-                odccommand += " --n " + str(reconodes)
-                # odccommand += " --nmin " + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
+                    odccommand += ' --reco ' + ' '.join(recoworkflows)
+                odccommand += ' --n ' + str(reconodes)
+                # odccommand += ' --nmin ' + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
                 if len(calibworkflows):
-                    odccommand += " --calib " + " ".join(calibworkflows)
-                if "GEN_TOPO_STDERR_LOGGING" in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
-                    odccommand += " --mon tools/monitoring_workflows/epnstderrlog.xml"
-                if args[1] != "":
-                    odccommand += " --prependexe \"module load " + args[1] + " 2>&1 ; \""
-                odccommand += " -o " + sys.argv[3]
+                    odccommand += ' --calib ' + ' '.join(calibworkflows)
+                if 'GEN_TOPO_STDERR_LOGGING' in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
+                    odccommand += ' --mon tools/monitoring_workflows/epnstderrlog.xml'
+                if args[1] != '':
+                    odccommand += ' --prependexe "module load ' + args[1] + ' 2>&1 ; "'
+                odccommand += ' -o ' + sys.argv[3]
                 if os.system(odccommand) != 0:
-                    print("\nError running odc: ", odccommand)
+                    print('\nError running odc: ', odccommand)
                     raise
             else:
-                outf = open(sys.argv[3], "w+")
+                outf = open(sys.argv[3], 'w+')
                 for i in recoworkflows:
-                    outf.write("# RECO workflow\n\n" + open(i, 'r').read() + "\n\n")
+                    outf.write('# RECO workflow\n\n' + open(i, 'r').read() + '\n\n')
                 for i in calibworkflows:
-                    outf.write("# CALIB workflow\n\n" + open(i, 'r').read() + "\n\n")
-        print("Done")
+                    outf.write('# CALIB workflow\n\n' + open(i, 'r').read() + '\n\n')
+        print('Done')
         exit(0)
 
-print("Could not find workflow", sys.argv[2])
+print('Could not find workflow', sys.argv[2])
 exit(1)

@@ -71,7 +71,11 @@ if [ $EPNSYNCMODE == 0 ]; then
   if [ -z "$EDJSONS_DIR" ];   then export EDJSONS_DIR="jsons"; fi      # output directory for ED json files
   if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=""; fi # No FLP processing by default when we do not run the sync EPN workflow, e.g. full system test will also run full FLP processing
 else # Defaults when running on the EPN
-  if [ -z "$SHMSIZE" ];              then export SHMSIZE=$(( 256 << 30 )); fi
+  if [[ "0$GEN_TOPO_CALIB_WORKFLOW" != "01" ]]; then
+    if [ -z "$SHMSIZE" ];              then export SHMSIZE=$(( 32 << 30 )); fi
+  else
+    if [ -z "$SHMSIZE" ];              then export SHMSIZE=$(( 256 << 30 )); fi
+  fi
   if [ -z "$NGPUS" ];                then export NGPUS=4; fi
   if [ -z "$EXTINPUT" ];             then export EXTINPUT=1; fi
   if [ -z "$EPNPIPELINES" ];         then export EPNPIPELINES=1; fi
@@ -79,7 +83,8 @@ else # Defaults when running on the EPN
   if [ -z "$TIMEFRAME_SHM_LIMIT" ];  then export TIMEFRAME_SHM_LIMIT=$(( $SHMSIZE / 2 )); fi
   if [ -z "$TIMEFRAME_RATE_LIMIT" ]; then export TIMEFRAME_RATE_LIMIT=0; fi
   if [ -z "$EDJSONS_DIR" ];          then export EDJSONS_DIR="/home/ed/jsons"; fi
-  if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
+  if [ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF,FT0"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
+  if [ -z "$GEN_TOPO_AUTOSCALE_PROCESSES" ];          then export GEN_TOPO_AUTOSCALE_PROCESSES=1; fi # On the EPN we should make sure to always use the node to the full extent
 fi
 # Some more options for running on the EPN
 if [ -z "$INFOLOGGER_SEVERITY" ]; then export INFOLOGGER_SEVERITY="important"; fi
@@ -90,6 +95,8 @@ if [ -z "$MULTIPLICITY_FACTOR_REST" ]; then export MULTIPLICITY_FACTOR_REST=1; f
 [ -z "${SEVERITY_TPC+x}" ] && SEVERITY_TPC="info" # overrides severity for the tpc workflow
 [ -z "${DISABLE_MC+x}" ] && DISABLE_MC="--disable-mc"
 [ -z "${DISABLE_ROOT_OUTPUT+x}" ] && DISABLE_ROOT_OUTPUT="--disable-root-output"
+
+if [ `uname` == Darwin ]; then export UDS_PREFIX=; else export UDS_PREFIX="@"; fi
 
 if [[ $(( $EXTINPUT + $CTFINPUT + $RAWTFINPUT + $DIGITINPUT )) -ge 2 ]]; then
   echo Only one of EXTINPUT / CTFINPUT / RAWTFINPUT / DIGITINPUT must be set
@@ -103,7 +110,7 @@ if [ $SYNCMODE == 1 ] && [ $CTFINPUT == 1 ]; then
   echo SYNCMODE and CTFINPUT are incompatible
   exit 1
 fi
-if [ $WORKFLOWMODE != "run" ] && [ $WORKFLOWMODE != "print" ] && [ $WORKFLOWMODE != "dds" ]; then
+if [ $WORKFLOWMODE != "run" ] && [ $WORKFLOWMODE != "print" ] && [ $WORKFLOWMODE != "dds" ] && [ $WORKFLOWMODE != "dump" ]; then
   echo Invalid workflow mode
   exit 1
 fi
