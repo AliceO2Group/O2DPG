@@ -15,7 +15,7 @@ if [ $NORATELOG == 1 ]; then
 fi
 ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;$ALL_EXTRA_CONFIG"
 
-PROXY_INSPEC="tunestring:ITS/TSTR/0;runtype:ITS/RUNT/0;fittype:ITS/FITT/0;scantype:ITS/SCANT/0;eos:***/INFORMATION"
+PROXY_INSPEC="tunestring:ITS/TSTR;runtype:ITS/RUNT;fittype:ITS/FITT;scantype:ITS/SCANT;eos:***/INFORMATION"
 
 WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --proxy-name its-thr-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=its-thr-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\" | "
 WORKFLOW+="o2-its-threshold-aggregator-workflow -b $ARGS_ALL | "
