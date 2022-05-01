@@ -154,8 +154,9 @@ for line in f:
                     filename = filename_xml
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
+                reconodesmin = min(reconodes, reconodesmin)
             if 'RECO_MAX_FAIL_NODES_OVERRIDE' in os.environ and os.environ['RECO_MAX_FAIL_NODES_OVERRIDE'] != '':
-                reconodesmin = max(1, reconodes - int(os.environ['RECO_NUM_NODES_OVERRIDE']))
+                reconodesmin = max(1, reconodes - int(os.environ['RECO_MAX_FAIL_NODES_OVERRIDE']))
             if os.environ['WORKFLOWMODE'] == 'dds':
                 if 'GEN_TOPO_ODC_EPN_TOPO_CMD' in os.environ:
                   odccommand = os.environ['GEN_TOPO_ODC_EPN_TOPO_CMD']
@@ -180,7 +181,7 @@ for line in f:
                 if len(recoworkflows):
                     odccommand += ' --reco ' + ' '.join(recoworkflows)
                 odccommand += ' --n ' + str(reconodes)
-                # odccommand += ' --nmin ' + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
+                odccommand += ' --nmin ' + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
                 if len(calibworkflows):
                     odccommand += ' --calib ' + ' '.join(calibworkflows)
                 if 'GEN_TOPO_STDERR_LOGGING' in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
@@ -188,6 +189,7 @@ for line in f:
                 if args[1] != '':
                     odccommand += ' --prependexe "module load ' + args[1] + ' 2>&1 ; "'
                 odccommand += ' -o ' + sys.argv[3]
+                print('Running ODC command', odccommand)
                 if os.system(odccommand) != 0:
                     print('\nError running odc: ', odccommand)
                     raise
