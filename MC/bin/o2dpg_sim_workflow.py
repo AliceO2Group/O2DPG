@@ -680,7 +680,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       tneeds = [ContextTask['name']]
       t = createTask(name="ft0fv0ctp_digi_" + str(tf), needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
-      t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
+      t['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
       t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew()
       workflow['stages'].append(t)
       det_to_digitask["FT0"]=t
