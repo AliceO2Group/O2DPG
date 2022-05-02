@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source common/setenv.sh
-
 export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM
 export GPUMEMSIZE=$(( 24 << 30 ))
 export HOSTMEMSIZE=$(( 5 << 30 ))
@@ -59,14 +58,14 @@ o2-dpl-raw-proxy $ARGS_ALL \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
     --input-spec "$CALIB_INSPEC"  \
     --configKeyValues "TPCDigitDump.LastTimeBin=600;$ARGS_ALL_CONFIG" \
-    --pipeline tpc-raw-to-digits-0:32 \
+    --pipeline tpc-raw-to-digits-0:20 \
     --remove-duplicates \
     --send-ce-digits \
     | o2-tpc-reco-workflow $ARGS_ALL \
     --input-type digitizer  \
     --output-type "tracks,disable-writer" \
     --disable-mc \
-    --pipeline tpc-tracker:4 \
+    --pipeline tpc-zsEncoder:20,tpc-tracker:8 \
     $GPU_CONFIG \
     --configKeyValues "$ARGS_ALL_CONFIG;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY" \
     | o2-tpc-laser-track-filter $ARGS_ALL \
@@ -76,10 +75,11 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --lanes 36 \
     --calib-type ce \
     --publish-after-tfs 50 \
-    --max-events 90 \
+    --max-events 110 \
     | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
     --ccdb-path http://ccdb-test.cern.ch:8080 \
     | o2-dpl-run $ARGS_ALL --dds
 
+#    --pipeline tpc-tracker:4 \
 
 #    --configKeyValues "align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.forceMemoryPoolSize=$GPUMEMSIZE;GPU_proc.forceHostMemoryPoolSize=$HOSTMEMSIZE;GPU_proc.deviceNum=0;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$ARGS_FILES;keyval.output_dir=/dev/null" \
