@@ -114,7 +114,7 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     MERGED_JSON_FILENAME=`realpath $MERGED_JSON_FILENAME`
 
     if [[ "0$QC_REDIRECT_MERGER_TO_LOCALHOST" == "01" ]]; then
-      sed -i -E 's/( *)"remoteMachine" *: *".*"(,|) *$/\1"remoteMachine": "127.0.0.1"\2/' $MERGED_JSON_FILENAME
+      sed -i.bak -E 's/( *)"remoteMachine" *: *".*"(,?) *$/\1"remoteMachine": "127.0.0.1"\2/' $MERGED_JSON_FILENAME
     fi
     QC_JSON_FROM_OUTSIDE="$MERGED_JSON_FILENAME"
   fi
