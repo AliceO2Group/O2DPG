@@ -37,7 +37,7 @@ Another abstraction layer above the *workflows* are **topology descriptions**. T
   - `--infologger-severity $INFOLOGGER_SEVERITY` enables the infologger.
 
 # Configuring and selecting workflow in AliECS:
-There are 3 ways foreseenm to configure the *full topology* in AliECS: (currently only the manual XML option exists)
+There are 3 ways foreseen to configure the *full topology* in AliECS: (currently only the manual XML option exists)
 - **version of workflow repository**: In this mode, the following settings are configured in AliECS, and they uniquely identify a *full topology*. The *parser* will then create the final DDS XML file with the *full topology*:
   - A **commit hash** identifying a state of the `O2DPG` repository (this can also be a tag, and in the case of production workflows it is required to be a tag).
   - The path of a **description library file** (path relative to the DATA folder inside the `O2DPG` repository).
