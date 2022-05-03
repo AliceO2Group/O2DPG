@@ -12,261 +12,280 @@
 
 using namespace Pythia8;
 
-class GeneratorPythia8Gun : public o2::eventgen::GeneratorPythia8{
-	public:
-		/// default constructor
-		GeneratorPythia8Gun() = default;
+class GeneratorPythia8Gun : public o2::eventgen::GeneratorPythia8
+{
+ public:
+  /// default constructor
+  GeneratorPythia8Gun() = default;
 
-		/// constructor
-		GeneratorPythia8Gun(int input_pdg){
-			genMinP=1.;
-			genMaxP=16.;
-			genMinEta=-0.1;
-			genMaxEta=0.1;
+  /// constructor
+  GeneratorPythia8Gun(int input_pdg)
+  {
+    genMinP = 1.;
+    genMaxP = 16.;
+    genMinEta = -0.1;
+    genMaxEta = 0.1;
 
-			pdg = input_pdg;
-			E=0;
-			px=0;
-			py=0;
-			pz=0;
-			p=0;
-			y=0;
-			eta=0;
-			xProd=0;
-			yProd=0;
-			zProd=0;
-			xProd=0.; yProd=0.; zProd=0.;
-			//addFurtherPion=false;
+    pdg = input_pdg;
+    E = 0;
+    px = 0;
+    py = 0;
+    pz = 0;
+    p = 0;
+    y = 0;
+    eta = 0;
+    xProd = 0;
+    yProd = 0;
+    zProd = 0;
+    xProd = 0.;
+    yProd = 0.;
+    zProd = 0.;
+    // addFurtherPion=false;
 
-			randomizePDGsign=false;
+    randomizePDGsign = false;
 
-			m = getMass(input_pdg);
-			furtherPrim={};
-			keys_furtherPrim={};
-		}
-		
-		///  Destructor
-  		~GeneratorPythia8Gun() = default;
+    m = getMass(input_pdg);
+    furtherPrim = {};
+    keys_furtherPrim = {};
+  }
 
-		/// set PDG code
-		void setPDG(int input_pdg){pdg=input_pdg;}
+  ///  Destructor
+  ~GeneratorPythia8Gun() = default;
 
-		/// randomize the PDG code sign of core particle
-		void setRandomizePDGsign(){randomizePDGsign=true;}
+  /// set PDG code
+  void setPDG(int input_pdg) { pdg = input_pdg; }
 
-		/// set mass
-		void setMass(int input_m){m=input_m;}
+  /// randomize the PDG code sign of core particle
+  void setRandomizePDGsign() { randomizePDGsign = true; }
 
-		/// set 4-momentum
-		void set4momentum(double input_px, double input_py, double input_pz){
-			px = input_px;
-			py = input_py;
-			pz = input_pz;
-			E  = sqrt( m*m+px*px+py*py+pz*pz );
-			fourMomentum.px(px);
-			fourMomentum.py(py);
-			fourMomentum.pz(pz);
-			fourMomentum.e(E);
-			p   = sqrt( px*px+py*py+pz*pz );
-			y   = 0.5*log( (E+pz)/(E-pz) );
-			eta = 0.5*log( (p+pz)/(p-pz) );
+  /// set mass
+  void setMass(int input_m) { m = input_m; }
 
-			////std::cout << "##### Particle #####" << std::endl;
-			////std::cout << " - PDG code: " << pdg << std::endl;
-			////std::cout << " - mass: "     << m   << std::endl;
-			////std::cout << " - (px,py,pz): (" << px << "," << py << "," << pz << ")" << std::endl;
-			////std::cout << " - momentum: " << p << std::endl;
-			////std::cout << " - energy: " << E << std::endl;
-			////std::cout << " - rapidity: " << y << std::endl;
-			////std::cout << " - pseudorapidity: " << eta << std::endl;
-			////std::cout << " - production vertex: (" << xProd << "," << yProd << "," << zProd << ")" << std::endl;
-		}
+  /// set 4-momentum
+  void set4momentum(double input_px, double input_py, double input_pz)
+  {
+    px = input_px;
+    py = input_py;
+    pz = input_pz;
+    E = sqrt(m * m + px * px + py * py + pz * pz);
+    fourMomentum.px(px);
+    fourMomentum.py(py);
+    fourMomentum.pz(pz);
+    fourMomentum.e(E);
+    p = sqrt(px * px + py * py + pz * pz);
+    y = 0.5 * log((E + pz) / (E - pz));
+    eta = 0.5 * log((p + pz) / (p - pz));
 
-		/// set 3-momentum
-		void setMomentum(double input_p){p=input_p;}
+    ////std::cout << "##### Particle #####" << std::endl;
+    ////std::cout << " - PDG code: " << pdg << std::endl;
+    ////std::cout << " - mass: "     << m   << std::endl;
+    ////std::cout << " - (px,py,pz): (" << px << "," << py << "," << pz << ")" << std::endl;
+    ////std::cout << " - momentum: " << p << std::endl;
+    ////std::cout << " - energy: " << E << std::endl;
+    ////std::cout << " - rapidity: " << y << std::endl;
+    ////std::cout << " - pseudorapidity: " << eta << std::endl;
+    ////std::cout << " - production vertex: (" << xProd << "," << yProd << "," << zProd << ")" << std::endl;
+  }
 
-		/// set x,y,z of production vertex
-		void setProdVtx(double input_xProd, double input_yProd, double input_zProd){xProd=input_xProd; yProd=input_xProd; zProd=input_zProd;}
+  /// set 3-momentum
+  void setMomentum(double input_p) { p = input_p; }
 
-		/// setter to add further primary particles to the event
-		void setAddFurtherPrimaries(const int pdgCode, const int howMany){
-			/// check if this species has been already added
-			const int map_counts = furtherPrim.count(pdgCode);
-			if(map_counts==1){	// species already present
-				const int howMany_already = furtherPrim[pdgCode];
-				std::cout << "BEWARE: " << howMany_already << " particles of species " << pdgCode << " already required.";
-				std::cout << " Ignoring the command setAddFurtherPrimaries(" << pdgCode << "," << howMany << ")" << std::endl;
-				return;
-			}
-			/// add particles, if not yet present
-			furtherPrim[pdgCode] = howMany;
-			keys_furtherPrim.insert(pdgCode);
-		}
+  /// set x,y,z of production vertex
+  void setProdVtx(double input_xProd, double input_yProd, double input_zProd)
+  {
+    xProd = input_xProd;
+    yProd = input_xProd;
+    zProd = input_zProd;
+  }
 
-		/// set add a further primary pion
-		//void setAddFurtherPion(){addFurtherPion=true;}
+  /// setter to add further primary particles to the event
+  void setAddFurtherPrimaries(const int pdgCode, const int howMany)
+  {
+    /// check if this species has been already added
+    const int map_counts = furtherPrim.count(pdgCode);
+    if (map_counts == 1) { // species already present
+      const int howMany_already = furtherPrim[pdgCode];
+      std::cout << "BEWARE: " << howMany_already << " particles of species " << pdgCode << " already required.";
+      std::cout << " Ignoring the command setAddFurtherPrimaries(" << pdgCode << "," << howMany << ")" << std::endl;
+      return;
+    }
+    /// add particles, if not yet present
+    furtherPrim[pdgCode] = howMany;
+    keys_furtherPrim.insert(pdgCode);
+  }
 
-		/// get mass from TParticlePDG
-		double getMass(int input_pdg){
-			double mass = 0;
-			if(TDatabasePDG::Instance()){
-				TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(input_pdg);
-				if(particle)	mass = particle->Mass();
-				else			std::cout << "===> particle mass equal to 0" << std::endl;
-			}
-			return mass;
-		}
+  /// set add a further primary pion
+  // void setAddFurtherPion(){addFurtherPion=true;}
 
-		//_________________________________________________________________________________
-		/// generate uniform eta and uniform momentum
-		void genUniformMomentumEta(double minP, double maxP, double minEta, double maxEta){
-			// random generator
-			std::unique_ptr<TRandom3> ranGenerator { new TRandom3() };
-			ranGenerator->SetSeed(0);
+  /// get mass from TParticlePDG
+  double getMass(int input_pdg)
+  {
+    double mass = 0;
+    if (TDatabasePDG::Instance()) {
+      TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(input_pdg);
+      if (particle)
+        mass = particle->Mass();
+      else
+        std::cout << "===> particle mass equal to 0" << std::endl;
+    }
+    return mass;
+  }
 
-			// momentum
-			const double gen_p = ranGenerator->Uniform(minP,maxP);
-			// eta
-			const double gen_eta = ranGenerator->Uniform(minEta,maxEta);
-			// z-component momentum from eta
-			const double cosTheta = ( exp(2*gen_eta)-1 ) / ( exp(2*gen_eta)+1 );	// starting from eta = -ln(tan(theta/2)) = 1/2*ln( (1+cos(theta))/(1-cos(theta)) ) ---> NB: valid for cos(theta)!=1
-			const double gen_pz = gen_p*cosTheta;
-			// y-component: random uniform
-			const double maxVal = sqrt( gen_p*gen_p-gen_pz*gen_pz );
-			double sign_py = ranGenerator->Uniform(0,1);
-			sign_py = (sign_py>0.5)?1.:-1.;
-			const double gen_py = ranGenerator->Uniform(0.,maxVal)*sign_py;
-			// x-component momentum
-			double sign_px = ranGenerator->Uniform(0,1);
-			sign_px = (sign_px>0.5)?1.:-1.;
-			const double gen_px = sqrt( gen_p*gen_p-gen_pz*gen_pz-gen_py*gen_py )*sign_px;
+  //_________________________________________________________________________________
+  /// generate uniform eta and uniform momentum
+  void genUniformMomentumEta(double minP, double maxP, double minEta, double maxEta)
+  {
+    // random generator
+    std::unique_ptr<TRandom3> ranGenerator{new TRandom3()};
+    ranGenerator->SetSeed(0);
 
-			set4momentum(gen_px,gen_py,gen_pz);
-		}
+    // momentum
+    const double gen_p = ranGenerator->Uniform(minP, maxP);
+    // eta
+    const double gen_eta = ranGenerator->Uniform(minEta, maxEta);
+    // z-component momentum from eta
+    const double cosTheta = (exp(2 * gen_eta) - 1) / (exp(2 * gen_eta) + 1); // starting from eta = -ln(tan(theta/2)) = 1/2*ln( (1+cos(theta))/(1-cos(theta)) ) ---> NB: valid for cos(theta)!=1
+    const double gen_pz = gen_p * cosTheta;
+    // y-component: random uniform
+    const double maxVal = sqrt(gen_p * gen_p - gen_pz * gen_pz);
+    double sign_py = ranGenerator->Uniform(0, 1);
+    sign_py = (sign_py > 0.5) ? 1. : -1.;
+    const double gen_py = ranGenerator->Uniform(0., maxVal) * sign_py;
+    // x-component momentum
+    double sign_px = ranGenerator->Uniform(0, 1);
+    sign_px = (sign_px > 0.5) ? 1. : -1.;
+    const double gen_px = sqrt(gen_p * gen_p - gen_pz * gen_pz - gen_py * gen_py) * sign_px;
 
-	protected:
+    set4momentum(gen_px, gen_py, gen_pz);
+  }
 
-		//__________________________________________________________________
-		Particle createParticle(){
-			std::cout << "createParticle() mass " << m << " pdgCode " << pdg << std::endl;
-			Particle myparticle;
-			myparticle.id(pdg);
-			myparticle.status(11);
-			myparticle.px(px);
-  			myparticle.py(py);
-  			myparticle.pz(pz);
-  			myparticle.e(E);
-  			myparticle.m(m);
-  			myparticle.xProd(xProd);
-  			myparticle.yProd(yProd);
-  			myparticle.zProd(zProd);
+ protected:
+  //__________________________________________________________________
+  Particle createParticle()
+  {
+    std::cout << "createParticle() mass " << m << " pdgCode " << pdg << std::endl;
+    Particle myparticle;
+    myparticle.id(pdg);
+    myparticle.status(11);
+    myparticle.px(px);
+    myparticle.py(py);
+    myparticle.pz(pz);
+    myparticle.e(E);
+    myparticle.m(m);
+    myparticle.xProd(xProd);
+    myparticle.yProd(yProd);
+    myparticle.zProd(zProd);
 
-			return myparticle;
-		}
-		
-		//__________________________________________________________________
-		int randomizeSign(){
+    return myparticle;
+  }
 
-			std::unique_ptr<TRandom3> gen_random {new TRandom3(0)};
-			const float n = gen_random->Uniform(-1,1);
+  //__________________________________________________________________
+  int randomizeSign()
+  {
 
-			return n/abs(n);
-		}
+    std::unique_ptr<TRandom3> gen_random{new TRandom3(0)};
+    const float n = gen_random->Uniform(-1, 1);
 
-		//__________________________________________________________________
-		Bool_t generateEvent() override {
+    return n / abs(n);
+  }
 
-			const double original_m = m;
-			const int original_pdg  = pdg;
+  //__________________________________________________________________
+  Bool_t generateEvent() override
+  {
 
-			/// reset event
-			mPythia.event.reset();
+    const double original_m = m;
+    const int original_pdg = pdg;
 
-			/// create and append the desired particle
-			//genUniformMomentumEta(1.,16.,-0.1,0.1);
-			genUniformMomentumEta(genMinP,genMaxP,genMinEta,genMaxEta);
-			if(randomizePDGsign)	pdg *= randomizeSign();
-			Particle particle = createParticle();
-			//
-			mPythia.event.append(particle);
-			//
+    /// reset event
+    mPythia.event.reset();
 
-			/// add further particles, if required
-			if(furtherPrim.size()>0){
-				if(keys_furtherPrim.size()<1){	/// protection
-					std::cout << "Something wrong with the insertion of further particles" << std::endl;
-					return false;
-				}
-				/// loop in the map
-				for(const int addPDG: keys_furtherPrim){
-					const int numAddPrim = furtherPrim[addPDG];	// we will add "numAddPrim" particles of type "addPDG"
-					//
-					// Modify the mass before calling genUniformMomentumEta (required inside set4momentum function) 
-					m = getMass(addPDG);
-					pdg = addPDG;
-					//
-					for(int iAdd=0; iAdd<numAddPrim; iAdd++){	// generated and append the desired particle
-						genUniformMomentumEta(genMinP,genMaxP,genMinEta,genMaxEta);
-						Particle further_particle = createParticle();
-						mPythia.event.append(further_particle);
-					}
-				} // end loop map
+    /// create and append the desired particle
+    // genUniformMomentumEta(1.,16.,-0.1,0.1);
+    genUniformMomentumEta(genMinP, genMaxP, genMinEta, genMaxEta);
+    if (randomizePDGsign)
+      pdg *= randomizeSign();
+    Particle particle = createParticle();
+    //
+    mPythia.event.append(particle);
+    //
 
-				// restore the values for the desired injected particle (mandatory for next iteration)
-				m   = original_m;
-				pdg = original_pdg;
-			}
+    /// add further particles, if required
+    if (furtherPrim.size() > 0) {
+      if (keys_furtherPrim.size() < 1) { /// protection
+        std::cout << "Something wrong with the insertion of further particles" << std::endl;
+        return false;
+      }
+      /// loop in the map
+      for (const int addPDG : keys_furtherPrim) {
+        const int numAddPrim = furtherPrim[addPDG]; // we will add "numAddPrim" particles of type "addPDG"
+        //
+        // Modify the mass before calling genUniformMomentumEta (required inside set4momentum function)
+        m = getMass(addPDG);
+        pdg = addPDG;
+        //
+        for (int iAdd = 0; iAdd < numAddPrim; iAdd++) { // generated and append the desired particle
+          genUniformMomentumEta(genMinP, genMaxP, genMinEta, genMaxEta);
+          Particle further_particle = createParticle();
+          mPythia.event.append(further_particle);
+        }
+      } // end loop map
 
-			/// go to next Pythia event
-			mPythia.next();
+      // restore the values for the desired injected particle (mandatory for next iteration)
+      m = original_m;
+      pdg = original_pdg;
+    }
 
-			return true;
-		}
-	
-	private:
+    /// go to next Pythia event
+    mPythia.next();
 
-		double genMinP;			/// minimum 3-momentum for generated particles
-		double genMaxP;			/// maximum 3-momentum for generated particles
-		double genMinEta;		/// minimum pseudorapidity for generated particles
-		double genMaxEta;		/// maximum pseudorapidity for generated particles
+    return true;
+  }
 
-		Vec4   fourMomentum;	/// four-momentum (px,py,pz,E)
-		double E;				/// energy: sqrt( m*m+px*px+py*py+pz*pz ) [GeV/c]
-		double m;				/// particle mass [GeV/c^2]
-		int    pdg;				/// particle pdg code
-		double px;				/// x-component momentum [GeV/c]
-		double py;				/// y-component momentum [GeV/c]
-		double pz;				/// z-component momentum [GeV/c]
-		double p;				/// momentum
-		double y;				/// rapidity
-		double eta;				/// pseudorapidity
-		double xProd;			/// x-coordinate position production vertex [cm]
-		double yProd;			/// y-coordinate position production vertex [cm]
-		double zProd;			/// z-coordinate position production vertex [cm]
+ private:
+  double genMinP;   /// minimum 3-momentum for generated particles
+  double genMaxP;   /// maximum 3-momentum for generated particles
+  double genMinEta; /// minimum pseudorapidity for generated particles
+  double genMaxEta; /// maximum pseudorapidity for generated particles
 
-		bool randomizePDGsign;	/// bool to randomize the PDG code of the core particle
+  Vec4 fourMomentum; /// four-momentum (px,py,pz,E)
+  double E;          /// energy: sqrt( m*m+px*px+py*py+pz*pz ) [GeV/c]
+  double m;          /// particle mass [GeV/c^2]
+  int pdg;           /// particle pdg code
+  double px;         /// x-component momentum [GeV/c]
+  double py;         /// y-component momentum [GeV/c]
+  double pz;         /// z-component momentum [GeV/c]
+  double p;          /// momentum
+  double y;          /// rapidity
+  double eta;        /// pseudorapidity
+  double xProd;      /// x-coordinate position production vertex [cm]
+  double yProd;      /// y-coordinate position production vertex [cm]
+  double zProd;      /// z-coordinate position production vertex [cm]
 
-		//bool   addFurtherPion;	/// bool to attach an additional primary pion
-		std::map<int,int> furtherPrim;				/// key: PDG code; value: how many further primaries of this species to be added
-		std::unordered_set<int> keys_furtherPrim;	/// keys of the above map (NB: only unique elements allowed!)
+  bool randomizePDGsign; /// bool to randomize the PDG code of the core particle
+
+  // bool   addFurtherPion;	/// bool to attach an additional primary pion
+  std::map<int, int> furtherPrim;           /// key: PDG code; value: how many further primaries of this species to be added
+  std::unordered_set<int> keys_furtherPrim; /// keys of the above map (NB: only unique elements allowed!)
 };
 
 ///___________________________________________________________
-FairGenerator* generateOmegaC(){
-    auto myGen = new GeneratorPythia8Gun(4332);
-	myGen->setRandomizePDGsign(); // randomization of OmegaC PDG switched on
-    return myGen;
+FairGenerator* generateOmegaC()
+{
+  auto myGen = new GeneratorPythia8Gun(4332);
+  myGen->setRandomizePDGsign(); // randomization of OmegaC PDG switched on
+  return myGen;
 }
 
 ///___________________________________________________________
-FairGenerator* generateOmegaAndPions_RandomCharge(const int nPions){
+FairGenerator* generateOmegaAndPions_RandomCharge(const int nPions)
+{
 
-	auto myGen = new GeneratorPythia8Gun(3334);
-	myGen->setRandomizePDGsign(); // randomization of Omega PDG switched on
+  auto myGen = new GeneratorPythia8Gun(3334);
+  myGen->setRandomizePDGsign(); // randomization of Omega PDG switched on
 
-	/// add further pions
-	myGen->setAddFurtherPrimaries( 211,nPions/2);	// pi+
-	myGen->setAddFurtherPrimaries(-211,nPions/2);	// pi-
+  /// add further pions
+  myGen->setAddFurtherPrimaries(211, nPions / 2);  // pi+
+  myGen->setAddFurtherPrimaries(-211, nPions / 2); // pi-
 
-	return myGen;
+  return myGen;
 }
