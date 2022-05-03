@@ -1,12 +1,12 @@
 #include "FairGenerator.h"
 
-class FwdBoxGenerator : public FairGenerator {
+class FwdBoxGenerator : public FairGenerator
+{
 
-public:
+ public:
   FwdBoxGenerator(int nparticles, int pdgcode, float etamin, float etamax,
                   float ptmin, float ptmax)
-      : FairGenerator(), mPDGCode(pdgcode), mNParticles(nparticles),
-        mEtaMin(etamin), mEtaMax(etamax), mPtMin(ptmin), mPtMax(ptmax){};
+    : FairGenerator(), mPDGCode(pdgcode), mNParticles(nparticles), mEtaMin(etamin), mEtaMax(etamax), mPtMin(ptmin), mPtMax(ptmax){};
   ~FwdBoxGenerator() = default;
 
   int mPDGCode;
@@ -18,7 +18,8 @@ public:
   bool mRandomizeCharge = true;
   void disableRandomCharge() { mRandomizeCharge = false; }
 
-  Bool_t ReadEvent(FairPrimaryGenerator *primGen) override {
+  Bool_t ReadEvent(FairPrimaryGenerator* primGen) override
+  {
 
     int iPart = mNParticles;
     while (iPart) {
@@ -42,16 +43,17 @@ public:
     return kTRUE;
   }
 
-private:
+ private:
 };
 
-FairGenerator *fwdMuBoxGen(int nParticles = 1, int pdgCode = 13,
+FairGenerator* fwdMuBoxGen(int nParticles = 1, int pdgCode = 13,
                            float etamin = -3.8f, float etamax = -2.2f,
-                           float ptmin = 0.01f, float ptmax = 20.f) {
+                           float ptmin = 0.01f, float ptmax = 20.f)
+{
   if (gSystem->Getenv("NMUONS")) {
     nParticles = atoi(gSystem->Getenv("NMUONS"));
   }
   auto gen =
-      new FwdBoxGenerator(nParticles, pdgCode, etamin, etamax, ptmin, ptmax);
+    new FwdBoxGenerator(nParticles, pdgCode, etamin, etamax, ptmin, ptmax);
   return gen;
 }
