@@ -39,6 +39,7 @@
         "taskParameters": {
           "layer": "1111111",
           "nThreads": "1",
+          "geomPath": "",
           "dicttimestamp": "0",
           "nBCbins" : "103"
         },
