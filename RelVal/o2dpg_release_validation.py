@@ -23,10 +23,8 @@
 
 import sys
 import argparse
-from os import environ, makedirs
-from os.path import join, abspath, exists
-from subprocess import Popen
-from shlex import split
+from os import environ, system
+from os.path import join
 
 # make sure O2DPG + O2 is loaded
 O2DPG_ROOT=environ.get('O2DPG_ROOT')
@@ -38,14 +36,11 @@ if O2DPG_ROOT is None:
 ROOT_MACRO=join(O2DPG_ROOT, "RelVal", "ReleaseValidation.C")
 
 def run(args):
-    if not exists(args.output):
-        makedirs(args.output)
     select_critical = "kTRUE" if args.select_critical else "kFALSE"
-    cmd = f"\\(\\\"{abspath(args.input_files[0])}\\\",\\\"{abspath(args.input_files[1])}\\\",{args.test},{args.chi2_value},{args.rel_bc_diff},{args.rel_entries_diff},{select_critical}\\)"
+    cmd = f"\\(\\\"{args.input_files[0]}\\\",\\\"{args.input_files[1]}\\\",{args.test},{args.chi2_value},{args.rel_bc_diff},{args.rel_entries_diff},{select_critical}\\)"
     cmd = f"root -l -b -q {ROOT_MACRO}{cmd}"
     print(f"Running {cmd}")
-    p = Popen(split(cmd), cwd=args.output)
-    p.wait()
+    system(cmd)
     return 0
 
 def main():
@@ -57,7 +52,6 @@ def main():
     parser.add_argument("--rel-bc-diff", dest="rel_bc_diff", type=float, help="Threshold of relative difference in normalised bin content", default=0.01)
     parser.add_argument("--rel-entries-diff", dest="rel_entries_diff", type=float, help="Threshold of relative difference in number of entries", default=0.01)
     parser.add_argument("--select-critical", dest="select_critical", action="store_true", help="Select the critical histograms and dump to file")
-    parser.add_argument("--output", "-o", help="output directory", default="./")
     parser.set_defaults(func=run)
 
     args = parser.parse_args()
