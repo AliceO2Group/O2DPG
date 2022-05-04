@@ -225,5 +225,23 @@
         "isRun3": "true",
         "processData": "false",
         "processMC": "true"
+    },
+    "track-propagation": {
+        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
+        "lutPath": "GLO\/Param\/MatLUT",
+        "geoPath": "GLO\/Config\/GeometryAligned",
+        "grpPath": "GLO\/GRP\/GRP",
+        "mVtxPath": "GLO\/Calib\/MeanVertex",
+        "processStandard": "false",
+        "processCovariance": "true"
+    },
+    "McCollisions": {},
+    "McParticles": {},
+    "McTrackLabels": {},
+    "check-mc-particles-indices-grouped": {
+        "debugMode": "1"
+    },
+    "check-mc-particles-indices": {
+        "debugMode": "0"
     }
 }
