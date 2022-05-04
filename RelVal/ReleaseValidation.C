@@ -4,7 +4,6 @@
 #include <vector>
 using namespace std;
 
-TFile* fileOut = nullptr;
 TFile* fileSummaryOutput = nullptr;
 TFile* fileTestSummary = nullptr;
 
@@ -27,24 +26,26 @@ enum options {
   // ...
 };
 
-void ProcessFile(TString const& fname, TString const& dirToAnalyse);
-void ProcessMonitorObjectCollection(
-  o2::quality_control::core::MonitorObjectCollection* o2MonObjColl);
+void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& currentPrefix = "");
+void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix = "");
 void ProcessDirCollection(TDirectoryFile* dirCollect);
-void ProcessList(TList* ls);
-void ProcessMonitorObject(o2::quality_control::core::MonitorObject* monObj);
-void WriteHisto(TObject* obj);
-void WriteHisto2D(TObject* obj);
-void WriteProfile(TObject* obj);
-void WriteTEfficiency(TObject* obj);
-bool AreIdenticalHistos(TH1* hA, TH1* hB);
-void CompareHistos(TH1* hA, TH1* hB, TString const& monobj, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
+void WriteHisto(TH1* obj, TDirectory* outDir, std::string const& currentPrefix = "");
+void WriteProfile(TProfile* obj, TDirectory* outDir, std::string const& currentPrefix = "");
+void WriteTEfficiency(TEfficiency* obj, TDirectory* outDir, std::string const& currentPrefix = "");
+void WriteToDirectory(TObject* obj, TDirectory* dir, std::string const& prefix = "");
+void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
                    bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests);
 struct results CompareChiSquareBinContentNentr(TH1* hA, TH1* hB, options whichTest, double varChi2, double varMeanDiff, double valEntriesDiff);
 void DrawRatio(TH1* hR);
 void DrawRelativeDifference(TH1* hR);
-void SelectCriticalHistos(TString const& whichdir);
+void SelectCriticalHistos();
 void createTestsSummaryPlot(TFile* file, TString const& obj);
+bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefix = "");
+
+bool checkFileOpen(TFile* file)
+{
+  return (file && !file->IsZombie());
+}
 
 // what to give as input:
 // 1) name and path of first file,
@@ -54,105 +55,73 @@ void createTestsSummaryPlot(TFile* file, TString const& obj);
 // 6) select if files have to be taken from the grid or not
 // 7) choose if specific critic plots have to be saved in a second .pdf file
 
-void ReleaseValidation(TString filename1 = "QCpass3",
-                       TString filename2 = "QCpass2",
-                       TString ObjectToAnalyse = "", int whichTest = 1, double valueChi2 = 1.5, double valueMeanDiff = 0.01, double valueEntriesDiff = 0.01,
-                       bool isOnGrid = false,
+void ReleaseValidation(const TString filename1, const TString filename2,
+                       int whichTest = 1, double valueChi2 = 1.5, double valueMeanDiff = 0.01, double valueEntriesDiff = 0.01,
                        bool selectCritical = false)
 {
-
   if (whichTest < 1 || whichTest > 7) {
-    printf("Error, please select which test you want to perform: \n");
-    printf("1->Chi-square; 2--> ContBinDiff; 3 --> Chi-square+MeanDiff; 4->EntriesDiff; 5--> EntriesDiff + Chi2; 6 -->  EntriesDiff + MeanDiff; 7 --> EntriesDiff + Chi2 + MeanDiff");
+    std::cerr << "ERROR: Please select which test you want to perform:\n"
+              << "1->Chi-square; 2--> ContBinDiff; 3 --> Chi-square+MeanDiff; 4->EntriesDiff; 5--> EntriesDiff + Chi2; 6 -->  EntriesDiff + MeanDiff; 7 --> EntriesDiff + Chi2 + MeanDiff\n";
     return;
   }
 
-  fileSummaryOutput =
-    new TFile("Summary_" + ObjectToAnalyse + ".root", "recreate");
-  fileSummaryOutput->Close();
-
-  TFile* inFile1 = nullptr;
-  TFile* inFile2 = nullptr;
-  // open files to be read in
-  if (isOnGrid) {
+  if (filename1.BeginsWith("alien") || filename2.BeginsWith("alien")) {
+    // assume that this is on the GRID
     TGrid::Connect("alien://");
-    inFile1 = TFile::Open("alien:///" + filename1 + ".root", "READ");
-    inFile2 = TFile::Open("alien:///" + filename2 + ".root", "READ");
-  } else {
-    inFile1 = TFile::Open(filename1 + ".root", "READ");
-    inFile2 = TFile::Open(filename2 + ".root", "READ");
   }
 
-  inFile1->ls();
-  inFile2->ls();
+  // attempt to open input files and make sure they are open
+  TFile inFile1(filename1, "READ");
+  TFile inFile2(filename2, "READ");
 
-  // process the input files and save the corresponding histograms in two files, newfile1.root and newfile2.root
-  fileOut = new TFile("newfile1.root", "recreate");
-  if (isOnGrid)
-    ProcessFile("alien:///" + filename1 + ".root", ObjectToAnalyse);
-  else
-    ProcessFile(filename1 + ".root", ObjectToAnalyse);
-  fileOut->Close();
-  delete fileOut;
+  if (!checkFileOpen(&inFile1)) {
+    std::cerr << "File " << filename1.Data() << " could not be opened\n";
+    return;
+  }
+  if (!checkFileOpen(&inFile2)) {
+    std::cerr << "File " << filename2.Data() << " could not be opened\n";
+    return;
+  }
 
-  fileOut = new TFile("newfile2.root", "recreate");
-  if (isOnGrid)
-    ProcessFile("alien:///" + filename2 + ".root", ObjectToAnalyse);
-  else
-    ProcessFile(filename2 + ".root", ObjectToAnalyse);
-  fileOut->Close();
-  delete fileOut;
+  // extract all histograms from input files and output them into a new file with a flat structure
+  TFile extractedFile1("newfile1.root", "RECREATE");
+  ExtractAndFlattenDirectory(&inFile1, &extractedFile1);
 
-  TFile* fileA = new TFile("newfile1.root");
-  TFile* fileB = new TFile("newfile2.root");
+  TFile extractedFile2("newfile2.root", "RECREATE");
+  ExtractAndFlattenDirectory(&inFile2, &extractedFile2);
 
-  bool isLastComparison = false; // It is true only when the last histogram of the file is considered,
-  // in order to properly close the pdf
-  bool isFirstComparison = false; // to properly open the pdf file
-
-  int nkeys = fileA->GetNkeys();
-
-  int ntest = 1;
-  int nhisto = nkeys;
-  TH2F* hSummaryCheck = new TH2F("hSummaryCheck", "", ntest, 0, 1, nhisto, 0, 2);
+  // prepare summary plots
+  int nkeys = extractedFile1.GetNkeys();
+  TH2F* hSummaryCheck = new TH2F("hSummaryCheck", "", 1, 0, 1, nkeys, 0, 2);
   hSummaryCheck->SetStats(000);
   hSummaryCheck->SetMinimum(-1E-6);
 
-  TH2F* hSummaryTests = new TH2F("hSummaryTests", "", 3, 0, 1, nhisto, 0, 2);
+  TH2F* hSummaryTests = new TH2F("hSummaryTests", "", 3, 0, 1, nkeys, 0, 2);
   hSummaryTests->SetStats(000);
   hSummaryTests->SetMinimum(-1E-6);
 
   // open the two files (just created), look at the histograms and make statistical tests
-  TList* lkeys = fileA->GetListOfKeys();
-  for (int j = 0; j < nkeys; j++) {
-    if (j == 0)
-      isFirstComparison = true;
-    if (j == nkeys - 1)
-      isLastComparison = true;
-    TKey* k = (TKey*)lkeys->At(j);
-    TString cname = k->GetClassName();
-    TString oname = k->GetName();
-    cout << cname << "  " << oname << endl;
-    if (cname.BeginsWith("TH")) {
-      TH1* hA = static_cast<TH1*>(fileA->Get(oname.Data()));
-      TH1* hB = static_cast<TH1*>(fileB->Get(oname.Data()));
-      cout << hA->GetName() << "  " << hB->GetName() << endl;
-      if (hA && hB) {
-        printf("%s and %s compared \n", hA->GetName(), hB->GetName());
-        bool ok = AreIdenticalHistos(hA, hB);
-        if (ok)
-          printf("%s       ---> IDENTICAL\n", oname.Data());
-        else {
-          // if two histograms are not identical, compare them according to the choosed test:
-          CompareHistos(hA, hB, ObjectToAnalyse, whichTest, valueChi2, valueMeanDiff, valueEntriesDiff, isFirstComparison, isLastComparison, hSummaryCheck, hSummaryTests);
-        }
-      } else {
-        if (!hA)
-          printf("%s    ---> MISSING in first file\n", oname.Data());
-        if (!hB)
-          printf("%s    ---> MISSING  in second file\n", oname.Data());
-      }
+  bool isLastComparison = false; // It is true only when the last histogram of the file is considered,
+  // in order to properly close the pdf
+  bool isFirstComparison = false; // to properly open the pdf file
+
+  TString objNameOfInterest("");
+
+  TIter next(extractedFile1.GetListOfKeys());
+  TKey* key = nullptr;
+  while ((key = static_cast<TKey*>(next()))) {
+    // At this point we expect objects deriving from TH1 only since that is what we extracted
+    auto hA = static_cast<TH1*>(key->ReadObj());
+    auto oname = key->GetName();
+    auto hB = static_cast<TH1*>(extractedFile2.Get(oname));
+
+    if (!hB) {
+      // That could still happen in case we compare either comletely different file by accident or something has been changed/added/removed
+      std::cerr << "ERROR: Histogram " << oname << " not found in " << filename2 << ", continue with next\n";
+      continue;
     }
+    std::cout << "Comparing " << hA->GetName() << " and " << hB->GetName() << "\n";
+    CompareHistos(hA, hB, whichTest, valueChi2, valueMeanDiff, valueEntriesDiff, isFirstComparison, isLastComparison, hSummaryCheck, hSummaryTests);
   }
 
   // Create a summary plot with the result of the choosen test for all histograms
@@ -171,287 +140,164 @@ void ReleaseValidation(TString filename1 = "QCpass3",
   hSummaryCheck->Draw("colz");
 
   // Create a summary plot with the result of each of the three basic tests for each histogram
-  TCanvas* summaryTests = new TCanvas("summaryTests", "summaryTests");
+  TCanvas summaryTests("summaryTests", "summaryTests");
 
   gStyle->SetGridStyle(3);
-  summaryTests->SetGrid();
+  summaryTests.SetGrid();
   hSummaryTests->Draw("colz");
 
-  fileSummaryOutput = new TFile("Summary_" + ObjectToAnalyse + ".root", "update");
-  hSummaryCheck->Write(Form("hSummaryCheck%d", whichTest) + ObjectToAnalyse);
-  hSummaryTests->Write("hSummaryTests" + ObjectToAnalyse);
-  if (selectCritical)
+  fileSummaryOutput = new TFile("Summary.root", "update");
+  hSummaryCheck->Write(Form("hSummaryCheck%d", whichTest));
+  hSummaryTests->Write("hSummaryTests");
+  if (selectCritical) {
     // selected critical plots are saved in a separated pdf
-    SelectCriticalHistos(ObjectToAnalyse);
-  return;
+    SelectCriticalHistos();
+  }
 }
 
-// Process File: method that looks at the content of the file and find all different TObjects there. In case of MonitorCollectionObjects, the methods "ProcessMonitorObjectCollection" and "ProcessMonitorObjects" are subsequently used; In case of TDirectories, the method "ProcessDirCollection" is invoched.
-void ProcessFile(TString const& fname, TString const& dirToAnalyse)
-{
+///////////////////////////////////////////////
+// reading and pre-processing of input files //
+///////////////////////////////////////////////
 
-  TFile* fileBase = TFile::Open(fname.Data());
-  int nkeys = fileBase->GetNkeys();
-  TList* lkeys = fileBase->GetListOfKeys();
-  for (int j = 0; j < nkeys; j++) {
-    prefix = "";
-    TKey* k = (TKey*)lkeys->At(j);
-    TString cname = k->GetClassName();
-    TString oname = k->GetName();
-    printf("****** KEY %d: %s (class %s)   ******\n", j, oname.Data(),
-           cname.Data());
-    // QC.root file --> monitoring objects
-    if (cname == "o2::quality_control::core::MonitorObjectCollection") {
-      o2::quality_control::core::MonitorObjectCollection* o2MonObjColl =
-        (o2::quality_control::core::MonitorObjectCollection*)fileBase->Get(
-          oname.Data());
-      TString objName = o2MonObjColl->GetName();
-      if (dirToAnalyse.Length() > 0 && !objName.Contains(dirToAnalyse.Data())) {
-        printf("Skip MonitorObjectCollection %s\n", objName.Data());
-      } else {
-        prefix.Append(Form("%s_", o2MonObjColl->GetName()));
-        ProcessMonitorObjectCollection(o2MonObjColl);
-      }
-    }
-    // analysis output --> TDirectories
-    if (cname == "TDirectoryFile") {
-      TDirectoryFile* dirColl =
-        (TDirectoryFile*)fileBase->Get(
-          oname.Data());
-      TString objname = dirColl->GetName();
-      if (dirToAnalyse.Length() > 0 && !objname.Contains(dirToAnalyse.Data())) {
-        printf("Skip TDirectory %s\n", objname.Data());
-      } else {
-        prefix.Append(Form("%s_", dirColl->GetName()));
-        ProcessDirCollection(dirColl);
+// writing a TObject to a TDirectory
+void WriteToDirectory(TObject* obj, TDirectory* dir, std::string const& prefix)
+{
+  std::string name = prefix + obj->GetName();
+  dir->WriteTObject(obj, name.c_str());
+}
+
+// Read from a given input directory and write everything found there (including sub directories) to a flat output directory
+void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& currentPrefix)
+{
+  TIter next(inDir->GetListOfKeys());
+  TKey* key = nullptr;
+  while ((key = static_cast<TKey*>(next()))) {
+    auto obj = key->ReadObj();
+    if (auto nextInDir = dynamic_cast<TDirectory*>(obj)) {
+      // recursively scan TDirectory
+      ExtractAndFlattenDirectory(nextInDir, outDir, currentPrefix + nextInDir->GetName() + "_");
+    } else if (auto qcMonitorCollection = dynamic_cast<o2::quality_control::core::MonitorObjectCollection*>(obj)) {
+      ExtractFromMonitorObjectCollection(qcMonitorCollection, outDir, currentPrefix);
+    } else {
+      if (!WriteObject(obj, outDir, currentPrefix)) {
+        std::cerr << "Cannot handle object " << obj->GetName() << " which is of class " << key->GetClassName() << "\n";
       }
     }
   }
-  return;
 }
 
-void ProcessMonitorObjectCollection(
-  o2::quality_control::core::MonitorObjectCollection* o2MonObjColl)
+// extract everything from a o2::quality_control::core::MonitorObjectCollection object
+void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix)
 {
-  printf("--- Process o2 Monitor Object Collection %s ---\n",
-         o2MonObjColl->GetName());
-  int nent = o2MonObjColl->GetEntries();
-  int counts = 0;
-  for (int j = 0; j < nent; j++) {
-    TObject* o = (TObject*)o2MonObjColl->At(j);
-    TString clname = o->ClassName();
-    TString olname = o->GetName();
-    printf("****** %s (class %s)   ******\n", olname.Data(), clname.Data());
-    if (clname == "o2::quality_control::core::MonitorObject") {
-      o2::quality_control::core::MonitorObject* monObj =
-        (o2::quality_control::core::MonitorObject*)o2MonObjColl->FindObject(
-          olname.Data());
-      // prefix.Append(Form("%s_", monObj->GetName()));
-      ProcessMonitorObject(monObj);
-      counts++;
-      if (counts == 40)
-        break; // to avoid crushes
-    } else if (clname.BeginsWith("TH")) {
-      TObject* o = (TObject*)o2MonObjColl->FindObject(olname.Data());
-      WriteHisto(o);
-      counts++;
-    } else if (clname.BeginsWith("TProfile")) {
-      TObject* o = (TObject*)o2MonObjColl->FindObject(olname.Data());
-      WriteProfile(o);
-      counts++;
-    } else if (clname.BeginsWith("TEfficiency")) {
-      TObject* o = (TObject*)o2MonObjColl->FindObject(olname.Data());
-      WriteTEfficiency(o);
-      counts++;
+  std::cout << "--- Process o2 Monitor Object Collection " << o2MonObjColl->GetName() << " ---\n";
+  int nProcessed{};
+  for (int j = 0; j < o2MonObjColl->GetEntries(); j++) {
+    if (WriteObject(o2MonObjColl->At(j), outDir, currentPrefix + o2MonObjColl->GetName() + "_")) {
+      nProcessed++;
     }
   }
-  printf("%d objects processed \n", counts);
-  return;
+  std::cout << "Objects processed in MonitorObjectCollection:" << nProcessed << "\n";
 }
 
-void ProcessDirCollection(TDirectoryFile* dirCollect)
+// decide which concrete function to call to write the given object
+bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefix)
 {
-  TString dirname = dirCollect->GetName();
-  printf("--- Process objects in the TDirectory %s ---\n", dirname.Data());
-  dirCollect->ls();
-  int nkeys = dirCollect->GetNkeys();
-  TList* lkeys = dirCollect->GetListOfKeys();
-  int counts = 0;
-  for (int j = 0; j < nkeys; j++) {
-    TKey* k = (TKey*)lkeys->At(j);
-    TString clname = k->GetClassName();
-    TString olname = k->GetName();
-    printf("****** %s (class %s)   ******\n", olname.Data(), clname.Data());
-    if (clname == "TDirectoryFile") {
-      TDirectoryFile* dirObj =
-        (TDirectoryFile*)dirCollect->Get(olname.Data());
-      dirObj->ls();
-      ProcessDirCollection(dirObj);
-    } else if (clname.BeginsWith("TH")) {
-      printf("--- Process histograms in %s ---\n", dirname.Data());
-      printf("--- %s ---\n", olname.Data());
-      WriteHisto(dirCollect->Get(olname.Data()));
-    } else if (clname.BeginsWith("TProfile")) {
-      TObject* o = (TObject*)dirCollect->Get(olname.Data());
-      WriteProfile(dirCollect->Get(olname.Data()));
-    } else if (clname.BeginsWith("TEfficiency")) {
-      TObject* o = (TObject*)dirCollect->Get(olname.Data());
-      WriteTEfficiency(dirCollect->Get(olname.Data()));
-    }
-    counts++;
+  if (auto monObj = dynamic_cast<o2::quality_control::core::MonitorObject*>(o)) {
+    return WriteObject(monObj->getObject(), outDir, currentPrefix);
   }
-  printf("%d objects processed \n", counts);
-  return;
+  if (auto eff = dynamic_cast<TEfficiency*>(o)) {
+    WriteTEfficiency(eff, outDir, currentPrefix);
+    return true;
+  }
+  if (auto prof = dynamic_cast<TProfile*>(o)) {
+    WriteProfile(prof, outDir, currentPrefix);
+    return true;
+  }
+  if (auto hist = dynamic_cast<TH1*>(o)) {
+    WriteHisto(hist, outDir, currentPrefix);
+    return true;
+  }
+  return false;
 }
 
-void ProcessList(TList* ls)
+// Implementation to write a TH1
+void WriteHisto(TH1* hA, TDirectory* outDir, std::string const& currentPrefix)
 {
-  // this needs to be implemented
-  printf(" * Process TList %s *\n", ls->GetName());
-  return;
-}
-
-void ProcessMonitorObject(o2::quality_control::core::MonitorObject* monObj)
-{
-  printf("------ Process o2 Monitor Object %s ------\n", monObj->GetName());
-  TObject* Obj = (TObject*)monObj->getObject();
-  TString Clname = Obj->ClassName();
-  TString Objname = Obj->GetName();
-  printf("****** %s (class %s)   ******\n", Objname.Data(), Clname.Data());
-  if (Clname.BeginsWith("TH")) {
-    WriteHisto(Obj);
-  } else if (Clname.BeginsWith("TProfile")) {
-    WriteProfile(Obj);
-  } else if (Clname.BeginsWith("TEfficiency")) {
-    WriteTEfficiency(Obj);
-  } else
-    printf("class %s needs to be analysed \n", Clname.Data());
-  return;
-}
-
-void WriteHisto(TObject* obj)
-{
-  TH1* hA = static_cast<TH1*>(obj);
   TString hAcln = hA->ClassName();
-  TDirectory* current = gDirectory;
-  TCanvas* cc = new TCanvas(Form("%s_%s", fileOut->GetName(), hA->GetName()), Form("%s_%s", fileOut->GetName(), hA->GetName()));
-  if (hAcln.Contains("TH2"))
+
+  TCanvas cc(Form("%s_%s", outDir->GetName(), hA->GetName()), Form("%s_%s", outDir->GetName(), hA->GetName()));
+  if (hAcln.Contains("TH2")) {
     hA->Draw("colz");
-  else
+  } else {
     hA->DrawNormalized();
-  cc->SaveAs(Form("%s_%s.png", fileOut->GetName(), hA->GetName()));
-  fileOut->cd();
-  hA->Write(Form("%s%s", prefix.Data(), hA->GetName()));
-  current->cd();
-  return;
+  }
+  cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hA->GetName()));
+  WriteToDirectory(hA, outDir);
 }
 
-void WriteHisto2D(TObject* obj)
-{
-  TH2* hA2D = static_cast<TH2*>(obj);
-  TDirectory* current = gDirectory;
-  TCanvas* cc = new TCanvas(Form("%s_%s", fileOut->GetName(), hA2D->GetName()), Form("%s_%s", fileOut->GetName(), hA2D->GetName()));
-  hA2D->Draw("colz");
-  cc->SaveAs(Form("%s_%s.png", fileOut->GetName(), hA2D->GetName()));
-  fileOut->cd();
-  hA2D->Write(Form("%s%s", prefix.Data(), hA2D->GetName()));
-  current->cd();
-  return;
-}
-
-void WriteTEfficiency(TObject* obj)
+// Implementation to extract TH1 from TEfficieny and write them
+void WriteTEfficiency(TEfficiency* hEff, TDirectory* outDir, std::string const& currentPrefix)
 { // should I further develop that?
-
-  TEfficiency* hEff = static_cast<TEfficiency*>(obj);
-
   // separate numerator and denominator of the efficiency
-  TH1* hEffNomin = (TH1*)hEff->GetPassedHistogram(); // eff nominator
-  TH1* hEffDenom = (TH1*)hEff->GetTotalHistogram();  // eff denominator
+  auto hEffNomin = (TH1*)hEff->GetPassedHistogram(); // eff nominator
+  auto hEffDenom = (TH1*)hEff->GetTotalHistogram();  // eff denominator
+  hEffNomin->SetName(Form("%s_effnominator", hEffNomin->GetName()));
+  hEffDenom->SetName(Form("%s_effdenominator", hEffDenom->GetName()));
 
   // recreate the efficiency dividing numerator for denominator:
-  TH1* heff = (TH1*)(hEffNomin->Clone("heff"));
+  auto heff = (TH1*)(hEffNomin->Clone("heff"));
+  heff->SetTitle(Form("%s", hEff->GetTitle()));
+  heff->SetName(Form("%s", hEff->GetName()));
   heff->Divide(hEffNomin, hEffDenom, 1.0, 1.0, "B");
-  TDirectory* current = gDirectory;
 
   // save nominator and denominator of the efficiency, to compare these plots from the two input files
 
-  TCanvas* cc = new TCanvas("Efficiency", Form("%s_%s", fileOut->GetName(), hEff->GetName()));
+  TCanvas cc("Efficiency", Form("%s_%s", outDir->GetName(), hEff->GetName()));
   hEff->Draw("AP");
-  cc->SaveAs(Form("%s_%s.png", fileOut->GetName(), hEff->GetName()));
+  cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hEff->GetName()));
 
-  TCanvas* cnom = new TCanvas("eff numerator", Form("%s_%s_effnominator", fileOut->GetName(), hEffNomin->GetName()));
+  TCanvas cnom("eff numerator", Form("%s_%s_effnominator", outDir->GetName(), hEffNomin->GetName()));
   hEffNomin->Draw();
-  cnom->SaveAs(Form("%s_%s_effnominator.png", fileOut->GetName(), hEffNomin->GetName()));
+  cnom.SaveAs(Form("%s_%s_effnominator.png", outDir->GetName(), hEffNomin->GetName()));
 
-  TCanvas* cden = new TCanvas("eff denominator", Form("%s_%s_effdenominator", fileOut->GetName(), hEffDenom->GetName()));
+  TCanvas cden("eff denominator", Form("%s_%s_effdenominator", outDir->GetName(), hEffDenom->GetName()));
   hEffDenom->Draw();
-  cden->SaveAs(Form("%s_%s_effdenominator.png", fileOut->GetName(), hEffDenom->GetName()));
+  cden.SaveAs(Form("%s_%s_effdenominator.png", outDir->GetName(), hEffDenom->GetName()));
 
-  TCanvas* cEff = new TCanvas("reconstructed efficiency", Form("%s_%s_effrec", fileOut->GetName(), hEff->GetName()));
+  TCanvas cEff("reconstructed efficiency", Form("%s_%s_effrec", outDir->GetName(), hEff->GetName()));
   heff->Draw();
-  cEff->SaveAs(Form("%s_%s_effrec.png", fileOut->GetName(), hEff->GetName()));
+  cEff.SaveAs(Form("%s_%s_effrec.png", outDir->GetName(), hEff->GetName()));
 
-  fileOut->cd();
-  hEff->Write(Form("%s%s", prefix.Data(), hEff->GetName()));
-  hEffNomin->SetName(Form("%s_effnominator", hEffNomin->GetName()));
-  hEffDenom->SetName(Form("%s_effdenominator", hEffDenom->GetName()));
-  hEffNomin->Write(Form("%s%s", prefix.Data(), hEffNomin->GetName()));
-  hEffDenom->Write(Form("%s%s", prefix.Data(), hEffDenom->GetName()));
-  heff->SetTitle(Form("%s", hEff->GetTitle()));
-  heff->SetName(Form("%s", hEff->GetName()));
-  heff->Write(Form("%s%s_effrec", prefix.Data(), heff->GetName()));
-  current->cd();
-  return;
+  WriteToDirectory(hEffNomin, outDir, currentPrefix);
+  WriteToDirectory(hEffDenom, outDir, currentPrefix);
+
+  WriteToDirectory(heff, outDir, currentPrefix);
 }
 
-void WriteProfile(TObject* obj)
+// Implementation to write TProfile
+void WriteProfile(TProfile* hProf, TDirectory* outDir, std::string const& currentPrefix)
 { // should I further develop that?
-  TProfile* hProf = static_cast<TProfile*>(obj);
-  TH1D* hprofx = (TH1D*)hProf->ProjectionX();
-  TDirectory* current = gDirectory;
 
-  TCanvas* cc = new TCanvas("profile histo", Form("%s_%s", fileOut->GetName(), hProf->GetName()));
+  auto hprofx = (TH1D*)hProf->ProjectionX();
+
+  TCanvas cc("profile histo", Form("%s_%s", outDir->GetName(), hProf->GetName()));
   hProf->Draw("");
-  cc->SaveAs(Form("%s_%s.png", fileOut->GetName(), hProf->GetName()));
+  cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hProf->GetName()));
 
   // save the x-projection of the TProfile
-  TCanvas* cprofx = new TCanvas("profile histo proj", Form("%s_%s", fileOut->GetName(), hprofx->GetName()));
+  TCanvas cprofx("profile histo proj", Form("%s_%s", outDir->GetName(), hprofx->GetName()));
   hprofx->Draw();
-  cprofx->SaveAs(Form("%s_%s.png", fileOut->GetName(), hprofx->GetName()));
-  fileOut->cd();
-  hProf->Write(Form("%s%s", prefix.Data(), hProf->GetName()));
-  // hProjx->SetName(Form("%s", hProjx->GetName()));
-  hprofx->Write(Form("%s%s", prefix.Data(), hprofx->GetName()));
-  current->cd();
-  return;
+  cprofx.SaveAs(Form("%s_%s.png", outDir->GetName(), hprofx->GetName()));
+
+  WriteToDirectory(hProf, outDir, currentPrefix);
+  WriteToDirectory(hprofx, outDir, currentPrefix);
 }
 
-// check if two hìstograms are identical (i.e, they have the same number of events, or the same bin content). If yes, the statistical compatibility tests are not performed
-bool AreIdenticalHistos(TH1* hA, TH1* hB)
-{
+////////////////////////////////////////////
+// functionality for histogram comparison //
+////////////////////////////////////////////
 
-  Long_t nEventsA = hA->GetEntries(); // temporary: we should use the number of
-                                      // analyzed events
-  Long_t nEventsB = hB->GetEntries(); // temporary: we should use the number of
-                                      // analyzed events
-  if (nEventsA != nEventsB) {
-    // printf(" %s -> Different number of entries: A --> %ld, B --> %ld\n", hA->GetName(), nEventsA, nEventsB);
-    return false;
-  }
-  for (int ix = 1; ix <= hA->GetNbinsX(); ix++) {
-    for (int iy = 1; iy <= hA->GetNbinsY(); iy++) {
-      for (int iz = 1; iz <= hA->GetNbinsZ(); iz++) {
-        double cA = hA->GetBinContent(ix, iy, iz);
-        double cB = hB->GetBinContent(ix, iy, iz);
-        if (TMath::Abs(cA - cB) > 0.001 * TMath::Abs(cA))
-          return false;
-      }
-    }
-  }
-  return true;
-}
-
-void CompareHistos(TH1* hA, TH1* hB, TString const& monobj, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
+void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
                    bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests)
 {
   // method to evaluate and draw the result of the comparison between plots
@@ -641,7 +487,7 @@ void CompareHistos(TH1* hA, TH1* hB, TString const& monobj, int whichTest, doubl
   more->Draw("same");
 
   c->SaveAs(Form("%s_Ratio.png", hA->GetName()));
-  fileSummaryOutput = new TFile("Summary_" + monobj + ".root", "update");
+  fileSummaryOutput = new TFile("Summary.root", "update");
   c->Write(Form("%s%s_Ratio", prefix.Data(), hA->GetName()));
   // fileSummaryOutput->ls();
   fileSummaryOutput->Close();
@@ -722,7 +568,7 @@ void CompareHistos(TH1* hA, TH1* hB, TString const& monobj, int whichTest, doubl
   toutc->Draw();
   more->Draw("same");
   c1->SaveAs(Form("%s_Difference.png", hA->GetName()));
-  fileSummaryOutput = new TFile("Summary_" + monobj + ".root", "update");
+  fileSummaryOutput = new TFile("Summary.root", "update");
   c1->Write(Form("%s%s_Difference", prefix.Data(), hA->GetName()));
   // fileSummaryOutput->ls();
   fileSummaryOutput->Close();
@@ -765,12 +611,12 @@ void DrawRelativeDifference(TH1* hR)
   return;
 }
 
-void SelectCriticalHistos(TString const& whichdir)
+void SelectCriticalHistos()
 {
   printf("Select all critical plots..... \n");
 
   vector<string> NamesFromTheList;
-  fileSummaryOutput = new TFile("Summary_" + whichdir + ".root", "READ");
+  fileSummaryOutput = new TFile("Summary.root", "READ");
   fileSummaryOutput->ls();
 
   ifstream InputFile;
