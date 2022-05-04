@@ -28,27 +28,53 @@ def getDPL_global_options(bigshm=False, noIPC=None):
    else:
       return common
 
+
+def QC_finalize_name(name):
+  return name + "_finalize"
+
 qcdir = "QC"
 def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
 
   stages = []
+
+  ## Adds a 'remote-batch' part of standard QC workflows
+  # taskName     - name of the QC workflow, it should be the same as in the main workflow
+  # qcConfigPath - path to the QC config file
+  # needs        - a list of tasks to be finished first. By default, the function puts the 'local-batch' part of the QC workflow
   def add_QC_finalization(taskName, qcConfigPath, needs=None):
     if standalone == True:
       needs = []
     elif needs == None:
       needs = [taskName + '_local' + str(tf) for tf in range(1, ntimeframes + 1)]
 
-    task = createTask(name=taskName + '_finalize', needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
+    task = createTask(name=QC_finalize_name(taskName), needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
     task['cmd'] = f'o2-qc --config {qcConfigPath} --remote-batch {taskName}.root' + \
                   f' --override-values "qc.config.Activity.number={run};qc.config.Activity.periodName={productionTag}"' + \
                   ' ' + getDPL_global_options()
     stages.append(task)
 
-  # to be enabled once MFT Digits should be ran 5 times with different settings
+  ## Adds a postprocessing QC workflow
+  # taskName     - name of the QC workflow
+  # qcConfigPath - path to the QC config file
+  # needs        - a list of tasks to be finished first. Usually it should include QC finalization tasks
+  #                which produce objects needed for given post-processing
+  # runSpecific  - if set as true, a concrete run number is put to the QC config,
+  #                thus the post-processing should cover objects only for that run
+  # prodSpecific - if set as true, a concrete production name is put to the config,
+  #                thus the post-processing should cover objects only for that production
+  def add_QC_postprocessing(taskName, qcConfigPath, needs, runSpecific, prodSpecific):
+    task = createTask(name=taskName, needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
+    overrideValues = '--override-values "'
+    overrideValues += f'qc.config.Activity.number={run};' if runSpecific else 'qc.config.Activity.number=0;'
+    overrideValues += f'qc.config.Activity.periodName={productionTag}"' if prodSpecific else 'qc.config.Activity.periodName="'
+    task['cmd'] = f'o2-qc --config {qcConfigPath} ' + \
+                  overrideValues + ' ' + getDPL_global_options()
+    stages.append(task)
+
+  ## The list of remote-batch workflows (reading the merged QC tasks results, applying Checks, uploading them to QCDB)
   MFTDigitsQCneeds = []
   for flp in range(5):
     MFTDigitsQCneeds.extend(['mftDigitsQC'+str(flp)+'_local'+str(tf) for tf in range(1, ntimeframes + 1)])
-  #
   add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-0.json', MFTDigitsQCneeds)
   add_QC_finalization('mftClustersQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json')
   add_QC_finalization('mftAsyncQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-async.json')
@@ -65,6 +91,9 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
   add_QC_finalization('tofft0PIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tof.json')
   add_QC_finalization('tofPIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidtof.json')
   add_QC_finalization('RecPointsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/ft0-reconstruction-config.json')
+  
+  # The list of QC Post-processing workflows
+  add_QC_postprocessing('tofTrendingHits', 'json://${O2DPG_ROOT}/MC/config/QC/json/tof-trending-hits.json', [QC_finalize_name('tofDigitsQC')], runSpecific=False, prodSpecific=True)
 
   return stages
 
