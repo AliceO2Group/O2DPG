@@ -172,9 +172,12 @@ if [[ -f "AO2D.root" ]]; then
     ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py --merged-task -f AO2D.root
     ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json
     if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
-       mv Analysis/MergedAnalyses/AnalysisResults.root .
+	mv Analysis/MergedAnalyses/AnalysisResults.root .
     else
 	echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
+    fi
+    if ls Analysis/*/*.log 1> /dev/null 2>&1; then
+	mv Analysis/*/*.log .
     fi
 fi
 
