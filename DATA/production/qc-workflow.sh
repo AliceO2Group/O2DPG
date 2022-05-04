@@ -61,17 +61,17 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     exit 1
   fi
 
-  TMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXXXXXXXXXXXXXX)
+  FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
 
   add_QC_JSON()
   {
     if [[ ${2} =~ ^consul://.* ]]; then
-      curl -s -o $TMPDIR/$1.json "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
+      curl -s -o $FETCHTMPDIR/$1.json "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
       if [[ $? != 0 ]]; then
         echo "Error fetching QC JSON $2"
         exit 1
       fi
-      JSON_FILES+=" $TMPDIR/$1.json"
+      JSON_FILES+=" $FETCHTMPDIR/$1.json"
     else
       JSON_FILES+=" ${2}"
     fi
@@ -119,7 +119,7 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     QC_JSON_FROM_OUTSIDE="$MERGED_JSON_FILENAME"
   fi
 
-  rm -Rf $TMPDIR
+  rm -Rf $FETCHTMPDIR
 fi
 
 if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
