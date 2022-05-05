@@ -225,3 +225,22 @@ add_comma_separated()
     fi
   done
 }
+
+add_semicolon_separated()
+{
+  if (( $# < 2 )); then
+    echo "$# parameters received"
+    echo "Function name: ${FUNCNAME} expects at least 2 parameters:"
+    echo "it concatenates the string in 1st parameter by the following"
+    echo "ones, forming semi-colon-separated string. $# parameters received"
+    exit 1
+  fi
+
+  for ((i = 2; i <= $#; i++ )); do
+    if [[ -z ${!1} ]]; then
+      eval $1+="${!i}"
+    else
+      eval $1+="\;${!i}"
+    fi
+  done
+}
