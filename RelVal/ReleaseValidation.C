@@ -35,6 +35,7 @@ void WriteTEfficiency(TEfficiency* obj, TDirectory* outDir, std::string const& c
 void WriteToDirectory(TObject* obj, TDirectory* dir, std::string const& prefix = "");
 void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
                    bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests);
+bool PotentiallySameHistograms(TH1*, TH1*);
 struct results CompareChiSquareBinContentNentr(TH1* hA, TH1* hB, options whichTest, double varChi2, double varMeanDiff, double valEntriesDiff);
 void DrawRatio(TH1* hR);
 void DrawRelativeDifference(TH1* hR);
@@ -45,6 +46,12 @@ bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefi
 bool checkFileOpen(TFile* file)
 {
   return (file && !file->IsZombie());
+}
+
+template <typename T>
+bool areSufficientlyEqualNumbers(T a, T b, T epsilon = T(0.00001))
+{
+  return std::abs(a - b) / std::abs(a) <= epsilon && std::abs(a - b) / std::abs(b) <= epsilon;
 }
 
 // what to give as input:
@@ -109,6 +116,10 @@ void ReleaseValidation(const TString filename1, const TString filename2,
 
   TIter next(extractedFile1.GetListOfKeys());
   TKey* key = nullptr;
+  int nSimilarHistos{};
+  int nComparisons{};
+  int nNotFound{};
+  std::vector<std::string> collectSimilarHistos;
   while ((key = static_cast<TKey*>(next()))) {
     // At this point we expect objects deriving from TH1 only since that is what we extracted
     auto hA = static_cast<TH1*>(key->ReadObj());
@@ -118,14 +129,27 @@ void ReleaseValidation(const TString filename1, const TString filename2,
     if (!hB) {
       // That could still happen in case we compare either comletely different file by accident or something has been changed/added/removed
       std::cerr << "ERROR: Histogram " << oname << " not found in " << filename2 << ", continue with next\n";
+      nNotFound++;
       continue;
+    }
+    if (PotentiallySameHistograms(hA, hB)) {
+      collectSimilarHistos.push_back(hA->GetName());
+      std::cerr << "WARNING: Found potentially same histogram " << oname << "\n";
+      nSimilarHistos++;
     }
     std::cout << "Comparing " << hA->GetName() << " and " << hB->GetName() << "\n";
     CompareHistos(hA, hB, whichTest, valueChi2, valueMeanDiff, valueEntriesDiff, isFirstComparison, isLastComparison, hSummaryCheck, hSummaryTests);
+    nComparisons++;
   }
+  std::cout << "\n##### Summary #####\nNumber of histograms compared: " << nComparisons
+            << "\nNumber of potentially same histograms: " << nSimilarHistos << "\n";
+  for (auto& csh : collectSimilarHistos) {
+    std::cout << " -> " << csh << "\n";
+  }
+  std::cout << "\nNumber of histograms only found in first but NOT second file: " << nNotFound << "\n";
 
   // Create a summary plot with the result of the choosen test for all histograms
-  TCanvas* summaryCheck = new TCanvas("summaryCheck", "summaryCheck");
+  TCanvas summaryCheck("summaryCheck", "summaryCheck");
   Int_t MyPalette[100];
   Double_t R[] = {1.00, 1.00, 0.00};
   Double_t G[] = {0.00, 0.50, 1.00};
@@ -136,7 +160,7 @@ void ReleaseValidation(const TString filename1, const TString filename2,
     MyPalette[i] = FI + i;
   gStyle->SetGridStyle(3);
   gStyle->SetGridWidth(3);
-  summaryCheck->SetGrid();
+  summaryCheck.SetGrid();
   hSummaryCheck->Draw("colz");
 
   // Create a summary plot with the result of each of the three basic tests for each histogram
@@ -158,6 +182,32 @@ void ReleaseValidation(const TString filename1, const TString filename2,
 ///////////////////////////////////////////////
 // reading and pre-processing of input files //
 ///////////////////////////////////////////////
+
+bool PotentiallySameAxes(TAxis* axisA, TAxis* axisB)
+{
+  auto binsA = axisA->GetNbins();
+  auto binsB = axisB->GetNbins();
+
+  if (binsA != binsB) {
+    // different number of bins --> obvious
+    return false;
+  }
+  for (int i = 1; i <= binsA; i++) {
+    if (!areSufficientlyEqualNumbers(axisA->GetBinLowEdge(i), axisB->GetBinLowEdge(i))) {
+      return false;
+    }
+  }
+  return areSufficientlyEqualNumbers(axisA->GetBinUpEdge(binsA), axisB->GetBinUpEdge(binsA));
+}
+
+bool PotentiallySameHistograms(TH1* hA, TH1* hB)
+{
+  if (hA->GetEntries() != hB->GetEntries()) {
+    // different number of entries --> obvious
+    return false;
+  }
+  return (!PotentiallySameAxes(hA->GetXaxis(), hB->GetXaxis()) || !PotentiallySameAxes(hA->GetYaxis(), hB->GetYaxis()) || !PotentiallySameAxes(hA->GetZaxis(), hB->GetZaxis()));
+}
 
 // writing a TObject to a TDirectory
 void WriteToDirectory(TObject* obj, TDirectory* dir, std::string const& prefix)
