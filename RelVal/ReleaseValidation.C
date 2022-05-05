@@ -207,7 +207,9 @@ bool PotentiallySameHistograms(TH1* hA, TH1* hB)
     return false;
   }
 
-  if (!PotentiallySameAxes(hA->GetXaxis(), hB->GetXaxis()) || !PotentiallySameAxes(hA->GetYaxis(), hB->GetYaxis()) || !PotentiallySameAxes(hA->GetZaxis(), hB->GetZaxis())) {
+  if (!PotentiallySameAxes(hA->GetXaxis(), hB->GetXaxis()) ||
+      (dynamic_cast<TH2*>(hA) && !PotentiallySameAxes(hA->GetYaxis(), hB->GetYaxis())) ||
+      (dynamic_cast<TH3*>(hA) && !PotentiallySameAxes(hA->GetZaxis(), hB->GetZaxis()))) {
     // some axes are different
     return false;
   }
@@ -374,8 +376,6 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
   hTests->SetStats(000);
   hTests->SetMinimum(-1E-6);
 
-  int nEventsA = hA->GetEntries();
-  int nEventsB = hB->GetEntries();
   double integralA = hA->Integral();
   double integralB = hB->Integral();
 
