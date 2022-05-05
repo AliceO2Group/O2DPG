@@ -206,7 +206,25 @@ bool PotentiallySameHistograms(TH1* hA, TH1* hB)
     // different number of entries --> obvious
     return false;
   }
-  return (!PotentiallySameAxes(hA->GetXaxis(), hB->GetXaxis()) || !PotentiallySameAxes(hA->GetYaxis(), hB->GetYaxis()) || !PotentiallySameAxes(hA->GetZaxis(), hB->GetZaxis()));
+
+  if (!PotentiallySameAxes(hA->GetXaxis(), hB->GetXaxis()) || !PotentiallySameAxes(hA->GetYaxis(), hB->GetYaxis()) || !PotentiallySameAxes(hA->GetZaxis(), hB->GetZaxis())) {
+    // some axes are different
+    return false;
+  }
+
+  // if still in the game, check bin contents of all bins
+  for (int ix = 1; ix <= hA->GetNbinsX(); ix++) {
+    for (int iy = 1; iy <= hA->GetNbinsY(); iy++) {
+      for (int iz = 1; iz <= hA->GetNbinsZ(); iz++) {
+        if (!areSufficientlyEqualNumbers(hA->GetBinContent(ix, iy, iz), hB->GetBinContent(ix, iy, iz))) {
+          return false;
+        }
+      }
+    }
+  }
+
+  // appear to be the same
+  return true;
 }
 
 // writing a TObject to a TDirectory
