@@ -3,7 +3,7 @@
 // Example of an implementation of an event generator
 // that provides HF signals for embedding in background
 
-R__ADD_INCLUDE_PATH($PYTHIA_ROOT / include)
+R__ADD_INCLUDE_PATH($PYTHIA_ROOT/include)
 
 #include "Pythia8/Pythia.h"
 
