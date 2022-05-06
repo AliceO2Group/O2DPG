@@ -70,30 +70,34 @@ if [[ $BEAMTYPE != "cosmic" ]] && [[ $FORCECALIBRATIONS != 1 ]] ; then
 
 fi
 
-# prim vtx
-if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]] ; then add_semicolon_separated CALIBDATASPEC_BARREL "pvtx:GLO/PVTX/0"; fi
+if [[ -z $CALIBDATASPEC_BARREL ]]; then
+    # prim vtx
+    if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]] ; then add_semicolon_separated CALIBDATASPEC_BARREL "pvtx:GLO/PVTX/0"; fi
 
-# TOF
-if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "calibTOF:TOF/CALIBDATA/0"; fi
-if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "diagWords:TOF/DIAFREQ/0"; fi
+    # TOF
+    if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "calibTOF:TOF/CALIBDATA/0"; fi
+    if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "diagWords:TOF/DIAFREQ/0"; fi
 
-# TRD
-if [[ $CALIB_TRD_VDRIFTEXB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "angResHistoTRD:TRD/ANGRESHISTS/0"; fi
-
-# EMC
-if [[ $CALIB_EMC_CHANNELCALIB == 1 ]]; then
-    add_semicolon_separated CALIBDATASPEC_CALO "cellsEMC:EMC/CELLS/0"
-    add_semicolon_separated CALIBDATASPEC_CALO "cellsTrgREMC:EMC/CELLSTRGR/0"
+    # TRD
+    if [[ $CALIB_TRD_VDRIFTEXB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "angResHistoTRD:TRD/ANGRESHISTS/0"; fi
 fi
 
-# PHS
-if [[ $CALIB_PHS_ENERGYCALIB == 1 ]] || [[ $CALIB_PHS_TURNONCALIB == 1 ]] || [[ $CALIB_PHS_RUNBYRUNCALIB == 1 ]]; then
-    add_semicolon_separated CALIBDATASPEC_CALO "clsPHS:PHS/CLUSTERS/0;"
-    add_semicolon_separated CALIBDATASPEC_CALO "clTRPHS:PHS/CLUSTERTRIGREC/0;"
+if [[ -z $CALIBDATASPEC_CALO ]]; then
+    # EMC
+    if [[ $CALIB_EMC_CHANNELCALIB == 1 ]]; then
+	add_semicolon_separated CALIBDATASPEC_CALO "cellsEMC:EMC/CELLS/0"
+	add_semicolon_separated CALIBDATASPEC_CALO "cellsTrgREMC:EMC/CELLSTRGR/0"
+    fi
+
+    # PHS
+    if [[ $CALIB_PHS_ENERGYCALIB == 1 ]] || [[ $CALIB_PHS_TURNONCALIB == 1 ]] || [[ $CALIB_PHS_RUNBYRUNCALIB == 1 ]]; then
+	add_semicolon_separated CALIBDATASPEC_CALO "clsPHS:PHS/CLUSTERS/0;"
+	add_semicolon_separated CALIBDATASPEC_CALO "clTRPHS:PHS/CLUSTERTRIGREC/0;"
+    fi
+    if [[ $CALIB_PHS_ENERGYCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO "cluelementsPHS:PHS/CLUELEMENTS/0;"; fi
+    if [[ $CALIB_PHS_BADMAPCALIB == 1 ]] || [[ $CALIB_PHS_TURNONCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO "cellsPHS:PHS/CELLS/0;"; fi
+    if [[ $CALIB_PHS_TURNONCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO "cellsTRPHS:PHS/CELLTRIGREC/0;"; fi
 fi
-if [[ $CALIB_PHS_ENERGYCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO "cluelementsPHS:PHS/CLUELEMENTS/0;"; fi
-if [[ $CALIB_PHS_BADMAPCALIB == 1 ]] || [[ $CALIB_PHS_TURNONCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO "cellsPHS:PHS/CELLS/0;"; fi
-if [[ $CALIB_PHS_TURNONCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO "cellsTRPHS:PHS/CELLTRIGREC/0;"; fi
 
 # printing for debug
 echo CALIBDATASPEC_BARREL = $CALIBDATASPEC_BARREL 1>&2
