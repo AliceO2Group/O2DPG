@@ -144,6 +144,8 @@ if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
 fi
 
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
+ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
+ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 
 # reco and matching
 # print workflow
@@ -170,7 +172,7 @@ if [[ -f "AO2D.root" ]]; then
 	exit $exitcode
     fi
     ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py --merged-task -f AO2D.root
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json
+    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json > analysisQC.log
     if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
 	mv Analysis/MergedAnalyses/AnalysisResults.root .
     else
