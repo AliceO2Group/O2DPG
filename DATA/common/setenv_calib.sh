@@ -41,6 +41,13 @@ if [[ $BEAMTYPE != "cosmic" ]] && [[ $FORCECALIBRATIONS != 1 ]] ; then
 	fi
     fi
 
+    # calibrations for TRD
+    if has_detector_calib TRD && has_detectors ITS TPC TRD ; then
+	if [[ -z ${CALIB_TRD_VDRIFTEXB+x} ]]; then CALIB_TRD_VDRIFTEXB=1; fi
+    else
+	CALIB_TRD_VDRIFTEXB=0
+    fi
+
     # calibrations for EMC
     if has_detector_calib EMC && has_detector_reco EMC; then
 	if [[ -z ${CALIB_EMC_CHANNELCALIB+x} ]]; then CALIB_EMC_CHANNELCALIB=1; fi
@@ -69,6 +76,9 @@ if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]] ; then add_semicolon_separated CALIBDATASPE
 # TOF
 if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "calibTOF:TOF/CALIBDATA/0"; fi
 if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "diagWords:TOF/DIAFREQ/0"; fi
+
+# TRD
+if [[ $CALIB_TRD_VDRIFTEXB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "angResHistoTRD:TRD/ANGRESHISTS/0"; fi
 
 # EMC
 if [[ $CALIB_EMC_CHANNELCALIB == 1 ]]; then
