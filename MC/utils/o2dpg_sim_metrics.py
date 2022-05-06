@@ -75,13 +75,13 @@ def match_category(proposed):
   return cat[0], proposed
 
 
-def extract_cpu_usage(pipeline_metrics):
+def extract_metric_over_time(pipeline_metrics, key):
   iterations = []
   for pm in pipeline_metrics:
     if len(iterations) < pm["iter"]:
       # NOTE that iterations start at 1 and NOT at 0
       iterations.extend([0] * (pm["iter"] - len(iterations)))
-    iterations[pm["iter"] - 1] += pm["cpu"]
+    iterations[pm["iter"] - 1] += pm[key]
   return iterations
 
 
@@ -111,7 +111,9 @@ def make_cat_map(pipeline_path):
 
   cpu_limit = current_pipeline["meta"]["cpu_limit"]
   # scale by constraint number of CPUs
-  current_pipeline["cpu_efficiencies"] = [e / cpu_limit for e in extract_cpu_usage(current_pipeline_metrics)]
+  current_pipeline["cpu_efficiencies"] = [e / cpu_limit for e in extract_metric_over_time(current_pipeline_metrics, "cpu")]
+  current_pipeline["pss_vs_time"] = extract_metric_over_time(current_pipeline_metrics, "pss")
+  current_pipeline["uss_vs_time"] = extract_metric_over_time(current_pipeline_metrics, "uss")
 
   metrics_map = {}
   for mm in current_pipeline_metrics:
@@ -424,9 +426,9 @@ def run(args):
   """
   Top level run function
   """
-  if not args.metrics_summary and not args.influxdb_file and not args.cpu_eff:
+  if not args.metrics_summary and not args.influxdb_file and not args.cpu_eff and not args.mem_usage:
     # if nothing is given explicitly, do everything
-    args.metrics_summary, args.influxdb_file, args.cpu_eff = (True, True, True)
+    args.metrics_summary, args.influxdb_file, args.cpu_eff, args.mem_usage = (True, True, True, True)
 
   # organise paths
   full_path = abspath(args.path)
@@ -504,8 +506,18 @@ def run(args):
       ax.text(0, global_eff, f"Overall efficiency: {global_eff:.2f} %", fontsize=30)
       save_figure(figure, join(out_dir, f"cpu_efficiency_{pipeline_name}.png"))
 
-  return 0
+  if args.mem_usage:
+    for met, ylabel in zip(("pss_vs_time", "uss_vs_time"), ("PSS [MB]", "USS [MB]")):
+      iterations = save_map[met]
+      if iterations:
+        pipeline_name = basename(full_path)
+        figure, ax = make_plot(range(len(iterations)), iterations, "sampling iteration", ylabel, title=pipeline_name)
+        average = sum(iterations) / len(iterations)
+        ax.axhline(average, color="black")
+        ax.text(0, average, f"Average: {average:.2f} MB", fontsize=30)
+        save_figure(figure, join(out_dir, f"{met}_{pipeline_name}.png"))
 
+  return 0
 
 def main():
 
@@ -514,6 +526,7 @@ def main():
   parser.add_argument("--tags", help="key-value pairs, seperated by ;, example: alidist=1234567;o2=7654321;tag=someTag")
   parser.add_argument("--metrics-summary", dest="metrics_summary", action="store_true", help="create the metrics summary")
   parser.add_argument("--cpu-eff", dest="cpu_eff", action="store_true", help="run only cpu efficiency evaluation")
+  parser.add_argument("--mem-usage", dest="mem_usage", action="store_true", help="run mem usage evaluation")
   parser.add_argument("--influxdb-file", dest="influxdb_file", action="store_true", help="prepare a file to be uploaded to InfluxDB")
   parser.add_argument("--influxdb-table-base", dest="influxdb_table_base", help="base name of InfluxDB table name", default="O2DPG_MC")
   parser.add_argument("--output", help="output_directory", default="metrics_summary")
