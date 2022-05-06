@@ -507,14 +507,14 @@ def run(args):
       save_figure(figure, join(out_dir, f"cpu_efficiency_{pipeline_name}.png"))
 
   if args.mem_usage:
-    for met, ylabel in zip(("pss_vs_time", "uss_vs_time"), ("PSS", "USS")):
+    for met, ylabel in zip(("pss_vs_time", "uss_vs_time"), ("PSS [MB]", "USS [MB]")):
       iterations = save_map[met]
       if iterations:
         pipeline_name = basename(full_path)
         figure, ax = make_plot(range(len(iterations)), iterations, "sampling iteration", ylabel, title=pipeline_name)
         average = sum(iterations) / len(iterations)
         ax.axhline(average, color="black")
-        ax.text(0, average, f"Average: {average:.2f} %", fontsize=30)
+        ax.text(0, average, f"Average: {average:.2f} MB", fontsize=30)
         save_figure(figure, join(out_dir, f"{met}_{pipeline_name}.png"))
 
   return 0
