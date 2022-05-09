@@ -9,7 +9,7 @@
 
 source $O2DPG_ROOT/DATA/common/setenv.sh
 
-if [[ $BEAMTYPE != "cosmic" ]] && [[ $FORCECALIBRATIONS != 1 ]] ; then
+if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
 
     # calibrations for primary vertex
     if has_detector_calib ITS && has_detectors_reco ITS && has_detector_matching PRIMVTX && [[ ! -z "$VERTEXING_SOURCES" ]]; then
