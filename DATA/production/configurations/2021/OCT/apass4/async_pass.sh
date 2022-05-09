@@ -82,7 +82,7 @@ fi
 
 if [[ -z $RUNNUMBER ]] || [[ -z $PERIOD ]] || [[ -z $BEAMTYPE ]] || [[ -z $PASS ]]; then
     echo "check env variables we need RUNNUMBER (--> $RUNNUMBER), PERIOD (--> $PERIOD), PASS (--> $PASS), BEAMTYPE (--> $BEAMTYPE)"
-    return 3
+    exit 3
 fi
 
 echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions and mode $MODE
@@ -90,13 +90,13 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 ###if [[ $MODE == "remote" ]]; then 
     # common archive
     if [[ ! -f commonInput.tgz ]]; then
-	echo "No commonInput.tgz found returning"
-	return 2
+	echo "No commonInput.tgz found exiting"
+	exit 2
     fi
     # run specific archive
     if [[ ! -f runInput_$RUNNUMBER.tgz ]]; then
-	echo "No runInput_$RUNNUMBER.tgz found returning"
-	return 2
+	echo "No runInput_$RUNNUMBER.tgz found exiting"
+	exit 2
     fi
     tar -xzvf commonInput.tgz
     tar -xzvf runInput_$RUNNUMBER.tgz
