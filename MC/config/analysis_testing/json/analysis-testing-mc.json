@@ -160,6 +160,25 @@
         "pid-he": "-1",
         "pid-al": "-1"
     },
+    "tpc-pid": {
+        "param-file": "",
+        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
+        "ccdbPath": "Analysis\/PID\/TPC\/Response",
+        "ccdb-timestamp": "0",
+        "useNetworkCorrection": "0",
+        "downloadNetworkFromAlien": "0",
+        "networkPathAlien": "alien:\/\/\/alice\/cern.ch\/user\/c\/csonnabe\/tpc_network_testing\/net_onnx_0.onnx",
+        "networkPathLocally": "network.onnx",
+        "pid-el": "-1",
+        "pid-mu": "-1",
+        "pid-pi": "-1",
+        "pid-ka": "-1",
+        "pid-pr": "-1",
+        "pid-de": "-1",
+        "pid-tr": "-1",
+        "pid-he": "-1",
+        "pid-al": "-1"
+    },
     "tof-signal": "",
     "track-extension": {
         "processRun2": "false",
@@ -201,6 +220,162 @@
         "pid-al": "-1",
         "processEvTime": "false",
         "processNoEvTime": "true"
+    },
+    "lambdakzero-builder": {
+        "dcanegtopv": "0.100000001",
+        "dcapostopv": "0.100000001",
+        "mincrossedrows": "70",
+        "isRun2": "0",
+        "d_bz": "-5",
+        "v0cospa": "0.995",
+        "dcav0dau": "1",
+        "v0radius": "5",
+        "useMatCorrType": "0",
+        "rejDiffCollTracks": "0"
+    },
+    "femto-dream-producer-task": {
+        "ConfDebugOutput": "true",
+        "ConfIsTrigger": "false",
+        "ConfIsRun3": "false",
+        "ConfEvtZvtx": "10",
+        "ConfEvtTriggerCheck": "true",
+        "ConfEvtTriggerSel": "0",
+        "ConfEvtOfflineCheck": "false",
+        "ConfStoreV0": "true",
+        "ConfTrkSign": {
+            "values": [
+                "-1",
+                "1"
+            ]
+        },
+        "ConfTrkPtMin": {
+            "values": [
+                "0.400000006",
+                "0.600000024",
+                "0.5"
+            ]
+        },
+        "ConfTrkEtaMax": {
+            "values": [
+                "0.800000012",
+                "0.699999988",
+                "0.899999976"
+            ]
+        },
+        "ConfTrkTPCnClsMin": {
+            "values": [
+                "80",
+                "70",
+                "60"
+            ]
+        },
+        "ConfTrkTPCfClsMin": {
+            "values": [
+                "0.699999988",
+                "0.829999983",
+                "0.899999976"
+            ]
+        },
+        "ConfTrkTPCcRowsMin": {
+            "values": [
+                "70",
+                "60",
+                "80"
+            ]
+        },
+        "ConfTrkTPCsClsMax": {
+            "values": [
+                "0.100000001",
+                "160"
+            ]
+        },
+        "ConfTrkITSnClsMin": {
+            "values": [
+                "-1",
+                "2",
+                "4"
+            ]
+        },
+        "ConfTrkITSnClsIbMin": {
+            "values": [
+                "-1",
+                "1"
+            ]
+        },
+        "ConfTrkDCAxyMax": {
+            "values": [
+                "0.100000001",
+                "3.5"
+            ]
+        },
+        "ConfTrkDCAzMax": {
+            "values": [
+                "0.200000003",
+                "3.5"
+            ]
+        },
+        "ConfTrkPIDnSigmaMax": {
+            "values": [
+                "3.5",
+                "3",
+                "2.5"
+            ]
+        },
+        "ConfTrkTPIDspecies": {
+            "values": [
+                "2",
+                "3",
+                "4",
+                "5"
+            ]
+        },
+        "ConfV0Sign": {
+            "values": [
+                "-1",
+                "1"
+            ]
+        },
+        "ConfV0PtMin": {
+            "values": [
+                "0.300000012",
+                "0.400000006",
+                "0.5"
+            ]
+        },
+        "ConfV0DCAdaughMax": {
+            "values": [
+                "1.20000005",
+                "1.5"
+            ]
+        },
+        "ConfV0CPAMin": {
+            "values": [
+                "0.99000001",
+                "0.995000005"
+            ]
+        },
+        "ConfV0TranRadMin": "0.200000003",
+        "ConfV0TranRadMax": "100",
+        "ConfV0DecVecMax": "100",
+        "ConfV0DaughTPCnclsMin": {
+            "values": [
+                "80",
+                "70",
+                "60"
+            ]
+        },
+        "ConfV0DaughDCAMin": {
+            "values": [
+                "0.0500000007",
+                "0.0599999987"
+            ]
+        },
+        "ConfV0DaughPIDnSigmaMax": {
+            "values": [
+                "5",
+                "4"
+            ]
+        }
     },
     "table-maker-m-c": {
         "cfgEventCuts": "eventStandardNoINT7",
