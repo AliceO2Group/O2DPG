@@ -1,0 +1,1 @@
+../common/getCommonArgs.sh
