@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# used to avoid sourcing this file 2x
+if [[ -z $SOURCE_GUARD_GETCOMMONARGS ]]; then
+SOURCE_GUARD_GETCOMMONARGS=1
+
 if [[ -z $SEVERITY || -z $NUMAID || -z $SHMSIZE || -z $FILEWORKDIR || -z $EPNSYNCMODE || -z $INFOLOGGER_SEVERITY || -z $SHMTHROW || -z $NORATELOG ]]; then
   echo "Configuration Environment Variable Missing in getCommonArgs.sh" 1>&2
   exit 1
@@ -18,3 +22,5 @@ fi
 [[ $SHMTHROW == 0 ]] && ARGS_ALL+=" --shm-throw-bad-alloc 0"
 [[ ! -z $SHM_MANAGER_SHMID && "0$GEN_TOPO_CALIB_WORKFLOW" != "01" ]] && ARGS_ALL+=" --no-cleanup --shm-no-cleanup on --shmid $SHM_MANAGER_SHMID"
 [[ $NORATELOG == 1 ]] && ARGS_ALL+=" --fairmq-rate-logging 0"
+
+fi # getCommonArgs.sh sourced

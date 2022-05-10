@@ -7,7 +7,9 @@
 # if they are not explicitly disabled.
 # Then, configure data spec according to enabled calibrations
 
-source $O2DPG_ROOT/DATA/common/setenv.sh
+# used to avoid sourcing this file 2x
+if [[ -z $SOURCE_GUARD_SETENV_CALIB ]]; then
+SOURCE_GUARD_SETENV_CALIB=1
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
 
@@ -142,3 +144,4 @@ get_proxy_connection()
   echo $PROXY_CONN
  
 }
+fi # setenv_calib.sh sourced

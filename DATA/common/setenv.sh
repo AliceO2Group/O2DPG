@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# used to avoid sourcing this file 2x
+if [[ -z $SOURCE_GUARD_SETENV ]]; then
+SOURCE_GUARD_SETENV=1
+
 # Make sure we can open sufficiently many files / allocate enough memory
 if [[ "0$SETENV_NO_ULIMIT" != "01" ]]; then
   ulimit -S -n 4096 && ulimit -S -m unlimited && ulimit -S -v unlimited && [[ -z "$GPUTYPE" ]] || [[ "$GPUTYPE" == "CPU" ]] || ulimit -S -l unlimited
@@ -244,3 +248,5 @@ add_semicolon_separated()
     fi
   done
 }
+
+fi # setenv.sh sourced
