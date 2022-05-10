@@ -51,6 +51,7 @@ parser.add_argument('--webhook', help=argparse.SUPPRESS) # log some infos to thi
 parser.add_argument('--checkpoint-on-failure', help=argparse.SUPPRESS) # debug option making a debug-tarball and sending to specified address
                                                                        # argument is alien-path
 parser.add_argument('--retry-on-failure', help=argparse.SUPPRESS, default=2) # number of times a failing task is retried
+parser.add_argument('--root', help=argparse.SUPPRESS, action='store_true') # number of times a failing task is retried
 parser.add_argument('--action-logfile', help='Logfilename for action logs. If none given, pipeline_action_#PID.log will be used')
 parser.add_argument('--metric-logfile', help='Logfilename for metric logs. If none given, pipeline_metric_#PID.log will be used')
 args = parser.parse_args()
@@ -1000,6 +1001,31 @@ class WorkflowExecutor:
         starttime = time.perf_counter()
         psutil.cpu_percent(interval=None)
         os.environ['JOBUTILS_SKIPDONE'] = "ON"
+
+        def speedup_ROOT_Init():
+               """initialize some env variables that speed up ROOT init
+               and prevent ROOT from spawning many short-lived child
+               processes"""
+
+               # a) the PATH for system libraries
+               # search taken from ROOT TUnixSystem
+               cmd='LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls /tmp/DOESNOTEXIST 2>&1 | grep -m 1 "system search path" | sed \'s/.*=//g\' | awk \'//{print $1}\''
+               proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+               libpath, err = proc.communicate()
+               if (args.root):
+                  print ("setting up ROOT system")
+                  os.environ['ROOT_LDSYSPATH'] = libpath.decode()
+
+               # b) the PATH for compiler includes needed by Cling
+               cmd='LC_ALL=C c++ -xc++ -E -v /dev/null 2>&1 | sed -n \'/^.include/,${/^ \/.*++/{p}}\'' # | sed \'s/ //\''
+               proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+               incpath, err = proc.communicate()
+               incpaths = [ line.lstrip() for line in incpath.decode().splitlines() ]
+               joined = ':'.join(incpaths)
+               if (args.root):
+                  os.environ['ROOT_CPPSYSINCL'] = joined
+
+        speedup_ROOT_Init()
 
         # we make our own "tmp" folder
         # where we can put stuff such as tmp socket files etc (for instance DPL FAIR-MQ sockets)
