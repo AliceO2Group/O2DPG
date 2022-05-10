@@ -140,7 +140,7 @@ ANALYSES.append(analysis_WeakDecayTutorial)
 analysis_CheckDataModelMC = {"name": "CheckDataModelMC",
                              "expected_output": ["AnalysisResults.root"],
                              "valid_for": [ANALYSIS_VALID_MC],
-                             "cmd": "o2-analysis-track-propagation {CONFIG} | o2-analysis-check-data-model-mc {CONFIG} {AOD}"}
+                             "cmd": "o2-analysis-check-data-model-mc {CONFIG} {AOD}"}
 ANALYSES.append(analysis_CheckDataModelMC)
 analysis_LK0CFFemto = {"name": "LK0CFFemto",
                        "expected_output": ["AnalysisResults.root", "QAResults.root"],
