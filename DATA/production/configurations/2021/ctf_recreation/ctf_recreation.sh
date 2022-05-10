@@ -74,7 +74,7 @@ fi
 if [[ -z "$DETCONFIG" ]]; then
     if [[ -z "ALIEN_JDL_DETCONFIG" ]]; then
 	echo "nothing set the detector configuration to use, exiting"
-	return 4
+	exit 4
     else
 	DETCONFIG="$ALIEN_JDL_DETCONFIG"
     fi
@@ -82,7 +82,7 @@ fi
 
 if [[ -z $RUNNUMBER ]] || [[ -z $YEAR ]] || [[ -z $PERIOD ]] || [[ -z $DETCONFIG ]] || [[ -z $BEAMTYPE ]] || [[ -z $PASS ]]; then
     echo "check env variables we need RUNNUMBER (--> $RUNNUMBER), YEAR (--> $YEAR), PERIOD (--> $PERIOD), DETCONFIG (--> $DETCONFIG), BEAMTYPE (--> $BEAMTYPE), PASS (--> $PASS)"
-    return 3
+    exit 3
 fi
 
 echo "processing run $RUNNUMBER, from year $YEAR and period $PERIOD with beamtype $BEAMTYPE, pass $PASS. Detector config will be $DETCONFIG"
@@ -90,20 +90,19 @@ echo "processing run $RUNNUMBER, from year $YEAR and period $PERIOD with beamtyp
 ###if [[ $MODE == "remote" ]]; then 
     # common archive
     if [[ ! -f commonInput.tgz ]]; then
-	echo "No commonInput.tgz found returning"
-	return 2
+	echo "No commonInput.tgz found exiting"
+	exit 2
     fi
     # run specific archive
     if [[ $DETCONFIG == "muon" ]] || [[ $DETCONFIG == "centralBarrel" ]]; then
 	if [[ ! -f runInput_$RUNNUMBER.tgz ]]; then
-	    echo "No runInput_$RUNNUMBER.tgz found returning"
-	    return 2
+	    echo "No runInput_$RUNNUMBER.tgz found exiting"
+	    exit 2
 	else
 	    tar -xzvf runInput_$RUNNUMBER.tgz
 	fi
     fi
     tar -xzvf commonInput.tgz
-    ln -s o2sim_geometry.root o2sim_geometry-aligned.root
 
 ###fi
 
@@ -128,7 +127,7 @@ else
 	echo "No setenv_extra_ctf_recreation_$DETCONFIG for $ALIEN_JDL_LPMANCHORYEAR in O2DPG"
 	echo "                Processing cannot start"
 	echo "*********************************************************************************************************"
-	return 5
+	exit 5
     fi
 fi
 
@@ -148,6 +147,8 @@ else
 fi
 
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
+ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
+ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 
 export TFDELAY=0.1
 if [[ $DETCONFIG == "centralBarrel" ]]; then

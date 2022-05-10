@@ -1,7 +1,7 @@
 // usage
-// o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV.C;GeneratorExternal.funcName=GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV()"
+// o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=GeneratorParamPromptJpsiToMuonEvtGen_pp13TeV.C;GeneratorExternal.funcName=GeneratorParamPromptJpsiToMuonEvtGen_pp13TeV()"
 //
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH($O2DPG_ROOT / MC / config / PWGDQ / EvtGen)
 #include "GeneratorEvtGen.C"
 
 namespace o2
@@ -16,8 +16,9 @@ class O2_GeneratorParamJpsi : public GeneratorTGenerator
   O2_GeneratorParamJpsi() : GeneratorTGenerator("ParamJpsi")
   {
     paramJpsi = new GeneratorParam(1, -1, PtJPsipp13TeV, YJPsipp13TeV, V2JPsipp13TeV, IpJPsipp13TeV);
-    paramJpsi->SetPtRange(0., 1000.);
-    paramJpsi->SetYRange(-1.0, 1.0);
+    paramJpsi->SetMomentumRange(0., 1.e6);
+    paramJpsi->SetPtRange(0, 999.);
+    paramJpsi->SetYRange(-4.2, -2.3);
     paramJpsi->SetPhiRange(0., 360.);
     paramJpsi->SetDecayer(new TPythia6Decayer());
     paramJpsi->SetForceDecay(kNoDecay); // particle left undecayed
@@ -41,26 +42,25 @@ class O2_GeneratorParamJpsi : public GeneratorTGenerator
   //-------------------------------------------------------------------------//
   static Double_t PtJPsipp13TeV(const Double_t* px, const Double_t* /*dummy*/)
   {
-    // prompt J/Psi pT
-    // pp, 13TeV (tuned on pp 13 TeV, 2016-2018)
-    //
-    const Double_t kC = 2.28550e+00;
-    const Double_t kpt0 = 3.73619e+00;
-    const Double_t kn = 2.81708e+00;
-    Double_t pt = px[0];
-
-    return kC * pt / TMath::Power((1. + (pt / kpt0) * (pt / kpt0)), kn);
+    // jpsi pT in pp at 13 TeV, tuned on data (2015)
+    Double_t x = *px;
+    Float_t p0, p1, p2, p3;
+    p0 = 1;
+    p1 = 4.75208;
+    p2 = 1.69247;
+    p3 = 4.49224;
+    return p0 * x / TMath::Power(1. + TMath::Power(x / p1, p2), p3);
   }
 
   //-------------------------------------------------------------------------//
   static Double_t YJPsipp13TeV(const Double_t* py, const Double_t* /*dummy*/)
   {
-    // jpsi y in pp at 13 TeV, tuned on data, prompt jpsi ALICE+LHCb, 13 TeV
+    // jpsi y in pp at 13 TeV, tuned on data (2015)
     Double_t y = *py;
     Float_t p0, p1, p2;
-    p0 = 7.79382e+00;
-    p1 = 2.87827e-06;
-    p2 = 4.41847e+00;
+    p0 = 1;
+    p1 = 0;
+    p2 = 2.98887;
     return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((y - p1) / p2), 2));
   }
 
@@ -85,7 +85,7 @@ class O2_GeneratorParamJpsi : public GeneratorTGenerator
 } // namespace o2
 
 FairGenerator*
-  GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV(TString pdgs = "443")
+  GeneratorParamPromptJpsiToMuonEvtGen_pp13TeV(TString pdgs = "443")
 {
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::O2_GeneratorParamJpsi>();
   gen->SetNSignalPerEvent(1); // number of jpsis per event
@@ -98,7 +98,7 @@ FairGenerator*
     gen->AddPdg(std::stoi(spdg), i);
     printf("PDG %d \n", std::stoi(spdg));
   }
-  gen->SetForceDecay(kEvtDiElectron);
+  gen->SetForceDecay(kEvtDiMuon);
 
   // print debug
   gen->PrintDebug();

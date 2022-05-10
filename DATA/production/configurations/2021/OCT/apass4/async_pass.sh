@@ -82,7 +82,7 @@ fi
 
 if [[ -z $RUNNUMBER ]] || [[ -z $PERIOD ]] || [[ -z $BEAMTYPE ]] || [[ -z $PASS ]]; then
     echo "check env variables we need RUNNUMBER (--> $RUNNUMBER), PERIOD (--> $PERIOD), PASS (--> $PASS), BEAMTYPE (--> $BEAMTYPE)"
-    return 3
+    exit 3
 fi
 
 echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions and mode $MODE
@@ -90,13 +90,13 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 ###if [[ $MODE == "remote" ]]; then 
     # common archive
     if [[ ! -f commonInput.tgz ]]; then
-	echo "No commonInput.tgz found returning"
-	return 2
+	echo "No commonInput.tgz found exiting"
+	exit 2
     fi
     # run specific archive
     if [[ ! -f runInput_$RUNNUMBER.tgz ]]; then
-	echo "No runInput_$RUNNUMBER.tgz found returning"
-	return 2
+	echo "No runInput_$RUNNUMBER.tgz found exiting"
+	exit 2
     fi
     tar -xzvf commonInput.tgz
     tar -xzvf runInput_$RUNNUMBER.tgz
@@ -144,6 +144,8 @@ if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
 fi
 
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
+ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
+ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 
 # reco and matching
 # print workflow
@@ -170,11 +172,14 @@ if [[ -f "AO2D.root" ]]; then
 	exit $exitcode
     fi
     ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py --merged-task -f AO2D.root
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json
+    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json > analysisQC.log
     if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
-       mv Analysis/MergedAnalyses/AnalysisResults.root .
+	mv Analysis/MergedAnalyses/AnalysisResults.root .
     else
 	echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
+    fi
+    if ls Analysis/*/*.log 1> /dev/null 2>&1; then
+	mv Analysis/*/*.log .
     fi
 fi
 

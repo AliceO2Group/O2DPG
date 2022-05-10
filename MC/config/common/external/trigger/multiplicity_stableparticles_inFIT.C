@@ -18,35 +18,39 @@ o2::eventgen::Trigger
 {
   return [minNch](const std::vector<TParticle>& particles) -> bool {
     int nch = 0;
-   
 
     for (const auto& particle : particles) {
-      
-      if (particle.GetStatusCode() != 1) continue;
-      if (!particle.GetPDG()) continue;
-      //printf("pass the pdg condition\n");
+
+      if (particle.GetStatusCode() != 1)
+        continue;
+      if (!particle.GetPDG())
+        continue;
+      // printf("pass the pdg condition\n");
       Int_t pdgcode = particle.GetPdgCode();
-      //printf("Pdgcode is %d\n",pdgcode);
-      if (particle.GetPDG()->Charge() == 0) continue;
-      //printf("Is charge\n");
-      if(!IsStable(pdgcode)) continue;
-      //printf("Pass stable\n");
+      // printf("Pdgcode is %d\n",pdgcode);
+      if (particle.GetPDG()->Charge() == 0)
+        continue;
+      // printf("Is charge\n");
+      if (!IsStable(pdgcode))
+        continue;
+      // printf("Pass stable\n");
 
       // FIT acceptance
-      if(!((2.2<particle.Eta() && particle.Eta()< 5.0) || (-3.4<particle.Eta() && particle.Eta()<-2.3))) continue;
-      //printf("Pass FIT acceptance\n");
-    
+      if (!((2.2 < particle.Eta() && particle.Eta() < 5.0) || (-3.4 < particle.Eta() && particle.Eta() < -2.3)))
+        continue;
+      // printf("Pass FIT acceptance\n");
+
       nch++;
     }
     bool fired = kFALSE;
-    if(nch >= minNch) fired = kTRUE;
-    //printf("nch %d and minNch %d\n",nch,minNch);
+    if (nch >= minNch)
+      fired = kTRUE;
+    // printf("nch %d and minNch %d\n",nch,minNch);
     return fired;
   };
 
-  //return trigger;
+  // return trigger;
 }
-
 
 Bool_t IsStable(Int_t pdg)
 {
@@ -56,42 +60,39 @@ Bool_t IsStable(Int_t pdg)
 
   const Int_t kNstable = 19;
   Int_t pdgStable[kNstable] = {
-    22,             // Photon
-    11,          // Electron
-    -13,          // Muon
-    211,            // Pion
-    321,             // Kaon
-    310,           // K0s
-    130,            // K0l
-    2212,            // Proton
-    2112,           // Neutron
-    3122,           // Lambda_0
-    3212,         // Sigma0
-    3112,        // Sigma Minus
-    3222,         // Sigma Plus
-    3312,               // Xsi Minus
-    3322,               // Xsi
-    3334,               // Omega
-    12,               // Electron Neutrino
-    14,              // Muon Neutrino
-    16              // Tau Neutrino
+    22,   // Photon
+    11,   // Electron
+    -13,  // Muon
+    211,  // Pion
+    321,  // Kaon
+    310,  // K0s
+    130,  // K0l
+    2212, // Proton
+    2112, // Neutron
+    3122, // Lambda_0
+    3212, // Sigma0
+    3112, // Sigma Minus
+    3222, // Sigma Plus
+    3312, // Xsi Minus
+    3322, // Xsi
+    3334, // Omega
+    12,   // Electron Neutrino
+    14,   // Muon Neutrino
+    16    // Tau Neutrino
   };
-  
 
   // All ions/nucleons are considered as stable
   // Nuclear code is 10LZZZAAAI
-  if(pdg>1000000000)return kTRUE;
-
- 
+  if (pdg > 1000000000)
+    return kTRUE;
 
   Bool_t isStablee = kFALSE;
   for (Int_t i = 0; i < kNstable; i++) {
-   if (TMath::Abs(pdg) == TMath::Abs(pdgStable[i])) {
-     isStablee = kTRUE;
-     break;
-   }
+    if (TMath::Abs(pdg) == TMath::Abs(pdgStable[i])) {
+      isStablee = kTRUE;
+      break;
+    }
   }
 
   return isStablee;
 }
-

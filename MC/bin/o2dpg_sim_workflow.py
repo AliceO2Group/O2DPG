@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 #
-# A script producing a consistent MC->RECO->AOD workflow 
-# It aims to handle the different MC possible configurations 
+# A script producing a consistent MC->RECO->AOD workflow
+# It aims to handle the different MC possible configurations
 # It just creates a workflow.json txt file, to execute the workflow one must execute right after
-#   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json 
+#   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
 #
 # Execution examples:
 #  - pp PYTHIA jets, 2 events, triggered on high pT decay photons on all barrel calorimeters acceptance, eCMS 13 TeV
@@ -15,13 +15,14 @@
 #  - pp PYTHIA ccbar events embedded into heavy-ion environment, 2 PYTHIA events into 1 bkg event, beams energy 2.510
 #     ./o2dpg_sim_workflow.py -e TGeant3 -nb 1 -ns 2 -j 8 -tf 1 -mod "--skipModules ZDC"  \
 #                             -col pp -eA 2.510 -proc "ccbar"  --embedding
-# 
+#
 
 import sys
 import importlib.util
 import argparse
 from os import environ, mkdir
 from os.path import join, dirname, isdir
+import random
 import json
 import itertools
 import time
@@ -79,7 +80,7 @@ parser.add_argument('--production-offset',help='Offset determining bunch-crossin
 parser.add_argument('-j',help='number of workers (if applicable)', default=8, type=int)
 parser.add_argument('-mod',help='Active modules (deprecated)', default='--skipModules ZDC')
 parser.add_argument('--with-ZDC', action='store_true', help='Enable ZDC in workflow')
-parser.add_argument('-seed',help='random seed number', default=0)
+parser.add_argument('-seed',help='random seed number', default=None)
 parser.add_argument('-o',help='output workflow file', default='workflow.json')
 parser.add_argument('--noIPC',help='disable shared memory in DPL')
 
@@ -125,11 +126,11 @@ O2_ROOT=environ.get('O2_ROOT')
 QUALITYCONTROL_ROOT=environ.get('QUALITYCONTROL_ROOT')
 O2PHYSICS_ROOT=environ.get('O2PHYSICS_ROOT')
 
-if O2DPG_ROOT == None: 
+if O2DPG_ROOT == None:
    print('Error: This needs O2DPG loaded')
 #   exit(1)
 
-if O2_ROOT == None: 
+if O2_ROOT == None:
    print('Error: This needs O2 loaded')
 #   exit(1)
 
@@ -184,7 +185,7 @@ def addWhenActive(detID, needslist, appendstring):
    if isActive(detID):
       needslist.append(appendstring)
 
-# ----------- START WORKFLOW CONSTRUCTION ----------------------------- 
+# ----------- START WORKFLOW CONSTRUCTION -----------------------------
 
 # set the time
 if args.timestamp==-1:
@@ -197,7 +198,10 @@ NWORKERS=args.j
 MODULES = "--skipModules ZDC" if not args.with_ZDC else ""
 SIMENGINE=args.e
 BFIELD=args.field
-RNDSEED=args.seed    # 0 means random seed ! Should we set different seed for Bkg and signal?
+RNDSEED=args.seed # typically the argument should be the jobid, but if we get None the current time is used for the initialisation
+random.seed(RNDSEED)
+print ("Using initialisation seed: ", RNDSEED)
+SIMSEED = random.randint(1, 900000000 - NTIMEFRAMES - 1) # PYTHIA maximum seed is 900M for some reason
 
 workflow={}
 workflow['stages'] = []
@@ -282,9 +286,10 @@ if doembedding:
         BKG_CONFIG_task=createTask(name='genbkgconf')
         BKG_CONFIG_task['cmd'] = 'echo "placeholder / dummy task"'
         if  GENBKG == 'pythia8':
+            print('Background generator seed: ', SIMSEED)
             BKG_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
                                    --output=pythia8bkg.cfg                                     \
-                                   --seed='+str(RNDSEED)+'                                     \
+                                   --seed='+str(SIMSEED)+'                                     \
                                    --idA='+str(PDGABKG)+'                                      \
                                    --idB='+str(PDGBBKG)+'                                      \
                                    --eCM='+str(ECMSBKG)+'                                      \
@@ -366,6 +371,9 @@ workflow['stages'].append(MATBUD_DOWNLOADER_TASK)
 
 # loop over timeframes
 for tf in range(1, NTIMEFRAMES + 1):
+   TFSEED = SIMSEED + tf
+   print("Timeframe " + str(tf) + " seed: ", TFSEED)
+
    timeframeworkdir='tf'+str(tf)
 
    # ----  transport task -------
@@ -395,7 +403,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    WEIGHTPOW=float(args.weightPow)
    PTHATMIN=float(args.ptHatMin)
    PTHATMAX=float(args.ptHatMax)
-           
+
    # translate here collision type to PDG
    COLTYPE=args.col
 
@@ -439,7 +447,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if GENERATOR == 'pythia8' and PROCESS!='':
       SGN_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
                                 --output=pythia8.cfg                                     \
-                                --seed='+str(RNDSEED)+'                                  \
+                                --seed='+str(TFSEED)+'                                   \
                                 --idA='+str(PDGA)+'                                      \
                                 --idB='+str(PDGB)+'                                      \
                                 --eCM='+str(ECMS)+'                                      \
@@ -469,7 +477,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------------
    signalprefix='sgn_' + str(tf)
    signalneeds=[ SGN_CONFIG_task['name'] ]
-   
+
    # add embedIntoFile only if embeddPattern does contain a '@'
    embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if (doembedding & ("@" in args.embeddPattern)) else ""
    #embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if doembedding else ""
@@ -479,7 +487,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        else:
             signalneeds = signalneeds + [ BKG_HEADER_task['name'] ]
    SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"], relative_cpu=5/8, n_workers=NWORKERS, mem='2000')
-   SGNtask['cmd']='${O2_ROOT}/bin/o2-sim -e '  + str(SIMENGINE) + ' '    + str(MODULES)  + ' -n ' + str(NSIGEVENTS)  \
+   SGNtask['cmd']='${O2_ROOT}/bin/o2-sim -e '  + str(SIMENGINE) + ' '    + str(MODULES)  + ' -n ' + str(NSIGEVENTS) + ' --seed ' + str(TFSEED) \
                   + ' --field ' + str(BFIELD)    + ' -j ' + str(NWORKERS) + ' -g ' + str(GENERATOR)   \
                   + ' '         + str(TRIGGER)   + ' '    + str(CONFKEY)  + ' '    + str(INIFILE)     \
                   + ' -o '      + signalprefix   + ' '    + embeddinto + ' --timestamp ' + str(args.timestamp)
@@ -511,7 +519,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # digitization steps
    # ------------------
    CONTEXTFILE='collisioncontext.root'
- 
+
    # Determine interation rate
    # it should be taken from CDB, meanwhile some default values
    INTRATE=int(args.interactionRate)
@@ -680,7 +688,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       tneeds = [ContextTask['name']]
       t = createTask(name="ft0fv0ctp_digi_" + str(tf), needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
-      t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
+      t['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
       t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew()
       workflow['stages'].append(t)
       det_to_digitask["FT0"]=t
@@ -742,7 +750,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    TRDTRACKINGtask['cmd'] = '${O2_ROOT}/bin/o2-trd-tracklet-transformer ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(TRDTRACKINGtask)
-   
+
    # FIXME This is so far a workaround to avoud a race condition for trdcalibratedtracklets.root
    TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name'],MATBUD_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    TRDTRACKINGtask2['cmd'] = '${O2_ROOT}/bin/o2-trd-global-tracking ' + getDPL_global_options(bigshm=True) \
@@ -806,7 +814,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    PHSRECOtask = createTask(name='phsreco_'+str(tf), needs=[getDigiTaskName("PHS")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    PHSRECOtask['cmd'] = '${O2_ROOT}/bin/o2-phos-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(PHSRECOtask)
- 
+
    CPVRECOtask = createTask(name='cpvreco_'+str(tf), needs=[getDigiTaskName("CPV")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    CPVRECOtask['cmd'] = '${O2_ROOT}/bin/o2-cpv-reco-workflow ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(CPVRECOtask)
@@ -816,7 +824,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       ZDCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-zdc-digits-reco ' + getDPL_global_options() + putConfigValues()
       workflow['stages'].append(ZDCRECOtask)
 
-   ## forward matching 
+   ## forward matching
    MCHMIDMATCHtask = createTask(name='mchmidMatch_'+str(tf), needs=[MCHRECOtask['name'], MIDRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MCHMIDMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-muon-tracks-matcher-workflow ' + getDPL_global_options()
    workflow['stages'].append(MCHMIDMATCHtask)
@@ -860,7 +868,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
      def addQCPerTF(taskName, needs, readerCommand, configFilePath, objectsFile=''):
        task = createTask(name=taskName + '_local' + str(tf), needs=needs, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
-       objectsFile = objectsFile if len(objectsFile) > 0 else taskName + '.root' 
+       objectsFile = objectsFile if len(objectsFile) > 0 else taskName + '.root'
        # the --local-batch argument will make QC Tasks store their results in a file and merge with any existing objects
        task['cmd'] = f'{readerCommand} | o2-qc --config {configFilePath}' + \
                      f' --local-batch ../{qcdir}/{objectsFile}' + \
@@ -869,9 +877,9 @@ for tf in range(1, NTIMEFRAMES + 1):
        # Prevents this task from being run for multiple TimeFrames at the same time, thus trying to modify the same file.
        task['semaphore'] = objectsFile
        workflow['stages'].append(task)
- 
+
      ### MFT
-     
+
      # to be enabled once MFT Digits should run 5 times with different configurations
      for flp in range(5):
        addQCPerTF(taskName='mftDigitsQC' + str(flp),
@@ -957,7 +965,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[ITSRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
- 
+
    #secondary vertexer
    svfinder_threads = ' --threads 1 '
    svfinder_cpu = 1
@@ -973,7 +981,7 @@ for tf in range(1, NTIMEFRAMES + 1):
   # -----------
   # produce AOD
   # -----------
-   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'], TOFRECOtask['name'], 
+   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'], TOFRECOtask['name'],
                FV0RECOtask['name']]
    if isActive('FV0'):
      aodneeds += [ FV0RECOtask['name'] ]
@@ -1008,7 +1016,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if args.run_anchored == False:
       AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id
    AODtask['cmd'] += ' ' + getDPL_global_options(bigshm=True)
-   AODtask['cmd'] += ' --info-sources ' + anchorConfig.get("o2-aod-producer-workflow-options",{}).get("info-sources",str(aodinfosources)) 
+   AODtask['cmd'] += ' --info-sources ' + anchorConfig.get("o2-aod-producer-workflow-options",{}).get("info-sources",str(aodinfosources))
    AODtask['cmd'] += ' --lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}'
    AODtask['cmd'] += ' --anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}'
    AODtask['cmd'] += ' --anchor-prod ${ALIEN_JDL_MCANCHOR:-unknown}'
