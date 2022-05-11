@@ -37,7 +37,7 @@ else
   # Note that this does not load the module, but just needs an O2DPG path to find, which then does the bulk of the topology generation.
   # gen_topo_o2dpg.sh is kept compatible between O2DPG versions, thus it doesn't really depend on which O2DPG version we use at this point.
   if [[ -z $O2DPG_ROOT ]]; then
-    O2DPG_ROOT=`bash -c "module load O2DPG > /dev/null; echo \\\$O2DPG_ROOT;"`
+    O2DPG_ROOT=`bash -c "module load O2DPG &> /dev/null; echo \\\$O2DPG_ROOT;"`
   fi
 fi
 # Now we know which gen_topo_o2dpg.sh we can use, and all EPN related env variables are set, so we can run the topology generation.
