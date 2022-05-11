@@ -106,8 +106,6 @@ echo CALIBDATASPEC_BARREL = $CALIBDATASPEC_BARREL 1>&2
 echo CALIBDATASPEC_CALO = $CALIBDATASPEC_CALO 1>&2
 
 # proxies properties
-PORT_BARREL=30453
-PORT_CALO=30454
 get_proxy_connection()
 {
   if (( $# < 2 )); then
@@ -116,16 +114,6 @@ get_proxy_connection()
     echo "first parameter is the string id of the proxy"
     echo "second parameter is the type of connection (input/output)"
     exit 1
-  fi
-  
-  # setting the port
-  if [[ $1 == "barrel" ]]; then
-      local PORT=$PORT_BARREL
-  elif [[ $1 == "calo" ]]; then
-      local PORT=$PORT_CALO
-  else
-      echo "parameter 1 should be either 'barrel' or 'calo'"
-      exit 3
   fi
 
   # setting the type of connection
@@ -137,8 +125,13 @@ get_proxy_connection()
       echo "parameter 2 should be either 'input' or 'output'"
       exit 2
   fi
-  
-  local PROXY_CONN="--proxy-channel-name aggregator-proxy-$1 --channel-config \"name=aggregator-proxy-$1,$CONNECTION,rateLogging=1,transport=zeromq,address=tcp://localhost:$PORT\""
+
+  if workflow_has_parameter CALIB_LOCAL_AGGREGATOR; then
+    CONNECTION+=",transport=shmem,address=ipc://${UDS_PREFIX}aggregator-shm-$1"
+  else
+    CONNECTION+=",transport=zeromq"
+  fi
+  local PROXY_CONN="--proxy-channel-name aggregator-proxy-$1 --channel-config \"name=aggregator-proxy-$1,$CONNECTION,rateLogging=1\""
 
   echo PROXY_CONN = $PROXY_CONN 1>&2
   echo $PROXY_CONN
