@@ -1,5 +1,5 @@
 R__LOAD_LIBRARY(EvtGen)
-R__ADD_INCLUDE_PATH($EVTGEN_ROOT/include)
+R__ADD_INCLUDE_PATH($EVTGEN_ROOT / include)
 
 #include "EvtGenBase/EvtStdHep.hh"
 #include "EvtGen/EvtGen.hh"
