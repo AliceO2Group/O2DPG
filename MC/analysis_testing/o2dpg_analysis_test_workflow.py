@@ -147,6 +147,11 @@ analysis_LK0CFFemto = {"name": "LK0CFFemto",
                        "valid_for": [ANALYSIS_VALID_MC],
                        "cmd": "o2-analysis-multiplicity-table {CONFIG} --aod-writer-json aodWriterTempConfig.json | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-pid-tof {CONFIG} | o2-analysis-pid-tpc {CONFIG} | o2-analysis-lf-lambdakzerobuilder {CONFIG} | o2-analysis-cf-femtodream-producer {CONFIG} {AOD}"}
 ANALYSES.append(analysis_LK0CFFemto)
+analysis_PWGMMFwdVertexing = {"name": "PWGMMFwdVertexing",
+                              "expected_output": ["AnalysisResults.root"],
+                              "valid_for": [ANALYSIS_VALID_MC],
+                              "cmd": "o2-analysis-mm-vertexing-fwd {CONFIG} {AOD}"}
+ANALYSES.append(analysis_PWGMMFwdVertexing)
 
 def make_merged_analysis(*analysis_names, accept_data_or_mc=ANALYSIS_VALID_MC):
     """merge CMD / DPL piping to one large pipe

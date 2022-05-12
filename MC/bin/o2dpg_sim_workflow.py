@@ -857,11 +857,25 @@ for tf in range(1, NTIMEFRAMES + 1):
       pvfinderneeds += [FDDRECOtask['name']]
    if isActive('MFT') and isActive('MCH'):
       pvfinderneeds += [MFTMCHMATCHtask['name']]
+
+   # Take None as default, we only add more if nothing from anchorConfig
+   pvfinder_sources = anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertexing-sources", None)
+   pvfinder_matching_sources = anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertex-track-matching-sources", None)
+   if not pvfinder_sources:
+      pvfinder_sources = "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF"
+      if isActive("MID"):
+         pvfinder_sources += ",MID"
+         pvfinderneeds += [MIDRECOtask['name']]
+   if not pvfinder_matching_sources:
+      pvfinder_matching_sources = "ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF"
+      if isActive("MID"):
+         pvfinder_matching_sources += ",MID"
+         pvfinderneeds += [MIDRECOtask['name']]
+   
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-primary-vertexing-workflow ' \
                          + getDPL_global_options() + putConfigValuesNew(['ITSAlpideParam','MFTAlpideParam', 'pvertexer', 'TPCGasParam'], {"NameConf.mDirMatLUT" : ".."})
-   PVFINDERtask['cmd'] += ' --vertexing-sources ' + anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertexing-sources", "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF") \
-                          + ' --vertex-track-matching-sources ' + anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertex-track-matching-sources","ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF")
+   PVFINDERtask['cmd'] += ' --vertexing-sources ' + pvfinder_sources + ' --vertex-track-matching-sources ' + pvfinder_matching_sources
    workflow['stages'].append(PVFINDERtask)
 
    if includeFullQC or includeLocalQC:
@@ -975,16 +989,25 @@ for tf in range(1, NTIMEFRAMES + 1):
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
    SVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-secondary-vertexing-workflow '
    SVFINDERtask['cmd'] += getDPL_global_options(bigshm=True) + svfinder_threads + putConfigValuesNew(['svertexer'], {"NameConf.mDirMatLUT" : ".."})
-   SVFINDERtask['cmd'] += ' --vertexing-sources ' + anchorConfig.get("o2-secondary-vertexing-workflow-options",{}).get("vertexing-sources","ITS,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF")
+   # Take None as default, we only add more if nothing from anchorConfig
+   svfinder_sources = anchorConfig.get("o2-secondary-vertexing-workflow-options",{}).get("vertexing-sources", None)
+   if not svfinder_sources:
+       svfinder_sources = "ITS,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF"
+       if isActive("MID"):
+           svfinder_sources += ",MID"
+   SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources
    workflow['stages'].append(SVFINDERtask)
 
   # -----------
   # produce AOD
   # -----------
+   # TODO This needs further refinement, sources and dependencies should be constructed dynamically
+   aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FDD,CTP,TPC-TRD,ITS-TPC-TRD,EMC'
    aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'], TOFRECOtask['name'],
                FV0RECOtask['name']]
    if isActive('FV0'):
      aodneeds += [ FV0RECOtask['name'] ]
+     aodinfosources += ',FV0'
    if isActive('TOF'):
      aodneeds += [ TOFRECOtask['name'] ]
    if isActive('TRD'):
@@ -995,16 +1018,16 @@ for tf in range(1, NTIMEFRAMES + 1):
      aodneeds += [ CPVRECOtask['name'] ]
    if isActive('PHS'):
      aodneeds += [ PHSRECOtask['name'] ]
+   if isActive('MID'):
+      aodneeds += [ MIDRECOtask['name'] ]
+      aodinfosources += ',MID'
    if args.with_ZDC and isActive('ZDC'):
      aodneeds += [ ZDCRECOtask['name'] ]
+     aodinfosources += ',ZDC'
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
    aod_df_id = '{0:03}'.format(tf)
-
-   aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FV0,FDD,CTP,TPC-TRD,ITS-TPC-TRD,EMC'
-   if args.with_ZDC:
-      aodinfosources += ',ZDC'
 
    AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='4000', cpu='1')
    AODtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
