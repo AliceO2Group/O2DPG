@@ -114,31 +114,17 @@ def make_cat_map(pipeline_path):
   current_pipeline["cpu_efficiencies"] = [e / cpu_limit for e in extract_metric_over_time(current_pipeline_metrics, "cpu")]
   current_pipeline["pss_vs_time"] = extract_metric_over_time(current_pipeline_metrics, "pss")
   current_pipeline["uss_vs_time"] = extract_metric_over_time(current_pipeline_metrics, "uss")
-
-  metrics_map = {}
+  
+  metrics_map = current_pipeline["metrics"]
   for mm in current_pipeline_metrics:
     name = mm["name"]
-    cat, cat_sub = match_category(name)
-    if not cat:
-      continue
-    if cat not in metrics_map:
-      metrics_map[cat] = {}
-    if cat_sub not in metrics_map[cat]:
-      metrics_map[cat][cat_sub] = [0.] * len(MET_TO_IND)
-    if "sum" not in metrics_map[cat]:
-      metrics_map[cat]["sum"] = [0.] * len(MET_TO_IND)
+    if name not in metrics_map:
+        metrics_map[name] = [0] * len(MET_TO_IND)
     for metric in ["uss", "pss", "cpu"]:
       ind = MET_TO_IND[metric]
       # we are dealing here with multiple iterations for the same sub category due to the way the metrics monitoring works
       # let's take the maximum to be conservavtive
-      metrics_map[cat][cat_sub][ind] = max(metrics_map[cat][cat_sub][ind], mm[metric])
-  for i in range(1, 4):
-    for cat, sub_cat in metrics_map.items():
-      for sc, val in sub_cat.items():
-        if sc == "sum":
-          # not add the sum to the sum
-          continue
-        sub_cat["sum"][i] += val[i]
+      metrics_map[name][ind] = max(metrics_map[name][ind], mm[metric])
 
   # add walltimes
   files = find_files(dirname(pipeline_path), "*.log_time", 1)
@@ -146,23 +132,42 @@ def make_cat_map(pipeline_path):
     print(f"No files found in {path}")
     return None
   for f in files:
-    # find category
-    cat_f = f.split("/")[-1]
-    cat_f = re.sub("\.log_time$", "", cat_f)
-    cat, cat_sub = match_category(cat_f)
-    if not cat:
+    # name from time log file
+    name = f.split("/")[-1]
+    name = re.sub("\.log_time$", "", name)
+    if name not in metrics_map:
+      # That should not happen but let's print a warning in this case
+      print(f"WARNING: Name {name} was not found while extracting times, that should not happen")
       continue
-    if cat not in metrics_map:
-      continue
-    if cat_sub not in metrics_map[cat]:
-      continue
-    walltime = extract_time_single(f)
-    metrics_map[cat]["sum"][0] += walltime
-    metrics_map[cat][cat_sub][0] = walltime
-
-  current_pipeline["metrics"] = metrics_map
+    metrics_map[name][0] = extract_time_single(f)
 
   return current_pipeline
+
+
+def arrange_into_categories(metrics_map_in):
+
+    if "metrics" not in metrics_map_in:
+        print("WARNING: Cannot find key \"metrics\" in input dictionary")
+        return {}
+
+    metrics_map = {}
+
+    for name, metrics in metrics_map_in["metrics"].items():
+        cat, cat_sub = match_category(name)
+        if not cat:
+            # no parent category found
+            continue
+        if cat not in metrics_map:
+            metrics_map[cat] = {}
+        if cat_sub not in metrics_map[cat]:
+            metrics_map[cat][cat_sub] = metrics
+        if "sum" not in metrics_map[cat]:
+            metrics_map[cat]["sum"] = [0.] * len(MET_TO_IND)
+
+        for i in range(0, 4):
+            metrics_map[cat]["sum"][i] += metrics_map[cat][cat_sub][i]
+
+    return metrics_map
 
 
 def make_default_figure(ax=None):
@@ -259,20 +264,24 @@ def make_plot(x, y, xlabel, ylabel, ax=None, title=None, **kwargs):
     title:
       title to be put for figure
   """
+  
+  # Only set the labels if we don't have an axes yet
+  set_labels = ax is None
+  
   figure, ax = make_default_figure(ax)
 
   if not len(x) or not len(y):
     print("No data for plotting...")
     return figure, ax
 
-  ax.plot(x, y)
+  ax.plot(x, y, **kwargs)
   ax.tick_params("both", labelsize=30)
   ax.tick_params("x", rotation=45)
-  ax.set_xlabel(xlabel, fontsize=30)
-  ax.set_ylabel(ylabel, fontsize=30)
-
-  if title:
-    figure.suptitle(title, fontsize=40)
+  if set_labels:
+    ax.set_xlabel(xlabel, fontsize=30)
+    ax.set_ylabel(ylabel, fontsize=30)
+    if title:
+      figure.suptitle(title, fontsize=40)
 
   return figure, ax
 
@@ -400,12 +409,10 @@ def filter_metric_per_detector(metrics, cat, metric):
   return labels, acc_list
 
 
-def make_for_influxDB(full_map, table_base_name, save_path):
+def make_for_influxDB(metrics, tags, table_base_name, save_path):
   """
   Make metric files to be sent to InfluxDB for monitoring on Grafana
   """
-  tags = full_map["tags"]
-  metrics = full_map["metrics"]
   with open(save_path, "w") as f:
     for metric_name, metric_id in MET_TO_IND.items():
       tab_name = f"{table_base_name}_workflows_{metric_name}"
@@ -420,119 +427,159 @@ def make_for_influxDB(full_map, table_base_name, save_path):
       fields = ",".join(fields)
       db_string += f" {fields},total={total}"
       f.write(f"{db_string}\n")
-
-
-def run(args):
-  """
-  Top level run function
-  """
-  if not args.metrics_summary and not args.influxdb_file and not args.cpu_eff and not args.mem_usage:
-    # if nothing is given explicitly, do everything
-    args.metrics_summary, args.influxdb_file, args.cpu_eff, args.mem_usage = (True, True, True, True)
-
-  # organise paths
-  full_path = abspath(args.path)
-  if not exists(full_path):
-    print(f"ERROR: pipeline_metrics file not found at {full_path}")
-    return 1
-  dir_path = dirname(full_path)
-
-  # extract metrics for this pipeline
-  save_map = make_cat_map(full_path)
-  if not save_map:
-    return 1
-
-  # create the common output directory
-  out_dir = join(dir_path, args.output)
-  if not exists(out_dir):
-    makedirs(out_dir)
-
-  # add the number of timeframes
-  ntfs = number_of_timeframes(dir_path)
-  save_map["tags"] = {"ntfs": ntfs}
-
-  # Add some more tags specified by the user
-  if args.tags:
-    pairs = args.tags.split(";")
-    for p in pairs:
-      key_val = p.split("=")
-      if len(key_val) != 2:
-        print(f"ERROR: Found invalid key-value pair {p}")
-        continue
-      save_map["tags"][key_val[0]] = key_val[1]
-
-  if args.influxdb_file:
-    # make file to send to influxDB
-    make_for_influxDB(save_map, args.influxdb_table_base, join(out_dir, "metrics_influxDB.dat"))
-
-  if args.metrics_summary:
-    # all metrics to one JSON
-    json_path = join(out_dir, "metrics.json")
-    with open(json_path, "w") as f:
-      json.dump(save_map, f, indent=2)
-
-    # get only the metrics here
-    metrics = save_map["metrics"]
-
-    # a unified color map
-    cmap = matplotlib.cm.get_cmap("coolwarm")
-
-    cats = []
-    vals = [[] for _ in range(4)]
-    for cat, val in metrics.items():
-      cats.append(cat)
-      vals[0].append(val["sum"][0])
-      vals[1].append(val["sum"][1])
-      vals[2].append(val["sum"][2])
-      vals[3].append(val["sum"][3])
-    plot_histo_and_pie(cats, vals[0], "sim category", "walltime [s]", join(out_dir, "walltimes.png"), cmap=cmap, title="TIME (per TF)", scale=1./ntfs)
-    plot_histo_and_pie(cats, vals[1], "sim category", "CPU [%]", join(out_dir, "cpu.png"), cmap=cmap, title="CPU (per TF)", scale=1./ntfs)
-    plot_histo_and_pie(cats, vals[2], "sim category", "USS [MB]", join(out_dir, "uss.png"), cmap=cmap, title="USS (per TF)", scale=1./ntfs)
-    plot_histo_and_pie(cats, vals[3], "sim category", "PSS [MB]", join(out_dir, "pss.png"), cmap=cmap, title="PSS (per TF)", scale=1./ntfs)
-
-    # Make pie charts for digit and reco
-    plot_any(make_pie, join(out_dir, "digi_time.png"), *filter_metric_per_detector(metrics, "digi", "time"), cmap=cmap, title="Time digitization")
-    plot_any(make_pie, join(out_dir, "reco_time.png"), *filter_metric_per_detector(metrics, "reco", "time"), cmap=cmap, title="Time econstruction")
-    plot_any(make_pie, join(out_dir, "digi_cpu.png"), *filter_metric_per_detector(metrics, "digi", "cpu"), cmap=cmap, title="CPU digitzation")
-    plot_any(make_pie, join(out_dir, "reco_cpu.png"), *filter_metric_per_detector(metrics, "reco", "cpu"), cmap=cmap, title="CPU reconstruction")
-
-  if args.cpu_eff:
-    effs = save_map["cpu_efficiencies"]
-    if effs:
-      pipeline_name = basename(full_path)
-      figure, ax = make_plot(range(len(effs)), effs, "sampling iteration", "CPU efficiency [%]", title=pipeline_name)
-      global_eff = sum(effs) / len(effs)
-      ax.axhline(global_eff, color="black")
-      ax.text(0, global_eff, f"Overall efficiency: {global_eff:.2f} %", fontsize=30)
-      save_figure(figure, join(out_dir, f"cpu_efficiency_{pipeline_name}.png"))
-
-  if args.mem_usage:
-    for met, ylabel in zip(("pss_vs_time", "uss_vs_time"), ("PSS [MB]", "USS [MB]")):
-      iterations = save_map[met]
-      if iterations:
-        pipeline_name = basename(full_path)
-        figure, ax = make_plot(range(len(iterations)), iterations, "sampling iteration", ylabel, title=pipeline_name)
-        average = sum(iterations) / len(iterations)
-        ax.axhline(average, color="black")
-        ax.text(0, average, f"Average: {average:.2f} MB", fontsize=30)
-        save_figure(figure, join(out_dir, f"{met}_{pipeline_name}.png"))
-
   return 0
+
+
+def extract(args):
+    full_path = abspath(args.path)
+    if not exists(full_path):
+        print(f"ERROR: pipeline_metrics file not found at {full_path}")
+        return 1
+
+    metrics_map = make_cat_map(full_path)
+    if not metrics_map:
+        print(f"ERROR: Could not extract metrics")
+        return 1
+
+    dir_path = dirname(full_path)
+
+    # add the number of timeframes
+    ntfs = number_of_timeframes(dir_path)
+    metrics_map["tags"] = {"ntfs": ntfs}
+
+    # Add some more tags specified by the user
+    if args.tags:
+        pairs = args.tags.split(";")
+        for p in pairs:
+            key_val = p.split("=")
+            if len(key_val) != 2:
+                print(f"WARNING: Found invalid key-value pair {p}, skip")
+                continue
+            metrics_map["tags"][key_val[0]] = key_val[1]
+            
+    # all metrics to one JSON
+    with open(args.output, "w") as f:
+        json.dump(metrics_map, f, indent=2)
+    
+    return 0
+
+
+def plot(args):
+    if not args.metrics_summary and not args.cpu_eff and not args.mem_usage:
+        # if nothing is given explicitly, do everything
+        args.metrics_summary, args.cpu_eff, args.mem_usage = (True, True, True)
+    
+    out_dir = args.output
+    
+    metrics_maps = []
+    metrics_maps_categories = []
+    
+    for m in args.metrics:
+        with open(m, "r") as f:
+            metrics_maps.append(json.load(f))
+            metrics_maps_categories.append(arrange_into_categories(metrics_maps[-1]))
+
+    if args.metrics_summary:
+        # a unified color map
+        cmap = matplotlib.cm.get_cmap("coolwarm")
+        
+        for mm, mmc in zip(metrics_maps, metrics_maps_categories):
+            cats = []
+            vals = [[] for _ in range(4)]
+            for cat, val in mmc.items():
+                cats.append(cat)
+                vals[0].append(val["sum"][0])
+                vals[1].append(val["sum"][1])
+                vals[2].append(val["sum"][2])
+                vals[3].append(val["sum"][3])
+            plot_histo_and_pie(cats, vals[0], "sim category", "walltime [s]", join(out_dir, f"walltimes_{mm['name']}.png"), cmap=cmap, title="TIME (per TF)", scale=1./mm["tags"]["ntfs"])
+            plot_histo_and_pie(cats, vals[1], "sim category", "CPU [%]", join(out_dir, f"cpu_{mm['name']}.png"), cmap=cmap, title="CPU (per TF)", scale=1./mm["tags"]["ntfs"])
+            plot_histo_and_pie(cats, vals[2], "sim category", "USS [MB]", join(out_dir, f"uss_{mm['name']}.png"), cmap=cmap, title="USS (per TF)", scale=1./mm["tags"]["ntfs"])
+            plot_histo_and_pie(cats, vals[3], "sim category", "PSS [MB]", join(out_dir, f"pss_{mm['name']}.png"), cmap=cmap, title="PSS (per TF)", scale=1./mm["tags"]["ntfs"])
+
+            # Make pie charts for digit and reco
+            plot_any(make_pie, join(out_dir, f"digi_time_{mm['name']}.png"), *filter_metric_per_detector(mmc, "digi", "time"), cmap=cmap, title="Time digitization")
+            plot_any(make_pie, join(out_dir, f"reco_time_{mm['name']}.png"), *filter_metric_per_detector(mmc, "reco", "time"), cmap=cmap, title="Time econstruction")
+            plot_any(make_pie, join(out_dir, f"digi_cpu_{mm['name']}.png"), *filter_metric_per_detector(mmc, "digi", "cpu"), cmap=cmap, title="CPU digitzation")
+            plot_any(make_pie, join(out_dir, f"reco_cpu_{mm['name']}.png"), *filter_metric_per_detector(mmc, "reco", "cpu"), cmap=cmap, title="CPU reconstruction")
+
+    # Provide some different line styles for overlay plots
+    linestyles = ["solid", "dashed", "dashdot"]
+
+    if args.cpu_eff:
+        figure, ax = figure, ax = make_default_figure()
+        ax.set_xlabel("sampling iteration", fontsize=30)
+        ax.set_ylabel("CPU efficiency [%]", fontsize=30)
+        for i, mm in enumerate(metrics_maps):
+            effs = mm["cpu_efficiencies"]
+            if effs:
+                ls = linestyles[i % len(linestyles)]
+                make_plot(range(len(effs)), effs, "", "", ax=ax, label=mm["name"], linestyle=ls)
+                global_eff = sum(effs) / len(effs)
+                ax.axhline(global_eff, color=ax.lines[-1].get_color(), linestyle=ls)
+                ax.text(0, global_eff, f"Overall efficiency: {global_eff:.2f} %", fontsize=30)
+            ax.legend(loc="best", fontsize=20)
+        save_figure(figure, join(out_dir, f"cpu_efficiency.png"))
+
+    if args.mem_usage:
+        figure_pss, ax_pss = figure, ax = make_default_figure()
+        ax_pss.set_xlabel("sampling iteration", fontsize=30)
+        ax_pss.set_ylabel("PSS [MB]", fontsize=30)
+        figure_uss, ax_uss = figure, ax = make_default_figure()
+        ax_uss.set_xlabel("sampling iteration", fontsize=30)
+        ax_uss.set_ylabel("USS [MB]", fontsize=30)
+        axes = [ax_pss, ax_uss]
+        figures = [figure_pss, figure_uss]
+        for met, ax, figure in zip(("pss_vs_time", "uss_vs_time"), axes, figures):
+            for i, mm in enumerate(metrics_maps):
+                iterations = mm[met]
+                if iterations:
+                    ls = linestyles[i % len(linestyles)]
+                    make_plot(range(len(iterations)), iterations, "", "", ax=ax, label=mm["name"], linestyle=ls)
+                    average = sum(iterations) / len(iterations)
+                    ax.axhline(average, color=ax.lines[-1].get_color(), linestyle=ls)
+                    ax.text(0, average, f"Average: {average:.2f} MB", fontsize=30)
+            ax.legend(loc="best", fontsize=20)
+            save_figure(figure, join(out_dir, f"{met}.png"))
+            
+    return 0
+
+
+def influx(args):
+    metrics_map = None
+    with open(args.metrics, "r") as f:
+        metrics_map = json.load(f)
+    return make_for_influxDB(arrange_into_categories(metrics_map), metrics_map["tags"], args.table_base, args.output)
+
 
 def main():
 
   parser = argparse.ArgumentParser(description="Metrics evaluation of O2 simulation workflow")
-  parser.add_argument("--path", help="path to pipeline_metrics file to be evaluated", required=True)
-  parser.add_argument("--tags", help="key-value pairs, seperated by ;, example: alidist=1234567;o2=7654321;tag=someTag")
-  parser.add_argument("--metrics-summary", dest="metrics_summary", action="store_true", help="create the metrics summary")
-  parser.add_argument("--cpu-eff", dest="cpu_eff", action="store_true", help="run only cpu efficiency evaluation")
-  parser.add_argument("--mem-usage", dest="mem_usage", action="store_true", help="run mem usage evaluation")
-  parser.add_argument("--influxdb-file", dest="influxdb_file", action="store_true", help="prepare a file to be uploaded to InfluxDB")
-  parser.add_argument("--influxdb-table-base", dest="influxdb_table_base", help="base name of InfluxDB table name", default="O2DPG_MC")
-  parser.add_argument("--output", help="output_directory", default="metrics_summary")
+  
+  sub_parsers = parser.add_subparsers(dest="command")
+  
+  extract_parser = sub_parsers.add_parser("extract")
+  extract_parser.set_defaults(func=extract)
+  extract_parser.add_argument("--path", help="path to pipeline_metrics file to be evaluated", required=True)
+  extract_parser.add_argument("--tags", help="key-value pairs, seperated by ;, example: alidist=1234567;o2=7654321;tag=someTag")
+  extract_parser.add_argument("--output", "-o", help="output name", default="metrics.json")
+
+  plot_parser = sub_parsers.add_parser("plot")
+  plot_parser.set_defaults(func=plot)
+  plot_parser.add_argument("--metrics", nargs="+", help="metric JSON files")
+  plot_parser.add_argument("--cpu-eff", dest="cpu_eff", action="store_true", help="run only cpu efficiency evaluation")
+  plot_parser.add_argument("--mem-usage", dest="mem_usage", action="store_true", help="run mem usage evaluation")
+  plot_parser.add_argument("--output", help="output_directory", default="metrics_summary")
+  plot_parser.add_argument("--metrics-summary", dest="metrics_summary", action="store_true", help="create the metrics summary")
+
+  influx_parser = sub_parsers.add_parser("influx")
+  influx_parser.set_defaults(func=influx)
+  influx_parser.add_argument("--metrics", help="pmetric JSON file to prepare for InfluxDB", required=True)
+  influx_parser.add_argument("--table-base", dest="table_base", help="base name of InfluxDB table name", default="O2DPG_MC")
+  influx_parser.add_argument("--output", "-o", help="pmetric JSON file to prepare for InfluxDB", default="metrics_influxDB.dat")
 
   args = parser.parse_args()
-  return run(args)
+  return args.func(args)
 
 if __name__ == "__main__":
   sys.exit(main())
