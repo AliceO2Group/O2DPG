@@ -560,13 +560,13 @@ def main():
   
   sub_parsers = parser.add_subparsers(dest="command")
   
-  extract_parser = sub_parsers.add_parser("extract")
+  extract_parser = sub_parsers.add_parser("extract", help="Extract metrics as JSON format from metric_pipeline")
   extract_parser.set_defaults(func=extract)
   extract_parser.add_argument("--path", help="path to pipeline_metrics file to be evaluated", required=True)
   extract_parser.add_argument("--tags", help="key-value pairs, seperated by ;, example: alidist=1234567;o2=7654321;tag=someTag")
   extract_parser.add_argument("--output", "-o", help="output name", default="metrics.json")
 
-  plot_parser = sub_parsers.add_parser("plot")
+  plot_parser = sub_parsers.add_parser("plot", help="Plot (multiple) metrcis from extracted metrics JSON file(s)")
   plot_parser.set_defaults(func=plot)
   plot_parser.add_argument("--metrics", nargs="+", help="metric JSON files")
   plot_parser.add_argument("--cpu-eff", dest="cpu_eff", action="store_true", help="run only cpu efficiency evaluation")
@@ -574,7 +574,7 @@ def main():
   plot_parser.add_argument("--output", help="output_directory", default="metrics_summary")
   plot_parser.add_argument("--metrics-summary", dest="metrics_summary", action="store_true", help="create the metrics summary")
 
-  influx_parser = sub_parsers.add_parser("influx")
+  influx_parser = sub_parsers.add_parser("influx", help="Derive a format which can be sent to InfluxDB")
   influx_parser.set_defaults(func=influx)
   influx_parser.add_argument("--metrics", help="pmetric JSON file to prepare for InfluxDB", required=True)
   influx_parser.add_argument("--table-base", dest="table_base", help="base name of InfluxDB table name", default="O2DPG_MC")
