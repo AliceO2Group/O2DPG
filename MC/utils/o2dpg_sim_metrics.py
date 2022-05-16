@@ -90,7 +90,7 @@ def make_cat_map(pipeline_path):
   Extract and calculate metrcis and CPU efficiency from pipeline_metrics (which was created by the o2_workflow_runner)
   """
   # start with memory and CPU and construct the full dictionaries step-by-step
-  current_pipeline = {"name": basename(pipeline_path), "metrics": {}} 
+  current_pipeline = {"name": basename(pipeline_path), "metric_name_to_index": MET_TO_IND, "metrics": {}} 
   current_pipeline_metrics = []
   with open(pipeline_path, "r") as f:
     for l in f:
@@ -127,19 +127,21 @@ def make_cat_map(pipeline_path):
       metrics_map[name][ind] = max(metrics_map[name][ind], mm[metric])
 
   # add walltimes
-  files = find_files(dirname(pipeline_path), "*.log_time", 1)
+  pipeline_dir = dirname(pipeline_path)
+  files = find_files(pipeline_dir, "*.log_time", 1)
   if not files:
-    print(f"No files found in {path}")
-    return None
+      print(f"WARNING: Cannot find time logs in {pipeline_dir}. Either your pipeline file is not at the root of the directory where the workflow was run or they were removed")
+      return current_pipeline
+
   for f in files:
     # name from time log file
     name = f.split("/")[-1]
     name = re.sub("\.log_time$", "", name)
+    time = extract_time_single(f)
     if name not in metrics_map:
-      # That should not happen but let's print a warning in this case
-      print(f"WARNING: Name {name} was not found while extracting times, that should not happen")
-      continue
-    metrics_map[name][0] = extract_time_single(f)
+      print(f"WARNING: Name {name} was not found while extracting times, probably that task was faster before at least one iteration could be monitored ({time}s)")
+      metrics_map[name] = [0] * len(MET_TO_IND)
+    metrics_map[name][0] = time
 
   return current_pipeline
 
