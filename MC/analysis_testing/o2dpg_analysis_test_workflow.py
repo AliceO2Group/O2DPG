@@ -100,7 +100,7 @@ ANALYSES = []
 analysis_MCHistograms = {"name": "MCHistograms",
                          "expected_output": None,
                          "valid_for": [ANALYSIS_VALID_MC],
-                         "cmd": "o2-analysis-track-propagation {CONFIG} | o2-analysistutorial-mc-histograms {CONFIG} {AOD}"}
+                         "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysistutorial-mc-histograms {CONFIG} {AOD}"}
 ANALYSES.append(analysis_MCHistograms)
 analysis_Efficiency = {"name": "Efficiency",
                        "expected_output": ["AnalysisResults.root"],
@@ -115,12 +115,12 @@ ANALYSES.append(analysis_EventTrackQA)
 analysis_Validation = {"name": "Validation",
                        "expected_output": ["AnalysisResults.root"],
                        "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
-                       "cmd": "o2-analysis-track-propagation {CONFIG} | o2-analysis-validation {CONFIG} {AOD}"}
+                       "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-validation {CONFIG} {AOD}"}
 ANALYSES.append(analysis_Validation)
 analysis_PIDFull = {"name": "PIDFull",
                     "expected_output": ["AnalysisResults.root"],
                     "valid_for": [ANALYSIS_VALID_MC],
-                    "cmd": "o2-analysis-dq-table-maker-mc {CONFIG} --severity error --shm-segment-size 12000000000 --aod-writer-json aodWriterTempConfig.json | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-pid-tof {CONFIG} | o2-analysis-pid-tof-full {CONFIG} | o2-analysis-pid-tof-beta {CONFIG} | o2-analysis-pid-tpc-full {CONFIG} {AOD}"}
+                    "cmd": "o2-analysis-dq-table-maker-mc {CONFIG} --severity error --shm-segment-size 12000000000 --aod-writer-json aodWriterTempConfig.json | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-pid-tof {CONFIG} | o2-analysis-pid-tof-full {CONFIG} | o2-analysis-pid-tof-beta {CONFIG} | o2-analysis-pid-tpc-full {CONFIG} {AOD}"}
 ANALYSES.append(analysis_PIDFull)
 analysis_PWGMMMFT = {"name": "PWGMMMFT",
                      "expected_output": ["AnalysisResults.root"],
@@ -135,7 +135,7 @@ ANALYSES.append(analysis_EventSelectionQA)
 analysis_WeakDecayTutorial = {"name": "WeakDecayTutorial",
                               "expected_output": None,
                               "valid_for": [ANALYSIS_VALID_MC],
-                              "cmd": "o2-analysis-track-propagation {CONFIG} | o2-analysistutorial-weak-decay-iteration {CONFIG} {AOD}"}
+                              "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysistutorial-weak-decay-iteration {CONFIG} {AOD}"}
 ANALYSES.append(analysis_WeakDecayTutorial)
 analysis_CheckDataModelMC = {"name": "CheckDataModelMC",
                              "expected_output": ["AnalysisResults.root"],
@@ -145,13 +145,14 @@ ANALYSES.append(analysis_CheckDataModelMC)
 analysis_LK0CFFemto = {"name": "LK0CFFemto",
                        "expected_output": ["AnalysisResults.root", "QAResults.root"],
                        "valid_for": [ANALYSIS_VALID_MC],
-                       "cmd": "o2-analysis-multiplicity-table {CONFIG} --aod-writer-json aodWriterTempConfig.json | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-pid-tof {CONFIG} | o2-analysis-pid-tpc {CONFIG} | o2-analysis-lf-lambdakzerobuilder {CONFIG} | o2-analysis-cf-femtodream-producer {CONFIG} {AOD}"}
+                       "cmd": "o2-analysis-multiplicity-table {CONFIG} --aod-writer-json aodWriterTempConfig.json | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-pid-tof {CONFIG} | o2-analysis-pid-tpc {CONFIG} | o2-analysis-lf-lambdakzerobuilder {CONFIG} | o2-analysis-cf-femtodream-producer {CONFIG} {AOD}"}
 ANALYSES.append(analysis_LK0CFFemto)
-analysis_PWGMMFwdVertexing = {"name": "PWGMMFwdVertexing",
-                              "expected_output": ["AnalysisResults.root"],
-                              "valid_for": [ANALYSIS_VALID_MC],
-                              "cmd": "o2-analysis-mm-vertexing-fwd {CONFIG} {AOD}"}
-ANALYSES.append(analysis_PWGMMFwdVertexing)
+# FIXME Taken out, not working at the moment, discussing with the authors
+# analysis_PWGMMFwdVertexing = {"name": "PWGMMFwdVertexing",
+#                               "expected_output": ["AnalysisResults.root"],
+#                               "valid_for": [ANALYSIS_VALID_MC],
+#                               "cmd": "o2-analysis-mm-vertexing-fwd {CONFIG} {AOD}"}
+# ANALYSES.append(analysis_PWGMMFwdVertexing)
 
 def make_merged_analysis(*analysis_names, accept_data_or_mc=ANALYSIS_VALID_MC):
     """merge CMD / DPL piping to one large pipe
