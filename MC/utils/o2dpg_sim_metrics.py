@@ -554,6 +554,86 @@ def influx(args):
     return make_for_influxDB(arrange_into_categories(metrics_map), metrics_map["tags"], args.table_base, args.output)
 
 
+def resources(args):
+
+    # Collect all metrics we got
+    metrics = []
+    for m in args.metrics:
+        with open(m, "r") as f:
+            metrics.append(json.load(f))
+
+    # We will finally use the intersection of task names
+    intersection = [m for m in metrics[0]["metrics"]]
+    # union is built as a cross check, TODO, could be used to identify very fast tasks as well
+    union = [m for m in metrics[0]["metrics"]]
+    # collect number of timeframes for each metrics file
+    ntfs = [metrics[-1]["tags"]["ntfs"]]
+
+    for met in metrics[1:]:
+        intersection = list(set(intersection) & set([m for m in met["metrics"]]))
+        union = list(set(intersection) | set([m for m in met["metrics"]]))
+        ntfs.append(met["tags"]["ntfs"])
+
+    if len(intersection) != len(union):
+        print("WARNING: Input metrics seem to be different, union and intersection do not have the same length, using intersection. This can however happen when some tasks finish super fast")
+
+    # quick helper to remove TF suffices
+    def unique_names_wo_tf_suffix(name, tasks_per_tf_, tasks_no_tf_):
+        name_split = name.split("_")
+        try:
+            # assume "_<int>" to reflect a TF suffix
+            tf = int(name_split[-1])
+            name = "_".join(name_split[:-1])
+            tasks_per_tf_.append(name)
+        except ValueError:
+            tasks_no_tf_.append(name)
+
+    tasks_per_tf = []
+    tasks_no_tf = []
+
+    for name in intersection:
+        unique_names_wo_tf_suffix(name, tasks_per_tf, tasks_no_tf)
+    # We treat every tf the same, none of those is special, so strip TF suffices and get unique list of names
+    tasks_per_tf = list(set(tasks_per_tf))
+
+    # what to do in case there were multiple metrics files given as input
+    derive_func = {"average": lambda l: sum(l) / len(l),
+                   "min": min,
+                   "max": max}[args.take]
+    # Collect here
+    resources_map = {t: {} for t in tasks_per_tf + tasks_no_tf}
+    # now let's only take what we are interested in
+    metrics = [m["metrics"] for m in metrics]
+    # for convenience
+    scaling_map = {"mem": lambda x: int(x), "cpu": lambda x: ceil(x * 0.01)}
+    # for the workflows we specify mem and cpu, in the metrics we have pss/uss and cpu
+    metrics_name_map = {"mem": "uss", "cpu": "cpu"}
+
+    for w in args.which:
+        met_ind = MET_TO_IND[metrics_name_map[w]]
+        scale = scaling_map[w]
+        for tptf in tasks_per_tf:
+            values = []
+            for met, n in zip(metrics, ntfs):
+                this_value = 0
+                for i in range(1, n + 1):
+                    key = f"{tptf}_{i}"
+                    # It could happen that a task is missing in a certain TF, e.g. when it went through fast enough to not leave a trace in pipeline iterations
+                    if key not in met:
+                        continue
+                    # now do per TF in current metrics, here we always take the max for now ==> conservative
+                    this_value = max(met[key][met_ind], this_value)
+                values.append(this_value)
+            resources_map[tptf][w] = scale(derive_func(values))
+
+        for tntf in tasks_no_tf:
+            resources_map[tntf][w] = scale(derive_func([met[tntf][met_ind] for met in metrics]))
+
+    # finally save to JSON
+    with open(args.output, "w") as f:
+        json.dump(resources_map, f, indent=2)
+
+
 def main():
 
   parser = argparse.ArgumentParser(description="Metrics evaluation of O2 simulation workflow")
@@ -579,6 +659,13 @@ def main():
   influx_parser.add_argument("--metrics", help="pmetric JSON file to prepare for InfluxDB", required=True)
   influx_parser.add_argument("--table-base", dest="table_base", help="base name of InfluxDB table name", default="O2DPG_MC")
   influx_parser.add_argument("--output", "-o", help="pmetric JSON file to prepare for InfluxDB", default="metrics_influxDB.dat")
+
+  resource_parser = sub_parsers.add_parser("resources", help="Derive resource estimate from metrics to be passed to workflow runner")
+  resource_parser.set_defaults(func=resources)
+  resource_parser.add_argument("--metrics", nargs="+", help="metric JSON files")
+  resource_parser.add_argument("--which", help="which resources to estimate", nargs="*", choices=["mem", "cpu"], default=["mem", "cpu"])
+  resource_parser.add_argument("--take", help="how to treat multiple input metric files", default="average", choices=["average", "max", "min"])
+  resource_parser.add_argument("--output", "-o", help="pmetric JSON file to prepare for InfluxDB", default="metrics_influxDB.dat")
 
   args = parser.parse_args()
   return args.func(args)

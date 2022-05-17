@@ -43,6 +43,7 @@ parser.add_argument('-tt','--target-tasks', nargs='+', help='Runs the pipeline b
 parser.add_argument('--produce-script', help='Produces a shell script that runs the workflow in serialized manner and quits.')
 parser.add_argument('--rerun-from', help='Reruns the workflow starting from given task (or pattern). All dependent jobs will be rerun.')
 parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit.', action='store_true')
+parser.add_argument('--update-resources', dest="update_resources", help='Read resource estimates from a JSON and apply where possible.')
 
 parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint (in MB)', default=0.9*max_system_mem/1024./1024)
 parser.add_argument('--cpu-limit', help='Set CPU limit (core count)', default=8)
@@ -286,8 +287,8 @@ def build_graph(taskuniverse, workflowspec):
     return (edges, nodes)
         
 
-# loads the workflow specification
-def load_workflow(workflowfile):
+# loads json into dict, e.g. for workflow specification
+def load_json(workflowfile):
     fp=open(workflowfile)
     workflowspec=json.load(fp)
     return workflowspec
@@ -408,6 +409,32 @@ def build_dag_properties(workflowspec):
     # print (global_next_tasks)
     return { 'nexttasks' : global_next_tasks, 'weights' : task_weights, 'topological_ordering' : tup[0] }
 
+# update the resource estimates of a workflow based on resources given via JSON
+def update_resource_estimates(workflow, resource_json):
+    resource_dict = load_json(resource_json)
+    stages = workflow["stages"]
+
+    for task in stages:
+        if task["timeframe"] >= 1:
+            tf = task["timeframe"]
+            name = "_".join(task["name"].split("_")[:-1])
+        else:
+            name = task["name"]
+
+        if name not in resource_dict:
+            continue
+
+        new_resources = resource_dict[name]
+
+        task["resources"]["mem"] = new_resources.get("mem", task["resources"]["mem"])
+        # CPU is a bit more invlolved
+        if "cpu" in new_resources:
+            cpu = new_resources["cpu"]
+            rel_cpu = task["resources"]["relative_cpu"]
+            if rel_cpu is not None:
+                # respect the relative CPU settings
+                cpu *= rel_cpu
+            task["resources"]["cpu"] = cpu
 
 #
 # functions for execution; encapsulated in a WorkflowExecutor class
@@ -417,7 +444,7 @@ class WorkflowExecutor:
     def __init__(self, workflowfile, args, jmax=100):
       self.args=args
       self.workflowfile = workflowfile
-      self.workflowspec = load_workflow(workflowfile)
+      self.workflowspec = load_json(workflowfile)
       self.workflowspec = filter_workflow(self.workflowspec, args.target_tasks, args.target_labels)
 
       if not self.workflowspec['stages']:
@@ -439,6 +466,9 @@ class WorkflowExecutor:
       for i in range(len(self.taskuniverse)):
           self.tasktoid[self.taskuniverse[i]]=i
           self.idtotask[i]=self.taskuniverse[i]
+
+      if args.update_resources:
+          update_resource_estimates(self.workflowspec, args.update_resources)
 
       self.maxmemperid = [ self.workflowspec['stages'][tid]['resources']['mem'] for tid in range(len(self.taskuniverse)) ]
       self.cpuperid = [ self.workflowspec['stages'][tid]['resources']['cpu'] for tid in range(len(self.taskuniverse)) ]
