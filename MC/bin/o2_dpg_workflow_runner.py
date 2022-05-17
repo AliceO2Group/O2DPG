@@ -879,8 +879,21 @@ class WorkflowExecutor:
            tarcommand = get_tar_command(filename=fn)
            actionlogger.info("Taring " + tarcommand)
 
+           # create a README file with instruction on how to use checkpoint
+           readmefile=open('README_CHECKPOINT_PID' + str(os.getpid()) + '.txt','w')
+
+           for tid in taskids:
+             taskspec = self.workflowspec['stages'][tid]
+             name = taskspec['name']
+             readmefile.write('Checkpoint created because of failure in task ' + name + '\n')
+             readmefile.write('In order to reproduce with this checkpoint, do the following steps:\n')
+             readmefile.write('a) setup the appropriate O2sim environment using alienv\n')
+             readmefile.write('b) run: $O2DPG_ROOT/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ' + name + '$ --retry-on-failure 0\n')
+           readmefile.close()
+
            # first of all the base directory
            os.system(tarcommand)
+
            # then we add stuff for the specific timeframes ids if any
            for tid in taskids:
              taskspec = self.workflowspec['stages'][tid]
@@ -889,6 +902,10 @@ class WorkflowExecutor:
                tarcommand = get_tar_command(dir=directory, flags='rf', filename=fn)
                actionlogger.info("Tar command is " + tarcommand)
                os.system(tarcommand)
+
+           # prepend file:/// to denote local file
+           fn = "file://" + fn
+           actionlogger.info("Local checkpoint file is " + fn)
 
            # location needs to be an alien path of the form alien:///foo/bar/
            copycommand='alien.py cp ' + fn + ' ' + str(location) + '@disk:1'
