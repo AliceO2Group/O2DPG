@@ -131,10 +131,6 @@
         "processRun2": "false",
         "processRun3": "true"
     },
-    "track-extension": {
-        "processRun2": "false",
-        "processRun3": "true"
-    },
     "multiplicity-table": {
         "processRun2": "false",
         "processRun3": "true"
