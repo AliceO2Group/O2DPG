@@ -33,6 +33,7 @@ parser = argparse.ArgumentParser(description='Parallel execution of a (O2-DPG) D
 
 parser.add_argument('-f','--workflowfile', help='Input workflow file name', required=True)
 parser.add_argument('-jmax','--maxjobs', help='Number of maximal parallel tasks.', default=100)
+parser.add_argument('-k','--keep-going', action='store_true', help='Keep executing the pipeline as far possibe (not stopping on first failure)')
 parser.add_argument('--dry-run', action='store_true', help='Show what you would do.')
 parser.add_argument('--visualize-workflow', action='store_true', help='Saves a graph visualization of workflow.')
 parser.add_argument('--target-labels', nargs='+', help='Runs the pipeline by target labels (example "TPC" or "DIGI").\
@@ -448,7 +449,8 @@ class WorkflowExecutor:
       self.cpulimit = float(args.cpu_limit)
       self.procstatus = { tid:'ToDo' for tid in range(len(self.workflowspec['stages'])) }
       self.taskneeds= { t:set(self.getallrequirements(t)) for t in self.taskuniverse }
-      self.stoponfailure = True
+      self.stoponfailure = not (args.keep_going == True)
+      print ("Stop on failure ",self.stoponfailure)
       self.max_jobs_parallel = int(jmax)
       self.scheduling_iteration = 0
       self.process_list = []  # list of currently scheduled tasks with normal priority
@@ -774,10 +776,9 @@ class WorkflowExecutor:
             # --> We could use this for corrective actions such as killing jobs currently back-filling
             # (or better hibernating)
 
-    def waitforany(self, process_list, finished):
+    def waitforany(self, process_list, finished, failingtasks):
        failuredetected = False
        failingpids = []
-       failingtasks = []
        if len(process_list)==0:
            return False
 
@@ -1018,6 +1019,7 @@ class WorkflowExecutor:
         starttime = time.perf_counter()
         psutil.cpu_percent(interval=None)
         os.environ['JOBUTILS_SKIPDONE'] = "ON"
+        errorencountered = False
 
         def speedup_ROOT_Init():
                """initialize some env variables that speed up ROOT init
@@ -1104,7 +1106,8 @@ class WorkflowExecutor:
                     break
             
                 finished_from_started = [] # to account for finished when actually started
-                while self.waitforany(self.process_list, finished_from_started):
+                failing = []
+                while self.waitforany(self.process_list, finished_from_started, failing):
                     if not args.dry_run:
                         self.monitor(self.process_list) #  ---> make async to normal operation?
                         time.sleep(1) # <--- make this incremental (small wait at beginning)
@@ -1114,6 +1117,16 @@ class WorkflowExecutor:
                 finished = finished + finished_from_started
                 actionlogger.debug("finished now :" + str(finished_from_started))
                 finishedtasks = finishedtasks + finished
+
+                # if a task was marked "failed" and we come here (because
+                # we use --keep-going) ... we need to take out the pid from finished
+                if len(failing) > 0:
+                    # remove these from those marked finished in order
+                    # not to continue with their children
+                    errorencountered = True
+                    for t in failing:
+                        finished = [ x for x in finished if x != t ]
+                        finishedtasks = [ x for x in finishedtasks if x != t ]
 
                 # if a task was marked as "retry" we simply put it back into the candidate list
                 if len(self.tids_marked_toretry) > 0:
@@ -1150,10 +1163,12 @@ class WorkflowExecutor:
             self.SIGHandler(0,0)
 
         endtime = time.perf_counter()
-        print ('\n**** Pipeline done (global_runtime : {:.3f}s) *****\n'.format(endtime-starttime))
+        statusmsg = "success"
+        if errorencountered:
+           statusmsg = "with failures"
 
-
-
+        print ('\n**** Pipeline done ' + statusmsg + ' (global_runtime : {:.3f}s) *****\n'.format(endtime-starttime))
+        return errorencountered
 
 
 if args.cgroup!=None:
@@ -1163,4 +1178,4 @@ if args.cgroup!=None:
     os.system(command)
 
 executor=WorkflowExecutor(args.workflowfile,jmax=args.maxjobs,args=args)
-executor.execute()
+exit (executor.execute())
