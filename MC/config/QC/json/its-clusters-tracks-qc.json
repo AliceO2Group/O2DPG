@@ -43,7 +43,7 @@
           "nThreads": "1",
 	  "nBCbins" : "103",
 	  "dicttimestamp" : 0,
-	  "geomPath" : "/home/epn/odc/files/"
+	  "geomPath" : "o2sim_geometry-aligned.root"
         }
       },
       "ITSTrackTask": {
