@@ -119,8 +119,8 @@ analysis_Validation = {"name": "Validation",
 ANALYSES.append(analysis_Validation)
 analysis_PIDFull = {"name": "PIDFull",
                     "expected_output": ["AnalysisResults.root"],
-                    "valid_for": [ANALYSIS_VALID_MC],
-                    "cmd": "o2-analysis-dq-table-maker-mc {CONFIG} --severity error --shm-segment-size 12000000000 --aod-writer-json aodWriterTempConfig.json | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-pid-tof {CONFIG} | o2-analysis-pid-tof-full {CONFIG} | o2-analysis-pid-tof-beta {CONFIG} | o2-analysis-pid-tpc-full {CONFIG} {AOD}"}
+                    "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
+                    "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-pid-tof {CONFIG} --add-qa 1 | o2-analysis-pid-tof-full {CONFIG} --add-qa 1 | o2-analysis-pid-tof-beta {CONFIG} --add-qa 1 | o2-analysis-pid-tpc-full {CONFIG} --add-qa 1 {AOD}"}
 ANALYSES.append(analysis_PIDFull)
 analysis_PWGMMMFT = {"name": "PWGMMMFT",
                      "expected_output": ["AnalysisResults.root"],
@@ -270,6 +270,8 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
             if specified, list of other tasks which need to be run before
     """
     input_aod = abspath(input_aod)
+    if input_aod.endswith(".txt") and not input_aod.startswith("@"):
+        input_aod = f"@{input_aod}"
     data_or_mc = ANALYSIS_VALID_MC if is_mc else ANALYSIS_VALID_DATA
     configuration = ANALYSIS_CONFIGS[data_or_mc] if config is None else config
     for ana in ANALYSES:
