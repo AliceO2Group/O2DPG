@@ -26,6 +26,7 @@ import random
 import json
 import itertools
 import time
+import requests, re
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
@@ -186,13 +187,34 @@ def addWhenActive(detID, needslist, appendstring):
    if isActive(detID):
       needslist.append(appendstring)
 
+
+def retrieve_sor(run_number):
+    """
+    retrieves start of run (sor)
+    from the RCT/RunInformation table with a simple http request
+    in case of problems, 0 will be returned
+    """
+    url="http://alice-ccdb.cern.ch/browse/RCT/RunInformation/"+str(run_number)
+    ansobject=requests.get(url)
+    tokens=ansobject.text.split("\n")
+
+    SOR=0
+    # extract SOR by pattern matching
+    for t in tokens:
+      match_object=re.match("\s*(SOR\s*=\s*)([0-9]*)\s*", t)
+      if match_object != None:
+         SOR=match_object[2]
+         break
+
+    return SOR
+
+
 # ----------- START WORKFLOW CONSTRUCTION -----------------------------
 
-# set the time
+# set the time to start of run (if no timestamp specified)
 if args.timestamp==-1:
-   # 1000 to convert seconds into milliseconds.
-   args.timestamp = int(time.time() * 1000)
-   print("Setting timestamp to ", args.timestamp)
+   args.timestamp = retrieve_sor(args.run)
+   assert (args.timestamp != 0)
 
 NTIMEFRAMES=int(args.tf)
 NWORKERS=args.j
@@ -310,8 +332,10 @@ if doembedding:
 
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=[BKG_CONFIG_task['name']], cpu=NWORKERS )
         BKGtask['cmd']='${O2_ROOT}/bin/o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
-                     + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)     \
-                     + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG) + ' --timestamp ' + str(args.timestamp)
+                     + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)                    \
+                     + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG) \
+                     + ('',' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)
+
         if not "all" in activeDetectors:
            BKGtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
 
@@ -491,7 +515,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    SGNtask['cmd']='${O2_ROOT}/bin/o2-sim -e '  + str(SIMENGINE) + ' '    + str(MODULES)  + ' -n ' + str(NSIGEVENTS) + ' --seed ' + str(TFSEED) \
                   + ' --field ' + str(BFIELD)    + ' -j ' + str(NWORKERS) + ' -g ' + str(GENERATOR)   \
                   + ' '         + str(TRIGGER)   + ' '    + str(CONFKEY)  + ' '    + str(INIFILE)     \
-                  + ' -o '      + signalprefix   + ' '    + embeddinto + ' --timestamp ' + str(args.timestamp)
+                  + ' -o '      + signalprefix   + ' '    + embeddinto                                \
+                  + (' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + args.run
    if not "all" in activeDetectors:
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
    workflow['stages'].append(SGNtask)
@@ -547,10 +572,12 @@ for tf in range(1, NTIMEFRAMES + 1):
    startOrbit = (tf-1 + int(args.production_offset)*NTIMEFRAMES)*orbitsPerTF
    globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : args.first_orbit + startOrbit,
                             "HBFUtils.nHBFPerTF" : orbitsPerTF,
-                            "HBFUtils.startTime" : args.timestamp,
                             "HBFUtils.orbitFirst" : args.first_orbit,
                             "HBFUtils.runNumber" : args.run }
-
+   # we set the timesamp here only if specified explicitely (otherwise it will come from
+   # the simulation GRP and digitization)
+   if (args.timestamp != -1):
+      globalTFConfigValues["HBFUtils.startTime"] = args.timestamp
 
    def putConfigValues(localCF = {}):
      """
