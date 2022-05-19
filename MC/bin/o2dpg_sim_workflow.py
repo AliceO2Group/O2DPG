@@ -107,7 +107,7 @@ parser.add_argument('--include-analysis', '--include-an', '--analysis',
                     action='store_true', help='a flag to include O2 analysis in the workflow')
 
 # MFT reconstruction configuration
-parser.add_argument('--mft-reco-full', action='store_true', help='enables complete mft reco instead of simplified misaligned version')
+parser.add_argument('--mft-reco-full', action='store_true', help='enables full MFT cluster scan (i.e. disables track finding optimization needed for PbPb)')
 parser.add_argument('--mft-assessment-full', action='store_true', help='enables complete assessment of mft reco')
 
 # Global Forward reconstruction configuration
