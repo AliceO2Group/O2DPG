@@ -168,6 +168,9 @@ has_pid_qc()
     for PIDDETECTOR in $PIDDETECTORS;
     do
 	echo PIDDETECTOR=$PIDDETECTOR 1>&2
+	if [[ $PIDDETECTOR == "TOF" ]]; then
+	    (! has_detectors_reco ITS TPC TOF || ! has_detector_matching ITSTPCTOF) && return 1
+	fi
 	! has_detector_qc $PIDDETECTOR && return 1
     done
     return 0
