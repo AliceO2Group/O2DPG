@@ -20,7 +20,7 @@
 
 # GEN_TOPO_RUN_HOME is a debug setting used in some tests. This is not needed for online running.
 if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
-  [[ $WORKFLOWMODE != "print" ]] && { echo "ERROR: GEN_TOPO_RUN_HOME is only supported with WORKFLOWMODE=print!" 1>&2; exit 1; }
+  [[ "0$GEN_TOPO_RUN_HOME_TEST" != "01" ]] && [[ $WORKFLOWMODE != "print" ]] && { echo "ERROR: GEN_TOPO_RUN_HOME is only supported with WORKFLOWMODE=print!" 1>&2; exit 1; }
 else
   if [ "0$GEN_TOPO_ONTHEFLY" == "01" ]; then
     # In case we run the on the fly generation on the EPN, we define which odc-epn-topo binary to use.
