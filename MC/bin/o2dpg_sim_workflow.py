@@ -37,13 +37,13 @@ from o2dpg_sim_config import create_sim_config
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
 
 # the run-number of data taking or default if unanchored
-parser.add_argument('-run',help="Run number for this MC", default=300000)
+parser.add_argument('-run', type=int, help="Run number for this MC", default=300000)
 parser.add_argument('-productionTag',help="Production tag for this MC", default='unknown')
 # the timestamp at which this MC workflow will be run
 # - in principle it should be consistent with the time of the "run" number above
 # - some external tool should sample it within
 # - we can also sample it ourselfs here
-parser.add_argument('--timestamp',help="Anchoring timestamp (defaults to now)", default=-1)
+parser.add_argument('--timestamp', type=int, help="Anchoring timestamp (defaults to now)", default=-1)
 parser.add_argument('--anchor-config',help="JSON file to contextualise workflow with external configs (config values etc.) for instance comping from data reco workflows.", default='')
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
@@ -206,7 +206,7 @@ def retrieve_sor(run_number):
          SOR=match_object[2]
          break
 
-    return SOR
+    return int(SOR)
 
 
 # ----------- START WORKFLOW CONSTRUCTION -----------------------------
@@ -516,7 +516,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                   + ' --field ' + str(BFIELD)    + ' -j ' + str(NWORKERS) + ' -g ' + str(GENERATOR)   \
                   + ' '         + str(TRIGGER)   + ' '    + str(CONFKEY)  + ' '    + str(INIFILE)     \
                   + ' -o '      + signalprefix   + ' '    + embeddinto                                \
-                  + (' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + args.run
+                  + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)
    if not "all" in activeDetectors:
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
    workflow['stages'].append(SGNtask)
@@ -901,7 +901,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       if isActive("MID"):
          pvfinder_matching_sources += ",MID"
          pvfinderneeds += [MIDRECOtask['name']]
-   
+
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-primary-vertexing-workflow ' \
                          + getDPL_global_options() + putConfigValuesNew(['ITSAlpideParam','MFTAlpideParam', 'pvertexer', 'TPCGasParam'], {"NameConf.mDirMatLUT" : ".."})
