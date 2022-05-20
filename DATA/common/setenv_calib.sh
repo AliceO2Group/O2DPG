@@ -35,12 +35,19 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
     fi
 
     # calibrations for TPC
-    if has_detector_calib TPC && has_detectors ITS TPC TOF TRD; then
-	if has_detectors TPC ITS TRD TOF && has_detector_matching ITSTPCTRDTOF; then
-	    if [[ -z ${CALIB_TPC_SCDCALIB+x} ]]; then CALIB_TPC_SCDCALIB=1; fi
-	else
-	    CALIB_TPC_SCDCALIB=0
-	fi
+    if has_detector_calib TPC; then
+       if has_detectors ITS TPC TOF TRD; then
+	   if has_detectors TPC ITS TRD TOF && has_detector_matching ITSTPCTRDTOF; then
+	       if [[ -z ${CALIB_TPC_SCDCALIB+x} ]]; then CALIB_TPC_SCDCALIB=1; fi
+	   else
+	       CALIB_TPC_SCDCALIB=0
+	   fi
+       fi
+       if [[ -z ${CALIB_TPC_TIMEGAIN+x} ]]; then CALIB_TPC_TIMEGAIN=1; fi
+       if [[ -z ${CALIB_TPC_RESPADGAIN+x} ]]; then CALIB_TPC_RESPADGAIN=1; fi
+    else
+	CALIB_TPC_TIMEGAIN=0
+	CALIB_TPC_RESPADGAIN=0
     fi
 
     # calibrations for TRD
@@ -82,6 +89,8 @@ echo "CALIB_PHS_BADMAPCALIB = $CALIB_PHS_BADMAPCALIB" 1>&2
 echo "CALIB_PHS_TURNONCALIB = $CALIB_PHS_TURNONCALIB" 1>&2
 echo "CALIB_PHS_RUNBYRUNCALIB = $CALIB_PHS_RUNBYRUNCALIB" 1>&2
 echo "CALIB_TRD_VDRIFTEXB = $CALIB_TRD_VDRIFTEXB" 1>&2
+echo "CALIB_TPC_TIMEGAIN = $CALIB_TPC_TIMEGAIN" 1>&2
+echo "CALIB_TPC_RESPADGAIN = $CALIB_TPC_RESPADGAIN" 1>&2
 
 if [[ -z $CALIBDATASPEC_BARREL ]]; then
     # prim vtx
@@ -90,6 +99,10 @@ if [[ -z $CALIBDATASPEC_BARREL ]]; then
     # TOF
     if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "calibTOF:TOF/CALIBDATA/0"; fi
     if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "diagWords:TOF/DIAFREQ/0"; fi
+
+    # TPC
+    if [[ $CALIB_TPC_TIMEGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "tpcmips:TPC/MIPS/0"; fi
+    if [[ $CALIB_TPC_RESPADGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "trackGainHistoTPC:TPC/TRACKGAINHISTOS/0"; fi
 
     # TRD
     if [[ $CALIB_TRD_VDRIFTEXB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "angResHistoTRD:TRD/ANGRESHISTS/0"; fi
