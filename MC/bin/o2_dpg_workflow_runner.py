@@ -1019,6 +1019,12 @@ class WorkflowExecutor:
         starttime = time.perf_counter()
         psutil.cpu_percent(interval=None)
         os.environ['JOBUTILS_SKIPDONE'] = "ON"
+        # a bit ALICEO2+O2DPG specific but for now a convenient place to
+        # restore original behaviour of ALICEO2_CCDB_LOCALCACHE semantics
+        # TODO: introduce a proper workflow-globalinit section which is defined inside the workflow json
+        if os.environ['ALICEO2_CCDB_LOCALCACHE'] != None:
+           os.environ['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = "ON"
+
         errorencountered = False
 
         def speedup_ROOT_Init():
