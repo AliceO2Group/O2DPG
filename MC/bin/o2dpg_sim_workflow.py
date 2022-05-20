@@ -1006,8 +1006,7 @@ for tf in range(1, NTIMEFRAMES + 1):
   # -----------
    # TODO This needs further refinement, sources and dependencies should be constructed dynamically
    aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FDD,CTP,TPC-TRD,ITS-TPC-TRD,EMC'
-   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'], TOFRECOtask['name'],
-               FV0RECOtask['name']]
+   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name']]
    if isActive('FV0'):
      aodneeds += [ FV0RECOtask['name'] ]
      aodinfosources += ',FV0'
