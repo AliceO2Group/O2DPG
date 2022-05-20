@@ -130,10 +130,12 @@ get_proxy_connection()
   # setting the type of connection
   if [[ $2 == "input" ]]; then
       local CONNECTION="method=bind,type=pull"
-      local NAMECONNECTION="--proxy-name"
+      local NAMEPROXY="--proxy-name aggregator-proxy-$1"
+      local NAMEPROXYCHANNEL=
   elif [[ $2 == "output" ]]; then
       local CONNECTION="method=connect,type=push"
-      local NAMECONNECTION="--proxy-channel-name"
+      local NAMEPROXY="--proxy-name calib-output-proxy-$1"
+      local NAMEPROXYCHANNEL="--proxy-channel-name aggregator-proxy-$1"
   else
       echo "parameter 2 should be either 'input' or 'output'"
       exit 2
@@ -144,7 +146,7 @@ get_proxy_connection()
   else
     CONNECTION+=",transport=zeromq"
   fi
-  local PROXY_CONN="$NAMECONNECTION aggregator-proxy-$1 --channel-config \"name=aggregator-proxy-$1,$CONNECTION,rateLogging=1\""
+  local PROXY_CONN="$NAMEPROXY $NAMEPROXYCHANNEL --channel-config \"name=aggregator-proxy-$1,$CONNECTION,rateLogging=1\""
 
   echo PROXY_CONN = $PROXY_CONN 1>&2
   echo $PROXY_CONN
