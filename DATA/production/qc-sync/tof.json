@@ -56,6 +56,10 @@
           "type": "dataSamplingPolicy",
           "name": "digi-local"
         },
+        "taskParameters": {
+          "PerChannel": "True",
+          "RangeMaxMultiplicity": "5000"
+        },
         "location": "local",
         "localMachines": [
           "epn",
