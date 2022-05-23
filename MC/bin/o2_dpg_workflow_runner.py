@@ -1022,7 +1022,7 @@ class WorkflowExecutor:
         # a bit ALICEO2+O2DPG specific but for now a convenient place to
         # restore original behaviour of ALICEO2_CCDB_LOCALCACHE semantics
         # TODO: introduce a proper workflow-globalinit section which is defined inside the workflow json
-        if os.environ['ALICEO2_CCDB_LOCALCACHE'] != None:
+        if os.environ.get('ALICEO2_CCDB_LOCALCACHE') != None:
            os.environ['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = "ON"
 
         errorencountered = False
