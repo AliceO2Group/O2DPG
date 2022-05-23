@@ -354,9 +354,6 @@
                 "0.995000005"
             ]
         },
-        "ConfV0TranRadMin": "0.200000003",
-        "ConfV0TranRadMax": "100",
-        "ConfV0DecVecMax": "100",
         "ConfV0DaughTPCnclsMin": {
             "values": [
                 "80",
@@ -374,6 +371,21 @@
             "values": [
                 "5",
                 "4"
+            ]
+        },
+        "ConfV0TranRadMin": {
+            "values": [
+                "0.2"
+            ]
+        },
+        "ConfV0TranRadMax": {
+            "values": [
+                "100.0"
+            ]
+        },
+        "ConfV0DecVecMax": {
+            "values": [
+                "100.0"
             ]
         }
     },
