@@ -49,6 +49,9 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
     CALIB_TPC_RESPADGAIN=0
   fi
 
+  # WORKAROUND - DISABLE TPC PADGAIN CALIB - TOO SLOW
+  CALIB_TPC_RESPADGAIN=0
+
   # calibrations for TRD
   if has_detector_calib TRD && has_detectors ITS TPC TRD ; then
     if [[ -z ${CALIB_TRD_VDRIFTEXB+x} ]]; then CALIB_TRD_VDRIFTEXB=1; fi
