@@ -132,10 +132,6 @@
         "processRun2": "false",
         "processRun3": "true"
     },
-    "track-extension": {
-        "processRun2": "false",
-        "processRun3": "true"
-    },
     "multiplicity-table": {
         "processRun2": "false",
         "processRun3": "true"
@@ -198,10 +194,14 @@
         "pid-de": "-1",
         "pid-tr": "-1",
         "pid-he": "-1",
-        "pid-al": "-1"
+        "pid-al": "-1",
+        "processEvTime": "true",
+        "processNoEvTime": "false"
     },
     "tof-pid-beta": {
-        "tof-expreso": "80"
+        "tof-expreso": "80",
+        "processEvTime": "true",
+        "processNoEvTime": "false"
     },
     "tof-pid-full": {
         "param-file": "",
@@ -218,8 +218,8 @@
         "pid-tr": "-1",
         "pid-he": "-1",
         "pid-al": "-1",
-        "processEvTime": "false",
-        "processNoEvTime": "true"
+        "processEvTime": "true",
+        "processNoEvTime": "false"
     },
     "lambdakzero-builder": {
         "dcanegtopv": "0.100000001",
