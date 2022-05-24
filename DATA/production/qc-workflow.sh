@@ -22,6 +22,13 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_PHS" ]] && QC_JSON_PHS=consul://o2/components/qc/ANY/any/phos-raw-clusters-epn
     [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=/home/shahoian/jsons/vertexing-qc.json
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json
+    if [[ -z "$QC_JSON_TOF_MATCH" ]]; then
+       if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD ; then
+         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctrdtof.json
+       elif has_tof_matching_source ITS-TPC ; then
+         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctof.json
+       fi
+    fi
   elif [[ $SYNCMODE == 1 ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
@@ -38,6 +45,13 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_TRD" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-sync/trd.json
     [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=$O2DPG_ROOT/DATA/production/qc-sync/pvtx.json
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json
+    if [[ -z "$QC_JSON_TOF_MATCH" ]]; then
+       if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD ; then
+         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctrdtof.json
+       elif has_tof_matching_source ITS-TPC ; then
+         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctof.json
+       fi
+    fi
   else
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-async/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-async/its.json
@@ -52,7 +66,7 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_TRD" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-async/trd.json
     [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=$O2DPG_ROOT/DATA/production/qc-async/primvtx.json
     [[ -z "$QC_JSON_ITSTPC" ]] && QC_JSON_ITSTPC=$O2DPG_ROOT/DATA/production/qc-async/itstpc.json
-    [[ -z "$QC_JSON_ITSTPCTOF" ]] && QC_JSON_ITSTPCTOF=$O2DPG_ROOT/DATA/production/qc-async/itstpctof.json
+    [[ -z "$QC_JSON_TOF_MATCH" ]] && QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-async/itstpctof.json
     [[ -z "$QC_JSON_PID_FT0TOF" ]] && QC_JSON_PID_FT0TOF=$O2DPG_ROOT/DATA/production/qc-async/pidft0tof.json
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-async/qc-global.json
   fi
@@ -90,6 +104,10 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
   done
 
   # matching / vertexing QC
+  if [ ! -z "$QC_JSON_TOF_MATCH" ]; then
+    add_QC_JSON TOF ${QC_JSON_TOF_MATCH}
+  fi
+
   for i in `echo $LIST_OF_GLORECO | sed "s/,/ /g"`; do
     GLO_JSON_FILE="QC_JSON_$i"
     if has_detector_matching $i && has_matching_qc $i && [ ! -z "${!GLO_JSON_FILE}" ]; then

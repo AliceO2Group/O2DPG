@@ -176,6 +176,11 @@ has_pid_qc()
     return 0
 }
 
+has_tof_matching_source()
+{
+  [[ $TOF_SOURCES =~ (^|,)"$1"(,|$) ]]
+}
+
 workflow_has_parameter()
 {
   [[ $WORKFLOW_PARAMETERS =~ (^|,)"$1"(,|$) ]]
