@@ -81,7 +81,7 @@ export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="--fv0-reconstructor"
 #...
 
 # ad-hoc settings for MFT 
-export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="$MFT_STROBELGT;MFTTracking.forceZeroField=true;MFTTracking.FullClusterScan=true;"
+export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="$MFT_STROBELGT;MFTTracking.forceZeroField=true;MFTTracking.FullClusterScan=true;MFTTracking.LTFclsRCut=0.2;"
 export ARGS_EXTRA_PROCESS_o2_mft_reco_workflow=" --run-assessment "
 
 # Enabling AOD

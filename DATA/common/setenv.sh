@@ -28,6 +28,8 @@ LIST_OF_DETECTORS="ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,C
 
 LIST_OF_GLORECO="ITSTPC,TPCTRD,ITSTPCTRD,TPCTOF,ITSTPCTOF,MFTMCH,MCHMID,PRIMVTX,SECVTX,AOD"
 
+LIST_OF_PID="FT0-TOF"
+
 # Detectors used in the workflow / enabled parameters
 if [[ -z "${WORKFLOW_DETECTORS+x}" ]] || [[ "0$WORKFLOW_DETECTORS" == "0ALL" ]]; then export WORKFLOW_DETECTORS=$LIST_OF_DETECTORS; fi
 if [[ -z "${WORKFLOW_DETECTORS_QC+x}" ]] || [[ "0$WORKFLOW_DETECTORS_QC" == "0ALL" ]]; then export WORKFLOW_DETECTORS_QC="$WORKFLOW_DETECTORS,$LIST_OF_GLORECO"; fi
@@ -158,6 +160,20 @@ has_detector_qc()
 has_matching_qc()
 {
   has_detector_matching $1 && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"$1"(,|$) ]]
+}
+
+has_pid_qc()
+{
+    PIDDETECTORS=$(echo $1 | tr "-" "\n")
+    for PIDDETECTOR in $PIDDETECTORS;
+    do
+	echo PIDDETECTOR=$PIDDETECTOR 1>&2
+	if [[ $PIDDETECTOR == "TOF" ]]; then
+	    (! has_detectors_reco ITS TPC TOF || ! has_detector_matching ITSTPCTOF) && return 1
+	fi
+	! has_detector_qc $PIDDETECTOR && return 1
+    done
+    return 0
 }
 
 workflow_has_parameter()

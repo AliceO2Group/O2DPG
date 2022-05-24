@@ -26,6 +26,7 @@ import random
 import json
 import itertools
 import time
+import requests, re
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
@@ -36,13 +37,13 @@ from o2dpg_sim_config import create_sim_config
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
 
 # the run-number of data taking or default if unanchored
-parser.add_argument('-run',help="Run number for this MC", default=300000)
+parser.add_argument('-run', type=int, help="Run number for this MC", default=300000)
 parser.add_argument('-productionTag',help="Production tag for this MC", default='unknown')
 # the timestamp at which this MC workflow will be run
 # - in principle it should be consistent with the time of the "run" number above
 # - some external tool should sample it within
 # - we can also sample it ourselfs here
-parser.add_argument('--timestamp',help="Anchoring timestamp (defaults to now)", default=-1)
+parser.add_argument('--timestamp', type=int, help="Anchoring timestamp (defaults to now)", default=-1)
 parser.add_argument('--anchor-config',help="JSON file to contextualise workflow with external configs (config values etc.) for instance comping from data reco workflows.", default='')
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
@@ -94,6 +95,7 @@ parser.add_argument('--early-tf-cleanup',action='store_true', help='whether to c
 # power feature (for playing) --> does not appear in help message
 #  help='Treat smaller sensors in a single digitization')
 parser.add_argument('--combine-smaller-digi', action='store_true', help=argparse.SUPPRESS)
+parser.add_argument('--combine-dpl-devices', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring)
                                                             # (consider doing this rather in O2 digitization code directly)
@@ -185,13 +187,34 @@ def addWhenActive(detID, needslist, appendstring):
    if isActive(detID):
       needslist.append(appendstring)
 
+
+def retrieve_sor(run_number):
+    """
+    retrieves start of run (sor)
+    from the RCT/RunInformation table with a simple http request
+    in case of problems, 0 will be returned
+    """
+    url="http://alice-ccdb.cern.ch/browse/RCT/RunInformation/"+str(run_number)
+    ansobject=requests.get(url)
+    tokens=ansobject.text.split("\n")
+
+    SOR=0
+    # extract SOR by pattern matching
+    for t in tokens:
+      match_object=re.match("\s*(SOR\s*=\s*)([0-9]*)\s*", t)
+      if match_object != None:
+         SOR=match_object[2]
+         break
+
+    return int(SOR)
+
+
 # ----------- START WORKFLOW CONSTRUCTION -----------------------------
 
-# set the time
+# set the time to start of run (if no timestamp specified)
 if args.timestamp==-1:
-   # 1000 to convert seconds into milliseconds.
-   args.timestamp = int(time.time() * 1000)
-   print("Setting timestamp to ", args.timestamp)
+   args.timestamp = retrieve_sor(args.run)
+   assert (args.timestamp != 0)
 
 NTIMEFRAMES=int(args.tf)
 NWORKERS=args.j
@@ -208,7 +231,7 @@ workflow['stages'] = []
 
 
 def getDPL_global_options(bigshm=False):
-   common=" -b --run --driver-client-backend ws:// "
+   common=" -b --run " # --driver-client-backend ws:// "
    if args.noIPC!=None:
       return common + " --no-IPC "
    if bigshm:
@@ -309,8 +332,10 @@ if doembedding:
 
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=[BKG_CONFIG_task['name']], cpu=NWORKERS )
         BKGtask['cmd']='${O2_ROOT}/bin/o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
-                     + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)     \
-                     + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG) + ' --timestamp ' + str(args.timestamp)
+                     + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)                    \
+                     + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG) \
+                     + ('',' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)
+
         if not "all" in activeDetectors:
            BKGtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
 
@@ -490,7 +515,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    SGNtask['cmd']='${O2_ROOT}/bin/o2-sim -e '  + str(SIMENGINE) + ' '    + str(MODULES)  + ' -n ' + str(NSIGEVENTS) + ' --seed ' + str(TFSEED) \
                   + ' --field ' + str(BFIELD)    + ' -j ' + str(NWORKERS) + ' -g ' + str(GENERATOR)   \
                   + ' '         + str(TRIGGER)   + ' '    + str(CONFKEY)  + ' '    + str(INIFILE)     \
-                  + ' -o '      + signalprefix   + ' '    + embeddinto + ' --timestamp ' + str(args.timestamp)
+                  + ' -o '      + signalprefix   + ' '    + embeddinto                                \
+                  + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)
    if not "all" in activeDetectors:
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
    workflow['stages'].append(SGNtask)
@@ -503,12 +529,14 @@ for tf in range(1, NTIMEFRAMES + 1):
       LinkGRPFileTask=createTask(name='linkGRP_'+str(tf), needs=[BKG_HEADER_task['name'] if usebkgcache else BKGtask['name'] ], tf=tf, cwd=timeframeworkdir, cpu='0',mem='0')
       LinkGRPFileTask['cmd']='''
                              ln -nsf ../bkg_grp.root o2sim_grp.root;
+                             ln -nsf ../bkg_grpecs.root o2sim_grpecs.root;
                              ln -nsf ../bkg_geometry.root o2sim_geometry.root;
                              ln -nsf ../bkg_geometry.root bkg_geometry.root;
                              ln -nsf ../bkg_geometry-aligned.root bkg_geometry-aligned.root;
                              ln -nsf ../bkg_geometry-aligned.root o2sim_geometry-aligned.root;
                              ln -nsf ../bkg_MCHeader.root bkg_MCHeader.root;
-                             ln -nsf ../bkg_grp.root bkg_grp.root
+                             ln -nsf ../bkg_grp.root bkg_grp.root;
+                             ln -nsf ../bkg_grpecs.root bkg_grpecs.root
                              '''
    else:
       LinkGRPFileTask=createTask(name='linkGRP_'+str(tf), needs=[SGNtask['name']], tf=tf, cwd=timeframeworkdir, cpu='0', mem='0')
@@ -546,10 +574,12 @@ for tf in range(1, NTIMEFRAMES + 1):
    startOrbit = (tf-1 + int(args.production_offset)*NTIMEFRAMES)*orbitsPerTF
    globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : args.first_orbit + startOrbit,
                             "HBFUtils.nHBFPerTF" : orbitsPerTF,
-                            "HBFUtils.startTime" : args.timestamp,
                             "HBFUtils.orbitFirst" : args.first_orbit,
                             "HBFUtils.runNumber" : args.run }
-
+   # we set the timesamp here only if specified explicitely (otherwise it will come from
+   # the simulation GRP and digitization)
+   if (args.timestamp != -1):
+      globalTFConfigValues["HBFUtils.startTime"] = args.timestamp
 
    def putConfigValues(localCF = {}):
      """
@@ -652,10 +682,12 @@ for tf in range(1, NTIMEFRAMES + 1):
             for d in itertools.chain(smallsensorlist, ctp_trigger_inputlist):
                tneeds += [ BKG_HITDOWNLOADER_TASKS[d]['name'] ]
          t = createTask(name=name, needs=tneeds,
-                     tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu=NWORKERS)
+                        tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
          t['cmd'] = ('','ln -nfs ../bkg_Hits*.root . ;')[doembedding]
-         t['cmd'] += commondigicmd + ' --skipDet TPC,TRD '
-         t['cmd'] += ' --ccdb-tof-sa'
+         # t['cmd'] += commondigicmd + ' --skipDet TPC,TRD,FT0,FV0,CTP '
+         t['cmd'] += commondigicmd + ' --onlyDet TOF,CPV,EMC,HMP,PHS,ITS,MFT,MID,MCH,FDD'
+         t['cmd'] += ' --ccdb-tof-sa '
+         t['cmd'] += ('',' --combine-devices ')[args.combine_dpl_devices]
          workflow['stages'].append(t)
          return t
 
@@ -682,14 +714,14 @@ for tf in range(1, NTIMEFRAMES + 1):
       t = det_to_digitask['ALLSMALLER'] if args.combine_smaller_digi==True else createRestDigiTask(name, det)
       det_to_digitask[det]=t
 
-   if args.combine_smaller_digi==False:
+   if True or args.combine_smaller_digi==False:
       # detectors serving CTP need to be treated somewhat special since CTP needs
       # these inputs at the same time --> still need to be made better
       tneeds = [ContextTask['name']]
       t = createTask(name="ft0fv0ctp_digi_" + str(tf), needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
       t['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
-      t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew()
+      t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew() + ('',' --combine-devices')[args.combine_dpl_devices]
       workflow['stages'].append(t)
       det_to_digitask["FT0"]=t
       det_to_digitask["FV0"]=t
@@ -775,7 +807,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                                                     'TPCGasParam',
                                                     'ITSCATrackerParam',
                                                     'MFTClustererParam'])                         \
-                              + " --track-sources " + anchorConfig.get("o2-tof-matcher-workflow-options",{}).get("track-sources",toftracksrcdefault)
+                              + " --track-sources " + anchorConfig.get("o2-tof-matcher-workflow-options",{}).get("track-sources",toftracksrcdefault) + ('',' --combine-devices')[args.combine_dpl_devices]
    workflow['stages'].append(TOFTPCMATCHERtask)
 
    MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[getDigiTaskName("MFT")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -871,11 +903,11 @@ for tf in range(1, NTIMEFRAMES + 1):
       if isActive("MID"):
          pvfinder_matching_sources += ",MID"
          pvfinderneeds += [MIDRECOtask['name']]
-   
+
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-primary-vertexing-workflow ' \
                          + getDPL_global_options() + putConfigValuesNew(['ITSAlpideParam','MFTAlpideParam', 'pvertexer', 'TPCGasParam'], {"NameConf.mDirMatLUT" : ".."})
-   PVFINDERtask['cmd'] += ' --vertexing-sources ' + pvfinder_sources + ' --vertex-track-matching-sources ' + pvfinder_matching_sources
+   PVFINDERtask['cmd'] += ' --vertexing-sources ' + pvfinder_sources + ' --vertex-track-matching-sources ' + pvfinder_matching_sources + ('',' --combine-source-devices')[args.combine_dpl_devices]
    workflow['stages'].append(PVFINDERtask)
 
    if includeFullQC or includeLocalQC:
@@ -995,7 +1027,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        svfinder_sources = "ITS,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF"
        if isActive("MID"):
            svfinder_sources += ",MID"
-   SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources
+   SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + ('',' --combine-source-devices')[args.combine_dpl_devices]
    workflow['stages'].append(SVFINDERtask)
 
   # -----------
@@ -1003,8 +1035,7 @@ for tf in range(1, NTIMEFRAMES + 1):
   # -----------
    # TODO This needs further refinement, sources and dependencies should be constructed dynamically
    aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FDD,CTP,TPC-TRD,ITS-TPC-TRD,EMC'
-   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'], TOFRECOtask['name'],
-               FV0RECOtask['name']]
+   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name']]
    if isActive('FV0'):
      aodneeds += [ FV0RECOtask['name'] ]
      aodinfosources += ',FV0'
@@ -1043,6 +1074,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += ' --lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}'
    AODtask['cmd'] += ' --anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}'
    AODtask['cmd'] += ' --anchor-prod ${ALIEN_JDL_MCANCHOR:-unknown}'
+   AODtask['cmd'] += ('',' --combine-source-devices ')[args.combine_dpl_devices]
    if environ.get('O2DPG_AOD_NOTRUNCATE') != None or environ.get('ALIEN_JDL_O2DPG_AOD_NOTRUNCATE') != None:
       AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
 

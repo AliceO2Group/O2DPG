@@ -53,6 +53,7 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=$O2DPG_ROOT/DATA/production/qc-async/primvtx.json
     [[ -z "$QC_JSON_ITSTPC" ]] && QC_JSON_ITSTPC=$O2DPG_ROOT/DATA/production/qc-async/itstpc.json
     [[ -z "$QC_JSON_ITSTPCTOF" ]] && QC_JSON_ITSTPCTOF=$O2DPG_ROOT/DATA/production/qc-async/itstpctof.json
+    [[ -z "$QC_JSON_PID_FT0TOF" ]] && QC_JSON_PID_FT0TOF=$O2DPG_ROOT/DATA/production/qc-async/pidft0tof.json
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-async/qc-global.json
   fi
 
@@ -93,6 +94,15 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     GLO_JSON_FILE="QC_JSON_$i"
     if has_detector_matching $i && has_matching_qc $i && [ ! -z "${!GLO_JSON_FILE}" ]; then
        add_QC_JSON $i ${!GLO_JSON_FILE}
+    fi
+  done
+
+  # PID QC
+  for i in `echo $LIST_OF_PID | sed "s/,/ /g"`; do
+    PIDDETFORFILE=`echo $i | sed "s/-//g"`
+    PID_JSON_FILE="QC_JSON_PID_$PIDDETFORFILE"
+    if has_pid_qc $i && [ ! -z "${!PID_JSON_FILE}" ]; then
+       add_QC_JSON pid$i ${!PID_JSON_FILE}
     fi
   done
 
