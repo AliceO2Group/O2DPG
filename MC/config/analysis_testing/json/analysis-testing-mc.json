@@ -430,5 +430,29 @@
     },
     "check-mc-particles-indices": {
         "debugMode": "0"
+    },
+    "particles-to-tracks": {
+        "processIndexing": "true"
+    },
+    "pseudorapidity-density": {
+        "estimatorEta": "1",
+        "useEvSel": "false",
+        "useDCAZ": "false",
+        "useDCAXY": "false",
+        "usePtDCAXY": "false",
+        "maxDCAXY": "2.4",
+        "maxDCAZ": "3.2",
+        "usePhiCut": "false",
+        "exclusionPhi": {
+            "values": [
+                [
+                    "4",
+                    "5"
+                ]
+            ]
+        },
+        "processTagging": "true",
+        "processTrackEfficiency": "true",
+        "processGen": "true"
     }
 }
