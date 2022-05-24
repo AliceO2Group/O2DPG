@@ -6,7 +6,8 @@
         "host": "ali-qcdb.cern.ch:8083",
         "username": "not_applicable",
         "password": "not_applicable",
-        "name": "not_applicable"
+        "name": "not_applicable",
+        "maxObjectSize" : "10000000"
       },
       "Activity": {
         "number": "42",
@@ -23,56 +24,6 @@
       }
     },
     "tasks": {
-      "RawDigits": {
-        "active": "true",
-        "className": "o2::quality_control_modules::tpc::RawDigits",
-        "moduleName": "QcTPC",
-        "detectorName": "TPC",
-        "cycleDurationSeconds": "60",
-        "resetAfterCycles": "1",
-        "maxNumberCycles": "-1",
-        "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "random-rawdata",
-          "query_blubb": "input:TPC/RAWDATA"
-        },
-        "taskParameters": {
-          "NRawDigitsNBins": "100",
-          "NRawDigitsXMin": "0",
-          "NRawDigitsXMax": "100",
-          "QmaxNBins": "200",
-          "QmaxXMin": "0",
-          "QmaxXMax": "200",
-          "TimeBinNBins": "600",
-          "TimeBinXMin": "0",
-          "TimeBinXMax": "600",
-          "mergeableOutput": "true"
-        },
-        "location": "local",
-        "localMachines": [
-          "localhost",
-          "epn"
-        ],
-        "remotePort": "47731",
-        "mergingMode": "delta",
-        "remoteMachine": "alio2-cr1-qts01.cern.ch",
-        "localControl": "odc"
-      },
-      "DummyTask": {
-        "active": "true", "" : "this dummy task is to redirect sampled data to a TPC machine which performs additional monitoring",
-        "className": "o2::quality_control_modules::skeleton::SkeletonTask",
-        "moduleName": "QcSkeleton",
-        "detectorName": "TST",
-        "cycleDurationSeconds": "10000000",
-        "maxNumberCycles": "-1",
-        "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "random-rawdata-om"
-        },
-        "location": "remote",
-        "remoteMachine": "tpc-login-ib",
-        "localControl": "odc"
-      },
       "Clusters": {
         "active": "true",
         "className": "o2::quality_control_modules::tpc::Clusters",
@@ -183,45 +134,6 @@
         }
       ],
       "blocking": "false"
-    },
-    {
-      "id": "random-rawdata",
-      "active": "true",
-      "machines": [
-        "localhost",
-        "epn"
-      ],
-      "query": "inputRaw:TPC/RAWDATA",
-      "outputs": "sampled-rawdata:DS/RAWDATA",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.001",
-          "seed": "0",
-          "timesliceId": "tfCounter"
-        }
-      ],
-      "blocking": "false"
-    },
-    {
-      "id": "random-rawdata-om",
-      "active": "true",
-      "machines": [
-        "localhost",
-        "epn"
-      ],
-      "port": "32629",
-      "query": "inputRaw:TPC/RAWDATA",
-      "outputs": "sampled-rawdata:DS2/RAWDATA",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.0005",
-          "seed": "0",
-          "timesliceId": "tfCounter"
-        }
-      ],
-      "blocking": "false"
-    }   
+    }
   ]
 }
