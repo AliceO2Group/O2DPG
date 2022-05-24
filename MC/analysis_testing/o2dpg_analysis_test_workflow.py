@@ -84,6 +84,10 @@ sys.modules[module_name] = o2dpg_workflow_utils
 spec.loader.exec_module(o2dpg_workflow_utils)
 from o2dpg_workflow_utils import createTask, dump_workflow
 
+#######################
+# ANALYSIS definition #
+#######################
+
 # some commong definitions
 ANALYSIS_LABEL = "Analysis"
 ANALYSIS_LABEL_MERGED = f"{ANALYSIS_LABEL}Merged"
@@ -153,6 +157,11 @@ ANALYSES.append(analysis_LK0CFFemto)
 #                               "valid_for": [ANALYSIS_VALID_MC],
 #                               "cmd": "o2-analysis-mm-vertexing-fwd {CONFIG} {AOD}"}
 # ANALYSES.append(analysis_PWGMMFwdVertexing)
+analysis_PWGMMMDnDeta = {"name": "PWGMMMDnDeta",
+                         "expected_output": ["AnalysisResults.root"],
+                         "valid_for": [ANALYSIS_VALID_MC],
+                         "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-mm-particles-to-tracks {CONFIG} | o2-analysis-mm-dndeta {CONFIG} {AOD}"}
+ANALYSES.append(analysis_PWGMMMDnDeta)
 
 def make_merged_analysis(*analysis_names, accept_data_or_mc=ANALYSIS_VALID_MC):
     """merge CMD / DPL piping to one large pipe
@@ -249,6 +258,38 @@ def create_ana_task(name, cmd, output_dir, *, needs=None, shmsegmentsize="--shm-
     task['cmd'] = f"{cmd} {shmsegmentsize} {aodmemoryratelimit} {readers} {extraarguments}"
     return task
 
+def add_analysis_post_processing_tasks(workflow):
+    """add post-processing step to analysis tasks if possible
+
+    Args:
+        workflow: list
+            current list of tasks
+    """
+    analyses_to_add_for = {}
+    # collect analyses in current workflow
+    for task in workflow:
+        if ANALYSIS_LABEL in task["labels"] or ANALYSIS_LABEL_MERGED in task["labels"]:
+            analyses_to_add_for[task["name"]] = task
+
+    for ana in ANALYSES:
+        if not ana["expected_output"]:
+            continue
+        ana_name_raw = ana["name"]
+        post_processing_macro = join(O2DPG_ROOT, "MC", "analysis_testing", "post_processing", f"{ana_name_raw}.C")
+        if not exists(post_processing_macro):
+            continue
+        ana_name = full_ana_name(ana_name_raw)
+        if ana_name not in analyses_to_add_for:
+            continue
+        pot_ana = analyses_to_add_for[ana_name]
+        cwd = pot_ana["cwd"]
+        needs = [ana_name]
+        task = createTask(name=f"{ANALYSIS_LABEL}_post_processing_{ana_name_raw}", cwd=join(cwd, "post_processing"), lab=[ANALYSIS_LABEL, f"{ANALYSIS_LABEL}PostProcessing", ana_name_raw], cpu=1, mem='2000', needs=needs)
+        input_files = ",".join([f"../{eo}" for eo in ana["expected_output"]])
+        cmd = f"\\(\\\"{input_files}\\\",\\\"./\\\"\\)"
+        task["cmd"] = f"root -l -b -q {post_processing_macro}{cmd}"
+        workflow.append(task)
+
 def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, add_merged_task=False, config=None, needs=None):
     """Add default analyses to user workflow
 
@@ -286,6 +327,8 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         task = create_ana_task(ana["name"], ana["cmd"].format(CONFIG=f"--configuration {configuration}", AOD=f"--aod-file {input_aod}"), output_dir, needs=needs, is_mc=is_mc)
         task["labels"].append(ANALYSIS_LABEL_MERGED)
         workflow.append(task)
+    # append potential post-processing
+    add_analysis_post_processing_tasks(workflow)
         
 def add_analysis_qc_upload_tasks(workflow, period_name, run_number, pass_name):
     """add o2-qc-upload-root-objects to specified analysis tasks
