@@ -109,12 +109,12 @@ ANALYSES.append(analysis_MCHistograms)
 analysis_Efficiency = {"name": "Efficiency",
                        "expected_output": ["AnalysisResults.root"],
                        "valid_for": [ANALYSIS_VALID_MC],
-                       "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-qa-efficiency --eff-mc 1 --eff-mc-pos 1 --eff-mc-neg 1 {CONFIG} {AOD}"}
+                       "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-qa-efficiency --eff-mc 1 --eff-mc-pos 1 --eff-mc-neg 1 {CONFIG} {AOD}"}
 ANALYSES.append(analysis_Efficiency)
 analysis_EventTrackQA = {"name": "EventTrackQA",
                          "expected_output": ["AnalysisResults.root"],
                          "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
-                         "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-qa-event-track {CONFIG} {AOD}"}
+                         "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-qa-event-track {CONFIG} {AOD}"}
 ANALYSES.append(analysis_EventTrackQA)
 analysis_Validation = {"name": "Validation",
                        "expected_output": ["AnalysisResults.root"],
@@ -124,12 +124,12 @@ ANALYSES.append(analysis_Validation)
 analysis_PIDFull = {"name": "PIDFull",
                     "expected_output": ["AnalysisResults.root"],
                     "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
-                    "cmd": "o2-analysis-ft0-corrected-table {CONFIG} | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-pid-tof {CONFIG} --add-qa 1 | o2-analysis-pid-tof-full {CONFIG} --add-qa 1 | o2-analysis-pid-tof-beta {CONFIG} --add-qa 1 | o2-analysis-pid-tpc-full {CONFIG} --add-qa 1 {AOD}"}
+                    "cmd": "o2-analysis-ft0-corrected-table {CONFIG} | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-pid-tof {CONFIG} --add-qa 1 | o2-analysis-pid-tof-full {CONFIG} --add-qa 1 | o2-analysis-pid-tof-beta {CONFIG} --add-qa 1 | o2-analysis-pid-tpc-full {CONFIG} --add-qa 1 {AOD}"}
 ANALYSES.append(analysis_PIDFull)
 analysis_PWGMMMFT = {"name": "PWGMMMFT",
                      "expected_output": ["AnalysisResults.root"],
                      "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
-                     "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-mm-dndeta-mft {CONFIG} {AOD}"}
+                     "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-mm-dndeta-mft {CONFIG} {AOD}"}
 ANALYSES.append(analysis_PWGMMMFT)
 analysis_EventSelectionQA = {"name": "EventSelectionQA",
                              "expected_output": ["AnalysisResults.root"],
@@ -149,7 +149,7 @@ ANALYSES.append(analysis_CheckDataModelMC)
 analysis_LK0CFFemto = {"name": "LK0CFFemto",
                        "expected_output": ["AnalysisResults.root", "QAResults.root"],
                        "valid_for": [ANALYSIS_VALID_MC],
-                       "cmd": "o2-analysis-multiplicity-table {CONFIG} --aod-writer-json aodWriterTempConfig.json | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackextension {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-pid-tof {CONFIG} | o2-analysis-pid-tpc {CONFIG} | o2-analysis-lf-lambdakzerobuilder {CONFIG} | o2-analysis-cf-femtodream-producer {CONFIG} {AOD}"}
+                       "cmd": "o2-analysis-multiplicity-table {CONFIG} --aod-writer-json aodWriterTempConfig.json | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-pid-tof {CONFIG} | o2-analysis-pid-tpc {CONFIG} | o2-analysis-lf-lambdakzerobuilder {CONFIG} | o2-analysis-cf-femtodream-producer {CONFIG} {AOD}"}
 ANALYSES.append(analysis_LK0CFFemto)
 # FIXME Taken out, not working at the moment, discussing with the authors
 # analysis_PWGMMFwdVertexing = {"name": "PWGMMFwdVertexing",
