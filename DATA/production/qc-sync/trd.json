@@ -164,7 +164,7 @@
         "dataSource": [
           {
           "type": "Task",
-          "name": "PulseHeightTask",
+          "name": "PulseHeight",
           "MOs": ["trackletsperevent"]
           }
         ]
