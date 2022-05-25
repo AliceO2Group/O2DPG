@@ -33,16 +33,7 @@
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "mid-digits"
-        },
-        "location": "local",
-        "mergingMode": "delta",
-        "localControl": "odc",
-        "localMachines": [
-          "epn",
-          "localhost"
-        ],
-        "remotePort": "47780",
-        "remoteMachine": "alio2-cr1-qme02.cern.ch"
+        }
       },
       "QcTaskMIDClust": {
         "active": "true",
@@ -54,16 +45,7 @@
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "mid-clusters"
-        },
-        "location": "local",
-        "mergingMode": "delta",
-        "localControl": "odc",
-        "localMachines": [
-          "epn",
-          "localhost"
-        ],
-        "remotePort": "47781",
-        "remoteMachine": "alio2-cr1-qme02.cern.ch"
+        }
       },
       "QcTaskMIDTracks": {
         "active": "true",
@@ -75,16 +57,7 @@
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "mid-tracks"
-        },
-        "location": "local",
-        "mergingMode": "delta",
-        "localControl": "odc",
-        "localMachines": [
-          "epn",
-          "localhost"
-        ],
-        "remotePort": "47782",
-        "remoteMachine": "alio2-cr1-qme02.cern.ch"
+        }
       }
     },
     "checks": {
@@ -144,10 +117,7 @@
     {
       "id": "mid-tracks",
       "active": "true",
-      "machines": [
-        "epn",
-        "localhost"
-      ],
+      "machines": [],
       "query": "tracks:MID/TRACKS/0;trackrofs:MID/TRACKROFS/0",
       "samplingConditions": [
         {
@@ -161,10 +131,7 @@
     {
       "id": "mid-clusters",
       "active": "true",
-      "machines": [
-        "epn",
-        "localhost"
-      ],
+      "machines": [],
       "query": "clusters:MID/TRACKCLUSTERS/0;clusterrofs:MID/TRCLUSROFS/0",
       "samplingConditions": [
         {
@@ -178,10 +145,7 @@
     {
       "id": "mid-digits",
       "active": "true",
-      "machines": [
-        "epn",
-        "localhost"
-      ],
+      "machines": [],
       "query": "digits:MID/DATA/0;digitrofs:MID/DATAROF/0;calib:MID/DATA/1;calibrofs:MID/DATAROF/1;fet:MID/DATA/2;fetrofs:MID/DATAROF/2",
       "samplingConditions": [
         {
