@@ -11,7 +11,6 @@ TString prefix = "";
 int correlationCase = 0; // at the moment I assume no error correlation ..
 
 
-
 struct results {
   bool passed;
   double value;
@@ -204,6 +203,8 @@ void ReleaseValidation(const TString filename1, const TString filename2,
     SelectCriticalHistos();
   }
   fileSummaryOutput->Close();
+
+  WriteToJson(hSummaryCheck);
 }
 
 // setting the labels of the Z axis for the colz plot 
@@ -578,6 +579,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
     c->Print("plots.pdf[");
   c->Divide(2, 1);
   c->cd(1);
+  gPad->SetTitle(hA->GetName());
   TString hcln = hA->ClassName();
   TString optD = "";
   if (hcln.Contains("TH2"))
@@ -586,6 +588,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
   hA->SetMarkerColor(1);
   hA->Scale(1. / hA->GetEntries()); // normalize to the number of entries
   TH1* hAc = (TH1*)hA->DrawClone(optD.Data());
+  hAc->SetTitle(hA->GetName());
   hAc->SetStats(0);
   hB->SetLineColor(2);
   hB->SetMarkerColor(2);
@@ -634,6 +637,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
   } else {
     TH1* hArat = (TH1*)hA->Clone("hArat");
     hArat->Divide(hB);
+    hArat->SetTitle(Form("%s_ratio",hA->GetName()));
     for (int k = 1; k <= hArat->GetNbinsX(); k++)
       hArat->SetBinError(k, 0.000000001);
     hArat->SetMinimum(
@@ -686,6 +690,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
   TH1* hDiff = (TH1*)hACl->Clone("hDiff");
   hDiff->SetStats(0);
   hDiff->Add(hBCl, -1);
+  hDiff->SetTitle(Form("%s_diff",hA->GetName()));
   hDiff->DrawClone(noptD.Data());
 
   TPaveStats* stACl =
@@ -720,14 +725,17 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
   } else {
     TH1* hDiffRel = (TH1*)hDiff->Clone("hDiffRel");
     hDiffRel->Divide(hBCl);
+    hDiffRel->SetTitle(Form("%s_diffrel",hA->GetName()));
     for (int k = 1; k <= hDiffRel->GetNbinsX(); k++)
       hDiffRel->SetBinError(k, 0.000000001);
+    /*
     hDiffRel->SetMinimum(TMath::Max(
       0.98, 0.95 * hDiffRel->GetBinContent(hDiffRel->GetMinimumBin()) -
               hDiffRel->GetBinError(hDiffRel->GetMinimumBin())));
     hDiffRel->SetMaximum(TMath::Min(
       1.02, 1.05 * hDiffRel->GetBinContent(hDiffRel->GetMaximumBin()) +
               hDiffRel->GetBinError(hDiffRel->GetMaximumBin())));
+    */
     hDiffRel->SetStats(0);
     TString hDiffRelcln = hDiffRel->ClassName();
     if (hDiffRelcln.Contains("TH2"))
@@ -774,10 +782,10 @@ void DrawRelativeDifference(TH1* hR)
   hR->SetMarkerStyle(20);
   hR->SetMarkerSize(0.5);
   hR->SetMinimum(
-    TMath::Max(0.98, 0.95 * hR->GetBinContent(hR->GetMinimumBin()) -
+    TMath::Max(-0.02, 1.05 * hR->GetBinContent(hR->GetMinimumBin()) -
                        hR->GetBinError(hR->GetMinimumBin())));
   hR->SetMaximum(
-    TMath::Min(1.02, 1.05 * hR->GetBinContent(hR->GetMaximumBin()) +
+    TMath::Min(0.02, 1.05 * hR->GetBinContent(hR->GetMaximumBin()) +
                        hR->GetBinError(hR->GetMaximumBin())));
   hR->SetStats(0);
   hR->GetYaxis()->SetTitle("RelativeDifference");
@@ -831,7 +839,7 @@ void SelectCriticalHistos()
         TCanvas* ccc =
           static_cast<TCanvas*>(fileSummaryOutput->Get(Oname.Data()));
         // ccc->Draw();
-        ccc->Print("critical.pdf[");
+        ccc->Print("critical.pdf");
       }
     }
   }
@@ -1036,30 +1044,86 @@ struct results CompareNentr(TH1* hA, TH1* hB, double val){
   return res;
 }
 
-/*
+
 void WriteToJson(TH2F* hSum){
   std::vector<std::string> good, warning, bad, nc, critical_nc;
   int nhists=hSum->GetYaxis()->GetNbins();
-  Json::Value json;   
-  Json::Value vec_good(Json::arrayValue),vec_warning(Json::arrayValue),vec_bad(Json::arrayValue),vec_nc(Json::arrayValue),vec_critical_nc(Json::arrayValue);
+
   for(int i=1;i<=nhists;i++){
     double res = hSum->GetBinContent(1,i);
     const char* label = hSum->GetYaxis()->GetBinLabel(i);
     if (res==0)
-      vec_bad.append(Json::Value(label));
+      bad.push_back(label);
     if (res==0.5)
-      vec_warning.append(Json::Value(label));
+      warning.push_back(label);
     if (res==1)
-      vec_good.append(Json::Value(label));
+      good.push_back(label);
     if (res==-0.25)
-      vec_nc.append(Json::Value(label));
+      nc.push_back(label);
     if (res==-0.5)
-      vec_critical_nc.append(Json::Value(label));
+      critical_nc.push_back(label);
   }
-  json["GOOD"]=vec_good;
-  json["BAD"]=vec_bad;
-  json["WARNING"]=vec_warning;
-  json["NC"]=vec_nc;
-  json["NC_CRIT"]=vec_critical_nc;
-  std::cout << json << std::endl;
-}*/
+  auto good_json = TBufferJSON::ToJSON(&good);
+  auto warning_json = TBufferJSON::ToJSON(&warning);
+  auto bad_json = TBufferJSON::ToJSON(&bad);
+  auto nc_json = TBufferJSON::ToJSON(&nc);
+  auto critical_nc_json = TBufferJSON::ToJSON(&critical_nc);
+
+
+  std::map<std::string,std::string> data;
+  data["GOOD"] = good_json;
+  data["WARNING"] = warning_json;
+  data["BAD"] = bad_json;
+  data["NONCRIT_NC"] = nc_json;
+  data["CRIT_NC"] = critical_nc_json;
+ 
+  auto json = TBufferJSON::ToJSON(&data, TBufferJSON::kMapAsObject);
+
+  std::ofstream jsonout("Summary.json");
+  jsonout << json;
+  jsonout.close();
+
+  std::ofstream jsonout2("Summary2.json");
+  jsonout2 << "{\n";
+  jsonout2 << "\t\"GOOD\":[";
+  for (std::string s : good){
+    jsonout2 << "\"" << s <<"\"";
+    if (s!=good.back())
+      jsonout2 << ",";
+  }
+  jsonout2 << "],\n";
+  jsonout2 << "\t\"WARNING\":[";
+  for (std::string s : warning){
+    jsonout2 << "\"" << s <<"\"";
+    if (s!=warning.back())
+      jsonout2 << ",";
+  }
+  jsonout2 << "],\n";
+  jsonout2 << "\t\"BAD\":[";
+  for (std::string s : bad){
+    jsonout2 << "\"" << s <<"\"";
+    if (s!=bad.back())
+      jsonout2 << ",";
+  }
+  jsonout2 << "],\n";
+  jsonout2 << "\t\"CRIT_NC\":[";
+  for (std::string s : critical_nc){
+    jsonout2 << "\"" << s <<"\"";
+    if (s!=critical_nc.back())
+      jsonout2 << ",";
+  }
+  jsonout2 << "],\n";
+  jsonout2 << "\t\"NONCRIT_NC\":[";
+  for (std::string s : nc){
+    jsonout2 << "\"" << s <<"\"";
+    if (s!=nc.back())
+      jsonout2 << ",";
+  }
+  jsonout2 << "]\n";
+  jsonout2 << "}";
+
+
+  jsonout2.close();
+
+
+}
