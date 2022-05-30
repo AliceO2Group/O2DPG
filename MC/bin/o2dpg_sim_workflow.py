@@ -95,7 +95,7 @@ parser.add_argument('--early-tf-cleanup',action='store_true', help='whether to c
 # power feature (for playing) --> does not appear in help message
 #  help='Treat smaller sensors in a single digitization')
 parser.add_argument('--combine-smaller-digi', action='store_true', help=argparse.SUPPRESS)
-parser.add_argument('--combine-dpl-devices', action='store_true', help=argparse.SUPPRESS)
+parser.add_argument('--no-combine-dpl-devices', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring)
                                                             # (consider doing this rather in O2 digitization code directly)
@@ -687,7 +687,7 @@ for tf in range(1, NTIMEFRAMES + 1):
          # t['cmd'] += commondigicmd + ' --skipDet TPC,TRD,FT0,FV0,CTP '
          t['cmd'] += commondigicmd + ' --onlyDet TOF,CPV,EMC,HMP,PHS,ITS,MFT,MID,MCH,FDD'
          t['cmd'] += ' --ccdb-tof-sa '
-         t['cmd'] += ('',' --combine-devices ')[args.combine_dpl_devices]
+         t['cmd'] += (' --combine-devices ','')[args.no_combine_dpl_devices]
          workflow['stages'].append(t)
          return t
 
@@ -721,7 +721,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       t = createTask(name="ft0fv0ctp_digi_" + str(tf), needs=tneeds,
                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
       t['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
-      t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew() + ('',' --combine-devices')[args.combine_dpl_devices]
+      t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew() + (' --combine-devices','')[args.no_combine_dpl_devices]
       workflow['stages'].append(t)
       det_to_digitask["FT0"]=t
       det_to_digitask["FV0"]=t
@@ -807,7 +807,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                                                     'TPCGasParam',
                                                     'ITSCATrackerParam',
                                                     'MFTClustererParam'])                         \
-                              + " --track-sources " + anchorConfig.get("o2-tof-matcher-workflow-options",{}).get("track-sources",toftracksrcdefault) + ('',' --combine-devices')[args.combine_dpl_devices]
+                              + " --track-sources " + anchorConfig.get("o2-tof-matcher-workflow-options",{}).get("track-sources",toftracksrcdefault) + (' --combine-devices','')[args.no_combine_dpl_devices]
    workflow['stages'].append(TOFTPCMATCHERtask)
 
    MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[getDigiTaskName("MFT")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -907,7 +907,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-primary-vertexing-workflow ' \
                          + getDPL_global_options() + putConfigValuesNew(['ITSAlpideParam','MFTAlpideParam', 'pvertexer', 'TPCGasParam'], {"NameConf.mDirMatLUT" : ".."})
-   PVFINDERtask['cmd'] += ' --vertexing-sources ' + pvfinder_sources + ' --vertex-track-matching-sources ' + pvfinder_matching_sources + ('',' --combine-source-devices')[args.combine_dpl_devices]
+   PVFINDERtask['cmd'] += ' --vertexing-sources ' + pvfinder_sources + ' --vertex-track-matching-sources ' + pvfinder_matching_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
    workflow['stages'].append(PVFINDERtask)
 
    if includeFullQC or includeLocalQC:
@@ -1027,7 +1027,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        svfinder_sources = "ITS,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF"
        if isActive("MID"):
            svfinder_sources += ",MID"
-   SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + ('',' --combine-source-devices')[args.combine_dpl_devices]
+   SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
    workflow['stages'].append(SVFINDERtask)
 
   # -----------
@@ -1074,7 +1074,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += ' --lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}'
    AODtask['cmd'] += ' --anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}'
    AODtask['cmd'] += ' --anchor-prod ${ALIEN_JDL_MCANCHOR:-unknown}'
-   AODtask['cmd'] += ('',' --combine-source-devices ')[args.combine_dpl_devices]
+   AODtask['cmd'] += (' --combine-source-devices ','')[args.no_combine_dpl_devices]
    if environ.get('O2DPG_AOD_NOTRUNCATE') != None or environ.get('ALIEN_JDL_O2DPG_AOD_NOTRUNCATE') != None:
       AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
 
