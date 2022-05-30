@@ -67,7 +67,7 @@
         "localhost"
       ],
       "port": "30333",
-      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS",
+      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS;diafreq:TOF/DIAFREQ/0",
       "samplingConditions": [
         {
           "condition": "random",
