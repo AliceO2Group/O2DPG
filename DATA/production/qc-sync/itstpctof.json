@@ -44,7 +44,7 @@
         "mergingMode": "delta",
         "localControl": "odc",
         "taskParameters" : {
-          "GID" : "ITS-TPC,ITS-TPC-TOF",
+          "GID" : "ITS-TPC,ITS-TPC-TOF,TPC",
           "verbose" : "false",
           "minPtCut" : "0.3f",
           "etaCut" : "0.8f",
