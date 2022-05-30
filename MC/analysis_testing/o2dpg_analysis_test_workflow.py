@@ -108,7 +108,7 @@ analysis_MCHistograms = {"name": "MCHistograms",
 ANALYSES.append(analysis_MCHistograms)
 analysis_Efficiency = {"name": "Efficiency",
                        "expected_output": ["AnalysisResults.root"],
-                       "valid_for": [ANALYSIS_VALID_MC],
+                       "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
                        "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-qa-efficiency --eff 1 --eff-pos 1 --eff-neg 1 {CONFIG} {AOD}"}
 ANALYSES.append(analysis_Efficiency)
 analysis_EventTrackQA = {"name": "EventTrackQA",
