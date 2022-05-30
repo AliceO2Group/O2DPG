@@ -7,10 +7,10 @@ fi
 
 if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
   if [[ $EPNSYNCMODE == 1 || "0$GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL" == "01" ]]; then
-    [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=/home/rmunzer/odc/config/tpcQCTasks_multinode_ALL.json
-    [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=/home/jian/jliu/itsEPN-merger.json
+    [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=consul://o2/components/qc/ANY/any/tpc-full-qcmn
+    [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=consul://o2/components/qc/ANY/any/its-qcmn-epn-full
     [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-qcmn
-    [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=/home/fnoferin/public/tof-qc-globalrun.json
+    [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=consul://o2/components/qc/ANY/any/tof-full-qcmn
     [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=/home/afurs/O2DataProcessing/testing/detectors/FDD/fdd-digits-ds.json
     [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=/home/afurs/O2DataProcessing/testing/detectors/FT0/ft0-digits-ds.json
     [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=/home/afurs/O2DataProcessing/testing/detectors/FV0/fv0-digits-ds.json
