@@ -143,11 +143,11 @@ get_proxy_connection()
 
   # setting the type of connection
   if [[ $2 == "input" ]]; then
-    local CONNECTION="method=bind,type=pull"
+    local CONNECTION="method=bind,type=sub"
     local NAMEPROXY="--proxy-name aggregator-proxy-$1"
     local NAMEPROXYCHANNEL=
   elif [[ $2 == "output" ]]; then
-    local CONNECTION="method=connect,type=push"
+    local CONNECTION="method=connect,type=pub"
     local NAMEPROXY="--proxy-name calib-output-proxy-$1"
     local NAMEPROXYCHANNEL="--proxy-channel-name aggregator-proxy-$1"
   else
