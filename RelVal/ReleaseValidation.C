@@ -445,7 +445,7 @@ void WriteProfile(TProfile* hProf, TDirectory* outDir, std::string const& curren
 // functionality for histogram comparison //
 ////////////////////////////////////////////
 
-
+// fills the result of a single test into the histogram displaying all test results
 void FillhTests(TH2F* hTests,const char* histName, results testResult){
   if(testResult.comparable){
     if (testResult.passed == false) {
@@ -467,7 +467,7 @@ void FillhTests(TH2F* hTests,const char* histName, results testResult){
   }
 }
 
-
+// keeps track if there was at least one failed/critical failed/non-comparable/... test
 void SetTestResults(results testResult,bool &test_failed, bool &criticaltest_failed, bool &test_nc, bool &criticaltest_nc){
   if (!testResult.passed){
     test_failed=true;
@@ -848,6 +848,7 @@ void SelectCriticalHistos()
 }
 
 
+// chi2. critical test
 struct results CompareChiSquare(TH1* hA, TH1* hB, double val){
   struct results res;
   res.testname="Chi2 test";
@@ -855,6 +856,7 @@ struct results CompareChiSquare(TH1* hA, TH1* hB, double val){
 
   res.passed=true;
 
+  //not comparable if some difference in the bins is detected
   if (!PotentiallySameAxes(hA,hB)){
     res.comparable=false;
     printf("%s: %s can not be performed\n",hA->GetName(),res.testname.Data());
@@ -935,6 +937,7 @@ struct results CompareChiSquare(TH1* hA, TH1* hB, double val){
 }
 
 
+//(normalized) difference of bin content. critical test
 struct results CompareBinContent(TH1* hA, TH1* hB, double val){
   struct results res;
   res.testname="Bin cont test";
@@ -943,6 +946,7 @@ struct results CompareBinContent(TH1* hA, TH1* hB, double val){
 
   res.passed=true;
 
+  //not comparable if some difference in the bins is detected
   if (!PotentiallySameAxes(hA,hB)){
     res.comparable=false;
     printf("%s: %s can not be performed\n",hA->GetName(),res.testname.Data());
@@ -1007,7 +1011,7 @@ struct results CompareBinContent(TH1* hA, TH1* hB, double val){
 }
 
 
-
+//compare number of entries. non-critical
 struct results CompareNentr(TH1* hA, TH1* hB, double val){
   struct results res;
   res.testname="Num entries test";
@@ -1016,6 +1020,7 @@ struct results CompareNentr(TH1* hA, TH1* hB, double val){
 
   res.passed=true;
 
+  //check only if the range of the histogram is the same, do no care about bins
   if (!PotentiallySameRange(hA,hB)){
     res.comparable=false;
     printf("%s: %s can not be performed\n",hA->GetName(),res.testname.Data());
@@ -1045,6 +1050,7 @@ struct results CompareNentr(TH1* hA, TH1* hB, double val){
 }
 
 
+//write the result of the check into a .json file. One list for each possible outcome
 void WriteToJson(TH2F* hSum){
   std::vector<std::string> good, warning, bad, nc, critical_nc;
   int nhists=hSum->GetYaxis()->GetNbins();
@@ -1063,67 +1069,47 @@ void WriteToJson(TH2F* hSum){
     if (res==-0.5)
       critical_nc.push_back(label);
   }
-  auto good_json = TBufferJSON::ToJSON(&good);
-  auto warning_json = TBufferJSON::ToJSON(&warning);
-  auto bad_json = TBufferJSON::ToJSON(&bad);
-  auto nc_json = TBufferJSON::ToJSON(&nc);
-  auto critical_nc_json = TBufferJSON::ToJSON(&critical_nc);
-
-
-  std::map<std::string,std::string> data;
-  data["GOOD"] = good_json;
-  data["WARNING"] = warning_json;
-  data["BAD"] = bad_json;
-  data["NONCRIT_NC"] = nc_json;
-  data["CRIT_NC"] = critical_nc_json;
- 
-  auto json = TBufferJSON::ToJSON(&data, TBufferJSON::kMapAsObject);
+  
 
   std::ofstream jsonout("Summary.json");
-  jsonout << json;
-  jsonout.close();
-
-  std::ofstream jsonout2("Summary2.json");
-  jsonout2 << "{\n";
-  jsonout2 << "\t\"GOOD\":[";
+  jsonout << "{\n";
+  jsonout << "\t\"GOOD\":[";
   for (std::string s : good){
-    jsonout2 << "\"" << s <<"\"";
+    jsonout << "\"" << s <<"\"";
     if (s!=good.back())
-      jsonout2 << ",";
+      jsonout << ",";
   }
-  jsonout2 << "],\n";
-  jsonout2 << "\t\"WARNING\":[";
+  jsonout << "],\n";
+  jsonout << "\t\"WARNING\":[";
   for (std::string s : warning){
-    jsonout2 << "\"" << s <<"\"";
+    jsonout << "\"" << s <<"\"";
     if (s!=warning.back())
-      jsonout2 << ",";
+      jsonout << ",";
   }
-  jsonout2 << "],\n";
-  jsonout2 << "\t\"BAD\":[";
+  jsonout << "],\n";
+  jsonout << "\t\"BAD\":[";
   for (std::string s : bad){
-    jsonout2 << "\"" << s <<"\"";
+    jsonout << "\"" << s <<"\"";
     if (s!=bad.back())
-      jsonout2 << ",";
+      jsonout << ",";
   }
-  jsonout2 << "],\n";
-  jsonout2 << "\t\"CRIT_NC\":[";
+  jsonout << "],\n";
+  jsonout << "\t\"CRIT_NC\":[";
   for (std::string s : critical_nc){
-    jsonout2 << "\"" << s <<"\"";
+    jsonout << "\"" << s <<"\"";
     if (s!=critical_nc.back())
-      jsonout2 << ",";
+      jsonout << ",";
   }
-  jsonout2 << "],\n";
-  jsonout2 << "\t\"NONCRIT_NC\":[";
+  jsonout << "],\n";
+  jsonout << "\t\"NONCRIT_NC\":[";
   for (std::string s : nc){
-    jsonout2 << "\"" << s <<"\"";
+    jsonout << "\"" << s <<"\"";
     if (s!=nc.back())
-      jsonout2 << ",";
+      jsonout << ",";
   }
-  jsonout2 << "]\n";
-  jsonout2 << "}";
+  jsonout << "]\n";
+  jsonout << "}";
 
 
-  jsonout2.close();
-
-
+  jsonout.close();
 }
