@@ -94,7 +94,7 @@ parser.add_argument('--early-tf-cleanup',action='store_true', help='whether to c
 
 # power feature (for playing) --> does not appear in help message
 #  help='Treat smaller sensors in a single digitization')
-parser.add_argument('--combine-smaller-digi', action='store_true', help=argparse.SUPPRESS)
+parser.add_argument('--no-combine-smaller-digi', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--no-combine-dpl-devices', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring)
@@ -706,25 +706,24 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    det_to_digitask={}
 
-   if args.combine_smaller_digi==True:
+   if not args.no_combine_smaller_digi==True:
       det_to_digitask['ALLSMALLER']=createRestDigiTask("restdigi_"+str(tf))
 
    for det in smallsensorlist:
       name=str(det).lower() + "digi_" + str(tf)
-      t = det_to_digitask['ALLSMALLER'] if args.combine_smaller_digi==True else createRestDigiTask(name, det)
+      t = det_to_digitask['ALLSMALLER'] if (not args.no_combine_smaller_digi==True) else createRestDigiTask(name, det)
       det_to_digitask[det]=t
 
-   if True or args.combine_smaller_digi==False:
-      # detectors serving CTP need to be treated somewhat special since CTP needs
-      # these inputs at the same time --> still need to be made better
-      tneeds = [ContextTask['name']]
-      t = createTask(name="ft0fv0ctp_digi_" + str(tf), needs=tneeds,
-                     tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
-      t['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
-      t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew() + (' --combine-devices','')[args.no_combine_dpl_devices]
-      workflow['stages'].append(t)
-      det_to_digitask["FT0"]=t
-      det_to_digitask["FV0"]=t
+   # detectors serving CTP need to be treated somewhat special since CTP needs
+   # these inputs at the same time --> still need to be made better
+   tneeds = [ContextTask['name']]
+   t = createTask(name="ft0fv0ctp_digi_" + str(tf), needs=tneeds,
+                  tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
+   t['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
+   t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew() + (' --combine-devices','')[args.no_combine_dpl_devices]
+   workflow['stages'].append(t)
+   det_to_digitask["FT0"]=t
+   det_to_digitask["FV0"]=t
 
    def getDigiTaskName(det):
       t = det_to_digitask.get(det)
