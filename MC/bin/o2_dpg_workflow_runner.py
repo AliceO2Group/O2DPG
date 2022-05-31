@@ -1031,6 +1031,9 @@ class WorkflowExecutor:
                """initialize some env variables that speed up ROOT init
                and prevent ROOT from spawning many short-lived child
                processes"""
+               if os.environ.get('ROOT_LDSYSPATH')!=None and os.environ.get('ROOT_CPPSYSINCL')!=None:
+                  # do nothing if already defined
+                  return
 
                # a) the PATH for system libraries
                # search taken from ROOT TUnixSystem
