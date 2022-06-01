@@ -32,7 +32,7 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=$O2DPG_ROOT/DATA/production/qc-sync/fv0.json
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-sync/emc.json
     [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=$O2DPG_ROOT/DATA/production/qc-sync/mch.json
-    [[ -z "$QC_JSON_MID" ]] && has_processing_step MID_RECO && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid.json || QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid-digits.json
+    [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid-digits.json && has_processing_step MID_RECO && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid.json
     [[ -z "$QC_JSON_CPV" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-sync/cpv.json
     [[ -z "$QC_JSON_PHS" ]] && QC_JSON_PHS=$O2DPG_ROOT/DATA/production/qc-sync/phs.json
     [[ -z "$QC_JSON_TRD" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-sync/trd.json
