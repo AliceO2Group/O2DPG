@@ -684,8 +684,13 @@ for tf in range(1, NTIMEFRAMES + 1):
          t = createTask(name=name, needs=tneeds,
                         tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
          t['cmd'] = ('','ln -nfs ../bkg_Hits*.root . ;')[doembedding]
-         # t['cmd'] += commondigicmd + ' --skipDet TPC,TRD,FT0,FV0,CTP '
-         t['cmd'] += commondigicmd + ' --onlyDet TOF,CPV,EMC,HMP,PHS,ITS,MFT,MID,MCH,FDD'
+         detlist = ''
+         for d in smallsensorlist:
+             if isActive(d):
+                if len(detlist) > 0:
+                   detlist += ','
+                detlist += d
+         t['cmd'] += commondigicmd + ' --onlyDet ' + detlist
          t['cmd'] += ' --ccdb-tof-sa '
          t['cmd'] += (' --combine-devices ','')[args.no_combine_dpl_devices]
          workflow['stages'].append(t)
