@@ -32,8 +32,8 @@ cp $O2DPG_ROOT/DATA/production/configurations/2021/OCT/${ALIEN_JDL_LPMPASSNAME:-
 sed -i 's/GPU_global.dEdxUseFullGainMap=1;GPU_global.dEdxDisableResidualGainMap=1/GPU_global.dEdxSplineTopologyCorrFile=splines_for_dedx_V1_MC_iter0_PP.root;GPU_global.dEdxDisableTopologyPol=1;GPU_global.dEdxDisableGainMap=1;GPU_global.dEdxDisableResidualGainMap=1;GPU_global.dEdxDisableResidualGain=1/' setenv_extra.sh
 chmod +x async_pass.sh
 
-# take out line running the workflow (we don't have data input)
-sed -i '/WORKFLOWMODE=run/d' async_pass.sh
+# take out line running the workflow (if we don't have data input)
+[ ${CTF_TEST_FILE} ] || sed -i '/WORKFLOWMODE=run/d' async_pass.sh
 
 # remove comments in order to set ALIEN_JDL stuff
 # (if not set already)
@@ -44,13 +44,19 @@ fi
 sed -i 's/JDL_ANCHORYEAR/JDL_LPMANCHORYEAR/' async_pass.sh
 
 # set number of timeframes to xx if necessary
-# sed -i 's/NTIMEFRAMES=-1/NTIMEFRAMES=xx/' async_pass.sh
+sed -i 's/NTIMEFRAMES=-1/NTIMEFRAMES=1/' async_pass.sh
 
 [[ ! -f commonInput.tgz ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/commonInput.tgz file:.
 [[ ! -f runInput_${RUNNUMBER} ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/runInput_${RUNNUMBER}.tgz file:.
 [[ ! -f TPC_calibdEdx.220301.tgz ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/TPC_calibdEdx.220301.tgz file:.
 tar -xzf TPC_calibdEdx.220301.tgz
 cp calibdEdx.pol/*.root .
+tar -xzf commonInput.tgz
+
+# hack to have o2sim_geometry.root file present if not part of download but -aligned was
+if [[ -f o2sim_geometry-aligned.root && ! -f o2sim_geometry.root ]]; then
+   ln -s o2sim_geometry-aligned.root o2sim_geometry.root
+fi
 
 # create workflow ---> creates the file that can be parsed
 export IGNORE_EXISTING_SHMFILES=1
@@ -58,7 +64,13 @@ touch list.list
 ALIEN_JDL_LPMPRODUCTIONTAG_KEEP=$ALIEN_JDL_LPMPRODUCTIONTAG
 echo "Substituting ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG with ALIEN_JDL_LPMANCHORPRODUCTION=$ALIEN_JDL_LPMANCHORPRODUCTION for simulating reco pass..."
 ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMANCHORPRODUCTION
-./async_pass.sh
+./async_pass.sh ${CTF_TEST_FILE:-""} 2&> async_pass_log.log
+RECO_RC=$?
+echo "RECO finished with ${RECO_RC}"
+if [ "${NO_MC}" ]; then
+  return ${RECO_RC} 2>/dev/null || exit ${RECO_RC} # optionally quit here and don't do MC (useful for testing)
+fi
+
 ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG_KEEP
 echo "Setting back ALIEN_JDL_LPMPRODUCTIONTAG to $ALIEN_JDL_LPMPRODUCTIONTAG"
 
