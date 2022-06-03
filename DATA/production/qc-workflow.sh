@@ -10,7 +10,7 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=consul://o2/components/qc/ANY/any/tpc-full-qcmn
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=consul://o2/components/qc/ANY/any/its-qcmn-epn-full
     [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-qcmn
-    if [[ -z "$QC_JSON_TOF" ]]; then 
+    if [[ -z "$QC_JSON_TOF" ]]; then
       if has_detector_flp_processing TOF; then
         QC_JSON_TOF=consul://o2/components/qc/ANY/any/tof-full-qcmn
       else
@@ -160,7 +160,7 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
 fi
 
 if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
-  add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM:---local --host ${QC_HOST:-localhost}} ${QC_CONFIG}" "" 0
+  add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM:---local --host ${QC_HOST:-localhost}} ${QC_CONFIG}"
 fi
 
 true # everything OK up to this point, so the script should return 0 (it is !=0 if the last check failed)
