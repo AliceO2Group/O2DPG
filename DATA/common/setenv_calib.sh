@@ -140,13 +140,23 @@ get_proxy_connection()
 
   # setting the type of connection
   if [[ $2 == "input" ]]; then
-    local CONNECTION="method=bind,type=sub"
+    local CONNECTION="method=bind"
     local NAMEPROXY="--proxy-name aggregator-proxy-$1"
     local NAMEPROXYCHANNEL=
+    if workflow_has_parameter CALIB_LOCAL_AGGREGATOR; then
+      CONNECTION+=",type=pull"
+    else
+      CONNECTION+=",type=sub"
+    fi
   elif [[ $2 == "output" ]]; then
-    local CONNECTION="method=connect,type=pub"
+    local CONNECTION="method=connect"
     local NAMEPROXY="--proxy-name calib-output-proxy-$1"
     local NAMEPROXYCHANNEL="--proxy-channel-name aggregator-proxy-$1"
+    if workflow_has_parameter CALIB_LOCAL_AGGREGATOR; then
+      CONNECTION+=",type=push"
+    else
+      CONNECTION+=",type=pub"
+    fi
   else
     echo "parameter 2 should be either 'input' or 'output'"
     exit 2
