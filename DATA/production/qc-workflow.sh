@@ -109,8 +109,8 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     fi
   done
 
-  # matching / vertexing QC
-  if [ ! -z "$QC_JSON_TOF_MATCH" ]; then
+  # TOF matching
+  if has_detector_qc TOF && [ ! -z "$QC_JSON_TOF_MATCH" ]; then
     add_QC_JSON TOF ${QC_JSON_TOF_MATCH}
   fi
 
