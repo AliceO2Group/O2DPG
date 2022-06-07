@@ -30,9 +30,9 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json
     if [[ -z "$QC_JSON_TOF_MATCH" ]]; then
        if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD ; then
-         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctrdtof.json
+         QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctrdtof
        elif has_tof_matching_source ITS-TPC ; then
-         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctof.json
+         QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctof
        fi
     fi
   elif [[ $SYNCMODE == 1 ]]; then
