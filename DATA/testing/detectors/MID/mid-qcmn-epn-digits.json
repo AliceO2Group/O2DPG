@@ -55,7 +55,7 @@
       "id": "mid-digits",
       "active": "true",
       "machines": [],
-      "query": "digits:MID/DATA/0;digitrofs:MID/DATAROF/0;calib:MID/DATA/1;calibrofs:MID/DATAROF/1;fet:MID/DATA/2;fetrofs:MID/DATAROF/2",
+      "query": "digits:MID/DATA;digitrofs:MID/DATAROF",
       "samplingConditions": [
         {
           "condition": "random",
