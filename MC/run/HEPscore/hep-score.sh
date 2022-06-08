@@ -27,7 +27,7 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 5020 -col pp -gen pythia8 -proc 
                                            -tf ${NTIMEFRAMES} -nb ${NBKGEVENTS}              \
                                            -ns ${NSIGEVENTS} -e ${SIMENGINE}                 \
                                            -j ${NWORKERS} --embedding -interactionRate 50000 \
-                                           --timestamp 1635659148972 -seed 1
+                                           -run 310000 -seed 1
 
 # timestamp chosen to correspond to a real data taking run
 
