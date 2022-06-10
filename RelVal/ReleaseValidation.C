@@ -45,7 +45,7 @@ void SelectCriticalHistos();
 void createTestsSummaryPlot(TFile* file, TString const& obj);
 bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefix = "");
 void SetZLabels(TAxis* axis);
-void WriteToJson(TH2F* hSum);
+void WriteToJson(TH2F* hSumCheck, TH2F* hSumTests);
 
 bool checkFileOpen(TFile* file)
 {
@@ -209,7 +209,7 @@ void ReleaseValidation(const TString filename1, const TString filename2,
   }
   fileSummaryOutput->Close();
 
-  WriteToJson(hSummaryCheck);
+  WriteToJson(hSummaryCheck,hSummaryTests);
 }
 
 // setting the labels of the Z axis for the colz plot
@@ -219,9 +219,9 @@ void SetZLabels(TAxis* axis)
   axis->SetNdivisions(10, kFALSE);
   axis->SetTickLength(0.);
   axis->ChangeLabel(1, -1, 0, -1, -1, -1, "");
-  axis->ChangeLabel(2, -1, -1, -1, -1, -1, "N.C. (crit.)");
+  axis->ChangeLabel(2, -1, -1, -1, -1, -1, "#splitline{NOT COMPARABLE}{(critical)}");
   axis->ChangeLabel(3, -1, 0, -1, -1, -1, "");
-  axis->ChangeLabel(4, -1, -1, -1, -1, -1, "N.C. (non-crit.)");
+  axis->ChangeLabel(4, -1, -1, -1, -1, -1, "#splitline{NOT COMPARABLE}{(non-critical)}");
   axis->ChangeLabel(5, -1, 0, -1, -1, -1, "");
   axis->ChangeLabel(6, -1, -1, -1, -1, -1, "BAD");
   axis->ChangeLabel(7, -1, 0, -1, -1, -1, "");
@@ -1042,46 +1042,77 @@ struct results CompareNentr(TH1* hA, TH1* hB, double val)
   return res;
 }
 
-void WriteSingleJSONKeyVal(std::ofstream& os, std::vector<std::string> const& labels, std::string const& key, std::string const& last = ",")
-{
-  os << "  \"" << key << "\": [";
-  for (auto& l : labels) {
-    os << "\"" << l << "\"";
-    if (l != labels.back())
-      os << ",";
+void WriteListsToJson(std::ofstream &jsonout, std::vector<std::string> (&results)[5],std::string (&results_names)[5],int indent=1){
+  for (int i=0;i<5;i++){
+    for (int in=0;in<indent;in++)
+      jsonout << "  ";
+    jsonout << "\"" <<results_names[i] << "\":[";
+    for (std::string s : results[i]){
+      jsonout << "\"" << s <<"\"";
+      if (s!=results[i].back())
+        jsonout << ",";
+    }
+    jsonout << "]";
+    if (i<4)
+      jsonout << ",";
+    jsonout << "\n";
+    results[i].clear();
   }
-  os << "]" << last << "\n";
 }
 
-// write the result of the check into a .json file. One list for each possible outcome
-void WriteToJson(TH2F* hSum)
-{
-  std::vector<std::string> good, warning, bad, nc, critical_nc;
-  int nhists = hSum->GetYaxis()->GetNbins();
 
-  for (int i = 1; i <= nhists; i++) {
-    double res = hSum->GetBinContent(1, i);
-    const char* label = hSum->GetYaxis()->GetBinLabel(i);
-    if (res == 0)
-      bad.push_back(label);
-    if (res == 0.5)
-      warning.push_back(label);
-    if (res == 1)
-      good.push_back(label);
-    if (res == -0.25)
-      nc.push_back(label);
-    if (res == -0.5)
-      critical_nc.push_back(label);
-  }
+//write the result of the check into a .json file. One list for each possible outcome.
+void WriteToJson(TH2F* hSumCheck, TH2F* hSumTests){
+  std::vector<std::string> good, warning, bad, nc, critical_nc;
+  std::vector<std::string> TestNames;
+  std::vector<std::string> results[5];
+  std::string results_names[5] = {"GOOD","WARNING","BAD","CRIT_NC","NONCRIT_NC"};
+  int nhists=hSumCheck->GetYaxis()->GetNbins();
+  int ntests=hSumTests->GetXaxis()->GetNbins();
 
   std::ofstream jsonout("Summary.json");
   jsonout << "{\n";
-  WriteSingleJSONKeyVal(jsonout, good, "GOOD");
-  WriteSingleJSONKeyVal(jsonout, warning, "WARNING");
-  WriteSingleJSONKeyVal(jsonout, bad, "BAD");
-  WriteSingleJSONKeyVal(jsonout, critical_nc, "CRIT_NC");
-  WriteSingleJSONKeyVal(jsonout, nc, "NONCRIT_NC", "");
-  jsonout << "}";
 
+   jsonout << "  \"Summary\":{\n";
+  for(int i=1;i<=nhists;i++){
+    double res = hSumCheck->GetBinContent(1,i);
+    const char* label = hSumCheck->GetYaxis()->GetBinLabel(i);
+    if (res==0)
+      results[2].push_back(label);
+    if (res==0.5)
+      results[1].push_back(label);
+    if (res==1)
+      results[0].push_back(label);
+    if (res==-0.25)
+      results[4].push_back(label);
+    if (res==-0.5)
+      results[3].push_back(label);
+  }
+  WriteListsToJson(jsonout,results,results_names,2);
+  jsonout << "  },\n";
+
+  for (int t=1;t<=ntests;t++){
+    jsonout << "  \"" << hSumTests->GetXaxis()->GetBinLabel(t) << "\":{\n";
+    for(int i=1;i<=nhists;i++){
+      double res = hSumTests->GetBinContent(t,i);
+      const char* label = hSumTests->GetYaxis()->GetBinLabel(i);
+      if (res==0)
+        results[2].push_back(label);
+      if (res==0.5)
+        results[1].push_back(label);
+      if (res==1)
+        results[0].push_back(label);
+      if (res==-0.25)
+        results[4].push_back(label);
+      if (res==-0.5)
+        results[3].push_back(label);
+    }
+    WriteListsToJson(jsonout,results,results_names,2);
+    jsonout << "  }";
+    if (t<ntests)
+      jsonout << ",";
+    jsonout << "\n";
+  }
+  jsonout << "}";
   jsonout.close();
 }
