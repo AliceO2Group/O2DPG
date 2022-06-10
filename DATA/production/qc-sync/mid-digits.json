@@ -20,6 +20,10 @@
       },
       "conditionDB": {
         "url": "null:8083"
+      },
+      "infologger": {
+        "filterDiscardDebug": "true",
+        "filterDiscardLevel": "1"
       }
     },
     "tasks": {
@@ -32,27 +36,23 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "dataSamplingPolicy",
-          "name": "mid-digits"
-        },
-        "taskParameters": {
-          "Diagnostic": "false"
+          "name": "middigits"
         },
         "location": "local",
         "mergingMode": "delta",
         "localControl": "odc",
         "localMachines": [
-          "localhost",
-          "epn"
+          "epn",
+          "localhost"
         ],
         "remotePort": "47780",
         "remoteMachine": "alio2-cr1-qme02.cern.ch"
       }
-    },
-    "checks": {}
+    }
   },
   "dataSamplingPolicies": [
     {
-      "id": "mid-digits",
+      "id": "middigits",
       "active": "true",
       "machines": [],
       "query": "digits:MID/DATA;digits_rof:MID/DATAROF",
