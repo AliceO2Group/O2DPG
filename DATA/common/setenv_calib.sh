@@ -90,42 +90,53 @@ echo "CALIB_TRD_VDRIFTEXB = $CALIB_TRD_VDRIFTEXB" 1>&2
 echo "CALIB_TPC_TIMEGAIN = $CALIB_TPC_TIMEGAIN" 1>&2
 echo "CALIB_TPC_RESPADGAIN = $CALIB_TPC_RESPADGAIN" 1>&2
 
-if [[ -z $CALIBDATASPEC_BARREL ]]; then
+# define spec for proxy for TF-based outputs from BARREL
+if [[ -z $CALIBDATASPEC_BARREL_TF ]]; then
   # prim vtx
-  if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]] ; then add_semicolon_separated CALIBDATASPEC_BARREL "pvtx:GLO/PVTX/0"; fi
+  if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]] ; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "pvtx:GLO/PVTX/0"; fi
 
   # TOF
-  if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "calibTOF:TOF/CALIBDATA/0"; fi
-  if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "diagWords:TOF/DIAFREQ/0"; fi
+  if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibTOF:TOF/CALIBDATA/0"; fi
+  if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "diagWords:TOF/DIAFREQ/0"; fi
 
   # TPC
-  if [[ $CALIB_TPC_TIMEGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "tpcmips:TPC/MIPS/0"; fi
-  if [[ $CALIB_TPC_RESPADGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "trackGainHistoTPC:TPC/TRACKGAINHISTOS/0"; fi
+  if [[ $CALIB_TPC_TIMEGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcmips:TPC/MIPS/0"; fi
 
   # TRD
-  if [[ $CALIB_TRD_VDRIFTEXB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL "angResHistoTRD:TRD/ANGRESHISTS/0"; fi
+  if [[ $CALIB_TRD_VDRIFTEXB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "angResHistoTRD:TRD/ANGRESHISTS/0"; fi
 fi
 
-if [[ -z $CALIBDATASPEC_CALO ]]; then
+# define spec for proxy for sporadic outputs from BARREL
+if [[ -z $CALIBDATASPEC_BARREL_SPORADIC ]]; then
+  # TPC
+  if [[ $CALIB_TPC_RESPADGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_SPORADIC "trackGainHistoTPC:TPC/TRACKGAINHISTOS/0"; fi
+fi
+
+# define spec for proxy for TF-based outputs from CALO
+if [[ -z $CALIBDATASPEC_CALO_TF ]]; then
   # EMC
   if [[ $CALIB_EMC_CHANNELCALIB == 1 ]]; then
-    add_semicolon_separated CALIBDATASPEC_CALO "cellsEMC:EMC/CELLS/0"
-    add_semicolon_separated CALIBDATASPEC_CALO "cellsTrgREMC:EMC/CELLSTRGR/0"
+    add_semicolon_separated CALIBDATASPEC_CALO_TF "cellsEMC:EMC/CELLS/0"
+    add_semicolon_separated CALIBDATASPEC_CALO_TF "cellsTrgREMC:EMC/CELLSTRGR/0"
   fi
 
   # PHS
   if [[ $CALIB_PHS_ENERGYCALIB == 1 ]] || [[ $CALIB_PHS_TURNONCALIB == 1 ]] || [[ $CALIB_PHS_RUNBYRUNCALIB == 1 ]]; then
-    add_semicolon_separated CALIBDATASPEC_CALO "clsPHS:PHS/CLUSTERS/0;"
-    add_semicolon_separated CALIBDATASPEC_CALO "clTRPHS:PHS/CLUSTERTRIGREC/0;"
+    add_semicolon_separated CALIBDATASPEC_CALO_TF "clsPHS:PHS/CLUSTERS/0;"
+    add_semicolon_separated CALIBDATASPEC_CALO_TF "clTRPHS:PHS/CLUSTERTRIGREC/0;"
   fi
-  if [[ $CALIB_PHS_ENERGYCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO "cluelementsPHS:PHS/CLUELEMENTS/0;"; fi
-  if [[ $CALIB_PHS_BADMAPCALIB == 1 ]] || [[ $CALIB_PHS_TURNONCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO "cellsPHS:PHS/CELLS/0;"; fi
-  if [[ $CALIB_PHS_TURNONCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO "cellsTRPHS:PHS/CELLTRIGREC/0;"; fi
+  if [[ $CALIB_PHS_ENERGYCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO_TF "cluelementsPHS:PHS/CLUELEMENTS/0;"; fi
+  if [[ $CALIB_PHS_BADMAPCALIB == 1 ]] || [[ $CALIB_PHS_TURNONCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO_TF "cellsPHS:PHS/CELLS/0;"; fi
+  if [[ $CALIB_PHS_TURNONCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO_TF "cellsTRPHS:PHS/CELLTRIGREC/0;"; fi
 fi
 
 # printing for debug
-echo CALIBDATASPEC_BARREL = $CALIBDATASPEC_BARREL 1>&2
-echo CALIBDATASPEC_CALO = $CALIBDATASPEC_CALO 1>&2
+echo CALIBDATASPEC_BARREL_TF = $CALIBDATASPEC_BARREL_TF 1>&2
+echo CALIBDATASPEC_BARREL_SPORADIC = $CALIBDATASPEC_BARREL_SPORADIC 1>&2
+echo CALIBDATASPEC_CALO_TF = $CALIBDATASPEC_CALO_TF 1>&2
+echo CALIBDATASPEC_CALO_SPORADIC = $CALIBDATASPEC_CALO_SPORADIC 1>&2
+echo CALIBDATASPEC_MUON_TF = $CALIBDATASPEC_MUON_TF 1>&2
+echo CALIBDATASPEC_MUON_SPORADIC = $CALIBDATASPEC_MUON_SPORADIC 1>&2
 
 # proxies properties
 get_proxy_connection()
