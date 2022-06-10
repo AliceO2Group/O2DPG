@@ -28,6 +28,61 @@ import json
 # this is PyROOT; enables reading ROOT C++ objects
 from ROOT import o2, TFile, TString, TBufferJSON, TClass, std
 
+#################################################################################
+# THIS WILL BE REMOVED WHEN ALL SCRIPTS USING DEPRECATED ARGS HAVE BEEN UPDATED
+ARGS_TO_BE_UPDATED = []
+ARGS_X_CHECK_REQUIRED = []
+
+def add_args_depr_new(parser, long_option, *args, **kwargs):
+    """
+    Add argument for deprecated and new style
+    """
+    arg_depr = f"-{long_option}"
+    arg = f"--{long_option}"
+    help = kwargs.get("help", None)
+    if kwargs.pop("required", False):
+        # Pop the required flag and handle that explicitely
+        ARGS_X_CHECK_REQUIRED.append(long_option)
+    parser.add_argument(arg, *args, **kwargs)
+    if help:
+        # Add the deprecation info to the help message
+        kwargs["help"] = f"{help} (DEPRECATED, use {arg} instead)"
+    # By adding both styles, they have the same destination so specifying either of them is enough
+    parser.add_argument(arg_depr, *args, **kwargs)
+
+    ARGS_TO_BE_UPDATED.append(long_option)
+
+def check_usage_deprecated_args():
+    """
+    Explicit checks to handle deprecated arguments
+
+    Issue a deprecation warning in case an "old-style" argument was used
+
+    Exit if a required argument is missing.
+    """
+    argv = sys.argv
+    has_deprecated = False
+    required = ""
+    for axcr in ARGS_X_CHECK_REQUIRED:
+        if f"--{axcr}" not in argv and f"-{axcr}" not in argv:
+            # First collect all required to issue a summarised error
+            required += f"--{axcr}"
+    for atbu in ARGS_TO_BE_UPDATED:
+        if f"-{atbu}" in argv:
+            has_deprecated = True
+            print(f"\nDEPRECATION WARNING: Option -{atbu} will be deprecated, use --{atbu} instead\n")
+    if required:
+        # We can't continue since at least one required argument is missing
+        print(f"o2dpg_sim_workflow.py: error: the following arguments are required: {required}")
+        sys.exit(1)
+
+    if has_deprecated:
+        # Sleep to give the user the time to read the warnings
+        time_sleep = 5
+        print(f"There are deprecation warnings. Run with --help to see all deprecated arguments. For now, everything will work as before and it will continue in {time_sleep} seconds...")
+        time.sleep(time_sleep)
+#################################################################################
+
 # some global constants
 # this should be taken from the C++ code (via PyROOT and library access to these constants)
 LHCMaxBunches = 3564;                           # max N bunches
@@ -228,7 +283,7 @@ def main():
     parser.add_argument("--prod-split", type=int, help="The number of MC jobs that sample from the given time range",default=1)
     parser.add_argument("--cycle", type=int, help="MC cycle. Determines the sampling offset", default=0)
     parser.add_argument("--split-id", type=int, help="The split id of this job within the whole production --prod-split)", default=0)
-    parser.add_argument("-tf", type=int, help="number of timeframes per job", default=1)
+    add_args_depr_new(parser, "tf", type=int, help="number of timeframes per job", default=1)
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
 
@@ -253,7 +308,7 @@ def main():
 
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
-    forwardargs = " ".join([ a for a in args.forward if a != '--' ]) + " -tf " + str(args.tf) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(sor_eor["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb"
+    forwardargs = " ".join([ a for a in args.forward if a != '--' ]) + " --tf " + str(args.tf) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " --run " + str(args.run_number) + " --run-anchored --first-orbit " + str(sor_eor["FirstOrbit"]) + " --field ccdb --bcPatternFile ccdb"
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
     print ("Creating time-anchored workflow...")
     os.system(cmd)

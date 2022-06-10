@@ -19,6 +19,62 @@ sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
 from o2dpg_workflow_utils import createTask, dump_workflow
 
+#################################################################################
+# THIS WILL BE REMOVED WHEN ALL SCRIPTS USING DEPRECATED ARGS HAVE BEEN UPDATED
+ARGS_TO_BE_UPDATED = []
+ARGS_X_CHECK_REQUIRED = []
+
+def add_args_depr_new(parser, long_option, *args, **kwargs):
+    """
+    Add argument for deprecated and new style
+    """
+    arg_depr = f"-{long_option}"
+    arg = f"--{long_option}"
+    help = kwargs.get("help", None)
+    if kwargs.pop("required", False):
+        # Pop the required flag and handle that explicitely
+        ARGS_X_CHECK_REQUIRED.append(long_option)
+    parser.add_argument(arg, *args, **kwargs)
+    if help:
+        # Add the deprecation info to the help message
+        kwargs["help"] = f"{help} (DEPRECATED, use {arg} instead)"
+    # By adding both styles, they have the same destination so specifying either of them is enough
+    parser.add_argument(arg_depr, *args, **kwargs)
+
+    ARGS_TO_BE_UPDATED.append(long_option)
+
+def check_usage_deprecated_args():
+    """
+    Explicit checks to handle deprecated arguments
+
+    Issue a deprecation warning in case an "old-style" argument was used
+
+    Exit if a required argument is missing.
+    """
+    argv = sys.argv
+    has_deprecated = False
+    required = ""
+    for axcr in ARGS_X_CHECK_REQUIRED:
+        if f"--{axcr}" not in argv and f"-{axcr}" not in argv:
+            # First collect all required to issue a summarised error
+            required += f"--{axcr}"
+    for atbu in ARGS_TO_BE_UPDATED:
+        if f"-{atbu}" in argv:
+            has_deprecated = True
+            print(f"\nDEPRECATION WARNING: Option -{atbu} will be deprecated, use --{atbu} instead\n")
+    if required:
+        # We can't continue since at least one required argument is missing
+        print(f"o2dpg_sim_workflow.py: error: the following arguments are required: {required}")
+        sys.exit(1)
+
+    if has_deprecated:
+        # Sleep to give the user the time to read the warnings
+        time_sleep = 5
+        print(f"There are deprecation warnings. Run with --help to see all deprecated arguments. For now, everything will work as before and it will continue in {time_sleep} seconds...")
+        time.sleep(time_sleep)
+#################################################################################
+
+
 def getDPL_global_options(bigshm=False, noIPC=None):
    common="-b --run --driver-client-backend ws:// "
    if noIPC != None:
@@ -42,9 +98,9 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
   # qcConfigPath - path to the QC config file
   # needs        - a list of tasks to be finished first. By default, the function puts the 'local-batch' part of the QC workflow
   def add_QC_finalization(taskName, qcConfigPath, needs=None):
-    if standalone == True:
+    if standalone:
       needs = []
-    elif needs == None:
+    elif needs is None:
       needs = [taskName + '_local' + str(tf) for tf in range(1, ntimeframes + 1)]
 
     task = createTask(name=QC_finalize_name(taskName), needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
@@ -104,8 +160,8 @@ def main() -> int:
 
   parser.add_argument('--noIPC',help='disable shared memory in DPL')
   parser.add_argument('-o',help='output workflow file', default='workflow.json')
-  parser.add_argument('-run',help="Run number for this MC", default=300000)
-  parser.add_argument('-productionTag',help="Production tag for this MC", default='unknown')
+  add_args_depr_new(parser, "run", type=int, help="Run number for this MC", default=300000)
+  add_args_depr_new(parser, "productionTag",help="Production tag for this MC", default='unknown')
 
   args = parser.parse_args()
   print (args)
@@ -115,10 +171,10 @@ def main() -> int:
   O2_ROOT=environ.get('O2_ROOT')
   QUALITYCONTROL_ROOT=environ.get('QUALITYCONTROL_ROOT')
 
-  if O2DPG_ROOT == None: 
+  if O2DPG_ROOT is None: 
     print('Error: This needs O2DPG loaded')
 
-  if O2_ROOT == None: 
+  if O2_ROOT is None: 
     print('Error: This needs O2 loaded')
 
   if QUALITYCONTROL_ROOT is None:

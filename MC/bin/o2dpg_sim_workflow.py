@@ -28,6 +28,62 @@ import itertools
 import time
 import requests, re
 
+
+#################################################################################
+# THIS WILL BE REMOVED WHEN ALL SCRIPTS USING DEPRECATED ARGS HAVE BEEN UPDATED
+ARGS_TO_BE_UPDATED = []
+ARGS_X_CHECK_REQUIRED = []
+
+def add_args_depr_new(parser, long_option, *args, **kwargs):
+    """
+    Add argument for deprecated and new style
+    """
+    arg_depr = f"-{long_option}"
+    arg = f"--{long_option}"
+    help = kwargs.get("help", None)
+    if kwargs.pop("required", False):
+        # Pop the required flag and handle that explicitely
+        ARGS_X_CHECK_REQUIRED.append(long_option)
+    parser.add_argument(arg, *args, **kwargs)
+    if help:
+        # Add the deprecation info to the help message
+        kwargs["help"] = f"{help} (DEPRECATED, use {arg} instead)"
+    # By adding both styles, they have the same destination so specifying either of them is enough
+    parser.add_argument(arg_depr, *args, **kwargs)
+
+    ARGS_TO_BE_UPDATED.append(long_option)
+
+def check_usage_deprecated_args():
+    """
+    Explicit checks to handle deprecated arguments
+
+    Issue a deprecation warning in case an "old-style" argument was used
+
+    Exit if a required argument is missing.
+    """
+    argv = sys.argv
+    has_deprecated = False
+    required = ""
+    for axcr in ARGS_X_CHECK_REQUIRED:
+        if f"--{axcr}" not in argv and f"-{axcr}" not in argv:
+            # First collect all required to issue a summarised error
+            required += f"--{axcr}"
+    for atbu in ARGS_TO_BE_UPDATED:
+        if f"-{atbu}" in argv:
+            has_deprecated = True
+            print(f"\nDEPRECATION WARNING: Option -{atbu} will be deprecated, use --{atbu} instead\n")
+    if required:
+        # We can't continue since at least one required argument is missing
+        print(f"o2dpg_sim_workflow.py: error: the following arguments are required: {required}")
+        sys.exit(1)
+
+    if has_deprecated:
+        # Sleep to give the user the time to read the warnings
+        time_sleep = 5
+        print(f"There are deprecation warnings. Run with --help to see all deprecated arguments. For now, everything will work as before and it will continue in {time_sleep} seconds...")
+        time.sleep(time_sleep)
+#################################################################################
+
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
 from o2dpg_workflow_utils import createTask, dump_workflow
@@ -37,51 +93,53 @@ from o2dpg_sim_config import create_sim_config
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
 
 # the run-number of data taking or default if unanchored
-parser.add_argument('-run', type=int, help="Run number for this MC", default=300000)
-parser.add_argument('-productionTag',help="Production tag for this MC", default='unknown')
+add_args_depr_new(parser, "run", type=int, help="Run number for this MC", default=300000)
+add_args_depr_new(parser, "productionTag",help="Production tag for this MC", default='unknown')
 # the timestamp at which this MC workflow will be run
 # - in principle it should be consistent with the time of the "run" number above
 # - some external tool should sample it within
 # - we can also sample it ourselfs here
 parser.add_argument('--timestamp', type=int, help="Anchoring timestamp (defaults to now)", default=-1)
 parser.add_argument('--anchor-config',help="JSON file to contextualise workflow with external configs (config values etc.) for instance comping from data reco workflows.", default='')
-parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
-parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
-parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...', default='')
-parser.add_argument('-trigger',help='event selection: particle, external', default='')
-parser.add_argument('-ini',help='generator init parameters file (full paths required), for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
-parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
+add_args_depr_new(parser, "ns",help='number of signal events / timeframe', default=20)
+add_args_depr_new(parser, "gen",help='generator: pythia8, extgen', default='', required=True)
+add_args_depr_new(parser, "proc",help='process type: inel, dirgamma, jets, ccbar, ...', default='')
+add_args_depr_new(parser, "trigger",help='event selection: particle, external', default='')
+add_args_depr_new(parser, "ini",help='generator init parameters file (full paths required), for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
+add_args_depr_new(parser, "confKey",help='generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
 
-parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
-parser.add_argument('-bcPatternFile',help='Bunch crossing pattern file, used in digitization (a file name or "ccdb")', default='')
-parser.add_argument('-eCM',help='CMS energy', default=-1)
-parser.add_argument('-eA',help='Beam A energy', default=-1) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
-parser.add_argument('-eB',help='Beam B energy', default=-1)
-parser.add_argument('-col',help='collision system: pp, PbPb, pPb, Pbp, ..., in case of embedding collision system of signal', default='pp')
-parser.add_argument('-field',help='L3 field rounded to kGauss, allowed values: +-2,+-5 and 0; +-5U for uniform field; or "ccdb" to take from conditions database', default='ccdb')
+add_args_depr_new(parser, "interactionRate",help='Interaction rate, used in digitization', default=-1)
+add_args_depr_new(parser, "bcPatternFile",help='Bunch crossing pattern file, used in digitization (a file name or "ccdb")', default='')
+add_args_depr_new(parser, "eCM", type=float, help='CMS energy', default=-1)
+add_args_depr_new(parser, "eA", type=float, help='Beam A energy', default=-1) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
+add_args_depr_new(parser, "eB", type=float, help='Beam B energy', default=-1)
+add_args_depr_new(parser, "col",help='collision system: pp, PbPb, pPb, Pbp, ..., in case of embedding collision system of signal', default='pp')
+add_args_depr_new(parser, "field",help='L3 field rounded to kGauss, allowed values: +-2,+-5 and 0; +-5U for uniform field; or "ccdb" to take from conditions database', default='ccdb')
 
-parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
-parser.add_argument('-ptHatMax',help='pT hard maximum when no bin requested', default=-1)
-parser.add_argument('-weightPow',help='Flatten pT hard spectrum with power', default=-1)
+add_args_depr_new(parser, "ptHatMin", type=float, help='pT hard minimum when no bin requested', default=0)
+add_args_depr_new(parser, "ptHatMax", type=float, help='pT hard maximum when no bin requested', default=-1)
+add_args_depr_new(parser, "weightPow", type=float, help='Flatten pT hard spectrum with power', default=-1)
+
 
 parser.add_argument('--embedding',action='store_true', help='With embedding into background')
 parser.add_argument('--embeddPattern',help='How signal is to be injected into background', default='@0:e1')
-parser.add_argument('-nb',help='number of background events / timeframe', default=20)
-parser.add_argument('-genBkg',help='embedding background generator', default='') #pythia8, not recomended: pythia8hi, pythia8pp
-parser.add_argument('-procBkg',help='process type: inel, ..., do not set it for Pythia8 PbPb', default='heavy_ion')
-parser.add_argument('-iniBkg',help='embedding background generator init parameters file (full path required)', default='${O2DPG_ROOT}/MC/config/common/ini/basic.ini')
-parser.add_argument('-confKeyBkg',help='embedding background configuration key values, for example: "GeneratorPythia8.config=pythia8bkg.cfg"', default='')
-parser.add_argument('-colBkg',help='embedding background collision system', default='PbPb')
+add_args_depr_new(parser, "nb",help='number of background events / timeframe', default=20)
+add_args_depr_new(parser, "genBkg",help='embedding background generator', default='') #pythia8, not recomended: pythia8hi, pythia8pp
+add_args_depr_new(parser, "procBkg",help='process type: inel, ..., do not set it for Pythia8 PbPb', default='heavy_ion')
+add_args_depr_new(parser, "iniBkg",help='embedding background generator init parameters file (full path required)', default='${O2DPG_ROOT}/MC/config/common/ini/basic.ini')
+add_args_depr_new(parser, "confKeyBkg",help='embedding background configuration key values, for example: "GeneratorPythia8.config=pythia8bkg.cfg"', default='')
+add_args_depr_new(parser, "colBkg",help='embedding background collision system', default='PbPb')
+
 
 parser.add_argument('-e',help='simengine', default='TGeant4')
-parser.add_argument('-tf',help='number of timeframes', default=2)
+add_args_depr_new(parser, "tf", type=int, help='number of timeframes', default=2)
 parser.add_argument('--production-offset',help='Offset determining bunch-crossing '
                      + ' range within a (GRID) production. This number sets first orbit to '
                      + 'Offset x Number of TimeFrames x OrbitsPerTimeframe (up for further sophistication)', default=0)
 parser.add_argument('-j',help='number of workers (if applicable)', default=8, type=int)
-parser.add_argument('-mod',help='Active modules (deprecated)', default='--skipModules ZDC')
+add_args_depr_new(parser, "mod",help='Active modules (deprecated)', default='--skipModules ZDC')
 parser.add_argument('--with-ZDC', action='store_true', help='Enable ZDC in workflow')
-parser.add_argument('-seed',help='random seed number', default=None)
+add_args_depr_new(parser, "seed",help='random seed number', default=None)
 parser.add_argument('-o',help='output workflow file', default='workflow.json')
 parser.add_argument('--noIPC',help='disable shared memory in DPL')
 
@@ -120,6 +178,7 @@ parser.add_argument('--fwdmatching-assessment-full', action='store_true', help='
 parser.add_argument('--fwdmatching-save-trainingdata', action='store_true', help='enables saving parameters at plane for matching training with machine learning')
 
 args = parser.parse_args()
+check_usage_deprecated_args()
 print (args)
 
 # make sure O2DPG + O2 is loaded
@@ -128,11 +187,11 @@ O2_ROOT=environ.get('O2_ROOT')
 QUALITYCONTROL_ROOT=environ.get('QUALITYCONTROL_ROOT')
 O2PHYSICS_ROOT=environ.get('O2PHYSICS_ROOT')
 
-if O2DPG_ROOT == None:
+if O2DPG_ROOT is None:
    print('Error: This needs O2DPG loaded')
 #   exit(1)
 
-if O2_ROOT == None:
+if O2_ROOT is None:
    print('Error: This needs O2 loaded')
 #   exit(1)
 
@@ -160,7 +219,7 @@ def load_external_config(configfile):
     return config
 
 anchorConfig = {}
-if args.anchor_config != '':
+if args.anchor_config:
    print ("** Using external config **")
    anchorConfig = load_external_config(args.anchor_config)
 else:
@@ -216,7 +275,7 @@ if args.timestamp==-1:
    args.timestamp = retrieve_sor(args.run)
    assert (args.timestamp != 0)
 
-NTIMEFRAMES=int(args.tf)
+NTIMEFRAMES=args.tf
 NWORKERS=args.j
 MODULES = "--skipModules ZDC" if not args.with_ZDC else ""
 SIMENGINE=args.e
@@ -239,10 +298,10 @@ def getDPL_global_options(bigshm=False):
    else:
       return common
 
-doembedding=True if args.embedding=='True' or args.embedding==True else False
-usebkgcache=args.use_bkg_from!=None
-includeFullQC=args.include_qc=='True' or args.include_qc==True
-includeLocalQC=args.include_local_qc=='True' or args.include_local_qc==True
+doembedding = args.embedding
+usebkgcache = args.use_bkg_from is not None
+includeFullQC = args.include_qc
+includeLocalQC = args.include_local_qc
 includeAnalysis = args.include_analysis
 
 qcdir = "QC"
@@ -260,9 +319,9 @@ if doembedding:
 
         PROCESSBKG=args.procBkg
         COLTYPEBKG=args.colBkg
-        ECMSBKG=float(args.eCM)
-        EBEAMABKG=float(args.eA)
-        EBEAMBBKG=float(args.eB)
+        ECMSBKG=args.eCM
+        EBEAMABKG=args.eA
+        EBEAMBBKG=args.eB
 
         if COLTYPEBKG == 'pp':
            PDGABKG=2212 # proton
@@ -301,9 +360,7 @@ if doembedding:
            print('o2dpg_sim_workflow: Error! bkg ECM or Beam Energy not set!!!')
            exit(1)
 
-        CONFKEYBKG=''
-        if args.confKeyBkg!= '':
-           CONFKEYBKG=' --configKeyValues "' + args.confKeyBkg + '"'
+        CONFKEYBKG = ' --configKeyValues "' + args.confKeyBkg + '"' if args.confKeyBkg else ''
 
         # Background PYTHIA configuration
         BKG_CONFIG_task=createTask(name='genbkgconf')
@@ -326,9 +383,7 @@ if doembedding:
         workflow['stages'].append(BKG_CONFIG_task)
 
         # background task configuration
-        INIBKG=''
-        if args.iniBkg!= '':
-           INIBKG=' --configFile ' + args.iniBkg
+        INIBKG = ' --configFile ' + args.iniBkg if args.iniBkg else ''
 
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=[BKG_CONFIG_task['name']], cpu=NWORKERS )
         BKGtask['cmd']='${O2_ROOT}/bin/o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
@@ -342,7 +397,7 @@ if doembedding:
         workflow['stages'].append(BKGtask)
 
         # check if we should upload background event
-        if args.upload_bkg_to!=None:
+        if args.upload_bkg_to is not None:
             BKGuploadtask=createTask(name='bkgupload', needs=[BKGtask['name']], cpu='0')
             BKGuploadtask['cmd']='alien.py mkdir ' + args.upload_bkg_to + ';'
             BKGuploadtask['cmd']+='alien.py cp -f bkg* ' + args.upload_bkg_to + ';'
@@ -404,30 +459,21 @@ for tf in range(1, NTIMEFRAMES + 1):
    # ----  transport task -------
    # function encapsulating the signal sim part
    # first argument is timeframe id
-   ECMS=float(args.eCM)
-   EBEAMA=float(args.eA)
-   EBEAMB=float(args.eB)
+   ECMS=args.eCM
+   EBEAMA=args.eA
+   EBEAMB=args.eB
    NSIGEVENTS=args.ns
    GENERATOR=args.gen
-   if GENERATOR =='':
-      print('o2dpg_sim_workflow: Error! generator name not provided')
-      exit(1)
 
-   INIFILE=''
-   if args.ini!= '':
-      INIFILE=' --configFile ' + args.ini
-   CONFKEY=''
-   if args.confKey!= '':
-      CONFKEY=' --configKeyValues "' + args.confKey + '"'
+   INIFILE = ' --configFile ' + args.ini if args.ini else ''
+   CONFKEY = ' --configKeyValues "' + args.confKey + '"' if args.confKey else ''
    PROCESS=args.proc
-   TRIGGER=''
-   if args.trigger != '':
-      TRIGGER=' -t ' + args.trigger
+   TRIGGER = ' -t ' + args.trigger if args.trigger else ''
 
    ## Pt Hat productions
-   WEIGHTPOW=float(args.weightPow)
-   PTHATMIN=float(args.ptHatMin)
-   PTHATMAX=float(args.ptHatMax)
+   WEIGHTPOW=args.weightPow
+   PTHATMIN=args.ptHatMin
+   PTHATMAX=args.ptHatMax
 
    # translate here collision type to PDG
    COLTYPE=args.col
@@ -616,7 +662,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      for key in listOfMainKeys:
        # it this key exists
        keydict = anchorConfig.get(key)
-       if keydict != None:
+       if keydict is not None:
           for k in keydict:
              cf[key+"."+k] = keydict[k]
 
@@ -639,7 +685,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                         + ' ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption         \
                         + ' ' + putConfigValues()
 
-   if BCPATTERN != '':
+   if BCPATTERN:
       ContextTask['cmd'] += ' --bcPatternFile "' + BCPATTERN + '"'
 
    # in case of embedding we engineer the context directly and allow the user to provide an embedding pattern
@@ -687,7 +733,7 @@ for tf in range(1, NTIMEFRAMES + 1):
          detlist = ''
          for d in smallsensorlist:
              if isActive(d):
-                if len(detlist) > 0:
+                if detlist:
                    detlist += ','
                 detlist += d
          t['cmd'] += commondigicmd + ' --onlyDet ' + detlist
@@ -711,12 +757,12 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    det_to_digitask={}
 
-   if not args.no_combine_smaller_digi==True:
+   if not args.no_combine_smaller_digi:
       det_to_digitask['ALLSMALLER']=createRestDigiTask("restdigi_"+str(tf))
 
    for det in smallsensorlist:
       name=str(det).lower() + "digi_" + str(tf)
-      t = det_to_digitask['ALLSMALLER'] if (not args.no_combine_smaller_digi==True) else createRestDigiTask(name, det)
+      t = det_to_digitask['ALLSMALLER'] if (not args.no_combine_smaller_digi) else createRestDigiTask(name, det)
       det_to_digitask[det]=t
 
    # detectors serving CTP need to be treated somewhat special since CTP needs
@@ -732,7 +778,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    def getDigiTaskName(det):
       t = det_to_digitask.get(det)
-      if t == None:
+      if t is None:
          return "undefined"
       return t['name']
 
@@ -816,7 +862,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=[getDigiTaskName("MFT")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MFTRECOtask['cmd'] = '${O2_ROOT}/bin/o2-mft-reco-workflow ' + getDPL_global_options() + putConfigValuesNew(['MFTTracking', 'MFTAlpideParam', 'ITSClustererParam','MFTClustererParam'])
-   if args.mft_assessment_full == True:
+   if args.mft_assessment_full:
       MFTRECOtask['cmd']+= ' --run-assessment '
    workflow['stages'].append(MFTRECOtask)
 
@@ -867,12 +913,12 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MFTMCHMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValuesNew(['ITSAlpideConfig','MFTAlpideConfig'],{"FwdMatching.useMIDMatch":"true"})
-   if args.fwdmatching_assessment_full == True:
+   if args.fwdmatching_assessment_full:
       MFTMCHMATCHtask['cmd']+= ' |  o2-globalfwd-assessment-workflow '
    MFTMCHMATCHtask['cmd']+= getDPL_global_options()
    workflow['stages'].append(MFTMCHMATCHtask)
 
-   if args.fwdmatching_save_trainingdata == True:
+   if args.fwdmatching_save_trainingdata:
       MFTMCHMATCHTraintask = createTask(name='mftmchMatchTrain_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
       MFTMCHMATCHTraintask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValuesNew(['ITSAlpideConfig','MFTAlpideConfig'],{"FwdMatching.useMIDMatch":"true"})
       MFTMCHMATCHTraintask['cmd']+= getDPL_global_options()
@@ -1111,7 +1157,7 @@ for tf in range(1, NTIMEFRAMES + 1):
   # is limited (which would restrict the number of timeframes). We offer a timeframe cleanup function
   # taking away digits, clusters and other stuff as soon as possible.
   # TODO: cleanup by labels or task names
-   if args.early_tf_cleanup == True:
+   if args.early_tf_cleanup:
      TFcleanup = createTask(name='tfcleanup_'+str(tf), needs= [ AOD_merge_task['name'] ], tf=tf, cwd=timeframeworkdir, lab=["CLEANUP"], mem='0', cpu='1')
      TFcleanup['cmd'] = 'rm *digi*.root;'
      TFcleanup['cmd'] += 'rm *cluster*.root'
