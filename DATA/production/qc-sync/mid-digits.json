@@ -55,7 +55,7 @@
       "id": "middigits",
       "active": "true",
       "machines": [],
-      "query": "digits:MID/DATA;digits_rof:MID/DATAROF",
+      "query": "digits:MID/DATA;digitrofs:MID/DATAROF",
       "samplingConditions": [
         {
           "condition": "random",
