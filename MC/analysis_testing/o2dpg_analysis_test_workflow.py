@@ -114,7 +114,7 @@ ANALYSES.append(analysis_Efficiency)
 analysis_EventTrackQA = {"name": "EventTrackQA",
                          "expected_output": ["AnalysisResults.root"],
                          "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
-                         "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-qa-event-track {CONFIG} {AOD}"}
+                         "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-qa-event-track {CONFIG} {AOD}"}
 ANALYSES.append(analysis_EventTrackQA)
 analysis_Validation = {"name": "Validation",
                        "expected_output": ["AnalysisResults.root"],
