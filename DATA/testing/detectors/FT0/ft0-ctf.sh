@@ -13,7 +13,7 @@ ARGS_CTF="--min-file-size 500000000  --max-ctf-per-file 10000 --meta-output-dir 
 
 MYDIR="$(dirname $(readlink -f $0))"
 
-PROXY_INSPEC="digits:FT0/DIGITSBC/0;channels:FT0/DIGITSCH/0;eos:***/INFORMATION;dd:FLP/DISTSUBTIMEFRAME"
+PROXY_INSPEC="digits:FT0/DIGITSBC/0;channels:FT0/DIGITSCH/0;eos:***/INFORMATION;dd:FLP/DISTSUBTIMEFRAME/0"
 IN_CHANNEL="--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=1'"
 
 o2-dpl-raw-proxy ${ARGS_ALL} --readout-proxy "${IN_CHANNEL}" --dataspec "${PROXY_INSPEC}" \
