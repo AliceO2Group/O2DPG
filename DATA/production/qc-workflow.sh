@@ -87,12 +87,13 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
   add_QC_JSON()
   {
     if [[ ${2} =~ ^consul://.* ]]; then
-      curl -s -o $FETCHTMPDIR/$1.json "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
+      TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
+      curl -s -o $TMP_FILENAME "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
       if [[ $? != 0 ]]; then
         echo "Error fetching QC JSON $2"
         exit 1
       fi
-      JSON_FILES+=" $FETCHTMPDIR/$1.json"
+      JSON_FILES+=" $TMP_FILENAME"
     else
       JSON_FILES+=" ${2}"
     fi
@@ -111,7 +112,7 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
 
   # TOF matching
   if has_detector_qc TOF && [ ! -z "$QC_JSON_TOF_MATCH" ]; then
-    add_QC_JSON TOF ${QC_JSON_TOF_MATCH}
+    add_QC_JSON matchTOF ${QC_JSON_TOF_MATCH}
   fi
 
   for i in `echo $LIST_OF_GLORECO | sed "s/,/ /g"`; do
