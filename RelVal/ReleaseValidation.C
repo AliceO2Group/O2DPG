@@ -850,7 +850,7 @@ void SelectCriticalHistos()
 struct results CompareChiSquare(TH1* hA, TH1* hB, double val)
 {
   struct results res;
-  res.testname = "Chi2 test";
+  res.testname = "test_chi2";
   res.critical = true;
 
   res.passed = true;
@@ -936,7 +936,7 @@ struct results CompareChiSquare(TH1* hA, TH1* hB, double val)
 struct results CompareBinContent(TH1* hA, TH1* hB, double val)
 {
   struct results res;
-  res.testname = "Bin cont test";
+  res.testname = "test_bin_cont";
 
   res.critical = true;
 
@@ -1009,7 +1009,7 @@ struct results CompareBinContent(TH1* hA, TH1* hB, double val)
 struct results CompareNentr(TH1* hA, TH1* hB, double val)
 {
   struct results res;
-  res.testname = "Num entries test";
+  res.testname = "test_num_entries";
 
   res.critical = false;
 
@@ -1073,7 +1073,7 @@ void WriteToJson(TH2F* hSumCheck, TH2F* hSumTests){
   std::ofstream jsonout("Summary.json");
   jsonout << "{\n";
 
-   jsonout << "  \"Summary\":{\n";
+   jsonout << "  \"test_summary\":{\n";
   for(int i=1;i<=nhists;i++){
     double res = hSumCheck->GetBinContent(1,i);
     const char* label = hSumCheck->GetYaxis()->GetBinLabel(i);
