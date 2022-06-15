@@ -52,7 +52,8 @@ def rel_val(args):
 def inspect(args):
     res = None
     with open(args.file, "r") as f:
-        res = json.load(f)
+        # NOTE For now care about the summary. However, we have each test individually, so we could do a more detailed check in the future
+        res = json.load(f)["test_summary"]
     for s in args.severity:
         names = res.get(s)
         if not names:
