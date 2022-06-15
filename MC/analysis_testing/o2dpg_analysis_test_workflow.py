@@ -162,6 +162,12 @@ analysis_PWGMMMDnDeta = {"name": "PWGMMMDnDeta",
                          "valid_for": [ANALYSIS_VALID_MC],
                          "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-mm-particles-to-tracks {CONFIG} | o2-analysis-mm-dndeta {CONFIG} {AOD}"}
 ANALYSES.append(analysis_PWGMMMDnDeta)
+analysis_PWGHFD0 = {"name": "PWGHFD0",
+                    "expected_output": ["AnalysisResults.root"],
+                    "valid_for": [ANALYSIS_VALID_MC],
+                    "cmd": "o2-analysis-hf-track-index-skims-creator {CONFIG} | o2-analysis-hf-candidate-creator-2prong {CONFIG} | o2-analysis-hf-d0-candidate-selector {CONFIG} | o2-analysis-hf-task-d0 {CONFIG} | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-pid-tpc-full {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-pid-tof-full {CONFIG} {AOD}"}
+ANALYSES.append(analysis_PWGHFD0)
+
 
 def make_merged_analysis(*analysis_names, accept_data_or_mc=ANALYSIS_VALID_MC):
     """merge CMD / DPL piping to one large pipe
