@@ -116,6 +116,11 @@ analysis_EventTrackQA = {"name": "EventTrackQA",
                          "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
                          "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-qa-event-track {CONFIG} {AOD}"}
 ANALYSES.append(analysis_EventTrackQA)
+analysis_K0STrackingEfficiencyQA = {"name": "K0STrackingEfficiencyQA",
+                                    "expected_output": ["AnalysisResults.root"],
+                                    "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
+                                    "cmd": "o2-analysis-lf-lambdakzerobuilder {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-pid-tpc {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-timestamp {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-qa-k0s-tracking-efficiency {CONFIG} {AOD}"}
+ANALYSES.append(analysis_K0STrackingEfficiencyQA)
 analysis_Validation = {"name": "Validation",
                        "expected_output": ["AnalysisResults.root"],
                        "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
