@@ -77,7 +77,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --publish-after-tfs 50 \
     --max-events 110 \
     | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
-    --ccdb-path http://ccdb-test.cern.ch:8080 \
+    --ccdb-path http://o2-ccdb.internal \
     | o2-dpl-run $ARGS_ALL --dds
 
 #    --pipeline tpc-tracker:4 \

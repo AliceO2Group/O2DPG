@@ -17,7 +17,7 @@ CALIB_CONFIG="TPCCalibPulser.FirstTimeBin=80;TPCCalibPulser.LastTimeBin=260;TPCC
 EXTRA_CONFIG=" "
 EXTRA_CONFIG="--calib-type pulser --publish-after-tfs 30 --max-events 120 --lanes 36"
 
-CCDB_PATH="--ccdb-path http://ccdb-test.cern.ch:8080"
+CCDB_PATH="--ccdb-path http://o2-ccdb.internal"
 
 
 o2-dpl-raw-proxy $ARGS_ALL \
