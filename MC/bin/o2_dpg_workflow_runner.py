@@ -52,7 +52,7 @@ parser.add_argument('--webhook', help=argparse.SUPPRESS) # log some infos to thi
 parser.add_argument('--checkpoint-on-failure', help=argparse.SUPPRESS) # debug option making a debug-tarball and sending to specified address
                                                                        # argument is alien-path
 parser.add_argument('--retry-on-failure', help=argparse.SUPPRESS, default=0) # number of times a failing task is retried
-parser.add_argument('--rootinit-speedup', help=argparse.SUPPRESS, action='store_true') # enable init of ROOT environment vars to speedup init/startup
+parser.add_argument('--no-rootinit-speedup', help=argparse.SUPPRESS, action='store_true') # disable init of ROOT environment vars to speedup init/startup
 parser.add_argument('--action-logfile', help='Logfilename for action logs. If none given, pipeline_action_#PID.log will be used')
 parser.add_argument('--metric-logfile', help='Logfilename for metric logs. If none given, pipeline_metric_#PID.log will be used')
 args = parser.parse_args()
@@ -1040,7 +1040,7 @@ class WorkflowExecutor:
                cmd='LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls /tmp/DOESNOTEXIST 2>&1 | grep -m 1 "system search path" | sed \'s/.*=//g\' | awk \'//{print $1}\''
                proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                libpath, err = proc.communicate()
-               if (args.rootinit_speedup):
+               if not (args.no_rootinit_speedup == True):
                   print ("setting up ROOT system")
                   os.environ['ROOT_LDSYSPATH'] = libpath.decode()
 
@@ -1050,7 +1050,7 @@ class WorkflowExecutor:
                incpath, err = proc.communicate()
                incpaths = [ line.lstrip() for line in incpath.decode().splitlines() ]
                joined = ':'.join(incpaths)
-               if (args.rootinit_speedup):
+               if not (args.no_rootinit_speedup == True):
                   os.environ['ROOT_CPPSYSINCL'] = joined
 
         speedup_ROOT_Init()
