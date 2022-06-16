@@ -16,7 +16,7 @@ CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 CALIB_CONFIG="TPCCalibPedestal.LastTimeBin=12000"
 EXTRA_CONFIG=" "
 EXTRA_CONFIG=" --publish-after-tfs 100 --max-events 120 --lanes 36"
-CCDB_PATH="--ccdb-path http://ccdb-test.cern.ch:8080"
+CCDB_PATH="--ccdb-path http://o2-ccdb.internal"
 
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \
