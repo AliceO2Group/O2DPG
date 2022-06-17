@@ -741,10 +741,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------
    tpcreconeeds=[]
    if not args.combine_tpc_clusterization:
-     # We treat TPC clusterization in multiple (sector) steps in order to stay within the memory limit
-     # We seem to be needing to ask for 2 sectors at least, otherwise there is a problem with the branch naming.
+     # We treat TPC clusterization in multiple (sector) steps in order to 
+     # stay within the memory limit or to parallelize over sector from outside (not yet supported within cluster algo)
      tpcclustertasks=[]
-     sectorpertask=6
+     sectorpertask=18
      for s in range(0,35,sectorpertask):
        taskname = 'tpcclusterpart' + str((int)(s/sectorpertask)) + '_' + str(tf)
        tpcclustertasks.append(taskname)
