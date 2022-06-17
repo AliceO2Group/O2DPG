@@ -153,11 +153,17 @@ for line in f:
                     if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
                         command = 'sed -i \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ' + filename + ' \\2,\' ' + filename_xml
                     if 'GEN_TOPO_DDS_ASSETS' in os.environ and int(os.environ['GEN_TOPO_DDS_ASSETS']):
+                        command = 'sed -i \'s/\\(["\'"\'"\'<>]\\)/\\\\\\1/g\' ' + filename
+                        print('Running SED command', command)
+                        if os.system(command) != 0:
+                            print('Error running sed on JSON file')
                         asset_name = 'dpl_json_' + wf[0] + '_' + str(i)
                         command = 'sed -i ' + \
                                   '-e \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ${DDS_LOCATION}/' + asset_name + ' \\2,\' ' + \
-                                  '-e \'s,^\( *.decltask name.*>$\),\\1 <assets><name>' + asset_name + '</name></assets>,\' ' + \
-                                  '-e \'s,^\( *.topology name.*>$\),\\1 <asset name="' + asset_name + '" type="inline" visibility="global" value="foo" />,\' ' + \
+                                  '-e \'/^\( *.decltask name.*>$\)/a <assets><name>' + asset_name + '</name></assets>\' ' + \
+                                  '-e \'/^\( *.topology name.*>$\)/a <asset name="' + asset_name + '" type="inline" visibility="global" value="\' ' + \
+                                  '-e \'/^\( *.topology name.*>$\)/r ' + filename + '\' ' + \
+                                  '-e \'/^\( *.topology name.*>$\)/a " />\' ' + \
                                   filename_xml
                     print('Running SED command', command)
                     if os.system(command) != 0:
