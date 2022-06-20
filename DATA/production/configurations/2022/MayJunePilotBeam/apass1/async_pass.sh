@@ -157,7 +157,7 @@ ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 # print workflow
 IS_SIMULATED_DATA=0 WORKFLOWMODE=print DISABLE_ROOT_OUTPUT="" TFDELAY=40 NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list > workflowconfig.log
 # run it
-IS_SIMULATED_DATA=0 WORKFLOWMODE=run DISABLE_ROOT_OUTPUT="" TFDELAY=40 NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list 
+IS_SIMULATED_DATA=0 WORKFLOWMODE=run DISABLE_ROOT_OUTPUT="" TFDELAY=40 NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list
 
 # now extract all performance metrics
 IFS=$'\n'
@@ -168,6 +168,9 @@ if [[ -f "performanceMetrics.json" ]]; then
     done
 fi
 
+# flag to possibly enable Analysis QC
+[[ -z ${ALIEN_JDL_RUNANALYSISQC+x} ]] && ALIEN_JDL_RUNANALYSISQC=1
+
 # now checking AO2D file
 if [[ -f "AO2D.root" ]]; then
     root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
@@ -177,15 +180,19 @@ if [[ -f "AO2D.root" ]]; then
 	echo "exit code from AO2D check is " $exitcode
 	exit $exitcode
     fi
-    ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py --merged-task -f AO2D.root
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json > analysisQC.log
-    if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
+    if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then 
+      ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py --merged-task -f AO2D.root
+      ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json > analysisQC.log
+      if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
 	mv Analysis/MergedAnalyses/AnalysisResults.root .
-    else
+      else
 	echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
-    fi
-    if ls Analysis/*/*.log 1> /dev/null 2>&1; then
+      fi
+      if ls Analysis/*/*.log 1> /dev/null 2>&1; then
 	mv Analysis/*/*.log .
+      fi
+    else
+      echo "Analysis QC will not be run, ALIEN_JDL_RUNANALYSISQC = $ALIEN_JDL_RUNANALYSISQC"
     fi
 fi
 
