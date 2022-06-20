@@ -44,7 +44,7 @@ fi
 #source /home/epn/runcontrol/tpc/qc_test_env.sh > /dev/null
 PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
-PROXY_OUTSPEC="A:TPC/LASERTRACKS;B:TPC/CEDIGITS;eos:***/INFORMATION"
+PROXY_OUTSPEC="A:TPC/LASERTRACKS;B:TPC/CEDIGITS;eos:***/INFORMATION;D:TPC/CLUSREFS"
 
 ### Comment: MAKE SURE the channels match address=ipc://@tf-builder-pipe-0
 
