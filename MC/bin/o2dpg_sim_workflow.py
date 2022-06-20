@@ -981,10 +981,10 @@ for tf in range(1, NTIMEFRAMES + 1):
 
      ### EMCAL
      if isActive('EMC'):
-        addQCPerTF(taskName='emcDigitsQC',
+        addQCPerTF(taskName='emcCellQC',
                    needs=[EMCRECOtask['name']],
                    readerCommand='o2-emcal-cell-reader-workflow --infile emccells.root',
-                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-digits-task.json')
+                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-cell-task.json')
      ### FT0
      addQCPerTF(taskName='RecPointsQC',
                    needs=[FT0RECOtask['name']],
