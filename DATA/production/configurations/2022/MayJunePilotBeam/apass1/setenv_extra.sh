@@ -31,7 +31,7 @@ if [[ $remappingITS == 1 ]] || [[ $remappingMFT == 1 ]]; then
   if [[ $remappingMFT == 1 ]]; then
     REMAPPING=$REMAPPING"MFT/Calib/ClusterDictionary"
   fi
-  RAMAPPING=$REMAPPING\"
+  REMAPPING=$REMAPPING\"
 fi
 
 echo remapping = $REMAPPING
@@ -49,7 +49,7 @@ else
 fi
 
 # TPC vdrift
-root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/getTPCvdrift.C+($RUNNUMBER, false)"
+root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/getTPCvdrift.C+($RUNNUMBER)"
 export VDRIFT=`cat vdrift.txt`
 
 # remove monitoring-backend
