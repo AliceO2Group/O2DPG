@@ -26,16 +26,16 @@
       }
     },
     "tasks": {
-      "DigitsTask": {
+      "CellTask": {
         "active": "true",
-        "className": "o2::quality_control_modules::emcal::DigitsQcTask",
+        "className": "o2::quality_control_modules::emcal::CellTask",
         "moduleName": "QcEMCAL",
         "detectorName": "EMC",
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "emcal-digits:EMC/CELLS;emcal-triggerecords:EMC/CELLSTRGR"
+          "query": "emcal-cells:EMC/CELLS;emcal-triggerecords:EMC/CELLSTRGR"
         }
       }
     },
