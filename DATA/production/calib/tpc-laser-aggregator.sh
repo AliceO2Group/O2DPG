@@ -6,7 +6,7 @@ source common/setenv.sh
 # Set general arguments
 source common/getCommonArgs.sh
 
-PROXY_INSPEC="A:TPC/LASERTRACKS;B:TPC/CEDIGITS;eos:***/INFORMATION"
+PROXY_INSPEC="A:TPC/LASERTRACKS;B:TPC/CEDIGITS;eos:***/INFORMATION;D:TPC/CLUSREFS"
 
 WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL \
   --proxy-name tpc-laser-input-proxy \
