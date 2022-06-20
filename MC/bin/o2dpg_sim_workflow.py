@@ -191,10 +191,10 @@ def addWhenActive(detID, needslist, appendstring):
 def retrieve_sor(run_number):
     """
     retrieves start of run (sor)
-    from the RCT/RunInformation table with a simple http request
+    from the RCT/Info/RunInformation table with a simple http request
     in case of problems, 0 will be returned
     """
-    url="http://alice-ccdb.cern.ch/browse/RCT/RunInformation/"+str(run_number)
+    url="http://alice-ccdb.cern.ch/browse/RCT/Info/RunInformation/"+str(run_number)
     ansobject=requests.get(url)
     tokens=ansobject.text.split("\n")
 
