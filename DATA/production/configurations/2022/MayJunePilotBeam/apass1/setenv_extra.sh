@@ -31,6 +31,7 @@ if [[ $remappingITS == 1 ]] || [[ $remappingMFT == 1 ]]; then
   if [[ $remappingMFT == 1 ]]; then
     REMAPPING=$REMAPPING"MFT/Calib/ClusterDictionary"
   fi
+  RAMAPPING=$REMAPPING\"
 fi
 
 echo remapping = $REMAPPING
@@ -68,7 +69,7 @@ export ITS_CONFIG=" --tracking-mode sync_misaligned"
 export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2"
 
 # ad-hoc options for GPU reco workflow
-export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="$VDRIFT;GPU_global.dEdxDisableResidualGainMap=1"
+export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="TPCGasParam.DriftV=$VDRIFT;GPU_global.dEdxDisableResidualGainMap=1"
 
 # ad-hoc settings for TOF reco
 # export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"http://alice-ccdb.cern.ch\""
@@ -81,19 +82,19 @@ export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb"
 export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2.;pvertexer.nSigmaTimeTrack=4.;pvertexer.timeMarginTrackTime=0.5;pvertexer.timeMarginVertexTime=7.;pvertexer.nSigmaTimeCut=10;pvertexer.dbscanMaxDist2=36;pvertexer.dcaTolerance=3.;pvertexer.pullIniCut=100;pvertexer.addZSigma2=0.1;pvertexer.tukey=20.;pvertexer.addZSigma2Debris=0.01;pvertexer.addTimeSigma2Debris=1.;pvertexer.maxChi2Mean=30;pvertexer.timeMarginReattach=3.;pvertexer.addTimeSigma2Debris=1.;pvertexer.dbscanDeltaT=24;pvertexer.maxChi2TZDebris=100;pvertexer.maxMultRatDebris=1.;pvertexer.dbscanAdaptCoef=20.;"
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
 
-export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow="$VDRIFT;$PVERTEXER;$MFT_STROBELGT"
+export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow="TPCGasParam.DriftV=$VDRIFT;$PVERTEXER;$MFT_STROBELGT"
 export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow="$SVTX"
 
 # ad-hoc settings for its-tpc matching
 export ITSTPCMATCH="tpcitsMatch.maxVDriftUncertainty=0.2;tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=1000;tpcitsMatch.crudeAbsDiffCut[0]=5;tpcitsMatch.crudeAbsDiffCut[1]=5;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=10;tpcitsMatch.crudeNSigma2Cut[0]=200;tpcitsMatch.crudeNSigma2Cut[1]=200;tpcitsMatch.crudeNSigma2Cut[2]=200;tpcitsMatch.crudeNSigma2Cut[3]=200;tpcitsMatch.crudeNSigma2Cut[4]=900;"
-export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow="$VDRIFT;$ITSEXTRAERR;$ITSTPCMATCH"
+export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow="TPCGasParam.DriftV=$VDRIFT;$ITSEXTRAERR;$ITSTPCMATCH"
 
 # ad-hoc settings for TOF matching
 export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="--output-type matching-info,calib-info --enable-dia"
-export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow="$VDRIFT;$ITSEXTRAERR"
+export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow="TPCGasParam.DriftV=$VDRIFT;$ITSEXTRAERR"
 
 # ad-hoc settings for TRD matching
-export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking="$VDRIFT;$ITSEXTRAERR"
+export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking="TPCGasParam.DriftV=$VDRIFT;$ITSEXTRAERR"
 
 # ad-hoc settings for FT0
 export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow="--ft0-reconstructor"
