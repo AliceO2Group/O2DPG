@@ -1,60 +1,104 @@
 #!/bin/bash
 
 line=`grep $1 $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/ctf2epn.txt`
-echo $line
-epn=`echo $line | cut -d' ' -f1`
-start=`echo $line | cut -d' ' -f2`
-echo epn = $epn
-echo start = $start
+echo "line found in file = $line"
+if [[ -z $line ]]; then
+  echo "CTF file not present in our list, no remapping needed"
+  export remappingITS=0
+  export remappingMFT=0
+  echo "remappingITS = $remappingITS, remappingMFT = $remappingMFT"
+else
+  epn=`echo $line | cut -d' ' -f1`
+  start=`echo $line | cut -d' ' -f2`
+  echo epn = $epn
+  echo start = $start
 
-lineTimes=`grep ${epn} $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/goodITSMFT_fixed.txt`
-echo lineTimes = $lineTimes
-goodITS=`echo $lineTimes | cut -d' ' -f2`
-echo goodITS = $goodITS
-goodMFT=`echo $lineTimes | sed 's/^[0-9][0-9][0-9] \(2022-[0-9]*-[0-9]*-[0-9]*-[0-9]*-[0-9]*\) \(2022-[0-9]*-[0-9]*-[0-9]*-[0-9]*-[0-9]*\)/\2/'`
-echo goodMFT = $goodMFT
+  lineTimes=`grep ${epn} $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/goodITSMFT_fixed.txt`
+  echo lineTimes = $lineTimes
+  goodITS=`echo $lineTimes | cut -d' ' -f2`
+  echo goodITS = $goodITS
+  goodMFT=`echo $lineTimes | sed 's/^[0-9][0-9][0-9] \(2022-[0-9]*-[0-9]*-[0-9]*-[0-9]*-[0-9]*\) \(2022-[0-9]*-[0-9]*-[0-9]*-[0-9]*-[0-9]*\)/\2/'`
+  echo goodMFT = $goodMFT
 
-startmonth=`echo $start | cut -d'-' -f2`
-startday=`echo $start | cut -d'-' -f3`
-starthour=`echo $start | cut -d'-' -f4`
-startminute=`echo $start | cut -d'-' -f5`
-startsecond=`echo $start | cut -d'-' -f6`
+  startmonth=`echo $start | cut -d'-' -f2`
+  startday=`echo $start | cut -d'-' -f3`
+  starthour=`echo $start | cut -d'-' -f4`
+  startminute=`echo $start | cut -d'-' -f5`
+  startsecond=`echo $start | cut -d'-' -f6`
 
-goodITSmonth=`echo $goodITS | cut -d'-' -f2`
-goodITSday=`echo $goodITS | cut -d'-' -f3`
-goodITShour=`echo $goodITS | cut -d'-' -f4`
-goodITSminute=`echo $goodITS | cut -d'-' -f5`
-goodITSsecond=`echo $goodITS | cut -d'-' -f6`
+  goodITSmonth=`echo $goodITS | cut -d'-' -f2`
+  goodITSday=`echo $goodITS | cut -d'-' -f3`
+  goodITShour=`echo $goodITS | cut -d'-' -f4`
+  goodITSminute=`echo $goodITS | cut -d'-' -f5`
+  goodITSsecond=`echo $goodITS | cut -d'-' -f6`
 
-goodMFTmonth=`echo $goodMFT | cut -d'-' -f2`
-goodMFTday=`echo $goodMFT | cut -d'-' -f3`
-goodMFThour=`echo $goodMFT | cut -d'-' -f4`
-goodMFTminute=`echo $goodMFT | cut -d'-' -f5`
-goodMFTsecond=`echo $goodMFT | cut -d'-' -f6`
+  goodMFTmonth=`echo $goodMFT | cut -d'-' -f2`
+  goodMFTday=`echo $goodMFT | cut -d'-' -f3`
+  goodMFThour=`echo $goodMFT | cut -d'-' -f4`
+  goodMFTminute=`echo $goodMFT | cut -d'-' -f5`
+  goodMFTsecond=`echo $goodMFT | cut -d'-' -f6`
 
-export remappingITS=0
-if [[ $startday < $goodITSday ]]; then
+  echo "good ITS: month = $goodITSmonth, day = $goodITSday, hour = $goodITShour, minute = $goodITSminute, seconds = $goodITSsecond"
+  echo "good MFT: month = $goodMFTmonth, day = $goodMFTday, hour = $goodMFThour, minute = $goodMFTminute, seconds = $goodMFTsecond"
+  echo "checking: month = $startmonth, day = $startday, hour = $starthour, minute = $startminute, seconds = $startsecond"
+
+  if [[ $startday < $goodITSday ]]; then
+    echo "day triggers remappingITS"
     remappingITS=1
-elif [[ $starthour < $goodITShour ]]; then
-    remappingITS=1
-elif [[ $startminute < $goodITSminute ]]; then
-    remappingITS=1
-elif [[ $startsecond < $goodITSsecond ]]; then
-    remappingITS=1
+  elif [[ $startday == $goodITSday ]]; then
+    if [[ $starthour < $goodITShour ]]; then
+      echo "hour triggers remappingITS"
+      remappingITS=1
+    elif [[ $starthour == $goodITShour ]]; then
+      if [[ $startminute < $goodITSminute ]]; then
+	echo "minute triggers remappingITS"
+	remappingITS=1
+      elif [[ $startminute == $goodITSminute ]]; then
+	if [[ $startsecond -le $goodITSsecond ]]; then
+	  echo "second triggers remappingITS"
+	  remappingITS=1
+	else
+	  echo "day, hour, minute would trigger remapping, but seconds are larger than what is needed to trigger remapping for ITS"
+	fi
+      else
+	echo "day, hour would trigger remapping, but minutes are larger than what is needed to trigger remapping for ITS"
+      fi
+    else
+      echo "day would trigger remapping, but minutes are larger than what is needed to trigger remapping for ITS"
+    fi
+  else
+    echo "start day is later than what is needed to trigger remapping for ITS"
+  fi
+
+  if [[ $startday < $goodMFTday ]]; then
+    echo "day triggers remappingMFT"
+    remappingMFT=1
+  elif [[ $startday == $goodMFTday ]]; then
+    if [[ $starthour < $goodMFThour ]]; then
+      echo "hour triggers remappingMFT"
+      remappingMFT=1
+    elif [[ $starthour == $goodMFThour ]]; then
+      if [[ $startminute < $goodMFTminute ]]; then
+	echo "minute triggers remappingMFT"
+	remappingMFT=1
+      elif [[ $startminute == $goodMFTminute ]]; then
+	if [[ $startsecond -le $goodMFTsecond ]]; then
+	  echo "second triggers remappingMFT"
+	  remappingMFT=1
+	else
+	  echo "day, hour, minute would trigger remapping, but seconds are larger than what is needed to trigger remapping for MFT"
+	fi
+      else
+	echo "day, hour would trigger remapping, but minutes are larger than what is needed to trigger remapping for MFT"
+      fi
+    else
+      echo "day would trigger remapping, but minutes are larger than what is needed to trigger remapping for MFT"
+    fi
+  else
+    echo "start day is later than what is needed to trigger remapping for MFT"
+  fi
+
+  echo "start = $start, goodITS = $goodITS, goodMFT = $goodMFT, remappingITS = $remappingITS, remappingMFT = $remappingMFT"
 fi
-
-export remappingMFT=0
-if [[ $startday < $goodMFTday ]]; then
-    remappingMFT=1
-elif [[ $starthour < $goodMFThour ]]; then
-    remappingMFT=1
-elif [[ $startminute < $goodMFTminute ]]; then
-    remappingMFT=1
-elif [[ $startsecond < $goodMFTsecond ]]; then
-    remappingMFT=1
-fi
-
-echo "start = $start, goodITS = $goodITS, goodMFT = $goodMFT, remappingITS = $remappingITS, remappingMFT = $remappingMFT"
-
 
 
