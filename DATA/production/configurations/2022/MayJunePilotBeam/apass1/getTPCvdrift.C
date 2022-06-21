@@ -1,6 +1,7 @@
 #include <cmath>
 #include <fmt/format.h>
 #include <string_view>
+#include <fstream>
 
 #include "TSystem.h"
 
@@ -53,6 +54,10 @@ float getTPCvdrift(int run, std::string_view ltrUrl = "http://ccdb-test.cern.ch:
   const auto corr = ltrCalib->getDriftVCorrection();
   const float vcorr = defaultDriftV / corr;
   printf("vdrift = %f\n", vcorr);
+
+  ofstream fp("vdrift.txt");
+  fp << vcorr << endl;
+  fp.close();
 
   return vcorr;
 }
