@@ -5,7 +5,9 @@ if [[ -z "$WORKFLOW" ]] || [[ -z "$MYDIR" ]]; then
   exit 1
 fi
 
-if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
+if [[ -z $QC_JSON_FROM_OUTSIDE && ! -z $GEN_TOPO_QC_JSON_FILE && -f $GEN_TOPO_QC_JSON_FILE ]]; then
+  QC_JSON_FROM_OUTSIDE=$GEN_TOPO_QC_JSON_FILE
+elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
   if [[ $EPNSYNCMODE == 1 || "0$GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL" == "01" ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=consul://o2/components/qc/ANY/any/tpc-full-qcmn
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=consul://o2/components/qc/ANY/any/its-qcmn-epn-full
@@ -137,11 +139,15 @@ if [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
   fi
 
   if [[ ! -z "$JSON_FILES" ]]; then
-    mkdir -p $GEN_TOPO_WORKDIR/json_cache
-    if [[ "0$GEN_TOPO_ONTHEFLY" == "01" ]]; then
-      find $GEN_TOPO_WORKDIR/json_cache/ -maxdepth 1 -type f -mtime +30 | xargs rm -f
+    if [[ -z "$GEN_TOPO_QC_JSON_FILE" ]]; then
+      mkdir -p $GEN_TOPO_WORKDIR/json_cache
+      if [[ "0$GEN_TOPO_ONTHEFLY" == "01" ]]; then
+        find $GEN_TOPO_WORKDIR/json_cache/ -maxdepth 1 -type f -mtime +30 | xargs rm -f
+      fi
+      MERGED_JSON_FILENAME=$GEN_TOPO_WORKDIR/json_cache/`date +%Y%m%d-%H%M%S`-$$-$RANDOM-$OUTPUT_SUFFIX.json
+    else
+      MERGED_JSON_FILENAME=$GEN_TOPO_QC_JSON_FILE
     fi
-    MERGED_JSON_FILENAME=$GEN_TOPO_WORKDIR/json_cache/`date +%Y%m%d-%H%M%S`-$$-$RANDOM-$OUTPUT_SUFFIX.json
     jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $QC_JSON_GLOBAL $JSON_FILES > $MERGED_JSON_FILENAME
     if [[ $? != 0 ]]; then
       echo Merging QC workflow with JSON files $JSON_FILES failed 1>&2
