@@ -58,7 +58,8 @@
         },
         "taskParameters": {
           "PerChannel": "True",
-          "RangeMaxMultiplicity": "5000"
+          "RangeMaxMultiplicity": "5000",
+          "NoiseClassSelection": "0"
         },
         "location": "local",
         "localMachines": [
