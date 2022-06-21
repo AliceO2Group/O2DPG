@@ -86,10 +86,10 @@ class CCDBAccessor:
 def retrieve_sor_eor(ccdbreader, run_number):
     """
     retrieves start of run (sor) and end of run (eor) given a run number
-    from the RCT/RunInformation table
+    from the RCT/Info/RunInformation table
     """
 
-    path_run_info = "RCT/RunInformation"
+    path_run_info = "RCT/Info/RunInformation"
     header = ccdbreader.fetch_header(path_run_info, run_number)
     if not header:
        print(f"WARNING: Cannot find run information for run number {r}")

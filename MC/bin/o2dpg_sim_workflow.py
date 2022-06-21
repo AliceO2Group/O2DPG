@@ -191,10 +191,10 @@ def addWhenActive(detID, needslist, appendstring):
 def retrieve_sor(run_number):
     """
     retrieves start of run (sor)
-    from the RCT/RunInformation table with a simple http request
+    from the RCT/Info/RunInformation table with a simple http request
     in case of problems, 0 will be returned
     """
-    url="http://alice-ccdb.cern.ch/browse/RCT/RunInformation/"+str(run_number)
+    url="http://alice-ccdb.cern.ch/browse/RCT/Info/RunInformation/"+str(run_number)
     ansobject=requests.get(url)
     tokens=ansobject.text.split("\n")
 
@@ -741,17 +741,17 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------
    tpcreconeeds=[]
    if not args.combine_tpc_clusterization:
-     # We treat TPC clusterization in multiple (sector) steps in order to stay within the memory limit
-     # We seem to be needing to ask for 2 sectors at least, otherwise there is a problem with the branch naming.
+     # We treat TPC clusterization in multiple (sector) steps in order to 
+     # stay within the memory limit or to parallelize over sector from outside (not yet supported within cluster algo)
      tpcclustertasks=[]
-     sectorpertask=6
+     sectorpertask=18
      for s in range(0,35,sectorpertask):
        taskname = 'tpcclusterpart' + str((int)(s/sectorpertask)) + '_' + str(tf)
        tpcclustertasks.append(taskname)
        tpcclussect = createTask(name=taskname, needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='2', mem='8000')
        tpcclussect['cmd'] = '${O2_ROOT}/bin/o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' --tpc-lanes ' + str(NWORKERS)
        tpcclussect['cmd'] += ' | ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --outfile tpc-native-clusters-part' + str((int)(s/sectorpertask)) + '.root --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' ' + putConfigValuesNew(["GPU_global"], {"GPU_proc.ompThreads" : 4})
-       tpcclussect['env'] = { "OMP_NUM_THREADS" : "4", "SHMSIZE" : "5000000000" }
+       tpcclussect['env'] = { "OMP_NUM_THREADS" : "4", "SHMSIZE" : "16000000000" }
        workflow['stages'].append(tpcclussect)
 
      TPCCLUSMERGEtask=createTask(name='tpcclustermerge_'+str(tf), needs=tpcclustertasks, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='10000')
@@ -981,10 +981,10 @@ for tf in range(1, NTIMEFRAMES + 1):
 
      ### EMCAL
      if isActive('EMC'):
-        addQCPerTF(taskName='emcDigitsQC',
+        addQCPerTF(taskName='emcCellQC',
                    needs=[EMCRECOtask['name']],
                    readerCommand='o2-emcal-cell-reader-workflow --infile emccells.root',
-                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-digits-task.json')
+                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-cell-task.json')
      ### FT0
      addQCPerTF(taskName='RecPointsQC',
                    needs=[FT0RECOtask['name']],

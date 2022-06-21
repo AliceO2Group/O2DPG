@@ -89,7 +89,10 @@ for line in f:
         if len(args) > 2 and not 'O2_ROOT' in os.environ:
             print('O2 not loaded')
             raise
+        xml_postprocessing = ('GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND'])) or ('GEN_TOPO_DDS_ASSETS' in os.environ and int(os.environ['GEN_TOPO_DDS_ASSETS']))
         with tempfile.TemporaryDirectory(prefix='o2_workflow_') as tmpdir:
+            if 'GEN_TOPO_OVERRIDE_TEMPDIR' in os.environ:
+                tmpdir = os.environ['GEN_TOPO_OVERRIDE_TEMPDIR']
             if NO_PROCESSING_MODE and len(args) > 2:
                 print('Cannot use DPL workflow together with DD mode', os.environ['DDMODE'])
                 raise
@@ -119,7 +122,7 @@ for line in f:
                 else:
                     command_log_filter = '"^\[INFO"'
                 command_preopt = 'GEN_TOPO_CALIB_WORKFLOW=' + str(is_calib_workflow)
-                if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
+                if xml_postprocessing:
                     json_cache_path = os.environ['GEN_TOPO_WORKDIR'] + '/json_cache'
                     filename_xml = filename
                     if not 'GEN_TOPO_WORKDIR' in os.environ:
@@ -142,12 +145,26 @@ for line in f:
                             break
                         print(line)
                     raise
-                if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
+                if xml_postprocessing:
                     command = 'cat ' + filename + ' | o2-dpl-run -b --dds --dds-workflow-suffix _' + wf[0] + str(i) + ' --resources-monitoring 15 '  + ' | grep -v ' + command_log_filter + ' > ' + filename_xml
                     print('Running CAT command', command)
                     if os.system(command) != 0:
                         print('Error running command', command)
-                    command = 'sed -i \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ' + filename + ' \\2,\' ' + filename_xml
+                    if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
+                        command = 'sed -i \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ' + filename + ' \\2,\' ' + filename_xml
+                    if 'GEN_TOPO_DDS_ASSETS' in os.environ and int(os.environ['GEN_TOPO_DDS_ASSETS']):
+                        command = 'sed -i \'s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/\'"\'"\'/\&#39;/g\' ' + filename
+                        print('Running SED command', command)
+                        if os.system(command) != 0:
+                            print('Error running sed on JSON file')
+                        asset_name = 'dpl_json_' + wf[0] + '_' + str(i)
+                        command = 'sed -i ' + \
+                                  '-e \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ${DDS_LOCATION}/' + asset_name + ' \\2,\' ' + \
+                                  '-e \'/^\( *.decltask name.*>$\)/a <assets><name>' + asset_name + '</name></assets>\' ' + \
+                                  '-e \'/^\( *.topology name.*>$\)/a <asset name="' + asset_name + '" type="inline" visibility="global" value="\' ' + \
+                                  '-e \'/^\( *.topology name.*>$\)/r ' + filename + '\' ' + \
+                                  '-e \'/^\( *.topology name.*>$\)/a " />\' ' + \
+                                  filename_xml
                     print('Running SED command', command)
                     if os.system(command) != 0:
                         print('Error running sed on XML file')
