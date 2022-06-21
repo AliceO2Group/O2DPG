@@ -159,7 +159,7 @@ for line in f:
                             print('Error running sed on JSON file')
                         asset_name = 'dpl_json_' + wf[0] + '_' + str(i)
                         command = 'sed -i ' + \
-                                  '-e \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ${DDS_LOCATION}/' + asset_name + ' \\2,\' ' + \
+                                  '-e \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ${DDS_LOCATION}/' + asset_name + '.asset \\2,\' ' + \
                                   '-e \'/^\( *.decltask name.*>$\)/a <assets><name>' + asset_name + '</name></assets>\' ' + \
                                   '-e \'/^\( *.topology name.*>$\)/a <asset name="' + asset_name + '" type="inline" visibility="global" value="\' ' + \
                                   '-e \'/^\( *.topology name.*>$\)/r ' + filename + '\' ' + \
