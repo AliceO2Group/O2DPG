@@ -109,7 +109,11 @@ echo "Checking current directory content"
 ls -altr 
 
 # define whether to remap or not the Cluster Dictionaries for ITS and MFT
-source $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/parse.sh `cat list.list`
+# needed only till run 517224 included (other runs are mapped in the ctf2epn
+# but they are not for async reco)
+if [[ $RUNNUMBER -le 517224 ]]; then
+  source $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/parse.sh `cat list.list`
+fi
 
 if [[ -f "setenv_extra.sh" ]]; then
     source setenv_extra.sh $RUNNUMBER $BEAMTYPE
