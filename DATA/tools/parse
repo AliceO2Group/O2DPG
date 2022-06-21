@@ -153,7 +153,7 @@ for line in f:
                     if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
                         command = 'sed -i \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ' + filename + ' \\2,\' ' + filename_xml
                     if 'GEN_TOPO_DDS_ASSETS' in os.environ and int(os.environ['GEN_TOPO_DDS_ASSETS']):
-                        command = 'sed -i \'s/\\(["\'"\'"\'<>]\\)/\\\\\\1/g\' ' + filename
+                        command = 'sed -i \'s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/\'"\'"\'/\&#39;/g\' ' + filename
                         print('Running SED command', command)
                         if os.system(command) != 0:
                             print('Error running sed on JSON file')
