@@ -151,7 +151,7 @@ for line in f:
                     if os.system(command) != 0:
                         print('Error running command', command)
                     if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
-                        command = 'sed -i \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ' + filename + ' \\2,\' ' + filename_xml
+                        command = 'sed -i \'s,^\( *<exe reachable="true">\).*\(|[^|]*</exe>\)$,\\1 cat ' + filename + ' \\2,\' ' + filename_xml
                     if 'GEN_TOPO_DDS_ASSETS' in os.environ and int(os.environ['GEN_TOPO_DDS_ASSETS']):
                         command = 'sed -i \'s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/\'"\'"\'/\&#39;/g\' ' + filename
                         print('Running SED command', command)
@@ -159,11 +159,11 @@ for line in f:
                             print('Error running sed on JSON file')
                         asset_name = 'dpl_json_' + wf[0] + '_' + str(i)
                         command = 'sed -i ' + \
-                                  '-e \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ${DDS_LOCATION}/' + asset_name + '.asset \\2,\' ' + \
-                                  '-e \'/^\( *.decltask name.*>$\)/a <assets><name>' + asset_name + '</name></assets>\' ' + \
-                                  '-e \'/^\( *.topology name.*>$\)/a <asset name="' + asset_name + '" type="inline" visibility="global" value="\' ' + \
-                                  '-e \'/^\( *.topology name.*>$\)/r ' + filename + '\' ' + \
-                                  '-e \'/^\( *.topology name.*>$\)/a " />\' ' + \
+                                  '-e \'s,^\( *<exe reachable="true">\).*\(|[^|]*</exe>\)$,\\1 cat ${DDS_LOCATION}/' + asset_name + '.asset \\2,\' ' + \
+                                  '-e \'/^\( *<decltask name.*>$\)/a <assets><name>' + asset_name + '</name></assets>\' ' + \
+                                  '-e \'/^\( *<topology name.*>$\)/a <asset name="' + asset_name + '" type="inline" visibility="global" value="\' ' + \
+                                  '-e \'/^\( *<topology name.*>$\)/r ' + filename + '\' ' + \
+                                  '-e \'/^\( *<topology name.*>$\)/a " />\' ' + \
                                   filename_xml
                     print('Running SED command', command)
                     if os.system(command) != 0:
