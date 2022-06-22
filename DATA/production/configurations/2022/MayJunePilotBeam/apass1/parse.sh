@@ -10,8 +10,8 @@ if [[ -z $line ]]; then
 else
   epn=`echo $line | cut -d' ' -f1`
   start=`echo $line | cut -d' ' -f2`
-  echo epn = $epn
-  echo start = $start
+  echo "epn = $epn"
+  echo "start of CTF data = $start"
 
   lineTimes=`grep ${epn} $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/goodITSMFT_fixed.txt`
   echo lineTimes = $lineTimes
@@ -42,61 +42,78 @@ else
   echo "good MFT: month = $goodMFTmonth, day = $goodMFTday, hour = $goodMFThour, minute = $goodMFTminute, seconds = $goodMFTsecond"
   echo "checking: month = $startmonth, day = $startday, hour = $starthour, minute = $startminute, seconds = $startsecond"
 
-  if [[ $startday < $goodITSday ]]; then
-    echo "day triggers remappingITS"
+  # check for ITS
+  if [[ $startmonth < $goodITSmonth ]]; then
+    echo "month triggers remappingITS"
     remappingITS=1
-  elif [[ $startday == $goodITSday ]]; then
-    if [[ $starthour < $goodITShour ]]; then
-      echo "hour triggers remappingITS"
+  elif [[ $startmonth == $goodITSmonth ]]; then
+    if [[ $startday < $goodITSday ]]; then
+      echo "day triggers remappingITS"
       remappingITS=1
-    elif [[ $starthour == $goodITShour ]]; then
-      if [[ $startminute < $goodITSminute ]]; then
-	echo "minute triggers remappingITS"
+    elif [[ $startday == $goodITSday ]]; then
+      if [[ $starthour < $goodITShour ]]; then
+	echo "hour triggers remappingITS"
 	remappingITS=1
-      elif [[ $startminute == $goodITSminute ]]; then
-	if [[ $startsecond -le $goodITSsecond ]]; then
-	  echo "second triggers remappingITS"
+      elif [[ $starthour == $goodITShour ]]; then
+	if [[ $startminute < $goodITSminute ]]; then
+	  echo "minute triggers remappingITS"
 	  remappingITS=1
+	elif [[ $startminute == $goodITSminute ]]; then
+	  if [[ $startsecond -le $goodITSsecond ]]; then
+	    echo "second triggers remappingITS"
+	    remappingITS=1
+	  else
+	    echo "month, day, hour, minute would trigger remapping, but seconds are larger than what is needed to trigger remapping for ITS"
+	  fi
 	else
-	  echo "day, hour, minute would trigger remapping, but seconds are larger than what is needed to trigger remapping for ITS"
+	  echo "month, day, hour would trigger remapping, but minutes are larger than what is needed to trigger remapping for ITS"
 	fi
       else
-	echo "day, hour would trigger remapping, but minutes are larger than what is needed to trigger remapping for ITS"
+	echo "month, day would trigger remapping, but hours are larger than what is needed to trigger remapping for ITS"
       fi
     else
-      echo "day would trigger remapping, but minutes are larger than what is needed to trigger remapping for ITS"
+      echo "month, would trigger remapping, but days are larger than what is needed to trigger remapping for ITS"
     fi
-  else
-    echo "start day is later than what is needed to trigger remapping for ITS"
+  else 
+    echo "start month is later than what is needed to trigger remapping for ITS"
   fi
 
-  if [[ $startday < $goodMFTday ]]; then
-    echo "day triggers remappingMFT"
+  # check for MFT
+  if [[ $startmonth < $goodMFTmonth ]]; then
+    echo "month triggers remappingMFT"
     remappingMFT=1
-  elif [[ $startday == $goodMFTday ]]; then
-    if [[ $starthour < $goodMFThour ]]; then
-      echo "hour triggers remappingMFT"
+  elif [[ $startmonth == $goodMFTmonth ]]; then
+    if [[ $startday < $goodMFTday ]]; then
+      echo "day triggers remappingMFT"
       remappingMFT=1
-    elif [[ $starthour == $goodMFThour ]]; then
-      if [[ $startminute < $goodMFTminute ]]; then
-	echo "minute triggers remappingMFT"
+    elif [[ $startday == $goodMFTday ]]; then
+      if [[ $starthour < $goodMFThour ]]; then
+	echo "hour triggers remappingMFT"
 	remappingMFT=1
-      elif [[ $startminute == $goodMFTminute ]]; then
-	if [[ $startsecond -le $goodMFTsecond ]]; then
-	  echo "second triggers remappingMFT"
+      elif [[ $starthour == $goodMFThour ]]; then
+	if [[ $startminute < $goodMFTminute ]]; then
+	  echo "minute triggers remappingMFT"
 	  remappingMFT=1
+	elif [[ $startminute == $goodMFTminute ]]; then
+	  if [[ $startsecond -le $goodMFTsecond ]]; then
+	    echo "second triggers remappingMFT"
+	    remappingMFT=1
+	  else
+	    echo "month, day, hour, minute would trigger remapping, but seconds are larger than what is needed to trigger remapping for MFT"
+	  fi
 	else
-	  echo "day, hour, minute would trigger remapping, but seconds are larger than what is needed to trigger remapping for MFT"
+	  echo "month, day, hour would trigger remapping, but minutes are larger than what is needed to trigger remapping for MFT"
 	fi
       else
-	echo "day, hour would trigger remapping, but minutes are larger than what is needed to trigger remapping for MFT"
+	echo "month, day would trigger remapping, but hours are larger than what is needed to trigger remapping for MFT"
       fi
     else
-      echo "day would trigger remapping, but minutes are larger than what is needed to trigger remapping for MFT"
+      echo "month, would trigger remapping, but days are larger than what is needed to trigger remapping for MFT"
     fi
-  else
-    echo "start day is later than what is needed to trigger remapping for MFT"
+  else 
+    echo "start month is later than what is needed to trigger remapping for MFT"
   fi
+
 
   echo "start = $start, goodITS = $goodITS, goodMFT = $goodMFT, remappingITS = $remappingITS, remappingMFT = $remappingMFT"
 fi
