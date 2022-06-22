@@ -27,7 +27,17 @@ if [ -z "$IS_SIMULATED_DATA" ]; then echo \$IS_SIMULATED_DATA missing; exit 1; f
 if [ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]; then echo \$GEN_TOPO_ODC_EPN_TOPO_ARGS missing; exit 1; fi
 if [ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]; then echo \$GEN_TOPO_EPN_CCDB_SERVER missing; exit 1; fi
 
-export GEN_TOPO_WORKDIR=$GEN_TOPO_WORKDIR/${GEN_TOPO_PARTITION}_${GEN_TOPO_ONTHEFLY}
+for i in `seq 1 100`; do
+  exec 100>${GEN_TOPO_WORKDIR}/${i}.lock || { echo Cannot create file descriptor for lock file 1>&2; exit 1; }
+  flock -n -E 100 100
+  RETVAL=$?
+  [[ $RETVAL == 100 ]] && continue
+  [[ $RETVAL != 0 ]] && { echo Cannot open lock file, retval $RETVAL 1>&2; exit 1; }
+  export GEN_TOPO_WORKDIR=$GEN_TOPO_WORKDIR/${i}_${GEN_TOPO_ONTHEFLY}
+  GEN_TOPO_LOCKFILE=${GEN_TOPO_WORKDIR}/${i}.lock
+  break
+done
+[[ -z $GEN_TOPO_LOCKFILE ]] && { echo Topology generation could not obtained a work dir 1>&1; exit 1; }
 
 if [[ "0$DDMODE" == "0discard" ]] || [[ "0$DDMODE" == "0disk" ]]; then
   export GEN_TOPO_LIBRARY_FILE="production/no-processing.desc"
@@ -41,7 +51,7 @@ if [ $GEN_TOPO_HASH == 1 ]; then
   if [ "0$GEN_TOPO_ONTHEFLY" == "01" ]; then
     export GEN_TOPO_CACHEABLE=1
   fi
-  CACHE_HASH=`echo $GEN_TOPO_PARTITION $GEN_TOPO_SOURCE $GEN_TOPO_LIBRARY_FILE $GEN_TOPO_WORKFLOW_NAME $OVERRIDE_PDPSUITE_VERSION $SET_QCJSON_VERSION $DD_DISK_FRACTION $SHM_MANAGER_SHMID $WORKFLOW_DETECTORS $WORKFLOW_DETECTORS_QC $WORKFLOW_DETECTORS_CALIB $WORKFLOW_PARAMETERS $RECO_NUM_NODES_OVERRIDE $DDMODE $DDWORKFLOW $INRAWCHANNAME $FILEWORKDIR $CTF_DIR | md5sum | awk '{print $1}'`
+  CACHE_HASH=`echo $GEN_TOPO_SOURCE $GEN_TOPO_LIBRARY_FILE $GEN_TOPO_WORKFLOW_NAME $OVERRIDE_PDPSUITE_VERSION $SET_QCJSON_VERSION $DD_DISK_FRACTION $SHM_MANAGER_SHMID $WORKFLOW_DETECTORS $WORKFLOW_DETECTORS_QC $WORKFLOW_DETECTORS_CALIB $WORKFLOW_PARAMETERS $RECO_NUM_NODES_OVERRIDE $DDMODE $DDWORKFLOW $INRAWCHANNAME $FILEWORKDIR $CTF_DIR | md5sum | awk '{print $1}'`
   if [ "0$GEN_TOPO_WIPE_CACHE" == "01" ]; then
     rm -f cache/$CACHE_HASH
   fi
@@ -78,3 +88,4 @@ fi
 cat $GEN_TOPO_WORKDIR/output.xml
 echo Removing temporary output file $GEN_TOPO_WORKDIR/output.xml 1>&2
 rm $GEN_TOPO_WORKDIR/output.xml
+rm -f $GEN_TOPO_LOCKFILE
