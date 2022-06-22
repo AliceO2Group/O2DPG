@@ -3,10 +3,16 @@
 /// \author Nicolò Jacazio nicolo.jacazio@cern.ch
 /// \since  05/08/2022
 /// \brief  Implementation of a gun generator for multiple particles, built on generator_pythia8_longlived.C
+///         Needs PDG, Number of injected, minimum and maximum pT. These can be provided in three ways, bundeling variables, particles or from input file
 ///         usage:
-///               o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLongLivedMultiple({1010010030}, {10}, {0.5}, {10})'
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLongLivedMultiple({1000010020, 1000010030}, {10, 10}, {0.5, 0.5}, {10, 10})'`
+///               Here PDG, Number injected, pT limits are separated and matched by index
 ///         or:
-///               o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLongLivedMultiple({{1010010030, 10, 0.5, 10}})'
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLongLivedMultiple({{1000010020, 10, 0.5, 10}, {1000010030, 10, 0.5, 10}})'`
+///               Here PDG, Number injected, pT limits are separated are divided per particle
+///         or:
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLongLivedMultiple("${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun")'`
+///               Here PDG, Number injected, pT limits are provided via an intermediate configuration file
 ///
 
 #include "generator_pythia8_longlived.C"
