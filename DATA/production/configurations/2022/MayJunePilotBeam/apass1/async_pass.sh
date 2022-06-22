@@ -96,7 +96,11 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 	exit 2
     fi
     tar -xzvf commonInput.tgz
-    source $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/selectSettings.sh
+    SELECTSETTINGSSCRIPT="$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/selectSettings.sh"
+    if [[ -f "selectSettings.sh" ]]; then
+      SELECTSETTINGSSCRIPT="selectSettings.sh"
+    fi
+    source $SELECTSETTINGSSCRIPT
     # run specific archive
     if [[ ! -f runInput_$RUNNUMBER.tgz ]]; then
 	echo "No runInput_$RUNNUMBER.tgz, let's hope we don't need it"
@@ -111,8 +115,12 @@ ls -altr
 # define whether to remap or not the Cluster Dictionaries for ITS and MFT
 # needed only till run 517224 included (other runs are mapped in the ctf2epn
 # but they are not for async reco)
+PARSESCRIPT="$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/parse.sh"
+if [[ -f "parse.sh" ]]; then
+  PARSESCRIPT="parse.sh"
+fi
 if [[ $RUNNUMBER -le 517224 ]]; then
-  source $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/parse.sh `cat list.list`
+  source $PARSESCRIPT `cat list.list`
 fi
 
 if [[ -f "setenv_extra.sh" ]]; then
