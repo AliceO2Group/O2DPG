@@ -346,7 +346,7 @@ def rel_val_sim_dirs(args):
         json.dump(file_sizes_to_json, f, indent=2)
 
     # enable all if everything is disabled
-    if not any(args.with_hits, args.with_tpctracks, args.with_kine, args.with_analysis, args.with_qc):
+    if not any((args.with_hits, args.with_tpctracks, args.with_kine, args.with_analysis, args.with_qc)):
         args.with_hits, args.with_tpctracks, args.with_kine, args.with_analysis, args.with_qc = (True,) * 5
 
     # hits
