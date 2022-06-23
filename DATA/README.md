@@ -154,7 +154,7 @@ FILEWORKDIR=/home/epn/odc/files EPNSYNCMODE=1 DDWORKFLOW=tools/datadistribution_
   - If you want to specify the number of reconstruction nodes to use here, you can use `RECO_NUM_NODES_OVERRIDE`, otherwise the default from your description library file will be used (leave it empty or `=0`).
   - The `WORKFLOW_DETECTORS` and `WORKFLOW_PARAMETERS` options are optional, your workflow does not need to use them. They are mostly for more complex workflows, so you can ignore them for now`.
   - Leave `DDMODE=processing` in order to run a workflow.
-  - `GEN_TOPO_PARTITION` and `NHBPERTF` will be set by AliECS later automatically, no need to change them.
+  - `NHBPERTF` will be set by AliECS later automatically, no need to change them.
   - Change the output filename to a file somewhere in your `$HOME`, the default is `$HOME`/gen_topo_output.xml. This will be the file you have to enter in AliECS as topology.
 - Run `run.sh`
 - Put the output file (default is `$HOME/gen_topo_output.xml`) as EPN DDS topology in the AliECS GUI.
@@ -196,7 +196,6 @@ drohr-workflow: "O2PDPSuite" reco,10,10,"SHMSIZE=128000000000 testing/private/dr
 [drohr@epn245 test]$ cat run.sh
 #!/bin/bash
 
-export GEN_TOPO_PARTITION=test                                       # ECS Partition
 export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 
 # Use these settings to fetch the Workflow Repository using a hash / tag
@@ -247,7 +246,6 @@ For reference, here is the creation of the XML for the full synchronous processi
 [drohr@epn245 test]$ cat run.sh
 #!/bin/bash
 
-export GEN_TOPO_PARTITION=test                                       # ECS Partition
 export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 
 # Use these settings to fetch the Workflow Repository using a hash / tag

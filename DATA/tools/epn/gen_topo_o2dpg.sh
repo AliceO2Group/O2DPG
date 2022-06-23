@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Check settings coming from AliECS via env variables
-if [ -z $GEN_TOPO_PARTITION ]; then echo \$GEN_TOPO_PARTITION missing; exit 1; fi # Partition
 if [ -z $GEN_TOPO_HASH ]; then echo \$GEN_TOPO_HASH missing; exit 1; fi # Flag whether source is a hash or a folder
 if [ -z $GEN_TOPO_SOURCE ]; then echo \$GEN_TOPO_SOURCE missing; exit 1; fi # O2DPG repository source, either a commit hash or a path
 if [ -z $GEN_TOPO_LIBRARY_FILE ]; then echo \$GEN_TOPO_LIBRARY_FILE missing; exit 1; fi # Topology description library file in the DATA path of the O2DPG repository
