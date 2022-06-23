@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <filesystem>
 using namespace std;
 
 TFile* fileSummaryOutput = nullptr;
@@ -26,6 +27,9 @@ enum options {
   // ...
 };
 
+// Disable plotting
+bool NO_PLOTTING = false;
+
 void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& currentPrefix = "");
 void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix = "");
 void ProcessDirCollection(TDirectoryFile* dirCollect);
@@ -35,6 +39,8 @@ void WriteTEfficiency(TEfficiency* obj, TDirectory* outDir, std::string const& c
 void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix = "");
 void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
                    bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests);
+void PlotOverlayAndRatio(TH1* hA, TH1* hB);
+void CompareHistosRatio(TH1* hA, TH1* hB);
 bool PotentiallySameHistograms(TH1*, TH1*);
 struct results CompareChiSquare(TH1* hA, TH1* hB, double varChi2);
 struct results CompareBinContent(TH1* hA, TH1* hB, double valMeanDiff);
@@ -59,6 +65,82 @@ bool areSufficientlyEqualNumbers(T a, T b, T epsilon = T(0.00001))
   return std::abs(a - b) <= epsilon;
 }
 
+// overlay 2 1D histograms
+void overlay1D(TH1* hA, TH1* hB, std::string const& outputDir)
+{
+  if (NO_PLOTTING) {
+    return;
+  }
+  TCanvas c("overlay", "", 800, 800);
+  auto yMax = std::max(hA->GetMaximum(), hB->GetMaximum());
+  auto yMin = std::min(hA->GetMaximum(), hB->GetMaximum());
+  auto yDiff = yMax - yMin;
+  std::string frameString = std::string(hA->GetTitle()) + ";" + hA->GetXaxis()->GetTitle() + ";" + hA->GetYaxis()->GetTitle();
+  auto frame = c.DrawFrame(hA->GetXaxis()->GetXmin(), yMin, hA->GetXaxis()->GetXmax(), yMax + 0.5 * yDiff, frameString.c_str());
+  c.cd();
+  hA->SetLineColor(kRed + 2);
+  hA->SetLineStyle(1);
+  hA->SetLineWidth(1);
+  hA->SetStats(0);
+  hB->SetLineColor(kBlue + 1);
+  hB->SetLineStyle(10);
+  hB->SetLineWidth(1);
+  hB->SetStats(0);
+  TLegend l(0.5, 0.8, 0.9, 0.89);
+  l.AddEntry(hA, "first");
+  l.AddEntry(hB, "second");
+  l.Draw();
+  // hA->Draw("same");
+  // hB->Draw("same");
+  TRatioPlot rp(hA, hB);
+  rp.Draw("same");
+  rp.GetLowerRefGraph()->SetMinimum(0.);
+  rp.GetLowerRefGraph()->SetMaximum(10.);
+
+  auto graph = rp.GetLowerRefGraph();
+  auto xLow = hA->GetBinCenter(std::min(hA->FindFirstBinAbove(), hB->FindFirstBinAbove()));
+  auto xUp = hA->GetBinCenter(std::min(hA->FindLastBinAbove(), hB->FindLastBinAbove()));
+  TF1 func("func", "[0] * x + [1]", xLow, xUp);
+  func.SetParameter(0, 0.);
+  func.SetParameter(1, 1.);
+  // find first and last bin above 0
+
+  graph->Fit(&func, "LEMR");
+  rp.GetLowerPad()->cd();
+  func.Draw("same");
+
+  auto savePath = outputDir + "/" + hA->GetName() + ".png";
+  c.SaveAs(savePath.c_str());
+  c.Close();
+}
+
+// entry point for overlay plots
+void PlotOverlayAndRatio(TH1* hA, TH1* hB)
+{
+  std::string outputDir("overlayPlots");
+  if (!std::filesystem::exists(outputDir)) {
+    std::filesystem::create_directory(outputDir);
+  }
+  auto hA3D = dynamic_cast<TH3*>(hA);
+  auto hB3D = dynamic_cast<TH3*>(hB);
+  if (hA3D || hB3D) {
+    std::cerr << "Cannot yet overlay 3D histograms\nSkipping" << hA->GetName() << "\n";
+    return;
+  }
+
+  auto hA2D = dynamic_cast<TH2*>(hA);
+  auto hB2D = dynamic_cast<TH2*>(hB);
+
+  if (hA2D && hB2D) {
+    // could be casted to 2D, so plot that
+    // overlay2D(hA2D, hB2D, outputDir);
+    std::cerr << "Cannot yet overlay 2D histograms (under development)\nSkipping" << hA->GetName() << "\n";
+    return;
+  }
+
+  overlay1D(hA, hB, outputDir);
+}
+
 // what to give as input:
 // 1) name and path of first file,
 // 2) name and path of second file,
@@ -69,8 +151,11 @@ bool areSufficientlyEqualNumbers(T a, T b, T epsilon = T(0.00001))
 
 void ReleaseValidation(const TString filename1, const TString filename2,
                        int whichTest = 1, double valueChi2 = 1.5, double valueMeanDiff = 1.5, double valueEntriesDiff = 0.01,
-                       bool selectCritical = false)
+                       bool selectCritical = false, bool no_plotting = false)
 {
+  gROOT->SetBatch();
+  NO_PLOTTING = no_plotting;
+
   if (whichTest < 1 || whichTest > 7) {
     std::cerr << "ERROR: Please select which test you want to perform:\n"
               << "1->Chi-square; 2--> ContBinDiff; 3 --> Chi-square+MeanDiff; 4->EntriesDiff; 5--> EntriesDiff + Chi2; 6 -->  EntriesDiff + MeanDiff; 7 --> EntriesDiff + Chi2 + MeanDiff\n";
@@ -159,6 +244,7 @@ void ReleaseValidation(const TString filename1, const TString filename2,
 
     std::cout << "Comparing " << hA->GetName() << " and " << hB->GetName() << "\n";
     CompareHistos(hA, hB, whichTest, valueChi2, valueMeanDiff, valueEntriesDiff, isFirstComparison, isLastComparison, hSummaryCheck, hSummaryTests);
+    CompareHistosRatio(hA, hB);
 
     nComparisons++;
     if (nComparisons == 1)
@@ -209,7 +295,7 @@ void ReleaseValidation(const TString filename1, const TString filename2,
   }
   fileSummaryOutput->Close();
 
-  WriteToJson(hSummaryCheck,hSummaryTests);
+  WriteToJson(hSummaryCheck, hSummaryTests);
 }
 
 // setting the labels of the Z axis for the colz plot
@@ -352,12 +438,25 @@ void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObject
   std::cout << "Objects processed in MonitorObjectCollection:" << nProcessed << "\n";
 }
 
+// make sure we don't have any special characters in the names, such as "/"
+void adjustName(TObject* o)
+{
+  if (auto oNamed = dynamic_cast<TNamed*>(o)) {
+    std::string name(oNamed->GetName());
+    std::replace(name.begin(), name.end(), '/', '_');
+    oNamed->SetName(name.c_str());
+    return;
+  }
+  std::cerr << "WARNING: Cannot adjust name of object with name " << o->GetName() << ". It might not be evaluated.\n";
+}
+
 // decide which concrete function to call to write the given object
 bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefix)
 {
   if (auto monObj = dynamic_cast<o2::quality_control::core::MonitorObject*>(o)) {
     return WriteObject(monObj->getObject(), outDir, currentPrefix);
   }
+  adjustName(o);
   if (auto eff = dynamic_cast<TEfficiency*>(o)) {
     WriteTEfficiency(eff, outDir, currentPrefix);
     return true;
@@ -378,13 +477,15 @@ void WriteHisto(TH1* hA, TDirectory* outDir, std::string const& currentPrefix)
 {
   TString hAcln = hA->ClassName();
 
-  TCanvas cc(Form("%s_%s", outDir->GetName(), hA->GetName()), Form("%s_%s", outDir->GetName(), hA->GetName()));
-  if (hAcln.Contains("TH2")) {
-    hA->Draw("colz");
-  } else {
-    hA->DrawNormalized();
+  if (!NO_PLOTTING) {
+    TCanvas cc(Form("%s_%s", outDir->GetName(), hA->GetName()), Form("%s_%s", outDir->GetName(), hA->GetName()));
+    if (hAcln.Contains("TH2")) {
+      hA->Draw("colz");
+    } else {
+      hA->DrawNormalized();
+    }
+    cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hA->GetName()));
   }
-  cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hA->GetName()));
   WriteToDirectory(hA, outDir, currentPrefix);
 }
 
@@ -404,22 +505,23 @@ void WriteTEfficiency(TEfficiency* hEff, TDirectory* outDir, std::string const& 
   heff->Divide(hEffNomin, hEffDenom, 1.0, 1.0, "B");
 
   // save nominator and denominator of the efficiency, to compare these plots from the two input files
+  if (!NO_PLOTTING) {
+    TCanvas cc("Efficiency", Form("%s_%s", outDir->GetName(), hEff->GetName()));
+    hEff->Draw("AP");
+    cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hEff->GetName()));
 
-  TCanvas cc("Efficiency", Form("%s_%s", outDir->GetName(), hEff->GetName()));
-  hEff->Draw("AP");
-  cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hEff->GetName()));
+    TCanvas cnom("eff numerator", Form("%s_%s_effnominator", outDir->GetName(), hEffNomin->GetName()));
+    hEffNomin->Draw();
+    cnom.SaveAs(Form("%s_%s_effnominator.png", outDir->GetName(), hEffNomin->GetName()));
 
-  TCanvas cnom("eff numerator", Form("%s_%s_effnominator", outDir->GetName(), hEffNomin->GetName()));
-  hEffNomin->Draw();
-  cnom.SaveAs(Form("%s_%s_effnominator.png", outDir->GetName(), hEffNomin->GetName()));
+    TCanvas cden("eff denominator", Form("%s_%s_effdenominator", outDir->GetName(), hEffDenom->GetName()));
+    hEffDenom->Draw();
+    cden.SaveAs(Form("%s_%s_effdenominator.png", outDir->GetName(), hEffDenom->GetName()));
 
-  TCanvas cden("eff denominator", Form("%s_%s_effdenominator", outDir->GetName(), hEffDenom->GetName()));
-  hEffDenom->Draw();
-  cden.SaveAs(Form("%s_%s_effdenominator.png", outDir->GetName(), hEffDenom->GetName()));
-
-  TCanvas cEff("reconstructed efficiency", Form("%s_%s_effrec", outDir->GetName(), hEff->GetName()));
-  heff->Draw();
-  cEff.SaveAs(Form("%s_%s_effrec.png", outDir->GetName(), hEff->GetName()));
+    TCanvas cEff("reconstructed efficiency", Form("%s_%s_effrec", outDir->GetName(), hEff->GetName()));
+    heff->Draw();
+    cEff.SaveAs(Form("%s_%s_effrec.png", outDir->GetName(), hEff->GetName()));
+  }
 
   WriteToDirectory(hEffNomin, outDir, currentPrefix);
   WriteToDirectory(hEffDenom, outDir, currentPrefix);
@@ -433,14 +535,16 @@ void WriteProfile(TProfile* hProf, TDirectory* outDir, std::string const& curren
 
   auto hprofx = (TH1D*)hProf->ProjectionX();
 
-  TCanvas cc("profile histo", Form("%s_%s", outDir->GetName(), hProf->GetName()));
-  hProf->Draw("");
-  cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hProf->GetName()));
+  if (!NO_PLOTTING) {
+    TCanvas cc("profile histo", Form("%s_%s", outDir->GetName(), hProf->GetName()));
+    hProf->Draw("");
+    cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hProf->GetName()));
 
-  // save the x-projection of the TProfile
-  TCanvas cprofx("profile histo proj", Form("%s_%s", outDir->GetName(), hprofx->GetName()));
-  hprofx->Draw();
-  cprofx.SaveAs(Form("%s_%s.png", outDir->GetName(), hprofx->GetName()));
+    // save the x-projection of the TProfile
+    TCanvas cprofx("profile histo proj", Form("%s_%s", outDir->GetName(), hprofx->GetName()));
+    hprofx->Draw();
+    cprofx.SaveAs(Form("%s_%s.png", outDir->GetName(), hprofx->GetName()));
+  }
 
   WriteToDirectory(hProf, outDir, currentPrefix);
   WriteToDirectory(hprofx, outDir, currentPrefix);
@@ -485,6 +589,11 @@ void SetTestResults(results testResult, bool& test_failed, bool& criticaltest_fa
     if (testResult.critical)
       criticaltest_nc = true;
   }
+}
+
+void CompareHistosRatio(TH1* hA, TH1* hB)
+{
+  PlotOverlayAndRatio(hA, hB);
 }
 
 void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
@@ -854,18 +963,23 @@ struct results CompareChiSquare(TH1* hA, TH1* hB, double val)
   res.critical = true;
 
   res.passed = true;
+  res.comparable = true;
 
   // not comparable if some difference in the bins is detected
   if (!PotentiallySameAxes(hA, hB)) {
     res.comparable = false;
     printf("%s: %s can not be performed\n", hA->GetName(), res.testname.Data());
     return res;
-  } else {
-    res.comparable = true;
   }
 
   double integralA = hA->Integral();
   double integralB = hB->Integral();
+
+  if ((integralA == 0) && (integralB == 0)) {
+    printf("Both histograms %s are empty \n", hA->GetName());
+    res.comparable = false;
+    return res;
+  }
 
   if ((integralA == 0) || (integralB == 0)) {
     printf("At least one of the histograms %s is empty \n", hA->GetName());
@@ -941,18 +1055,23 @@ struct results CompareBinContent(TH1* hA, TH1* hB, double val)
   res.critical = true;
 
   res.passed = true;
+  res.comparable = true;
 
   // not comparable if some difference in the bins is detected
   if (!PotentiallySameAxes(hA, hB)) {
     res.comparable = false;
     printf("%s: %s can not be performed\n", hA->GetName(), res.testname.Data());
     return res;
-  } else {
-    res.comparable = true;
   }
 
   double integralA = hA->Integral();
   double integralB = hB->Integral();
+
+  if ((integralA == 0) && (integralB == 0)) {
+    printf("Both histograms %s are empty \n", hA->GetName());
+    res.comparable = false;
+    return res;
+  }
 
   if ((integralA == 0) || (integralB == 0)) {
     printf("At least one histogram is empty \n");
@@ -1014,18 +1133,23 @@ struct results CompareNentr(TH1* hA, TH1* hB, double val)
   res.critical = false;
 
   res.passed = true;
+  res.comparable = true;
 
   // check only if the range of the histogram is the same, do no care about bins
   if (!PotentiallySameRange(hA, hB)) {
     res.comparable = false;
     printf("%s: %s can not be performed\n", hA->GetName(), res.testname.Data());
     return res;
-  } else {
-    res.comparable = true;
   }
 
   double integralA = hA->Integral();
   double integralB = hB->Integral();
+
+  if ((integralA == 0) && (integralB == 0)) {
+    printf("Both histograms %s are empty \n", hA->GetName());
+    res.comparable = false;
+    return res;
+  }
 
   double entriesdiff = TMath::Abs(integralA - integralB) / ((integralA + integralB) / 2);
 
@@ -1042,74 +1166,75 @@ struct results CompareNentr(TH1* hA, TH1* hB, double val)
   return res;
 }
 
-void WriteListsToJson(std::ofstream &jsonout, std::vector<std::string> (&results)[5],std::string (&results_names)[5],int indent=1){
-  for (int i=0;i<5;i++){
-    for (int in=0;in<indent;in++)
+void WriteListsToJson(std::ofstream& jsonout, std::vector<std::string> (&results)[5], std::string (&results_names)[5], int indent = 1)
+{
+  for (int i = 0; i < 5; i++) {
+    for (int in = 0; in < indent; in++)
       jsonout << "  ";
-    jsonout << "\"" <<results_names[i] << "\":[";
-    for (std::string s : results[i]){
-      jsonout << "\"" << s <<"\"";
-      if (s!=results[i].back())
+    jsonout << "\"" << results_names[i] << "\":[";
+    for (std::string s : results[i]) {
+      jsonout << "\"" << s << "\"";
+      if (s != results[i].back())
         jsonout << ",";
     }
     jsonout << "]";
-    if (i<4)
+    if (i < 4)
       jsonout << ",";
     jsonout << "\n";
     results[i].clear();
   }
 }
 
-
-//write the result of the check into a .json file. One list for each possible outcome.
-void WriteToJson(TH2F* hSumCheck, TH2F* hSumTests){
+// write the result of the check into a .json file. One list for each possible outcome.
+void WriteToJson(TH2F* hSumCheck, TH2F* hSumTests)
+{
   std::vector<std::string> good, warning, bad, nc, critical_nc;
   std::vector<std::string> TestNames;
   std::vector<std::string> results[5];
-  std::string results_names[5] = {"GOOD","WARNING","BAD","CRIT_NC","NONCRIT_NC"};
-  int nhists=hSumCheck->GetYaxis()->GetNbins();
-  int ntests=hSumTests->GetXaxis()->GetNbins();
+  std::string results_names[5] = {"GOOD", "WARNING", "BAD", "CRIT_NC", "NONCRIT_NC"};
+  int nhists = hSumCheck->GetYaxis()->GetNbins();
+  int ntests = hSumTests->GetXaxis()->GetNbins();
 
   std::ofstream jsonout("Summary.json");
   jsonout << "{\n";
 
-   jsonout << "  \"test_summary\":{\n";
-  for(int i=1;i<=nhists;i++){
-    double res = hSumCheck->GetBinContent(1,i);
+  jsonout << "  \"test_summary\":{\n";
+  for (int i = 1; i <= nhists; i++) {
+    double res = hSumCheck->GetBinContent(1, i);
     const char* label = hSumCheck->GetYaxis()->GetBinLabel(i);
-    if (res==0)
+    if (res == 0)
       results[2].push_back(label);
-    if (res==0.5)
+    if (res == 0.5)
       results[1].push_back(label);
-    if (res==1)
+    if (res == 1)
       results[0].push_back(label);
-    if (res==-0.25)
+    if (res == -0.25)
       results[4].push_back(label);
-    if (res==-0.5)
+    if (res == -0.5)
       results[3].push_back(label);
   }
-  WriteListsToJson(jsonout,results,results_names,2);
+  WriteListsToJson(jsonout, results, results_names, 2);
   jsonout << "  },\n";
 
-  for (int t=1;t<=ntests;t++){
+  for (int t = 1; t <= ntests; t++) {
     jsonout << "  \"" << hSumTests->GetXaxis()->GetBinLabel(t) << "\":{\n";
-    for(int i=1;i<=nhists;i++){
-      double res = hSumTests->GetBinContent(t,i);
+    for (int i = 1; i <= nhists; i++) {
+      double res = hSumTests->GetBinContent(t, i);
       const char* label = hSumTests->GetYaxis()->GetBinLabel(i);
-      if (res==0)
+      if (res == 0)
         results[2].push_back(label);
-      if (res==0.5)
+      if (res == 0.5)
         results[1].push_back(label);
-      if (res==1)
+      if (res == 1)
         results[0].push_back(label);
-      if (res==-0.25)
+      if (res == -0.25)
         results[4].push_back(label);
-      if (res==-0.5)
+      if (res == -0.5)
         results[3].push_back(label);
     }
-    WriteListsToJson(jsonout,results,results_names,2);
+    WriteListsToJson(jsonout, results, results_names, 2);
     jsonout << "  }";
-    if (t<ntests)
+    if (t < ntests)
       jsonout << ",";
     jsonout << "\n";
   }
