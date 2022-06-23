@@ -1,6 +1,5 @@
 #!/bin/bash
 
-export GEN_TOPO_PARTITION=test                                       # ECS Partition
 export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 export DD_DISK_FRACTION=100                                          # In case of disk / processing-disk mode, fraction of raw data to store
 
