@@ -84,6 +84,9 @@ def find_mutual_files(dirs, glob_pattern, *, grep=None):
             f[i] = f[i][len(d):].lstrip("/")
 
     # build the intersection
+    if not files:
+        return []
+
     intersection = files[0]
     for f in files[1:]:
         intersection = list(set(intersection) & set(f))
@@ -392,7 +395,7 @@ def rel_val_sim_dirs(args):
     if args.with_qc:
         dir_qc1 = join(dir1, "QC")
         dir_qc2 = join(dir2, "QC")
-        qc_files = find_mutual_files((dir_qc1, dir_qc2), "*Async*.root")
+        qc_files = find_mutual_files((dir_qc1, dir_qc2), "*.root")
         output_dir_qc = join(output_dir, "qc")
         if not exists(output_dir_qc):
             makedirs(output_dir_qc)

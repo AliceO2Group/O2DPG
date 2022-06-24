@@ -39,8 +39,7 @@ void WriteTEfficiency(TEfficiency* obj, TDirectory* outDir, std::string const& c
 void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix = "");
 void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
                    bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests);
-void PlotOverlayAndRatio(TH1* hA, TH1* hB);
-void CompareHistosRatio(TH1* hA, TH1* hB);
+void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color);
 bool PotentiallySameHistograms(TH1*, TH1*);
 struct results CompareChiSquare(TH1* hA, TH1* hB, double varChi2);
 struct results CompareBinContent(TH1* hA, TH1* hB, double valMeanDiff);
@@ -65,18 +64,27 @@ bool areSufficientlyEqualNumbers(T a, T b, T epsilon = T(0.00001))
   return std::abs(a - b) <= epsilon;
 }
 
-// overlay 2 1D histograms
-void overlay1D(TH1* hA, TH1* hB, std::string const& outputDir)
+int isEmptyHisto(TH1* h)
 {
-  if (NO_PLOTTING) {
-    return;
+  // this tells us if and in which way a histogram is empty
+
+  auto entries = h->GetEntries();
+  if (!entries) {
+    // no entries, definitely empty
+    return 1;
   }
+
+  if (entries && !h->Integral()) {
+    // everything must have landed in the over- or underflow bins
+    return 2;
+  }
+  return 0;
+}
+
+// overlay 2 1D histograms
+void overlay1D(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color, std::string const& outputDir)
+{
   TCanvas c("overlay", "", 800, 800);
-  auto yMax = std::max(hA->GetMaximum(), hB->GetMaximum());
-  auto yMin = std::min(hA->GetMaximum(), hB->GetMaximum());
-  auto yDiff = yMax - yMin;
-  std::string frameString = std::string(hA->GetTitle()) + ";" + hA->GetXaxis()->GetTitle() + ";" + hA->GetYaxis()->GetTitle();
-  auto frame = c.DrawFrame(hA->GetXaxis()->GetXmin(), yMin, hA->GetXaxis()->GetXmax(), yMax + 0.5 * yDiff, frameString.c_str());
   c.cd();
   hA->SetLineColor(kRed + 2);
   hA->SetLineStyle(1);
@@ -86,14 +94,16 @@ void overlay1D(TH1* hA, TH1* hB, std::string const& outputDir)
   hB->SetLineStyle(10);
   hB->SetLineWidth(1);
   hB->SetStats(0);
-  TLegend l(0.5, 0.8, 0.9, 0.89);
-  l.AddEntry(hA, "first");
-  l.AddEntry(hB, "second");
-  l.Draw();
-  // hA->Draw("same");
-  // hB->Draw("same");
+
   TRatioPlot rp(hA, hB);
   rp.Draw("same");
+  rp.GetUpperPad()->cd();
+  TLatex toutc(0.2, 0.85, compLabel.Data());
+  toutc.SetNDC();
+  toutc.SetTextColor(color);
+  toutc.SetTextFont(62);
+  toutc.Draw();
+  legend.Draw();
   rp.GetLowerRefGraph()->SetMinimum(0.);
   rp.GetLowerRefGraph()->SetMaximum(10.);
 
@@ -105,7 +115,7 @@ void overlay1D(TH1* hA, TH1* hB, std::string const& outputDir)
   func.SetParameter(1, 1.);
   // find first and last bin above 0
 
-  graph->Fit(&func, "LEMR");
+  graph->Fit(&func, "EMR");
   rp.GetLowerPad()->cd();
   func.Draw("same");
 
@@ -114,8 +124,35 @@ void overlay1D(TH1* hA, TH1* hB, std::string const& outputDir)
   c.Close();
 }
 
+// overlay 2 1D histograms
+void overlay2D(TH2* hA, TH2* hB, TLegend& legend, TString& compLabel, int color, std::string const& outputDir)
+{
+  TCanvas c("overlay", "", 2400, 800);
+  c.Divide(3, 1);
+  c.cd(1);
+  hA->SetStats(0);
+  hA->Draw("colz");
+  c.cd(2);
+  hB->SetStats(0);
+  hB->Draw("colz");
+  auto hDiv = (TH2*)hA->Clone(Form("%s_ratio", hA->GetName()));
+  hDiv->Divide(hB);
+  c.cd(3);
+  hDiv->Draw("colz");
+  TLatex toutc(0.2, 0.85, compLabel.Data());
+  toutc.SetNDC();
+  toutc.SetTextColor(color);
+  toutc.SetTextFont(62);
+  toutc.Draw();
+  legend.Draw();
+
+  auto savePath = outputDir + "/" + hA->GetName() + ".png";
+  c.SaveAs(savePath.c_str());
+  c.Close();
+}
+
 // entry point for overlay plots
-void PlotOverlayAndRatio(TH1* hA, TH1* hB)
+void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color)
 {
   std::string outputDir("overlayPlots");
   if (!std::filesystem::exists(outputDir)) {
@@ -124,7 +161,7 @@ void PlotOverlayAndRatio(TH1* hA, TH1* hB)
   auto hA3D = dynamic_cast<TH3*>(hA);
   auto hB3D = dynamic_cast<TH3*>(hB);
   if (hA3D || hB3D) {
-    std::cerr << "Cannot yet overlay 3D histograms\nSkipping" << hA->GetName() << "\n";
+    std::cerr << "Cannot yet overlay 3D histograms\nSkipping " << hA->GetName() << "\n";
     return;
   }
 
@@ -134,11 +171,11 @@ void PlotOverlayAndRatio(TH1* hA, TH1* hB)
   if (hA2D && hB2D) {
     // could be casted to 2D, so plot that
     // overlay2D(hA2D, hB2D, outputDir);
-    std::cerr << "Cannot yet overlay 2D histograms (under development)\nSkipping" << hA->GetName() << "\n";
+    overlay2D(hA2D, hB2D, legend, compLabel, color, outputDir);
     return;
   }
 
-  overlay1D(hA, hB, outputDir);
+  overlay1D(hA, hB, legend, compLabel, color, outputDir);
 }
 
 // what to give as input:
@@ -244,7 +281,6 @@ void ReleaseValidation(const TString filename1, const TString filename2,
 
     std::cout << "Comparing " << hA->GetName() << " and " << hB->GetName() << "\n";
     CompareHistos(hA, hB, whichTest, valueChi2, valueMeanDiff, valueEntriesDiff, isFirstComparison, isLastComparison, hSummaryCheck, hSummaryTests);
-    CompareHistosRatio(hA, hB);
 
     nComparisons++;
     if (nComparisons == 1)
@@ -475,17 +511,6 @@ bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefi
 // Implementation to write a TH1
 void WriteHisto(TH1* hA, TDirectory* outDir, std::string const& currentPrefix)
 {
-  TString hAcln = hA->ClassName();
-
-  if (!NO_PLOTTING) {
-    TCanvas cc(Form("%s_%s", outDir->GetName(), hA->GetName()), Form("%s_%s", outDir->GetName(), hA->GetName()));
-    if (hAcln.Contains("TH2")) {
-      hA->Draw("colz");
-    } else {
-      hA->DrawNormalized();
-    }
-    cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hA->GetName()));
-  }
   WriteToDirectory(hA, outDir, currentPrefix);
 }
 
@@ -504,28 +529,8 @@ void WriteTEfficiency(TEfficiency* hEff, TDirectory* outDir, std::string const& 
   heff->SetName(Form("%s", hEff->GetName()));
   heff->Divide(hEffNomin, hEffDenom, 1.0, 1.0, "B");
 
-  // save nominator and denominator of the efficiency, to compare these plots from the two input files
-  if (!NO_PLOTTING) {
-    TCanvas cc("Efficiency", Form("%s_%s", outDir->GetName(), hEff->GetName()));
-    hEff->Draw("AP");
-    cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hEff->GetName()));
-
-    TCanvas cnom("eff numerator", Form("%s_%s_effnominator", outDir->GetName(), hEffNomin->GetName()));
-    hEffNomin->Draw();
-    cnom.SaveAs(Form("%s_%s_effnominator.png", outDir->GetName(), hEffNomin->GetName()));
-
-    TCanvas cden("eff denominator", Form("%s_%s_effdenominator", outDir->GetName(), hEffDenom->GetName()));
-    hEffDenom->Draw();
-    cden.SaveAs(Form("%s_%s_effdenominator.png", outDir->GetName(), hEffDenom->GetName()));
-
-    TCanvas cEff("reconstructed efficiency", Form("%s_%s_effrec", outDir->GetName(), hEff->GetName()));
-    heff->Draw();
-    cEff.SaveAs(Form("%s_%s_effrec.png", outDir->GetName(), hEff->GetName()));
-  }
-
   WriteToDirectory(hEffNomin, outDir, currentPrefix);
   WriteToDirectory(hEffDenom, outDir, currentPrefix);
-
   WriteToDirectory(heff, outDir, currentPrefix);
 }
 
@@ -534,17 +539,6 @@ void WriteProfile(TProfile* hProf, TDirectory* outDir, std::string const& curren
 { // should I further develop that?
 
   auto hprofx = (TH1D*)hProf->ProjectionX();
-
-  if (!NO_PLOTTING) {
-    TCanvas cc("profile histo", Form("%s_%s", outDir->GetName(), hProf->GetName()));
-    hProf->Draw("");
-    cc.SaveAs(Form("%s_%s.png", outDir->GetName(), hProf->GetName()));
-
-    // save the x-projection of the TProfile
-    TCanvas cprofx("profile histo proj", Form("%s_%s", outDir->GetName(), hprofx->GetName()));
-    hprofx->Draw();
-    cprofx.SaveAs(Form("%s_%s.png", outDir->GetName(), hprofx->GetName()));
-  }
 
   WriteToDirectory(hProf, outDir, currentPrefix);
   WriteToDirectory(hprofx, outDir, currentPrefix);
@@ -577,8 +571,19 @@ void FillhTests(TH2F* hTests, const char* histName, results testResult)
 }
 
 // keeps track if there was at least one failed/critical failed/non-comparable/... test
-void SetTestResults(results testResult, bool& test_failed, bool& criticaltest_failed, bool& test_nc, bool& criticaltest_nc)
+void SetTestResults(results testResult, bool& test_failed, bool& criticaltest_failed, bool& test_nc, bool& criticaltest_nc, bool update = false)
 {
+  if (update && !testResult.critical) {
+    return;
+  }
+
+  if (update) {
+    test_failed = test_failed || !testResult.passed;
+    criticaltest_nc = criticaltest_nc || !testResult.comparable;
+    criticaltest_failed = criticaltest_failed || !testResult.passed;
+    return;
+  }
+
   if (!testResult.passed) {
     test_failed = true;
     if (testResult.critical)
@@ -589,11 +594,6 @@ void SetTestResults(results testResult, bool& test_failed, bool& criticaltest_fa
     if (testResult.critical)
       criticaltest_nc = true;
   }
-}
-
-void CompareHistosRatio(TH1* hA, TH1* hB)
-{
-  PlotOverlayAndRatio(hA, hB);
 }
 
 void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
@@ -607,10 +607,6 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
 
   double integralA = hA->Integral();
   double integralB = hB->Integral();
-
-  TH1* hACl = (TH1*)hA->Clone("hACl"); // I will use these two clones of hA and
-                                       // hB to perform other checks later..
-  TH1* hBCl = (TH1*)hB->Clone("hBCl");
 
   TString outc = "";
   int colt = 1;
@@ -626,8 +622,8 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
 
   struct results testResult;
 
-  TLegend* more = new TLegend(0.6, 0.6, .9, .8);
-  more->SetBorderSize(1);
+  TLegend more(0.6, 0.6, 0.9, 0.8);
+  more.SetBorderSize(1);
 
   // test if each of the 3 bits is turned on in subset ‘i = whichTest’?
   // if yes, process the bit
@@ -636,23 +632,23 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
     testResult = CompareChiSquare(hA, hB, valChi2);
     SetTestResults(testResult, test_failed, criticaltest_failed, test_nc, criticaltest_nc);
     if (testResult.comparable)
-      more->AddEntry((TObject*)nullptr, Form("#chi^{2} / Nbins = %f", testResult.value), "");
+      more.AddEntry((TObject*)nullptr, Form("#chi^{2} / Nbins = %f", testResult.value), "");
     FillhTests(hTests, hA->GetName(), testResult);
   }
 
   if ((whichTest & BINCONTNORM) == BINCONTNORM) {
     testResult = CompareBinContent(hA, hB, valMeanDiff);
-    SetTestResults(testResult, test_failed, criticaltest_failed, test_nc, criticaltest_nc);
+    SetTestResults(testResult, test_failed, criticaltest_failed, test_nc, criticaltest_nc, true);
     if (testResult.comparable)
-      more->AddEntry((TObject*)nullptr, Form("meandiff = %f", testResult.value), "");
+      more.AddEntry((TObject*)nullptr, Form("meandiff = %f", testResult.value), "");
     FillhTests(hTests, hA->GetName(), testResult);
   }
 
   if ((whichTest & NENTRIES) == NENTRIES) {
     testResult = CompareNentr(hA, hB, valEntriesDiff);
-    SetTestResults(testResult, test_failed, criticaltest_failed, test_nc, criticaltest_nc);
+    SetTestResults(testResult, test_failed, criticaltest_failed, test_nc, criticaltest_nc, true);
     if (testResult.comparable)
-      more->AddEntry((TObject*)nullptr, Form("entriesdiff = %f", testResult.value), "");
+      more.AddEntry((TObject*)nullptr, Form("entriesdiff = %f", testResult.value), "");
     FillhTests(hTests, hA->GetName(), testResult);
   }
 
@@ -682,228 +678,18 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
     hSum->Fill(Form("Check%d", whichTest), Form("%s", hA->GetName()), 1);
   }
 
-  TCanvas* c = new TCanvas(hA->GetName(), hA->GetName(), 1200, 600);
-  if (firstComparison)
-    c->Print("plots.pdf[");
-  c->Divide(2, 1);
-  c->cd(1);
-  gPad->SetTitle(hA->GetName());
-  TString hcln = hA->ClassName();
-  TString optD = "";
-  if (hcln.Contains("TH2"))
-    optD = "box";
-  hA->SetLineColor(1);
-  hA->SetMarkerColor(1);
-  hA->Scale(1. / hA->GetEntries()); // normalize to the number of entries
-  TH1* hAc = (TH1*)hA->DrawClone(optD.Data());
-  hAc->SetTitle(hA->GetName());
-  hAc->SetStats(0);
-  hB->SetLineColor(2);
-  hB->SetMarkerColor(2);
-  hB->Scale(1. / hB->GetEntries()); // normalize to the number of entries
-  TH1* hBc = (TH1*)hB->DrawClone(Form("%ssames", optD.Data()));
-  hBc->SetStats(0);
-  // c->Update();
-  TPaveStats* stA =
-    (TPaveStats*)hAc->GetListOfFunctions()->FindObject("stats");
-  if (stA) {
-    stA->SetLineColor(1);
-    stA->SetTextColor(1);
-    stA->SetY1NDC(0.68);
-    stA->SetY2NDC(0.88);
+  if (isEmptyHisto(hA) == 2 || isEmptyHisto(hB) == 2) {
+    std::cerr << "WARNING: Cannot draw histograms due to the fact that all entries are in under- or overflow bins\n";
+    return;
   }
-  TPaveStats* stB =
-    (TPaveStats*)hBc->GetListOfFunctions()->FindObject("stats");
-  if (stB) {
-    stB->SetLineColor(2);
-    stB->SetTextColor(2);
-    stB->SetY1NDC(0.45);
-    stB->SetY2NDC(0.65);
-  }
-
-  c->cd(2);
-  // Implement the plotting of the ratio between the two histograms
-  if (hcln.Contains("TH3")) {
-    TH1D* hXa = ((TH3*)hA)->ProjectionX(Form("%s_xA", hA->GetName()));
-    TH1D* hXb = ((TH3*)hB)->ProjectionX(Form("%s_xB", hB->GetName()));
-    TH1D* hYa = ((TH3*)hA)->ProjectionY(Form("%s_yA", hA->GetName()));
-    TH1D* hYb = ((TH3*)hB)->ProjectionY(Form("%s_yB", hB->GetName()));
-    TH1D* hZa = ((TH3*)hA)->ProjectionZ(Form("%s_zA", hA->GetName()));
-    TH1D* hZb = ((TH3*)hB)->ProjectionZ(Form("%s_zB", hB->GetName()));
-    hXa->Divide(hXb);
-    hYa->Divide(hYb);
-    hZa->Divide(hZb);
-    TPad* rpad = (TPad*)gPad;
-    rpad->Divide(1, 3);
-    rpad->cd(1);
-    DrawRatio(hXa);
-    rpad->cd(2);
-    DrawRatio(hYa);
-    rpad->cd(3);
-    DrawRatio(hZa);
-
-  } else {
-    TH1* hArat = (TH1*)hA->Clone("hArat");
-    hArat->Divide(hB);
-    hArat->SetTitle(Form("%s_ratio", hA->GetName()));
-    for (int k = 1; k <= hArat->GetNbinsX(); k++)
-      hArat->SetBinError(k, 0.000000001);
-    hArat->SetMinimum(
-      TMath::Max(0.98, 0.95 * hArat->GetBinContent(hArat->GetMinimumBin()) -
-                         hArat->GetBinError(hArat->GetMinimumBin())));
-    hArat->SetMaximum(
-      TMath::Min(1.02, 1.05 * hArat->GetBinContent(hArat->GetMaximumBin()) +
-                         hArat->GetBinError(hArat->GetMaximumBin())));
-    hArat->SetStats(0);
-    if (hcln.Contains("TH2"))
-      hArat->Draw("colz");
-    else if (hcln.Contains("TH1"))
-      DrawRatio(hArat);
-    else
-      hArat->Draw();
-  }
-  c->cd(1);
-
-  TLatex* toutc = new TLatex(0.2, 0.85, outc.Data());
-  toutc->SetNDC();
-  toutc->SetTextColor(colt);
-  toutc->SetTextFont(62);
-  toutc->Draw();
-  // draw text
-  more->Draw("same");
-
-  c->SaveAs(Form("%s_Ratio.png", hA->GetName()));
-  fileSummaryOutput = new TFile("Summary.root", "update");
-  c->Write(Form("%s%s_Ratio", prefix.Data(), hA->GetName()));
-  // fileSummaryOutput->ls();
-  fileSummaryOutput->Close();
-  c->Print("plots.pdf");
-
-  // Implement the plotting of the difference between the two histograms, and
-  // the relative difference
-  TCanvas* c1 = new TCanvas(Form("%s_diff", hA->GetName()), Form("%s_diff", hA->GetName()), 1200, 600);
-  c1->Divide(2, 1);
-  c1->cd(1);
-
-  TString hAClcln = hACl->ClassName();
-  TString noptD = "";
-  if (hAClcln.Contains("TH2"))
-    noptD = "colz"; // box
-  hACl->SetLineColor(1);
-  hACl->SetMarkerColor(1);
-  hACl->Scale(1. / hACl->GetEntries());
-  hBCl->Scale(1. / hBCl->GetEntries());
-
-  // Subtraction
-  TH1* hDiff = (TH1*)hACl->Clone("hDiff");
-  hDiff->SetStats(0);
-  hDiff->Add(hBCl, -1);
-  hDiff->SetTitle(Form("%s_diff", hA->GetName()));
-  hDiff->DrawClone(noptD.Data());
-
-  TPaveStats* stACl =
-    (TPaveStats*)hACl->GetListOfFunctions()->FindObject("stats");
-  if (stACl) {
-    stACl->SetLineColor(1);
-    stACl->SetTextColor(1);
-    stACl->SetY1NDC(0.68);
-    stACl->SetY2NDC(0.88);
-  }
-
-  c1->cd(2);
-  if (hcln.Contains("TH3")) {
-    TH1D* hXaCl = ((TH3*)hDiff)->ProjectionX(Form("%s_xA", hACl->GetName()));
-    TH1D* hXbCl = ((TH3*)hBCl)->ProjectionX(Form("%s_xB", hBCl->GetName()));
-    TH1D* hYaCl = ((TH3*)hDiff)->ProjectionY(Form("%s_yA", hACl->GetName()));
-    TH1D* hYbCl = ((TH3*)hBCl)->ProjectionY(Form("%s_yB", hBCl->GetName()));
-    TH1D* hZaCl = ((TH3*)hDiff)->ProjectionZ(Form("%s_zA", hACl->GetName()));
-    TH1D* hZbCl = ((TH3*)hBCl)->ProjectionZ(Form("%s_zB", hBCl->GetName()));
-    hXaCl->Divide(hXbCl);
-    hYaCl->Divide(hYbCl);
-    hZaCl->Divide(hZbCl);
-    TPad* rrpad = (TPad*)gPad;
-    rrpad->Divide(1, 3);
-    rrpad->cd(1);
-    DrawRelativeDifference(hXaCl);
-    rrpad->cd(2);
-    DrawRelativeDifference(hYaCl);
-    rrpad->cd(3);
-    DrawRelativeDifference(hZaCl);
-
-  } else {
-    TH1* hDiffRel = (TH1*)hDiff->Clone("hDiffRel");
-    hDiffRel->Divide(hBCl);
-    hDiffRel->SetTitle(Form("%s_diffrel", hA->GetName()));
-    for (int k = 1; k <= hDiffRel->GetNbinsX(); k++)
-      hDiffRel->SetBinError(k, 0.000000001);
-    /*
-    hDiffRel->SetMinimum(TMath::Max(
-      0.98, 0.95 * hDiffRel->GetBinContent(hDiffRel->GetMinimumBin()) -
-              hDiffRel->GetBinError(hDiffRel->GetMinimumBin())));
-    hDiffRel->SetMaximum(TMath::Min(
-      1.02, 1.05 * hDiffRel->GetBinContent(hDiffRel->GetMaximumBin()) +
-              hDiffRel->GetBinError(hDiffRel->GetMaximumBin())));
-    */
-    hDiffRel->SetStats(0);
-    TString hDiffRelcln = hDiffRel->ClassName();
-    if (hDiffRelcln.Contains("TH2"))
-      hDiffRel->Draw("colz");
-    else if (hDiffRelcln.Contains("TH1"))
-      DrawRelativeDifference(hDiffRel);
-    else
-      hDiffRel->Draw();
-  }
-
-  c1->cd(1);
-  toutc->Draw();
-  more->Draw("same");
-  c1->SaveAs(Form("%s_Difference.png", hA->GetName()));
-  fileSummaryOutput = new TFile("Summary.root", "update");
-  c1->Write(Form("%s%s_Difference", prefix.Data(), hA->GetName()));
-  // fileSummaryOutput->ls();
-  fileSummaryOutput->Close();
-  if (finalComparison) {
-    c1->Print("plots.pdf");
-    c1->Print("plots.pdf]");
-  } else
-    c1->Print("plots.pdf");
-}
-
-void DrawRatio(TH1* hR)
-{
-  hR->SetMarkerStyle(20);
-  hR->SetMarkerSize(0.5);
-  hR->SetMinimum(
-    TMath::Max(0.98, 0.95 * hR->GetBinContent(hR->GetMinimumBin()) -
-                       hR->GetBinError(hR->GetMinimumBin())));
-  hR->SetMaximum(
-    TMath::Min(1.02, 1.05 * hR->GetBinContent(hR->GetMaximumBin()) +
-                       hR->GetBinError(hR->GetMaximumBin())));
-  hR->SetStats(0);
-  hR->GetYaxis()->SetTitle("Ratio");
-  hR->Draw("P");
-  return;
-}
-
-void DrawRelativeDifference(TH1* hR)
-{
-  hR->SetMarkerStyle(20);
-  hR->SetMarkerSize(0.5);
-  hR->SetMinimum(
-    TMath::Max(-0.02, 1.05 * hR->GetBinContent(hR->GetMinimumBin()) -
-                        hR->GetBinError(hR->GetMinimumBin())));
-  hR->SetMaximum(
-    TMath::Min(0.02, 1.05 * hR->GetBinContent(hR->GetMaximumBin()) +
-                       hR->GetBinError(hR->GetMaximumBin())));
-  hR->SetStats(0);
-  hR->GetYaxis()->SetTitle("RelativeDifference");
-  hR->Draw("P");
-  return;
+  PlotOverlayAndRatio(hA, hB, more, outc, colt);
 }
 
 void SelectCriticalHistos()
 {
   printf("Select all critical plots..... \n");
+  std::cerr << "Currently not supported\n";
+  return;
 
   vector<string> NamesFromTheList;
   fileSummaryOutput = new TFile("Summary.root", "READ");
@@ -952,7 +738,6 @@ void SelectCriticalHistos()
     }
   }
   critic_pdf->Print("critical.pdf]");
-  return;
 }
 
 // chi2. critical test
@@ -972,21 +757,27 @@ struct results CompareChiSquare(TH1* hA, TH1* hB, double val)
     return res;
   }
 
-  double integralA = hA->Integral();
-  double integralB = hB->Integral();
+  auto isEmptyA = isEmptyHisto(hA);
+  auto isEmptyB = isEmptyHisto(hB);
 
-  if ((integralA == 0) && (integralB == 0)) {
+  if (isEmptyA == 2 || isEmptyB == 2) {
+    std::cerr << "WARNING: All entries in histogram " << hA->GetName() << " appear to be in under- or overflow bins\n";
+  }
+
+  if (isEmptyA && isEmptyB) {
     printf("Both histograms %s are empty \n", hA->GetName());
     res.comparable = false;
     return res;
   }
 
-  if ((integralA == 0) || (integralB == 0)) {
+  if (isEmptyA || isEmptyB) {
     printf("At least one of the histograms %s is empty \n", hA->GetName());
     res.passed = false;
     return res;
   }
 
+  double integralA = hA->Integral();
+  double integralB = hB->Integral();
   double chi2 = 0;
 
   int nBins = 0;
@@ -1064,21 +855,27 @@ struct results CompareBinContent(TH1* hA, TH1* hB, double val)
     return res;
   }
 
-  double integralA = hA->Integral();
-  double integralB = hB->Integral();
+  auto isEmptyA = isEmptyHisto(hA);
+  auto isEmptyB = isEmptyHisto(hB);
 
-  if ((integralA == 0) && (integralB == 0)) {
+  if (isEmptyA == 2 || isEmptyB == 2) {
+    std::cerr << "WARNING: All entries in histogram " << hA->GetName() << " appear to be in under- or overflow bins\n";
+  }
+
+  if (isEmptyA && isEmptyB) {
     printf("Both histograms %s are empty \n", hA->GetName());
     res.comparable = false;
     return res;
   }
 
-  if ((integralA == 0) || (integralB == 0)) {
-    printf("At least one histogram is empty \n");
+  if (isEmptyA || isEmptyB) {
+    printf("At least one of the histograms %s is empty \n", hA->GetName());
     res.passed = false;
     return res;
   }
 
+  double integralA = hA->Integral();
+  double integralB = hB->Integral();
   double meandiff = 0;
 
   int nBins = 0;
@@ -1142,15 +939,21 @@ struct results CompareNentr(TH1* hA, TH1* hB, double val)
     return res;
   }
 
-  double integralA = hA->Integral();
-  double integralB = hB->Integral();
+  auto isEmptyA = isEmptyHisto(hA);
+  auto isEmptyB = isEmptyHisto(hB);
 
-  if ((integralA == 0) && (integralB == 0)) {
-    printf("Both histograms %s are empty \n", hA->GetName());
-    res.comparable = false;
+  if (isEmptyA == 2 || isEmptyB == 2) {
+    std::cerr << "WARNING: All entries in histogram " << hA->GetName() << " appear to be in under- or overflow bins\n";
+  }
+
+  if (isEmptyA || isEmptyB) {
+    printf("At least one of the histograms %s is empty \n", hA->GetName());
+    res.passed = false;
     return res;
   }
 
+  double integralA = hA->Integral();
+  double integralB = hB->Integral();
   double entriesdiff = TMath::Abs(integralA - integralB) / ((integralA + integralB) / 2);
 
   res.value = entriesdiff;
