@@ -36,4 +36,4 @@ o2-dpl-raw-proxy $ARGS_ALL \
             --config $QC_CONFIG \
     | o2-calibration-ccdb-populator-workflow $ARGS_ALL \
 					     --ccdb-path $PHS_CCDB_PATH \
-    | o2-dpl-run $ARGS_ALL --dds
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}

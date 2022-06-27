@@ -28,4 +28,4 @@ o2-dpl-raw-proxy $ARGS_ALL \
     $EXTRA_CONFIG \
     | o2-calibration-ccdb-populator-workflow $ARGS_ALL \
     $CCDB_PATH \
-    | o2-dpl-run $ARGS_ALL --dds
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}

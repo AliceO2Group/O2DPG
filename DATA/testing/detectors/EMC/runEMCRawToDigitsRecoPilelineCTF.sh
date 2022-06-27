@@ -50,4 +50,4 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --meta-output-dir ${CTF_METAFILES_DIR} \
     --min-file-size "${CTF_MINSIZE}" \
     --max-ctf-per-file "${CTF_MAX_PER_FILE}" \
-    | o2-dpl-run $ARGS_ALL --dds
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}

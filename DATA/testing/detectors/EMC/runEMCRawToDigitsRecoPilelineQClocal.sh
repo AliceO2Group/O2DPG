@@ -35,4 +35,4 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --config $QC_CONFIG \
     --local \
     --host $HOST \
-    | o2-dpl-run $ARGS_ALL --dds
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}

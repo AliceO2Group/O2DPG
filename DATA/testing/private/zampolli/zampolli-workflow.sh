@@ -17,4 +17,4 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --input-spec "$PROXY_INSPEC"  \
     --remove-duplicates \
     --configKeyValues "$ARGS_ALL_CONFIG;TPCDigitDump.LastTimeBin=1000;" \
-    | o2-dpl-run $ARGS_ALL $GLOBALDPLOPT --dds
+    | o2-dpl-run $ARGS_ALL $GLOBALDPLOPT --dds ${WORKFLOWMODE_FILE}
