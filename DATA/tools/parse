@@ -89,12 +89,10 @@ for line in f:
         if len(args) > 2 and not 'O2_ROOT' in os.environ:
             print('O2 not loaded')
             raise
-        xml_postprocessing = ('GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND'])) or ('GEN_TOPO_DDS_ASSETS' in os.environ and int(os.environ['GEN_TOPO_DDS_ASSETS']))
-        if xml_postprocessing:
-            json_cache_path = os.environ['GEN_TOPO_WORKDIR'] + '/json_cache'
-            if not os.path.exists(json_cache_path):
-                os.makedirs(json_cache_path, 0o770)
-            os.environ['GEN_TOPO_QC_JSON_FILE'] = os.path.abspath(json_cache_path + '/qc_tmp_' + datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S') + '_' + str(random.randrange(100000000)) + '.json')
+        json_cache_path = os.environ['GEN_TOPO_WORKDIR'] + '/json_cache'
+        if not os.path.exists(json_cache_path):
+            os.makedirs(json_cache_path, 0o770)
+        os.environ['GEN_TOPO_QC_JSON_FILE'] = os.path.abspath(json_cache_path + '/qc_tmp_' + datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S') + '_' + str(random.randrange(100000000)) + '.json')
         with tempfile.TemporaryDirectory(prefix='o2_workflow_') as tmpdir:
             if 'GEN_TOPO_OVERRIDE_TEMPDIR' in os.environ:
                 tmpdir = os.environ['GEN_TOPO_OVERRIDE_TEMPDIR']
@@ -122,19 +120,10 @@ for line in f:
                 print('Adding', wf[0], 'workflow (', wf[2], '-', wf[1], 'nodes):', wf[3])
                 reconodes = max(reconodes, int(wf[1]))
                 reconodesmin = max(reconodesmin, int(wf[2]))
-                if 'GEN_TOPO_IGNORE_ERROR' in os.environ and int(os.environ['GEN_TOPO_IGNORE_ERROR']):
-                    command_log_filter = '"^\["'
-                else:
-                    command_log_filter = '"^\[INFO"'
-                command_preopt = 'GEN_TOPO_CALIB_WORKFLOW=' + str(is_calib_workflow)
-                if xml_postprocessing:
-                    filename_xml = filename
-                    if not 'GEN_TOPO_WORKDIR' in os.environ:
-                        print('$GEN_TOPO_WORKDIR not set')
-                        raise
-                    filename = json_cache_path + '/dpl_tmp_' + datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S') + wf[0] + str(i) + '_' + str(random.randrange(100000000)) + '.json'
-                    command_preopt += ' WORKFLOWMODE=dump'
-                command = command_preopt + ' GLOBALDPLOPT+=" -b --dds-workflow-suffix _' + wf[0] + str(i) + '" ' + wf[3] + ' | grep -v ' + command_log_filter + ' > ' + filename + ' && [ `grep "^\[" ' + filename + ' | wc -l` == 0 ]'
+                command_preopt = 'GEN_TOPO_CALIB_WORKFLOW=' + str(is_calib_workflow) + ' ${WORKFLOWMODE_FILE}=' + filename
+                command = command_preopt + ' GLOBALDPLOPT+=" -b --dds-workflow-suffix _' + wf[0] + str(i) + '" ' + wf[3]
+                if os.environ['WORKFLOWMODE'] == 'print':
+                  command += ' > ' + filename
                 print('Running DPL command', command)
                 if reco_num_nodes_override == 0:
                   os.environ['RECO_NUM_NODES_WORKFLOW'] = wf[1]
@@ -147,30 +136,6 @@ for line in f:
                             break
                         print(line)
                     raise
-                if xml_postprocessing:
-                    command = 'cat ' + filename + ' | o2-dpl-run -b --dds --dds-workflow-suffix _' + wf[0] + str(i) + ' --resources-monitoring 15 '  + ' | grep -v ' + command_log_filter + ' > ' + filename_xml
-                    print('Running CAT command', command)
-                    if os.system(command) != 0:
-                        print('Error running command', command)
-                    if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
-                        command = 'sed -i \'s,^\( *<exe reachable="true">\).*\(|[^|]*</exe>\)$,\\1 cat ' + filename + ' \\2,\' ' + filename_xml
-                    if 'GEN_TOPO_DDS_ASSETS' in os.environ and int(os.environ['GEN_TOPO_DDS_ASSETS']):
-                        command = 'sed -i \'s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/\'"\'"\'/\&#39;/g\' ' + filename
-                        print('Running SED command for DPL JSON XML Escaping', command)
-                        if os.system(command) != 0:
-                            print('Error running sed on JSON file')
-                        asset_name = 'dpl_json_' + wf[0] + '_' + str(i)
-                        command = 'sed -i ' + \
-                                  '-e \'s,^\( *<exe reachable="true">\).*\(|[^|]*</exe>\)$,\\1 cat ${DDS_LOCATION}/' + asset_name + '.asset \\2,\' ' + \
-                                  '-e \'/^ *<decltask name.*>$/a <assets><name>' + asset_name + '</name></assets>\' ' + \
-                                  '-e \'/^ *<topology name.*>$/a <asset name="' + asset_name + '" type="inline" visibility="global" value="\' ' + \
-                                  '-e \'/^ *<topology name.*>$/r ' + filename + '\' ' + \
-                                  '-e \'/^ *<topology name.*>$/a " />\' ' + \
-                                  filename_xml
-                    print('Running SED command', command)
-                    if os.system(command) != 0:
-                        print('Error running sed on XML file')
-                    filename = filename_xml
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
                 reconodesmin = min(reconodes, reconodesmin)
@@ -212,7 +177,7 @@ for line in f:
                 if os.system(odccommand) != 0:
                     print('\nError running odc: ', odccommand)
                     raise
-                if 'GEN_TOPO_DDS_ASSETS' in os.environ and int(os.environ['GEN_TOPO_DDS_ASSETS']) and os.path.exists(os.environ['GEN_TOPO_QC_JSON_FILE']):
+                if os.path.exists(os.environ['GEN_TOPO_QC_JSON_FILE']):
                     command = 'sed -i \'s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/\'"\'"\'/\&#39;/g\' ' + os.environ['GEN_TOPO_QC_JSON_FILE']
                     print('Running SED command for DPL JSON XML Escaping', command)
                     if os.system(command) != 0:
