@@ -21,7 +21,7 @@ Another abstraction layer above the *workflows* are **topology descriptions**. T
 - The defaults (particularly also those set in the common environment files in the `common` folder) are tuned for running on a laptop / desktop.
 
 # Workflow requirements:
-- Workflows shall support 3 run modes selected via the `WORKFLOWMODE` env variable, the **dds** mode is mandatory:
+- Workflows shall support 3 run modes selected via the `WORKFLOWMODE` env variable, the **dds** mode and its ${WORKFLOWMODE_FILE} parameter are mandatory:
   - **run** (default): run the workflow
   - **print**: print the final workflow command to the console
   - **dds**: create a partial topology.
@@ -95,7 +95,7 @@ For an example, chek the calibration workflows [here](testing/examples)
 *NOTE* For reference, to run a workflow with calib aggregator on the EPN with AliECS, currently a node from the `calib` zone must be requested, by setting `odc_resources` to `[ {"zone":"online", "n":10}, {"zone":"calib", "n":1 } ]` (adjust the `10` to the number of required reconstruction nodes). This will be improved later and then this extra setting will not be needed anymore.
 
 # The parser script:
-The **parser** is a simple python script that parses a *topology description* and generates the DDS XML file with the *full topology*. To do so, it runs all the DPL workflows with the `--dds` option and then uses the `odc-topo-epn` tool to merge the *partial topology*  into the final *full topology*.
+The **parser** is a simple python script that parses a *topology description* and generates the DDS XML file with the *full topology*. To do so, it runs all the DPL workflows with the `--dds ${WORKFLOWMODE_FILE}` option and then uses the `odc-topo-epn` tool to merge the *partial topology*  into the final *full topology*.
 The *parser* is steered by some command line options and by some environment variables (note that the env variables get also passed through to the workflows).
 - The *parser* needs a DataDistribution topology file. Example files are shipped with the parser in the `tools/datadistribution_workflows` folder for: just discarding the TF, store the TF to disk, forward the TF to DPL processing (what we need for a DPL workflow), and forward to processing while storing to disk in parallel.
 - *Parser* command line options:
@@ -142,7 +142,7 @@ FILEWORKDIR=/home/epn/odc/files EPNSYNCMODE=1 DDWORKFLOW=tools/datadistribution_
 - Check out the [O2DPG](https://github.com/AliceO2Group/O2DPG) repository to your home folder on the EPN (`$HOME` in the following).
 - Copy the content of `O2DPG/DATA/testing/examples` (description library file `workflows.desc` and workflow script `example-workflow.sh`) to another place INSIDE the repository, usually under `testing/detectors/[DETECTOR]` or `testing/private/[USERNAME]`.
 - Edit the workflow script to your needs, adjust / rename the workflow in the description library file.
-  - See [here](#Topology-descriptions) for the syntax of the library file (in case it is not obvious), and make sure not to override the listed protected environment variables. The workflow script is just a bash script that starts a DPL workflow, which must have the `--dds` parameter in order to create a partial DDS topology.
+  - See [here](#Topology-descriptions) for the syntax of the library file (in case it is not obvious), and make sure not to override the listed protected environment variables. The workflow script is just a bash script that starts a DPL workflow, which must have the `--dds ${WORKFLOWMODE_FILE}` parameter in order to create a partial DDS topology.
   - Make sure that the workflow script fullfils the [requirements](#Workflow-requirements), particularly that it respects the requested environment variables.
   - Use `O2PDPSuite` for the modules to load to have the latest installed version, or `O2PDPSuite/[version]` to specify a version.
 - Create an empty folder in your `$HOME` on the EPN, in the following `$HOME/test`.

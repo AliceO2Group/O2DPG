@@ -78,7 +78,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --max-events 110 \
     | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
     --ccdb-path http://o2-ccdb.internal \
-    | o2-dpl-run $ARGS_ALL --dds
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
 
 #    --pipeline tpc-tracker:4 \
 
