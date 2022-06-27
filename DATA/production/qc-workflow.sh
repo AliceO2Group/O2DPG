@@ -23,7 +23,13 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=consul://o2/components/qc/ANY/any/ft0-digits-qc-epn
     [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=consul://o2/components/qc/ANY/any/fv0-digits-qc-epn
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall
-    [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-digits
+    if [[ -z "$QC_JSON_MCH" ]]; then
+	if has_detector MCH && has_processing_step MCH_RECO; then
+	    QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full
+	else
+	    QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-digits
+	fi
+    fi
     [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=consul://o2/components/qc/ANY/any/mid-full-qcmn
     [[ -z "$QC_JSON_CPV" ]] && QC_JSON_CPV=consul://o2/components/qc/ANY/any/cpv-physics-qcmn-epn
     [[ -z "$QC_JSON_TRD" ]] && QC_JSON_TRD=consul://o2/components/qc/ANY/any/trd-full-qcmn-norawdatastats-epn
