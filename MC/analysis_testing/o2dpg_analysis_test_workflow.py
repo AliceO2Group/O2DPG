@@ -162,11 +162,11 @@ ANALYSES.append(analysis_LK0CFFemto)
 #                               "valid_for": [ANALYSIS_VALID_MC],
 #                               "cmd": "o2-analysis-mm-vertexing-fwd {CONFIG} {AOD}"}
 # ANALYSES.append(analysis_PWGMMFwdVertexing)
-analysis_PWGMMMDnDeta = {"name": "PWGMMMDnDeta",
-                         "expected_output": ["AnalysisResults.root"],
-                         "valid_for": [ANALYSIS_VALID_MC],
-                         "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-mm-particles-to-tracks {CONFIG} | o2-analysis-mm-dndeta {CONFIG} {AOD}"}
-ANALYSES.append(analysis_PWGMMMDnDeta)
+# analysis_PWGMMMDnDeta = {"name": "PWGMMMDnDeta",
+#                          "expected_output": ["AnalysisResults.root"],
+#                          "valid_for": [ANALYSIS_VALID_MC],
+#                          "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-mm-particles-to-tracks {CONFIG} | o2-analysis-mm-dndeta {CONFIG} {AOD}"}
+# ANALYSES.append(analysis_PWGMMMDnDeta)
 analysis_PWGHFD0 = {"name": "PWGHFD0",
                     "expected_output": ["AnalysisResults.root"],
                     "valid_for": [ANALYSIS_VALID_MC],
