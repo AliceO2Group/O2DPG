@@ -12,11 +12,11 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=consul://o2/components/qc/ANY/any/tpc-full-qcmn
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=consul://o2/components/qc/ANY/any/its-qcmn-epn-full
     [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-qcmn
-if has_detector MFT && has_processing_step MFT_RECO; then
-    [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-track-full-qcmn
-else
-    [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-qcmn
-fi
+    if has_detector MFT && has_processing_step MFT_RECO; then
+      [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-track-full-qcmn
+    else
+      [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-qcmn
+    fi
 
     if [[ -z "$QC_JSON_TOF" ]]; then
       if has_detector_flp_processing TOF; then
@@ -30,24 +30,30 @@ fi
     [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=consul://o2/components/qc/ANY/any/fv0-digits-qc-epn
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall
     if [[ -z "$QC_JSON_MCH" ]]; then
-	if has_detector MCH && has_processing_step MCH_RECO; then
-	    QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full
-	else
-	    QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-digits
-	fi
+      if has_detector MCH && has_processing_step MCH_RECO; then
+        QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full
+      else
+        QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-digits
+      fi
     fi
-    [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=consul://o2/components/qc/ANY/any/mid-full-qcmn
+    if [[ -z "$QC_JSON_MID" ]]; then
+      if has_detector MID && has_processing_step MID_RECO; then
+        QC_JSON_MID=consul://o2/components/qc/ANY/any/mid-flp_raw-epn_full-qcmn
+      else
+        QC_JSON_MID=consul://o2/components/qc/ANY/any/mid-flp_raw-epn_digits-qcmn
+      fi
+    fi
     [[ -z "$QC_JSON_CPV" ]] && QC_JSON_CPV=consul://o2/components/qc/ANY/any/cpv-physics-qcmn-epn
     [[ -z "$QC_JSON_TRD" ]] && QC_JSON_TRD=consul://o2/components/qc/ANY/any/trd-full-qcmn-norawdatastats-epn
     [[ -z "$QC_JSON_PHS" ]] && QC_JSON_PHS=consul://o2/components/qc/ANY/any/phos-raw-clusters-epn
     [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=consul://o2/components/qc/ANY/any/vertexing-qc
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json
     if [[ -z "$QC_JSON_TOF_MATCH" ]]; then
-       if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD ; then
-         QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctrdtof
-       elif has_tof_matching_source ITS-TPC ; then
-         QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctof
-       fi
+      if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD; then
+        QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctrdtof
+      elif has_tof_matching_source ITS-TPC; then
+        QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctof
+      fi
     fi
   elif [[ $SYNCMODE == 1 ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
@@ -66,11 +72,11 @@ fi
     [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=$O2DPG_ROOT/DATA/production/qc-sync/pvtx.json
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json
     if [[ -z "$QC_JSON_TOF_MATCH" ]]; then
-       if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD ; then
-         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctrdtof.json
-       elif has_tof_matching_source ITS-TPC ; then
-         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctof.json
-       fi
+      if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD; then
+        QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctrdtof.json
+      elif has_tof_matching_source ITS-TPC; then
+        QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctof.json
+      fi
     fi
   else
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-async/tpc.json
@@ -98,8 +104,7 @@ fi
 
   FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
 
-  add_QC_JSON()
-  {
+  add_QC_JSON() {
     if [[ ${2} =~ ^consul://.* ]]; then
       TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
       curl -s -o $TMP_FILENAME "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
@@ -117,7 +122,7 @@ fi
   JSON_FILES=
   OUTPUT_SUFFIX=
   QC_CONFIG=
-  for i in `echo $LIST_OF_DETECTORS | sed "s/,/ /g"`; do
+  for i in $(echo $LIST_OF_DETECTORS | sed "s/,/ /g"); do
     DET_JSON_FILE="QC_JSON_$i"
     if has_detector_qc $i && [ ! -z "${!DET_JSON_FILE}" ]; then
       add_QC_JSON $i ${!DET_JSON_FILE}
@@ -129,19 +134,19 @@ fi
     add_QC_JSON matchTOF ${QC_JSON_TOF_MATCH}
   fi
 
-  for i in `echo $LIST_OF_GLORECO | sed "s/,/ /g"`; do
+  for i in $(echo $LIST_OF_GLORECO | sed "s/,/ /g"); do
     GLO_JSON_FILE="QC_JSON_$i"
     if has_detector_matching $i && has_matching_qc $i && [ ! -z "${!GLO_JSON_FILE}" ]; then
-       add_QC_JSON $i ${!GLO_JSON_FILE}
+      add_QC_JSON $i ${!GLO_JSON_FILE}
     fi
   done
 
   # PID QC
-  for i in `echo $LIST_OF_PID | sed "s/,/ /g"`; do
-    PIDDETFORFILE=`echo $i | sed "s/-//g"`
+  for i in $(echo $LIST_OF_PID | sed "s/,/ /g"); do
+    PIDDETFORFILE=$(echo $i | sed "s/-//g")
     PID_JSON_FILE="QC_JSON_PID_$PIDDETFORFILE"
     if has_pid_qc $i && [ ! -z "${!PID_JSON_FILE}" ]; then
-       add_QC_JSON pid$i ${!PID_JSON_FILE}
+      add_QC_JSON pid$i ${!PID_JSON_FILE}
     fi
   done
 
@@ -156,16 +161,16 @@ fi
       if [[ "0$GEN_TOPO_ONTHEFLY" == "01" ]]; then
         find $GEN_TOPO_WORKDIR/json_cache/ -maxdepth 1 -type f -mtime +30 | xargs rm -f
       fi
-      MERGED_JSON_FILENAME=$GEN_TOPO_WORKDIR/json_cache/`date +%Y%m%d-%H%M%S`-$$-$RANDOM-$OUTPUT_SUFFIX.json
+      MERGED_JSON_FILENAME=$GEN_TOPO_WORKDIR/json_cache/$(date +%Y%m%d-%H%M%S)-$$-$RANDOM-$OUTPUT_SUFFIX.json
     else
       MERGED_JSON_FILENAME=$GEN_TOPO_QC_JSON_FILE
     fi
-    jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $QC_JSON_GLOBAL $JSON_FILES > $MERGED_JSON_FILENAME
+    jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $QC_JSON_GLOBAL $JSON_FILES >$MERGED_JSON_FILENAME
     if [[ $? != 0 ]]; then
       echo Merging QC workflow with JSON files $JSON_FILES failed 1>&2
       exit 1
     fi
-    MERGED_JSON_FILENAME=`realpath $MERGED_JSON_FILENAME`
+    MERGED_JSON_FILENAME=$(realpath $MERGED_JSON_FILENAME)
 
     if [[ "0$QC_REDIRECT_MERGER_TO_LOCALHOST" == "01" ]]; then
       sed -i.bak -E 's/( *)"remoteMachine" *: *".*"(,?) *$/\1"remoteMachine": "127.0.0.1"\2/' $MERGED_JSON_FILENAME
