@@ -103,7 +103,7 @@ if [[ -z $CALIBDATASPEC_BARREL_TF ]]; then
 
   # TPC
   if [[ $CALIB_TPC_TIMEGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcmips:TPC/MIPS/0"; fi
-  if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "unbinnedTPCResiduals:/GLO/UNBINNEDRES/0"; fi
+  if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "unbinnedTPCResiduals:GLO/UNBINNEDRES/0"; fi
 
   # TRD
   if [[ $CALIB_TRD_VDRIFTEXB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "angResHistoTRD:TRD/ANGRESHISTS/0"; fi
