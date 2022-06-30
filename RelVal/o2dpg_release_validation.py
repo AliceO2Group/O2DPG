@@ -57,7 +57,7 @@
 import sys
 import argparse
 from os import environ, makedirs
-from os.path import join, abspath, exists, isfile, isdir, dirname
+from os.path import join, abspath, exists, isfile, isdir, dirname, relpath
 from glob import glob
 from subprocess import Popen
 from pathlib import Path
@@ -295,26 +295,33 @@ def has_severity(filename, severity=("BAD", "CRIT_NC")):
     """
     Check if any 2 histograms have a given severity level after RelVal
     """
+    counter = {s: 0 for s in severity + ["ALL"]}
+
     def rel_val_summary(d):
         ret = False
-        for s in severity:
+        for s in REL_VAL_SEVERITY_MAP:
             names = d.get(s)
+            counter["ALL"] += len(names)
             if not names:
+                continue
+            if s not in severity:
                 continue
             print(f"Histograms for severity {s}:")
             for n in names:
                 print(f"    {n}")
+            counter[s] = len(names)
             ret = True
         return ret
 
     def rel_val_summary_global(d):
         ret = False
-        to_print = {k: [] for k in severity}
-        for s in severity:
-            for h in d:
-                if h["test_summary"] in severity:
-                    to_print[s].append(h["name"])
-                    ret = True
+        to_print = {s: [] for s in severity}
+        counter["ALL"] = len(d)
+        for h in d:
+            if h["test_summary"] in severity:
+                to_print[h["test_summary"]].append(h["name"])
+                counter[h["test_summary"]] += 1
+                ret = True
         for s, names in to_print.items():
             if not names:
                 continue
@@ -325,13 +332,16 @@ def has_severity(filename, severity=("BAD", "CRIT_NC")):
 
     res = None
     with open(filename, "r") as f:
-        # NOTE For now care about the summary. However, we have each test individually, so we could do a more detailed check in the future
         res = json.load(f)
 
     # decide whether that is an overall summary or from 2 files only
-    if "histograms" in res:
-        return rel_val_summary_global(res["histograms"])
-    return rel_val_summary(res["test_summary"])
+    ret = rel_val_summary_global(res["histograms"]) if "histograms" in res else rel_val_summary(res["test_summary"])
+    if ret:
+        print(f"\nNumber of compared histograms: {counter['ALL']} out of which")
+        for s in severity:
+            print(f"    {counter[s]} histograms have severity {s}")
+        print("as printed above.\n")
+    return ret
 
 
 def rel_val_ttree(dir1, dir2, files, output_dir, args, treename="o2sim", *, combine_patterns=None):
@@ -389,8 +399,8 @@ def make_summary(in_dir):
             current_summary = json.load(f)
         # remove the file name, used as the top key for this collection
         rel_val_path = "/".join(path.split("/")[:-1])
-        type_global = path.split("/")[1]
-        type_specific = "/".join(path.split("/")[1:-1])
+        type_specific = relpath(rel_val_path, in_dir)
+        type_global = type_specific.split("/")[0]
         make_summary = {}
         for which_test, flagged_histos in current_summary.items():
             # loop over tests done
@@ -483,9 +493,6 @@ def rel_val_sim_dirs(args):
             makedirs(output_dir_qc)
         rel_val_histograms(dir_qc1, dir_qc2, qc_files, output_dir_qc, args)
 
-    with open(join(output_dir, "SummaryGlobal.json"), "w") as f:
-        json.dump(make_summary(output_dir), f, indent=2)
-
 
 def rel_val(args):
     """
@@ -502,14 +509,33 @@ def rel_val(args):
         return 1
     if not exists(args.output):
         makedirs(args.output)
-    return func(args)
+    func(args)
+    with open(join(args.output, "SummaryGlobal.json"), "w") as f:
+        json.dump(make_summary(args.output), f, indent=2)
 
 
 def inspect(args):
     """
     Inspect a Summary.json in view of RelVal severity
     """
-    return has_severity(args.file, args.severity)
+    path = args.path
+
+    def get_filepath(d):
+        summary_global = join(path, "SummaryGlobal.json")
+        if exists(summary_global):
+            return summary_global
+        summary = join(path, "Summary.json")
+        if exists(summary):
+            return summary
+        print(f"Can neither find {summary_global} nor {summary}. Nothing to work with.")
+        return None
+
+    if isdir(path):
+        path = get_filepath(path)
+        if not path:
+            return 1
+
+    return not has_severity(path, args.severity)
 
 
 def influx(args):
@@ -521,13 +547,14 @@ def influx(args):
     if not exists(json_in):
         print(f"Cannot find expected JSON summary {json_in}.")
         return 1
-
-    table_name = f"{args.table_prefix}_ReleaseValidation"
+    table_name = "O2DPG_MC_ReleaseValidation"
+    if args.table_suffix:
+        table_name = f"{table_name}_{args.table_suffix}"
     tags_out = ""
     if args.tags:
         for t in args.tags:
             t_split = t.split("=")
-            if len(t_split) != 2:
+            if len(t_split) != 2 or not t_split[0] or not t_split[1]:
                 print(f"ERROR: Invalid format of tags {t} for InfluxDB")
                 return 1
             # we take it apart and put it back together again to make sure there are no whitespaces etc
@@ -542,8 +569,8 @@ def influx(args):
     with open(json_in, "r") as f:
         in_list = json.load(f)["histograms"]
     with open(out_file, "w") as f:
-        for h in in_list:
-            s = f"{row_tags},type_global={h['type_global']},type_specific={h['type_specific']} histogram_name={h['name']}"
+        for i, h in enumerate(in_list):
+            s = f"{row_tags},type_global={h['type_global']},type_specific={h['type_specific']},id={i} histogram_name=\"{h['name']}\""
             for k, v in h.items():
                 # add all tests - do it dynamically because more might be added in the future
                 if "test_" not in k:
@@ -578,14 +605,14 @@ def main():
     rel_val_parser.set_defaults(func=rel_val)
 
     inspect_parser = sub_parsers.add_parser("inspect")
-    inspect_parser.add_argument("file", help="pass a JSON produced from ReleaseValidation (rel-val)")
+    inspect_parser.add_argument("path", help="either complete file path to a Summary.json or SummaryGlobal.json or directory where one of the former is expected to be")
     inspect_parser.add_argument("--severity", nargs="*", default=["BAD", "CRIT_NC"], choices=REL_VAL_SEVERITY_MAP.keys(), help="Choose severity levels to search for")
     inspect_parser.set_defaults(func=inspect)
 
     influx_parser = sub_parsers.add_parser("influx")
     influx_parser.add_argument("--dir", help="directory where ReleaseValidation was run", required=True)
     influx_parser.add_argument("--tags", nargs="*", help="tags to be added for influx, list of key=value")
-    influx_parser.add_argument("--table-prefix", dest="table_prefix", help="prefix for table name", default="O2DPG_MC")
+    influx_parser.add_argument("--table-suffix", dest="table_suffix", help="prefix for table name")
     influx_parser.set_defaults(func=influx)
 
     args = parser.parse_args()
