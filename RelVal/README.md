@@ -42,10 +42,11 @@ If you would like to compare 2 files, simply run
 ```bash
 python o2dpg_release_validation.py rel-val -i <file1> <file2> [-o <output/dir>]
 ```
-This performs all of the above mentioned tests. If only certain tests should be performed, this can be achieved with the flags `--with-<which-test>` where `<which-test>` is one of
+This performs all of the above mentioned tests. If only certain tests should be performed, this can be achieved with the flags `--with-test-<which-test>` where `<which-test>` is one of
 1. `chi2`,
 1. `bincont`,
 1. `numentries`.
+
 By default, all of them are switched on.
 
 ### Apply to entire simulation outcome
@@ -56,6 +57,7 @@ In addition to simply comparing 2 ROOT files, the script offers the possibility 
 1. TPC tracks output,
 1. MC kinematics,
 1. MC hits.
+
 **NOTE** That each single one of the comparison types if only done if mutual files were found in the 2 corresponding directories. As an example, one could do
 ```bash
 cd ${DIR1}
@@ -65,12 +67,12 @@ cd ${DIR2}
 python o2dpg_workflow_runner.py -f <workflow-json2>
 python ${O2DPG_ROOT}/ReleaseValidation/o2dpg_release_validation.py rel-val -i ${DIR1} ${DIR2} [-o <output/dir>] [<test-flags>]
 ```
-Again, also here it can be specified explicitly on what the tests should be run by specifying one or more `<test-flags` such as
-1. `--with-qc`,
-1. `--with-analysis`,
-1. `--with-tpctracks`,
-1. `--with-kine`,
-1. `--with-hits`.
+Again, also here it can be specified explicitly on what the tests should be run by specifying one or more `<test-flags>` such as
+1. `--with-type-qc`,
+1. `--with-type-analysis`,
+1. `--with-type-tpctracks`,
+1. `--with-type-kine`,
+1. `--with-type-hits`.
 
 ### Quick inspection
 
@@ -87,3 +89,10 @@ To convert the final output to something that can be digested by InfluxDB, use
 python ${O2DPG_ROOT}/ReleaseValidation/o2dpg_release_validation.py influx --dir <rel-val-out-dir> [--tags k1=v1 k2=v2 ...] [--table-name <chosen-table-name>]
 ```
 When the `--tags` argument is specified, these are injected as TAGS for InfluxDB in addition. The table name can also be specified explicitly; if not given, it defaults to `O2DPG_MC_ReleaseValidation`.
+
+## Plot output
+
+There are various plots created during the RelVal run. For each compared file there are
+* overlay plots (to be found in the sub directory `overlayPlots`),
+* 2D plots summarising the results in a grid view (called `SummaryTests.png`),
+* pie charts showing the fraction of test results per test.
