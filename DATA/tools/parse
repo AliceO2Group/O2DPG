@@ -103,16 +103,12 @@ for line in f:
                 filename = tmpdir + '/wf' + str(i) + '.dds'
                 if args[i].startswith('reco'):
                     wf = args[i].split(',', 3)
-                    recoworkflows.append(filename)
                     is_calib_workflow = 0
                 elif args[i].startswith('calib'):
                     wf = args[i].split(',', 2)
-                    filenamecore = filename
-                    # filenamecore = filenamecore+ ':' + wf[1] # Currently disabled, since odc-epn-topo does not accept :[ncores]
                     wf.append(wf[2])
                     wf[1] = '1';
                     wf[2] = wf[1]
-                    calibworkflows.append(filenamecore)
                     is_calib_workflow = 1
                 else:
                     print('Invalid workflow type', args[i])
@@ -136,6 +132,21 @@ for line in f:
                             break
                         print(line)
                     raise
+                if args[i].startswith('reco'):
+                    recoworkflows.append(filename)
+                elif args[i].startswith('calib'):
+                    if os.environ['WORKFLOWMODE'] == 'dds':
+                    isempty = 1
+                        ftmp = open(filename, 'r')
+                        rg = re.compile('^.*<decltask')
+                        for line in ftmp:
+                            if re.match(rg, line):
+                                isempty = 0
+                                break
+                    if isempty:
+                        continue
+                    # filename = filename+ ':' + wf[1] # Currently disabled, since odc-epn-topo does not accept :[ncores]
+                    calibworkflows.append(filename)
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
                 reconodesmin = min(reconodes, reconodesmin)
