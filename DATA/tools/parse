@@ -145,7 +145,7 @@ for line in f:
                                 break
                     if isempty:
                         continue
-                    # filename = filename+ ':' + wf[1] # Currently disabled, since odc-epn-topo does not accept :[ncores]
+                    filename = filename + ':' + wf[1]
                     calibworkflows.append(filename)
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
