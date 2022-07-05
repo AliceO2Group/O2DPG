@@ -75,6 +75,13 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
     CALIB_PHS_TURNONCALIB=0
     CALIB_PHS_RUNBYRUNCALIB=0
   fi
+
+  # calibrations for CPV
+  if has_detector_calib CPV && has_detector_reco CPV; then
+    if [[ -z ${CALIB_CPV_GAIN+x} ]]; then CALIB_CPV_GAIN=1; fi
+  else
+    CALIB_CPV_GAIN=0
+  fi
 fi
 
 if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
@@ -90,6 +97,7 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo "CALIB_TRD_VDRIFTEXB = $CALIB_TRD_VDRIFTEXB" 1>&2
   echo "CALIB_TPC_TIMEGAIN = $CALIB_TPC_TIMEGAIN" 1>&2
   echo "CALIB_TPC_RESPADGAIN = $CALIB_TPC_RESPADGAIN" 1>&2
+  echo "CALIB_CPV_GAIN = $CALIB_CPV_GAIN" 1>&2
 fi
 
 # define spec for proxy for TF-based outputs from BARREL
@@ -131,6 +139,11 @@ if [[ -z $CALIBDATASPEC_CALO_TF ]]; then
   if [[ $CALIB_PHS_ENERGYCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO_TF "cluelementsPHS:PHS/CLUELEMENTS/0"; fi
   if [[ $CALIB_PHS_BADMAPCALIB == 1 ]] || [[ $CALIB_PHS_TURNONCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO_TF "cellsPHS:PHS/CELLS/0"; fi
   if [[ $CALIB_PHS_TURNONCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_CALO_TF "cellsTRPHS:PHS/CELLTRIGREC/0"; fi
+
+  # CPV
+  if [[ $CALIB_CPV_GAIN == 1 ]]; then
+    add_semicolon_separated CALIBDATASPEC_CALO_TF "calibdCPV:CPV/CALIBDIGITS/0"
+  fi
 fi
 
 if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
