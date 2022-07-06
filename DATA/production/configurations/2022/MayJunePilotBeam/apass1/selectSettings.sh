@@ -19,7 +19,7 @@ if [[ $RUNNUMBER -ge 519041 ]] && [[ $RUNNUMBER -le 519507 ]]; then
   COLLISIONCONTEXT=collisioncontext_Single_16b_8_8_8_noLR.root
 fi
 
-if [[ $RUNNUMBER -ge 519903 ]] && [[ $RUNNUMBER -le 519908 ]]; then
+if [[ $RUNNUMBER -ge 519903 ]] && [[ $RUNNUMBER -le 520099 ]]; then
   COLLISIONCONTEXT=collisioncontext_Single_4b_2_2_2_noLR.root
 fi
 

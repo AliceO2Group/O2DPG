@@ -74,7 +74,6 @@ fi
 if [[ -n "$ALIEN_JDL_LPMPRODUCTIONTAG" ]]; then
     export PERIOD="$ALIEN_JDL_LPMPRODUCTIONTAG"
     export O2DPGPATH="$PERIOD"
-    ( [[ $ALIEN_JDL_LPMPRODUCTIONTAG == MAY ]] || [[ $ALIEN_JDL_LPMPRODUCTIONTAG == JUN ]] || [[ $ALIEN_JDL_LPMPRODUCTIONTAG == LHC22c ]] || [[ $ALIEN_JDL_LPMPRODUCTIONTAG == LHC22d ]] || [[ $ALIEN_JDL_LPMPRODUCTIONTAG == LHC22e ]] ) && O2DPGPATH="MayJunePilotBeam"
 fi
 
 # pass
@@ -111,17 +110,6 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 
 echo "Checking current directory content"
 ls -altr 
-
-# define whether to remap or not the Cluster Dictionaries for ITS and MFT
-# needed only till run 517224 included (other runs are mapped in the ctf2epn
-# but they are not for async reco)
-PARSESCRIPT="$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/parse.sh"
-if [[ -f "parse.sh" ]]; then
-  PARSESCRIPT="parse.sh"
-fi
-if [[ $RUNNUMBER -le 517224 ]]; then
-  source $PARSESCRIPT `cat list.list`
-fi
 
 if [[ -f "setenv_extra.sh" ]]; then
     source setenv_extra.sh $RUNNUMBER $BEAMTYPE
@@ -165,11 +153,21 @@ ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
 ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
 ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 
+# TFDELAY and throttling
+TFDELAYSECONDS=40
+if [[ -n "$ALIEN_JDL_TFDELAYSECONDS" ]]; then
+  TFDELAYSECONDS="$ALIEN_JDL_TFDELAYSECONDS"
+# ...otherwise, it depends on whether we have throttling
+elif [[ -n "$ALIEN_JDL_USETHROTTLING" ]]; then
+  TFDELAYSECONDS=8
+  TIMEFRAME_RATE_LIMIT=1
+fi
+
 # reco and matching
 # print workflow
-IS_SIMULATED_DATA=0 WORKFLOWMODE=print DISABLE_ROOT_OUTPUT="" TFDELAY=40 NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list > workflowconfig.log
+IS_SIMULATED_DATA=0 WORKFLOWMODE=print DISABLE_ROOT_OUTPUT="" TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list > workflowconfig.log
 # run it
-IS_SIMULATED_DATA=0 WORKFLOWMODE=run DISABLE_ROOT_OUTPUT="" TFDELAY=40 NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list
+IS_SIMULATED_DATA=0 WORKFLOWMODE=run DISABLE_ROOT_OUTPUT="" TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list
 
 # now extract all performance metrics
 IFS=$'\n'
