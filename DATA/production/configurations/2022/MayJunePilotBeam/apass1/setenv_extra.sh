@@ -49,7 +49,12 @@ else
 fi
 
 # TPC vdrift
-root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/getTPCvdrift.C+($RUNNUMBER)"
+CCDB_TPC_VDRIFT="http://ccdb-test.cern.ch:8080"
+if [[ $RUNNUMBER -ge 518737 ]]; then
+  CCDB_TPC_VDRIFT="http://alice-ccdb.cern.ch"
+fi
+echo "CCDB for TPC Vdrift = $CCDB_TPC_VDRIFT"
+root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/getTPCvdrift.C+($RUNNUMBER, \"$CCDB_TPC_VDRIFT\" )"
 export VDRIFT=`cat vdrift.txt`
 
 # remove monitoring-backend
