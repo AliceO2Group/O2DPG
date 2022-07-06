@@ -9,7 +9,7 @@
 #include "DataFormatsTPC/LtrCalibData.h"
 #include "TPCBase/ParameterGas.h"
 
-float getTPCvdrift(int run, std::string_view ltrUrl = "http://ccdb-test.cern.ch:8080")
+float getTPCvdrift(int run, std::string_view ltrUrl = "http://alice-ccdb.cern.ch")
 {
   o2::ccdb::CcdbApi c;
   c.init("http://alice-ccdb.cern.ch");
