@@ -11,6 +11,10 @@
 if [[ -z $SOURCE_GUARD_SETENV_CALIB ]]; then
 SOURCE_GUARD_SETENV_CALIB=1
 
+# For the moment the TPC interpolation will always send also the track parameters in addition to unbinned residuals to the aggregator.
+# Remove this line to only send unbinned residuals
+if [[ -z "$CALIB_TPC_SCDCALIB_SENDTRKDATA" ]];  then export CALIB_TPC_SCDCALIB_SENDTRKDATA=0; fi
+
 if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   # calibrations for primary vertex
   if has_detector_calib ITS && has_detectors_reco ITS && has_detector_matching PRIMVTX && [[ ! -z "$VERTEXING_SOURCES" ]]; then
@@ -104,6 +108,7 @@ if [[ -z $CALIBDATASPEC_BARREL_TF ]]; then
   # TPC
   if [[ $CALIB_TPC_TIMEGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcmips:TPC/MIPS/0"; fi
   if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "unbinnedTPCResiduals:GLO/UNBINNEDRES/0"; fi
+  if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ 0$CALIB_TPC_SCDCALIB_SENDTRKDATA == "01" ]]; then then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcInterpTrkData:GLO/TRKDATA/0"; fi
 
   # TRD
   if [[ $CALIB_TRD_VDRIFTEXB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "angResHistoTRD:TRD/ANGRESHISTS/0"; fi
