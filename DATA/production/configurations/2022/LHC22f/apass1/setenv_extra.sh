@@ -62,8 +62,6 @@ export ARGS_ALL_EXTRA=" --resources-monitoring 50 --resources-monitoring-dump-in
 # some settings in common between workflows
 export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=9e-4;ITSCATrackerParam.sysErrZ2[0]=9e-4;ITSCATrackerParam.sysErrY2[1]=9e-4;ITSCATrackerParam.sysErrZ2[1]=9e-4;ITSCATrackerParam.sysErrY2[2]=9e-4;ITSCATrackerParam.sysErrZ2[2]=9e-4;ITSCATrackerParam.sysErrY2[3]=1e-2;ITSCATrackerParam.sysErrZ2[3]=1e-2;ITSCATrackerParam.sysErrY2[4]=1e-2;ITSCATrackerParam.sysErrZ2[4]=1e-2;ITSCATrackerParam.sysErrY2[5]=1e-2;ITSCATrackerParam.sysErrZ2[5]=1e-2;ITSCATrackerParam.sysErrY2[6]=1e-2;ITSCATrackerParam.sysErrZ2[6]=1e-2;"
 
-export MFT_STROBELGT="MFTAlpideParam.roFrameLengthInBC=198"
-
 # ad-hoc options for ITS reco workflow
 export ITS_CONFIG=" --tracking-mode sync_misaligned"
 export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2"
@@ -82,7 +80,7 @@ export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --for-calib"
 export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2.;pvertexer.nSigmaTimeTrack=4.;pvertexer.timeMarginTrackTime=0.5;pvertexer.timeMarginVertexTime=7.;pvertexer.nSigmaTimeCut=10;pvertexer.dbscanMaxDist2=36;pvertexer.dcaTolerance=3.;pvertexer.pullIniCut=100;pvertexer.addZSigma2=0.1;pvertexer.tukey=20.;pvertexer.addZSigma2Debris=0.01;pvertexer.addTimeSigma2Debris=1.;pvertexer.maxChi2Mean=30;pvertexer.timeMarginReattach=3.;pvertexer.addTimeSigma2Debris=1.;pvertexer.dbscanDeltaT=24;pvertexer.maxChi2TZDebris=100;pvertexer.maxMultRatDebris=1.;pvertexer.dbscanAdaptCoef=20.;pvertexer.timeMarginVertexTime=1.3"
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
 
-export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow="TPCGasParam.DriftV=$VDRIFT;$PVERTEXER;$MFT_STROBELGT;"
+export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow="TPCGasParam.DriftV=$VDRIFT;$PVERTEXER;"
 export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow="$SVTX"
 
 # ad-hoc settings for its-tpc matching
@@ -106,7 +104,7 @@ export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="--fv0-reconstructor"
 #...
 
 # ad-hoc settings for MFT 
-export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="$MFT_STROBELGT;MFTTracking.forceZeroField=true;MFTTracking.FullClusterScan=true;MFTTracking.LTFclsRCut=0.2;"
+export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="MFTTracking.forceZeroField=true;MFTTracking.FullClusterScan=true;MFTTracking.LTFclsRCut=0.2;"
 export ARGS_EXTRA_PROCESS_o2_mft_reco_workflow=" --run-assessment "
 
 # ad-hoc settings for MCH
