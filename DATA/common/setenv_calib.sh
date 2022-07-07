@@ -19,8 +19,6 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   # calibrations for primary vertex
   if has_detector_calib ITS && has_detectors_reco ITS && has_detector_matching PRIMVTX && [[ ! -z "$VERTEXING_SOURCES" ]]; then
     if [[ -z ${CALIB_PRIMVTX_MEANVTX+x} ]]; then CALIB_PRIMVTX_MEANVTX=1; fi
-  else
-    CALIB_PRIMVTX_MEANVTX=0
   fi
 
   # calibrations for TOF
@@ -28,13 +26,8 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
     if ( has_detectors_reco ITS TPC && has_detector_matching ITSTPCTOF ) || ( has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRDTOF ); then
       if [[ -z ${CALIB_TOF_LHCPHASE+x} ]]; then CALIB_TOF_LHCPHASE=1; fi
       if [[ -z ${CALIB_TOF_CHANNELOFFSETS+x} ]]; then CALIB_TOF_CHANNELOFFSETS=1; fi
-    else
-      CALIB_TOF_LHCPHASE=0
-      CALIB_TOF_CHANNELOFFSETS=0
     fi
     if [[ -z ${CALIB_TOF_DIAGNOSTICS+x} ]]; then CALIB_TOF_DIAGNOSTICS=1; fi
-  else
-    CALIB_TOF_DIAGNOSTICS=0
   fi
 
   # calibrations for TPC
@@ -42,29 +35,22 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
     if has_detectors ITS TPC TOF TRD; then
       if has_detectors TPC ITS TRD TOF && has_detector_matching ITSTPCTRDTOF; then
         if [[ -z ${CALIB_TPC_SCDCALIB+x} ]]; then CALIB_TPC_SCDCALIB=1; fi
-      else
-        CALIB_TPC_SCDCALIB=0
       fi
     fi
-    if [[ -z ${CALIB_TPC_TIMEGAIN+x} ]]; then CALIB_TPC_TIMEGAIN=1; fi
-    if [[ -z ${CALIB_TPC_RESPADGAIN+x} ]]; then CALIB_TPC_RESPADGAIN=1; fi
-  else
-    CALIB_TPC_TIMEGAIN=0
-    CALIB_TPC_RESPADGAIN=0
+    if has_processing_step TPC_DEDX; then
+      if [[ -z ${CALIB_TPC_TIMEGAIN+x} ]]; then CALIB_TPC_TIMEGAIN=1; fi
+      if [[ -z ${CALIB_TPC_RESPADGAIN+x} ]]; then CALIB_TPC_RESPADGAIN=1; fi
+    fi
   fi
 
   # calibrations for TRD
   if has_detector_calib TRD && has_detectors ITS TPC TRD ; then
     if [[ -z ${CALIB_TRD_VDRIFTEXB+x} ]]; then CALIB_TRD_VDRIFTEXB=1; fi
-  else
-    CALIB_TRD_VDRIFTEXB=0
   fi
 
   # calibrations for EMC
   if has_detector_calib EMC && has_detector_reco EMC; then
     if [[ -z ${CALIB_EMC_CHANNELCALIB+x} ]]; then CALIB_EMC_CHANNELCALIB=1; fi
-  else
-    CALIB_EMC_CHANNELCALIB=0
   fi
 
   # calibrations for PHS
@@ -73,20 +59,28 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
     if [[ -z ${CALIB_PHS_BADMAPCALIB+x} ]]; then CALIB_PHS_BADMAPCALIB=1; fi
     if [[ -z ${CALIB_PHS_TURNONCALIB+x} ]]; then CALIB_PHS_TURNONCALIB=1; fi
     if [[ -z ${CALIB_PHS_RUNBYRUNCALIB+x} ]]; then CALIB_PHS_RUNBYRUNCALIB=1; fi
-  else
-    CALIB_PHS_ENERGYCALIB=0
-    CALIB_PHS_BADMAPCALIB=0
-    CALIB_PHS_TURNONCALIB=0
-    CALIB_PHS_RUNBYRUNCALIB=0
   fi
 
   # calibrations for CPV
   if has_detector_calib CPV && has_detector_reco CPV; then
     if [[ -z ${CALIB_CPV_GAIN+x} ]]; then CALIB_CPV_GAIN=1; fi
-  else
-    CALIB_CPV_GAIN=0
   fi
 fi
+
+[[ -z ${CALIB_PRIMVTX_MEANVTX} ]] && CALIB_PRIMVTX_MEANVTX=0
+[[ -z ${CALIB_TOF_LHCPHASE} ]] && CALIB_TOF_LHCPHASE=0
+[[ -z ${CALIB_TOF_CHANNELOFFSETS} ]] && CALIB_TOF_CHANNELOFFSETS=0
+[[ -z ${CALIB_TOF_DIAGNOSTICS} ]] && CALIB_TOF_DIAGNOSTICS=0
+[[ -z ${CALIB_TPC_SCDCALIB} ]] && CALIB_TPC_SCDCALIB=0
+[[ -z ${CALIB_TPC_TIMEGAIN} ]] && CALIB_TPC_TIMEGAIN=0
+[[ -z ${CALIB_TPC_RESPADGAIN} ]] && CALIB_TPC_RESPADGAIN=0
+[[ -z ${CALIB_TRD_VDRIFTEXB} ]] && CALIB_TRD_VDRIFTEXB=0
+[[ -z ${CALIB_EMC_CHANNELCALIB} ]] && CALIB_EMC_CHANNELCALIB=0
+[[ -z ${CALIB_PHS_ENERGYCALIB} ]] && CALIB_PHS_ENERGYCALIB=0
+[[ -z ${CALIB_PHS_BADMAPCALIB} ]] && CALIB_PHS_BADMAPCALIB=0
+[[ -z ${CALIB_PHS_TURNONCALIB} ]] && CALIB_PHS_TURNONCALIB=0
+[[ -z ${CALIB_PHS_RUNBYRUNCALIB} ]] && CALIB_PHS_RUNBYRUNCALIB=0
+[[ -z ${CALIB_CPV_GAIN} ]] && CALIB_CPV_GAIN=0
 
 if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo "CALIB_PRIMVTX_MEANVTX = $CALIB_PRIMVTX_MEANVTX" 1>&2
