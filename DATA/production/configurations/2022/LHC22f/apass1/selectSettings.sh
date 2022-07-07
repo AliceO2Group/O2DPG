@@ -15,6 +15,10 @@ COLLISIONCONTEXT=collisioncontext_Single_3b_2_2_2.root
 export ITS_STROBE=198
 export MFT_STROBE=198
 
+
+if [[ $RUNNUMBER -ge 520163 ]] && [[ $RUNNUMBER -le 520180 ]]; then
+  export MFT_STROBE=297
+fi
 if [[ $RUNNUMBER -ge 520259 ]] && [[ $RUNNUMBER -le 520290 ]]; then
   export ITS_STROBE=297
   export MFT_STROBE=297
