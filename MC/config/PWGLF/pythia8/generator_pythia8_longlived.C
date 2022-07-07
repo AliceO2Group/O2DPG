@@ -66,8 +66,8 @@ public:
 private:
   double genMinPt = 0.5;  /// minimum 3-momentum for generated particles
   double genMaxPt = 12.;  /// maximum 3-momentum for generated particles
-  double genMinEta = -8.; /// minimum pseudorapidity for generated particles
-  double genMaxEta = +8.; /// maximum pseudorapidity for generated particles
+  double genMinEta = -1.; /// minimum pseudorapidity for generated particles
+  double genMaxEta = +1.; /// maximum pseudorapidity for generated particles
 
   double m = 0;       /// particle mass [GeV/c^2]
   int pdg = 0;        /// particle pdg code
