@@ -9,8 +9,12 @@ source common/getCommonArgs.sh
 PROXY_INSPEC="A:MCH/PDIGITS/0"
 CONSUL_ENDPOINT="alio2-cr1-hv-aliecs.cern.ch:8500"
 
+MCH_MAX_PEDESTAL=${MCH_MAX_PEDESTAL:-500.0}
+MCH_MAX_NOISE=${MCH_MAX_NOISE:-2.0}
+MCH_MIN_ENTRIES=${MCH_MIN_ENTRIES:-100}
+MCH_MIN_FRACTION=${MCH_MIN_FRACTION:-0.5}
 MCH_END_OF_STREAM_ONLY=${MCH_END_OF_STREAM_ONLY:-true}
-BADCHANNEL_CONFIG="${ARGS_ALL_CONFIG};MCHBadChannelCalibratorParam.maxPed=200.0;MCHBadChannelCalibratorParam.maxNoise=2.0;MCHBadChannelCalibratorParam.minRequiredNofEntriesPerChannel=100;MCHBadChannelCalibratorParam.minRequiredCalibratedFraction=0.5;MCHBadChannelCalibratorParam.onlyAtEndOfStream=${MCH_END_OF_STREAM_ONLY}"
+BADCHANNEL_CONFIG="${ARGS_ALL_CONFIG};MCHBadChannelCalibratorParam.maxPed=${MCH_MAX_PEDESTAL};MCHBadChannelCalibratorParam.maxNoise=${MCH_MAX_NOISE};MCHBadChannelCalibratorParam.minRequiredNofEntriesPerChannel=${MCH_MIN_ENTRIES};MCHBadChannelCalibratorParam.minRequiredCalibratedFraction=${MCH_MIN_FRACTION};MCHBadChannelCalibratorParam.onlyAtEndOfStream=${MCH_END_OF_STREAM_ONLY}"
 
 WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --proxy-name mch-badchannel-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=mch-badchannel-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\" | "
 WORKFLOW+="o2-calibration-mch-badchannel-calib-workflow $ARGS_ALL --configKeyValues \"$BADCHANNEL_CONFIG\" | "
