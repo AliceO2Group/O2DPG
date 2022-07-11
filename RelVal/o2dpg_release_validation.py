@@ -267,6 +267,9 @@ def make_generic_histograms_from_chain(filenames1, filenames2, output_filepath1,
         # if successful, append histogram and necessary info
         leaf_names2.append(b)
         hist = gDirectory.Get(h_name)
+        hist.Reset("ICEMS")
+        # After pre-defined binning, fill again to make sure really the very same binning is used in this and the compared histogram
+        chain1.Draw(f"{b}>>+{h_name}")
         histograms.append(hist)
         output_file1.cd()
         hist.Write()
