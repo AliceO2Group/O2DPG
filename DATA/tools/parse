@@ -114,7 +114,11 @@ for line in f:
                 print('Adding', wf[0], 'workflow (', wf[2], '-', wf[1], 'nodes):', wf[3])
                 reconodes = max(reconodes, int(wf[1]))
                 reconodesmin = max(reconodesmin, int(wf[2]))
-                command_preopt = 'GEN_TOPO_CALIB_WORKFLOW=' + str(is_calib_workflow) + ' ${WORKFLOWMODE_FILE}=' + filename
+                if reco_num_nodes_override == 0:
+                  os.environ['RECO_NUM_NODES_WORKFLOW'] = wf[1]
+                command_preopt = 'GEN_TOPO_CALIB_WORKFLOW=' + str(is_calib_workflow)
+                if os.environ['WORKFLOWMODE'] == 'dds':
+                    command_preopt += ' WORKFLOWMODE_FILE=' + filename
                 command = command_preopt + ' GLOBALDPLOPT+=" -b --dds-workflow-suffix _' + wf[0] + str(i) + '" ' + wf[3]
                 if os.environ['WORKFLOWMODE'] == 'print':
                   command += ' > ' + filename
