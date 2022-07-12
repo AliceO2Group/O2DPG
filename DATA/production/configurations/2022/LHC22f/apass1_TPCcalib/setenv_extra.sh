@@ -41,7 +41,7 @@ export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_rea
 
 # run-dependent options
 if [[ -f "setenv_run.sh" ]]; then
-    source setenv_run.sh 
+    source setenv_run.sh
 else
     echo "************************************************************"
     echo No ad-hoc run-dependent settings for current async processing
@@ -104,7 +104,7 @@ export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="--fv0-reconstructor"
 # ad-hoc settings for FDD
 #...
 
-# ad-hoc settings for MFT 
+# ad-hoc settings for MFT
 export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="MFTTracking.forceZeroField=true;MFTTracking.FullClusterScan=true;MFTTracking.LTFclsRCut=0.2;"
 export ARGS_EXTRA_PROCESS_o2_mft_reco_workflow=" --run-assessment "
 
@@ -130,6 +130,7 @@ if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
 fi
 
 # Enabling TPC calibration
+export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
 export WORKFLOW_PARAMETERS="CALIB,CALIB_LOCAL_INTEGRATED_AGGREGATOR,${WORKFLOW_PARAMETERS}"
 export CALIB_PRIMVTX_MEANVTX=0
 export CALIB_TOF_LHCPHASE=0
@@ -144,4 +145,3 @@ export CALIB_PHS_BADMAPCALIB=0
 export CALIB_PHS_TURNONCALIB=0
 export CALIB_PHS_RUNBYRUNCALIB=0
 export CALIB_CPV_GAIN=0
-
