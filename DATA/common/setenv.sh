@@ -81,7 +81,7 @@ else # Defaults when running on the EPN
   if [[ "0$GEN_TOPO_CALIB_WORKFLOW" != "01" ]]; then
     if [[ -z "$SHMSIZE" ]];              then export SHMSIZE=$(( 32 << 30 )); fi
   else
-    if [[ -z "$SHMSIZE" ]];              then export SHMSIZE=$(( 256 << 30 )); fi
+    if [[ -z "$SHMSIZE" ]];              then export SHMSIZE=$(( 112 << 30 )); fi
   fi
   if [[ -z "$NGPUS" ]];                then export NGPUS=4; fi
   if [[ -z "$EXTINPUT" ]];             then export EXTINPUT=1; fi
