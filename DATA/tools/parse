@@ -123,31 +123,29 @@ for line in f:
                 if os.environ['WORKFLOWMODE'] == 'print':
                   command += ' > ' + filename
                 print('Running DPL command', command)
-                if reco_num_nodes_override == 0:
-                  os.environ['RECO_NUM_NODES_WORKFLOW'] = wf[1]
-                if os.system(command) != 0:
-                    print('Error running command', command)
+                retVal = os.system(command)
+                if retVal != 0:
+                    print('Error (' + str(retVal) + ') running command', command)
                     ftmp = open(filename, 'r')
                     rg = re.compile('^<topology')
                     for line in ftmp:
                         if re.match(rg, line):
                             break
-                        print(line)
+                        print(line, end='')
                     raise
                 if args[i].startswith('reco'):
                     recoworkflows.append(filename)
                 elif args[i].startswith('calib'):
                     if os.environ['WORKFLOWMODE'] == 'dds':
-                    isempty = 1
+                        isempty = 1
                         ftmp = open(filename, 'r')
                         rg = re.compile('^.*<decltask')
                         for line in ftmp:
                             if re.match(rg, line):
                                 isempty = 0
                                 break
-                    if isempty:
-                        continue
-                    filename = filename + ':' + wf[1]
+                        if isempty:
+                            continue
                     calibworkflows.append(filename)
                     calibworkflowsdds.append(filename + ':' + wf[1])
             if reco_num_nodes_override > 0:
