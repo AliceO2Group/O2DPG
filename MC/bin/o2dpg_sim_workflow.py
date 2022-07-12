@@ -330,7 +330,7 @@ if doembedding:
         if args.iniBkg!= '':
            INIBKG=' --configFile ' + args.iniBkg
 
-        BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=[BKG_CONFIG_task['name']], cpu=NWORKERS )
+        BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=[BKG_CONFIG_task['name'], GRP_TASK['name']], cpu=NWORKERS )
         BKGtask['cmd']='${O2_ROOT}/bin/o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
                      + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)                    \
                      + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG) \
@@ -393,6 +393,11 @@ if usebkgcache:
 MATBUD_DOWNLOADER_TASK = createTask(name='matbuddownloader', cpu='0')
 MATBUD_DOWNLOADER_TASK['cmd'] = '[ -f matbud.root ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p GLO/Param/MatLUT -o matbud.root --no-preserve-path --timestamp ' + str(args.timestamp)
 workflow['stages'].append(MATBUD_DOWNLOADER_TASK)
+
+orbitsPerTF=256
+GRP_TASK = createTask(name='grpcreate', cpu='0')
+GRP_TASK['cmd'] = 'o2-grp-simgrp-tool createGRPs --run ' + str(args.run) + ' --publishto ${ALICEO2_CCDB_LOCALCACHE:-.ccdb} -o grp --hbfpertf ' + str(orbitsPerTF) + ' --field ' + args.field
+workflow['stages'].append(GRP_TASK)
 
 # loop over timeframes
 for tf in range(1, NTIMEFRAMES + 1):
@@ -501,7 +506,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # transport signals
    # -----------------
    signalprefix='sgn_' + str(tf)
-   signalneeds=[ SGN_CONFIG_task['name'] ]
+   signalneeds=[ SGN_CONFIG_task['name'], GRP_TASK['name'] ]
 
    # add embedIntoFile only if embeddPattern does contain a '@'
    embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if (doembedding & ("@" in args.embeddPattern)) else ""
@@ -570,7 +575,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    simsoption=' --sims ' + ('bkg,'+signalprefix if doembedding else signalprefix)
 
    # each timeframe should be done for a different bunch crossing range, depending on the timeframe id
-   orbitsPerTF = 256
    startOrbit = (tf-1 + int(args.production_offset)*NTIMEFRAMES)*orbitsPerTF
    globalTFConfigValues = { "HBFUtils.orbitFirstSampled" : args.first_orbit + startOrbit,
                             "HBFUtils.nHBFPerTF" : orbitsPerTF,
