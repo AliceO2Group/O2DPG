@@ -70,6 +70,7 @@ for line in f:
         reconodesmin = 0
         recoworkflows = []
         calibworkflows = []
+        calibworkflowsdds = []
         print('Found topology', sys.argv[2], '-', args)
         if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']) and (not 'GEN_TOPO_RUN_HOME' in os.environ or not int(os.environ['GEN_TOPO_RUN_HOME'])):
             restore_O2DPG_ROOT = 'O2DPG_ROOT' in os.environ
@@ -144,6 +145,7 @@ for line in f:
                         continue
                     filename = filename + ':' + wf[1]
                     calibworkflows.append(filename)
+                    calibworkflowsdds.append(filename + ':' + wf[1])
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
                 reconodesmin = min(reconodes, reconodesmin)
@@ -175,7 +177,7 @@ for line in f:
                 odccommand += ' --n ' + str(reconodes)
                 odccommand += ' --nmin ' + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
                 if len(calibworkflows):
-                    odccommand += ' --calib ' + ' '.join(calibworkflows)
+                    odccommand += ' --calib ' + ' '.join(calibworkflowsdds)
                 if 'GEN_TOPO_STDERR_LOGGING' in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
                     odccommand += ' --mon tools/monitoring_workflows/epnstderrlog.xml'
                 if args[1] != '':
