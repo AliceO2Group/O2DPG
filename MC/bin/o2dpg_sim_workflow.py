@@ -249,6 +249,15 @@ qcdir = "QC"
 if (includeLocalQC or includeFullQC) and not isdir(qcdir):
     mkdir(qcdir)
 
+# create the GRPs
+orbitsPerTF=256
+GRP_TASK = createTask(name='grpcreate', cpu='0')
+GRP_TASK['cmd'] = 'o2-grp-simgrp-tool createGRPs --run ' + str(args.run) + ' --publishto ${ALICEO2_CCDB_LOCALCACHE:-.ccdb} -o grp --hbfpertf ' + str(orbitsPerTF) + ' --field ' + args.field
+GRP_TASK['cmd'] += ' --readoutDets ' + " ".join(activeDetectors) + ' --print '
+if len(args.bcPatternFile) > 0:
+    GRP_TASK['cmd'] += '  --bcPatternFile ' + str(args.bcPatternFile)
+workflow['stages'].append(GRP_TASK)
+
 if doembedding:
     if not usebkgcache:
         # ---- do background transport task -------
@@ -393,11 +402,6 @@ if usebkgcache:
 MATBUD_DOWNLOADER_TASK = createTask(name='matbuddownloader', cpu='0')
 MATBUD_DOWNLOADER_TASK['cmd'] = '[ -f matbud.root ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p GLO/Param/MatLUT -o matbud.root --no-preserve-path --timestamp ' + str(args.timestamp)
 workflow['stages'].append(MATBUD_DOWNLOADER_TASK)
-
-orbitsPerTF=256
-GRP_TASK = createTask(name='grpcreate', cpu='0')
-GRP_TASK['cmd'] = 'o2-grp-simgrp-tool createGRPs --run ' + str(args.run) + ' --publishto ${ALICEO2_CCDB_LOCALCACHE:-.ccdb} -o grp --hbfpertf ' + str(orbitsPerTF) + ' --field ' + args.field
-workflow['stages'].append(GRP_TASK)
 
 # loop over timeframes
 for tf in range(1, NTIMEFRAMES + 1):
