@@ -13,6 +13,7 @@ import signal
 import socket
 import sys
 import traceback
+import platform
 try:
     from graphviz import Digraph
     havegraphviz=True
@@ -1031,6 +1032,11 @@ class WorkflowExecutor:
                """initialize some env variables that speed up ROOT init
                and prevent ROOT from spawning many short-lived child
                processes"""
+
+               # only do it on Linux
+               if platform.system() != 'Linux':
+                  return
+
                if os.environ.get('ROOT_LDSYSPATH')!=None and os.environ.get('ROOT_CPPSYSINCL')!=None:
                   # do nothing if already defined
                   return
