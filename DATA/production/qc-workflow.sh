@@ -11,13 +11,13 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
   if [[ $EPNSYNCMODE == 1 || "0$GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL" == "01" ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=consul://o2/components/qc/ANY/any/tpc-full-qcmn
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=consul://o2/components/qc/ANY/any/its-qcmn-epn-full
-    [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-qcmn
-    if has_detector MFT && has_processing_step MFT_RECO; then
-      [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-track-full-qcmn
-    else
-      [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-qcmn
+    if [[ -z "$QC_JSON_MFT" ]]; then
+      if has_detector MFT && has_processing_step MFT_RECO; then
+        QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-track-full-qcmn
+      else
+        QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-qcmn
+      fi
     fi
-
     if [[ -z "$QC_JSON_TOF" ]]; then
       if has_detector_flp_processing TOF; then
         QC_JSON_TOF=consul://o2/components/qc/ANY/any/tof-full-qcmn
