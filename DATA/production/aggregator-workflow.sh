@@ -5,6 +5,4 @@ if [ "0$O2_ROOT" == "0" ]; then
     exit 1
 fi
 
-export DPL_CONDITION_BACKEND="http://o2-ccdb.internal"
-
 source $O2_ROOT/prodtests/full-system-test/aggregator-workflow.sh
