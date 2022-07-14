@@ -1,3 +1,5 @@
+FT0-time-offset-calibration: "O2PDPSuite" reco,1,1,"production/calib/ft0-timeoffset-processing.sh"
+
 ITS-noise-calibration: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 production/calib/its-noise-processing.sh" calib,20,"NTHREADS=32 production/calib/its-noise-aggregator.sh"
 
 ITS-noise-calibration-clusters: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 USECLUSTERS=1 production/calib/its-noise-processing.sh" calib,20,"USECLUSTERS=1 NTHREADS=32 production/calib/its-noise-aggregator.sh"
