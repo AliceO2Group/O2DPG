@@ -12,7 +12,7 @@ TPC-pulser: "O2PDPSuite" reco,1,1," production/calib/tpc-pulser.sh"
 
 TPC-pedestal: "O2PDPSuite" reco,1,1," production/calib/tpc-pedestal.sh"
 
-TPC-laser: "O2PDPSuite" reco,1,1,"SHMSIZE=$((64 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) HOSTMEMSIZE=$(( 5 << 30 ))  production/calib/tpc-laser.sh"
+TPC-laser: "O2PDPSuite" reco,1,1,"SHMSIZE=$((112 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) HOSTMEMSIZE=$(( 5 << 30 ))  production/calib/tpc-laser.sh"
 
 MFT-noise-calibration: "O2PDPSuite" reco,20,20,"production/calib/mft-noise-processing.sh" calib,20,"production/calib/mft-noise-aggregator.sh"
 
