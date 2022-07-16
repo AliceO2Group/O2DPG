@@ -749,7 +749,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------
    tpcreconeeds=[]
    if not args.combine_tpc_clusterization:
-     # We treat TPC clusterization in multiple (sector) steps in order to 
+     # We treat TPC clusterization in multiple (sector) steps in order to
      # stay within the memory limit or to parallelize over sector from outside (not yet supported within cluster algo)
      tpcclustertasks=[]
      sectorpertask=18
@@ -892,9 +892,36 @@ for tf in range(1, NTIMEFRAMES + 1):
       MFTMCHMATCHTraintask['cmd']+= getDPL_global_options()
       workflow['stages'].append(MFTMCHMATCHTraintask)
 
+   # Take None as default, we only add more if nothing from anchorConfig
+   pvfinder_sources = anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertexing-sources", None)
+   pvfinder_matching_sources = anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertex-track-matching-sources", None)
    pvfinderneeds = [ITSTPCMATCHtask['name']]
+   if not pvfinder_sources:
+      pvfinder_sources = "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
+   if not pvfinder_matching_sources:
+      pvfinder_matching_sources = "ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
+      if isActive("MID"):
+         pvfinder_matching_sources += ",MID"
+         pvfinderneeds += [MIDRECOtask['name']]
+
    if isActive('FT0'):
       pvfinderneeds += [FT0RECOtask['name']]
+      pvfinder_matching_sources += ",FT0"
+   if isActive('FV0'):
+      pvfinderneeds += [FV0RECOtask['name']]
+      pvfinder_matching_sources += ",FV0"
+   if isActive('FDD'):
+      pvfinderneeds += [FT0RECOtask['name']]
+      pvfinder_matching_sources += ",FDD"
+   if isActive('EMC'):
+      pvfinderneeds += [EMCRECOtask['name']]
+      pvfinder_matching_sources += ",EMC"
+   if isActive('PHS'):
+      pvfinderneeds += [PHSRECOtask['name']]
+      pvfinder_matching_sources += ",PHS"
+   if isActive('CPV'):
+      pvfinderneeds += [CPVRECOtask['name']]
+      pvfinder_matching_sources += ",CPV"
    if isActive('TOF'):
       pvfinderneeds += [TOFTPCMATCHERtask['name']]
    if isActive('MFT'):
@@ -908,19 +935,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    if isActive('MFT') and isActive('MCH'):
       pvfinderneeds += [MFTMCHMATCHtask['name']]
 
-   # Take None as default, we only add more if nothing from anchorConfig
-   pvfinder_sources = anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertexing-sources", None)
-   pvfinder_matching_sources = anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertex-track-matching-sources", None)
-   if not pvfinder_sources:
-      pvfinder_sources = "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF"
-      if isActive("MID"):
-         pvfinder_sources += ",MID"
-         pvfinderneeds += [MIDRECOtask['name']]
-   if not pvfinder_matching_sources:
-      pvfinder_matching_sources = "ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF"
-      if isActive("MID"):
-         pvfinder_matching_sources += ",MID"
-         pvfinderneeds += [MIDRECOtask['name']]
 
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-primary-vertexing-workflow ' \
@@ -1042,7 +1056,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # Take None as default, we only add more if nothing from anchorConfig
    svfinder_sources = anchorConfig.get("o2-secondary-vertexing-workflow-options",{}).get("vertexing-sources", None)
    if not svfinder_sources:
-       svfinder_sources = "ITS,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF"
+       svfinder_sources = "ITS,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
        if isActive("MID"):
            svfinder_sources += ",MID"
    SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
@@ -1052,7 +1066,7 @@ for tf in range(1, NTIMEFRAMES + 1):
   # produce AOD
   # -----------
    # TODO This needs further refinement, sources and dependencies should be constructed dynamically
-   aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FDD,CTP,TPC-TRD,ITS-TPC-TRD,EMC'
+   aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FDD,CTP,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TRD-TOF,EMC'
    aodneeds = [PVFINDERtask['name'], SVFINDERtask['name']]
    if isActive('FV0'):
      aodneeds += [ FV0RECOtask['name'] ]
