@@ -48,7 +48,7 @@ if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRI
 else:
     reco_num_nodes_override = 0
 
-modulecmd = ""
+modulecmd = " module purge ; "
 if 'GEN_TOPO_OVERRIDE_MODULE_DIR' in os.environ:
     mod.module('unuse', '/opt/alisw/el8/modulefiles')
     mod.module('use', os.environ['GEN_TOPO_OVERRIDE_MODULE_DIR'])
