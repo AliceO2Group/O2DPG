@@ -135,7 +135,10 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     fi
   done
 
-  for i in $(echo $LIST_OF_GLORECO | sed "s/,/ /g"); do
+  LIST_OF_GLOQC=
+  has_detectors_reco ITS TPC && has_detector_matching ITSTPC && add_comma_separated LIST_OF_GLOQC ITSTPC
+  has_detectors_reco ITS && has_detector_matching PRIMVTX && add_comma_separated LIST_OF_GLOQC PRIMVTX
+  for i in $(echo $LIST_OF_GLOQC | sed "s/,/ /g"); do
     GLO_JSON_FILE="QC_JSON_$i"
     if has_detector_matching $i && has_matching_qc $i && [ ! -z "${!GLO_JSON_FILE}" ]; then
       add_QC_JSON $i ${!GLO_JSON_FILE}
