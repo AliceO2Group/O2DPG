@@ -196,6 +196,7 @@ get_proxy_connection()
     CONNECTION+=",transport=zeromq"
   fi
   local PROXY_CONN="$NAMEPROXY $NAMEPROXYCHANNEL --channel-config \"name=aggregator-proxy-$1,$CONNECTION,rateLogging=1\""
+  [[ $EPNSYNCMODE == 1 ]] && PROXY_CONN+=" --network-interface ib0"
   if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
     echo PROXY_CONN = $PROXY_CONN 1>&2
   fi
