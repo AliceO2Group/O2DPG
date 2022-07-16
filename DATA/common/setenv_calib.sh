@@ -13,7 +13,7 @@ SOURCE_GUARD_SETENV_CALIB=1
 
 # For the moment the TPC interpolation will always send also the track parameters in addition to unbinned residuals to the aggregator.
 # Remove this line to only send unbinned residuals
-if [[ -z "$CALIB_TPC_SCDCALIB_SENDTRKDATA" ]];  then export CALIB_TPC_SCDCALIB_SENDTRKDATA=0; fi
+if [[ -z "$CALIB_TPC_SCDCALIB_SENDTRKDATA" ]];  then export CALIB_TPC_SCDCALIB_SENDTRKDATA=1; fi
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   # calibrations for primary vertex
