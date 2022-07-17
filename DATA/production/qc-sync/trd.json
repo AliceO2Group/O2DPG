@@ -109,65 +109,6 @@
           "mergingMode": "delta",
           "mergerCycleMultiplier": "2",
           "localControl": "odc"
-      },
-      "PulseHeight": {
-        "active": "true",
-        "className": "o2::quality_control_modules::trd::PulseHeight",
-        "moduleName": "QcTRD",
-        "detectorName": "TRD",
-        "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
-        "dataSource_comment": "no comment",
-        "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "trdall"
-        },
-        "taskParameters": {
-          "peakregionstart": "7.0",
-          "peakregionend": "20.0",
-          "pulseheightpeaklower": "1.0",
-          "pulseheightpeakupper": "5.0"
-        },
-      "location": "local",
-      "localMachines": [
-            "epn",
-            "localhost"
-          ],
-          "remoteMachine": "alio2-cr1-qc05.cern.ch",
-          "remotePort": "47745",
-          "mergingMode": "delta",
-          "mergerCycleMultiplier": "2",
-          "localControl": "odc"
-      }    
-    },
-    "checks": {
-      "QcCheck": {
-        "active": "false",
-        "className": "o2::quality_control_modules::trd::RawDataCheck",
-        "moduleName": "QcTRD",
-        "policy": "OnAny",
-        "detectorName": "TRD",
-        "dataSource": [
-          {
-          "type": "Task",
-          "name": "RawDataTask",
-          "MOs": ["trackletsperevent"]
-          }
-        ]
-      },
-      "PulseHeightCheck": {
-        "active": "false",
-        "className": "o2::quality_control_modules::trd::PulseHeightCheck",
-        "moduleName": "QcTRD",
-        "policy": "OnAny",
-        "detectorName": "TRD",
-        "dataSource": [
-          {
-          "type": "Task",
-          "name": "PulseHeight",
-          "MOs": ["trackletsperevent"]
-          }
-        ]
       }
     }
   },
@@ -180,7 +121,7 @@
       "samplingConditions":[
         {
           "condition": "random",
-          "fraction": "0.9",
+          "fraction": "0.5",
           "seed": "1234"
         }
       ],
@@ -188,4 +129,3 @@
     }
   ]
 }
-

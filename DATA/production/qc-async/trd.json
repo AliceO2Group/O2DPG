@@ -60,26 +60,7 @@
           "pulseheightpeaklower": "1.0",
           "pulseheightpeakupper": "5.0"
         }
-      },
-      "PulseHeight": {
-        "active": "true",
-        "className": "o2::quality_control_modules::trd::PulseHeight",
-        "moduleName": "QcTRD",
-        "detectorName": "TRD",
-        "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
-        "dataSource_comment": "no comment",
-        "dataSource": {
-          "type": "direct",
-          "query": "digits:TRD/DIGITS;tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
-        },
-        "taskParameters": {
-          "peakregionstart": "7.0",
-          "peakregionend": "20.0",
-          "pulseheightpeaklower": "1.0",
-          "pulseheightpeakupper": "5.0"
-        }
-      }    
+      }
     }
   },
   "dataSamplingPolicies": [
