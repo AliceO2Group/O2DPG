@@ -14,7 +14,7 @@ class GeneratorPythia8LongLivedGun : public o2::eventgen::GeneratorPythia8
 {
 public:
   /// constructor
-  GeneratorPythia8LongLivedGun(int input_pdg, int nInject = 1) : pdg{input_pdg}, nParticles{nInject}, m{getMass(input_pdg)}
+  GeneratorPythia8LongLivedGun(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10, int input_pdg2 = -1) : pdg{input_pdg}, nParticles{nInject}, genMinPt{ptMin}, genMaxPt{ptMax}, m{getMass(input_pdg)}, pdg2{input_pdg2}
   {
   }
 
@@ -60,6 +60,23 @@ public:
       sign *= randomizePDGsign ? -1 : 1;
       mParticles.push_back(TParticle(sign * pdg, 1, -1, -1, -1, -1, px, py, pz, et, 0., 0., 0., 0.));
     }
+
+    if (pdg2 != -1)
+    {
+      for (int i{0}; i < nParticles; ++i)
+      {
+        const double pt = gRandom->Uniform(genMinPt, genMaxPt);
+        const double eta = gRandom->Uniform(genMinEta, genMaxEta);
+        const double phi = gRandom->Uniform(0, TMath::TwoPi());
+        const double px{pt * std::cos(phi)};
+        const double py{pt * std::sin(phi)};
+        const double pz{pt * std::sinh(eta)};
+        const double et{std::hypot(std::hypot(pt, pz), m)};
+        sign *= randomizePDGsign ? -1 : 1;
+        mParticles.push_back(TParticle(sign * pdg2, 1, -1, -1, -1, -1, px, py, pz, et, 0., 0., 0., 0.));
+      }
+    }
+
     return true;
   }
 
@@ -73,11 +90,13 @@ private:
   int pdg = 0;        /// particle pdg code
   int nParticles = 1; /// Number of injected particles
 
+  int pdg2 = -1; /// optional second particle pdg code
+
   bool randomizePDGsign = true; /// bool to randomize the PDG code of the core particle
 };
 
 ///___________________________________________________________
-FairGenerator *generateLongLived(int pdg, int nInject)
+FairGenerator *generateLongLived(int pdg, int nInject, float ptMin = 1, float ptMax = 10, int pdg2 = -1)
 {
-  return new GeneratorPythia8LongLivedGun(pdg, nInject);
+  return new GeneratorPythia8LongLivedGun(pdg, nInject, ptMin, ptMax, pdg2);
 }
