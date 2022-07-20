@@ -11,9 +11,10 @@ TFile* fileTestSummary = nullptr;
 TString prefix = "";
 int correlationCase = 0; // at the moment I assume no error correlation ..
 
-struct results {
+struct TestResult {
   bool passed;
   double value;
+  double threshold;
   double critical;
   bool comparable;
   TString testname;
@@ -27,8 +28,8 @@ enum options {
   // ...
 };
 
-// Disable plotting
-bool NO_PLOTTING = false;
+// define a global epsilon
+double EPSILON = 0.00001;
 
 void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& currentPrefix = "");
 void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix = "");
@@ -38,19 +39,111 @@ void WriteProfile(TProfile* obj, TDirectory* outDir, std::string const& currentP
 void WriteTEfficiency(TEfficiency* obj, TDirectory* outDir, std::string const& currentPrefix = "");
 void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix = "");
 void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
-                   bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests);
+                   bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests, std::unordered_map<std::string, std::vector<TestResult>>& allTests);
 void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color);
 bool PotentiallySameHistograms(TH1*, TH1*);
-struct results CompareChiSquare(TH1* hA, TH1* hB, double varChi2);
-struct results CompareBinContent(TH1* hA, TH1* hB, double valMeanDiff);
-struct results CompareNentr(TH1* hA, TH1* hB, double valEntriesDiff);
+TestResult CompareChiSquare(TH1* hA, TH1* hB, double varChi2, bool areComparable);
+TestResult CompareBinContent(TH1* hA, TH1* hB, double valMeanDiff, bool areComparable);
+TestResult CompareNentr(TH1* hA, TH1* hB, double valEntriesDiff, bool areComparable);
 void DrawRatio(TH1* hR);
 void DrawRelativeDifference(TH1* hR);
 void SelectCriticalHistos();
 void createTestsSummaryPlot(TFile* file, TString const& obj);
 bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefix = "");
 void SetZLabels(TAxis* axis);
-void WriteToJson(TH2F* hSumCheck, TH2F* hSumTests);
+const char* MapResultToLabel(TestResult const& testResult);
+void WriteTestResultsToJson(std::ofstream& json, std::string const& key, std::vector<TestResult> const& testResults);
+void WriteToJsonFromMap(std::unordered_map<std::string, std::vector<TestResult>> const& allTestsMap);
+void fillThresholdsFromFile(std::string const& inFilepath, std::unordered_map<std::string, std::vector<TestResult>>& allThresholds);
+
+template <typename T>
+T getThreshold(std::string const& histoName, std::string const& testName, std::unordered_map<std::string, std::vector<TestResult>> const& allThresholds, T defaultValue)
+{
+  std::cerr << "Extract threshold from value for histogram " << histoName << " and test " << testName << ", with default " << defaultValue << "\n";
+  auto const& it = allThresholds.find(histoName);
+  if (it == allThresholds.end()) {
+    return defaultValue;
+  }
+  for (auto& test : it->second) {
+    if (testName.compare(test.testname.Data()) == 0) {
+      if (test.value == 0) {
+        std::cerr << "The threshold was chosen to be 0, hence use deault value " << defaultValue << "\n";
+        return defaultValue;
+      }
+      return test.value;
+    }
+  }
+  std::cerr << "Could not extract threshold from value for histogram " << histoName << " and test " << testName << ", returning default " << defaultValue << "\n";
+  return defaultValue;
+}
+
+void fillThresholdsFromFile(std::string const& inFilepath, std::unordered_map<std::string, std::vector<TestResult>>& allThresholds)
+{
+  if (inFilepath.empty()) {
+    return;
+  }
+  std::ifstream inFile;
+  inFile.open(inFilepath);
+  std::string line;
+  if (inFile.is_open()) {
+    while (std::getline(inFile, line)) {
+      std::istringstream ss(line);
+      std::string token;
+      // expect histoName,testName,value
+      std::string tokens[3] = {"NULL", "NULL", "NULL"};
+      int counter{0};
+      while (counter < 3 && std::getline(ss, token, ',')) {
+        tokens[counter] = token;
+        std::cout << token << std::endl;
+        counter++;
+      }
+      TestResult result;
+
+      result.testname = tokens[1];
+      if (tokens[2].compare("null") == 0 || tokens[2].compare("None") == 0) {
+        continue;
+      } else {
+        result.value = std::stod(tokens[2]);
+      }
+      allThresholds[tokens[0]].push_back(result);
+      std::cout << "Add test " << result.testname << " with value " << result.value << " for histogram " << tokens[0] << " to map" << std::endl;
+    }
+  }
+}
+
+void AddSummaryTest(std::unordered_map<std::string, std::vector<TestResult>>& allTests)
+{
+  // derive the summary from the single tests that were conducted
+  for (auto& tests : allTests) {
+    // summary test
+    TestResult result;
+    result.value = 0.;
+    result.threshold = 0.;
+    result.testname = "test_summary";
+    result.passed = true;
+    result.critical = true;
+    result.comparable = true;
+    bool sawAtLeastOneCritical = false;
+    for (auto& test : tests.second) {
+      if (test.critical) {
+        if (!test.comparable || !test.passed) {
+          result.passed = false;
+          result.comparable = test.comparable;
+          // a critical test failed --> break immediately cause that's the worst we can get
+          break;
+        }
+        sawAtLeastOneCritical = true;
+      }
+      if (sawAtLeastOneCritical) {
+        // only fill from non-critical if there has not yet been a critical to fill from
+        continue;
+      }
+      result.passed = test.passed;
+      result.comparable = test.comparable;
+    }
+    tests.second.push_back(result);
+  }
+}
 
 bool checkFileOpen(TFile* file)
 {
@@ -188,10 +281,9 @@ void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, 
 
 void ReleaseValidation(const TString filename1, const TString filename2,
                        int whichTest = 1, double valueChi2 = 1.5, double valueMeanDiff = 1.5, double valueEntriesDiff = 0.01,
-                       bool selectCritical = false, bool no_plotting = false)
+                       bool selectCritical = false, const char* inFilepathThreshold = "")
 {
   gROOT->SetBatch();
-  NO_PLOTTING = no_plotting;
 
   if (whichTest < 1 || whichTest > 7) {
     std::cerr << "ERROR: Please select which test you want to perform:\n"
@@ -244,6 +336,9 @@ void ReleaseValidation(const TString filename1, const TString filename2,
   hSummaryTests->SetStats(000);
   hSummaryTests->SetMinimum(-1E-6);
 
+  // collect test results to store them as JSON later
+  std::unordered_map<std::string, std::vector<TestResult>> allTestsMap;
+
   // open the two files (just created), look at the histograms and make statistical tests
   bool isLastComparison = false; // It is true only when the last histogram of the file is considered,
   // in order to properly close the pdf
@@ -258,6 +353,8 @@ void ReleaseValidation(const TString filename1, const TString filename2,
   int nNotFound{};
   int comparison = 0;
   std::vector<std::string> collectSimilarHistos;
+  std::unordered_map<std::string, std::vector<TestResult>> inThresholds;
+  fillThresholdsFromFile(inFilepathThreshold, inThresholds);
   while ((key = static_cast<TKey*>(next()))) {
     // At this point we expect objects deriving from TH1 only since that is what we extracted
     auto hA = static_cast<TH1*>(key->ReadObj());
@@ -280,7 +377,13 @@ void ReleaseValidation(const TString filename1, const TString filename2,
     }
 
     std::cout << "Comparing " << hA->GetName() << " and " << hB->GetName() << "\n";
-    CompareHistos(hA, hB, whichTest, valueChi2, valueMeanDiff, valueEntriesDiff, isFirstComparison, isLastComparison, hSummaryCheck, hSummaryTests);
+
+    auto valueChi2Use = getThreshold(hA->GetName(), "test_chi2", inThresholds, valueChi2);
+    auto valueMeanDiffUse = getThreshold(hA->GetName(), "test_bin_cont", inThresholds, valueMeanDiff);
+    auto valueEntriesDiffUse = getThreshold(hA->GetName(), "test_num_entries", inThresholds, valueEntriesDiff);
+    std::cout << valueChi2Use << " " << valueMeanDiffUse << " " << valueEntriesDiffUse << "\n";
+
+    CompareHistos(hA, hB, whichTest, valueChi2Use, valueMeanDiffUse, valueEntriesDiffUse, isFirstComparison, isLastComparison, hSummaryCheck, hSummaryTests, allTestsMap);
 
     nComparisons++;
     if (nComparisons == 1)
@@ -331,7 +434,9 @@ void ReleaseValidation(const TString filename1, const TString filename2,
   }
   fileSummaryOutput->Close();
 
-  WriteToJson(hSummaryCheck, hSummaryTests);
+  // WriteToJson(hSummaryCheck, hSummaryTests);
+  AddSummaryTest(allTestsMap);
+  WriteToJsonFromMap(allTestsMap);
 }
 
 // setting the labels of the Z axis for the colz plot
@@ -549,7 +654,7 @@ void WriteProfile(TProfile* hProf, TDirectory* outDir, std::string const& curren
 ////////////////////////////////////////////
 
 // fills the result of a single test into the histogram displaying all test results
-void FillhTests(TH2F* hTests, const char* histName, results testResult)
+void FillhTests(TH2F* hTests, const char* histName, TestResult testResult)
 {
   if (testResult.comparable) {
     if (testResult.passed == false) {
@@ -571,7 +676,7 @@ void FillhTests(TH2F* hTests, const char* histName, results testResult)
 }
 
 // keeps track if there was at least one failed/critical failed/non-comparable/... test
-void SetTestResults(results testResult, bool& test_failed, bool& criticaltest_failed, bool& test_nc, bool& criticaltest_nc, bool update = false)
+void SetTestResults(TestResult testResult, bool& test_failed, bool& criticaltest_failed, bool& test_nc, bool& criticaltest_nc, bool update = false)
 {
   if (update && !testResult.critical) {
     return;
@@ -596,8 +701,42 @@ void SetTestResults(results testResult, bool& test_failed, bool& criticaltest_fa
   }
 }
 
+bool CheckComparable(TH1* hA, TH1* hB)
+{
+  if (!PotentiallySameAxes(hA, hB)) {
+    std::cerr << "WARNING: Axes of histogram " << hA->GetName() << " appear to be different\n";
+    return false;
+  }
+
+  auto isEmptyA = isEmptyHisto(hA);
+  auto isEmptyB = isEmptyHisto(hB);
+
+  if (isEmptyA == 2 || isEmptyB == 2) {
+    std::cerr << "WARNING: All entries in histogram " << hA->GetName() << " appear to be in under- or overflow bins\n";
+  }
+
+  if (isEmptyA || isEmptyB) {
+    printf("At least one of the histograms %s is empty \n", hA->GetName());
+    return false;
+  }
+
+  double integralA = hA->Integral();
+  double integralB = hB->Integral();
+
+  if (!isfinite(integralA) || !isfinite(integralB) || isnan(integralA) || isnan(integralB)) {
+    std::cerr << "WARNING: Found NaN or non-finite integral for histogram " << hA->GetName() << "\n";
+    return false;
+  }
+  return true;
+}
+
+void RegisterTestResult(std::unordered_map<std::string, std::vector<TestResult>>& allTests, std::string const& histogramName, TestResult const& testResult)
+{
+  allTests[histogramName].push_back(testResult);
+}
+
 void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
-                   bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests)
+                   bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests, std::unordered_map<std::string, std::vector<TestResult>>& allTests)
 {
   // method to evaluate and draw the result of the comparison between plots
   hSum->SetStats(000);
@@ -620,7 +759,8 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
   bool criticaltest_failed = false;
   bool criticaltest_nc = false;
 
-  struct results testResult;
+  TestResult testResult;
+  auto areComparable = CheckComparable(hA, hB);
 
   TLegend more(0.6, 0.6, 0.9, 0.8);
   more.SetBorderSize(1);
@@ -629,27 +769,30 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
   // if yes, process the bit
 
   if ((whichTest & CHI2) == CHI2) {
-    testResult = CompareChiSquare(hA, hB, valChi2);
+    testResult = CompareChiSquare(hA, hB, valChi2, areComparable);
     SetTestResults(testResult, test_failed, criticaltest_failed, test_nc, criticaltest_nc);
     if (testResult.comparable)
       more.AddEntry((TObject*)nullptr, Form("#chi^{2} / Nbins = %f", testResult.value), "");
     FillhTests(hTests, hA->GetName(), testResult);
+    RegisterTestResult(allTests, hA->GetName(), testResult);
   }
 
   if ((whichTest & BINCONTNORM) == BINCONTNORM) {
-    testResult = CompareBinContent(hA, hB, valMeanDiff);
+    testResult = CompareBinContent(hA, hB, valMeanDiff, areComparable);
     SetTestResults(testResult, test_failed, criticaltest_failed, test_nc, criticaltest_nc, true);
     if (testResult.comparable)
       more.AddEntry((TObject*)nullptr, Form("meandiff = %f", testResult.value), "");
     FillhTests(hTests, hA->GetName(), testResult);
+    RegisterTestResult(allTests, hA->GetName(), testResult);
   }
 
   if ((whichTest & NENTRIES) == NENTRIES) {
-    testResult = CompareNentr(hA, hB, valEntriesDiff);
+    testResult = CompareNentr(hA, hB, valEntriesDiff, areComparable);
     SetTestResults(testResult, test_failed, criticaltest_failed, test_nc, criticaltest_nc, true);
     if (testResult.comparable)
       more.AddEntry((TObject*)nullptr, Form("entriesdiff = %f", testResult.value), "");
     FillhTests(hTests, hA->GetName(), testResult);
+    RegisterTestResult(allTests, hA->GetName(), testResult);
   }
 
   //}
@@ -741,38 +884,17 @@ void SelectCriticalHistos()
 }
 
 // chi2. critical test
-struct results CompareChiSquare(TH1* hA, TH1* hB, double val)
+TestResult CompareChiSquare(TH1* hA, TH1* hB, double val, bool areComparable)
 {
-  struct results res;
+  TestResult res;
+  res.threshold = val;
   res.testname = "test_chi2";
   res.critical = true;
 
-  res.passed = true;
-  res.comparable = true;
+  res.passed = false;
+  res.comparable = areComparable;
 
-  // not comparable if some difference in the bins is detected
-  if (!PotentiallySameAxes(hA, hB)) {
-    res.comparable = false;
-    printf("%s: %s can not be performed\n", hA->GetName(), res.testname.Data());
-    return res;
-  }
-
-  auto isEmptyA = isEmptyHisto(hA);
-  auto isEmptyB = isEmptyHisto(hB);
-
-  if (isEmptyA == 2 || isEmptyB == 2) {
-    std::cerr << "WARNING: All entries in histogram " << hA->GetName() << " appear to be in under- or overflow bins\n";
-  }
-
-  if (isEmptyA && isEmptyB) {
-    printf("Both histograms %s are empty \n", hA->GetName());
-    res.comparable = false;
-    return res;
-  }
-
-  if (isEmptyA || isEmptyB) {
-    printf("At least one of the histograms %s is empty \n", hA->GetName());
-    res.passed = false;
+  if (!areComparable) {
     return res;
   }
 
@@ -788,7 +910,7 @@ struct results CompareChiSquare(TH1* hA, TH1* hB, double val)
         double eA = 0;
         if (cA < 0) {
           printf("Negative counts!!! cA=%f in bin %d %d %d\n", cA, ix, iy, iz);
-          res.passed = false;
+          res.comparable = false;
           return res;
         } else
           eA = TMath::Sqrt(cA);
@@ -796,7 +918,7 @@ struct results CompareChiSquare(TH1* hA, TH1* hB, double val)
         double eB = 0;
         if (cB < 0) {
           printf("Negative counts!!! cB=%f in bin %d %d %d\n", cB, ix, iy, iz);
-          res.passed = false;
+          res.comparable = false;
           return res;
         } else
           eB = TMath::Sqrt(cB);
@@ -821,7 +943,7 @@ struct results CompareChiSquare(TH1* hA, TH1* hB, double val)
   if (nBins > 0) {
     res.value = chi2 / nBins;
     printf("%s: %s performed: chi2/nBins=%f \n", hA->GetName(), res.testname.Data(), res.value);
-    if (res.value < val) {
+    if (res.value <= val) {
       printf("       ---> COMPATIBLE\n");
       res.passed = true;
     } else {
@@ -838,39 +960,18 @@ struct results CompareChiSquare(TH1* hA, TH1* hB, double val)
 }
 
 //(normalized) difference of bin content. critical test
-struct results CompareBinContent(TH1* hA, TH1* hB, double val)
+TestResult CompareBinContent(TH1* hA, TH1* hB, double val, bool areComparable)
 {
-  struct results res;
+  TestResult res;
+  res.threshold = val;
   res.testname = "test_bin_cont";
 
   res.critical = true;
 
-  res.passed = true;
-  res.comparable = true;
+  res.passed = false;
+  res.comparable = areComparable;
 
-  // not comparable if some difference in the bins is detected
-  if (!PotentiallySameAxes(hA, hB)) {
-    res.comparable = false;
-    printf("%s: %s can not be performed\n", hA->GetName(), res.testname.Data());
-    return res;
-  }
-
-  auto isEmptyA = isEmptyHisto(hA);
-  auto isEmptyB = isEmptyHisto(hB);
-
-  if (isEmptyA == 2 || isEmptyB == 2) {
-    std::cerr << "WARNING: All entries in histogram " << hA->GetName() << " appear to be in under- or overflow bins\n";
-  }
-
-  if (isEmptyA && isEmptyB) {
-    printf("Both histograms %s are empty \n", hA->GetName());
-    res.comparable = false;
-    return res;
-  }
-
-  if (isEmptyA || isEmptyB) {
-    printf("At least one of the histograms %s is empty \n", hA->GetName());
-    res.passed = false;
+  if (!areComparable) {
     return res;
   }
 
@@ -885,13 +986,13 @@ struct results CompareBinContent(TH1* hA, TH1* hB, double val)
         double cA = hA->GetBinContent(ix, iy, iz);
         if (cA < 0) {
           printf("Negative counts!!! cA=%f in bin %d %d %d\n", cA, ix, iy, iz);
-          res.passed = false;
+          res.comparable = false;
           return res;
         }
         double cB = hB->GetBinContent(ix, iy, iz);
         if (cB < 0) {
           printf("Negative counts!!! cB=%f in bin %d %d %d\n", cB, ix, iy, iz);
-          res.passed = false;
+          res.comparable = false;
           return res;
         }
         if ((cA > 0) || (cB > 0)) {
@@ -905,50 +1006,31 @@ struct results CompareBinContent(TH1* hA, TH1* hB, double val)
   if (nBins > 0) {
     res.value = meandiff;
     printf("%s: %s performed: meandiff=%f \n", hA->GetName(), res.testname.Data(), res.value);
-    if (res.value < val) {
+    if (res.value <= val) {
       printf("       ---> COMPATIBLE\n");
       res.passed = true;
     } else {
       printf("       ---> BAD\n");
       res.passed = false;
     }
-
-    return res;
   }
 
-  res.passed = false;
-  printf(" Histograms with empty bins");
   return res;
 }
 
 // compare number of entries. non-critical
-struct results CompareNentr(TH1* hA, TH1* hB, double val)
+TestResult CompareNentr(TH1* hA, TH1* hB, double val, bool areComparable)
 {
-  struct results res;
+  TestResult res;
+  res.threshold = val;
   res.testname = "test_num_entries";
 
   res.critical = false;
 
-  res.passed = true;
-  res.comparable = true;
+  res.passed = false;
+  res.comparable = areComparable;
 
-  // check only if the range of the histogram is the same, do no care about bins
-  if (!PotentiallySameRange(hA, hB)) {
-    res.comparable = false;
-    printf("%s: %s can not be performed\n", hA->GetName(), res.testname.Data());
-    return res;
-  }
-
-  auto isEmptyA = isEmptyHisto(hA);
-  auto isEmptyB = isEmptyHisto(hB);
-
-  if (isEmptyA == 2 || isEmptyB == 2) {
-    std::cerr << "WARNING: All entries in histogram " << hA->GetName() << " appear to be in under- or overflow bins\n";
-  }
-
-  if (isEmptyA || isEmptyB) {
-    printf("At least one of the histograms %s is empty \n", hA->GetName());
-    res.passed = false;
+  if (!areComparable) {
     return res;
   }
 
@@ -958,7 +1040,7 @@ struct results CompareNentr(TH1* hA, TH1* hB, double val)
 
   res.value = entriesdiff;
   printf("%s: %s performed: entriesdiff=%f \n", hA->GetName(), res.testname.Data(), res.value);
-  if (res.value < val) {
+  if (res.value <= val) {
     printf("       ---> COMPATIBLE\n");
     res.passed = true;
   } else {
@@ -969,78 +1051,59 @@ struct results CompareNentr(TH1* hA, TH1* hB, double val)
   return res;
 }
 
-void WriteListsToJson(std::ofstream& jsonout, std::vector<std::string> (&results)[5], std::string (&results_names)[5], int indent = 1)
+const char* MapResultToLabel(TestResult const& testResult)
 {
-  for (int i = 0; i < 5; i++) {
-    for (int in = 0; in < indent; in++)
-      jsonout << "  ";
-    jsonout << "\"" << results_names[i] << "\":[";
-    for (std::string s : results[i]) {
-      jsonout << "\"" << s << "\"";
-      if (s != results[i].back())
-        jsonout << ",";
+  if (!testResult.passed) {
+    if (testResult.critical) {
+      if (!testResult.comparable) {
+        return "CRIT_NC";
+      }
+      return "BAD";
     }
-    jsonout << "]";
-    if (i < 4)
-      jsonout << ",";
-    jsonout << "\n";
-    results[i].clear();
+    return "WARNING";
   }
+  if (!testResult.comparable) {
+    return "NONCRIT_NC";
+  }
+  return "GOOD";
 }
 
-// write the result of the check into a .json file. One list for each possible outcome.
-void WriteToJson(TH2F* hSumCheck, TH2F* hSumTests)
+void WriteTestResultsToJson(std::ofstream& json, std::string const& key, std::vector<TestResult> const& testResults)
 {
-  std::vector<std::string> good, warning, bad, nc, critical_nc;
-  std::vector<std::string> TestNames;
-  std::vector<std::string> results[5];
-  std::string results_names[5] = {"GOOD", "WARNING", "BAD", "CRIT_NC", "NONCRIT_NC"};
-  int nhists = hSumCheck->GetYaxis()->GetNbins();
-  int ntests = hSumTests->GetXaxis()->GetNbins();
+  json << "  \"" << key << "\": [\n";
+  for (int i = 0; i < testResults.size(); i++) {
+    auto& result = testResults[i];
 
+    json << "    {\n";
+    json << "      \"test_name\": \"" << result.testname.Data() << "\",\n";
+    if (isnan(result.value)) {
+      json << "      \"value\": null,\n";
+    } else {
+      json << "      \"value\": " << result.value << ",\n";
+    }
+    json << "      \"threshold\": " << result.threshold << ",\n";
+    auto comparable = result.comparable ? "true" : "false";
+    json << "      \"comparable\": " << comparable << ",\n";
+    json << "      \"result\": \"" << MapResultToLabel(result) << "\"\n    }";
+    if (i != testResults.size() - 1) {
+      json << ",\n";
+    }
+  }
+  json << "\n  ]";
+}
+
+void WriteToJsonFromMap(std::unordered_map<std::string, std::vector<TestResult>> const& allTestsMap)
+{
   std::ofstream jsonout("Summary.json");
   jsonout << "{\n";
-
-  jsonout << "  \"test_summary\":{\n";
-  for (int i = 1; i <= nhists; i++) {
-    double res = hSumCheck->GetBinContent(1, i);
-    const char* label = hSumCheck->GetYaxis()->GetBinLabel(i);
-    if (res == 0)
-      results[2].push_back(label);
-    if (res == 0.5)
-      results[1].push_back(label);
-    if (res == 1)
-      results[0].push_back(label);
-    if (res == -0.25)
-      results[4].push_back(label);
-    if (res == -0.5)
-      results[3].push_back(label);
-  }
-  WriteListsToJson(jsonout, results, results_names, 2);
-  jsonout << "  },\n";
-
-  for (int t = 1; t <= ntests; t++) {
-    jsonout << "  \"" << hSumTests->GetXaxis()->GetBinLabel(t) << "\":{\n";
-    for (int i = 1; i <= nhists; i++) {
-      double res = hSumTests->GetBinContent(t, i);
-      const char* label = hSumTests->GetYaxis()->GetBinLabel(i);
-      if (res == 0)
-        results[2].push_back(label);
-      if (res == 0.5)
-        results[1].push_back(label);
-      if (res == 1)
-        results[0].push_back(label);
-      if (res == -0.25)
-        results[4].push_back(label);
-      if (res == -0.5)
-        results[3].push_back(label);
+  int mapIndex = 0;
+  int mapSize = allTestsMap.size();
+  for (auto& testResult : allTestsMap) {
+    WriteTestResultsToJson(jsonout, testResult.first, testResult.second);
+    if (++mapIndex < mapSize) {
+      jsonout << ",\n";
     }
-    WriteListsToJson(jsonout, results, results_names, 2);
-    jsonout << "  }";
-    if (t < ntests)
-      jsonout << ",";
-    jsonout << "\n";
   }
-  jsonout << "}";
+  jsonout << "\n}";
   jsonout.close();
 }
