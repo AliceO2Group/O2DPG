@@ -15,20 +15,10 @@
 # ------------------------------------------------------------------------
 
 source common/setenv.sh
-# env  > /home/fap/dump_env.txt
+# env  > /tmp/hmpid_pedestal_env_dump.txt
 
-# ---------------------------------------------------------------------------------------------------------------------
 # Set general arguments
-ARGS_ALL="--session default --severity $SEVERITY --shm-segment-size $SHMSIZE $ARGS_ALL_EXTRA"
-ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
-ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 60"
-if [ $SHMTHROW == 0 ]; then
-  ARGS_ALL+=" --shm-throw-bad-alloc 0"
-fi
-if [ $NORATELOG == 1 ]; then
-  ARGS_ALL+=" --fairmq-rate-logging 0"
-fi
-ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameCo$
+source getCommonArgs.sh
 
 # Define the Input/Output streams
 PROXY_INSPEC="A:HMP/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
@@ -83,9 +73,6 @@ fi
 
 WORKFLOW+="--files-basepath 'HMP/Calib/Pedestals' "
 WORKFLOW+="--pedestals-tag ${HMP_PED_TAG} --sigmacut ${HMP_SIGMACUT} | "
-
-# --- WORKFLOW+="o2-dpl-output-proxy ${ARGS_ALL} --dataspec \"$PROXY_OUTSPEC\" --proxy-channel-name its-thr-input-proxy "
-# --- WORKFLOW+="--channel-config \"name=its-thr-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0\" | "
 
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} "
 
