@@ -18,7 +18,7 @@ source common/setenv.sh
 # env  > /tmp/hmpid_pedestal_env_dump.txt
 
 # Set general arguments
-source getCommonArgs.sh
+source common/getCommonArgs.sh
 
 # Define the Input/Output streams
 PROXY_INSPEC="A:HMP/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
