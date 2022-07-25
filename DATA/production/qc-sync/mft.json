@@ -10,20 +10,20 @@
       },
       "Activity": {
         "number": "42",
-        "type": "2"
+        "type": "0"
       },
       "monitoring": {
         "url": "influxdb-unix:///tmp/telegraf.sock"
       },
       "consul": {
-        "url": "alio2-cr1-hv-head01:8500"
+        "url": "http://ali-consul.cern.ch:8500"
       },
       "conditionDB": {
         "url": "http://localhost:8084"
       }
     },
     "tasks": {
-      "QcMFTReadoutTask": {
+      "MFTReadoutTask": {
         "active": "true",
         "className": "o2::quality_control_modules::mft::QcMFTReadoutTask",
         "moduleName": "QcMFT",
@@ -41,20 +41,20 @@
         "remoteMachine": "any",
         "remotePort": "47798"
       },
-      "QcMFTDigitTask": {
+      "MFTDigitTask": {
         "active": "true",
         "className": "o2::quality_control_modules::mft::QcMFTDigitTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "randomdigit:MFT/DIGITS/0"
+          "query": "randomdigit:MFT/DIGITS/0;digitsrof:MFT/DIGITSROF/0"
         },
         "taskParameters": {
           "FLP": "0",
-          "TaskLevel": "1"
+          "NoiseScan": "0"
         },
         "location": "local",
         "localMachines": [
@@ -63,12 +63,12 @@
         "remoteMachine": "any",
         "remotePort": "47799"
       },
-      "QcMFTClusterTask": {
+      "MFTClusterTask": {
         "active": "true",
         "className": "o2::quality_control_modules::mft::QcMFTClusterTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "dataSamplingPolicy",
@@ -82,26 +82,52 @@
         "remoteMachine": "alio2-cr1-qme05.cern.ch",
         "remotePort": "47797",
         "localControl": "odc"
+      },
+      "MFTAsyncTask": {
+        "active": "true",
+        "className" : "o2::quality_control_modules::mft::QcMFTAsyncTask",
+        "moduleName": "QcMFT",
+        "detectorName": "MFT",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource" : {
+          "type" : "direct",
+          "query" : "tracks:MFT/TRACKS/0;tracksrofs:MFT/MFTTrackROF/0;clusters:MFT/COMPCLUSTERS/0;clustersrofs:MFT/CLUSTERSROF/0"
+        },
+        "location": "local",
+        "localMachines": [
+          "epn",
+          "localhost"
+        ],
+        "remoteMachine": "alio2-cr1-qme05.cern.ch",
+        "remotePort": "47796",
+        "localControl": "odc"
       }
     },
     "checks": {
-      "QcMFTReadoutCheck": {
+      "MFTReadoutCheck": {
         "active": "true",
         "className": "o2::quality_control_modules::mft::QcMFTReadoutCheck",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
         "policy": "OnEachSeparately",
+        "checkParameters" : {
+          "WarningThresholdMedium" : "0",
+          "WarningThresholdBad" : "10",
+          "ErrorThresholdMedium" : "200",
+          "ErrorThresholdBad" : "300",
+          "FaultThresholdMedium" : "200",
+          "FaultThresholdBad" : "300"
+        },
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcMFTReadoutTask",
-            "MOs": [
-              "mMFTSummaryLaneStatus"
-            ]
+            "name": "MFTReadoutTask",
+            "MOs": ["mDDWSummary","mSummaryChipOk","mSummaryChipFault", "mSummaryChipError", "mSummaryChipWarning", "mRDHSummary"]
           }
         ]
       },
-      "QcMFTDigitCheck": {
+      "MFTDigitCheck": {
         "active": "true",
         "className": "o2::quality_control_modules::mft::QcMFTDigitCheck",
         "moduleName": "QcMFT",
@@ -110,25 +136,73 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcMFTDigitTask"
+            "name": "MFTDigitTask",
+            "MOs"  : ["mDigitChipOccupancy","mDigitOccupancySummary","mDigitChipStdDev"]
           }
         ]
       },
-      "QcMFTClusterCheck": {
+      "MFTClusterCheck": {
         "active": "true",
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcMFTClusterTask",
-            "MOs": [
-              "mMFTClusterSensorIndex"
-            ]
+            "name": "MFTClusterTask",
+            "MOs" : ["mClusterOccupancy","mClusterPatternIndex","mClusterOccupancySummary"]
           }
         ],
         "className": "o2::quality_control_modules::mft::QcMFTClusterCheck",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "policy": "OnAny"
+        "policy": "OnEachSeparately"
+      }
+    },
+    "postprocessing": {
+      "MFTReadoutTrend": {
+        "active": "true",
+        "className": "o2::quality_control::postprocessing::TrendingTask",
+        "moduleName": "QcMFT",
+        "detectorName": "MFT",
+        "dataSources": [
+          {
+            "type": "repository",
+            "path": "MFT/MO/MFTReadoutTask",
+            "names": [ "mSummaryChipError", "mSummaryChipWarning", "mSummaryChipFault" ],
+            "reductorName": "o2::quality_control_modules::mft::QcMFTReadoutTrend",
+            "moduleName": "QcMFT"
+          }
+        ],
+        "plots": [
+          {
+            "name": "mChipErrorTrend",
+            "title": "Trend of total number of chips in error",
+            "varexp": "mSummaryChipError.binContentOverflow:time",
+            "selection": "",
+            "option": "*L"
+          },
+          {
+            "name": "mChipWarningTrend",
+            "title": "Trend of total number of chips in warning",
+            "varexp": "mSummaryChipWarning.binContentOverflow:time",
+            "selection": "",
+            "option": "*L"
+          },
+          {
+            "name": "mChipFaultTrend",
+            "title": "Trend of total number of chips in fault",
+            "varexp": "mSummaryChipFault.binContentOverflow:time",
+            "selection": "",
+            "option": "*L"
+          }
+        ],
+        "initTrigger": [
+          "userorcontrol"
+        ],
+        "updateTrigger": [
+          "newobject:qcdb:MFT/MO/MFTReadoutTask/mSummaryChipWarning"
+        ],
+        "stopTrigger": [
+          "userorcontrol"
+        ]
       }
     }
   },
@@ -145,7 +219,7 @@
         {
           "condition": "random",
           "fraction": "0.01",
-          "seed": "1234"
+          "seed": "0"
         }
       ],
       "blocking": "false"
