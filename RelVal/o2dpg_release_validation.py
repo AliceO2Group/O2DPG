@@ -568,10 +568,10 @@ def plot_compare_summaries(summaries, fields, out_dir, *, labels=None):
         # now fill the correct values of the fields for the histograms in common
         for map_index, test_histo_value_map in enumerate(test_histo_value_maps):
             this_map = test_histo_value_map[test_name]
-            for i, histo_name in enumerate(this_map["histograms"]):
-                if histo_name in histogram_names_intersection:
-                    for f in fields:
-                        values[f][map_index].append(this_map[f][i])
+            for histo_name in histogram_names_intersection:
+                i = this_map["histograms"].index(histo_name)
+                for f in fields:
+                    values[f][map_index].append(this_map[f][i])
 
         # now plot
         figure, ax = plt.subplots(figsize=(20, 20))
