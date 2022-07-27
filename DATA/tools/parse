@@ -48,6 +48,12 @@ if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRI
 else:
     reco_num_nodes_override = 0
 
+modulecmd = " module purge ; "
+if 'GEN_TOPO_OVERRIDE_MODULE_DIR' in os.environ:
+    mod.module('unuse', '/opt/alisw/el8/modulefiles')
+    mod.module('use', os.environ['GEN_TOPO_OVERRIDE_MODULE_DIR'])
+    modulecmd += ' module unuse /opt/alisw/el8/modulefiles 2>&1 ; module use ' + os.environ['GEN_TOPO_OVERRIDE_MODULE_DIR'] + ' 2>&1 ; '
+
 f = open(sys.argv[1], 'r')
 for line in f:
     line = line.strip()
@@ -99,12 +105,14 @@ for line in f:
                 raise
             for i in range(2, len(args)):
                 filename = tmpdir + '/wf' + str(i) + '.dds'
+                calibcores = '1'
                 if args[i].startswith('reco'):
                     wf = args[i].split(',', 3)
                     is_calib_workflow = 0
                 elif args[i].startswith('calib'):
                     wf = args[i].split(',', 2)
                     wf.append(wf[2])
+                    calibcores = wf[1]
                     wf[1] = '1';
                     wf[2] = wf[1]
                     is_calib_workflow = 1
@@ -147,7 +155,7 @@ for line in f:
                         if isempty:
                             continue
                     calibworkflows.append(filename)
-                    calibworkflowsdds.append(filename + ':' + wf[1])
+                    calibworkflowsdds.append(filename + ':' + calibcores)
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
                 reconodesmin = min(reconodes, reconodesmin)
@@ -183,7 +191,7 @@ for line in f:
                 if 'GEN_TOPO_STDERR_LOGGING' in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
                     odccommand += ' --mon tools/monitoring_workflows/epnstderrlog.xml'
                 if args[1] != '':
-                    odccommand += ' --prependexe "module load ' + args[1] + ' 2>&1 ; "'
+                    odccommand += ' --prependexe "' + modulecmd + ' module load ' + args[1] + ' 2>&1 ; "'
                 odccommand += ' -o ' + sys.argv[3]
                 print('Running ODC command', odccommand)
                 if os.system(odccommand) != 0:

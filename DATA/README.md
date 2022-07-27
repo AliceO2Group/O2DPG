@@ -88,7 +88,7 @@ To set up such a workflow, a couple of points must be followed:
 - The `dataspec` of the proxies is configured in the same way as for the `readout-proxy` and the specs must be equal for corresponding input and output proxies.
 - The channels of input and output proxies (except for the *reco* `readout-proxy`) must be configured without address!
 - The output proxies must use the command line option `--proxy-channel-name [name]` with `name` being the configured channel name.
-- To run on the EPN, the *calib* input proxies must have the command line option `--network-interface ib0` (this ensures data is sent via InfiniBand not via Ethernet).
+- To run on the EPN, the *calib* input proxies of the aggregatornodes must have the command line option `--network-interface ib0` (this ensures data is sent via InfiniBand not via Ethernet). Note that this is only for the aggregator node, not for the normal processing part!
 
 For an example, chek the calibration workflows [here](testing/examples)
 

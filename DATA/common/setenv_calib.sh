@@ -13,7 +13,7 @@ SOURCE_GUARD_SETENV_CALIB=1
 
 # For the moment the TPC interpolation will always send also the track parameters in addition to unbinned residuals to the aggregator.
 # Remove this line to only send unbinned residuals
-if [[ -z "$CALIB_TPC_SCDCALIB_SENDTRKDATA" ]];  then export CALIB_TPC_SCDCALIB_SENDTRKDATA=0; fi
+if [[ -z "$CALIB_TPC_SCDCALIB_SENDTRKDATA" ]];  then export CALIB_TPC_SCDCALIB_SENDTRKDATA=1; fi
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   # calibrations for primary vertex
@@ -195,7 +195,9 @@ get_proxy_connection()
   else
     CONNECTION+=",transport=zeromq"
   fi
-  local PROXY_CONN="$NAMEPROXY $NAMEPROXYCHANNEL --channel-config \"name=aggregator-proxy-$1,$CONNECTION,rateLogging=1\""
+  local PROXY_CONN="$NAMEPROXY $NAMEPROXYCHANNEL --channel-config \"name=aggregator-proxy-$1,$CONNECTION,rateLogging=10\""
+  [[ $EPNSYNCMODE == 1 ]] && PROXY_CONN+=" --network-interface ib0"
+  [[ $2 == "input" && ! -z $TIMEFRAME_SHM_LIMIT ]] && PROXY_CONN+=" --timeframes-shm-limit $TIMEFRAME_SHM_LIMIT"
   if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
     echo PROXY_CONN = $PROXY_CONN 1>&2
   fi

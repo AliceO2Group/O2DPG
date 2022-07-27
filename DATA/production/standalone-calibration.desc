@@ -25,3 +25,6 @@ MID-calib-workflow: "O2PDPSuite" reco,1,1,"production/calib/mid-badchannels.sh"
 PHS-pedestal-calibration: "O2PDPSuite" reco,1,1," production/calib/phs-pedestal.sh"
 
 PHS-led-calibration: "O2PDPSuite" reco,1,1," production/calib/phs-led.sh"
+
+HMP-pedestals: "O2PDPSuite" reco,1,1," production/calib/hmp-pedestals-processing.sh"
+

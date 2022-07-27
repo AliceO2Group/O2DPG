@@ -865,8 +865,8 @@ class WorkflowExecutor:
         # and copies it to a specific ALIEN location. Not a core function
         # just some tool get hold on error conditions appearing on the GRID.
 
-        def get_tar_command(dir='./', flags='cf', filename='checkpoint.tar'):
-            return 'find ' + str(dir) + ' -maxdepth 1 -type f -print0 | xargs -0 tar ' + str(flags) + ' ' + str(filename)
+        def get_tar_command(dir='./', flags='cf', findtype='f', filename='checkpoint.tar'):
+            return 'find ' + str(dir) + ' -maxdepth 1 -type ' + str(findtype) + ' -print0 | xargs -0 tar ' + str(flags) + ' ' + str(filename)
 
         if location != None:
            print ('Making a failure checkpoint')
@@ -902,6 +902,10 @@ class WorkflowExecutor:
              directory = taskspec['cwd']
              if directory != "./":
                tarcommand = get_tar_command(dir=directory, flags='rf', filename=fn)
+               actionlogger.info("Tar command is " + tarcommand)
+               os.system(tarcommand)
+               # same for soft links
+               tarcommand = get_tar_command(dir=directory, flags='rf', findtype='l', filename=fn)
                actionlogger.info("Tar command is " + tarcommand)
                os.system(tarcommand)
 
