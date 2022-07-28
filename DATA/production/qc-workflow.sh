@@ -5,6 +5,11 @@ if [[ -z "$WORKFLOW" ]] || [[ -z "$MYDIR" ]]; then
   exit 1
 fi
 
+if [[ ! -z $GEN_TOPO_QC_JSON_FILE ]]; then
+  exec 101>$GEN_TOPO_QC_JSON_FILE.lock || exit 1
+  flock 101 || exit 1
+fi
+
 if [[ -z $QC_JSON_FROM_OUTSIDE && ! -z $GEN_TOPO_QC_JSON_FILE && -f $GEN_TOPO_QC_JSON_FILE ]]; then
   QC_JSON_FROM_OUTSIDE=$GEN_TOPO_QC_JSON_FILE
 elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
@@ -195,6 +200,10 @@ fi
 
 if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
   add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM:---local --host ${QC_HOST:-localhost}} ${QC_CONFIG}"
+fi
+
+if [[ ! -z $GEN_TOPO_QC_JSON_FILE ]]; then
+  flock -u 101 || exit 1
 fi
 
 true # everything OK up to this point, so the script should return 0 (it is !=0 if the last check failed)
