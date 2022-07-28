@@ -13,7 +13,7 @@ PROXY_OUTSPEC="calib:FT0/CALIB_INFO/0"
 PROXY_NAME="ft0-timeoffset-input-proxy"
 
 WORKFLOW="o2-dpl-raw-proxy ${ARGS_ALL} --dataspec \"${PROXY_INSPEC}\" --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@${INRAWCHANNAME},transport=shmem,rateLogging=1\" | "
-WORKFLOW+="o2-calibration-ft0-tf-processor ${ARGS_ALL} --configKeyValues \"$ARGS_ALL_CONFIG\" | "
+WORKFLOW+="o2-calibration-ft0-tf-processor ${ARGS_ALL}  | "
 WORKFLOW+="o2-dpl-output-proxy ${ARGS_ALL} --dataspec \"$PROXY_OUTSPEC\" --proxy-channel-name ${PROXY_NAME} --channel-config \"name=${PROXY_NAME},method=connect,type=push,transport=zeromq,rateLogging=1\" | "
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
 
