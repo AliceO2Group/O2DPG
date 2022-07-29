@@ -4,7 +4,7 @@
 # A script producing the QC finalization workflow.
 # If run as main, it will dump the workflow to the specified output file and tasks will not have dependencies.
 # For example:
-#   ${O2DPG_ROOT}/DATA/production/o2dpg_qc_pp_workflow.py -o qc_workflow.json 
+#   ${O2DPG_ROOT}/DATA/production/o2dpg_qc_postproc_workflow.py -o qc_workflow.json
 
 
 # The script can be also imported.
@@ -77,7 +77,7 @@ def QC_postprocessing_workflow(runNumber, periodName, passName, qcdbUrl):
     stages.append(task)
 
   ## The list of QC Post-processing workflows, add the new ones below
-  add_QC_postprocessing('example', 'json://${O2DPG_ROOT}/DATA/production/qc-pp-async/example.json', needs=[], runSpecific=False, periodSpecific=False, passSpecific=True)
+  add_QC_postprocessing('example', 'json://${O2DPG_ROOT}/DATA/production/qc-postproc-async/example.json', needs=[], runSpecific=False, periodSpecific=False, passSpecific=True)
 
   return stages
 
