@@ -41,6 +41,9 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
       if [[ -z ${CALIB_TPC_TIMEGAIN+x} ]]; then CALIB_TPC_TIMEGAIN=1; fi
       if [[ -z ${CALIB_TPC_RESPADGAIN+x} ]]; then CALIB_TPC_RESPADGAIN=1; fi
     fi
+    if ( has_detectors ITS TPC && has_detector_matching ITSTPC ); then
+      if [[ -z ${CALIB_TPC_VDRIFTTGL+x} ]]; then CALIB_TPC_VDRIFTTGL=1; fi
+    fi
   fi
 
   # calibrations for TRD
