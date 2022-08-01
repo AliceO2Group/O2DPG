@@ -18,7 +18,8 @@ EXTRA_CONFIG=" "
 EXTRA_CONFIG="--calib-type pulser --publish-after-tfs 30 --max-events 120 --lanes 36"
 
 CCDB_PATH="--ccdb-path http://o2-ccdb.internal"
-
+HOST=localhost
+QC_CONFIG="consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
 
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \
@@ -29,4 +30,5 @@ o2-dpl-raw-proxy $ARGS_ALL \
     $EXTRA_CONFIG \
     | o2-calibration-ccdb-populator-workflow $ARGS_ALL \
     $CCDB_PATH \
+    | o2-qc $ARGS_ALL --config $QC_CONFIG --local --host $HOST \
     | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
