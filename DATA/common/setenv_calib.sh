@@ -44,6 +44,7 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
     if ( has_detectors ITS TPC && has_detector_matching ITSTPC ); then
       if [[ -z ${CALIB_TPC_VDRIFTTGL+x} ]]; then CALIB_TPC_VDRIFTTGL=1; fi
     fi
+    if [[ -z ${CALIB_TPC_IDC+x} ]]; then CALIB_TPC_IDC=0; fi # default is off
   fi
 
   # calibrations for TRD
@@ -77,6 +78,7 @@ fi
 [[ -z ${CALIB_TPC_SCDCALIB} ]] && CALIB_TPC_SCDCALIB=0
 [[ -z ${CALIB_TPC_TIMEGAIN} ]] && CALIB_TPC_TIMEGAIN=0
 [[ -z ${CALIB_TPC_RESPADGAIN} ]] && CALIB_TPC_RESPADGAIN=0
+[[ -z ${CALIB_TPC_IDC} ]] && CALIB_TPC_IDC=0
 [[ -z ${CALIB_TRD_VDRIFTEXB} ]] && CALIB_TRD_VDRIFTEXB=0
 [[ -z ${CALIB_EMC_CHANNELCALIB} ]] && CALIB_EMC_CHANNELCALIB=0
 [[ -z ${CALIB_PHS_ENERGYCALIB} ]] && CALIB_PHS_ENERGYCALIB=0
@@ -98,6 +100,7 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo "CALIB_TRD_VDRIFTEXB = $CALIB_TRD_VDRIFTEXB" 1>&2
   echo "CALIB_TPC_TIMEGAIN = $CALIB_TPC_TIMEGAIN" 1>&2
   echo "CALIB_TPC_RESPADGAIN = $CALIB_TPC_RESPADGAIN" 1>&2
+  echo "CALIB_TPC_IDC = $CALIB_TPC_IDC" 1>&2
   echo "CALIB_CPV_GAIN = $CALIB_CPV_GAIN" 1>&2
 fi
 
@@ -126,6 +129,19 @@ if [[ -z $CALIBDATASPEC_BARREL_SPORADIC ]]; then
   if [[ $CALIB_TPC_RESPADGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_SPORADIC "trackGainHistoTPC:TPC/TRACKGAINHISTOS/0"; fi
 fi
 
+# define spec for proxy for TPC IDCs - Side A
+if [[ -z $CALIBDATASPEC_TPCIDC_A ]]; then
+  # TPC
+  if [[ $CALIB_TPC_IDC == 1 ]]; then add_semicolon_separated CALIBDATASPEC_TPCIDC_A "idcsgroupa:TPC/IDCGROUPA"; fi
+fi
+
+# define spec for proxy for TPC IDCs - Side C
+if [[ -z $CALIBDATASPEC_TPCIDC_C ]]; then
+  # TPC
+  if [[ $CALIB_TPC_IDC == 1 ]]; then add_semicolon_separated CALIBDATASPEC_TPCIDC_C "idcsgroupc:TPC/IDCGROUPC"; fi
+fi
+
+
 # define spec for proxy for TF-based outputs from CALO
 if [[ -z $CALIBDATASPEC_CALO_TF ]]; then
   # EMC
@@ -153,6 +169,8 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   # printing for debug
   echo CALIBDATASPEC_BARREL_TF = $CALIBDATASPEC_BARREL_TF 1>&2
   echo CALIBDATASPEC_BARREL_SPORADIC = $CALIBDATASPEC_BARREL_SPORADIC 1>&2
+  echo CALIBDATASPEC_TPCIDC_A = $CALIBDATASPEC_TPCIDC_A 1>&2
+  echo CALIBDATASPEC_TPCIDC_C = $CALIBDATASPEC_TPCIDC_C 1>&2
   echo CALIBDATASPEC_CALO_TF = $CALIBDATASPEC_CALO_TF 1>&2
   echo CALIBDATASPEC_CALO_SPORADIC = $CALIBDATASPEC_CALO_SPORADIC 1>&2
   echo CALIBDATASPEC_MUON_TF = $CALIBDATASPEC_MUON_TF 1>&2
