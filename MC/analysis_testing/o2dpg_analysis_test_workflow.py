@@ -134,7 +134,17 @@ ANALYSES.append(analysis_Validation)
 analysis_PIDFull = {"name": "PIDFull",
                     "expected_output": ["AnalysisResults.root"],
                     "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
-                    "cmd": "o2-analysis-ft0-corrected-table {CONFIG} | o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-multiplicity-table {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-pid-tof {CONFIG} --add-qa 1 | o2-analysis-pid-tof-full {CONFIG} --add-qa 1 | o2-analysis-pid-tof-beta {CONFIG} --add-qa 1 | o2-analysis-pid-tpc-full {CONFIG} --add-qa 1 {AOD}"}
+                    "cmd": ["o2-analysis-ft0-corrected-table",
+                            "o2-analysis-timestamp",
+                            "o2-analysis-track-propagation",
+                            "o2-analysis-trackselection",
+                            "o2-analysis-event-selection",
+                            "o2-analysis-multiplicity-table",
+                            "o2-analysis-pid-tof-base",
+                            "o2-analysis-pid-tof --add-qa 1",
+                            "o2-analysis-pid-tof-full --add-qa 1",
+                            "o2-analysis-pid-tof-beta --add-qa 1",
+                            "o2-analysis-pid-tpc-full --add-qa 1"]}
 ANALYSES.append(analysis_PIDFull)
 analysis_PWGMMMFT = {"name": "PWGMMMFT",
                      "expected_output": ["AnalysisResults.root"],
