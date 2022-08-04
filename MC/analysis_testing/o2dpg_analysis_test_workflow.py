@@ -31,7 +31,7 @@
 #                         pass name
 #   --period-name PERIOD_NAME
 #                         prodcution tag
-#   --config CONFIG       overwrite thee default config JSON. Pass as json://<path/to/file>
+#   --config CONFIG       overwrite the default config JSON. Pass as </path/to/file>, will be automatically configured to json://
 #   --only-analyses [ONLY_ANALYSES [ONLY_ANALYSES ...]]
 #                         filter only on these analyses
 #   --merged-task         add merged analysis task (one pipe for all) with name "MergedAnalyses"
@@ -67,7 +67,7 @@ import sys
 import importlib.util
 import argparse
 from os import environ, makedirs
-from os.path import join, exists, abspath, expanduser
+from os.path import join, exists, abspath, expanduser, normpath
 
 # make sure O2DPG + O2 is loaded
 O2DPG_ROOT=environ.get('O2DPG_ROOT')
@@ -95,8 +95,8 @@ ANALYSIS_LABEL_ON_MC = f"{ANALYSIS_LABEL}MC"
 ANALYSIS_VALID_MC = "mc"
 ANALYSIS_VALID_DATA = "data"
 
-ANALYSIS_CONFIGS = {ANALYSIS_VALID_MC: "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
-                    ANALYSIS_VALID_DATA: "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json"}
+ANALYSIS_CONFIGS = {ANALYSIS_VALID_MC: "${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
+                    ANALYSIS_VALID_DATA: "${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json"}
 
 # collect all analyses
 ANALYSES = []
@@ -114,7 +114,12 @@ ANALYSES.append(analysis_Efficiency)
 analysis_EventTrackQA = {"name": "EventTrackQA",
                          "expected_output": ["AnalysisResults.root"],
                          "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
-                         "cmd": "o2-analysis-timestamp {CONFIG} | o2-analysis-track-propagation {CONFIG} | o2-analysis-trackselection {CONFIG} | o2-analysis-event-selection {CONFIG} | o2-analysis-pid-tof-base {CONFIG} | o2-analysis-qa-event-track {CONFIG} {AOD}"}
+                         "cmd": ["o2-analysis-timestamp",
+                                 "o2-analysis-track-propagation",
+                                 "o2-analysis-trackselection",
+                                 "o2-analysis-multiplicity-table",
+                                 "o2-analysis-event-selection",
+                                 "o2-analysis-qa-event-track"]}
 ANALYSES.append(analysis_EventTrackQA)
 analysis_K0STrackingEfficiencyQA = {"name": "K0STrackingEfficiencyQA",
                                     "expected_output": ["AnalysisResults.root"],
@@ -325,9 +330,17 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         input_aod = f"@{input_aod}"
     data_or_mc = ANALYSIS_VALID_MC if is_mc else ANALYSIS_VALID_DATA
     configuration = ANALYSIS_CONFIGS[data_or_mc] if config is None else config
+    configuration = configuration.replace("json://", "")
+    configuration = abspath(normpath(configuration))
+    configuration = f"json://{configuration}"
     for ana in ANALYSES:
-        if data_or_mc in ana["valid_for"] and (not analyses_only or (ana["name"] in analyses_only)): 
-            workflow.append(create_ana_task(ana["name"], ana["cmd"].format(CONFIG=f"--configuration {configuration}", AOD=f"--aod-file {input_aod}"), output_dir, needs=needs, is_mc=is_mc))
+        if data_or_mc in ana["valid_for"] and (not analyses_only or (ana["name"] in analyses_only)):
+            if type(ana["cmd"]) is list:
+                piped_analysis = f" --configuration {configuration} | ".join(ana["cmd"])
+                piped_analysis += f" --configuration {configuration} --aod-file {input_aod}"
+                workflow.append(create_ana_task(ana["name"], piped_analysis, output_dir, needs=needs, is_mc=is_mc))
+            else:
+                workflow.append(create_ana_task(ana["name"], ana["cmd"].format(CONFIG=f"--configuration {configuration}", AOD=f"--aod-file {input_aod}"), output_dir, needs=needs, is_mc=is_mc))
             continue
         print(f"Analysis {ana['name']} not added since not compatible with isMC={is_mc} and filetred analyses {analyses_only}")
     if add_merged_task:
@@ -400,7 +413,7 @@ def run(args):
 
 def main():
     """entry point when run directly from command line"""
-    parser = argparse.ArgumentParser(description='Create analysi test workflow')
+    parser = argparse.ArgumentParser(description='Create analysis test workflow')
     parser.add_argument("-f", "--input-file", dest="input_file", default="./AO2D.root", help="full path to the AO2D input", required=True)
     parser.add_argument("-a", "--analysis-dir", dest="analysis_dir", default="./Analysis", help="the analysis output and working directory")
     parser.add_argument("-o", "--output", default="workflow_analysis_test.json", help="the workflow file name")
@@ -409,7 +422,7 @@ def main():
     parser.add_argument("--run-number", dest="run_number", type=int, default=300000, help="the run number")
     parser.add_argument("--pass-name", dest="pass_name", help="pass name")
     parser.add_argument("--period-name", dest="period_name", help="period name")
-    parser.add_argument("--config", help="overwrite the default config JSON. Pass as json://</path/to/file>")
+    parser.add_argument("--config", help="overwrite the default config JSON. Pass as </path/to/file>, will be automatically configured to json://")
     parser.add_argument("--only-analyses", dest="only_analyses", nargs="*", help="filter only on these analyses")
     parser.add_argument("--merged-task", dest="merged_task", action="store_true", help="add merged analysis task (one pipe for all) with name \"MergedAnalyses\"")
     parser.set_defaults(func=run)
