@@ -25,19 +25,16 @@ public:
   void setRandomizePDGsign(bool val) { randomizePDGsign = val; }
 
   /// get mass from TParticlePDG
-  double getMass(int input_pdg)
+  static double getMass(int input_pdg)
   {
     double mass = 0;
     if (TDatabasePDG::Instance())
     {
       TParticlePDG *particle = TDatabasePDG::Instance()->GetParticle(input_pdg);
-      if (particle)
-      {
+      if (particle) {
         mass = particle->Mass();
-      }
-      else
-      {
-        std::cout << "===> Unknown particle requested, mass set to 0" << std::endl;
+      } else {
+        std::cout << "===> Unknown particle requested with PDG " << input_pdg << ", mass set to 0" << std::endl;
       }
     }
     return mass;
