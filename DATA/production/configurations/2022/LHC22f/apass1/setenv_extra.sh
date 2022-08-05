@@ -93,6 +93,10 @@ export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow="$SVTX"
 # ad-hoc settings for its-tpc matching
 export ITSTPCMATCH="tpcitsMatch.maxVDriftUncertainty=0.2;tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=1000;tpcitsMatch.crudeAbsDiffCut[0]=5;tpcitsMatch.crudeAbsDiffCut[1]=5;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=10;tpcitsMatch.crudeNSigma2Cut[0]=200;tpcitsMatch.crudeNSigma2Cut[1]=200;tpcitsMatch.crudeNSigma2Cut[2]=200;tpcitsMatch.crudeNSigma2Cut[3]=200;tpcitsMatch.crudeNSigma2Cut[4]=900;"
 export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow="TPCGasParam.DriftV=$VDRIFT;$ITSEXTRAERR;$ITSTPCMATCH"
+# enabling AfterBurner
+if [[ $WORKFLOW_DETECTORS =~ (^|,)"FT0"(,|$) ]] ; then
+  export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="--use-ft0"
+fi
 
 # ad-hoc settings for TOF matching
 export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="--output-type matching-info,calib-info --enable-dia"
