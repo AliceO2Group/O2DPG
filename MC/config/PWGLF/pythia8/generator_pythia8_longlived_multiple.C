@@ -1,6 +1,7 @@
 ///
 /// \file   generator_pythia8_longlived_multiple.C
 /// \author Nicolò Jacazio nicolo.jacazio@cern.ch
+/// \since  05/08/2022
 /// \brief  Implementation of a gun generator for multiple particles, built on generator_pythia8_longlived.C
 ///         usage:
 ///               o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLongLivedMultiple({1010010030}, {10}, {0.5}, {10})'
@@ -137,8 +138,11 @@ FairGenerator* generateLongLivedMultiple(std::string configuration = "${O2DPG_RO
     while (getline(inputFile, l)) {
       TString line = l;
       line.Strip(TString::kBoth, ' ');
+      std::cout << n++ << " '" << line << "'" << endl;
+      if (line.IsNull() || line.IsWhitespace()) {
+        continue;
+      }
 
-      std::cout << n++ << " " << line << endl;
       if (line.BeginsWith("#")) {
         std::cout << "Skipping\n";
         continue;
