@@ -10,52 +10,63 @@
 # If 2 sim directories should be compared, it is possible to specify for which parts the RelVal should be done by adding the flags
 # --with-<whic-part>
 # (see full help message below to see available options)
-#
-# usage: o2dpg_release_validation.py rel-val [-h] -i INPUT INPUT -t
-#                                            {1,2,3,4,5,6,7}
-#                                            [--chi2-value CHI2_VALUE]
-#                                            [--rel-mean-diff REL_MEAN_DIFF]
-#                                            [--rel-entries-diff REL_ENTRIES_DIFF]
+# usage: o2dpg_release_validation.py rel-val [-h] -i INPUT INPUT
+#                                            [--with-test-chi2]
+#                                            [--with-test-bincont]
+#                                            [--with-test-numentries]
+#                                            [--chi2-threshold CHI2_THRESHOLD]
+#                                            [--rel-mean-diff-threshold REL_MEAN_DIFF_THRESHOLD]
+#                                            [--rel-entries-diff-threshold REL_ENTRIES_DIFF_THRESHOLD]
 #                                            [--select-critical]
 #                                            [--threshold THRESHOLD]
-#                                            [--with-hits]
+#                                            [--with-type-hits]
 #                                            [--detectors [{ITS,TOF,EMC,TRD,PHS,FT0,HMP,MFT,FDD,FV0,MCH,MID,CPV,ZDC,TPC} [{ITS,TOF,EMC,TRD,PHS,FT0,HMP,MFT,FDD,FV0,MCH,MID,CPV,ZDC,TPC} ...]]]
-#                                            [--with-tpctracks] [--with-kine]
-#                                            [--with-analysis] [--with-qc]
-#                                            [--no-plots] [--output OUTPUT]
-# 
+#                                            [--with-type-tpctracks]
+#                                            [--with-type-kine]
+#                                            [--with-type-analysis]
+#                                            [--with-type-qc] [--no-plots]
+#                                            [--use-values-as-thresholds USE_VALUES_AS_THRESHOLDS]
+#                                            [--output OUTPUT]
+#
 # optional arguments:
 #   -h, --help            show this help message and exit
 #   -i INPUT INPUT, --input INPUT INPUT
 #                         2 input files for comparison OR 2 input directories
 #                         from simulation for comparison
-#   -t {1,2,3,4,5,6,7}, --test {1,2,3,4,5,6,7}
-#                         index of test case
-#   --chi2-value CHI2_VALUE
+#   --with-test-chi2      run chi2 test
+#   --with-test-bincont   run bin-content test
+#   --with-test-numentries
+#                         run number-of-entries test
+#   --chi2-threshold CHI2_THRESHOLD
 #                         Chi2 threshold
-#   --rel-mean-diff REL_MEAN_DIFF
+#   --rel-mean-diff-threshold REL_MEAN_DIFF_THRESHOLD
 #                         Threshold of relative difference in mean
-#   --rel-entries-diff REL_ENTRIES_DIFF
+#   --rel-entries-diff-threshold REL_ENTRIES_DIFF_THRESHOLD
 #                         Threshold of relative difference in number of entries
 #   --select-critical     Select the critical histograms and dump to file
 #   --threshold THRESHOLD
 #                         threshold for how far file sizes are allowed to
 #                         diverge before warning
-#   --with-hits           include hit comparison when RelVal when run on
+#   --with-type-hits      include hit comparison when RelVal when run on
 #                         simulation directories
 #   --detectors [{ITS,TOF,EMC,TRD,PHS,FT0,HMP,MFT,FDD,FV0,MCH,MID,CPV,ZDC,TPC} [{ITS,TOF,EMC,TRD,PHS,FT0,HMP,MFT,FDD,FV0,MCH,MID,CPV,ZDC,TPC} ...]]
 #                         include these detectors for hit RelVal
-#   --with-tpctracks      include TPC tracks RelVal when run on simulation
+#   --with-type-tpctracks
+#                         include TPC tracks RelVal when run on simulation
 #                         directories
-#   --with-kine           include kine RelVal when run on simulation directories
-#   --with-analysis       include analysis RelVal when run on simulation
+#   --with-type-kine      include kine RelVal when run on simulation directories
+#   --with-type-analysis  include analysis RelVal when run on simulation
 #                         directories
-#   --with-qc             include QC RelVal when run on simulation directories
+#   --with-type-qc        include QC RelVal when run on simulation directories
 #   --no-plots            disable plotting
+#   --use-values-as-thresholds USE_VALUES_AS_THRESHOLDS
+#                         Use values from another run as thresholds for this one
 #   --output OUTPUT, -o OUTPUT
 #                         output directory
+
 import sys
 import argparse
+import re
 from os import environ, makedirs
 from os.path import join, abspath, exists, isfile, isdir, dirname, relpath
 from glob import glob
@@ -75,12 +86,11 @@ if O2DPG_ROOT is None:
 
 ROOT_MACRO=join(O2DPG_ROOT, "RelVal", "ReleaseValidation.C")
 
-from ROOT import TFile, gDirectory, gROOT, TChain
+from ROOT import TFile, gDirectory, gROOT, TChain, TH1D
 
 DETECTORS_OF_INTEREST_HITS = ["ITS", "TOF", "EMC", "TRD", "PHS", "FT0", "HMP", "MFT", "FDD", "FV0", "MCH", "MID", "CPV", "ZDC", "TPC"]
 
 REL_VAL_SEVERITY_MAP = {"GOOD": 0, "WARNING": 1, "NONCRIT_NC": 2, "CRIT_NC": 3, "BAD": 4}
-
 REL_VAL_SEVERITY_COLOR_MAP = {"GOOD": "green", "WARNING": "orange", "NONCRIT_NC": "cornflowerblue", "CRIT_NC": "navy", "BAD": "red"}
 
 gROOT.SetBatch()
@@ -208,6 +218,40 @@ def load_root_file(path, option="READ"):
     return f
 
 
+def make_generic_histograms_from_log_file(filenames1, filenames2, output_filepath1, output_filepath2, patterns, field_numbers, names):
+
+    values1 = [[] for _ in names]
+    values2 = [[] for _ in names]
+
+    for filename in filenames1:
+        with open(filename, "r") as f:
+            for line in f:
+                for i, (pattern, field_number) in enumerate(zip(patterns, field_numbers)):
+                    if not re.search(pattern, line):
+                        continue
+                    values1[i].append(float(line.split()[field_number]))
+    for filename in filenames2:
+        with open(filename, "r") as f:
+            for line in f:
+                for i, (pattern, field_number) in enumerate(zip(patterns, field_numbers)):
+                    if not re.search(pattern, line):
+                        continue
+                    values2[i].append(float(line.split()[field_number]))
+
+    file1 = TFile(output_filepath1, "RECREATE")
+    for values, name in zip(values1, names):
+        h1 = TH1D(name, "", 1, 0, 1)
+        h1.Fill(0.5, sum(values))
+        h1.Write()
+    file1.Close()
+    file2 = TFile(output_filepath2, "RECREATE")
+    for values, name in zip(values2, names):
+        h2 = TH1D(name, "", 1, 0, 1)
+        h2.Fill(0.5, sum(values))
+        h2.Write()
+    file2.Close()
+
+
 def make_generic_histograms_from_chain(filenames1, filenames2, output_filepath1, output_filepath2, treename="o2sim"):
     """
     Create all possible histograms of TLeaf from given TChains
@@ -298,7 +342,8 @@ def rel_val_files(file1, file2, args, output_dir):
         makedirs(output_dir)
     select_critical = "kTRUE" if args.select_critical else "kFALSE"
     no_plots = "kTRUE" if args.no_plots else "kFALSE"
-    cmd = f"\\(\\\"{abspath(file1)}\\\",\\\"{abspath(file2)}\\\",{args.test},{args.chi2_value},{args.rel_mean_diff},{args.rel_entries_diff},{select_critical},{no_plots}\\)"
+    in_thresholds = args.use_values_as_thresholds if args.use_values_as_thresholds else ""
+    cmd = f"\\(\\\"{abspath(file1)}\\\",\\\"{abspath(file2)}\\\",{args.test},{args.chi2_threshold},{args.rel_mean_diff_threshold},{args.rel_entries_diff_threshold},{select_critical},\\\"{abspath(in_thresholds)}\\\"\\)"
     cmd = f"root -l -b -q {ROOT_MACRO}{cmd}"
     log_file = join(abspath(output_dir), "rel_val.log")
     print(f"==> Running {cmd}\nwith log file at {log_file}")
@@ -312,60 +357,35 @@ def rel_val_files(file1, file2, args, output_dir):
     return 0
 
 
-def has_severity(filename, severity=("BAD", "CRIT_NC"), *, summary_only=False):
+def print_summary(filename, *, summary_only=False):
     """
     Check if any 2 histograms have a given severity level after RelVal
     """
-    severity = list(severity)
-    counter = {s: 0 for s in severity + ["ALL"]}
 
-    def rel_val_summary(d):
-        ret = False
-        for s in REL_VAL_SEVERITY_MAP:
-            names = d.get(s)
-            counter["ALL"] += len(names)
-            if not names:
-                continue
-            if s not in severity:
-                continue
-            if not summary_only:
-                print(f"Histograms for severity {s}:")
-                for n in names:
-                    print(f"    {n}")
-            counter[s] = len(names)
-            ret = True
-        return ret
-
-    def rel_val_summary_global(d):
-        ret = False
-        to_print = {s: [] for s in severity}
-        counter["ALL"] = len(d)
-        for h in d:
-            if h["test_summary"] in severity:
-                to_print[h["test_summary"]].append(h["name"])
-                counter[h["test_summary"]] += 1
-                ret = True
-        if not summary_only:
-            for s, names in to_print.items():
-                if not names:
-                    continue
-                print(f"Histograms for severity {s}:")
-                for n in names:
-                    print(f"    {n}")
-        return ret
-
-    res = None
+    summary = None
     with open(filename, "r") as f:
-        res = json.load(f)
+        summary = json.load(f)
 
-    # decide whether that is an overall summary or from 2 files only
-    ret = rel_val_summary_global(res["histograms"]) if "histograms" in res else rel_val_summary(res["test_summary"])
-    if ret:
-        print(f"\nNumber of compared histograms: {counter['ALL']} out of which severity is")
-        for s in severity:
-            print(f"    {s}: {counter[s]}")
-        print("as printed above.\n")
-    return ret
+    test_n_hist_map = {s: [] for s in REL_VAL_SEVERITY_MAP}
+
+    # need to re-arrange the JSON structure abit for per-test result pie charts
+    for histo_name, tests in summary.items():
+        # loop over tests done
+        for test in tests:
+            test_name = test["test_name"]
+            if test_name != "test_summary":
+                continue
+            result = test["result"]
+            test_n_hist_map[result].append(histo_name)
+
+    n_all = sum(len(v) for v in test_n_hist_map.values())
+    print(f"\n#####\nNumber of compared histograms: {n_all} out of which severity is")
+    print("Out of those:")
+    for sev, histos in test_n_hist_map.items():
+        print(f"Severity {sev}: {len(histos)}")
+    print("\n#####\n")
+
+    return test_n_hist_map
 
 
 def rel_val_ttree(dir1, dir2, files, output_dir, args, treename="o2sim", *, combine_patterns=None):
@@ -407,19 +427,70 @@ def rel_val_ttree(dir1, dir2, files, output_dir, args, treename="o2sim", *, comb
     return 0
 
 
-def plot_pie_chart_single(summary, out_dir, title):
-    for which_test, flagged_histos in summary.items():
-        figure, ax = plt.subplots(figsize=(20, 20))
-        labels = []
-        n_histos = []
-        colors = []
-        # loop over tests done
-        for flag, histos in flagged_histos.items():
-            if not histos:
+def rel_val_log_file(dir1, dir2, files, output_dir, args, patterns, field_numbers, names, *, combine_patterns=None):
+    """
+    RelVal for 2 ROOT files containing a TTree to be compared
+    """
+    # Prepare file paths for TChain
+    to_be_chained1 = []
+    to_be_chained2 = []
+    output_dirs = []
+
+    # possibly combine common files, for instance when they come from different timeframes
+    if combine_patterns:
+        for cp in combine_patterns:
+            chained1 = [join(dir1, hf) for hf in files if cp in hf]
+            chained2 = [join(dir2, hf) for hf in files if cp in hf]
+            if not chained1 or not chained2:
                 continue
+            to_be_chained1.append(chained1)
+            to_be_chained2.append(chained2)
+            output_dirs.append(f"{cp}_dir")
+    else:
+        to_be_chained1 = []
+        to_be_chained2 = []
+        for hf in files:
+            to_be_chained1.append(join(dir1, hf))
+            to_be_chained2.append(join(dir2, hf))
+            output_dirs.append(f"{hf}_dir")
+
+    # paths for chains prepared, output directory names specified, do RelVal
+    for tbc1, tbc2, od in zip(to_be_chained1, to_be_chained2, output_dirs):
+        output_dir_hf = join(output_dir, od)
+        if not exists(output_dir_hf):
+            makedirs(output_dir_hf)
+
+        make_generic_histograms_from_log_file(tbc1, tbc2, join(output_dir_hf, "file1.root"), join(output_dir_hf, "file2.root"), patterns, field_numbers, names)
+        # after we created files containing histograms, they can be compared with the standard RelVal
+        rel_val_files(abspath(join(output_dir_hf, "file1.root")), abspath(join(output_dir_hf, "file2.root")), args, output_dir_hf)
+    return 0
+
+def plot_pie_chart_single(summary, out_dir, title):
+    test_n_hist_map = {}
+
+    # need to re-arrange the JSON structure abit for per-test result pie charts
+    for histo_name, tests in summary.items():
+        # loop over tests done
+        for test in tests:
+            test_name = test["test_name"];
+            if test_name not in test_n_hist_map:
+                test_n_hist_map[test_name] = {}
+            result = test["result"]
+            if result not in test_n_hist_map[test_name]:
+                test_n_hist_map[test_name][result] = 0
+            test_n_hist_map[test_name][result] += 1
+
+
+    for which_test, flags in test_n_hist_map.items():
+        labels = []
+        colors = []
+        n_histos = []
+        for flag, count in flags.items():
             labels.append(flag)
-            n_histos.append(len(histos))
+            n_histos.append(count)
             colors.append(REL_VAL_SEVERITY_COLOR_MAP[flag])
+
+        figure, ax = plt.subplots(figsize=(20, 20))
         ax.pie(n_histos, explode=[0.05 for _ in labels], labels=labels, autopct="%1.1f%%", startangle=90, textprops={"fontsize": 30}, colors=colors)
         ax.axis("equal")
         ax.axis("equal")
@@ -430,15 +501,103 @@ def plot_pie_chart_single(summary, out_dir, title):
         plt.close(figure)
 
 
-def plot_pie_charts(in_dir):
+def extract_from_summary(summary, fields):
+    """
+    Extract a fields from summary per test and histogram name
+    """
+    test_histo_value_map = {}
+    # need to re-arrange the JSON structure abit for per-test result pie charts
+    for histo_name, tests in summary.items():
+        # loop over tests done
+        for test in tests:
+            test_name = test["test_name"];
+            if test_name not in test_histo_value_map:
+                test_histo_value_map[test_name] = {field: [] for field in fields}
+                test_histo_value_map[test_name]["histograms"] = []
+            if not test["comparable"]:
+                continue
+            test_histo_value_map[test_name]["histograms"].append(histo_name)
+            for field in fields:
+                test_histo_value_map[test_name][field].append(test[field])
+    return test_histo_value_map
+
+
+def plot_values_single(summary, out_dir, title):
+    test_histo_value_map = extract_from_summary(summary, ["value", "threshold"])
+
+    for which_test, histos_values_thresolds in test_histo_value_map.items():
+
+        figure, ax = plt.subplots(figsize=(20, 20))
+        ax.plot(range(len(histos_values_thresolds["histograms"])), histos_values_thresolds["value"], label="values", marker="x")
+        ax.plot(range(len(histos_values_thresolds["histograms"])), histos_values_thresolds["threshold"], label="thresholds", marker="o")
+        ax.legend(loc="best", fontsize=20)
+        ax.set_xticks(range(len(histos_values_thresolds["histograms"])))
+        ax.set_xticklabels(histos_values_thresolds["histograms"], rotation=90)
+        ax.tick_params("both", labelsize=20)
+
+        figure.suptitle(f"{title} ({which_test})", fontsize=40)
+        save_path = join(out_dir, f"test_values_thresholds_{which_test}.png")
+        figure.tight_layout()
+        figure.savefig(save_path)
+        plt.close(figure)
+
+
+def plot_compare_summaries(summaries, fields, out_dir, *, labels=None):
+    """
+    if labels is given, it needs to have the same length as summaries
+    """
+    test_histo_value_maps = [extract_from_summary(summary, fields) for summary in summaries]
+
+    # need to get intersection of tests
+    test_names = list(set().union(*[list(t.keys()) for t in test_histo_value_maps]))
+
+    if not labels:
+        labels = [f"summary_{i}" for i, _ in enumerate(summaries)]
+
+    for test_name in test_names:
+        histogram_names_intersection = []
+        # First we figure out the intersection of histograms ==> histograms in common
+        for test_histo_value_map in test_histo_value_maps:
+            if test_name not in test_histo_value_map:
+                continue
+            this_map = test_histo_value_map[test_name]
+            if not histogram_names_intersection:
+                histogram_names_intersection = this_map["histograms"]
+            histogram_names_intersection =  list(set(histogram_names_intersection) & set(this_map["histograms"]))
+        values = {field: [[] for _ in test_histo_value_maps] for field in fields}
+        # now fill the correct values of the fields for the histograms in common
+        for map_index, test_histo_value_map in enumerate(test_histo_value_maps):
+            this_map = test_histo_value_map[test_name]
+            for histo_name in histogram_names_intersection:
+                i = this_map["histograms"].index(histo_name)
+                for f in fields:
+                    values[f][map_index].append(this_map[f][i])
+
+        # now plot
+        figure, ax = plt.subplots(figsize=(20, 20))
+        for field, values_lists in values.items():
+            for label, single_values in zip(labels, values_lists):
+                ax.plot(range(len(histogram_names_intersection)), single_values, label=f"{label}_{field}")
+        ax.legend(loc="best", fontsize=20)
+        ax.set_xticks(range(len(histogram_names_intersection)))
+        ax.set_xticklabels(histogram_names_intersection, rotation=90)
+        ax.tick_params("both", labelsize=20)
+        save_path = join(out_dir, f"plot_{test_name}_{'_'.join(labels)}.png")
+        figure.tight_layout()
+        figure.savefig(save_path)
+        plt.close(figure)
+
+
+def plot_additional_summary(in_dir):
     """
     Make a summary per histogram (that should be able to be parsed by Grafana eventually)
     """
-    print("==> Create pie charts <==")
+    print("==> Plotting <==")
     file_paths = glob(f"{in_dir}/**/Summary.json", recursive=True)
     summary = []
 
     for path in file_paths:
+        print(path)
         # go through all we found
         current_summary = None
         with open(path, "r") as f:
@@ -447,6 +606,7 @@ def plot_pie_charts(in_dir):
         rel_val_path = "/".join(path.split("/")[:-1])
         title = relpath(rel_val_path, in_dir)
         plot_pie_chart_single(current_summary, rel_val_path, title)
+        plot_values_single(current_summary, rel_val_path, title)
 
 
 def make_summary(in_dir):
@@ -455,7 +615,7 @@ def make_summary(in_dir):
     """
     print("==> Make summary <==")
     file_paths = glob(f"{in_dir}/**/Summary.json", recursive=True)
-    summary = []
+    summary = {}
 
     for path in file_paths:
         # go through all we found
@@ -468,19 +628,15 @@ def make_summary(in_dir):
         rel_path_plot = join(type_specific, "overlayPlots")
         type_global = type_specific.split("/")[0]
         make_summary = {}
-        for which_test, flagged_histos in current_summary.items():
+        for histo_name, tests in current_summary.items():
+            summary[histo_name] = tests
             # loop over tests done
-            for flag, histos in flagged_histos.items():
-                # loop over flags per test
-                for h in histos:
-                    if h not in make_summary:
-                        # re-arrange to have histogram at the sop
-                        make_summary[h] = {"name": h, "type_global": type_global, "type_specific": type_specific, "rel_path_plot": join(rel_path_plot, f"{h}.png")}
-                    # add outcome of test
-                    make_summary[h][which_test] = flag
-        # re-arrange to list, now each summary["path"] basically contains "rows" and each batch represents the columns
-        summary.extend([batch for batch in make_summary.values()])
-    return {"histograms": summary}
+            for test in tests:
+                test["name"] = histo_name
+                test["type_global"] = type_global
+                test["type_specific"] = type_specific
+                test["rel_path_plot"] = join(rel_path_plot, f"{histo_name}.png")
+    return summary
 
 
 def rel_val_histograms(dir1, dir2, files, output_dir, args):
@@ -532,6 +688,19 @@ def rel_val_sim_dirs(args):
             makedirs(output_dir_tpctracks)
         rel_val_ttree(dir1, dir2, tpctrack_files, output_dir_tpctracks, args, "tpcrec", combine_patterns=["tpctracks.root"])
 
+        tpctrack_files = find_mutual_files((dir1, dir2), "tpcreco*.log")
+        print(tpctrack_files)
+        output_dir_tpctracks = join(output_dir, "tpctracks")
+        if not exists(output_dir_tpctracks):
+            makedirs(output_dir_tpctracks)
+        # only one pattern, namely the line in the tpc reco file to look for
+        patterns = ["^(.*?)(Event has)(.*)(TPC Clusters)(.*)$"]
+        # the field(s) to extract from found line
+        fields = [4]
+        # the name of the histogram to build
+        histo_names = ["number_tpc_clusters"]
+        rel_val_log_file(dir1, dir2, tpctrack_files, output_dir_tpctracks, args, patterns, fields, histo_names, combine_patterns=["tpcreco"])
+
     # TPC tracks
     if args.with_type_kine:
         print("==> Run RelVal for MC kinematics <==")
@@ -564,6 +733,19 @@ def rel_val_sim_dirs(args):
         rel_val_histograms(dir_qc1, dir_qc2, qc_files, output_dir_qc, args)
 
 
+def make_new_threshold_file(json_path, out_filepath):
+    json_in = None
+    with open(json_path, "r") as f:
+        json_in = json.load(f)
+    with open(out_filepath, "w") as f:
+        for histo_name, tests in json_in.items():
+            for t in tests:
+                print(t["result"])
+                if not t["comparable"]:
+                    continue
+                f.write(f"{histo_name},{t['test_name']},{t['value']}\n")
+
+
 def rel_val(args):
     """
     Entry point for RelVal
@@ -573,6 +755,11 @@ def rel_val(args):
     args.test = 1 * args.with_test_chi2 + 2 * args.with_test_bincont + 4 * args.with_test_numentries
     if not args.test:
         args.test = 7
+    if not exists(args.output):
+        makedirs(args.output)
+    if args.use_values_as_thresholds:
+        out_path = make_new_threshold_file(args.use_values_as_thresholds, join(args.output, "use_thresholds.dat"))
+        args.use_values_as_thresholds = join(args.output, "use_thresholds.dat")
     if isfile(args.input[0]) and isfile(args.input[1]):
         # simply check if files, assume that they would be ROOT files in that case
         func = rel_val_files
@@ -586,8 +773,8 @@ def rel_val(args):
     func(args)
     with open(join(args.output, "SummaryGlobal.json"), "w") as f:
         json.dump(make_summary(args.output), f, indent=2)
-    plot_pie_charts(args.output)
-    has_severity(join(args.output, "SummaryGlobal.json"), REL_VAL_SEVERITY_MAP.keys(), summary_only=True)
+    plot_additional_summary(args.output)
+    print_summary(join(args.output, "SummaryGlobal.json"), summary_only=True)
 
 
 def inspect(args):
@@ -611,7 +798,61 @@ def inspect(args):
         if not path:
             return 1
 
-    return not has_severity(path, args.severity)
+    print_summary(path)
+
+    return 0
+
+
+def compare(args):
+    """
+    Compare 2 RelVal outputs with one another
+    """
+    output_dir = args.output
+
+    if not args.difference and not args.compare_values:
+        args.difference, args.compare_values = (True, True)
+
+    # plot comparison of values and thresholds of both RelVals per test
+    if args.compare_values:
+        summaries_common = find_mutual_files((args.input[0], args.input[1]), "Summary.json")
+        for summaries in summaries_common:
+            output_dir_this = join(output_dir, f"{summaries.replace('/', '_')}_dir")
+            if not exists(output_dir_this):
+                makedirs(output_dir_this)
+            summaries = [join(input, summaries) for input in args.input]
+            for i, _ in enumerate(summaries):
+                with open(summaries[i], "r") as f:
+                    summaries[i] = json.load(f)
+            plot_compare_summaries(summaries, ["threshold", "value"], output_dir_this)
+
+    # print the histogram names with different severities per test
+    if args.difference:
+        summaries = [join(input, "SummaryGlobal.json") for input in args.input]
+        for i, summary in enumerate(summaries):
+            if not exists(summary):
+                print(f"WARNING: Cannot find expected {summary}.")
+                return 1
+
+        s = "\nCOMPARING RELVAL SUMMARY\n"
+        summaries = [print_summary(summary) for summary in summaries]
+        print("Histograms with different RelVal results from 2 RelVal runs")
+        for severity in REL_VAL_SEVERITY_MAP:
+            intersection = list(set(summaries[0][severity]) & set(summaries[1][severity]))
+            s += f"==> SEVERITY {severity} <=="
+            print(f"==> SEVERITY {severity} <==")
+            s += "\n"
+            for i, summary in enumerate(summaries):
+                print(f"FILE {i+1}")
+                s += f"FILE {i+1}: "
+                counter = 0
+                for histo_name in summary[severity]:
+                    if histo_name not in intersection:
+                        print(f"  {histo_name}")
+                        counter += 1
+                s += f"{counter}   "
+            s += "\n"
+        print(s)
+    return 0
 
 
 def influx(args):
@@ -641,20 +882,19 @@ def influx(args):
 
     out_file = join(output_dir, "influxDB.dat")
 
-    in_list = None
+    summary = None
     with open(json_in, "r") as f:
-        in_list = json.load(f)["histograms"]
+        summary = json.load(f)
     with open(out_file, "w") as f:
-        for i, h in enumerate(in_list):
-            s = f"{row_tags},type_global={h['type_global']},type_specific={h['type_specific']},id={i}"
+        for i, (histo_name, tests) in enumerate(summary.items()):
+            if not tests:
+                continue
+            s = f"{row_tags},type_global={tests[0]['type_global']},type_specific={tests[0]['type_specific']},id={i}"
             if args.web_storage:
-                s += f",web_storage={join(args.web_storage, h['rel_path_plot'])}"
-            s += f" histogram_name=\"{h['name']}\""
-            for k, v in h.items():
-                # add all tests - do it dynamically because more might be added in the future
-                if "test_" not in k:
-                    continue
-                s += f",{k}={REL_VAL_SEVERITY_MAP[v]}"
+                s += f",web_storage={join(args.web_storage, tests[0]['rel_path_plot'])}"
+            s += f" histogram_name=\"{histo_name}\""
+            for test in tests:
+                s += f",{test['test_name']}={REL_VAL_SEVERITY_MAP[test['result']]}"
             f.write(f"{s}\n")
 
 
@@ -670,9 +910,9 @@ def main():
     rel_val_parser.add_argument("--with-test-chi2", dest="with_test_chi2", action="store_true", help="run chi2 test")
     rel_val_parser.add_argument("--with-test-bincont", dest="with_test_bincont", action="store_true", help="run bin-content test")
     rel_val_parser.add_argument("--with-test-numentries", dest="with_test_numentries", action="store_true", help="run number-of-entries test")
-    rel_val_parser.add_argument("--chi2-value", dest="chi2_value", type=float, help="Chi2 threshold", default=1.5)
-    rel_val_parser.add_argument("--rel-mean-diff", dest="rel_mean_diff", type=float, help="Threshold of relative difference in mean", default=1.5)
-    rel_val_parser.add_argument("--rel-entries-diff", dest="rel_entries_diff", type=float, help="Threshold of relative difference in number of entries", default=0.01)
+    rel_val_parser.add_argument("--chi2-threshold", dest="chi2_threshold", type=float, help="Chi2 threshold", default=1.5)
+    rel_val_parser.add_argument("--rel-mean-diff-threshold", dest="rel_mean_diff_threshold", type=float, help="Threshold of relative difference in mean", default=1.5)
+    rel_val_parser.add_argument("--rel-entries-diff-threshold", dest="rel_entries_diff_threshold", type=float, help="Threshold of relative difference in number of entries", default=0.01)
     rel_val_parser.add_argument("--select-critical", dest="select_critical", action="store_true", help="Select the critical histograms and dump to file")
     rel_val_parser.add_argument("--threshold", type=float, default=0.1, help="threshold for how far file sizes are allowed to diverge before warning")
     rel_val_parser.add_argument("--with-type-hits", dest="with_type_hits", action="store_true", help="include hit comparison when RelVal when run on simulation directories")
@@ -682,13 +922,19 @@ def main():
     rel_val_parser.add_argument("--with-type-analysis", dest="with_type_analysis", action="store_true", help="include analysis RelVal when run on simulation directories")
     rel_val_parser.add_argument("--with-type-qc", dest="with_type_qc", action="store_true", help="include QC RelVal when run on simulation directories")
     rel_val_parser.add_argument("--no-plots", dest="no_plots", action="store_true", help="disable plotting")
+    rel_val_parser.add_argument("--use-values-as-thresholds", dest="use_values_as_thresholds", help="Use values from another run as thresholds for this one")
     rel_val_parser.add_argument("--output", "-o", help="output directory", default="rel_val")
     rel_val_parser.set_defaults(func=rel_val)
 
     inspect_parser = sub_parsers.add_parser("inspect")
     inspect_parser.add_argument("path", help="either complete file path to a Summary.json or SummaryGlobal.json or directory where one of the former is expected to be")
-    inspect_parser.add_argument("--severity", nargs="*", default=["BAD", "CRIT_NC"], choices=REL_VAL_SEVERITY_MAP.keys(), help="Choose severity levels to search for")
     inspect_parser.set_defaults(func=inspect)
+
+    compare_parser = sub_parsers.add_parser("compare", parents=[common_file_parser])
+    compare_parser.add_argument("--output", "-o", help="output directory", default="rel_val_comparison")
+    compare_parser.add_argument("--difference", action="store_true", help="plot histograms with different severity")
+    compare_parser.add_argument("--compare-values", action="store_true", help="plot value and threshold comparisons of RelVals")
+    compare_parser.set_defaults(func=compare)
 
     influx_parser = sub_parsers.add_parser("influx")
     influx_parser.add_argument("--dir", help="directory where ReleaseValidation was run", required=True)

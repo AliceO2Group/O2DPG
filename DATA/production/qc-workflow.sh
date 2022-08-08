@@ -5,6 +5,11 @@ if [[ -z "$WORKFLOW" ]] || [[ -z "$MYDIR" ]]; then
   exit 1
 fi
 
+if [[ ! -z $GEN_TOPO_QC_JSON_FILE ]]; then
+  exec 101>$GEN_TOPO_QC_JSON_FILE.lock || exit 1
+  flock 101 || exit 1
+fi
+
 if [[ -z $QC_JSON_FROM_OUTSIDE && ! -z $GEN_TOPO_QC_JSON_FILE && -f $GEN_TOPO_QC_JSON_FILE ]]; then
   QC_JSON_FROM_OUTSIDE=$GEN_TOPO_QC_JSON_FILE
 elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
@@ -44,7 +49,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
       fi
     fi
     [[ -z "$QC_JSON_CPV" ]] && QC_JSON_CPV=consul://o2/components/qc/ANY/any/cpv-physics-qcmn-epn
-    [[ -z "$QC_JSON_TRD" ]] && QC_JSON_TRD=consul://o2/components/qc/ANY/any/trd-full-qcmn-norawdatastats-epn
+    [[ -z "$QC_JSON_TRD" ]] && QC_JSON_TRD=consul://o2/components/qc/ANY/any/trd-full-qcmn-nopulseheight-epn
     [[ -z "$QC_JSON_PHS" ]] && QC_JSON_PHS=consul://o2/components/qc/ANY/any/phos-raw-clusters-epn
     [[ -z "$QC_JSON_PRIMVTX" ]] && QC_JSON_PRIMVTX=consul://o2/components/qc/ANY/any/vertexing-qc
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json
@@ -58,7 +63,13 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
   elif [[ $SYNCMODE == 1 ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
-    [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft.json
+    if [[ -z "$QC_JSON_MFT" ]]; then
+      if has_processing_step MFT_RECO; then
+        QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft_track.json
+      else
+        QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft.json
+      fi
+    fi
     [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=$O2DPG_ROOT/DATA/production/qc-sync/tof.json
     [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=$O2DPG_ROOT/DATA/production/qc-sync/fdd.json
     [[ -z "$QC_JSON_FT0" ]] && QC_JSON_FT0=$O2DPG_ROOT/DATA/production/qc-sync/ft0.json
@@ -136,7 +147,10 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     fi
   done
 
-  for i in $(echo $LIST_OF_GLORECO | sed "s/,/ /g"); do
+  LIST_OF_GLOQC=
+  has_detectors_reco ITS TPC && has_detector_matching ITSTPC && add_comma_separated LIST_OF_GLOQC ITSTPC
+  has_detectors_reco ITS && has_detector_matching PRIMVTX && add_comma_separated LIST_OF_GLOQC PRIMVTX
+  for i in $(echo $LIST_OF_GLOQC | sed "s/,/ /g"); do
     GLO_JSON_FILE="QC_JSON_$i"
     if has_detector_matching $i && has_matching_qc $i && [ ! -z "${!GLO_JSON_FILE}" ]; then
       add_QC_JSON $i ${!GLO_JSON_FILE}
@@ -187,6 +201,10 @@ fi
 
 if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
   add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM:---local --host ${QC_HOST:-localhost}} ${QC_CONFIG}"
+fi
+
+if [[ ! -z $GEN_TOPO_QC_JSON_FILE ]]; then
+  flock -u 101 || exit 1
 fi
 
 true # everything OK up to this point, so the script should return 0 (it is !=0 if the last check failed)

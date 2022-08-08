@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import os
+import subprocess
+import threading
 import sys
 import shlex
 import tempfile
@@ -47,6 +49,12 @@ if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRI
     os.environ['RECO_NUM_NODES_WORKFLOW'] = str(reco_num_nodes_override)
 else:
     reco_num_nodes_override = 0
+
+modulecmd = " module purge ; "
+if 'GEN_TOPO_OVERRIDE_MODULE_DIR' in os.environ:
+    mod.module('unuse', '/opt/alisw/el8/modulefiles')
+    mod.module('use', os.environ['GEN_TOPO_OVERRIDE_MODULE_DIR'])
+    modulecmd += ' module unuse /opt/alisw/el8/modulefiles 2>&1 ; module use ' + os.environ['GEN_TOPO_OVERRIDE_MODULE_DIR'] + ' 2>&1 ; '
 
 f = open(sys.argv[1], 'r')
 for line in f:
@@ -97,14 +105,17 @@ for line in f:
             if NO_PROCESSING_MODE and len(args) > 2:
                 print('Cannot use DPL workflow together with DD mode', os.environ['DDMODE'])
                 raise
-            for i in range(2, len(args)):
+                
+            def processSubtopology(i, args, tmpdir, reconodes, reconodesmin, recoworkflows, calibworkflows, calibworkflowsdds):
                 filename = tmpdir + '/wf' + str(i) + '.dds'
+                calibcores = '1'
                 if args[i].startswith('reco'):
                     wf = args[i].split(',', 3)
                     is_calib_workflow = 0
                 elif args[i].startswith('calib'):
                     wf = args[i].split(',', 2)
                     wf.append(wf[2])
+                    calibcores = wf[1]
                     wf[1] = '1';
                     wf[2] = wf[1]
                     is_calib_workflow = 1
@@ -123,8 +134,8 @@ for line in f:
                 if os.environ['WORKFLOWMODE'] == 'print':
                   command += ' > ' + filename
                 print('Running DPL command', command)
-                retVal = os.system(command)
-                if retVal != 0:
+                retVal = subprocess.run(command, shell=True)
+                if retVal.returncode != 0:
                     print('Error (' + str(retVal) + ') running command', command)
                     ftmp = open(filename, 'r')
                     rg = re.compile('^<topology')
@@ -145,9 +156,17 @@ for line in f:
                                 isempty = 0
                                 break
                         if isempty:
-                            continue
+                            return
                     calibworkflows.append(filename)
-                    calibworkflowsdds.append(filename + ':' + wf[1])
+                    calibworkflowsdds.append(filename + ':' + calibcores)
+            
+            subtopologyThreads = []
+            for i in range(2, len(args)):
+                t = threading.Thread(target = processSubtopology, args = (i, args, tmpdir, reconodes, reconodesmin, recoworkflows, calibworkflows, calibworkflowsdds))
+                t.start()
+                subtopologyThreads.append(t)
+            for t in subtopologyThreads:
+                t.join()
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
                 reconodesmin = min(reconodes, reconodesmin)
@@ -183,7 +202,7 @@ for line in f:
                 if 'GEN_TOPO_STDERR_LOGGING' in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
                     odccommand += ' --mon tools/monitoring_workflows/epnstderrlog.xml'
                 if args[1] != '':
-                    odccommand += ' --prependexe "module load ' + args[1] + ' 2>&1 ; "'
+                    odccommand += ' --prependexe "' + modulecmd + ' module load ' + args[1] + ' 2>&1 ; "'
                 odccommand += ' -o ' + sys.argv[3]
                 print('Running ODC command', odccommand)
                 if os.system(odccommand) != 0:

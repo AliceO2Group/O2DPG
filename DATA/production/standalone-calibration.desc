@@ -1,3 +1,5 @@
+FT0-time-offset-calibration: "O2PDPSuite" reco,1,1,"production/calib/ft0-timeoffset-processing.sh" calib,1,"production/calib/ft0-timeoffset-aggregator.sh"
+
 ITS-noise-calibration: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 production/calib/its-noise-processing.sh" calib,20,"NTHREADS=32 production/calib/its-noise-aggregator.sh"
 
 ITS-noise-calibration-clusters: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 USECLUSTERS=1 production/calib/its-noise-processing.sh" calib,20,"USECLUSTERS=1 NTHREADS=32 production/calib/its-noise-aggregator.sh"
@@ -12,7 +14,7 @@ TPC-pulser: "O2PDPSuite" reco,1,1," production/calib/tpc-pulser.sh"
 
 TPC-pedestal: "O2PDPSuite" reco,1,1," production/calib/tpc-pedestal.sh"
 
-TPC-laser: "O2PDPSuite" reco,1,1,"SHMSIZE=$((64 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) HOSTMEMSIZE=$(( 5 << 30 ))  production/calib/tpc-laser.sh"
+TPC-laser: "O2PDPSuite" reco,1,1,"SHMSIZE=$((112 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) HOSTMEMSIZE=$(( 5 << 30 ))  production/calib/tpc-laser.sh"
 
 MFT-noise-calibration: "O2PDPSuite" reco,20,20,"production/calib/mft-noise-processing.sh" calib,20,"production/calib/mft-noise-aggregator.sh"
 
@@ -23,3 +25,6 @@ MID-calib-workflow: "O2PDPSuite" reco,1,1,"production/calib/mid-badchannels.sh"
 PHS-pedestal-calibration: "O2PDPSuite" reco,1,1," production/calib/phs-pedestal.sh"
 
 PHS-led-calibration: "O2PDPSuite" reco,1,1," production/calib/phs-led.sh"
+
+HMP-pedestals: "O2PDPSuite" reco,1,1," production/calib/hmp-pedestals-processing.sh"
+

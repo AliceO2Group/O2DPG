@@ -154,14 +154,16 @@ ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
 ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 
 # TFDELAY and throttling
-TFDELAYSECONDS=40
+export TFDELAYSECONDS=40
 if [[ -n "$ALIEN_JDL_TFDELAYSECONDS" ]]; then
   TFDELAYSECONDS="$ALIEN_JDL_TFDELAYSECONDS"
 # ...otherwise, it depends on whether we have throttling
 elif [[ -n "$ALIEN_JDL_USETHROTTLING" ]]; then
   TFDELAYSECONDS=8
-  TIMEFRAME_RATE_LIMIT=1
+  export TIMEFRAME_RATE_LIMIT=1
 fi
+
+echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS} TIMEFRAME_RATE_LIMIT ${TIMEFRAME_RATE_LIMIT}"
 
 # reco and matching
 # print workflow
