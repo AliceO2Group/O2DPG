@@ -77,4 +77,11 @@ def create_sim_config(args):
         add(config, {"MFTTracking.forceZeroField" : 0,
                      "MFTTracking.LTFclsRCut" : 0.0100})
 
+    # Forward matching settings
+    if args.fwdmatching_4_param == True:
+        add(config, {"FwdMatching.matchFcn" : "matchsXYPhiTanl"})
+    if args.fwdmatching_cut_4_param == True:
+        add(config, {"FwdMatching.cutFcn" : "cut3SigmaXYAngles"})
+
+
     return config
