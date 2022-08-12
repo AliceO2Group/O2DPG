@@ -43,7 +43,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     fi
     if [[ -z "$QC_JSON_MID" ]]; then
       if has_detector MID && has_processing_step MID_RECO; then
-        QC_JSON_MID=consul://o2/components/qc/ANY/any/mid-flp_raw-epn_full-qcmn
+        QC_JSON_MID=consul://o2/components/qc/ANY/any/mid-full-qcmn
       else
         QC_JSON_MID=consul://o2/components/qc/ANY/any/mid-flp_raw-epn_digits-qcmn
       fi
