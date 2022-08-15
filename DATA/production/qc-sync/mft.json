@@ -54,7 +54,11 @@
         },
         "taskParameters": {
           "FLP": "0",
-          "NoiseScan": "0"
+          "NoiseScan" : "0",
+          "maxDigitROFSize" : "5000",
+          "maxDuration" : "60000",
+          "timeBinSize" : "0.1",
+          "ROFLengthInBC" : "198"
         },
         "location": "local",
         "localMachines": [
@@ -79,6 +83,13 @@
           "epn",
           "localhost"
         ],
+        "taskParameters" : {
+          "maxClusterROFSize" : "5000",
+          "maxDuration" : "60000",
+          "timeBinSize" : "0.1",
+          "ROFLengthInBC" : "198",
+          "geomFileName" : "o2sim_geometry-aligned.root"
+        },
         "remoteMachine": "alio2-cr1-qme05.cern.ch",
         "remotePort": "47797",
         "localControl": "odc"
