@@ -466,6 +466,8 @@ class WorkflowExecutor:
       self.internalmonitorid = 0 # internal use
       self.tids_marked_toretry = [] # sometimes we might want to retry a failed task (simply because it was "unlucky") and we put them here
       self.retry_counter = [ 0 for tid in range(len(self.taskuniverse)) ] # we keep track of many times retried already
+      self.task_retries = [ self.workflowspec['stages'][tid].get('retry_count',0) for tid in range(len(self.taskuniverse)) ] # the per task specific "retry" number -> needs to be parsed from the JSON
+
       self.semaphore_values = { self.workflowspec['stages'][tid].get('semaphore'):0 for tid in range(len(self.taskuniverse)) if self.workflowspec['stages'][tid].get('semaphore')!=None } # keeps current count of semaphores (defined in the json workflow). used to achieve user-defined "critical sections".
 
     def SIGHandler(self, signum, frame):
@@ -799,7 +801,7 @@ class WorkflowExecutor:
             if returncode != 0:
                print (str(self.idtotask[tid]) + ' failed ... checking retry')
                # we inspect if this is something "unlucky" which could be resolved by a simple resubmit
-               if self.is_worth_retrying(tid) and self.retry_counter[tid] < int(args.retry_on_failure):
+               if self.is_worth_retrying(tid) and ((self.retry_counter[tid] < int(args.retry_on_failure)) or (self.retry_counter[tid] < int(self.task_retries[tid]))):
                  print (str(self.idtotask[tid]) + ' to be retried')
                  actionlogger.info ('Task ' + str(self.idtotask[tid]) + ' failed but marked to be retried ')
                  self.tids_marked_toretry.append(tid)
