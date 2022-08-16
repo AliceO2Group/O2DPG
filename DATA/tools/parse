@@ -128,6 +128,8 @@ for line in f:
                 if reco_num_nodes_override == 0:
                   os.environ['RECO_NUM_NODES_WORKFLOW'] = wf[1]
                 command_preopt = 'GEN_TOPO_CALIB_WORKFLOW=' + str(is_calib_workflow)
+                if is_calib_workflow:
+                    command_preopt += ' GEN_TOPO_CALIB_NCORES=' + calibcores
                 if os.environ['WORKFLOWMODE'] == 'dds':
                     command_preopt += ' WORKFLOWMODE_FILE=' + filename
                 command = command_preopt + ' GLOBALDPLOPT+=" -b --dds-workflow-suffix _' + wf[0] + str(i) + '" ' + wf[3]
