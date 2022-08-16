@@ -80,7 +80,11 @@ if [[ $EPNSYNCMODE == 0 ]]; then
   if [[ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=""; fi # No FLP processing by default when we do not run the sync EPN workflow, e.g. full system test will also run full FLP processing
 else # Defaults when running on the EPN
   if [[ "0$GEN_TOPO_CALIB_WORKFLOW" != "01" ]]; then
-    if [[ -z "$SHMSIZE" ]];              then export SHMSIZE=$(( 32 << 30 )); fi
+    if [[ -z $GEN_TOPO_CALIB_NCORES ]]; then
+      if [[ -z "$SHMSIZE" ]];              then export SHMSIZE=$(( 32 << 30 )); fi
+    else
+      if [[ -z "$SHMSIZE" ]];              then export SHMSIZE=$(( ($GEN_TOPO_CALIB_NCORES * 2) << 30 )); fi
+    fi
   else
     if [[ -z "$SHMSIZE" ]];              then export SHMSIZE=$(( 112 << 30 )); fi
   fi
