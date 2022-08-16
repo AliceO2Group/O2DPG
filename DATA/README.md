@@ -90,6 +90,10 @@ To set up such a workflow, a couple of points must be followed:
 - The output proxies must use the command line option `--proxy-channel-name [name]` with `name` being the configured channel name.
 - To run on the EPN, the *calib* input proxies of the aggregatornodes must have the command line option `--network-interface ib0` (this ensures data is sent via InfiniBand not via Ethernet). Note that this is only for the aggregator node, not for the normal processing part!
 
+Please note that for a calibration workflow the number of cores used by the workflow must be specified, and the memory limit is derrived from the number of cores (~4 GB per core, with some margin reserved for the system).
+If `SHMSIZE` is set for the workflow, it must also fit in this memory constraint. A rough guideline is 50% of the available memory. If it is not set, it defaults to 2 GB pre core.
+Please make to request a reasonable number of cores, since there are only 4 calibration nodes which are shared among all workflows.
+
 For an example, chek the calibration workflows [here](testing/examples)
 
 *NOTE* For reference, to run a workflow with calib aggregator on the EPN with AliECS, currently a node from the `calib` zone must be requested, by setting `odc_resources` to `[ {"zone":"online", "n":10}, {"zone":"calib", "n":1 } ]` (adjust the `10` to the number of required reconstruction nodes). This will be improved later and then this extra setting will not be needed anymore.
