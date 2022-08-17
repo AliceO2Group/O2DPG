@@ -224,14 +224,14 @@ def make_generic_histograms_from_log_file(filenames1, filenames2, output_filepat
     values2 = [[] for _ in names]
 
     for filename in filenames1:
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             for line in f:
                 for i, (pattern, field_number) in enumerate(zip(patterns, field_numbers)):
                     if not re.search(pattern, line):
                         continue
                     values1[i].append(float(line.split()[field_number]))
     for filename in filenames2:
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             for line in f:
                 for i, (pattern, field_number) in enumerate(zip(patterns, field_numbers)):
                     if not re.search(pattern, line):
