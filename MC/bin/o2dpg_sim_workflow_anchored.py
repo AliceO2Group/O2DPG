@@ -128,7 +128,7 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
     """
 
     # make a simple HTTP request on the "browsing" endpoint
-    url="http://alice-ccdb.cern.ch/browse/GLO/Config/GRPECS/run_number="+str(run_number)
+    url="http://alice-ccdb.cern.ch/browse/GLO/Config/GRPECS/runNumber="+str(run_number)
     ansobject=requests.get(url)
     tokens=ansobject.text.split("\n")
     # look for the validity token
