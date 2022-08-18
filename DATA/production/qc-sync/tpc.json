@@ -20,7 +20,7 @@
         "url": "http://ali-consul.cern.ch:8500"
       },
       "conditionDB": {
-        "url": "http://localhost:8084"
+        "url": "http://alice-ccdb.cern.ch"
       }
     },
     "tasks": {
