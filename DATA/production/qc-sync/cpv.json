@@ -19,7 +19,7 @@
           "url": "alio2-cr1-hv-aliecs:8500"
       },
       "conditionDB": {
-        "url": "http://localhost:8084/"
+        "url": "http://alice-ccdb.cern.ch/"
       }
     },
     "tasks": {
