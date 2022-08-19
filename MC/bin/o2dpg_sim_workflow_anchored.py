@@ -238,11 +238,18 @@ def main():
     # make a CCDB accessor object
     ccdbreader = CCDBAccessor(args.ccdb_url)
     # fetch the EOR/SOR
-    # retrieve_sor_eor(ccdbreader, args.run_number) # <-- from RCT/Info
+    rct_sor_eor = retrieve_sor_eor(ccdbreader, args.run_number) # <-- from RCT/Info
     sor_eor = retrieve_sor_eor_fromGRPECS(ccdbreader, args.run_number)
     if not sor_eor:
        print ("No time info found")
        sys.exit(1)
+
+    # verify that the variaous sor_eor information are the same
+    if sor_eor["SOR"] != rct_sor_eor["SOR"]:
+       print ("Inconsistent SOR information on CCDB")
+
+    if sor_eor["EOR"] != rct_sor_eor["EOR"]:
+       print ("Inconsistent EOR information on CCDB")
 
     # determine timestamp, and production offset for the final
     # MC job to run
