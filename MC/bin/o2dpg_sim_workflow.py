@@ -254,8 +254,8 @@ if (includeLocalQC or includeFullQC) and not isdir(qcdir):
 orbitsPerTF=256
 GRP_TASK = createTask(name='grpcreate', cpu='0')
 GRP_TASK['cmd'] = 'o2-grp-simgrp-tool createGRPs --run ' + str(args.run) + ' --publishto ${ALICEO2_CCDB_LOCALCACHE:-.ccdb} -o grp --hbfpertf ' + str(orbitsPerTF) + ' --field ' + args.field
-GRP_TASK['cmd'] += ' --readoutDets ' + " ".join(activeDetectors) + ' --print '
-if len(args.bcPatternFile) > 0:
+GRP_TASK['cmd'] += ' --readoutDets ' + " ".join(activeDetectors) + ' --print ' + ('','--lhcif-CCDB')[args.run_anchored]
+if (not args.run_anchored == True) and len(args.bcPatternFile) > 0:
     GRP_TASK['cmd'] += '  --bcPatternFile ' + str(args.bcPatternFile)
 workflow['stages'].append(GRP_TASK)
 
@@ -1069,8 +1069,10 @@ for tf in range(1, NTIMEFRAMES + 1):
   # produce AOD
   # -----------
    # TODO This needs further refinement, sources and dependencies should be constructed dynamically
-   aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FDD,CTP,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TRD-TOF,EMC'
+   aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FDD,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TRD-TOF'
    aodneeds = [PVFINDERtask['name'], SVFINDERtask['name']]
+   if isActive('CTP'):
+     aodinfosources += ',CTP'
    if isActive('FV0'):
      aodneeds += [ FV0RECOtask['name'] ]
      aodinfosources += ',FV0'
@@ -1080,6 +1082,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      aodneeds += [ TRDTRACKINGtask2['name'] ]
    if isActive('EMC'):
      aodneeds += [ EMCRECOtask['name'] ]
+     aodinfosources += ',EMC'
    if isActive('CPV'):
      aodneeds += [ CPVRECOtask['name'] ]
    if isActive('PHS'):
