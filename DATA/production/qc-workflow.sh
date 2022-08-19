@@ -193,6 +193,10 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
       unlink $MERGED_JSON_FILENAME.bak
       QC_CONFIG+="--override-values \"qc.config.database.host=ccdb-test.cern.ch:8080\""
     fi
+
+    if [[ "0$GEN_TOPO_QC_OVERRIDE_CCDB_SERVER" != "0" ]]; then
+      sed -i 's,http://alice-ccdb.cern.ch,$GEN_TOPO_QC_OVERRIDE_CCDB_SERVER,g' $MERGED_JSON_FILENAME
+    fi
     QC_JSON_FROM_OUTSIDE="$MERGED_JSON_FILENAME"
   fi
 
