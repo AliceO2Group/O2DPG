@@ -200,6 +200,7 @@ for line in f:
                 odccommand += ' --n ' + str(reconodes)
                 odccommand += ' --nmin ' + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
                 if len(calibworkflows):
+                    calibworkflowsdds.sort(key=lambda x:int(x.split(':')[1])*-1)
                     odccommand += ' --calib ' + ' '.join(calibworkflowsdds)
                 if 'GEN_TOPO_STDERR_LOGGING' in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
                     odccommand += ' --mon tools/monitoring_workflows/epnstderrlog.xml'
