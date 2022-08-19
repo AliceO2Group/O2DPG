@@ -60,45 +60,16 @@ def create_sim_config(args):
                        "pvertexer.maxMultRatDebris": 1.,
                        "pvertexer.dbscanAdaptCoef" : 20,
                        "pvertexer.maxVerticesPerCluster" : 20,
-                       "pvertexer.dbscanMaxDist2" : 36,
-                       "ITSCATrackerParam.sysErrY2[0]": 0.,
-                       "ITSCATrackerParam.sysErrY2[1]": 0.,
-                       "ITSCATrackerParam.sysErrY2[2]": 0.,
-                       "ITSCATrackerParam.sysErrY2[3]": 0.,
-                       "ITSCATrackerParam.sysErrY2[4]": 0.,
-                       "ITSCATrackerParam.sysErrY2[5]": 0.,
-                       "ITSCATrackerParam.sysErrY2[6]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[0]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[1]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[2]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[3]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[4]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[5]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[6]": 0.})
+                       "pvertexer.dbscanMaxDist2" : 36})
        else:
           # generic pp
           # remove extra errors on time margin for tracks and ITS clusters
-          add(config, {"pvertexer.timeMarginTrackTime" : 0.,
-                       "pvertexer.acceptableScale2" : 9,
+          add(config, {"pvertexer.acceptableScale2" : 9,
                        "pvertexer.dbscanMaxDist2" : 36,
                        "pvertexer.dbscanDeltaT" : 24,
                        "pvertexer.maxChi2TZDebris" : 100,
                        "pvertexer.maxMultRatDebris" : 1.,
-                       "pvertexer.dbscanAdaptCoef" : 20.,
-                       "ITSCATrackerParam.sysErrY2[0]": 0.,
-                       "ITSCATrackerParam.sysErrY2[1]": 0.,
-                       "ITSCATrackerParam.sysErrY2[2]": 0.,
-                       "ITSCATrackerParam.sysErrY2[3]": 0.,
-                       "ITSCATrackerParam.sysErrY2[4]": 0.,
-                       "ITSCATrackerParam.sysErrY2[5]": 0.,
-                       "ITSCATrackerParam.sysErrY2[6]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[0]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[1]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[2]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[3]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[4]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[5]": 0.,
-                       "ITSCATrackerParam.sysErrZ2[6]": 0.})
+                       "pvertexer.dbscanAdaptCoef" : 20.})
 
     # MFT tracking settings
     if args.mft_reco_full == True:
