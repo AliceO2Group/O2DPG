@@ -131,9 +131,8 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
     url="http://alice-ccdb.cern.ch/browse/GLO/Config/GRPECS/runNumber="+str(run_number)
     ansobject=requests.get(url)
     tokens=ansobject.text.split("\n")
-    # look for the validity token
 
-    # look for the ID token
+    # look for the FIRST ID and validity token
     ID=None
     VALIDITY=None
     for t in tokens:
@@ -156,7 +155,7 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
 
     # we make a suitable request (at the start time) --> this gives the actual
     # object, with which we can query the end time as well
-    grp=retrieve_CCDBObject_asJSON(ccdbreader, "/GLO/Config/GRPECS", int(SOV))
+    grp=retrieve_CCDBObject_asJSON(ccdbreader, "/GLO/Config/GRPECS" + "/runNumber=" + str(run_number) + "/", int(SOV))
 
     # check that this object is really the one we wanted based on run-number
     assert(int(grp["mRun"]) == int(run_number))
