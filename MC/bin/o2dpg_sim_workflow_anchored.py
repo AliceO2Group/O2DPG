@@ -12,6 +12,7 @@ import os
 import requests
 import re
 import json
+import math
 
 # Creates a time anchored MC workflow; positioned within a given run-number (as function of production size etc)
 
@@ -46,6 +47,8 @@ class CCDBAccessor:
 
         # this is used for the actual fetching for now
         o2.ccdb.BasicCCDBManager.instance().setURL(url)
+        # we allow nullptr responsens and will treat it ourselves
+        o2.ccdb.BasicCCDBManager.instance().setFatalWhenNull(False)
 
     def list(self, path, dump_path=None):
         ret = self.api.list(path, False, "application/json")
@@ -113,17 +116,15 @@ def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp, objtype_external = N
     if objtype == None:
        return None
 
-    print (objtype)
     ts, obj = ccdbreader.fetch(path, objtype, timestamp)
-    print (obj)
     # convert object to json
     jsonTString = TBufferJSON.ConvertToJSON(obj, TClass.GetClass(objtype))
     return json.loads(jsonTString.Data())
 
 def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
     """
-    Retrieves start of run (sor) and end of run (eor) given a run number
-    from via the GRPECS object. We first need to find the right object
+    Retrieves start of run (sor), end of run (eor) and other global parameters from the GRPECS object,
+    given a run number. We first need to find the right object
     ... but this is possible with a browsing request and meta_data filtering.
     """
 
@@ -157,6 +158,7 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
     # object, with which we can query the end time as well
     grp=retrieve_CCDBObject_asJSON(ccdbreader, "/GLO/Config/GRPECS" + "/runNumber=" + str(run_number) + "/", int(SOV))
 
+
     # check that this object is really the one we wanted based on run-number
     assert(int(grp["mRun"]) == int(run_number))
 
@@ -164,14 +166,20 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
     EOR=int(grp["mTimeEnd"])
     # fetch orbit reset to calculate orbitFirst
     ts, oreset = ccdbreader.fetch("CTP/Calib/OrbitReset", "vector<Long64_t>", timestamp = SOR)
+    print ("All orbit resets")
+    for i in range(len(oreset)):
+        print (" oreset " + str(i) + " " + str(oreset[i]))
+
     print ("OrbitReset:", int(oreset[0]))
     print ("RunStart:", SOR)
 
     orbitFirst = int((1000*SOR - oreset[0])//LHCOrbitMUS)  # calc done in microseconds
-    print ("OrbitFirst", orbitFirst)
+    orbitLast = int((1000*EOR - oreset[0])//LHCOrbitMUS) 
+    print ("OrbitFirst", orbitFirst) # first orbit of this run
+    print ("LastOrbit of run", orbitLast)
 
     # orbitReset.get(run_number)
-    return {"SOR": SOR, "EOR": EOR, "FirstOrbit" : orbitFirst}
+    return {"SOR": SOR, "EOR": EOR, "FirstOrbit" : orbitFirst, "LastOrbit" : orbitLast, "OrbitsPerTF" : int(grp["mNHBFPerTF"])}
 
 def retrieve_GRP(ccdbreader, timestamp):
     """
@@ -182,11 +190,33 @@ def retrieve_GRP(ccdbreader, timestamp):
     if not header:
        print(f"WARNING: Could not download GRP object for timestamp {timestamp}")
        return None
-    ts, grp = reader.fetch(grp_path, "o2::parameters::GRPObject", timestamp = timestamp)
+    ts, grp = ccdbreader.fetch(grp_path, "o2::parameters::GRPObject", timestamp = timestamp)
     return grp
 
+def retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, run_number, finaltime):
+    """
+    retrieves the CTP scalers object for a given timestamp and run_number
+    and calculates the interation rate to be applied in Monte Carlo digitizers
+    """
+    path = "CTP/Calib/Scalers/runNumber=" + str(run_number)
+    ts, ctpscaler = ccdbreader.fetch(path, "o2::ctp::CTPRunScalers", timestamp = timestamp)
+    if ctpscaler != None:
+      ctpscaler.convertRawToO2()
+      rate = ctpscaler.getRateGivenT(finaltime,0,0)  # the simple FT0 rate from the counters
+      # print("Global rate " + str(rate.first) + " local rate " + str(rate.second))
 
-def determine_timestamp(sor, eor, splitinfo, cycle, ntf):
+      # now get the bunch filling object which is part of GRPLHCIF and calculate
+      # true rate (input from Chiara Zampolli)
+      ts, grplhcif = ccdbreader.fetch("GLO/Config/GRPLHCIF", "o2::parameters::GRPLHCIFData", timestamp = timestamp)
+      coll_bunches = grplhcif.getBunchFilling().getNBunches()
+      mu = - math.log(1. - rate.first / 11245 / coll_bunches)
+      finalRate = coll_bunches * mu * 11245
+      return finalRate
+
+    print (f"[ERROR]: Could not determine interaction rate; Some (external) default used")
+    return None
+
+def determine_timestamp(sor, eor, splitinfo, cycle, ntf, HBF_per_timeframe = 256):
     """
     Determines the timestamp and production offset variable based
     on the global properties of the production (MC split, etc) and the properties
@@ -198,7 +228,6 @@ def determine_timestamp(sor, eor, splitinfo, cycle, ntf):
     print (f"End-of-run : {eor}")
     time_length_inmus = 1000*(eor - sor) # time length in micro seconds
     timestamp_delta = time_length_inmus / totaljobs
-    HBF_per_timeframe = 128 # 128 orbits per timeframe --> should be taken from GRP or common constant in all O2DPG; note that 2023 has 32!!
 
     ntimeframes = time_length_inmus / (HBF_per_timeframe * LHCOrbitMUS)
     norbits = time_length_inmus / LHCOrbitMUS
@@ -232,6 +261,7 @@ def main():
     parser.add_argument("--cycle", type=int, help="MC cycle. Determines the sampling offset", default=0)
     parser.add_argument("--split-id", type=int, help="The split id of this job within the whole production --prod-split)", default=0)
     parser.add_argument("-tf", type=int, help="number of timeframes per job", default=1)
+    parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
 
@@ -242,40 +272,53 @@ def main():
     ccdbreader = CCDBAccessor(args.ccdb_url)
     # fetch the EOR/SOR
     rct_sor_eor = retrieve_sor_eor(ccdbreader, args.run_number) # <-- from RCT/Info
-    sor_eor = retrieve_sor_eor_fromGRPECS(ccdbreader, args.run_number)
-    if not sor_eor:
+    GLOparams = retrieve_sor_eor_fromGRPECS(ccdbreader, args.run_number)
+    if not GLOparams:
        print ("No time info found")
        sys.exit(1)
 
     # verify that the variaous sor_eor information are the same
-    if sor_eor["SOR"] != rct_sor_eor["SOR"]:
+    if GLOparams["SOR"] != rct_sor_eor["SOR"]:
        print ("Inconsistent SOR information on CCDB")
 
-    if sor_eor["EOR"] != rct_sor_eor["EOR"]:
+    if GLOparams["EOR"] != rct_sor_eor["EOR"]:
        print ("Inconsistent EOR information on CCDB")
 
     # determine timestamp, and production offset for the final
     # MC job to run
-    timestamp, prod_offset = determine_timestamp(sor_eor["SOR"], sor_eor["EOR"], [args.split_id, args.prod_split], args.cycle, args.tf)
+    timestamp, prod_offset = determine_timestamp(GLOparams["SOR"], GLOparams["EOR"], [args.split_id, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
     # this is anchored to
-    print ("Determined start-of-run to be: ", sor_eor["SOR"])
+    print ("Determined start-of-run to be: ", GLOparams["SOR"])
     print ("Determined timestamp to be : ", timestamp)
     print ("Determined offset to be : ", prod_offset)
+    print ("Determined start of run to be : ", GLOparams["SOR"])
 
+    currentorbit = GLOparams["FirstOrbit"] + prod_offset * GLOparams["OrbitsPerTF"] # orbit number at production start
+    currenttime = GLOparams["SOR"] + prod_offset * GLOparams["OrbitsPerTF"] * LHCOrbitMUS // 1000 # timestamp in milliseconds
+    print ("Production put at time : " + str(currenttime))
+
+    forwardargs = " ".join([ a for a in args.forward if a != '--' ])
+    # retrieve interaction rate
+    rate = None
+    if args.ccdb_IRate == True:
+       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000.)
+
+       if rate != None:
+         # if the rate calculation was successful we will use it, otherwise we fall back to some rate given as part
+         # of args.forward
+         # Regular expression pattern to match "interactioRate" followed by an integer
+         pattern = r"-interactionRate\s+\d+"
+         # Use re.sub() to replace the pattern with an empty string
+         forwardargs = re.sub(pattern, " ", forwardargs)
+         forwardargs += ' -interactionRate ' + str(int(rate))
+   
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
-    forwardargs = " ".join([ a for a in args.forward if a != '--' ]) + " -tf " + str(args.tf) + " --sor " + str(sor_eor["EOR"]) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(sor_eor["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb"
+    forwardargs += " -tf " + str(args.tf) + " --sor " + str(GLOparams["EOR"]) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"])
+    print ("forward args ", forwardargs)
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
     print ("Creating time-anchored workflow...")
     os.system(cmd)
-    # TODO:
-    # - we can anchor many more things at this level:
-    #   * field
-    #   * interaction rate
-    #   * vertex position
-    #   * ...
-    # - develop this into swiss-army tool:
-    #   * determine prod split based on sampling-fraction (support for production manager etc)
 
 if __name__ == "__main__":
   sys.exit(main())
