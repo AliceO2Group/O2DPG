@@ -178,6 +178,11 @@ has_pid_qc()
     return 0
 }
 
+has_track_source() 
+{
+  [[ $TRACK_SOURCES =~ (^|,)"$1"(,|$) ]]
+} 
+
 has_tof_matching_source()
 {
   [[ $TOF_SOURCES =~ (^|,)"$1"(,|$) ]]

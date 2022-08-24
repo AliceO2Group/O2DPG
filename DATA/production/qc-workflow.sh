@@ -36,7 +36,11 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall
     if [[ -z "$QC_JSON_MCH" ]]; then
       if has_detector MCH && has_processing_step MCH_RECO; then
-        QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full
+        if has_track_source "MCH-MID"; then
+          QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full-track-matching
+        else
+          QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full
+        fi
       else
         QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-digits
       fi
