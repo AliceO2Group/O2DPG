@@ -953,7 +953,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        # the --local-batch argument will make QC Tasks store their results in a file and merge with any existing objects
        task['cmd'] = f'{readerCommand} | o2-qc --config {configFilePath}' + \
                      f' --local-batch ../{qcdir}/{objectsFile}' + \
-                     f' --override-values "qc.config.Activity.number={args.run};qc.config.Activity.periodName={args.productionTag}"' + \
+                     f' --override-values "qc.config.Activity.number={args.run};qc.config.Activity.periodName={args.productionTag};qc.config.Activity.start={args.timestamp}"' + \
                      ' ' + getDPL_global_options()
        # Prevents this task from being run for multiple TimeFrames at the same time, thus trying to modify the same file.
        task['semaphore'] = objectsFile
