@@ -52,7 +52,11 @@ float getTPCvdrift(int run, std::string_view ltrUrl = "http://alice-ccdb.cern.ch
   c.init(ltrUrl.data());
   const auto ltrCalib = c.retrieveFromTFileAny<o2::tpc::LtrCalibData>(calibType.data(), metadata, minTime); /// timestamp in the run of interest
   const auto corr = ltrCalib->getDriftVCorrection();
-  const float vcorr = defaultDriftV / corr;
+  float vcorr = defaultDriftV / corr;
+  if (ltrCalib->refVDrift != 0) {
+    printf("refVDrift different from zero: %f (default was %f)\n", ltrCalib->refVDrift, defaultDriftV);
+    vcorr = ltrCalib->refVDrift / corr;
+  }
   printf("vdrift = %f\n", vcorr);
 
   ofstream fp("vdrift.txt");
