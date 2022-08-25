@@ -63,6 +63,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --pipeline tpc-raw-to-digits-0:20 \
     --remove-duplicates \
     --send-ce-digits \
+    --decoder-type 0 \
     | o2-tpc-reco-workflow $ARGS_ALL \
     --input-type digitizer  \
     --output-type "tracks,disable-writer" \
