@@ -68,7 +68,7 @@
         "remotePort": "47799"
       },
       "MFTClusterTask": {
-        "active": "true",
+        "active": "false",
         "className": "o2::quality_control_modules::mft::QcMFTClusterTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
@@ -133,7 +133,7 @@
         ]
       },
       "MFTClusterCheck": {
-        "active": "true",
+        "active": "false",
         "dataSource": [
           {
             "type": "Task",
@@ -200,7 +200,7 @@
   "dataSamplingPolicies": [
     {
       "id": "mft-clusters",
-      "active": "true",
+      "active": "false",
       "machines": [
         "epn",
         "localhost"
