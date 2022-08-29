@@ -23,7 +23,7 @@
         }
       },
       "tasks": {
-        "RecPointsQcTask": {
+        "RecPointsQcTaskFDD": {
           "active": "true",
           "className": "o2::quality_control_modules::fdd::RecPointsQcTask",
           "moduleName": "QcFDD",
