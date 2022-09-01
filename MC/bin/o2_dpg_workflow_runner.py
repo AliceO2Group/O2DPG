@@ -426,15 +426,24 @@ def update_resource_estimates(workflow, resource_json):
 
         new_resources = resource_dict[name]
 
-        task["resources"]["mem"] = new_resources.get("mem", task["resources"]["mem"])
+        oldmem = task["resources"]["mem"]
+        newmem = new_resources.get("mem", task["resources"]["mem"])
+        actionlogger.info("Updating mem estimate for " + task["name"] + " from " + str(oldmem) + " to " + str(newmem))
+        task["resources"]["mem"] = newmem
+        # should we really be correcting for relative_cpu, when we have an outer estimate ??
+        oldcpu = task["resources"]["cpu"]
+        newcpu = new_resources.get("cpu", task["resources"]["cpu"])
+        actionlogger.info("Updating cpu estimate for " + task["name"] + " from " + str(oldcpu) + " to " + str(newcpu))
+        task["resources"]["cpu"] = newcpu
+
         # CPU is a bit more invlolved
-        if "cpu" in new_resources:
-            cpu = new_resources["cpu"]
-            rel_cpu = task["resources"]["relative_cpu"]
-            if rel_cpu is not None:
-                # respect the relative CPU settings
-                cpu *= rel_cpu
-            task["resources"]["cpu"] = cpu
+        # if "cpu" in new_resources:
+        #    cpu = new_resources["cpu"]
+        #    rel_cpu = task["resources"]["relative_cpu"]
+        #    if rel_cpu is not None:
+        #        # respect the relative CPU settings
+        #        cpu *= rel_cpu
+        #    task["resources"]["cpu"] = cpu
 
 #
 # functions for execution; encapsulated in a WorkflowExecutor class
