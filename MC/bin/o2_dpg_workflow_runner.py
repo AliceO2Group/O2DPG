@@ -445,6 +445,43 @@ def update_resource_estimates(workflow, resource_json):
         #        cpu *= rel_cpu
         #    task["resources"]["cpu"] = cpu
 
+# a function to read a software environment determined by alienv into
+# a python dictionary
+def get_alienv_software_environment(packagestring):
+    """
+    packagestring is something like O2::v202298081-1,O2Physics::xxx
+    """
+    # alienv printenv packagestring --> dictionary
+    # for the moment this works with CVMFS only
+    cmd="/cvmfs/alice.cern.ch/bin/alienv printenv " + packagestring
+    proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+
+    envstring, err = proc.communicate()
+    # see if the printenv command was successful
+    if len(err.decode()) > 0:
+       print (err.decode())
+       raise Exception
+
+    # the software environment is now in the evnstring
+    # split it on semicolon
+    envstring=envstring.decode()
+    tokens=envstring.split(";")
+    # build envmap
+    envmap = {}
+    for t in tokens:
+      # check if assignment
+      if t.count("=") > 0:
+         assignment = t.rstrip().split("=")
+         envmap[assignment[0]] = assignment[1]
+      elif t.count("export") > 0:
+         # the case when we export or a simple variable
+         # need to consider the case when this has not been previously assigned
+         variable = t.split()[1]
+         if not variable in envmap:
+            envmap[variable]=""
+
+    return envmap
+
 #
 # functions for execution; encapsulated in a WorkflowExecutor class
 #
@@ -508,6 +545,9 @@ class WorkflowExecutor:
       self.task_retries = [ self.workflowspec['stages'][tid].get('retry_count',0) for tid in range(len(self.taskuniverse)) ] # the per task specific "retry" number -> needs to be parsed from the JSON
 
       self.semaphore_values = { self.workflowspec['stages'][tid].get('semaphore'):0 for tid in range(len(self.taskuniverse)) if self.workflowspec['stages'][tid].get('semaphore')!=None } # keeps current count of semaphores (defined in the json workflow). used to achieve user-defined "critical sections".
+      self.alternative_envs = {} # mapping of taskid to alternative software envs (to be applied on a per-task level)
+      # init alternative software environments
+      self.init_alternative_software_environments()
 
     def SIGHandler(self, signum, frame):
        # basically forcing shut down of all child processes
@@ -585,6 +625,15 @@ class WorkflowExecutor:
       # add task specific environment
       if self.workflowspec['stages'][tid].get('env')!=None:
           taskenv.update(self.workflowspec['stages'][tid]['env'])
+
+      # apply specific (non-default) software version, if any
+      # (this was setup earlier)
+      alternative_env = self.alternative_envs.get(tid, None)
+      if alternative_env != None:
+          actionlogger.info('Applying alternative software environment to task ' + self.idtotask[tid])
+          for entry in alternative_env:
+              # overwrite what is present in default
+              taskenv[entry] = alternative_env[entry]
 
       p = psutil.Popen(['/bin/bash','-c',c], cwd=workdir, env=taskenv)
       try:
@@ -958,6 +1007,24 @@ class WorkflowExecutor:
            copycommand='alien.py cp ' + fn + ' ' + str(location) + '@disk:1'
            actionlogger.info("Copying to alien " + copycommand)
            os.system(copycommand)
+
+    def init_alternative_software_environments(self):
+        """
+        Initiatialises alternative software environments for specific tasks, if there
+        is an annotation in the workflow specificiation.
+        """
+
+        environment_cache = {}
+        # go through all the tasks once and setup environment
+        for taskid in range(len(self.workflowspec['stages'])):
+          packagestr = self.workflowspec['stages'][taskid].get("alternative_alienv_package")
+          if packagestr == None:
+             continue
+
+          if environment_cache.get(packagestr) == None:
+             environment_cache[packagestr] = get_alienv_software_environment(packagestr)
+
+          self.alternative_envs[taskid] = environment_cache[packagestr]
 
 
     def analyse_files_and_connections(self):

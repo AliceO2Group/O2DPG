@@ -184,3 +184,45 @@ def check_workflow(workflow):
         print("===> Please check warnings and errors!")
 
     return is_sane
+
+# Adjusts software version for RECO (and beyond) stages
+# (if this is wished). Function implements specific wish from operations
+# to be able to operate with different sim and reco software versions (due to different speed of development and fixes and patching).
+def adjust_RECO_environment(workflowspec, package = ""):
+    if len(package) == 0:
+       return
+
+    # We essentially need to go through the graph and apply the mapping
+    # so take the workflow spec and see if the task itself or any child
+    # is labeled RECO ---> typical graph traversal with caching
+
+    # helper structures
+    taskuniverse = [ l['name'] for l in workflowspec['stages'] ]
+    tasktoid = {}
+    for i in range(len(taskuniverse)):
+        tasktoid[taskuniverse[i]]=i
+
+    matches_label = {}
+    # internal helper for recursive graph traversal
+    def matches_or_inherits_label(taskid, label, cache):
+        if cache.get(taskid) != None:
+           return cache[taskid]
+        result = False
+        if label in workflowspec['stages'][taskid]['labels']:
+           result = True
+        else:
+           # check mother tasks
+           for mothertask in workflowspec['stages'][taskid]['needs']:
+               motherid = tasktoid[mothertask]
+               if matches_or_inherits_label(motherid, label, cache):
+                  result = True
+                  break
+
+        cache[taskid] = result
+        return result
+
+    # fills the matches_label dictionary
+    for taskid in range(len(workflowspec['stages'])):
+        if (matches_or_inherits_label(taskid, "RECO", matches_label)):
+           # now we do the final adjust (as annotation) in the workflow itself
+           workflowspec['stages'][taskid]["alternative_alienv_package"] = package
