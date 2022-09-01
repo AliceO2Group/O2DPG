@@ -44,7 +44,14 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
     if ( has_detectors ITS TPC && has_detector_matching ITSTPC ); then
       if [[ -z ${CALIB_TPC_VDRIFTTGL+x} ]]; then CALIB_TPC_VDRIFTTGL=1; fi
     fi
-    if [[ -z ${CALIB_TPC_IDC+x} ]]; then CALIB_TPC_IDC=0; fi # default is off
+    # IDCs
+    if [[ -z ${CALIB_TPC_IDC+x} ]]; then
+      CALIB_TPC_IDC=0; # default is off
+    else
+      if [[ -z {$CALIB_TPC_IDC_BOTH+x} ]]; then
+	CALIB_TPC_IDC_BOTH=0;
+      fi # by default, A and C side are processed separately
+    fi
   fi
 
   # calibrations for TRD
@@ -104,13 +111,20 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo "CALIB_TPC_TIMEGAIN = $CALIB_TPC_TIMEGAIN" 1>&2
   echo "CALIB_TPC_RESPADGAIN = $CALIB_TPC_RESPADGAIN" 1>&2
   echo "CALIB_TPC_IDC = $CALIB_TPC_IDC" 1>&2
+  if [[ $CALIB_TPC_IDC == 1 ]]; then
+    if [[ ! -z $CALIB_TPC_IDC_BOTH == 1 ]]; then
+      echo "CALIB_TPC_IDC_BOTH = $CALIB_TPC_IDC_BOTH" 1>&2
+    else
+      echo "CALIB_TPC_IDC_BOTH not set, A and C side will be run separately"
+    fi
+  fi
   echo "CALIB_CPV_GAIN = $CALIB_CPV_GAIN" 1>&2
 fi
 
 # define spec for proxy for TF-based outputs from BARREL
 if [[ -z $CALIBDATASPEC_BARREL_TF ]]; then
   # prim vtx
-  if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]] ; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "pvtx:GLO/PVTX/0"; fi
+  if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "pvtx:GLO/PVTX/0"; fi
 
   # TOF
   if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibTOF:TOF/CALIBDATA/0"; fi
