@@ -43,8 +43,8 @@ def createTask(name='', needs=[], tf=-1, cwd='./', lab=[], cpu=1, relative_cpu=N
             working directory of this task, will be created automatically
         lab: list
             list of labels to be attached
-        cpu: int
-            absolute number of workers to be used
+        cpu: float
+            absolute number of CPU this task uses/needs on average
         relative_cpu: float or None
             if given, cpu is recomputed based on the number of available workers
         mem: int
