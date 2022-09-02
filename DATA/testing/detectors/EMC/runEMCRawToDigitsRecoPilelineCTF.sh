@@ -43,7 +43,6 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --infologger-severity warning \
     | o2-ctf-writer-workflow $ARGS_ALL \
     --configKeyValues "${CONFKEYVAL}" \
-    --no-grp \
     --onlyDet $WORKFLOW_DETECTORS \
     --ctf-dict "${CTF_DICT}" \
     --output-dir $CTF_DIR \
