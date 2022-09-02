@@ -22,7 +22,9 @@ for i in $(seq 0 $((CHIPMODBASE-1)))
 do
   WORKFLOW+="o2-its-threshold-calib-workflow -b --enable-eos --enable-single-pix-tag --ccdb-mgr-url=\"http://localhost:8084\" --nthreads 1 --chip-mod-selector $i --chip-mod-base $CHIPMODBASE --fittype derivative --output-dir \"/data/calibration\" --meta-output-dir \"/data/epn2eos_tool/epn2eos\" --meta-type \"calibration\" $ARGS_ALL | "
 done
-WORKFLOW+="o2-qc --config consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/its-qc-calibration --local --host epn -b $ARGS_ALL | "
+if workflow_has_parameter QC && has_detector_qc ITS; then
+  WORKFLOW+="o2-qc --config consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/its-qc-calibration --local --host epn -b $ARGS_ALL | "
+fi
 WORKFLOW+="o2-dpl-output-proxy ${ARGS_ALL} --dataspec \"$PROXY_OUTSPEC\" --proxy-channel-name its-thr-input-proxy --channel-config \"name=its-thr-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0\" | "
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
 
