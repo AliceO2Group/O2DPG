@@ -105,8 +105,8 @@ for line in f:
             if NO_PROCESSING_MODE and len(args) > 2:
                 print('Cannot use DPL workflow together with DD mode', os.environ['DDMODE'])
                 raise
-                
-            def processSubtopology(i, args, tmpdir, reconodes, reconodesmin, recoworkflows, calibworkflows, calibworkflowsdds):
+
+            def processSubtopology(i, args, tmpdir, reconodes, reconodesmin, recoworkflows, calibworkflows, calibworkflowsdds, threadsOK):
                 filename = tmpdir + '/wf' + str(i) + '.dds'
                 calibcores = '1'
                 if args[i].startswith('reco'):
@@ -137,6 +137,7 @@ for line in f:
                   command += ' > ' + filename
                 print('Running DPL command', command)
                 retVal = subprocess.run(command, shell=True)
+                print('Returned with ', retVal.returncode)
                 if retVal.returncode != 0:
                     print('Error (' + str(retVal) + ') running command', command)
                     ftmp = open(filename, 'r')
@@ -146,6 +147,7 @@ for line in f:
                             break
                         print(line, end='')
                     raise
+                threadsOK[i] = 1
                 if args[i].startswith('reco'):
                     recoworkflows.append(filename)
                 elif args[i].startswith('calib'):
@@ -161,14 +163,18 @@ for line in f:
                             return
                     calibworkflows.append(filename)
                     calibworkflowsdds.append(filename + ':' + calibcores)
-            
+
             subtopologyThreads = []
+            threadsOK = [0] * len(args)
             for i in range(2, len(args)):
-                t = threading.Thread(target = processSubtopology, args = (i, args, tmpdir, reconodes, reconodesmin, recoworkflows, calibworkflows, calibworkflowsdds))
+                t = threading.Thread(target = processSubtopology, args = (i, args, tmpdir, reconodes, reconodesmin, recoworkflows, calibworkflows, calibworkflowsdds, threadsOK))
                 t.start()
                 subtopologyThreads.append(t)
             for t in subtopologyThreads:
                 t.join()
+            for i in range(2, len(args)):
+                if not threadsOK[i]:
+                    raise
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
                 reconodesmin = min(reconodes, reconodesmin)
