@@ -30,6 +30,7 @@ if [[ -z "$IS_SIMULATED_DATA" ]]; then echo \$IS_SIMULATED_DATA missing; exit 1;
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]]; then echo \$GEN_TOPO_ODC_EPN_TOPO_ARGS missing; exit 1; fi
 if [[ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]]; then echo \$GEN_TOPO_EPN_CCDB_SERVER missing; exit 1; fi
 
+mkdir -p $GEN_TOPO_WORKDIR || { echo Error creating directory 1>&2; exit 1; }
 for i in `seq 1 100`; do
   exec 100>${GEN_TOPO_WORKDIR}/${i}.lock || { echo Cannot create file descriptor for lock file 1>&2; exit 1; }
   flock -n -E 100 100
