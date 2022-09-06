@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+
 using namespace std;
 
 TFile* fileSummaryOutput = nullptr;
@@ -31,7 +32,8 @@ enum options {
 // define a global epsilon
 double EPSILON = 0.00001;
 
-void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& currentPrefix = "");
+void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vector<std::string>& treePaths, std::string const& currentPrefix = "");
+void ExtractAndFlattenTrees(TDirectory* inDir1, std::vector<std::string> const& treePathsIntersection, std::unordered_map<std::string, TH1*>& histos);
 void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix = "");
 void ProcessDirCollection(TDirectoryFile* dirCollect);
 void WriteHisto(TH1* obj, TDirectory* outDir, std::string const& currentPrefix = "");
@@ -271,6 +273,16 @@ void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, 
   overlay1D(hA, hB, legend, compLabel, color, outputDir);
 }
 
+void extractFilenames(std::string const& filenames, std::vector<std::string>& vec, char sep = ',')
+{
+  vec.clear();
+  std::stringstream ss(filenames);
+  std::string seg;
+  while (std::getline(ss, seg, sep)) {
+    vec.push_back(seg);
+  }
+}
+
 // what to give as input:
 // 1) name and path of first file,
 // 2) name and path of second file,
@@ -279,7 +291,7 @@ void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, 
 // 6) select if files have to be taken from the grid or not
 // 7) choose if specific critic plots have to be saved in a second .pdf file
 
-void ReleaseValidation(const TString filename1, const TString filename2,
+void ReleaseValidation(std::string const& filenames1, std::string const& filenames2,
                        int whichTest = 1, double valueChi2 = 1.5, double valueMeanDiff = 1.5, double valueEntriesDiff = 0.01,
                        bool selectCritical = false, const char* inFilepathThreshold = "")
 {
@@ -291,30 +303,83 @@ void ReleaseValidation(const TString filename1, const TString filename2,
     return;
   }
 
-  if (filename1.BeginsWith("alien") || filename2.BeginsWith("alien")) {
-    // assume that this is on the GRID
-    TGrid::Connect("alien://");
-  }
-
-  // attempt to open input files and make sure they are open
-  TFile inFile1(filename1, "READ");
-  TFile inFile2(filename2, "READ");
-
-  if (!checkFileOpen(&inFile1)) {
-    std::cerr << "File " << filename1.Data() << " could not be opened\n";
-    return;
-  }
-  if (!checkFileOpen(&inFile2)) {
-    std::cerr << "File " << filename2.Data() << " could not be opened\n";
-    return;
-  }
-
-  // extract all histograms from input files and output them into a new file with a flat structure
+  std::vector<std::string> filenamesVec1;
+  std::vector<std::string> filenamesVec2;
+  std::vector<TFile*> files1;
+  std::vector<TFile*> files2;
+  extractFilenames(filenames1, filenamesVec1);
+  extractFilenames(filenames2, filenamesVec2);
   TFile extractedFile1("newfile1.root", "RECREATE");
-  ExtractAndFlattenDirectory(&inFile1, &extractedFile1);
-
   TFile extractedFile2("newfile2.root", "RECREATE");
-  ExtractAndFlattenDirectory(&inFile2, &extractedFile2);
+  std::vector<std::string> treePaths1;
+  std::vector<std::string> treePaths2;
+
+  for (auto& fn : filenamesVec1) {
+
+    if (fn.find("alien") == 0) {
+      // assume that this is on the GRID
+      TGrid::Connect("alien://");
+    }
+
+    // attempt to open input files and make sure they are open
+    files1.push_back(new TFile(fn.c_str(), "READ"));
+    auto& inFile = files1.back();
+
+    if (!checkFileOpen(inFile)) {
+      std::cerr << "File " << fn << " could not be opened\n";
+      return;
+    }
+    ExtractAndFlattenDirectory(inFile, &extractedFile1, treePaths1);
+  }
+
+  for (auto& fn : filenamesVec2) {
+
+    if (fn.find("alien") == 0) {
+      // assume that this is on the GRID
+      TGrid::Connect("alien://");
+    }
+
+    // attempt to open input files and make sure they are open
+    files2.push_back(new TFile(fn.c_str(), "READ"));
+    auto& inFile = files2.back();
+
+    if (!checkFileOpen(inFile)) {
+      std::cerr << "File " << fn << " could not be opened\n";
+      return;
+    }
+    ExtractAndFlattenDirectory(inFile, &extractedFile2, treePaths2);
+  }
+
+  std::sort(treePaths1.begin(), treePaths1.end());
+  treePaths1.erase(std::unique(treePaths1.begin(), treePaths1.end()), treePaths1.end());
+  std::sort(treePaths2.begin(), treePaths2.end());
+  treePaths2.erase(std::unique(treePaths2.begin(), treePaths2.end()), treePaths2.end());
+  std::vector<std::string> treePathsIntersection;
+  std::set_intersection(treePaths1.begin(), treePaths1.end(), treePaths2.begin(), treePaths2.end(), std::back_inserter(treePathsIntersection));
+
+  std::unordered_map<std::string, TH1*> histogramsFromTrees;
+  for (auto& fn : files1) {
+    ExtractAndFlattenTrees(fn, treePathsIntersection, histogramsFromTrees);
+  }
+  for (auto& it : histogramsFromTrees) {
+    if (!it.second) {
+      std::cerr << "WARNING: There was previously a problem with histogram " << it.first << ", not writing.\n";
+      continue;
+    }
+    WriteToDirectory(it.second, &extractedFile1);
+    it.second->Reset("ICEMS");
+  }
+  for (auto& fn : files2) {
+    ExtractAndFlattenTrees(fn, treePathsIntersection, histogramsFromTrees);
+  }
+  for (auto& it : histogramsFromTrees) {
+    if (!it.second) {
+      std::cerr << "WARNING: There was previously a problem with histogram " << it.first << ", not writing.\n";
+      continue;
+    }
+    WriteToDirectory(it.second, &extractedFile2);
+    it.second->Reset("ICEMS");
+  }
 
   // prepare summary plots
   int nkeys = extractedFile1.GetNkeys();
@@ -366,7 +431,7 @@ void ReleaseValidation(const TString filename1, const TString filename2,
 
     if (!hB) {
       // That could still happen in case we compare either comletely different file by accident or something has been changed/added/removed
-      std::cerr << "ERROR: Histogram " << oname << " not found in " << filename2 << ", continue with next\n";
+      std::cerr << "ERROR: Histogram " << oname << " not found in second batch continue with next\n";
       nNotFound++;
       continue;
     }
@@ -543,11 +608,17 @@ void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix)
 {
   std::string name = prefix + histo->GetName();
   histo->SetName(name.c_str());
+  auto hasObject = (TH1*)dir->Get(name.c_str());
+  if (hasObject) {
+    hasObject->Add(histo);
+    dir->WriteTObject(hasObject, name.c_str(), "Overwrite");
+    return;
+  }
   dir->WriteTObject(histo);
 }
 
 // Read from a given input directory and write everything found there (including sub directories) to a flat output directory
-void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& currentPrefix)
+void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vector<std::string>& treePaths, std::string const& currentPrefix)
 {
   TIter next(inDir->GetListOfKeys());
   TKey* key = nullptr;
@@ -555,13 +626,83 @@ void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::stri
     auto obj = key->ReadObj();
     if (auto nextInDir = dynamic_cast<TDirectory*>(obj)) {
       // recursively scan TDirectory
-      ExtractAndFlattenDirectory(nextInDir, outDir, currentPrefix + nextInDir->GetName() + "_");
+      ExtractAndFlattenDirectory(nextInDir, outDir, treePaths, currentPrefix + nextInDir->GetName() + "_");
     } else if (auto qcMonitorCollection = dynamic_cast<o2::quality_control::core::MonitorObjectCollection*>(obj)) {
       ExtractFromMonitorObjectCollection(qcMonitorCollection, outDir, currentPrefix);
+    } else if (dynamic_cast<TTree*>(obj)) {
+      std::string treePath(inDir->GetPath());
+      auto pos = treePath.find(":/");
+      if (pos != std::string::npos) {
+        treePath = treePath.substr(pos + 2);
+      }
+      treePaths.push_back(treePath + obj->GetName());
+      continue;
     } else {
       if (!WriteObject(obj, outDir, currentPrefix)) {
         std::cerr << "Cannot handle object " << obj->GetName() << " which is of class " << key->GetClassName() << "\n";
       }
+    }
+  }
+}
+
+void ExtractAndFlattenTrees(TDirectory* inDir, std::vector<std::string> const& treePathsIntersection, std::unordered_map<std::string, TH1*>& histos)
+{
+  const std::vector<std::string> acceptedLeafTypes{"char", "int", "float", "double"};
+  for (auto& tpi : treePathsIntersection) {
+    auto tree = (TTree*)inDir->Get(tpi.c_str());
+    if (!tree) {
+      std::cerr << "TTree " << tpi << " not present\n";
+      continue;
+    }
+    TIter next(tree->GetListOfLeaves());
+    std::vector<std::string> leafNames;
+    TLeaf* obj = nullptr;
+    while ((obj = (TLeaf*)next())) {
+      bool accept(false);
+      TString typeName(obj->GetTypeName());
+      typeName.ToLower();
+      for (auto& alt : acceptedLeafTypes) {
+        if (typeName.Contains(alt.c_str())) {
+          accept = true;
+          break;
+        }
+      }
+      if (!accept) {
+        continue;
+      }
+      auto fullName = obj->GetFullName();
+      if (fullName.EndsWith("_")) {
+        continue;
+      }
+      leafNames.push_back(fullName.Data());
+    }
+    for (auto& ln : leafNames) {
+      std::string histName = tpi + "_" + ln;
+      size_t pos;
+      while ((pos = histName.find(".")) != std::string::npos) {
+        histName.replace(pos, 1, "_");
+      }
+      while ((pos = histName.find("/")) != std::string::npos) {
+        histName.replace(pos, 1, "_");
+      }
+
+      auto drawString = ln + ">>" + histName;
+      auto it = histos.find(histName);
+      if (it != histos.end()) {
+        if (it->second) {
+          drawString = ln + ">>+" + histName;
+        } else {
+          std::cerr << "WARNING: There was previously a problem with drawing the TLeaf " << ln << ", skip\n";
+        }
+      }
+      auto success = tree->Draw(drawString.c_str(), "", "", TTree::kMaxEntries, 0);
+      auto thisHist = (TH1*)gDirectory->Get(histName.c_str());
+      if (!success || !thisHist) {
+        std::cerr << "WARNING: Cannot draw TLeaf " << ln << "\n";
+        histos[histName] = nullptr;
+        continue;
+      }
+      histos[histName] = thisHist;
     }
   }
 }

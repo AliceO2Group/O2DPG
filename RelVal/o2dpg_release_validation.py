@@ -5,13 +5,15 @@
 # 2. 2 corresponding simulation directories
 #
 # The RelVal suite is run with
-# o2dpg_release_validation.py rel-val -i <file-or-sim-dir1> <file-or-sim-dir2>
+# o2dpg_release_validation.py rel-val -i <file-or-sim-dir1> -j <file-or-sim-dir2>
 #
-# If 2 sim directories should be compared, it is possible to specify for which parts the RelVal should be done by adding the flags
-# --with-<whic-part>
-# (see full help message below to see available options)
-# usage: o2dpg_release_validation.py rel-val [-h] -i INPUT INPUT
-#                                            [--with-test-chi2]
+# If 2 sim directories should be compared, it the files to be compared must be given via a config JSON
+# via --dirs-config
+# See O2DPG/RelVal/config/rel_val_sim_dirs_default.json for as an example
+#
+# The full help message would be
+# usage: o2dpg_release_validation.py rel-val [-h] -i [INPUT1 ...] -j
+#                                            [INPUT2 ...] [--with-test-chi2]
 #                                            [--with-test-bincont]
 #                                            [--with-test-numentries]
 #                                            [--chi2-threshold CHI2_THRESHOLD]
@@ -19,20 +21,21 @@
 #                                            [--rel-entries-diff-threshold REL_ENTRIES_DIFF_THRESHOLD]
 #                                            [--select-critical]
 #                                            [--threshold THRESHOLD]
-#                                            [--with-type-hits]
-#                                            [--detectors [{ITS,TOF,EMC,TRD,PHS,FT0,HMP,MFT,FDD,FV0,MCH,MID,CPV,ZDC,TPC} [{ITS,TOF,EMC,TRD,PHS,FT0,HMP,MFT,FDD,FV0,MCH,MID,CPV,ZDC,TPC} ...]]]
-#                                            [--with-type-tpctracks]
-#                                            [--with-type-kine]
-#                                            [--with-type-analysis]
-#                                            [--with-type-qc] [--no-plots]
+#                                            [--no-plots]
 #                                            [--use-values-as-thresholds USE_VALUES_AS_THRESHOLDS]
+#                                            [--dir-config DIR_CONFIG]
+#                                            [--dir-config-enable [DIR_CONFIG_ENABLE ...]]
+#                                            [--dir-config-disable [DIR_CONFIG_DISABLE ...]]
 #                                            [--output OUTPUT]
 #
 # optional arguments:
 #   -h, --help            show this help message and exit
-#   -i INPUT INPUT, --input INPUT INPUT
-#                         2 input files for comparison OR 2 input directories
-#                         from simulation for comparison
+#   -i [INPUT1 ...], --input1 [INPUT1 ...]
+#                         EITHER first set of input files for comparison OR
+#                         first input directory from simulation for comparison
+#   -j [INPUT2 ...], --input2 [INPUT2 ...]
+#                         EITHER second set of input files for comparison OR
+#                         second input directory from simulation for comparison
 #   --with-test-chi2      run chi2 test
 #   --with-test-bincont   run bin-content test
 #   --with-test-numentries
@@ -47,20 +50,16 @@
 #   --threshold THRESHOLD
 #                         threshold for how far file sizes are allowed to
 #                         diverge before warning
-#   --with-type-hits      include hit comparison when RelVal when run on
-#                         simulation directories
-#   --detectors [{ITS,TOF,EMC,TRD,PHS,FT0,HMP,MFT,FDD,FV0,MCH,MID,CPV,ZDC,TPC} [{ITS,TOF,EMC,TRD,PHS,FT0,HMP,MFT,FDD,FV0,MCH,MID,CPV,ZDC,TPC} ...]]
-#                         include these detectors for hit RelVal
-#   --with-type-tpctracks
-#                         include TPC tracks RelVal when run on simulation
-#                         directories
-#   --with-type-kine      include kine RelVal when run on simulation directories
-#   --with-type-analysis  include analysis RelVal when run on simulation
-#                         directories
-#   --with-type-qc        include QC RelVal when run on simulation directories
 #   --no-plots            disable plotting
 #   --use-values-as-thresholds USE_VALUES_AS_THRESHOLDS
 #                         Use values from another run as thresholds for this one
+#   --dir-config DIR_CONFIG
+#                         What to take into account in a given directory
+#   --dir-config-enable [DIR_CONFIG_ENABLE ...]
+#                         only enable these top keys in your dir-config
+#   --dir-config-disable [DIR_CONFIG_DISABLE ...]
+#                         disable these top keys in your dir-config (precedence
+#                         over dir-config-enable)
 #   --output OUTPUT, -o OUTPUT
 #                         output directory
 
@@ -252,89 +251,7 @@ def make_generic_histograms_from_log_file(filenames1, filenames2, output_filepat
     file2.Close()
 
 
-def make_generic_histograms_from_chain(filenames1, filenames2, output_filepath1, output_filepath2, treename="o2sim"):
-    """
-    Create all possible histograms of TLeaf from given TChains
-    """
-
-    chain1 = TChain(treename)
-    for f in filenames1:
-        chain1.Add(f)
-    chain2 = TChain(treename)
-    for f in filenames2:
-        chain2.Add(f)
-
-    # focus only on these TLeaf types
-    accepted_types = ["UInt_t", "Int_t", "Float_t", "Double_t", "Double32_t"]
-
-    # A bit cumbersome but let's just use some code duplication to the same for 2 chains
-    # 1. extract names with accepted types
-    branch_names1 = []
-    leaf_names1 = []
-    leaf_names2 = []
-    for b in chain1.GetListOfBranches():
-        branch_names1.append(b.GetName())
-    for l in chain1.GetListOfLeaves():
-        if l.GetTypeName() not in accepted_types:
-            continue
-        this_name = l.GetName()
-        if this_name[-1] == "_" and this_name[:-1] in branch_names1:
-            # this is sort of a hack, we cannot draw these top-level branches, but can also not derive that from TLeaf::GetTypeName
-            continue
-        leaf_names1.append(this_name)
-    for l in chain2.GetListOfLeaves():
-        if l.GetTypeName() not in accepted_types:
-            continue
-        this_name = l.GetName()
-        if this_name[-1] == "_" and this_name[:-1] in branch_names1:
-            # this is sort of a hack, we cannot draw these top-level branches, but can also not derive that from TLeaf::GetTypeName
-            continue
-        leaf_names2.append(l.GetName())
-
-    # 2. sort then in order to...
-    leaf_names1.sort()
-    leaf_names2.sort()
-
-    # 3. ...compare whether we have the same leaves
-    if leaf_names1 != leaf_names2:
-        print("WARNING: Found different branches in input files")
-        # 4. if not, warn and shrink to intersection
-        leaf_names1 = list(set(leaf_names1) & set(leaf_names2))
-
-    # Reset and use later
-    leaf_names2 = []
-    histograms = []
-    output_file1 = load_root_file(output_filepath1, "RECREATE")
-    for b in leaf_names1:
-        h_name = b.replace(".", "_")
-        chain1.Draw(f"{b}>>{h_name}")
-        # if successful, append histogram and necessary info
-        leaf_names2.append(b)
-        hist = gDirectory.Get(h_name)
-        hist.Reset("ICEMS")
-        # After pre-defined binning, fill again to make sure really the very same binning is used in this and the compared histogram
-        chain1.Draw(f"{b}>>+{h_name}")
-        histograms.append(hist)
-        output_file1.cd()
-        hist.Write()
-
-    # Extract the second bunch of histograms
-    output_file2 = load_root_file(output_filepath2, "RECREATE")
-    for b, h in zip(leaf_names2, histograms):
-        # reset the histogram and re-use to guarantee same binning
-        h.Reset("ICEMS")
-        # change current directory and set it for this histogram
-        output_file2.cd()
-        h.SetDirectory(output_file2)
-        # append to the existing (empty) histogram
-        chain2.Draw(f"{b}>>+{h.GetName()}")
-        h.Write()
-
-    output_file1.Close()
-    output_file2.Close()
-
-
-def rel_val_files(file1, file2, args, output_dir):
+def rel_val_files(files1, files2, args, output_dir):
     """
     RelVal for 2 ROOT files, simply a wrapper around ReleaseValidation.C macro
     """
@@ -343,7 +260,11 @@ def rel_val_files(file1, file2, args, output_dir):
     select_critical = "kTRUE" if args.select_critical else "kFALSE"
     no_plots = "kTRUE" if args.no_plots else "kFALSE"
     in_thresholds = args.use_values_as_thresholds if args.use_values_as_thresholds else ""
-    cmd = f"\\(\\\"{abspath(file1)}\\\",\\\"{abspath(file2)}\\\",{args.test},{args.chi2_threshold},{args.rel_mean_diff_threshold},{args.rel_entries_diff_threshold},{select_critical},\\\"{abspath(in_thresholds)}\\\"\\)"
+    file1 = [abspath(f) for f in files1]
+    file1 = ",".join(file1)
+    file2 = [abspath(f) for f in files2]
+    file2 = ",".join(file2)
+    cmd = f"\\(\\\"{file1}\\\",\\\"{file2}\\\",{args.test},{args.chi2_threshold},{args.rel_mean_diff_threshold},{args.rel_entries_diff_threshold},{select_critical},\\\"{abspath(in_thresholds)}\\\"\\)"
     cmd = f"root -l -b -q {ROOT_MACRO}{cmd}"
     log_file = join(abspath(output_dir), "rel_val.log")
     print(f"==> Running {cmd}\nwith log file at {log_file}")
@@ -356,6 +277,8 @@ def rel_val_files(file1, file2, args, output_dir):
     log_file.close()
     return 0
 
+def rel_val_files_only(args):
+    return rel_val_files(args.input1, args.input2, args, args.output)
 
 def print_summary(filename, *, summary_only=False):
     """
@@ -386,45 +309,6 @@ def print_summary(filename, *, summary_only=False):
     print("\n#####\n")
 
     return test_n_hist_map
-
-
-def rel_val_ttree(dir1, dir2, files, output_dir, args, treename="o2sim", *, combine_patterns=None):
-    """
-    RelVal for 2 ROOT files containing a TTree to be compared
-    """
-    # Prepare file paths for TChain
-    to_be_chained1 = []
-    to_be_chained2 = []
-    output_dirs = []
-
-    # possibly combine common files, for instance when they come from different timeframes
-    if combine_patterns:
-        for cp in combine_patterns:
-            chained1 = [join(dir1, hf) for hf in files if cp in hf]
-            chained2 = [join(dir2, hf) for hf in files if cp in hf]
-            if not chained1 or not chained2:
-                continue
-            to_be_chained1.append(chained1)
-            to_be_chained2.append(chained2)
-            output_dirs.append(f"{cp}_dir")
-    else:
-        to_be_chained1 = []
-        to_be_chained2 = []
-        for hf in files:
-            to_be_chained1.append(join(dir1, hf))
-            to_be_chained2.append(join(dir2, hf))
-            output_dirs.append(f"{hf}_dir")
-
-    # paths for chains prepared, output directory names specified, do RelVal
-    for tbc1, tbc2, od in zip(to_be_chained1, to_be_chained2, output_dirs):
-        output_dir_hf = join(output_dir, od)
-        if not exists(output_dir_hf):
-            makedirs(output_dir_hf)
-
-        make_generic_histograms_from_chain(tbc1, tbc2, join(output_dir_hf, "file1.root"), join(output_dir_hf, "file2.root"), treename)
-        # after we created files containing histograms, they can be compared with the standard RelVal
-        rel_val_files(abspath(join(output_dir_hf, "file1.root")), abspath(join(output_dir_hf, "file2.root")), args, output_dir_hf)
-    return 0
 
 
 def rel_val_log_file(dir1, dir2, files, output_dir, args, patterns, field_numbers, names, *, combine_patterns=None):
@@ -462,7 +346,7 @@ def rel_val_log_file(dir1, dir2, files, output_dir, args, patterns, field_number
 
         make_generic_histograms_from_log_file(tbc1, tbc2, join(output_dir_hf, "file1.root"), join(output_dir_hf, "file2.root"), patterns, field_numbers, names)
         # after we created files containing histograms, they can be compared with the standard RelVal
-        rel_val_files(abspath(join(output_dir_hf, "file1.root")), abspath(join(output_dir_hf, "file2.root")), args, output_dir_hf)
+        rel_val_files((abspath(join(output_dir_hf, "file1.root")),), (abspath(join(output_dir_hf, "file2.root")),), args, output_dir_hf)
     return 0
 
 def plot_pie_chart_single(summary, out_dir, title):
@@ -597,7 +481,6 @@ def plot_additional_summary(in_dir):
     summary = []
 
     for path in file_paths:
-        print(path)
         # go through all we found
         current_summary = None
         with open(path, "r") as f:
@@ -647,91 +530,54 @@ def rel_val_histograms(dir1, dir2, files, output_dir, args):
         output_dir_f = join(output_dir, f"{f}_dir")
         if not exists(output_dir_f):
             makedirs(output_dir_f)
-        rel_val_files(join(dir1, f), join(dir2, f), args, output_dir_f)
+        rel_val_files((join(dir1, f),), (join(dir2, f),), args, output_dir_f)
 
 
 def rel_val_sim_dirs(args):
     """
     Make full RelVal for 2 simulation directories
     """
-    dir1 = args.input[0]
-    dir2 = args.input[1]
+    dir1 = args.input1[0]
+    dir2 = args.input2[0]
     output_dir = args.output
 
     look_for = "Summary.json"
     summary_dict = {}
 
-    # file sizes
+    # file sizes, this is just done on everything to be found in both directories
     file_sizes_to_json = file_sizes([dir1, dir2], 0.5)
     with open(join(output_dir, "file_sizes.json"), "w") as f:
         json.dump(file_sizes_to_json, f, indent=2)
 
-    # enable all if everything is disabled
-    if not any((args.with_type_hits, args.with_type_tpctracks, args.with_type_kine, args.with_type_analysis, args.with_type_qc)):
-        args.with_type_hits, args.with_type_tpctracks, args.with_type_kine, args.with_type_analysis, args.with_type_qc = (True,) * 5
 
-    # hits
-    if args.with_type_hits:
-        print("==> Run RelVal for hits <==")
-        hit_files = find_mutual_files((dir1, dir2), "*Hits*.root", grep=args.detectors)
-        output_dir_hits = join(output_dir, "hits")
-        if not exists(output_dir_hits):
-            makedirs(output_dir_hits)
-        rel_val_ttree(dir1, dir2, hit_files, output_dir_hits, args, combine_patterns=[f"Hits{d}" for d in args.detectors])
+    config = args.dir_config
+    with open(config, "r") as f:
+        config = json.load(f)
 
-    # TPC tracks
-    if args.with_type_tpctracks:
-        print("==> Run RelVal for TPC tracks <==")
-        tpctrack_files = find_mutual_files((dir1, dir2), "tpctracks.root")
-        output_dir_tpctracks = join(output_dir, "tpctracks")
-        if not exists(output_dir_tpctracks):
-            makedirs(output_dir_tpctracks)
-        rel_val_ttree(dir1, dir2, tpctrack_files, output_dir_tpctracks, args, "tpcrec", combine_patterns=["tpctracks.root"])
+    run_over_keys = list(config.keys())
+    if args.dir_config_enable:
+        run_over_keys = [rok for rok in run_over_keys if rok in args.dir_config_enable]
+    if args.dir_config_disable:
+        run_over_keys = [rok for rok in run_over_keys if rok not in args.dir-dir_config_disable]
+    if not run_over_keys:
+        print("WARNING: All keys in config disabled, nothing to do")
+        return 0
 
-        tpctrack_files = find_mutual_files((dir1, dir2), "tpcreco*.log")
-        print(tpctrack_files)
-        output_dir_tpctracks = join(output_dir, "tpctracks")
-        if not exists(output_dir_tpctracks):
-            makedirs(output_dir_tpctracks)
-        # only one pattern, namely the line in the tpc reco file to look for
-        patterns = ["^(.*?)(Event has)(.*)(TPC Clusters)(.*)$"]
-        # the field(s) to extract from found line
-        fields = [4]
-        # the name of the histogram to build
-        histo_names = ["number_tpc_clusters"]
-        rel_val_log_file(dir1, dir2, tpctrack_files, output_dir_tpctracks, args, patterns, fields, histo_names, combine_patterns=["tpcreco"])
-
-    # TPC tracks
-    if args.with_type_kine:
-        print("==> Run RelVal for MC kinematics <==")
-        kine_files = find_mutual_files((dir1, dir2), "*Kine.root")
-        output_dir_kine = join(output_dir, "kine")
-        if not exists(output_dir_kine):
-            makedirs(output_dir_kine)
-        rel_val_ttree(dir1, dir2, kine_files, output_dir_kine, args, combine_patterns=["Kine.root"])
-
-    # Analysis
-    if args.with_type_analysis:
-        print("==> Run RelVal for analysis <==")
-        dir_analysis1 = join(dir1, "Analysis")
-        dir_analysis2 = join(dir2, "Analysis")
-        analysis_files = find_mutual_files((dir_analysis1, dir_analysis2), "*.root")
-        output_dir_analysis = join(output_dir, "analysis")
-        if not exists(output_dir_analysis):
-            makedirs(output_dir_analysis)
-        rel_val_histograms(dir_analysis1, dir_analysis2, analysis_files, output_dir_analysis, args)
-
-    # QC
-    if args.with_type_qc:
-        print("==> Run RelVal for QC <==")
-        dir_qc1 = join(dir1, "QC")
-        dir_qc2 = join(dir2, "QC")
-        qc_files = find_mutual_files((dir_qc1, dir_qc2), "*.root")
-        output_dir_qc = join(output_dir, "qc")
-        if not exists(output_dir_qc):
-            makedirs(output_dir_qc)
-        rel_val_histograms(dir_qc1, dir_qc2, qc_files, output_dir_qc, args)
-
+    for rok in run_over_keys:
+        current_dir_config = config[rok]
+        # now run over name and path (to glob)
+        for name, path in current_dir_config.items():
+            current_files = find_mutual_files((dir1, dir2), path)
+            if not current_files:
+                print(f"WARNING: Nothing found for search path {path}, continue")
+                continue
+            in1 = [join(dir1, cf) for cf in current_files]
+            in2 = [join(dir2, cf) for cf in current_files]
+            current_output_dir = join(output_dir, rok, name)
+            if not exists(current_output_dir):
+                makedirs(current_output_dir)
+            rel_val_files(in1, in2, args, current_output_dir)
+    return 0
 
 def make_new_threshold_file(json_path, out_filepath):
     json_in = None
@@ -760,13 +606,20 @@ def rel_val(args):
     if args.use_values_as_thresholds:
         out_path = make_new_threshold_file(args.use_values_as_thresholds, join(args.output, "use_thresholds.dat"))
         args.use_values_as_thresholds = join(args.output, "use_thresholds.dat")
-    if isfile(args.input[0]) and isfile(args.input[1]):
-        # simply check if files, assume that they would be ROOT files in that case
-        func = rel_val_files
-    if is_sim_dir(args.input[0]) and is_sim_dir(args.input[1]):
+    if is_sim_dir(args.input1[0]) and is_sim_dir(args.input2[0]):
+        if not args.dir_config:
+            print("ERROR: RelVal to be run on 2 directories. Please provide a configuration what to validate.")
+            return 1
         func = rel_val_sim_dirs
+    else:
+        func = rel_val_files_only
+        for f in args.input1 + args.input2:
+            if not isfile(f):
+                func = None
+                break
+        # simply check if files, assume that they would be ROOT files in that case
     if not func:
-        print("Please provide either 2 files or 2 simulation directories as input.")
+        print("Please provide either 2 sets of files or 2 simulation directories as input.")
         return 1
     if not exists(args.output):
         makedirs(args.output)
@@ -775,6 +628,7 @@ def rel_val(args):
         json.dump(make_summary(args.output), f, indent=2)
     plot_additional_summary(args.output)
     print_summary(join(args.output, "SummaryGlobal.json"), summary_only=True)
+    return 0
 
 
 def inspect(args):
@@ -903,7 +757,8 @@ def main():
     parser = argparse.ArgumentParser(description='Wrapping ReleaseValidation macro')
 
     common_file_parser = argparse.ArgumentParser(add_help=False)
-    common_file_parser.add_argument("-i", "--input", nargs=2, help="2 input files for comparison OR 2 input directories from simulation for comparison", required=True)
+    common_file_parser.add_argument("-i", "--input1", nargs="*", help="EITHER first set of input files for comparison OR first input directory from simulation for comparison", required=True)
+    common_file_parser.add_argument("-j", "--input2", nargs="*", help="EITHER second set of input files for comparison OR second input directory from simulation for comparison", required=True)
 
     sub_parsers = parser.add_subparsers(dest="command")
     rel_val_parser = sub_parsers.add_parser("rel-val", parents=[common_file_parser])
@@ -915,14 +770,12 @@ def main():
     rel_val_parser.add_argument("--rel-entries-diff-threshold", dest="rel_entries_diff_threshold", type=float, help="Threshold of relative difference in number of entries", default=0.01)
     rel_val_parser.add_argument("--select-critical", dest="select_critical", action="store_true", help="Select the critical histograms and dump to file")
     rel_val_parser.add_argument("--threshold", type=float, default=0.1, help="threshold for how far file sizes are allowed to diverge before warning")
-    rel_val_parser.add_argument("--with-type-hits", dest="with_type_hits", action="store_true", help="include hit comparison when RelVal when run on simulation directories")
-    rel_val_parser.add_argument("--detectors", nargs="*", help="include these detectors for hit RelVal", default=DETECTORS_OF_INTEREST_HITS, choices=DETECTORS_OF_INTEREST_HITS)
-    rel_val_parser.add_argument("--with-type-tpctracks", dest="with_type_tpctracks", action="store_true", help="include TPC tracks RelVal when run on simulation directories")
-    rel_val_parser.add_argument("--with-type-kine", dest="with_type_kine", action="store_true", help="include kine RelVal when run on simulation directories")
-    rel_val_parser.add_argument("--with-type-analysis", dest="with_type_analysis", action="store_true", help="include analysis RelVal when run on simulation directories")
-    rel_val_parser.add_argument("--with-type-qc", dest="with_type_qc", action="store_true", help="include QC RelVal when run on simulation directories")
     rel_val_parser.add_argument("--no-plots", dest="no_plots", action="store_true", help="disable plotting")
     rel_val_parser.add_argument("--use-values-as-thresholds", dest="use_values_as_thresholds", help="Use values from another run as thresholds for this one")
+    rel_val_parser.add_argument("--dir-config", dest="dir_config", help="What to take into account in a given directory")
+    rel_val_parser.add_argument("--dir-config-enable", dest="dir_config_enable", nargs="*", help="only enable these top keys in your dir-config")
+    rel_val_parser.add_argument("--dir-config-disable", dest="dir_config_disable", nargs="*", help="disable these top keys in your dir-config (precedence over dir-config-enable)")
+
     rel_val_parser.add_argument("--output", "-o", help="output directory", default="rel_val")
     rel_val_parser.set_defaults(func=rel_val)
 
