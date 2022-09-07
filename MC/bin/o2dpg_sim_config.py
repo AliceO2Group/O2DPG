@@ -1,7 +1,7 @@
 def create_sim_config(args):
-#creates a generic simulation config
-#based on arguments args(run number, energy, ...) originally passed
-#to o2dpg_sim_workflow.py
+    # creates a generic simulation config
+    # based on arguments args (run number, energy, ...) originally passed
+    # to o2dpg_sim_workflow.py
 
     COLTYPEIR = args.col
     if args.embedding==True:
@@ -16,19 +16,19 @@ def create_sim_config(args):
            d[sk] = flatconfig[entry]
            cfg[mk] = d
 
-#some specific settings for pp productions
+    # some specific settings for pp productions
     if COLTYPEIR == 'pp':
-#Alpide chip settings
+       # Alpide chip settings
        add(config, {"MFTAlpideParam.roFrameLengthInBC" : 198})
        if 302000 <= int(args.run) and int(args.run) < 309999:
            add(config, {"ITSAlpideParam.roFrameLengthInBC" : 198})
-#MFT tracking setting
-       add(config, {"MFTTracking.FullClusterScan" : true})
-#ITS reco settings
+       # MFT tracking setting
+       add(config, {"MFTTracking.FullClusterScan" : 1})
+       # ITS reco settings
        add(config, {"ITSVertexerParam.phiCut" : 0.5,
                     "ITSVertexerParam.clusterContributorsCut" : 3,
                     "ITSVertexerParam.tanLambdaCut" : 0.2})
-#primary vertexing settings
+       # primary vertexing settings
        if 301000 <= int(args.run) and int(args.run) <= 301999:
           add(config, {"pvertexer.acceptableScale2" : 9,
                        "pvertexer.minScale2" : 2.,
@@ -51,11 +51,10 @@ def create_sim_config(args):
                        "pvertexer.maxMultRatDebris" : 1.,
                        "pvertexer.dbscanAdaptCoef" : 20.})
        elif 302000 <= int(args.run) and int(args.run) <= 309999:
-#specific tunes for high pp
-#run range taken from                                                          \
-    https: // twiki.cern.ch/twiki/bin/viewauth/ALICE/O2DPGMCSamplingSchema
-#taken from JIRA https: // alice.its.cern.ch/jira/browse/O2-2691
-#remove extra errors on time margin for tracks and ITS clusters
+          # specific tunes for high pp
+          # run range taken from https://twiki.cern.ch/twiki/bin/viewauth/ALICE/O2DPGMCSamplingSchema
+          # taken from JIRA https://alice.its.cern.ch/jira/browse/O2-2691
+          # remove extra errors on time margin for tracks and ITS clusters
           add(config, {"pvertexer.timeMarginTrackTime" : 0.,
                        "pvertexer.dbscanDeltaT" : 7,
                        "pvertexer.maxChi2TZDebris": 50,
@@ -64,8 +63,8 @@ def create_sim_config(args):
                        "pvertexer.maxVerticesPerCluster" : 20,
                        "pvertexer.dbscanMaxDist2" : 36})
        else:
-#generic pp
-#remove extra errors on time margin for tracks and ITS clusters
+          # generic pp
+          # remove extra errors on time margin for tracks and ITS clusters
           add(config, {"pvertexer.acceptableScale2" : 9,
                        "pvertexer.dbscanMaxDist2" : 36,
                        "pvertexer.dbscanDeltaT" : 24,
@@ -73,7 +72,7 @@ def create_sim_config(args):
                        "pvertexer.maxMultRatDebris" : 1.,
                        "pvertexer.dbscanAdaptCoef" : 20.})
 
-#MFT tracking settings
+    # MFT tracking settings
     if args.mft_reco_full == True:
         add(config, {"MFTTracking.forceZeroField" : 0,
                      "MFTTracking.LTFclsRCut" : 0.0100})
