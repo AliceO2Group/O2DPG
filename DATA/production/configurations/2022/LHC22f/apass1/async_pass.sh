@@ -73,7 +73,11 @@ fi
 # period
 if [[ -n "$ALIEN_JDL_LPMPRODUCTIONTAG" ]]; then
     export PERIOD="$ALIEN_JDL_LPMPRODUCTIONTAG"
-    export O2DPGPATH="$PERIOD"
+    if [[ -n "$ALIEN_JDL_O2DPGPATH" ]]; then
+      export O2DPGPATH="$ALIEN_JDL_O2DPGPATH"
+    else
+      export O2DPGPATH="$PERIOD"
+    fi
 fi
 
 # pass
