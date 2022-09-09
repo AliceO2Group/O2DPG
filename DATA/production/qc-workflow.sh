@@ -25,9 +25,9 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     fi
     if [[ -z "$QC_JSON_TOF" ]]; then
       if has_detector_flp_processing TOF; then
-        QC_JSON_TOF=consul://o2/components/qc/ANY/any/tof-full-qcmn
+        QC_JSON_TOF=consul://o2/components/qc/ANY/any/tof-full-qcmn-on-epn
       else
-        QC_JSON_TOF=consul://o2/components/qc/ANY/any/tof-full-epn-qcmn
+        QC_JSON_TOF=consul://o2/components/qc/ANY/any/tof-full-epn-qcmn-on-epn
       fi
     fi
     [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=consul://o2/components/qc/ANY/any/fdd-digits-qc-epn
