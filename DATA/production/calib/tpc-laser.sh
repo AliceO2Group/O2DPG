@@ -47,6 +47,10 @@ CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
 ### Comment: MAKE SURE the channels match address=ipc://@tf-builder-pipe-0
 
+if [ -z $TPC_LASER_EVENTS ]; then
+    TPC_LASER_EVENTS=10
+fi
+
 #VERBOSE=""
 
 #echo GPU_CONFIG $GPU_CONFIG_KEYS;
@@ -73,13 +77,13 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --condition-remap file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS \
     --configKeyValues "$ARGS_ALL_CONFIG;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1" \
     | o2-tpc-laser-track-filter $ARGS_ALL \
-    | o2-tpc-calib-laser-tracks  $ARGS_ALL --use-filtered-tracks --min-tfs 50 \
+    | o2-tpc-calib-laser-tracks  $ARGS_ALL --use-filtered-tracks --min-tfs ${TPC_LASER_EVENTS}\
     | o2-tpc-calib-pad-raw $ARGS_ALL \
     --configKeyValues "TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=150;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=302;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null" \
     --lanes 36 \
     --calib-type ce \
     --publish-after-tfs 50 \
-    --max-events 110 \
+    --max-events 200 \
     | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
     --ccdb-path http://o2-ccdb.internal \
     | o2-qc $ARGS_ALL --config $QC_CONFIG --local --host $HOST \
