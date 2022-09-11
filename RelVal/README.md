@@ -41,7 +41,7 @@ The wrapper includes 3 different sub-commands for now
 
 If you would like to compare 2 files, simply run
 ```bash
-python o2dpg_release_validation.py rel-val -i <file1> <file2> [-o <output/dir>]
+python o2dpg_release_validation.py rel-val -i <list-of-first-files> -j <list-of-second-files> [-o <output/dir>]
 ```
 This performs all of the above mentioned tests. If only certain tests should be performed, this can be achieved with the flags `--with-test-<which-test>` where `<which-test>` is one of
 1. `chi2`,
@@ -52,28 +52,18 @@ By default, all of them are switched on.
 
 ### Apply to entire simulation outcome
 
-In addition to simply comparing 2 ROOT files, the script offers the possibility of comparing 2 corresponding directories that contain simulation artifacts (and potentially QC and analysis results). This then automatically runs the RelVal on
-1. QC output,
-1. analysis results output,
-1. TPC tracks output,
-1. MC kinematics,
-1. MC hits.
+In addition to simply comparing 2 ROOT files, the script offers the possibility of comparing 2 corresponding directories that contain simulation artifacts (and potentially QC and analysis results). It is not foreseen to run over everything inside those directories but the files must be specifiec via a small config file. See [this example](config/rel_val_sim_dirs_default.json). It is passed via the option `--dirs-config`. In addition, top-level keys can be enabled(disabled) with `--dirs-config-enable <keys>`(`dirs-config-disable <keys>`) where disabling takes precedence.
 
-**NOTE** That each single one of the comparison types if only done if mutual files were found in the 2 corresponding directories. As an example, one could do
+**NOTE** That each single one of the comparisons is only done if mutual files were found in the 2 corresponding directories. As an example, one could do
 ```bash
 cd ${DIR1}
 python o2dpg_workflow_runner.py -f <workflow-json1>
 cd ${DIR2}
 # potentially something has changed in the software or the simulation/reconstruction parameters
 python o2dpg_workflow_runner.py -f <workflow-json2>
-python ${O2DPG_ROOT}/ReleaseValidation/o2dpg_release_validation.py rel-val -i ${DIR1} ${DIR2} [-o <output/dir>] [<test-flags>]
+python ${O2DPG_ROOT}/ReleaseValidation/o2dpg_release_validation.py rel-val -i ${DIR1} -j ${DIR2} --dirs-config ${O2DPG_ROOT}/RelVal/config/rel_val_sim_dirs_default.json --dirs-config-enable QC [-o <output/dir>] [<test-flags>]
 ```
-Again, also here it can be specified explicitly on what the tests should be run by specifying one or more `<test-flags>` such as
-1. `--with-type-qc`,
-1. `--with-type-analysis`,
-1. `--with-type-tpctracks`,
-1. `--with-type-kine`,
-1. `--with-type-hits`.
+This would run the RelVal von everything specified under the top key `QC`.
 
 ### Quick inspection
 
