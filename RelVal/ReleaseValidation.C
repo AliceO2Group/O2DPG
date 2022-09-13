@@ -1077,7 +1077,9 @@ TestResult CompareChiSquare(TH1* hA, TH1* hB, double val, bool areComparable)
         double sigma2 = eA * eA + eB * eB - 2 * correl * eA * eB; // maybe to be improved
         if (sigma2 > 0)
           chi2 += diff * diff / sigma2;
-        nBins++;
+        if (cA > 0 || cB > 0) {
+          nBins++;
+        }
       }
     }
   }
