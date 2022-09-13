@@ -34,7 +34,7 @@
         "tofPIDQC": "QC/tofPIDQC.root",
         "tpcStandardQC": "QC/tpcStandardQC.root",
         "trdDigitsQC": "QC/trdDigitsQC.root",
-        "vectexQC": "QC/vertexQC.root"
+        "vertexQC": "QC/vertexQC.root"
     },
     "MCKine": {
         "MCKine": "tf*/*Kine.root"
