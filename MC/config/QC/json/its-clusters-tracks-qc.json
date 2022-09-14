@@ -43,7 +43,8 @@
           "nThreads": "1",
 	  "nBCbins" : "103",
 	  "dicttimestamp" : 0,
-	  "geomPath" : "o2sim_geometry-aligned.root"
+	  "geomPath" : "o2sim_geometry-aligned.root",
+	  "publishSummary1D": "0"
         }
       },
       "ITSTrackTask": {
