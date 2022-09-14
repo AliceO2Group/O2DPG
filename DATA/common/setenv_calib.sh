@@ -27,6 +27,11 @@ if has_detector_calib TRD && has_detectors ITS TPC TRD; then CAN_DO_CALIB_TRD_VD
 if has_detector_calib EMC && has_detector_reco EMC; then CAN_DO_CALIB_EMC_BADCHANNELCALIB=1; CAN_DO_CALIB_EMC_TIMECALIB=1; else CAN_DO_CALIB_EMC_BADCHANNELCALIB=0; CAN_DO_CALIB_EMC_TIMECALIB=0; fi
 if has_detector_calib PHS && has_detector_reco PHS; then CAN_DO_CALIB_PHS_ENERGYCALIB=1; CAN_DO_CALIB_PHS_BADMAPCALIB=1; CAN_DO_CALIB_PHS_TURNONCALIB=1; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=1; else CAN_DO_CALIB_PHS_ENERGYCALIB=0; CAN_DO_CALIB_PHS_BADMAPCALIB=0; CAN_DO_CALIB_PHS_TURNONCALIB=0; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=0; fi
 if has_detector_calib CPV && has_detector_reco CPV; then CAN_DO_CALIB_CPV_GAIN=1; else CAN_DO_CALIB_CPV_GAIN=0; fi
+if has_detector_calib ZDC && has_detector_reco ZDC; then
+    CAN_DO_CALIB_ZDC_TDC=1;
+else
+    CAN_DO_CALIB_ZDC_TDC=0;
+fi
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   # calibrations for primary vertex
@@ -100,6 +105,11 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   if [[ $CAN_DO_CALIB_CPV_GAIN == 1 ]]; then
     if [[ -z ${CALIB_CPV_GAIN+x} ]]; then CALIB_CPV_GAIN=1; fi
   fi
+
+  # calibrations for ZDC
+  if [[ $CAN_DO_CALIB_ZDC_TDC == 1 ]]; then
+    if [[ -z ${CALIB_ZDC_TDC+x} ]]; then CALIB_ZDC_TDC=1; fi
+  fi
 fi
 
 ( [[ -z ${CALIB_PRIMVTX_MEANVTX} ]] || [[ $CAN_DO_CALIB_PRIMVTX_MEANVTX == 0 ]] ) && CALIB_PRIMVTX_MEANVTX=0
@@ -118,6 +128,7 @@ fi
 ( [[ -z ${CALIB_PHS_TURNONCALIB} ]] || [[ $CAN_DO_CALIB_PHS_BADMAPCALIB == 0 ]] ) && CALIB_PHS_TURNONCALIB=0
 ( [[ -z ${CALIB_PHS_RUNBYRUNCALIB} ]] || [[ $CAN_DO_CALIB_PHS_RUNBYRUNCALIB == 0 ]] ) && CALIB_PHS_RUNBYRUNCALIB=0
 ( [[ -z ${CALIB_CPV_GAIN} ]] || [[ $CAN_DO_CALIB_CPV_GAIN == 0 ]] ) && CALIB_CPV_GAIN=0
+( [[ -z ${CALIB_ZDC_TDC} ]] || [[ $CAN_DO_CALIB_ZDC_TDC == 0 ]] ) && CALIB_ZDC_TDC=0
 
 if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo "CALIB_PRIMVTX_MEANVTX = $CALIB_PRIMVTX_MEANVTX" 1>&2
@@ -142,6 +153,7 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
     fi
   fi
   echo "CALIB_CPV_GAIN = $CALIB_CPV_GAIN" 1>&2
+  echo "CALIB_ZDC_TDC = $CALIB_ZDC_TDC" 1>&2
 fi
 
 # define spec for proxy for TF-based outputs from BARREL
@@ -205,6 +217,15 @@ if [[ -z $CALIBDATASPEC_CALO_TF ]]; then
   fi
 fi
 
+# define spec for proxy for TF-based outputs from forward detectors
+if [[ -z $CALIBDATASPEC_FORWARD_TF ]]; then
+  # ZDC
+  if [[ $CALIB_ZDC_TDC == 1 ]]; then
+    add_semicolon_separated CALIBDATASPEC_FORWARD_TF "tdcZDC:ZDC/TDCCALIBDATA/0"
+    add_semicolon_separated CALIBDATASPEC_FORWARD_TF "histoZDC:ZDC/TDC_1DH"
+  fi
+fi
+
 if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   # printing for debug
   echo CALIBDATASPEC_BARREL_TF = $CALIBDATASPEC_BARREL_TF 1>&2
@@ -215,6 +236,7 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo CALIBDATASPEC_CALO_SPORADIC = $CALIBDATASPEC_CALO_SPORADIC 1>&2
   echo CALIBDATASPEC_MUON_TF = $CALIBDATASPEC_MUON_TF 1>&2
   echo CALIBDATASPEC_MUON_SPORADIC = $CALIBDATASPEC_MUON_SPORADIC 1>&2
+  echo CALIBDATASPEC_FORWARD_TF = $CALIBDATASPEC_FORWARD_TF 1>&2
 fi
 
 # proxies properties
