@@ -1,14 +1,16 @@
 # O2DPG ReleaseValidation (RelVal)
 
-## The macro [ReleaseValidation.C](ReleaseValidation.C)
+The RelVal is specifically designed to compare 2 sets of QC objects. However, it is also possible to compare ROOT files that contain other objects such as histograms (`TH1`) or also `TTree`s (see further below for the full list of objects that are understood).
 
-This macro `ReleaseValidation.C` allows to compare 2 ROOT files that contain objects of the types
-* ROOT histograms (deriving from `TH1`)
-* ROOT `TProfile`
-* ROOT `TEfficiency`
-* O2 `o2::quality_control::core::MonitorObjectCollection`
-* O2 `o2::quality_control::core::MonitorObject`
+At the end of this README are some examples for QC RelVal.
 
+## ROOT macros
+
+There are 2 ROOT macros which can in principle be used as-is. Their functionality and purpose is explained in the following. In general, it is recommended to use the Python wrapper explained further below. It offers additional flexibility and functionality on top of the macros.
+
+### The macro [ReleaseValidation.C](ReleaseValidation.C)
+
+This macro allows to compare 2 ROOT files that contain `TH1` objects. Objects are considered to correspond to each other if they have the same name.
 At the moment, 3 different comparisons are implemented:
 1. relative difference of bin contents,
 1. Chi2 test,
@@ -22,6 +24,16 @@ There are 5 different test severities per test:
 1. `NONCRIT_NC` if the histograms could not be compared e.g. due to different binning or axis ranges **and** if the test is considered as **non-critical**,
 1. `CRIT_NC` if the histograms could not be compared e.g. due to different binning or axis ranges **and** if the test is considered as **critical**,
 1. `BAD` if a critical test exceeds the threshold.
+
+### The macro [ExtractAndFlatten.C](ExtractAndFlatten.C)
+
+This macro is used to prepare the input files for `ReleaseValidation.C`. It extracts objects from an input file and turns the objects into `TH1` objects which are then stored in a flat file. The macro browses the input file recursively and the following objects will be recognised and extracted:
+* ROOT histograms (deriving from `TH1`)
+* ROOT `TProfile`
+* ROOT `TEfficiency`
+* O2 `o2::quality_control::core::MonitorObjectCollection`
+* O2 `o2::quality_control::core::MonitorObject`
+* ROOT `TTree` (Here the algorithm does its best to extract as many TLeafs as possible which works when they can be drawn with `TTree::Draw`.)
 
 ## Python wrapper and usage
 
@@ -41,7 +53,7 @@ The wrapper includes 3 different sub-commands for now
 
 If you would like to compare 2 files, simply run
 ```bash
-python o2dpg_release_validation.py rel-val -i <list-of-first-files> -j <list-of-second-files> [-o <output/dir>]
+python o2dpg_release_validation.py rel-val -i <list-of-first-files> -j <list-of-second-files> [-o <output/dir>] [--include-dirs <list-of-directories>]
 ```
 This performs all of the above mentioned tests. If only certain tests should be performed, this can be achieved with the flags `--with-test-<which-test>` where `<which-test>` is one of
 1. `chi2`,
@@ -49,6 +61,9 @@ This performs all of the above mentioned tests. If only certain tests should be 
 1. `numentries`.
 
 By default, all of them are switched on.
+
+If `--include-dirs` is specified, only objects under those directories are taken into account. Note that this is not a patter matching but it needs to start with the top directory. Thus, if for instance `--include-dirs /path/to/interesting`, everything below that path will be considered. However, something placed in `/another/path/to/interesting` will not be considered.
+Note that `o2::quality_control::core::MonitorObjectCollection` is treated as a directory in this respect.
 
 ### Apply to entire simulation outcome
 
@@ -65,13 +80,15 @@ python ${O2DPG_ROOT}/ReleaseValidation/o2dpg_release_validation.py rel-val -i ${
 ```
 This would run the RelVal von everything specified under the top key `QC`.
 
-### Quick inspection
+### Inspection and re-plotting summary grid
 
 This is done via
 ```bash
-python ${O2DPG_ROOT}/ReleaseValidation/o2dpg_release_validation.py inspect <path-to-outputdir-or-file> [--severity <severity>]
+python ${O2DPG_ROOT}/ReleaseValidation/o2dpg_release_validation.py inspect <path-to-outputdir-or-file> [--include-patterns <patterns>] [--plot] [--flags <severity-flags>]
 ```
-The latter optional argument could be a list of any of the above mentioned severities. If a directory is passed as input, it is expected that there is either a file named `SummaryGlobal.json` or - if that cannot be found - a file named `Summary.json`.
+If only a path is provided, a summary will be printed on the screen showing the number of `GOOD`, `CRIT_NC` and `BAD`.
+Adding patterns for `--include-patterns` only objects matching at least one of the patterns will be taken into account for the summary.
+If `--plot` is provided, another summary grid will be written into the same directory passed to the `inspect` command and it will be called `SummaryTestUser.png`. If `--flags` are given, only the objects where at least one test has one of the flags will be included in the grid.
 
 ### Make ready for InfluxDB
 
@@ -107,10 +124,11 @@ In addition each test threshold can be set globally for all histogram comparison
 * `--rel-mean-diff-threshold <value>`,
 * `--rel-entries-diff-threshold <value>`.
 
+## RelVal for QC (examples)
 
-## FEATURES TO BE ADDED
+### Comparing data with MC
 
-* more detailed MC kinematics RelVal
-* additional parsing options for `inspect`
-* make summary JSON format more efficient
-* potential additional requests
+MC QC objects are usually distributed over multiple files while those from data are all contained in one single file. It is possible to directly compare them with
+```bash
+python ${O2DPG_ROOT}/ReleaseValidation/o2dpg_release_validation.py rel-val -i ${MC_PRODUCTION}/QC/*.root -j ${DATA_PRODUCTION}/QC.root [--inlcude-dirs <include-directories]
+```

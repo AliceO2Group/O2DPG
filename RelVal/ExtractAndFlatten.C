@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& basedOnTree = "", std::string const& currentPrefix = "");
+void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& basedOnTree = "", std::string const& currentPrefix = "", std::vector<std::string>* includeDirs = nullptr);
 void ExtractTree(TTree* tree, TDirectory* outDir, std::string const& basedOnTree = "", std::string const& currentPrefix = "");
 void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix = "");
 void WriteHisto(TH1* obj, TDirectory* outDir, std::string const& currentPrefix = "");
@@ -11,6 +11,7 @@ void WriteTEfficiency(TEfficiency* obj, TDirectory* outDir, std::string const& c
 void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix = "");
 bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefix = "");
 
+// use this potentially to write histograms from TTree::Draw to
 TDirectory* BUFFER_DIR = nullptr;
 
 bool checkFileOpen(TFile* file)
@@ -23,9 +24,26 @@ bool checkFileOpen(TFile* file)
 // outputFilename: Where to store histograms of flattened output
 // basedOnTree: This is in principle only needed for TTrees to determine the x-axis range and binning
 
-void ExtractAndFlatten(std::string const& filename, std::string const& outputFilename, std::string const& basedOnTree = "")
+void ExtractAndFlatten(std::string const& filename, std::string const& outputFilename, std::string const& basedOnTree = "", std::string const& includeDirsString = "")
 {
   gROOT->SetBatch();
+
+  std::vector<std::string>* includeDirs{};
+  if (!includeDirsString.empty()) {
+    includeDirs = new std::vector<std::string>();
+    std::stringstream ss(includeDirsString);
+    std::string token;
+    while (std::getline(ss, token, ',')) {
+      // normalise paths to always start with "/" and end without "/"
+      if (token.back() == '/') {
+        token.pop_back();
+      }
+      if (token.front() != '/') {
+        token.insert(0, "/");
+      }
+      includeDirs->push_back(token);
+    }
+  }
 
   // That is used to not pollute any other directory
   BUFFER_DIR = new TDirectory("BUFFER_DIR", "BUFFER_DIR");
@@ -39,7 +57,7 @@ void ExtractAndFlatten(std::string const& filename, std::string const& outputFil
     return;
   }
   TFile extractedFile(outputFilename.c_str(), "UPDATE");
-  ExtractAndFlattenDirectory(&inFile, &extractedFile, basedOnTree);
+  ExtractAndFlattenDirectory(&inFile, &extractedFile, basedOnTree, "", includeDirs);
   inFile.Close();
   extractedFile.Close();
 }
@@ -59,17 +77,57 @@ void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix)
   dir->WriteTObject(histo);
 }
 
-// Read from a given input directory and write everything found there (including sub directories) to a flat output directory
-void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& basedOnTree, std::string const& currentPrefix)
+bool checkIncludePath(std::string thisPath, std::vector<std::string>*& includeDirs)
 {
+  if (!includeDirs) {
+    return true;
+  }
+  auto pos = thisPath.find(":/");
+  if (pos != std::string::npos) {
+    // remove the file: to keep only /path/to/dir
+    thisPath.erase(0, pos + 2);
+    // thisPath = thisPath.substr(pos + 2);
+  }
+  if (thisPath.empty() || thisPath.compare("/") == 0) {
+    // if we are in top dir, do nothing
+    return true;
+  }
+  bool extractThis(false);
+  for (auto& incDir : *includeDirs) {
+    if (incDir.find(thisPath) != std::string::npos) {
+      // A pattern given by the user was found in the current path.
+      // So everything below must be extracted and we don't need to check again.
+      includeDirs = nullptr;
+      return true;
+    }
+    if (thisPath.find(incDir) != std::string::npos) {
+      // Here, the current path was found in the user pattern. The user pattern is deeper so we need to keep looking.
+      return true;
+    }
+  }
+  return false;
+}
+
+// Read from a given input directory and write everything found there (including sub directories) to a flat output directory
+void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& basedOnTree, std::string const& currentPrefix, std::vector<std::string>* includeDirs)
+{
+
+  if (!checkIncludePath(inDir->GetPath(), includeDirs)) {
+    return;
+  }
   TIter next(inDir->GetListOfKeys());
   TKey* key = nullptr;
   while ((key = static_cast<TKey*>(next()))) {
     auto obj = key->ReadObj();
     if (auto nextInDir = dynamic_cast<TDirectory*>(obj)) {
       // recursively scan TDirectory
-      ExtractAndFlattenDirectory(nextInDir, outDir, basedOnTree, currentPrefix + nextInDir->GetName() + "_");
+      ExtractAndFlattenDirectory(nextInDir, outDir, basedOnTree, currentPrefix + nextInDir->GetName() + "_", includeDirs);
     } else if (auto qcMonitorCollection = dynamic_cast<o2::quality_control::core::MonitorObjectCollection*>(obj)) {
+      auto qcMonPath = std::string(inDir->GetPath()) + "/" + qcMonitorCollection->GetName();
+      auto includeDirsCache = includeDirs;
+      if (!checkIncludePath(qcMonPath, includeDirsCache)) {
+        continue;
+      }
       ExtractFromMonitorObjectCollection(qcMonitorCollection, outDir, currentPrefix);
     } else if (auto tree = dynamic_cast<TTree*>(obj)) {
       ExtractTree(tree, outDir, basedOnTree, currentPrefix);
@@ -166,9 +224,7 @@ void adjustName(TObject* o)
     std::string name(oNamed->GetName());
     std::replace(name.begin(), name.end(), '/', '_');
     oNamed->SetName(name.c_str());
-    return;
   }
-  std::cerr << "WARNING: Cannot adjust name of object with name " << o->GetName() << ". It might not be evaluated.\n";
 }
 
 // decide which concrete function to call to write the given object
@@ -190,6 +246,7 @@ bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefi
     WriteHisto(hist, outDir, currentPrefix);
     return true;
   }
+  std::cerr << "WARNING: Cannot process object " << o->GetName() << "\n";
   return false;
 }
 
