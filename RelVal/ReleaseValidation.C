@@ -32,14 +32,6 @@ enum options {
 // define a global epsilon
 double EPSILON = 0.00001;
 
-void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vector<std::string>& treePaths, std::string const& currentPrefix = "");
-void ExtractAndFlattenTrees(TDirectory* inDir1, std::vector<std::string> const& treePathsIntersection, std::unordered_map<std::string, TH1*>& histos);
-void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix = "");
-void ProcessDirCollection(TDirectoryFile* dirCollect);
-void WriteHisto(TH1* obj, TDirectory* outDir, std::string const& currentPrefix = "");
-void WriteProfile(TProfile* obj, TDirectory* outDir, std::string const& currentPrefix = "");
-void WriteTEfficiency(TEfficiency* obj, TDirectory* outDir, std::string const& currentPrefix = "");
-void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix = "");
 void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
                    bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests, std::unordered_map<std::string, std::vector<TestResult>>& allTests);
 void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color);
@@ -51,7 +43,6 @@ void DrawRatio(TH1* hR);
 void DrawRelativeDifference(TH1* hR);
 void SelectCriticalHistos();
 void createTestsSummaryPlot(TFile* file, TString const& obj);
-bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefix = "");
 void SetZLabels(TAxis* axis);
 const char* MapResultToLabel(TestResult const& testResult);
 void WriteTestResultsToJson(std::ofstream& json, std::string const& key, std::vector<TestResult> const& testResults);
@@ -273,16 +264,6 @@ void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, 
   overlay1D(hA, hB, legend, compLabel, color, outputDir);
 }
 
-void extractFilenames(std::string const& filenames, std::vector<std::string>& vec, char sep = ',')
-{
-  vec.clear();
-  std::stringstream ss(filenames);
-  std::string seg;
-  while (std::getline(ss, seg, sep)) {
-    vec.push_back(seg);
-  }
-}
-
 // what to give as input:
 // 1) name and path of first file,
 // 2) name and path of second file,
@@ -291,7 +272,7 @@ void extractFilenames(std::string const& filenames, std::vector<std::string>& ve
 // 6) select if files have to be taken from the grid or not
 // 7) choose if specific critic plots have to be saved in a second .pdf file
 
-void ReleaseValidation(std::string const& filenames1, std::string const& filenames2,
+void ReleaseValidation(std::string const& filename1, std::string const& filename2,
                        int whichTest = 1, double valueChi2 = 1.5, double valueMeanDiff = 1.5, double valueEntriesDiff = 0.01,
                        bool selectCritical = false, const char* inFilepathThreshold = "")
 {
@@ -303,83 +284,8 @@ void ReleaseValidation(std::string const& filenames1, std::string const& filenam
     return;
   }
 
-  std::vector<std::string> filenamesVec1;
-  std::vector<std::string> filenamesVec2;
-  std::vector<TFile*> files1;
-  std::vector<TFile*> files2;
-  extractFilenames(filenames1, filenamesVec1);
-  extractFilenames(filenames2, filenamesVec2);
-  TFile extractedFile1("newfile1.root", "RECREATE");
-  TFile extractedFile2("newfile2.root", "RECREATE");
-  std::vector<std::string> treePaths1;
-  std::vector<std::string> treePaths2;
-
-  for (auto& fn : filenamesVec1) {
-
-    if (fn.find("alien") == 0) {
-      // assume that this is on the GRID
-      TGrid::Connect("alien://");
-    }
-
-    // attempt to open input files and make sure they are open
-    files1.push_back(new TFile(fn.c_str(), "READ"));
-    auto& inFile = files1.back();
-
-    if (!checkFileOpen(inFile)) {
-      std::cerr << "File " << fn << " could not be opened\n";
-      return;
-    }
-    ExtractAndFlattenDirectory(inFile, &extractedFile1, treePaths1);
-  }
-
-  for (auto& fn : filenamesVec2) {
-
-    if (fn.find("alien") == 0) {
-      // assume that this is on the GRID
-      TGrid::Connect("alien://");
-    }
-
-    // attempt to open input files and make sure they are open
-    files2.push_back(new TFile(fn.c_str(), "READ"));
-    auto& inFile = files2.back();
-
-    if (!checkFileOpen(inFile)) {
-      std::cerr << "File " << fn << " could not be opened\n";
-      return;
-    }
-    ExtractAndFlattenDirectory(inFile, &extractedFile2, treePaths2);
-  }
-
-  std::sort(treePaths1.begin(), treePaths1.end());
-  treePaths1.erase(std::unique(treePaths1.begin(), treePaths1.end()), treePaths1.end());
-  std::sort(treePaths2.begin(), treePaths2.end());
-  treePaths2.erase(std::unique(treePaths2.begin(), treePaths2.end()), treePaths2.end());
-  std::vector<std::string> treePathsIntersection;
-  std::set_intersection(treePaths1.begin(), treePaths1.end(), treePaths2.begin(), treePaths2.end(), std::back_inserter(treePathsIntersection));
-
-  std::unordered_map<std::string, TH1*> histogramsFromTrees;
-  for (auto& fn : files1) {
-    ExtractAndFlattenTrees(fn, treePathsIntersection, histogramsFromTrees);
-  }
-  for (auto& it : histogramsFromTrees) {
-    if (!it.second) {
-      std::cerr << "WARNING: There was previously a problem with histogram " << it.first << ", not writing.\n";
-      continue;
-    }
-    WriteToDirectory(it.second, &extractedFile1);
-    it.second->Reset("ICEMS");
-  }
-  for (auto& fn : files2) {
-    ExtractAndFlattenTrees(fn, treePathsIntersection, histogramsFromTrees);
-  }
-  for (auto& it : histogramsFromTrees) {
-    if (!it.second) {
-      std::cerr << "WARNING: There was previously a problem with histogram " << it.first << ", not writing.\n";
-      continue;
-    }
-    WriteToDirectory(it.second, &extractedFile2);
-    it.second->Reset("ICEMS");
-  }
+  TFile extractedFile1(filename1.c_str());
+  TFile extractedFile2(filename2.c_str());
 
   // prepare summary plots
   int nkeys = extractedFile1.GetNkeys();
@@ -601,193 +507,6 @@ bool PotentiallySameHistograms(TH1* hA, TH1* hB)
 
   // appear to be the same
   return true;
-}
-
-// writing a TObject to a TDirectory
-void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix)
-{
-  std::string name = prefix + histo->GetName();
-  histo->SetName(name.c_str());
-  auto hasObject = (TH1*)dir->Get(name.c_str());
-  if (hasObject) {
-    hasObject->Add(histo);
-    dir->WriteTObject(hasObject, name.c_str(), "Overwrite");
-    return;
-  }
-  dir->WriteTObject(histo);
-}
-
-// Read from a given input directory and write everything found there (including sub directories) to a flat output directory
-void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vector<std::string>& treePaths, std::string const& currentPrefix)
-{
-  TIter next(inDir->GetListOfKeys());
-  TKey* key = nullptr;
-  while ((key = static_cast<TKey*>(next()))) {
-    auto obj = key->ReadObj();
-    if (auto nextInDir = dynamic_cast<TDirectory*>(obj)) {
-      // recursively scan TDirectory
-      ExtractAndFlattenDirectory(nextInDir, outDir, treePaths, currentPrefix + nextInDir->GetName() + "_");
-    } else if (auto qcMonitorCollection = dynamic_cast<o2::quality_control::core::MonitorObjectCollection*>(obj)) {
-      ExtractFromMonitorObjectCollection(qcMonitorCollection, outDir, currentPrefix);
-    } else if (dynamic_cast<TTree*>(obj)) {
-      std::string treePath(inDir->GetPath());
-      auto pos = treePath.find(":/");
-      if (pos != std::string::npos) {
-        treePath = treePath.substr(pos + 2);
-      }
-      treePaths.push_back(treePath + obj->GetName());
-      continue;
-    } else {
-      if (!WriteObject(obj, outDir, currentPrefix)) {
-        std::cerr << "Cannot handle object " << obj->GetName() << " which is of class " << key->GetClassName() << "\n";
-      }
-    }
-  }
-}
-
-void ExtractAndFlattenTrees(TDirectory* inDir, std::vector<std::string> const& treePathsIntersection, std::unordered_map<std::string, TH1*>& histos)
-{
-  const std::vector<std::string> acceptedLeafTypes{"char", "int", "float", "double"};
-  for (auto& tpi : treePathsIntersection) {
-    auto tree = (TTree*)inDir->Get(tpi.c_str());
-    if (!tree) {
-      std::cerr << "TTree " << tpi << " not present\n";
-      continue;
-    }
-    TIter next(tree->GetListOfLeaves());
-    std::vector<std::string> leafNames;
-    TLeaf* obj = nullptr;
-    while ((obj = (TLeaf*)next())) {
-      bool accept(false);
-      TString typeName(obj->GetTypeName());
-      typeName.ToLower();
-      for (auto& alt : acceptedLeafTypes) {
-        if (typeName.Contains(alt.c_str())) {
-          accept = true;
-          break;
-        }
-      }
-      if (!accept) {
-        continue;
-      }
-      auto fullName = obj->GetFullName();
-      if (fullName.EndsWith("_")) {
-        continue;
-      }
-      leafNames.push_back(fullName.Data());
-    }
-    for (auto& ln : leafNames) {
-      std::string histName = tpi + "_" + ln;
-      size_t pos;
-      while ((pos = histName.find(".")) != std::string::npos) {
-        histName.replace(pos, 1, "_");
-      }
-      while ((pos = histName.find("/")) != std::string::npos) {
-        histName.replace(pos, 1, "_");
-      }
-
-      auto drawString = ln + ">>" + histName;
-      auto it = histos.find(histName);
-      if (it != histos.end()) {
-        if (it->second) {
-          drawString = ln + ">>+" + histName;
-        } else {
-          std::cerr << "WARNING: There was previously a problem with drawing the TLeaf " << ln << ", skip\n";
-        }
-      }
-      auto success = tree->Draw(drawString.c_str(), "", "", TTree::kMaxEntries, 0);
-      auto thisHist = (TH1*)gDirectory->Get(histName.c_str());
-      if (!success || !thisHist) {
-        std::cerr << "WARNING: Cannot draw TLeaf " << ln << "\n";
-        histos[histName] = nullptr;
-        continue;
-      }
-      histos[histName] = thisHist;
-    }
-  }
-}
-
-// extract everything from a o2::quality_control::core::MonitorObjectCollection object
-void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix)
-{
-  std::cout << "--- Process o2 Monitor Object Collection " << o2MonObjColl->GetName() << " ---\n";
-  int nProcessed{};
-  for (int j = 0; j < o2MonObjColl->GetEntries(); j++) {
-    if (WriteObject(o2MonObjColl->At(j), outDir, currentPrefix + o2MonObjColl->GetName() + "_")) {
-      nProcessed++;
-    }
-  }
-  std::cout << "Objects processed in MonitorObjectCollection:" << nProcessed << "\n";
-}
-
-// make sure we don't have any special characters in the names, such as "/"
-void adjustName(TObject* o)
-{
-  if (auto oNamed = dynamic_cast<TNamed*>(o)) {
-    std::string name(oNamed->GetName());
-    std::replace(name.begin(), name.end(), '/', '_');
-    oNamed->SetName(name.c_str());
-    return;
-  }
-  std::cerr << "WARNING: Cannot adjust name of object with name " << o->GetName() << ". It might not be evaluated.\n";
-}
-
-// decide which concrete function to call to write the given object
-bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefix)
-{
-  if (auto monObj = dynamic_cast<o2::quality_control::core::MonitorObject*>(o)) {
-    return WriteObject(monObj->getObject(), outDir, currentPrefix);
-  }
-  adjustName(o);
-  if (auto eff = dynamic_cast<TEfficiency*>(o)) {
-    WriteTEfficiency(eff, outDir, currentPrefix);
-    return true;
-  }
-  if (auto prof = dynamic_cast<TProfile*>(o)) {
-    WriteProfile(prof, outDir, currentPrefix);
-    return true;
-  }
-  if (auto hist = dynamic_cast<TH1*>(o)) {
-    WriteHisto(hist, outDir, currentPrefix);
-    return true;
-  }
-  return false;
-}
-
-// Implementation to write a TH1
-void WriteHisto(TH1* hA, TDirectory* outDir, std::string const& currentPrefix)
-{
-  WriteToDirectory(hA, outDir, currentPrefix);
-}
-
-// Implementation to extract TH1 from TEfficieny and write them
-void WriteTEfficiency(TEfficiency* hEff, TDirectory* outDir, std::string const& currentPrefix)
-{ // should I further develop that?
-  // separate numerator and denominator of the efficiency
-  auto hEffNomin = (TH1*)hEff->GetPassedHistogram(); // eff nominator
-  auto hEffDenom = (TH1*)hEff->GetTotalHistogram();  // eff denominator
-  hEffNomin->SetName(Form("%s_effnominator", hEffNomin->GetName()));
-  hEffDenom->SetName(Form("%s_effdenominator", hEffDenom->GetName()));
-
-  // recreate the efficiency dividing numerator for denominator:
-  auto heff = (TH1*)(hEffNomin->Clone("heff"));
-  heff->SetTitle(Form("%s", hEff->GetTitle()));
-  heff->SetName(Form("%s", hEff->GetName()));
-  heff->Divide(hEffNomin, hEffDenom, 1.0, 1.0, "B");
-
-  WriteToDirectory(hEffNomin, outDir, currentPrefix);
-  WriteToDirectory(hEffDenom, outDir, currentPrefix);
-  WriteToDirectory(heff, outDir, currentPrefix);
-}
-
-// Implementation to write TProfile
-void WriteProfile(TProfile* hProf, TDirectory* outDir, std::string const& currentPrefix)
-{ // should I further develop that?
-
-  auto hprofx = (TH1D*)hProf->ProjectionX();
-
-  WriteToDirectory(hProf, outDir, currentPrefix);
-  WriteToDirectory(hprofx, outDir, currentPrefix);
 }
 
 ////////////////////////////////////////////

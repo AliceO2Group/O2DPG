@@ -83,7 +83,8 @@ if O2DPG_ROOT is None:
     print('ERROR: This needs O2DPG loaded')
     sys.exit(1)
 
-ROOT_MACRO=join(O2DPG_ROOT, "RelVal", "ReleaseValidation.C")
+ROOT_MACRO_EXTRACT=join(O2DPG_ROOT, "RelVal", "ExtractAndFlatten.C")
+ROOT_MACRO_RELVAL=join(O2DPG_ROOT, "RelVal", "ReleaseValidation.C")
 
 from ROOT import TFile, gDirectory, gROOT, TChain, TH1D
 
@@ -255,30 +256,47 @@ def rel_val_files(files1, files2, args, output_dir):
     """
     RelVal for 2 ROOT files, simply a wrapper around ReleaseValidation.C macro
     """
+    def run_macro(cmd, log_file):
+        p = Popen(split(cmd), cwd=output_dir, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+        log_file = open(log_file, 'a')
+        for line in p.stdout:
+            log_file.write(line)
+        p.wait()
+        log_file.close()
+
     if not exists(output_dir):
         makedirs(output_dir)
     select_critical = "kTRUE" if args.select_critical else "kFALSE"
-    no_plots = "kTRUE" if args.no_plots else "kFALSE"
     in_thresholds = args.use_values_as_thresholds if args.use_values_as_thresholds else ""
-    file1 = [abspath(f) for f in files1]
-    file1 = ",".join(file1)
-    file2 = [abspath(f) for f in files2]
-    file2 = ",".join(file2)
-    cmd = f"\\(\\\"{file1}\\\",\\\"{file2}\\\",{args.test},{args.chi2_threshold},{args.rel_mean_diff_threshold},{args.rel_entries_diff_threshold},{select_critical},\\\"{abspath(in_thresholds)}\\\"\\)"
-    cmd = f"root -l -b -q {ROOT_MACRO}{cmd}"
-    log_file = join(abspath(output_dir), "rel_val.log")
-    print(f"==> Running {cmd}\nwith log file at {log_file}")
-    p = Popen(split(cmd), cwd=output_dir, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
-    log_file = open(log_file, 'w')
-    for line in p.stdout:
-        log_file.write(line)
-        #sys.stdout.write(line)
-    p.wait()
-    log_file.close()
+    log_file_extract = join(abspath(output_dir), "extract_and_flatten.log")
+    log_file_rel_val = join(abspath(output_dir), "rel_val.log")
+
+    print(f"Extraction of files\n{','.join(files1)}")
+    file_1 = "newfile1.root"
+    for f in files1:
+        f = abspath(f)
+        cmd = f"\\(\\\"{f}\\\",\\\"{file_1}\\\"\\)"
+        cmd = f"root -l -b -q {ROOT_MACRO_EXTRACT}{cmd}"
+        run_macro(cmd, log_file_extract)
+    print(f"Extraction of files\n{','.join(files2)}")
+    file_2 = "newfile2.root"
+    for f in files2:
+        f = abspath(f)
+        cmd = f"\\(\\\"{f}\\\",\\\"{file_2}\\\",\\\"{file_1}\\\"\\)"
+        cmd = f"root -l -b -q {ROOT_MACRO_EXTRACT}{cmd}"
+        run_macro(cmd, log_file_extract)
+
+    cmd = f"\\(\\\"{file_1}\\\",\\\"{file_2}\\\",{args.test},{args.chi2_threshold},{args.rel_mean_diff_threshold},{args.rel_entries_diff_threshold},{select_critical},\\\"{abspath(in_thresholds)}\\\"\\)"
+    cmd = f"root -l -b -q {ROOT_MACRO_RELVAL}{cmd}"
+    print("Runnin RelVal on extracted objects")
+    run_macro(cmd, log_file_rel_val)
+
     return 0
+
 
 def rel_val_files_only(args):
     return rel_val_files(args.input1, args.input2, args, args.output)
+
 
 def print_summary(filename, *, summary_only=False):
     """
@@ -348,6 +366,7 @@ def rel_val_log_file(dir1, dir2, files, output_dir, args, patterns, field_number
         # after we created files containing histograms, they can be compared with the standard RelVal
         rel_val_files((abspath(join(output_dir_hf, "file1.root")),), (abspath(join(output_dir_hf, "file2.root")),), args, output_dir_hf)
     return 0
+
 
 def plot_pie_chart_single(summary, out_dir, title):
     test_n_hist_map = {}
@@ -520,17 +539,6 @@ def make_summary(in_dir):
                 test["type_specific"] = type_specific
                 test["rel_path_plot"] = join(rel_path_plot, f"{histo_name}.png")
     return summary
-
-
-def rel_val_histograms(dir1, dir2, files, output_dir, args):
-    """
-    Simply another wrapper to combine multiple files where we expect them to contain histograms already
-    """
-    for f in files:
-        output_dir_f = join(output_dir, f"{f}_dir")
-        if not exists(output_dir_f):
-            makedirs(output_dir_f)
-        rel_val_files((join(dir1, f),), (join(dir2, f),), args, output_dir_f)
 
 
 def rel_val_sim_dirs(args):
@@ -770,7 +778,6 @@ def main():
     rel_val_parser.add_argument("--rel-entries-diff-threshold", dest="rel_entries_diff_threshold", type=float, help="Threshold of relative difference in number of entries", default=0.01)
     rel_val_parser.add_argument("--select-critical", dest="select_critical", action="store_true", help="Select the critical histograms and dump to file")
     rel_val_parser.add_argument("--threshold", type=float, default=0.1, help="threshold for how far file sizes are allowed to diverge before warning")
-    rel_val_parser.add_argument("--no-plots", dest="no_plots", action="store_true", help="disable plotting")
     rel_val_parser.add_argument("--use-values-as-thresholds", dest="use_values_as_thresholds", help="Use values from another run as thresholds for this one")
     rel_val_parser.add_argument("--dir-config", dest="dir_config", help="What to take into account in a given directory")
     rel_val_parser.add_argument("--dir-config-enable", dest="dir_config_enable", nargs="*", help="only enable these top keys in your dir-config")
