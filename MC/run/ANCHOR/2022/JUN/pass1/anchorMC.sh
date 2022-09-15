@@ -146,7 +146,7 @@ if [ "${MCRC}" = "0" ]; then
   # do QC tasks
   if [[ "${remainingargs}" == *"--include-local-qc"* ]]; then
     echo "Doing QC"
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
+    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} -k
     RC=$?
   fi
 
