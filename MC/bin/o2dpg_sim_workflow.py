@@ -879,7 +879,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # calorimeters
    EMCRECOtask = createTask(name='emcalreco_'+str(tf), needs=[getDigiTaskName("EMC")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    EMCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-emcal-reco-workflow --input-type digits --output-type cells --infile emcaldigits.root ' + getDPL_global_options() + putConfigValues()
-   # EMCRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
+   EMCRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    workflow['stages'].append(EMCRECOtask)
 
    PHSRECOtask = createTask(name='phsreco_'+str(tf), needs=[getDigiTaskName("PHS")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
