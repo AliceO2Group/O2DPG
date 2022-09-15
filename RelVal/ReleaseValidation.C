@@ -33,17 +33,14 @@ enum options {
 double EPSILON = 0.00001;
 
 void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
-                   bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests, std::unordered_map<std::string, std::vector<TestResult>>& allTests);
+                   bool firstComparison, bool finalComparison, std::unordered_map<std::string, std::vector<TestResult>>& allTests);
 void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color);
 bool PotentiallySameHistograms(TH1*, TH1*);
 TestResult CompareChiSquare(TH1* hA, TH1* hB, double varChi2, bool areComparable);
 TestResult CompareBinContent(TH1* hA, TH1* hB, double valMeanDiff, bool areComparable);
 TestResult CompareNentr(TH1* hA, TH1* hB, double valEntriesDiff, bool areComparable);
 void DrawRatio(TH1* hR);
-void DrawRelativeDifference(TH1* hR);
 void SelectCriticalHistos();
-void createTestsSummaryPlot(TFile* file, TString const& obj);
-void SetZLabels(TAxis* axis);
 const char* MapResultToLabel(TestResult const& testResult);
 void WriteTestResultsToJson(std::ofstream& json, std::string const& key, std::vector<TestResult> const& testResults);
 void WriteToJsonFromMap(std::unordered_map<std::string, std::vector<TestResult>> const& allTestsMap);
@@ -289,10 +286,6 @@ void ReleaseValidation(std::string const& filename1, std::string const& filename
 
   // prepare summary plots
   int nkeys = extractedFile1.GetNkeys();
-  TH2F* hSummaryCheck = new TH2F("hSummaryCheck", "", 1, 0, 1, nkeys, 0, 2);
-  hSummaryCheck->SetStats(000);
-  hSummaryCheck->SetMinimum(-1E-6);
-
   int nTests = 0;
   if ((whichTest & CHI2) == CHI2) {
     nTests++;
@@ -303,9 +296,6 @@ void ReleaseValidation(std::string const& filename1, std::string const& filename
   if ((whichTest & NENTRIES) == NENTRIES) {
     nTests++;
   }
-  TH2F* hSummaryTests = new TH2F("hSummaryTests", "", nTests, 0, 1, nkeys, 0, 2);
-  hSummaryTests->SetStats(000);
-  hSummaryTests->SetMinimum(-1E-6);
 
   // collect test results to store them as JSON later
   std::unordered_map<std::string, std::vector<TestResult>> allTestsMap;
@@ -354,7 +344,7 @@ void ReleaseValidation(std::string const& filename1, std::string const& filename
     auto valueEntriesDiffUse = getThreshold(hA->GetName(), "test_num_entries", inThresholds, valueEntriesDiff);
     std::cout << valueChi2Use << " " << valueMeanDiffUse << " " << valueEntriesDiffUse << "\n";
 
-    CompareHistos(hA, hB, whichTest, valueChi2Use, valueMeanDiffUse, valueEntriesDiffUse, isFirstComparison, isLastComparison, hSummaryCheck, hSummaryTests, allTestsMap);
+    CompareHistos(hA, hB, whichTest, valueChi2Use, valueMeanDiffUse, valueEntriesDiffUse, isFirstComparison, isLastComparison, allTestsMap);
 
     nComparisons++;
     if (nComparisons == 1)
@@ -367,45 +357,6 @@ void ReleaseValidation(std::string const& filename1, std::string const& filename
   }
   std::cout << "\nNumber of histograms only found in first but NOT second file: " << nNotFound << "\n";
 
-  // Create a summary plot with the result of the choosen test for all histograms
-  TCanvas summaryCheck("summaryCheck", "summaryCheck");
-  Int_t MyPalette[5];
-  MyPalette[0] = kBlue;
-  MyPalette[1] = kBlue - 10;
-  MyPalette[2] = kRed;
-  MyPalette[3] = kOrange;
-  MyPalette[4] = kGreen;
-  gStyle->SetPalette(5, MyPalette);
-  gStyle->SetGridStyle(3);
-  gStyle->SetGridWidth(3);
-  summaryCheck.SetGrid();
-  summaryCheck.SetRightMargin(0.22);
-  hSummaryCheck->LabelsDeflate("Y");
-  SetZLabels(hSummaryCheck->GetZaxis());
-  hSummaryCheck->Draw("colz");
-  summaryCheck.SaveAs(Form("SummaryCheck%d.png", whichTest));
-
-  // Create a summary plot with the result of each of the three basic tests for each histogram
-  TCanvas summaryTests("summaryTests", "summaryTests");
-
-  gStyle->SetGridStyle(3);
-  summaryTests.SetGrid();
-  summaryTests.SetRightMargin(0.22);
-  hSummaryTests->LabelsDeflate("Y");
-  SetZLabels(hSummaryTests->GetZaxis());
-  hSummaryTests->Draw("colz");
-  summaryTests.SaveAs("SummaryTests.png");
-
-  fileSummaryOutput = new TFile("Summary.root", "update");
-  hSummaryCheck->Write(Form("hSummaryCheck%d", whichTest));
-  hSummaryTests->Write("hSummaryTests");
-  if (selectCritical) {
-    // selected critical plots are saved in a separated pdf
-    SelectCriticalHistos();
-  }
-  fileSummaryOutput->Close();
-
-  // WriteToJson(hSummaryCheck, hSummaryTests);
   AddSummaryTest(allTestsMap);
   WriteToJsonFromMap(allTestsMap);
 }
@@ -513,28 +464,6 @@ bool PotentiallySameHistograms(TH1* hA, TH1* hB)
 // functionality for histogram comparison //
 ////////////////////////////////////////////
 
-// fills the result of a single test into the histogram displaying all test results
-void FillhTests(TH2F* hTests, const char* histName, TestResult testResult)
-{
-  if (testResult.comparable) {
-    if (testResult.passed == false) {
-      if (testResult.critical == true) {                                               // if the BAD test is critical (true), then we have BAD, otherwise just a WARNING
-        hTests->Fill(Form("%s", testResult.testname.Data()), Form("%s", histName), 0); // BAD--> histo bin cont = 0
-      } else {
-        hTests->Fill(Form("%s", testResult.testname.Data()), Form("%s", histName), 0.5); // WARNING--> histo bin cont = 0.5
-      }
-    } else {
-      hTests->Fill(Form("%s", testResult.testname.Data()), Form("%s", histName), 1); // GOOD--> histo bin cont = 1
-    }
-  } else {
-    if (testResult.critical == true) {
-      hTests->Fill(Form("%s", testResult.testname.Data()), Form("%s", histName), -0.5); // critical test N.C = -0.5
-    } else {
-      hTests->Fill(Form("%s", testResult.testname.Data()), Form("%s", histName), -0.25); // non-critical test N.C = -0.25
-    }
-  }
-}
-
 // keeps track if there was at least one failed/critical failed/non-comparable/... test
 void SetTestResults(TestResult testResult, bool& test_failed, bool& criticaltest_failed, bool& test_nc, bool& criticaltest_nc, bool update = false)
 {
@@ -596,13 +525,8 @@ void RegisterTestResult(std::unordered_map<std::string, std::vector<TestResult>>
 }
 
 void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMeanDiff, double valEntriesDiff,
-                   bool firstComparison, bool finalComparison, TH2F* hSum, TH2F* hTests, std::unordered_map<std::string, std::vector<TestResult>>& allTests)
+                   bool firstComparison, bool finalComparison, std::unordered_map<std::string, std::vector<TestResult>>& allTests)
 {
-  // method to evaluate and draw the result of the comparison between plots
-  hSum->SetStats(000);
-  hSum->SetMinimum(-1E-6);
-  hTests->SetStats(000);
-  hTests->SetMinimum(-1E-6);
 
   double integralA = hA->Integral();
   double integralB = hB->Integral();
@@ -633,7 +557,6 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
     SetTestResults(testResult, test_failed, criticaltest_failed, test_nc, criticaltest_nc);
     if (testResult.comparable)
       more.AddEntry((TObject*)nullptr, Form("#chi^{2} / Nbins = %f", testResult.value), "");
-    FillhTests(hTests, hA->GetName(), testResult);
     RegisterTestResult(allTests, hA->GetName(), testResult);
   }
 
@@ -642,7 +565,6 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
     SetTestResults(testResult, test_failed, criticaltest_failed, test_nc, criticaltest_nc, true);
     if (testResult.comparable)
       more.AddEntry((TObject*)nullptr, Form("meandiff = %f", testResult.value), "");
-    FillhTests(hTests, hA->GetName(), testResult);
     RegisterTestResult(allTests, hA->GetName(), testResult);
   }
 
@@ -651,34 +573,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, double valChi2, double valMe
     SetTestResults(testResult, test_failed, criticaltest_failed, test_nc, criticaltest_nc, true);
     if (testResult.comparable)
       more.AddEntry((TObject*)nullptr, Form("entriesdiff = %f", testResult.value), "");
-    FillhTests(hTests, hA->GetName(), testResult);
     RegisterTestResult(allTests, hA->GetName(), testResult);
-  }
-
-  //}
-  // if all tests (subsets of the check) are GOOD, then the result is GOOD, otherwise it is BAD or WARNING or N.C.
-  // It is BAD if at least one of the BAD tests is a critical test
-  //}
-  if (criticaltest_failed) { // BAD
-    outc = Form("Check %d: BAD", whichTest);
-    hSum->Fill(Form("Check%d", whichTest), Form("%s", hA->GetName()), 0);
-    colt = kRed + 1;
-  } else if (criticaltest_nc) { // critical N.C.
-    outc = Form("Check %d: NOT COMPARABLE", whichTest);
-    hSum->Fill(Form("Check%d", whichTest), Form("%s", hA->GetName()), -0.5);
-    colt = kBlue + 1;
-  } else if (test_nc) { // non-critical N.C
-    outc = Form("Check %d: NOT COMPARABLE (non-crit.)", whichTest);
-    hSum->Fill(Form("Check%d", whichTest), Form("%s", hA->GetName()), -0.25);
-    colt = kBlue - 10;
-  } else if (test_failed) { // WARNING
-    outc = Form("Check %d: WARNING", whichTest);
-    colt = kOrange + 1;
-    hSum->Fill(Form("Check%d", whichTest), Form("%s", hA->GetName()), 0.5);
-  } else { // GOOD
-    outc = Form("Check %d: COMPATIBLE", whichTest);
-    colt = kGreen + 1;
-    hSum->Fill(Form("Check%d", whichTest), Form("%s", hA->GetName()), 1);
   }
 
   if (isEmptyHisto(hA) == 2 || isEmptyHisto(hB) == 2) {
@@ -922,10 +817,10 @@ const char* MapResultToLabel(TestResult const& testResult)
       }
       return "BAD";
     }
+    if (!testResult.comparable) {
+      return "NONCRIT_NC";
+    }
     return "WARNING";
-  }
-  if (!testResult.comparable) {
-    return "NONCRIT_NC";
   }
   return "GOOD";
 }
