@@ -588,5 +588,13 @@
             ]
         },
        "processMC": "true"
+    },
+    "ambiguous-track-propagation": {
+        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
+        "geoPath": "GLO\/Config\/GeometryAligned",
+        "grpmagPath": "GLO\/Config\/GRPMagField",
+        "mVtxPath": "GLO\/Calib\/MeanVertex",
+        "processCentral": "false",
+        "processMFT": "true"
     }
 }

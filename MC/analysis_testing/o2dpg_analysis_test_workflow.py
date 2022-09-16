@@ -165,6 +165,7 @@ analysis_PWGMMMFT = {"name": "PWGMMMFT",
                              "o2-analysis-trackselection",
                              "o2-analysis-event-selection",
                              "o2-analysis-multiplicity-table",
+                             "o2-analysis-mm-track-propagation",
                              "o2-analysis-mm-dndeta-mft"]}
 ANALYSES.append(analysis_PWGMMMFT)
 analysis_EventSelectionQA = {"name": "EventSelectionQA",
