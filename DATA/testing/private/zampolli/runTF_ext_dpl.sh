@@ -31,7 +31,6 @@ export ALL_EXTRA_CONFIG="HBFUtils.nHBFPerTF=$NHBPERTF"
 #export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow=""
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="GPU_proc.debugLevel=1;"
 
-export GEN_TOPO_IGNORE_ERROR=1
 
                                                                                                                                                                                                                                                                                                                                                                
 export MULTIPLICITY_FACTOR_RAWDECODERS=1
