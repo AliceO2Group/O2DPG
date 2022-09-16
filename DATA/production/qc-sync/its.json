@@ -44,7 +44,7 @@
           "nThreads": "1",
           "nBCbins" : "103",
           "dicttimestamp" : "0",
-	  "publishSummary1D": "0"
+          "publishSummary1D": "0"
         },
           "localMachines": [
           "localhost", "epn"
