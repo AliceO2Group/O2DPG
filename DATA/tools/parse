@@ -44,6 +44,9 @@ if 'WORKFLOWMODE' in os.environ:
 else:
     os.environ['WORKFLOWMODE'] = 'dds'
 
+if 'O2_NO_CATCHALL_EXCEPTIONS' in os.environ:
+    os.unsetenv("O2_NO_CATCHALL_EXCEPTIONS")
+
 if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRIDE'] != '' and int(os.environ['RECO_NUM_NODES_OVERRIDE']) > 0:
     reco_num_nodes_override = int(os.environ['RECO_NUM_NODES_OVERRIDE'])
     os.environ['RECO_NUM_NODES_WORKFLOW'] = str(reco_num_nodes_override)
@@ -137,7 +140,6 @@ for line in f:
                   command += ' > ' + filename
                 print('Running DPL command', command)
                 retVal = subprocess.run(command, shell=True)
-                print('Returned with ', retVal.returncode)
                 if retVal.returncode != 0:
                     print('Error (' + str(retVal) + ') running command', command)
                     ftmp = open(filename, 'r')
