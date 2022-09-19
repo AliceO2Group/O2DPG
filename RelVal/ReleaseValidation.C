@@ -782,7 +782,13 @@ TestResult CompareNentr(TH1* hA, TH1* hB, double val, bool areComparable)
   res.threshold = val;
   res.testname = "test_num_entries";
 
-  res.critical = false;
+  if(TString(hA->GetName()).EndsWith("_ratioFromTEfficiency")){ //make NEntries-test critical when dealing with efficiencies
+    res.critical = true;
+  }
+  else{
+    res.critical = false;
+  }
+  
 
   res.passed = false;
   res.comparable = areComparable;

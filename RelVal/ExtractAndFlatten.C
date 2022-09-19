@@ -262,13 +262,13 @@ void WriteTEfficiency(TEfficiency* hEff, TDirectory* outDir, std::string const& 
   // separate numerator and denominator of the efficiency
   auto hEffNomin = (TH1*)hEff->GetPassedHistogram(); // eff nominator
   auto hEffDenom = (TH1*)hEff->GetTotalHistogram();  // eff denominator
-  hEffNomin->SetName(Form("%s_effnominator", hEffNomin->GetName()));
-  hEffDenom->SetName(Form("%s_effdenominator", hEffDenom->GetName()));
+  hEffNomin->SetName(Form("%s_numeratorFromTEfficiency", hEffNomin->GetName()));
+  hEffDenom->SetName(Form("%s_denominatorFromTEfficiency", hEffDenom->GetName()));
 
   // recreate the efficiency dividing numerator for denominator:
   auto heff = (TH1*)(hEffNomin->Clone("heff"));
   heff->SetTitle(Form("%s", hEff->GetTitle()));
-  heff->SetName(Form("%s", hEff->GetName()));
+  heff->SetName(Form("%s_ratioFromTEfficiency", hEff->GetName()));
   heff->Divide(hEffNomin, hEffDenom, 1.0, 1.0, "B");
 
   WriteToDirectory(hEffNomin, outDir, currentPrefix);
