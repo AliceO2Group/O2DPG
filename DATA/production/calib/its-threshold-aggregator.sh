@@ -12,9 +12,9 @@ CCDBPATH1=""
 CCDBPATH2=""
 if [ $RUNTYPE == "tuning" ] || [ $RUNTYPE == "digital" ]; then
   CCDBPATH1="http://alio2-cr1-flp199.cern.ch:8083"
-  CCDBPATH2="http://localhost:8084"
+  CCDBPATH2="http://o2-ccdb.internal"
 elif [ $RUNTYPE == "thrshort" ]; then
-  CCDBPATH1="http://localhost:8084"
+  CCDBPATH1="http://o2-ccdb.internal"
 else
   echo Ccdb paths are empty
 fi
