@@ -268,7 +268,7 @@ void WriteTEfficiency(TEfficiency* hEff, TDirectory* outDir, std::string const& 
   // recreate the efficiency dividing numerator for denominator:
   auto heff = (TH1*)(hEffNomin->Clone("heff"));
   heff->SetTitle(Form("%s", hEff->GetTitle()));
-  heff->SetName(Form("%s", hEff->GetName()));
+  heff->SetName(Form("%s_efficiency", hEff->GetName()));
   heff->Divide(hEffNomin, hEffDenom, 1.0, 1.0, "B");
 
   WriteToDirectory(hEffNomin, outDir, currentPrefix);
