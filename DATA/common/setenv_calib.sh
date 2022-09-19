@@ -27,7 +27,7 @@ if has_detector_calib TRD && has_detectors ITS TPC TRD; then CAN_DO_CALIB_TRD_VD
 if has_detector_calib EMC && has_detector_reco EMC; then CAN_DO_CALIB_EMC_BADCHANNELCALIB=1; CAN_DO_CALIB_EMC_TIMECALIB=1; else CAN_DO_CALIB_EMC_BADCHANNELCALIB=0; CAN_DO_CALIB_EMC_TIMECALIB=0; fi
 if has_detector_calib PHS && has_detector_reco PHS; then CAN_DO_CALIB_PHS_ENERGYCALIB=1; CAN_DO_CALIB_PHS_BADMAPCALIB=1; CAN_DO_CALIB_PHS_TURNONCALIB=1; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=1; else CAN_DO_CALIB_PHS_ENERGYCALIB=0; CAN_DO_CALIB_PHS_BADMAPCALIB=0; CAN_DO_CALIB_PHS_TURNONCALIB=0; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=0; fi
 if has_detector_calib CPV && has_detector_reco CPV; then CAN_DO_CALIB_CPV_GAIN=1; else CAN_DO_CALIB_CPV_GAIN=0; fi
-if has_detector_calib ZDC && has_detector_reco ZDC; then
+if has_detector_calib ZDC && has_processing_step ZDC_RECO; then
     CAN_DO_CALIB_ZDC_TDC=1;
 else
     CAN_DO_CALIB_ZDC_TDC=0;
