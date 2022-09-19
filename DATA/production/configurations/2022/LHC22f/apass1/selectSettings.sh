@@ -33,9 +33,15 @@ if [[ $RUNNUMBER -ge 520543 ]] && [[ $RUNNUMBER -le 521150 ]]; then
 fi
 
 # LHC22m: 521326 - 521907
-if [[ $RUNNUMBER -ge 521326 ]]; then
+if [[ $RUNNUMBER -ge 521326 ]] && [[ $RUNNUMBER -le 525582 ]]; then
   # -30kA/-6kA
   GRPMAG=o2sim_grp_b5m_128HB.root
+fi
+
+# LHC22n: from 525583
+if [[ $RUNNUMBER -ge 525583 ]]; then
+  # +30kA/+6kA
+  GRPMAG=o2sim_grp_b5p_128HB.root
 fi
 
 echo "GRP B field = $GRPMAG"
