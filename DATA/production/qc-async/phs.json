@@ -16,7 +16,7 @@
         "url": "influxdb-unix:///tmp/telegraf.sock"
       },
       "consul": {
-        "url": "http://ali-consul.cern.ch:8500"
+        "url": ""
       },
       "conditionDB": {
         "url": "http://localhost:8084"
