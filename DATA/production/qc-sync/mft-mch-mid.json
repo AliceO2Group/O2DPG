@@ -1,0 +1,55 @@
+{
+    "qc": {
+        "config": {
+            "database": {
+                "implementation": "CCDB",
+                "host": "ali-qcdb.cern.ch:8083",
+                "username": "not_applicable",
+                "password": "not_applicable",
+                "name": "not_applicable"
+            },
+            "Activity": {
+                "number": "42",
+                "type": "2"
+            },
+            "monitoring": {
+                "url": "influxdb-unix:///tmp/telegraf.sock"
+            },
+            "consul": {
+                "url": "null:8500"
+            },
+            "conditionDB": {
+                "url": "null:8083"
+            }
+        },
+        "tasks": {
+            "FwdTracks": {
+                "active": "true",
+                "className": "o2::quality_control_modules::muon::TracksTask",
+                "moduleName": "QcMUONCommon",
+                "detectorName": "GLO",
+                "cycleDurationSeconds": "180",
+                "maxNumberCycles": "-1",
+                "dataSource": {
+                    "type": "direct",
+                    "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;fwdtracks:GLO/GLFWD;matchMCHMID:GLO/MTC_MCHMID;matchMFTMCH:GLO/MTC_MFTMCH"
+                },
+                "taskParameters": {
+                    "maxTracksPerTF": "600",
+                    "GID": "MFT,MCH,MID,MFT-MCH,MCH-MID"
+                },
+                "location": "local",
+                "mergingMode": "delta",
+                "localControl": "odc",
+                "localMachines": [
+                    "localhost",
+                    "epn"
+                ],
+                "remotePort": "47789",
+                "remoteMachine": "alio2-cr1-qc01.cern.ch"
+            }
+        },
+        "checks": {}
+    },
+    "dataSamplingPolicies": []
+}

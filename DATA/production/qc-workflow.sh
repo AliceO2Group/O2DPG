@@ -1,5 +1,7 @@
 #!/bin/bash
 
+printenv 
+
 if [[ -z "$WORKFLOW" ]] || [[ -z "$MYDIR" ]]; then
   echo This script must be called from the dpl-workflow.sh and not standalone 1>&2
   exit 1
@@ -39,11 +41,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_ZDC" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=consul://o2/components/qc/ANY/any/zdc-rec-epn
     if [[ -z "$QC_JSON_MCH" ]]; then
       if has_detector MCH && has_processing_step MCH_RECO; then
-        if has_track_source "MCH-MID"; then
-          QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full-track-matching
-        else
           QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full
-        fi
       else
         QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-digits
       fi
@@ -67,7 +65,19 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
         QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctof
       fi
     fi
+
+    if [[ -z "$QC_JSON_MUON_MATCH" ]]; then
+      if has_track_source "MFT-MCH" && has_track_source "MCH-MID"; then
+          QC_JSON_MUON_MATCH=consul://o2/components/qc/ANY/any/muon-qcmn-epn-mft-mch-mid
+      elif has_track_source "MFT-MCH"; then
+        QC_JSON_MUON_MATCH=consul://o2/components/qc/ANY/any/muon-qcmn-epn-mft-mch
+      elif has_track_source "MCH-MID"; then
+        QC_JSON_MUON_MATCH=consul://o2/components/qc/ANY/any/muon-qcmn-epn-mch-mid
+      fi
+    fi
+
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json # this must be last
+
   elif [[ $SYNCMODE == 1 ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
@@ -98,7 +108,19 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctof.json
       fi
     fi
+
+    if [[ -z "$QC_JSON_MUON_MATCH" ]]; then
+      if has_track_source "MFT-MCH" && has_track_source "MCH-MID"; then
+        QC_JSON_MUON_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/mft-mch-mid.json
+      elif has_track_source "MFT-MCH"; then
+        QC_JSON_MUON_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/mft-mch.json
+      elif has_track_source "MCH-MID"; then
+        QC_JSON_MUON_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/mch-mid.json
+      fi
+    fi
+
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json # this must be last
+
   else
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-async/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-async/its.json
