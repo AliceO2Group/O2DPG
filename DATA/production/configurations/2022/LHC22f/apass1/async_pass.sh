@@ -172,11 +172,34 @@ echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS
 if [[ ! -z "$ALIEN_JDL_SHMSIZE" ]]; then export SHMSIZE=$ALIEN_JDL_SHMSIZE; elif [[ -z "$SHMSIZE" ]]; then export SHMSIZE=$(( 16 << 30 )); fi
 if [[ ! -z "$ALIEN_JDL_DDSHMSIZE" ]]; then export DDSHMSIZE=$ALIEN_JDL_DDSHMSIZE; elif [[ -z "$DDSHMSIZE" ]]; then export DDSHMSIZE=$(( 32 << 10 )); fi
 
+# root output enabled only for 2 permille of the cases
+# keeping AO2D.root QC.root o2calib_tof.root MFTAssessment.root mchtracks.root mchclusters.root
+SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT_o2_mft_reco_workflow= ENABLE_ROOT_OUTPUT_o2_tof_matcher_workflow= ENABLE_ROOT_OUTPUT_o2_aod_producer_workflow= ENABLE_ROOT_OUTPUT_o2_qc= "
+
+if [[ -z $RND_PERMILLE ]]; then
+  RND_PERMILLE=$((1 + $RANDOM % 2000))
+fi
+echo "Randomly generated number for current reco = $RND_PERMILLE"
+if [[ $RND_PERMILLE -ge 2 ]]; then
+  echo "ROOT ouput will be kept ONLY FOR SOME workflows"
+else
+  echo "ROOT ouput will be kept for ALL workflows"
+  SETTING_ROOT_OUTPUT+="DISABLE_ROOT_OUTPUT=0"
+fi
+echo SETTING_ROOT_OUTPUT=$SETTING_ROOT_OUTPUT
+
+# Enabling GPUs
+if [[ -n "$ALIEN_JDL_USEGPUS" ]]; then
+  echo "Enabling GPUS"
+  export GPUTYPE="HIP"
+  export GPUMEMSIZE=$((25 << 30))
+fi
+
 # reco and matching
 # print workflow
-IS_SIMULATED_DATA=0 WORKFLOWMODE=print DISABLE_ROOT_OUTPUT="" TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 ./run-workflow-on-inputlist.sh CTF list.list > workflowconfig.log
+env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 ./run-workflow-on-inputlist.sh CTF list.list > workflowconfig.log
 # run it
-IS_SIMULATED_DATA=0 WORKFLOWMODE=run DISABLE_ROOT_OUTPUT="" TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 ./run-workflow-on-inputlist.sh CTF list.list
+env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 ./run-workflow-on-inputlist.sh CTF list.list
 
 # now extract all performance metrics
 IFS=$'\n'
