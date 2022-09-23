@@ -22,8 +22,6 @@ def create_sim_config(args):
        add(config, {"MFTAlpideParam.roFrameLengthInBC" : 198})
        if 302000 <= int(args.run) and int(args.run) < 309999:
            add(config, {"ITSAlpideParam.roFrameLengthInBC" : 198})
-       # MFT tracking setting
-       add(config, {"MFTTracking.FullClusterScan" : 1})
        # ITS reco settings
        add(config, {"ITSVertexerParam.phiCut" : 0.5,
                     "ITSVertexerParam.clusterContributorsCut" : 3,
