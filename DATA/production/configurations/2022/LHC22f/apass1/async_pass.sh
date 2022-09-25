@@ -92,7 +92,7 @@ fi
 
 echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions and mode $MODE
 
-###if [[ $MODE == "remote" ]]; then 
+###if [[ $MODE == "remote" ]]; then
     # common archive
     if [[ ! -f commonInput.tgz ]]; then
 	echo "No commonInput.tgz found exiting"
@@ -107,13 +107,13 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
     # run specific archive
     if [[ ! -f runInput_$RUNNUMBER.tgz ]]; then
 	echo "No runInput_$RUNNUMBER.tgz, let's hope we don't need it"
-    else 
+    else
       tar -xzvf runInput_$RUNNUMBER.tgz
     fi
 ###fi
 
 echo "Checking current directory content"
-ls -altr 
+ls -altr
 
 if [[ -f "setenv_extra.sh" ]]; then
     source setenv_extra.sh $RUNNUMBER $BEAMTYPE
@@ -169,11 +169,14 @@ fi
 
 echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS} TIMEFRAME_RATE_LIMIT ${TIMEFRAME_RATE_LIMIT}"
 
+if [[ ! -z "$ALIEN_JDL_SHMSIZE" ]]; then export SHMSIZE=$ALIEN_JDL_SHMSIZE; elif [[ -z "$SHMSIZE" ]]; then export SHMSIZE=$(( 16 << 30 )); fi
+if [[ ! -z "$ALIEN_JDL_DDSHMSIZE" ]]; then export DDSHMSIZE=$ALIEN_JDL_DDSHMSIZE; elif [[ -z "$DDSHMSIZE" ]]; then export DDSHMSIZE=$(( 32 << 10 )); fi
+
 # reco and matching
 # print workflow
-IS_SIMULATED_DATA=0 WORKFLOWMODE=print DISABLE_ROOT_OUTPUT="" TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list > workflowconfig.log
+IS_SIMULATED_DATA=0 WORKFLOWMODE=print DISABLE_ROOT_OUTPUT="" TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 ./run-workflow-on-inputlist.sh CTF list.list > workflowconfig.log
 # run it
-IS_SIMULATED_DATA=0 WORKFLOWMODE=run DISABLE_ROOT_OUTPUT="" TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 SHMSIZE=16000000000 DDSHMSIZE=32000 ./run-workflow-on-inputlist.sh CTF list.list
+IS_SIMULATED_DATA=0 WORKFLOWMODE=run DISABLE_ROOT_OUTPUT="" TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 ./run-workflow-on-inputlist.sh CTF list.list
 
 # now extract all performance metrics
 IFS=$'\n'
@@ -196,7 +199,7 @@ if [[ -f "AO2D.root" ]]; then
 	echo "exit code from AO2D check is " $exitcode
 	exit $exitcode
     fi
-    if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then 
+    if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
       ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
       ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json > analysisQC.log
       if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
