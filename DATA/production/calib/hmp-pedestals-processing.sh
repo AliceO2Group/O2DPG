@@ -64,7 +64,7 @@ then
 fi
 if [ $HMP_CCDB_REC == 'true' ];
 then
-  WORKFLOW+="--use-ccdb --ccdb-uri 'http://alice-ccdb.cern.ch' "
+  WORKFLOW+="--use-ccdb --ccdb-uri 'https://alice-ccdb.cern.ch' "
 fi
 if [ $HMP_FILES_REC == 'true' ];
 then
