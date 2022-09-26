@@ -47,9 +47,9 @@ void WriteToJsonFromMap(std::unordered_map<std::string, std::vector<TestResult>>
 void fillThresholdsFromFile(std::string const& inFilepath, std::unordered_map<std::string, std::vector<TestResult>>& allThresholds);
 
 template <typename T>
-T getThreshold(std::string const& histoName, std::string const& testName, std::unordered_map<std::string, std::vector<TestResult>> const& allThresholds, T defaultValue)
+T getThreshold(std::string const& histoName, std::string const& testName, std::unordered_map<std::string, std::vector<TestResult>> const& allThresholds, T defaultValue, double margin)
 {
-  std::cerr << "Extract threshold from value for histogram " << histoName << " and test " << testName << ", with default " << defaultValue << "\n";
+  std::cerr << "Extract threshold from value for histogram " << histoName << " and test " << testName << ", with margin " << margin << " and default " << defaultValue << "\n";
   auto const& it = allThresholds.find(histoName);
   if (it == allThresholds.end()) {
     return defaultValue;
@@ -60,7 +60,7 @@ T getThreshold(std::string const& histoName, std::string const& testName, std::u
         std::cerr << "The threshold was chosen to be 0, hence use deault value " << defaultValue << "\n";
         return defaultValue;
       }
-      return test.value;
+      return test.value*margin;
     }
   }
   std::cerr << "Could not extract threshold from value for histogram " << histoName << " and test " << testName << ", returning default " << defaultValue << "\n";
@@ -271,7 +271,7 @@ void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, 
 
 void ReleaseValidation(std::string const& filename1, std::string const& filename2,
                        int whichTest = 1, double valueChi2 = 1.5, double valueMeanDiff = 1.5, double valueEntriesDiff = 0.01,
-                       bool selectCritical = false, const char* inFilepathThreshold = "")
+                       bool selectCritical = false, const char* inFilepathThreshold = "", double Chi2Margin = 1.0, double MeanDiffMargin = 1.0, double EntriesDiffMargin = 1.0)
 {
   gROOT->SetBatch();
 
@@ -339,9 +339,9 @@ void ReleaseValidation(std::string const& filename1, std::string const& filename
 
     std::cout << "Comparing " << hA->GetName() << " and " << hB->GetName() << "\n";
 
-    auto valueChi2Use = getThreshold(hA->GetName(), "test_chi2", inThresholds, valueChi2);
-    auto valueMeanDiffUse = getThreshold(hA->GetName(), "test_bin_cont", inThresholds, valueMeanDiff);
-    auto valueEntriesDiffUse = getThreshold(hA->GetName(), "test_num_entries", inThresholds, valueEntriesDiff);
+    auto valueChi2Use = getThreshold(hA->GetName(), "test_chi2", inThresholds, valueChi2, Chi2Margin);
+    auto valueMeanDiffUse = getThreshold(hA->GetName(), "test_bin_cont", inThresholds, valueMeanDiff, MeanDiffMargin);
+    auto valueEntriesDiffUse = getThreshold(hA->GetName(), "test_num_entries", inThresholds, valueEntriesDiff, EntriesDiffMargin);
     std::cout << valueChi2Use << " " << valueMeanDiffUse << " " << valueEntriesDiffUse << "\n";
 
     CompareHistos(hA, hB, whichTest, valueChi2Use, valueMeanDiffUse, valueEntriesDiffUse, isFirstComparison, isLastComparison, allTestsMap);

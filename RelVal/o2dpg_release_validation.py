@@ -485,7 +485,7 @@ def rel_val_files(files1, files2, args, output_dir):
         cmd = f"root -l -b -q {ROOT_MACRO_EXTRACT}{cmd}"
         run_macro(cmd, log_file_extract)
 
-    cmd = f"\\(\\\"{file_1}\\\",\\\"{file_2}\\\",{args.test},{args.chi2_threshold},{args.rel_mean_diff_threshold},{args.rel_entries_diff_threshold},{select_critical},\\\"{abspath(in_thresholds)}\\\"\\)"
+    cmd = f"\\(\\\"{file_1}\\\",\\\"{file_2}\\\",{args.test},{args.chi2_threshold},{args.rel_mean_diff_threshold},{args.rel_entries_diff_threshold},{select_critical},\\\"{abspath(in_thresholds)}\\\",{args.chi2_threshold_margin},{args.rel_mean_diff_threshold_margin},{args.rel_entries_diff_threshold_margin}\\)"
     cmd = f"root -l -b -q {ROOT_MACRO_RELVAL}{cmd}"
     print("Running RelVal on extracted objects")
     run_macro(cmd, log_file_rel_val)
@@ -654,17 +654,19 @@ def rel_val_sim_dirs(args):
             rel_val_files(in1, in2, args, current_output_dir)
     return 0
 
-def make_new_threshold_file(json_path, out_filepath):
+def make_new_threshold_file(json_path, out_filepath,threshold_margins):
     json_in = None
     with open(json_path, "r") as f:
         json_in = json.load(f)
     with open(out_filepath, "w") as f:
         for histo_name, tests in json_in.items():
             for t in tests:
-                print(t["result"])
                 if not t["comparable"]:
                     continue
-                f.write(f"{histo_name},{t['test_name']},{t['value']}\n")
+                if t["test_name"] not in REL_VAL_TEST_NAMES_MAP:
+                    continue
+                ind = REL_VAL_TEST_NAMES_MAP[t['test_name']]
+                f.write(f"{histo_name},{t['test_name']},{t['value']*threshold_margins[ind]}\n")
 
 
 def rel_val(args):
@@ -681,7 +683,7 @@ def rel_val(args):
     if not exists(args.output):
         makedirs(args.output)
     if args.use_values_as_thresholds:
-        out_path = make_new_threshold_file(args.use_values_as_thresholds, join(args.output, "use_thresholds.dat"))
+        out_path = make_new_threshold_file(args.use_values_as_thresholds, join(args.output, "use_thresholds.dat"),[args.chi2_threshold_margin,args.rel_mean_diff_threshold_margin,args.rel_entries_diff_threshold_margin])
         args.use_values_as_thresholds = join(args.output, "use_thresholds.dat")
     if is_sim_dir(args.input1[0]) and is_sim_dir(args.input2[0]):
         if not args.dir_config:
@@ -869,6 +871,9 @@ def main():
     rel_val_parser.add_argument("--rel-entries-diff-threshold", dest="rel_entries_diff_threshold", type=float, help="Threshold of relative difference in number of entries", default=0.01)
     rel_val_parser.add_argument("--select-critical", dest="select_critical", action="store_true", help="Select the critical histograms and dump to file")
     rel_val_parser.add_argument("--use-values-as-thresholds", dest="use_values_as_thresholds", help="Use values from another run as thresholds for this one")
+    rel_val_parser.add_argument("--chi2-threshold-margin", dest="chi2_threshold_margin", type=float, help="Margin to apply to the chi2 threshold extracted from file", default=1.0)
+    rel_val_parser.add_argument("--rel-mean-diff-threshold-margin", dest="rel_mean_diff_threshold_margin", type=float, help="Margin to apply to the rel_mean_diff threshold extracted from file", default=1.0)
+    rel_val_parser.add_argument("--rel-entries-diff-threshold-margin", dest="rel_entries_diff_threshold_margin", type=float, help="Margin to apply to the rel_entries_diff threshold extracted from file", default=1.0)
     rel_val_parser.add_argument("--dir-config", dest="dir_config", help="What to take into account in a given directory")
     rel_val_parser.add_argument("--dir-config-enable", dest="dir_config_enable", nargs="*", help="only enable these top keys in your dir-config")
     rel_val_parser.add_argument("--dir-config-disable", dest="dir_config_disable", nargs="*", help="disable these top keys in your dir-config (precedence over dir-config-enable)")
