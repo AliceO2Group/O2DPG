@@ -35,7 +35,7 @@ fi
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   # calibrations for primary vertex
-  if [[ $CAN_DO_PRIMVTX_MEANVTX == 1 ]]; then
+  if [[ $CAN_DO_CALIB_PRIMVTX_MEANVTX == 1 ]]; then
     if [[ -z ${CALIB_PRIMVTX_MEANVTX+x} ]]; then CALIB_PRIMVTX_MEANVTX=1; fi
   fi
 
