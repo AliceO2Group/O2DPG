@@ -12,7 +12,7 @@
 float getTPCvdrift(int run, std::string_view ltrUrl = "http://ccdb-test.cern.ch:8080")
 {
   o2::ccdb::CcdbApi c;
-  c.init("http://alice-ccdb.cern.ch");
+  c.init("https://alice-ccdb.cern.ch");
   std::map<std::string, std::string> headers, metadataRCT, metadata, mm;
   headers = c.retrieveHeaders(fmt::format("RCT/Info/RunInformation/{}", run), metadataRCT, -1);
   printf("\nLooking for vdrift for run %d\n", run);
