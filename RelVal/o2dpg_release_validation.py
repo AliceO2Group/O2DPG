@@ -485,7 +485,7 @@ def rel_val_files(files1, files2, args, output_dir):
         cmd = f"root -l -b -q {ROOT_MACRO_EXTRACT}{cmd}"
         run_macro(cmd, log_file_extract)
 
-    cmd = f"\\(\\\"{file_1}\\\",\\\"{file_2}\\\",{args.test},{args.chi2_threshold},{args.rel_mean_diff_threshold},{args.rel_entries_diff_threshold},{select_critical},\\\"{abspath(in_thresholds)}\\\",{args.chi2_threshold_margin},{args.rel_mean_diff_threshold_margin},{args.rel_entries_diff_threshold_margin}\\)"
+    cmd = f"\\(\\\"{file_1}\\\",\\\"{file_2}\\\",{args.test},{args.chi2_threshold},{args.rel_mean_diff_threshold},{args.rel_entries_diff_threshold},{select_critical},\\\"{abspath(in_thresholds)}\\\"\\)"
     cmd = f"root -l -b -q {ROOT_MACRO_RELVAL}{cmd}"
     print("Running RelVal on extracted objects")
     run_macro(cmd, log_file_rel_val)
