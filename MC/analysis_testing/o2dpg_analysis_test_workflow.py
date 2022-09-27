@@ -97,13 +97,13 @@ ANALYSIS_CONFIGS = {ANALYSIS_VALID_MC: "json://${O2DPG_ROOT}/MC/config/analysis_
 # collect all analyses
 ANALYSES = []
 
-#analysis_MCHistograms = {"name": "MCHistograms",
-#                         "expected_output": None,
-#                         "valid_for": [ANALYSIS_VALID_MC],
-#                         "cmd": ["o2-analysis-timestamp",
-#                                 "o2-analysis-track-propagation",
-#                                 "o2-analysistutorial-mc-histograms"]}
-#ANALYSES.append(analysis_MCHistograms)
+analysis_MCHistograms = {"name": "MCHistograms",
+                         "expected_output": None,
+                         "valid_for": [ANALYSIS_VALID_MC],
+                         "cmd": ["o2-analysis-timestamp",
+                                 "o2-analysis-track-propagation",
+                                 "o2-analysistutorial-mc-histograms"]}
+ANALYSES.append(analysis_MCHistograms)
 analysis_Efficiency = {"name": "Efficiency",
                        "expected_output": ["AnalysisResults.root"],
                        "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
