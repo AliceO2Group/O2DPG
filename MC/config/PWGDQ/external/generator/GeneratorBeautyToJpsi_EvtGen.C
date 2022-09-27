@@ -30,9 +30,15 @@ FairGenerator*
     printf("PDG %d \n", std::stoi(spdg));
   }
   gen->SetForceDecay(kEvtBJpsiDiElectron);
+  
   // set random seed
   gen->readString("Random:setSeed on");
-  gen->readString("Random:seed = 0");
+  uint random_seed;
+  unsigned long long int random_value = 0; 
+  ifstream urandom("/dev/urandom", ios::in|ios::binary);
+  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
+  gen->readString(Form("Random:seed = %d", random_value % 900000001));
+  
   // print debug
   // gen->PrintDebug();
 
