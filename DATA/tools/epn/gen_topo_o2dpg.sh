@@ -23,7 +23,7 @@ if [[ -z "$MULTIPLICITY_FACTOR_REST" ]]; then echo \$MULTIPLICITY_FACTOR_REST mi
 if [[ -z "$FILEWORKDIR" ]]; then echo \$FILEWORKDIR missing; exit 1; fi
 if [[ -z "$INRAWCHANNAME" ]]; then echo \$INRAWCHANNAME missing; exit 1; fi
 if [[ -z "$CTF_DIR" ]]; then echo \$CTF_DIR missing; exit 1; fi
-if [[ -z "$CTF_METAFILES_DIR" ]]; then echo \$CTF_METAFILES_DIR missing; exit 1; fi
+if [[ -z "$CTF_METAFILES_DIR" ]] && [[ $WORKFLOWMODE != "print" ]]; then echo \$CTF_METAFILES_DIR missing; exit 1; fi
 if [[ -z "$GEN_TOPO_WORKDIR" ]]; then echo \$GEN_TOPO_WORKDIR missing; exit 1; fi
 if [[ -z "$GEN_TOPO_STDERR_LOGGING" ]]; then echo \$GEN_TOPO_STDERR_LOGGING missing; exit 1; fi
 if [[ -z "$IS_SIMULATED_DATA" ]]; then echo \$IS_SIMULATED_DATA missing; exit 1; fi
