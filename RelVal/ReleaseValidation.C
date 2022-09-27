@@ -49,7 +49,7 @@ void fillThresholdsFromFile(std::string const& inFilepath, std::unordered_map<st
 template <typename T>
 T getThreshold(std::string const& histoName, std::string const& testName, std::unordered_map<std::string, std::vector<TestResult>> const& allThresholds, T defaultValue)
 {
-  std::cerr << "Extract threshold from value for histogram " << histoName << " and test " << testName << ", with default " << defaultValue << "\n";
+  std::cerr << "Extract threshold from value for histogram " << histoName << " and test " << testName << " and default " << defaultValue << "\n";
   auto const& it = allThresholds.find(histoName);
   if (it == allThresholds.end()) {
     return defaultValue;
