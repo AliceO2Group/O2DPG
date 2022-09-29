@@ -1025,12 +1025,12 @@ for tf in range(1, NTIMEFRAMES + 1):
                 objectsFile='tofDigitsQC.root')
 
      addQCPerTF(taskName='tofft0PIDQC',
-                needs=[ITSTPCMATCHtask['name'], TOFRECOtask['name'], FT0RECOtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC,TPC,ITS-TPC-TOF,TPC-TOF" --cluster-types FT0',
+                needs=[TOFTPCMATCHERtask['name'], FT0RECOtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF,TPC-TRD,TPC-TRD-TOF" --cluster-types FT0',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tof.json')
      addQCPerTF(taskName='tofPIDQC',
-                needs=[ITSTPCMATCHtask['name'], TOFRECOtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC,TPC,ITS-TPC-TOF,TPC-TOF" --cluster-types none',
+                needs=[TOFTPCMATCHERtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF,TPC-TRD,TPC-TRD-TOF" --cluster-types none',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/pidtof.json')
 
      ### EMCAL

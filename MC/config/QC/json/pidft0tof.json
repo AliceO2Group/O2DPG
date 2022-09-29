@@ -43,13 +43,14 @@
                 "dataSource": {
                     "type": "direct",
                     "query_comment": "checking every matched track",
-                    "query": "matchITSTPCTOF:TOF/MTC_ITSTPC/0;trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;tofcluster:TOF/CLUSTERS/0;trackTPC:TPC/TRACKS/0;trackTPCClRefs:TPC/CLUSREFS/0;recpoints:FT0/RECPOINTS/0"
+                    "query" : "matchITSTPCTOF:TOF/MTC_ITSTPC/0;matchTPCTOF:TOF/MTC_TPC/0;trackTPCTOF:TOF/TOFTRACKS_TPC/0;trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;trackTPC:TPC/TRACKS/0;trackTPCClRefs:TPC/CLUSREFS/0;tofcluster:TOF/CLUSTERS/0;trackTPCMCTR:TPC/TRACKSMCLBL;trackITSTPCMCTR:GLO/TPCITS_MC;trackITSTPCABMCTR:GLO/TPCITSAB_MC;clsTOF_TPC_MCTR:TOF/MCMTC_TPC;clsTOF_GLO_MCTR:TOF/MCMTC_ITSTPC;trackITSTPCTRD:TRD/MATCH_ITSTPC/0;trackITSTPCTRDMCTR:TRD/MCLB_ITSTPC/0;trackITSTPCTRDSAMCTR:TRD/MCLB_ITSTPC_TRD/0;trackTPCTRD:TRD/MATCH_TPC/0;trackTPCTRDMCTR:TRD/MCLB_TPC/0;trackTPCTRDSAMCTR:TRD/MCLB_TPC_TRD/0;trigITSTPCTRD:TRD/TRGREC_ITSTPC/0;trigTPCTRD:TRD/TRGREC_TPC/0;matchITSTPCTRDTOF:TOF/MTC_ITSTPCTRD/0;clsTOF_GLO3_MCTR:TOF/MCMTC_ITSTPCTRD/0;matchTPCTRDTOF:TOF/MTC_TPCTRD/0;clsTOF_GLO2_MCTR:TOF/MCMTC_TPCTRD/0;recpoints:FT0/RECPOINTS/0"
                 },
                 "taskParameters": {
-                    "GID": "ITS-TPC,TPC,ITS-TPC-TOF",
+                    "GID" : "ITS-TPC,TPC,ITS-TPC-TOF,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TRD-TOF,TPC-TRD-TOF",
                     "verbose": "false",
                     "minPtCut": "0.3f",
                     "etaCut": "0.8f",
+                    "useFT0": "true",
                     "minNTPCClustersCut": "60",
                     "minDCACut": "100.f",
                     "minDCACutY": "10.f",
