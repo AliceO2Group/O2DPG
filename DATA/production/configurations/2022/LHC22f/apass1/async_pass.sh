@@ -172,19 +172,50 @@ echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS
 if [[ ! -z "$ALIEN_JDL_SHMSIZE" ]]; then export SHMSIZE=$ALIEN_JDL_SHMSIZE; elif [[ -z "$SHMSIZE" ]]; then export SHMSIZE=$(( 16 << 30 )); fi
 if [[ ! -z "$ALIEN_JDL_DDSHMSIZE" ]]; then export DDSHMSIZE=$ALIEN_JDL_DDSHMSIZE; elif [[ -z "$DDSHMSIZE" ]]; then export DDSHMSIZE=$(( 32 << 10 )); fi
 
-# root output enabled only for 2 permille of the cases
+# root output enabled only for some fraction of the cases
 # keeping AO2D.root QC.root o2calib_tof.root MFTAssessment.root mchtracks.root mchclusters.root
+
 SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT_o2_mft_reco_workflow= ENABLE_ROOT_OUTPUT_o2_tof_matcher_workflow= ENABLE_ROOT_OUTPUT_o2_aod_producer_workflow= ENABLE_ROOT_OUTPUT_o2_qc= "
 
-if [[ -z $RND_PERMILLE ]]; then
-  RND_PERMILLE=$((1 + $RANDOM % 2000))
-fi
-echo "Randomly generated number for current reco = $RND_PERMILLE"
-if [[ $RND_PERMILLE -ge 2 ]]; then
-  echo "ROOT ouput will be kept ONLY FOR SOME workflows"
+keep=0
+
+if [[ $MODE == "remote" ]]; then
+  if [ -f wn.xml ]; then
+    CTF=$(grep alien:// wn.xml | tr ' ' '\n' | grep ^lfn | cut -d\" -f2)
+  fi
+  SUBJOBIDX=$(grep -B1 $CTF CTFs.xml | head -n1 | cut -d\" -f2)
+  echo "CTF                                     : $CTF"
+  echo "Index of CTF in collection              : $SUBJOBIDX"
+  echo "Number of subjobs for current masterjob : $ALIEN_JDL_SUBJOBCOUNT"
+
+  # JDL can set the permille to keep; otherwise we use 2
+  if [[ ! -z "$ALIEN_JDL_NKEEP" ]]; then export NKEEP=$ALIEN_JDL_NKEEP; else NKEEP=2; fi
+
+  KEEPRATIO=$((1000/NKEEP))
+  echo "Set to save ${NKEEP} permil intermediate output"
+  [[ "$((SUBJOBIDX%KEEPRATIO))" -eq "0" ]] && keep=1
+  # if we don't have enough subjobs, we anyway keep the first
+  [[ "$ALIEN_JDL_SUBJOBCOUNT" -le "$KEEPRATIO" && "$SUBJOBIDX" -eq 1 ]] && keep=1
+  if [[ $keep -eq 1 ]]; then
+    echo "Intermediate files WILL BE KEPT";
+  else
+    echo "Intermediate files WILL BE KEPT ONLY FOR SOME WORKFLOWS";
+  fi
 else
-  echo "ROOT ouput will be kept for ALL workflows"
-  SETTING_ROOT_OUTPUT+="DISABLE_ROOT_OUTPUT=0"
+  # in LOCAL mode, by default we keep all intermediate files
+  echo -e "\n\n **** RUNNING IN LOCAL MODE"
+  keep=1
+  if [[ -z "$DO_NOT_KEEP_OUTPUT_IN_LOCAL" ]]; then
+    echo "**** ONLY SOME WORKFLOWS WILL HAVE THE ROOT OUTPUT SAVED\n\n"
+    keep=0;
+  else
+    echo -e "**** WE KEEP ALL ROOT OUTPUT";
+    echo -e "**** IF YOU WANT TO REMOVE ROOT OUTPUT FILES FOR PERFORMANCE STUDIES OR SIMILAR, PLEASE SET THE ENV VAR DO_NOT_KEEP_OUTPUT_IN_LOCAL\n\n"
+  fi
+fi
+
+if [[ $keep -eq 0 ]]; then
+  SETTING_ROOT_OUTPUT+="DISABLE_ROOT_OUTPUT=0";
 fi
 echo SETTING_ROOT_OUTPUT=$SETTING_ROOT_OUTPUT
 
