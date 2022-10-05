@@ -179,23 +179,35 @@ SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT
 
 keep=0
 
-if [[ $MODE == "remote" ]]; then
-  if [ -f wn.xml ]; then
-    CTF=$(grep alien:// wn.xml | tr ' ' '\n' | grep ^lfn | cut -d\" -f2)
-  fi
-  SUBJOBIDX=$(grep -B1 $CTF CTFs.xml | head -n1 | cut -d\" -f2)
-  echo "CTF                                     : $CTF"
-  echo "Index of CTF in collection              : $SUBJOBIDX"
-  echo "Number of subjobs for current masterjob : $ALIEN_JDL_SUBJOBCOUNT"
-
+if [[ -n $ALIEN_JDL_PACKAGES ]]; then # if we have this env variable, it means that we are running on the grid
   # JDL can set the permille to keep; otherwise we use 2
   if [[ ! -z "$ALIEN_JDL_NKEEP" ]]; then export NKEEP=$ALIEN_JDL_NKEEP; else NKEEP=2; fi
 
   KEEPRATIO=$((1000/NKEEP))
   echo "Set to save ${NKEEP} permil intermediate output"
-  [[ "$((SUBJOBIDX%KEEPRATIO))" -eq "0" ]] && keep=1
-  # if we don't have enough subjobs, we anyway keep the first
-  [[ "$ALIEN_JDL_SUBJOBCOUNT" -le "$KEEPRATIO" && "$SUBJOBIDX" -eq 1 ]] && keep=1
+
+  if [[ -f wn.xml ]]; then
+    grep alien:// wn.xml | tr ' ' '\n' | grep ^lfn | cut -d\" -f2 > tmp.tmp
+  else
+    echo $1 > tmp.tmp
+  fi
+  while read -r CTF; do
+    SUBJOBIDX=$(grep -B1 $CTF CTFs.xml | head -n1 | cut -d\" -f2)
+    echo "CTF                                     : $CTF"
+    echo "Index of CTF in collection              : $SUBJOBIDX"
+    echo "Number of subjobs for current masterjob : $ALIEN_JDL_SUBJOBCOUNT"
+    # if we don't have enough subjobs, we anyway keep the first
+    if [[ "$ALIEN_JDL_SUBJOBCOUNT" -le "$KEEPRATIO" && "$SUBJOBIDX" -eq 1 ]]; then
+      echo -e "**** NOT ENOUGH SUBJOBS TO SAMPLE, WE WILL FORCE TO KEEP THE OUTPUT ****"
+      keep=1
+      break
+    else
+      if [[ "$((SUBJOBIDX%KEEPRATIO))" -eq "0" ]]; then
+	keep=1
+	break
+      fi
+    fi
+  done < tmp.tmp
   if [[ $keep -eq 1 ]]; then
     echo "Intermediate files WILL BE KEPT";
   else
@@ -203,21 +215,21 @@ if [[ $MODE == "remote" ]]; then
   fi
 else
   # in LOCAL mode, by default we keep all intermediate files
-  echo -e "\n\n **** RUNNING IN LOCAL MODE"
+  echo -e "\n\n**** RUNNING IN LOCAL MODE ****"
   keep=1
-  if [[ -z "$DO_NOT_KEEP_OUTPUT_IN_LOCAL" ]]; then
-    echo "**** ONLY SOME WORKFLOWS WILL HAVE THE ROOT OUTPUT SAVED\n\n"
+  if [[ "$DO_NOT_KEEP_OUTPUT_IN_LOCAL" -eq 1 ]]; then
+    echo -e "**** ONLY SOME WORKFLOWS WILL HAVE THE ROOT OUTPUT SAVED ****\n\n"
     keep=0;
   else
-    echo -e "**** WE KEEP ALL ROOT OUTPUT";
-    echo -e "**** IF YOU WANT TO REMOVE ROOT OUTPUT FILES FOR PERFORMANCE STUDIES OR SIMILAR, PLEASE SET THE ENV VAR DO_NOT_KEEP_OUTPUT_IN_LOCAL\n\n"
+    echo -e "**** WE KEEP ALL ROOT OUTPUT ****";
+    echo -e "**** IF YOU WANT TO REMOVE ROOT OUTPUT FILES FOR PERFORMANCE STUDIES OR SIMILAR, PLEASE SET THE ENV VAR DO_NOT_KEEP_OUTPUT_IN_LOCAL ****\n\n"
   fi
 fi
 
-if [[ $keep -eq 0 ]]; then
+if [[ $keep -eq 1 ]]; then
   SETTING_ROOT_OUTPUT+="DISABLE_ROOT_OUTPUT=0";
 fi
-echo SETTING_ROOT_OUTPUT=$SETTING_ROOT_OUTPUT
+echo "SETTING_ROOT_OUTPUT = $SETTING_ROOT_OUTPUT"
 
 # Enabling GPUs
 if [[ -n "$ALIEN_JDL_USEGPUS" ]]; then
