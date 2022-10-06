@@ -4,8 +4,6 @@
 #include <vector>
 #include <filesystem>
 
-using namespace std;
-
 TFile* fileSummaryOutput = nullptr;
 TFile* fileTestSummary = nullptr;
 
@@ -15,7 +13,7 @@ int correlationCase = 0; // at the moment I assume no error correlation ..
 struct TestResult {
   double value = 0.0;
   bool comparable = true;
-  TString testname;
+  std::string testname;
 };
 
 // define the possible available tests
@@ -353,7 +351,7 @@ bool CheckComparable(TH1* hA, TH1* hB)
   }
 
   if (isEmptyA || isEmptyB) {
-    printf("At least one of the histograms %s is empty \n", hA->GetName());
+      std::cerr << "At least one of the histograms " << hA->GetName() << " is empty\n";
     return false;
   }
 
@@ -396,16 +394,28 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, bool firstComparison, bool f
   if ((whichTest & CHI2) == CHI2) {
     auto testResult = CompareChiSquare(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
+    if (testResult.comparable) {
+        legendOverlayPlot.AddEntry((TObject*)nullptr, Form("#chi^{2} / N_{bins} = %f", testResult.value), "");
+    }
   }
 
   if ((whichTest & BINCONTNORM) == BINCONTNORM) {
     auto testResult = CompareBinContent(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
+    if (testResult.comparable) {
+      legendOverlayPlot.AddEntry((TObject*)nullptr, Form("meandiff = %f", testResult.value), "");
+    }
   }
 
   if ((whichTest & NENTRIES) == NENTRIES) {
     auto testResult = CompareNentr(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
+    if (testResult.comparable) {
+      legendOverlayPlot.AddEntry((TObject*)nullptr, Form("#chi^{2} / N_{bins} = %f", testResult.value), "");
+    }
+    if (testResult.comparable) {
+      legendOverlayPlot.AddEntry((TObject*)nullptr, Form("entriesdiff = %f", testResult.value), "");
+    }
   }
 
   if (isEmptyHisto(hA) == 2 || isEmptyHisto(hB) == 2) {
@@ -434,21 +444,17 @@ TestResult CompareChiSquare(TH1* hA, TH1* hB, bool areComparable)
     for (int iy = 1; iy <= hA->GetNbinsY(); iy++) {
       for (int iz = 1; iz <= hA->GetNbinsZ(); iz++) {
         double cA = hA->GetBinContent(ix, iy, iz);
-        double eA = 0;
         if (cA < 0) {
-          printf("Negative counts!!! cA=%f in bin %d %d %d\n", cA, ix, iy, iz);
+          std::cerr << "Negative counts!!! cA=" << cA << " in bin (" << ix << "," << iy << "," << iz << "\n";
           res.comparable = false;
           return res;
-        } else
-          eA = TMath::Sqrt(cA);
+        }
         double cB = hB->GetBinContent(ix, iy, iz);
-        double eB = 0;
         if (cB < 0) {
-          printf("Negative counts!!! cB=%f in bin %d %d %d\n", cB, ix, iy, iz);
+          std::cerr << "Negative counts!!! cB=" << cB << " in bin (" << ix << "," << iy << "," << iz << "\n";
           res.comparable = false;
           return res;
-        } else
-          eB = TMath::Sqrt(cB);
+        }
         double diff = cA * TMath::Sqrt(integralB / integralA) - cB * TMath::Sqrt(integralA / integralB);
         double correl = 0.;
         if (correlationCase == 1) {
@@ -460,7 +466,7 @@ TestResult CompareChiSquare(TH1* hA, TH1* hB, bool areComparable)
           if ((cA > cB) && (cA > 0))
             correl = TMath::Sqrt(cB / cA);
         }
-        double sigma2 = eA * eA + eB * eB - 2 * correl * eA * eB; // maybe to be improved
+        double sigma2 = cA * cB - 2 * correl * TMath::Sqrt(cA) * TMath::Sqrt(cB); // maybe to be improved
         if (sigma2 > 0)
           chi2 += diff * diff / sigma2;
         if (cA > 0 || cB > 0) {
@@ -471,11 +477,11 @@ TestResult CompareChiSquare(TH1* hA, TH1* hB, bool areComparable)
   }
   if (nBins > 0) {
     res.value = chi2 / nBins;
-    printf("%s: %s performed: chi2/nBins=%f \n", hA->GetName(), res.testname.Data(), res.value);
+    std::cout << hA->GetName() << ": " << res.testname << " performed: chi2/nBins=" << res.value << "\n";
     return res;
   }
 
-  printf(" Histograms with empty bins");
+  std::cerr << "Histogram with empty bins (" << hA->GetName() << ")\n";
   return res;
 }
 
@@ -499,13 +505,13 @@ TestResult CompareBinContent(TH1* hA, TH1* hB, bool areComparable)
       for (int iz = 1; iz <= hA->GetNbinsZ(); iz++) {
         double cA = hA->GetBinContent(ix, iy, iz);
         if (cA < 0) {
-          printf("Negative counts!!! cA=%f in bin %d %d %d\n", cA, ix, iy, iz);
+          std::cerr << "Negative counts!!! cA=" << cA << " in bin (" << ix << "," << iy << "," << iz << "\n";
           res.comparable = false;
           return res;
         }
         double cB = hB->GetBinContent(ix, iy, iz);
         if (cB < 0) {
-          printf("Negative counts!!! cB=%f in bin %d %d %d\n", cB, ix, iy, iz);
+          std::cerr << "Negative counts!!! cB=" << cB << " in bin (" << ix << "," << iy << "," << iz << "\n";
           res.comparable = false;
           return res;
         }
@@ -519,10 +525,11 @@ TestResult CompareBinContent(TH1* hA, TH1* hB, bool areComparable)
   meandiff = meandiff * TMath::Sqrt((integralA + integralB) / (2 * nBins));
   if (nBins > 0) {
     res.value = meandiff;
-    printf("%s: %s performed: meandiff=%f \n", hA->GetName(), res.testname.Data(), res.value);
+    std::cout << hA->GetName() << ": " << res.testname << " performed: meandiff=" << res.value << "\n";
+    return res;
   }
 
-  printf(" Histograms with empty bins");
+  std::cerr << "Histogram with empty bins (" << hA->GetName() << ")\n";
   return res;
 }
 
@@ -541,7 +548,7 @@ TestResult CompareNentr(TH1* hA, TH1* hB, bool areComparable)
   double entriesdiff = TMath::Abs(integralA - integralB) / ((integralA + integralB) / 2);
 
   res.value = entriesdiff;
-  printf("%s: %s performed: entriesdiff=%f \n", hA->GetName(), res.testname.Data(), res.value);
+  std::cout << hA->GetName() << ": " << res.testname << " performed: entriesdiff=" << res.value << "\n";
 
   return res;
 }
@@ -553,7 +560,7 @@ void WriteTestResultsToJson(std::ofstream& json, std::string const& key, std::ve
     auto& result = testResults[i];
 
     json << "    {\n";
-    json << "      \"test_name\": \"" << result.testname.Data() << "\",\n";
+    json << "      \"test_name\": \"" << result.testname << "\",\n";
     if (isnan(result.value)) {
       json << "      \"value\": null,\n";
     } else {
