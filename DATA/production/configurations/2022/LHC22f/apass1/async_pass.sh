@@ -10,6 +10,8 @@
 # export ALIEN_JDL_LPMPASSNAME=apass4
 # export ALIEN_JDL_LPMANCHORYEAR=2021
 
+# to skip positional arg parsing before the randomizing part.
+inputarg="${1}"
 
 if [[ "${1##*.}" == "root" ]]; then
     #echo ${1##*.}
@@ -189,7 +191,7 @@ if [[ -n $ALIEN_JDL_PACKAGES ]]; then # if we have this env variable, it means t
   if [[ -f wn.xml ]]; then
     grep alien:// wn.xml | tr ' ' '\n' | grep ^lfn | cut -d\" -f2 > tmp.tmp
   else
-    echo $1 > tmp.tmp
+    echo "${inputarg}" > tmp.tmp
   fi
   while read -r CTF; do
     SUBJOBIDX=$(grep -B1 $CTF CTFs.xml | head -n1 | cut -d\" -f2)
