@@ -30,7 +30,7 @@ import requests, re
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
-from o2dpg_workflow_utils import createTask, dump_workflow, adjust_RECO_environment
+from o2dpg_workflow_utils import createTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
 from o2dpg_sim_config import create_sim_config
 
@@ -178,20 +178,12 @@ else:
 activeDetectors = anchorConfig.get('o2-ctf-reader-workflow-options',{}).get('onlyDet','all')
 # convert to set/hashmap
 activeDetectors = { det:1 for det in activeDetectors.split(",") }
-
-# see if a detector is in list of activeDetectors
-def isActive(detID):
-   """
-   detID == the usual detID string (3 letters)
-   """
-   if "all" in activeDetectors:
-      return True
-   return detID in activeDetectors
+for det in activeDetectors:
+    activate_detector(det)
 
 def addWhenActive(detID, needslist, appendstring):
    if isActive(detID):
       needslist.append(appendstring)
-
 
 def retrieve_sor(run_number):
     """
