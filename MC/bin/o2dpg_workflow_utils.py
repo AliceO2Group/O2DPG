@@ -4,6 +4,21 @@ from copy import deepcopy
 import json
 
 
+# List of active detectors
+ACTIVE_DETECTORS = ["all"]
+
+def activate_detector(det):
+    try:
+        # first of all remove "all" if a specific detector is passed
+        ind = ACTIVE_DETECTORS.index("all")
+        del ACTIVE_DETECTORS[ind]
+    except ValueError:
+        pass
+    ACTIVE_DETECTORS.append(det)
+
+def isActive(det):
+    return "all" in ACTIVE_DETECTORS or det in ACTIVE_DETECTORS
+
 def relativeCPU(n_rel, n_workers):
     # compute number of CPUs from a given number of workers
     # n_workers and a fraction n_rel

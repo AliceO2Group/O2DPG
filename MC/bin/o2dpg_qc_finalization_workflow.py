@@ -17,7 +17,7 @@ from os.path import join, dirname, isdir
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
-from o2dpg_workflow_utils import createTask, dump_workflow
+from o2dpg_workflow_utils import createTask, dump_workflow, isActive
 
 def getDPL_global_options(bigshm=False, noIPC=None):
    common="-b --run --driver-client-backend ws:// "
