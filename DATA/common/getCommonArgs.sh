@@ -19,7 +19,7 @@ if [[ $EPNSYNCMODE == 1 ]]; then
 elif [[ "0$ENABLE_METRICS" != "01" ]]; then
   ARGS_ALL+=" --monitoring-backend no-op://"
 fi
-[[ $SHMTHROW == 0 ]] && ARGS_ALL+=" --shm-throw-bad-alloc 0"
+[[ $SHMTHROW == 0 ]] && ARGS_ALL+=" --bad-alloc-max-attempts 60 --bad-alloc-attempt-interval 1000"
 [[ ! -z $SHM_MANAGER_SHMID && "0$GEN_TOPO_CALIB_WORKFLOW" != "01" ]] && ARGS_ALL+=" --no-cleanup --shm-no-cleanup on --shmid $SHM_MANAGER_SHMID"
 [[ $NORATELOG == 1 ]] && ARGS_ALL+=" --fairmq-rate-logging 0"
 
