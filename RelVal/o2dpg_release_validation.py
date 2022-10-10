@@ -109,11 +109,12 @@ REL_VAL_SEVERITIES = ["GOOD", "WARNING", "NONCRIT_NC", "CRIT_NC", "BAD"]
 REL_VAL_SEVERITIES_USE_SUMMARY = [True, False, False, True, True]
 REL_VAL_SEVERITY_MAP = {v: i for i, v in enumerate(REL_VAL_SEVERITIES)}
 REL_VAL_SEVERITY_COLOR_MAP = {"GOOD": "green", "WARNING": "orange", "NONCRIT_NC": "cornflowerblue", "CRIT_NC": "navy", "BAD": "red"}
-REL_VAL_TEST_NAMES = ["test_chi2", "test_bin_cont", "test_num_entries"]
+REL_VAL_TEST_NAMES = ["chi2", "bin_cont", "num_entries"]
 REL_VAL_TEST_NAMES_MAP = {v: i for i, v in enumerate(REL_VAL_TEST_NAMES)}
 REL_VAL_TEST_CRITICAL = [True, True, False]
-TEST_SUMMARY_NAME = "test_summary"
-REL_VAL_TEST_NAMES_SUMMARY = REL_VAL_TEST_NAMES + [TEST_SUMMARY_NAME]
+REL_VAL_TEST_DEFAULT_THRESHOLDS = [1.5, 1.5, 0.01]
+REL_VAL_TEST_SUMMARY_NAME = "summary"
+REL_VAL_TEST_NAMES_SUMMARY = REL_VAL_TEST_NAMES + [REL_VAL_TEST_SUMMARY_NAME]
 REL_VAL_TEST_NAMES_MAP_SUMMARY = {v: i for i, v in enumerate(REL_VAL_TEST_NAMES_SUMMARY)}
 
 gROOT.SetBatch()
@@ -394,8 +395,8 @@ def plot_summary_grid(summary, flags, include_patterns, output_path):
             res = test["result"]
             ind = REL_VAL_TEST_NAMES_MAP_SUMMARY[test_name]
             if ind != len(REL_VAL_TEST_NAMES_MAP):
-                value_annotaion = f"{test['value']:.2f}" if test["comparable"] else "---"
-                collect_annotations_per_test[ind] = f"{test['threshold']:.2f}; {value_annotaion}"
+                value_annotaion = f"{test['value']:.3f}" if test["comparable"] else "---"
+                collect_annotations_per_test[ind] = f"{test['threshold']:.3f}; {value_annotaion}"
             collect_flags_per_test[ind] = REL_VAL_SEVERITY_MAP[res]
 
         if not include_this:
@@ -433,6 +434,8 @@ def calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args):
             this_histo_thresholds=[]
             for t in tests:
                 test_name = t["test_name"]
+                if test_name == REL_VAL_TEST_SUMMARY_NAME:
+                    continue
                 these_thresholds={}
                 these_thresholds["test_name"] = test_name
                 these_thresholds["value"] = default_thresholds[test_name]
@@ -456,6 +459,8 @@ def calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args):
             for t in tests:
                 these_thresholds={}
                 test_name = t["test_name"]
+                if test_name == REL_VAL_TEST_SUMMARY_NAME:
+                    continue
                 these_thresholds["test_name"] = test_name
                 threshold_list = []
                 for ut in user_thresholds:
@@ -493,19 +498,18 @@ def make_single_summary(rel_val_dict, args, output_dir):
     user_thresholds = {}
     this_summary = {}
 
-    default_thresholds = {"test_chi2": args.chi2_threshold,
-                          "test_bin_cont": args.rel_mean_diff_threshold,
-                          "test_num_entries": args.rel_entries_diff_threshold}
-    margins_thresholds = {"test_chi2": args.chi2_threshold_margin,
-                          "test_bin_cont": args.rel_mean_diff_threshold_margin,
-                          "test_num_entries": args.rel_entries_diff_threshold_margin}
+    default_thresholds = {t: getattr(args, f"{t}_threshold") for t in REL_VAL_TEST_NAMES}
+    margins_thresholds = {t: getattr(args, f"{t}_threshold_margin") for t in REL_VAL_TEST_NAMES}
+    test_enabled = {t: getattr(args, f"with_{t}") for t in REL_VAL_TEST_NAMES}
+    if not any(test_enabled.values()):
+        test_enabled = {t: True for t in test_enabled}
 
     the_thresholds = calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args)
     with open(join(output_dir, "used_thresholds.json"), "w") as f:
             json.dump(the_thresholds, f, indent=2)
 
     for histo_name, tests in rel_val_dict.items():
-        test_summary = {"test_name": TEST_SUMMARY_NAME,
+        test_summary = {"test_name": REL_VAL_TEST_SUMMARY_NAME,
                         "value": None,
                         "threshold": None,
                         "result": None}
@@ -514,7 +518,7 @@ def make_single_summary(rel_val_dict, args, output_dir):
         is_comparable_summary = True
         these_tests = []
         for t in tests:
-            if t["test_name"] == TEST_SUMMARY_NAME:
+            if t["test_name"] == REL_VAL_TEST_SUMMARY_NAME or not test_enabled[t["test_name"]]:
                 continue
             test_name = t["test_name"]
             test_id = REL_VAL_TEST_NAMES_MAP[test_name]
@@ -525,7 +529,7 @@ def make_single_summary(rel_val_dict, args, output_dir):
             passed = True
             is_critical = REL_VAL_TEST_CRITICAL[test_id] or histo_name.find("_ratioFromTEfficiency") != -1
             if comparable:
-                passed = t["value"] <= threshold
+                passed = t["value"] <=  threshold
 
             t["result"] = assign_result_flag(is_critical, comparable, passed)
 
@@ -634,7 +638,7 @@ def map_histos_to_severity(summary, include_patterns=None):
         # loop over tests done
         for test in tests:
             test_name = test["test_name"]
-            if test_name != TEST_SUMMARY_NAME:
+            if test_name != REL_VAL_TEST_SUMMARY_NAME:
                 continue
             result = test["result"]
             test_n_hist_map[result].append(histo_name)
@@ -704,7 +708,7 @@ def rel_val_sim_dirs(args):
     if args.dir_config_enable:
         run_over_keys = [rok for rok in run_over_keys if rok in args.dir_config_enable]
     if args.dir_config_disable:
-        run_over_keys = [rok for rok in run_over_keys if rok not in args.dir-dir_config_disable]
+        run_over_keys = [rok for rok in run_over_keys if rok not in args.dir_config_disable]
     if not run_over_keys:
         print("WARNING: All keys in config disabled, nothing to do")
         return 0
@@ -734,9 +738,14 @@ def rel_val(args):
         print(f"NOTE: Extracted objects will be added to existing ones in case there was already a RelVal at {args.output}.\n")
     func = None
     # construct the bit mask
-    args.test = 1 * args.with_test_chi2 + 2 * args.with_test_bincont + 4 * args.with_test_numentries
+    args.test = 0
+    default_sum = 0
+    for i, t in enumerate(REL_VAL_TEST_NAMES):
+        bit = 2**i
+        args.test += bit * getattr(args, f"with_{t}")
+        default_sum += bit
     if not args.test:
-        args.test = 7
+        args.test = default_sum
     if not exists(args.output):
         makedirs(args.output)
     if is_sim_dir(args.input1[0]) and is_sim_dir(args.input2[0]):
@@ -933,21 +942,17 @@ def main():
     common_file_parser.add_argument("-j", "--input2", nargs="*", help="EITHER second set of input files for comparison OR second input directory from simulation for comparison", required=True)
 
     common_threshold_parser = argparse.ArgumentParser(add_help=False)
-    common_threshold_parser.add_argument("--chi2-threshold", dest="chi2_threshold", type=float, help="Chi2 threshold", default=1.5)
-    common_threshold_parser.add_argument("--rel-mean-diff-threshold", dest="rel_mean_diff_threshold", type=float, help="Threshold of relative difference in mean", default=1.5)
-    common_threshold_parser.add_argument("--rel-entries-diff-threshold", dest="rel_entries_diff_threshold", type=float, help="Threshold of relative difference in number of entries", default=0.01)
-    common_threshold_parser.add_argument("--use-values-as-thresholds", nargs="*", dest="use_values_as_thresholds", help="Use values from other runs as thresholds for this one")
-    # The following only take effect for thresholds given via an input file
+    common_threshold_parser.add_argument("--use-values-as-thresholds", nargs="*", dest="use_values_as_thresholds", help="Use values from another run as thresholds for this one")
     common_threshold_parser.add_argument("--combine-thresholds", dest="combine_thresholds",  choices=["mean", "max"], help="Arithmetic mean or maximum is chosen as threshold value", default="mean")
-    common_threshold_parser.add_argument("--chi2-threshold-margin", dest="chi2_threshold_margin", type=float, help="Margin to apply to the chi2 threshold extracted from file", default=1.0)
-    common_threshold_parser.add_argument("--rel-mean-diff-threshold-margin", dest="rel_mean_diff_threshold_margin", type=float, help="Margin to apply to the rel_mean_diff threshold extracted from file", default=1.0)
-    common_threshold_parser.add_argument("--rel-entries-diff-threshold-margin", dest="rel_entries_diff_threshold_margin", type=float, help="Margin to apply to the rel_entries_diff threshold extracted from file", default=1.0)
+    for test, thresh in zip(REL_VAL_TEST_NAMES, REL_VAL_TEST_DEFAULT_THRESHOLDS):
+        test_dahsed = test.replace("_", "-")
+        common_threshold_parser.add_argument(f"--with-test-{test_dahsed}", dest=f"with_{test}", action="store_true", help=f"run {test} test")
+        common_threshold_parser.add_argument(f"--test-{test_dahsed}-threshold", dest=f"{test}_threshold", type=float, help=f"{test} threshold", default=thresh)
+        # The following only take effect for thresholds given via an input file
+        common_threshold_parser.add_argument(f"--test-{test_dahsed}-threshold-margin", dest=f"{test}_threshold_margin", type=float, help=f"Margin to apply to the {test} threshold extracted from file", default=1.0)
 
     sub_parsers = parser.add_subparsers(dest="command")
     rel_val_parser = sub_parsers.add_parser("rel-val", parents=[common_file_parser, common_threshold_parser])
-    rel_val_parser.add_argument("--with-test-chi2", dest="with_test_chi2", action="store_true", help="run chi2 test")
-    rel_val_parser.add_argument("--with-test-bincont", dest="with_test_bincont", action="store_true", help="run bin-content test")
-    rel_val_parser.add_argument("--with-test-numentries", dest="with_test_numentries", action="store_true", help="run number-of-entries test")
     rel_val_parser.add_argument("--dir-config", dest="dir_config", help="What to take into account in a given directory")
     rel_val_parser.add_argument("--dir-config-enable", dest="dir_config_enable", nargs="*", help="only enable these top keys in your dir-config")
     rel_val_parser.add_argument("--dir-config-disable", dest="dir_config_disable", nargs="*", help="disable these top keys in your dir-config (precedence over dir-config-enable)")

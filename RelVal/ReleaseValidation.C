@@ -17,20 +17,36 @@ struct TestResult {
 };
 
 // define the possible available tests
-enum options {
-  CHI2 = 0x01,
-  BINCONTNORM = 0x02,
-  NENTRIES = 0x04,
+struct TestFlag {
+  static constexpr int CHI2 = 0;
+  static constexpr int BINCONTNORM = 1;
+  static constexpr int NENTRIES = 2;
+  static constexpr int LAST = NENTRIES;
   // ...
 };
+
+bool shouldRunTest(int userTests, int flag)
+{
+  return (userTests & (1 << flag)) > 0;
+}
+
+int maxUserTests()
+{
+  int maxTestNumber = 0;
+  for (int i = 0; i <= TestFlag::LAST; i++) {
+    maxTestNumber += (1 << i);
+  }
+  return maxTestNumber;
+}
 
 // define a global epsilon
 double EPSILON = 0.00001;
 
-void CompareHistos(TH1* hA, TH1* hB, int whichTest, bool firstComparison, bool finalComparison, std::unordered_map<std::string, std::vector<TestResult>>& allTests);
+void CompareHistos(TH1* hA, TH1* hB, int whichTests, bool firstComparison, bool finalComparison, std::unordered_map<std::string, std::vector<TestResult>>& allTests);
 void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color);
 bool PotentiallySameHistograms(TH1*, TH1*);
 TestResult CompareChiSquare(TH1* hA, TH1* hB, bool areComparable);
+TestResult CompareChiSquareTH1(TH1* hA, TH1* hB, bool areComparable);
 TestResult CompareBinContent(TH1* hA, TH1* hB, bool areComparable);
 TestResult CompareNentr(TH1* hA, TH1* hB, bool areComparable);
 void DrawRatio(TH1* hR);
@@ -173,13 +189,13 @@ void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, 
 // 6) select if files have to be taken from the grid or not
 // 7) choose if specific critic plots have to be saved in a second .pdf file
 
-void ReleaseValidation(std::string const& filename1, std::string const& filename2, int whichTest)
+void ReleaseValidation(std::string const& filename1, std::string const& filename2, int whichTests)
 {
   gROOT->SetBatch();
 
-  if (whichTest < 1 || whichTest > 7) {
-    std::cerr << "ERROR: Please select which test you want to perform:\n"
-              << "1->Chi-square; 2--> ContBinDiff; 3 --> Chi-square+MeanDiff; 4->EntriesDiff; 5--> EntriesDiff + Chi2; 6 -->  EntriesDiff + MeanDiff; 7 --> EntriesDiff + Chi2 + MeanDiff\n";
+  auto maxTestNumber = maxUserTests();
+  if (whichTests < 1 || whichTests > maxTestNumber) {
+    std::cerr << "ERROR: Max test number is " << maxTestNumber << " to perform all tests. Otherwise please enable bits where the last possible bit is " << TestFlag::LAST << "\n";
     return;
   }
 
@@ -188,16 +204,6 @@ void ReleaseValidation(std::string const& filename1, std::string const& filename
 
   // prepare summary plots
   int nkeys = extractedFile1.GetNkeys();
-  int nTests = 0;
-  if ((whichTest & CHI2) == CHI2) {
-    nTests++;
-  }
-  if ((whichTest & BINCONTNORM) == BINCONTNORM) {
-    nTests++;
-  }
-  if ((whichTest & NENTRIES) == NENTRIES) {
-    nTests++;
-  }
 
   // collect test results to store them as JSON later
   std::unordered_map<std::string, std::vector<TestResult>> allTestsMap;
@@ -237,7 +243,7 @@ void ReleaseValidation(std::string const& filename1, std::string const& filename
 
     std::cout << "Comparing " << hA->GetName() << " and " << hB->GetName() << "\n";
 
-    CompareHistos(hA, hB, whichTest, isFirstComparison, isLastComparison, allTestsMap);
+    CompareHistos(hA, hB, whichTests, isFirstComparison, isLastComparison, allTestsMap);
 
     nComparisons++;
     if (nComparisons == 1)
@@ -351,7 +357,7 @@ bool CheckComparable(TH1* hA, TH1* hB)
   }
 
   if (isEmptyA || isEmptyB) {
-      std::cerr << "At least one of the histograms " << hA->GetName() << " is empty\n";
+    std::cerr << "At least one of the histograms " << hA->GetName() << " is empty\n";
     return false;
   }
 
@@ -370,7 +376,7 @@ void RegisterTestResult(std::unordered_map<std::string, std::vector<TestResult>>
   allTests[histogramName].push_back(testResult);
 }
 
-void CompareHistos(TH1* hA, TH1* hB, int whichTest, bool firstComparison, bool finalComparison, std::unordered_map<std::string, std::vector<TestResult>>& allTests)
+void CompareHistos(TH1* hA, TH1* hB, int whichTests, bool firstComparison, bool finalComparison, std::unordered_map<std::string, std::vector<TestResult>>& allTests)
 {
 
   double integralA = hA->Integral();
@@ -388,18 +394,18 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, bool firstComparison, bool f
   TLegend legendOverlayPlot(0.6, 0.6, 0.9, 0.8);
   legendOverlayPlot.SetBorderSize(1);
 
-  // test if each of the 3 bits is turned on in subset ‘i = whichTest’?
+  // test if each of the 3 bits is turned on in subset ‘i = whichTests’?
   // if yes, process the bit
 
-  if ((whichTest & CHI2) == CHI2) {
+  if (shouldRunTest(whichTests, TestFlag::CHI2)) {
     auto testResult = CompareChiSquare(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
     if (testResult.comparable) {
-        legendOverlayPlot.AddEntry((TObject*)nullptr, Form("#chi^{2} / N_{bins} = %f", testResult.value), "");
+      legendOverlayPlot.AddEntry((TObject*)nullptr, Form("#chi^{2} / N_{bins} = %f", testResult.value), "");
     }
   }
 
-  if ((whichTest & BINCONTNORM) == BINCONTNORM) {
+  if (shouldRunTest(whichTests, TestFlag::BINCONTNORM)) {
     auto testResult = CompareBinContent(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
     if (testResult.comparable) {
@@ -407,12 +413,9 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, bool firstComparison, bool f
     }
   }
 
-  if ((whichTest & NENTRIES) == NENTRIES) {
+  if (shouldRunTest(whichTests, TestFlag::NENTRIES)) {
     auto testResult = CompareNentr(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
-    if (testResult.comparable) {
-      legendOverlayPlot.AddEntry((TObject*)nullptr, Form("#chi^{2} / N_{bins} = %f", testResult.value), "");
-    }
     if (testResult.comparable) {
       legendOverlayPlot.AddEntry((TObject*)nullptr, Form("entriesdiff = %f", testResult.value), "");
     }
@@ -429,59 +432,14 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTest, bool firstComparison, bool f
 TestResult CompareChiSquare(TH1* hA, TH1* hB, bool areComparable)
 {
   TestResult res;
-  res.testname = "test_chi2";
+  res.testname = "chi2";
   if (!areComparable) {
     res.comparable = false;
     return res;
   }
 
-  double integralA = hA->Integral();
-  double integralB = hB->Integral();
-  double chi2 = 0;
+  res.value = hA->Chi2Test(hB, "CHI2/NDF");
 
-  int nBins = 0;
-  for (int ix = 1; ix <= hA->GetNbinsX(); ix++) {
-    for (int iy = 1; iy <= hA->GetNbinsY(); iy++) {
-      for (int iz = 1; iz <= hA->GetNbinsZ(); iz++) {
-        double cA = hA->GetBinContent(ix, iy, iz);
-        if (cA < 0) {
-          std::cerr << "Negative counts!!! cA=" << cA << " in bin (" << ix << "," << iy << "," << iz << "\n";
-          res.comparable = false;
-          return res;
-        }
-        double cB = hB->GetBinContent(ix, iy, iz);
-        if (cB < 0) {
-          std::cerr << "Negative counts!!! cB=" << cB << " in bin (" << ix << "," << iy << "," << iz << "\n";
-          res.comparable = false;
-          return res;
-        }
-        double diff = cA * TMath::Sqrt(integralB / integralA) - cB * TMath::Sqrt(integralA / integralB);
-        double correl = 0.;
-        if (correlationCase == 1) {
-          // estimate degree of correlation from number of events in histogram
-          // assume that the histogram with less events is a subsample of that
-          // with more events
-          if ((cB > cA) && (cB > 0))
-            correl = TMath::Sqrt(cA / cB);
-          if ((cA > cB) && (cA > 0))
-            correl = TMath::Sqrt(cB / cA);
-        }
-        double sigma2 = cA * cB - 2 * correl * TMath::Sqrt(cA) * TMath::Sqrt(cB); // maybe to be improved
-        if (sigma2 > 0)
-          chi2 += diff * diff / sigma2;
-        if (cA > 0 || cB > 0) {
-          nBins++;
-        }
-      }
-    }
-  }
-  if (nBins > 0) {
-    res.value = chi2 / nBins;
-    std::cout << hA->GetName() << ": " << res.testname << " performed: chi2/nBins=" << res.value << "\n";
-    return res;
-  }
-
-  std::cerr << "Histogram with empty bins (" << hA->GetName() << ")\n";
   return res;
 }
 
@@ -489,7 +447,7 @@ TestResult CompareChiSquare(TH1* hA, TH1* hB, bool areComparable)
 TestResult CompareBinContent(TH1* hA, TH1* hB, bool areComparable)
 {
   TestResult res;
-  res.testname = "test_bin_cont";
+  res.testname = "bin_cont";
   if (!areComparable) {
     res.comparable = false;
     return res;
@@ -537,7 +495,7 @@ TestResult CompareBinContent(TH1* hA, TH1* hB, bool areComparable)
 TestResult CompareNentr(TH1* hA, TH1* hB, bool areComparable)
 {
   TestResult res;
-  res.testname = "test_num_entries";
+  res.testname = "num_entries";
   if (!areComparable) {
     res.comparable = false;
     return res;
