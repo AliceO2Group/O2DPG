@@ -422,7 +422,57 @@ def plot_summary_grid(summary, flags, include_patterns, output_path):
     plt.close(figure)
 
 
-def make_single_summary(rel_val_dict, args):
+def calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args):
+    """
+    calculate thresholds
+    """
+    the_thresholds={}
+
+    if not args.use_values_as_thresholds:
+        for histo_name, tests in rel_val_dict.items():
+            this_histo_thresholds=[]
+            for t in tests:
+                test_name = t["test_name"]
+                these_thresholds={}
+                these_thresholds["test_name"] = test_name
+                these_thresholds["value"] = default_thresholds[test_name]
+                this_histo_thresholds.append(these_thresholds)
+            the_thresholds[histo_name] = this_histo_thresholds
+
+    else:
+        if args.use_values_as_thresholds[0].startswith("@"):
+            with open(args.use_values_as_thresholds[0][1:], "r") as f:
+                list_of_threshold_files = f.read().splitlines()
+        else:
+            list_of_threshold_files = args.use_values_as_thresholds
+
+        user_thresholds = []
+        for file_name in list_of_threshold_files:
+            with open(file_name, "r") as f:
+                user_thresholds.append(json.load(f))
+
+        for histo_name, tests in rel_val_dict.items():
+            this_histo_thresholds=[]
+            for t in tests:
+                these_thresholds={}
+                test_name = t["test_name"]
+                these_thresholds["test_name"] = test_name
+                threshold_list = []
+                for ut in user_thresholds:
+                    for ref_test in ut.get(histo_name, []):
+                        if ref_test["test_name"] == test_name:
+                            threshold_list.append(ref_test["value"])
+                if args.combine_thresholds == "mean":
+                    these_thresholds["value"] = margins_thresholds[test_name] * sum(threshold_list) / len(threshold_list)
+                else:
+                    these_thresholds["value"] = margins_thresholds[test_name] * max(threshold_list)
+                this_histo_thresholds.append(these_thresholds)
+            the_thresholds[histo_name] = this_histo_thresholds
+
+    return the_thresholds
+
+
+def make_single_summary(rel_val_dict, args, output_dir):
     """
     Make the usual summary
     """
@@ -442,9 +492,6 @@ def make_single_summary(rel_val_dict, args):
 
     user_thresholds = {}
     this_summary = {}
-    if args.use_values_as_thresholds:
-        with open(args.use_values_as_thresholds, "r") as f:
-            user_thresholds = json.load(f)
 
     default_thresholds = {"test_chi2": args.chi2_threshold,
                           "test_bin_cont": args.rel_mean_diff_threshold,
@@ -452,6 +499,10 @@ def make_single_summary(rel_val_dict, args):
     margins_thresholds = {"test_chi2": args.chi2_threshold_margin,
                           "test_bin_cont": args.rel_mean_diff_threshold_margin,
                           "test_num_entries": args.rel_entries_diff_threshold_margin}
+
+    the_thresholds = calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args)
+    with open(join(output_dir, "used_thresholds.json"), "w") as f:
+            json.dump(the_thresholds, f, indent=2)
 
     for histo_name, tests in rel_val_dict.items():
         test_summary = {"test_name": TEST_SUMMARY_NAME,
@@ -465,13 +516,9 @@ def make_single_summary(rel_val_dict, args):
         for t in tests:
             if t["test_name"] == TEST_SUMMARY_NAME:
                 continue
-            threshold = default_thresholds[t["test_name"]]
             test_name = t["test_name"]
             test_id = REL_VAL_TEST_NAMES_MAP[test_name]
-            for ref_test in user_thresholds.get(histo_name, []):
-                if ref_test["test_name"] == test_name:
-                    threshold = ref_test["value"] * margins_thresholds[test_name]
-                    break
+            threshold = the_thresholds[histo_name][REL_VAL_TEST_NAMES_MAP[test_name]]["value"]
             t["threshold"] = threshold
 
             comparable = t["comparable"]
@@ -553,7 +600,7 @@ def rel_val_files(files1, files2, args, output_dir):
         rel_val_summary = None
         with open(json_path, "r") as f:
             rel_val_summary = json.load(f)
-        final_summary = make_single_summary(rel_val_summary, args)
+        final_summary = make_single_summary(rel_val_summary, args, output_dir)
         with open(join(output_dir, "Summary.json"), "w") as f:
             json.dump(final_summary, f, indent=2)
         plot_pie_charts(final_summary, output_dir, "")
@@ -745,7 +792,7 @@ def inspect(args):
     current_summary = None
     with open(path, "r") as f:
         current_summary = json.load(f)
-    summary = make_single_summary(current_summary, args)
+    summary = make_single_summary(current_summary, args, output_dir)
     with open(join(output_dir, "Summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
     print_summary(summary)
@@ -889,8 +936,9 @@ def main():
     common_threshold_parser.add_argument("--chi2-threshold", dest="chi2_threshold", type=float, help="Chi2 threshold", default=1.5)
     common_threshold_parser.add_argument("--rel-mean-diff-threshold", dest="rel_mean_diff_threshold", type=float, help="Threshold of relative difference in mean", default=1.5)
     common_threshold_parser.add_argument("--rel-entries-diff-threshold", dest="rel_entries_diff_threshold", type=float, help="Threshold of relative difference in number of entries", default=0.01)
-    common_threshold_parser.add_argument("--use-values-as-thresholds", dest="use_values_as_thresholds", help="Use values from another run as thresholds for this one")
+    common_threshold_parser.add_argument("--use-values-as-thresholds", nargs="*", dest="use_values_as_thresholds", help="Use values from other runs as thresholds for this one")
     # The following only take effect for thresholds given via an input file
+    common_threshold_parser.add_argument("--combine-thresholds", dest="combine_thresholds",  choices=["mean", "max"], help="Arithmetic mean or maximum is chosen as threshold value", default="mean")
     common_threshold_parser.add_argument("--chi2-threshold-margin", dest="chi2_threshold_margin", type=float, help="Margin to apply to the chi2 threshold extracted from file", default=1.0)
     common_threshold_parser.add_argument("--rel-mean-diff-threshold-margin", dest="rel_mean_diff_threshold_margin", type=float, help="Margin to apply to the rel_mean_diff threshold extracted from file", default=1.0)
     common_threshold_parser.add_argument("--rel-entries-diff-threshold-margin", dest="rel_entries_diff_threshold_margin", type=float, help="Margin to apply to the rel_entries_diff threshold extracted from file", default=1.0)
