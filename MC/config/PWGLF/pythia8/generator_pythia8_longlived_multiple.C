@@ -25,7 +25,7 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
 {
  public:
   /// constructor
-  GeneratorPythia8LongLivedGunMultiple() : GeneratorPythia8LongLivedGun{0}
+  GeneratorPythia8LongLivedGunMultiple(bool injOnePerEvent = true) : GeneratorPythia8LongLivedGun{0}, mOneInjectionPerEvent{injOnePerEvent}
   {
   }
 
@@ -36,7 +36,13 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   Bool_t importParticles() override
   {
     GeneratorPythia8::importParticles();
+    const int configToUse = mOneInjectionPerEvent ? static_cast<int>(gRandom->Uniform(0.f, gunConfigs.size())) : -1;
+    int nConfig = 0;
     for (const ConfigContainer& cfg : gunConfigs) {
+      if (configToUse >= 0 && nConfig != configToUse) {
+        nConfig++;
+        continue;
+      }
       for (int i{0}; i < cfg.nInject; ++i) {
         const double pt = gRandom->Uniform(cfg.ptMin, cfg.ptMax);
         const double eta = gRandom->Uniform(cfg.etaMin, cfg.etaMax);
@@ -50,6 +56,7 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
         // to do since all pushed particles should be tracked.
         o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       }
+      nConfig++;
     }
     return true;
   }
@@ -98,6 +105,7 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   ConfigContainer addGun(ConfigContainer cfg) { return addGun(cfg.pdg, cfg.nInject, cfg.ptMin, cfg.ptMax); }
 
  private:
+  const bool mOneInjectionPerEvent = true; // if true, only one injection per event is performed, i.e. if multiple PDG (including antiparticles) are requested to be injected only one will be done per event
   std::vector<ConfigContainer> gunConfigs; // List of gun configurations to use
 };
 

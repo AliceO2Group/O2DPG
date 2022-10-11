@@ -8,6 +8,10 @@
 [ ! "${O2DPG_ROOT}" ] && echo "Error: This needs O2DPG loaded" && exit 1
 [ ! "${O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
 
+# ----------- CONFIGURE --------------------------
+export IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE=1
+export ALICEO2_CCDB_LOCALCACHE=.ccdb
+
 # ----------- LOAD UTILITY FUNCTIONS --------------------------
 . ${O2_ROOT}/share/scripts/jobutils.sh
 
