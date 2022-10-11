@@ -12,69 +12,73 @@
 # See O2DPG/RelVal/config/rel_val_sim_dirs_default.json for as an example
 #
 # The full help message would be
-#usage: o2dpg_release_validation.py rel-val [-h] -i [INPUT1 ...] -j
-#                                           [INPUT2 ...]
-#                                           [--chi2-threshold CHI2_THRESHOLD]
-#                                           [--rel-mean-diff-threshold REL_MEAN_DIFF_THRESHOLD]
-#                                           [--rel-entries-diff-threshold REL_ENTRIES_DIFF_THRESHOLD]
-#                                           [--use-values-as-thresholds USE_VALUES_AS_THRESHOLDS]
-#                                           [--chi2-threshold-margin CHI2_THRESHOLD_MARGIN]
-#                                           [--rel-mean-diff-threshold-margin REL_MEAN_DIFF_THRESHOLD_MARGIN]
-#                                           [--rel-entries-diff-threshold-margin REL_ENTRIES_DIFF_THRESHOLD_MARGIN]
-#                                           [--with-test-chi2]
-#                                           [--with-test-bincont]
-#                                           [--with-test-numentries]
-#                                           [--dir-config DIR_CONFIG]
-#                                           [--dir-config-enable [DIR_CONFIG_ENABLE ...]]
-#                                           [--dir-config-disable [DIR_CONFIG_DISABLE ...]]
-#                                           [--include-dirs [INCLUDE_DIRS ...]]
-#                                           [--add] [--output OUTPUT]
-#
-#optional arguments:
-#  -h, --help            show this help message and exit
-#  -i [INPUT1 ...], --input1 [INPUT1 ...]
-#                        EITHER first set of input files for comparison OR
-#                        first input directory from simulation for comparison
-#  -j [INPUT2 ...], --input2 [INPUT2 ...]
-#                        EITHER second set of input files for comparison OR
-#                        second input directory from simulation for comparison
-#  --chi2-threshold CHI2_THRESHOLD
-#                        Chi2 threshold
-#  --rel-mean-diff-threshold REL_MEAN_DIFF_THRESHOLD
-#                        Threshold of relative difference in mean
-#  --rel-entries-diff-threshold REL_ENTRIES_DIFF_THRESHOLD
-#                        Threshold of relative difference in number of entries
-#  --use-values-as-thresholds USE_VALUES_AS_THRESHOLDS
-#                        Use values from another run as thresholds for this one
-#  --chi2-threshold-margin CHI2_THRESHOLD_MARGIN
-#                        Margin to apply to the chi2 threshold extracted from
-#                        file
-#  --rel-mean-diff-threshold-margin REL_MEAN_DIFF_THRESHOLD_MARGIN
-#                        Margin to apply to the rel_mean_diff threshold
-#                        extracted from file
-#  --rel-entries-diff-threshold-margin REL_ENTRIES_DIFF_THRESHOLD_MARGIN
-#                        Margin to apply to the rel_entries_diff threshold
-#                        extracted from file
-#  --with-test-chi2      run chi2 test
-#  --with-test-bincont   run bin-content test
-#  --with-test-numentries
-#                        run number-of-entries test
-#  --dir-config DIR_CONFIG
-#                        What to take into account in a given directory
-#  --dir-config-enable [DIR_CONFIG_ENABLE ...]
-#                        only enable these top keys in your dir-config
-#  --dir-config-disable [DIR_CONFIG_DISABLE ...]
-#                        disable these top keys in your dir-config (precedence
-#                        over dir-config-enable)
-#  --include-dirs [INCLUDE_DIRS ...]
-#                        only inlcude directories; note that each pattern is
-#                        assumed to start in the top-directory (at the moment
-#                        no regex or *)
-#  --add                 If given and there is already a RelVal in the output
-#                        directory, extracted objects will be added to the
-#                        existing ones
-#  --output OUTPUT, -o OUTPUT
-#                        output directory
+# usage: o2dpg_release_validation.py rel-val [-h] -i [INPUT1 ...] -j
+#                                            [INPUT2 ...]
+#                                            [--use-values-as-thresholds [USE_VALUES_AS_THRESHOLDS ...]]
+#                                            [--combine-thresholds {mean,max}]
+#                                            [--with-test-chi2]
+#                                            [--test-chi2-threshold CHI2_THRESHOLD]
+#                                            [--test-chi2-threshold-margin CHI2_THRESHOLD_MARGIN]
+#                                            [--with-test-bin-cont]
+#                                            [--test-bin-cont-threshold BIN_CONT_THRESHOLD]
+#                                            [--test-bin-cont-threshold-margin BIN_CONT_THRESHOLD_MARGIN]
+#                                            [--with-test-num-entries]
+#                                            [--test-num-entries-threshold NUM_ENTRIES_THRESHOLD]
+#                                            [--test-num-entries-threshold-margin NUM_ENTRIES_THRESHOLD_MARGIN]
+#                                            [--dir-config DIR_CONFIG]
+#                                            [--dir-config-enable [DIR_CONFIG_ENABLE ...]]
+#                                            [--dir-config-disable [DIR_CONFIG_DISABLE ...]]
+#                                            [--include-dirs [INCLUDE_DIRS ...]]
+#                                            [--add] [--output OUTPUT]
+# 
+# optional arguments:
+#   -h, --help            show this help message and exit
+#   -i [INPUT1 ...], --input1 [INPUT1 ...]
+#                         EITHER first set of input files for comparison OR
+#                         first input directory from simulation for comparison
+#   -j [INPUT2 ...], --input2 [INPUT2 ...]
+#                         EITHER second set of input files for comparison OR
+#                         second input directory from simulation for comparison
+#   --use-values-as-thresholds [USE_VALUES_AS_THRESHOLDS ...]
+#                         Use values from another run as thresholds for this one
+#   --combine-thresholds {mean,max}
+#                         Arithmetic mean or maximum is chosen as threshold
+#                         value
+#   --with-test-chi2      run chi2 test
+#   --test-chi2-threshold CHI2_THRESHOLD
+#                         chi2 threshold
+#   --test-chi2-threshold-margin CHI2_THRESHOLD_MARGIN
+#                         Margin to apply to the chi2 threshold extracted from
+#                         file
+#   --with-test-bin-cont  run bin_cont test
+#   --test-bin-cont-threshold BIN_CONT_THRESHOLD
+#                         bin_cont threshold
+#   --test-bin-cont-threshold-margin BIN_CONT_THRESHOLD_MARGIN
+#                         Margin to apply to the bin_cont threshold extracted
+#                         from file
+#   --with-test-num-entries
+#                         run num_entries test
+#   --test-num-entries-threshold NUM_ENTRIES_THRESHOLD
+#                         num_entries threshold
+#   --test-num-entries-threshold-margin NUM_ENTRIES_THRESHOLD_MARGIN
+#                         Margin to apply to the num_entries threshold extracted
+#                         from file
+#   --dir-config DIR_CONFIG
+#                         What to take into account in a given directory
+#   --dir-config-enable [DIR_CONFIG_ENABLE ...]
+#                         only enable these top keys in your dir-config
+#   --dir-config-disable [DIR_CONFIG_DISABLE ...]
+#                         disable these top keys in your dir-config (precedence
+#                         over dir-config-enable)
+#   --include-dirs [INCLUDE_DIRS ...]
+#                         only inlcude directories; note that each pattern is
+#                         assumed to start in the top-directory (at the moment
+#                         no regex or *)
+#   --add                 If given and there is already a RelVal in the output
+#                         directory, extracted objects will be added to the
+#                         existing ones
+#   --output OUTPUT, -o OUTPUT
+#                         output directory
 
 import sys
 import argparse
