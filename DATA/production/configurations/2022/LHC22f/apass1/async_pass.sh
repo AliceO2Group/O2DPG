@@ -179,6 +179,15 @@ if [[ ! -z "$ALIEN_JDL_DDSHMSIZE" ]]; then export DDSHMSIZE=$ALIEN_JDL_DDSHMSIZE
 
 SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT_o2_mft_reco_workflow= ENABLE_ROOT_OUTPUT_o2_tof_matcher_workflow= ENABLE_ROOT_OUTPUT_o2_aod_producer_workflow= ENABLE_ROOT_OUTPUT_o2_qc= "
 
+if [[ -n "$ALIEN_EXTRA_ENABLE_ROOT_OUTPUT" ]]; then
+  OLD_IFS=$IFS
+  IFS=';'
+  for token in $ALIEN_EXTRA_ENABLE_ROOT_OUTPUT; do
+    SETTING_ROOT_OUTPUT+=" ENABLE_ROOT_OUTPUT_$token"
+  done
+  IFS=$OLD_IFS
+fi
+
 keep=0
 
 if [[ -n $ALIEN_JDL_PACKAGES ]]; then # if we have this env variable, it means that we are running on the grid
