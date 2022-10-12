@@ -19,7 +19,7 @@
           "url": "infologger:///debug?qc"
         },
         "consul": {
-          "url": "ccdb-test.cern.ch:8080"
+          "url": ""
         },
         "conditionDB": {
           "url":  "ccdb-test.cern.ch:8080"
