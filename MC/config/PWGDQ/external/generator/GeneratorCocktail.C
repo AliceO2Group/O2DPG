@@ -30,9 +30,19 @@ class GeneratorCocktail_class : public Generator
   bool importParticles() override
   {
     for (auto& g : *mEntries) {
+      int nPart = mParticles.size();
       g->importParticles();
-      for (auto& p : g->getParticles())
+      for (auto p : g->getParticles()) {
+        if (p.GetFirstMother() > -1)
+          p.SetFirstMother(p.GetFirstMother() + nPart);
+        if (p.GetSecondMother() > -1)
+          p.SetLastMother(p.GetSecondMother() + nPart);
+        if (p.GetFirstDaughter() > -1)
+          p.SetFirstDaughter(p.GetFirstDaughter() + nPart);
+        if (p.GetLastDaughter() > -1)
+          p.SetLastDaughter(p.GetLastDaughter() + nPart);
         mParticles.push_back(p);
+      }
       g->clearParticles();
     }
     return true;
