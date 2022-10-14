@@ -30,6 +30,6 @@ if [ $WORKFLOWMODE == "print" ]; then
   echo $WORKFLOW | sed "s/| */|\n/g"
 else
   # Execute the command we have assembled
-  WORKFLOW+=" --$WORKFLOWMODE"
+  WORKFLOW+=" --$WORKFLOWMODE ${WORKFLOWMODE_FILE}"
   eval $WORKFLOW
 fi

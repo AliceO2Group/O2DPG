@@ -62,18 +62,22 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --pipeline tpc-raw-to-digits-0:20 \
     --remove-duplicates \
     --send-ce-digits \
+    --decoder-type 0 \
     | o2-tpc-reco-workflow $ARGS_ALL \
     --input-type digitizer  \
     --output-type "tracks,disable-writer" \
     --disable-mc \
     --pipeline tpc-zsEncoder:20,tpc-tracker:8 \
     $GPU_CONFIG \
-    --configKeyValues "$ARGS_ALL_CONFIG;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY" \
+    --condition-remap file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS \
+    --configKeyValues "$ARGS_ALL_CONFIG;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1" \
     | o2-tpc-laser-track-filter $ARGS_ALL \
     | o2-dpl-output-proxy ${ARGS_ALL} \
     --dataspec "$PROXY_OUTSPEC" \
-    --proxy-channel-name tpc-laser-input-proxy --channel-config "name=tpc-laser-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0" \
-    | o2-dpl-run $ARGS_ALL --dds
+    --proxy-name tpc-laser-input-proxy \
+    --proxy-channel-name tpc-laser-input-proxy \
+    --channel-config "name=tpc-laser-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0" \
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
 
 #    --pipeline tpc-tracker:4 \
 
