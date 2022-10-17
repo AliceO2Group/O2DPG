@@ -169,23 +169,32 @@ elif [[ -n "$ALIEN_JDL_USETHROTTLING" ]]; then
   export TIMEFRAME_RATE_LIMIT=1
 fi
 
-echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS} TIMEFRAME_RATE_LIMIT ${TIMEFRAME_RATE_LIMIT}"
-
 if [[ ! -z "$ALIEN_JDL_SHMSIZE" ]]; then export SHMSIZE=$ALIEN_JDL_SHMSIZE; elif [[ -z "$SHMSIZE" ]]; then export SHMSIZE=$(( 16 << 30 )); fi
 if [[ ! -z "$ALIEN_JDL_DDSHMSIZE" ]]; then export DDSHMSIZE=$ALIEN_JDL_DDSHMSIZE; elif [[ -z "$DDSHMSIZE" ]]; then export DDSHMSIZE=$(( 32 << 10 )); fi
 
 # root output enabled only for some fraction of the cases
-# keeping AO2D.root QC.root o2calib_tof.root MFTAssessment.root mchtracks.root mchclusters.root
+# keeping AO2D.root QC.root o2calib_tof.root mchtracks.root mchclusters.root
 
-SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT_o2_mft_reco_workflow= ENABLE_ROOT_OUTPUT_o2_tof_matcher_workflow= ENABLE_ROOT_OUTPUT_o2_aod_producer_workflow= ENABLE_ROOT_OUTPUT_o2_qc= "
+SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT_o2_tof_matcher_workflow= ENABLE_ROOT_OUTPUT_o2_aod_producer_workflow= ENABLE_ROOT_OUTPUT_o2_qc= "
 
 keep=0
+
+if [[ -n $ALIEN_INPUT_TYPE ]] && [[ "$ALIEN_INPUT_TYPE" == "TFs" ]]; then
+  export WORKFLOW_PARAMETERS=CTF
+  INPUT_TYPE=TF
+  if [[ $RUNNUMBER -lt 523141 ]]; then
+    export TPC_CONVERT_LINKZS_TO_RAW=1
+  fi
+else
+  INPUT_TYPE=CTF
+fi
 
 if [[ -n $ALIEN_JDL_PACKAGES ]]; then # if we have this env variable, it means that we are running on the grid
   # JDL can set the permille to keep; otherwise we use 2
   if [[ ! -z "$ALIEN_JDL_NKEEP" ]]; then export NKEEP=$ALIEN_JDL_NKEEP; else NKEEP=2; fi
 
-  KEEPRATIO=$((1000/NKEEP))
+  KEEPRATIO=0
+  (( $NKEEP > 0 )) && KEEPRATIO=$((1000/NKEEP))
   echo "Set to save ${NKEEP} permil intermediate output"
 
   if [[ -f wn.xml ]]; then
@@ -193,10 +202,10 @@ if [[ -n $ALIEN_JDL_PACKAGES ]]; then # if we have this env variable, it means t
   else
     echo "${inputarg}" > tmp.tmp
   fi
-  while read -r CTF; do
-    SUBJOBIDX=$(grep -B1 $CTF CTFs.xml | head -n1 | cut -d\" -f2)
-    echo "CTF                                     : $CTF"
-    echo "Index of CTF in collection              : $SUBJOBIDX"
+  while read -r INPUT_FILE && (( $KEEPRATIO > 0 )); do
+    SUBJOBIDX=$(grep -B1 $INPUT_FILE CTFs.xml | head -n1 | cut -d\" -f2)
+    echo "INPUT_FILE                              : $INPUT_FILE"
+    echo "Index of INPUT_FILE in collection       : $SUBJOBIDX"
     echo "Number of subjobs for current masterjob : $ALIEN_JDL_SUBJOBCOUNT"
     # if we don't have enough subjobs, we anyway keep the first
     if [[ "$ALIEN_JDL_SUBJOBCOUNT" -le "$KEEPRATIO" && "$SUBJOBIDX" -eq 1 ]]; then
@@ -238,13 +247,34 @@ if [[ -n "$ALIEN_JDL_USEGPUS" ]]; then
   echo "Enabling GPUS"
   export GPUTYPE="HIP"
   export GPUMEMSIZE=$((25 << 30))
+  if [[ $keep -eq 0 ]]; then
+    export MULTIPLICITY_PROCESS_tof_matcher=2
+    export MULTIPLICITY_PROCESS_mch_cluster_finder=3
+    export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
+    export MULTIPLICITY_PROCESS_itstpc_track_matcher=3
+    export MULTIPLICITY_PROCESS_its_tracker=2
+  fi
+  export SHMSIZE=20000000000
+  export SHMTHROW=0
+  export TIMEFRAME_RATE_LIMIT=8
+  export OMP_NUM_THREADS=8
+else
+  # David, Oct 13th
+  # the optimized settings for the 8 core GRID queue without GPU are
+  # (overwriting the values above)
+  #
+  export TIMEFRAME_RATE_LIMIT=3
+  export OMP_NUM_THREADS=5
+  export SHMSIZE=16000000000
 fi
+
+echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS} TIMEFRAME_RATE_LIMIT ${TIMEFRAME_RATE_LIMIT}"
 
 # reco and matching
 # print workflow
-env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 ./run-workflow-on-inputlist.sh CTF list.list > workflowconfig.log
+env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list > workflowconfig.log
 # run it
-env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 ./run-workflow-on-inputlist.sh CTF list.list
+env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS NTIMEFRAMES=-1 ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
 
 # now extract all performance metrics
 IFS=$'\n'

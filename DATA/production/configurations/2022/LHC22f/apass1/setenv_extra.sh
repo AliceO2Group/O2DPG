@@ -128,7 +128,6 @@ export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="--fv0-reconstructor"
 
 # ad-hoc settings for MFT
 export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="MFTTracking.forceZeroField=false;MFTTracking.FullClusterScan=false;$MAXBCDIFFTOMASKBIAS_MFT"
-export ARGS_EXTRA_PROCESS_o2_mft_reco_workflow="$ARGS_EXTRA_PROCESS_mft_reco_workflow --run-assessment "
 
 # ad-hoc settings for MCH
 export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow="MCHClustering.lowestPadCharge=20;MCHClustering.defaultClusterResolution=0.4;MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6;MCHDigitFilter.timeOffset=126"
