@@ -111,7 +111,6 @@ ls -altr
 
 rm -f /dev/shm/*
 
-unset WORKFLOW_PARAMETER
 export WORKFLOW_PARAMETERS=CTF
 if [[ -f "setenv_extra_ctf_recreation_$DETCONFIG.sh" ]]; then
     source setenv_extra_ctf_recreation_$DETCONFIG.sh 
