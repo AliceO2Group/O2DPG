@@ -22,7 +22,7 @@ if has_detector_calib TOF && has_detector_reco TOF && (( has_detectors_reco ITS 
 if has_detector_calib TPC && has_detectors ITS TPC TOF TRD && has_detector_matching ITSTPCTRDTOF; then CAN_DO_CALIB_TPC_SCDCALIB=1; else CAN_DO_CALIB_TPC_SCDCALIB=0; fi
 if has_detector_calib TPC && has_processing_step TPC_DEDX; then CAN_DO_CALIB_TPC_TIMEGAIN=1; CAN_DO_CALIB_TPC_RESPADGAIN=1; else CAN_DO_CALIB_TPC_TIMEGAIN=0; CAN_DO_CALIB_TPC_RESPADGAIN=0; fi
 if has_detector_calib TPC && has_detectors ITS TPC && has_detector_matching ITSTPC; then CAN_DO_CALIB_TPC_VDRIFTTGL=1; else CAN_DO_CALIB_TPC_VDRIFTTGL=0; fi
-if has_detector_calib TPC; then CAN_DO_CALIB_TPC_IDC=1; else CAN_DO_CALIB_TPC_IDC=0; fi
+if has_detector_calib TPC; then CAN_DO_CALIB_TPC_IDC=1; CAN_DO_CALIB_TPC_SAC=1; else CAN_DO_CALIB_TPC_IDC=0; CAN_DO_CALIB_TPC_SAC=0; fi
 if has_detector_calib TRD && has_detectors ITS TPC TRD && has_detector_matching ITSTPCTRD; then CAN_DO_CALIB_TRD_VDRIFTEXB=1; else CAN_DO_CALIB_TRD_VDRIFTEXB=0; fi
 if has_detector_calib EMC && has_detector_reco EMC; then CAN_DO_CALIB_EMC_BADCHANNELCALIB=1; CAN_DO_CALIB_EMC_TIMECALIB=1; else CAN_DO_CALIB_EMC_BADCHANNELCALIB=0; CAN_DO_CALIB_EMC_TIMECALIB=0; fi
 if has_detector_calib PHS && has_detector_reco PHS; then CAN_DO_CALIB_PHS_ENERGYCALIB=1; CAN_DO_CALIB_PHS_BADMAPCALIB=1; CAN_DO_CALIB_PHS_TURNONCALIB=1; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=1; else CAN_DO_CALIB_PHS_ENERGYCALIB=0; CAN_DO_CALIB_PHS_BADMAPCALIB=0; CAN_DO_CALIB_PHS_TURNONCALIB=0; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=0; fi
@@ -73,6 +73,10 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
       fi # by default, A and C side are processed separately
     fi
   fi
+  # SAC
+  if [[ $CAN_DO_CALIB_TPC_SAC == 1 ]]; then
+    if [[ -z ${CALIB_TPC_SAC+x} ]]; then CALIB_TPC_SAC=1; fi
+  fi
 
   # calibrations for TRD
   if [[ $CAN_DO_CALIB_TRD_VDRIFTEXB == 1 ]] ; then
@@ -120,6 +124,7 @@ fi
 ( [[ -z ${CALIB_TPC_TIMEGAIN} ]] || [[ $CAN_DO_CALIB_TPC_TIMEGAIN == 0 ]] ) && CALIB_TPC_TIMEGAIN=0
 ( [[ -z ${CALIB_TPC_RESPADGAIN} ]] || [[ $CAN_DO_CALIB_TPC_RESPADGAIN == 0 ]] ) && CALIB_TPC_RESPADGAIN=0
 ( [[ -z ${CALIB_TPC_IDC} ]] || [[ $CAN_DO_CALIB_TPC_IDC == 0 ]] ) && CALIB_TPC_IDC=0
+( [[ -z ${CALIB_TPC_SAC} ]] || [[ $CAN_DO_CALIB_TPC_SAC == 0 ]] ) && CALIB_TPC_SAC=0
 ( [[ -z ${CALIB_TRD_VDRIFTEXB} ]] || [[ $CAN_DO_CALIB_TRD_VDRIFTEXB == 0 ]] ) && CALIB_TRD_VDRIFTEXB=0
 ( [[ -z ${CALIB_EMC_BADCHANNELCALIB} ]] || [[ $CAN_DO_CALIB_EMC_BADCHANNELCALIB == 0 ]] ) && CALIB_EMC_BADCHANNELCALIB=0
 ( [[ -z ${CALIB_EMC_TIMECALIB} ]] || [[ $CAN_DO_CALIB_EMC_TIMECALIB == 0 ]] ) && CALIB_EMC_TIMECALIB=0
@@ -152,6 +157,7 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
       echo "CALIB_TPC_IDC: A and C side will be run separately" 1>&2
     fi
   fi
+  echo "CALIB_TPC_SAC = $CALIB_TPC_SAC" 1>&2
   echo "CALIB_CPV_GAIN = $CALIB_CPV_GAIN" 1>&2
   echo "CALIB_ZDC_TDC = $CALIB_ZDC_TDC" 1>&2
 fi
@@ -193,6 +199,11 @@ if [[ -z $CALIBDATASPEC_TPCIDC_C ]]; then
   if [[ $CALIB_TPC_IDC == 1 ]]; then add_semicolon_separated CALIBDATASPEC_TPCIDC_C "idcsgroupc:TPC/IDCGROUPC"; fi
 fi
 
+# define spec for proxy for TPC SAC
+if [[ -z $CALIBDATASPEC_TPCSAC ]]; then
+  # TPC
+  if [[ $CALIB_TPC_SAC == 1 ]]; then add_semicolon_separated CALIBDATASPEC_TPCSAC "sacdec:TPC/DECODEDSAC;sacreftime:TPC/REFTIMESAC"; fi
+fi
 
 # define spec for proxy for TF-based outputs from CALO
 if [[ -z $CALIBDATASPEC_CALO_TF ]]; then
