@@ -22,6 +22,7 @@ if [[ "${1##*.}" == "root" ]]; then
     shift
 elif [[ "${1##*.}" == "xml" ]]; then
     sed -rn 's/.*turl="([^"]*)".*/\1/p' $1 > list.list
+    head -1 list.list > list.listtmp && mv list.listtmp list.list
     export MODE="remote"
     shift
 fi
