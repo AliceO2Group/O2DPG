@@ -22,10 +22,15 @@ if [[ "${1##*.}" == "root" ]]; then
     shift
 elif [[ "${1##*.}" == "xml" ]]; then
     sed -rn 's/.*turl="([^"]*)".*/\1/p' $1 > list.list
-    head -1 list.list > list.listtmp && mv list.listtmp list.list
     export MODE="remote"
     shift
 fi
+
+# Could need sometimes to iterate just a subset of the input files
+#
+[ -z ${ALIEN_JDL_INPUTFILELIMIT} ] && ALIEN_JDL_INPUTFILELIMIT=($(cat list.list|wc -l))
+head -${ALIEN_JDL_INPUTFILELIMIT} list.list > list.listtmp && mv list.listtmp list.list
+echo "Will iterate ${ALIEN_JDL_INPUTFILELIMIT} input files"
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
