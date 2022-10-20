@@ -28,7 +28,7 @@
         "vertex-z-min": "-10",
         "vertex-z-max": "10",
         "pt-bins": "500",
-        "log-pt": "1",
+        "log-pt": "0",
         "eta-bins": "500",
         "y-bins": "500",
         "phi-bins": "500",
