@@ -274,10 +274,12 @@ if [[ -n "$ALIEN_JDL_USEGPUS" ]]; then
     export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
     export MULTIPLICITY_PROCESS_itstpc_track_matcher=3
     export MULTIPLICITY_PROCESS_its_tracker=2
+    export TIMEFRAME_RATE_LIMIT=8
+  else
+    export TIMEFRAME_RATE_LIMIT=4
   fi
   export SHMSIZE=20000000000
   export SHMTHROW=0
-  export TIMEFRAME_RATE_LIMIT=8
   export OMP_NUM_THREADS=8
 else
   # David, Oct 13th
