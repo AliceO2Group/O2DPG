@@ -27,6 +27,7 @@ import json
 import itertools
 import time
 import requests, re
+import pandas as pd
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
@@ -54,6 +55,7 @@ parser.add_argument('-confKey',help='generator or trigger configuration key valu
 
 parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
 parser.add_argument('-bcPatternFile',help='Bunch crossing pattern file, used in digitization (a file name or "ccdb")', default='')
+parser.add_argument('-meanVertexPerRunTxtFile',help='Txt file with mean vertex settings per run', default='')
 parser.add_argument('-eCM',help='CMS energy', default=-1)
 parser.add_argument('-eA',help='Beam A energy', default=-1) #6369 PbPb, 2.510 pp 5 TeV, 4 pPb
 parser.add_argument('-eB',help='Beam B energy', default=-1)
@@ -205,6 +207,30 @@ def retrieve_sor(run_number):
 
     return int(SOR)
 
+CONFKEY=''
+if args.confKey!= '':
+  CONFKEY=' --configKeyValues "' + args.confKey + '"'
+
+# Recover mean vertex settings from external txt file
+
+if  len(args.meanVertexPerRunTxtFile) > 0:
+  if "Diamond" in CONFKEY:
+     print("confKey already sets diamond, stop!")
+     sys.exit()
+  #df = pd.read_csv(args.vertexPerRunFile, sep=" ", header=None) # for single space
+  df = pd.read_csv(args.meanVertexPerRunTxtFile, delimiter="\t", header=None) # for tabular
+  df.columns = ["runNumber", "vx", "vy", "vz", "sx", "sy", "sz"]
+  #print(df) # print full table
+  MV_SX = float(df.loc[df['runNumber'].eq(args.run), 'sx'])
+  MV_SY = float(df.loc[df['runNumber'].eq(args.run), 'sy'])
+  MV_SZ = float(df.loc[df['runNumber'].eq(args.run), 'sz'])
+  MV_VX = float(df.loc[df['runNumber'].eq(args.run), 'vx'])
+  MV_VY = float(df.loc[df['runNumber'].eq(args.run), 'vy'])
+  MV_VZ = float(df.loc[df['runNumber'].eq(args.run), 'vz'])
+  print("** Using mean vertex parameters from file",args.meanVertexPerRunTxtFile,"for run =",args.run,
+  ": \n \t vx =",MV_VX,", vy =",MV_VY,", vz =",MV_VZ,",\n \t sx =",MV_SX,", sy =",MV_SY,", sz =",MV_SZ)
+  CONFKEY = CONFKEY + ' "Diamond.width[2]='+str(MV_SZ)+';Diamond.width[1]='+str(MV_SY)+';Diamond.width[0]='+str(MV_SX)+';Diamond.position[2]='+str(MV_VZ)+';Diamond.position[1]='+str(MV_VY)+';Diamond.position[0]='+str(MV_VX)+'"'
+  print("** New confKey:",CONFKEY)
 
 # ----------- START WORKFLOW CONSTRUCTION -----------------------------
 
@@ -422,9 +448,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    INIFILE=''
    if args.ini!= '':
       INIFILE=' --configFile ' + args.ini
-   CONFKEY=''
-   if args.confKey!= '':
-      CONFKEY=' --configKeyValues "' + args.confKey + '"'
    PROCESS=args.proc
    TRIGGER=''
    if args.trigger != '':
