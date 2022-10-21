@@ -153,23 +153,23 @@ if [ "${MCRC}" = "0" ]; then
     echo "Doing QC"
     ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
     RC=$?
-  fi
-
-  # could take this away finally
-  if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then
-    err_logs=$(get_error_logs $(pwd) --include-grep "QC")
-    [ ! "${RC}" -eq 0 ] && send_mattermost "--text QC stage **failed** :x: --files ${err_logs}" || send_mattermost "--text QC **passed** :white_check_mark:"
-    unset ALICEO2_CCDB_LOCALCACHE
-    # perform some analysis testing
-    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-    . ${DIR}/analysis_testing.sh
+    if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then
+      err_logs=$(get_error_logs $(pwd) --include-grep "QC")
+      [ ! "${RC}" -eq 0 ] && send_mattermost "--text QC stage **failed** :x: --files ${err_logs}" || send_mattermost "--text QC **passed** :white_check_mark:"
+    fi
   fi
 
   # do analysis tasks
   if [[ "${remainingargs}" == *"--include-analysis"* ]]; then
     echo "Doing Analysis"
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels Analysis --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
-    RC=$?
+    unset ALICEO2_CCDB_LOCALCACHE
+    if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then
+      # perform some analysis testing within alibi framework
+      . ${ALIBI_TASK_DIR}/analysis_testing.sh
+    else
+      # otherwise simply run all analyses there are
+      ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels Analysis --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
+    fi
   fi
 
 fi
