@@ -72,7 +72,7 @@ if [[ $GEN_TOPO_HASH == 1 ]]; then
   cd O2DPG
   git checkout $GEN_TOPO_SOURCE &> /dev/null
   if [[ $? != 0 ]]; then
-    git fetch origin 1>&2 || { echo Repository update failed 1>&2; exit 1; }
+    git fetch --tags origin 1>&2 || { echo Repository update failed 1>&2; exit 1; }
     git checkout $GEN_TOPO_SOURCE &> /dev/null || { echo commit does not exist 1>&2; exit 1; }
   fi
   # At a tag, or a detached non-dirty commit, but not on a branch

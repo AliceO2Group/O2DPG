@@ -26,6 +26,12 @@ elif [[ "${1##*.}" == "xml" ]]; then
     shift
 fi
 
+# Could need sometimes to iterate just a subset of the input files
+#
+[ -z ${ALIEN_JDL_INPUTFILELIMIT} ] && ALIEN_JDL_INPUTFILELIMIT=($(cat list.list|wc -l))
+head -${ALIEN_JDL_INPUTFILELIMIT} list.list > list.listtmp && mv list.listtmp list.list
+echo "Will iterate ${ALIEN_JDL_INPUTFILELIMIT} input files"
+
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
   key="$1"
@@ -123,8 +129,8 @@ else
     echo "************************************************************************************"
     echo "No ad-hoc setenv_extra settings for current async processing; using the one in O2DPG"
     echo "************************************************************************************"
-    if [[ -f $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/setenv_extra.sh ]]; then
-	ln -s $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/setenv_extra.sh
+    if [[ -f $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/extractCalib/setenv_extra.sh ]]; then
+	ln -s $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/extractCalib/setenv_extra.sh
 	source setenv_extra.sh $RUNNUMBER $BEAMTYPE
     else
 	echo "*********************************************************************************************************"
@@ -175,30 +181,7 @@ if [[ ! -z "$ALIEN_JDL_DDSHMSIZE" ]]; then export DDSHMSIZE=$ALIEN_JDL_DDSHMSIZE
 # root output enabled only for some fraction of the cases
 # keeping AO2D.root QC.root o2calib_tof.root mchtracks.root mchclusters.root
 
-SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT_o2_tof_matcher_workflow= ENABLE_ROOT_OUTPUT_o2_aod_producer_workflow= ENABLE_ROOT_OUTPUT_o2_qc= "
-
-# to add extra output to always keep
-if [[ -n "$ALIEN_EXTRA_ENABLE_ROOT_OUTPUT" ]]; then
-  OLD_IFS=$IFS
-  IFS=','
-  for token in $ALIEN_EXTRA_ENABLE_ROOT_OUTPUT; do
-    SETTING_ROOT_OUTPUT+=" ENABLE_ROOT_OUTPUT_$token"
-  done
-  IFS=$OLD_IFS
-fi
-
-# to define which extra output to always keep
-if [[ -n "$ALIEN_ENABLE_ROOT_OUTPUT" ]]; then
-  OLD_IFS=$IFS
-  IFS=','
-  SETTING_ROOT_OUTPUT=
-  for token in $ALIEN_ENABLE_ROOT_OUTPUT; do
-    SETTING_ROOT_OUTPUT+=" ENABLE_ROOT_OUTPUT_$token"
-  done
-  IFS=$OLD_IFS
-fi
-
-keep=0
+SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_primary_vertexing_workflow= ENABLE_ROOT_OUTPUT_o2_tfidinfo_writer_workflow= "
 
 if [[ -n $ALIEN_INPUT_TYPE ]] && [[ "$ALIEN_INPUT_TYPE" == "TFs" ]]; then
   export WORKFLOW_PARAMETERS=CTF
@@ -210,53 +193,7 @@ else
   INPUT_TYPE=CTF
 fi
 
-if [[ -n $ALIEN_JDL_PACKAGES ]]; then # if we have this env variable, it means that we are running on the grid
-  # JDL can set the permille to keep; otherwise we use 2
-  if [[ ! -z "$ALIEN_JDL_NKEEP" ]]; then export NKEEP=$ALIEN_JDL_NKEEP; else NKEEP=2; fi
-
-  KEEPRATIO=0
-  (( $NKEEP > 0 )) && KEEPRATIO=$((1000/NKEEP))
-  echo "Set to save ${NKEEP} permil intermediate output"
-
-  if [[ -f wn.xml ]]; then
-    grep alien:// wn.xml | tr ' ' '\n' | grep ^lfn | cut -d\" -f2 > tmp.tmp
-  else
-    echo "${inputarg}" > tmp.tmp
-  fi
-  while read -r INPUT_FILE && (( $KEEPRATIO > 0 )); do
-    SUBJOBIDX=$(grep -B1 $INPUT_FILE CTFs.xml | head -n1 | cut -d\" -f2)
-    echo "INPUT_FILE                              : $INPUT_FILE"
-    echo "Index of INPUT_FILE in collection       : $SUBJOBIDX"
-    echo "Number of subjobs for current masterjob : $ALIEN_JDL_SUBJOBCOUNT"
-    # if we don't have enough subjobs, we anyway keep the first
-    if [[ "$ALIEN_JDL_SUBJOBCOUNT" -le "$KEEPRATIO" && "$SUBJOBIDX" -eq 1 ]]; then
-      echo -e "**** NOT ENOUGH SUBJOBS TO SAMPLE, WE WILL FORCE TO KEEP THE OUTPUT ****"
-      keep=1
-      break
-    else
-      if [[ "$((SUBJOBIDX%KEEPRATIO))" -eq "0" ]]; then
-	keep=1
-	break
-      fi
-    fi
-  done < tmp.tmp
-  if [[ $keep -eq 1 ]]; then
-    echo "Intermediate files WILL BE KEPT";
-  else
-    echo "Intermediate files WILL BE KEPT ONLY FOR SOME WORKFLOWS";
-  fi
-else
-  # in LOCAL mode, by default we keep all intermediate files
-  echo -e "\n\n**** RUNNING IN LOCAL MODE ****"
-  keep=1
-  if [[ "$DO_NOT_KEEP_OUTPUT_IN_LOCAL" -eq 1 ]]; then
-    echo -e "**** ONLY SOME WORKFLOWS WILL HAVE THE ROOT OUTPUT SAVED ****\n\n"
-    keep=0;
-  else
-    echo -e "**** WE KEEP ALL ROOT OUTPUT ****";
-    echo -e "**** IF YOU WANT TO REMOVE ROOT OUTPUT FILES FOR PERFORMANCE STUDIES OR SIMILAR, PLEASE SET THE ENV VAR DO_NOT_KEEP_OUTPUT_IN_LOCAL ****\n\n"
-  fi
-fi
+keep=0
 
 if [[ $keep -eq 1 ]]; then
   SETTING_ROOT_OUTPUT+="DISABLE_ROOT_OUTPUT=0";
@@ -274,12 +211,10 @@ if [[ -n "$ALIEN_JDL_USEGPUS" ]]; then
     export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
     export MULTIPLICITY_PROCESS_itstpc_track_matcher=3
     export MULTIPLICITY_PROCESS_its_tracker=2
-    export TIMEFRAME_RATE_LIMIT=8
-  else
-    export TIMEFRAME_RATE_LIMIT=4
   fi
   export SHMSIZE=20000000000
   export SHMTHROW=0
+  export TIMEFRAME_RATE_LIMIT=8
   export OMP_NUM_THREADS=8
 else
   # David, Oct 13th
@@ -306,47 +241,4 @@ if [[ -f "performanceMetrics.json" ]]; then
 	strippedWorkflow=`echo $workflow | cut -d\" -f2`
 	cat performanceMetrics.json | jq '.'\"${strippedWorkflow}\"'' > ${strippedWorkflow}_metrics.json
     done
-fi
-
-# flag to possibly enable Analysis QC
-[[ -z ${ALIEN_JDL_RUNANALYSISQC+x} ]] && ALIEN_JDL_RUNANALYSISQC=1
-
-# now checking AO2D file
-if [[ -f "AO2D.root" ]]; then
-    root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
-    exitcode=$?
-    if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from AO2D check is " $exitcode > validation_error.message
-	echo "exit code from AO2D check is " $exitcode
-	exit $exitcode
-    fi
-    if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
-      ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
-      ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json > analysisQC.log
-      if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
-	mv Analysis/MergedAnalyses/AnalysisResults.root .
-      else
-	echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
-      fi
-      if ls Analysis/*/*.log 1> /dev/null 2>&1; then
-	mv Analysis/*/*.log .
-      fi
-    else
-      echo "Analysis QC will not be run, ALIEN_JDL_RUNANALYSISQC = $ALIEN_JDL_RUNANALYSISQC"
-    fi
-fi
-
-# copying the QC json file here
-if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
-    QC_JSON=$QC_JSON_FROM_OUTSIDE
-else
-    if [[ -d $GEN_TOPO_WORKDIR/json_cache ]]; then
-	echo "copying latest file found in ${GEN_TOPO_WORKDIR}/json_cache"
-	QC_JSON=`ls -dArt $GEN_TOPO_WORKDIR/json_cache/* | tail -n 1`
-    else
-	echo "No QC files found, probably QC was not run"
-    fi
-fi
-if [[ ! -z $QC_JSON ]]; then
-    cp $QC_JSON QC_production.json
 fi
