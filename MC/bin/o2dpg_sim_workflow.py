@@ -447,7 +447,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       INIFILE=' --configFile ' + args.ini
    CONFKEY=''
    if args.confKey!= '':
-    CONFKEY=' --configKeyValues "' + args.confKey +'"'
+      CONFKEY=' --configKeyValues "' + args.confKey + '"'
    PROCESS=args.proc
    TRIGGER=''
    if args.trigger != '':
