@@ -56,10 +56,10 @@ has_pid_qc()
     return 0
 }
 
-has_track_source() 
+has_track_source()
 {
   [[ $TRACK_SOURCES =~ (^|,)"$1"(,|$) ]]
-} 
+}
 
 has_tof_matching_source()
 {
@@ -183,8 +183,6 @@ LIST_OF_PID="FT0-TOF"
 
 # Detectors used in the workflow / enabled parameters
 if [[ -z "${WORKFLOW_DETECTORS+x}" ]] || [[ "0$WORKFLOW_DETECTORS" == "0ALL" ]]; then export WORKFLOW_DETECTORS=$LIST_OF_DETECTORS; fi
-# temporary manual addition of CTP if ADD_CTP is requested, to be removed when ECS will start including CTP/TRG to the list of detectors.
-! has_detector CTP && [[ ! -z "${ADD_CTP+x}" ]] && add_comma_separated WORKFLOW_DETECTORS CTP
 if [[ -z "${WORKFLOW_DETECTORS_QC+x}" ]] || [[ "0$WORKFLOW_DETECTORS_QC" == "0ALL" ]]; then export WORKFLOW_DETECTORS_QC="$WORKFLOW_DETECTORS,$LIST_OF_GLORECO"; fi
 if [[ -z "${WORKFLOW_DETECTORS_CALIB+x}" ]] || [[ "0$WORKFLOW_DETECTORS_CALIB" == "0ALL" ]]; then export WORKFLOW_DETECTORS_CALIB=$WORKFLOW_DETECTORS; fi
 if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
