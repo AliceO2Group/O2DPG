@@ -202,7 +202,10 @@ fi
 # define spec for proxy for TPC SAC
 if [[ -z $CALIBDATASPEC_TPCSAC ]]; then
   # TPC
-  if [[ $CALIB_TPC_SAC == 1 ]]; then add_semicolon_separated CALIBDATASPEC_TPCSAC "sacdec:TPC/DECODEDSAC;sacreftime:TPC/REFTIMESAC"; fi
+  if [[ $CALIB_TPC_SAC == 1 ]]; then
+    add_semicolon_separated CALIBDATASPEC_TPCSAC "sacdec:TPC/DECODEDSAC"
+    add_semicolon_separated CALIBDATASPEC_TPCSAC "sacreftime:TPC/REFTIMESAC"
+  fi
 fi
 
 # define spec for proxy for TF-based outputs from CALO
