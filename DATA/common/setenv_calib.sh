@@ -75,7 +75,7 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   fi
   # SAC
   if [[ $CAN_DO_CALIB_TPC_SAC == 1 ]]; then
-    if [[ -z ${CALIB_TPC_SAC+x} ]]; then CALIB_TPC_SAC=1; fi
+    if [[ -z ${CALIB_TPC_SAC+x} ]]; then CALIB_TPC_SAC=0; fi # default is off
   fi
 
   # calibrations for TRD
