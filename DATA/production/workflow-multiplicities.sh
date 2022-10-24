@@ -57,6 +57,8 @@ elif [[ $EPNPIPELINES != 0 ]]; then
     if [[ "0$HIGH_RATE_PP" == "01" ]]; then
       N_TPCITS=$(math_max $((5 * $EPNPIPELINES * $NGPUS / 4)) 1)
       N_TPCENT=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
+      N_TOFMATCH=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
+      N_TRDTRKTRANS=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
     else
       N_TPCITS=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
       N_TPCENT=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
