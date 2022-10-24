@@ -87,4 +87,12 @@ elif [[ $EPNPIPELINES != 0 ]]; then
   N_GENERICRAWDEV=
 fi
 
+if [[ -z $EVE_NTH_EVENT ]]; then
+  if [[ $BEAMTYPE == "PbPb" ]]; then
+    EVE_NTH_EVENT=2
+  elif [[ $BEAMTYPE == "pp" && "0$ED_VERTEX_MODE" == "01" ]]; then
+    EVE_NTH_EVENT=5
+  fi
+fi
+
 fi
