@@ -58,7 +58,6 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_PHS" ]] && QC_JSON_PHS=consul://o2/components/qc/ANY/any/phos-raw-clusters-epn
     [[ -z "$QC_JSON_GLO_VTX" ]] && QC_JSON_GLO=consul://o2/components/qc/ANY/any/glo-vtx-qcmn-epn
     [[ -z "$QC_JSON_GLO_ITSTPC_MTCH" ]] && QC_JSON_GLO=consul://o2/components/qc/ANY/any/glo-itstpc-mtch-qcmn-epn
-    [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json
     if [[ -z "$QC_JSON_TOF_MATCH" ]]; then
       if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD; then
         QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctrdtof
@@ -66,6 +65,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
         QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctof
       fi
     fi
+    [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json # this must be last
   elif [[ $SYNCMODE == 1 ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
@@ -89,7 +89,6 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_TRD" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-sync/trd.json
     [[ -z "$QC_JSON_GLO_VTX" ]] && QC_JSON_GLO=$O2DPG_ROOT/DATA/production/qc-sync/glo-vtx-qcmn-epn.json
     [[ -z "$QC_JSON_GLO_ITSTPC_MTCH" ]] && QC_JSON_GLO=$O2DPG_ROOT/DATA/production/qc-sync/glo-itstpc-mtch-qcmn-epn.json
-    [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json
     if [[ -z "$QC_JSON_TOF_MATCH" ]]; then
       if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD; then
         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctrdtof.json
@@ -97,6 +96,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctof.json
       fi
     fi
+    [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json # this must be last
   else
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-async/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-async/its.json
@@ -115,7 +115,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_GLO_ITSTPC_MTCH" ]] && QC_JSON_ITSTPC=$O2DPG_ROOT/DATA/production/qc-async/itstpc.json
     [[ -z "$QC_JSON_TOF_MATCH" ]] && QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-async/itstpctof.json
     [[ -z "$QC_JSON_PID_FT0TOF" ]] && QC_JSON_PID_FT0TOF=$O2DPG_ROOT/DATA/production/qc-async/pidft0tof.json
-    [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-async/qc-global.json
+    [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-async/qc-global.json # this must be last
   fi
 
   if [[ -z "$GEN_TOPO_WORKDIR" ]]; then
