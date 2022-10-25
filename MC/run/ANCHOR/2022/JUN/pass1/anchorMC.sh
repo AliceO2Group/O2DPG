@@ -139,42 +139,11 @@ ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_
 MCRC=$?  # <--- we'll report back this code
 exit 0
 
-if [ "${MCRC}" = "0" ]; then
-  # publish the AODs to ALIEN
-  [ ${ALIBI_EXECUTOR_FRAMEWORK} ] && copy_ALIEN "*AO2D*"
-
+if [[ "${MCRC}" = "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
   # do QC tasks
-  if [[ "${remainingargs}" == *"--include-local-qc"* ]]; then
-    echo "Doing QC"
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} -k
-    RC=$?
-  fi
-
-  # could take this away finally
-  if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then 
-    err_logs=$(get_error_logs $(pwd) --include-grep "QC")
-    [ ! "${RC}" -eq 0 ] && send_mattermost "--text QC stage **failed** :x: --files ${err_logs}" || send_mattermost "--text QC **passed** :white_check_mark:"
-    unset ALICEO2_CCDB_LOCALCACHE
-    # perform some analysis testing
-    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-    . ${DIR}/analysis_testing.sh
-  fi
-
-  # do analysis tasks
-  if [[ "${remainingargs}" == *"--include-analysis"* ]]; then
-    echo "Doing Analysis"
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels Analysis --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
-    RC=$?
-  fi
-
-fi
-
-# could take this way finally
-if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then
-  # publish the original data to ALIEN
-  find ./ -name "localhos*_*" -delete
-  tar -czf mcarchive.tar.gz workflow.json tf* QC pipeline*
-  copy_ALIEN mcarchive.tar.gz
+  echo "Doing QC"
+  ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} -k
+  RC=$?
 fi
 
 #
