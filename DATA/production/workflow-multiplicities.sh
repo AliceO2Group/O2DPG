@@ -18,6 +18,8 @@ fi
 
 [[ $SYNCMODE == 1 ]] && NTRDTRKTHREADS=1
 
+NGPURECOTHREADS=-1 # -1 = auto-detect
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Process multiplicities
 
@@ -30,8 +32,8 @@ if [[ $OPTIMIZED_PARALLEL_ASYNC != 0 ]]; then
   # Tuned multiplicities for async Pb-Pb processing
   if [[ $SYNCMODE == "1" ]]; then echo "Must not use OPTIMIZED_PARALLEL_ASYNC with GPU or SYNCMODE" 1>&2; exit 1; fi
   if [[ $NUMAGPUIDS != 0 ]]; then N_NUMAFACTOR=1; else N_NUMAFACTOR=2; fi
-  GPU_CONFIG_KEY+="GPU_proc.ompThreads=6;"
-  TRD_CONFIG_KEY+="GPU_proc.ompThreads=2;"
+  NGPURECOTHREADS=6
+  NTRDTRKTHREADS=2
   if [[ $GPUTYPE == "CPU" ]]; then
     N_TPCENTDEC=$((2 * $N_NUMAFACTOR))
     N_MFTTRK=$((3 * $N_NUMAFACTOR))
@@ -51,7 +53,6 @@ if [[ $OPTIMIZED_PARALLEL_ASYNC != 0 ]]; then
 elif [[ $EPNPIPELINES != 0 ]]; then
   # Tuned multiplicities for sync Pb-Pb processing
   if [[ $BEAMTYPE == "pp" ]]; then
-    N_ITSTRK=$(math_max $((6 * $EPNPIPELINES * $NGPUS / 4)) 1)
     N_ITSRAWDEC=$(math_max $((6 * $EPNPIPELINES * $NGPUS / 4)) 1)
     N_MFTRAWDEC=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
     if [[ "0$HIGH_RATE_PP" == "01" ]]; then
@@ -59,9 +60,13 @@ elif [[ $EPNPIPELINES != 0 ]]; then
       N_TPCENT=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
       N_TOFMATCH=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
       N_TRDTRKTRANS=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
+      N_ITSTRK=$(math_max $((9 * $EPNPIPELINES * $NGPUS / 4)) 1)
+      N_PRIMVTX=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
+      N_PRIMVTXMATCH=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
     else
       N_TPCITS=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
       N_TPCENT=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
+      N_ITSTRK=$(math_max $((6 * $EPNPIPELINES * $NGPUS / 4)) 1)
     fi
   else
     N_ITSTRK=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
@@ -76,7 +81,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
   N_TPCRAWDEC=$(math_max $((12 * $EPNPIPELINES * $NGPUS / 4)) 1)
   if [[ $GPUTYPE == "CPU" ]]; then
     N_TPCTRK=8
-    GPU_CONFIG_KEY+="GPU_proc.ompThreads=4;"
+    NGPURECOTHREADS=4
   fi
   # Scale some multiplicities with the number of nodes
   RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15) * ($NUMAGPUIDS != 0 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
@@ -92,9 +97,15 @@ fi
 if [[ -z $EVE_NTH_EVENT ]]; then
   if [[ $BEAMTYPE == "PbPb" ]]; then
     EVE_NTH_EVENT=2
+  elif [[ "0$HIGH_RATE_PP" == "01" ]]; then
+    EVE_NTH_EVENT=10
   elif [[ $BEAMTYPE == "pp" && "0$ED_VERTEX_MODE" == "01" ]]; then
     EVE_NTH_EVENT=5
   fi
 fi
+
+#if [[ "0$HIGH_RATE_PP" == "01" ]]; then
+  # Extra settings for HIGH_RATE_PP
+#fi
 
 fi
