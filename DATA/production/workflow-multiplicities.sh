@@ -51,10 +51,12 @@ if [[ $OPTIMIZED_PARALLEL_ASYNC != 0 ]]; then
     N_TOFMATCH=$(math_max $((20 * $NGPUS * $OPTIMIZED_PARALLEL_ASYNC * $N_NUMAFACTOR / 4)) 1)
   fi
 elif [[ $EPNPIPELINES != 0 ]]; then
-  # Tuned multiplicities for sync Pb-Pb processing
+  RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15) * ($NUMAGPUIDS != 0 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
+  # Tuned multiplicities for sync pp / Pb-Pb processing
   if [[ $BEAMTYPE == "pp" ]]; then
     N_ITSRAWDEC=$(math_max $((6 * $EPNPIPELINES * $NGPUS / 4)) 1)
     N_MFTRAWDEC=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
+    N_MCHCL=$(math_max $((6 * 100 / $RECO_NUM_NODES_WORKFLOW_CMP)) 1)
     if [[ "0$HIGH_RATE_PP" == "01" ]]; then
       N_TPCITS=$(math_max $((5 * $EPNPIPELINES * $NGPUS / 4)) 1)
       N_TPCENT=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
@@ -84,14 +86,16 @@ elif [[ $EPNPIPELINES != 0 ]]; then
     NGPURECOTHREADS=4
   fi
   # Scale some multiplicities with the number of nodes
-  RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15) * ($NUMAGPUIDS != 0 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
-  N_ITSRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSRAWDEC:-1}) # This means, if we have 60 EPN nodes, we need at least 3 ITS RAW decoders
+  N_ITSRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSRAWDEC:-1}) # This means, if we have 60 EPN nodes, we need at least 3 ITS RAW decoders per NUMA domain (2 * 3 = 6)
   N_MFTRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTRAWDEC:-1})
-  N_ITSTRK=$(math_max $((1 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
+  if [[ $BEAMTYPE == "pp" ]]; then
+    N_ITSTRK=$(math_max $((9 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
+  else
+    N_ITSTRK=$(math_max $((2 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
+  fi
   N_MFTTRK=$(math_max $((1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTTRK:-1})
   N_CTPRAWDEC=$(math_max $((1 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_CTPRAWDEC:-1})
   N_TRDRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_TRDRAWDEC:-1})
-  N_GENERICRAWDEV=
 fi
 
 if [[ -z $EVE_NTH_EVENT ]]; then
@@ -100,7 +104,7 @@ if [[ -z $EVE_NTH_EVENT ]]; then
   elif [[ "0$HIGH_RATE_PP" == "01" ]]; then
     EVE_NTH_EVENT=10
   elif [[ $BEAMTYPE == "pp" && "0$ED_VERTEX_MODE" == "01" ]]; then
-    EVE_NTH_EVENT=5
+    EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
   fi
 fi
 
