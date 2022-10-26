@@ -58,7 +58,7 @@ fi
 # TPC vdrift
 PERIODLETTER=${PERIOD: -1}
 VDRIFTPARAMOPTION=
-if [[ $PERIODLETTER < m ]]; then
+if [[ $PERIODLETTER < m ]] || [[ $ALIEN_JDL_LPMPRODUCTIONTAG == MAY ]] || [[ $ALIEN_JDL_LPMPRODUCTIONTAG == JUN ]]; then
   root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/getTPCvdrift.C+($RUNNUMBER)"
   export VDRIFT=`cat vdrift.txt`
   VDRIFTPARAMOPTION="TPCGasParam.DriftV=$VDRIFT"
