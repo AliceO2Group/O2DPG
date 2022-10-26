@@ -190,6 +190,17 @@ if [[ -z "${WORKFLOW_DETECTORS_CTF+x}" ]] || [[ "0$WORKFLOW_DETECTORS_CTF" == "0
 if [[ "0$WORKFLOW_DETECTORS_FLP_PROCESSING" == "0ALL" ]]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=$WORKFLOW_DETECTORS; fi
 if [[ -z "$WORKFLOW_PARAMETERS" ]]; then export WORKFLOW_PARAMETERS=; fi
 
+if [[ ! -z $WORKFLOW_DETECTORS_EXCLUDE_QC ]]; then
+  for i in $(echo $WORKFLOW_DETECTORS_EXCLUDE_QC | sed "s/,/ /g"); do
+    export WORKFLOW_DETECTORS_QC=$(echo $WORKFLOW_DETECTORS_QC | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
+  done
+fi
+if [[ ! -z $WORKFLOW_DETECTORS_EXCLUDE_CALIB ]]; then
+  for i in $(echo $WORKFLOW_DETECTORS_EXCLUDE_CALIB | sed "s/,/ /g"); do
+    export WORKFLOW_DETECTORS_CALIB=$(echo $WORKFLOW_DETECTORS_CALIB | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
+  done
+fi
+
 if [[ -z "$TFLOOP" ]];        then export TFLOOP=0; fi                    # loop over timeframes
 if [[ -z "$NTIMEFRAMES" ]];   then export NTIMEFRAMES=-1; fi              # max number of time frames to process, <=0 : unlimited
 if [[ -z "$CTFDICT_NTF" ]];   then export CTFDICT_NTF=100; fi             # auto-save CTF dictionary after each CTFDICT_NTF TFs (if > 0)
