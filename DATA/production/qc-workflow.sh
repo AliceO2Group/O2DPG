@@ -158,10 +158,10 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
 
   # GLO QC: VTX and ITSTPC_MTCH
   if has_detectors_reco ITS && has_detector_matching PRIMVTX; then
-    add_QC_JSON GLO $QC_JSON_GLO_VTX
+    add_QC_JSON GLO_PRIMVTX $QC_JSON_GLO_VTX
   fi
   if has_detectors_reco ITS TPC && has_detector_matching ITSTPC; then
-    add_QC_JSON GLO $QC_JSON_GLO_ITSTPC_MTCH
+    add_QC_JSON GLO_ITSTPC $QC_JSON_GLO_ITSTPC_MTCH
   fi
 
   # PID QC
