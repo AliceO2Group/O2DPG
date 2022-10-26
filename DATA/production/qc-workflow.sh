@@ -149,14 +149,14 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     add_QC_JSON matchTOF ${QC_JSON_TOF_MATCH}
   fi
 
-  for i in $(echo $LIST_OF_DETECTORS | sed "s/,/ /g"); do
+  for i in ${LIST_OF_DETECTORS//,/ }; do
     DET_JSON_FILE="QC_JSON_$i"
     if has_detector_qc $i && [ ! -z "${!DET_JSON_FILE}" ]; then
       add_QC_JSON $i ${!DET_JSON_FILE}
     fi
   done
 
-  for i in $(echo $LIST_OF_GLORECO | sed "s/,/ /g"); do
+  for i in ${LIST_OF_GLORECO//,/ }; do
     DET_JSON_FILE="QC_JSON_GLO_$i"
     if has_matching_qc $i && [ ! -z "${!DET_JSON_FILE}" ]; then
       if [[ $i == "PRIMVTX" ]] && ! has_detector_reco ITS; then continue; fi
@@ -166,8 +166,8 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
   done
 
   # PID QC
-  for i in $(echo $LIST_OF_PID | sed "s/,/ /g"); do
-    PIDDETFORFILE=$(echo $i | sed "s/-//g")
+  for i in ${LIST_OF_PID//,/ }; do
+    PIDDETFORFILE=${i//-/}
     PID_JSON_FILE="QC_JSON_PID_$PIDDETFORFILE"
     if has_pid_qc $i && [ ! -z "${!PID_JSON_FILE}" ]; then
       add_QC_JSON pid$i ${!PID_JSON_FILE}
