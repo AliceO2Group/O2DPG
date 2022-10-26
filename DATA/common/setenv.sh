@@ -191,12 +191,12 @@ if [[ "0$WORKFLOW_DETECTORS_FLP_PROCESSING" == "0ALL" ]]; then export WORKFLOW_D
 if [[ -z "$WORKFLOW_PARAMETERS" ]]; then export WORKFLOW_PARAMETERS=; fi
 
 if [[ ! -z $WORKFLOW_DETECTORS_EXCLUDE_QC ]]; then
-  for i in $(echo $WORKFLOW_DETECTORS_EXCLUDE_QC | sed "s/,/ /g"); do
+  for i in ${WORKFLOW_DETECTORS_EXCLUDE_QC//,/ }; do
     export WORKFLOW_DETECTORS_QC=$(echo $WORKFLOW_DETECTORS_QC | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
   done
 fi
 if [[ ! -z $WORKFLOW_DETECTORS_EXCLUDE_CALIB ]]; then
-  for i in $(echo $WORKFLOW_DETECTORS_EXCLUDE_CALIB | sed "s/,/ /g"); do
+  for i in ${WORKFLOW_DETECTORS_EXCLUDE_CALIB//,/ }; do
     export WORKFLOW_DETECTORS_CALIB=$(echo $WORKFLOW_DETECTORS_CALIB | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
   done
 fi
