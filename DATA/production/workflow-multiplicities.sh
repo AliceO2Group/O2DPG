@@ -18,7 +18,7 @@ fi
 
 [[ $SYNCMODE == 1 ]] && NTRDTRKTHREADS=1
 
-NGPURECOTHREADS=-1 # -1 = auto-detect
+[[ -z $NGPURECOTHREADS ]] & NGPURECOTHREADS=-1 # -1 = auto-detect
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Process multiplicities
@@ -100,13 +100,20 @@ fi
 
 if [[ -z $EVE_NTH_EVENT ]]; then
   if [[ $BEAMTYPE == "PbPb" ]]; then
-    EVE_NTH_EVENT=2
+    [[ -z $EVE_NTH_EVENT ]] && EVE_NTH_EVENT=2
   elif [[ "0$HIGH_RATE_PP" == "01" ]]; then
-    EVE_NTH_EVENT=10
+    [[ -z $EVE_NTH_EVENT ]] && EVE_NTH_EVENT=10
   elif [[ $BEAMTYPE == "pp" && "0$ED_VERTEX_MODE" == "01" ]]; then
-    EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
+    [[ -z $EVE_NTH_EVENT ]] && EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
   fi
 fi
+
+if [[ "0$HIGH_RATE_PP" == "01" ]]; then
+  [[ -z $CUT_RANDOM_FRACTION_ITS ]] && CUT_RANDOM_FRACTION_ITS=0.97
+else
+  [[ -z $CUT_RANDOM_FRACTION_ITS ]] && CUT_RANDOM_FRACTION_ITS=0.95
+fi
+[[ -z $CUT_RANDOM_FRACTION_MCH ]] && [[ $RUNTYPE != "COSMICS" ]] && CUT_RANDOM_FRACTION_MCH=0.7
 
 #if [[ "0$HIGH_RATE_PP" == "01" ]]; then
   # Extra settings for HIGH_RATE_PP
