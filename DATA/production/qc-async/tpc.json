@@ -36,8 +36,8 @@
         "resetAfterCycles": "1",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "direct",
-          "query": "inputClus:TPC/CLUSTERNATIVE"
+          "type": "dataSamplingPolicy",
+          "name": "tpc-clusters"
         },
         "taskParameters": {
           "mergeableOutput": "true",
@@ -93,5 +93,20 @@
     }
   },
   "dataSamplingPolicies": [
+    {
+      "id": "tpc-clusters",
+      "active": "true",
+      "machines": ["localhost"],
+      "query" : "inputClusters:TPC/CLUSTERNATIVE",
+      "outputs": "sampled-clusters:DS/CLUSTERNATIVE",
+      "samplingConditions": [
+        {
+          "condition": "random",
+          "fraction": "0.1",
+          "seed": "0"
+        }
+      ],
+      "blocking": "false"
+    }
   ]
 }
