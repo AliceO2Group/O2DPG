@@ -79,7 +79,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
   N_EMCREC=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
   N_TRDENT=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
   N_TRDTRK=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
-  N_MFTTRK=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
+  N_MFTTRK=$(math_max $((5 * $EPNPIPELINES * $NGPUS / 4)) 1)
   N_TPCRAWDEC=$(math_max $((12 * $EPNPIPELINES * $NGPUS / 4)) 1)
   if [[ $GPUTYPE == "CPU" ]]; then
     N_TPCTRK=8
