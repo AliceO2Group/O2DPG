@@ -32,6 +32,7 @@ if has_detector_calib ZDC && has_processing_step ZDC_RECO; then
 else
     CAN_DO_CALIB_ZDC_TDC=0;
 fi
+if has_detector_calib FT0; then CAN_DO_CALIB_FT0_TIMEOFFSET=1; else CAN_DO_CALIB_FT0_TIMEOFFSET=0; fi
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   # calibrations for primary vertex
@@ -114,6 +115,11 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   if [[ $CAN_DO_CALIB_ZDC_TDC == 1 ]]; then
     if [[ -z ${CALIB_ZDC_TDC+x} ]]; then CALIB_ZDC_TDC=1; fi
   fi
+
+  # calibrations for FT0
+  if [[ $CAN_DO_CALIB_FT0_TIMEOFFSET == 1 ]]; then
+    if [[ -z ${CALIB_FT0_TIMEOFFSET+x} ]]; then CALIB_FT0_TIMEOFFSET=1; fi
+  fi
 fi
 
 ( [[ -z ${CALIB_PRIMVTX_MEANVTX} ]] || [[ $CAN_DO_CALIB_PRIMVTX_MEANVTX == 0 ]] ) && CALIB_PRIMVTX_MEANVTX=0
@@ -134,6 +140,8 @@ fi
 ( [[ -z ${CALIB_PHS_RUNBYRUNCALIB} ]] || [[ $CAN_DO_CALIB_PHS_RUNBYRUNCALIB == 0 ]] ) && CALIB_PHS_RUNBYRUNCALIB=0
 ( [[ -z ${CALIB_CPV_GAIN} ]] || [[ $CAN_DO_CALIB_CPV_GAIN == 0 ]] ) && CALIB_CPV_GAIN=0
 ( [[ -z ${CALIB_ZDC_TDC} ]] || [[ $CAN_DO_CALIB_ZDC_TDC == 0 ]] ) && CALIB_ZDC_TDC=0
+( [[ -z ${CALIB_FT0_TIMEOFFSET} ]] || [[ $CAN_DO_CALIB_FT0_TIMEOFFSET == 0 ]] ) && CALIB_FT0_TIMEOFFSET=0
+
 
 if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo "CALIB_PRIMVTX_MEANVTX = $CALIB_PRIMVTX_MEANVTX" 1>&2
@@ -160,6 +168,7 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo "CALIB_TPC_SAC = $CALIB_TPC_SAC" 1>&2
   echo "CALIB_CPV_GAIN = $CALIB_CPV_GAIN" 1>&2
   echo "CALIB_ZDC_TDC = $CALIB_ZDC_TDC" 1>&2
+  echo "CALIB_FT0_TIMEOFFSET = $CALIB_FT0_TIMEOFFSET" 1>&2
 fi
 
 # define spec for proxy for TF-based outputs from BARREL
@@ -240,6 +249,14 @@ if [[ -z $CALIBDATASPEC_FORWARD_TF ]]; then
   fi
 fi
 
+# define spec for proxy for TF-based outputs from FT0 detector
+if [[ -z $CALIBDATASPEC_FT0_TF ]]; then
+  # FT0
+  if [[ $CALIB_FT0_TIMEOFFSET == 1 ]]; then
+    add_semicolon_separated CALIBDATASPEC_FT0_TF "timeSpectraFT0:FT0/CALIB_INFO/0"
+  fi
+fi
+
 if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   # printing for debug
   echo CALIBDATASPEC_BARREL_TF = $CALIBDATASPEC_BARREL_TF 1>&2
@@ -251,6 +268,7 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo CALIBDATASPEC_MUON_TF = $CALIBDATASPEC_MUON_TF 1>&2
   echo CALIBDATASPEC_MUON_SPORADIC = $CALIBDATASPEC_MUON_SPORADIC 1>&2
   echo CALIBDATASPEC_FORWARD_TF = $CALIBDATASPEC_FORWARD_TF 1>&2
+  echo CALIBDATASPEC_FT0_TIMEOFFSET = $CALIBDATASPEC_FT0_TIMEOFFSET 1>&2
 fi
 
 # proxies properties
