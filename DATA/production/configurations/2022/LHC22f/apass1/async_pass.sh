@@ -322,7 +322,7 @@ if [[ -f "AO2D.root" ]]; then
     fi
     if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
       ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
-      ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_test.json > analysisQC.log
+      ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
       if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
 	mv Analysis/MergedAnalyses/AnalysisResults.root .
       else
