@@ -247,13 +247,9 @@ if [[ -z $CALIBDATASPEC_FORWARD_TF ]]; then
     add_semicolon_separated CALIBDATASPEC_FORWARD_TF "tdcZDC:ZDC/TDCCALIBDATA/0"
     add_semicolon_separated CALIBDATASPEC_FORWARD_TF "histoZDC:ZDC/TDC_1DH"
   fi
-fi
-
-# define spec for proxy for TF-based outputs from FT0 detector
-if [[ -z $CALIBDATASPEC_FT0_TF ]]; then
   # FT0
   if [[ $CALIB_FT0_TIMEOFFSET == 1 ]]; then
-    add_semicolon_separated CALIBDATASPEC_FT0_TF "timeSpectraFT0:FT0/CALIB_INFO/0"
+    add_semicolon_separated CALIBDATASPEC_FORWARD_TF "timeSpectraFT0:FT0/CALIB_INFO/0"
   fi
 fi
 
@@ -268,7 +264,6 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo CALIBDATASPEC_MUON_TF = $CALIBDATASPEC_MUON_TF 1>&2
   echo CALIBDATASPEC_MUON_SPORADIC = $CALIBDATASPEC_MUON_SPORADIC 1>&2
   echo CALIBDATASPEC_FORWARD_TF = $CALIBDATASPEC_FORWARD_TF 1>&2
-  echo CALIBDATASPEC_FT0_TF = $CALIBDATASPEC_FT0_TF 1>&2
 fi
 
 # proxies properties
