@@ -139,15 +139,11 @@ for line in f:
                 if os.environ['WORKFLOWMODE'] == 'print':
                   command += ' > ' + filename
                 print('Running DPL command', command)
-                retVal = subprocess.run(command, shell=True)
+                retVal = subprocess.run(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
                 if retVal.returncode != 0:
-                    print('Error (' + str(retVal) + ') running command', command)
-                    ftmp = open(filename, 'r')
-                    rg = re.compile('^<topology')
-                    for line in ftmp:
-                        if re.match(rg, line):
-                            break
-                        print(line, end='')
+                    print('Error (' + str(retVal.returncode) + ') running command', command)
+                    print('stderr:', retVal.stderr)
+                    print('stdour:', retVal.stdout)
                     raise
                 threadsOK[i] = 1
                 if args[i].startswith('reco'):
@@ -171,6 +167,10 @@ for line in f:
             for i in range(2, len(args)):
                 t = threading.Thread(target = processSubtopology, args = (i, args, tmpdir, reconodes, reconodesmin, recoworkflows, calibworkflows, calibworkflowsdds, threadsOK))
                 t.start()
+                if 'GEN_TOPO_SINGLE_THREAD' in os.environ and int(os.environ['GEN_TOPO_SINGLE_THREAD']):
+                    t.join()
+                    if not threadsOK[i]:
+                        raise
                 subtopologyThreads.append(t)
             for t in subtopologyThreads:
                 t.join()
