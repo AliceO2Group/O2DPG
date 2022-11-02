@@ -235,6 +235,19 @@ def file_sizes(dirs, threshold):
     return collect_dict
 
 
+def check_include_patterns(histo_name, include_patterns):
+    if not include_patterns:
+        return True
+    else:
+        include_this = False
+        for ip in include_patterns:
+            if re.search(ip,histo_name):
+                include_this = True
+                break
+        return include_this
+
+
+
 def plot_pie_charts(summary, out_dir, title, include_patterns=None):
 
     print("==> Plot pie charts <==")
@@ -244,14 +257,8 @@ def plot_pie_charts(summary, out_dir, title, include_patterns=None):
     # need to re-arrange the JSON structure abit for per-test result pie charts
     for histo_name, tests in summary.items():
         # check if histo_name is in include patterns
-        if include_patterns:
-            include_this = False
-            for ip in include_patterns:
-                if re.search(ip,histo_name):
-                    include_this = True
-                    break
-            if not include_this:
-                continue
+        if not check_include_patterns(histo_name, include_patterns):
+            continue
         # loop over tests done
         for test in tests:
             test_name = test["test_name"];
@@ -291,14 +298,8 @@ def extract_from_summary(summary, fields, include_patterns=None):
     # need to re-arrange the JSON structure abit for per-test result pie charts
     for histo_name, tests in summary.items():
         # check if histo_name is in include patterns
-        if include_patterns:
-            include_this = False
-            for ip in include_patterns:
-                if re.search(ip,histo_name):
-                    include_this = True
-                    break
-            if not include_this:
-                continue
+        if not check_include_patterns(histo_name, include_patterns):
+            continue
         # loop over tests done
         for test in tests:
             test_name = test["test_name"];
@@ -393,14 +394,8 @@ def plot_summary_grid(summary, flags, include_patterns, output_path):
     collect_annotations = []
 
     for name, batch in summary.items():
-        if include_patterns:
-            include_this = False
-            for ip in include_patterns:
-                if re.search(ip,name):
-                    include_this = True
-                    break
-            if not include_this:
-                continue
+        if not check_include_patterns(name, include_patterns):
+            continue
         include_this = not flags
         collect_flags_per_test = [0] * len(REL_VAL_TEST_NAMES_MAP_SUMMARY)
         collect_annotations_per_test = [""] * len(REL_VAL_TEST_NAMES_MAP_SUMMARY)
@@ -531,14 +526,8 @@ def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None):
             json.dump(the_thresholds, f, indent=2)
 
     for histo_name, tests in rel_val_dict.items():
-        if include_patterns:
-            include_this = False
-            for ip in include_patterns:
-                if re.search(ip,histo_name):
-                    include_this = True
-                    break
-            if not include_this:
-                continue
+        if not check_include_patterns(histo_name, include_patterns):
+            continue
         test_summary = {"test_name": REL_VAL_TEST_SUMMARY_NAME,
                         "value": None,
                         "threshold": None,
@@ -657,14 +646,8 @@ def map_histos_to_severity(summary, include_patterns=None):
     # need to re-arrange the JSON structure abit for per-test result pie charts
     for histo_name, tests in summary.items():
         # check if histo_name is in include_patterns
-        if include_patterns:
-            include_this = False
-            for ip in include_patterns:
-                if re.search(ip,histo_name):
-                    include_this = True
-                    break
-            if not include_this:
-                continue
+        if not check_include_patterns(histo_name, include_patterns):
+            continue
         # loop over tests done
         for test in tests:
             test_name = test["test_name"]
@@ -1006,7 +989,7 @@ def main():
     inspect_parser.add_argument("--plot", action="store_true", help="Plot the summary grid")
     inspect_parser.add_argument("--print", action="store_true", help="Print the summary on the screen")
     inspect_parser.add_argument("--flags", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(REL_VAL_SEVERITY_MAP.keys()))
-    inspect_parser.add_argument("--include-patterns", dest="include_patterns", nargs="*", help="include objects whose name includes at least one of the given patterns (at the moment no regex or *)")
+    inspect_parser.add_argument("--include-patterns", dest="include_patterns", nargs="*", help="include objects whose name includes at least one of the given patterns")
     inspect_parser.add_argument("--output", "-o", help="output directory, by default points to directory where the Summary.json was found")
     inspect_parser.set_defaults(func=inspect)
 
