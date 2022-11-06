@@ -14,6 +14,7 @@ SOURCE_GUARD_SETENV_CALIB=1
 # For the moment the TPC interpolation will always send also the track parameters in addition to unbinned residuals to the aggregator.
 # Remove this line to only send unbinned residuals
 if [[ -z "$CALIB_TPC_SCDCALIB_SENDTRKDATA" ]];  then export CALIB_TPC_SCDCALIB_SENDTRKDATA=1; fi
+has_detector CTP && export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"
 
 # define the conditions for each calibration
 if has_detector_calib ITS && has_detectors_reco ITS && has_detector_matching PRIMVTX && [[ ! -z "$VERTEXING_SOURCES" ]]; then CAN_DO_CALIB_PRIMVTX_MEANVTX=1; else CAN_DO_CALIB_PRIMVTX_MEANVTX=0; fi
@@ -175,6 +176,7 @@ if [[ -z $CALIBDATASPEC_BARREL_TF ]]; then
   if [[ $CALIB_TPC_TIMEGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcmips:TPC/MIPS/0"; fi
   if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "unbinnedTPCResiduals:GLO/UNBINNEDRES/0"; fi
   if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ 0$CALIB_TPC_SCDCALIB_SENDTRKDATA == "01" ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcInterpTrkData:GLO/TRKDATA/0"; fi
+  if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ $CALIB_TPC_SCDCALIB_CTP_INPUT == "--enable-ctp" ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "lumi:CTP/LUMI/0"; fi
   if [[ $CALIB_TPC_VDRIFTTGL == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcvdtgl:GLO/TPCITS_VDTGL/0"; fi
 
   # TRD
