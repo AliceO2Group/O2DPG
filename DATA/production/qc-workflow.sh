@@ -10,6 +10,7 @@ if [[ ! -z $GEN_TOPO_QC_JSON_FILE ]]; then
   flock 101 || exit 1
 fi
 
+QC_CONFIG=
 if [[ -z $QC_JSON_FROM_OUTSIDE && ! -z $GEN_TOPO_QC_JSON_FILE && -f $GEN_TOPO_QC_JSON_FILE ]]; then
   QC_JSON_FROM_OUTSIDE=$GEN_TOPO_QC_JSON_FILE
 elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
@@ -142,7 +143,6 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
 
   JSON_FILES=
   OUTPUT_SUFFIX=
-  QC_CONFIG=
 
   # TOF matching
   if has_detector_qc TOF && [ ! -z "$QC_JSON_TOF_MATCH" ]; then
@@ -199,7 +199,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     if [[ "0$QC_REDIRECT_MERGER_TO_LOCALHOST" == "01" ]]; then
       sed -i.bak -E 's/( *)"remoteMachine" *: *".*"(,?) *$/\1"remoteMachine": "127.0.0.1"\2/' $MERGED_JSON_FILENAME
       unlink $MERGED_JSON_FILENAME.bak
-      QC_CONFIG+="--override-values \"qc.config.database.host=ccdb-test.cern.ch:8080\""
+      QC_CONFIG+=" --override-values \"qc.config.database.host=ccdb-test.cern.ch:8080\""
     fi
 
     if [[ "0$GEN_TOPO_QC_OVERRIDE_CCDB_SERVER" != "0" ]]; then
@@ -210,6 +210,8 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
 
   rm -Rf $FETCHTMPDIR
 fi
+
+[[ $EPNSYNCMODE == 1 && $NUMAGPUIDS == 1 ]] && QC_CONFIG+=" --override-values \"qc.config.infologger.filterDiscardFile=../../qc-_ID_${NUMAID}.log\""
 
 if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
   add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM:---local --host ${QC_HOST:-localhost}} ${QC_CONFIG}"
