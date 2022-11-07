@@ -32,7 +32,7 @@ if has_detector_calib ZDC && has_processing_step ZDC_RECO; then
 else
     CAN_DO_CALIB_ZDC_TDC=0;
 fi
-if has_detector_calib FT0; then CAN_DO_CALIB_FT0_TIMEOFFSET=1; else CAN_DO_CALIB_FT0_TIMEOFFSET=0; fi
+# if has_detector_calib FT0; then CAN_DO_CALIB_FT0_TIMEOFFSET=1; else CAN_DO_CALIB_FT0_TIMEOFFSET=0; fi
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   # calibrations for primary vertex
