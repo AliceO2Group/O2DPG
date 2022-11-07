@@ -140,10 +140,18 @@ for line in f:
                   command += ' > ' + filename
                 print('Running DPL command', command)
                 retVal = subprocess.run(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                tmpchk = retVal.stderr.decode() + retVal.stdout.decode()
+                haserror = 0
+                if tmpchk.find('[FATAL]') != -1 or tmpchk.find('[ERROR]') != -1:
+                    print("Found error messages during topology generation")
+                    haserror = 1
                 if retVal.returncode != 0:
-                    print('Error (' + str(retVal.returncode) + ') running command', command)
-                    print('stderr:', retVal.stderr)
-                    print('stdour:', retVal.stdout)
+                    print("Non-zero return value " + str(retVal.returncode) + " during topology generation")
+                    haserror = 1
+                if haserror != 0:
+                    print('Error running command', command)
+                    print('stderr:', retVal.stderr.decode())
+                    print('stdout:', retVal.stdout.decode())
                     raise
                 threadsOK[i] = 1
                 if args[i].startswith('reco'):
