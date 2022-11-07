@@ -134,9 +134,14 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
         echo "Error fetching QC JSON $2"
         exit 1
       fi
-      JSON_FILES+=" $TMP_FILENAME"
     else
-      JSON_FILES+=" ${2}"
+      TMP_FILENAME=$2
+    fi
+    JSON_FILES+=" $TMP_FILENAME"
+    jq -rM '""' > /dev/null < $TMP_FILENAME
+    if [[ $? != 0 ]]; then
+      echo "Invalid QC JSON $2" 1>&2
+      exit 1
     fi
     OUTPUT_SUFFIX+="-$1"
   }
@@ -189,7 +194,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     else
       MERGED_JSON_FILENAME=$GEN_TOPO_QC_JSON_FILE
     fi
-    jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $QC_JSON_GLOBAL $JSON_FILES >$MERGED_JSON_FILENAME
+    jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $QC_JSON_GLOBAL $JSON_FILES > $MERGED_JSON_FILENAME
     if [[ $? != 0 ]]; then
       echo Merging QC workflow with JSON files $JSON_FILES failed 1>&2
       exit 1
