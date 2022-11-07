@@ -219,6 +219,16 @@ fi
 [[ $EPNSYNCMODE == 1 && $NUMAGPUIDS == 1 ]] && QC_CONFIG+=" --override-values \"qc.config.infologger.filterDiscardFile=../../qc-_ID_${NUMAID}.log\""
 
 if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
+  if [[ ! -f $QC_JSON_FROM_OUTSIDE ]]; then
+    echo QC JSON FILE $QC_JSON_FROM_OUTSIDE missing 1>&2
+    exit 1
+  fi
+  jq -rM '""' > /dev/null < $QC_JSON_FROM_OUTSIDE
+  if [[ $? != 0 ]]; then
+    echo "Final QC JSON FILE $QC_JSON_FROM_OUTSIDE has invalid syntax" 1>&2
+    #cat $QC_JSON_FROM_OUTSIDE 1>&2
+    exit 1
+  fi
   add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM:---local --host ${QC_HOST:-localhost}} ${QC_CONFIG}"
 fi
 
