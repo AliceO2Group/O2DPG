@@ -68,10 +68,6 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   if [[ $CAN_DO_CALIB_TPC_IDC == 1 ]]; then
     if [[ -z ${CALIB_TPC_IDC+x} ]] || [[ $CALIB_TPC_IDC == 0 ]]; then
       CALIB_TPC_IDC=0; # default is off
-    else
-      if [[ -z {$CALIB_TPC_IDC_BOTH+x} ]]; then
-	CALIB_TPC_IDC_BOTH=0;
-      fi # by default, A and C side are processed separately
     fi
   fi
   # SAC
@@ -156,13 +152,6 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo "CALIB_TPC_TIMEGAIN = $CALIB_TPC_TIMEGAIN" 1>&2
   echo "CALIB_TPC_RESPADGAIN = $CALIB_TPC_RESPADGAIN" 1>&2
   echo "CALIB_TPC_IDC = $CALIB_TPC_IDC" 1>&2
-  if [[ $CALIB_TPC_IDC == 1 ]]; then
-    if [[ $CALIB_TPC_IDC_BOTH == 1 ]]; then
-      echo "CALIB_TPC_IDC_BOTH = $CALIB_TPC_IDC_BOTH" 1>&2
-    else
-      echo "CALIB_TPC_IDC: A and C side will be run separately" 1>&2
-    fi
-  fi
   echo "CALIB_TPC_SAC = $CALIB_TPC_SAC" 1>&2
   echo "CALIB_CPV_GAIN = $CALIB_CPV_GAIN" 1>&2
   echo "CALIB_ZDC_TDC = $CALIB_ZDC_TDC" 1>&2
