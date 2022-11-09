@@ -203,8 +203,8 @@ fi
 if [[ -z $CALIBDATASPEC_TPCSAC ]]; then
   # TPC
   if [[ $CALIB_TPC_SAC == 1 ]]; then
-    add_semicolon_separated CALIBDATASPEC_TPCSAC "sacdec:TPC/DECODEDSAC"
-    add_semicolon_separated CALIBDATASPEC_TPCSAC "sacreftime:TPC/REFTIMESAC"
+    add_semicolon_separated CALIBDATASPEC_TPCSAC "sacdec:TPC/DECODEDSAC/0"
+    add_semicolon_separated CALIBDATASPEC_TPCSAC "sacreftime:TPC/REFTIMESAC/0"
   fi
 fi
 
