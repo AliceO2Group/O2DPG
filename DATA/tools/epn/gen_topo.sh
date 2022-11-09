@@ -11,6 +11,7 @@
 [[ -z "$FILEWORKDIR" ]] && export FILEWORKDIR=/home/epn/odc/files # Path to common grp / geometry / etc files
 [[ -z "$INRAWCHANNAME" ]] && export INRAWCHANNAME=tf-builder-pipe-0 # Pipe name to get data from TfBuilder
 [[ -z "$CTF_DIR" ]] && export CTF_DIR=/data/tf/compressed # Output directory for CTFs
+[[ -z "$CALIB_DIR" ]] && export CALIB_DIR=/data/calibration # Output directory for calibration data
 [[ -z "$CTF_METAFILES_DIR" ]] && [[ "0$WORKFLOWMODE" != "0print" ]] && export CTF_METAFILES_DIR=/data/epn2eos_tool/epn2eos #CTF Metafiles directory
 if [[ $USER == "epn" ]]; then
   [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=/scratch/services/gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
