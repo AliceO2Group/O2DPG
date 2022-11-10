@@ -11,11 +11,6 @@
 if [[ -z $SOURCE_GUARD_SETENV_CALIB ]]; then
 SOURCE_GUARD_SETENV_CALIB=1
 
-# For the moment the TPC interpolation will always send also the track parameters in addition to unbinned residuals to the aggregator.
-# Remove this line to only send unbinned residuals
-if [[ -z "$CALIB_TPC_SCDCALIB_SENDTRKDATA" ]];  then export CALIB_TPC_SCDCALIB_SENDTRKDATA=1; fi
-has_detector CTP && export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"
-
 # define the conditions for each calibration
 if has_detector_calib ITS && has_detectors_reco ITS && has_detector_matching PRIMVTX && [[ ! -z "$VERTEXING_SOURCES" ]]; then CAN_DO_CALIB_PRIMVTX_MEANVTX=1; else CAN_DO_CALIB_PRIMVTX_MEANVTX=0; fi
 if has_detector_calib TOF && has_detector_reco TOF; then CAN_DO_CALIB_TOF_DIAGNOSTICS=1; else CAN_DO_CALIB_TOF_DIAGNOSTICS=0; fi
@@ -33,6 +28,9 @@ if has_detector_calib ZDC && has_processing_step ZDC_RECO; then
 else
     CAN_DO_CALIB_ZDC_TDC=0;
 fi
+
+# additional individual settings for calibration workflows
+has_detector CTP && export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
   # calibrations for primary vertex
