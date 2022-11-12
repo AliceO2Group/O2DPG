@@ -167,7 +167,10 @@ if [[ -z $CALIBDATASPEC_BARREL_TF ]]; then
   # TPC
   if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "unbinnedTPCResiduals:GLO/UNBINNEDRES/0"; fi
   if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ 0$CALIB_TPC_SCDCALIB_SENDTRKDATA == "01" ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcInterpTrkData:GLO/TRKDATA/0"; fi
-  if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ $CALIB_TPC_SCDCALIB_CTP_INPUT == "--enable-ctp" ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "lumi:CTP/LUMI/0"; fi
+  if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ $CALIB_TPC_SCDCALIB_CTP_INPUT == "--enable-ctp" ]]; then
+    add_semicolon_separated CALIBDATASPEC_BARREL_TF "lumi:CTP/LUMI/0"
+    add_semicolon_separated CALIBDATASPEC_BARREL_TF "ctpdigi:CTP/DIGITS/0"
+  fi
   if [[ $CALIB_TPC_VDRIFTTGL == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcvdtgl:GLO/TPCITS_VDTGL/0"; fi
 
   # TRD
