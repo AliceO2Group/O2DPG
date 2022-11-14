@@ -227,21 +227,21 @@ if [[ $ALIEN_JDL_DOTRDVDRIFTEXBCALIB == "1" ]]; then
 fi
 
 # to add extra output to always keep
-if [[ -n "$ALIEN_EXTRA_ENABLE_ROOT_OUTPUT" ]]; then
+if [[ -n "$ALIEN_JDL_EXTRAENABLEROOTOUTPUT" ]]; then
   OLD_IFS=$IFS
   IFS=','
-  for token in $ALIEN_EXTRA_ENABLE_ROOT_OUTPUT; do
+  for token in $ALIEN_JDL_EXTRAENABLEROOTOUTPUT; do
     SETTING_ROOT_OUTPUT+=" ENABLE_ROOT_OUTPUT_$token="
   done
   IFS=$OLD_IFS
 fi
 
 # to define which extra output to always keep
-if [[ -n "$ALIEN_ENABLE_ROOT_OUTPUT" ]]; then
+if [[ -n "$ALIEN_JDL_ENABLEROOTOUTPUT" ]]; then
   OLD_IFS=$IFS
   IFS=','
   SETTING_ROOT_OUTPUT=
-  for token in $ALIEN_ENABLE_ROOT_OUTPUT; do
+  for token in $ALIEN_JDL_ENABLEROOTOUTPUT; do
     SETTING_ROOT_OUTPUT+=" ENABLE_ROOT_OUTPUT_$token="
   done
   IFS=$OLD_IFS
@@ -249,7 +249,7 @@ fi
 
 keep=0
 
-if [[ -n $ALIEN_INPUT_TYPE ]] && [[ "$ALIEN_INPUT_TYPE" == "TFs" ]]; then
+if [[ -n $ALIEN_JDL_INPUTTYPE ]] && [[ "$ALIEN_JDL_INPUTTYPE" == "TFs" ]]; then
   export WORKFLOW_PARAMETERS=CTF
   INPUT_TYPE=TF
   if [[ $RUNNUMBER -lt 523141 ]]; then
@@ -341,6 +341,13 @@ else
     export OMP_NUM_THREADS=5
     export SHMSIZE=16000000000
   fi
+fi
+
+# AOD file size
+if [[ -n "$ALIEN_JDL_AODFILESIZE" ]]; then
+  export AOD_FILE_SIZE="$ALIEN_JDL_AODFILESIZE"
+else
+  export AOD_FILE_SIZE=8000
 fi
 
 echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS} TIMEFRAME_RATE_LIMIT ${TIMEFRAME_RATE_LIMIT}"
