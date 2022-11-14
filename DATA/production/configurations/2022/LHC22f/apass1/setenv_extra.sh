@@ -236,7 +236,7 @@ fi
 export WORKFLOW_PARAMETERS="AOD,${WORKFLOW_PARAMETERS}"
 
 # ad-hoc settings for AOD
-#...
+export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="--aod-writer-maxfilesize $AOD_FILE_SIZE"
 
 # Enabling QC
 export WORKFLOW_PARAMETERS="QC,${WORKFLOW_PARAMETERS}"
