@@ -298,7 +298,7 @@ get_proxy_connection()
     if [[ $3 == "timeframe" ]]; then
       PROXY_CONN+=" --environment DPL_OUTPUT_PROXY_ORDERED=1"
     elif [[ $3 == "sporadic" ]]; then
-      PROXY_CONN+=" --environment DPL_OUTPUT_PROXY_WHENANY=1"
+      PROXY_CONN+=" --environment \"DPL_OUTPUT_PROXY_WHENANY=1 DPL_DONT_DROP_OLD_TIMESLICE=1\""
     else
       echo "invalid option $3, must be (sporadic|timeframe)" 1>&2
       exit 1
