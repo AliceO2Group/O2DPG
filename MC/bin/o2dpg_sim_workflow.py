@@ -97,6 +97,7 @@ parser.add_argument('--early-tf-cleanup',action='store_true', help='whether to c
 
 # power features (for playing) --> does not appear in help message
 #  help='Treat smaller sensors in a single digitization')
+parser.add_argument('--pregenCollContext', action='store_true', help=argparse.SUPPRESS) # the mode where we pregenerate the collision context for each timeframe (experimental)
 parser.add_argument('--no-combine-smaller-digi', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--no-combine-dpl-devices', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--no-mc-labels', action='store_true', default=False, help=argparse.SUPPRESS)
@@ -533,7 +534,22 @@ for tf in range(1, NTIMEFRAMES + 1):
    # transport signals
    # -----------------
    signalprefix='sgn_' + str(tf)
+ 
+   # Determine interation rate
+   # it should be taken from CDB, meanwhile some default values
+   INTRATE=int(args.interactionRate)
+   BCPATTERN=args.bcPatternFile
+
+   PreCollContextTask=createTask(name='precollcontext_' + str(tf), needs=[], tf=tf, cwd=timeframeworkdir, cpu='1')
+   PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + signalprefix + ',' + str(INTRATE) + ',10000:10000' + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF) + ' --orbits ' + str(orbitsPerTF) + ' --seed ' + str(TFSEED) + ' --noEmptyTF'
+   if BCPATTERN != '':
+      PreCollContextTask['cmd'] += ' --bcPatternFile "' + BCPATTERN + '"'
+   workflow['stages'].append(PreCollContextTask)
+
+
    signalneeds=[ SGN_CONFIG_task['name'], GRP_TASK['name'] ]
+   if (args.pregenCollContext == True):
+      signalneeds.append(PreCollContextTask['name'])
 
    # add embedIntoFile only if embeddPattern does contain a '@'
    embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if (doembedding & ("@" in args.embeddPattern)) else ""
@@ -551,6 +567,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                   + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)
    if not "all" in activeDetectors:
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
+   if args.pregenCollContext == True:
+      SGNtask['cmd'] += ' --fromCollContext collisioncontext.root' 
    workflow['stages'].append(SGNtask)
 
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
@@ -607,7 +625,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                             "HBFUtils.nHBFPerTF" : orbitsPerTF,
                             "HBFUtils.orbitFirst" : args.first_orbit,
                             "HBFUtils.runNumber" : args.run }
-   # we set the timesamp here only if specified explicitely (otherwise it will come from
+   # we set the timestamp here only if specified explicitely (otherwise it will come from
    # the simulation GRP and digitization)
    if (args.timestamp != -1):
       globalTFConfigValues["HBFUtils.startTime"] = args.timestamp
@@ -664,11 +682,12 @@ for tf in range(1, NTIMEFRAMES + 1):
 
 
    # This task creates the basic setup for all digitizers! all digitization configKeyValues need to be given here
-   ContextTask = createTask(name='digicontext_'+str(tf), needs=[SGNtask['name'], LinkGRPFileTask['name']], tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='1')
+   contextneeds = [LinkGRPFileTask['name'], SGNtask['name']]
+   ContextTask = createTask(name='digicontext_'+str(tf), needs=contextneeds, tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='1')
    # this is just to have the digitizer ini file
    ContextTask['cmd'] = '${O2_ROOT}/bin/o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) \
                         + ' ' + getDPL_global_options(ccdbbackend=False) + ' -n ' + str(args.ns) + simsoption       \
-                        + ' ' + putConfigValues()
+                        + ' ' + putConfigValues({"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF)}) + ('',' --incontext ' + CONTEXTFILE)[args.pregenCollContext] 
 
    if BCPATTERN != '':
       ContextTask['cmd'] += ' --bcPatternFile "' + BCPATTERN + '"'
@@ -677,7 +696,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    # The :r flag means to shuffle the background events randomly
    if doembedding:
       ContextTask['cmd'] += ';ln -nfs ../bkg_Kine.root .;${O2_ROOT}/bin/o2-steer-colcontexttool -i bkg,' + str(INTRATE) + ',' + str(args.ns) + ':' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF) + ' --use-existing-kine'
-
       if BCPATTERN != '':
          ContextTask['cmd'] += ' --bcPatternFile "' + BCPATTERN + '"'
 
@@ -690,7 +708,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCDigitask=createTask(name='tpcdigi_'+str(tf), needs=tpcdigineeds,
                           tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu=NWORKERS, mem='9000')
    TPCDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTPC.root . ;')[doembedding]
-   TPCDigitask['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TPC --interactionRate ' + str(INTRATE) + '  --tpc-lanes ' + str(NWORKERS) + ' --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini ' + putConfigValuesNew(["TPCGasParam","TPCGEMParam","TPCEleParam"])
+   TPCDigitask['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet TPC --interactionRate ' + str(INTRATE) + '  --tpc-lanes ' + str(NWORKERS) + ' --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini ' + putConfigValuesNew(["TPCGasParam","TPCGEMParam","TPCEleParam"],localCF={"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF)})
    TPCDigitask['cmd'] += (' --tpc-chunked-writer','')[args.no_tpc_digitchunking]
    TPCDigitask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    # we add any other extra command line options (power user customization) with an environment variable
