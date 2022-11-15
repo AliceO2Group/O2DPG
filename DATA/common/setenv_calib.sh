@@ -253,11 +253,12 @@ fi
 # proxies properties
 get_proxy_connection()
 {
-  if (( $# < 2 )); then
+  if (( $# < 3 )); then
     echo "$# parameters received"
     echo "Function name: ${FUNCNAME} expects at least 3 parameters:"
     echo "first parameter is the string id of the proxy"
     echo "second parameter is the type of connection (input/output)"
+    echo "third parameter is (sporadic|timeframe)"
     exit 1
   fi
 
@@ -293,6 +294,16 @@ get_proxy_connection()
   local PROXY_CONN="$NAMEPROXY $NAMEPROXYCHANNEL --channel-config \"name=aggregator-proxy-$1,$CONNECTION,rateLogging=10\""
   [[ $EPNSYNCMODE == 1 ]] && PROXY_CONN+=" --network-interface ib0"
   [[ $2 == "input" && ! -z $TIMEFRAME_SHM_LIMIT ]] && PROXY_CONN+=" --timeframes-shm-limit $TIMEFRAME_SHM_LIMIT"
+  if [[ $2 == "output" ]]; then
+    if [[ $3 == "timeframe" ]]; then
+      PROXY_CONN+=" --environment DPL_OUTPUT_PROXY_ORDERED=1"
+    elif [[ $3 == "sporadic" ]]; then
+      PROXY_CONN+=" --environment DPL_OUTPUT_PROXY_WHENANY=1"
+    else
+      echo "invalid option $3, must be (sporadic|timeframe)" 1>&2
+      exit 1
+    fi
+  fi
   if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
     echo PROXY_CONN = $PROXY_CONN 1>&2
   fi
