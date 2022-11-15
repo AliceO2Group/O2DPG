@@ -2,9 +2,8 @@
 #include <string>
 #include <vector>
 
-void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vector<TList*>& treeList, std::string const& basedOnTree = "", std::string const& currentPrefix = "", std::vector<std::string>* includeDirs = nullptr);
+void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& basedOnTree = "", std::string const& currentPrefix = "", std::vector<std::string>* includeDirs = nullptr);
 void ExtractTree(TTree* tree, TDirectory* outDir, std::string const& basedOnTree = "", std::string const& currentPrefix = "");
-void AddTree(TTree* tree, std::vector<TList*>& treeList);
 void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix = "");
 void WriteHisto(TH1* obj, TDirectory* outDir, std::string const& currentPrefix = "");
 void WriteProfile(TProfile* obj, TDirectory* outDir, std::string const& currentPrefix = "");
@@ -58,18 +57,7 @@ void ExtractAndFlatten(std::string const& filename, std::string const& outputFil
     return;
   }
   TFile extractedFile(outputFilename.c_str(), "UPDATE");
-  std::vector<TList*> treeList;
-  ExtractAndFlattenDirectory(&inFile, &extractedFile, treeList, basedOnTree, "", includeDirs);
-
-  for(std::vector<TList*>::iterator list = treeList.begin(); list != treeList.end(); ++list) {
-    TTree* mergedTree = TTree::MergeTrees((*list));
-    if (mergedTree){
-      ExtractTree(mergedTree, &extractedFile, basedOnTree, "DF_merged");
-    } else {
-      std::cerr << "WARNING: Empty TTree " << (*list)->First()->GetName()  << ", skipping." << "\n";
-    }
-  }
-  
+  ExtractAndFlattenDirectory(&inFile, &extractedFile, basedOnTree, "", includeDirs);
   inFile.Close();
   extractedFile.Close();
 }
@@ -121,7 +109,7 @@ bool checkIncludePath(std::string thisPath, std::vector<std::string>*& includeDi
 }
 
 // Read from a given input directory and write everything found there (including sub directories) to a flat output directory
-void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vector<TList*>& treeList ,std::string const& basedOnTree, std::string const& currentPrefix, std::vector<std::string>* includeDirs)
+void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& basedOnTree, std::string const& currentPrefix, std::vector<std::string>* includeDirs)
 {
 
   if (!checkIncludePath(inDir->GetPath(), includeDirs)) {
@@ -133,7 +121,7 @@ void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vect
     auto obj = key->ReadObj();
     if (auto nextInDir = dynamic_cast<TDirectory*>(obj)) {
       // recursively scan TDirectory
-      ExtractAndFlattenDirectory(nextInDir, outDir, treeList, basedOnTree, currentPrefix + nextInDir->GetName() + "_", includeDirs);
+      ExtractAndFlattenDirectory(nextInDir, outDir, basedOnTree, currentPrefix + nextInDir->GetName() + "_", includeDirs);
     } else if (auto qcMonitorCollection = dynamic_cast<o2::quality_control::core::MonitorObjectCollection*>(obj)) {
       auto qcMonPath = std::string(inDir->GetPath()) + "/" + qcMonitorCollection->GetName();
       auto includeDirsCache = includeDirs;
@@ -142,32 +130,13 @@ void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vect
       }
       ExtractFromMonitorObjectCollection(qcMonitorCollection, outDir, currentPrefix);
     } else if (auto tree = dynamic_cast<TTree*>(obj)) {
-      if (currentPrefix.rfind("DF_", 0) == 0) {
-        AddTree(tree, treeList);
-      }
-      else {
-        ExtractTree(tree, outDir, basedOnTree, currentPrefix);
-      }
+      ExtractTree(tree, outDir, basedOnTree, currentPrefix);
     } else {
       if (!WriteObject(obj, outDir, currentPrefix)) {
         std::cerr << "Cannot handle object " << obj->GetName() << " which is of class " << key->GetClassName() << "\n";
       }
     }
   }
-}
-
-void AddTree(TTree* tree, std::vector<TList*>& treeList)
-{
-  for(std::vector<TList*>::iterator list = treeList.begin(); list != treeList.end(); ++list) {
-    if (!std::strcmp(tree->GetName(),(*list)->First()->GetName())){
-      (*list)->Add(tree);
-      return;
-    }
-  }
-  TList* newList = new TList;
-  newList->Add(tree);
-  treeList.push_back(newList);
-  return;
 }
 
 void ExtractTree(TTree* tree, TDirectory* outDir, std::string const& basedOnTree, std::string const& currentPrefix)
@@ -178,6 +147,9 @@ void ExtractTree(TTree* tree, TDirectory* outDir, std::string const& basedOnTree
   TLeaf* obj = nullptr;
   TFile* basedOnTreeFile = nullptr;
   auto prefix = !currentPrefix.empty() ? currentPrefix + "_" + tree->GetName() : tree->GetName();
+  if (prefix.rfind("DF_", 0) == 0) {
+    prefix = std::string("DF_merged_") + tree->GetName();
+  }
   if (!basedOnTree.empty()) {
     basedOnTreeFile = new TFile(basedOnTree.c_str(), "READ");
   }
@@ -233,6 +205,7 @@ void ExtractTree(TTree* tree, TDirectory* outDir, std::string const& basedOnTree
     }
     WriteObject(currentHist, outDir);
   }
+  BUFFER_DIR->Clear();
 }
 
 // extract everything from a o2::quality_control::core::MonitorObjectCollection object
