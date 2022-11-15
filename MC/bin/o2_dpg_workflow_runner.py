@@ -148,8 +148,7 @@ class Graph:
  
             # increment in-degree of destination vertex by 1
             self.indegree[dest] = self.indegree[dest] + 1
- 
- 
+
 # Recursive function to find all topological orderings of a given DAG
 def findAllTopologicalOrders(graph, path, discovered, N, allpaths, maxnumber=1):
     if len(allpaths) >= maxnumber:
