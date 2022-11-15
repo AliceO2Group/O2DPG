@@ -217,7 +217,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
   rm -Rf $FETCHTMPDIR
 fi
 
-[[ $EPNSYNCMODE == 1 && $NUMAGPUIDS == 1 ]] && QC_CONFIG_OVERRIDE+="qc.config.infologger.filterDiscardFile=../../qc-_ID_${NUMAID}.log;"
+[[ $EPNSYNCMODE == 1 && $NUMAGPUIDS == 1 ]] && QC_CONFIG_OVERRIDE+="qc.config.infologger.filterDiscardFile=../../qc-_ID_-${NUMAID}.log;"
 
 [[ ! -z $QC_CONFIG_OVERRIDE ]] && QC_CONFIG+=" --override-values \"$QC_CONFIG_OVERRIDE\""
 
