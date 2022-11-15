@@ -336,7 +336,8 @@ def plot_values_thresholds(summary, out_dir, title, include_patterns=None, exclu
     test_histo_value_map = extract_from_summary(summary, ["value", "threshold"], include_patterns, exclude_patterns)
 
     for which_test, histos_values_thresolds in test_histo_value_map.items():
-
+        if which_test == REL_VAL_TEST_SUMMARY_NAME:
+            continue
         figure, ax = plt.subplots(figsize=(20, 20))
         ax.plot(range(len(histos_values_thresolds["histograms"])), histos_values_thresolds["value"], label="values", marker="x")
         ax.plot(range(len(histos_values_thresolds["histograms"])), histos_values_thresolds["threshold"], label="thresholds", marker="o")
@@ -365,6 +366,8 @@ def plot_compare_summaries(summaries, fields, out_dir, *, labels=None, include_p
         labels = [f"summary_{i}" for i, _ in enumerate(summaries)]
 
     for test_name in test_names:
+        if test_name == REL_VAL_TEST_SUMMARY_NAME:
+            continue
         histogram_names_intersection = []
         # First we figure out the intersection of histograms ==> histograms in common
         for test_histo_value_map in test_histo_value_maps:
@@ -1001,7 +1004,6 @@ def main():
     inspect_parser = sub_parsers.add_parser("inspect", parents=[common_threshold_parser, common_pattern_parser])
     inspect_parser.add_argument("path", help="either complete file path to a Summary.json or SummaryGlobal.json or directory where one of the former is expected to be")
     inspect_parser.add_argument("--plot", action="store_true", help="Plot the summary grid")
-    inspect_parser.add_argument("--print", action="store_true", help="Print the summary on the screen")
     inspect_parser.add_argument("--flags", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(REL_VAL_SEVERITY_MAP.keys()))
     inspect_parser.add_argument("--output", "-o", help="output directory, by default points to directory where the Summary.json was found")
     inspect_parser.set_defaults(func=inspect)
