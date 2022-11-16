@@ -67,6 +67,8 @@ else
   echo "TPC vdrift will be taken from CCDB"
 fi
 
+echo "BeamType = $BEAMTYPE"
+
 # remove monitoring-backend
 export ENABLE_METRICS=1
 
@@ -94,7 +96,11 @@ export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb"
 # following comment https://alice.its.cern.ch/jira/browse/O2-2691?focusedCommentId=278262&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-278262
 #export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2.;pvertexer.nSigmaTimeTrack=4.;pvertexer.timeMarginTrackTime=0.5;pvertexer.timeMarginVertexTime=7.;pvertexer.nSigmaTimeCut=10;pvertexer.dbscanMaxDist2=36;pvertexer.dcaTolerance=3.;pvertexer.pullIniCut=100;pvertexer.addZSigma2=0.1;pvertexer.tukey=20.;pvertexer.addZSigma2Debris=0.01;pvertexer.addTimeSigma2Debris=1.;pvertexer.maxChi2Mean=30;pvertexer.timeMarginReattach=3.;pvertexer.addTimeSigma2Debris=1.;pvertexer.dbscanDeltaT=24;pvertexer.maxChi2TZDebris=100;pvertexer.maxMultRatDebris=1.;pvertexer.dbscanAdaptCoef=20.;pvertexer.timeMarginVertexTime=1.3"
 # updated on 7 Sept 2022
-export PVERTEXER="pvertexer.maxChi2TZDebris=10;pvertexer.acceptableScale2=9;pvertexer.minScale2=2;"
+DEBRIS=""
+if [[ $BEAMTYPE == "pp" ]]; then
+  DEBRIS="pvertexer.maxChi2TZDebris=10"
+fi
+export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2;$DEBRIS"
 
 # secondary vertexing
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
