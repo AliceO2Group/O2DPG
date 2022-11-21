@@ -10,8 +10,8 @@ if [[ -z $GEN_TOPO_SOURCE ]]; then echo \$GEN_TOPO_SOURCE missing; exit 1; fi # 
 if [[ -z $GEN_TOPO_LIBRARY_FILE ]]; then echo \$GEN_TOPO_LIBRARY_FILE missing; exit 1; fi # Topology description library file in the DATA path of the O2DPG repository
 if [[ -z $GEN_TOPO_WORKFLOW_NAME ]]; then echo \$GEN_TOPO_WORKFLOW_NAME missing; exit 1; fi # Workflow name in library file
 if [[ -z ${WORKFLOW_DETECTORS+x} ]]; then echo \$WORKFLOW_DETECTORS missing; exit 1; fi # Comma-separated list of detectors to run processing for
-if [[ -z ${WORKFLOW_DETECTORS_QC+x} ]]; then echo \$WORKFLOW_DETECTORS_QC missing; exit 1; fi # Comma-separated list of detectors to run QC for
-if [[ -z ${WORKFLOW_DETECTORS_CALIB+x} ]]; then echo \$WORKFLOW_DETECTORS_CALIB missing; exit 1; fi # Comma-separated list of detectors to run calibration for
+if [[ -z ${WORKFLOW_DETECTORS_QC+x} && -z ${WORKFLOW_DETECTORS_EXCLUDE_QC+x} ]]; then echo \$WORKFLOW_DETECTORS_EXCLUDE_QC missing; exit 1; fi # Comma-separated list of detectors to run QC for
+if [[ -z ${WORKFLOW_DETECTORS_CALIB+x} && -z ${WORKFLOW_DETECTORS_EXCLUDE_CALIB+x} ]]; then echo \$WORKFLOW_DETECTORS_EXCLUDE_CALIB missing; exit 1; fi # Comma-separated list of detectors to run calibration for
 if [[ -z ${WORKFLOW_PARAMETERS+x} ]]; then echo \$WORKFLOW_PARAMETERS missing; exit 1; fi # Additional parameters for workflow
 if [[ -z ${RECO_NUM_NODES_OVERRIDE+x} ]]; then echo \$RECO_NUM_NODES_OVERRIDE missing; exit 1; fi # Override number of nodes
 if [[ -z $DDMODE ]] && [[ -z $DDWORKFLOW ]]; then echo Either \$DDMODE or \$DDWORKFLOW must be set; exit 1; fi # Select data distribution workflow
