@@ -13,7 +13,7 @@
         "type": "2"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "influxdb-unix:///tmp/telegraf.sock"
       },
       "consul": {
         "url": ""
