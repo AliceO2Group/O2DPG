@@ -268,26 +268,30 @@ if [[ -n "$ALIEN_JDL_USEGPUS" ]]; then
   echo "Enabling GPUS"
   export GPUTYPE="HIP"
   export GPUMEMSIZE=$((25 << 30))
-  if [[ $keep -eq 0 ]]; then
-    export MULTIPLICITY_PROCESS_tof_matcher=2
-    export MULTIPLICITY_PROCESS_mch_cluster_finder=3
-    export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
-    export MULTIPLICITY_PROCESS_itstpc_track_matcher=3
-    export MULTIPLICITY_PROCESS_its_tracker=2
-    export TIMEFRAME_RATE_LIMIT=8
-  else
-    export TIMEFRAME_RATE_LIMIT=4
+  if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
+    if [[ $keep -eq 0 ]]; then
+      export MULTIPLICITY_PROCESS_tof_matcher=2
+      export MULTIPLICITY_PROCESS_mch_cluster_finder=3
+      export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
+      export MULTIPLICITY_PROCESS_itstpc_track_matcher=3
+      export MULTIPLICITY_PROCESS_its_tracker=2
+      export TIMEFRAME_RATE_LIMIT=8
+    else
+      export TIMEFRAME_RATE_LIMIT=4
+    fi
+    export OMP_NUM_THREADS=8
+    export SHMSIZE=20000000000
   fi
-  export SHMSIZE=20000000000
-  export OMP_NUM_THREADS=8
 else
   # David, Oct 13th
   # the optimized settings for the 8 core GRID queue without GPU are
   # (overwriting the values above)
   #
-  export TIMEFRAME_RATE_LIMIT=3
-  export OMP_NUM_THREADS=5
-  export SHMSIZE=16000000000
+  if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
+    export TIMEFRAME_RATE_LIMIT=3
+    export OMP_NUM_THREADS=5
+    export SHMSIZE=16000000000
+  fi
 fi
 
 echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS} TIMEFRAME_RATE_LIMIT ${TIMEFRAME_RATE_LIMIT}"
