@@ -279,7 +279,6 @@ if [[ -n "$ALIEN_JDL_USEGPUS" ]]; then
     export TIMEFRAME_RATE_LIMIT=4
   fi
   export SHMSIZE=20000000000
-  export SHMTHROW=0
   export OMP_NUM_THREADS=8
 else
   # David, Oct 13th
