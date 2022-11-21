@@ -44,6 +44,42 @@ if [[ $RUNNUMBER -ge 525583 ]]; then
   GRPMAG=o2sim_grp_b5p_128HB.root
 fi
 
+# LHC22o: from 526383 - first good physics run
+if [[ $RUNNUMBER -ge 526383 ]]; then
+  # +30kA/+6kA
+  GRPMAG=o2sim_grp_b5p_128HB.root
+fi
+
+# LHC22p: from 528563 - first good physics run
+if [[ $RUNNUMBER -ge 528563 ]]; then
+  # -30kA/-6kA
+  GRPMAG=o2sim_grp_b5m_128HB.root
+fi
+
+# LHC22q: from 528991 - first good physics run
+if [[ $RUNNUMBER -ge 528991 ]]; then
+  # +30kA/+6kA
+  GRPMAG=o2sim_grp_b5p_128HB.root
+fi
+
+# LHC22r: from 529066 - first good physics run
+if [[ $RUNNUMBER -ge 529066 ]]; then
+  # +30kA/+6kA
+  GRPMAG=o2sim_grp_b5p_128HB.root
+fi
+
+# LHC22s: from 529397 - first good physics run
+if [[ $RUNNUMBER -ge 529397 ]]; then
+  # +30kA/+6kA
+  GRPMAG=o2sim_grp_b5p_128HB.root
+fi
+
+# LHC22t: from 529450 - first good physics run
+if [[ $RUNNUMBER -ge 529450 ]]; then
+  # +30kA/+6kA
+  GRPMAG=o2sim_grp_b5p_128HB.root
+fi
+
 echo "GRP B field = $GRPMAG"
 
 ln -s $GRPMAG o2sim_grp.root
