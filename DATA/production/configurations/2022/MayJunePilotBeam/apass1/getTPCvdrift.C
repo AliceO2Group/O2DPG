@@ -8,6 +8,7 @@
 #include "CCDB/CcdbApi.h"
 #include "DataFormatsTPC/LtrCalibData.h"
 #include "TPCBase/ParameterGas.h"
+#include <TJAlienCredentials.h>
 
 float getTPCvdrift(int run, std::string_view ltrUrl = "http://ccdb-test.cern.ch:8080")
 {
@@ -24,7 +25,15 @@ float getTPCvdrift(int run, std::string_view ltrUrl = "http://ccdb-test.cern.ch:
   //
   // query present run up to +-3days
   const auto queryInterval = 3l * 24l * 60l * 60l * 1000l;
-  const auto queryString = fmt::format("curl -H \"If-Not-Before: {}\" -H \"If-Not-After: {}\" -H \"Accept: application/json\" {}/browse/{}", sor - queryInterval, sor + queryInterval, ltrUrl.data(), calibType.data());
+
+    // alien credentials, needed since we use https
+  TJAlienCredentials* cred = new TJAlienCredentials();
+  cred->loadCredentials();
+  cred->selectPreferedCredentials();
+  CredentialsKind cmk = cred->getPreferedCredentials();
+  TJAlienCredentialsObject cmo = cred->get(cmk);
+  
+  const auto queryString = fmt::format("curl --cert {} --key {} --insecure -H \"If-Not-Before: {}\" -H \"If-Not-After: {}\" -H \"Accept: application/json\" {}/browse/{}", cmo.certpath.c_str(), cmo.keypath.c_str(), sor - queryInterval, sor + queryInterval, ltrUrl.data(), calibType.data());
   fmt::print("Query: {}\n", queryString);
   const auto queryResultTString = gSystem->GetFromPipe(queryString.data());
   std::string queryResult(queryResultTString);
