@@ -264,7 +264,7 @@ fi
 echo "SETTING_ROOT_OUTPUT = $SETTING_ROOT_OUTPUT"
 
 # Enabling GPUs
-if [[ -n "$ALIEN_JDL_USEGPUS" ]]; then
+if [[ -n "$ALIEN_JDL_USEGPUS" ]] && [[ $ALIEN_JDL_USEGPUS != 0 ]]; then
   echo "Enabling GPUS"
   export GPUTYPE="HIP"
   export GPUMEMSIZE=$((25 << 30))
