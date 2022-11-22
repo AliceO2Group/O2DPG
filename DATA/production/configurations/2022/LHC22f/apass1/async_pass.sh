@@ -18,6 +18,9 @@ if [[ "${1##*.}" == "root" ]]; then
     #echo "alien://${1}" > list.list
     #export MODE="remote"
     echo "${1}" > list.list
+    if [[ ! -z $ASYNC_BENCHMARK_ITERATIONS ]]; then
+      for i in `seq 1 $ASYNC_BENCHMARK_ITERATIONS`; do echo "${1}" >> list.list; done
+    fi
     export MODE="LOCAL"
     shift
 elif [[ "${1##*.}" == "xml" ]]; then
@@ -264,7 +267,7 @@ fi
 echo "SETTING_ROOT_OUTPUT = $SETTING_ROOT_OUTPUT"
 
 # Enabling GPUs
-if [[ -n "$ALIEN_JDL_USEGPUS" ]] && [[ $ALIEN_JDL_USEGPUS != 0 ]]; then
+if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]]; then
   echo "Enabling GPUS"
   export GPUTYPE="HIP"
   export GPUMEMSIZE=$((25 << 30))
