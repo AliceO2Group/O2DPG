@@ -163,7 +163,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
   OUTPUT_SUFFIX=
 
   # TOF matching
-  if has_detector_qc TOF && [ ! -z "$QC_JSON_TOF_MATCH" ]; then
+  if has_detector_qc TOF && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"TOF_MATCH"(,|$) ]] && [ ! -z "$QC_JSON_TOF_MATCH" ]; then
     add_QC_JSON matchTOF ${QC_JSON_TOF_MATCH}
   fi
 
