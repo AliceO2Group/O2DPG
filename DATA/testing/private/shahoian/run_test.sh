@@ -33,7 +33,7 @@ export ALL_EXTRA_CONFIG="HBFUtils.nHBFPerTF=$NHBPERTF"
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="GPU_proc.debugLevel=1;"
 
 
-export CTF_METAFILES_DIR=/data/epn2eos_tool/epn2eos
+export EPN2EOS_METAFILES_DIR=/data/epn2eos_tool/epn2eos
 
 export MULTIPLICITY_FACTOR_RAWDECODERS=1
 export MULTIPLICITY_FACTOR_CTFENCODERS=1
