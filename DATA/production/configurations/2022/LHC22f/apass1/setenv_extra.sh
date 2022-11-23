@@ -35,6 +35,7 @@ if [[ $remappingITS == 1 ]] || [[ $remappingMFT == 1 ]]; then
 fi
 
 echo remapping = $REMAPPING
+echo "BeamType = $BEAMTYPE"
 
 # other ad-hoc settings for CTF reader
 export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --allow-missing-detectors $REMAPPING"
@@ -45,7 +46,20 @@ if [[ $RUNNUMBER -ge 521889 ]]; then
   MAXBCDIFFTOMASKBIAS_ITS="ITSClustererParam.maxBCDiffToMaskBias=10"
   MAXBCDIFFTOMASKBIAS_MFT="MFTClustererParam.maxBCDiffToMaskBias=10"
 fi
-
+# shift by +1 BC TRD(2), PHS(4), CPV(5), EMC(6), HMP(7) and by (orbitShift-1)*3564+1 BCs the ZDC since it internally resets the orbit to 1 at SOR and BC is shifted by -1 like for triggered detectors.
+# run 520403: orbitShift = 59839744 --> final shift = 213268844053
+# run 520418: orbitShift = 28756480 --> final shift = 102488091157
+# The "wrong" +1 offset request for ITS (0) must produce alarm since shifts are not supported there
+if [[ $PERIOD == "LHC22s" ]]; then
+  if [[ $RUNNUMBER -eq 529403 ]]; then
+    ZDC_BC_SHIFT=213268844053
+  elif [[ $RUNNUMBER -eq 529418 ]]; then
+    ZDC_BC_SHIFT=102488091157
+  else
+    ZDC_BC_SHIFT=0
+  fi
+  export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow="TriggerOffsetsParam.customOffset[2]=1;TriggerOffsetsParam.customOffset[4]=1;TriggerOffsetsParam.customOffset[5]=1;TriggerOffsetsParam.customOffset[6]=1;TriggerOffsetsParam.customOffset[7]=1;TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
+fi
 # run-dependent options
 if [[ -f "setenv_run.sh" ]]; then
     source setenv_run.sh 
@@ -67,8 +81,6 @@ else
   echo "TPC vdrift will be taken from CCDB"
 fi
 
-echo "BeamType = $BEAMTYPE"
-
 # remove monitoring-backend
 export ENABLE_METRICS=1
 
@@ -81,8 +93,13 @@ export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=9e-4;ITSCATrackerParam.sysErrZ
 
 # ad-hoc options for ITS reco workflow
 export ITS_CONFIG=" --tracking-mode sync_misaligned"
-export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;$MAXBCDIFFTOMASKBIAS_ITS"
-
+EXTRA_ITSRECO_CONFIG=
+if [[ $BEAMTYPE == "PbPb" ]]; then
+  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.trackletsPerClusterLimit=5.;ITSCATrackerParam.cellsPerClusterLimit=5.;ITSVertexerParam.clusterContributorsCut=16"
+elif [[ $BEAMTYPE == "pp" ]]; then
+  EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2"
+fi
+export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="$MAXBCDIFFTOMASKBIAS_ITS;$EXTRA_ITSRECO_CONFIG;"
 # ad-hoc options for GPU reco workflow
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="GPU_global.dEdxDisableResidualGainMap=1;$VDRIFTPARAMOPTION;"
 
@@ -96,11 +113,12 @@ export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb"
 # following comment https://alice.its.cern.ch/jira/browse/O2-2691?focusedCommentId=278262&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-278262
 #export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2.;pvertexer.nSigmaTimeTrack=4.;pvertexer.timeMarginTrackTime=0.5;pvertexer.timeMarginVertexTime=7.;pvertexer.nSigmaTimeCut=10;pvertexer.dbscanMaxDist2=36;pvertexer.dcaTolerance=3.;pvertexer.pullIniCut=100;pvertexer.addZSigma2=0.1;pvertexer.tukey=20.;pvertexer.addZSigma2Debris=0.01;pvertexer.addTimeSigma2Debris=1.;pvertexer.maxChi2Mean=30;pvertexer.timeMarginReattach=3.;pvertexer.addTimeSigma2Debris=1.;pvertexer.dbscanDeltaT=24;pvertexer.maxChi2TZDebris=100;pvertexer.maxMultRatDebris=1.;pvertexer.dbscanAdaptCoef=20.;pvertexer.timeMarginVertexTime=1.3"
 # updated on 7 Sept 2022
-DEBRIS=""
-if [[ $BEAMTYPE == "pp" ]]; then
-  DEBRIS="pvertexer.maxChi2TZDebris=10"
+EXTRA_PRIMVTX=""
+if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == "LHC22c" || $PERIOD == "LHC22d" || $PERIOD == "LHC22e" || $PERIOD == "LHC22f" ]]; then
+  EXTRA_PRIMVTX_TimeMargin="pvertexer.timeMarginVertexTime=1.3"
 fi
-export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2;$DEBRIS"
+
+export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2;$EXTRA_PRIMVTX_TimeMargin"
 
 # secondary vertexing
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
