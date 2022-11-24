@@ -115,8 +115,20 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     # the following two ($QC_JSON_PRIMVTX and $QC_JSON_ITSTPC) replace $QC_JSON_GLO for async processing
     [[ -z "$QC_JSON_GLO_PRIMVTX" ]] && QC_JSON_GLO_PRIMVTX=$O2DPG_ROOT/DATA/production/qc-async/primvtx.json
     [[ -z "$QC_JSON_GLO_ITSTPC" ]] && QC_JSON_GLO_ITSTPC=$O2DPG_ROOT/DATA/production/qc-async/itstpc.json
-    [[ -z "$QC_JSON_TOF_MATCH" ]] && QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-async/itstpctof.json
-    [[ -z "$QC_JSON_PID_FT0TOF" ]] && QC_JSON_PID_FT0TOF=$O2DPG_ROOT/DATA/production/qc-async/pidft0tof.json
+    if [[ -z "$QC_JSON_TOF_MATCH" ]]; then
+      if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD; then
+        QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-async/itstpctofwtrd.json
+      elif has_tof_matching_source ITS-TPC; then
+        QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-async/itstpctof.json
+      fi
+    fi
+    if [[ -z "$QC_JSON_PID_FT0TOF" ]]; then
+      if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD; then
+        QC_JSON_PID_FT0TOF=$O2DPG_ROOT/DATA/production/qc-async/pidft0tofwtrd.json
+      elif has_tof_matching_source ITS-TPC; then
+        QC_JSON_PID_FT0TOF=$O2DPG_ROOT/DATA/production/qc-async/pidft0tof.json
+      fi
+    fi
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-async/qc-global.json # this must be last
   fi
 
