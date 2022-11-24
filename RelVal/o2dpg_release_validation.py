@@ -224,7 +224,7 @@ def file_sizes(dirs, threshold):
     return collect_dict
 
 
-def load_patterns(include_patterns, exclude_patterns):
+def load_patterns(include_patterns, exclude_patterns, print_loaded=True):
     """
     Load include patterns to be used for regex comparion
     """
@@ -236,14 +236,15 @@ def load_patterns(include_patterns, exclude_patterns):
 
     include_patterns = load_this_patterns(include_patterns)
     exclude_patterns = load_this_patterns(exclude_patterns)
-    if include_patterns:
-        print("Following patterns are included:")
-        for ip in include_patterns:
-            print(f"  - {ip}")
-    if exclude_patterns:
-        print("Following patterns are excluded:")
-        for ep in exclude_patterns:
-            print(f"  - {ep}")
+    if print_loaded:
+        if include_patterns:
+            print("Following patterns are included:")
+            for ip in include_patterns:
+                print(f"  - {ip}")
+        if exclude_patterns:
+            print("Following patterns are excluded:")
+            for ep in exclude_patterns:
+                print(f"  - {ep}")
     return include_patterns, exclude_patterns
 
 
@@ -805,22 +806,21 @@ def rel_val(args):
     print_summary(global_summary)
     return 0
 
+def get_filepath(d):
+    summary_global = join(d, "SummaryGlobal.json")
+    if exists(summary_global):
+        return summary_global
+    summary = join(d, "Summary.json")
+    if exists(summary):
+        return summary
+    print(f"Can neither find {summary_global} nor {summary}. Nothing to work with.")
+    return None
 
 def inspect(args):
     """
     Inspect a Summary.json in view of RelVal severity
     """
     path = args.path
-
-    def get_filepath(d):
-        summary_global = join(d, "SummaryGlobal.json")
-        if exists(summary_global):
-            return summary_global
-        summary = join(d, "Summary.json")
-        if exists(summary):
-            return summary
-        print(f"Can neither find {summary_global} nor {summary}. Nothing to work with.")
-        return None
 
     if isdir(path):
         path = get_filepath(path)
@@ -964,6 +964,44 @@ def dir_comp(args):
         json.dump(file_sizes_to_json, f, indent=2)
     return 0
 
+def printTable(args):
+    """
+    Print the filtered histogram names of a Summary.json as list to screen
+    """
+    path = args.path
+    if isdir(path):
+        path = get_filepath(path)
+        if not path:
+            return 1
+
+    include_patterns, exclude_patterns = load_patterns(args.include_patterns, args.exclude_patterns, False)
+    with open(path, "r") as f:
+        summary = json.load(f)
+    for histo_name, tests in summary.items():
+        if not check_patterns(histo_name, include_patterns, exclude_patterns):
+            continue
+        include_this = not (args.flags or args.flags_summary)
+        if not include_this:
+            for test in tests:
+                if test["test_name"] == REL_VAL_TEST_SUMMARY_NAME:
+                    if args.flags_summary:
+                        for f in args.flags_summary:
+                            if test["result"] == f:
+                                include_this = True
+                                break
+                else:
+                    if (not include_this) and args.flags:
+                        for f in args.flags:
+                            if test["result"] == f:
+                                include_this = True
+                                break
+                if include_this:
+                    break
+        if not include_this:
+            continue
+        print(f"{histo_name}")
+
+    return 0
 
 def print_header():
     print(f"\n{'#' * 25}\n#{' ' * 23}#\n# RUN ReleaseValidation #\n#{' ' * 23}#\n{'#' * 25}\n")
@@ -1022,13 +1060,20 @@ def main():
     influx_parser.add_argument("--table-suffix", dest="table_suffix", help="prefix for table name")
     influx_parser.set_defaults(func=influx)
 
+    print_parser = sub_parsers.add_parser("print", parents=[common_pattern_parser])
+    print_parser.add_argument("path", help="either complete file path to a Summary.json or SummaryGlobal.json or directory where one of the former is expected to be")
+    print_parser.add_argument("--flags", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(REL_VAL_SEVERITY_MAP.keys()))
+    print_parser.add_argument("--flags-summary", dest="flags_summary", nargs="*", help="extract all objects which have this severity flag as overall test result", choices=list(REL_VAL_SEVERITY_MAP.keys()))
+    print_parser.set_defaults(func=printTable)
+
     file_size_parser = sub_parsers.add_parser("file-sizes", parents=[common_file_parser])
     file_size_parser.add_argument("--threshold", type=float, default=0.5, help="threshold for how far file sizes are allowed to diverge before warning")
     file_size_parser.add_argument("--output", "-o", help="output directory", default="file_sizes")
     file_size_parser.set_defaults(func=dir_comp)
 
     args = parser.parse_args()
-    print_header()
+    if not args.command == "print":
+        print_header()
     return(args.func(args))
 
 if __name__ == "__main__":
