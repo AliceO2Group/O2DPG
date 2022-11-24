@@ -266,6 +266,25 @@ def check_patterns(name, include_patterns, exclude_patterns):
         return True
     return False
 
+def check_flags(tests, flags, flags_summary):
+    """
+    include histograms based on the flags
+    """
+    if not flags and not flags_summary:
+        return True
+    for test in tests:
+        if test["test_name"] == REL_VAL_TEST_SUMMARY_NAME:
+            if flags_summary:
+                for f in flags_summary:
+                    if test["result"] == f:
+                        return True
+        else:
+            if flags:
+                for f in flags:
+                    if test["result"] == f:
+                        return True
+    return False
+
 
 def plot_pie_charts(summary, out_dir, title, include_patterns=None, exclude_patterns=None):
 
@@ -515,7 +534,7 @@ def calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args):
     return the_thresholds
 
 
-def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, exclude_patterns=None):
+def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, exclude_patterns=None, flags=None, flags_summary=None):
     """
     Make the usual summary
     """
@@ -548,6 +567,8 @@ def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, e
 
     for histo_name, tests in rel_val_dict.items():
         if not check_patterns(histo_name, include_patterns, exclude_patterns):
+            continue
+        if not check_flags(tests, flags, flags_summary):
             continue
         test_summary = {"test_name": REL_VAL_TEST_SUMMARY_NAME,
                         "value": None,
@@ -832,10 +853,12 @@ def inspect(args):
         makedirs(output_dir)
 
     include_patterns, exclude_patterns = load_patterns(args.include_patterns, args.exclude_patterns)
+    flags = args.flags
+    flags_summary = args.flags_summary
     current_summary = None
     with open(path, "r") as f:
         current_summary = json.load(f)
-    summary = make_single_summary(current_summary, args, output_dir, include_patterns, exclude_patterns)
+    summary = make_single_summary(current_summary, args, output_dir, include_patterns, exclude_patterns, flags, flags_summary)
     with open(join(output_dir, "Summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
     print_summary(summary, include_patterns)
@@ -980,24 +1003,7 @@ def printTable(args):
     for histo_name, tests in summary.items():
         if not check_patterns(histo_name, include_patterns, exclude_patterns):
             continue
-        include_this = not (args.flags or args.flags_summary)
-        if not include_this:
-            for test in tests:
-                if test["test_name"] == REL_VAL_TEST_SUMMARY_NAME:
-                    if args.flags_summary:
-                        for f in args.flags_summary:
-                            if test["result"] == f:
-                                include_this = True
-                                break
-                else:
-                    if (not include_this) and args.flags:
-                        for f in args.flags:
-                            if test["result"] == f:
-                                include_this = True
-                                break
-                if include_this:
-                    break
-        if not include_this:
+        if not check_flags(tests, args.flags, args.flags_summary):
             continue
         print(f"{histo_name}")
 
@@ -1029,6 +1035,10 @@ def main():
     common_pattern_parser.add_argument("--include-patterns", dest="include_patterns", nargs="*", help="include objects whose name includes at least one of the given patterns (takes precedence)")
     common_pattern_parser.add_argument("--exclude-patterns", dest="exclude_patterns", nargs="*", help="exclude objects whose name includes at least one of the given patterns")
 
+    common_flags_parser = argparse.ArgumentParser(add_help=False)
+    common_flags_parser.add_argument("--flags", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(REL_VAL_SEVERITY_MAP.keys()))
+    common_flags_parser.add_argument("--flags-summary", dest="flags_summary", nargs="*", help="extract all objects which have this severity flag as overall test result", choices=list(REL_VAL_SEVERITY_MAP.keys()))
+
     sub_parsers = parser.add_subparsers(dest="command")
     rel_val_parser = sub_parsers.add_parser("rel-val", parents=[common_file_parser, common_threshold_parser])
     rel_val_parser.add_argument("--dir-config", dest="dir_config", help="What to take into account in a given directory")
@@ -1039,10 +1049,9 @@ def main():
     rel_val_parser.add_argument("--output", "-o", help="output directory", default="rel_val")
     rel_val_parser.set_defaults(func=rel_val)
 
-    inspect_parser = sub_parsers.add_parser("inspect", parents=[common_threshold_parser, common_pattern_parser])
+    inspect_parser = sub_parsers.add_parser("inspect", parents=[common_threshold_parser, common_pattern_parser, common_flags_parser])
     inspect_parser.add_argument("path", help="either complete file path to a Summary.json or SummaryGlobal.json or directory where one of the former is expected to be")
     inspect_parser.add_argument("--plot", action="store_true", help="Plot the summary grid")
-    inspect_parser.add_argument("--flags", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(REL_VAL_SEVERITY_MAP.keys()))
     inspect_parser.add_argument("--output", "-o", help="output directory, by default points to directory where the Summary.json was found")
     inspect_parser.set_defaults(func=inspect)
 
@@ -1060,10 +1069,8 @@ def main():
     influx_parser.add_argument("--table-suffix", dest="table_suffix", help="prefix for table name")
     influx_parser.set_defaults(func=influx)
 
-    print_parser = sub_parsers.add_parser("print", parents=[common_pattern_parser])
+    print_parser = sub_parsers.add_parser("print", parents=[common_pattern_parser, common_flags_parser])
     print_parser.add_argument("path", help="either complete file path to a Summary.json or SummaryGlobal.json or directory where one of the former is expected to be")
-    print_parser.add_argument("--flags", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(REL_VAL_SEVERITY_MAP.keys()))
-    print_parser.add_argument("--flags-summary", dest="flags_summary", nargs="*", help="extract all objects which have this severity flag as overall test result", choices=list(REL_VAL_SEVERITY_MAP.keys()))
     print_parser.set_defaults(func=printTable)
 
     file_size_parser = sub_parsers.add_parser("file-sizes", parents=[common_file_parser])
