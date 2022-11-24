@@ -1,0 +1,405 @@
+R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/external/generator)
+#include "GeneratorCocktail.C"
+
+namespace o2
+{
+namespace eventgen
+{
+
+
+class cocktailParam_class : public GeneratorTGenerator
+{
+public:
+  cocktailParam_class(GeneratorParam* cocktailParam) : GeneratorTGenerator("cocktailParam")
+  {
+    setTGenerator(cocktailParam);
+  };
+
+  ~cocktailParam_class()
+  {
+    delete cocktailParam;
+  };
+
+
+private:
+  GeneratorParam* cocktailParam= nullptr;
+}; 
+
+
+
+class GeneratorEMCocktailV2 : public GeneratorCocktail_class
+{
+ public:
+  GeneratorEMCocktailV2(){
+  fDecayer = NULL;
+  fDecayerConfig = NULL;
+  fDecayMode = kAll;
+  fWeightingMode = kNonAnalog;
+  fParametrizationFile = "";
+  fParametrizationDir = "";
+  fV2ParametrizationDir = "";
+  fNPart = 1000;
+  fCollisionSystem = GeneratorParamEMlibV2::kpp7TeV;
+  fCentrality = GeneratorParamEMlibV2::kpp;
+  fV2Systematic = GeneratorParamEMlibV2::kNoV2Sys;
+  fUseYWeighting = kFALSE;
+  fDynPtRange = kFALSE;
+  fForceConv = kFALSE;
+  fSelectedParticles = 0x3FFFFFF;
+  fUseFixedEP = kFALSE;  
+  }
+
+  ~GeneratorEMCocktailV2()
+  {
+    
+  }
+
+  /*
+  GeneratorParamEMlibV2: enum Particle_t{kPizero=0, kEta=1, kRho0=2, kOmega=3, kEtaprime=4, kPhi=5, kJpsi=6,
+    kSigma0=7, kK0s=8, kDeltaPlPl=9, kDeltaPl=10, kDeltaMi=11, kDeltaZero=12,
+    kRhoPl=13, kRhoMi=14, kK0star=15, kK0l=16, kLambda=17, kKPl=18, kKMi=19,
+    kOmegaPl=20, kOmegaMi=21, kXiPl=22, kXiMi=23, kSigmaPl=24, kSigmaMi=25,
+    kDirectRealGamma=26, kDirectVirtGamma=27,kNParticles};
+    */
+  const char* GeneratorNames[GeneratorParamEMlibV2::kNParticles] = {"Pizero", "Eta", "Rho", "Omega", "Etaprime", "Phi", "Jpsi", "Sigma0", "K0short", "DeltaPlPl", "DeltaPl", "DeltaMi", "DeltaZero", "RhoPl", "RhoMi", "K0star", "K0long", "Lambda", "KPl", "KMi", "OmegaPl", "OmegaMi", "XiPl", "XiMi", "SigamPl", "SigmaMi", "DirectRealGamma", "DirectVirtGamma"};
+  Int_t ParticleIDs[GeneratorParamEMlibV2::kNParticles] = {111, 221, 113, 223, 331, 333, 443, 3212, 310, 2224, 2214, 1114, 2114, 213, 213, 313, 130, 3122, 321, 321, -3334, 3334, -3312, 3312, 3224, 3114, 22, 22};
+  Int_t ParticleGenerator[GeneratorParamEMlibV2::kNParticles] = {0x00001, 0x00002, 0x00004, 0x00008, 0x00010, 0x00020, 0x00040, 0x00080, 0x00100, 0x00200, 0x00400, 0x00800, 0x01000, 0x02000, 0x04000, 0x08000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000};
+
+  void    SetUseYWeighting(Bool_t useYWeighting)                      { fUseYWeighting = useYWeighting;   }
+  void    SetDynamicalPtRange(Bool_t dynamicalPtRange)                { fDynPtRange = dynamicalPtRange;   }
+  void    SetParametrizationFile(TString paramFile)                   { fParametrizationFile = paramFile; }
+  void    SetParametrizationFileDirectory(TString paramDir)           { fParametrizationDir = paramDir;   }
+  void    SetParametrizationFileV2Directory(TString paramDir)         { fV2ParametrizationDir = paramDir; }
+  void    SetDecayer(TPythia6Decayer* const decayer)                  { fDecayer = decayer;               }
+  void    SetDecayerConfig(PythiaDecayerConfig* const decayerconfig)  { fDecayerConfig = decayerconfig;   }
+  void    SetDecayMode(Decay_t decay)                                 { fDecayMode = decay;               }
+  void    SetWeightingMode(Weighting_t weight)                        { fWeightingMode = weight;          }
+  void    SetNPart(Int_t npart)                                       { fNPart = npart;                   }
+  void    SetCollisionSystem(GeneratorParamEMlibV2::CollisionSystem_t col)    { fCollisionSystem = col;           }
+  void    SetCentrality(GeneratorParamEMlibV2::Centrality_t cent)             { fCentrality = cent;               }
+  void    SetV2Systematic(GeneratorParamEMlibV2::v2Sys_t v2sys)               { fV2Systematic = v2sys;            }
+  void    SetForceGammaConversion(Bool_t force=kTRUE)                 { fForceConv=force;                 }
+  void    SetFixedEventPlane(Bool_t toFix=kTRUE)                        {fUseFixedEP=toFix;}
+  void    SetPtRange(Double_t ptmin, Double_t ptmax)                {fPtMin=ptmin; fPtMax=ptmax;}
+  void    SetYRange(Double_t ymin, Double_t ymax)                   {fYMin=ymin; fYMax=ymax;}
+  void    SetPhiRange(Double_t phimin, Double_t phimax)              {fPhiMin=phimin; fPhiMax=phimax;}
+  void    SelectMotherParticles(UInt_t part)                          { fSelectedParticles=part; }
+
+  Bool_t SetPtParametrizations() {
+    TF1* tempFct = NULL;
+    for (Int_t i=0; i<27; i++) {
+      tempFct = GeneratorParamEMlibV2::GetPtParametrization(i);
+      if (!tempFct) 
+        return kFALSE;
+      if (i<26)
+        fPtParametrization[i] = new TF1(*tempFct);
+      else
+        fParametrizationProton = new TF1(*tempFct);
+    }
+    return kTRUE;
+  }
+
+//_________________________________________________________________________
+  void SetMtScalingFactors() {
+    TH1D* tempMtFactorHisto = GeneratorParamEMlibV2::GetMtScalingFactors();
+    fMtScalingFactorHisto = new TH1D(*tempMtFactorHisto);
+  }
+
+//_________________________________________________________________________
+  Bool_t SetPtYDistributions() {
+    TH2F* tempPtY = NULL;
+    for(Int_t i=0; i<26; i++) {
+      tempPtY = GeneratorParamEMlibV2::GetPtYDistribution(i);
+      if (tempPtY)
+        fPtYDistribution[i] = new TH2F(*tempPtY);
+      else
+        fPtYDistribution[i] = NULL;
+    }
+
+    return kTRUE;
+  }
+
+/* not implemented
+  void SetHeaviestHadron(ParticleGenerator_t part)
+  {
+    Int_t val=kGenPizero;
+    while(val<part) val|=val<<1;
+    
+    fSelectedParticles=val;
+    return;
+  }*/
+
+  TF1* GetPtParametrization(Int_t np) {
+    if (np<26)
+      return fPtParametrization[np];
+    else if (np==26)
+      return fParametrizationProton;
+    else
+      return NULL;
+  }
+
+  TH1D* GetMtScalingFactors() {
+    return fMtScalingFactorHisto;
+  }
+
+  TH2F* GetPtYDistribution(Int_t np) {
+    if (np<26)
+      return fPtYDistribution[np];
+    else
+      return NULL;
+  }
+
+  void GetPtRange(Double_t &ptMin, Double_t &ptMax) {
+    ptMin = fPtMin;
+    ptMax = fPtMax;
+  }
+
+  Double_t GetMaxPtStretchFactor(Int_t pdgCode) {
+    Double_t massParticle = TDatabasePDG::Instance()->GetParticle(pdgCode)->Mass();
+    Double_t massPi0 = TDatabasePDG::Instance()->GetParticle(111)->Mass();
+    Double_t factor = massParticle/massPi0;
+    if (factor*fPtMax > 300) factor = 300./fPtMax; // so far the input pt parametrizations are defined up to pt = 300 GeV/c
+    return factor;
+  }
+
+  Double_t GetYWeight(Int_t np, TParticle* part) {
+    if (!fUseYWeighting) return 1.;
+    Double_t weight = 0.;
+    if (fPtYDistribution[np]) {
+      if (part->Pt() > fPtYDistribution[np]->GetXaxis()->GetXmin() && part->Pt() < fPtYDistribution[np]->GetXaxis()->GetXmax()) {
+        if (part->Y() > fPtYDistribution[np]->GetYaxis()->GetXmin() && part->Y() < fPtYDistribution[np]->GetYaxis()->GetXmax()) {
+          weight = fPtYDistribution[np]->GetBinContent(fPtYDistribution[np]->GetXaxis()->FindBin(part->Pt()), fPtYDistribution[np]->GetYaxis()->FindBin(part->Y()));
+          if (weight)
+            return weight;
+          else
+            return 1.;
+        } else
+          return 1.;
+      } else
+        return 1.;
+    } else
+      return 1.;
+  }
+
+  void AddSource2Generator(Char_t* nameSource, GeneratorParam* genSource, Double_t maxPtStretchFactor=1.) {
+      printf("GeneratorEMCocktailV2: Add %s to generator\n", nameSource);
+      // add sources to the cocktail
+      Double_t phiMin = fPhiMin*180./TMath::Pi();
+      Double_t phiMax = fPhiMax*180./TMath::Pi();
+      
+      genSource->SetPtRange(fPtMin, maxPtStretchFactor*fPtMax);
+      genSource->SetPhiRange(phiMin, phiMax);
+      genSource->SetYRange(fYMin, fYMax);
+      genSource->SetWeighting(fWeightingMode);
+      genSource->SetDecayer(fDecayer);
+      genSource->SetDecayerConfig(fDecayerConfig);
+      genSource->SetForceDecay(fDecayMode);
+      genSource->SetForceGammaConversion(kFALSE);
+      genSource->Init();
+
+      fGeneratorType.push_back(genSource->GetParam());
+
+      cocktailParam_class* newgen = new cocktailParam_class(genSource);
+      AddGenerator(newgen,1);
+  }
+
+  void CreateCocktail() {
+    // create and add sources to the cocktail
+
+    // Set kinematic limits
+    Double_t ptMin  = fPtMin;
+    Double_t ptMax  = fPtMax;
+    Double_t yMin   = fYMin;;
+    Double_t yMax   = fYMax;;
+    Double_t phiMin = fPhiMin*180./TMath::Pi();
+    Double_t phiMax = fPhiMax*180./TMath::Pi();
+    printf("GeneratorEMCocktailV2: Ranges pT:%4.1f : %4.1f GeV/c, y:%4.2f : %4.2f, Phi:%5.1f : %5.1f degrees\n",ptMin,ptMax,yMin,yMax,phiMin,phiMax);
+    printf("GeneratorEMCocktailV2: the parametrised sources uses the decay mode %d\n",fDecayMode);
+    printf("GeneratorEMCocktailV2: generating %d particles per source\n",fNPart);
+    printf("GeneratorEMCocktailV2: Selected Params:collision system - %d , centrality - %d\n",fCollisionSystem, fCentrality);
+    //Initialize user selection for Pt Parameterization and centrality:
+
+    GeneratorParamEMlibV2::SelectParams(fCollisionSystem, fCentrality,fV2Systematic);
+    GeneratorParamEMlibV2::SetMtScalingFactors(fParametrizationFile, fParametrizationDir);
+    SetMtScalingFactors();
+    GeneratorParamEMlibV2::SetPtParametrizations(fParametrizationFile, fParametrizationDir);
+    SetPtParametrizations();
+    //Check consistency of pT and flow parameterizations: same centrality?
+    if(fV2ParametrizationDir.Length()>0){ //flow specified
+      TRegexp cent("_[0-9][0-9][0-9][0-9]_") ;
+      if(fParametrizationDir(cent)!=fV2ParametrizationDir(cent)){
+        printf("GeneratorEMCocktailV2: WARNING: Centrality for pT parameterization %s differs from centrality for flow parameterization: %s\n",fParametrizationDir.Data(),fV2ParametrizationDir.Data()) ;   
+      }
+      GeneratorParamEMlibV2::SetFlowParametrizations(fParametrizationFile, fV2ParametrizationDir);
+    }
+       
+    if (fDynPtRange)
+      printf("GeneratorEMCocktailV2: Dynamical adaption of pT range was chosen, the number of generated particles will also be adapted\n");
+
+    if (fUseYWeighting) {
+      printf("GeneratorEMCocktailV2: Rapidity weighting will be used\n");
+      GeneratorParamEMlibV2::SetPtYDistributions(fParametrizationFile, fParametrizationDir);
+      SetPtYDistributions();
+    }
+
+    for (int g=0; g<GeneratorParamEMlibV2::kNParticles; g++){
+      // Create and add electron sources to the generator
+      if ((g==GeneratorParamEMlibV2::kDirectRealGamma) || (g==GeneratorParamEMlibV2::kDirectVirtGamma)) continue;
+      if(fSelectedParticles&ParticleGenerator[g]){
+        Double_t maxPtStretchFactor = 1.;
+        if (fDynPtRange) maxPtStretchFactor = GetMaxPtStretchFactor(ParticleIDs[g]);
+        GeneratorParam *genNew=0;
+        Char_t nameNew[10];
+        snprintf(nameNew,10,GeneratorNames[g]);
+        genNew = new GeneratorParam(fNPart, new GeneratorParamEMlibV2(), g, "DUMMY");
+        AddSource2Generator(nameNew,genNew,maxPtStretchFactor);
+        TF1 *fPtNew = genNew->GetPt();
+        fYieldArray[g] = fPtNew->Integral(fPtMin,fPtMax,1.e-6);
+      }
+    }
+
+    TParticlePDG *elPDG=TDatabasePDG::Instance()->GetParticle(11);
+    TDatabasePDG::Instance()->AddParticle("ForcedConversionElecton-","ForcedConversionElecton-",elPDG->Mass(),true,0,elPDG->Charge(),elPDG->ParticleClass(),220011,0);
+    TDatabasePDG::Instance()->AddParticle("ForcedConversionElecton+","ForcedConversionElecton+",elPDG->Mass(),true,0,-elPDG->Charge(),elPDG->ParticleClass(),-220011,0);
+
+    if (fDecayMode!=kGammaEM) return;
+    // gamma not implemented
+
+  }
+
+  bool SetNormalization(){
+    auto generators=getGenerators();
+    int particleCounter = 0;
+    int generatorCounter = 0;
+    for (auto& g : *generators){
+      Int_t type = fGeneratorType[generatorCounter];
+      double dNdy = fYieldArray[type];
+      g->importParticles();
+      int nParticles = g->getParticles().size();
+      for (int i=0;i<nParticles;i++){
+        double weight = dNdy*mParticles[particleCounter+i].GetWeight();
+        if (fUseYWeighting){
+          weight *= GetYWeight(type,&mParticles[particleCounter+i]);
+        }
+        mParticles[particleCounter+i].SetWeight(weight);
+      }
+      particleCounter += nParticles;
+      generatorCounter++;
+      g->clearParticles();
+    }
+    return true;
+  }
+
+ bool importParticles() override {return GeneratorCocktail_class::importParticles() && SetNormalization();}
+
+  private:
+  TPythia6Decayer* fDecayer;                             // External decayer
+  PythiaDecayerConfig* fDecayerConfig;                             // External decayer config
+  Decay_t         fDecayMode;                           // decay mode in which resonances are forced to decay, default: kAll
+  Weighting_t     fWeightingMode;                       // weighting mode: kAnalog or kNonAnalog
+  TString         fParametrizationFile;                 // parametrization file
+  TString         fParametrizationDir;                  // parametrization file directory
+  TString         fV2ParametrizationDir;                // parametrization file directory for flow
+  Int_t           fNPart;                               // multiplicity of each source per event
+  Double_t        fYieldArray[GeneratorParamEMlibV2::kNParticles];             // array of dN/dy for each source
+  TF1*     fPtParametrization[26];               // pt paramtrizations
+  TF1*     fParametrizationProton;               //
+  TH1D*    fMtScalingFactorHisto;                // mt scaling factors
+  TH2F*    fPtYDistribution[26];            // pt-y distribution
+  Double_t        fPtMin; 
+  Double_t        fPtMax; 
+  Double_t        fYMin; 
+  Double_t        fYMax; 
+  Double_t        fPhiMin; 
+  Double_t        fPhiMax;
+  GeneratorParamEMlibV2::CollisionSystem_t  fCollisionSystem;   // selected collision system
+  GeneratorParamEMlibV2::Centrality_t       fCentrality;        // selected centrality
+  GeneratorParamEMlibV2::v2Sys_t            fV2Systematic;      // selected systematic error for v2 parameters
+  Bool_t        fUseYWeighting;                         // select if input pt-y distributions should be used for weighting in generation
+  Bool_t        fDynPtRange;                            // select if the pt range for the generation should be adapted to different mother particle weights dynamically
+  Bool_t        fForceConv;                             // select whether you want to force all gammas to convert imidediately
+  UInt_t        fSelectedParticles;                     // which particles to simulate, allows to switch on and off 32 different particles
+  Bool_t        fUseFixedEP; 
+  std::vector<Int_t> fGeneratorType;           // vector that contains the type of the mother particle for each generator in the list   
+};
+
+}
+}
+
+// =======================================================================================================
+FairGenerator*
+  GenerateEMCocktail(Int_t collisionsSystem        = GeneratorParamEMlibV2::kpp7TeV,
+    Int_t centrality            = GeneratorParamEMlibV2::kpp,
+    Int_t decayMode             = 3,
+    Int_t selectedMothers       = 63,
+    TString paramFile           = "",
+    TString paramFileDir        = "",
+    Int_t numberOfParticles     = 100,
+    Double_t minPt              = 0.,
+    Double_t maxPt              = 20.,
+    Int_t pythiaErrorTolerance  = 2000,
+    Bool_t externalDecayer      = 0,      //not implemented
+    Bool_t decayLongLived       = 1,
+    Bool_t dynamicalPtRange     = 0,
+    Bool_t useYWeights          = 0,
+    TString paramV2FileDir      = "",
+    Bool_t toFixEP              = 0,      //notimplemented
+    Double_t yGenRange          = 0.1,
+    TString useLMeeDecaytable   = "",
+    Int_t weightingMode         = 1
+    )
+{
+  auto gener = new o2::eventgen::GeneratorEMCocktailV2();
+
+  auto decayer  = new TPythia6Decayer();
+  auto decayerconfig = new PythiaDecayerConfig();
+  //if (externalDecayer) decayer->SetDecayerExodus();
+  if (decayLongLived) decayerconfig->DecayLongLivedParticles();
+  if (useLMeeDecaytable.Length()>0){
+    decayer->SetDecayTableFile(useLMeeDecaytable.Data());
+    decayer->ReadDecayTable();
+  }
+  (TPythia6::Instance())->SetMSTU(22, pythiaErrorTolerance);   // tolerance for error due to rhos
+
+  gener->SetParametrizationFile(paramFile);
+  gener->SetParametrizationFileDirectory(paramFileDir);
+  gener->SetNPart(numberOfParticles);                         
+  gener->SetPtRange(minPt,maxPt);
+  gener->SetFixedEventPlane(toFixEP) ;
+  gener->SetDynamicalPtRange(dynamicalPtRange);
+  gener->SetUseYWeighting(useYWeights);
+  gener->SetYRange(-yGenRange,yGenRange);
+  gener->SetPhiRange(0., 360.*(TMath::Pi()/180.));
+  //gener->SetOrigin(0.,0.,0.); 
+  //gener->SetSigma(0.,0.,0.);
+  //gener->SetVertexSmear(kPerEvent);
+  //gener->SetTrackingFlag(0);
+  gener->SelectMotherParticles(selectedMothers);
+  gener->SetCollisionSystem((GeneratorParamEMlibV2::CollisionSystem_t)collisionsSystem);
+  gener->SetCentrality((GeneratorParamEMlibV2::Centrality_t)centrality);
+  if(paramV2FileDir.Length()>0)
+      gener->SetParametrizationFileV2Directory(paramV2FileDir);
+  //gener->SetV2Systematic((GeneratorParamEMlibV2::v2Sys_t)GeneratorParamEMlibV2::kNoV2Sys);
+    
+  if (decayMode == 1){
+      gener->SetDecayMode(kGammaEM);      // kGammaEM      => single photon
+    } else if (decayMode == 2){
+      gener->SetDecayMode(kElectronEM);  // kElectronEM   => single electron
+    } else if (decayMode == 3){
+      gener->SetDecayMode(kDiElectronEM); // kDiElectronEM => electron-positron
+    }
+
+  gener->SetDecayer(decayer);
+  gener->SetDecayerConfig(decayerconfig);
+
+  if (weightingMode==0){
+    gener->SetWeightingMode(kAnalog); // kAnalog    => weight ~ 1
+  } else if (weightingMode==1){
+    gener->SetWeightingMode(kNonAnalog); // kNonAnalog => weight ~ dN/dp_T
+  }
+                                      
+  gener->CreateCocktail();
+
+
+  return gener;
+}
