@@ -113,10 +113,11 @@ REL_VAL_SEVERITIES = ["GOOD", "WARNING", "NONCRIT_NC", "CRIT_NC", "BAD"]
 REL_VAL_SEVERITIES_USE_SUMMARY = [True, False, False, True, True]
 REL_VAL_SEVERITY_MAP = {v: i for i, v in enumerate(REL_VAL_SEVERITIES)}
 REL_VAL_SEVERITY_COLOR_MAP = {"GOOD": "green", "WARNING": "orange", "NONCRIT_NC": "cornflowerblue", "CRIT_NC": "navy", "BAD": "red"}
-REL_VAL_TEST_NAMES = ["chi2", "bin_cont", "num_entries"]
+REL_VAL_TEST_NAMES = ["chi2", "kolmogorov", "num_entries"]
 REL_VAL_TEST_NAMES_MAP = {v: i for i, v in enumerate(REL_VAL_TEST_NAMES)}
 REL_VAL_TEST_CRITICAL = [True, True, False]
-REL_VAL_TEST_DEFAULT_THRESHOLDS = [1.5, 1.5, 0.01]
+REL_VAL_TEST_DEFAULT_THRESHOLDS = [1.5, 0.5, 0.01]
+REL_VAL_TEST_UPPER_LOWER_THRESHOLD = [1, -1, 1]
 REL_VAL_TEST_SUMMARY_NAME = "summary"
 REL_VAL_TEST_NAMES_SUMMARY = REL_VAL_TEST_NAMES + [REL_VAL_TEST_SUMMARY_NAME]
 REL_VAL_TEST_NAMES_MAP_SUMMARY = {v: i for i, v in enumerate(REL_VAL_TEST_NAMES_SUMMARY)}
@@ -590,7 +591,7 @@ def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, e
             passed = True
             is_critical = REL_VAL_TEST_CRITICAL[test_id] or histo_name.find("_ratioFromTEfficiency") != -1
             if comparable:
-                passed = t["value"] <=  threshold
+                passed = t["value"]*REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[t["test_name"]]] <=  threshold*REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[t["test_name"]]]
 
             t["result"] = assign_result_flag(is_critical, comparable, passed)
 

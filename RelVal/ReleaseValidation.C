@@ -19,7 +19,7 @@ struct TestResult {
 // define the possible available tests
 struct TestFlag {
   static constexpr int CHI2 = 0;
-  static constexpr int BINCONTNORM = 1;
+  static constexpr int KOLMOGOROV = 1;
   static constexpr int NENTRIES = 2;
   static constexpr int LAST = NENTRIES;
   // ...
@@ -46,8 +46,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, bool firstComparison, bool 
 void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color);
 bool PotentiallySameHistograms(TH1*, TH1*);
 TestResult CompareChiSquare(TH1* hA, TH1* hB, bool areComparable);
-TestResult CompareChiSquareTH1(TH1* hA, TH1* hB, bool areComparable);
-TestResult CompareBinContent(TH1* hA, TH1* hB, bool areComparable);
+TestResult CompareKolmogorov(TH1* hA, TH1* hB, bool areComparable);
 TestResult CompareNentr(TH1* hA, TH1* hB, bool areComparable);
 void DrawRatio(TH1* hR);
 void SelectCriticalHistos();
@@ -405,11 +404,11 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, bool firstComparison, bool 
     }
   }
 
-  if (shouldRunTest(whichTests, TestFlag::BINCONTNORM)) {
-    auto testResult = CompareBinContent(hA, hB, areComparable);
+  if (shouldRunTest(whichTests, TestFlag::KOLMOGOROV)) {
+    auto testResult = CompareKolmogorov(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
     if (testResult.comparable) {
-      legendOverlayPlot.AddEntry((TObject*)nullptr, Form("meandiff = %f", testResult.value), "");
+      legendOverlayPlot.AddEntry((TObject*)nullptr, Form("Kolmogorov prob. = %f", testResult.value), "");
     }
   }
 
@@ -443,52 +442,20 @@ TestResult CompareChiSquare(TH1* hA, TH1* hB, bool areComparable)
   return res;
 }
 
-// (normalized) difference of bin content
-TestResult CompareBinContent(TH1* hA, TH1* hB, bool areComparable)
+// Kolmogorov
+TestResult CompareKolmogorov(TH1* hA, TH1* hB, bool areComparable)
 {
   TestResult res;
-  res.testname = "bin_cont";
+  res.testname = "kolmogorov";
   if (!areComparable) {
     res.comparable = false;
     return res;
   }
 
-  double integralA = hA->Integral();
-  double integralB = hB->Integral();
-  double meandiff = 0;
+  res.value = hA->KolmogorovTest(hB);
 
-  int nBins = 0;
-  for (int ix = 1; ix <= hA->GetNbinsX(); ix++) {
-    for (int iy = 1; iy <= hA->GetNbinsY(); iy++) {
-      for (int iz = 1; iz <= hA->GetNbinsZ(); iz++) {
-        double cA = hA->GetBinContent(ix, iy, iz);
-        if (cA < 0) {
-          std::cerr << "Negative counts!!! cA=" << cA << " in bin (" << ix << "," << iy << "," << iz << "\n";
-          res.comparable = false;
-          return res;
-        }
-        double cB = hB->GetBinContent(ix, iy, iz);
-        if (cB < 0) {
-          std::cerr << "Negative counts!!! cB=" << cB << " in bin (" << ix << "," << iy << "," << iz << "\n";
-          res.comparable = false;
-          return res;
-        }
-        if ((cA > 0) || (cB > 0)) {
-          meandiff += TMath::Abs(cA / integralA - cB / integralB);
-          nBins++;
-        }
-      }
-    }
-  }
-  meandiff = meandiff * TMath::Sqrt((integralA + integralB) / (2 * nBins));
-  if (nBins > 0) {
-    res.value = meandiff;
-    std::cout << hA->GetName() << ": " << res.testname << " performed: meandiff=" << res.value << "\n";
-    return res;
-  }
-
-  std::cerr << "Histogram with empty bins (" << hA->GetName() << ")\n";
   return res;
+
 }
 
 // compare number of entries. non-critical
@@ -504,10 +471,17 @@ TestResult CompareNentr(TH1* hA, TH1* hB, bool areComparable)
   double integralA = hA->Integral();
   double integralB = hB->Integral();
   double entriesdiff = TMath::Abs(integralA - integralB) / ((integralA + integralB) / 2);
-
+  /*
+  // alternative
+  double errorA;
+  double errorB;
+  double integralA = hA->IntegralAndError(0,-1,errorA);
+  double integralB = hB->IntegralAndError(0,-1,errorB);
+  double error = TMath::Sqrt(errorA*errorA+errorB*errorB);
+  double entriesdiff = TMath::Abs(integralA - integralB) / error;
+  */
   res.value = entriesdiff;
-  std::cout << hA->GetName() << ": " << res.testname << " performed: entriesdiff=" << res.value << "\n";
-
+  
   return res;
 }
 
