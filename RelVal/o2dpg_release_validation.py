@@ -113,10 +113,11 @@ REL_VAL_SEVERITIES = ["GOOD", "WARNING", "NONCRIT_NC", "CRIT_NC", "BAD"]
 REL_VAL_SEVERITIES_USE_SUMMARY = [True, False, False, True, True]
 REL_VAL_SEVERITY_MAP = {v: i for i, v in enumerate(REL_VAL_SEVERITIES)}
 REL_VAL_SEVERITY_COLOR_MAP = {"GOOD": "green", "WARNING": "orange", "NONCRIT_NC": "cornflowerblue", "CRIT_NC": "navy", "BAD": "red"}
-REL_VAL_TEST_NAMES = ["chi2", "bin_cont", "num_entries"]
+REL_VAL_TEST_NAMES = ["chi2", "kolmogorov", "num_entries"]
 REL_VAL_TEST_NAMES_MAP = {v: i for i, v in enumerate(REL_VAL_TEST_NAMES)}
 REL_VAL_TEST_CRITICAL = [True, True, False]
-REL_VAL_TEST_DEFAULT_THRESHOLDS = [1.5, 1.5, 0.01]
+REL_VAL_TEST_DEFAULT_THRESHOLDS = [1.5, 0.5, 0.01]
+REL_VAL_TEST_UPPER_LOWER_THRESHOLD = [1, -1, 1]
 REL_VAL_TEST_SUMMARY_NAME = "summary"
 REL_VAL_TEST_NAMES_SUMMARY = REL_VAL_TEST_NAMES + [REL_VAL_TEST_SUMMARY_NAME]
 REL_VAL_TEST_NAMES_MAP_SUMMARY = {v: i for i, v in enumerate(REL_VAL_TEST_NAMES_SUMMARY)}
@@ -224,7 +225,7 @@ def file_sizes(dirs, threshold):
     return collect_dict
 
 
-def load_patterns(include_patterns, exclude_patterns):
+def load_patterns(include_patterns, exclude_patterns, print_loaded=True):
     """
     Load include patterns to be used for regex comparion
     """
@@ -236,14 +237,15 @@ def load_patterns(include_patterns, exclude_patterns):
 
     include_patterns = load_this_patterns(include_patterns)
     exclude_patterns = load_this_patterns(exclude_patterns)
-    if include_patterns:
-        print("Following patterns are included:")
-        for ip in include_patterns:
-            print(f"  - {ip}")
-    if exclude_patterns:
-        print("Following patterns are excluded:")
-        for ep in exclude_patterns:
-            print(f"  - {ep}")
+    if print_loaded:
+        if include_patterns:
+            print("Following patterns are included:")
+            for ip in include_patterns:
+                print(f"  - {ip}")
+        if exclude_patterns:
+            print("Following patterns are excluded:")
+            for ep in exclude_patterns:
+                print(f"  - {ep}")
     return include_patterns, exclude_patterns
 
 
@@ -263,6 +265,24 @@ def check_patterns(name, include_patterns, exclude_patterns):
             if re.search(ip, name):
                 return False
         return True
+    return False
+
+def check_flags(tests, flags, flags_summary):
+    """
+    include histograms based on the flags
+    """
+    if not flags and not flags_summary:
+        return True
+    for test in tests:
+        if test["test_name"] == REL_VAL_TEST_SUMMARY_NAME:
+            if flags_summary:
+                for f in flags_summary:
+                    if test["result"] == f:
+                        return True
+        elif flags:
+            for f in flags:
+                if test["result"] == f:
+                    return True
     return False
 
 
@@ -514,7 +534,7 @@ def calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args):
     return the_thresholds
 
 
-def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, exclude_patterns=None):
+def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, exclude_patterns=None, flags=None, flags_summary=None):
     """
     Make the usual summary
     """
@@ -548,6 +568,8 @@ def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, e
     for histo_name, tests in rel_val_dict.items():
         if not check_patterns(histo_name, include_patterns, exclude_patterns):
             continue
+        if not check_flags(tests, flags, flags_summary):
+            continue
         test_summary = {"test_name": REL_VAL_TEST_SUMMARY_NAME,
                         "value": None,
                         "threshold": None,
@@ -568,7 +590,7 @@ def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, e
             passed = True
             is_critical = REL_VAL_TEST_CRITICAL[test_id] or histo_name.find("_ratioFromTEfficiency") != -1
             if comparable:
-                passed = t["value"] <=  threshold
+                passed = t["value"]*REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[t["test_name"]]] <=  threshold*REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[t["test_name"]]]
 
             t["result"] = assign_result_flag(is_critical, comparable, passed)
 
@@ -805,22 +827,21 @@ def rel_val(args):
     print_summary(global_summary)
     return 0
 
+def get_filepath(d):
+    summary_global = join(d, "SummaryGlobal.json")
+    if exists(summary_global):
+        return summary_global
+    summary = join(d, "Summary.json")
+    if exists(summary):
+        return summary
+    print(f"Can neither find {summary_global} nor {summary}. Nothing to work with.")
+    return None
 
 def inspect(args):
     """
     Inspect a Summary.json in view of RelVal severity
     """
     path = args.path
-
-    def get_filepath(d):
-        summary_global = join(d, "SummaryGlobal.json")
-        if exists(summary_global):
-            return summary_global
-        summary = join(d, "Summary.json")
-        if exists(summary):
-            return summary
-        print(f"Can neither find {summary_global} nor {summary}. Nothing to work with.")
-        return None
 
     if isdir(path):
         path = get_filepath(path)
@@ -832,10 +853,12 @@ def inspect(args):
         makedirs(output_dir)
 
     include_patterns, exclude_patterns = load_patterns(args.include_patterns, args.exclude_patterns)
+    flags = args.flags
+    flags_summary = args.flags_summary
     current_summary = None
     with open(path, "r") as f:
         current_summary = json.load(f)
-    summary = make_single_summary(current_summary, args, output_dir, include_patterns, exclude_patterns)
+    summary = make_single_summary(current_summary, args, output_dir, include_patterns, exclude_patterns, flags, flags_summary)
     with open(join(output_dir, "Summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
     print_summary(summary, include_patterns)
@@ -964,6 +987,27 @@ def dir_comp(args):
         json.dump(file_sizes_to_json, f, indent=2)
     return 0
 
+def print_table(args):
+    """
+    Print the filtered histogram names of a Summary.json as list to screen
+    """
+    path = args.path
+    if isdir(path):
+        path = get_filepath(path)
+        if not path:
+            return 1
+
+    include_patterns, exclude_patterns = load_patterns(args.include_patterns, args.exclude_patterns, False)
+    with open(path, "r") as f:
+        summary = json.load(f)
+    for histo_name, tests in summary.items():
+        if not check_patterns(histo_name, include_patterns, exclude_patterns):
+            continue
+        if not check_flags(tests, args.flags, args.flags_summary):
+            continue
+        print(f"{histo_name}")
+
+    return 0
 
 def print_header():
     print(f"\n{'#' * 25}\n#{' ' * 23}#\n# RUN ReleaseValidation #\n#{' ' * 23}#\n{'#' * 25}\n")
@@ -991,6 +1035,10 @@ def main():
     common_pattern_parser.add_argument("--include-patterns", dest="include_patterns", nargs="*", help="include objects whose name includes at least one of the given patterns (takes precedence)")
     common_pattern_parser.add_argument("--exclude-patterns", dest="exclude_patterns", nargs="*", help="exclude objects whose name includes at least one of the given patterns")
 
+    common_flags_parser = argparse.ArgumentParser(add_help=False)
+    common_flags_parser.add_argument("--flags", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(REL_VAL_SEVERITY_MAP.keys()))
+    common_flags_parser.add_argument("--flags-summary", dest="flags_summary", nargs="*", help="extract all objects which have this severity flag as overall test result", choices=list(REL_VAL_SEVERITY_MAP.keys()))
+
     sub_parsers = parser.add_subparsers(dest="command")
     rel_val_parser = sub_parsers.add_parser("rel-val", parents=[common_file_parser, common_threshold_parser])
     rel_val_parser.add_argument("--dir-config", dest="dir_config", help="What to take into account in a given directory")
@@ -1001,10 +1049,9 @@ def main():
     rel_val_parser.add_argument("--output", "-o", help="output directory", default="rel_val")
     rel_val_parser.set_defaults(func=rel_val)
 
-    inspect_parser = sub_parsers.add_parser("inspect", parents=[common_threshold_parser, common_pattern_parser])
+    inspect_parser = sub_parsers.add_parser("inspect", parents=[common_threshold_parser, common_pattern_parser, common_flags_parser])
     inspect_parser.add_argument("path", help="either complete file path to a Summary.json or SummaryGlobal.json or directory where one of the former is expected to be")
     inspect_parser.add_argument("--plot", action="store_true", help="Plot the summary grid")
-    inspect_parser.add_argument("--flags", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(REL_VAL_SEVERITY_MAP.keys()))
     inspect_parser.add_argument("--output", "-o", help="output directory, by default points to directory where the Summary.json was found")
     inspect_parser.set_defaults(func=inspect)
 
@@ -1022,13 +1069,18 @@ def main():
     influx_parser.add_argument("--table-suffix", dest="table_suffix", help="prefix for table name")
     influx_parser.set_defaults(func=influx)
 
+    print_parser = sub_parsers.add_parser("print", parents=[common_pattern_parser, common_flags_parser])
+    print_parser.add_argument("path", help="either complete file path to a Summary.json or SummaryGlobal.json or directory where one of the former is expected to be")
+    print_parser.set_defaults(func=print_table)
+
     file_size_parser = sub_parsers.add_parser("file-sizes", parents=[common_file_parser])
     file_size_parser.add_argument("--threshold", type=float, default=0.5, help="threshold for how far file sizes are allowed to diverge before warning")
     file_size_parser.add_argument("--output", "-o", help="output directory", default="file_sizes")
     file_size_parser.set_defaults(func=dir_comp)
 
     args = parser.parse_args()
-    print_header()
+    if not args.command == "print":
+        print_header()
     return(args.func(args))
 
 if __name__ == "__main__":
