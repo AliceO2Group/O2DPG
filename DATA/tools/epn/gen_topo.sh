@@ -20,6 +20,7 @@ if [[ $USER == "epn" ]]; then
   [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=/scratch/services/gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
 else
   [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=$HOME/gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
+  mkdir -p $HOME/gen_topo
 fi
 [[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]] && export GEN_TOPO_ODC_EPN_TOPO_ARGS="--recozone online --calibzone calib" # Arguments to pass to odc-epn-topo command
 [[ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]] && export GEN_TOPO_EPN_CCDB_SERVER="http://127.0.0.1:8084" # CCDB server to use
