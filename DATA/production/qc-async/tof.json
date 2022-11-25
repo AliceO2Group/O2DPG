@@ -36,7 +36,11 @@
         },
         "taskParameters": {
           "Diagnostic": "true",
-          "NoiseClassSelection": "0"
+          "PerChannel": "True",
+          "RangeMaxMultiplicity": "15000",
+          "NbinsMultiplicity": "15000",
+          "applyCalib": "True",
+          "NoiseClassSelection": "1"
         }
       }
     },
