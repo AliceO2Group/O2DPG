@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
-from os.path import join, exists, basename, dirname, abspath
+from os.path import join, exists, basename, dirname
 from os import makedirs
+from math import ceil
 import argparse
 import re
 from glob import glob
@@ -10,20 +11,57 @@ import matplotlib.pyplot as plt
 import matplotlib
 import json
 
-
 ################################################################
 #                                                              #
 # script to exctract and plot metrics of a simulation workflow #
 #                                                              #
 ################################################################
 
-# example usage
-# o2dpg_sim_metrics.py --path <path/to/pipeline_metrics.log> -o <output/directory>
+# Plot CPU, mem and time of a simulation workflow: subcommand plot-metrics
 #
-# calculates and plots
-# 1. overall CPU efficiency (--cpu-eff)
-# 2. metrics of different simulation categories (--metrics-summary)
-# in addition it can create a file which can be uploaded to InfluxDB for further usage, e.g. Grafana (--influxdb-file)
+# usage: o2dpg_sim_metrics.py plot-metrics [-h] -p [PIPELINES ...] [--metrics-summary] [--cpu-eff] [--mem-usage] [--output OUTPUT] [--filter FILTER]
+
+# options:
+#   -h, --help            show this help message and exit
+#   -p [PIPELINES ...], --pipelines [PIPELINES ...]
+#                         pipeline_metric files from o2_dpg_workflow_runner
+#   --metrics-summary     create the metrics summary
+#   --cpu-eff             run only cpu efficiency evaluation
+#   --mem-usage           run mem usage evaluation
+#   --output OUTPUT       output_directory
+#   --filter FILTER       regex to filter only on certain names in pipeline iterations
+#
+#
+# make a new resource estimate based on previous runs
+#
+# usage: o2dpg_sim_metrics.py resource-estimate [-h] -p [PIPELINES ...] [--which [{mem,cpu} ...]] [--take {average,max,min}] [--output OUTPUT]
+
+# options:
+#   -h, --help            show this help message and exit
+#   -p [PIPELINES ...], --pipelines [PIPELINES ...]
+#                         pipeline_metric files from o2_dpg_workflow_runner
+#   --which [{mem,cpu} ...]
+#                         which resources to derive for estimate (cpu or mem or both)
+#   --take {average,max,min}
+#                         how to combine multiple pipeline_metric files
+#   --output OUTPUT, -o OUTPUT
+#                         JSON file with resource estimates to be passed to o2_dpg_workflow_runner
+#
+#
+# make a text file which can be parsed by influxDB to visualise metrics
+#
+# usage: o2dpg_sim_metrics.py influx [-h] -p PIPELINE [--table-base TABLE_BASE] [--output OUTPUT] [--tags TAGS]
+
+# options:
+#   -h, --help            show this help message and exit
+#   -p PIPELINE, --pipeline PIPELINE
+#                         exactly one pipeline_metric file from o2_dpg_workflow_runner to prepare for InfluxDB
+#   --table-base TABLE_BASE
+#                         base name of InfluxDB table name
+#   --output OUTPUT, -o OUTPUT
+#                         output file name
+#   --tags TAGS           key-value pairs, seperated by ";", for example: alidist=1234567;o2=7654321;tag=someTag
+
 
 # metrics to be extracted
 MET_TO_IND = {"time": 0, "cpu": 1, "uss": 2, "pss": 3}
@@ -34,7 +72,7 @@ CATEGORIES_REG = [re.compile(c, flags=re.IGNORECASE) for c in CATEGORIES_RAW]
 CATEGORIES_EXCLUDE = ["", "QC", "", "", "", "QC", "QC", ""]
 
 # detectors to extract metrics for
-DETECTORS = ["ITS", "TOF", "EMC", "TRD", "PHS", "FT0", "HMP", "MFT", "FDD", "FV0", "MCH", "MID", "CPV", "ZDC", "TPC"]
+DETECTORS = ["rest", "ITS", "TOF", "EMC", "TRD", "PHS", "FT0", "HMP", "MFT", "FDD", "FV0", "MCH", "MID", "CPV", "ZDC", "TPC"]
 
 def find_files(path, search, depth=0):
   files = []
@@ -50,7 +88,10 @@ def number_of_timeframes(path):
   Derive number of timeframes from what is found in path
   """
   files = find_files(path, "tf*")
-  return max(len(files), 1)
+  if not len(files):
+    print("WARNING: Cannot derive number of timeframes, set it to 1")
+    return 1
+  return len(files)
 
 
 def extract_time_single(path):
@@ -60,78 +101,69 @@ def extract_time_single(path):
         return float(l.strip().split()[-1])
 
 
-def match_category(proposed):
+def get_parent_category(proposed):
   """
   Match a base category to a proposed sub-category
   """
   cat = [cr for cr, creg, ce in zip(CATEGORIES_RAW, CATEGORIES_REG, CATEGORIES_EXCLUDE) if creg.search(proposed) and (not ce or ce not in proposed)]
   if not cat:
     #print(f"{proposed} not falling in one of the categories of interest")
-    return None, None
+    return None
   if len(cat) != 1:
     print(f"ERROR: Found more than 1 matching category")
     print(cat)
-    return None, None
-  return cat[0], proposed
+    return None
+  return cat[0]
 
 
-def extract_metric_over_time(pipeline_metrics, key):
-  iterations = []
-  for pm in pipeline_metrics:
-    if len(iterations) < pm["iter"]:
-      # NOTE that iterations start at 1 and NOT at 0
-      iterations.extend([0] * (pm["iter"] - len(iterations)))
-    iterations[pm["iter"] - 1] += pm[key]
-  return iterations
+def jsonise_pipeline(path):
+  if not exists(path):
+      print(f"ERROR: pipeline_metrics file not found at {path}")
+      return None
 
-
-def make_cat_map(pipeline_path):
-  """
-  Extract and calculate metrcis and CPU efficiency from pipeline_metrics (which was created by the o2_workflow_runner)
-  """
   # start with memory and CPU and construct the full dictionaries step-by-step
-  current_pipeline = {"name": basename(pipeline_path), "metric_name_to_index": MET_TO_IND, "metrics": {}} 
-  current_pipeline_metrics = []
-  with open(pipeline_path, "r") as f:
+  json_pipeline = {"name": basename(path), "metric_name_to_index": MET_TO_IND, "iterations": []} 
+  iterations = json_pipeline["iterations"]
+  metrics_map = {}
+  json_pipeline["summary"] = metrics_map
+  with open(path, "r") as f:
     for l in f:
       l = l.strip().split()
       l = " ".join(l[3:])
       # make it JSON readable
       l = l.replace("'", '"')
       l = l.replace("None", "null")
-      d = json.loads(l)
+      try:
+        d = json.loads(l)
+      except json.decoder.JSONDecodeError:
+        # We just ignire this case
+        # For instance, there might be lines like ***MEMORY LIMIT PASSED !!***
+        continue
       if "iter" in d:
-        current_pipeline_metrics.append(d)
-      elif "meta" not in current_pipeline and "mem_limit" in d:
-        current_pipeline["meta"] = d
+        iterations.append(d)
+        name = d["name"]
+        if name not in metrics_map:
+            metrics_map[name] = [0] * len(MET_TO_IND)
+        for metric in ["uss", "pss", "cpu"]:
+          ind = MET_TO_IND[metric]
+          # we are dealing here with multiple iterations for the same sub category due to the way the metrics monitoring works
+          # let's take the maximum to be conservavtive
+          metrics_map[name][ind] = max(metrics_map[name][ind], d[metric])
+
+      elif "meta" not in json_pipeline and "mem_limit" in d:
+        json_pipeline["meta"] = d
 
   # protect against potential str values there
-  current_pipeline["meta"]["cpu_limit"] = float(current_pipeline["meta"]["cpu_limit"])
-  current_pipeline["meta"]["mem_limit"] = float(current_pipeline["meta"]["mem_limit"])
+  json_pipeline["meta"]["cpu_limit"] = float(json_pipeline["meta"]["cpu_limit"])
+  json_pipeline["meta"]["mem_limit"] = float(json_pipeline["meta"]["mem_limit"])
 
-  cpu_limit = current_pipeline["meta"]["cpu_limit"]
-  # scale by constraint number of CPUs
-  current_pipeline["cpu_efficiencies"] = [e / cpu_limit for e in extract_metric_over_time(current_pipeline_metrics, "cpu")]
-  current_pipeline["pss_vs_time"] = extract_metric_over_time(current_pipeline_metrics, "pss")
-  current_pipeline["uss_vs_time"] = extract_metric_over_time(current_pipeline_metrics, "uss")
-  
-  metrics_map = current_pipeline["metrics"]
-  for mm in current_pipeline_metrics:
-    name = mm["name"]
-    if name not in metrics_map:
-        metrics_map[name] = [0] * len(MET_TO_IND)
-    for metric in ["uss", "pss", "cpu"]:
-      ind = MET_TO_IND[metric]
-      # we are dealing here with multiple iterations for the same sub category due to the way the metrics monitoring works
-      # let's take the maximum to be conservavtive
-      metrics_map[name][ind] = max(metrics_map[name][ind], mm[metric])
+  # add the number of timeframes
+  ntfs = number_of_timeframes(dirname(path))
+  json_pipeline["tags"] = {"ntfs": ntfs}
 
-  # add walltimes
-  pipeline_dir = dirname(pipeline_path)
-  files = find_files(pipeline_dir, "*.log_time", 1)
+  files = find_files(dirname(path), "*.log_time", 1)
   if not files:
-      print(f"WARNING: Cannot find time logs in {pipeline_dir}. Either your pipeline file is not at the root of the directory where the workflow was run or they were removed")
-      return current_pipeline
+    return json_pipeline
 
   for f in files:
     # name from time log file
@@ -143,19 +175,15 @@ def make_cat_map(pipeline_path):
       metrics_map[name] = [0] * len(MET_TO_IND)
     metrics_map[name][0] = time
 
-  return current_pipeline
+  return json_pipeline
 
 
-def arrange_into_categories(metrics_map_in):
-
-    if "metrics" not in metrics_map_in:
-        print("WARNING: Cannot find key \"metrics\" in input dictionary")
-        return {}
+def arrange_into_categories(json_pipeline):
 
     metrics_map = {}
 
-    for name, metrics in metrics_map_in["metrics"].items():
-        cat, cat_sub = match_category(name)
+    for cat_sub, metrics in json_pipeline["summary"].items():
+        cat = get_parent_category(cat_sub)
         if not cat:
             # no parent category found
             continue
@@ -172,14 +200,15 @@ def arrange_into_categories(metrics_map_in):
     return metrics_map
 
 
-def make_default_figure(ax=None):
+def make_default_figure(ax=None, **fig_args):
   """Make a default figure with one axes
 
   args:
     ax: matplorlib.pyplot.Axes (optional)
   """
   if ax is None:
-    return plt.subplots(figsize=(20, 20))
+    fig_args["figsize"] = fig_args.get("figsize", (20, 20))
+    return plt.subplots(**fig_args)
   else:
     return ax.get_figure, ax
 
@@ -248,7 +277,7 @@ def make_histo(x, y, xlabel, ylabel, ax=None, cmap=None, norm=True, title=None, 
   return figure, ax
 
 
-def make_plot(x, y, xlabel, ylabel, ax=None, title=None, **kwargs):
+def make_plot(x, y, xlabel, ylabel, ax=None, **kwargs):
   """
   Make a histogram
 
@@ -267,9 +296,6 @@ def make_plot(x, y, xlabel, ylabel, ax=None, title=None, **kwargs):
       title to be put for figure
   """
   
-  # Only set the labels if we don't have an axes yet
-  set_labels = ax is None
-  
   figure, ax = make_default_figure(ax)
 
   if not len(x) or not len(y):
@@ -279,11 +305,8 @@ def make_plot(x, y, xlabel, ylabel, ax=None, title=None, **kwargs):
   ax.plot(x, y, **kwargs)
   ax.tick_params("both", labelsize=30)
   ax.tick_params("x", rotation=45)
-  if set_labels:
-    ax.set_xlabel(xlabel, fontsize=30)
-    ax.set_ylabel(ylabel, fontsize=30)
-    if title:
-      figure.suptitle(title, fontsize=40)
+  ax.set_xlabel(xlabel, fontsize=30)
+  ax.set_ylabel(ylabel, fontsize=30)
 
   return figure, ax
 
@@ -411,15 +434,39 @@ def filter_metric_per_detector(metrics, cat, metric):
   return labels, acc_list
 
 
-def make_for_influxDB(metrics, tags, table_base_name, save_path):
+def extract_from_pipeline(json_pipeline, fields, filter=None):
+  """
+  Extract given fields from pipeline based on potential regex filter
+  """
+  iterations_y = [[] for _ in fields]
+  iterations_x = [[] for _ in fields]
+  for it in json_pipeline["iterations"]:
+      if not check_regex(it["name"], filter):
+        continue
+      for j, f in enumerate(fields):
+        this_iteration = iterations_y[j]
+        if len(this_iteration) < it["iter"]:
+          iterations_x[j].append(it["iter"] - 1)
+          this_iteration.extend([0] * (it["iter"] - len(this_iteration)))
+        this_iteration[it["iter"] - 1] += float(it[f])
+  for i, it_x in enumerate(iterations_x):
+    iterations_y[i] = [iterations_y[i][x] for x in it_x]
+  return json_pipeline["name"], iterations_x, iterations_y
+
+
+def make_for_influxDB(json_pipeline, tags, table_base_name, save_path):
   """
   Make metric files to be sent to InfluxDB for monitoring on Grafana
   """
+  n_cpu = json_pipeline["meta"]["cpu_limit"]
+  tags = ",".join([f"{k}={v}" for k, v in json_pipeline.get("tags", {}).items()])
+  if tags:
+    tags = f",{tags}"
+  metrics = arrange_into_categories(json_pipeline)
   with open(save_path, "w") as f:
     for metric_name, metric_id in MET_TO_IND.items():
       tab_name = f"{table_base_name}_workflows_{metric_name}"
-      fields = ",".join([f"{k}={v}" for k, v in tags.items()])
-      db_string = f"{tab_name},{fields}"
+      db_string = f"{tab_name}{tags}"
       total = 0
       # fields are separated from the tags by a whitespace
       fields = []
@@ -429,150 +476,220 @@ def make_for_influxDB(metrics, tags, table_base_name, save_path):
       fields = ",".join(fields)
       db_string += f" {fields},total={total}"
       f.write(f"{db_string}\n")
+
+      if metric_id == 0:
+        # don't do the following for time
+        continue
+      _, _, iterations_y = extract_from_pipeline(json_pipeline, (metric_name,))
+      tab_name = f"{table_base_name}_workflows_{metric_name}_per_cpu"
+      iterations = [it / n_cpu if metric_id == 1 else it for it in iterations_y[0]]
+      # now we need to make the string for influx DB
+      db_string = f"{tab_name}{tags} minimum={min(iterations)},maximum={max(iterations)},average={sum(iterations) / len(iterations)}"
+      f.write(f"{db_string}\n")
+
   return 0
 
 
-def extract(args):
-    full_path = abspath(args.path)
-    if not exists(full_path):
-        print(f"ERROR: pipeline_metrics file not found at {full_path}")
-        return 1
+def check_regex(to_check, filter):
+  """
+  Quickly check if to_check holds against regex filter
+  """
+  if not filter:
+    return True
+  return bool(re.search(filter, to_check))
 
-    metrics_map = make_cat_map(full_path)
-    if not metrics_map:
-        print(f"ERROR: Could not extract metrics")
-        return 1
 
-    dir_path = dirname(full_path)
+def plot_mem_usage(json_pipelines, out_dir, filter=None, *, only_agerage=False):
+  """
+  Plotting the memory usage as a function of iterations
+  Provide min, max and average in addition, particularly useful when investigating changes of resources needed by workflow
+  """
+  figure_pss, ax_pss = make_default_figure()
+  figure_uss, ax_uss = make_default_figure()
+  names = []
+  averages_pss = []
+  averages_uss = []
+  min_pss = []
+  max_pss = []
+  min_uss = []
+  max_uss = []
 
-    # add the number of timeframes
-    ntfs = number_of_timeframes(dir_path)
-    metrics_map["tags"] = {"ntfs": ntfs}
+  linestyles = ["solid", "dashed", "dashdot"]
+  for jp_i, jp in enumerate(json_pipelines):
+    name, iterations_x, iterations_y = extract_from_pipeline(jp, ("pss", "uss"), filter)
+    if not iterations_y[0] or not iterations_y[1]:
+      continue
+    names.append(f"{jp_i}_{name}")
+    average_pss = sum(iterations_y[0]) / len(iterations_y[0])
+    average_uss = sum(iterations_y[1]) / len(iterations_y[1])
+    averages_pss.append(average_pss)
+    averages_uss.append(average_uss)
+    min_pss.append(min(iterations_y[0]))
+    max_pss.append(max(iterations_y[0]))
+    min_uss.append(min(iterations_y[1]))
+    max_uss.append(max(iterations_y[1]))
 
-    # Add some more tags specified by the user
-    if args.tags:
+    ls = linestyles[jp_i%len(linestyles)]
+
+    make_plot(iterations_x[0], iterations_y[0], "sampling iterations", "PSS [MB]", ax_pss, label=name, ls=ls)
+    make_plot(iterations_x[1], iterations_y[1], "sampling iterations", "USS [MB]", ax_uss, label=name, ls=ls)
+    ax_pss.axhline(average_pss, color=ax_pss.lines[-1].get_color(), linestyle=ls)
+    ax_pss.text(0, average_pss, f"Average: {average_pss:.2f} MB", fontsize=30)
+    ax_uss.axhline(average_uss, color=ax_uss.lines[-1].get_color(), linestyle=ls)
+    ax_uss.text(0, average_uss, f"Average: {average_uss:.2f} MB", fontsize=30)
+
+  ax_pss.legend(loc="best")
+  ax_uss.legend(loc="best")
+
+  save_figure(figure_pss, join(out_dir, f"pss_vs_iterations.png"))
+  save_figure(figure_uss, join(out_dir, f"uss_vs_iterations.png"))
+
+  if len(json_pipelines) > 1:
+    figure, ax = make_default_figure()
+    make_plot(names, averages_pss, "pipeline names", "PSS [MB]", ax, label="average", ls=linestyles[0])
+    make_plot(names, min_pss, "pipeline names", "PSS [MB]", ax, label="min", ls=linestyles[1])
+    make_plot(names, max_pss, "pipeline names", "PSS [MB]", ax, label="max", ls=linestyles[2])
+    ax.tick_params("x", rotation=90)
+    ax.legend(loc="best", fontsize=20)
+    save_figure(figure, join(out_dir, f"pss_min_max_average.png"))
+    figure, ax = make_default_figure()
+    make_plot(names, averages_uss, "pipeline names", "USS [MB]", ax, label="average", ls=linestyles[0])
+    make_plot(names, min_uss, "pipeline names", "USS [MB]", ax, label="min", ls=linestyles[1])
+    make_plot(names, max_uss, "pipeline names", "USS [MB]", ax, label="max", ls=linestyles[2])
+    ax.tick_params("x", rotation=90)
+    ax.legend(loc="best", fontsize=20)
+    save_figure(figure, join(out_dir, f"uss_min_max_average.png"))
+
+
+def plot_cpu_eff(json_pipelines, out_dir, filter=None):
+  """
+  Plotting the memory usage as a function of iterations
+  Provide min, max and average in addition, particularly useful when investigating changes of resources needed by workflow
+  """
+  names = []
+  averages = []
+  mins = []
+  maxs = []
+  figure, ax = make_default_figure()
+  linestyles = ["solid", "dashed", "dashdot"]
+  for jp_i, jp in enumerate(json_pipelines):
+    name, iterations_x, iterations_y = extract_from_pipeline(jp, ("cpu",), filter)
+    ls = linestyles[jp_i%len(linestyles)]
+    n_cpu = jp["meta"]["cpu_limit"]
+    iterations = [it / n_cpu for it in iterations_y[0]]
+    if not iterations:
+      continue
+    names.append(f"{jp_i}_{name}")
+    average = sum(iterations) / len(iterations)
+    mins.append(min(iterations))
+    maxs.append(max(iterations))
+    averages.append(average)
+
+    make_plot(iterations_x[0], iterations, "sampling iterations", "CPU efficiency [%]", ax, label=name, ls=ls)
+    ax.axhline(average, color=ax.lines[-1].get_color(), linestyle=ls)
+    ax.text(0, average, f"Average: {average:.2f} [%]", fontsize=30)
+
+  ax.legend(loc="best")
+  save_figure(figure, join(out_dir, f"cpu_efficiency_vs_iterations.png"))
+
+  if len(json_pipelines) > 1:
+    figure, ax = make_default_figure()
+    make_plot(names, averages, "pipeline names", "CPU efficiency [%]", ax, label="average", ls=linestyles[0])
+    make_plot(names, mins, "pipeline names", "CPU efficiency [%]", ax, label="minimum", ls=linestyles[1])
+    make_plot(names, maxs, "pipeline names", "CPU efficiency [%]", ax, label="maximum", ls=linestyles[2])
+    ax.tick_params("x", rotation=90)
+    ax.legend(loc="best", fontsize=20)
+    save_figure(figure, join(out_dir, f"cpu_efficiency_min_max_average.png"))
+
+
+def plot(args):
+    if not args.metrics_summary and not args.cpu and not args.mem:
+        # if nothing is given explicitly, do everything
+        args.metrics_summary, args.cpu, args.mem = (True, True, True)
+    
+    out_dir = args.output
+    if not exists(out_dir):
+      makedirs(out_dir)
+    
+    metrics_maps = []
+    metrics_maps_categories = []
+
+    # collect pipeline names for which no times could be extracted
+    no_times = []
+    
+    for m in args.pipelines:
+        metrics_maps.append(jsonise_pipeline(m))
+        metrics_maps_categories.append(arrange_into_categories(metrics_maps[-1]))
+
+    if args.metrics_summary:
+      # a unified color map
+      cmap = matplotlib.cm.get_cmap("coolwarm")
+      
+      for mm, mmc in zip(metrics_maps, metrics_maps_categories):
+        cats = []
+        vals = [[] for _ in range(4)]
+        for cat, val in mmc.items():
+          cats.append(cat)
+          for i, _ in enumerate(vals):
+            vals[i].append(val["sum"][i])
+        if any(vals[0]):
+          plot_histo_and_pie(cats, vals[0], "sim category", "$\sum_{i\in\mathrm{tasks}} \mathrm{walltime}_i\,[s]$", join(out_dir, f"walltimes_{mm['name']}.png"), cmap=cmap, title="TIME (per TF)", scale=1./mm["tags"]["ntfs"])
+        else:
+          no_times.append(mm["name"])
+        plot_histo_and_pie(cats, vals[1], "sim category", "$\sum_{i\in\mathrm{tasks}} \mathrm{CPU}_i\,[\%]$", join(out_dir, f"cpu_{mm['name']}.png"), cmap=cmap, title="CPU (per TF)", scale=1./mm["tags"]["ntfs"])
+        plot_histo_and_pie(cats, vals[2], "sim category", "$\sum_{i\in\mathrm{tasks}} \mathrm{USS}_i\,[MB]$", join(out_dir, f"uss_{mm['name']}.png"), cmap=cmap, title="USS (per TF)", scale=1./mm["tags"]["ntfs"])
+        plot_histo_and_pie(cats, vals[3], "sim category", "$\sum_{i\in\mathrm{tasks}} \mathrm{PSS}_i\,[MB]$", join(out_dir, f"pss_{mm['name']}.png"), cmap=cmap, title="PSS (per TF)", scale=1./mm["tags"]["ntfs"])
+
+        # Make pie charts for digit and reco
+        if any(vals[0]):
+          plot_any(make_pie, join(out_dir, f"digi_time_{mm['name']}.png"), *filter_metric_per_detector(mmc, "digi", "time"), cmap=cmap, title="Time digitization")
+          plot_any(make_pie, join(out_dir, f"reco_time_{mm['name']}.png"), *filter_metric_per_detector(mmc, "reco", "time"), cmap=cmap, title="Time econstruction")
+        plot_any(make_pie, join(out_dir, f"digi_cpu_{mm['name']}.png"), *filter_metric_per_detector(mmc, "digi", "cpu"), cmap=cmap, title="CPU digitzation")
+        plot_any(make_pie, join(out_dir, f"reco_cpu_{mm['name']}.png"), *filter_metric_per_detector(mmc, "reco", "cpu"), cmap=cmap, title="CPU reconstruction")
+
+      if no_times:
+        print("WARNING: For the following pipelines, no times could be extracted:")
+        for nt in no_times:
+          print(f"  {nt}")
+
+    if args.mem:
+      plot_mem_usage(metrics_maps, out_dir, args.filter)
+    if args.cpu:
+      plot_cpu_eff(metrics_maps, out_dir, args.filter)
+
+    return 0
+
+
+def influx(args):
+  
+  json_pipeline = jsonise_pipeline(args.pipeline)
+  if args.tags:
         pairs = args.tags.split(";")
         for p in pairs:
             key_val = p.split("=")
             if len(key_val) != 2:
                 print(f"WARNING: Found invalid key-value pair {p}, skip")
                 continue
-            metrics_map["tags"][key_val[0]] = key_val[1]
-            
-    # all metrics to one JSON
-    with open(args.output, "w") as f:
-        json.dump(metrics_map, f, indent=2)
-    
-    return 0
+            json_pipeline["tags"][key_val[0]] = key_val[1]
 
-
-def plot(args):
-    if not args.metrics_summary and not args.cpu_eff and not args.mem_usage:
-        # if nothing is given explicitly, do everything
-        args.metrics_summary, args.cpu_eff, args.mem_usage = (True, True, True)
-    
-    out_dir = args.output
-    
-    metrics_maps = []
-    metrics_maps_categories = []
-    
-    for m in args.metrics:
-        with open(m, "r") as f:
-            metrics_maps.append(json.load(f))
-            metrics_maps_categories.append(arrange_into_categories(metrics_maps[-1]))
-
-    if args.metrics_summary:
-        # a unified color map
-        cmap = matplotlib.cm.get_cmap("coolwarm")
-        
-        for mm, mmc in zip(metrics_maps, metrics_maps_categories):
-            cats = []
-            vals = [[] for _ in range(4)]
-            for cat, val in mmc.items():
-                cats.append(cat)
-                vals[0].append(val["sum"][0])
-                vals[1].append(val["sum"][1])
-                vals[2].append(val["sum"][2])
-                vals[3].append(val["sum"][3])
-            plot_histo_and_pie(cats, vals[0], "sim category", "walltime [s]", join(out_dir, f"walltimes_{mm['name']}.png"), cmap=cmap, title="TIME (per TF)", scale=1./mm["tags"]["ntfs"])
-            plot_histo_and_pie(cats, vals[1], "sim category", "CPU [%]", join(out_dir, f"cpu_{mm['name']}.png"), cmap=cmap, title="CPU (per TF)", scale=1./mm["tags"]["ntfs"])
-            plot_histo_and_pie(cats, vals[2], "sim category", "USS [MB]", join(out_dir, f"uss_{mm['name']}.png"), cmap=cmap, title="USS (per TF)", scale=1./mm["tags"]["ntfs"])
-            plot_histo_and_pie(cats, vals[3], "sim category", "PSS [MB]", join(out_dir, f"pss_{mm['name']}.png"), cmap=cmap, title="PSS (per TF)", scale=1./mm["tags"]["ntfs"])
-
-            # Make pie charts for digit and reco
-            plot_any(make_pie, join(out_dir, f"digi_time_{mm['name']}.png"), *filter_metric_per_detector(mmc, "digi", "time"), cmap=cmap, title="Time digitization")
-            plot_any(make_pie, join(out_dir, f"reco_time_{mm['name']}.png"), *filter_metric_per_detector(mmc, "reco", "time"), cmap=cmap, title="Time econstruction")
-            plot_any(make_pie, join(out_dir, f"digi_cpu_{mm['name']}.png"), *filter_metric_per_detector(mmc, "digi", "cpu"), cmap=cmap, title="CPU digitzation")
-            plot_any(make_pie, join(out_dir, f"reco_cpu_{mm['name']}.png"), *filter_metric_per_detector(mmc, "reco", "cpu"), cmap=cmap, title="CPU reconstruction")
-
-    # Provide some different line styles for overlay plots
-    linestyles = ["solid", "dashed", "dashdot"]
-
-    if args.cpu_eff:
-        figure, ax = figure, ax = make_default_figure()
-        ax.set_xlabel("sampling iteration", fontsize=30)
-        ax.set_ylabel("CPU efficiency [%]", fontsize=30)
-        for i, mm in enumerate(metrics_maps):
-            effs = mm["cpu_efficiencies"]
-            if effs:
-                ls = linestyles[i % len(linestyles)]
-                make_plot(range(len(effs)), effs, "", "", ax=ax, label=mm["name"], linestyle=ls)
-                global_eff = sum(effs) / len(effs)
-                ax.axhline(global_eff, color=ax.lines[-1].get_color(), linestyle=ls)
-                ax.text(0, global_eff, f"Overall efficiency: {global_eff:.2f} %", fontsize=30)
-            ax.legend(loc="best", fontsize=20)
-        save_figure(figure, join(out_dir, f"cpu_efficiency.png"))
-
-    if args.mem_usage:
-        figure_pss, ax_pss = figure, ax = make_default_figure()
-        ax_pss.set_xlabel("sampling iteration", fontsize=30)
-        ax_pss.set_ylabel("PSS [MB]", fontsize=30)
-        figure_uss, ax_uss = figure, ax = make_default_figure()
-        ax_uss.set_xlabel("sampling iteration", fontsize=30)
-        ax_uss.set_ylabel("USS [MB]", fontsize=30)
-        axes = [ax_pss, ax_uss]
-        figures = [figure_pss, figure_uss]
-        for met, ax, figure in zip(("pss_vs_time", "uss_vs_time"), axes, figures):
-            for i, mm in enumerate(metrics_maps):
-                iterations = mm[met]
-                if iterations:
-                    ls = linestyles[i % len(linestyles)]
-                    make_plot(range(len(iterations)), iterations, "", "", ax=ax, label=mm["name"], linestyle=ls)
-                    average = sum(iterations) / len(iterations)
-                    ax.axhline(average, color=ax.lines[-1].get_color(), linestyle=ls)
-                    ax.text(0, average, f"Average: {average:.2f} MB", fontsize=30)
-            ax.legend(loc="best", fontsize=20)
-            save_figure(figure, join(out_dir, f"{met}.png"))
-            
-    return 0
-
-
-def influx(args):
-    metrics_map = None
-    with open(args.metrics, "r") as f:
-        metrics_map = json.load(f)
-    return make_for_influxDB(arrange_into_categories(metrics_map), metrics_map["tags"], args.table_base, args.output)
+  return make_for_influxDB(json_pipeline, json_pipeline["tags"], args.table_base, args.output)
 
 
 def resources(args):
 
     # Collect all metrics we got
-    metrics = []
-    for m in args.metrics:
-        with open(m, "r") as f:
-            metrics.append(json.load(f))
-
+    json_pipelines = [jsonise_pipeline(m) for m in args.pipelines]
     # We will finally use the intersection of task names
-    intersection = [m for m in metrics[0]["metrics"]]
+    intersection = [m for m in json_pipelines[0]["summary"]]
     # union is built as a cross check, TODO, could be used to identify very fast tasks as well
-    union = [m for m in metrics[0]["metrics"]]
+    union = [m for m in json_pipelines[0]["summary"]]
     # collect number of timeframes for each metrics file
-    ntfs = [metrics[-1]["tags"]["ntfs"]]
+    ntfs = [json_pipelines[-1]["tags"]["ntfs"]]
 
-    for met in metrics[1:]:
-        intersection = list(set(intersection) & set([m for m in met["metrics"]]))
-        union = list(set(intersection) | set([m for m in met["metrics"]]))
-        ntfs.append(met["tags"]["ntfs"])
+    for jp in json_pipelines[1:]:
+        intersection = list(set(intersection) & set([m for m in jp["summary"]]))
+        union = list(set(intersection) | set([m for m in jp["summary"]]))
+        ntfs.append(jp["tags"]["ntfs"])
 
     if len(intersection) != len(union):
         print("WARNING: Input metrics seem to be different, union and intersection do not have the same length, using intersection. This can however happen when some tasks finish super fast")
@@ -603,7 +720,7 @@ def resources(args):
     # Collect here
     resources_map = {t: {} for t in tasks_per_tf + tasks_no_tf}
     # now let's only take what we are interested in
-    metrics = [m["metrics"] for m in metrics]
+    metrics = [jp["summary"] for jp in json_pipelines]
     # for convenience
     scaling_map = {"mem": lambda x: int(x), "cpu": lambda x: ceil(x * 0.01)}
     # for the workflows we specify mem and cpu, in the metrics we have pss/uss and cpu
@@ -637,35 +754,30 @@ def resources(args):
 def main():
 
   parser = argparse.ArgumentParser(description="Metrics evaluation of O2 simulation workflow")
-  
   sub_parsers = parser.add_subparsers(dest="command")
-  
-  extract_parser = sub_parsers.add_parser("extract", help="Extract metrics as JSON format from metric_pipeline")
-  extract_parser.set_defaults(func=extract)
-  extract_parser.add_argument("--path", help="path to pipeline_metrics file to be evaluated", required=True)
-  extract_parser.add_argument("--tags", help="key-value pairs, seperated by ;, example: alidist=1234567;o2=7654321;tag=someTag")
-  extract_parser.add_argument("--output", "-o", help="output name", default="metrics.json")
 
-  plot_parser = sub_parsers.add_parser("plot", help="Plot (multiple) metrcis from extracted metrics JSON file(s)")
+  plot_parser = sub_parsers.add_parser("plot-metrics", help="Plot (multiple) metrcis from extracted metrics JSON file(s)")
   plot_parser.set_defaults(func=plot)
-  plot_parser.add_argument("--metrics", nargs="+", help="metric JSON files")
-  plot_parser.add_argument("--cpu-eff", dest="cpu_eff", action="store_true", help="run only cpu efficiency evaluation")
-  plot_parser.add_argument("--mem-usage", dest="mem_usage", action="store_true", help="run mem usage evaluation")
-  plot_parser.add_argument("--output", help="output_directory", default="metrics_summary")
+  plot_parser.add_argument("-p", "--pipelines", nargs="*", help="pipeline_metric files from o2_dpg_workflow_runner", required=True)
   plot_parser.add_argument("--metrics-summary", dest="metrics_summary", action="store_true", help="create the metrics summary")
+  plot_parser.add_argument("--cpu", dest="cpu", action="store_true", help="run only cpu efficiency evaluation")
+  plot_parser.add_argument("--mem", dest="mem", action="store_true", help="run mem usage evaluation")
+  plot_parser.add_argument("--output", help="output_directory", default="metrics_summary")
+  plot_parser.add_argument("--filter", help="regex to filter only on certain names in pipeline iterations")
 
   influx_parser = sub_parsers.add_parser("influx", help="Derive a format which can be sent to InfluxDB")
   influx_parser.set_defaults(func=influx)
-  influx_parser.add_argument("--metrics", help="pmetric JSON file to prepare for InfluxDB", required=True)
+  influx_parser.add_argument("-p", "--pipeline", help="exactly one pipeline_metric file from o2_dpg_workflow_runner to prepare for InfluxDB", required=True)
   influx_parser.add_argument("--table-base", dest="table_base", help="base name of InfluxDB table name", default="O2DPG_MC")
-  influx_parser.add_argument("--output", "-o", help="pmetric JSON file to prepare for InfluxDB", default="metrics_influxDB.dat")
+  influx_parser.add_argument("--output", "-o", help="output file name", default="metrics_influxDB.dat")
+  influx_parser.add_argument("--tags", help="key-value pairs, seperated by \";\", for example: alidist=1234567;o2=7654321;tag=someTag")
 
-  resource_parser = sub_parsers.add_parser("resources", help="Derive resource estimate from metrics to be passed to workflow runner")
+  resource_parser = sub_parsers.add_parser("resource-estimate", help="Derive resource estimate from metrics to be passed to workflow runner")
   resource_parser.set_defaults(func=resources)
-  resource_parser.add_argument("--metrics", nargs="+", help="metric JSON files")
-  resource_parser.add_argument("--which", help="which resources to estimate", nargs="*", choices=["mem", "cpu"], default=["mem", "cpu"])
-  resource_parser.add_argument("--take", help="how to treat multiple input metric files", default="average", choices=["average", "max", "min"])
-  resource_parser.add_argument("--output", "-o", help="pmetric JSON file to prepare for InfluxDB", default="metrics_influxDB.dat")
+  resource_parser.add_argument("-p", "--pipelines", nargs="*", help="pipeline_metric files from o2_dpg_workflow_runner", required=True)
+  resource_parser.add_argument("--which", help="which resources to derive for estimate (cpu or mem or both)", nargs="*", choices=["mem", "cpu"], default=["mem", "cpu"])
+  resource_parser.add_argument("--take", help="how to combine multiple pipeline_metric files", default="average", choices=["average", "max", "min"])
+  resource_parser.add_argument("--output", "-o", help="JSON file with resource estimates to be passed to o2_dpg_workflow_runner", default="resource_estimates.json")
 
   args = parser.parse_args()
   return args.func(args)
