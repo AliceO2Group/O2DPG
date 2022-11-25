@@ -279,11 +279,10 @@ def check_flags(tests, flags, flags_summary):
                 for f in flags_summary:
                     if test["result"] == f:
                         return True
-        else:
-            if flags:
-                for f in flags:
-                    if test["result"] == f:
-                        return True
+        elif flags:
+            for f in flags:
+                if test["result"] == f:
+                    return True
     return False
 
 
@@ -988,7 +987,7 @@ def dir_comp(args):
         json.dump(file_sizes_to_json, f, indent=2)
     return 0
 
-def printTable(args):
+def print_table(args):
     """
     Print the filtered histogram names of a Summary.json as list to screen
     """
@@ -1072,7 +1071,7 @@ def main():
 
     print_parser = sub_parsers.add_parser("print", parents=[common_pattern_parser, common_flags_parser])
     print_parser.add_argument("path", help="either complete file path to a Summary.json or SummaryGlobal.json or directory where one of the former is expected to be")
-    print_parser.set_defaults(func=printTable)
+    print_parser.set_defaults(func=print_table)
 
     file_size_parser = sub_parsers.add_parser("file-sizes", parents=[common_file_parser])
     file_size_parser.add_argument("--threshold", type=float, default=0.5, help="threshold for how far file sizes are allowed to diverge before warning")
