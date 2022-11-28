@@ -26,7 +26,6 @@ private:
 }; 
 
 
-
 class GeneratorEMCocktailV2 : public GeneratorCocktail_class
 {
  public:
@@ -54,16 +53,45 @@ class GeneratorEMCocktailV2 : public GeneratorCocktail_class
     
   }
 
-  /*
-  GeneratorParamEMlibV2: enum Particle_t{kPizero=0, kEta=1, kRho0=2, kOmega=3, kEtaprime=4, kPhi=5, kJpsi=6,
-    kSigma0=7, kK0s=8, kDeltaPlPl=9, kDeltaPl=10, kDeltaMi=11, kDeltaZero=12,
-    kRhoPl=13, kRhoMi=14, kK0star=15, kK0l=16, kLambda=17, kKPl=18, kKMi=19,
-    kOmegaPl=20, kOmegaMi=21, kXiPl=22, kXiMi=23, kSigmaPl=24, kSigmaMi=25,
-    kDirectRealGamma=26, kDirectVirtGamma=27,kNParticles};
-    */
-  const char* GeneratorNames[GeneratorParamEMlibV2::kNParticles] = {"Pizero", "Eta", "Rho", "Omega", "Etaprime", "Phi", "Jpsi", "Sigma0", "K0short", "DeltaPlPl", "DeltaPl", "DeltaMi", "DeltaZero", "RhoPl", "RhoMi", "K0star", "K0long", "Lambda", "KPl", "KMi", "OmegaPl", "OmegaMi", "XiPl", "XiMi", "SigamPl", "SigmaMi", "DirectRealGamma", "DirectVirtGamma"};
-  Int_t ParticleIDs[GeneratorParamEMlibV2::kNParticles] = {111, 221, 113, 223, 331, 333, 443, 3212, 310, 2224, 2214, 1114, 2114, 213, 213, 313, 130, 3122, 321, 321, -3334, 3334, -3312, 3312, 3224, 3114, 22, 22};
-  Int_t ParticleGenerator[GeneratorParamEMlibV2::kNParticles] = {0x00001, 0x00002, 0x00004, 0x00008, 0x00010, 0x00020, 0x00040, 0x00080, 0x00100, 0x00200, 0x00400, 0x00800, 0x01000, 0x02000, 0x04000, 0x08000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000, 0x1000000, 0x2000000, 0x4000000, 0x8000000};
+  struct Generator {
+    Int_t LibID;
+    const char* Name;
+    Int_t ParticleID;
+    Int_t GeneratorID;
+  };
+  
+  Generator Generators[GeneratorParamEMlibV2::kNParticles]={
+    {GeneratorParamEMlibV2::kPizero, "Pizero", 111, 0x00001},
+    {GeneratorParamEMlibV2::kEta, "Eta", 221, 0x00002},
+    {GeneratorParamEMlibV2::kRho0, "Rho", 113, 0x00004},
+    {GeneratorParamEMlibV2::kOmega, "Omega", 223, 0x00008},
+    {GeneratorParamEMlibV2::kEtaprime, "Etaprime", 331, 0x00010},
+    {GeneratorParamEMlibV2::kPhi, "Phi", 333, 0x00020},
+    {GeneratorParamEMlibV2::kJpsi, "Jpsi", 443, 0x00040},
+    {GeneratorParamEMlibV2::kSigma0, "Sigma0", 3212, 0x00080},
+    {GeneratorParamEMlibV2::kK0s, "K0short", 310, 0x00100},
+    {GeneratorParamEMlibV2::kDeltaPlPl, "DeltaPlPl", 2224, 0x00200},
+    {GeneratorParamEMlibV2::kDeltaPl, "DeltaPl", 2214, 0x00400},
+    {GeneratorParamEMlibV2::kDeltaMi, "DeltaMi", 1114, 0x00800},
+    {GeneratorParamEMlibV2::kDeltaZero, "DeltaZero", 2114, 0x01000},
+    {GeneratorParamEMlibV2::kRhoPl, "RhoPl", 213, 0x02000},
+    {GeneratorParamEMlibV2::kRhoMi, "RhoMi", 213, 0x04000},
+    {GeneratorParamEMlibV2::kK0star, "K0star", 313, 0x08000},
+    {GeneratorParamEMlibV2::kK0l, "K0long", 130, 0x10000},
+    {GeneratorParamEMlibV2::kLambda, "Lambda", 3122, 0x20000},
+    {GeneratorParamEMlibV2::kKPl, "KPl", 321, 0x40000},
+    {GeneratorParamEMlibV2::kKMi, "KMi", 321, 0x80000},
+    {GeneratorParamEMlibV2::kOmegaPl, "OmegaPl", -3334, 0x100000},
+    {GeneratorParamEMlibV2::kOmegaMi, "OmegaMi", 3334, 0x200000},
+    {GeneratorParamEMlibV2::kXiPl, "XiPl", -3312, 0x400000},
+    {GeneratorParamEMlibV2::kXiMi, "XiMi", 3312, 0x800000},
+    {GeneratorParamEMlibV2::kSigmaPl, "SigamPl", 3224, 0x1000000},
+    {GeneratorParamEMlibV2::kSigmaMi, "SigmaMi", 3114, 0x2000000},
+    {GeneratorParamEMlibV2::kDirectRealGamma, "DirectRealGamma", 22, 0x4000000},
+    {GeneratorParamEMlibV2::kDirectVirtGamma, "DirectVirtGamma", 22, 0x8000000}
+  };
+
+  static const int nHadrons = GeneratorParamEMlibV2::kNParticles - 2; //total number of particles minus DirectRealGamma and DirectVirtGamma
 
   void    SetUseYWeighting(Bool_t useYWeighting)                      { fUseYWeighting = useYWeighting;   }
   void    SetDynamicalPtRange(Bool_t dynamicalPtRange)                { fDynPtRange = dynamicalPtRange;   }
@@ -87,11 +115,11 @@ class GeneratorEMCocktailV2 : public GeneratorCocktail_class
 
   Bool_t SetPtParametrizations() {
     TF1* tempFct = NULL;
-    for (Int_t i=0; i<27; i++) {
+    for (Int_t i=0; i<nHadrons+1; i++) {
       tempFct = GeneratorParamEMlibV2::GetPtParametrization(i);
       if (!tempFct) 
         return kFALSE;
-      if (i<26)
+      if (i<nHadrons)
         fPtParametrization[i] = new TF1(*tempFct);
       else
         fParametrizationProton = new TF1(*tempFct);
@@ -108,7 +136,7 @@ class GeneratorEMCocktailV2 : public GeneratorCocktail_class
 //_________________________________________________________________________
   Bool_t SetPtYDistributions() {
     TH2F* tempPtY = NULL;
-    for(Int_t i=0; i<26; i++) {
+    for(Int_t i=0; i<nHadrons; i++) {
       tempPtY = GeneratorParamEMlibV2::GetPtYDistribution(i);
       if (tempPtY)
         fPtYDistribution[i] = new TH2F(*tempPtY);
@@ -130,9 +158,9 @@ class GeneratorEMCocktailV2 : public GeneratorCocktail_class
   }*/
 
   TF1* GetPtParametrization(Int_t np) {
-    if (np<26)
+    if (np<nHadrons)
       return fPtParametrization[np];
-    else if (np==26)
+    else if (np==nHadrons)
       return fParametrizationProton;
     else
       return NULL;
@@ -143,7 +171,7 @@ class GeneratorEMCocktailV2 : public GeneratorCocktail_class
   }
 
   TH2F* GetPtYDistribution(Int_t np) {
-    if (np<26)
+    if (np<nHadrons)
       return fPtYDistribution[np];
     else
       return NULL;
@@ -242,19 +270,19 @@ class GeneratorEMCocktailV2 : public GeneratorCocktail_class
       SetPtYDistributions();
     }
 
-    for (int g=0; g<GeneratorParamEMlibV2::kNParticles; g++){
+    for (Generator g : Generators){
       // Create and add electron sources to the generator
-      if ((g==GeneratorParamEMlibV2::kDirectRealGamma) || (g==GeneratorParamEMlibV2::kDirectVirtGamma)) continue;
-      if(fSelectedParticles&ParticleGenerator[g]){
+      if ((g.LibID==GeneratorParamEMlibV2::kDirectRealGamma) || (g.LibID==GeneratorParamEMlibV2::kDirectVirtGamma)) continue;
+      if(fSelectedParticles&g.GeneratorID){
         Double_t maxPtStretchFactor = 1.;
-        if (fDynPtRange) maxPtStretchFactor = GetMaxPtStretchFactor(ParticleIDs[g]);
+        if (fDynPtRange) maxPtStretchFactor = GetMaxPtStretchFactor(g.ParticleID);
         GeneratorParam *genNew=0;
         Char_t nameNew[10];
-        snprintf(nameNew,10,GeneratorNames[g]);
-        genNew = new GeneratorParam(fNPart, new GeneratorParamEMlibV2(), g, "DUMMY");
+        snprintf(nameNew,10,g.Name);
+        genNew = new GeneratorParam((Int_t)(maxPtStretchFactor*fNPart), new GeneratorParamEMlibV2(), g.LibID, "DUMMY");
         AddSource2Generator(nameNew,genNew,maxPtStretchFactor);
         TF1 *fPtNew = genNew->GetPt();
-        fYieldArray[g] = fPtNew->Integral(fPtMin,fPtMax,1.e-6);
+        fYieldArray[g.LibID] = fPtNew->Integral(fPtMin,maxPtStretchFactor*fPtMax,1.e-6);
       }
     }
 
@@ -302,10 +330,10 @@ class GeneratorEMCocktailV2 : public GeneratorCocktail_class
   TString         fV2ParametrizationDir;                // parametrization file directory for flow
   Int_t           fNPart;                               // multiplicity of each source per event
   Double_t        fYieldArray[GeneratorParamEMlibV2::kNParticles];             // array of dN/dy for each source
-  TF1*     fPtParametrization[26];               // pt paramtrizations
+  TF1*     fPtParametrization[nHadrons];               // pt paramtrizations
   TF1*     fParametrizationProton;               //
   TH1D*    fMtScalingFactorHisto;                // mt scaling factors
-  TH2F*    fPtYDistribution[26];            // pt-y distribution
+  TH2F*    fPtYDistribution[nHadrons];            // pt-y distribution
   Double_t        fPtMin; 
   Double_t        fPtMax; 
   Double_t        fYMin; 
