@@ -23,7 +23,7 @@
       }
     },
     "tasks": {
-      "QcTaskMIDDigits": {
+      "Digits": {
         "active": "true",
         "className": "o2::quality_control_modules::mid::DigitsQcTask",
         "moduleName": "QcMID",
@@ -35,7 +35,7 @@
           "name": "mid-digits"
         }
       },
-      "QcTaskMIDClust": {
+      "Clusters": {
         "active": "true",
         "className": "o2::quality_control_modules::mid::ClustQcTask",
         "moduleName": "QcMID",
@@ -47,7 +47,7 @@
           "name": "mid-clusters"
         }
       },
-      "QcTaskMIDTracks": {
+      "Tracks": {
         "active": "true",
         "className": "o2::quality_control_modules::mid::TracksQcTask",
         "moduleName": "QcMID",
@@ -61,7 +61,7 @@
       }
     },
     "checks": {
-      "QcCheckMIDDigits": {
+      "Digits": {
         "active": "true",
         "className": "o2::quality_control_modules::mid::DigitsQcCheck",
         "moduleName": "QcMID",
@@ -73,7 +73,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcTaskMIDDigits",
+            "name": "Digits",
             "MOs": [
               "mMultHitMT11B",
               "mMultHitMT12B",
@@ -83,7 +83,7 @@
           }
         ]
       },
-      "QcCheckMIDClust": {
+      "Clusters": {
         "active": "true",
         "className": "o2::quality_control_modules::mid::ClustQcCheck",
         "moduleName": "QcMID",
@@ -92,12 +92,12 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcTaskMIDClust",
+            "name": "Clusters",
             "MOs": []
           }
         ]
       },
-      "QcCheckMIDTracks": {
+      "Tracks": {
         "active": "true",
         "className": "o2::quality_control_modules::mid::TracksQcCheck",
         "moduleName": "QcMID",
@@ -106,7 +106,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcTaskMIDTracks",
+            "name": "Tracks",
             "MOs": []
           }
         ]

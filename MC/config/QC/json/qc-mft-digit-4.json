@@ -26,7 +26,7 @@
       }
     },
     "tasks": {
-      "QcMFTDigitTask": {
+      "Digits": {
         "active": "true",
         "className": "o2::quality_control_modules::mft::QcMFTDigitTask",
         "moduleName": "QcMFT",
@@ -50,7 +50,7 @@
       }
     },
     "checks": {
-      "QcMFTDigitCheck": {
+      "Digits": {
         "active": "true",
         "className": "o2::quality_control_modules::mft::QcMFTDigitCheck",
         "moduleName": "QcMFT",
@@ -58,7 +58,7 @@
         "policy": "OnEachSeparately",
         "dataSource": [{
           "type": "Task",
-          "name": "QcMFTDigitTask"
+          "name": "Digits"
         }]
       }
     }    

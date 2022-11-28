@@ -31,8 +31,8 @@
         "" : "Message at this level or above are discarded (default: 21 - Trace)" }
     },
     "tasks" : {
-      "MTCITSTPCTOF" : {
-	"taskName" : "MatchTOF_ITSTPCTOF_TPCTOF",
+      "MatchTrNoTRD" : {
+	"taskName" : "MatchTrNoTRD",
         "active" : "true",
         "className" : "o2::quality_control_modules::tof::TOFMatchedTracks",
         "moduleName" : "QcTOF",

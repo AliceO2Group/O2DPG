@@ -26,7 +26,7 @@
       }
     },
     "tasks": {
-      "TPCTrackingQA": {
+      "Tracking": {
         "active": "true",
         "className": "o2::quality_control_modules::tpc::Tracking",
         "moduleName": "QcTPC",

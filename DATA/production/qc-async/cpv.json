@@ -23,7 +23,7 @@
       }
     },
     "tasks": {
-      "PhysicsAsync": {
+      "Physics": {
         "active": "true",
         "className": "o2::quality_control_modules::cpv::PhysicsTask",
         "moduleName": "QcCPV",

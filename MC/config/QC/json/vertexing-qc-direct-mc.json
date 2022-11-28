@@ -31,7 +31,7 @@
                        "" : "Message at this level or above are discarded (default: 21 - Trace)" }
     },
     "tasks" : {
-      "Vertexing_MC" : {
+      "Vertexing" : {
         "active" : "true",
         "className" : "o2::quality_control_modules::glo::VertexingQcTask",
         "moduleName" : "QcGLO",
@@ -61,7 +61,7 @@
         "detectorName" : "GLO",
         "dataSource" : [ {
           "type" : "Task",
-          "name" : "Vertexing_MC",
+          "name" : "Vertexing",
           "MOs" : ["example"]
         } ]
       }

@@ -23,7 +23,7 @@
       }
     },
     "tasks" : {
-      "MatchingTOF" : {
+      "MatchTrNoTRD" : {
         "active" : "true",
         "className" : "o2::quality_control_modules::tof::TOFMatchedTracks",
         "moduleName" : "QcTOF",

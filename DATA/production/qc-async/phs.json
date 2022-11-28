@@ -23,7 +23,7 @@
       }
     },
     "tasks": {
-      "ClusterTask": {
+      "Clusters": {
         "active": "true",
         "className": "o2::quality_control_modules::phos::ClusterQcTask",
         "moduleName": "QcPHOS",

@@ -23,7 +23,7 @@
         }
       },
       "tasks": {
-        "DigitQcTaskFV0": {
+        "Digits": {
           "active": "true",
           "className": "o2::quality_control_modules::fv0::DigitQcTask",
           "moduleName": "QcFV0",

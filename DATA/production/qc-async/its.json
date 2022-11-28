@@ -23,7 +23,7 @@
       }
     },
     "tasks": {
-      "ITSClusterTask": {
+      "Clusters": {
         "active": "true",
         "className": "o2::quality_control_modules::its::ITSClusterTask",
         "moduleName": "QcITS",
@@ -44,7 +44,7 @@
 	  "publishSummary1D": "0"
         }
       },
-      "ITSTrackTask": {
+      "Tracks": {
         "active": "true",
         "className": "o2::quality_control_modules::its::ITSTrackTask",
         "moduleName": "QcITS",
@@ -69,7 +69,7 @@
       }
     },
     "checks": {
-      "ITSClusterCheck": {
+      "Clusters": {
         "active": "true",
         "className": "o2::quality_control_modules::its::ITSClusterCheck",
         "moduleName": "QcITS",
@@ -89,7 +89,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "ITSClusterTask",
+            "name": "Clusters",
             "MOs": [
               "Layer0/AverageClusterSize",
               "Layer1/AverageClusterSize",
@@ -109,7 +109,7 @@
           }
         ]
       },
-      "ITSTrackCheck": {
+      "Tracks": {
         "active": "true",
         "className": "o2::quality_control_modules::its::ITSTrackCheck",
         "moduleName": "QcITS",
@@ -118,7 +118,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "ITSTrackTask",
+            "name": "Tracks",
             "MOs": [
               "NClusters",
               "PhiDistribution",

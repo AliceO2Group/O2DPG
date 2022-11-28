@@ -23,7 +23,7 @@
         }
       },
       "tasks": {
-        "RecPointsQcTaskFT0": {
+        "RecPoints": {
           "active": "true",
           "className": "o2::quality_control_modules::ft0::RecPointsQcTask",
           "moduleName": "QcFT0",

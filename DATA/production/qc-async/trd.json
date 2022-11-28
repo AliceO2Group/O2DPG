@@ -42,7 +42,7 @@
           "pulseheightpeakupper": "5.0"
         }
       },
-      "TrackletsTask": {
+      "Tracklets": {
         "active": "true",
         "className": "o2::quality_control_modules::trd::TrackletsTask",
         "moduleName": "QcTRD",

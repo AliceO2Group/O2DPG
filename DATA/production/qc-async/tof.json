@@ -23,7 +23,7 @@
       }
     },
     "tasks": {
-      "TaskDigits": {
+      "Digits": {
         "active": "true",
         "className": "o2::quality_control_modules::tof::TaskDigits",
         "moduleName": "QcTOF",
@@ -41,7 +41,7 @@
       }
     },
     "checks": {
-      "CheckRawMultiplicity": {
+      "Multiplicity": {
         "active": "true",
         "className": "o2::quality_control_modules::tof::CheckRawMultiplicity",
         "moduleName": "QcTOF",
@@ -50,7 +50,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "TaskDigits",
+            "name": "Digits",
             "MOs": [
               "TOFRawsMulti"
             ]

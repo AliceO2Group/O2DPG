@@ -23,7 +23,7 @@
       }
     },
     "tasks": {
-      "CellTask": {
+      "Cells": {
         "active": "true",
         "className": "o2::quality_control_modules::emcal::CellTask",
         "moduleName": "QcEMCAL",
