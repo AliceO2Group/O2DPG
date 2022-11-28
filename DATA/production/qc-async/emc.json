@@ -23,8 +23,9 @@
       }
     },
     "tasks": {
-      "Cells": {
+      "EMCCells": {
         "active": "true",
+        "taskName": "Cells",
         "className": "o2::quality_control_modules::emcal::CellTask",
         "moduleName": "QcEMCAL",
         "detectorName": "EMC",

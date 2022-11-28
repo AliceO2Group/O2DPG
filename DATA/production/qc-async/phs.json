@@ -23,8 +23,9 @@
       }
     },
     "tasks": {
-      "Clusters": {
+      "PHSClusters": {
         "active": "true",
+        "taskName": "Clusters",
         "className": "o2::quality_control_modules::phos::ClusterQcTask",
         "moduleName": "QcPHOS",
         "detectorName": "PHS",

@@ -23,8 +23,9 @@
         }
       },
       "tasks": {
-        "Digits": {
+        "FV0Digits": {
           "active": "true",
+          "taskName": "Digits",
           "className": "o2::quality_control_modules::fv0::DigitQcTask",
           "moduleName": "QcFV0",
           "detectorName": "FV0",

@@ -23,8 +23,9 @@
       }
     },
     "tasks": {
-      "Digits": {
+      "TOFDigits": {
         "active": "true",
+        "taskName": "Digits",
         "className": "o2::quality_control_modules::tof::TaskDigits",
         "moduleName": "QcTOF",
         "detectorName": "TOF",
@@ -41,8 +42,9 @@
       }
     },
     "checks": {
-      "Multiplicity": {
+      "TOFMultiplicity": {
         "active": "true",
+        "checkName": "Multiplicity",
         "className": "o2::quality_control_modules::tof::CheckRawMultiplicity",
         "moduleName": "QcTOF",
         "policy": "OnAny",
@@ -50,7 +52,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "Digits",
+            "name": "TOFDigits",
             "MOs": [
               "TOFRawsMulti"
             ]

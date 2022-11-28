@@ -23,8 +23,9 @@
       }
     },
     "tasks": {
-      "Physics": {
+      "CPVPhysics": {
         "active": "true",
+        "taskName": "Physics",
         "className": "o2::quality_control_modules::cpv::PhysicsTask",
         "moduleName": "QcCPV",
         "detectorName": "CPV",
