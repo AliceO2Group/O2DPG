@@ -29,7 +29,7 @@ else
     CAN_DO_CALIB_ZDC_TDC=0;
 fi
 # for async recalibration
-if has_detector_calib EMC && has_detector_reco EMC && $EPNSYNCMODE != 1; then CAN_DO_CALIB_EMC_ASYNC_RECALIB=1; else CAN_DO_CALIB_EMC_ASYNC_RECALIB=0; fi
+if has_detector_calib EMC && has_detector_reco EMC && $SYNCMODE != 1; then CAN_DO_CALIB_EMC_ASYNC_RECALIB=1; else CAN_DO_CALIB_EMC_ASYNC_RECALIB=0; fi
 
 # additional individual settings for calibration workflows
 has_detector CTP && export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"
