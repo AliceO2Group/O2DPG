@@ -122,6 +122,14 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 echo "Checking current directory content"
 ls -altr
 
+if [[ -n "$ALIEN_JDL_DOEMCCALIB" ]]; then
+  export CALIB_EMC_ASYNC_RECALIB="$ALIEN_JDL_DOEMCCALIB"
+fi
+
+if [[ -n "$ALIEN_JDL_DOTPCRESIDUALEXTRACTION" ]]; then
+  export DO_TPC_RESIDUAL_EXTRACTION="$ALIEN_JDL_DOTPCRESIDUALEXTRACTION"
+fi
+
 if [[ -f "setenv_extra.sh" ]]; then
     source setenv_extra.sh $RUNNUMBER $BEAMTYPE
 else
@@ -181,6 +189,12 @@ if [[ ! -z "$ALIEN_JDL_DDSHMSIZE" ]]; then export DDSHMSIZE=$ALIEN_JDL_DDSHMSIZE
 # keeping AO2D.root QC.root o2calib_tof.root mchtracks.root mchclusters.root
 
 SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT_o2_tof_matcher_workflow= ENABLE_ROOT_OUTPUT_o2_aod_producer_workflow= ENABLE_ROOT_OUTPUT_o2_qc= "
+if [[ $DO_EMC_CALIB == "1" ]]; then
+  SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_emcal_emc_offline_calib_workflow= "
+fi
+if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
+  SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_calibration_residual_aggregator= "
+fi
 
 # to add extra output to always keep
 if [[ -n "$ALIEN_EXTRA_ENABLE_ROOT_OUTPUT" ]]; then
@@ -307,7 +321,9 @@ echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS
 # print workflow
 env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list > workflowconfig.log
 # run it
-env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+if [[ "0$RUN_WORKFLOW" != "00" ]]; then
+  env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+fi
 
 # now extract all performance metrics
 IFS=$'\n'

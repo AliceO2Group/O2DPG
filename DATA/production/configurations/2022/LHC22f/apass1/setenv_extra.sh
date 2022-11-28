@@ -156,6 +156,31 @@ export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="MFTTracking.forceZeroField=fal
 # ad-hoc settings for MCH
 export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow="MCHClustering.lowestPadCharge=20;MCHClustering.defaultClusterResolution=0.4;MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6;MCHDigitFilter.timeOffset=126"
 
+# possibly adding calib steps as done online
+# could be done better, so that more could be enabled in one go
+if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
+  export WORKFLOW_PARAMETERS="CALIB,CALIB_LOCAL_INTEGRATED_AGGREGATOR,${WORKFLOW_PARAMETERS}"
+  export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
+  export CALIB_PRIMVTX_MEANVTX=0
+  export CALIB_TOF_LHCPHASE=0
+  export CALIB_TOF_CHANNELOFFSETS=0
+  export CALIB_TOF_DIAGNOSTICS=0
+  export CALIB_EMC_BADCHANNELCALIB=0
+  export CALIB_EMC_TIMECALIB=0
+  export CALIB_PHS_ENERGYCALIB=0
+  export CALIB_PHS_BADMAPCALIB=0
+  export CALIB_PHS_TURNONCALIB=0
+  export CALIB_PHS_RUNBYRUNCALIB=0
+  export CALIB_PHS_L1PHASE=0
+  export CALIB_TRD_VDRIFTEXB=0
+  export CALIB_TPC_TIMEGAIN=0
+  export CALIB_TPC_RESPADGAIN=0
+  export CALIB_TPC_VDRIFTTGL=0
+  export CALIB_CPV_GAIN=0
+  export CALIB_ZDC_TDC=0
+  export CALIB_FT0_TIMEOFFSET=0
+fi
+
 # Enabling AOD
 export WORKFLOW_PARAMETERS="AOD,${WORKFLOW_PARAMETERS}"
 
