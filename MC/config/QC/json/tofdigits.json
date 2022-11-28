@@ -37,7 +37,11 @@
           "name": "tof-digits"
         },
         "taskParameters": {
-          "Diagnostic": "true"
+          "Diagnostic": "true",
+          "PerChannel": "True",
+          "RangeMaxMultiplicity": "15000",
+          "NbinsMultiplicity": "15000",
+          "applyCalib": "True"
         },
         "location": "remote"
       }
