@@ -1,3 +1,5 @@
+#include <fstream>
+#include<stdio.h>
 #if !defined(__CLING__) || defined(__ROOTCLING__)
 #include "CCDB/BasicCCDBManager.h"
 #include "CommonDataFormat/InteractionRecord.h"
@@ -9,15 +11,17 @@
 using namespace o2::ctp;
 const double orbitDuration = 88.924596234; // us
 
-void writeIRtoFile(int isIRhigherThan100kHz);
+void writeIRtoFile(float ir);
 
-void isIRHigherThan100kHz(int run = 527057, bool debug = false) {
+void getIR(int run = 527057, bool debug = false) {
 
+  float ir = 0.f;
   LOGP(info, "Checking IR");
   if (run < 523141) {
     // LHC22c, d, e, f
-    LOGP(info, "Run number < 523141 --> we are in 22c, d, e, or f, so IR is < 100 kHz");
-    writeIRtoFile(0);
+    LOGP(info, "Run number < 523141 --> we are in 22c, d, e, or f, so IR is < 100 kHz, writing 0.f");
+    // In these runs, sometimes the CCDB does not contain correct scalers, so we use 0 as a placeholder
+    writeIRtoFile(ir);
     return;
   }
   
@@ -30,7 +34,7 @@ void isIRHigherThan100kHz(int run = 527057, bool debug = false) {
   headers = ccdb_api.retrieveHeaders(Form("RCT/Info/RunInformation/%i", run), metadata, -1);
   int64_t tsSOR = atol(headers["SOR"].c_str()); // ms
   int64_t tsEOR = atol(headers["EOR"].c_str()); // ms
-  LOGP(info, "tsSOR={} ms, tsEOR={} ms", tsSOR, tsEOR);
+  LOGP(info, "tsSOR = {} ms, tsEOR = {} ms", tsSOR, tsEOR);
 
   // Extract CTP info
   std::map<std::string, std::string> metadataCTP;
@@ -42,8 +46,9 @@ void isIRHigherThan100kHz(int run = 527057, bool debug = false) {
     ccdb_inst.setURL("http://ccdb-test.cern.ch:8080");
     scl = ccdb_inst.getSpecific<o2::ctp::CTPRunScalers>("CTP/Calib/Scalers", tsSOR, metadata);
     if (!scl) {
-      LOGP(info, "Cannot get IR for run {} neither from production nor test CCDB, writing -1", run);
-      writeIRtoFile(-1);
+      LOGP(info, "Cannot get IR for run {} neither from production nor test CCDB, writing -1.f", run);
+      ir = -1.f;
+      writeIRtoFile(ir);
       return;
     }
   }
@@ -51,7 +56,6 @@ void isIRHigherThan100kHz(int run = 527057, bool debug = false) {
   scl->convertRawToO2();
   std::vector<CTPScalerRecordO2> mScalerRecordO2 = scl->getScalerRecordO2();
   int n = mScalerRecordO2.size();
-  double ir = 0;
   if (n != 0) {
     std::int64_t totScalers = 0;
     std::vector<int64_t> vOrbit;
@@ -72,23 +76,28 @@ void isIRHigherThan100kHz(int run = 527057, bool debug = false) {
       ++i;
     }
 
-    int64_t duration = (vOrbit.back() - vOrbit.front()) * orbitDuration * 1e-6; // s
-    ir = double(vScaler.back() - vScaler.front()) / duration;
-    LOGP(info, "run {}: orbit.back = {}, orbit.front = {}, duration = {} s, scalers = {}, IR = {} Hz", run, vOrbit.back(), vOrbit.front(), duration, vScaler.back() - vScaler.front(), ir);
+    long duration = std::round((vOrbit.back() - vOrbit.front()) * orbitDuration * 1e-6); // s
+    ir = float(vScaler.back() - vScaler.front()) / duration;
+    LOGP(info, "run {}: orbit.front = {} orbit.back = {} duration = {} s scalers = {} IR = {} Hz", run, vOrbit.front(), vOrbit.back(), duration, vScaler.back() - vScaler.front(), ir);
   }
 
   if (ir < 100000) {
     LOGP(info, "IR < 100 kHz");
-    writeIRtoFile(0);
-    return;
   }
-  LOGP(info, "IR > 100 kHz");
-  writeIRtoFile(1);
+  else {
+    LOGP(info, "IR > 100 kHz");
+  }
+  writeIRtoFile(ir);
   return;
 }
 
-void writeIRtoFile(int isIRhigherThan100kHz) {
-  ofstream fp("IR.txt");
-  fp << isIRhigherThan100kHz << endl;
-  fp.close();
+void writeIRtoFile(float ir) {
+
+  FILE *fptr = fopen("IR.txt", "w");
+  if (fptr == NULL) {
+    printf("ERROR: Could not open file to write IR!");
+    return;
+  }
+  fprintf(fptr,"%.2f", ir);
+  fclose(fptr);
 }
