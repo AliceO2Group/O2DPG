@@ -106,7 +106,7 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 	exit 2
     fi
     tar -xzvf commonInput.tgz
-    SELECTSETTINGSSCRIPT="$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/selectSettings.sh"
+    SELECTSETTINGSSCRIPT="$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/selectSettings.sh"
     if [[ -f "selectSettings.sh" ]]; then
       SELECTSETTINGSSCRIPT="selectSettings.sh"
     fi
@@ -136,12 +136,12 @@ else
     echo "************************************************************************************"
     echo "No ad-hoc setenv_extra settings for current async processing; using the one in O2DPG"
     echo "************************************************************************************"
-    if [[ -f $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/setenv_extra.sh ]]; then
-	ln -s $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/setenv_extra.sh
+    if [[ -f $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh ]]; then
+	ln -s $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh
 	source setenv_extra.sh $RUNNUMBER $BEAMTYPE
     else
 	echo "*********************************************************************************************************"
-	echo "No setenev_extra for $ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME in O2DPG"
+	echo "No setenev_extra for $ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS in O2DPG"
 	echo "                No special settings will be used"
 	echo "*********************************************************************************************************"
     fi

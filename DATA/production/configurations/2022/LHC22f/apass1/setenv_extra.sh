@@ -73,7 +73,7 @@ fi
 PERIODLETTER=${PERIOD: -1}
 VDRIFTPARAMOPTION=
 if [[ $PERIODLETTER < m ]]; then
-  root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/getTPCvdrift.C+($RUNNUMBER)"
+  root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/getTPCvdrift.C+($RUNNUMBER)"
   export VDRIFT=`cat vdrift.txt`
   VDRIFTPARAMOPTION="TPCGasParam.DriftV=$VDRIFT"
   echo "Setting TPC vdrift to $VDRIFT"
