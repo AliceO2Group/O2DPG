@@ -639,7 +639,7 @@ class WorkflowExecutor:
           p.nice(nice)
           self.nicevalues[tid]=nice
       except (psutil.NoSuchProcess, psutil.AccessDenied):
-          actionlogger.error('Couldn\'t set nice value of ' + str(p.pid) + ' to ' + str(nice) + ' -- current value is ' + str(p.nice()))
+          actionlogger.error('Couldn\'t set nice value of ' + str(p.pid) + ' to ' + str(nice))
           self.nicevalues[tid]=os.nice(0)
       return p
 
@@ -849,7 +849,7 @@ class WorkflowExecutor:
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         pass
 
-            resources_per_task[tid]={'iter':self.internalmonitorid, 'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS/1024./1024., 'pss':totalPSS/1024./1024, 'nice':proc.nice(), 'swap':totalSWAP, 'label':self.workflowspec['stages'][tid]['labels']}
+            resources_per_task[tid]={'iter':self.internalmonitorid, 'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS/1024./1024., 'pss':totalPSS/1024./1024, 'nice':self.nicevalues[tid], 'swap':totalSWAP, 'label':self.workflowspec['stages'][tid]['labels']}
             metriclogger.info(resources_per_task[tid])
             send_webhook(self.args.webhook, resources_per_task)
             
