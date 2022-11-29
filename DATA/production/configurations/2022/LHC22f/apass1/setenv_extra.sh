@@ -82,19 +82,9 @@ else
 fi
 
 # IR
-OPTIONHIGHIR_PV=
-root -b -q "$O2DPG_ROOT/DATA/production/common/isIRHigherThan100kHz.C+($RUNNUMBER)"
-export ISHIGHIR=`cat IR.txt`
-if [[ $ISHIGHIR == 0 ]]; then
-  # add options for low IR
-  echo "Low IR, adding pvertexer.timeMarginVertexTime=1.3"
-  OPTIONHIGHIR_PV="pvertexer.timeMarginVertexTime=1.3"
-elif [[ $ISHIGHIR == 1 ]]; then
-  echo "High IR, no extra options needed"
-else
-  echo "Not possible to determine IR, quitting..."
-  exit 4
-fi
+root -b -q "$O2DPG_ROOT/DATA/production/common/getIR.C+($RUNNUMBER)"
+export RUN_IR=`cat IR.txt`
+echo "IR for current run ($RUNNUMBER) = $RUN_IR"
 
 echo "BeamType = $BEAMTYPE"
 
@@ -135,7 +125,7 @@ if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == 
   EXTRA_PRIMVTX_TimeMargin="pvertexer.timeMarginVertexTime=1.3"
 fi
 
-export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2;$EXTRA_PRIMVTX_TimeMargin;$OPTIONHIGHIR_PV"
+export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2;$EXTRA_PRIMVTX_TimeMargin;"
 
 # secondary vertexing
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
