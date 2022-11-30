@@ -182,7 +182,7 @@
         "epn",
         "localhost"
       ],
-      "query": "digits:MID/DATA;digitrofs:MID/DATAROF",
+      "query": "digits:MID/DATA;digits_rof:MID/DATAROF",
       "samplingConditions": [
         {
           "condition": "random",

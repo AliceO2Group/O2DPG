@@ -69,4 +69,4 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --configFile="/home/wiechula/processData/inputFilesTracking/krypton/krBoxCluster.largeBox.cuts.krMap.ini" \
     $KR_CONFIG \
     | o2-qc $ARGS_ALL --config $QC_CONFIG --local --host localhost \
-    | o2-dpl-run --dds  | grep -v ERROR
+    | o2-dpl-run --dds ${WORKFLOWMODE_FILE}  | grep -v ERROR

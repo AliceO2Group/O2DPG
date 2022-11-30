@@ -10,7 +10,6 @@ export DDMODE=processing-disk                                             # Data
 # Use these settings to specify a path to the workflow repository in your home dir
 export GEN_TOPO_HASH=0                                               # Specify path to O2DataProcessing repository
 export GEN_TOPO_SOURCE=/home/afurs/O2DataProcessing                  # Path to O2DataProcessing repository
-export GEN_TOPO_IGNORE_ERROR=1
 export GEN_TOPO_LIBRARY_FILE=testing/detectors/FV0/workflows.desc    # Topology description library file to load
 export GEN_TOPO_WORKFLOW_NAME=fv0-ctf                # Name of workflow in topology description library
 export WORKFLOW_DETECTORS=FV0                                        # Optional parameter for the workflow: Detectors to run reconstruction for (comma-separated list)

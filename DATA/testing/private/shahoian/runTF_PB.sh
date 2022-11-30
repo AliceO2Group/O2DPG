@@ -29,7 +29,6 @@ export RECO_NUM_NODES_OVERRIDE=0                                     # Override 
 export NHBPERTF=128                                                  # Number of HBF per TF
 export ALL_EXTRA_CONFIG="HBFUtils.nHBFPerTF=$NHBPERTF"
 
-export GEN_TOPO_IGNORE_ERROR=1
 
 export MULTIPLICITY_FACTOR_RAWDECODERS=1
 export MULTIPLICITY_FACTOR_CTFENCODERS=1

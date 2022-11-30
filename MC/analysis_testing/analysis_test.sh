@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 # This script performs an analysis task (given as first argument)
 # in a directory (produced) where a merged AO2D.root was produced

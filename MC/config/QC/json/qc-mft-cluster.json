@@ -19,7 +19,7 @@
         "url": "infologger:///debug?qc"
       },
       "consul": {
-        "url": "http://consul-test.cern.ch:8500"
+        "url": ""
       },
       "conditionDB": {
         "url": "ccdb-test.cern.ch:8080"
@@ -36,10 +36,14 @@
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
           "type": "direct",
-          "query": "randomcluster:MFT/COMPCLUSTERS/0;clustersrof:MFT/CLUSTERSROF/0"
+          "query": "randomcluster:MFT/COMPCLUSTERS/0;clustersrof:MFT/CLUSTERSROF/0;patterns:MFT/PATTERNS/0;cldict:MFT/CLUSDICT/0?lifetime=condition&ccdb-path=MFT/Calib/ClusterDictionary"
         },
         "taskParameters": {
-          "myOwnKey": "myOwnValue"
+          "maxClusterROFSize" : "5000",
+          "maxDuration" : "60000",
+          "timeBinSize" : "0.1",
+          "ROFLengthInBC" : "198",
+          "geomFileName" : "o2sim_geometry-aligned.root"
         },
         "location": "remote"
       }
@@ -50,12 +54,12 @@
         "dataSource": [{
           "type": "Task",
           "name": "QcMFTClusterTask",
-          "MOs": ["mMFTClusterSensorIndex"]
+          "MOs" : ["mClusterOccupancy","mClusterPatternIndex","mClusterSizeSummary","mGroupedClusterSizeSummary","mClusterOccupancySummary"]
         }],
         "className": "o2::quality_control_modules::mft::QcMFTClusterCheck",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "policy": "OnAny"
+        "policy": "OnEachSeparately"
       }
     }    
   },

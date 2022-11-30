@@ -32,7 +32,31 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "emcal-cells:EMC/CELLS;emcal-triggerecords:EMC/CELLSTRGR"
+          "query": "emcal-cells:EMC/CELLS/0;emcal-triggerecords:EMC/CELLSTRGR/0"
+        }
+      },
+      "ClusterTask": {
+        "active": "true",
+        "className": "o2::quality_control_modules::emcal::ClusterTask",
+        "moduleName": "QcEMCAL",
+        "detectorName": "EMC",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "emcal-cells:EMC/CELLS/0;emcal-triggerecords:EMC/CELLSTRGR/0"
+        },
+        "taskParameters": {
+          "useInternalClusterizer": "true",
+          "bindingCellTriggerRecords": "emcal-triggerecords",
+          "calibrateCells": "false",
+          "clusterizerSeedThreshold": "0.5",
+          "clusterizerCellTreshold": "0.1",
+          "clusterizerDoGradientCut": "true",
+          "clusterizerGradientCut": "0.03",
+          "clusterizerMinTime": "-300.",
+          "clusterizerMaxTime": "300.",
+          "clusterizerMaxTimeDelta": "1000."
         }
       }
     }

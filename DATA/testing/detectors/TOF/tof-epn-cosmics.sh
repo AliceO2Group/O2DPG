@@ -25,4 +25,4 @@ ${ARGS_ALL} --configKeyValues "$ARGS_ALL_CONFIG;" \
 --pipeline "tof-compressed-decoder:${NTHREADS},TOFClusterer:${NTHREADS},tof-entropy-encoder:${NTHREADS}" \
 | o2-qc ${ARGS_ALL} --config json://${MYDIR}/qc-full.json --local --host epn \
 | o2-dpl-output-proxy ${ARGS_ALL} --channel-config ${OUT_CHANNEL} --dataspec ${PROXY_OUTSPEC} \
-| o2-dpl-run $ARGS_ALL $GLOBALDPLOPT --dds # option instead iof run to export DDS xml file
+| o2-dpl-run $ARGS_ALL $GLOBALDPLOPT --dds ${WORKFLOWMODE_FILE} # option instead iof run to export DDS xml file

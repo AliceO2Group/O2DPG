@@ -19,7 +19,6 @@ export WORKFLOW_PARAMETERS=                                          # Additiona
 export RECO_NUM_NODES_OVERRIDE=0                                     # Override the number of EPN compute nodes to use (default is specified in description library file)
 export NHBPERTF=256                                                  # Number of HBF per TF
 
-export GEN_TOPO_IGNORE_ERROR=1
 
 ##---------------
 jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' /home/epn/odc/files/tpcQCTasks_multinode_ALL.json /home/epn/jliu/itsEPNv2.json > /home/shahoian/alice/O2DataProcessing/testing/private/shahoian/qc/qc-tpcMNAll-itsEPNv2.json

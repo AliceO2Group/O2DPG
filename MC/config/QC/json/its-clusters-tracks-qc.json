@@ -19,7 +19,7 @@
         "url": "infologger:///debug?qc"
       },
       "consul": {
-        "url": "http://consul-test.cern.ch:8500"
+        "url": ""
       },
       "conditionDB": {
         "url": "ccdb-test.cern.ch:8080"
@@ -43,7 +43,8 @@
           "nThreads": "1",
 	  "nBCbins" : "103",
 	  "dicttimestamp" : 0,
-	  "geomPath" : "o2sim_geometry-aligned.root"
+	  "geomPath" : "o2sim_geometry-aligned.root",
+	  "publishSummary1D": "0"
         }
       },
       "ITSTrackTask": {
@@ -63,7 +64,7 @@
           "vertexXYsize": "0.5",
           "vertexZsize": "15",
           "vertexRsize": "0.8",
-          "NtracksMAX"  : "100",
+          "NtracksMAX"  : "5000",
           "doTTree": "0",
 	  "nBCbins" : "103",
 	  "dicttimestamp" : "0"
@@ -75,8 +76,19 @@
         "active": "true",
         "className": "o2::quality_control_modules::its::ITSClusterCheck",
         "moduleName": "QcITS",
-        "policy": "OnAny",
+        "policy": "OnEachSeparately",
         "detectorName": "ITS",
+        "checkParameters": {
+          "maxcluoccL0" : "5",
+          "maxcluoccL1" : "4",
+          "maxcluoccL2" : "3",
+          "maxcluoccL3" : "2",
+          "maxcluoccL4" : "1",
+          "maxcluoccL5" : "1",
+          "maxcluoccL6" : "1",
+          "skipxbinsoccupancy" : "",
+          "skipybinsoccupancy" : ""
+        },
         "dataSource": [
           {
             "type": "Task",
@@ -104,7 +116,7 @@
         "active": "true",
         "className": "o2::quality_control_modules::its::ITSTrackCheck",
         "moduleName": "QcITS",
-        "policy": "OnAny",
+        "policy": "OnEachSeparately",
         "detectorName": "ITS",
         "dataSource": [
           {
@@ -134,7 +146,7 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.3",
+          "fraction": "1",
           "seed": "1441"
         }
       ],
@@ -144,11 +156,11 @@
       "id": "tracks",
       "active": "true",
       "machines": [],
-      "query": "Vertices:ITS/VERTICES/0;tracks:ITS/TRACKS/0;rofs:ITS/ITSTrackROF/0;clustersrof:ITS/CLUSTERSROF/0;compclus:ITS/COMPCLUSTERS/0;patterns:ITS/PATTERNS/0;clusteridx:ITS/TRACKCLSID/0",
+      "query": "Verticesrof:ITS/VERTICESROF/0;Vertices:ITS/VERTICES/0;tracks:ITS/TRACKS/0;rofs:ITS/ITSTrackROF/0;clustersrof:ITS/CLUSTERSROF/0;compclus:ITS/COMPCLUSTERS/0;patterns:ITS/PATTERNS/0;clusteridx:ITS/TRACKCLSID/0",
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.3",
+          "fraction": "1",
           "seed": "1441"
         }
       ],

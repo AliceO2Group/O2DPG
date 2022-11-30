@@ -28,7 +28,7 @@
         "vertex-z-min": "-10",
         "vertex-z-max": "10",
         "pt-bins": "500",
-        "log-pt": "1",
+        "log-pt": "0",
         "eta-bins": "500",
         "y-bins": "500",
         "phi-bins": "500",
@@ -56,82 +56,97 @@
     "track-selection": {
         "isRun3": "true"
     },
-    "tpc-pid-full": {
-        "param-file": "",
-        "param-signal": "BetheBloch",
-        "param-sigma": "TPCReso",
-        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
-        "ccdbPath": "Analysis\/PID\/TPC\/Response",
-        "ccdb-timestamp": "-1",
-        "pid-el": "1",
-        "pid-mu": "1",
-        "pid-pi": "1",
-        "pid-ka": "1",
-        "pid-pr": "1",
-        "pid-de": "-1",
-        "pid-tr": "-1",
-        "pid-he": "-1",
-        "pid-al": "-1"
-    },
     "tof-signal": "",
     "track-extension": {
         "processRun2": "false",
         "processRun3": "true"
     },
-    "tof-pid": {
-        "param-file": "",
-        "param-sigma": "TOFReso",
-        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
-        "ccdbPath": "Analysis\/PID\/TOF",
-        "ccdb-timestamp": "-1",
-        "pid-el": "1",
-        "pid-mu": "1",
-        "pid-pi": "1",
-        "pid-ka": "1",
-        "pid-pr": "1",
-        "pid-de": "-1",
-        "pid-tr": "-1",
-        "pid-he": "-1",
-        "pid-al": "-1",
-        "processEvTime": "true",
-        "processNoEvTime": "false"
-    },
-    "tof-pid-beta": {
-        "tof-expreso": "80",
-        "processEvTime": "true",
-        "processNoEvTime": "false"
-    },
-    "tof-pid-full": {
-        "param-file": "",
-        "param-sigma": "TOFReso",
-        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
-        "ccdbPath": "Analysis\/PID\/TOF",
-        "ccdb-timestamp": "-1",
-        "pid-el": "1",
-        "pid-mu": "1",
-        "pid-pi": "1",
-        "pid-ka": "1",
-        "pid-pr": "1",
-        "pid-de": "-1",
-        "pid-tr": "-1",
-        "pid-he": "-1",
-        "pid-al": "-1",
-        "processEvTime": "true",
-        "processNoEvTime": "false"
-    },
     "qa-event-track": {
-        "isMC": "false",
         "isRun3": "true",
+        "selectGoodEvents": "true",
+        "selectMaxVtxZ": "100",
+        "targetNumberOfEvents": "10000000",
+        "fractionOfSampledEvents": "1",
+        "trackSelection": "1",
+        "selectCharge": "0",
+        "selectPrim": "false",
+        "selectSec": "false",
+        "selectPID": "0",
+        "minPt": "-10",
+        "maxPt": "1e+10",
+        "minEta": "-2",
+        "maxEta": "2",
+        "minPhi": "-1",
+        "maxPhi": "10",
+        "binsPt": {
+            "values": [
+                "0",
+                "0",
+                "0.10000000000000001",
+                "0.20000000000000001",
+                "0.29999999999999999",
+                "0.40000000000000002",
+                "0.5",
+                "0.59999999999999998",
+                "0.69999999999999996",
+                "0.80000000000000004",
+                "0.90000000000000002",
+                "1",
+                "1.1000000000000001",
+                "1.2",
+                "1.3",
+                "1.3999999999999999",
+                "1.5",
+                "2",
+                "5",
+                "10",
+                "20",
+                "50"
+            ]
+        },
+        "binsVertexPosZ": {
+            "values": [
+                "100",
+                "-20",
+                "20"
+            ]
+        },
+        "binsVertexPosXY": {
+            "values": [
+                "500",
+                "-1",
+                "1"
+            ]
+        },
+        "binsTrackMultiplcity": {
+            "values": [
+                "200",
+                "0",
+                "200"
+            ]
+        },
         "processData": "true",
-        "processMC": "false"
+        "processDataIU": "false",
+        "processDataIUFiltered": "false",
+        "processMC": "false",
+        "processTableData": "false",
+        "processTableMC": "false"
     },
     "track-propagation": {
         "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
         "lutPath": "GLO\/Param\/MatLUT",
         "geoPath": "GLO\/Config\/GeometryAligned",
-        "grpPath": "GLO\/GRP\/GRP",
+        "grpmagPath": "GLO\/Config\/GRPMagField",
         "mVtxPath": "GLO\/Calib\/MeanVertex",
         "processStandard": "false",
         "processCovariance": "true"
+    },
+    "ambiguous-track-propagation": {
+        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
+        "geoPath": "GLO\/Config\/GeometryAligned",
+        "grpmagPath": "GLO\/Config\/GRPMagField",
+        "mVtxPath": "GLO\/Calib\/MeanVertex",
+        "processCentral": "false",
+        "processMFT": "true"
     }
 }

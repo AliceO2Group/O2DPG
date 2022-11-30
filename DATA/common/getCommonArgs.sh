@@ -10,7 +10,7 @@ if [[ -z $SEVERITY || -z $NUMAID || -z $SHMSIZE || -z $FILEWORKDIR || -z $EPNSYN
 fi
 
 ARGS_ALL="--session ${OVERRIDE_SESSION:-default} --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE $ARGS_ALL_EXTRA --early-forward-policy noraw"
-ARGS_ALL_CONFIG="NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIRRUN;NameConf.mDirGRP=$FILEWORKDIRRUN;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;$ALL_EXTRA_CONFIG"
+ARGS_ALL_CONFIG="NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirGRP=$FILEWORKDIRRUN;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;$ALL_EXTRA_CONFIG"
 if [[ $EPNSYNCMODE == 1 ]]; then
   ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
   ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 15"
@@ -19,7 +19,7 @@ if [[ $EPNSYNCMODE == 1 ]]; then
 elif [[ "0$ENABLE_METRICS" != "01" ]]; then
   ARGS_ALL+=" --monitoring-backend no-op://"
 fi
-[[ $SHMTHROW == 0 ]] && ARGS_ALL+=" --shm-throw-bad-alloc 0"
+[[ $SHMTHROW == 0 ]] && ARGS_ALL+=" --bad-alloc-max-attempts 60 --bad-alloc-attempt-interval 1000"
 [[ ! -z $SHM_MANAGER_SHMID && "0$GEN_TOPO_CALIB_WORKFLOW" != "01" ]] && ARGS_ALL+=" --no-cleanup --shm-no-cleanup on --shmid $SHM_MANAGER_SHMID"
 [[ $NORATELOG == 1 ]] && ARGS_ALL+=" --fairmq-rate-logging 0"
 

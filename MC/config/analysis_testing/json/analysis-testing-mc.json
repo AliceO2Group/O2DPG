@@ -28,7 +28,7 @@
         "vertex-z-min": "-10",
         "vertex-z-max": "10",
         "pt-bins": "500",
-        "log-pt": "1",
+        "log-pt": "0",
         "eta-bins": "500",
         "y-bins": "500",
         "phi-bins": "500",
@@ -57,87 +57,10 @@
     "track-selection": {
         "isRun3": "true"
     },
-    "tpc-pid-full": {
-        "param-file": "",
-        "param-signal": "BetheBloch",
-        "param-sigma": "TPCReso",
-        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
-        "ccdbPath": "Analysis\/PID\/TPC\/Response",
-        "ccdb-timestamp": "-1",
-        "pid-el": "1",
-        "pid-mu": "1",
-        "pid-pi": "1",
-        "pid-ka": "1",
-        "pid-pr": "1",
-        "pid-de": "-1",
-        "pid-tr": "-1",
-        "pid-he": "-1",
-        "pid-al": "-1"
-    },
-    "tpc-pid": {
-        "param-file": "",
-        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
-        "ccdbPath": "Analysis\/PID\/TPC\/Response",
-        "ccdb-timestamp": "0",
-        "useNetworkCorrection": "0",
-        "downloadNetworkFromAlien": "0",
-        "networkPathAlien": "alien:\/\/\/alice\/cern.ch\/user\/c\/csonnabe\/tpc_network_testing\/net_onnx_0.onnx",
-        "networkPathLocally": "network.onnx",
-        "pid-el": "-1",
-        "pid-mu": "-1",
-        "pid-pi": "-1",
-        "pid-ka": "-1",
-        "pid-pr": "-1",
-        "pid-de": "-1",
-        "pid-tr": "-1",
-        "pid-he": "-1",
-        "pid-al": "-1"
-    },
     "tof-signal": "",
     "track-extension": {
         "processRun2": "false",
         "processRun3": "true"
-    },
-    "tof-pid": {
-        "param-file": "",
-        "param-sigma": "TOFReso",
-        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
-        "ccdbPath": "Analysis\/PID\/TOF",
-        "ccdb-timestamp": "-1",
-        "pid-el": "1",
-        "pid-mu": "1",
-        "pid-pi": "1",
-        "pid-ka": "1",
-        "pid-pr": "1",
-        "pid-de": "-1",
-        "pid-tr": "-1",
-        "pid-he": "-1",
-        "pid-al": "-1",
-        "processEvTime": "true",
-        "processNoEvTime": "false"
-    },
-    "tof-pid-beta": {
-        "tof-expreso": "80",
-        "processEvTime": "true",
-        "processNoEvTime": "false"
-    },
-    "tof-pid-full": {
-        "param-file": "",
-        "param-sigma": "TOFReso",
-        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
-        "ccdbPath": "Analysis\/PID\/TOF",
-        "ccdb-timestamp": "-1",
-        "pid-el": "1",
-        "pid-mu": "1",
-        "pid-pi": "1",
-        "pid-ka": "1",
-        "pid-pr": "1",
-        "pid-de": "-1",
-        "pid-tr": "-1",
-        "pid-he": "-1",
-        "pid-al": "-1",
-        "processEvTime": "true",
-        "processNoEvTime": "false"
     },
     "lambdakzero-builder": {
         "dcanegtopv": "0.100000001",
@@ -326,16 +249,81 @@
         "processOnlyBCs": "true"
     },
     "qa-event-track": {
-        "isMC": "true",
         "isRun3": "true",
-        "processData": "false",
-        "processMC": "true"
+        "selectGoodEvents": "true",
+        "selectMaxVtxZ": "100",
+        "targetNumberOfEvents": "10000000",
+        "fractionOfSampledEvents": "1",
+        "trackSelection": "1",
+        "selectCharge": "0",
+        "selectPrim": "false",
+        "selectSec": "false",
+        "selectPID": "0",
+        "minPt": "-10",
+        "maxPt": "1e+10",
+        "minEta": "-2",
+        "maxEta": "2",
+        "minPhi": "-1",
+        "maxPhi": "10",
+        "binsPt": {
+            "values": [
+                "0",
+                "0",
+                "0.10000000000000001",
+                "0.20000000000000001",
+                "0.29999999999999999",
+                "0.40000000000000002",
+                "0.5",
+                "0.59999999999999998",
+                "0.69999999999999996",
+                "0.80000000000000004",
+                "0.90000000000000002",
+                "1",
+                "1.1000000000000001",
+                "1.2",
+                "1.3",
+                "1.3999999999999999",
+                "1.5",
+                "2",
+                "5",
+                "10",
+                "20",
+                "50"
+            ]
+        },
+        "binsVertexPosZ": {
+            "values": [
+                "100",
+                "-20",
+                "20"
+            ]
+        },
+        "binsVertexPosXY": {
+            "values": [
+                "500",
+                "-1",
+                "1"
+            ]
+        },
+        "binsTrackMultiplcity": {
+            "values": [
+                "200",
+                "0",
+                "200"
+            ]
+        },
+        "processData": "true",
+        "processDataIU": "false",
+        "processDataIUFiltered": "false",
+        "processMC": "true",
+        "processTableData": "false",
+        "processTableMC": "false"
     },
     "track-propagation": {
         "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
         "lutPath": "GLO\/Param\/MatLUT",
         "geoPath": "GLO\/Config\/GeometryAligned",
-        "grpPath": "GLO\/GRP\/GRP",
+        "grpmagPath": "GLO\/Config\/GRPMagField",
         "mVtxPath": "GLO\/Calib\/MeanVertex",
         "processStandard": "false",
         "processCovariance": "true"
@@ -372,5 +360,241 @@
         "processTagging": "true",
         "processTrackEfficiency": "true",
         "processGen": "true"
+    },
+    "hf-track-index-skims-creator": {
+        "fillHistograms": "true",
+        "do3prong": "1",
+        "bz": "5.",
+        "propToDCA": "true",
+        "maxRad": "5.",
+        "maxDZIni": "999.",
+        "minParamChange": "0.001",
+        "minRelChi2Change": "0.9",
+
+        "pTBinsD0ToPiK": {
+            "values": [
+                "0.",
+                "5.",
+                "1000."
+            ]
+        },
+        "cutsD0ToPiK": {
+            "values": [
+                ["1.61", "2.12", "0.5", "0.00"],
+                ["1.61", "2.12", "0.5", "0.00"]
+            ]
+        },
+
+        "pTBinsJpsiToEE": {
+            "values": [
+                "0.",
+                "5.",
+                "1000."
+            ]
+        },
+        "cutsJpsiToEE": {
+            "values": [
+                ["2.5", "4.1", "-2.", "1000.00"],
+                ["2.5", "4.1", "-2.", "1000.00"]
+            ]
+        },
+
+        "pTBinsJpsiToMuMu": {
+            "values": [
+                "0.",
+                "5.",
+                "1000."
+            ]
+        },
+        "cutsJpsiToMuMu": {
+            "values": [
+                ["2.5", "4.1", "-2.", "1000.00"],
+                ["2.5", "4.1", "-2.", "1000.00"]
+            ]
+        },
+
+        "pTBinsDPlusToPiKPi": {
+            "values": [
+                "1.",
+                "5.",
+                "1000."
+            ]
+        },
+        "cutsDPlusToPiKPi": {
+            "values": [
+                ["1.67", "2.07", "0.7", "0.03"],
+                ["1.67", "2.07", "0.7", "0.03"]
+            ]
+        },
+
+        "pTBinsDsToPiKK": {
+            "values": [
+                "1.5",
+                "5.",
+                "1000."
+            ]
+        },
+        "cutsDsToPiKK": {
+            "values": [
+                ["1.74", "2.18", "0.94", "0.02"],
+                ["1.74", "2.18", "0.94", "0.02"]
+            ]
+        },
+
+        "pTBinsLcToPKPi": {
+            "values": [
+                "4.",
+                "5.",
+                "1000."
+            ]
+        },
+        "cutsLcToPKPi": {
+            "values": [
+                ["1.98", "2.58", "-2.", "0.0"],
+                ["1.98", "2.58", "-2.", "0.0"]
+            ]
+        },
+
+        "pTBinsXicToPKPi": {
+            "values": [
+                "4.",
+                "5.",
+                "1000."
+            ]
+        },
+        "cutsXicToPKPi": {
+            "values": [
+                ["2.10", "2.80", "-2.", "0.0"],
+                ["2.10", "2.80", "-2.", "0.0"]
+            ]
+        }
+    },
+    "hf-cand-creator-2prong": {
+        "d_bz": "5.",
+        "b_propdca": "true",
+        "d_maxr": "5.",
+        "d_maxdzini": "999.",
+        "d_minparamchange": "0.001",
+        "d_minrelchi2change": "0.9",
+        "b_dovalplots": "true"
+    },
+    "hf-cand-creator-2prong-expressions": {
+        "processMC": "true"
+    },
+    "hf-d0-candidate-selector": {
+        "d_pTCandMin": "0.",
+        "d_pTCandMax": "50.",
+        "d_pidTPCMinpT": "0.15",
+        "d_pidTPCMaxpT": "10.",
+        "d_pidTOFMinpT": "0.15",
+        "d_pidTOFMaxpT": "10.",
+        "d_TPCNClsFindablePIDCut": "50.",
+        "d_nSigmaTPC": "3.",
+        "d_nSigmaTPCCombined": "5.",
+        "d_nSigmaTOF": "3.",
+        "d_nSigmaTOFCombined": "5.",
+        "pTBins": {
+            "values": [
+                "0",
+                "0.5",
+                "1",
+                "1.5",
+                "2",
+                "2.5",
+                "3",
+                "3.5",
+                "4",
+                "4.5",
+                "5",
+                "5.5",
+                "6",
+                "6.5",
+                "7",
+                "7.5",
+                "8",
+                "9",
+                "10",
+                "12",
+                "16",
+                "20",
+                "24",
+                "36",
+                "50",
+                "100"
+            ]
+        },
+        "D0_to_pi_K_cuts": {
+            "values": [
+                [ "0.4", "0.035", "0.8", "0.5", "0.5", "0.1", "0.1", "-5.e-5", "0.80", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.035", "0.8", "0.5", "0.5", "0.1", "0.1", "-5.e-5", "0.80", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.4", "0.4", "0.1", "0.1", "-25.e-5", "0.80", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.4", "0.4", "0.1", "0.1", "-25.e-5", "0.80", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-20.e-5", "0.90", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-20.e-5", "0.90", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-12.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-12.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-7.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-7.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.9", "0.7", "0.7", "0.1", "0.1", "-5.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.9", "0.7", "0.7", "0.1", "0.1", "-5.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "0.9", "0.7", "0.7", "0.1", "0.1", "-5.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "1.0", "0.7", "0.7", "0.1", "0.1", "10.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "1.0", "0.7", "0.7", "0.1", "0.1", "1000.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "1.0", "0.7", "0.7", "0.1", "0.1", "1000.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "1.0", "0.7", "0.7", "0.1", "0.1", "1000.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "1.0", "0.7", "0.7", "0.1", "0.1", "1000.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
+                [ "0.4", "0.030", "1.0", "0.6", "0.6", "0.1", "0.1", "1000.e-5", "0.80", "0.", "0.", "10.0", "10.0", "0.06" ]
+            ]
+        }
+    },
+    "hf-task-d0": {
+        "cutYCandMax": "0.8",
+        "d_selectionFlagD0": "0",
+        "d_selectionFlagD0bar": "0",
+        "pTBins": {
+            "values": [
+                "0",
+                "0.5",
+                "1",
+                "1.5",
+                "2",
+                "2.5",
+                "3",
+                "3.5",
+                "4",
+                "4.5",
+                "5",
+                "5.5",
+                "6",
+                "6.5",
+                "7",
+                "7.5",
+                "8",
+                "9",
+                "10",
+                "12",
+                "16",
+                "20",
+                "24",
+                "36",
+                "50",
+                "100"
+            ]
+        },
+       "processMC": "true"
+    },
+    "ambiguous-track-propagation": {
+        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
+        "geoPath": "GLO\/Config\/GeometryAligned",
+        "grpmagPath": "GLO\/Config\/GRPMagField",
+        "mVtxPath": "GLO\/Calib\/MeanVertex",
+        "processCentral": "false",
+        "processMFT": "true"
     }
 }

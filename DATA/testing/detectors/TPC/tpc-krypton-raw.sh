@@ -67,4 +67,4 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --max-tf-per-file 8000 \
     --time-bins-before 20 \
     | o2-qc $ARGS_ALL --config $QC_CONFIG --local --host $HOST \
-    | o2-dpl-run $ARGS_ALL --dds | grep -v ERROR
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE} | grep -v ERROR

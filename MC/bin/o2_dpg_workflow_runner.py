@@ -13,6 +13,7 @@ import signal
 import socket
 import sys
 import traceback
+import platform
 try:
     from graphviz import Digraph
     havegraphviz=True
@@ -42,6 +43,7 @@ parser.add_argument('-tt','--target-tasks', nargs='+', help='Runs the pipeline b
 parser.add_argument('--produce-script', help='Produces a shell script that runs the workflow in serialized manner and quits.')
 parser.add_argument('--rerun-from', help='Reruns the workflow starting from given task (or pattern). All dependent jobs will be rerun.')
 parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit.', action='store_true')
+parser.add_argument('--update-resources', dest="update_resources", help='Read resource estimates from a JSON and apply where possible.')
 
 parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint (in MB)', default=0.9*max_system_mem/1024./1024)
 parser.add_argument('--cpu-limit', help='Set CPU limit (core count)', default=8)
@@ -52,7 +54,7 @@ parser.add_argument('--webhook', help=argparse.SUPPRESS) # log some infos to thi
 parser.add_argument('--checkpoint-on-failure', help=argparse.SUPPRESS) # debug option making a debug-tarball and sending to specified address
                                                                        # argument is alien-path
 parser.add_argument('--retry-on-failure', help=argparse.SUPPRESS, default=0) # number of times a failing task is retried
-parser.add_argument('--rootinit-speedup', help=argparse.SUPPRESS, action='store_true') # enable init of ROOT environment vars to speedup init/startup
+parser.add_argument('--no-rootinit-speedup', help=argparse.SUPPRESS, action='store_true') # disable init of ROOT environment vars to speedup init/startup
 parser.add_argument('--action-logfile', help='Logfilename for action logs. If none given, pipeline_action_#PID.log will be used')
 parser.add_argument('--metric-logfile', help='Logfilename for metric logs. If none given, pipeline_metric_#PID.log will be used')
 args = parser.parse_args()
@@ -146,8 +148,7 @@ class Graph:
  
             # increment in-degree of destination vertex by 1
             self.indegree[dest] = self.indegree[dest] + 1
- 
- 
+
 # Recursive function to find all topological orderings of a given DAG
 def findAllTopologicalOrders(graph, path, discovered, N, allpaths, maxnumber=1):
     if len(allpaths) >= maxnumber:
@@ -285,8 +286,8 @@ def build_graph(taskuniverse, workflowspec):
     return (edges, nodes)
         
 
-# loads the workflow specification
-def load_workflow(workflowfile):
+# loads json into dict, e.g. for workflow specification
+def load_json(workflowfile):
     fp=open(workflowfile)
     workflowspec=json.load(fp)
     return workflowspec
@@ -407,6 +408,78 @@ def build_dag_properties(workflowspec):
     # print (global_next_tasks)
     return { 'nexttasks' : global_next_tasks, 'weights' : task_weights, 'topological_ordering' : tup[0] }
 
+# update the resource estimates of a workflow based on resources given via JSON
+def update_resource_estimates(workflow, resource_json):
+    resource_dict = load_json(resource_json)
+    stages = workflow["stages"]
+
+    for task in stages:
+        if task["timeframe"] >= 1:
+            tf = task["timeframe"]
+            name = "_".join(task["name"].split("_")[:-1])
+        else:
+            name = task["name"]
+
+        if name not in resource_dict:
+            continue
+
+        new_resources = resource_dict[name]
+
+        oldmem = task["resources"]["mem"]
+        newmem = new_resources.get("mem", task["resources"]["mem"])
+        actionlogger.info("Updating mem estimate for " + task["name"] + " from " + str(oldmem) + " to " + str(newmem))
+        task["resources"]["mem"] = newmem
+        # should we really be correcting for relative_cpu, when we have an outer estimate ??
+        oldcpu = task["resources"]["cpu"]
+        newcpu = new_resources.get("cpu", task["resources"]["cpu"])
+        actionlogger.info("Updating cpu estimate for " + task["name"] + " from " + str(oldcpu) + " to " + str(newcpu))
+        task["resources"]["cpu"] = newcpu
+
+        # CPU is a bit more invlolved
+        # if "cpu" in new_resources:
+        #    cpu = new_resources["cpu"]
+        #    rel_cpu = task["resources"]["relative_cpu"]
+        #    if rel_cpu is not None:
+        #        # respect the relative CPU settings
+        #        cpu *= rel_cpu
+        #    task["resources"]["cpu"] = cpu
+
+# a function to read a software environment determined by alienv into
+# a python dictionary
+def get_alienv_software_environment(packagestring):
+    """
+    packagestring is something like O2::v202298081-1,O2Physics::xxx
+    """
+    # alienv printenv packagestring --> dictionary
+    # for the moment this works with CVMFS only
+    cmd="/cvmfs/alice.cern.ch/bin/alienv printenv " + packagestring
+    proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+
+    envstring, err = proc.communicate()
+    # see if the printenv command was successful
+    if len(err.decode()) > 0:
+       print (err.decode())
+       raise Exception
+
+    # the software environment is now in the evnstring
+    # split it on semicolon
+    envstring=envstring.decode()
+    tokens=envstring.split(";")
+    # build envmap
+    envmap = {}
+    for t in tokens:
+      # check if assignment
+      if t.count("=") > 0:
+         assignment = t.rstrip().split("=")
+         envmap[assignment[0]] = assignment[1]
+      elif t.count("export") > 0:
+         # the case when we export or a simple variable
+         # need to consider the case when this has not been previously assigned
+         variable = t.split()[1]
+         if not variable in envmap:
+            envmap[variable]=""
+
+    return envmap
 
 #
 # functions for execution; encapsulated in a WorkflowExecutor class
@@ -416,7 +489,7 @@ class WorkflowExecutor:
     def __init__(self, workflowfile, args, jmax=100):
       self.args=args
       self.workflowfile = workflowfile
-      self.workflowspec = load_workflow(workflowfile)
+      self.workflowspec = load_json(workflowfile)
       self.workflowspec = filter_workflow(self.workflowspec, args.target_tasks, args.target_labels)
 
       if not self.workflowspec['stages']:
@@ -438,6 +511,9 @@ class WorkflowExecutor:
       for i in range(len(self.taskuniverse)):
           self.tasktoid[self.taskuniverse[i]]=i
           self.idtotask[i]=self.taskuniverse[i]
+
+      if args.update_resources:
+          update_resource_estimates(self.workflowspec, args.update_resources)
 
       self.maxmemperid = [ self.workflowspec['stages'][tid]['resources']['mem'] for tid in range(len(self.taskuniverse)) ]
       self.cpuperid = [ self.workflowspec['stages'][tid]['resources']['cpu'] for tid in range(len(self.taskuniverse)) ]
@@ -465,7 +541,12 @@ class WorkflowExecutor:
       self.internalmonitorid = 0 # internal use
       self.tids_marked_toretry = [] # sometimes we might want to retry a failed task (simply because it was "unlucky") and we put them here
       self.retry_counter = [ 0 for tid in range(len(self.taskuniverse)) ] # we keep track of many times retried already
+      self.task_retries = [ self.workflowspec['stages'][tid].get('retry_count',0) for tid in range(len(self.taskuniverse)) ] # the per task specific "retry" number -> needs to be parsed from the JSON
+
       self.semaphore_values = { self.workflowspec['stages'][tid].get('semaphore'):0 for tid in range(len(self.taskuniverse)) if self.workflowspec['stages'][tid].get('semaphore')!=None } # keeps current count of semaphores (defined in the json workflow). used to achieve user-defined "critical sections".
+      self.alternative_envs = {} # mapping of taskid to alternative software envs (to be applied on a per-task level)
+      # init alternative software environments
+      self.init_alternative_software_environments()
 
     def SIGHandler(self, signum, frame):
        # basically forcing shut down of all child processes
@@ -544,12 +625,21 @@ class WorkflowExecutor:
       if self.workflowspec['stages'][tid].get('env')!=None:
           taskenv.update(self.workflowspec['stages'][tid]['env'])
 
+      # apply specific (non-default) software version, if any
+      # (this was setup earlier)
+      alternative_env = self.alternative_envs.get(tid, None)
+      if alternative_env != None:
+          actionlogger.info('Applying alternative software environment to task ' + self.idtotask[tid])
+          for entry in alternative_env:
+              # overwrite what is present in default
+              taskenv[entry] = alternative_env[entry]
+
       p = psutil.Popen(['/bin/bash','-c',c], cwd=workdir, env=taskenv)
       try:
           p.nice(nice)
           self.nicevalues[tid]=nice
       except (psutil.NoSuchProcess, psutil.AccessDenied):
-          actionlogger.error('Couldn\'t set nice value of ' + str(p.pid) + ' to ' + str(nice) + ' -- current value is ' + str(p.nice()))
+          actionlogger.error('Couldn\'t set nice value of ' + str(p.pid) + ' to ' + str(nice))
           self.nicevalues[tid]=os.nice(0)
       return p
 
@@ -759,7 +849,7 @@ class WorkflowExecutor:
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         pass
 
-            resources_per_task[tid]={'iter':self.internalmonitorid, 'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS/1024./1024., 'pss':totalPSS/1024./1024, 'nice':proc.nice(), 'swap':totalSWAP, 'label':self.workflowspec['stages'][tid]['labels']}
+            resources_per_task[tid]={'iter':self.internalmonitorid, 'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS/1024./1024., 'pss':totalPSS/1024./1024, 'nice':self.nicevalues[tid], 'swap':totalSWAP, 'label':self.workflowspec['stages'][tid]['labels']}
             metriclogger.info(resources_per_task[tid])
             send_webhook(self.args.webhook, resources_per_task)
             
@@ -798,7 +888,7 @@ class WorkflowExecutor:
             if returncode != 0:
                print (str(self.idtotask[tid]) + ' failed ... checking retry')
                # we inspect if this is something "unlucky" which could be resolved by a simple resubmit
-               if self.is_worth_retrying(tid) and self.retry_counter[tid] < int(args.retry_on_failure):
+               if self.is_worth_retrying(tid) and ((self.retry_counter[tid] < int(args.retry_on_failure)) or (self.retry_counter[tid] < int(self.task_retries[tid]))):
                  print (str(self.idtotask[tid]) + ' to be retried')
                  actionlogger.info ('Task ' + str(self.idtotask[tid]) + ' failed but marked to be retried ')
                  self.tids_marked_toretry.append(tid)
@@ -864,8 +954,8 @@ class WorkflowExecutor:
         # and copies it to a specific ALIEN location. Not a core function
         # just some tool get hold on error conditions appearing on the GRID.
 
-        def get_tar_command(dir='./', flags='cf', filename='checkpoint.tar'):
-            return 'find ' + str(dir) + ' -maxdepth 1 -type f -print0 | xargs -0 tar ' + str(flags) + ' ' + str(filename)
+        def get_tar_command(dir='./', flags='cf', findtype='f', filename='checkpoint.tar'):
+            return 'find ' + str(dir) + ' -maxdepth 1 -type ' + str(findtype) + ' -print0 | xargs -0 tar ' + str(flags) + ' ' + str(filename)
 
         if location != None:
            print ('Making a failure checkpoint')
@@ -903,6 +993,10 @@ class WorkflowExecutor:
                tarcommand = get_tar_command(dir=directory, flags='rf', filename=fn)
                actionlogger.info("Tar command is " + tarcommand)
                os.system(tarcommand)
+               # same for soft links
+               tarcommand = get_tar_command(dir=directory, flags='rf', findtype='l', filename=fn)
+               actionlogger.info("Tar command is " + tarcommand)
+               os.system(tarcommand)
 
            # prepend file:/// to denote local file
            fn = "file://" + fn
@@ -912,6 +1006,24 @@ class WorkflowExecutor:
            copycommand='alien.py cp ' + fn + ' ' + str(location) + '@disk:1'
            actionlogger.info("Copying to alien " + copycommand)
            os.system(copycommand)
+
+    def init_alternative_software_environments(self):
+        """
+        Initiatialises alternative software environments for specific tasks, if there
+        is an annotation in the workflow specificiation.
+        """
+
+        environment_cache = {}
+        # go through all the tasks once and setup environment
+        for taskid in range(len(self.workflowspec['stages'])):
+          packagestr = self.workflowspec['stages'][taskid].get("alternative_alienv_package")
+          if packagestr == None:
+             continue
+
+          if environment_cache.get(packagestr) == None:
+             environment_cache[packagestr] = get_alienv_software_environment(packagestr)
+
+          self.alternative_envs[taskid] = environment_cache[packagestr]
 
 
     def analyse_files_and_connections(self):
@@ -1020,10 +1132,13 @@ class WorkflowExecutor:
         psutil.cpu_percent(interval=None)
         os.environ['JOBUTILS_SKIPDONE'] = "ON"
         # a bit ALICEO2+O2DPG specific but for now a convenient place to
-        # restore original behaviour of ALICEO2_CCDB_LOCALCACHE semantics
+        # force presence of ALICEO2_CCDB_LOCALCACHE (needed for MC)
         # TODO: introduce a proper workflow-globalinit section which is defined inside the workflow json
-        if os.environ.get('ALICEO2_CCDB_LOCALCACHE') != None:
-           os.environ['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = "ON"
+        # TODO: explicitely tell reco workflows where to pickup GRP from disc
+        if os.environ.get('ALICEO2_CCDB_LOCALCACHE') == None:
+           print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default") 
+           os.environ['ALICEO2_CCDB_LOCALCACHE'] = os.getcwd() + "/.ccdb"
+        os.environ['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = "ON"
 
         errorencountered = False
 
@@ -1031,6 +1146,11 @@ class WorkflowExecutor:
                """initialize some env variables that speed up ROOT init
                and prevent ROOT from spawning many short-lived child
                processes"""
+
+               # only do it on Linux
+               if platform.system() != 'Linux':
+                  return
+
                if os.environ.get('ROOT_LDSYSPATH')!=None and os.environ.get('ROOT_CPPSYSINCL')!=None:
                   # do nothing if already defined
                   return
@@ -1040,7 +1160,7 @@ class WorkflowExecutor:
                cmd='LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls /tmp/DOESNOTEXIST 2>&1 | grep -m 1 "system search path" | sed \'s/.*=//g\' | awk \'//{print $1}\''
                proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                libpath, err = proc.communicate()
-               if (args.rootinit_speedup):
+               if not (args.no_rootinit_speedup == True):
                   print ("setting up ROOT system")
                   os.environ['ROOT_LDSYSPATH'] = libpath.decode()
 
@@ -1050,7 +1170,7 @@ class WorkflowExecutor:
                incpath, err = proc.communicate()
                incpaths = [ line.lstrip() for line in incpath.decode().splitlines() ]
                joined = ':'.join(incpaths)
-               if (args.rootinit_speedup):
+               if not (args.no_rootinit_speedup == True):
                   os.environ['ROOT_CPPSYSINCL'] = joined
 
         speedup_ROOT_Init()

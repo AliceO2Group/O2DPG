@@ -81,8 +81,8 @@ class GeneratorEvtGen : public T
 
     EvtRandom::setRandomEngine(mEng);
 
-    char* decayTablePath = gSystem->ExpandPathName("$EVTGEN_ROOT/share/DECAY_2010.DEC"); // default decay table
-    char* particleTablePath = gSystem->ExpandPathName("$EVTGEN_ROOT/share/evt.pdl");     // particle table
+    char* decayTablePath = gSystem->ExpandPathName("$EVTGEN_ROOT/share/EvtGen/DECAY_2010.DEC"); // default decay table
+    char* particleTablePath = gSystem->ExpandPathName("$EVTGEN_ROOT/share/EvtGen/evt.pdl");     // particle table
     std::list<EvtDecayBase*> extraModels;
 
     EvtExternalGenList genList;
@@ -92,7 +92,7 @@ class GeneratorEvtGen : public T
     mEvtGen = new EvtGen(decayTablePath, particleTablePath, mEng, fRadCorrEngine, &extraModels);
     ForceDecay();
     if (mDecayTablePath.Contains("DEC"))
-      mEvtGen->readUDecay(mDecayTablePath); // user decay table
+      mEvtGen->readUDecay(mDecayTablePath.Data()); // user decay table
     return kTRUE;
   };
 

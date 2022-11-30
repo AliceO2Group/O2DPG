@@ -1,0 +1,43 @@
+{
+    "hits": {
+        "ITS": "tf*/*HitsITS.root",
+        "TPC": "tf*/*HitsTPC.root",
+        "TOF": "tf*/*HitsTOF.root",
+        "TRD": "tf*/*HitsTRD.root",
+        "EMC": "tf*/*HitsEMC.root",
+        "PHS": "tf*/*HitsPHS.root",
+        "FT0": "tf*/*HitsFT0.root",
+        "FV0": "tf*/*HitsFV0.root",
+        "HMP": "tf*/*HitsHMP.root",
+        "MFT": "tf*/*HitsMFT.root",
+        "FDD": "tf*/*HitsFDD.root",
+        "MID": "tf*/*HitsMID.root",
+        "MCH": "tf*/*HitsMCH.root",
+        "CPV": "tf*/*HitsCPV.root",
+        "ZDC": "tf*/*HitsZDC.root"
+    },
+    "tpctracks": {
+        "TPCtracks": "tf*/tpctracks.root"
+    },
+    "QC": {
+        "emcCellQC": "QC/emcCellQC.root",
+        "ITSTPCmatchQC": "QC/ITSTPCmatchQC.root",
+        "ITSTrackSimTask": "QC/ITSTrackSimTask.root",
+        "mftAsyncQC": "QC/mftAsyncQC.root",
+        "mftClustersQC": "QC/mftClustersQC.root",
+        "mftDigitsQC": "QC/mftDigitsQC.root",
+        "RecPointsQC": "QC/RecPointsQC.root",
+        "tofDigitsQC": "QC/tofDigitsQC.root",
+        "tofft0PIDQC": "QC/tofft0PIDQC.root",
+        "TOFMatchQC": "QC/TOFMatchQC.root",
+        "TOFMatchWithTRDQC": "QC/TOFMatchWithTRDQC.root",
+        "tofPIDQC": "QC/tofPIDQC.root",
+        "tpcStandardQC": "QC/tpcStandardQC.root",
+        "trdDigitsQC": "QC/trdDigitsQC.root",
+        "vertexQC": "QC/vertexQC.root"
+    },
+    "MCKine": {
+        "MCKine": "tf*/*Kine.root"
+    }
+
+}

@@ -30,9 +30,20 @@ class GeneratorCocktail_class : public Generator
   bool importParticles() override
   {
     for (auto& g : *mEntries) {
+      int nPart = mParticles.size();
       g->importParticles();
-      for (auto& p : g->getParticles())
+      for (auto p : g->getParticles()) {
         mParticles.push_back(p);
+        auto& pEdit = mParticles.back();
+        if (pEdit.GetFirstMother() > -1)
+          pEdit.SetFirstMother(pEdit.GetFirstMother() + nPart);
+        if (pEdit.GetSecondMother() > -1)
+          pEdit.SetLastMother(pEdit.GetSecondMother() + nPart);
+        if (pEdit.GetFirstDaughter() > -1)
+          pEdit.SetFirstDaughter(pEdit.GetFirstDaughter() + nPart);
+        if (pEdit.GetLastDaughter() > -1)
+          pEdit.SetLastDaughter(pEdit.GetLastDaughter() + nPart);
+      }
       g->clearParticles();
     }
     return true;
@@ -43,6 +54,11 @@ class GeneratorCocktail_class : public Generator
     for (int in = 0; in < ntimes; in++)
       mEntries->push_back(gen);
     return;
+  };
+
+  std::vector<Generator*>* getGenerators()
+  {
+    return mEntries;
   };
 
  private:

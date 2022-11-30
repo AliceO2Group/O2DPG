@@ -54,7 +54,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --configKeyValues "$ARGS_ALL_CONFIG;$GPU_CONFIG_KEY;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;" \
     | o2-eve-display $ARGS_ALL --display-tracks TPC --display-clusters TPC --disable-mc --jsons-folder /home/ed/jsons --eve-dds-collection-index 0 --configKeyValues "$ARGS_ALL_CONFIG" \
     | o2-ctf-writer-workflow $ARGS_ALL --configKeyValues "$ARGS_ALL_CONFIG" --output-dir $CTF_DIR --ctf-dict-dir $FILEWORKDIR --output-type ctf --onlyDet TPC \
-    | o2-dpl-run $ARGS_ALL --dds
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
 
 #HOST=localhost
 #| o2-qc $ARGS_ALL --config json:///home/epn/odc/files/tpcQCTasks_multinode_ALL.json --local --host $HOST \

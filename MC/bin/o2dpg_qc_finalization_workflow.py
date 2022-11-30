@@ -17,7 +17,7 @@ from os.path import join, dirname, isdir
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
-from o2dpg_workflow_utils import createTask, dump_workflow
+from o2dpg_workflow_utils import createTask, dump_workflow, isActive
 
 def getDPL_global_options(bigshm=False, noIPC=None):
    common="-b --run --driver-client-backend ws:// "
@@ -78,7 +78,7 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
   add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-0.json', MFTDigitsQCneeds)
   add_QC_finalization('mftClustersQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json')
   add_QC_finalization('mftAsyncQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-async.json')
-  add_QC_finalization('emcDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/emc-digits-task.json')
+  add_QC_finalization('emcCellQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/emc-cell-task.json')
   #add_QC_finalization('tpcTrackingQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-tracking-direct.json')
   add_QC_finalization('tpcStandardQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-standard-direct.json')
   add_QC_finalization('trdDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json')
@@ -88,10 +88,16 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
   add_QC_finalization('tofDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tofdigits.json')
   add_QC_finalization('TOFMatchWithTRDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_AllTypes_direct_MC.json')
   add_QC_finalization('ITSTrackSimTask', 'json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
-  add_QC_finalization('tofft0PIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tof.json')
-  add_QC_finalization('tofPIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidtof.json')
+  if isActive('FT0') and isActive('TRD'):
+     add_QC_finalization('tofft0PIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tof.json')
+  elif isActive('FT0'):
+     add_QC_finalization('tofft0PIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tofNoTRD.json')
+  elif isActive('TRD'):
+     add_QC_finalization('tofPIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidtof.json')
+  else:
+     add_QC_finalization('tofPIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidtofNoTRD.json')
   add_QC_finalization('RecPointsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/ft0-reconstruction-config.json')
-  
+
   # The list of QC Post-processing workflows
   add_QC_postprocessing('tofTrendingHits', 'json://${O2DPG_ROOT}/MC/config/QC/json/tof-trending-hits.json', [QC_finalize_name('tofDigitsQC')], runSpecific=False, prodSpecific=True)
 

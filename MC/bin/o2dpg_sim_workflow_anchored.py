@@ -86,10 +86,10 @@ class CCDBAccessor:
 def retrieve_sor_eor(ccdbreader, run_number):
     """
     retrieves start of run (sor) and end of run (eor) given a run number
-    from the RCT/RunInformation table
+    from the RCT/Info/RunInformation table
     """
 
-    path_run_info = "RCT/RunInformation"
+    path_run_info = "RCT/Info/RunInformation"
     header = ccdbreader.fetch_header(path_run_info, run_number)
     if not header:
        print(f"WARNING: Cannot find run information for run number {r}")
@@ -128,12 +128,11 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
     """
 
     # make a simple HTTP request on the "browsing" endpoint
-    url="http://alice-ccdb.cern.ch/browse/GLO/Config/GRPECS/run_number="+str(run_number)
+    url="http://alice-ccdb.cern.ch/browse/GLO/Config/GRPECS/runNumber="+str(run_number)
     ansobject=requests.get(url)
     tokens=ansobject.text.split("\n")
-    # look for the validity token
 
-    # look for the ID token
+    # look for the FIRST ID and validity token
     ID=None
     VALIDITY=None
     for t in tokens:
@@ -156,7 +155,7 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
 
     # we make a suitable request (at the start time) --> this gives the actual
     # object, with which we can query the end time as well
-    grp=retrieve_CCDBObject_asJSON(ccdbreader, "/GLO/Config/GRPECS", int(SOV))
+    grp=retrieve_CCDBObject_asJSON(ccdbreader, "/GLO/Config/GRPECS" + "/runNumber=" + str(run_number) + "/", int(SOV))
 
     # check that this object is really the one we wanted based on run-number
     assert(int(grp["mRun"]) == int(run_number))
@@ -238,11 +237,18 @@ def main():
     # make a CCDB accessor object
     ccdbreader = CCDBAccessor(args.ccdb_url)
     # fetch the EOR/SOR
-    # retrieve_sor_eor(ccdbreader, args.run_number) # <-- from RCT/Info
+    rct_sor_eor = retrieve_sor_eor(ccdbreader, args.run_number) # <-- from RCT/Info
     sor_eor = retrieve_sor_eor_fromGRPECS(ccdbreader, args.run_number)
     if not sor_eor:
        print ("No time info found")
        sys.exit(1)
+
+    # verify that the variaous sor_eor information are the same
+    if sor_eor["SOR"] != rct_sor_eor["SOR"]:
+       print ("Inconsistent SOR information on CCDB")
+
+    if sor_eor["EOR"] != rct_sor_eor["EOR"]:
+       print ("Inconsistent EOR information on CCDB")
 
     # determine timestamp, and production offset for the final
     # MC job to run

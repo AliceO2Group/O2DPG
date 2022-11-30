@@ -60,55 +60,6 @@
           "pulseheightpeaklower": "1.0",
           "pulseheightpeakupper": "5.0"
         }
-      },
-      "PulseHeight": {
-        "active": "true",
-        "className": "o2::quality_control_modules::trd::PulseHeight",
-        "moduleName": "QcTRD",
-        "detectorName": "TRD",
-        "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
-        "dataSource_comment": "no comment",
-        "dataSource": {
-          "type": "direct",
-          "query": "digits:TRD/DIGITS;tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
-        },
-        "taskParameters": {
-          "peakregionstart": "7.0",
-          "peakregionend": "20.0",
-          "pulseheightpeaklower": "1.0",
-          "pulseheightpeakupper": "5.0"
-        }
-      }    
-    },
-    "checks": {
-      "QcCheck": {
-        "active": "false",
-        "className": "o2::quality_control_modules::trd::RawDataCheck",
-        "moduleName": "QcTRD",
-        "policy": "OnAny",
-        "detectorName": "TRD",
-        "dataSource": [
-          {
-          "type": "Task",
-          "name": "RawDataTask",
-          "MOs": ["trackletsperevent"]
-          }
-        ]
-      },
-      "PulseHeightCheck": {
-        "active": "false",
-        "className": "o2::quality_control_modules::trd::PulseHeightCheck",
-        "moduleName": "QcTRD",
-        "policy": "OnAny",
-        "detectorName": "TRD",
-        "dataSource": [
-          {
-          "type": "Task",
-          "name": "PulseHeightTask",
-          "MOs": ["trackletsperevent"]
-          }
-        ]
       }
     }
   },

@@ -20,7 +20,7 @@
         "url": "http://ali-consul.cern.ch:8500"
       },
       "conditionDB": {
-        "url": "http://localhost:8084"
+        "url": "https://alice-ccdb.cern.ch"
       }
     },
     "tasks": {
@@ -79,7 +79,16 @@
           "type": "direct",
           "query": "inputTracks:TPC/TRACKS/0"
         },
-        "taskParameters": {},
+        "taskParameters": {
+          "cutMinNCluster": "60",
+          "cutAbsTgl": "1.",
+          "cutMindEdxTot": "10.",
+          "cutMaxdEdxTot": "2000.",
+          "cutMinpTPC": "0.05",
+          "cutMaxpTPC": "20.",
+          "cutMinpTPCMIPs": "0.45",
+          "cutMaxpTPCMIPs": "0.55"
+        },
         "location": "local",
         "localMachines": [
           "localhost",
@@ -102,7 +111,11 @@
           "type": "direct",
           "query": "inputTracks:TPC/TRACKS/0"
         },
-        "taskParameters": {},
+        "taskParameters": {
+          "cutAbsEta": "1.",
+          "cutMinNCluster": "60",
+          "cutMindEdxTot": "20."
+        },
         "location": "local",
         "localMachines": [
           "localhost",

@@ -26,4 +26,4 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --severity $SEVERITY \
     --infologger-severity $INFOLOGGER_SEVERITY \
     --pipeline EMCALRawToCellConverterSpec:$NCPU \
-    | o2-dpl-run $ARGS_ALL --dds
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}

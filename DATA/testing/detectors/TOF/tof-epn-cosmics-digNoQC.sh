@@ -23,4 +23,4 @@ o2-dpl-raw-proxy ${ARGS_ALL} --dataspec "${PROXY_INSPEC}" \
 ${ARGS_ALL} --configKeyValues "$ARGS_ALL_CONFIG;" \
 --pipeline "tof-compressed-decoder:${NTHREADS}" \
 | o2-dpl-output-proxy ${ARGS_ALL} --channel-config ${OUT_CHANNEL} --dataspec ${PROXY_OUTSPEC} \
-| o2-dpl-run $ARGS_ALL $GLOBALDPLOPT --dds # option instead iof run to export DDS xml file
+| o2-dpl-run $ARGS_ALL $GLOBALDPLOPT --dds ${WORKFLOWMODE_FILE} # option instead iof run to export DDS xml file
