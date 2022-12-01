@@ -16,7 +16,7 @@ WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL \
  | o2-tpc-calib-laser-tracks  $ARGS_ALL \
  --use-filtered-tracks --min-tfs 50 \
  | o2-tpc-calib-pad-raw $ARGS_ALL \
-  --configKeyValues \"TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=150;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=302;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null\" \
+  --configKeyValues \"TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=502;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null\" \
  --lanes 36 \
  --calib-type ce \
  --publish-after-tfs 50 \
