@@ -122,12 +122,19 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 echo "Checking current directory content"
 ls -altr
 
+export ADD_CALIB=0
+
 if [[ -n "$ALIEN_JDL_DOEMCCALIB" ]]; then
-  export CALIB_EMC_ASYNC_RECALIB="$ALIEN_JDL_DOEMCCALIB"
+  export ADD_CALIB=1
 fi
 
 if [[ -n "$ALIEN_JDL_DOTPCRESIDUALEXTRACTION" ]]; then
   export DO_TPC_RESIDUAL_EXTRACTION="$ALIEN_JDL_DOTPCRESIDUALEXTRACTION"
+  export ADD_CALIB=1
+fi
+
+if [[ -n "$ALIEN_JDL_DOTRDVDRIFTEXBCALIB" ]]; then
+  export ADD_CALIB=1
 fi
 
 if [[ -f "setenv_extra.sh" ]]; then
@@ -189,7 +196,7 @@ if [[ ! -z "$ALIEN_JDL_DDSHMSIZE" ]]; then export DDSHMSIZE=$ALIEN_JDL_DDSHMSIZE
 # keeping AO2D.root QC.root o2calib_tof.root mchtracks.root mchclusters.root
 
 SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT_o2_tof_matcher_workflow= ENABLE_ROOT_OUTPUT_o2_aod_producer_workflow= ENABLE_ROOT_OUTPUT_o2_qc= "
-if [[ $DO_EMC_CALIB == "1" ]]; then
+if [[ $ALIEN_JDL_DOEMCCALIB == "1" ]]; then
   SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_emcal_emc_offline_calib_workflow= "
 fi
 if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
@@ -201,7 +208,7 @@ if [[ -n "$ALIEN_EXTRA_ENABLE_ROOT_OUTPUT" ]]; then
   OLD_IFS=$IFS
   IFS=','
   for token in $ALIEN_EXTRA_ENABLE_ROOT_OUTPUT; do
-    SETTING_ROOT_OUTPUT+=" ENABLE_ROOT_OUTPUT_$token"
+    SETTING_ROOT_OUTPUT+=" ENABLE_ROOT_OUTPUT_$token="
   done
   IFS=$OLD_IFS
 fi
@@ -212,7 +219,7 @@ if [[ -n "$ALIEN_ENABLE_ROOT_OUTPUT" ]]; then
   IFS=','
   SETTING_ROOT_OUTPUT=
   for token in $ALIEN_ENABLE_ROOT_OUTPUT; do
-    SETTING_ROOT_OUTPUT+=" ENABLE_ROOT_OUTPUT_$token"
+    SETTING_ROOT_OUTPUT+=" ENABLE_ROOT_OUTPUT_$token="
   done
   IFS=$OLD_IFS
 fi
