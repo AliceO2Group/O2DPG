@@ -194,6 +194,7 @@ if [[ $ADD_CALIB == "1" ]]; then
   if [[ $ALIEN_JDL_DOTRDVDRIFTEXBCALIB == "1" ]]; then
     export CALIB_TRD_VDRIFTEXB="$ALIEN_JDL_DOTRDVDRIFTEXBCALIB"
     export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow="--enable-root-output"
+    export ARGS_EXTRA_PROCESS_o2_trd_global_tracking="--enable-qc"
   fi
 fi
 
