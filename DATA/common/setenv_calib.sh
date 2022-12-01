@@ -177,6 +177,8 @@ if [[ -z $CALIBDATASPEC_BARREL_TF ]]; then
   if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then
     add_semicolon_separated CALIBDATASPEC_BARREL_TF "unbinnedTPCResiduals:GLO/UNBINNEDRES/0"
     add_semicolon_separated CALIBDATASPEC_BARREL_TF "trackReferences:GLO/TRKREFS/0"
+    # the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
+    [[ -z $CALIB_TPC_SCDCALIB_SLOTLENGTH ]] && export CALIB_TPC_SCDCALIB_SLOTLENGTH=600
   fi
   if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ 0$CALIB_TPC_SCDCALIB_SENDTRKDATA == "01" ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcInterpTrkData:GLO/TRKDATA/0"; fi
   if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ $CALIB_TPC_SCDCALIB_CTP_INPUT == "--enable-ctp" ]]; then
