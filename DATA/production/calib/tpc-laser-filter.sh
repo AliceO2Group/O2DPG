@@ -58,7 +58,8 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
     --input-spec "$CALIB_INSPEC"  \
-    --configKeyValues "TPCDigitDump.LastTimeBin=600;$ARGS_ALL_CONFIG" \
+    --configKeyValues "TPCDigitDump.NoiseThreshold=3;TPCDigitDump.LastTimeBin=600;$ARGS_ALL_CONFIG" \
+    --pedestal-url /home/wiechula/processData/inputFilesTracking/triggeredLaser/pedestals.openchannels.root \
     --pipeline tpc-raw-to-digits-0:20 \
     --remove-duplicates \
     --send-ce-digits \
