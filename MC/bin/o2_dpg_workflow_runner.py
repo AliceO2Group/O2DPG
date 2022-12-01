@@ -1230,8 +1230,9 @@ class WorkflowExecutor:
                 actionlogger.debug('Sorted current candidates: ' + str([(c,self.idtotask[c]) for c in candidates]))
                 self.try_job_from_candidates(candidates, self.process_list, finished)
                 if len(candidates) > 0 and len(self.process_list) == 0:
-                    actionlogger.info("Not able to make progress: Nothing scheduled although non-zero candidate set")
+                    print("Runtime error: Not able to make progress: Nothing scheduled although non-zero candidate set", file=sys.stderr)
                     send_webhook(self.args.webhook,"Unable to make further progress: Quitting")
+                    errorencountered = True
                     break
             
                 finished_from_started = [] # to account for finished when actually started
