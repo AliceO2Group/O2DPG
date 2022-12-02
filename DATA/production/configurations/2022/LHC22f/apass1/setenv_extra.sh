@@ -9,7 +9,11 @@ export SETENV_NO_ULIMIT=1
 export DPL_DEFAULT_PIPELINE_LENGTH=16
 
 # detector list
-export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
+if [[ -n $ALIEN_JDL_WORKFLOWDETECTORS ]]; then
+  export WORKFLOW_DETECTORS=$ALIEN_JDL_WORKFLOWDETECTORS
+else
+  export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
+fi
 
 # ad-hoc settings for CTF reader: we are on the grid, we read the files remotely
 echo "*********************** mode = ${MODE}"
