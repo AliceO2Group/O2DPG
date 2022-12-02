@@ -70,7 +70,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --disable-mc \
     --pipeline tpc-zsEncoder:20,tpc-tracker:8 \
     $GPU_CONFIG \
-    --condition-remap file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS \
+    --condition-remap "file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPMagField" \
     --configKeyValues "$ARGS_ALL_CONFIG;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1" \
     | o2-tpc-laser-track-filter $ARGS_ALL \
     | o2-dpl-output-proxy ${ARGS_ALL} \
