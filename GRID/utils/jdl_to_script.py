@@ -9,7 +9,7 @@ import argparse
 import os, stat
 import subprocess
 
-parser = argparse.ArgumentParser(description='Produce local shell script from an ALIEN JDL'_
+parser = argparse.ArgumentParser(description='Produce local shell script from an ALIEN JDL')
 
 # the run-number of data taking or default if unanchored
 parser.add_argument('--jdl', type=str, help="A local JDL file")
