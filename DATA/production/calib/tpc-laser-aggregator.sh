@@ -14,13 +14,13 @@ WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL \
   --network-interface ib0 \
   --channel-config \"name=tpc-laser-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\" \
  | o2-tpc-calib-laser-tracks  $ARGS_ALL \
- --use-filtered-tracks --min-tfs 100 \
+ --use-filtered-tracks --only-publish-on-eos \
  | o2-tpc-calib-pad-raw $ARGS_ALL \
   --configKeyValues \"TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=502;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null\" \
  --lanes 36 \
- --calib-type ce \
  --publish-after-tfs 50 \
- --max-events 110 \
+ --max-events 110
+ --calib-type ce \
  | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
  --ccdb-path http://o2-ccdb.internal \
  | o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
