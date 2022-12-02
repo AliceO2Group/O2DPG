@@ -119,9 +119,8 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
     fi
 ###fi
 
-echo "Checking current directory content"
-ls -altr
-
+##############################
+# calibrations
 export ADD_CALIB=0
 
 if [[ -n "$ALIEN_JDL_DOEMCCALIB" ]]; then
@@ -136,6 +135,26 @@ fi
 if [[ -n "$ALIEN_JDL_DOTRDVDRIFTEXBCALIB" ]]; then
   export ADD_CALIB=1
 fi
+if [[ $ADD_CALIB == 1 ]]; then
+  if [[ -z $CALIB_WORKFLOW_FROM_OUTSIDE ]]; then
+    echo "Use calib-workflow.sh from O2"
+    cp $O2_ROOT/prodtests/full-system-test/calib-workflow.sh .
+  else
+    echo "Use calib-workflow.sh passed as input"
+    cp $CALIB_WORKFLOW_FROM_OUTSIDE .
+  fi
+  if [[ -z $AGGREGATOR_WORKFLOW_FROM_OUTSIDE ]]; then
+    echo "Use aggregator-workflow.sh from O2"
+    cp $O2_ROOT/prodtests/full-system-test/aggregator-workflow.sh .
+  else
+    echo "Use aggregator-workflow.sh passed as input"
+    cp $AGGREGATOR_WORKFLOW_FROM_OUTSIDE .
+  fi
+fi
+##############################
+
+echo "Checking current directory content"
+ls -altr
 
 if [[ -f "setenv_extra.sh" ]]; then
     source setenv_extra.sh $RUNNUMBER $BEAMTYPE
