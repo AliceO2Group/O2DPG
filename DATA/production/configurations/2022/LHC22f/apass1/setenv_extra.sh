@@ -58,6 +58,9 @@ fi
 # run 520418: orbitShift = 28756480 --> final shift = 102488091157
 # The "wrong" +1 offset request for ITS (0) must produce alarm since shifts are not supported there
 if [[ $PERIOD == "LHC22s" ]]; then
+  # CTP asked to extract their digits
+  export ADD_EXTRA_WORKFLOW="o2-ctp-digit-writer"
+    
   TPCITSTIMEERR="0.3"
   TPCITSTIMEBIAS="0"
   if [[ $RUNNUMBER -eq 529397 ]]; then
