@@ -164,8 +164,8 @@ export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow="$PVERTEXER;$VDRIFTPAR
 export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow="$SVTX"
 
 # ad-hoc settings for its-tpc matching
-[[ -z TPCITSTIMEBIAS ]] && TPCITSTIMEBIAS=0
-[[ -z TPCITSTIMEERR ]] && TPCITSTIMEERR=0
+[ -z "${TPCITSTIMEBIAS}" ] && TPCITSTIMEBIAS=0
+[ -z "${TPCITSTIMEERR}" ] && TPCITSTIMEERR=0
 MAX_VDRIFT_UNC=0.04
 CUT_MATCH_CHI2=150
 export ITSTPCMATCH="tpcitsMatch.globalTimeBiasMUS=$TPCITSTIMEBIAS;tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;tpcitsMatch.maxVDriftUncertainty=$MAX_VDRIFT_UNC;tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=CUT_MATCH_CHI2;tpcitsMatch.crudeAbsDiffCut[0]=5;tpcitsMatch.crudeAbsDiffCut[1]=5;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=10;tpcitsMatch.crudeNSigma2Cut[0]=200;tpcitsMatch.crudeNSigma2Cut[1]=200;tpcitsMatch.crudeNSigma2Cut[2]=200;tpcitsMatch.crudeNSigma2Cut[3]=200;tpcitsMatch.crudeNSigma2Cut[4]=900;"

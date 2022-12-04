@@ -221,6 +221,10 @@ fi
 if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
   SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_calibration_residual_aggregator= "
 fi
+if [[ $ALIEN_JDL_DOTRDVDRIFTEXBCALIB == "1" ]]; then
+  SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_trd_global_tracking= "
+  SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_calibration_trd_workflow= "
+fi
 
 # to add extra output to always keep
 if [[ -n "$ALIEN_EXTRA_ENABLE_ROOT_OUTPUT" ]]; then
