@@ -65,25 +65,25 @@ if [[ $PERIOD == "LHC22s" ]]; then
   TPCITSTIMEBIAS="0"
   if [[ $RUNNUMBER -eq 529397 ]]; then
     ZDC_BC_SHIFT=8344204308
-    TPCITSTIMEBIAS="-2.2455706" # 90 BC
+    TPCCLUSTERTIMESHIFT="-11.25" # 90 BC
   elif [[ $RUNNUMBER -eq 529399 ]]; then
     ZDC_BC_SHIFT=59691807252
-    TPCITSTIMEBIAS="-2.1457675" # 86 BC
+    TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
   elif [[ $RUNNUMBER -eq 529403 ]]; then
     ZDC_BC_SHIFT=213268844053
-    TPCITSTIMEBIAS="-2.1457675" # 86 BC
+    TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
   elif [[ $RUNNUMBER -eq 529414 ]]; then
     ZDC_BC_SHIFT=3065150484
-    TPCITSTIMEBIAS="-0.59881883" # 24/62 BC
+    TPCCLUSTERTIMESHIFT="-3."  # 24/62 BC
     if [[ -f list.list ]]; then
       threshCTF="/alice/data/2022/LHC22s/529414/raw/2340/o2_ctf_run00529414_orbit0010200192_tf0000072971_epn086.root"
       ctf0=`head -n1 list.list`
       ctf0=${ctf0/alien:\/\//}
-      [[ $ctf0 < $threshCTF ]] && TPCITSTIMEBIAS="-0.59881883" || TPCITSTIMEBIAS="-1.5469486"
+      [[ $ctf0 < $threshCTF ]] && TPCCLUSTERTIMESHIFT="-3." || TPCCLUSTERTIMESHIFT="-7.75"
     fi
   elif [[ $RUNNUMBER -eq 529418 ]]; then
     ZDC_BC_SHIFT=102488091157
-    TPCITSTIMEBIAS="1.0978345"  # 44 BC
+    TPCCLUSTERTIMESHIFT="-5.5"  # 44 BC
   else
     ZDC_BC_SHIFT=0
   fi
@@ -139,6 +139,7 @@ fi
 export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="$MAXBCDIFFTOMASKBIAS_ITS;$EXTRA_ITSRECO_CONFIG;"
 # ad-hoc options for GPU reco workflow
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="GPU_global.dEdxDisableResidualGainMap=1;$VDRIFTPARAMOPTION;"
+[[ ! -z $TPCCLUSTERTIMESHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.clustersShiftTimebins=$TPCCLUSTERTIMESHIFT;"
 
 # ad-hoc settings for TOF reco
 # export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"https://alice-ccdb.cern.ch\""
@@ -164,11 +165,12 @@ export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow="$PVERTEXER;$VDRIFTPAR
 export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow="$SVTX"
 
 # ad-hoc settings for its-tpc matching
-[ -z "${TPCITSTIMEBIAS}" ] && TPCITSTIMEBIAS=0
-[ -z "${TPCITSTIMEERR}" ] && TPCITSTIMEERR=0
-CUT_MATCH_CHI2=150
+CUT_MATCH_CHI2=100
 export ITSTPCMATCH="tpcitsMatch.globalTimeBiasMUS=$TPCITSTIMEBIAS;tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;tpcitsMatch.crudeAbsDiffCut[0]=5;tpcitsMatch.crudeAbsDiffCut[1]=5;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=10;tpcitsMatch.crudeNSigma2Cut[0]=200;tpcitsMatch.crudeNSigma2Cut[1]=200;tpcitsMatch.crudeNSigma2Cut[2]=200;tpcitsMatch.crudeNSigma2Cut[3]=200;tpcitsMatch.crudeNSigma2Cut[4]=900;"
 export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow="$ITSEXTRAERR;$ITSTPCMATCH;$VDRIFTPARAMOPTION;"
+[[ ! -z "${TPCITSTIMEBIAS}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+="tpcitsMatch.globalTimeBiasMUS=$TPCITSTIMEBIAS;"
+[[ ! -z "${TPCITSTIMEERR}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+="tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;"
+
 # enabling AfterBurner
 if [[ $WORKFLOW_DETECTORS =~ (^|,)"FT0"(,|$) ]] ; then
   export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="--use-ft0"
