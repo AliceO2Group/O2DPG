@@ -135,6 +135,13 @@ fi
 if [[ -n "$ALIEN_JDL_DOTRDVDRIFTEXBCALIB" ]]; then
   export ADD_CALIB=1
 fi
+
+# AOD file size
+if [[ -n "$ALIEN_JDL_AODFILESIZE" ]]; then
+  export AOD_FILE_SIZE="$ALIEN_JDL_AODFILESIZE"
+else
+  export AOD_FILE_SIZE=8000
+fi
 if [[ $ADD_CALIB == 1 ]]; then
   if [[ -z $CALIB_WORKFLOW_FROM_OUTSIDE ]]; then
     echo "Use calib-workflow.sh from O2"
@@ -221,23 +228,27 @@ fi
 if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
   SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_calibration_residual_aggregator= "
 fi
+if [[ $ALIEN_JDL_DOTRDVDRIFTEXBCALIB == "1" ]]; then
+  SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_trd_global_tracking= "
+  SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_calibration_trd_workflow= "
+fi
 
 # to add extra output to always keep
-if [[ -n "$ALIEN_EXTRA_ENABLE_ROOT_OUTPUT" ]]; then
+if [[ -n "$ALIEN_JDL_EXTRAENABLEROOTOUTPUT" ]]; then
   OLD_IFS=$IFS
   IFS=','
-  for token in $ALIEN_EXTRA_ENABLE_ROOT_OUTPUT; do
+  for token in $ALIEN_JDL_EXTRAENABLEROOTOUTPUT; do
     SETTING_ROOT_OUTPUT+=" ENABLE_ROOT_OUTPUT_$token="
   done
   IFS=$OLD_IFS
 fi
 
 # to define which extra output to always keep
-if [[ -n "$ALIEN_ENABLE_ROOT_OUTPUT" ]]; then
+if [[ -n "$ALIEN_JDL_ENABLEROOTOUTPUT" ]]; then
   OLD_IFS=$IFS
   IFS=','
   SETTING_ROOT_OUTPUT=
-  for token in $ALIEN_ENABLE_ROOT_OUTPUT; do
+  for token in $ALIEN_JDL_ENABLEROOTOUTPUT; do
     SETTING_ROOT_OUTPUT+=" ENABLE_ROOT_OUTPUT_$token="
   done
   IFS=$OLD_IFS
@@ -245,7 +256,7 @@ fi
 
 keep=0
 
-if [[ -n $ALIEN_INPUT_TYPE ]] && [[ "$ALIEN_INPUT_TYPE" == "TFs" ]]; then
+if [[ -n $ALIEN_JDL_INPUTTYPE ]] && [[ "$ALIEN_JDL_INPUTTYPE" == "TFs" ]]; then
   export WORKFLOW_PARAMETERS=CTF
   INPUT_TYPE=TF
   if [[ $RUNNUMBER -lt 523141 ]]; then
@@ -363,8 +374,52 @@ fi
 # flag to possibly enable Analysis QC
 [[ -z ${ALIEN_JDL_RUNANALYSISQC+x} ]] && ALIEN_JDL_RUNANALYSISQC=1
 
-# now checking AO2D file
-if [[ -f "AO2D.root" ]]; then
+# merging last AOD file in case it is too small; threashold put at 80% of the required file size
+AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
+AOD_LIST=`find . -name AO2D.root`
+if [[ -n $ALIEN_JDL_MINALLOWEDAODPERCENTSIZE ]]; then
+  MIN_ALLOWED_AOD_PERCENT_SIZE=$ALIEN_JDL_MINALLOWEDAODPERCENTSIZE
+else
+  MIN_ALLOWED_AOD_PERCENT_SIZE=20
+fi
+if [[ $AOD_LIST_COUNT -ge 2 ]]; then
+  AOD_LAST=`find . -name AO2D.root | sort | tail -1`
+  CURRENT_SIZE=`wc -c $AOD_LAST | awk '{print $1}'`
+  echo current size = $CURRENT_SIZE
+  PERCENT=`echo "scale=2; $CURRENT_SIZE/($AOD_FILE_SIZE*10^6)*100" | bc -l`
+  echo percent = $PERCENT
+  if (( $(echo "$PERCENT < $MIN_ALLOWED_AOD_PERCENT_SIZE" | bc -l) )); then
+    AOD_LAST_BUT_ONE=`find . -name AO2D.root | sort | tail -2 | head -1`
+    echo "Too small, merging $AOD_LAST with previous file $AOD_LAST_BUT_ONE"
+    ls $PWD/$AOD_LAST > list.list
+    ls $PWD/$AOD_LAST_BUT_ONE >> list.list
+    echo "List of files for merging:"
+    cat list.list
+    mkdir tmpAOD
+    cd tmpAOD
+    ln -s ../list.list .
+    o2-aod-merger --input list.list
+    MERGED_SIZE=`wc -c AO2D.root | awk '{print $1}'`
+    echo "Size of merged file: $MERGED_SIZE"
+    cd ..
+    AOD_DIR_TO_BE_REMOVED="$(echo $AOD_LAST | sed -e 's/AO2D.root//')"
+    AOD_DIR_TO_BE_UPDATED="$(echo $AOD_LAST_BUT_ONE | sed -e 's/AO2D.root//')"
+    echo "We will remove $AOD_DIR_TO_BE_REMOVED and update $AOD_DIR_TO_BE_UPDATED"
+    rm -rf $AOD_DIR_TO_BE_REMOVED
+    mv tmpAOD/AO2D.root $AOD_DIR_TO_BE_UPDATED/.
+    rm -rf tmpAOD
+  fi
+fi
+
+# now checking all AO2D files and running the analysis QC
+# retrieving again the list of AOD files, in case it changed after the merging above
+AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
+AOD_LIST=`find . -name AO2D.root`
+for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
+  AOD_DIR=`echo $AOD_LIST | cut -d' ' -f$i | sed -e 's/AO2D.root//'`
+  echo "Verifying and potentially running analysis QC for AOD file in $AOD_DIR"
+  cd $AOD_DIR
+  if [[ -f "AO2D.root" ]]; then
     root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
     exitcode=$?
     if [[ $exitcode -ne 0 ]]; then
@@ -386,7 +441,9 @@ if [[ -f "AO2D.root" ]]; then
     else
       echo "Analysis QC will not be run, ALIEN_JDL_RUNANALYSISQC = $ALIEN_JDL_RUNANALYSISQC"
     fi
-fi
+  fi
+  cd ..
+done
 
 # copying the QC json file here
 if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then

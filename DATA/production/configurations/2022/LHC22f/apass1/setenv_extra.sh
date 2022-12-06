@@ -9,7 +9,11 @@ export SETENV_NO_ULIMIT=1
 export DPL_DEFAULT_PIPELINE_LENGTH=16
 
 # detector list
-export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
+if [[ -n $ALIEN_JDL_WORKFLOWDETECTORS ]]; then
+  export WORKFLOW_DETECTORS=$ALIEN_JDL_WORKFLOWDETECTORS
+else
+  export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
+fi
 
 # ad-hoc settings for CTF reader: we are on the grid, we read the files remotely
 echo "*********************** mode = ${MODE}"
@@ -36,7 +40,7 @@ fi
 
 echo remapping = $REMAPPING
 echo "BeamType = $BEAMTYPE"
-
+echo "PERIOD = $PERIOD"
 # other ad-hoc settings for CTF reader
 export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --allow-missing-detectors $REMAPPING"
 echo RUN = $RUNNUMBER
@@ -47,18 +51,44 @@ if [[ $RUNNUMBER -ge 521889 ]]; then
   MAXBCDIFFTOMASKBIAS_MFT="MFTClustererParam.maxBCDiffToMaskBias=10"
 fi
 # shift by +1 BC TRD(2), PHS(4), CPV(5), EMC(6), HMP(7) and by (orbitShift-1)*3564+1 BCs the ZDC since it internally resets the orbit to 1 at SOR and BC is shifted by -1 like for triggered detectors.
+# run 529397: orbitShift = 2341248  --> final shift = 8344204308
+# run 529399: orbitShift = 16748544 --> final shift = 59691807252
 # run 520403: orbitShift = 59839744 --> final shift = 213268844053
+# run 520414: orbitShift = 860032   --> final shift = 3065150484
 # run 520418: orbitShift = 28756480 --> final shift = 102488091157
 # The "wrong" +1 offset request for ITS (0) must produce alarm since shifts are not supported there
 if [[ $PERIOD == "LHC22s" ]]; then
-  if [[ $RUNNUMBER -eq 529403 ]]; then
+  # CTP asked to extract their digits
+  export ADD_EXTRA_WORKFLOW="o2-ctp-digit-writer"
+    
+  TPCITSTIMEERR="0.3"
+  TPCITSTIMEBIAS="0"
+  if [[ $RUNNUMBER -eq 529397 ]]; then
+    ZDC_BC_SHIFT=8344204308
+    TPCCLUSTERTIMESHIFT="-11.25" # 90 BC
+  elif [[ $RUNNUMBER -eq 529399 ]]; then
+    ZDC_BC_SHIFT=59691807252
+    TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
+  elif [[ $RUNNUMBER -eq 529403 ]]; then
     ZDC_BC_SHIFT=213268844053
+    TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
+  elif [[ $RUNNUMBER -eq 529414 ]]; then
+    ZDC_BC_SHIFT=3065150484
+    TPCCLUSTERTIMESHIFT="-3."  # 24/62 BC
+    if [[ -f list.list ]]; then
+      threshCTF="/alice/data/2022/LHC22s/529414/raw/2340/o2_ctf_run00529414_orbit0010200192_tf0000072971_epn086.root"
+      ctf0=`head -n1 list.list`
+      ctf0=${ctf0/alien:\/\//}
+      [[ $ctf0 < $threshCTF ]] && TPCCLUSTERTIMESHIFT="-3." || TPCCLUSTERTIMESHIFT="-7.75"
+    fi
   elif [[ $RUNNUMBER -eq 529418 ]]; then
     ZDC_BC_SHIFT=102488091157
+    TPCCLUSTERTIMESHIFT="-5.5"  # 44 BC
   else
     ZDC_BC_SHIFT=0
   fi
   export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow="TriggerOffsetsParam.customOffset[2]=1;TriggerOffsetsParam.customOffset[4]=1;TriggerOffsetsParam.customOffset[5]=1;TriggerOffsetsParam.customOffset[6]=1;TriggerOffsetsParam.customOffset[7]=1;TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
+  export PVERTEXER+=";pvertexer.dbscanDeltaT=1;pvertexer.maxMultRatDebris=1.;"
 fi
 # run-dependent options
 if [[ -f "setenv_run.sh" ]]; then
@@ -109,6 +139,7 @@ fi
 export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="$MAXBCDIFFTOMASKBIAS_ITS;$EXTRA_ITSRECO_CONFIG;"
 # ad-hoc options for GPU reco workflow
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="GPU_global.dEdxDisableResidualGainMap=1;$VDRIFTPARAMOPTION;"
+[[ ! -z $TPCCLUSTERTIMESHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.clustersShiftTimebins=$TPCCLUSTERTIMESHIFT;"
 
 # ad-hoc settings for TOF reco
 # export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"https://alice-ccdb.cern.ch\""
@@ -125,7 +156,7 @@ if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == 
   EXTRA_PRIMVTX_TimeMargin="pvertexer.timeMarginVertexTime=1.3"
 fi
 
-export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2;$EXTRA_PRIMVTX_TimeMargin;"
+export PVERTEXER+="pvertexer.acceptableScale2=9;pvertexer.minScale2=2;$EXTRA_PRIMVTX_TimeMargin;"
 
 # secondary vertexing
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
@@ -134,8 +165,12 @@ export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow="$PVERTEXER;$VDRIFTPAR
 export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow="$SVTX"
 
 # ad-hoc settings for its-tpc matching
-export ITSTPCMATCH="tpcitsMatch.maxVDriftUncertainty=0.2;tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=1000;tpcitsMatch.crudeAbsDiffCut[0]=5;tpcitsMatch.crudeAbsDiffCut[1]=5;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=10;tpcitsMatch.crudeNSigma2Cut[0]=200;tpcitsMatch.crudeNSigma2Cut[1]=200;tpcitsMatch.crudeNSigma2Cut[2]=200;tpcitsMatch.crudeNSigma2Cut[3]=200;tpcitsMatch.crudeNSigma2Cut[4]=900;"
+CUT_MATCH_CHI2=100
+export ITSTPCMATCH="tpcitsMatch.globalTimeBiasMUS=$TPCITSTIMEBIAS;tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;tpcitsMatch.crudeAbsDiffCut[0]=5;tpcitsMatch.crudeAbsDiffCut[1]=5;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=10;tpcitsMatch.crudeNSigma2Cut[0]=200;tpcitsMatch.crudeNSigma2Cut[1]=200;tpcitsMatch.crudeNSigma2Cut[2]=200;tpcitsMatch.crudeNSigma2Cut[3]=200;tpcitsMatch.crudeNSigma2Cut[4]=900;"
 export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow="$ITSEXTRAERR;$ITSTPCMATCH;$VDRIFTPARAMOPTION;"
+[[ ! -z "${TPCITSTIMEBIAS}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+="tpcitsMatch.globalTimeBiasMUS=$TPCITSTIMEBIAS;"
+[[ ! -z "${TPCITSTIMEERR}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+="tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;"
+
 # enabling AfterBurner
 if [[ $WORKFLOW_DETECTORS =~ (^|,)"FT0"(,|$) ]] ; then
   export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="--use-ft0"
@@ -202,7 +237,7 @@ fi
 export WORKFLOW_PARAMETERS="AOD,${WORKFLOW_PARAMETERS}"
 
 # ad-hoc settings for AOD
-#...
+export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="--aod-writer-maxfilesize $AOD_FILE_SIZE"
 
 # Enabling QC
 export WORKFLOW_PARAMETERS="QC,${WORKFLOW_PARAMETERS}"
