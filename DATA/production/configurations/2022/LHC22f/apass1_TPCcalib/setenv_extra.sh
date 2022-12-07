@@ -110,6 +110,9 @@ export ARGS_EXTRA_PROCESS_o2_mft_reco_workflow=" --run-assessment "
 # ad-hoc settings for MCH
 export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow="MCHClustering.lowestPadCharge=20;MCHClustering.defaultClusterResolution=0.4;MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6;MCHDigitFilter.timeOffset=126"
 
+# ad-hoc settings for TPC residual extraction
+export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="--output-type trackParams,unbinnedResid,binnedResid"
+
 # Enabling AOD
 export WORKFLOW_PARAMETERS="AOD,${WORKFLOW_PARAMETERS}"
 

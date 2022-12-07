@@ -60,7 +60,7 @@ fi
 if [[ $PERIOD == "LHC22s" ]]; then
   # CTP asked to extract their digits
   export ADD_EXTRA_WORKFLOW="o2-ctp-digit-writer"
-    
+
   TPCITSTIMEERR="0.3"
   TPCITSTIMEBIAS="0"
   if [[ $RUNNUMBER -eq 529397 ]]; then
@@ -92,7 +92,7 @@ if [[ $PERIOD == "LHC22s" ]]; then
 fi
 # run-dependent options
 if [[ -f "setenv_run.sh" ]]; then
-    source setenv_run.sh 
+    source setenv_run.sh
 else
     echo "************************************************************"
     echo No ad-hoc run-dependent settings for current async processing
@@ -224,6 +224,8 @@ if [[ $ADD_CALIB == "1" ]]; then
   export CALIB_FT0_TIMEOFFSET=0
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
+    # ad-hoc settings for TPC residual extraction
+    export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="--output-type trackParams,unbinnedResid,binnedResid"
   fi
   export CALIB_EMC_ASYNC_RECALIB="$ALIEN_JDL_DOEMCCALIB"
   if [[ $ALIEN_JDL_DOTRDVDRIFTEXBCALIB == "1" ]]; then
@@ -232,6 +234,7 @@ if [[ $ADD_CALIB == "1" ]]; then
     export ARGS_EXTRA_PROCESS_o2_trd_global_tracking="--enable-qc"
   fi
 fi
+
 
 # Enabling AOD
 export WORKFLOW_PARAMETERS="AOD,${WORKFLOW_PARAMETERS}"
@@ -250,5 +253,3 @@ if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
     sed -i 's/REPLACE_ME_PASS/'"${PASS}"'/g' $QC_JSON_FROM_OUTSIDE
     sed -i 's/REPLACE_ME_PERIOD/'"${PERIOD}"'/g' $QC_JSON_FROM_OUTSIDE
 fi
-
-
