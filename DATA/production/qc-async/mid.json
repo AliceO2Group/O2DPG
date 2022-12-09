@@ -62,7 +62,7 @@
     },
     "checks": {
       "QcCheckMIDDigits": {
-        "active": "true",
+        "active": "false",
         "className": "o2::quality_control_modules::mid::DigitsQcCheck",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -84,7 +84,7 @@
         ]
       },
       "QcCheckMIDClust": {
-        "active": "true",
+        "active": "false",
         "className": "o2::quality_control_modules::mid::ClustQcCheck",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -98,7 +98,7 @@
         ]
       },
       "QcCheckMIDTracks": {
-        "active": "true",
+        "active": "false",
         "className": "o2::quality_control_modules::mid::TracksQcCheck",
         "moduleName": "QcMID",
         "detectorName": "MID",

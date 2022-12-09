@@ -35,7 +35,7 @@
         "make-eff": "true",
         "applyEvSel": "0",
         "processMC": "true",
-        "processData": "true"
+        "processData": "false"
     },
     "event-selection-qa-task": {
         "isMC": "true",
