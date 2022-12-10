@@ -51,10 +51,7 @@ if [[ $RUNNUMBER -ge 521889 ]]; then
   MAXBCDIFFTOMASKBIAS_MFT="MFTClustererParam.maxBCDiffToMaskBias=10"
 fi
 # shift by +1 BC TRD(2), PHS(4), CPV(5), EMC(6), HMP(7) and by (orbitShift-1)*3564+1 BCs the ZDC since it internally resets the orbit to 1 at SOR and BC is shifted by -1 like for triggered detectors.
-# run 529397: orbitShift = 2341248  --> final shift = 8344204308
-# run 529399: orbitShift = 16748544 --> final shift = 59691807252
 # run 520403: orbitShift = 59839744 --> final shift = 213268844053
-# run 520414: orbitShift = 860032   --> final shift = 3065150484
 # run 520418: orbitShift = 28756480 --> final shift = 102488091157
 # The "wrong" +1 offset request for ITS (0) must produce alarm since shifts are not supported there
 if [[ $PERIOD == "LHC22s" ]]; then
@@ -64,16 +61,13 @@ if [[ $PERIOD == "LHC22s" ]]; then
   TPCITSTIMEERR="0.3"
   TPCITSTIMEBIAS="0"
   if [[ $RUNNUMBER -eq 529397 ]]; then
-    ZDC_BC_SHIFT=8344204308
     TPCCLUSTERTIMESHIFT="-11.25" # 90 BC
   elif [[ $RUNNUMBER -eq 529399 ]]; then
-    ZDC_BC_SHIFT=59691807252
     TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
   elif [[ $RUNNUMBER -eq 529403 ]]; then
     ZDC_BC_SHIFT=213268844053
     TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
   elif [[ $RUNNUMBER -eq 529414 ]]; then
-    ZDC_BC_SHIFT=3065150484
     TPCCLUSTERTIMESHIFT="-3."  # 24/62 BC
     if [[ -f list.list ]]; then
       threshCTF="/alice/data/2022/LHC22s/529414/raw/2340/o2_ctf_run00529414_orbit0010200192_tf0000072971_epn086.root"
@@ -90,6 +84,12 @@ if [[ $PERIOD == "LHC22s" ]]; then
   export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow="TriggerOffsetsParam.customOffset[2]=1;TriggerOffsetsParam.customOffset[4]=1;TriggerOffsetsParam.customOffset[5]=1;TriggerOffsetsParam.customOffset[6]=1;TriggerOffsetsParam.customOffset[7]=1;TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
   export PVERTEXER+=";pvertexer.dbscanDeltaT=1;pvertexer.maxMultRatDebris=1.;"
 fi
+
+# fix also ZDC in the pp run 529038
+if [[ $RUNNUMBER -eq 529038 ]]; then
+  ZDC_BC_SHIFT=486590350357 # started at orbit 136529280
+fi
+
 # run-dependent options
 if [[ -f "setenv_run.sh" ]]; then
     source setenv_run.sh
