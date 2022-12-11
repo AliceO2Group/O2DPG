@@ -88,7 +88,22 @@ fi
 # fix also ZDC in the pp run 529038
 if [[ $RUNNUMBER -eq 529038 ]]; then
   ZDC_BC_SHIFT=486590350357 # started at orbit 136529280
+  export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow="TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
 fi
+
+# ITSTPC vs FT0 time shift
+if [[ -z $TPCCLUSTERTIMESHIFT ]]; then
+  SHIFTSCRIPT="$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/ShiftMap.sh"
+  if [[ -f "ShiftMap.sh" ]]; then
+    SHIFTSCRIPT="ShiftMap.sh"
+  fi
+  source $SHIFTSCRIPT $RUNNUMBER
+fi
+if [[ -z $TPCCLUSTERTIMESHIFT ]]; then
+  echo "TPC cluster time shift not defined for current run"
+  TPCCLUSTERTIMESHIFT=0
+fi
+echo "TPC cluster time will be shifted by $TPCCLUSTERTIMESHIFT"
 
 # run-dependent options
 if [[ -f "setenv_run.sh" ]]; then
