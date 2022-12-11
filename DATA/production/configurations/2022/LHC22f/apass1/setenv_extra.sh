@@ -86,8 +86,28 @@ if [[ $PERIOD == "LHC22s" ]]; then
 fi
 
 # fix also ZDC in the pp run 529038
-if [[ $RUNNUMBER -eq 529038 ]]; then
-  ZDC_BC_SHIFT=486590350357 # started at orbit 136529280
+if [[ $PERIOD == "LHC22q" ]]; then
+  if [[ $RUNNUMBER -eq 529003 ]]; then
+    ZDC_BC_SHIFT=427744319508; 
+  elif [[ $RUNNUMBER -eq 529005 ]]; then
+    ZDC_BC_SHIFT=585290682900
+  elif [[ $RUNNUMBER -eq 529006 ]]; then
+    ZDC_BC_SHIFT=1007373207060
+  elif [[ $RUNNUMBER -eq 529008 ]]; then
+    ZDC_BC_SHIFT=1379963461140
+  elif [[ $RUNNUMBER -eq 529009 ]]; then
+    ZDC_BC_SHIFT=1454804952084
+  elif [[ $RUNNUMBER -eq 529015 ]]; then
+    ZDC_BC_SHIFT=2244823203348
+  elif [[ $RUNNUMBER -eq 529037 ]]; then
+    ZDC_BC_SHIFT=256033194516
+  elif [[ $RUNNUMBER -eq 529038 ]]; then
+    ZDC_BC_SHIFT=486590350356
+  elif [[ $RUNNUMBER -eq 529039 ]]; then
+    ZDC_BC_SHIFT=1399525886484
+  elif [[ $RUNNUMBER -eq 529043 ]]; then
+    ZDC_BC_SHIFT=3079675091988
+  fi					 
   export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow="TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
 fi
 
