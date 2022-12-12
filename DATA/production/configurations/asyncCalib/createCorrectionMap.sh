@@ -18,14 +18,22 @@ if [[ $ALIEN_JDL_OLDFILENAME == "1" ]]; then
   filePattern="o2tpc_residuals${mergePattern}.*\.root"
 fi
 
+# job is over all files
+if [[ "$mergePattern" == "-1" ]]; then
+  mergePattern=all
+  filePattern=".*"
+fi
+
 fileList=inputFileList.txt
 voxResOutFile=TPCDebugVoxRes_${mergePattern}.root
 splineOutFile=TPCFastTransform_${mergePattern}.root
 
 [[ -z "${ALIEN_JDL_MAPCREATORARGS}" ]] && ALIEN_JDL_MAPCREATORARGS='--configKeyValues "scdcalib.maxSigY=2;scdcalib.maxSigZ=2"'
+[[ -z "${ALIEN_JDL_MAPKNOTSY}" ]] && ALIEN_JDL_MAPKNOTSY=10
+[[ -z "${ALIEN_JDL_MAPKNOTSZ}" ]] && ALIEN_JDL_MAPKNOTSZ=20
 
 # ===| create intput list |=====================================================
-sed -rn 's|.*turl="([^"]*)".*|\1|p' $inputCollection | grep $filePattern | sort -n > ${fileList}
+sed -rn 's|.*turl="([^"]*)".*|\1|p' $inputCollection | grep "$filePattern" | sort -n > ${fileList}
 
 declare -i nLines=$(wc -l ${fileList} | awk '{print $1}')
 if [[ $nLines -eq 0 ]]; then
@@ -47,6 +55,9 @@ fi
 
 # ===| create spline object |===================================================
 cmd="root.exe -q -x -l -n $O2_ROOT/share/macro/TPCFastTransformInit.C'(\"${voxResOutFile}\", \"${splineOutFile}\")' &> splines.log"
+if [[ $(grep 'TPCFastTransformInit(' $O2_ROOT/share/macro/TPCFastTransformInit.C) =~ nKnots ]]; then
+  cmd="root.exe -q -x -l -n $O2_ROOT/share/macro/TPCFastTransformInit.C'(${ALIEN_JDL_MAPKNOTSY}, ${ALIEN_JDL_MAPKNOTSZ}, \"${voxResOutFile}\", \"${splineOutFile}\")' &> splines.log"
+fi
 echo "running: '$cmd'"
 if [[ $ALIEN_JDL_DONTEXTRACTTPCCALIB != "1" ]]; then
   eval $cmd

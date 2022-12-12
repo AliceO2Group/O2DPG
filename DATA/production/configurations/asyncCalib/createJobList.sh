@@ -27,5 +27,7 @@ declare -i nLines=$(wc -l $TIMEBINLOGFILENAME | awk '{print $1}')
 if [[ $nLines -eq 0 ]]; then
   echo "ERROR: Problem creating list for jobs to submit"
 else
+  # Add line for job over full run
+  echo "-1 0 0" >> $TIMEBINLOGFILENAME
   echo "Number of jobs to submit for SCD map creation: $nLines"
 fi
