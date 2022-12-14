@@ -15,7 +15,7 @@
 # usage: o2dpg_release_validation.py rel-val [-h] -i [INPUT1 ...] -j
 #                                            [INPUT2 ...]
 #                                            [--use-values-as-thresholds [USE_VALUES_AS_THRESHOLDS ...]]
-#                                            [--combine-thresholds {mean,max}]
+#                                            [--combine-thresholds {mean,max/min}]
 #                                            [--with-test-chi2]
 #                                            [--test-chi2-threshold CHI2_THRESHOLD]
 #                                            [--test-chi2-threshold-margin CHI2_THRESHOLD_MARGIN]
@@ -41,8 +41,8 @@
 #                         second input directory from simulation for comparison
 #   --use-values-as-thresholds [USE_VALUES_AS_THRESHOLDS ...]
 #                         Use values from another run as thresholds for this one
-#   --combine-thresholds {mean,max}
-#                         Arithmetic mean or maximum is chosen as threshold
+#   --combine-thresholds {mean,max/min}
+#                         Arithmetic mean or maximum/minimum is chosen as threshold
 #                         value
 #   --with-test-chi2      run chi2 test
 #   --test-chi2-threshold CHI2_THRESHOLD
@@ -94,6 +94,7 @@ import json
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import seaborn
+from shutil import copy
 
 # make sure O2DPG + O2 is loaded
 O2DPG_ROOT=environ.get('O2DPG_ROOT')
@@ -525,9 +526,13 @@ def calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args):
                         if ref_test["test_name"] == test_name:
                             threshold_list.append(ref_test["value"])
                 if args.combine_thresholds == "mean":
-                    these_thresholds["value"] = margins_thresholds[test_name] * sum(threshold_list) / len(threshold_list)
+                    these_thresholds["value"] = pow(margins_thresholds[test_name],REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[test_name]]) * sum(threshold_list) / len(threshold_list)
                 else:
-                    these_thresholds["value"] = margins_thresholds[test_name] * max(threshold_list)
+                    if REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[test_name]] == 1:
+                        maxmin = max(threshold_list)
+                    else:
+                        maxmin = min(threshold_list)
+                    these_thresholds["value"] = pow(margins_thresholds[test_name],REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[test_name]]) * maxmin
                 this_histo_thresholds.append(these_thresholds)
             the_thresholds[histo_name] = this_histo_thresholds
 
@@ -568,8 +573,6 @@ def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, e
     for histo_name, tests in rel_val_dict.items():
         if not check_patterns(histo_name, include_patterns, exclude_patterns):
             continue
-        if not check_flags(tests, flags, flags_summary):
-            continue
         test_summary = {"test_name": REL_VAL_TEST_SUMMARY_NAME,
                         "value": None,
                         "threshold": None,
@@ -604,6 +607,8 @@ def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, e
         test_summary["result"] = assign_result_flag(is_critical_summary, is_comparable_summary, passed_summary)
         test_summary["comparable"] = is_comparable_summary
         these_tests.append(test_summary)
+        if not check_flags(these_tests, flags, flags_summary):
+            continue
         this_summary[histo_name] = these_tests
 
     return this_summary
@@ -837,6 +842,22 @@ def get_filepath(d):
     print(f"Can neither find {summary_global} nor {summary}. Nothing to work with.")
     return None
 
+def copy_overlays(path, output_dir,summary):
+    """
+    copy overlay plots in this summary from the input directory to the output directory
+    """
+    path = join(dirname(path),"overlayPlots")
+    output_dir = join(output_dir,"overlayPlots")
+    if not exists(output_dir):
+        makedirs(output_dir)
+    for histoname in summary:
+        filename=join(path,histoname+".png")
+        if exists(filename):
+            copy(filename,output_dir)
+        else:
+            print(f"File {filename} not found.")
+    return 0
+
 def inspect(args):
     """
     Inspect a Summary.json in view of RelVal severity
@@ -867,6 +888,9 @@ def inspect(args):
         plot_pie_charts(summary, output_dir, "", include_patterns, exclude_patterns)
         plot_values_thresholds(summary, output_dir, "", include_patterns, exclude_patterns)
         plot_summary_grid(summary, args.flags, include_patterns, exclude_patterns, join(output_dir, "SummaryTests.png"))
+
+    if args.copy_overlays:
+        copy_overlays(path, output_dir,summary)
 
     return 0
 
@@ -1023,7 +1047,7 @@ def main():
 
     common_threshold_parser = argparse.ArgumentParser(add_help=False)
     common_threshold_parser.add_argument("--use-values-as-thresholds", nargs="*", dest="use_values_as_thresholds", help="Use values from another run as thresholds for this one")
-    common_threshold_parser.add_argument("--combine-thresholds", dest="combine_thresholds",  choices=["mean", "max"], help="Arithmetic mean or maximum is chosen as threshold value", default="mean")
+    common_threshold_parser.add_argument("--combine-thresholds", dest="combine_thresholds",  choices=["mean", "max/min"], help="Arithmetic mean or maximum/minimum is chosen as threshold value", default="mean")
     for test, thresh in zip(REL_VAL_TEST_NAMES, REL_VAL_TEST_DEFAULT_THRESHOLDS):
         test_dahsed = test.replace("_", "-")
         common_threshold_parser.add_argument(f"--with-test-{test_dahsed}", dest=f"with_{test}", action="store_true", help=f"run {test} test")
@@ -1053,6 +1077,7 @@ def main():
     inspect_parser.add_argument("path", help="either complete file path to a Summary.json or SummaryGlobal.json or directory where one of the former is expected to be")
     inspect_parser.add_argument("--plot", action="store_true", help="Plot the summary grid")
     inspect_parser.add_argument("--output", "-o", help="output directory, by default points to directory where the Summary.json was found")
+    inspect_parser.add_argument("--copy-overlays", dest="copy_overlays", action="store_true", help="Copy overlay plots that meet the filter criteria to output directory")
     inspect_parser.set_defaults(func=inspect)
 
     compare_parser = sub_parsers.add_parser("compare", parents=[common_file_parser, common_pattern_parser])
