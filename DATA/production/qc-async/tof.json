@@ -31,8 +31,9 @@
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "digi-local"
+          "type": "direct",
+          "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS;diafreq:TOF/DIAFREQ/0",
+          "query_comment" : "100% sampling"
         },
         "taskParameters": {
           "Diagnostic": "true",
@@ -64,24 +65,6 @@
     }
   },
   "dataSamplingPolicies": [
-    {
-      "id": "digi-local",
-      "active": "true",
-      "machines": [
-        "epn",
-        "localhost"
-      ],
-      "port": "30333",
-      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS;diafreq:TOF/DIAFREQ/0",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.1",
-          "seed": "1234"
-        }
-      ],
-      "blocking": "false"
-    }
   ]
 }
 

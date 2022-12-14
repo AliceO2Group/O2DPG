@@ -32,8 +32,9 @@
         "maxNumberCycles": "-1",
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "mft-async"
+          "type": "direct",
+          "query_comment" : "100% sampling",
+          "query": "tracks:MFT/TRACKS/0;tracksrofs:MFT/MFTTrackROF/0;clusters:MFT/COMPCLUSTERS/0;clustersrofs:MFT/CLUSTERSROF/0"
         },
         "taskParameters": {
           "ROFLengthInBC": "198",
@@ -47,19 +48,5 @@
     "checks": {}
   },
   "dataSamplingPolicies": [
-    {
-      "id": "mft-async",
-      "active": "true",
-      "machines": [],
-      "query": "tracks:MFT/TRACKS/0;tracksrofs:MFT/MFTTrackROF/0;clusters:MFT/COMPCLUSTERS/0;clustersrofs:MFT/CLUSTERSROF/0",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.05",
-          "seed": "1234"
-        }
-      ],
-      "blocking": "false"
-    }
   ]
 }
