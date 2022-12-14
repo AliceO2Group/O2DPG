@@ -207,7 +207,7 @@ ANALYSES.append(analysis_LK0CFFemto)
 analysis_PWGMMFwdVertexing = {"name": "PWGMMFwdVertexing",
                               "expected_output": ["AnalysisResults.root"],
                               "valid_for": [ANALYSIS_VALID_MC],
-                              "cmd": ["o2-analysis-mm-vertexing-fwd"]}
+                              "cmd": ["o2-analysis-timestamp", "o2-analysis-mm-vertexing-fwd"]}
 ANALYSES.append(analysis_PWGMMFwdVertexing)
 #analysis_PWGMMMDnDeta = {"name": "PWGMMMDnDeta",
 #                         "expected_output": ["AnalysisResults.root"],
