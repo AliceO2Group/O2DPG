@@ -19,8 +19,7 @@ if [[ $ALIEN_JDL_OLDFILENAME == "1" ]]; then
 fi
 
 # job is over all files
-if [[ "$mergePattern" == "-1" ]]; then
-  mergePattern=all
+if [[ "$mergePattern" == "all" ]]; then
   filePattern=".*"
 fi
 
