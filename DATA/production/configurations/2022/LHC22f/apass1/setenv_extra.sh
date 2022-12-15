@@ -238,7 +238,7 @@ export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="--fv0-reconstructor"
 
 # ad-hoc settings for MFT
 if [[ $BEAMTYPE == "pp" || $PERIOD == "LHC22s" ]]; then
-  export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="MFTTracking.RBins=20;MFTTracking.PhiBins=20;MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
+  export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="MFTTracking.RBins=20;MFTTracking.PhiBins=60;MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
 else
   export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
 fi
