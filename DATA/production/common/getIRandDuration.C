@@ -12,22 +12,30 @@ using namespace o2::ctp;
 const double orbitDuration = 88.924596234; // us
 
 void writeIRtoFile(float ir);
+void writeDurationToFile(long duration);
 
-void getIR(int run = 527057, bool debug = false) {
+void getIRandDuration(int run = 527057, bool debug = false) {
 
   float ir = 0.f;
-  LOGP(info, "Checking IR");
+  long duration = 0;
+  // duration as O2end - O2start:
+  auto& ccdb_inst = o2::ccdb::BasicCCDBManager::instance();
+  ccdb_inst.setURL("https://alice-ccdb.cern.ch");
+  std::pair<uint64_t, uint64_t> run_times = ccdb_inst.getRunDuration(run);
+  long run_duration = long(run_times.second - run_times.first);
+  
+  LOGP(info, "Checking IR anbd duration");
   if (run < 523141) {
     // LHC22c, d, e, f
     LOGP(info, "Run number < 523141 --> we are in 22c, d, e, or f, so IR is < 100 kHz, writing 0.f");
+    LOGP(info, "In addition, the duration for these runs is O2end - O2start: if the run was short, this might overestimate the duration");
     // In these runs, sometimes the CCDB does not contain correct scalers, so we use 0 as a placeholder
     writeIRtoFile(ir);
+    writeDurationToFile(duration);
     return;
   }
   
   o2::ccdb::CcdbApi ccdb_api;
-  auto& ccdb_inst = o2::ccdb::BasicCCDBManager::instance();
-  ccdb_inst.setURL("https://alice-ccdb.cern.ch");
   ccdb_api.init("https://alice-ccdb.cern.ch");
   // access SOR and EOR timestamps
   std::map<string, string> headers, metadata;
@@ -47,8 +55,10 @@ void getIR(int run = 527057, bool debug = false) {
     scl = ccdb_inst.getSpecific<o2::ctp::CTPRunScalers>("CTP/Calib/Scalers", tsSOR, metadata);
     if (!scl) {
       LOGP(info, "Cannot get IR for run {} neither from production nor test CCDB, writing -1.f", run);
+      LOGP(info, "In addition, the duration for these runs is O2end - O2start: if the run was short, this might overestimate the duration");
       ir = -1.f;
       writeIRtoFile(ir);
+      writeDurationToFile(duration);
       return;
     }
   }
@@ -76,7 +86,7 @@ void getIR(int run = 527057, bool debug = false) {
       ++i;
     }
 
-    long duration = std::round((vOrbit.back() - vOrbit.front()) * orbitDuration * 1e-6); // s
+    duration = std::round((vOrbit.back() - vOrbit.front()) * orbitDuration * 1e-6); // s
     ir = float(vScaler.back() - vScaler.front()) / duration;
     LOGP(info, "run {}: orbit.front = {} orbit.back = {} duration = {} s scalers = {} IR = {} Hz", run, vOrbit.front(), vOrbit.back(), duration, vScaler.back() - vScaler.front(), ir);
   }
@@ -88,6 +98,7 @@ void getIR(int run = 527057, bool debug = false) {
     LOGP(info, "IR > 100 kHz");
   }
   writeIRtoFile(ir);
+  writeDurationToFile(duration);
   return;
 }
 
@@ -98,6 +109,17 @@ void writeIRtoFile(float ir) {
     printf("ERROR: Could not open file to write IR!");
     return;
   }
-  fprintf(fptr,"%.2f", ir);
+  fprintf(fptr, "%.2f", ir);
+  fclose(fptr);
+}
+
+void writeDurationToFile(long duration) {
+
+  FILE *fptr = fopen("Duration.txt", "w");
+  if (fptr == NULL) {
+    printf("ERROR: Could not open file to write IR!");
+    return;
+  }
+  fprintf(fptr, "%ld", duration);
   fclose(fptr);
 }
