@@ -147,9 +147,11 @@ else
 fi
 
 # IR
-root -b -q "$O2DPG_ROOT/DATA/production/common/getIR.C+($RUNNUMBER)"
+root -b -q "$O2DPG_ROOT/DATA/production/common/getIRandDuration.C+($RUNNUMBER)"
 export RUN_IR=`cat IR.txt`
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
+export RUN_DURATION=`cat Duration.txt`
+echo "Duration of current run ($RUNNUMBER) = $RUN_DURATION"
 
 echo "BeamType = $BEAMTYPE"
 
