@@ -31,8 +31,8 @@
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "mid-digits"
+          "type": "direct",
+          "query": "digits:MID/DATA;digits_rof:MID/DATAROF"
         }
       },
       "QcTaskMIDClust": {
@@ -43,8 +43,8 @@
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "mid-clusters"
+          "type": "direct",
+          "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS"
         }
       },
       "QcTaskMIDTracks": {
@@ -55,8 +55,8 @@
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "mid-tracks"
+          "type": "direct",
+          "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS"
         }
       }
     },
@@ -113,48 +113,5 @@
       }
     }
   },
-  "dataSamplingPolicies": [
-    {
-      "id": "mid-tracks",
-      "active": "true",
-      "machines": [],
-      "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "1",
-          "seed": "1441"
-        }
-      ],
-      "blocking": "false"
-    },
-    {
-      "id": "mid-clusters",
-      "active": "true",
-      "machines": [],
-      "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "1",
-          "seed": "1441"
-        }
-      ],
-      "blocking": "false"
-    },
-    {
-      "id": "mid-digits",
-      "active": "true",
-      "machines": [],
-      "query": "digits:MID/DATA;digits_rof:MID/DATAROF",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "1",
-          "seed": "1441"
-        }
-      ],
-      "blocking": "false"
-    }
-  ]
+  "dataSamplingPolicies": []
 }
