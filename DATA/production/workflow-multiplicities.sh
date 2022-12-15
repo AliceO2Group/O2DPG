@@ -66,12 +66,24 @@ if [[ ! -z $OPTIMIZED_PARALLEL_ASYNC ]]; then
     MULTIPLICITY_PROCESS_itstpc_track_matcher=12
     MULTIPLICITY_PROCESS_its_tracker=12
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_4gpu" ]]; then
-    N_TPCENTDEC=$(math_max $((3 * $NGPUS / 4)) 1)
-    N_MFTTRK=$(math_max $((6 * $NGPUS / 4)) 1)
-    N_ITSTRK=$(math_max $((6 * $NGPUS / 4)) 1)
+    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=20
+    [[ -z $SHMSIZE ]] && SHMSIZE=128000000000 # SHM_LIMIT 3/4
+    NGPURECOTHREADS=8
+    NTRDTRKTHREADS=4
+    NGPUS=4
+    N_TPCTRK=4
+    # time in s: pvtx 16, tof 30, trd 82 itstpc 53 its 200 mfttr 30 tpcent 23 hmp-clus 40 (25.11.22)
+    N_TPCENTDEC=$(math_max $((2 * $NGPUS / 4)) 1)
+    N_ITSTRK=$(math_max $((10 * $NGPUS / 4)) 1)
     N_TPCITS=$(math_max $((4 * $NGPUS / 4)) 1)
-    N_MCHTRK=$(math_max $((2 * $NGPUS / 4)) 1)
-    N_TOFMATCH=$(math_max $((20 * $NGPUS / 4)) 1)
+    N_MFTTRK=$(math_max $((3 * $NGPUS / 4)) 1)
+    N_TRDTRK=$(math_max $((7 * $NGPUS / 4)) 1)
+    N_TOFMATCH=$(math_max $((3 * $NGPUS / 4)) 1)
+    N_HMPCLUS=$(math_max $((3 * $NGPUS / 4)) 1)
+    CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="ITSVertexerParam.nThreads=3;ITSCATrackerParam.nThreads=3;"
+    MULTIPLICITY_PROCESS_mch_cluster_finder=2
+    MULTIPLICITY_PROCESS_pvertex_track_matching=2
+    MULTIPLICITY_PROCESS_primary_vertexing=3
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_64cpu" ]]; then
     NGPURECOTHREADS=6
     NTRDTRKTHREADS=2

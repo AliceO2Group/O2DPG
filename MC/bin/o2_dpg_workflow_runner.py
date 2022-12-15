@@ -639,7 +639,7 @@ class WorkflowExecutor:
           p.nice(nice)
           self.nicevalues[tid]=nice
       except (psutil.NoSuchProcess, psutil.AccessDenied):
-          actionlogger.error('Couldn\'t set nice value of ' + str(p.pid) + ' to ' + str(nice) + ' -- current value is ' + str(p.nice()))
+          actionlogger.error('Couldn\'t set nice value of ' + str(p.pid) + ' to ' + str(nice))
           self.nicevalues[tid]=os.nice(0)
       return p
 
@@ -849,7 +849,7 @@ class WorkflowExecutor:
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         pass
 
-            resources_per_task[tid]={'iter':self.internalmonitorid, 'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS/1024./1024., 'pss':totalPSS/1024./1024, 'nice':proc.nice(), 'swap':totalSWAP, 'label':self.workflowspec['stages'][tid]['labels']}
+            resources_per_task[tid]={'iter':self.internalmonitorid, 'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS/1024./1024., 'pss':totalPSS/1024./1024, 'nice':self.nicevalues[tid], 'swap':totalSWAP, 'label':self.workflowspec['stages'][tid]['labels']}
             metriclogger.info(resources_per_task[tid])
             send_webhook(self.args.webhook, resources_per_task)
             
@@ -1230,8 +1230,9 @@ class WorkflowExecutor:
                 actionlogger.debug('Sorted current candidates: ' + str([(c,self.idtotask[c]) for c in candidates]))
                 self.try_job_from_candidates(candidates, self.process_list, finished)
                 if len(candidates) > 0 and len(self.process_list) == 0:
-                    actionlogger.info("Not able to make progress: Nothing scheduled although non-zero candidate set")
+                    print("Runtime error: Not able to make progress: Nothing scheduled although non-zero candidate set", file=sys.stderr)
                     send_webhook(self.args.webhook,"Unable to make further progress: Quitting")
+                    errorencountered = True
                     break
             
                 finished_from_started = [] # to account for finished when actually started

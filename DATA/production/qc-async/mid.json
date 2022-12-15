@@ -65,7 +65,7 @@
     },
     "checks": {
       "MIDDigits": {
-        "active": "true",
+        "active": "false",
         "checkName": "Digits",
         "className": "o2::quality_control_modules::mid::DigitsQcCheck",
         "moduleName": "QcMID",
@@ -88,7 +88,7 @@
         ]
       },
       "MIDClusters": {
-        "active": "true",
+        "active": "false",
         "checkName": "Clusters",
         "className": "o2::quality_control_modules::mid::ClustQcCheck",
         "moduleName": "QcMID",
@@ -103,7 +103,7 @@
         ]
       },
       "MIDTracks": {
-        "active": "true",
+        "active": "false",
         "checkName": "Tracks",
         "className": "o2::quality_control_modules::mid::TracksQcCheck",
         "moduleName": "QcMID",
@@ -128,7 +128,7 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.1",
+          "fraction": "1",
           "seed": "1441"
         }
       ],
@@ -142,7 +142,7 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.1",
+          "fraction": "1",
           "seed": "1441"
         }
       ],
@@ -156,7 +156,7 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.1",
+          "fraction": "1",
           "seed": "1441"
         }
       ],

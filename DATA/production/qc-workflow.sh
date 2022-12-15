@@ -244,7 +244,14 @@ if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
     #cat $QC_JSON_FROM_OUTSIDE 1>&2
     exit 1
   fi
-  add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM:---local --host ${QC_HOST:-localhost}} ${QC_CONFIG}"
+  if [[ -z $QC_CONFIG_PARAM ]]; then
+    if [[ $SYNCMODE == 1 ]]; then
+      QC_CONFIG_PARAM="--local --host ${QC_HOST:-localhost}"
+    else
+      QC_CONFIG_PARAM="--local-batch=QC.root"
+    fi
+  fi
+  add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM} ${QC_CONFIG}"
 fi
 
 if [[ ! -z $GEN_TOPO_QC_JSON_FILE ]]; then

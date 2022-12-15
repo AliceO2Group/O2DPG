@@ -28,11 +28,16 @@ if has_detector_calib ZDC && has_processing_step ZDC_RECO; then
 else
     CAN_DO_CALIB_ZDC_TDC=0;
 fi
+# for async recalibration
+if has_detector_calib EMC && has_detector_reco EMC && [[ $SYNCMODE != 1 ]]; then CAN_DO_CALIB_EMC_ASYNC_RECALIB=1; else CAN_DO_CALIB_EMC_ASYNC_RECALIB=0; fi
 
 # additional individual settings for calibration workflows
 has_detector CTP && export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ $FORCECALIBRATIONS == 1 ]] ; then
+
+  # here we won't deal with calibrations only for async! e.g. EMC_ASYNC_RECALIB; we want that they are always explicitly enabled
+
   # calibrations for primary vertex
   if [[ $CAN_DO_CALIB_PRIMVTX_MEANVTX == 1 ]]; then
     if [[ -z ${CALIB_PRIMVTX_MEANVTX+x} ]]; then CALIB_PRIMVTX_MEANVTX=1; fi
@@ -133,6 +138,8 @@ fi
 ( [[ -z ${CALIB_PHS_L1PHASE} ]] || [[ $CAN_DO_CALIB_PHS_L1PHASE == 0 ]] ) && CALIB_PHS_L1PHASE=0
 ( [[ -z ${CALIB_CPV_GAIN} ]] || [[ $CAN_DO_CALIB_CPV_GAIN == 0 ]] ) && CALIB_CPV_GAIN=0
 ( [[ -z ${CALIB_ZDC_TDC} ]] || [[ $CAN_DO_CALIB_ZDC_TDC == 0 ]] ) && CALIB_ZDC_TDC=0
+# for async:
+( [[ -z ${CALIB_EMC_ASYNC_RECALIB} ]] || [[ $CAN_DO_CALIB_EMC_ASYNC_RECALIB == 0 ]] ) && CALIB_EMC_ASYNC_RECALIB=0
 
 if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo "CALIB_PRIMVTX_MEANVTX = $CALIB_PRIMVTX_MEANVTX" 1>&2
@@ -153,6 +160,8 @@ if [[ "0$GEN_TOPO_VERBOSE" == "01" ]]; then
   echo "CALIB_TPC_SAC = $CALIB_TPC_SAC" 1>&2
   echo "CALIB_CPV_GAIN = $CALIB_CPV_GAIN" 1>&2
   echo "CALIB_ZDC_TDC = $CALIB_ZDC_TDC" 1>&2
+  echo "Calibrations for async:" 1>&2
+  echo "CALIB_EMC_ASYNC_RECALIB = $CALIB_EMC_ASYNC_RECALIB" 1>&2
 fi
 
 # define spec for proxy for TF-based outputs from BARREL
@@ -165,7 +174,12 @@ if [[ -z $CALIBDATASPEC_BARREL_TF ]]; then
   if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "diagWords:TOF/DIAFREQ/0"; fi
 
   # TPC
-  if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "unbinnedTPCResiduals:GLO/UNBINNEDRES/0"; fi
+  if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then
+    add_semicolon_separated CALIBDATASPEC_BARREL_TF "unbinnedTPCResiduals:GLO/UNBINNEDRES/0"
+    add_semicolon_separated CALIBDATASPEC_BARREL_TF "trackReferences:GLO/TRKREFS/0"
+    # the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
+    [[ -z $CALIB_TPC_SCDCALIB_SLOTLENGTH ]] && export CALIB_TPC_SCDCALIB_SLOTLENGTH=600
+  fi
   if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ 0$CALIB_TPC_SCDCALIB_SENDTRKDATA == "01" ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcInterpTrkData:GLO/TRKDATA/0"; fi
   if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ $CALIB_TPC_SCDCALIB_CTP_INPUT == "--enable-ctp" ]]; then
     add_semicolon_separated CALIBDATASPEC_BARREL_TF "lumi:CTP/LUMI/0"
