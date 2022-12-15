@@ -843,15 +843,16 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(ITSTPCMATCHtask)
 
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
-   TRDTRACKINGtask['cmd'] = '${O2_ROOT}/bin/o2-trd-tracklet-transformer ' + getDPL_global_options() + putConfigValues() + ('',' --disable-mc')[args.no_mc_labels]
+   TRDTRACKINGtask['cmd'] = '${O2_ROOT}/bin/o2-trd-tracklet-transformer ' + getDPL_global_options() + putConfigValuesNew(['GPU_rec_trd']) + ('',' --disable-mc')[args.no_mc_labels]
    workflow['stages'].append(TRDTRACKINGtask)
 
    # FIXME This is so far a workaround to avoud a race condition for trdcalibratedtracklets.root
    TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name'],MATBUD_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    TRDTRACKINGtask2['cmd'] = '${O2_ROOT}/bin/o2-trd-global-tracking ' + getDPL_global_options(bigshm=True) + ('',' --disable-mc')[args.no_mc_labels] \
                               + putConfigValuesNew(['ITSClustererParam',
-                                                   'ITSCATrackerParam',
-                                                    'TPCGasParam'], {"NameConf.mDirMatLUT" : ".."})                                    \
+                                                    'ITSCATrackerParam',
+                                                    'TPCGasParam',
+                                                    'GPU_rec_trd'], {"NameConf.mDirMatLUT" : ".."})                                    \
                              + " --track-sources " + anchorConfig.get("o2-trd-global-tracking-options",{}).get("track-sources","all")
    workflow['stages'].append(TRDTRACKINGtask2)
 

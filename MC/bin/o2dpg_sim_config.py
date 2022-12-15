@@ -81,5 +81,11 @@ def create_sim_config(args):
     if args.fwdmatching_cut_4_param == True:
         add(config, {"FwdMatching.cutFcn" : "cut3SigmaXYAngles"})
 
+    # special settings for TRD MC reco
+    add(config, {"GPU_rec_trd.maxChi2" : 15,
+                 "GPU_rec_trd.penaltyChi2" : 13,
+                 "GPU_rec_trd.extraRoadY" : 2,
+                 "GPU_rec_trd.extraRoadZ" : 0,
+                 "GPU_rec_trd.trkltResRPhiIdeal" : 0.04})
 
     return config
