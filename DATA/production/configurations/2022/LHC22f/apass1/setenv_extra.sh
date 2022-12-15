@@ -88,7 +88,7 @@ fi
 # fix also ZDC in the pp run 529038
 if [[ $PERIOD == "LHC22q" ]]; then
   if [[ $RUNNUMBER -eq 529003 ]]; then
-    ZDC_BC_SHIFT=427744319508; 
+    ZDC_BC_SHIFT=427744319508;
   elif [[ $RUNNUMBER -eq 529005 ]]; then
     ZDC_BC_SHIFT=585290682900
   elif [[ $RUNNUMBER -eq 529006 ]]; then
@@ -107,7 +107,7 @@ if [[ $PERIOD == "LHC22q" ]]; then
     ZDC_BC_SHIFT=1399525886484
   elif [[ $RUNNUMBER -eq 529043 ]]; then
     ZDC_BC_SHIFT=3079675091988
-  fi					 
+  fi
   export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow="TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
 fi
 
@@ -152,6 +152,13 @@ export RUN_IR=`cat IR.txt`
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
 export RUN_DURATION=`cat Duration.txt`
 echo "Duration of current run ($RUNNUMBER) = $RUN_DURATION"
+
+# For runs shorter than 10 minutes we have only a single slot.
+# In that case we have to adopt the slot length in order to
+# set the maximum number of processed tracks per TF correctly
+if (( RUN_DURATION < 600 )); then
+  export CALIB_TPC_SCDCALIB_SLOTLENGTH=$RUN_DURATION
+fi
 
 echo "BeamType = $BEAMTYPE"
 
@@ -232,7 +239,7 @@ export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="--fv0-reconstructor"
 # ad-hoc settings for MFT
 if [[ $BEAMTYPE == "pp" || $PERIOD == "LHC22s" ]]; then
   export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="MFTTracking.RBins=20;MFTTracking.PhiBins=20;MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
-else  
+else
   export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
 fi
 # ad-hoc settings for MCH
