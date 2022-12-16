@@ -374,7 +374,7 @@ fi
 # flag to possibly enable Analysis QC
 [[ -z ${ALIEN_JDL_RUNANALYSISQC+x} ]] && ALIEN_JDL_RUNANALYSISQC=1
 
-# merging last AOD file in case it is too small; threashold put at 80% of the required file size
+# merging last AOD file in case it is too small; threshold put at 80% of the required file size
 AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
 AOD_LIST=`find . -name AO2D.root`
 if [[ -n $ALIEN_JDL_MINALLOWEDAODPERCENTSIZE ]]; then
@@ -413,19 +413,31 @@ fi
 
 # now checking all AO2D files and running the analysis QC
 # retrieving again the list of AOD files, in case it changed after the merging above
-AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
-AOD_LIST=`find . -name AO2D.root`
 for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
   AOD_DIR=`echo $AOD_LIST | cut -d' ' -f$i | sed -e 's/AO2D.root//'`
-  echo "Verifying and potentially running analysis QC for AOD file in $AOD_DIR"
+  echo "Verifying, Merging DFs, and potentially running analysis QC for AOD file in $AOD_DIR"
   cd $AOD_DIR
   if [[ -f "AO2D.root" ]]; then
+    echo "Checking AO2Ds with un-merged DFs"
     root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
     exitcode=$?
     if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D check is " $exitcode > validation_error.message
 	echo "exit code from AO2D check is " $exitcode
 	exit $exitcode
+    fi
+    ls AO2D.root > list.list
+    o2-aod-merger --input list.list --output AO2D_merged.root
+    echo "Checking AO2Ds with merged DFs"
+    root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
+    exitcode=$?
+    if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from AO2D with merged DFs check is " $exitcode > validation_error.message
+	echo "exit code from AO2D with merged DFs check is " $exitcode
+	echo "We will keep the AO2Ds with unmerged DFs"
+    else
+      echo "All ok, replacing initial AO2D.root file with the one with merged DFs"
+      mv AO2D_merged.root AO2D.root
     fi
     if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
       ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
