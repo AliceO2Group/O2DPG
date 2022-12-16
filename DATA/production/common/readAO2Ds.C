@@ -7,6 +7,7 @@ int readAO2Ds(const char* filename = "AO2D.root")
   int nkeysfile = f->GetNkeys();
   TList* lkeysfile = f->GetListOfKeys();
   std::vector<int> vectNEntriesPerDF;
+  int nDFs = 0;
   for (int ik = 0; ik < nkeysfile; ++ik) {
     TKey* k = (TKey*)lkeysfile->At(ik);
     TString cnameKeyInFile = k->GetClassName();
@@ -14,6 +15,7 @@ int readAO2Ds(const char* filename = "AO2D.root")
     if (cnameKeyInFile != "TDirectoryFile" && !onameKeyInFile.BeginsWith("DF_")) {
       continue;
     }
+    ++nDFs;
     TDirectoryFile* d = (TDirectoryFile*)f->Get(onameKeyInFile.Data());
     int nkeysdir = d->GetNkeys();
     vectNEntriesPerDF.push_back(nkeysdir);
@@ -47,6 +49,7 @@ int readAO2Ds(const char* filename = "AO2D.root")
       std::cout << "table " << item.first << " has " << item.second << " entries" << std::endl;
     }
   }
+  std::cout << "Number of DFs found in AOD file = " << nDFs << std::endl;
   if (std::equal(vectNEntriesPerDF.begin() + 1, vectNEntriesPerDF.end(), vectNEntriesPerDF.begin())) {
     std::cout << "All DFs have the same number of tables" << std::endl;
   } else {
