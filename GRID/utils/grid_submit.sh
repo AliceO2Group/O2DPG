@@ -196,6 +196,7 @@ while [ $# -gt 0 ] ; do
         --controlserver) CONTROLSERVER=$2; shift 2 ;; # allows to give a SERVER ADDRESS/IP which can act as controller for GRID jobs
         --prodsplit) PRODSPLIT=$2; shift 2 ;; # allows to set JDL production split level (useful to easily replicate workflows)
         --singularity) SINGULARITY=ON; shift 1 ;; # run everything inside singularity
+        --wait) WAITFORALIEN=ON; shift 1 ;; #wait for alien jobs to finish
 	-h) Usage ; exit ;;
         *) break ;;
     esac
@@ -302,9 +303,9 @@ EOF
       [ ! "${CONTINUE_WORKDIR}" ] && echo "mkdir ${MY_JOBWORKDIR}" >> ${command_file}
       [ ! "${CONTINUE_WORKDIR}" ] && echo "mkdir ${MY_JOBWORKDIR}/output" >> ${command_file}
       echo "rm ${MY_BINDIR}/${MY_JOBNAMEDATE}.sh" >> ${command_file}    # remove current job script
-      echo "cp ${PWD}/${MY_JOBNAMEDATE}.jdl alien://${MY_JOBWORKDIR}/${MY_JOBNAMEDATE}.jdl" >> ${command_file}  # copy the jdl
-      echo "cp ${THIS_SCRIPT} alien://${MY_BINDIR}/${MY_JOBNAMEDATE}.sh" >> ${command_file}  # copy current job script to AliEn
-      [ ! "${CONTINUE_WORKDIR}" ] && echo "cp ${MY_JOBSCRIPT} alien://${MY_JOBWORKDIR}/alien_jobscript.sh" >> ${command_file}
+      echo "cp file:${PWD}/${MY_JOBNAMEDATE}.jdl alien://${MY_JOBWORKDIR}/${MY_JOBNAMEDATE}.jdl@DISK=1" >> ${command_file}  # copy the jdl
+      echo "cp file:${THIS_SCRIPT} alien://${MY_BINDIR}/${MY_JOBNAMEDATE}.sh@DISK=1" >> ${command_file}  # copy current job script to AliEn
+      [ ! "${CONTINUE_WORKDIR}" ] && echo "cp file:${MY_JOBSCRIPT} alien://${MY_JOBWORKDIR}/alien_jobscript.sh" >> ${command_file}
     ) &> alienlog.txt
 
     pok "Submitting job \"${MY_JOBNAMEDATE}\" from $PWD"
@@ -321,8 +322,24 @@ EOF
     else
       per "Job submission failed: error log follows"
       cat alienlog.txt
+      exit 1
     fi
   fi
+
+  # wait here until all ALIEN jobs have returned
+  while [ "${WAITFORALIEN}" ]; do
+    sleep 10
+    JOBSTATUS=$(alien.py ps -j ${MY_JOBID} | awk '//{print $4}')
+    echo "Job status ${JOBSTATUS}"
+    if [ "$JOBSTATUS" == "D" ]; then
+      echo "Job done"
+      WAITFORALIEN=""
+    fi
+    if [[ "${FOO:0:1}" == [EK] ]]; then
+      echo "Job error occured"
+      exit 1
+    fi
+  done
 
   exit 0
 fi  # <---- end if ALIEN_JOB_SUBMITTER
@@ -404,7 +421,7 @@ if [ "${ONGRID}" = "1" ]; then
 
   # ----------- FETCH PREVIOUS CHECKPOINT IN CASE WE CONTINUE A JOB ----
   if [ "${CONTINUE_WORKDIR}" ]; then
-    alien.py cp alien://${ALIEN_JOB_OUTPUTDIR}/checkpoint.tar .
+    alien.py cp alien://${ALIEN_JOB_OUTPUTDIR}/checkpoint.tar file:/.
     if [ -f checkpoint.tar ]; then
        tar -xf checkpoint.tar
        rm checkpoint.tar
