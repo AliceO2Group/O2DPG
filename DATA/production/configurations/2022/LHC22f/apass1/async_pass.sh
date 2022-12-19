@@ -345,7 +345,7 @@ else
   #
   if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
     export TIMEFRAME_RATE_LIMIT=3
-    export OMP_NUM_THREADS=5
+    export OMP_NUM_THREADS=6
     export SHMSIZE=16000000000
   fi
 fi
