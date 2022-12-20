@@ -147,7 +147,8 @@ else
 fi
 
 # IR
-root -b -q "$O2DPG_ROOT/DATA/production/common/getIRandDuration.C+($RUNNUMBER)"
+cp $O2DPG_ROOT/DATA/production/common/getIRandDuration.C ./
+root -b -q "getIRandDuration.C+($RUNNUMBER)"
 export RUN_IR=`cat IR.txt`
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
 export RUN_DURATION=`cat Duration.txt`
