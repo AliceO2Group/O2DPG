@@ -58,7 +58,9 @@
           "clusterizerGradientCut": "0.03",
           "clusterizerMinTime": "-300.",
           "clusterizerMaxTime": "300.",
-          "clusterizerMaxTimeDelta": "1000."
+          "clusterizerMaxTimeDelta": "1000.",
+          "hasInvMassMesons": "true",
+          "mesonClustersRejectExotics": 1
         }
       }
     }
