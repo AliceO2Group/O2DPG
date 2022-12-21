@@ -413,6 +413,8 @@ fi
 
 # now checking all AO2D files and running the analysis QC
 # retrieving again the list of AOD files, in case it changed after the merging above
+AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
+AOD_LIST=`find . -name AO2D.root`
 for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
   AOD_DIR=`echo $AOD_LIST | cut -d' ' -f$i | sed -e 's/AO2D.root//'`
   echo "Verifying, Merging DFs, and potentially running analysis QC for AOD file in $AOD_DIR"
