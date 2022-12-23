@@ -326,16 +326,29 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]]; then
   export GPUMEMSIZE=$((25 << 30))
   if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
     if [[ $keep -eq 0 ]]; then
-      export MULTIPLICITY_PROCESS_tof_matcher=2
-      export MULTIPLICITY_PROCESS_mch_cluster_finder=3
-      export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
-      export MULTIPLICITY_PROCESS_itstpc_track_matcher=3
-      export MULTIPLICITY_PROCESS_its_tracker=2
+      if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
+	export MULTIPLICITY_PROCESS_tof_matcher=2
+	export MULTIPLICITY_PROCESS_mch_cluster_finder=3
+	export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
+	export MULTIPLICITY_PROCESS_itstpc_track_matcher=3
+	export MULTIPLICITY_PROCESS_its_tracker=2
+      else
+	# forcing multiplicities to be 1
+	export MULTIPLICITY_PROCESS_tof_matcher=1
+	export MULTIPLICITY_PROCESS_mch_cluster_finder=1
+	export MULTIPLICITY_PROCESS_tpc_entropy_decoder=1
+	export MULTIPLICITY_PROCESS_itstpc_track_matcher=1
+	export MULTIPLICITY_PROCESS_its_tracker=1
+      fi
       export TIMEFRAME_RATE_LIMIT=8
     else
       export TIMEFRAME_RATE_LIMIT=4
     fi
-    export OMP_NUM_THREADS=8
+    if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
+      export OMP_NUM_THREADS=8
+    else
+      export OMP_NUM_THREADS=4
+    fi
     export SHMSIZE=20000000000
   fi
 else
