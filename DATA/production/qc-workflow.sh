@@ -1,7 +1,5 @@
 #!/bin/bash
 
-printenv 
-
 if [[ -z "$WORKFLOW" ]] || [[ -z "$MYDIR" ]]; then
   echo This script must be called from the dpl-workflow.sh and not standalone 1>&2
   exit 1
@@ -11,6 +9,28 @@ if [[ ! -z $GEN_TOPO_QC_JSON_FILE ]]; then
   exec 101>$GEN_TOPO_QC_JSON_FILE.lock || exit 1
   flock 101 || exit 1
 fi
+
+FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
+
+add_QC_JSON() {
+  if [[ ${2} =~ ^consul://.* ]]; then
+    TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
+    curl -s -o $TMP_FILENAME "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
+    if [[ $? != 0 ]]; then
+      echo "Error fetching QC JSON $2"
+      exit 1
+    fi
+  else
+    TMP_FILENAME=$2
+  fi
+  JSON_FILES+=" $TMP_FILENAME"
+  jq -rM '""' > /dev/null < $TMP_FILENAME
+  if [[ $? != 0 ]]; then
+    echo "Invalid QC JSON $2" 1>&2
+    exit 1
+  fi
+  OUTPUT_SUFFIX+="-$1"
+}
 
 QC_CONFIG=
 QC_CONFIG_OVERRIDE=
@@ -79,6 +99,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json # this must be last
 
   elif [[ $SYNCMODE == 1 ]]; then
+  echo "TOTO SYNCMODE=1 TRACK_SOURCES=${TRACK_SOURCES}"
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
     if [[ -z "$QC_JSON_MFT" ]]; then
@@ -94,7 +115,15 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=$O2DPG_ROOT/DATA/production/qc-sync/fv0.json
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-sync/emc.json
     [[ -z "$QC_JSON_ZDC" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=$O2DPG_ROOT/DATA/production/qc-sync/zdc.json
-    [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=$O2DPG_ROOT/DATA/production/qc-sync/mch.json
+    if [[ -z "$QC_JSON_MCH" ]]; then
+      QC_JSON_MCH=$O2DPG_ROOT/DATA/production/qc-sync/mch-digits.json
+      if has_processing_step "MCH_RECO"; then
+        add_QC_JSON MCH_RECO $O2DPG_ROOT/DATA/production/qc-sync/mch-reco.json
+      fi
+      if has_track_source "MCH"; then
+        add_QC_JSON MCH_TRACK $O2DPG_ROOT/DATA/production/qc-sync/mch-tracks.json
+      fi
+    fi
     [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid-digits.json && has_processing_step MID_RECO && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid.json
     [[ -z "$QC_JSON_CPV" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-sync/cpv.json
     [[ -z "$QC_JSON_PHS" ]] && QC_JSON_PHS=$O2DPG_ROOT/DATA/production/qc-sync/phs.json
@@ -122,6 +151,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json # this must be last
 
   else
+  echo "TOTO SYNCMODE=0 TRACK_SOURCES=${TRACK_SOURCES}"
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-async/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-async/its.json
     [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-async/mft.json
@@ -158,28 +188,9 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     echo This script must be run via the gen_topo scripts, or a GEN_TOPO_WORKDIR must be provided where merged JSONS are stored 1>&2
     exit 1
   fi
-
-  FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
-
-  add_QC_JSON() {
-    if [[ ${2} =~ ^consul://.* ]]; then
-      TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
-      curl -s -o $TMP_FILENAME "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
-      if [[ $? != 0 ]]; then
-        echo "Error fetching QC JSON $2"
-        exit 1
-      fi
-    else
-      TMP_FILENAME=$2
-    fi
-    JSON_FILES+=" $TMP_FILENAME"
-    jq -rM '""' > /dev/null < $TMP_FILENAME
-    if [[ $? != 0 ]]; then
-      echo "Invalid QC JSON $2" 1>&2
-      exit 1
-    fi
-    OUTPUT_SUFFIX+="-$1"
-  }
+ 
+  echo "TOTO==="
+  printenv
 
   JSON_FILES=
   OUTPUT_SUFFIX=
