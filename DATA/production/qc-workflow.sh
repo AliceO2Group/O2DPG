@@ -12,6 +12,9 @@ fi
 
 FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
 
+JSON_FILES=
+OUTPUT_SUFFIX=
+
 add_QC_JSON() {
   if [[ ${2} =~ ^consul://.* ]]; then
     TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
@@ -99,7 +102,6 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json # this must be last
 
   elif [[ $SYNCMODE == 1 ]]; then
-  echo "TOTO SYNCMODE=1 TRACK_SOURCES=${TRACK_SOURCES}"
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
     if [[ -z "$QC_JSON_MFT" ]]; then
@@ -151,7 +153,6 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json # this must be last
 
   else
-  echo "TOTO SYNCMODE=0 TRACK_SOURCES=${TRACK_SOURCES}"
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-async/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-async/its.json
     [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-async/mft.json
@@ -161,6 +162,15 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=$O2DPG_ROOT/DATA/production/qc-async/fdd.json
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-async/emc.json
     [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-async/mid.json
+    if [[ -z "$QC_JSON_MCH" ]]; then
+      QC_JSON_MCH=$O2DPG_ROOT/DATA/production/qc-async/mch-digits.json
+      if has_processing_step "MCH_RECO"; then
+        add_QC_JSON MCH_RECO $O2DPG_ROOT/DATA/production/qc-async/mch-reco.json
+      fi
+      if has_track_source "MCH"; then
+        add_QC_JSON MCH_TRACK $O2DPG_ROOT/DATA/production/qc-async/mch-tracks.json
+      fi
+    fi
     [[ -z "$QC_JSON_CPV" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-async/cpv.json
     [[ -z "$QC_JSON_PHS" ]] && QC_JSON_PHS=$O2DPG_ROOT/DATA/production/qc-async/phs.json
     [[ -z "$QC_JSON_TRD" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-async/trd.json
@@ -189,11 +199,6 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     exit 1
   fi
  
-  echo "TOTO==="
-  printenv
-
-  JSON_FILES=
-  OUTPUT_SUFFIX=
 
   # TOF matching
   if has_detector_qc TOF && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"TOF_MATCH"(,|$) ]] && [ ! -z "$QC_JSON_TOF_MATCH" ]; then
@@ -283,6 +288,9 @@ if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
     else
       QC_CONFIG_PARAM="--local-batch=QC.root"
     fi
+  fi
+  if [[ ! -z $FST_STAGE ]]; then
+    QC_CONFIG_PARAM=$(echo $QC_CONFIG_PARAM | sed -e "s/\.root/-${FST_STAGE}\.root/")
   fi
   add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM} ${QC_CONFIG}"
 fi

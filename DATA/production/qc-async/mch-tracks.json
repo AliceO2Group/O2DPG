@@ -3,7 +3,7 @@
         "config": {
             "database": {
                 "implementation": "CCDB",
-                "host": "ali-qcdb.cern.ch:8083",
+                "host": "localhost:6464",
                 "username": "not_applicable",
                 "password": "not_applicable",
                 "name": "not_applicable"
@@ -13,13 +13,13 @@
                 "type": "2"
             },
             "monitoring": {
-                "url": "influxdb-unix:///tmp/telegraf.sock"
+                "url": "infologger:///debug?qc"
             },
             "consul": {
-                "url": "null:8500"
+                "url": ""
             },
             "conditionDB": {
-                "url": "https://alice-ccdb.cern.ch"
+                "url": ""
             }
         },
         "tasks": {
@@ -37,19 +37,8 @@
                 "taskParameters": {
                     "maxTracksPerTF": "600",
                     "GID": "MCH"
-                },
-                "location": "local",
-                "mergingMode": "delta",
-                "localControl": "odc",
-                "localMachines": [
-                    "localhost",
-                    "epn"
-                ],
-                "remotePort": "47789",
-                "remoteMachine": "alio2-cr1-qc01.cern.ch"
+                }
             }
-        },
-        "checks": {}
-    },
-    "dataSamplingPolicies": []
+        }
+    }
 }
