@@ -1,0 +1,398 @@
+{
+    "qc": {
+        "config": {
+            "database": {
+                "implementation": "CCDB",
+                "host": "ali-qcdb-gpn.cern.ch:8083",
+                "username": "not_applicable",
+                "password": "not_applicable",
+                "name": "not_applicable"
+            },
+            "Activity": {
+                "number": "",
+                "type": "2",
+                "passName": "apass2",
+                "periodName": "",
+                "provenance": "qc_async"
+            },
+            "postprocessing": {
+                "periodSeconds": 0.01
+            },
+            "monitoring": {
+                "url": "infologger:///debug?qc"
+            },
+            "consul": {
+                "url": ""
+            },
+            "conditionDB": {
+                "url": "ccdb-test.cern.ch:8080"
+            },
+            "infologger": {
+                "filterDiscardDebug": "false",
+                "filterDiscardLevel": "99"
+            }
+        },
+        "postprocessing": {
+            "CellTrend": {
+                "active": "true",
+                "className": "o2::quality_control::postprocessing::SliceTrendingTask",
+                "moduleName": "QualityControl",
+                "detectorName": "EMC",
+                "resumeTrend": "false",
+                "producePlotsOnUpdate": "true",
+                "dataSources": [
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/CellTask",
+                        "names": [
+                            "NumberOfEvents_PHYS",
+                            "ncellsPerEventTot",
+                            "ncellsPerEventEMCALTot",
+                            "ncellsPerEventDCALTot",
+                            "ncellPerEventTot_Thres",
+                            "ncellPerEventEMCALTot_Thres",
+                            "ncellPerEventDCALTot_Thres"
+                        ],
+                        "axisDivision": [
+                            []
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH1SliceReductor",
+                        "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/CellTask",
+                        "names": [
+                            "NEventsPerTFPHYS"
+                        ],
+                        "axisDivision": [
+                            [
+                                "1.",
+                                "400."
+                            ]
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH1SliceReductor",
+                        "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/CellTask",
+                        "names": [
+                            "cellTime_PHYS",
+                            "cellTimeEMCAL_PHYS",
+                            "cellTimeDCAL_PHYS"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH1SliceReductor",
+                        "axisDivision": [
+                            [
+                                "-100.",
+                                "100."
+                            ]
+                        ],
+                        "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/CellTask",
+                        "names": [
+                            "cellAmplitude_PHYS",
+                            "cellAmplitudeEMCAL_PHYS",
+                            "cellAmplitudeDCAL_PHYS"
+                        ],
+                        "axisDivision": [
+                            [
+                                "0.5",
+                                "50."
+                            ]
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH1SliceReductor",
+                        "moduleName": "QcCommon"
+                    }
+                ],
+                "plots": [
+                    {
+                        "name": "NumberOfEvents",
+                        "title": "Number of events",
+                        "varexp": "NumberOfEvents_PHYS.entries:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "0:.5",
+                        "graphAxisLabel": "Number of events:Run number"
+                    },
+                    {
+                        "name": "NumberOfEventsTimeframe",
+                        "title": "Mean number of events / timeframe",
+                        "varexp": "NEventsPerTFPHYS.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "stddevX:.5",
+                        "graphAxisLabel": "<Number of events>:Run number"
+                    },
+                    {
+                        "name": "MeanNumberOfCellsEvent",
+                        "title": "Mean number of cells / events (EMCAL+DCAL)",
+                        "varexp": "ncellsPerEventTot.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "stddevX:.5",
+                        "graphAxisLabel": "<Number of cells/event>:Run number"
+                    },
+                    {
+                        "name": "MeanNumberOfEMCALCellsEvent",
+                        "title": "Mean number of cells / events (EMCAL)",
+                        "varexp": "ncellsPerEventEMCALTot.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "stddevX:.5",
+                        "graphAxisLabel": "<Number of cells/event>:Run number"
+                    },
+                    {
+                        "name": "MeanNumberOfDCALCellsEvent",
+                        "title": "Mean number of cells / events (DCAL)",
+                        "varexp": "ncellsPerEventDCALTot.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "stddevX:.5",
+                        "graphAxisLabel": "<Number of cells/event>:Run number"
+                    },
+                    {
+                        "name": "MeanNumberOfCellsEventThreshold",
+                        "title": "Mean number of cells / events (EMCAL+DCAL, E > 300 MeV)",
+                        "varexp": "ncellPerEventTot_Thres.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "stddevX:.5",
+                        "graphAxisLabel": "<Number of cells/event>:Run number"
+                    },
+                    {
+                        "name": "MeanNumberOfEMCALCellsEventThreshold",
+                        "title": "Mean number of cells / events (EMCAL, E > 300 MeV)",
+                        "varexp": "ncellPerEventEMCALTot_Thres.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "stddevX:.5",
+                        "graphAxisLabel": "<Number of cells/event>:Run number"
+                    },
+                    {
+                        "name": "MeanNumberOfDCALCellsEventThreshold",
+                        "title": "Mean number of cells / events (DCAL, E > 300 MeV)",
+                        "varexp": "ncellPerEventDCALTot_Thres.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "stddevX:.5",
+                        "graphAxisLabel": "<Number of cells/event>:Run number"
+                    },
+                    {
+                        "name": "MeanCellTime",
+                        "title": "Mean cell time (EMCAL+DCAL)",
+                        "varexp": "cellTime_PHYS.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<t_cell> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanEMCALCellTime",
+                        "title": "Mean cell time (EMCAL)",
+                        "varexp": "cellTimeEMCAL_PHYS.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<t_cell> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanDCALCellTime",
+                        "title": "Mean cell time (DCAL)",
+                        "varexp": "cellTimeDCAL_PHYS.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<t_cell> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanCellEnergy",
+                        "title": "Mean cell energy (EMCAL+DCAL)",
+                        "varexp": "cellAmplitude_PHYS.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_cell> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanEMCALCellEnergy",
+                        "title": "Mean cell energy (EMCAL)",
+                        "varexp": "cellAmplitudeEMCAL_PHYS.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_cell> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanDCALCellEnergy",
+                        "title": "Mean cell energy (DCAL)",
+                        "varexp": "cellAmplitudeDCAL_PHYS.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_cell> (GeV):Run number"
+                    }
+                ],
+                "initTrigger": [
+                    "once"
+                ],
+                "updateTrigger": [
+                    "foreachlatest:qcdb:EMC/MO/CellTask/NumberOfEvents_PHYS"
+                ],
+                "stopTrigger": [
+                    "once"
+                ]
+            },
+            "ClusterTrend": {
+                "active": "true",
+                "className": "o2::quality_control::postprocessing::SliceTrendingTask",
+                "moduleName": "QualityControl",
+                "detectorName": "EMC",
+                "resumeTrend": "false",
+                "producePlotsOnUpdate": "true",
+                "dataSources": [
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/ClusterTask",
+                        "names": [
+                            "ClustE_All",
+                            "ClustE_DCal",
+                            "ClustE_EMCal",
+                            "M02_All",
+                            "M20_DCal",
+                            "M20_EMCal",
+                            "NclustPerEvt"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH1SliceReductor",
+                        "axisDivision": [
+                            []
+                        ],
+                        "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/ClusterTask",
+                        "names": [
+                            "Cells_EMCal",
+                            "Cells_DCal"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH2SliceReductor",
+                        "axisDivision": [
+                            [
+                                "0.5",
+                                "5.",
+                                "10.",
+                                "50."
+                            ],
+                            [
+                                "0.",
+                                "30."
+                            ]
+                        ],
+                        "moduleName": "QcCommon"
+                    }
+                ],
+                "plots": [
+                    {
+                        "name": "MeanNumberOfClustersEvent",
+                        "title": "Mean number of clusters / events",
+                        "varexp": "NclustPerEvt.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "stddevX:.5",
+                        "graphAxisLabel": "<Number of clusters/event>:Run number"
+                    },
+                    {
+                        "name": "MeanClusterEnergy",
+                        "title": "Mean cluster energy (EMCAL+DCAL)",
+                        "varexp": "ClustE_All.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_cluster> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanEMCALClusterEnergy",
+                        "title": "Mean cluster energy (EMCAL)",
+                        "varexp": "ClustE_EMCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_custer> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanDCALClusterEnergy",
+                        "title": "Mean cluster energy (DCAL)",
+                        "varexp": "ClustE_DCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_cluster> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanClusterM02",
+                        "title": "Mean cluster M02 (EMCAL+DCAL)",
+                        "varexp": "M02_All.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<M02>:Run number"
+                    },
+                    {
+                        "name": "MeanEMCALClusterM02",
+                        "title": "Mean cluster M02 (EMCAL)",
+                        "varexp": "M20_EMCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<M02>:Run number"
+                    },
+                    {
+                        "name": "MeanDCALClusterM02",
+                        "title": "Mean cluster M02 (DCAL)",
+                        "varexp": "M20_DCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<M02>:Run number"
+                    },
+                    {
+                        "name": "NCellsClusterEMCAL",
+                        "title": "Number of Cells / Cluster EMCAL",
+                        "varexp": "Cells_EMCal.meanY:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanY:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "<Number of cells / cluster>:run"
+                    },
+                    {
+                        "name": "NCellsClusterDCAL",
+                        "title": "Number of Cells / Cluster DCAL",
+                        "varexp": "Cells_DCal.meanY:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanY:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "<Number of cells / cluster>:run"
+                    }
+                ],
+                "initTrigger": [
+                    "once"
+                ],
+                "updateTrigger": [
+                    "foreachlatest:qcdb:EMC/MO/ClusterTask/NclustPerEvt"
+                ],
+                "stopTrigger": [
+                    "once"
+                ]
+            }
+        }
+    }
+}
