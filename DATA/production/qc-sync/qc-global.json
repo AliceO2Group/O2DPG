@@ -19,7 +19,7 @@
         "url": ""
       },
       "conditionDB": {
-        "url": "https://alice-ccdb.cern.ch"
+        "url": "http://alice-ccdb.cern.ch"
       },
       "infologger": {
         "filterDiscardDebug": "true",
