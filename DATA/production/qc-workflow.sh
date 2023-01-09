@@ -221,7 +221,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     fi
 
     if [[ "0$GEN_TOPO_QC_OVERRIDE_CCDB_SERVER" != "0" ]]; then
-      sed -i "s,https://alice-ccdb.cern.ch,$GEN_TOPO_QC_OVERRIDE_CCDB_SERVER,g" $MERGED_JSON_FILENAME
+      sed -i "s,http://alice-ccdb.cern.ch,$GEN_TOPO_QC_OVERRIDE_CCDB_SERVER,g" $MERGED_JSON_FILENAME
     fi
     QC_JSON_FROM_OUTSIDE="$MERGED_JSON_FILENAME"
   fi

@@ -19,7 +19,7 @@
         "url": "http://ali-consul.cern.ch:8500"
       },
       "conditionDB": {
-        "url": "https://alice-ccdb.cern.ch"
+        "url": "http://alice-ccdb.cern.ch"
       }
     },
     "tasks": {
