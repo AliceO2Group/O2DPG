@@ -188,7 +188,8 @@ class GeneratorEvtGen : public T
     // 0 -> mother particle
     T::mParticles[indexMother].SetFirstDaughter(mEvtstdhep->getFirstDaughter(0) + T::mParticles.size() - 1);
     T::mParticles[indexMother].SetLastDaughter(mEvtstdhep->getLastDaughter(0) + T::mParticles.size() - 1);
-    T::mParticles[indexMother].SetStatusCode(11);
+    // set another HepMC code and switch off transport
+    mcutils::MCGenHelper::encodeParticleStatusAndTracking(T::mParticles[indexMother], 11, 0, false);
     if (mDebug)
       std::cout << "index mother " << indexMother << " first daughter " << mEvtstdhep->getFirstDaughter(0) + T::mParticles.size() - 1 << " last daughter " << mEvtstdhep->getLastDaughter(0) + T::mParticles.size() - 1 << std::endl;
     for (int i = 1; i < mEvtstdhep->getNPart(); i++) {
@@ -233,10 +234,8 @@ class GeneratorEvtGen : public T
       t = x4.get(0) * kconvT + T::mParticles[indexMother].T();  //[s]
 
       T::mParticles.push_back(TParticle(partnum, istat, jmotherfirst, -1, jdaugfirst, jdauglast, px, py, pz, e, x, y, z, t));
-      if (istat == 1) {
-        // Make sure this particle will be tracked. Needs to be done explicitly here since these particles are added outside of the inherited importParticles function
-        T::mParticles.back().SetBit(ParticleStatus::kToBeDone);
-      }
+      // make sure status codes are properly encoded and enable transport if HepMC status ==1
+      mcutils::MCGenHelper::encodeParticleStatusAndTracking(T::mParticles.back(), istat == 1);
       ////
       if (mDebug)
         std::cout << "   -> PDG " << partnum << " STATUS " << istat << " position in the array" << T::mParticles.size() - 1 << " mother " << jmotherfirst << " First daughter" << jdaugfirst << " Last daughter " << jdauglast << std::endl;
