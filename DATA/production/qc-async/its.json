@@ -23,8 +23,9 @@
       }
     },
     "tasks": {
-      "ITSClusterTask": {
+      "ITSClusters": {
         "active": "true",
+        "taskName": "Clusters",
         "className": "o2::quality_control_modules::its::ITSClusterTask",
         "moduleName": "QcITS",
         "detectorName": "ITS",
@@ -45,8 +46,9 @@
 	  "publishSummary1D": "0"
         }
       },
-      "ITSTrackTask": {
+      "ITSTracks": {
         "active": "true",
+        "taskName": "Tracks",
         "className": "o2::quality_control_modules::its::ITSTrackTask",
         "moduleName": "QcITS",
         "detectorName": "ITS",
@@ -71,8 +73,9 @@
       }
     },
     "checks": {
-      "ITSClusterCheck": {
+      "ITSClusters": {
         "active": "true",
+        "checkName": "Clusters",
         "className": "o2::quality_control_modules::its::ITSClusterCheck",
         "moduleName": "QcITS",
         "policy": "OnEachSeparately",
@@ -91,7 +94,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "ITSClusterTask",
+            "name": "ITSClusters",
             "MOs": [
               "Layer0/AverageClusterSize",
               "Layer1/AverageClusterSize",
@@ -111,8 +114,9 @@
           }
         ]
       },
-      "ITSTrackCheck": {
+      "ITSTracks": {
         "active": "true",
+        "taskName": "Tracks",
         "className": "o2::quality_control_modules::its::ITSTrackCheck",
         "moduleName": "QcITS",
         "policy": "OnEachSeparately",
@@ -120,7 +124,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "ITSTrackTask",
+            "name": "ITSTracks",
             "MOs": [
               "NClusters",
               "PhiDistribution",

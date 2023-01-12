@@ -26,7 +26,7 @@
       }
     },
     "tasks": {
-      "QcMFTClusterTask": {
+      "Clusters": {
         "active": "true",
         "className": "o2::quality_control_modules::mft::QcMFTClusterTask",
         "moduleName": "QcMFT",
@@ -49,11 +49,11 @@
       }
     },
     "checks": {
-      "QcMFTClusterCheck": {
+      "Clusters": {
         "active": "true",
         "dataSource": [{
           "type": "Task",
-          "name": "QcMFTClusterTask",
+          "name": "Clusters",
           "MOs" : ["mClusterOccupancy","mClusterPatternIndex","mClusterSizeSummary","mGroupedClusterSizeSummary","mClusterOccupancySummary"]
         }],
         "className": "o2::quality_control_modules::mft::QcMFTClusterCheck",

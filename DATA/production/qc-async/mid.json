@@ -23,8 +23,9 @@
       }
     },
     "tasks": {
-      "QcTaskMIDDigits": {
+      "MIDDigits": {
         "active": "true",
+        "taskName": "Digits",
         "className": "o2::quality_control_modules::mid::DigitsQcTask",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -36,8 +37,9 @@
           "query_comment" : "100% sampling"
         }
       },
-      "QcTaskMIDClust": {
+      "MIDClusters": {
         "active": "true",
+        "taskName": "Clusters",
         "className": "o2::quality_control_modules::mid::ClustQcTask",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -49,8 +51,9 @@
           "query_comment" : "100% sampling"
         }
       },
-      "QcTaskMIDTracks": {
+      "MIDTracks": {
         "active": "true",
+        "taskName": "Tracks",
         "className": "o2::quality_control_modules::mid::TracksQcTask",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -64,8 +67,9 @@
       }
     },
     "checks": {
-      "QcCheckMIDDigits": {
+      "MIDDigits": {
         "active": "false",
+        "checkName": "Digits",
         "className": "o2::quality_control_modules::mid::DigitsQcCheck",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -76,7 +80,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcTaskMIDDigits",
+            "name": "MIDDigits",
             "MOs": [
               "mMultHitMT11B",
               "mMultHitMT12B",
@@ -86,8 +90,9 @@
           }
         ]
       },
-      "QcCheckMIDClust": {
+      "MIDClusters": {
         "active": "false",
+        "checkName": "Clusters",
         "className": "o2::quality_control_modules::mid::ClustQcCheck",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -95,13 +100,14 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcTaskMIDClust",
+            "name": "MIDClusters",
             "MOs": []
           }
         ]
       },
-      "QcCheckMIDTracks": {
+      "MIDTracks": {
         "active": "false",
+        "checkName": "Tracks",
         "className": "o2::quality_control_modules::mid::TracksQcCheck",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -109,7 +115,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcTaskMIDTracks",
+            "name": "MIDTracks",
             "MOs": []
           }
         ]

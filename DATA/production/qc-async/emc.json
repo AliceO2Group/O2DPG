@@ -25,7 +25,7 @@
     "tasks": {
       "CellTaskEMCAL": {
         "active": "true",
-        "taskName": "CellTask",
+        "taskName": "Cells",
         "className": "o2::quality_control_modules::emcal::CellTask",
         "moduleName": "QcEMCAL",
         "detectorName": "EMC",
@@ -38,7 +38,7 @@
       },
       "ClusterTaskEMCAL": {
         "active": "true",
-        "taskName": "ClusterTask",
+        "taskName": "Clusters",
         "className": "o2::quality_control_modules::emcal::ClusterTask",
         "moduleName": "QcEMCAL",
         "detectorName": "EMC",
