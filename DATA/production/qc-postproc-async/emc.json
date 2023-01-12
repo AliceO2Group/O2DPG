@@ -43,7 +43,7 @@
                 "dataSources": [
                     {
                         "type": "repository",
-                        "path": "EMC/MO/CellTask",
+                        "path": "EMC/MO/Cells",
                         "names": [
                             "NumberOfEvents_PHYS",
                             "ncellsPerEventTot",
@@ -61,7 +61,7 @@
                     },
                     {
                         "type": "repository",
-                        "path": "EMC/MO/CellTask",
+                        "path": "EMC/MO/Cells",
                         "names": [
                             "NEventsPerTFPHYS"
                         ],
@@ -76,7 +76,7 @@
                     },
                     {
                         "type": "repository",
-                        "path": "EMC/MO/CellTask",
+                        "path": "EMC/MO/Cells",
                         "names": [
                             "cellTime_PHYS",
                             "cellTimeEMCAL_PHYS",
@@ -93,7 +93,7 @@
                     },
                     {
                         "type": "repository",
-                        "path": "EMC/MO/CellTask",
+                        "path": "EMC/MO/Cells",
                         "names": [
                             "cellAmplitude_PHYS",
                             "cellAmplitudeEMCAL_PHYS",
@@ -241,7 +241,7 @@
                     "once"
                 ],
                 "updateTrigger": [
-                    "foreachlatest:qcdb:EMC/MO/CellTask/NumberOfEvents_PHYS"
+                    "foreachlatest:qcdb:EMC/MO/Cells/NumberOfEvents_PHYS"
                 ],
                 "stopTrigger": [
                     "once"
@@ -257,7 +257,7 @@
                 "dataSources": [
                     {
                         "type": "repository",
-                        "path": "EMC/MO/ClusterTask",
+                        "path": "EMC/MO/Clusters",
                         "names": [
                             "ClustE_All",
                             "ClustE_DCal",
@@ -275,7 +275,7 @@
                     },
                     {
                         "type": "repository",
-                        "path": "EMC/MO/ClusterTask",
+                        "path": "EMC/MO/Clusters",
                         "names": [
                             "Cells_EMCal",
                             "Cells_DCal"
@@ -387,7 +387,7 @@
                     "once"
                 ],
                 "updateTrigger": [
-                    "foreachlatest:qcdb:EMC/MO/ClusterTask/NclustPerEvt"
+                    "foreachlatest:qcdb:EMC/MO/Clusters/NclustPerEvt"
                 ],
                 "stopTrigger": [
                     "once"
