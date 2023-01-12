@@ -47,7 +47,7 @@ export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="ITSVertexerParam.phiCut=0.5;IT
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="$VDRIFT;GPU_global.dEdxUseFullGainMap=1;GPU_global.dEdxDisableResidualGainMap=1"
 
 # ad-hoc settings for TOF reco
-# export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"https://alice-ccdb.cern.ch\""
+# export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"http://alice-ccdb.cern.ch\""
 # since commit on Dec, 4
 export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb"
 

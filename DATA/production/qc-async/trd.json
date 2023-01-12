@@ -23,8 +23,9 @@
       }
     },
     "tasks": {
-      "DigitTask": {
+      "TRDDigits": {
         "active": "true",
+        "taskName": "Digits",
         "className": "o2::quality_control_modules::trd::DigitsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
@@ -42,8 +43,9 @@
           "pulseheightpeakupper": "5.0"
         }
       },
-      "TrackletsTask": {
+      "TRDTracklets": {
         "active": "true",
+        "taskName": "Tracklets",
         "className": "o2::quality_control_modules::trd::TrackletsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",

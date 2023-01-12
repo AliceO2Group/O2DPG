@@ -342,7 +342,7 @@ if doembedding:
         # Background PYTHIA configuration
         BKG_CONFIG_task=createTask(name='genbkgconf')
         BKG_CONFIG_task['cmd'] = 'echo "placeholder / dummy task"'
-        if  GENBKG == 'pythia8':
+        if  GENBKG == 'pythia8' and PROCESSBKG != "":
             print('Background generator seed: ', SIMSEED)
             BKG_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
                                    --output=pythia8bkg.cfg                                     \
@@ -709,6 +709,8 @@ for tf in range(1, NTIMEFRAMES + 1):
      returnstring = returnstring + '"'
      return returnstring
 
+   # parsing passName from env variable
+   PASSNAME='${ALIEN_JDL_LPMANCHORPASSNAME:-unanchored}'
 
    # This task creates the basic setup for all digitizers! all digitization configKeyValues need to be given here
    contextneeds = [LinkGRPFileTask['name'], SGNtask['name']]
@@ -718,7 +720,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # this is just to have the digitizer ini file
    ContextTask['cmd'] = '${O2_ROOT}/bin/o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) \
                         + ' ' + getDPL_global_options(ccdbbackend=False) + ' -n ' + str(args.ns) + simsoption       \
-                        + ' ' + putConfigValues({"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF)}) + ('',' --incontext ' + CONTEXTFILE)[args.pregenCollContext] + QEDdigiargs
+                        + ' ' + putConfigValuesNew({"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF)},{"DigiParams.passName" : str(PASSNAME)}) + ('',' --incontext ' + CONTEXTFILE)[args.pregenCollContext] + QEDdigiargs
    ContextTask['cmd'] += ' --bcPatternFile ccdb'
 
    # in case of embedding we engineer the context directly and allow the user to provide an embedding pattern

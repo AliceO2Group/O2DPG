@@ -51,7 +51,7 @@ export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="ITSVertexerParam.phiCut=0.5;IT
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="$VDRIFT;GPU_global.gainCalibFile=GainMap_2021-12-15_krypton_0.5T.v2.root;GPU_global.dEdxSplineTopologyCorrFile=splines_for_dedx_3D_scaled_Threshold_3.5.root;GPU_global.dEdxCorrFile=calibdEdx.${RUNNUMBER}.root"
 
 # ad-hoc settings for TOF reco
-# export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"https://alice-ccdb.cern.ch\""
+# export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"http://alice-ccdb.cern.ch\""
 # since commit on Dec, 4
 export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb"
 

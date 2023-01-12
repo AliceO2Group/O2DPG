@@ -23,8 +23,9 @@
       }
     },
     "tasks": {
-      "QcMFTAsync": {
+      "MFTTracks": {
         "active": "true",
+        "taskName": "Tracks",
         "className": "o2::quality_control_modules::mft::QcMFTAsyncTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",

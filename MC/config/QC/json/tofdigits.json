@@ -24,7 +24,7 @@
       }
     },
     "tasks": {
-      "TaskDigits": {
+      "Digits": {
         "active": "true",
         "className": "o2::quality_control_modules::tof::TaskDigits",
         "moduleName": "QcTOF",
@@ -47,7 +47,7 @@
       }
     },
     "checks": {
-      "TOFRawsMulti": {
+      "Multiplicity": {
         "active": "true",
         "className": "o2::quality_control_modules::tof::CheckRawMultiplicity",
         "moduleName": "QcTOF",
@@ -56,14 +56,14 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "TaskDigits",
+            "name": "Digits",
             "MOs": [
               "TOFRawsMulti"
             ]
           }
         ]
       },
-      "TOFRawsTime": {
+      "Time": {
         "active": "true",
         "className": "o2::quality_control_modules::tof::CheckRawTime",
         "moduleName": "QcTOF",
@@ -72,14 +72,14 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "TaskDigits",
+            "name": "Digits",
             "MOs": [
               "TOFRawsTime"
             ]
           }
         ]
       },
-      "TOFRawsToT": {
+      "ToT": {
         "active": "true",
         "className": "o2::quality_control_modules::tof::CheckRawToT",
         "moduleName": "QcTOF",
@@ -88,14 +88,14 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "TaskDigits",
+            "name": "Digits",
             "MOs": [
               "TOFRawsToT"
             ]
           }
         ]
       },
-      "TOFRawHitMap": {
+      "HitMap": {
         "active": "false",
         "className": "o2::quality_control_modules::tof::CheckHitMap",
         "moduleName": "QcTOF",
@@ -104,7 +104,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "TaskDigits",
+            "name": "Digits",
             "MOs": [
               "TOFRawHitMap"
             ]

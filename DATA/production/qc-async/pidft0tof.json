@@ -30,9 +30,10 @@
             }
         },
         "tasks": {
-            "TaskFT0TOF": {
+            "TOFPID": {
                 "active": "true",
                 "className": "o2::quality_control_modules::pid::TaskFT0TOF",
+                "taskName": "PID",
                 "moduleName": "QcTOF",
                 "detectorName": "TOF",
                 "cycleDurationSeconds": "10",

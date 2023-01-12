@@ -17,10 +17,8 @@ NWORKERS=${NWORKERS:-8}
 MODULES="--skipModules ZDC"
 SIMENGINE=${SIMENGINE:-TGeant4}
 NSIGEVENTS=${NSIGEVENTS:-1}
-NBKGEVENTS=${NBKGEVENTS:-1}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
 [[ ${SPLITID} != "" ]] && SEED="-seed ${SPLITID}" || SEED=""
-
 # create workflow
 
 #ccbar filter

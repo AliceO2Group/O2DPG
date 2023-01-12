@@ -25,7 +25,7 @@ fi
 
 # checking for remapping
 if [[ $remappingITS == 1 ]] || [[ $remappingMFT == 1 ]]; then
-  REMAPPING="--condition-remap \"https://alice-ccdb.cern.ch/RecITSMFT="
+  REMAPPING="--condition-remap \"http://alice-ccdb.cern.ch/RecITSMFT="
   if [[ $remappingITS == 1 ]]; then
     REMAPPING=$REMAPPING"ITS/Calib/ClusterDictionary"
     if [[ $remappingMFT == 1 ]]; then
@@ -147,7 +147,8 @@ else
 fi
 
 # IR
-root -b -q "$O2DPG_ROOT/DATA/production/common/getIRandDuration.C+($RUNNUMBER)"
+cp $O2DPG_ROOT/DATA/production/common/getIRandDuration.C ./
+root -b -q "getIRandDuration.C+($RUNNUMBER)"
 export RUN_IR=`cat IR.txt`
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
 export RUN_DURATION=`cat Duration.txt`
@@ -162,12 +163,14 @@ fi
 
 echo "BeamType = $BEAMTYPE"
 
-# remove monitoring-backend
-export ENABLE_METRICS=1
-
-# add the performance metrics
-#export ARGS_ALL_EXTRA=" --resources-monitoring 10 --resources-monitoring-dump-interval 10"
-export ARGS_ALL_EXTRA=" --resources-monitoring 50 --resources-monitoring-dump-interval 50"
+if [[ $ALIEN_JDL_ENABLEMONITORING == "0" ]]; then
+  export ENABLE_METRICS=0
+else
+  # remove monitoring-backend
+  export ENABLE_METRICS=1
+  # add the performance metrics
+  export ARGS_ALL_EXTRA=" --resources-monitoring 50 --resources-monitoring-dump-interval 50"
+fi
 
 # some settings in common between workflows
 export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=9e-4;ITSCATrackerParam.sysErrZ2[0]=9e-4;ITSCATrackerParam.sysErrY2[1]=9e-4;ITSCATrackerParam.sysErrZ2[1]=9e-4;ITSCATrackerParam.sysErrY2[2]=9e-4;ITSCATrackerParam.sysErrZ2[2]=9e-4;ITSCATrackerParam.sysErrY2[3]=1e-2;ITSCATrackerParam.sysErrZ2[3]=1e-2;ITSCATrackerParam.sysErrY2[4]=1e-2;ITSCATrackerParam.sysErrZ2[4]=1e-2;ITSCATrackerParam.sysErrY2[5]=1e-2;ITSCATrackerParam.sysErrZ2[5]=1e-2;ITSCATrackerParam.sysErrY2[6]=1e-2;ITSCATrackerParam.sysErrZ2[6]=1e-2;"
@@ -186,7 +189,7 @@ export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="GPU_global.dEdxDisableResidual
 [[ ! -z $TPCCLUSTERTIMESHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.clustersShiftTimebins=$TPCCLUSTERTIMESHIFT;"
 
 # ad-hoc settings for TOF reco
-# export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"https://alice-ccdb.cern.ch\""
+# export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"http://alice-ccdb.cern.ch\""
 # since commit on Dec, 4
 export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb"
 
