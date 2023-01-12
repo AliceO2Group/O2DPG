@@ -38,7 +38,7 @@ from o2dpg_sim_config import create_sim_config
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
 
 # the run-number of data taking or default if unanchored
-parser.add_argument('-run', type=int, help="Run number for this MC", default=300000)
+parser.add_argument('-run', type=int, help="Run number for this MC. See https://twiki.cern.ch/twiki/bin/view/ALICE/O2DPGMCSamplingSchema for possible pre-defined choices.", default=300000)
 parser.add_argument('-productionTag',help="Production tag for this MC", default='unknown')
 # the timestamp at which this MC workflow will be run
 # - in principle it should be consistent with the time of the "run" number above
@@ -62,6 +62,7 @@ parser.add_argument('-eA',help='Beam A energy', default=-1) #6369 PbPb, 2.510 pp
 parser.add_argument('-eB',help='Beam B energy', default=-1)
 parser.add_argument('-col',help='collision system: pp, PbPb, pPb, Pbp, ..., in case of embedding collision system of signal', default='pp')
 parser.add_argument('-field',help='L3 field rounded to kGauss, allowed values: +-2,+-5 and 0; +-5U for uniform field; or "ccdb" to take from conditions database', default='ccdb')
+parser.add_argument('--with-qed',action='store_true', help='Enable QED background contribution (for PbPb always included)')
 
 parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
 parser.add_argument('-ptHatMax',help='pT hard maximum when no bin requested', default=-1)
@@ -499,6 +500,48 @@ for tf in range(1, NTIMEFRAMES + 1):
       print('o2dpg_sim_workflow: Error! CM or Beam Energy not set!!!')
       exit(1)
 
+   # Determine interation rate
+   # it should be taken from CDB, meanwhile some default values
+   signalprefix='sgn_' + str(tf)
+   INTRATE=int(args.interactionRate)
+   BCPATTERN=args.bcPatternFile
+   includeQED = (COLTYPE == 'PbPb') or (args.with_qed == True)
+
+   # preproduce the collision context
+   precollneeds=[GRP_TASK['name']]
+   NEventsQED=10000  # max number of QED events to simulate per timeframe
+   PbPbXSec=8. # expected PbPb cross section
+   QEDXSecExpected=35237.5  # expected magnitude of QED cross section
+   PreCollContextTask=createTask(name='precollcontext_' + str(tf), needs=precollneeds, tf=tf, cwd=timeframeworkdir, cpu='1')
+   PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + signalprefix + ',' + str(INTRATE) + ',10000:10000' + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF) + ' --orbits ' + str(orbitsPerTF) + ' --seed ' + str(TFSEED) + ' --noEmptyTF'
+   PreCollContextTask['cmd'] += ' --bcPatternFile ccdb'  # <--- the object should have been set in (local) CCDB
+   if includeQED:
+      qedrate = INTRATE * QEDXSecExpected / PbPbXSec   # hadronic interaction rate * cross_section_ratio
+      qedspec = 'qed_' + str(tf) + ',' + str(qedrate) + ',10000000:' + str(NEventsQED)
+      PreCollContextTask['cmd'] += ' --QEDinteraction ' + qedspec
+   workflow['stages'].append(PreCollContextTask)
+
+   # produce QED background for PbPb collissions
+
+   QEDdigiargs = ""
+   if includeQED:
+     NEventsQED=10000 # 35K for a full timeframe?
+     QED_task=createTask(name='qedsim_'+str(tf), needs=([],[PreCollContextTask['name']])[args.pregenCollContext == True], tf=tf, cwd=timeframeworkdir, cpu='1')
+     ########################################################################################################
+     #
+     # ATTENTION: CHANGING THE PARAMETERS/CUTS HERE MIGHT INVALIDATE THE QED INTERACTION RATES USED ELSEWHERE
+     #
+     ########################################################################################################
+     QED_task['cmd'] = 'o2-sim -e TGeant3  --field '  + str(BFIELD) + '                 \
+                          -j ' + str('1')      +  ' -o qed_' + str(tf) + '              \
+                          -n ' + str(NEventsQED) + ' -m PIPE ITS MFT FT0 FV0 FDD        \
+                          -g extgen --configKeyValues \"GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;Diamond.width[2]=6.\" --run ' + str(args.run) # + (' ',' --fromCollContext collisioncontext.root')[args.pregenCollContext]
+     QED_task['cmd'] += '; QEDXSecCheck=`grep xSectionQED qedgenparam.ini | sed \'s/xSectionQED=//\'`'
+     QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected) + ' = $QEDXSecCheck"'
+     # TODO: propagate the Xsecion ratio dynamically
+     QEDdigiargs=' --simPrefixQED qed_' + str(tf) +  ' --qed-x-section-ratio ' + str(QEDXSecExpected/PbPbXSec)
+     workflow['stages'].append(QED_task)
+
    # produce the signal configuration
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)
    SGN_CONFIG_task['cmd'] = 'echo "placeholder / dummy task"'
@@ -533,20 +576,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------------
    # transport signals
    # -----------------
-   signalprefix='sgn_' + str(tf)
- 
-   # Determine interation rate
-   # it should be taken from CDB, meanwhile some default values
-   INTRATE=int(args.interactionRate)
-   BCPATTERN=args.bcPatternFile
-
-   PreCollContextTask=createTask(name='precollcontext_' + str(tf), needs=[], tf=tf, cwd=timeframeworkdir, cpu='1')
-   PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + signalprefix + ',' + str(INTRATE) + ',10000:10000' + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF) + ' --orbits ' + str(orbitsPerTF) + ' --seed ' + str(TFSEED) + ' --noEmptyTF'
-   if BCPATTERN != '':
-      PreCollContextTask['cmd'] += ' --bcPatternFile "' + BCPATTERN + '"'
-   workflow['stages'].append(PreCollContextTask)
-
-
    signalneeds=[ SGN_CONFIG_task['name'], GRP_TASK['name'] ]
    if (args.pregenCollContext == True):
       signalneeds.append(PreCollContextTask['name'])
@@ -685,21 +714,20 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # This task creates the basic setup for all digitizers! all digitization configKeyValues need to be given here
    contextneeds = [LinkGRPFileTask['name'], SGNtask['name']]
+   if includeQED:
+     contextneeds += [QED_task['name']]
    ContextTask = createTask(name='digicontext_'+str(tf), needs=contextneeds, tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu='1')
    # this is just to have the digitizer ini file
    ContextTask['cmd'] = '${O2_ROOT}/bin/o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) \
                         + ' ' + getDPL_global_options(ccdbbackend=False) + ' -n ' + str(args.ns) + simsoption       \
-                        + ' ' + putConfigValuesNew({"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF)},{"DigiParams.passName" : str(PASSNAME)}) + ('',' --incontext ' + CONTEXTFILE)[args.pregenCollContext] 
-
-   if BCPATTERN != '':
-      ContextTask['cmd'] += ' --bcPatternFile "' + BCPATTERN + '"'
+                        + ' ' + putConfigValuesNew({"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF)},{"DigiParams.passName" : str(PASSNAME)}) + ('',' --incontext ' + CONTEXTFILE)[args.pregenCollContext] + QEDdigiargs
+   ContextTask['cmd'] += ' --bcPatternFile ccdb'
 
    # in case of embedding we engineer the context directly and allow the user to provide an embedding pattern
    # The :r flag means to shuffle the background events randomly
    if doembedding:
       ContextTask['cmd'] += ';ln -nfs ../bkg_Kine.root .;${O2_ROOT}/bin/o2-steer-colcontexttool -i bkg,' + str(INTRATE) + ',' + str(args.ns) + ':' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF) + ' --use-existing-kine'
-      if BCPATTERN != '':
-         ContextTask['cmd'] += ' --bcPatternFile "' + BCPATTERN + '"'
+      ContextTask['cmd'] += ' --bcPatternFile ccdb '
 
    workflow['stages'].append(ContextTask)
 
@@ -731,8 +759,10 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # these are digitizers which are single threaded
    def createRestDigiTask(name, det='ALLSMALLER'):
-      tneeds = needs=[ContextTask['name']]
-      commondigicmd = '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew(["MFTAlpideParam", "ITSAlpideParam", "ITSDigitizerParam"])
+      tneeds =[ContextTask['name']]
+      if includeQED == True:
+        tneeds += [QED_task['name']]
+      commondigicmd = '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew(["MFTAlpideParam", "ITSAlpideParam", "ITSDigitizerParam"]) + QEDdigiargs
 
       if det=='ALLSMALLER': # here we combine all smaller digits in one DPL workflow
          if usebkgcache:
@@ -781,10 +811,12 @@ for tf in range(1, NTIMEFRAMES + 1):
    # detectors serving CTP need to be treated somewhat special since CTP needs
    # these inputs at the same time --> still need to be made better
    tneeds = [ContextTask['name']]
+   if includeQED:
+     tneeds += [QED_task['name']]
    t = createTask(name="ft0fv0ctp_digi_" + str(tf), needs=tneeds,
                   tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
    t['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
-   t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew() + (' --combine-devices','')[args.no_combine_dpl_devices] + ('',' --disable-mc')[args.no_mc_labels]
+   t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew() + (' --combine-devices','')[args.no_combine_dpl_devices] + ('',' --disable-mc')[args.no_mc_labels] + QEDdigiargs
    workflow['stages'].append(t)
    det_to_digitask["FT0"]=t
    det_to_digitask["FV0"]=t
