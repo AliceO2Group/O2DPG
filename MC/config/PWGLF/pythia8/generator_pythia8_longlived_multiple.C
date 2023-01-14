@@ -46,8 +46,8 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
         const double pz{pt * std::sinh(eta)};
         const double et{std::hypot(std::hypot(pt, pz), cfg.mass)};
         mParticles.push_back(TParticle(cfg.pdg, 1, -1, -1, -1, -1, px, py, pz, et, 0., 0., 0., 0.));
-        // make sure status code is encoded properly. Transport flag will be set automatically
-        // due to the default criterion of HepMC status == 1
+        // make sure status code is encoded properly. Transport flag will be set by default and we have nothing
+        // to do since all pushed particles should be tracked.
         o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       }
     }
