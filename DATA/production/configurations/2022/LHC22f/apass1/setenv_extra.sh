@@ -172,18 +172,50 @@ else
   export ARGS_ALL_EXTRA=" --resources-monitoring 50 --resources-monitoring-dump-interval 50"
 fi
 
+#ALIGNLEVEL=0: before December 2022 alignment, 1: after December 2022 alignment
+ALIGNLEVEL=1
+if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == "LHC22c" || $PERIOD == "LHC22d" || $PERIOD == "LHC22e" || $PERIOD == "LHC22f" ]]; then
+  ALIGNLEVEL=0
+  if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
+    # extract pass number
+    ANCHORED_PASS=$ALIEN_JDL_LPMANCHOREPASSNAME
+    ANCHORED_PASS_NUMBER=`echo $ANCHORED_PASS | sed 's/^apass//'`
+    echo "ANCHORED_PASS_NUMER = $ANCHORED_PASS_NUMBER"
+    if [[ $PERIOD == "MAY" || $PERIOD == "JUN" ]] && [[ $ANCHORED_PASS_NUMBER -gt 1 ]]; then
+      ALIGNLEVEL=1
+    elif [[ $PERIOD == "LHC22c" || $PERIOD == "LHC22d" || $PERIOD == "LHC22e" || $PERIOD == "LHC22f" ]] && [[ $ANCHORED_PASS_NUMBER -gt 2 ]]; then
+      ALIGNLEVEL=1
+    fi
+  fi
+fi
+
 # some settings in common between workflows
-export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=9e-4;ITSCATrackerParam.sysErrZ2[0]=9e-4;ITSCATrackerParam.sysErrY2[1]=9e-4;ITSCATrackerParam.sysErrZ2[1]=9e-4;ITSCATrackerParam.sysErrY2[2]=9e-4;ITSCATrackerParam.sysErrZ2[2]=9e-4;ITSCATrackerParam.sysErrY2[3]=1e-2;ITSCATrackerParam.sysErrZ2[3]=1e-2;ITSCATrackerParam.sysErrY2[4]=1e-2;ITSCATrackerParam.sysErrZ2[4]=1e-2;ITSCATrackerParam.sysErrY2[5]=1e-2;ITSCATrackerParam.sysErrZ2[5]=1e-2;ITSCATrackerParam.sysErrY2[6]=1e-2;ITSCATrackerParam.sysErrZ2[6]=1e-2;"
+if [[ $ALIGNLEVEL == 0 ]]; then
+  ERRIB="9e-4"
+  ERROB="1e-2"
+  export ITS_CONFIG=" --tracking-mode sync_misaligned"
+elif [[ $ALIGNLEVEL == 1 ]]; then
+  ERRIB="100e-8"
+  ERROB="100e-8"
+  export ITS_CONFIG=" --tracking-mode async"
+fi
+
+export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysErrZ2[0]=$ERRIB;ITSCATrackerParam.sysErrY2[1]=$ERRIB;ITSCATrackerParam.sysErrZ2[1]=$ERRIB;ITSCATrackerParam.sysErrY2[2]=$ERRIB;ITSCATrackerParam.sysErrZ2[2]=$ERRIB;ITSCATrackerParam.sysErrY2[3]=$ERROB;ITSCATrackerParam.sysErrZ2[3]=$ERROB;ITSCATrackerParam.sysErrY2[4]=$ERROB;ITSCATrackerParam.sysErrZ2[4]=$ERROB;ITSCATrackerParam.sysErrY2[5]=$ERROB;ITSCATrackerParam.sysErrZ2[5]=$ERROB;ITSCATrackerParam.sysErrY2[6]=$ERROB;ITSCATrackerParam.sysErrZ2[6]=$ERROB;"
 
 # ad-hoc options for ITS reco workflow
-export ITS_CONFIG=" --tracking-mode sync_misaligned"
 EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.trackletsPerClusterLimit=5.;ITSCATrackerParam.cellsPerClusterLimit=5.;ITSVertexerParam.clusterContributorsCut=16"
+  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.trackletsPerClusterLimit=5.;ITSCATrackerParam.cellsPerClusterLimit=5.;ITSVertexerParam.clusterContributorsCut=16;"
 elif [[ $BEAMTYPE == "pp" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2"
+  EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
 fi
 export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="$MAXBCDIFFTOMASKBIAS_ITS;$EXTRA_ITSRECO_CONFIG;"
+
+# in the ALIGNLEVEL there was inconsistency between the internal errors of sync_misaligned and ITSEXTRAERR
+if [[ $ALIGNLEVEL != 0 ]]; then   
+ export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow+="$ITSEXTRAERR;"
+fi
+
 # ad-hoc options for GPU reco workflow
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="GPU_global.dEdxDisableResidualGainMap=1;$VDRIFTPARAMOPTION;"
 [[ ! -z $TPCCLUSTERTIMESHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.clustersShiftTimebins=$TPCCLUSTERTIMESHIFT;"
@@ -199,11 +231,20 @@ export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb"
 #export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2.;pvertexer.nSigmaTimeTrack=4.;pvertexer.timeMarginTrackTime=0.5;pvertexer.timeMarginVertexTime=7.;pvertexer.nSigmaTimeCut=10;pvertexer.dbscanMaxDist2=36;pvertexer.dcaTolerance=3.;pvertexer.pullIniCut=100;pvertexer.addZSigma2=0.1;pvertexer.tukey=20.;pvertexer.addZSigma2Debris=0.01;pvertexer.addTimeSigma2Debris=1.;pvertexer.maxChi2Mean=30;pvertexer.timeMarginReattach=3.;pvertexer.addTimeSigma2Debris=1.;pvertexer.dbscanDeltaT=24;pvertexer.maxChi2TZDebris=100;pvertexer.maxMultRatDebris=1.;pvertexer.dbscanAdaptCoef=20.;pvertexer.timeMarginVertexTime=1.3"
 # updated on 7 Sept 2022
 EXTRA_PRIMVTX_TimeMargin=""
-if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == "LHC22c" || $PERIOD == "LHC22d" || $PERIOD == "LHC22e" || $PERIOD == "LHC22f" ]]; then
+if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == LHC22* ]]; then
   EXTRA_PRIMVTX_TimeMargin="pvertexer.timeMarginVertexTime=1.3"
 fi
 
 export PVERTEXER+="pvertexer.acceptableScale2=9;pvertexer.minScale2=2;$EXTRA_PRIMVTX_TimeMargin;"
+if [[ $ALIGNLEVEL == 1 ]]; then
+  if [[ $BEAMTYPE == "pp" ]]; then
+    export PVERTEXER+="pvertexer.maxChi2TZDebris=40;pvertexer.maxChi2Mean=12;pvertexer.maxMultRatDebris=1.;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
+  elif [[ $BEAMTYPE == "PbPb" ]]; then
+    # at the moment placeholder
+    export PVERTEXER+="pvertexer.maxChi2Mean=12;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
+  fi
+fi
+
 
 # secondary vertexing
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
@@ -212,8 +253,13 @@ export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow="$PVERTEXER;$VDRIFTPAR
 export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow="$SVTX"
 
 # ad-hoc settings for its-tpc matching
-CUT_MATCH_CHI2=100
-export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;tpcitsMatch.crudeAbsDiffCut[0]=5;tpcitsMatch.crudeAbsDiffCut[1]=5;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=10;tpcitsMatch.crudeNSigma2Cut[0]=200;tpcitsMatch.crudeNSigma2Cut[1]=200;tpcitsMatch.crudeNSigma2Cut[2]=200;tpcitsMatch.crudeNSigma2Cut[3]=200;tpcitsMatch.crudeNSigma2Cut[4]=900;"
+CUT_MATCH_CHI2=160
+if [[ $ALIGNLEVEL == 0 ]]; then
+  export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;tpcitsMatch.crudeAbsDiffCut[0]=5;tpcitsMatch.crudeAbsDiffCut[1]=5;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=10;tpcitsMatch.crudeNSigma2Cut[0]=200;tpcitsMatch.crudeNSigma2Cut[1]=200;tpcitsMatch.crudeNSigma2Cut[2]=200;tpcitsMatch.crudeNSigma2Cut[3]=200;tpcitsMatch.crudeNSigma2Cut[4]=900;"
+elif [[ $ALIGNLEVEL == 1 ]]; then
+  export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;tpcitsMatch.crudeAbsDiffCut[0]=6;tpcitsMatch.crudeAbsDiffCut[1]=6;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=5;"
+fi
+
 export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow="$ITSEXTRAERR;$ITSTPCMATCH;$VDRIFTPARAMOPTION;"
 [[ ! -z "${TPCITSTIMEBIAS}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+="tpcitsMatch.globalTimeBiasMUS=$TPCITSTIMEBIAS;"
 [[ ! -z "${TPCITSTIMEERR}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+="tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;"
