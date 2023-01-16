@@ -16,6 +16,8 @@ GeneratorCharmToMu_EvtGenFwdY(double rapidityMin = -4.3, double rapidityMax = -2
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorHF>();
   gen->setRapidity(rapidityMin,rapidityMax);
   gen->setPDG(4);
+  TString pathO2table = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffChadrons.cfg");
+  gen->readFile(pathO2table.Data());
 
   gen->setVerbose(verbose);
   if(ispp) gen->setFormula("1");
