@@ -10,6 +10,31 @@ if [[ ! -z $GEN_TOPO_QC_JSON_FILE ]]; then
   flock 101 || exit 1
 fi
 
+FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
+
+JSON_FILES=
+OUTPUT_SUFFIX=
+
+add_QC_JSON() {
+  if [[ ${2} =~ ^consul://.* ]]; then
+    TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
+    curl -s -o $TMP_FILENAME "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
+    if [[ $? != 0 ]]; then
+      echo "Error fetching QC JSON $2"
+      exit 1
+    fi
+  else
+    TMP_FILENAME=$2
+  fi
+  JSON_FILES+=" $TMP_FILENAME"
+  jq -rM '""' > /dev/null < $TMP_FILENAME
+  if [[ $? != 0 ]]; then
+    echo "Invalid QC JSON $2" 1>&2
+    exit 1
+  fi
+  OUTPUT_SUFFIX+="-$1"
+}
+
 QC_CONFIG=
 QC_CONFIG_OVERRIDE=
 if [[ -z $QC_JSON_FROM_OUTSIDE && ! -z $GEN_TOPO_QC_JSON_FILE && -f $GEN_TOPO_QC_JSON_FILE ]]; then
@@ -39,11 +64,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_ZDC" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=consul://o2/components/qc/ANY/any/zdc-rec-epn
     if [[ -z "$QC_JSON_MCH" ]]; then
       if has_detector MCH && has_processing_step MCH_RECO; then
-        if has_track_source "MCH-MID"; then
-          QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full-track-matching
-        else
           QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full
-        fi
       else
         QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-digits
       fi
@@ -67,7 +88,19 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
         QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctof
       fi
     fi
+
+    if [[ -z "$QC_JSON_MUON_MATCH" ]]; then
+      if has_track_source "MFT-MCH" && has_track_source "MCH-MID"; then
+          QC_JSON_MUON_MATCH=consul://o2/components/qc/ANY/any/muon-qcmn-epn-mft-mch-mid
+      elif has_track_source "MFT-MCH"; then
+        QC_JSON_MUON_MATCH=consul://o2/components/qc/ANY/any/muon-qcmn-epn-mft-mch
+      elif has_track_source "MCH-MID"; then
+        QC_JSON_MUON_MATCH=consul://o2/components/qc/ANY/any/muon-qcmn-epn-mch-mid
+      fi
+    fi
+
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json # this must be last
+
   elif [[ $SYNCMODE == 1 ]]; then
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
@@ -84,7 +117,15 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_FV0" ]] && QC_JSON_FV0=$O2DPG_ROOT/DATA/production/qc-sync/fv0.json
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-sync/emc.json
     [[ -z "$QC_JSON_ZDC" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=$O2DPG_ROOT/DATA/production/qc-sync/zdc.json
-    [[ -z "$QC_JSON_MCH" ]] && QC_JSON_MCH=$O2DPG_ROOT/DATA/production/qc-sync/mch.json
+    if [[ -z "$QC_JSON_MCH" ]]; then
+      QC_JSON_MCH=$O2DPG_ROOT/DATA/production/qc-sync/mch-digits.json
+      if has_processing_step "MCH_RECO"; then
+        add_QC_JSON MCH_RECO $O2DPG_ROOT/DATA/production/qc-sync/mch-reco.json
+      fi
+      if has_track_source "MCH"; then
+        add_QC_JSON MCH_TRACK $O2DPG_ROOT/DATA/production/qc-sync/mch-tracks.json
+      fi
+    fi
     [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid-digits.json && has_processing_step MID_RECO && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid.json
     [[ -z "$QC_JSON_CPV" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-sync/cpv.json
     [[ -z "$QC_JSON_PHS" ]] && QC_JSON_PHS=$O2DPG_ROOT/DATA/production/qc-sync/phs.json
@@ -98,7 +139,19 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctof.json
       fi
     fi
+
+    if [[ -z "$QC_JSON_MUON_MATCH" ]]; then
+      if has_track_source "MFT-MCH" && has_track_source "MCH-MID"; then
+        QC_JSON_MUON_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/mft-mch-mid.json
+      elif has_track_source "MFT-MCH"; then
+        QC_JSON_MUON_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/mft-mch.json
+      elif has_track_source "MCH-MID"; then
+        QC_JSON_MUON_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/mch-mid.json
+      fi
+    fi
+
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json # this must be last
+
   else
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-async/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-async/its.json
@@ -109,6 +162,15 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=$O2DPG_ROOT/DATA/production/qc-async/fdd.json
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-async/emc.json
     [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-async/mid.json
+    if [[ -z "$QC_JSON_MCH" ]]; then
+      QC_JSON_MCH=$O2DPG_ROOT/DATA/production/qc-async/mch-digits.json
+      if has_processing_step "MCH_RECO"; then
+        add_QC_JSON MCH_RECO $O2DPG_ROOT/DATA/production/qc-async/mch-reco.json
+      fi
+      if has_track_source "MCH"; then
+        add_QC_JSON MCH_TRACK $O2DPG_ROOT/DATA/production/qc-async/mch-tracks.json
+      fi
+    fi
     [[ -z "$QC_JSON_CPV" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-async/cpv.json
     [[ -z "$QC_JSON_PHS" ]] && QC_JSON_PHS=$O2DPG_ROOT/DATA/production/qc-async/phs.json
     [[ -z "$QC_JSON_TRD" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-async/trd.json
@@ -136,31 +198,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     echo This script must be run via the gen_topo scripts, or a GEN_TOPO_WORKDIR must be provided where merged JSONS are stored 1>&2
     exit 1
   fi
-
-  FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
-
-  add_QC_JSON() {
-    if [[ ${2} =~ ^consul://.* ]]; then
-      TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
-      curl -s -o $TMP_FILENAME "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
-      if [[ $? != 0 ]]; then
-        echo "Error fetching QC JSON $2"
-        exit 1
-      fi
-    else
-      TMP_FILENAME=$2
-    fi
-    JSON_FILES+=" $TMP_FILENAME"
-    jq -rM '""' > /dev/null < $TMP_FILENAME
-    if [[ $? != 0 ]]; then
-      echo "Invalid QC JSON $2" 1>&2
-      exit 1
-    fi
-    OUTPUT_SUFFIX+="-$1"
-  }
-
-  JSON_FILES=
-  OUTPUT_SUFFIX=
+ 
 
   # TOF matching
   if has_detector_qc TOF && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"TOF_MATCH"(,|$) ]] && [ ! -z "$QC_JSON_TOF_MATCH" ]; then
@@ -250,6 +288,9 @@ if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
     else
       QC_CONFIG_PARAM="--local-batch=QC.root"
     fi
+  fi
+  if [[ ! -z $FST_STAGE ]]; then
+    QC_CONFIG_PARAM=$(echo $QC_CONFIG_PARAM | sed -e "s/\.root/-${FST_STAGE}\.root/")
   fi
   add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM} ${QC_CONFIG}"
 fi
