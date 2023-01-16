@@ -54,7 +54,8 @@
         "processRun3": "true"
     },
     "track-selection": {
-        "isRun3": "true"
+        "isRun3": "true",
+        "produceFBextendedTable": "true"
     },
     "tof-signal": "",
     "track-extension": {
