@@ -1,0 +1,45 @@
+{
+    "qc": {
+        "config": {
+            "database": {
+                "implementation": "CCDB",
+                "host": "localhost:6464",
+                "username": "not_applicable",
+                "password": "not_applicable",
+                "name": "not_applicable"
+            },
+            "Activity": {
+                "number": "42",
+                "type": "2"
+            },
+            "monitoring": {
+                "url": "infologger:///debug?qc"
+            },
+            "consul": {
+                "url": ""
+            },
+            "conditionDB": {
+                "url": ""
+            }
+        },
+        "tasks": {
+            "MCHTracks": {
+                "active": "true",
+                "taskName": "Tracks",
+                "className": "o2::quality_control_modules::muon::TracksTask",
+                "moduleName": "QcMUONCommon",
+                "detectorName": "MCH",
+                "cycleDurationSeconds": "180",
+                "maxNumberCycles": "-1",
+                "dataSource": {
+                    "type": "direct",
+                    "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;mchgeo:GLO/Config/0?lifetime=condition&ccdb-path=GLO/Config/GeometryAligned"
+                },
+                "taskParameters": {
+                    "maxTracksPerTF": "600",
+                    "GID": "MCH"
+                }
+            }
+        }
+    }
+}
