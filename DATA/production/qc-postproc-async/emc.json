@@ -19,7 +19,7 @@
                 "periodSeconds": 0.01
             },
             "monitoring": {
-                "url": "infologger:///debug?qc"
+                "url": "no-op://"
             },
             "consul": {
                 "url": ""
@@ -28,8 +28,8 @@
                 "url": "ccdb-test.cern.ch:8080"
             },
             "infologger": {
-                "filterDiscardDebug": "false",
-                "filterDiscardLevel": "99"
+                "filterDiscardDebug": "true",
+                "filterDiscardLevel": "6"
             }
         },
         "postprocessing": {

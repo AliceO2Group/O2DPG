@@ -14,7 +14,7 @@
 	"provenance" : "qc_mc"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "no-op://"
       },
       "consul": {
         "url": ""
