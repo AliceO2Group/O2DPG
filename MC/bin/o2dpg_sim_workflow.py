@@ -536,8 +536,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                           -j ' + str('1')      +  ' -o qed_' + str(tf) + '              \
                           -n ' + str(NEventsQED) + ' -m PIPE ITS MFT FT0 FV0 FDD        \
                           -g extgen --configKeyValues \"GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;Diamond.width[2]=6.\" --run ' + str(args.run) # + (' ',' --fromCollContext collisioncontext.root')[args.pregenCollContext]
-     QED_task['cmd'] += '; QEDXSecCheck=`grep xSectionQED qedgenparam.ini | sed \'s/xSectionQED=//\'`'
-     QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected) + ' = $QEDXSecCheck"'
+     QED_task['cmd'] += '; RC=$?; QEDXSecCheck=`grep xSectionQED qedgenparam.ini | sed \'s/xSectionQED=//\'`'
+     QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected) + ' = $QEDXSecCheck"; [[ ${RC} == 0 ]]'
      # TODO: propagate the Xsecion ratio dynamically
      QEDdigiargs=' --simPrefixQED qed_' + str(tf) +  ' --qed-x-section-ratio ' + str(QEDXSecExpected/PbPbXSec)
      workflow['stages'].append(QED_task)
