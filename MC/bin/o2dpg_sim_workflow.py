@@ -505,7 +505,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    signalprefix='sgn_' + str(tf)
    INTRATE=int(args.interactionRate)
    BCPATTERN=args.bcPatternFile
-   includeQED = (COLTYPE == 'PbPb' or COLTYPEBKG == 'PbPb') or (args.with_qed == True)
+   includeQED = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb")) or (args.with_qed == True)
 
    # preproduce the collision context
    precollneeds=[GRP_TASK['name']]
