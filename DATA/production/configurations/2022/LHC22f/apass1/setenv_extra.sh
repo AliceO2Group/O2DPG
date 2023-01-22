@@ -197,6 +197,7 @@ if [[ $ALIGNLEVEL == 0 ]]; then
 elif [[ $ALIGNLEVEL == 1 ]]; then
   ERRIB="100e-8"
   ERROB="100e-8"
+  [[ -z $TPCITSTIMEERR ]] && TPCITSTIMEERR="0.2"
   export ITS_CONFIG=" --tracking-mode async"
 fi
 
