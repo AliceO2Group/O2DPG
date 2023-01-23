@@ -327,6 +327,7 @@ if [[ $ADD_CALIB == "1" ]]; then
       export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="--enable-itsonly --tracking-sources ITS,TPC,TRD,TOF,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF"
       export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="scdcalib.maxTracksPerCalibSlot=-1;scdcalib.minPtNoOuterPoint=0.8;scdcalib.minTPCNClsNoOuterPoint=120"
       export ARGS_EXTRA_PROCESS_o2_trd_global_tracking="--enable-qc"
+    fi
   fi
   export CALIB_EMC_ASYNC_RECALIB="$ALIEN_JDL_DOEMCCALIB"
   if [[ $ALIEN_JDL_DOTRDVDRIFTEXBCALIB == "1" ]]; then
