@@ -29,7 +29,7 @@
       }
     },
     "postprocessing": {
-      "TrendBeamSpot": {
+      "BeamSpotTrending": {
         "active": "true",
         "className": "o2::quality_control::postprocessing::TrendingTask",
         "moduleName": "QualityControl",

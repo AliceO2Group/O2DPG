@@ -33,7 +33,7 @@
             }
         },
         "postprocessing": {
-            "CellTrend": {
+            "CellsTrending": {
                 "active": "true",
                 "className": "o2::quality_control::postprocessing::SliceTrendingTask",
                 "moduleName": "QualityControl",
@@ -247,7 +247,7 @@
                     "once"
                 ]
             },
-            "ClusterTrend": {
+            "ClustersTrending": {
                 "active": "true",
                 "className": "o2::quality_control::postprocessing::SliceTrendingTask",
                 "moduleName": "QualityControl",
