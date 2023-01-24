@@ -1,3 +1,13 @@
+# General
+
+This directory contains scripts/files to setup, configure, and run ALICE Run3 Monte Carlo production workflows.
+The most important files are
+
+* `o2dpg_sim_workflow.py` --> set up a MC workflow of dependent task. Main output is a file `workflow.json` describing the graph of individual tasks to run.
+
+* `o2_dpg_workflow_runner.py` --> execute the tasks defined in the workflow file.
+
+
 # Workflow editing
 
 The tool `$O2DPG_ROOT/MC/bin/o2dpg-workflow-tools.py` provides some management of workflow files.
