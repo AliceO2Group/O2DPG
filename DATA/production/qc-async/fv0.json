@@ -29,18 +29,38 @@
           "className": "o2::quality_control_modules::fv0::DigitQcTask",
           "moduleName": "QcFV0",
           "detectorName": "FV0",
-          "cycleDurationSeconds": "60",
+          "cycleDurationSeconds": "600",
           "maxNumberCycles": "-1",
           "dataSource": {
             "type": "direct",
             "query": "digits:FV0/DIGITSBC/0;channels:FV0/DIGITSCH/0"
-            },
+           },
           "taskParameters": {
-            "ChannelIDs": "0,1,2,3,4,5,6,7,8,9,10,11"
+		    "trgModeInnerOuterThresholdVar": "Ampl",
+            "trgThresholdNChannels": "2",
+            "trgThresholdCharge": "8",
+            "trgThresholdChargeInner": "4",
+            "trgThresholdChargeOuter": "4"
           }
         }
+      },
+      "checks": {
+      "FV0CFDEff": {
+        "active": "true",
+        "className": "o2::quality_control_modules::fv0::CFDEffCheck",
+        "moduleName": "QcFV0",
+        "policy": "OnAny",
+        "detectorName": "FV0",
+        "dataSource": [{
+          "type": "Task",
+          "name": "FV0Digits",
+          "MOs": ["CFD_efficiency"]
+        }],
+        "checkParameters": {
+          "thresholdWarning": "0.8",
+          "thresholdError": "0.6"
+        }
       }
-    },
-    "dataSamplingPolicies": [
-    ]
+    }
+  }
 }
