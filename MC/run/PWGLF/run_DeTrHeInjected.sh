@@ -28,7 +28,8 @@ SYSTEM=${SYSTEM:-pp}
 ENERGY=${ENERGY:-900}
 [[ ${SPLITID} != "" ]] && SEED="-seed ${SPLITID}" || SEED=""
 
-echo $MODULES
+echo "NWORKERS = $NWORKERS"
+echo "MODULES = $MODULES"
 
 # create workflow
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${ENERGY} -col ${SYSTEM} -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} -confKey "Diamond.width[2]=6." -e ${SIMENGINE} ${SEED} -mod "${MODULES}" \
