@@ -72,7 +72,7 @@
         "checkName": "Clusters",
         "dataSource": [{
           "type": "Task",
-          "name": "Clusters",
+          "name": "MFTClusters",
           "MOs" : ["mClusterOccupancy","mClusterPatternIndex","mClusterSizeSummary","mGroupedClusterSizeSummary","mClusterOccupancySummary"]
         }],
         "className": "o2::quality_control_modules::mft::QcMFTClusterCheck",
