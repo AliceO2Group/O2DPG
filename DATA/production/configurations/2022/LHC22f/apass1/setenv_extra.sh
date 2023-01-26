@@ -319,7 +319,9 @@ if [[ $ADD_CALIB == "1" ]]; then
   export CALIB_CPV_GAIN=0
   export CALIB_ZDC_TDC=0
   export CALIB_FT0_TIMEOFFSET=0
+  export CALIB_TPC_SCDCALIB=0
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
+    export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
     # ad-hoc settings for TPC residual extraction
     export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="--output-type trackParams,unbinnedResid,binnedResid"
@@ -335,17 +337,30 @@ if [[ $ADD_CALIB == "1" ]]; then
     export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow="--enable-root-output"
     export ARGS_EXTRA_PROCESS_o2_trd_global_tracking="--enable-qc"
   fi
+  if [[ $ALIEN_JDL_DOMEANVTXCALIB == 1 ]]; then
+    export CALIB_PRIMVTX_MEANVTX="$ALIEN_JDL_DOMEANVTXCALIB"
+    export TFPERSLOTS_MEANVTX=550000 # 1 hour
+    export DELAYINTFS_MEANVTX=55000  # 10 minutes
+  fi
+  if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
+    export ADD_EXTRA_WORKFLOW="o2-calibration-ccdb-populator-workflow"
+    export ARGS_EXTRA_PROCESS_o2_calibration_ccdb_populator_workflow="--ccdb-path file://$PWD"
+  fi
 fi
 
 
 # Enabling AOD
-export WORKFLOW_PARAMETERS="AOD,${WORKFLOW_PARAMETERS}"
+if [[ $ALIEN_JDL_AODOFF != "1" ]]; then
+  export WORKFLOW_PARAMETERS="AOD,${WORKFLOW_PARAMETERS}"
+fi
 
 # ad-hoc settings for AOD
 export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="--aod-writer-maxfilesize $AOD_FILE_SIZE"
 
 # Enabling QC
-export WORKFLOW_PARAMETERS="QC,${WORKFLOW_PARAMETERS}"
+if [[ $ALIEN_JDL_QCOFF != "1" ]]; then
+  export WORKFLOW_PARAMETERS="QC,${WORKFLOW_PARAMETERS}"
+fi
 export QC_CONFIG_PARAM="--local-batch=QC.root --override-values \"qc.config.Activity.number=$RUNNUMBER;qc.config.Activity.passName=$PASS;qc.config.Activity.periodName=$PERIOD\""
 export GEN_TOPO_WORKDIR="./"
 #export QC_JSON_FROM_OUTSIDE="QC-20211214.json"
