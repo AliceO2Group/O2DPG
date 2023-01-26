@@ -136,6 +136,10 @@ if [[ -n "$ALIEN_JDL_DOTRDVDRIFTEXBCALIB" ]]; then
   export ADD_CALIB=1
 fi
 
+if [[ -n "$ALIEN_JDL_DOMEANVTXCALIB" ]]; then
+  export ADD_CALIB=1
+fi
+
 # AOD file size
 if [[ -n "$ALIEN_JDL_AODFILESIZE" ]]; then
   export AOD_FILE_SIZE="$ALIEN_JDL_AODFILESIZE"
@@ -231,6 +235,10 @@ fi
 if [[ $ALIEN_JDL_DOTRDVDRIFTEXBCALIB == "1" ]]; then
   SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_trd_global_tracking= "
   SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_calibration_trd_workflow= "
+fi
+if [[ $ALIEN_JDL_DOMEANVTXCALIB == "1" ]]; then
+  SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_primary_vertexing_workflow= "
+  SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_tfidinfo_writer_workflow= "
 fi
 
 # to add extra output to always keep
@@ -384,105 +392,109 @@ if [[ -f "performanceMetrics.json" ]]; then
     done
 fi
 
-# flag to possibly enable Analysis QC
-[[ -z ${ALIEN_JDL_RUNANALYSISQC+x} ]] && ALIEN_JDL_RUNANALYSISQC=1
-
-# merging last AOD file in case it is too small; threshold put at 80% of the required file size
-AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
-AOD_LIST=`find . -name AO2D.root`
-if [[ -n $ALIEN_JDL_MINALLOWEDAODPERCENTSIZE ]]; then
-  MIN_ALLOWED_AOD_PERCENT_SIZE=$ALIEN_JDL_MINALLOWEDAODPERCENTSIZE
-else
-  MIN_ALLOWED_AOD_PERCENT_SIZE=20
-fi
-if [[ $AOD_LIST_COUNT -ge 2 ]]; then
-  AOD_LAST=`find . -name AO2D.root | sort | tail -1`
-  CURRENT_SIZE=`wc -c $AOD_LAST | awk '{print $1}'`
-  echo current size = $CURRENT_SIZE
-  PERCENT=`echo "scale=2; $CURRENT_SIZE/($AOD_FILE_SIZE*10^6)*100" | bc -l`
-  echo percent = $PERCENT
-  if (( $(echo "$PERCENT < $MIN_ALLOWED_AOD_PERCENT_SIZE" | bc -l) )); then
-    AOD_LAST_BUT_ONE=`find . -name AO2D.root | sort | tail -2 | head -1`
-    echo "Too small, merging $AOD_LAST with previous file $AOD_LAST_BUT_ONE"
-    ls $PWD/$AOD_LAST > list.list
-    ls $PWD/$AOD_LAST_BUT_ONE >> list.list
-    echo "List of files for merging:"
-    cat list.list
-    mkdir tmpAOD
-    cd tmpAOD
-    ln -s ../list.list .
-    o2-aod-merger --input list.list
-    MERGED_SIZE=`wc -c AO2D.root | awk '{print $1}'`
-    echo "Size of merged file: $MERGED_SIZE"
-    cd ..
-    AOD_DIR_TO_BE_REMOVED="$(echo $AOD_LAST | sed -e 's/AO2D.root//')"
-    AOD_DIR_TO_BE_UPDATED="$(echo $AOD_LAST_BUT_ONE | sed -e 's/AO2D.root//')"
-    echo "We will remove $AOD_DIR_TO_BE_REMOVED and update $AOD_DIR_TO_BE_UPDATED"
-    rm -rf $AOD_DIR_TO_BE_REMOVED
-    mv tmpAOD/AO2D.root $AOD_DIR_TO_BE_UPDATED/.
-    rm -rf tmpAOD
+if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
+  # flag to possibly enable Analysis QC
+  [[ -z ${ALIEN_JDL_RUNANALYSISQC+x} ]] && ALIEN_JDL_RUNANALYSISQC=1
+  
+  # merging last AOD file in case it is too small; threshold put at 80% of the required file size
+  AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
+  AOD_LIST=`find . -name AO2D.root`
+  if [[ -n $ALIEN_JDL_MINALLOWEDAODPERCENTSIZE ]]; then
+    MIN_ALLOWED_AOD_PERCENT_SIZE=$ALIEN_JDL_MINALLOWEDAODPERCENTSIZE
+  else
+    MIN_ALLOWED_AOD_PERCENT_SIZE=20
   fi
-fi
-
-# now checking all AO2D files and running the analysis QC
-# retrieving again the list of AOD files, in case it changed after the merging above
-AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
-AOD_LIST=`find . -name AO2D.root`
-for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
-  AOD_DIR=`echo $AOD_LIST | cut -d' ' -f$i | sed -e 's/AO2D.root//'`
-  echo "Verifying, Merging DFs, and potentially running analysis QC for AOD file in $AOD_DIR"
-  cd $AOD_DIR
-  if [[ -f "AO2D.root" ]]; then
-    echo "Checking AO2Ds with un-merged DFs"
-    root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
-    exitcode=$?
-    if [[ $exitcode -ne 0 ]]; then
+  if [[ $AOD_LIST_COUNT -ge 2 ]]; then
+    AOD_LAST=`find . -name AO2D.root | sort | tail -1`
+    CURRENT_SIZE=`wc -c $AOD_LAST | awk '{print $1}'`
+    echo current size = $CURRENT_SIZE
+    PERCENT=`echo "scale=2; $CURRENT_SIZE/($AOD_FILE_SIZE*10^6)*100" | bc -l`
+    echo percent = $PERCENT
+    if (( $(echo "$PERCENT < $MIN_ALLOWED_AOD_PERCENT_SIZE" | bc -l) )); then
+      AOD_LAST_BUT_ONE=`find . -name AO2D.root | sort | tail -2 | head -1`
+      echo "Too small, merging $AOD_LAST with previous file $AOD_LAST_BUT_ONE"
+      ls $PWD/$AOD_LAST > list.list
+      ls $PWD/$AOD_LAST_BUT_ONE >> list.list
+      echo "List of files for merging:"
+      cat list.list
+      mkdir tmpAOD
+      cd tmpAOD
+      ln -s ../list.list .
+      o2-aod-merger --input list.list
+      MERGED_SIZE=`wc -c AO2D.root | awk '{print $1}'`
+      echo "Size of merged file: $MERGED_SIZE"
+      cd ..
+      AOD_DIR_TO_BE_REMOVED="$(echo $AOD_LAST | sed -e 's/AO2D.root//')"
+      AOD_DIR_TO_BE_UPDATED="$(echo $AOD_LAST_BUT_ONE | sed -e 's/AO2D.root//')"
+      echo "We will remove $AOD_DIR_TO_BE_REMOVED and update $AOD_DIR_TO_BE_UPDATED"
+      rm -rf $AOD_DIR_TO_BE_REMOVED
+      mv tmpAOD/AO2D.root $AOD_DIR_TO_BE_UPDATED/.
+      rm -rf tmpAOD
+    fi
+  fi
+  
+  # now checking all AO2D files and running the analysis QC
+  # retrieving again the list of AOD files, in case it changed after the merging above
+  AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
+  AOD_LIST=`find . -name AO2D.root`
+  for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
+    AOD_DIR=`echo $AOD_LIST | cut -d' ' -f$i | sed -e 's/AO2D.root//'`
+    echo "Verifying, Merging DFs, and potentially running analysis QC for AOD file in $AOD_DIR"
+    cd $AOD_DIR
+    if [[ -f "AO2D.root" ]]; then
+      echo "Checking AO2Ds with un-merged DFs"
+      root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
+      exitcode=$?
+      if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D check is " $exitcode > validation_error.message
 	echo "exit code from AO2D check is " $exitcode
 	exit $exitcode
-    fi
-    ls AO2D.root > list.list
-    o2-aod-merger --input list.list --output AO2D_merged.root
-    echo "Checking AO2Ds with merged DFs"
-    root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
-    exitcode=$?
-    if [[ $exitcode -ne 0 ]]; then
+      fi
+      ls AO2D.root > list.list
+      o2-aod-merger --input list.list --output AO2D_merged.root
+      echo "Checking AO2Ds with merged DFs"
+      root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
+      exitcode=$?
+      if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D with merged DFs check is " $exitcode > validation_error.message
 	echo "exit code from AO2D with merged DFs check is " $exitcode
 	echo "We will keep the AO2Ds with unmerged DFs"
-    else
-      echo "All ok, replacing initial AO2D.root file with the one with merged DFs"
-      mv AO2D_merged.root AO2D.root
-    fi
-    if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
-      ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
-      ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
-      if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
-	mv Analysis/MergedAnalyses/AnalysisResults.root .
       else
-	echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
+	echo "All ok, replacing initial AO2D.root file with the one with merged DFs"
+	mv AO2D_merged.root AO2D.root
       fi
-      if ls Analysis/*/*.log 1> /dev/null 2>&1; then
-	mv Analysis/*/*.log .
+      if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
+	${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
+	${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
+	if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
+	  mv Analysis/MergedAnalyses/AnalysisResults.root .
+	else
+	  echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
+	fi
+	if ls Analysis/*/*.log 1> /dev/null 2>&1; then
+	  mv Analysis/*/*.log .
+	fi
+      else
+	echo "Analysis QC will not be run, ALIEN_JDL_RUNANALYSISQC = $ALIEN_JDL_RUNANALYSISQC"
       fi
+    fi
+    cd ..
+  done
+fi
+
+if [[ $ALIEN_JDL_QCOFF != 1 ]]; then
+  # copying the QC json file here
+  if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
+    QC_JSON=$QC_JSON_FROM_OUTSIDE
+  else
+    if [[ -d $GEN_TOPO_WORKDIR/json_cache ]]; then
+      echo "copying latest file found in ${GEN_TOPO_WORKDIR}/json_cache"
+      QC_JSON=`ls -dArt $GEN_TOPO_WORKDIR/json_cache/* | tail -n 1`
     else
-      echo "Analysis QC will not be run, ALIEN_JDL_RUNANALYSISQC = $ALIEN_JDL_RUNANALYSISQC"
+      echo "No QC files found, probably QC was not run"
     fi
   fi
-  cd ..
-done
-
-# copying the QC json file here
-if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
-    QC_JSON=$QC_JSON_FROM_OUTSIDE
-else
-    if [[ -d $GEN_TOPO_WORKDIR/json_cache ]]; then
-	echo "copying latest file found in ${GEN_TOPO_WORKDIR}/json_cache"
-	QC_JSON=`ls -dArt $GEN_TOPO_WORKDIR/json_cache/* | tail -n 1`
-    else
-	echo "No QC files found, probably QC was not run"
-    fi
-fi
-if [[ ! -z $QC_JSON ]]; then
+  if [[ ! -z $QC_JSON ]]; then
     cp $QC_JSON QC_production.json
+  fi
 fi
