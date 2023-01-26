@@ -41,12 +41,16 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   {
     GeneratorPythia8::importParticles();
     const int configToUse = mOneInjectionPerEvent ? static_cast<int>(gRandom->Uniform(0.f, gunConfigs.size())) : -1;
+    LOGF(info, "Using configuration %i out of %lli", configToUse, gunConfigs.size());
+
     int nConfig = 0;
     for (const ConfigContainer& cfg : gunConfigs) {
       if (configToUse >= 0 && nConfig != configToUse) {
         nConfig++;
         continue;
       }
+      LOGF(info, "Injecting %i particles with PDG %i, pT in [%f, %f]", cfg.nInject, cfg.pdg, cfg.ptMin, cfg.ptMax);
+
       for (int i{0}; i < cfg.nInject; ++i) {
         const double pt = gRandom->Uniform(cfg.ptMin, cfg.ptMax);
         const double eta = gRandom->Uniform(cfg.etaMin, cfg.etaMax);
@@ -85,6 +89,7 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
                                                                                ptMax{P}
     {
       mass = GeneratorPythia8LongLivedGun::getMass(pdg);
+      LOGF(info, "ConfigContainer: pdg = %i, nInject = %i, ptMin = %f, ptMax = %f, mass = %f", pdg, nInject, ptMin, ptMax, mass);
     };
     ConfigContainer(TObjArray* arr) : ConfigContainer(atoi(arr->At(0)->GetName()),
                                                       atoi(arr->At(1)->GetName()),
