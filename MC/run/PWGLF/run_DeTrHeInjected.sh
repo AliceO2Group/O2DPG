@@ -10,7 +10,7 @@
 
 # ----------- CONFIGURE --------------------------
 export IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE=1
-export ALICEO2_CCDB_LOCALCACHE=.ccdb
+#export ALICEO2_CCDB_LOCALCACHE=.ccdb
 
 # ----------- LOAD UTILITY FUNCTIONS --------------------------
 . ${O2_ROOT}/share/scripts/jobutils.sh
@@ -26,15 +26,23 @@ NTIMEFRAMES=${NTIMEFRAMES:-1}
 INTRATE=${INTRATE:-50000}
 SYSTEM=${SYSTEM:-pp}
 ENERGY=${ENERGY:-900}
+CFGINIFILE=${CFGINIFILE:-"${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFDeTrHe_${SYSTEM}.ini"}
 [[ ${SPLITID} != "" ]] && SEED="-seed ${SPLITID}" || SEED=""
 
 echo "NWORKERS = $NWORKERS"
 echo "MODULES = $MODULES"
 
 # create workflow
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${ENERGY} -col ${SYSTEM} -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} -confKey "Diamond.width[2]=6." -e ${SIMENGINE} ${SEED} -mod "${MODULES}" \
-        -ini ${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFDeTrHe_${SYSTEM}.ini
+O2_SIM_WORKFLOW=${O2_SIM_WORKFLOW:-"${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py"}
+$O2_SIM_WORKFLOW -eCM ${ENERGY} -col ${SYSTEM} -gen external \
+        -j ${NWORKERS} \
+        -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} \
+        -confKey "Diamond.width[2]=6." \
+        ${SEED} -mod "${MODULES}" \
+        -ini $CFGINIFILE
+        # -e ${SIMENGINE} \
 
 # run workflow
 # allow increased timeframe parallelism with --cpu-limit 32
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt aod --cpu-limit 32
+O2_SIM_WORKFLOW_RUNNER=${O2_SIM_WORKFLOW_RUNNER:-"${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py"}
+$O2_SIM_WORKFLOW_RUNNER -f workflow.json -tt aod --cpu-limit 32
