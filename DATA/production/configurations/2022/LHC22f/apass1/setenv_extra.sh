@@ -343,8 +343,7 @@ if [[ $ADD_CALIB == "1" ]]; then
     export DELAYINTFS_MEANVTX=55000  # 10 minutes
   fi
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
-    export ADD_EXTRA_WORKFLOW="o2-calibration-ccdb-populator-workflow"
-    export ARGS_EXTRA_PROCESS_o2_calibration_ccdb_populator_workflow="--ccdb-path file://$PWD"
+    export CCDB_POPULATOR_UPLOAD_PATH="file://$PWD"
   fi
 fi
 
