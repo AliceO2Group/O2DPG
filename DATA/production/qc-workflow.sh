@@ -135,12 +135,12 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-async/emc.json
     [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-async/mid.json
     if [[ -z "$QC_JSON_MCH" ]]; then
-      QC_JSON_MCH=$O2DPG_ROOT/DATA/production/qc-async/mch-digits.json
+      add_QC_JSON MCH_DIGITS $O2DPG_ROOT/DATA/production/qc-async/mch-digits.json
       if has_processing_step "MCH_RECO"; then
         add_QC_JSON MCH_RECO $O2DPG_ROOT/DATA/production/qc-async/mch-reco.json
       fi
       if has_track_source "MCH"; then
-        add_QC_JSON MCH_TRACK $O2DPG_ROOT/DATA/production/qc-async/mch-tracks.json
+        add_QC_JSON MCH_TRACKS $O2DPG_ROOT/DATA/production/qc-async/mch-tracks.json
       fi
     fi
     [[ -z "$QC_JSON_CPV" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-async/cpv.json
@@ -227,7 +227,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     if [[ "0$QC_REDIRECT_MERGER_TO_LOCALHOST" == "01" ]]; then
       sed -i.bak -E 's/( *)"remoteMachine" *: *".*"(,?) *$/\1"remoteMachine": "127.0.0.1"\2/' $MERGED_JSON_FILENAME
       unlink $MERGED_JSON_FILENAME.bak
-      QC_CONFIG_OVERRIDE+="qc.config.database.host=localhost:6464;"
+      QC_CONFIG_OVERRIDE+="qc.config.database.host=ccdb-test.cern.ch:8080;"
     fi
 
     if [[ "0$GEN_TOPO_QC_OVERRIDE_CCDB_SERVER" != "0" ]]; then
