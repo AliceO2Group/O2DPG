@@ -209,15 +209,15 @@ analysis_PWGMMFwdVertexing = {"name": "PWGMMFwdVertexing",
                               "valid_for": [ANALYSIS_VALID_MC],
                               "cmd": ["o2-analysis-timestamp", "o2-analysis-mm-vertexing-fwd"]}
 ANALYSES.append(analysis_PWGMMFwdVertexing)
-analysis_MCQC = {"name": "MCQC",
-                         "expected_output": ["AnalysisResults.root"],
-                         "valid_for": [ANALYSIS_VALID_MC],
-                         "cmd": ["o2-analysis-timestamp",
-                                 "o2-analysis-track-propagation",
-                                 "o2-analysis-trackselection",
-                                 "o2-analysis-event-selection",
-                                 "o2-analysis-task-mc-simple-qc"]}
-ANALYSES.append(analysis_MCQC)
+analysis_MCSimpleValidation = {"name": "MCSimpleValidation",
+                               "expected_output": ["AnalysisResults.root"],
+                               "valid_for": [ANALYSIS_VALID_MC],
+                               "cmd": ["o2-analysis-timestamp",
+                               "o2-analysis-track-propagation",
+                               "o2-analysis-trackselection",
+                               "o2-analysis-event-selection",
+                               "o2-analysis-task-mc-simple-qc"]}
+ANALYSES.append(analysis_MCSimpleValidation)
 #analysis_PWGMMMDnDeta = {"name": "PWGMMMDnDeta",
 #                         "expected_output": ["AnalysisResults.root"],
 #                         "valid_for": [ANALYSIS_VALID_MC],
