@@ -39,8 +39,8 @@ $O2_SIM_WORKFLOW -eCM ${ENERGY} -col ${SYSTEM} -gen external \
         -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} \
         -confKey "Diamond.width[2]=6." \
         ${SEED} -mod "${MODULES}" \
+        -e ${SIMENGINE} \
         -ini $CFGINIFILE
-        # -e ${SIMENGINE} \
 
 # run workflow
 # allow increased timeframe parallelism with --cpu-limit 32

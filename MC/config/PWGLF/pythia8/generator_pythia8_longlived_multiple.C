@@ -15,12 +15,14 @@
 ///               Here PDG, Number injected, pT limits are provided via an intermediate configuration file
 ///
 
+#include "generator_pythia8_longlived.C"
+#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include "SimulationDataFormat/MCGenStatus.h"
 #include "SimulationDataFormat/MCUtils.h"
-#include "generator_pythia8_longlived.C"
 #include "fairlogger/Logger.h"
 #include "TSystem.h"
 #include <fstream>
+#endif
 
 using namespace Pythia8;
 using namespace o2::mcgenstatus;
