@@ -1,4 +1,3 @@
-README.md
 # Run script for PWG-LF MC injector
 
 Simple script to run the PWG-LF MC injector.
