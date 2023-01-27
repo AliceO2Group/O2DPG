@@ -43,6 +43,5 @@ $O2_SIM_WORKFLOW -eCM ${ENERGY} -col ${SYSTEM} -gen external \
         -ini $CFGINIFILE
 
 # run workflow
-# allow increased timeframe parallelism with --cpu-limit 32
 O2_SIM_WORKFLOW_RUNNER=${O2_SIM_WORKFLOW_RUNNER:-"${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py"}
-$O2_SIM_WORKFLOW_RUNNER -f workflow.json -tt aod --cpu-limit 32
+$O2_SIM_WORKFLOW_RUNNER -f workflow.json -tt aod --cpu-limit $NWORKERS
