@@ -10,6 +10,31 @@ if [[ ! -z $GEN_TOPO_QC_JSON_FILE ]]; then
   flock 101 || exit 1
 fi
 
+FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
+
+JSON_FILES=
+OUTPUT_SUFFIX=
+
+add_QC_JSON() {
+  if [[ ${2} =~ ^consul://.* ]]; then
+    TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
+    curl -s -o $TMP_FILENAME "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
+    if [[ $? != 0 ]]; then
+      echo "Error fetching QC JSON $2"
+      exit 1
+    fi
+  else
+    TMP_FILENAME=$2
+  fi
+  JSON_FILES+=" $TMP_FILENAME"
+  jq -rM '""' > /dev/null < $TMP_FILENAME
+  if [[ $? != 0 ]]; then
+    echo "Invalid QC JSON $2" 1>&2
+    exit 1
+  fi
+  OUTPUT_SUFFIX+="-$1"
+}
+
 QC_CONFIG=
 QC_CONFIG_OVERRIDE=
 if [[ -z $QC_JSON_FROM_OUTSIDE && ! -z $GEN_TOPO_QC_JSON_FILE && -f $GEN_TOPO_QC_JSON_FILE ]]; then
@@ -109,6 +134,15 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=$O2DPG_ROOT/DATA/production/qc-async/fdd.json
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-async/emc.json
     [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-async/mid.json
+    if [[ -z "$QC_JSON_MCH" ]]; then
+      add_QC_JSON MCH_DIGITS $O2DPG_ROOT/DATA/production/qc-async/mch-digits.json
+      if has_processing_step "MCH_RECO"; then
+        add_QC_JSON MCH_RECO $O2DPG_ROOT/DATA/production/qc-async/mch-reco.json
+      fi
+      if has_track_source "MCH"; then
+        add_QC_JSON MCH_TRACKS $O2DPG_ROOT/DATA/production/qc-async/mch-tracks.json
+      fi
+    fi
     [[ -z "$QC_JSON_CPV" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-async/cpv.json
     [[ -z "$QC_JSON_PHS" ]] && QC_JSON_PHS=$O2DPG_ROOT/DATA/production/qc-async/phs.json
     [[ -z "$QC_JSON_TRD" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-async/trd.json
@@ -136,31 +170,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     echo This script must be run via the gen_topo scripts, or a GEN_TOPO_WORKDIR must be provided where merged JSONS are stored 1>&2
     exit 1
   fi
-
-  FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
-
-  add_QC_JSON() {
-    if [[ ${2} =~ ^consul://.* ]]; then
-      TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
-      curl -s -o $TMP_FILENAME "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
-      if [[ $? != 0 ]]; then
-        echo "Error fetching QC JSON $2"
-        exit 1
-      fi
-    else
-      TMP_FILENAME=$2
-    fi
-    JSON_FILES+=" $TMP_FILENAME"
-    jq -rM '""' > /dev/null < $TMP_FILENAME
-    if [[ $? != 0 ]]; then
-      echo "Invalid QC JSON $2" 1>&2
-      exit 1
-    fi
-    OUTPUT_SUFFIX+="-$1"
-  }
-
-  JSON_FILES=
-  OUTPUT_SUFFIX=
+ 
 
   # TOF matching
   if has_detector_qc TOF && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"TOF_MATCH"(,|$) ]] && [ ! -z "$QC_JSON_TOF_MATCH" ]; then
