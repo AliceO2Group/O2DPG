@@ -34,5 +34,7 @@ The following variables can be set from the outside:
 
 Example:
 ```
-./runLFInjector.sh ${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFDeTrHe_pp.ini NWORKERS=4 NSIGEVENTS=10
+NWORKERS=4
+NSIGEVENTS=10
+./runLFInjector.sh ${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFDeTrHe_pp.ini
 ```
