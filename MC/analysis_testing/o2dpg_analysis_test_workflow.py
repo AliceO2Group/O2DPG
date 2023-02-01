@@ -337,7 +337,8 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         needs: iter (optional)
             if specified, list of other tasks which need to be run before
     """
-    input_aod = abspath(input_aod)
+    if not input_aod.startswith("alien://"):
+        input_aod = abspath(input_aod)
     if input_aod.endswith(".txt") and not input_aod.startswith("@"):
         input_aod = f"@{input_aod}"
     data_or_mc = ANALYSIS_VALID_MC if is_mc else ANALYSIS_VALID_DATA
