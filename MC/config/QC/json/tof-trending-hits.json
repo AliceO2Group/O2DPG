@@ -25,7 +25,7 @@
       }
     },
     "postprocessing": {
-      "TOFTrendingHits": {
+      "HitsTrending": {
         "active": "true",
         "className": "o2::quality_control_modules::tof::TrendingHits",
         "moduleName": "QcTOF",
@@ -33,7 +33,7 @@
         "dataSources": [
           {
             "type": "repository",
-            "path": "TOF/MO/TaskDigits/Multiplicity",
+            "path": "TOF/MO/Digits/Multiplicity",
             "names": [
               "Integrated"
             ],
@@ -54,7 +54,7 @@
           "userorcontrol"
         ],
         "updateTrigger": [
-          "foreachlatest:qcdb:TOF/MO/TaskDigits/Multiplicity/Integrated"
+          "foreachlatest:qcdb:TOF/MO/Digits/Multiplicity/Integrated"
         ],
         "stopTrigger": [
           "userorcontrol"
