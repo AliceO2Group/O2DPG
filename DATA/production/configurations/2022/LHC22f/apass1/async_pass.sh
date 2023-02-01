@@ -369,6 +369,11 @@ else
   #
   if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
     export TIMEFRAME_RATE_LIMIT=3
+    if (( $(echo "$RUN_IR > 800000" | bc -l) )); then
+      export TIMEFRAME_RATE_LIMIT=1
+    elif (( $(echo "$RUN_IR < 50000" | bc -l) )); then
+      export TIMEFRAME_RATE_LIMIT=6
+    fi
     export OMP_NUM_THREADS=6
     export SHMSIZE=16000000000
   fi
