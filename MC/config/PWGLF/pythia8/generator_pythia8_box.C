@@ -1,3 +1,4 @@
+#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include "Pythia8/Pythia.h"
 #include "FairGenerator.h"
 #include "FairPrimaryGenerator.h"
@@ -7,6 +8,7 @@
 #include "TDatabasePDG.h"
 #include "TMath.h"
 #include <cmath>
+#endif
 
 using namespace Pythia8;
 
