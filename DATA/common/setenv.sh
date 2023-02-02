@@ -9,6 +9,11 @@ has_detector()
   [[ $WORKFLOW_DETECTORS =~ (^|,)"$1"(,|$) ]]
 }
 
+has_detector_from_global_reader()
+{
+  [[ $WORKFLOW_DETECTORS_USE_GLOBAL_READER =~ (^|,)"$1"(,|$) ]]
+}
+
 has_detector_calib()
 {
   has_detector $1 && [[ $WORKFLOW_DETECTORS_CALIB =~ (^|,)"$1"(,|$) ]]
@@ -195,6 +200,7 @@ if [[ -z "${WORKFLOW_DETECTORS_CALIB+x}" ]] || [[ "0$WORKFLOW_DETECTORS_CALIB" =
 if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
 if [[ -z "${WORKFLOW_DETECTORS_CTF+x}" ]] || [[ "0$WORKFLOW_DETECTORS_CTF" == "0ALL" ]]; then export WORKFLOW_DETECTORS_CTF=$WORKFLOW_DETECTORS; fi
 if [[ "0$WORKFLOW_DETECTORS_FLP_PROCESSING" == "0ALL" ]]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=$WORKFLOW_DETECTORS; fi
+if [[ "0$WORKFLOW_DETECTORS_USE_GLOBAL_READER" == "0ALL" ]]; then export WORKFLOW_DETECTORS_USE_GLOBAL_READER=$WORKFLOW_DETECTORS; fi
 if [[ -z "$WORKFLOW_PARAMETERS" ]]; then export WORKFLOW_PARAMETERS=; fi
 
 if [[ ! -z $WORKFLOW_DETECTORS_EXCLUDE_QC ]]; then
