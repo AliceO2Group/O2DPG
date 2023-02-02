@@ -134,7 +134,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_FDD" ]] && QC_JSON_FDD=$O2DPG_ROOT/DATA/production/qc-async/fdd.json
     [[ -z "$QC_JSON_EMC" ]] && QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-async/emc.json
     [[ -z "$QC_JSON_MID" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-async/mid.json
-    if [[ -z "$QC_JSON_MCH" ]]; then
+    if has_detector_qc MCH && [[ -z "$QC_JSON_MCH" ]]; then
       add_QC_JSON MCH_DIGITS $O2DPG_ROOT/DATA/production/qc-async/mch-digits.json
       if has_processing_step "MCH_RECO"; then
         add_QC_JSON MCH_RECO $O2DPG_ROOT/DATA/production/qc-async/mch-reco.json
