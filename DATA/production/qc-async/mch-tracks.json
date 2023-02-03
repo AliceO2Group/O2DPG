@@ -33,11 +33,21 @@
                 "maxNumberCycles": "-1",
                 "dataSource": {
                     "type": "direct",
-                    "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;mchgeo:GLO/Config/0?lifetime=condition&ccdb-path=GLO/Config/GeometryAligned"
+                    "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS"
                 },
                 "taskParameters": {
                     "maxTracksPerTF": "600",
                     "GID": "MCH"
+                },
+                "grpGeomRequest": {
+                    "geomRequest": "Aligned",
+                    "askGRPECS": "false",
+                    "askGRPLHCIF": "false",
+                    "askGRPMagField": "false",
+                    "askMatLUT": "false",
+                    "askTime": "false",
+                    "askOnceAllButField": "false",
+                    "needPropagatorD": "false"
                 }
             }
         }
