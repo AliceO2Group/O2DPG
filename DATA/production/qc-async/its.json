@@ -43,6 +43,7 @@
 	  "nBCbins" : "103",
 	  "dicttimestamp" : "0",
 	  "geomPath" : "o2sim_geometry-aligned.root",
+          "publishDetailedSummary": "0",
 	  "publishSummary1D": "0"
         }
       },
