@@ -101,7 +101,9 @@ elif [[ $EPNPIPELINES != 0 ]]; then
   if [[ $BEAMTYPE == "pp" ]]; then
     N_ITSRAWDEC=$(math_max $((6 * $EPNPIPELINES * $NGPUS / 4)) 1)
     N_MFTRAWDEC=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
-    N_MCHCL=$(math_max $((6 * 100 / $RECO_NUM_NODES_WORKFLOW_CMP)) 1)
+    if [[ "0$GEN_TOPO_AUTOSCALE_PROCESSES" == "01" && $RUNTYPE == "PHYSICS" ]]; then
+      N_MCHCL=$(math_max $((6 * 100 / $RECO_NUM_NODES_WORKFLOW_CMP)) 1)
+    fi
     if [[ "0$HIGH_RATE_PP" == "01" ]]; then
       N_TPCITS=$(math_max $((5 * $EPNPIPELINES * $NGPUS / 4)) 1)
       N_TPCENT=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
@@ -134,15 +136,17 @@ elif [[ $EPNPIPELINES != 0 ]]; then
     # Scale some multiplicities with the number of nodes
     N_ITSRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSRAWDEC:-1}) # This means, if we have 60 EPN nodes, we need at least 3 ITS RAW decoders (will be scaled down by a factor of two automatically if we have 2 NUMA domains)
     N_MFTRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTRAWDEC:-1})
-    if [[ $BEAMTYPE == "pp" ]]; then
-      N_ITSTRK=$(math_max $((9 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
-    else
-      N_ITSTRK=$(math_max $((2 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
+    if [[ $RUNTYPE == "PHYSICS" || $RUNTYPE == "COSMICS" ]]; then
+      if [[ $BEAMTYPE == "pp" ]]; then
+        N_ITSTRK=$(math_max $((9 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
+      else
+        N_ITSTRK=$(math_max $((2 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
+      fi
+      N_ITSTRK=$(( $N_ITSTRK < 7 ? $N_ITSTRK : 7 ))
+      N_MFTTRK=$(math_max $((1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTTRK:-1})
+      N_CTPRAWDEC=$(math_max $((1 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_CTPRAWDEC:-1})
+      N_TRDRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_TRDRAWDEC:-1})
     fi
-    N_ITSTRK=$(( $N_ITSTRK < 7 ? $N_ITSTRK : 7 ))
-    N_MFTTRK=$(math_max $((1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTTRK:-1})
-    N_CTPRAWDEC=$(math_max $((1 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_CTPRAWDEC:-1})
-    N_TRDRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_TRDRAWDEC:-1})
   fi
 fi
 
