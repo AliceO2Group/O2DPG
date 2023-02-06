@@ -138,7 +138,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
   else
     N_ITSTRK=$(math_max $((2 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
   fi
-  N_ITSTRK=$(( $N_ITSTRK < 8 ? $N_ITSTRK : 8 ))
+  N_ITSTRK=$(( $N_ITSTRK < 7 ? $N_ITSTRK : 7 ))
   N_MFTTRK=$(math_max $((1 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTTRK:-1})
   N_CTPRAWDEC=$(math_max $((1 * 30 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_CTPRAWDEC:-1})
   N_TRDRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_TRDRAWDEC:-1})
