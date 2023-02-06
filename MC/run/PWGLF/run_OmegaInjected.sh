@@ -14,6 +14,9 @@
 # ----------- START ACTUAL JOB  -----------------------------
 
 NWORKERS=${NWORKERS:-8}
+CPU_LIMIT=${CPU_LIMIT:-8}
+TARGETTASK=${TARGETTASK:-aod}
+
 MODULES="--skipModules ZDC"
 SIMENGINE=${SIMENGINE:-TGeant4}
 NSIGEVENTS=${NSIGEVENTS:-1}
@@ -29,4 +32,4 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -e ${SIMENGINE} ${SEED} -eCM 13600 -c
 
 
 # run workflow
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt aod --cpu-limit 64
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${TARGETTASK} --cpu-limit ${CPU_LIMIT}

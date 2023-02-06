@@ -1,3 +1,4 @@
+#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include "Pythia8/Pythia.h"
 #include "FairGenerator.h"
 #include "FairPrimaryGenerator.h"
@@ -7,8 +8,10 @@
 #include "TDatabasePDG.h"
 #include "TMath.h"
 #include <cmath>
-
 using namespace Pythia8;
+#endif
+
+
 
 class GeneratorPythia8Box : public o2::eventgen::GeneratorPythia8
 {

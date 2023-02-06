@@ -2,7 +2,7 @@
 #!/bin/bash
 
 ########################################################################
-# A very basic test to test a custom generator implementation of PWGDQ #
+# A very basic test to test a custom generator implementation of PWGHF #
 ########################################################################
 
 [[ -z ${O2_ROOT+x} ]] && { echo "O2_ROOT not loaded." ; exit 1 ; }
