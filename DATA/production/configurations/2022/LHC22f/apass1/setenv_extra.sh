@@ -81,7 +81,7 @@ if [[ $PERIOD == "LHC22s" ]]; then
   else
     ZDC_BC_SHIFT=0
   fi
-  export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow="TriggerOffsetsParam.customOffset[2]=1;TriggerOffsetsParam.customOffset[4]=1;TriggerOffsetsParam.customOffset[5]=1;TriggerOffsetsParam.customOffset[6]=1;TriggerOffsetsParam.customOffset[7]=1;TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
+  export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+="TriggerOffsetsParam.customOffset[2]=1;TriggerOffsetsParam.customOffset[4]=1;TriggerOffsetsParam.customOffset[5]=1;TriggerOffsetsParam.customOffset[6]=1;TriggerOffsetsParam.customOffset[7]=1;TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
   export PVERTEXER+=";pvertexer.dbscanDeltaT=1;pvertexer.maxMultRatDebris=1.;"
 fi
 
@@ -108,7 +108,7 @@ if [[ $PERIOD == "LHC22q" ]]; then
   elif [[ $RUNNUMBER -eq 529043 ]]; then
     ZDC_BC_SHIFT=3079675091988
   fi
-  export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow="TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
+  [[ ! -z $ZDC_BC_SHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+="TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
 fi
 
 # ITSTPC vs FT0 time shift
