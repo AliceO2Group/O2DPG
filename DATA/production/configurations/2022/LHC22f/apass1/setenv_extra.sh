@@ -323,10 +323,10 @@ if [[ $ADD_CALIB == "1" ]]; then
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
+    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="--enable-itsonly --tracking-sources ITS,TPC,TRD,TOF,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF"
     # ad-hoc settings for TPC residual extraction
     export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="--output-type trackParams,unbinnedResid,binnedResid"
     if [[ $ALIEN_JDL_DEBUGRESIDUALEXTRACTION == "1" ]]; then
-      export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="--enable-itsonly --tracking-sources ITS,TPC,TRD,TOF,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF"
       export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="scdcalib.maxTracksPerCalibSlot=-1;scdcalib.minPtNoOuterPoint=0.8;scdcalib.minTPCNClsNoOuterPoint=120"
       export ARGS_EXTRA_PROCESS_o2_trd_global_tracking="--enable-qc"
     fi
