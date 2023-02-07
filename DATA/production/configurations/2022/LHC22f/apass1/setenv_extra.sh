@@ -41,6 +41,10 @@ fi
 echo remapping = $REMAPPING
 echo "BeamType = $BEAMTYPE"
 echo "PERIOD = $PERIOD"
+
+# needed if we need more wf
+export ADD_EXTRA_WORKFLOW=
+
 # other ad-hoc settings for CTF reader
 export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --allow-missing-detectors $REMAPPING"
 echo RUN = $RUNNUMBER
@@ -56,7 +60,7 @@ fi
 # The "wrong" +1 offset request for ITS (0) must produce alarm since shifts are not supported there
 if [[ $PERIOD == "LHC22s" ]]; then
   # CTP asked to extract their digits
-  export ADD_EXTRA_WORKFLOW="o2-ctp-digit-writer"
+  add_comma_separated ADD_EXTRA_WORKFLOW="o2-ctp-digit-writer"
 
   TPCITSTIMEERR="0.3"
   TPCITSTIMEBIAS="0"
@@ -147,11 +151,13 @@ else
 fi
 
 # IR
-cp $O2DPG_ROOT/DATA/production/common/getIRandDuration.C ./
-root -b -q "getIRandDuration.C+($RUNNUMBER)"
-export RUN_IR=`cat IR.txt`
+if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]]; then
+  cp $O2DPG_ROOT/DATA/production/common/getIRandDuration.C ./
+  root -b -q "getIRandDuration.C+($RUNNUMBER)"
+  export RUN_IR=`cat IR.txt`
+  export RUN_DURATION=`cat Duration.txt`
+fi
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
-export RUN_DURATION=`cat Duration.txt`
 echo "Duration of current run ($RUNNUMBER) = $RUN_DURATION"
 
 # For runs shorter than 10 minutes we have only a single slot.
@@ -266,9 +272,7 @@ export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow="$ITSEXTRAERR;$ITSTPCMATCH;
 [[ ! -z "${TPCITSTIMEERR}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+="tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;"
 
 # enabling AfterBurner
-if [[ $WORKFLOW_DETECTORS =~ (^|,)"FT0"(,|$) ]] ; then
-  export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="--use-ft0"
-fi
+has_detector FT0 && export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="--use-ft0"
 
 # ad-hoc settings for TOF matching
 export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="--output-type matching-info,calib-info --enable-dia"
@@ -347,6 +351,14 @@ if [[ $ADD_CALIB == "1" ]]; then
   fi
 fi
 
+# extra workflows in case we want to process the currents for FT0, FV0, TOF, TPC
+if [[ $ALIEN_JDL_EXTRACTCURRENTS == 1 ]]; then
+  if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
+  has_detector_reco FT0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-ft0-integrate-cluster-workflow"
+  has_detector_reco FV0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-fv0-integrate-cluster-workflow"
+  has_detector_reco TOF && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tof-integrate-cluster-workflow"
+  has_detector_reco TPC && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-integrate-cluster-workflow"
+fi
 
 # Enabling AOD
 if [[ $ALIEN_JDL_AODOFF != "1" ]]; then
@@ -355,6 +367,9 @@ fi
 
 # ad-hoc settings for AOD
 export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="--aod-writer-maxfilesize $AOD_FILE_SIZE"
+if [[ $PERIOD == "LHC22m" ]]; then
+  export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --aod-producer-workflow \"--ctpreadout-create 1\""
+fi
 
 # Enabling QC
 if [[ $ALIEN_JDL_QCOFF != "1" ]]; then

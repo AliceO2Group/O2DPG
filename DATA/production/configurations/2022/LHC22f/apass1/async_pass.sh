@@ -167,6 +167,9 @@ fi
 echo "Checking current directory content"
 ls -altr
 
+ln -s $O2DPG_ROOT/DATA/common/gen_topo_helper_functions.sh
+source gen_topo_helper_functions.sh
+
 if [[ -f "setenv_extra.sh" ]]; then
     source setenv_extra.sh $RUNNUMBER $BEAMTYPE
 else
