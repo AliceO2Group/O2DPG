@@ -65,13 +65,16 @@ if [[ $PERIOD == "LHC22s" ]]; then
   TPCITSTIMEERR="0.3"
   TPCITSTIMEBIAS="0"
   if [[ $RUNNUMBER -eq 529397 ]]; then
+    ZDC_BC_SHIFT=0
     TPCCLUSTERTIMESHIFT="-11.25" # 90 BC
   elif [[ $RUNNUMBER -eq 529399 ]]; then
+    ZDC_BC_SHIFT=0
     TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
   elif [[ $RUNNUMBER -eq 529403 ]]; then
     ZDC_BC_SHIFT=213268844053
     TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
   elif [[ $RUNNUMBER -eq 529414 ]]; then
+    ZDC_BC_SHIFT=0
     TPCCLUSTERTIMESHIFT="-3."  # 24/62 BC
     if [[ -f list.list ]]; then
       threshCTF="/alice/data/2022/LHC22s/529414/raw/2340/o2_ctf_run00529414_orbit0010200192_tf0000072971_epn086.root"
@@ -345,6 +348,7 @@ if [[ $ADD_CALIB == "1" ]]; then
     export CALIB_PRIMVTX_MEANVTX="$ALIEN_JDL_DOMEANVTXCALIB"
     export TFPERSLOTS_MEANVTX=550000 # 1 hour
     export DELAYINTFS_MEANVTX=55000  # 10 minutes
+    export SVERTEXING_SOURCES=none # disable secondary vertexing
   fi
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
     export CCDB_POPULATOR_UPLOAD_PATH="file://$PWD"
