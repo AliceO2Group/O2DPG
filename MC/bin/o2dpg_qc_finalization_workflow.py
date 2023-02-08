@@ -44,8 +44,8 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
   def add_QC_finalization(taskName, qcConfigPath, needs=None):
     if standalone == True:
       needs = []
-    elif needs == None:
-      needs = [taskName + '_local' + str(tf) for tf in range(1, ntimeframes + 1)]
+    elif needs is None:
+      needs = [taskName + f'_local_{tf}' for tf in range(1, ntimeframes + 1)]
 
     task = createTask(name=QC_finalize_name(taskName), needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
     task['cmd'] = f'o2-qc --config {qcConfigPath} --remote-batch {taskName}.root' + \
@@ -74,7 +74,7 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
   ## The list of remote-batch workflows (reading the merged QC tasks results, applying Checks, uploading them to QCDB)
   MFTDigitsQCneeds = []
   for flp in range(5):
-    MFTDigitsQCneeds.extend(['mftDigitsQC'+str(flp)+'_local'+str(tf) for tf in range(1, ntimeframes + 1)])
+    MFTDigitsQCneeds.extend([f'mftDigitsQC{flp}_local_{tf}' for tf in range(1, ntimeframes + 1)])
   add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-0.json', MFTDigitsQCneeds)
   add_QC_finalization('mftClustersQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json')
   add_QC_finalization('mftAsyncQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-async.json')
