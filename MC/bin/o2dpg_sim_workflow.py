@@ -721,6 +721,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # this is just to have the digitizer ini file
    ContextTask['cmd'] = '${O2_ROOT}/bin/o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) \
                         + ' ' + getDPL_global_options(ccdbbackend=False) + ' -n ' + str(args.ns) + simsoption       \
+                        + ' --seed ' + str(TFSEED)                                                                  \
                         + ' ' + putConfigValuesNew({"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF)},{"DigiParams.passName" : str(PASSNAME)}) + ('',' --incontext ' + CONTEXTFILE)[args.pregenCollContext] + QEDdigiargs
    ContextTask['cmd'] += ' --bcPatternFile ccdb'
 
