@@ -17,7 +17,7 @@ private:
   GeneratorParam *thisGenerator = nullptr;
 };
 
-class GeneratorEMCocktailV2 : public GeneratorCocktail_class {
+class GeneratorEMCocktailV2 : public GeneratorCocktail {
 public:
   GeneratorEMCocktailV2()
       : fDecayer(nullptr), fDecayerConfig(nullptr), fDecayMode(kAll),

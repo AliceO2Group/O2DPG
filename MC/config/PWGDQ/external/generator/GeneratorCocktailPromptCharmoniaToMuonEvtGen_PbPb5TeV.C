@@ -163,7 +163,7 @@ class O2_GeneratorParamPsi : public GeneratorTGenerator
 FairGenerator* GeneratorCocktailPromptCharmoniaToMuonEvtGen_PbPb5TeV()
 {
 
-  auto genCocktailEvtGen = new o2::eventgen::GeneratorEvtGen<GeneratorCocktail_class>();
+  auto genCocktailEvtGen = new o2::eventgen::GeneratorEvtGen<GeneratorCocktail>();
 
   auto genJpsi = new o2::eventgen::O2_GeneratorParamJpsi;
   genJpsi->SetNSignalPerEvent(4); // 4 J/psi generated per event by GeneratorParam
