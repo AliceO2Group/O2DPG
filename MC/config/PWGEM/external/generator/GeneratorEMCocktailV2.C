@@ -1,4 +1,4 @@
-R__ADD_INCLUDE_PATH($O2DPG_ROOT / MC / config / PWGDQ / external / generator)
+R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/external/generator)
 #include "GeneratorCocktail.C"
 
 namespace o2 {
@@ -373,6 +373,7 @@ public:
           pEdit.SetLastDaughter(pEdit.GetLastDaughter() + nPart);
       }
       g->clearParticles();
+      generatorCounter++;
     }
     return true;
   };
