@@ -7,60 +7,59 @@ namespace eventgen
 {
 
 
-class cocktailParam_class : public GeneratorTGenerator
+class CocktailParam : public GeneratorTGenerator
 {
 public:
-  cocktailParam_class(GeneratorParam* cocktailParam) : GeneratorTGenerator("cocktailParam")
+  CocktailParam(GeneratorParam* thisGenerator) : GeneratorTGenerator("thisGenerator")
   {
-    setTGenerator(cocktailParam);
+    setTGenerator(thisGenerator);
   };
 
-  ~cocktailParam_class()
+  ~CocktailParam()
   {
-    delete cocktailParam;
+    delete thisGenerator;
   };
 
 
 private:
-  GeneratorParam* cocktailParam= nullptr;
+  GeneratorParam* thisGenerator= nullptr;
 }; 
 
 
 class GeneratorEMCocktailV2 : public GeneratorCocktail_class
 {
  public:
-  GeneratorEMCocktailV2(){
-  fDecayer = NULL;
-  fDecayerConfig = NULL;
-  fDecayMode = kAll;
-  fWeightingMode = kNonAnalog;
-  fParametrizationFile = "";
-  fParametrizationDir = "";
-  fV2ParametrizationDir = "";
-  fNPart = 1000;
-  fCollisionSystem = GeneratorParamEMlibV2::kpp7TeV;
-  fCentrality = GeneratorParamEMlibV2::kpp;
-  fV2Systematic = GeneratorParamEMlibV2::kNoV2Sys;
-  fUseYWeighting = kFALSE;
-  fDynPtRange = kFALSE;
-  fForceConv = kFALSE;
-  fSelectedParticles = 0x3FFFFFF;
-  fUseFixedEP = kFALSE;  
-  }
+  GeneratorEMCocktailV2() : 
+  fDecayer(nullptr),
+  fDecayerConfig(nullptr),
+  fDecayMode(kAll),
+  fWeightingMode(kNonAnalog),
+  fParametrizationFile(""),
+  fParametrizationDir(""),
+  fV2ParametrizationDir(""),
+  fNPart(1000),
+  fCollisionSystem(GeneratorParamEMlibV2::kpp7TeV),
+  fCentrality(GeneratorParamEMlibV2::kpp),
+  fV2Systematic(GeneratorParamEMlibV2::kNoV2Sys),
+  fUseYWeighting(kFALSE),
+  fDynPtRange(kFALSE),
+  fForceConv(kFALSE),
+  fSelectedParticles(0x3FFFFFF),
+  fUseFixedEP(kFALSE) {}
 
   ~GeneratorEMCocktailV2()
   {
     
   }
 
-  struct Generator {
+  struct GeneratorIDs {
     Int_t LibID;
     const char* Name;
     Int_t ParticleID;
     Int_t GeneratorID;
   };
   
-  Generator Generators[GeneratorParamEMlibV2::kNParticles]={
+  GeneratorIDs Generators[GeneratorParamEMlibV2::kNParticles]={
     {GeneratorParamEMlibV2::kPizero, "Pizero", 111, 0x00001},
     {GeneratorParamEMlibV2::kEta, "Eta", 221, 0x00002},
     {GeneratorParamEMlibV2::kRho0, "Rho", 113, 0x00004},
@@ -191,22 +190,24 @@ class GeneratorEMCocktailV2 : public GeneratorCocktail_class
   }
 
   Double_t GetYWeight(Int_t np, TParticle* part) {
-    if (!fUseYWeighting) return 1.;
-    Double_t weight = 0.;
-    if (fPtYDistribution[np]) {
-      if (part->Pt() > fPtYDistribution[np]->GetXaxis()->GetXmin() && part->Pt() < fPtYDistribution[np]->GetXaxis()->GetXmax()) {
-        if (part->Y() > fPtYDistribution[np]->GetYaxis()->GetXmin() && part->Y() < fPtYDistribution[np]->GetYaxis()->GetXmax()) {
-          weight = fPtYDistribution[np]->GetBinContent(fPtYDistribution[np]->GetXaxis()->FindBin(part->Pt()), fPtYDistribution[np]->GetYaxis()->FindBin(part->Y()));
-          if (weight)
-            return weight;
-          else
-            return 1.;
-        } else
-          return 1.;
-      } else
-        return 1.;
-    } else
+    if (!fUseYWeighting){
       return 1.;
+    }
+    if (!fPtYDistribution[np]){
+      return 1.;
+    }
+    if (!(part->Pt() > fPtYDistribution[np]->GetXaxis()->GetXmin() && part->Pt() < fPtYDistribution[np]->GetXaxis()->GetXmax())){
+      return 1.;
+    }
+    if (!(part->Y() > fPtYDistribution[np]->GetYaxis()->GetXmin() && part->Y() < fPtYDistribution[np]->GetYaxis()->GetXmax())){
+      return 1.;
+    }
+    Double_t weight = 0.;
+    weight = fPtYDistribution[np]->GetBinContent(fPtYDistribution[np]->GetXaxis()->FindBin(part->Pt()), fPtYDistribution[np]->GetYaxis()->FindBin(part->Y()));
+    if (!weight){
+      return 1.;
+    }
+    return weight;
   }
 
   void AddSource2Generator(Char_t* nameSource, GeneratorParam* genSource, Double_t maxPtStretchFactor=1.) {
@@ -227,7 +228,7 @@ class GeneratorEMCocktailV2 : public GeneratorCocktail_class
 
       fGeneratorType.push_back(genSource->GetParam());
 
-      cocktailParam_class* newgen = new cocktailParam_class(genSource);
+      CocktailParam* newgen = new CocktailParam(genSource);
       AddGenerator(newgen,1);
   }
 
@@ -270,7 +271,7 @@ class GeneratorEMCocktailV2 : public GeneratorCocktail_class
       SetPtYDistributions();
     }
 
-    for (Generator g : Generators){
+    for (GeneratorIDs g : Generators){
       // Create and add electron sources to the generator
       if ((g.LibID==GeneratorParamEMlibV2::kDirectRealGamma) || (g.LibID==GeneratorParamEMlibV2::kDirectVirtGamma)) continue;
       if(fSelectedParticles&g.GeneratorID){
@@ -295,30 +296,44 @@ class GeneratorEMCocktailV2 : public GeneratorCocktail_class
 
   }
 
-  bool SetNormalization(){
+
+// add particles, shift mother/daughter indices and set normaliziation
+  bool importParticles() override
+  {
     auto generators=getGenerators();
-    int particleCounter = 0;
     int generatorCounter = 0;
-    for (auto& g : *generators){
+    // loop over all generators
+    for (auto& g : *generators) {
+      int nPart = mParticles.size();
       Int_t type = fGeneratorType[generatorCounter];
       double dNdy = fYieldArray[type];
       g->importParticles();
-      int nParticles = g->getParticles().size();
-      for (int i=0;i<nParticles;i++){
-        double weight = dNdy*mParticles[particleCounter+i].GetWeight();
+      // loop over all particles of this generator
+      for (auto p : g->getParticles()) {
+        //add the particle
+        mParticles.push_back(p);
+        auto& pEdit = mParticles.back();
+        o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(pEdit, false);
+        // set the normalization
+        double weight = dNdy*pEdit.GetWeight();
         if (fUseYWeighting){
-          weight *= GetYWeight(type,&mParticles[particleCounter+i]);
+          weight *= GetYWeight(type,&pEdit);
         }
-        mParticles[particleCounter+i].SetWeight(weight);
+        pEdit.SetWeight(weight);
+        //shift mother/daughter indices
+        if (pEdit.GetFirstMother() > -1)
+          pEdit.SetFirstMother(pEdit.GetFirstMother() + nPart);
+        if (pEdit.GetSecondMother() > -1)
+          pEdit.SetLastMother(pEdit.GetSecondMother() + nPart);
+        if (pEdit.GetFirstDaughter() > -1)
+          pEdit.SetFirstDaughter(pEdit.GetFirstDaughter() + nPart);
+        if (pEdit.GetLastDaughter() > -1)
+          pEdit.SetLastDaughter(pEdit.GetLastDaughter() + nPart);
       }
-      particleCounter += nParticles;
-      generatorCounter++;
       g->clearParticles();
     }
     return true;
-  }
-
- bool importParticles() override {return GeneratorCocktail_class::importParticles() && SetNormalization();}
+  };
 
   private:
   TPythia6Decayer* fDecayer;                             // External decayer
