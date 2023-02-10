@@ -44,7 +44,7 @@ fi
 
 [[ "$#" == "1" && "$1" == "-h" || "$1" == "--help" ]] && { print_usage ; exit 0 ; }
 
-# Don't run if O2DPG_ROOT is missing. That is the only one we ask for,everything else is in the hands of the users 
+# Don't run if O2DPG_ROOT is missing. That is the only one we ask for,everything else is in the hands of the users
 [[ -z ${O2DPG_ROOT+x} ]] && { echo_red "O2DPG_ROOT and potentially also other packages not loaded." ; exit 1 ; }
 
 TESTS_AVAILABLE=$(find ${O2DPG_ROOT}/test -maxdepth 1 -type f -name "test-*.sh")
@@ -104,6 +104,7 @@ done
 RET=0
 
 # Now run all found tests
+search_pattern="TASK-EXIT-CODE: ([1-9][0-9]*)|[Ss]egmentation violation|[Ee]xception caught|\[FATAL\]|uncaught exception"
 for tr in ${TESTS_RUN} ; do
     # Basename of full path to next test script
     test_name=$(get_test_name_from_path ${tr})
@@ -118,6 +119,13 @@ for tr in ${TESTS_RUN} ; do
         if [ "${RET}" != "0" ] ; then
             echo_red "There was an error (exit code was ${RET}), here is the log $(pwd)/${logfile}"
             cat ${logfile}
+            echo_red "Potential further information from dedicated logfiles"
+            error_files=$(find . -maxdepth 3 -type f \( -name "*.log" -or -name "*serverlog*" -or -name "*workerlog*" -or -name "*mergerlog*" \) | xargs grep -l -E "${search_pattern}")
+            for ef in ${error_files} ; do
+                echo_red "Error found in log ${ef}"
+                # print the match plus additional 10 lines
+                grep -n -A 10 -B 10 -E "${search_pattern}" ${ef}
+            done
             # Mark failure in the log file
             echo -e "\n### O2DPG TEST FAILED ###\n" >> ${logfile}
             exit ${RET}
@@ -128,4 +136,3 @@ done
 
 echo_green "All tests successful!"
 exit 0
- 
