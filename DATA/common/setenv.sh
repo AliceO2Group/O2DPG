@@ -4,8 +4,7 @@
 if [[ -z $SOURCE_GUARD_SETENV ]]; then
 SOURCE_GUARD_SETENV=1
 
-MYDIR="$(dirname $(realpath $0))"
-source $MYDIR/gen_topo_helper_functions.sh
+source $O2DPG_ROOT/DATA/common/gen_topo_helper_functions.sh
 
 # Make sure we can open sufficiently many files / allocate enough memory
 if [[ "0$SETENV_NO_ULIMIT" != "01" ]]; then
