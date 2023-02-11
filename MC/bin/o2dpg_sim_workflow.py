@@ -515,7 +515,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    QEDXSecExpected=35237.5  # expected magnitude of QED cross section
    PreCollContextTask=createTask(name='precollcontext_' + str(tf), needs=precollneeds, tf=tf, cwd=timeframeworkdir, cpu='1')
    PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + signalprefix + ',' + str(INTRATE) + ',' + str(args.ns) + ':' + str(args.ns) + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF) + ' --orbits ' + str(orbitsPerTF) + ' --seed ' + str(TFSEED) + ' --noEmptyTF'
-   PreCollContextTask['cmd'] += ' --bcPatternFile ccdb'  # <--- the object should have been set in (local) CCDB
+   PreCollContextTask['cmd'] += ' --bcPatternFile ' + str(args.bcPatternFile)  # <--- the object should have been set in (local) CCDB
    if includeQED:
       qedrate = INTRATE * QEDXSecExpected / PbPbXSec   # hadronic interaction rate * cross_section_ratio
       qedspec = 'qed_' + str(tf) + ',' + str(qedrate) + ',10000000:' + str(NEventsQED)
@@ -723,13 +723,13 @@ for tf in range(1, NTIMEFRAMES + 1):
                         + ' ' + getDPL_global_options(ccdbbackend=False) + ' -n ' + str(args.ns) + simsoption       \
                         + ' --seed ' + str(TFSEED)                                                                  \
                         + ' ' + putConfigValuesNew({"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF)},{"DigiParams.passName" : str(PASSNAME)}) + ('',' --incontext ' + CONTEXTFILE)[args.pregenCollContext] + QEDdigiargs
-   ContextTask['cmd'] += ' --bcPatternFile ccdb'
+   ContextTask['cmd'] += ' --bcPatternFile ' + str(args.bcPatternFile)
 
    # in case of embedding we engineer the context directly and allow the user to provide an embedding pattern
    # The :r flag means to shuffle the background events randomly
    if doembedding:
       ContextTask['cmd'] += ';ln -nfs ../bkg_Kine.root .;${O2_ROOT}/bin/o2-steer-colcontexttool -i bkg,' + str(INTRATE) + ',' + str(args.ns) + ':' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF) + ' --use-existing-kine'
-      ContextTask['cmd'] += ' --bcPatternFile ccdb '
+      ContextTask['cmd'] += ' --bcPatternFile ' + str(args.bcPatternFile) + ' '
 
    workflow['stages'].append(ContextTask)
 
