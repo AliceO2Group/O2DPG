@@ -1,601 +1,1039 @@
 {
-    "bc-selection-task": {
-        "processRun2": "false",
-        "processRun3": "true"
+  "McCollisions": {},
+  "McParticles": {},
+  "McTrackLabels": {},
+  "ambiguous-track-propagation": {
+    "ccdb-url": "http://alice-ccdb.cern.ch",
+    "geoPath": "GLO/Config/GeometryAligned",
+    "grpmagPath": "GLO/Config/GRPMagField",
+    "mVtxPath": "GLO/Calib/MeanVertex",
+    "processCentral": "false",
+    "processMFT": "true"
+  },
+  "bc-selection-task": {
+    "processRun2": "false",
+    "processRun3": "true"
+  },
+  "check-mc-particles-indices": {
+    "debugMode": "0"
+  },
+  "check-mc-particles-indices-grouped": {
+    "debugMode": "1"
+  },
+  "event-selection-qa-task": {
+    "isMC": "true",
+    "processMCRun3": "true",
+    "processRun2": "false",
+    "processRun3": "true"
+  },
+  "event-selection-task": {
+    "isMC": "true",
+    "muonSelection": "0",
+    "processRun2": "false",
+    "processRun3": "true",
+    "syst": "pp"
+  },
+  "femto-dream-producer-task": {
+    "ConfDebugOutput": "true",
+    "ConfEvtOfflineCheck": "false",
+    "ConfEvtTriggerCheck": "true",
+    "ConfEvtTriggerSel": "0",
+    "ConfEvtZvtx": "10",
+    "ConfIsRun3": "false",
+    "ConfIsTrigger": "false",
+    "ConfStoreV0": "true",
+    "ConfTrkDCAxyMax": {
+      "values": [
+        "0.100000001",
+        "3.5"
+      ]
     },
-    "qa-efficiency": {
-        "eta-min": "-0.8",
-        "eta-max": "0.8",
-        "phi-min": "0",
-        "phi-max": "6.28399992",
-        "y-min": "-0.5",
-        "y-max": "0.5",
-        "pt-min": "0.1",
-        "pt-max": "10",
-        "noFakes": "false",
-        "do-un-id": "true",
-        "do-el": "true",
-        "do-mu": "true",
-        "do-pi": "true",
-        "do-ka": "true",
-        "do-pr": "true",
-        "do-de": "true",
-        "do-tr": "true",
-        "do-he": "true",
-        "do-al": "true",
-        "applyTrackSelection": "true",
-        "nMinNumberOfContributors": "2",
-        "vertex-z-min": "-10",
-        "vertex-z-max": "10",
-        "pt-bins": "500",
-        "log-pt": "0",
-        "eta-bins": "500",
-        "y-bins": "500",
-        "phi-bins": "500",
-        "make-eff": "true",
-        "applyEvSel": "0",
-        "processMC": "true",
-        "processData": "false"
+    "ConfTrkDCAzMax": {
+      "values": [
+        "0.200000003",
+        "3.5"
+      ]
     },
-    "event-selection-qa-task": {
-        "isMC": "true",
-        "processRun2": "false",
-        "processRun3": "true",
-        "processMCRun3": "true"
+    "ConfTrkEtaMax": {
+      "values": [
+        "0.800000012",
+        "0.699999988",
+        "0.899999976"
+      ]
     },
-    "event-selection-task": {
-        "syst": "pp",
-        "muonSelection": "0",
-        "isMC": "true",
-        "processRun2": "false",
-        "processRun3": "true"
+    "ConfTrkITSnClsIbMin": {
+      "values": [
+        "-1",
+        "1"
+      ]
     },
-    "multiplicity-table": {
-        "processRun2": "false",
-        "processRun3": "true"
+    "ConfTrkITSnClsMin": {
+      "values": [
+        "-1",
+        "2",
+        "4"
+      ]
     },
-    "track-selection": {
-        "isRun3": "true",
-        "produceFBextendedTable": "true"
+    "ConfTrkPIDnSigmaMax": {
+      "values": [
+        "3.5",
+        "3",
+        "2.5"
+      ]
     },
-    "tof-signal": "",
-    "track-extension": {
-        "processRun2": "false",
-        "processRun3": "true"
+    "ConfTrkPtMin": {
+      "values": [
+        "0.400000006",
+        "0.600000024",
+        "0.5"
+      ]
     },
-    "lambdakzero-builder": {
-        "dcanegtopv": "0.100000001",
-        "dcapostopv": "0.100000001",
-        "mincrossedrows": "70",
-        "isRun2": "0",
-        "d_bz": "-5",
-        "v0cospa": "0.995",
-        "dcav0dau": "1",
-        "v0radius": "5",
-        "useMatCorrType": "0",
-        "rejDiffCollTracks": "0"
+    "ConfTrkSign": {
+      "values": [
+        "-1",
+        "1"
+      ]
     },
-    "femto-dream-producer-task": {
-        "ConfDebugOutput": "true",
-        "ConfIsTrigger": "false",
-        "ConfIsRun3": "false",
-        "ConfEvtZvtx": "10",
-        "ConfEvtTriggerCheck": "true",
-        "ConfEvtTriggerSel": "0",
-        "ConfEvtOfflineCheck": "false",
-        "ConfStoreV0": "true",
-        "ConfTrkSign": {
-            "values": [
-                "-1",
-                "1"
-            ]
-        },
-        "ConfTrkPtMin": {
-            "values": [
-                "0.400000006",
-                "0.600000024",
-                "0.5"
-            ]
-        },
-        "ConfTrkEtaMax": {
-            "values": [
-                "0.800000012",
-                "0.699999988",
-                "0.899999976"
-            ]
-        },
-        "ConfTrkTPCnClsMin": {
-            "values": [
-                "80",
-                "70",
-                "60"
-            ]
-        },
-        "ConfTrkTPCfClsMin": {
-            "values": [
-                "0.699999988",
-                "0.829999983",
-                "0.899999976"
-            ]
-        },
-        "ConfTrkTPCcRowsMin": {
-            "values": [
-                "70",
-                "60",
-                "80"
-            ]
-        },
-        "ConfTrkTPCsClsMax": {
-            "values": [
-                "0.100000001",
-                "160"
-            ]
-        },
-        "ConfTrkITSnClsMin": {
-            "values": [
-                "-1",
-                "2",
-                "4"
-            ]
-        },
-        "ConfTrkITSnClsIbMin": {
-            "values": [
-                "-1",
-                "1"
-            ]
-        },
-        "ConfTrkDCAxyMax": {
-            "values": [
-                "0.100000001",
-                "3.5"
-            ]
-        },
-        "ConfTrkDCAzMax": {
-            "values": [
-                "0.200000003",
-                "3.5"
-            ]
-        },
-        "ConfTrkPIDnSigmaMax": {
-            "values": [
-                "3.5",
-                "3",
-                "2.5"
-            ]
-        },
-        "ConfTrkTPIDspecies": {
-            "values": [
-                "2",
-                "3",
-                "4",
-                "5"
-            ]
-        },
-        "ConfV0Sign": {
-            "values": [
-                "-1",
-                "1"
-            ]
-        },
-        "ConfV0PtMin": {
-            "values": [
-                "0.300000012",
-                "0.400000006",
-                "0.5"
-            ]
-        },
-        "ConfV0DCAdaughMax": {
-            "values": [
-                "1.20000005",
-                "1.5"
-            ]
-        },
-        "ConfV0CPAMin": {
-            "values": [
-                "0.99000001",
-                "0.995000005"
-            ]
-        },
-        "ConfV0DaughTPCnclsMin": {
-            "values": [
-                "80",
-                "70",
-                "60"
-            ]
-        },
-        "ConfV0DaughDCAMin": {
-            "values": [
-                "0.0500000007",
-                "0.0599999987"
-            ]
-        },
-        "ConfV0DaughPIDnSigmaMax": {
-            "values": [
-                "5",
-                "4"
-            ]
-        },
-        "ConfV0TranRadMin": {
-            "values": [
-                "0.2"
-            ]
-        },
-        "ConfV0TranRadMax": {
-            "values": [
-                "100.0"
-            ]
-        },
-        "ConfV0DecVecMax": {
-            "values": [
-                "100.0"
-            ]
-        }
+    "ConfTrkTPCcRowsMin": {
+      "values": [
+        "70",
+        "60",
+        "80"
+      ]
     },
-    "table-maker-m-c": {
-        "cfgEventCuts": "eventStandardNoINT7",
-        "cfgBarrelTrackCuts": "jpsiO2MCdebugCuts,kaonPID",
-        "cfgMuonCuts": "muonQualityCuts,muonTightQualityCutsForTests",
-        "cfgBarrelLowPt": "1",
-        "cfgMuonLowPt": "1",
-        "cfgMCsignals": "anyBeautyHadron,everythingFromBeauty,everythingFromEverythingFromBeauty",
-        "cfgIsRun2": "false",
-        "cfgNoQA": "false",
-        "cfgDetailedQA": "true",
-        "processFull": "false",
-        "processBarrelOnly": "false",
-        "processBarrelOnlyWithCent": "false",
-        "processBarrelOnlyWithCov": "true",
-        "processMuonOnlyWithCov": "false",
-        "processMuonOnlyWithCent": "false",
-        "processOnlyBCs": "true"
+    "ConfTrkTPCfClsMin": {
+      "values": [
+        "0.699999988",
+        "0.829999983",
+        "0.899999976"
+      ]
     },
-    "qa-event-track": {
-        "isRun3": "true",
-        "selectGoodEvents": "true",
-        "selectMaxVtxZ": "100",
-        "targetNumberOfEvents": "10000000",
-        "fractionOfSampledEvents": "1",
-        "trackSelection": "1",
-        "selectCharge": "0",
-        "selectPrim": "false",
-        "selectSec": "false",
-        "selectPID": "0",
-        "minPt": "-10",
-        "maxPt": "1e+10",
-        "minEta": "-2",
-        "maxEta": "2",
-        "minPhi": "-1",
-        "maxPhi": "10",
-        "binsPt": {
-            "values": [
-                "0",
-                "0",
-                "0.10000000000000001",
-                "0.20000000000000001",
-                "0.29999999999999999",
-                "0.40000000000000002",
-                "0.5",
-                "0.59999999999999998",
-                "0.69999999999999996",
-                "0.80000000000000004",
-                "0.90000000000000002",
-                "1",
-                "1.1000000000000001",
-                "1.2",
-                "1.3",
-                "1.3999999999999999",
-                "1.5",
-                "2",
-                "5",
-                "10",
-                "20",
-                "50"
-            ]
-        },
-        "binsVertexPosZ": {
-            "values": [
-                "100",
-                "-20",
-                "20"
-            ]
-        },
-        "binsVertexPosXY": {
-            "values": [
-                "500",
-                "-1",
-                "1"
-            ]
-        },
-        "binsTrackMultiplcity": {
-            "values": [
-                "200",
-                "0",
-                "200"
-            ]
-        },
-        "processData": "true",
-        "processDataIU": "false",
-        "processDataIUFiltered": "false",
-        "processMC": "true",
-        "processTableData": "false",
-        "processTableMC": "false"
+    "ConfTrkTPCnClsMin": {
+      "values": [
+        "80",
+        "70",
+        "60"
+      ]
     },
-    "track-propagation": {
-        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
-        "lutPath": "GLO\/Param\/MatLUT",
-        "geoPath": "GLO\/Config\/GeometryAligned",
-        "grpmagPath": "GLO\/Config\/GRPMagField",
-        "mVtxPath": "GLO\/Calib\/MeanVertex",
-        "processStandard": "false",
-        "processCovariance": "true"
+    "ConfTrkTPCsClsMax": {
+      "values": [
+        "0.100000001",
+        "160"
+      ]
     },
-    "McCollisions": {},
-    "McParticles": {},
-    "McTrackLabels": {},
-    "check-mc-particles-indices-grouped": {
-        "debugMode": "1"
+    "ConfTrkTPIDspecies": {
+      "values": [
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
     },
-    "check-mc-particles-indices": {
-        "debugMode": "0"
+    "ConfV0CPAMin": {
+      "values": [
+        "0.99000001",
+        "0.995000005"
+      ]
     },
-    "particles-to-tracks": {
-        "processIndexing": "true"
+    "ConfV0DCAdaughMax": {
+      "values": [
+        "1.20000005",
+        "1.5"
+      ]
     },
-    "pseudorapidity-density": {
-        "estimatorEta": "1",
-        "useEvSel": "false",
-        "useDCAZ": "false",
-        "useDCAXY": "false",
-        "usePtDCAXY": "false",
-        "maxDCAXY": "2.4",
-        "maxDCAZ": "3.2",
-        "usePhiCut": "false",
-        "exclusionPhi": {
-            "values": [
-                [
-                    "4",
-                    "5"
-                ]
-            ]
-        },
-        "processTagging": "true",
-        "processTrackEfficiency": "true",
-        "processGen": "true"
+    "ConfV0DaughDCAMin": {
+      "values": [
+        "0.0500000007",
+        "0.0599999987"
+      ]
     },
-    "hf-track-index-skims-creator": {
-        "fillHistograms": "true",
-        "do3prong": "1",
-        "bz": "5.",
-        "propToDCA": "true",
-        "maxRad": "5.",
-        "maxDZIni": "999.",
-        "minParamChange": "0.001",
-        "minRelChi2Change": "0.9",
-
-        "pTBinsD0ToPiK": {
-            "values": [
-                "0.",
-                "5.",
-                "1000."
-            ]
-        },
-        "cutsD0ToPiK": {
-            "values": [
-                ["1.61", "2.12", "0.5", "0.00"],
-                ["1.61", "2.12", "0.5", "0.00"]
-            ]
-        },
-
-        "pTBinsJpsiToEE": {
-            "values": [
-                "0.",
-                "5.",
-                "1000."
-            ]
-        },
-        "cutsJpsiToEE": {
-            "values": [
-                ["2.5", "4.1", "-2.", "1000.00"],
-                ["2.5", "4.1", "-2.", "1000.00"]
-            ]
-        },
-
-        "pTBinsJpsiToMuMu": {
-            "values": [
-                "0.",
-                "5.",
-                "1000."
-            ]
-        },
-        "cutsJpsiToMuMu": {
-            "values": [
-                ["2.5", "4.1", "-2.", "1000.00"],
-                ["2.5", "4.1", "-2.", "1000.00"]
-            ]
-        },
-
-        "pTBinsDPlusToPiKPi": {
-            "values": [
-                "1.",
-                "5.",
-                "1000."
-            ]
-        },
-        "cutsDPlusToPiKPi": {
-            "values": [
-                ["1.67", "2.07", "0.7", "0.03"],
-                ["1.67", "2.07", "0.7", "0.03"]
-            ]
-        },
-
-        "pTBinsDsToPiKK": {
-            "values": [
-                "1.5",
-                "5.",
-                "1000."
-            ]
-        },
-        "cutsDsToPiKK": {
-            "values": [
-                ["1.74", "2.18", "0.94", "0.02"],
-                ["1.74", "2.18", "0.94", "0.02"]
-            ]
-        },
-
-        "pTBinsLcToPKPi": {
-            "values": [
-                "4.",
-                "5.",
-                "1000."
-            ]
-        },
-        "cutsLcToPKPi": {
-            "values": [
-                ["1.98", "2.58", "-2.", "0.0"],
-                ["1.98", "2.58", "-2.", "0.0"]
-            ]
-        },
-
-        "pTBinsXicToPKPi": {
-            "values": [
-                "4.",
-                "5.",
-                "1000."
-            ]
-        },
-        "cutsXicToPKPi": {
-            "values": [
-                ["2.10", "2.80", "-2.", "0.0"],
-                ["2.10", "2.80", "-2.", "0.0"]
-            ]
-        }
+    "ConfV0DaughPIDnSigmaMax": {
+      "values": [
+        "5",
+        "4"
+      ]
     },
-    "hf-cand-creator-2prong": {
-        "d_bz": "5.",
-        "b_propdca": "true",
-        "d_maxr": "5.",
-        "d_maxdzini": "999.",
-        "d_minparamchange": "0.001",
-        "d_minrelchi2change": "0.9",
-        "b_dovalplots": "true"
+    "ConfV0DaughTPCnclsMin": {
+      "values": [
+        "80",
+        "70",
+        "60"
+      ]
     },
-    "hf-cand-creator-2prong-expressions": {
-        "processMC": "true"
+    "ConfV0DecVecMax": {
+      "values": [
+        "100.0"
+      ]
     },
-    "hf-d0-candidate-selector": {
-        "d_pTCandMin": "0.",
-        "d_pTCandMax": "50.",
-        "d_pidTPCMinpT": "0.15",
-        "d_pidTPCMaxpT": "10.",
-        "d_pidTOFMinpT": "0.15",
-        "d_pidTOFMaxpT": "10.",
-        "d_TPCNClsFindablePIDCut": "50.",
-        "d_nSigmaTPC": "3.",
-        "d_nSigmaTPCCombined": "5.",
-        "d_nSigmaTOF": "3.",
-        "d_nSigmaTOFCombined": "5.",
-        "pTBins": {
-            "values": [
-                "0",
-                "0.5",
-                "1",
-                "1.5",
-                "2",
-                "2.5",
-                "3",
-                "3.5",
-                "4",
-                "4.5",
-                "5",
-                "5.5",
-                "6",
-                "6.5",
-                "7",
-                "7.5",
-                "8",
-                "9",
-                "10",
-                "12",
-                "16",
-                "20",
-                "24",
-                "36",
-                "50",
-                "100"
-            ]
-        },
-        "D0_to_pi_K_cuts": {
-            "values": [
-                [ "0.4", "0.035", "0.8", "0.5", "0.5", "0.1", "0.1", "-5.e-5", "0.80", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.035", "0.8", "0.5", "0.5", "0.1", "0.1", "-5.e-5", "0.80", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.4", "0.4", "0.1", "0.1", "-25.e-5", "0.80", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.4", "0.4", "0.1", "0.1", "-25.e-5", "0.80", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-20.e-5", "0.90", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-20.e-5", "0.90", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-12.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-12.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-8.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-7.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.8", "0.7", "0.7", "0.1", "0.1", "-7.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.9", "0.7", "0.7", "0.1", "0.1", "-5.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.9", "0.7", "0.7", "0.1", "0.1", "-5.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "0.9", "0.7", "0.7", "0.1", "0.1", "-5.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "1.0", "0.7", "0.7", "0.1", "0.1", "10.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "1.0", "0.7", "0.7", "0.1", "0.1", "1000.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "1.0", "0.7", "0.7", "0.1", "0.1", "1000.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "1.0", "0.7", "0.7", "0.1", "0.1", "1000.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "1.0", "0.7", "0.7", "0.1", "0.1", "1000.e-5", "0.85", "0.", "0.", "10.0", "10.0", "0.06" ],
-                [ "0.4", "0.030", "1.0", "0.6", "0.6", "0.1", "0.1", "1000.e-5", "0.80", "0.", "0.", "10.0", "10.0", "0.06" ]
-            ]
-        }
+    "ConfV0PtMin": {
+      "values": [
+        "0.300000012",
+        "0.400000006",
+        "0.5"
+      ]
     },
-    "hf-task-d0": {
-        "cutYCandMax": "0.8",
-        "d_selectionFlagD0": "0",
-        "d_selectionFlagD0bar": "0",
-        "pTBins": {
-            "values": [
-                "0",
-                "0.5",
-                "1",
-                "1.5",
-                "2",
-                "2.5",
-                "3",
-                "3.5",
-                "4",
-                "4.5",
-                "5",
-                "5.5",
-                "6",
-                "6.5",
-                "7",
-                "7.5",
-                "8",
-                "9",
-                "10",
-                "12",
-                "16",
-                "20",
-                "24",
-                "36",
-                "50",
-                "100"
-            ]
-        },
-       "processMC": "true"
+    "ConfV0Sign": {
+      "values": [
+        "-1",
+        "1"
+      ]
     },
-    "ambiguous-track-propagation": {
-        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
-        "geoPath": "GLO\/Config\/GeometryAligned",
-        "grpmagPath": "GLO\/Config\/GRPMagField",
-        "mVtxPath": "GLO\/Calib\/MeanVertex",
-        "processCentral": "false",
-        "processMFT": "true"
+    "ConfV0TranRadMax": {
+      "values": [
+        "100.0"
+      ]
+    },
+    "ConfV0TranRadMin": {
+      "values": [
+        "0.2"
+      ]
     }
+  },
+  "hf-cand-creator-2prong": {
+    "b_dovalplots": "true",
+    "b_propdca": "true",
+    "d_bz": "5.",
+    "d_maxdzini": "999.",
+    "d_maxr": "5.",
+    "d_minparamchange": "0.001",
+    "d_minrelchi2change": "0.9"
+  },
+  "hf-cand-creator-2prong-expressions": {
+    "processMC": "true"
+  },
+  "hf-d0-candidate-selector": {
+    "D0_to_pi_K_cuts": {
+      "values": [
+        [
+          "0.4",
+          "0.035",
+          "0.8",
+          "0.5",
+          "0.5",
+          "0.1",
+          "0.1",
+          "-5.e-5",
+          "0.80",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.035",
+          "0.8",
+          "0.5",
+          "0.5",
+          "0.1",
+          "0.1",
+          "-5.e-5",
+          "0.80",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.4",
+          "0.4",
+          "0.1",
+          "0.1",
+          "-25.e-5",
+          "0.80",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.4",
+          "0.4",
+          "0.1",
+          "0.1",
+          "-25.e-5",
+          "0.80",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-20.e-5",
+          "0.90",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-20.e-5",
+          "0.90",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-12.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-12.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-8.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-8.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-8.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-8.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-8.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-8.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-7.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.8",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-7.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.9",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-5.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.9",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-5.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "0.9",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "-5.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "1.0",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "10.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "1.0",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "1000.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "1.0",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "1000.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "1.0",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "1000.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "1.0",
+          "0.7",
+          "0.7",
+          "0.1",
+          "0.1",
+          "1000.e-5",
+          "0.85",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ],
+        [
+          "0.4",
+          "0.030",
+          "1.0",
+          "0.6",
+          "0.6",
+          "0.1",
+          "0.1",
+          "1000.e-5",
+          "0.80",
+          "0.",
+          "0.",
+          "10.0",
+          "10.0",
+          "0.06"
+        ]
+      ]
+    },
+    "d_TPCNClsFindablePIDCut": "50.",
+    "d_nSigmaTOF": "3.",
+    "d_nSigmaTOFCombined": "5.",
+    "d_nSigmaTPC": "3.",
+    "d_nSigmaTPCCombined": "5.",
+    "d_pTCandMax": "50.",
+    "d_pTCandMin": "0.",
+    "d_pidTOFMaxpT": "10.",
+    "d_pidTOFMinpT": "0.15",
+    "d_pidTPCMaxpT": "10.",
+    "d_pidTPCMinpT": "0.15",
+    "pTBins": {
+      "values": [
+        "0",
+        "0.5",
+        "1",
+        "1.5",
+        "2",
+        "2.5",
+        "3",
+        "3.5",
+        "4",
+        "4.5",
+        "5",
+        "5.5",
+        "6",
+        "6.5",
+        "7",
+        "7.5",
+        "8",
+        "9",
+        "10",
+        "12",
+        "16",
+        "20",
+        "24",
+        "36",
+        "50",
+        "100"
+      ]
+    }
+  },
+  "hf-task-d0": {
+    "cutYCandMax": "0.8",
+    "d_selectionFlagD0": "0",
+    "d_selectionFlagD0bar": "0",
+    "pTBins": {
+      "values": [
+        "0",
+        "0.5",
+        "1",
+        "1.5",
+        "2",
+        "2.5",
+        "3",
+        "3.5",
+        "4",
+        "4.5",
+        "5",
+        "5.5",
+        "6",
+        "6.5",
+        "7",
+        "7.5",
+        "8",
+        "9",
+        "10",
+        "12",
+        "16",
+        "20",
+        "24",
+        "36",
+        "50",
+        "100"
+      ]
+    },
+    "processMC": "true"
+  },
+  "hf-track-index-skims-creator": {
+    "bz": "5.",
+    "cutsD0ToPiK": {
+      "values": [
+        [
+          "1.61",
+          "2.12",
+          "0.5",
+          "0.00"
+        ],
+        [
+          "1.61",
+          "2.12",
+          "0.5",
+          "0.00"
+        ]
+      ]
+    },
+    "cutsDPlusToPiKPi": {
+      "values": [
+        [
+          "1.67",
+          "2.07",
+          "0.7",
+          "0.03"
+        ],
+        [
+          "1.67",
+          "2.07",
+          "0.7",
+          "0.03"
+        ]
+      ]
+    },
+    "cutsDsToPiKK": {
+      "values": [
+        [
+          "1.74",
+          "2.18",
+          "0.94",
+          "0.02"
+        ],
+        [
+          "1.74",
+          "2.18",
+          "0.94",
+          "0.02"
+        ]
+      ]
+    },
+    "cutsJpsiToEE": {
+      "values": [
+        [
+          "2.5",
+          "4.1",
+          "-2.",
+          "1000.00"
+        ],
+        [
+          "2.5",
+          "4.1",
+          "-2.",
+          "1000.00"
+        ]
+      ]
+    },
+    "cutsJpsiToMuMu": {
+      "values": [
+        [
+          "2.5",
+          "4.1",
+          "-2.",
+          "1000.00"
+        ],
+        [
+          "2.5",
+          "4.1",
+          "-2.",
+          "1000.00"
+        ]
+      ]
+    },
+    "cutsLcToPKPi": {
+      "values": [
+        [
+          "1.98",
+          "2.58",
+          "-2.",
+          "0.0"
+        ],
+        [
+          "1.98",
+          "2.58",
+          "-2.",
+          "0.0"
+        ]
+      ]
+    },
+    "cutsXicToPKPi": {
+      "values": [
+        [
+          "2.10",
+          "2.80",
+          "-2.",
+          "0.0"
+        ],
+        [
+          "2.10",
+          "2.80",
+          "-2.",
+          "0.0"
+        ]
+      ]
+    },
+    "do3prong": "1",
+    "fillHistograms": "true",
+    "maxDZIni": "999.",
+    "maxRad": "5.",
+    "minParamChange": "0.001",
+    "minRelChi2Change": "0.9",
+    "pTBinsD0ToPiK": {
+      "values": [
+        "0.",
+        "5.",
+        "1000."
+      ]
+    },
+    "pTBinsDPlusToPiKPi": {
+      "values": [
+        "1.",
+        "5.",
+        "1000."
+      ]
+    },
+    "pTBinsDsToPiKK": {
+      "values": [
+        "1.5",
+        "5.",
+        "1000."
+      ]
+    },
+    "pTBinsJpsiToEE": {
+      "values": [
+        "0.",
+        "5.",
+        "1000."
+      ]
+    },
+    "pTBinsJpsiToMuMu": {
+      "values": [
+        "0.",
+        "5.",
+        "1000."
+      ]
+    },
+    "pTBinsLcToPKPi": {
+      "values": [
+        "4.",
+        "5.",
+        "1000."
+      ]
+    },
+    "pTBinsXicToPKPi": {
+      "values": [
+        "4.",
+        "5.",
+        "1000."
+      ]
+    },
+    "propToDCA": "true"
+  },
+  "lambdakzero-builder": {
+    "d_bz": "-5",
+    "dcanegtopv": "0.100000001",
+    "dcapostopv": "0.100000001",
+    "dcav0dau": "1",
+    "isRun2": "0",
+    "mincrossedrows": "70",
+    "rejDiffCollTracks": "0",
+    "useMatCorrType": "0",
+    "v0cospa": "0.995",
+    "v0radius": "5"
+  },
+  "multiplicity-table": {
+    "processRun2": "false",
+    "processRun3": "true"
+  },
+  "particles-to-tracks": {
+    "processIndexing": "true"
+  },
+  "pseudorapidity-density": {
+    "estimatorEta": "1",
+    "exclusionPhi": {
+      "values": [
+        [
+          "4",
+          "5"
+        ]
+      ]
+    },
+    "maxDCAXY": "2.4",
+    "maxDCAZ": "3.2",
+    "processGen": "true",
+    "processTagging": "true",
+    "processTrackEfficiency": "true",
+    "useDCAXY": "false",
+    "useDCAZ": "false",
+    "useEvSel": "false",
+    "usePhiCut": "false",
+    "usePtDCAXY": "false"
+  },
+  "qa-efficiency": {
+    "applyEvSel": "0",
+    "applyTrackSelection": "true",
+    "do-al": "true",
+    "do-de": "true",
+    "do-el": "true",
+    "do-he": "true",
+    "do-ka": "true",
+    "do-mu": "true",
+    "do-pi": "true",
+    "do-pr": "true",
+    "do-tr": "true",
+    "do-un-id": "true",
+    "eta-bins": "500",
+    "eta-max": "0.8",
+    "eta-min": "-0.8",
+    "log-pt": "0",
+    "make-eff": "true",
+    "nMinNumberOfContributors": "2",
+    "noFakes": "false",
+    "phi-bins": "500",
+    "phi-max": "6.28399992",
+    "phi-min": "0",
+    "processData": "false",
+    "processMC": "true",
+    "pt-bins": "500",
+    "pt-max": "10",
+    "pt-min": "0.1",
+    "vertex-z-max": "10",
+    "vertex-z-min": "-10",
+    "y-bins": "500",
+    "y-max": "0.5",
+    "y-min": "-0.5"
+  },
+  "qa-event-track": {
+    "binsPt": {
+      "values": [
+        "0",
+        "0",
+        "0.10000000000000001",
+        "0.20000000000000001",
+        "0.29999999999999999",
+        "0.40000000000000002",
+        "0.5",
+        "0.59999999999999998",
+        "0.69999999999999996",
+        "0.80000000000000004",
+        "0.90000000000000002",
+        "1",
+        "1.1000000000000001",
+        "1.2",
+        "1.3",
+        "1.3999999999999999",
+        "1.5",
+        "2",
+        "5",
+        "10",
+        "20",
+        "50"
+      ]
+    },
+    "binsTrackMultiplcity": {
+      "values": [
+        "200",
+        "0",
+        "200"
+      ]
+    },
+    "binsVertexPosXY": {
+      "values": [
+        "500",
+        "-1",
+        "1"
+      ]
+    },
+    "binsVertexPosZ": {
+      "values": [
+        "100",
+        "-20",
+        "20"
+      ]
+    },
+    "fractionOfSampledEvents": "1",
+    "isRun3": "true",
+    "maxEta": "2",
+    "maxPhi": "10",
+    "maxPt": "1e+10",
+    "minEta": "-2",
+    "minPhi": "-1",
+    "minPt": "-10",
+    "processData": "true",
+    "processDataIU": "false",
+    "processDataIUFiltered": "false",
+    "processMC": "true",
+    "processTableData": "false",
+    "processTableMC": "false",
+    "selectCharge": "0",
+    "selectGoodEvents": "true",
+    "selectMaxVtxZ": "100",
+    "selectPID": "0",
+    "selectPrim": "false",
+    "selectSec": "false",
+    "targetNumberOfEvents": "10000000",
+    "trackSelection": "1"
+  },
+  "table-maker-m-c": {
+    "cfgBarrelLowPt": "1",
+    "cfgBarrelTrackCuts": "jpsiO2MCdebugCuts,kaonPID",
+    "cfgDetailedQA": "true",
+    "cfgEventCuts": "eventStandardNoINT7",
+    "cfgIsRun2": "false",
+    "cfgMCsignals": "anyBeautyHadron,everythingFromBeauty,everythingFromEverythingFromBeauty",
+    "cfgMuonCuts": "muonQualityCuts,muonTightQualityCutsForTests",
+    "cfgMuonLowPt": "1",
+    "cfgNoQA": "false",
+    "processBarrelOnly": "false",
+    "processBarrelOnlyWithCent": "false",
+    "processBarrelOnlyWithCov": "true",
+    "processFull": "false",
+    "processMuonOnlyWithCent": "false",
+    "processMuonOnlyWithCov": "false",
+    "processOnlyBCs": "true"
+  },
+  "tof-signal": "",
+  "track-extension": {
+    "processRun2": "false",
+    "processRun3": "true"
+  },
+  "track-propagation": {
+    "ccdb-url": "http://alice-ccdb.cern.ch",
+    "geoPath": "GLO/Config/GeometryAligned",
+    "grpmagPath": "GLO/Config/GRPMagField",
+    "lutPath": "GLO/Param/MatLUT",
+    "mVtxPath": "GLO/Calib/MeanVertex",
+    "processCovariance": "true",
+    "processStandard": "false"
+  },
+  "track-selection": {
+    "isRun3": "true",
+    "produceFBextendedTable": "true"
+  }
 }
