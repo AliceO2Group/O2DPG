@@ -209,7 +209,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   [[ -z $TPCITSTIMEERR ]] && TPCITSTIMEERR="0.2"
   export ITS_CONFIG=" --tracking-mode async"
   # this is to account for the TPC tracks bias due to the distortions: increment cov.matrix diagonal at the TPC inner boundary
-  TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.5;trackTuneParams.tpcCovInner[2]=6.25e-4;trackTuneParams.tpcCovInner[3]=1e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
+  TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.5;trackTuneParams.tpcCovInner[1]=0.5;trackTuneParams.tpcCovInner[2]=6.25e-4;trackTuneParams.tpcCovInner[3]=1e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
 fi
 
 export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysErrZ2[0]=$ERRIB;ITSCATrackerParam.sysErrY2[1]=$ERRIB;ITSCATrackerParam.sysErrZ2[1]=$ERRIB;ITSCATrackerParam.sysErrY2[2]=$ERRIB;ITSCATrackerParam.sysErrZ2[2]=$ERRIB;ITSCATrackerParam.sysErrY2[3]=$ERROB;ITSCATrackerParam.sysErrZ2[3]=$ERROB;ITSCATrackerParam.sysErrY2[4]=$ERROB;ITSCATrackerParam.sysErrZ2[4]=$ERROB;ITSCATrackerParam.sysErrY2[5]=$ERROB;ITSCATrackerParam.sysErrZ2[5]=$ERROB;ITSCATrackerParam.sysErrY2[6]=$ERROB;ITSCATrackerParam.sysErrZ2[6]=$ERROB;"
