@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Create correction maps for a list of input files.
-# The scripts assumes to get as input parameters 
+# The scripts assumes to get as input parameters
 # - the xml collection of the o2tpc_residuals*.root files created for a single run
 # - the pattern of the calibration interval extracted by the 'createJobList.sh' macro.
 # It creates an two output files
@@ -27,7 +27,6 @@ fileList=inputFileList.txt
 voxResOutFile=TPCDebugVoxRes_${mergePattern}.root
 splineOutFile=TPCFastTransform_${mergePattern}.root
 
-[[ -z "${ALIEN_JDL_MAPCREATORARGS}" ]] && ALIEN_JDL_MAPCREATORARGS='--configKeyValues "scdcalib.maxSigY=2;scdcalib.maxSigZ=2"'
 [[ -z "${ALIEN_JDL_MAPKNOTSY}" ]] && ALIEN_JDL_MAPKNOTSY=10
 [[ -z "${ALIEN_JDL_MAPKNOTSZ}" ]] && ALIEN_JDL_MAPKNOTSZ=20
 
@@ -42,7 +41,7 @@ fi
 echo "Creating residual map for $nLines input files"
 
 # ===| create tree with residuals |=============================================
-cmd="o2-tpc-static-map-creator $ALIEN_JDL_MAPCREATORARGS --residuals-infiles ${fileList} --outfile ${voxResOutFile} &> residuals.log"
+cmd="root.exe -q -x -l -n $O2_ROOT/share/macro/staticMapCreator.C'(\"${fileList}\", ${ALIEN_JDL_LPMRUNNUMBER}, \"${voxResOutFile}\")' &> residuals.log"
 echo "running: '$cmd'"
 if [[ $ALIEN_JDL_DONTEXTRACTTPCCALIB != "1" ]]; then
   eval $cmd
