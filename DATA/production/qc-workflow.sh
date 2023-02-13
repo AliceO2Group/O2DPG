@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ -z "$WORKFLOW" ]] || [[ -z "$GEN_TOPO_MYDIR" && -z "$MYDIR" ]]; then
+if [[ -z "$WORKFLOW" || -z "$GEN_TOPO_MYDIR" ]]; then
   echo This script must be called from the dpl-workflow.sh and not standalone 1>&2
   exit 1
 fi
