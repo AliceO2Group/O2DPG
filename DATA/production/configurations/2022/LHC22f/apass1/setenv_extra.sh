@@ -363,6 +363,7 @@ if [[ $ALIEN_JDL_EXTRACTCURRENTS == 1 ]]; then
   has_detector_reco FT0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-ft0-integrate-cluster-workflow"
   has_detector_reco FV0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-fv0-integrate-cluster-workflow"
   has_detector_reco TOF && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tof-integrate-cluster-workflow"
+  export ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow="--process-3D-currents --nSlicesTF 1"
   has_detector_reco TPC && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-integrate-cluster-workflow"
 fi
 
