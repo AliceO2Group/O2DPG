@@ -137,7 +137,8 @@ analysis_K0STrackingEfficiencyQA = {"name": "K0STrackingEfficiencyQA",
                                             "o2-analysis-timestamp",
                                             "o2-analysis-multiplicity-table",
                                             "o2-analysis-qa-k0s-tracking-efficiency"]}
-ANALYSES.append(analysis_K0STrackingEfficiencyQA)
+if 0:
+  ANALYSES.append(analysis_K0STrackingEfficiencyQA)
 analysis_Validation = {"name": "Validation",
                        "expected_output": ["AnalysisResults.root"],
                        "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
@@ -162,7 +163,8 @@ analysis_PIDFull = {"name": "PIDFull",
                             "o2-analysis-pid-tof-qa-beta",
                             "o2-analysis-pid-tpc-base",
                             "o2-analysis-pid-tpc-full"]}
-ANALYSES.append(analysis_PIDFull)
+if 0:
+  ANALYSES.append(analysis_PIDFull)
 analysis_PWGMMMFT = {"name": "PWGMMMFT",
                      "expected_output": ["AnalysisResults.root"],
                      "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
@@ -207,7 +209,8 @@ analysis_LK0CFFemto = {"name": "LK0CFFemto",
                                "o2-analysis-pid-tpc",
                                "o2-analysis-lf-lambdakzerobuilder",
                                "o2-analysis-cf-femtodream-producer"]}
-ANALYSES.append(analysis_LK0CFFemto)
+if 0:
+  ANALYSES.append(analysis_LK0CFFemto)
 analysis_PWGMMFwdVertexing = {"name": "PWGMMFwdVertexing",
                               "expected_output": ["AnalysisResults.root"],
                               "valid_for": [ANALYSIS_VALID_MC],
