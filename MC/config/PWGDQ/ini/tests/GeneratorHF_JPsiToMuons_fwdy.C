@@ -1,5 +1,8 @@
-int checkKine(std::string const& path, int checkPdgSignal, int checkPdgDecay)
+int External()
 {
+    int checkPdgSignal = 443;
+    int checkPdgDecay = 13;
+    std::string path{"o2sim_Kine.root"};
     std::cout << "Check for\nsignal PDG " << checkPdgSignal << "\ndecay PDG " << checkPdgDecay << "\n";
     TFile file(path.c_str(), "READ");
     if (file.IsZombie()) {
@@ -55,7 +58,7 @@ int checkKine(std::string const& path, int checkPdgSignal, int checkPdgDecay)
               << "#lepton pairs: " << nLeptonPairs << "\n"
               << "#lepton pairs to be done: " << nLeptonPairs << "\n";
 
-    
+
     if (nLeptonPairs == 0 || nLeptons == 0 || nAntileptons == 0) {
         std::cerr << "Number of leptons, number of anti-leptons as well as number of lepton pairs should all be greater than 1.\n";
         return 1;

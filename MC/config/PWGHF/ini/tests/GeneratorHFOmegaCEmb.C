@@ -1,5 +1,9 @@
-int checkKine(std::string const &path, int checkPdgSignal, std::vector<int> checkPdgDecays)
+int External()
 {
+    std::string path{"o2sim_Kine.root"};
+    int checkPdgSignal{4332};
+    std::vector<int> checkPdgDecays{3334, 211};
+
     std::cout << "Check for\nsignal PDG " << checkPdgSignal;
     for (auto pdg : checkPdgDecays)
     {
@@ -72,5 +76,13 @@ int checkKine(std::string const &path, int checkPdgSignal, std::vector<int> chec
         }
     }
 
+    return 0;
+}
+
+
+int Pythia8()
+{
+    // THIS IS OBVIOUSLY NOT HOW A TEST SHOULD LOOK LIKE.
+    // We are wating for the G4 patch with the correct Omega_c lifetime, then it will be updated
     return 0;
 }
