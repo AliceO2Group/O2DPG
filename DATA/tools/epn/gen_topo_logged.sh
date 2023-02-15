@@ -8,6 +8,10 @@
 LOGDATE=$(date -u +%Y%m%d-%H%M%S)
 echo "$LOGDATE $ECS_ENVIRONMENT_ID : Starting topology generation" >> /var/log/topology/gen-topo.log
 
+if [[ ! -z $ODC_TOPO_GEN_CMD ]]; then
+  echo "$LOGDATE $ECS_ENVIRONMENT_ID : Command line: $ODC_TOPO_GEN_CMD" >> /var/log/topology/gen-topo.log
+fi
+
 STDERRFILE=$(mktemp)
 /opt/alisw/el8/GenTopo/bin/gen_topo.sh 2> $STDERRFILE
 RETVAL=$?
