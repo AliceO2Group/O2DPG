@@ -95,6 +95,13 @@ if [[ "0$GEN_TOPO_CACHEABLE" == "01" ]]; then
   fi
   cp $GEN_TOPO_WORKDIR/output.xml cache/$GEN_TOPO_CACHE_HASH
 fi
+
+if [[ ! -z $ECS_ENVIRONMENT_ID && -d "/var/log/topology/" ]]; then
+  GEN_TOPO_LOG_FILE=/var/log/topology/topology-$(date -u +%Y%m%d-%H%M%S)-$ECS_ENVIRONMENT_ID.xml
+  cp $GEN_TOPO_WORKDIR/output.xml $GEN_TOPO_LOG_FILE
+  nohup gzip $GEN_TOPO_LOG_FILE &> /dev/null &
+fi
+
 cat $GEN_TOPO_WORKDIR/output.xml
 echo Removing temporary output file $GEN_TOPO_WORKDIR/output.xml 1>&2
 rm $GEN_TOPO_WORKDIR/output.xml
