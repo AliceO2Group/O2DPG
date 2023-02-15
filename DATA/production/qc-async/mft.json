@@ -10,7 +10,7 @@
       },
       "Activity": {
         "number": "42",
-        "type": "2"
+        "type": "0"
       },
       "monitoring": {
         "url": "infologger:///debug?qc"
@@ -36,10 +36,10 @@
           "query": "randomcluster:MFT/COMPCLUSTERS/0;clustersrof:MFT/CLUSTERSROF/0;patterns:MFT/PATTERNS/0;cldict:MFT/CLUSDICT/0?lifetime=condition&ccdb-path=MFT/Calib/ClusterDictionary"
         },
         "taskParameters": {
-          "maxClusterROFSize" : "5000",
+          "maxClusterROFSize" : "50000",
           "maxDuration" : "60000",
           "timeBinSize" : "0.1",
-          "ROFLengthInBC" : "198",
+          "ROFLengthInBC" : "594",
           "geomFileName" : "o2sim_geometry-aligned.root"
         }
       },
@@ -58,9 +58,9 @@
           "query": "tracks:MFT/TRACKS/0;tracksrofs:MFT/MFTTrackROF/0;clusters:MFT/COMPCLUSTERS/0;clustersrofs:MFT/CLUSTERSROF/0"
         },
         "taskParameters": {
-          "ROFLengthInBC": "198",
-          "MaxTrackROFSize": "1000",
-          "MaxClusterROFSize": "5000",
+          "ROFLengthInBC": "594",
+          "MaxTrackROFSize": "10000",
+          "MaxClusterROFSize": "50000",
           "MaxDuration": "60000",
           "TimeBinSize": "0.1"
         }
@@ -75,6 +75,10 @@
           "name": "MFTClusters",
           "MOs" : ["mClusterOccupancy","mClusterPatternIndex","mClusterSizeSummary","mGroupedClusterSizeSummary","mClusterOccupancySummary"]
         }],
+        "checkParameters" : {
+          "ZoneThresholdMedium" : "2",
+          "ZoneThresholdBad" : "5"
+        },
         "className": "o2::quality_control_modules::mft::QcMFTClusterCheck",
         "moduleName": "QcMFT",
         "detectorName": "MFT",

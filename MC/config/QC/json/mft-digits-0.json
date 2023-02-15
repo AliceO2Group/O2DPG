@@ -26,9 +26,9 @@
       }
     },
     "tasks": {
-      "Clusters": {
+      "Digits": {
         "active": "true",
-        "className": "o2::quality_control_modules::mft::QcMFTClusterTask",
+        "className": "o2::quality_control_modules::mft::QcMFTDigitTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
         "cycleDurationSeconds": "60",
@@ -36,30 +36,35 @@
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
           "type": "direct",
-          "query": "randomcluster:MFT/COMPCLUSTERS/0;clustersrof:MFT/CLUSTERSROF/0;patterns:MFT/PATTERNS/0;cldict:MFT/CLUSDICT/0?lifetime=condition&ccdb-path=MFT/Calib/ClusterDictionary"
+          "query": "randomdigit:MFT/DIGITS/0;digitsrof:MFT/DIGITSROF/0"
         },
         "taskParameters": {
-          "maxClusterROFSize" : "5000",
+          "FLP": "0",
+          "NoiseScan" : "0",
+          "maxDigitROFSize" : "5000",
           "maxDuration" : "60000",
           "timeBinSize" : "0.1",
-          "ROFLengthInBC" : "198",
-          "geomFileName" : "o2sim_geometry-aligned.root"
+          "ROFLengthInBC" : "594"
         },
         "location": "remote"
       }
     },
     "checks": {
-      "Clusters": {
+      "Digits": {
         "active": "true",
-        "dataSource": [{
-          "type": "Task",
-          "name": "Clusters",
-          "MOs" : ["mClusterOccupancy","mClusterPatternIndex","mClusterSizeSummary","mGroupedClusterSizeSummary","mClusterOccupancySummary"]
-        }],
-        "className": "o2::quality_control_modules::mft::QcMFTClusterCheck",
+        "className": "o2::quality_control_modules::mft::QcMFTDigitCheck",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "policy": "OnEachSeparately"
+        "policy": "OnEachSeparately",
+        "checkParameters" : {
+          "ZoneThresholdMedium" : "2",
+          "ZoneThresholdBad" : "5"
+        },
+        "dataSource": [{
+          "type": "Task",
+          "name": "Digits",
+          "MOs" : ["mDigitChipOccupancy","mDigitOccupancySummary","mDigitChipStdDev"]
+        }]
       }
     }
   },

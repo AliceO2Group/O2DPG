@@ -45,9 +45,9 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=consul://o2/components/qc/ANY/any/its-qcmn-epn-full
     if [[ -z "$QC_JSON_MFT" ]]; then
       if has_detector MFT && has_processing_step MFT_RECO; then
-        QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-track-full-qcmn
-      else
         QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-qcmn
+      else
+        QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-no-tracks-qcmn
       fi
     fi
     if [[ -z "$QC_JSON_TOF" ]]; then
@@ -98,9 +98,9 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
     if [[ -z "$QC_JSON_MFT" ]]; then
       if has_processing_step MFT_RECO; then
-        QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft_track.json
+        QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft-full.json
       else
-        QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft.json
+        QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft-full-no-tracks.json
       fi
     fi
     [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=$O2DPG_ROOT/DATA/production/qc-sync/tof.json

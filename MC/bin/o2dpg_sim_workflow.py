@@ -1061,16 +1061,16 @@ for tf in range(1, NTIMEFRAMES + 1):
        addQCPerTF(taskName='mftDigitsQC' + str(flp),
                   needs=[getDigiTaskName("MFT")],
                   readerCommand='o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root',
-                  configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-' + str(flp) + '.json',
+                  configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-digits-' + str(flp) + '.json',
                   objectsFile='mftDigitsQC.root')
      addQCPerTF(taskName='mftClustersQC',
                 needs=[MFTRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types none --cluster-types MFT',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json')
-     addQCPerTF(taskName='mftAsyncQC',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-clusters.json')
+     addQCPerTF(taskName='mftTracksQC',
                 needs=[MFTRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types MFT --cluster-types MFT',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-async.json')
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks.json')
 
      ### TPC
      # addQCPerTF(taskName='tpcTrackingQC',
