@@ -13,6 +13,10 @@ if [[ -n $ALIEN_JDL_WORKFLOWDETECTORS ]]; then
   export WORKFLOW_DETECTORS=$ALIEN_JDL_WORKFLOWDETECTORS
 else
   export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
+  if [[ $RUNNUMBER == 528529 ]] || [[ $RUNNUMBER == 528529 ]]; then
+    # removing MID for these runs: it was noisy and therefore declared bad, and makes the reco crash
+    export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
+  fi
 fi
 
 # ad-hoc settings for CTF reader: we are on the grid, we read the files remotely
@@ -367,7 +371,9 @@ if [[ $ALIEN_JDL_EXTRACTCURRENTS == 1 ]]; then
   has_detector_reco FT0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-ft0-integrate-cluster-workflow"
   has_detector_reco FV0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-fv0-integrate-cluster-workflow"
   has_detector_reco TOF && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tof-integrate-cluster-workflow"
-  export ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow="--process-3D-currents --nSlicesTF 1"
+  if [[ $ALIEN_JDL_DISABLE3DCURRENTS != 1 ]]; then
+    export ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow="--process-3D-currents --nSlicesTF 1"
+  fi
   has_detector_reco TPC && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-integrate-cluster-workflow"
 fi
 
