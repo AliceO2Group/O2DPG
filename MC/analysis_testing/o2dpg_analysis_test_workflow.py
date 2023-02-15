@@ -119,7 +119,6 @@ analysis_EventTrackQA = {"name": "EventTrackQA",
                          "cmd": ["o2-analysis-timestamp",
                                  "o2-analysis-track-propagation",
                                  "o2-analysis-trackselection",
-                                 "o2-analysis-multiplicity-table",
                                  "o2-analysis-event-selection",
                                  "o2-analysis-qa-event-track"]}
 ANALYSES.append(analysis_EventTrackQA)
@@ -130,14 +129,16 @@ analysis_K0STrackingEfficiencyQA = {"name": "K0STrackingEfficiencyQA",
                                             "o2-analysis-track-propagation",
                                             "o2-analysis-trackselection",
                                             "o2-analysis-pid-tof-base",
-                                            "o2-analysis-pid-tof --add-qa 1",
-                                            "o2-analysis-pid-tof-full --add-qa 1",
-                                            "o2-analysis-pid-tpc-full --add-qa 1",
+                                            "o2-analysis-pid-tof",
+                                            "o2-analysis-pid-tof-full",
+                                            "o2-analysis-pid-tpc-base",
+                                            "o2-analysis-pid-tpc-full",
                                             "o2-analysis-event-selection",
                                             "o2-analysis-timestamp",
                                             "o2-analysis-multiplicity-table",
                                             "o2-analysis-qa-k0s-tracking-efficiency"]}
-ANALYSES.append(analysis_K0STrackingEfficiencyQA)
+if 0:
+  ANALYSES.append(analysis_K0STrackingEfficiencyQA)
 analysis_Validation = {"name": "Validation",
                        "expected_output": ["AnalysisResults.root"],
                        "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
@@ -153,13 +154,17 @@ analysis_PIDFull = {"name": "PIDFull",
                             "o2-analysis-track-propagation",
                             "o2-analysis-trackselection",
                             "o2-analysis-event-selection",
-                            "o2-analysis-multiplicity-table",
                             "o2-analysis-pid-tof-base",
-                            "o2-analysis-pid-tof --add-qa 1",
-                            "o2-analysis-pid-tof-full --add-qa 1",
-                            "o2-analysis-pid-tof-beta --add-qa 1",
-                            "o2-analysis-pid-tpc-full --add-qa 1"]}
-ANALYSES.append(analysis_PIDFull)
+                            "o2-analysis-pid-tof",
+                            "o2-analysis-pid-tof-full",
+                            "o2-analysis-pid-tof-qa",
+                            "o2-analysis-pid-tof-qa-evtime",
+                            "o2-analysis-pid-tof-beta",
+                            "o2-analysis-pid-tof-qa-beta",
+                            "o2-analysis-pid-tpc-base",
+                            "o2-analysis-pid-tpc-full"]}
+if 0:
+  ANALYSES.append(analysis_PIDFull)
 analysis_PWGMMMFT = {"name": "PWGMMMFT",
                      "expected_output": ["AnalysisResults.root"],
                      "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
@@ -200,10 +205,12 @@ analysis_LK0CFFemto = {"name": "LK0CFFemto",
                                "o2-analysis-event-selection",
                                "o2-analysis-pid-tof-base",
                                "o2-analysis-pid-tof",
+                               "o2-analysis-pid-tpc-base",
                                "o2-analysis-pid-tpc",
                                "o2-analysis-lf-lambdakzerobuilder",
                                "o2-analysis-cf-femtodream-producer"]}
-ANALYSES.append(analysis_LK0CFFemto)
+if 0:
+  ANALYSES.append(analysis_LK0CFFemto)
 analysis_PWGMMFwdVertexing = {"name": "PWGMMFwdVertexing",
                               "expected_output": ["AnalysisResults.root"],
                               "valid_for": [ANALYSIS_VALID_MC],
@@ -239,6 +246,7 @@ ANALYSES.append(analysis_MCSimpleValidation)
 #                            "o2-analysis-trackselection",
 #                            "o2-analysis-event-selection",
 #                            "o2-analysis-multiplicity-table",
+#                            "o2-analysis-pid-tpc-base",
 #                            "o2-analysis-pid-tpc-full",
 #                            "o2-analysis-pid-tof-base",
 #                            "o2-analysis-pid-tof-full"]}
@@ -437,6 +445,7 @@ def run(args):
     if not workflow:
         print("WARNING: Nothing was added")
     dump_workflow(workflow, args.output)
+    print("Now you can run the workflow e.g.", "`${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py" + f" -f {args.output}`")
     return 0
 
 def main():
