@@ -3,9 +3,11 @@
 # This is a wrapper script that sets EPN-related env variables needed for the PDP DPL Topology generation.
 # Author: David Rohr
 
-# A reference version of this script is contained in the O2DPG repository: https://github.com/AliceO2Group/O2DPG/blob/master/DATA/tools/epn/gen_topo.sh
+# This script is developed within O2DPG: https://github.com/AliceO2Group/O2DPG/blob/master/DATA/tools/epn/gen_topo.sh
+# It is installed as package GenTopo to the updateable RPM path /opt/alisw/el8/GenTopo/bin/ on the EPNs
 
 # The purpose of this script is to separate the topology generation (which is in O2DPG) from the setting of the EPN-related settings
+# This script contains only the EPN related settings
 
 # Settings for some EPN paths / names / etc.
 [[ -z "$FILEWORKDIR" ]] && export FILEWORKDIR=/home/epn/odc/files # Path to common grp / geometry / etc files
@@ -41,16 +43,9 @@ else
     [[ -z $GEN_TOPO_ODC_EPN_TOPO_CMD ]] && { echo "ERROR: no odc-epn-topo in the path" 1>&2; exit 1; }
     module purge &> /dev/null
   fi
-
-  # Set O2DPG_ROOT from the latest available O2DPG module, if not already set.
-  # Note that this does not load the module, but just needs an O2DPG path to find, which then does the bulk of the topology generation.
-  # gen_topo_o2dpg.sh is kept compatible between O2DPG versions, thus it doesn't really depend on which O2DPG version we use at this point.
-  if [[ -z $O2DPG_ROOT ]]; then
-    O2DPG_ROOT=`bash -c "module load O2DPG &> /dev/null; echo \\\$O2DPG_ROOT;"`
-  fi
 fi
-# Now we know which gen_topo_o2dpg.sh we can use, and all EPN related env variables are set, so we can run the topology generation.
-$O2DPG_ROOT/DATA/tools/epn/gen_topo_o2dpg.sh
+# Run stage 2 of GenTopo, which does the PDP part, still from hardcoded updatable RPM path
+/opt/alisw/el8/GenTopo/bin/gen_topo_o2dpg.sh
 if [ $? != 0 ]; then
   echo topology generation failed 1>&2
   exit 1
