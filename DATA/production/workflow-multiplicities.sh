@@ -20,7 +20,7 @@ fi
 
 [[ $SYNCMODE == 1 ]] && NTRDTRKTHREADS=1
 
-[[ -z $NGPURECOTHREADS ]] & NGPURECOTHREADS=-1 # -1 = auto-detect
+[[ -z $NGPURECOTHREADS ]] && NGPURECOTHREADS=-1 # -1 = auto-detect
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Process multiplicities
