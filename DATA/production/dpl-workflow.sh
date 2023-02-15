@@ -5,4 +5,4 @@ if [ "0$O2_ROOT" == "0" ]; then
     exit 1
 fi
 
-source $O2_ROOT/prodtests/full-system-test/dpl-workflow.sh
+source $O2_ROOT/prodtests/full-system-test/dpl-workflow.sh || { echo "dpl-workflow.sh failed" 1>&2 && exit 1; }

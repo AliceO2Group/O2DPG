@@ -4,7 +4,7 @@
 if [[ -z $SOURCE_GUARD_SETENV ]]; then
 SOURCE_GUARD_SETENV=1
 
-source $O2DPG_ROOT/DATA/common/gen_topo_helper_functions.sh
+source $O2DPG_ROOT/DATA/common/gen_topo_helper_functions.sh || { echo "gen_topo_helper_functions.sh failed" 1>&2 && exit 1; }
 
 # Make sure we can open sufficiently many files / allocate enough memory
 if [[ "0$SETENV_NO_ULIMIT" != "01" ]]; then
