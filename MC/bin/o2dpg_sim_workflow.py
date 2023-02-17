@@ -46,6 +46,7 @@ parser.add_argument('-productionTag',help="Production tag for this MC", default=
 # - we can also sample it ourselfs here
 parser.add_argument('--timestamp', type=int, help="Anchoring timestamp (defaults to now)", default=-1)
 parser.add_argument('--condition-not-after', type=int, help="only consider CCDB objects not created after this timestamp (for TimeMachine)", default=3385078236000)
+parser.add_argument('--orbitsPerTF', type=int, help="Timeframe size in number of LHC orbits", default=128)
 parser.add_argument('--anchor-config',help="JSON file to contextualise workflow with external configs (config values etc.) for instance comping from data reco workflows.", default='')
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
@@ -275,7 +276,7 @@ if (includeLocalQC or includeFullQC) and not isdir(qcdir):
     mkdir(qcdir)
 
 # create the GRPs
-orbitsPerTF=256
+orbitsPerTF=int(args.orbitsPerTF)
 GRP_TASK = createTask(name='grpcreate', cpu='0')
 GRP_TASK['cmd'] = 'o2-grp-simgrp-tool createGRPs --run ' + str(args.run) + ' --publishto ${ALICEO2_CCDB_LOCALCACHE:-.ccdb} -o grp --hbfpertf ' + str(orbitsPerTF) + ' --field ' + args.field
 GRP_TASK['cmd'] += ' --readoutDets ' + " ".join(activeDetectors) + ' --print ' + ('','--lhcif-CCDB')[args.run_anchored]
@@ -505,7 +506,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    signalprefix='sgn_' + str(tf)
    INTRATE=int(args.interactionRate)
    BCPATTERN=args.bcPatternFile
-   includeQED = (COLTYPE == 'PbPb') or (args.with_qed == True)
+   includeQED = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb")) or (args.with_qed == True)
 
    # preproduce the collision context
    precollneeds=[GRP_TASK['name']]
@@ -536,8 +537,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                           -j ' + str('1')      +  ' -o qed_' + str(tf) + '              \
                           -n ' + str(NEventsQED) + ' -m PIPE ITS MFT FT0 FV0 FDD        \
                           -g extgen --configKeyValues \"GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;Diamond.width[2]=6.\" --run ' + str(args.run) # + (' ',' --fromCollContext collisioncontext.root')[args.pregenCollContext]
-     QED_task['cmd'] += '; QEDXSecCheck=`grep xSectionQED qedgenparam.ini | sed \'s/xSectionQED=//\'`'
-     QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected) + ' = $QEDXSecCheck"'
+     QED_task['cmd'] += '; RC=$?; QEDXSecCheck=`grep xSectionQED qedgenparam.ini | sed \'s/xSectionQED=//\'`'
+     QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected) + ' = $QEDXSecCheck"; [[ ${RC} == 0 ]]'
      # TODO: propagate the Xsecion ratio dynamically
      QEDdigiargs=' --simPrefixQED qed_' + str(tf) +  ' --qed-x-section-ratio ' + str(QEDXSecExpected/PbPbXSec)
      workflow['stages'].append(QED_task)
@@ -720,6 +721,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # this is just to have the digitizer ini file
    ContextTask['cmd'] = '${O2_ROOT}/bin/o2-sim-digitizer-workflow --only-context --interactionRate ' + str(INTRATE) \
                         + ' ' + getDPL_global_options(ccdbbackend=False) + ' -n ' + str(args.ns) + simsoption       \
+                        + ' --seed ' + str(TFSEED)                                                                  \
                         + ' ' + putConfigValuesNew({"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF)},{"DigiParams.passName" : str(PASSNAME)}) + ('',' --incontext ' + CONTEXTFILE)[args.pregenCollContext] + QEDdigiargs
    ContextTask['cmd'] += ' --bcPatternFile ccdb'
 

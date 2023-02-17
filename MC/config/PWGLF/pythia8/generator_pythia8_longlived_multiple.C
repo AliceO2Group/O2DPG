@@ -16,16 +16,22 @@
 ///
 
 #include "generator_pythia8_longlived.C"
+#if !defined(__CLING__) || defined(__ROOTCLING__)
+#include "SimulationDataFormat/MCGenStatus.h"
+#include "SimulationDataFormat/MCUtils.h"
+#include "fairlogger/Logger.h"
 #include "TSystem.h"
 #include <fstream>
+#endif
 
 using namespace Pythia8;
+using namespace o2::mcgenstatus;
 
 class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
 {
  public:
   /// constructor
-  GeneratorPythia8LongLivedGunMultiple() : GeneratorPythia8LongLivedGun{0}
+  GeneratorPythia8LongLivedGunMultiple(bool injOnePerEvent = true) : GeneratorPythia8LongLivedGun{0}, mOneInjectionPerEvent{injOnePerEvent}
   {
   }
 
@@ -36,7 +42,17 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   Bool_t importParticles() override
   {
     GeneratorPythia8::importParticles();
+    const int configToUse = mOneInjectionPerEvent ? static_cast<int>(gRandom->Uniform(0.f, gunConfigs.size())) : -1;
+    LOGF(info, "Using configuration %i out of %lli", configToUse, gunConfigs.size());
+
+    int nConfig = 0;
     for (const ConfigContainer& cfg : gunConfigs) {
+      if (configToUse >= 0 && nConfig != configToUse) {
+        nConfig++;
+        continue;
+      }
+      LOGF(info, "Injecting %i particles with PDG %i, pT in [%f, %f]", cfg.nInject, cfg.pdg, cfg.ptMin, cfg.ptMax);
+
       for (int i{0}; i < cfg.nInject; ++i) {
         const double pt = gRandom->Uniform(cfg.ptMin, cfg.ptMax);
         const double eta = gRandom->Uniform(cfg.etaMin, cfg.etaMax);
@@ -45,11 +61,25 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
         const double py{pt * std::sin(phi)};
         const double pz{pt * std::sinh(eta)};
         const double et{std::hypot(std::hypot(pt, pz), cfg.mass)};
-        mParticles.push_back(TParticle(cfg.pdg, 1, -1, -1, -1, -1, px, py, pz, et, 0., 0., 0., 0.));
+
+        // TParticle::TParticle(Int_t pdg,
+        //                      Int_t status,
+        //                      Int_t mother1, Int_t mother2,
+        //                      Int_t daughter1, Int_t daughter2,
+        //                      Double_t px, Double_t py, Double_t pz, Double_t etot,
+        //                      Double_t vx, Double_t vy, Double_t vz, Double_t time)
+
+        mParticles.push_back(TParticle(cfg.pdg,
+                                       MCGenStatusEncoding(1, 1).fullEncoding,
+                                       -1, -1,
+                                       -1, -1,
+                                       px, py, pz, et,
+                                       0., 0., 0., 0.));
         // make sure status code is encoded properly. Transport flag will be set by default and we have nothing
         // to do since all pushed particles should be tracked.
         o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       }
+      nConfig++;
     }
     return true;
   }
@@ -61,6 +91,7 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
                                                                                ptMax{P}
     {
       mass = GeneratorPythia8LongLivedGun::getMass(pdg);
+      LOGF(info, "ConfigContainer: pdg = %i, nInject = %i, ptMin = %f, ptMax = %f, mass = %f", pdg, nInject, ptMin, ptMax, mass);
     };
     ConfigContainer(TObjArray* arr) : ConfigContainer(atoi(arr->At(0)->GetName()),
                                                       atoi(arr->At(1)->GetName()),
@@ -76,13 +107,13 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
     double mass = 0.f;
     void print() const
     {
-      Printf("int pdg = %i", pdg);
-      Printf("int nInject = %i", nInject);
-      Printf("float ptMin = %f", ptMin);
-      Printf("float ptMax = %f", ptMax);
-      Printf("float etaMin = %f", etaMin);
-      Printf("float etaMax = %f", etaMax);
-      Printf("double mass = %f", mass);
+      LOGF(info, "int pdg = %i", pdg);
+      LOGF(info, "int nInject = %i", nInject);
+      LOGF(info, "float ptMin = %f", ptMin);
+      LOGF(info, "float ptMax = %f", ptMax);
+      LOGF(info, "float etaMin = %f", etaMin);
+      LOGF(info, "float etaMax = %f", etaMax);
+      LOGF(info, "double mass = %f", mass);
     }
   };
 
@@ -95,9 +126,13 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   }
 
   //__________________________________________________________________
+  long int getNGuns() const { return gunConfigs.size(); }
+
+  //__________________________________________________________________
   ConfigContainer addGun(ConfigContainer cfg) { return addGun(cfg.pdg, cfg.nInject, cfg.ptMin, cfg.ptMax); }
 
  private:
+  const bool mOneInjectionPerEvent = true; // if true, only one injection per event is performed, i.e. if multiple PDG (including antiparticles) are requested to be injected only one will be done per event
   std::vector<ConfigContainer> gunConfigs; // List of gun configurations to use
 };
 
@@ -107,7 +142,7 @@ FairGenerator* generateLongLivedMultiple(std::vector<int> PDGs, std::vector<int>
 {
   const std::vector<unsigned long> entries = {PDGs.size(), nInject.size(), ptMin.size(), ptMax.size()};
   if (!std::equal(entries.begin() + 1, entries.end(), entries.begin())) {
-    Printf("Not equal number of entries, check configuration");
+    LOGF(fatal, "Not equal number of entries, check configuration");
     return nullptr;
   }
   GeneratorPythia8LongLivedGunMultiple* multiGun = new GeneratorPythia8LongLivedGunMultiple();
@@ -126,7 +161,7 @@ FairGenerator* generateLongLivedMultiple(std::vector<GeneratorPythia8LongLivedGu
   }
   GeneratorPythia8LongLivedGunMultiple* multiGun = new GeneratorPythia8LongLivedGunMultiple();
   for (const auto& c : cfg) {
-    Printf("Adding gun");
+    LOGF(info, "Adding gun %i", multiGun->getNGuns());
     c.print();
     multiGun->addGun(c);
   }
@@ -138,7 +173,7 @@ FairGenerator* generateLongLivedMultiple(std::vector<GeneratorPythia8LongLivedGu
 FairGenerator* generateLongLivedMultiple(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun")
 {
   configuration = gSystem->ExpandPathName(configuration.c_str());
-  Printf("Using configuration file '%s'", configuration.c_str());
+  LOGF(info, "Using configuration file '%s'", configuration.c_str());
   std::ifstream inputFile(configuration.c_str(), ios::in);
   std::vector<GeneratorPythia8LongLivedGunMultiple::ConfigContainer> cfgVec;
   if (inputFile.is_open()) {
@@ -161,7 +196,7 @@ FairGenerator* generateLongLivedMultiple(std::string configuration = "${O2DPG_RO
       cfgVec.push_back(cfg);
     }
   } else {
-    Printf("ERROR: can't open '%s'", configuration.c_str());
+    LOGF(fatal, "Can't open '%s' !", configuration.c_str());
     return nullptr;
   }
   return generateLongLivedMultiple(cfgVec);

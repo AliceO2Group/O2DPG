@@ -119,7 +119,6 @@ analysis_EventTrackQA = {"name": "EventTrackQA",
                          "cmd": ["o2-analysis-timestamp",
                                  "o2-analysis-track-propagation",
                                  "o2-analysis-trackselection",
-                                 "o2-analysis-multiplicity-table",
                                  "o2-analysis-event-selection",
                                  "o2-analysis-qa-event-track"]}
 ANALYSES.append(analysis_EventTrackQA)
@@ -130,14 +129,16 @@ analysis_K0STrackingEfficiencyQA = {"name": "K0STrackingEfficiencyQA",
                                             "o2-analysis-track-propagation",
                                             "o2-analysis-trackselection",
                                             "o2-analysis-pid-tof-base",
-                                            "o2-analysis-pid-tof --add-qa 1",
-                                            "o2-analysis-pid-tof-full --add-qa 1",
-                                            "o2-analysis-pid-tpc-full --add-qa 1",
+                                            "o2-analysis-pid-tof",
+                                            "o2-analysis-pid-tof-full",
+                                            "o2-analysis-pid-tpc-base",
+                                            "o2-analysis-pid-tpc-full",
                                             "o2-analysis-event-selection",
                                             "o2-analysis-timestamp",
                                             "o2-analysis-multiplicity-table",
                                             "o2-analysis-qa-k0s-tracking-efficiency"]}
-ANALYSES.append(analysis_K0STrackingEfficiencyQA)
+if 0:
+  ANALYSES.append(analysis_K0STrackingEfficiencyQA)
 analysis_Validation = {"name": "Validation",
                        "expected_output": ["AnalysisResults.root"],
                        "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
@@ -153,13 +154,17 @@ analysis_PIDFull = {"name": "PIDFull",
                             "o2-analysis-track-propagation",
                             "o2-analysis-trackselection",
                             "o2-analysis-event-selection",
-                            "o2-analysis-multiplicity-table",
                             "o2-analysis-pid-tof-base",
-                            "o2-analysis-pid-tof --add-qa 1",
-                            "o2-analysis-pid-tof-full --add-qa 1",
-                            "o2-analysis-pid-tof-beta --add-qa 1",
-                            "o2-analysis-pid-tpc-full --add-qa 1"]}
-ANALYSES.append(analysis_PIDFull)
+                            "o2-analysis-pid-tof",
+                            "o2-analysis-pid-tof-full",
+                            "o2-analysis-pid-tof-qa",
+                            "o2-analysis-pid-tof-qa-evtime",
+                            "o2-analysis-pid-tof-beta",
+                            "o2-analysis-pid-tof-qa-beta",
+                            "o2-analysis-pid-tpc-base",
+                            "o2-analysis-pid-tpc-full"]}
+if 0:
+  ANALYSES.append(analysis_PIDFull)
 analysis_PWGMMMFT = {"name": "PWGMMMFT",
                      "expected_output": ["AnalysisResults.root"],
                      "valid_for": [ANALYSIS_VALID_MC, ANALYSIS_VALID_DATA],
@@ -200,15 +205,26 @@ analysis_LK0CFFemto = {"name": "LK0CFFemto",
                                "o2-analysis-event-selection",
                                "o2-analysis-pid-tof-base",
                                "o2-analysis-pid-tof",
+                               "o2-analysis-pid-tpc-base",
                                "o2-analysis-pid-tpc",
                                "o2-analysis-lf-lambdakzerobuilder",
                                "o2-analysis-cf-femtodream-producer"]}
-ANALYSES.append(analysis_LK0CFFemto)
+if 0:
+  ANALYSES.append(analysis_LK0CFFemto)
 analysis_PWGMMFwdVertexing = {"name": "PWGMMFwdVertexing",
                               "expected_output": ["AnalysisResults.root"],
                               "valid_for": [ANALYSIS_VALID_MC],
                               "cmd": ["o2-analysis-timestamp", "o2-analysis-mm-vertexing-fwd"]}
 ANALYSES.append(analysis_PWGMMFwdVertexing)
+analysis_MCSimpleValidation = {"name": "MCSimpleValidation",
+                               "expected_output": ["AnalysisResults.root"],
+                               "valid_for": [ANALYSIS_VALID_MC],
+                               "cmd": ["o2-analysis-timestamp",
+                               "o2-analysis-track-propagation",
+                               "o2-analysis-trackselection",
+                               "o2-analysis-event-selection",
+                               "o2-analysis-task-mc-simple-qc"]}
+ANALYSES.append(analysis_MCSimpleValidation)
 #analysis_PWGMMMDnDeta = {"name": "PWGMMMDnDeta",
 #                         "expected_output": ["AnalysisResults.root"],
 #                         "valid_for": [ANALYSIS_VALID_MC],
@@ -230,6 +246,7 @@ ANALYSES.append(analysis_PWGMMFwdVertexing)
 #                            "o2-analysis-trackselection",
 #                            "o2-analysis-event-selection",
 #                            "o2-analysis-multiplicity-table",
+#                            "o2-analysis-pid-tpc-base",
 #                            "o2-analysis-pid-tpc-full",
 #                            "o2-analysis-pid-tof-base",
 #                            "o2-analysis-pid-tof-full"]}
@@ -310,7 +327,7 @@ def add_analysis_post_processing_tasks(workflow):
         task["cmd"] = f"root -l -b -q {post_processing_macro}{cmd}"
         workflow.append(task)
 
-def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, config=None, needs=None):
+def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, config=None, needs=None, autoset_converters=False):
     """Add default analyses to user workflow
 
     Args:
@@ -328,7 +345,26 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         needs: iter (optional)
             if specified, list of other tasks which need to be run before
     """
-    input_aod = abspath(input_aod)
+    additional_workflows = []
+    if not input_aod.startswith("alien://"):
+        input_aod = abspath(input_aod)
+        if autoset_converters: # This is needed to run with the latest TAG of the O2Physics with the older data
+            if input_aod.endswith(".root"):
+                from ROOT import TFile
+                froot = TFile.Open(input_aod, "READ")
+                found_O2collision_001 = False
+                for i in froot.GetListOfKeys():
+                    if "DF_" not in i.GetName():
+                        continue
+                    df_dir = froot.Get(i.GetName())
+                    # print(i)
+                    for j in df_dir.GetListOfKeys():
+                        # print(j)
+                        if "O2collision_001" in j.GetName():
+                            found_O2collision_001 = True
+                    if not found_O2collision_001:
+                        additional_workflows.append("o2-analysis-collision-converter --doNotSwap")
+                    break
     if input_aod.endswith(".txt") and not input_aod.startswith("@"):
         input_aod = f"@{input_aod}"
     data_or_mc = ANALYSIS_VALID_MC if is_mc else ANALYSIS_VALID_DATA
@@ -339,6 +375,11 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         configuration = abspath(expanduser(configuration))
     configuration = f"json://{configuration}"
     for ana in ANALYSES:
+        for i in additional_workflows:
+            if i not in ana["cmd"]:
+                # print("Appending extra task", i, "to analysis", ana["name"], "as it is not there yet and needed for conversion")
+                ana["cmd"].append(i)
+        # print("Adding analysis", ana, ana["name"])
         if data_or_mc in ana["valid_for"] and (not analyses_only or (ana["name"] in analyses_only)):
             piped_analysis = f" --configuration {configuration} | ".join(ana["cmd"])
             piped_analysis += f" --configuration {configuration} --aod-file {input_aod}"
@@ -398,12 +439,13 @@ def run(args):
         return 1
     
     workflow = []
-    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, config=args.config)
+    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, config=args.config, autoset_converters=args.autoset_converters)
     if args.with_qc_upload:
         add_analysis_qc_upload_tasks(workflow, args.period_name, args.run_number, args.pass_name)
     if not workflow:
         print("WARNING: Nothing was added")
     dump_workflow(workflow, args.output)
+    print("Now you can run the workflow e.g.", "`${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py" + f" -f {args.output}`")
     return 0
 
 def main():
@@ -419,6 +461,7 @@ def main():
     parser.add_argument("--period-name", dest="period_name", help="period name")
     parser.add_argument("--config", help="overwrite the default config JSON. Pass as </path/to/file>, will be automatically configured to json://")
     parser.add_argument("--only-analyses", dest="only_analyses", nargs="*", help="filter only on these analyses")
+    parser.add_argument("--autoset-converters", dest="autoset_converters", action="store_true", help="Compatibility mode to automatically set the converters for the analysis")
     parser.set_defaults(func=run)
 
     args = parser.parse_args()

@@ -142,7 +142,7 @@ for line in f:
                 retVal = subprocess.run(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
                 tmpchk = retVal.stderr.decode() + retVal.stdout.decode()
                 haserror = 0
-                if tmpchk.find('[FATAL]') != -1 or tmpchk.find('[ERROR]') != -1:
+                if tmpchk.find('[FATAL]') != -1 or tmpchk.find('[ERROR]') != -1 or tmpchk.find(': command not found') != -1 or tmpchk.find('No such file or directory') != -1 or tmpchk.find('bash: syntax error') != -1:
                     print("Found error messages during topology generation")
                     haserror = 1
                 if retVal.returncode != 0:

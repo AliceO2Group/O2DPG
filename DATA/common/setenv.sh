@@ -4,156 +4,7 @@
 if [[ -z $SOURCE_GUARD_SETENV ]]; then
 SOURCE_GUARD_SETENV=1
 
-has_detector()
-{
-  [[ $WORKFLOW_DETECTORS =~ (^|,)"$1"(,|$) ]]
-}
-
-has_detector_calib()
-{
-  has_detector $1 && [[ $WORKFLOW_DETECTORS_CALIB =~ (^|,)"$1"(,|$) ]]
-}
-
-has_detector_reco()
-{
-  has_detector $1 && [[ $WORKFLOW_DETECTORS_RECO =~ (^|,)"$1"(,|$) ]]
-}
-
-has_detector_ctf()
-{
-  has_detector $1 && [[ $WORKFLOW_DETECTORS_CTF =~ (^|,)"$1"(,|$) ]]
-}
-
-has_detector_flp_processing()
-{
-  has_detector $1 && [[ $WORKFLOW_DETECTORS_FLP_PROCESSING =~ (^|,)"$1"(,|$) ]]
-}
-
-has_detector_matching()
-{
-  [[ $WORKFLOW_DETECTORS_MATCHING =~ (^|,)"ALL"(,|$) ]] || [[ $WORKFLOW_DETECTORS_MATCHING =~ (^|,)"$1"(,|$) ]]
-}
-
-has_detector_qc()
-{
-  has_detector $1 && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"$1"(,|$) ]]
-}
-
-has_matching_qc()
-{
-  has_detector_matching $1 && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"$1"(,|$) ]]
-}
-
-has_pid_qc()
-{
-    PIDDETECTORS=$(echo $1 | tr "-" "\n")
-    for PIDDETECTOR in $PIDDETECTORS; do
-        if [[ $PIDDETECTOR == "TOF" ]]; then
-            (! has_detectors_reco ITS TPC TOF || ! has_detector_matching ITSTPCTOF) && return 1
-        fi
-        ! has_detector_qc $PIDDETECTOR && return 1
-    done
-    return 0
-}
-
-has_track_source()
-{
-  [[ $TRACK_SOURCES =~ (^|,)"$1"(,|$) ]]
-}
-
-has_tof_matching_source()
-{
-  [[ $TOF_SOURCES =~ (^|,)"$1"(,|$) ]]
-}
-
-workflow_has_parameter()
-{
-  [[ $WORKFLOW_PARAMETERS =~ (^|,)"$1"(,|$) ]]
-}
-
-_check_multiple()
-{
-  CHECKER=$1
-  shift
-  while true; do
-    if [[ "0$1" == "0" ]]; then return 0; fi
-    if ! $CHECKER $1; then return 1; fi
-    shift
-  done
-}
-
-has_detectors()
-{
-  _check_multiple has_detector $@
-}
-
-has_detectors_qc()
-{
-  _check_multiple has_detector_qc $@
-}
-
-has_detectors_calib()
-{
-  _check_multiple has_detector_calib $@
-}
-
-has_detectors_reco()
-{
-  _check_multiple has_detector_reco $@
-}
-
-has_detectors_ctf()
-{
-  _check_multiple has_detector_ctf $@
-}
-
-has_detectors_flp_processing()
-{
-  _check_multiple has_detector_flp_processing $@
-}
-
-workflow_has_parameters()
-{
-  _check_multiple workflow_has_parameter $@
-}
-
-add_comma_separated()
-{
-  if (( $# < 2 )); then
-    echo "$# parameters received"
-    echo "Function name: ${FUNCNAME} expects at least 2 parameters:"
-    echo "it concatenates the string in 1st parameter by the following"
-    echo "ones, forming comma-separated string. $# parameters received"
-    exit 1
-  fi
-
-  for ((i = 2; i <= $#; i++ )); do
-    if [[ -z ${!1} ]]; then
-      eval $1+="${!i}"
-    else
-      eval $1+=",${!i}"
-    fi
-  done
-}
-
-add_semicolon_separated()
-{
-  if (( $# < 2 )); then
-    echo "$# parameters received"
-    echo "Function name: ${FUNCNAME} expects at least 2 parameters:"
-    echo "it concatenates the string in 1st parameter by the following"
-    echo "ones, forming semi-colon-separated string. $# parameters received"
-    exit 1
-  fi
-
-  for ((i = 2; i <= $#; i++ )); do
-    if [[ -z ${!1} ]]; then
-      eval $1+="${!i}"
-    else
-      eval $1+="\;${!i}"
-    fi
-  done
-}
+source $O2DPG_ROOT/DATA/common/gen_topo_helper_functions.sh || { echo "gen_topo_helper_functions.sh failed" 1>&2 && exit 1; }
 
 # Make sure we can open sufficiently many files / allocate enough memory
 if [[ "0$SETENV_NO_ULIMIT" != "01" ]]; then
@@ -182,12 +33,20 @@ LIST_OF_GLORECO="ITSTPC,TPCTRD,ITSTPCTRD,TPCTOF,ITSTPCTOF,MFTMCH,MCHMID,PRIMVTX,
 LIST_OF_PID="FT0-TOF"
 
 # Detectors used in the workflow / enabled parameters
+# Available options: WORKFLOW_DETECTORS, WORKFLOW_DETECTORS_EXCLUDE, WORKFLOW_DETECTORS_QC, WORKFLOW_DETECTORS_EXCLUDE_QC, WORKFLOW_DETECTORS_CALIB, WORKFLOW_DETECTORS_EXCLUDE_CALIB, ...
 if [[ -z "${WORKFLOW_DETECTORS+x}" ]] || [[ "0$WORKFLOW_DETECTORS" == "0ALL" ]]; then export WORKFLOW_DETECTORS=$LIST_OF_DETECTORS; fi
+if [[ ! -z $WORKFLOW_DETECTORS_EXCLUDE ]]; then
+  for i in ${WORKFLOW_DETECTORS_EXCLUDE//,/ }; do
+    export WORKFLOW_DETECTORS=$(echo $WORKFLOW_DETECTORS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
+  done
+fi
+
 if [[ -z "${WORKFLOW_DETECTORS_QC+x}" ]] || [[ "0$WORKFLOW_DETECTORS_QC" == "0ALL" ]]; then export WORKFLOW_DETECTORS_QC="$WORKFLOW_DETECTORS,$LIST_OF_GLORECO,TOF_MATCH"; fi
 if [[ -z "${WORKFLOW_DETECTORS_CALIB+x}" ]] || [[ "0$WORKFLOW_DETECTORS_CALIB" == "0ALL" ]]; then export WORKFLOW_DETECTORS_CALIB=$WORKFLOW_DETECTORS; fi
 if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
 if [[ -z "${WORKFLOW_DETECTORS_CTF+x}" ]] || [[ "0$WORKFLOW_DETECTORS_CTF" == "0ALL" ]]; then export WORKFLOW_DETECTORS_CTF=$WORKFLOW_DETECTORS; fi
 if [[ "0$WORKFLOW_DETECTORS_FLP_PROCESSING" == "0ALL" ]]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=$WORKFLOW_DETECTORS; fi
+if [[ "0$WORKFLOW_DETECTORS_USE_GLOBAL_READER" == "0ALL" ]]; then export WORKFLOW_DETECTORS_USE_GLOBAL_READER=$WORKFLOW_DETECTORS; fi
 if [[ -z "$WORKFLOW_PARAMETERS" ]]; then export WORKFLOW_PARAMETERS=; fi
 
 if [[ ! -z $WORKFLOW_DETECTORS_EXCLUDE_QC ]]; then

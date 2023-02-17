@@ -87,6 +87,7 @@ fi
 export EPNSYNCMODE=1
 export O2DPG_ROOT=`realpath \`pwd\`/../`
 echo Running topology generation to temporary file $GEN_TOPO_WORKDIR/output.xml 1>&2
+# Run stage 3 of GenTopo, now from the O2DPG version specified by the user
 ./tools/parse "$GEN_TOPO_LIBRARY_FILE" $GEN_TOPO_WORKFLOW_NAME $GEN_TOPO_WORKDIR/output.xml 1>&2 || { echo Error during workflow description parsing 1>&2; exit 1; }
 if [[ "0$GEN_TOPO_CACHEABLE" == "01" ]]; then
   cd $GEN_TOPO_WORKDIR
@@ -95,6 +96,13 @@ if [[ "0$GEN_TOPO_CACHEABLE" == "01" ]]; then
   fi
   cp $GEN_TOPO_WORKDIR/output.xml cache/$GEN_TOPO_CACHE_HASH
 fi
+
+if [[ ! -z $ECS_ENVIRONMENT_ID && -d "/var/log/topology/" ]]; then
+  GEN_TOPO_LOG_FILE=/var/log/topology/topology-$(date -u +%Y%m%d-%H%M%S)-$ECS_ENVIRONMENT_ID.xml
+  cp $GEN_TOPO_WORKDIR/output.xml $GEN_TOPO_LOG_FILE
+  nohup gzip $GEN_TOPO_LOG_FILE &> /dev/null &
+fi
+
 cat $GEN_TOPO_WORKDIR/output.xml
 echo Removing temporary output file $GEN_TOPO_WORKDIR/output.xml 1>&2
 rm $GEN_TOPO_WORKDIR/output.xml

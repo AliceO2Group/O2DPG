@@ -23,9 +23,9 @@
       }
     },
     "tasks" : {
-      "TOFMatchTrNoTRD" : {
+      "MatchingTOFAll" : {
         "active" : "true",
-        "taskName": "MatchTrNoTRD",
+        "taskName": "MatchTrAll",
         "className" : "o2::quality_control_modules::tof::TOFMatchedTracks",
         "moduleName" : "QcTOF",
         "detectorName" : "TOF",

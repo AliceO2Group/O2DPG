@@ -16,7 +16,7 @@
         "periodName": "SimChallenge"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "no-op://"
       },
       "consul": {
         "url": ""
@@ -61,7 +61,7 @@
           "name": "Digits"
         }]
       }
-    }    
+    }
   },
   "dataSamplingPolicies": [
   ]

@@ -30,7 +30,7 @@
 #                                            [--dir-config-disable [DIR_CONFIG_DISABLE ...]]
 #                                            [--include-dirs [INCLUDE_DIRS ...]]
 #                                            [--add] [--output OUTPUT]
-# 
+#
 # optional arguments:
 #   -h, --help            show this help message and exit
 #   -i [INPUT1 ...], --input1 [INPUT1 ...]
@@ -991,8 +991,9 @@ def influx(args):
                 s += f",web_storage={join(args.web_storage, tests[0]['rel_path_plot'])}"
             s += f" histogram_name=\"{histo_name}\""
             for test in tests:
-                s += f",{test['test_name']}={REL_VAL_SEVERITY_MAP[test['result']]}"
+                s += f",{test['test_name']}={REL_VAL_SEVERITY_MAP[test['result']]},{test['test_name']}_value={test['value']},{test['test_name']}_threshold={test['threshold']}"
             f.write(f"{s}\n")
+    return 0
 
 def dir_comp(args):
     """
