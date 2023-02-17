@@ -41,7 +41,7 @@ fi
 echo "Creating residual map for $nLines input files"
 
 # ===| create tree with residuals |=============================================
-cmd="root.exe -q -x -l -n $O2_ROOT/share/macro/staticMapCreator.C'(\"${fileList}\", ${ALIEN_JDL_LPMRUNNUMBER}, \"${voxResOutFile}\")' &> residuals.log"
+cmd="root.exe -q -x -l -n $O2_ROOT/share/macro/staticMapCreator.C+'(\"${fileList}\", ${ALIEN_JDL_LPMRUNNUMBER}, \"${voxResOutFile}\")' &> residuals.log"
 echo "running: '$cmd'"
 if [[ $ALIEN_JDL_DONTEXTRACTTPCCALIB != "1" ]]; then
   eval $cmd
