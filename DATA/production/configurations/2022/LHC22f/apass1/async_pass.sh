@@ -228,7 +228,7 @@ if [[ ! -z "$ALIEN_JDL_DDSHMSIZE" ]]; then export DDSHMSIZE=$ALIEN_JDL_DDSHMSIZE
 # root output enabled only for some fraction of the cases
 # keeping AO2D.root QC.root o2calib_tof.root mchtracks.root mchclusters.root
 
-SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT_o2_aod_producer_workflow= ENABLE_ROOT_OUTPUT_o2_qc= "
+SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT_o2_muon_tracks_matcher_workflow= ENABLE_ROOT_OUTPUT_o2_aod_producer_workflow= ENABLE_ROOT_OUTPUT_o2_qc= "
 if [[ $ALIEN_JDL_DOEMCCALIB == "1" ]]; then
   SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_emcal_emc_offline_calib_workflow= "
 fi
