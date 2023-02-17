@@ -15,12 +15,18 @@ CHIPMODBASE=5
 if [ $RUNTYPE == "digital" ]; then
   CHIPMODBASE=10
 fi
+VCASNRANGE="--min-vcasn 30 --max-vcasn 80"
+if [ $RUNTYPE == "tuningbb" ]; then
+  VCASNRANGE="--min-vcasn 30 --max-vcasn 130"
+fi 
+ENABLEEOS=""
+if [[ -z $USEEOS ]]; then ENABLEEOS="--enable-eos"; fi
 
 WORKFLOW="o2-dpl-raw-proxy --exit-transition-timeout 20 $ARGS_ALL --dataspec \"$PROXY_INSPEC\" --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,rateLogging=0,transport=shmem\" | "
 WORKFLOW+="o2-itsmft-stf-decoder-workflow ${ARGS_ALL} --condition-tf-per-query -1 --condition-backend \"http://localhost:8084\" --ignore-dist-stf --configKeyValues \"$ARGS_ALL_CONFIG\" --nthreads 1  --no-clusters --no-cluster-patterns --pipeline its-stf-decoder:6 --enable-calib-data --digits | "
 for i in $(seq 0 $((CHIPMODBASE-1)))
 do
-  WORKFLOW+="o2-its-threshold-calib-workflow -b --enable-eos --enable-single-pix-tag --ccdb-mgr-url=\"http://localhost:8084\" --nthreads 1 --chip-mod-selector $i --chip-mod-base $CHIPMODBASE --fittype derivative --output-dir \"/data/calibration\" --meta-output-dir \"/data/epn2eos_tool/epn2eos\" --meta-type \"calibration\" $ARGS_ALL | "
+  WORKFLOW+="o2-its-threshold-calib-workflow -b $VCASNRANGE $ENABLEEOS --enable-single-pix-tag --ccdb-mgr-url=\"http://localhost:8084\" --nthreads 1 --chip-mod-selector $i --chip-mod-base $CHIPMODBASE --fittype derivative --output-dir \"/data/calibration\" --meta-output-dir \"/data/epn2eos_tool/epn2eos\" --meta-type \"calibration\" $ARGS_ALL | "
 done
 if workflow_has_parameter QC && has_detector_qc ITS; then
   WORKFLOW+="o2-qc --config consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/its-qc-calibration --local --host epn -b $ARGS_ALL | "
