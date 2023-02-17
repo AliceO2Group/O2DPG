@@ -19,18 +19,17 @@ else
   echo Ccdb paths are empty
 fi
 
-if [[ -z $USEEOS ]]; then 
-
 WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --exit-transition-timeout 20 --proxy-name its-thr-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=its-thr-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\" | "
-if [[ -z $USEEOS ]]; then#use eos
+if [[ -z $USEEOS ]]; then
   WORKFLOW+="o2-its-threshold-aggregator-workflow -b $ARGS_ALL | "
   WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"$CCDBPATH1\" --sspec-min 0 --sspec-max 0 --name-extention dcs | "
   if [ $RUNTYPE == "digital" ]; then
     WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"$CCDBPATH2\" --sspec-min 1 --sspec-max 1 | "
   fi
-else#do not use eos
+else
   WORKFLOW+="o2-its-threshold-aggregator-workflow -b --ccdb-url=\"$CCDBPATH1\" $ARGS_ALL | "
 fi
+
 WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
 
 if [ $WORKFLOWMODE == "print" ]; then
