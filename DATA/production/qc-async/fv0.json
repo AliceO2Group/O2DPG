@@ -46,7 +46,7 @@
       },
       "checks": {
       "FV0CFDEff": {
-        "active": "true",
+        "active": "false",
         "className": "o2::quality_control_modules::fv0::CFDEffCheck",
         "moduleName": "QcFV0",
         "policy": "OnAny",
