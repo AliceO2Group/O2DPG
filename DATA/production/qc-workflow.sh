@@ -15,10 +15,16 @@ FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
 JSON_FILES=
 OUTPUT_SUFFIX=
 
+if [[ "0$GEN_TOPO_DEPLOYMENT_TYPE" == "0ALICE_STAGING" ]]; then
+  GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-mvs00.cern.ch
+else
+  GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-aliecs.cern.ch
+fi
+
 add_QC_JSON() {
   if [[ ${2} =~ ^consul://.* ]]; then
     TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
-    curl -s -o $TMP_FILENAME "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
+    curl -s -o $TMP_FILENAME "http://${GEN_TOPO_QC_CONSUL_SERVER}:8500/v1/kv/${2/consul:\/\//}?raw"
     if [[ $? != 0 ]]; then
       echo "Error fetching QC JSON $2"
       exit 1
