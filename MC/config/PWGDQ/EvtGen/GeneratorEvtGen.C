@@ -83,7 +83,7 @@ class GeneratorEvtGen : public T
 
     EvtRandom::setRandomEngine(mEng);
 
-    char* decayTablePath = gSystem->ExpandPathName("$EVTGEN_ROOT/share/EvtGen/DECAY_2010.DEC"); // default decay table
+    char* decayTablePath = gSystem->ExpandPathName("$EVTGEN_ROOT/share/EvtGen/DECAY.DEC"); // default decay table
     char* particleTablePath = gSystem->ExpandPathName("$EVTGEN_ROOT/share/EvtGen/evt.pdl");     // particle table
     std::list<EvtDecayBase*> extraModels;
 
