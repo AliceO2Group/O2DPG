@@ -84,5 +84,5 @@ int Pythia8()
 {
     // THIS IS OBVIOUSLY NOT HOW A TEST SHOULD LOOK LIKE.
     // We are wating for the G4 patch with the correct Omega_c lifetime, then it will be updated
-    return 0;
+    return 1;
 }
