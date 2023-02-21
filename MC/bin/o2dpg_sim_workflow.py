@@ -31,7 +31,7 @@ import pandas as pd
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
-from o2dpg_workflow_utils import createTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector
+from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
 from o2dpg_sim_config import create_sim_config
 
@@ -253,6 +253,19 @@ SIMSEED = random.randint(1, 900000000 - NTIMEFRAMES - 1) # PYTHIA maximum seed i
 workflow={}
 workflow['stages'] = []
 
+### setup global environment variables which are valid for all tasks
+globalenv = {}
+if args.condition_not_after:
+   # this is for the time-machine CCDB mechanism
+   globalenv['ALICEO2_CCDB_CONDITION_NOT_AFTER'] = args.condition_not_after
+   # this is enforcing the use of local CCDB caching
+   if os.environ.get('ALICEO2_CCDB_LOCALCACHE') == None:
+       print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + os.getcwd() + '/.ccdb')
+       globalenv['ALICEO2_CCDB_LOCALCACHE'] = os.getcwd() + "/.ccdb"
+   globalenv['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = 'ON'
+
+workflow['stages'].append(createGlobalInitTask(globalenv))
+####
 
 def getDPL_global_options(bigshm=False, ccdbbackend=True):
    common=" -b --run "
@@ -1282,6 +1295,6 @@ if includeAnalysis:
 # adjust for alternate (RECO) software environments
 adjust_RECO_environment(workflow, args.alternative_reco_software)
 
-dump_workflow(workflow["stages"], args.o)
+dump_workflow(workflow['stages'], args.o)
 
 exit (0)
