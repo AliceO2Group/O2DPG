@@ -186,7 +186,7 @@ get_root_includes()
         # construct the full file path
         included_file_this_dir=${included_file_this_dir}/${included_file}
         # check if this file exists and if so, add it to our list if  not yet there
-        [[ -f ${included_file_this_dir} && "${full_includes}" == *"${included_file_this_dir}"* ]] && full_includes+="${included_file_this_dir} "
+        [[ -f ${included_file_this_dir} && "${full_includes}" != *"${included_file_this_dir}"* ]] && full_includes+="${included_file_this_dir} "
     done <<< "$(grep R__ADD_INCLUDE_PATH ${including_file})"
     echo ${full_includes}
 }
@@ -196,7 +196,7 @@ find_including_macros()
 {
     # figure out the macros that INCLUDE macros that have changed, so that in turn we can check
     # if these including macros are contained in some INI files
-    local repo_dir_head=$(pwd)
+    local repo_dir_head=${REPO_DIR}
     local changed_files=$(get_changed_files)
     local potentially_included=${MACRO_FILES_POTENTIALLY_INCLUDED}
     # we reset it here but we could fill it again to be able to do it fully recursively
@@ -219,7 +219,7 @@ find_including_macros()
             # check if included relative to this directory
             local included_file_this_dir=$(dirname ${including_file})/${included_file}
             included_file_this_dir=$(realpath $included_file_this_dir)
-            included_file_this_dir=${included_file##${repo_dir_head}/}
+            included_file_this_dir=${included_file_this_dir##${repo_dir_head}/}
             if [[ -f ${included_file_this_dir} && "${changed_files}" == *"${included_file_this_dir}"* ]] ; then
                 [[ "${including_macros}" == *"${including_file}"* ]] && continue
                 including_macros+="${including_file} "
