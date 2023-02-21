@@ -451,6 +451,9 @@ GenerateEMCocktail(Int_t collisionsSystem = GeneratorParamEMlibV2::kpp7TeV,
   (TPythia6::Instance())
       ->SetMSTU(22, pythiaErrorTolerance); // tolerance for error due to rhos
 
+  if (paramFile.BeginsWith("alien://")){
+    TGrid::Connect("alien://");
+  }
   gener->SetParametrizationFile(paramFile);
   gener->SetParametrizationFileDirectory(paramFileDir);
   gener->SetNPart(numberOfParticles);
