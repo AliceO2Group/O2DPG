@@ -896,8 +896,7 @@
     "usePtDCAXY": "false"
   },
   "qa-efficiency": {
-    "applyEvSel": "0",
-    "applyTrackSelection": "true",
+    "applyEvSel": "2",
     "do-al": "true",
     "do-de": "true",
     "do-el": "true",
@@ -907,27 +906,49 @@
     "do-pi": "true",
     "do-pr": "true",
     "do-tr": "true",
-    "do-un-id": "true",
-    "eta-bins": "500",
-    "eta-max": "0.8",
-    "eta-min": "-0.8",
+    "doNegativePDG": "true",
+    "doPositivePDG": "true",
+    "doPtEta": "false",
+    "etaBins": {
+      "values": [
+        "200",
+        "-0.8",
+        "0.8"
+      ]
+    },
+    "globalTrackSelection": "0",
     "log-pt": "0",
     "make-eff": "true",
+    "maxProdRadius": "9999",
     "nMinNumberOfContributors": "2",
-    "noFakes": "false",
-    "phi-bins": "500",
-    "phi-max": "6.28399992",
-    "phi-min": "0",
-    "processData": "false",
+    "noFakesHits": "false",
+    "phiBins": {
+      "values": [
+        "200",
+        "0",
+        "6.2839999198913574"
+      ]
+    },
+    "processData": "true",
     "processMC": "true",
-    "pt-bins": "500",
-    "pt-max": "10",
-    "pt-min": "0.1",
+    "processMCWithoutCollisions": "false",
+    "ptBins": {
+      "values": [
+        "200",
+        "0",
+        "5"
+      ]
+    },
+    "trackSelection": "true",
     "vertex-z-max": "10",
     "vertex-z-min": "-10",
-    "y-bins": "500",
-    "y-max": "0.5",
-    "y-min": "-0.5"
+    "yBins": {
+      "values": [
+        "200",
+        "-0.5",
+        "0.5"
+      ]
+    }
   },
   "qa-event-track": {
     "binsPt": {
@@ -1033,7 +1054,13 @@
     "processStandard": "false"
   },
   "track-selection": {
+    "compatibilityIU": "false",
+    "etaMax": "0.800000012",
+    "etaMin": "-0.800000012",
     "isRun3": "true",
-    "produceFBextendedTable": "true"
+    "itsMatching": "1",
+    "produceFBextendedTable": "true",
+    "ptMax": "1e+10",
+    "ptMin": "0.100000001"
   }
 }
