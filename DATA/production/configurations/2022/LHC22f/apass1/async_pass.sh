@@ -360,7 +360,7 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]]; then
     else
       export OMP_NUM_THREADS=4
     fi
-    export SHMSIZE=20000000000
+    export SHMSIZE=30000000000
   fi
 else
   # David, Oct 13th
