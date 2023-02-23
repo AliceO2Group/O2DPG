@@ -7,11 +7,12 @@
 CHECK_GENERATORS="Pythia8 External"
 
 # The test parent dir to be cretaed in current directory
-TEST_PARENT_DIR="o2dpg_tests"
+TEST_PARENT_DIR="o2dpg_tests/generators"
 
 # unified names of log files for simulation and test macro
 LOG_FILE_SIM="o2dpg-test-sim.log"
 LOG_FILE_KINE="o2dpg-test-kine.log"
+LOG_FILE_GENERIC_KINE="o2dpg-test-generic-kine.log"
 
 # collect any macro files that are not directly used in INI files but that might be included in other macros
 MACRO_FILES_POTENTIALLY_INCLUDED=""
@@ -58,24 +59,6 @@ fi
 # Core and utility functionality #
 ##################################
 
-get_changed_files()
-{
-    # in the Github CIs, there are env variables that give us the base and head hashes,
-    # so use them if they are there
-    # Otherwise, we go a few steps back
-    local hash_base_user=${O2DPG_TEST_HASH_BASE:-"HEAD~1"}
-    local hash_head_user=${O2DPG_TEST_HASH_HEAD:-"HEAD"}
-    local hash_base=${ALIBUILD_BASE_HASH:-${hash_base_user}}
-    local hash_head=${ALIBUILD_HEAD_HASH:-${hash_head_user}}
-
-    # check if unstaged changes and ALIBUILD_HEAD_HASH not set, in that case compare to unstaged
-    # if there are unstaged changes and no head from user, leave blank
-    [[ ! -z "$(git diff)" && -z ${ALIBUILD_HEAD_HASH+x} && -z ${O2DPG_TEST_HASH_HEAD+x} ]] && hash_head=""
-    # if there are unstaged changes and no base from user, set to HEAD
-    [[ ! -z "$(git diff)" && -z ${ALIBUILD_HEAD_HASH+x} && -z ${O2DPG_TEST_HASH_BASE+x} ]] && hash_base="HEAD"
-    git diff --diff-filter=AMR --name-only ${hash_base} ${hash_head}
-}
-
 
 get_test_script_path_for_ini()
 {
@@ -97,18 +80,25 @@ exec_test()
     local test_script=$(get_test_script_path_for_ini ${ini_path})
     # prepare the header of the log files
     echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_KINE}
+    echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_GENERIC_KINE}
     echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_SIM}
     # run the simulation, fail if not successful
     o2-sim -g ${generator_lower} --noGeant -n 100 -j 4 --configFile ${ini_path} >> ${LOG_FILE_SIM} 2>&1
     RET=${?}
-    if [[ "${RET}" == "0" ]]  ; then
-        # now run the test script that we know at this point exists
-        cp ${test_script} ${generator}.C
-        root -l -b -q ${generator}.C >> ${LOG_FILE_KINE} 2>&1
-        RET=${?}
-        rm ${generator}.C
-    fi
-    [[ "${KEEP_ONLY_LOGS}" == "1" ]] && find . -type f ! -name '*.log' -and ! -name "*serverlog*" -and ! -name "*mergerlog*" -and ! -name "*workerlog*" -delete
+    [[ "${RET}" != "0" ]] && { remove_artifacts ; return ${RET} ; }
+
+    # now run the generic test on the kinemtics
+    root -l -b -q ${O2DPG_ROOT}/test/common/kine_tests/test_generic_kine.C >> ${LOG_FILE_GENERIC_KINE} 2>&1
+    RET=${?}
+
+    # now run the test script that we know at this point exists
+    cp ${test_script} ${generator}.C
+    root -l -b -q ${generator}.C >> ${LOG_FILE_KINE} 2>&1
+    local ret_test=${?}
+    [[ "${RET}" != "0" ]] || RET=${ret_test}
+    rm ${generator}.C
+
+    remove_artifacts
     return ${RET}
 }
 
@@ -127,9 +117,9 @@ check_generators()
     for g in ${CHECK_GENERATORS} ; do
         # check if this generator is mentioned in the INI file and only then test it
         if [[ "$(grep ${g} ${ini_path})" != "" ]] ; then
-            echo -n "Test ${TEST_COUNTER}: ${ini_path} with generator ${g}"
             local look_for=$(grep " ${g}.*\(\)" ${test_script})
-            [[ -z "${look_for}" ]] && { echo "Nothing to test for ini file ${ini_path} and generator ${g}." ; continue ; }
+            [[ -z "${look_for}" ]] && continue
+            echo -n "Test ${TEST_COUNTER}: ${ini_path} with generator ${g}"
             tested_any=1
             # prepare the test directory
             local test_dir=${TEST_COUNTER}_$(basename ${ini})_${g}_dir
@@ -166,7 +156,7 @@ add_ini_files_from_macros()
         for oif in ${other_ini_files} ; do
             # add to our collection of INI files if not yet there
             [[ "${INI_FILES}" ==  *"${oif}"* ]] && continue
-            INI_FILES+="${oif} "
+            INI_FILES+=" ${oif} "
         done
     done
 }
@@ -257,11 +247,31 @@ add_ini_files_from_tests()
     done
 }
 
+add_ini_files_from_all_tests()
+{
+    # Collect also those INI files for which the test has been changed
+    local all_tests=$(find ${REPO_DIR} -name "*.C" | grep "MC/.*/ini/tests")
+    local repo_dir_head=${REPO_DIR}
+    for t in ${all_tests} ; do
+        local this_test=$(realpath ${t})
+        this_test=${this_test##${repo_dir_head}/}
+        local tc=$(basename ${this_test})
+        this_test=${this_test%%/tests/*}
+        tc=${tc%.C}.ini
+        tc=${this_test}/${tc}
+        [[ "${INI_FILES}" == *"${tc}"* ]] && continue
+        INI_FILES+=" ${tc} "
+    done
+}
+
 
 collect_ini_files()
 {
     # Collect all INI files which have changed
-    INI_FILES=$(get_changed_files | grep ".ini$" | grep "MC/config")
+    local ini_files=$(get_changed_files | grep ".ini$" | grep "MC/config")
+    for ini in ${ini_files} ; do
+        [[ "${INI_FILES}" == *"${ini}"* ]] && continue || INI_FILES+=" ${ini} "
+    done
 
     # this relies on INI_FILES and MACRO_FILES_POTENTIALLY_INCLUDED
     # collect all INI files that might include some changed macros
@@ -273,7 +283,7 @@ collect_ini_files()
     add_ini_files_from_macros $(find_including_macros)
 
     # also tests might have changed in which case we run them
-    add_ini_files_from_tests $(get_changed_files | grep ".C$" | grep "MC/.*/tests")
+    add_ini_files_from_tests $(get_changed_files | grep ".C$" | grep "MC/.*/ini/tests")
 }
 
 
@@ -357,13 +367,19 @@ if [[ -z ${O2DPG_ROOT+x} ]] ; then
     exit 1
 fi
 
-### TODO ####
-# * allow other tests, such as basic workflow creation and others
-#############
+# source the utilities
+source ${REPO_DIR}/test/common/utils/utils.sh
 
 # Do the initial steps in the source dir where we have the full git repo
-echo ${REPO_DIR}
 pushd ${REPO_DIR} > /dev/null
+
+# First check, if testing itself has changed. In that case this will add INI files
+# for which a test can be found
+global_testing_changed=$(get_changed_files | grep -E ".C$|.sh$" | grep "^test/")
+[[ "${global_testing_changed}" != "" ]] && add_ini_files_from_all_tests
+
+# Then add the ini files that have changed as well. We need to do that so we get information
+# about missing tests etc.
 collect_ini_files
 
 if [[ -z "${INI_FILES}" ]] ; then
@@ -389,7 +405,7 @@ for ini in ${INI_FILES} ; do
     ini_files_full_paths+="$(realpath ${ini}) "
 done
 
-# go back to where we cam from
+# go back to where we came from
 popd > /dev/null
 
 # Now, do the trick:
@@ -401,7 +417,7 @@ export O2DPG_ROOT=${REPO_DIR}
 
 # prepare our local test directory
 rm -rf ${TEST_PARENT_DIR} 2>/dev/null
-mkdir ${TEST_PARENT_DIR} 2>/dev/null
+mkdir -p ${TEST_PARENT_DIR} 2>/dev/null
 pushd ${TEST_PARENT_DIR} > /dev/null
 
 # global return code to be returned at the end
@@ -421,18 +437,12 @@ popd > /dev/null
 
 # final printing of log files of failed tests
 if [[ "${ret_global}" != "0" ]] ; then
-    search_pattern="TASK-EXIT-CODE: ([1-9][0-9]*)|[Ss]egmentation violation|[Ee]xception caught|\[FATAL\]|uncaught exception|\(int\) ([1-9][0-9]*)"
-    error_files=$(find . -maxdepth 4 -type f \( -name "*.log" -or -name "*serverlog*" -or -name "*workerlog*" -or -name "*mergerlog*" \) | xargs grep -l -E "${search_pattern}" | sort)
-    for ef in ${error_files} ; do
-        echo_red "Error found in log $(realpath ${ef})"
-        # print the match plus additional 10 lines
-        grep -n -A 10 -B 10 -E "${search_pattern}" ${ef}
-    done
+    print_error_logs ${TEST_PARENT_DIR}
     exit ${ret_global}
 fi
 
 echo
-echo_green "All tests successful"
+echo_green "All generator tests successful"
 echo
 
 exit 0
