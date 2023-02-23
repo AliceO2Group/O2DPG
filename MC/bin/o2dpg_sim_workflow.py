@@ -20,7 +20,7 @@
 import sys
 import importlib.util
 import argparse
-from os import environ, mkdir
+from os import environ, mkdir, getcwd
 from os.path import join, dirname, isdir
 import random
 import json
@@ -259,9 +259,9 @@ if args.condition_not_after:
    # this is for the time-machine CCDB mechanism
    globalenv['ALICEO2_CCDB_CONDITION_NOT_AFTER'] = args.condition_not_after
    # this is enforcing the use of local CCDB caching
-   if os.environ.get('ALICEO2_CCDB_LOCALCACHE') == None:
-       print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + os.getcwd() + '/.ccdb')
-       globalenv['ALICEO2_CCDB_LOCALCACHE'] = os.getcwd() + "/.ccdb"
+   if environ.get('ALICEO2_CCDB_LOCALCACHE') == None:
+       print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + getcwd() + '/.ccdb')
+       globalenv['ALICEO2_CCDB_LOCALCACHE'] = getcwd() + "/.ccdb"
    globalenv['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = 'ON'
 
 workflow['stages'].append(createGlobalInitTask(globalenv))
