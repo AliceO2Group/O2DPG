@@ -109,6 +109,7 @@ parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS
                                                             # (consider doing this rather in O2 digitization code directly)
 parser.add_argument('--run-anchored', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--alternative-reco-software', default="", help=argparse.SUPPRESS) # power feature to set CVFMS alienv software version for reco steps (different from default)
+parser.add_argument('--dpl-child-driver', default="", help="Child driver to use in DPL processes (export mode)")
 
 # QC related arguments
 parser.add_argument('--include-qc', '--include-full-qc', action='store_true', help='includes QC in the workflow, both per-tf processing and finalization')
@@ -269,6 +270,8 @@ workflow['stages'].append(createGlobalInitTask(globalenv))
 
 def getDPL_global_options(bigshm=False, ccdbbackend=True):
    common=" -b --run "
+   if len(args.dpl_child_driver) > 0:
+     common=common + ' --child-driver ' + str(args.dpl_child_driver)
    if ccdbbackend:
      common=common + " --condition-not-after " + str(args.condition_not_after)
    if args.noIPC!=None:
