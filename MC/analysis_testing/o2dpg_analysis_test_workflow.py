@@ -136,7 +136,8 @@ analysis_K0STrackingEfficiencyQA = {"name": "K0STrackingEfficiencyQA",
                                             "o2-analysis-event-selection",
                                             "o2-analysis-timestamp",
                                             "o2-analysis-multiplicity-table",
-                                            "o2-analysis-qa-k0s-tracking-efficiency"]}
+                                            "o2-analysis-qa-k0s-tracking-efficiency",
+                                            "o2-analysis-perf-k0s-resolution"]}
 if 0:
   ANALYSES.append(analysis_K0STrackingEfficiencyQA)
 analysis_Validation = {"name": "Validation",
