@@ -263,7 +263,10 @@ if args.condition_not_after:
    if environ.get('ALICEO2_CCDB_LOCALCACHE') == None:
        print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + getcwd() + '/.ccdb')
        globalenv['ALICEO2_CCDB_LOCALCACHE'] = getcwd() + "/.ccdb"
-   globalenv['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = 'ON'
+   else:
+       # fixes the workflow to use and remember externally provided path
+       globalenv['ALICEO2_CCDB_LOCALCACHE'] = environ.get('ALICEO2_CCDB_LOCALCACHE')
+   globalenv['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = '${ALICEO2_CCDB_LOCALCACHE:+"ON"}'
 
 workflow['stages'].append(createGlobalInitTask(globalenv))
 ####
