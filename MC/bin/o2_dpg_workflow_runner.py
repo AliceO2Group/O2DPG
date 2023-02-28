@@ -491,10 +491,9 @@ class WorkflowExecutor:
       self.workflowfile = workflowfile
       self.workflowspec = load_json(workflowfile)
       self.globalenv = self.extract_global_environment(self.workflowspec) # initialize global environment settings
-      print ("The global environment is ", self.globalenv)
       for e in self.globalenv:
         if os.environ.get(e, None) == None:
-           print ("Applying key ", str(e))
+           actionlogger.info("Applying global environment from init section " + str(e) + " : " + str(self.globalenv[e]))
            os.environ[e] = str(self.globalenv[e])
 
       self.workflowspec = filter_workflow(self.workflowspec, args.target_tasks, args.target_labels)

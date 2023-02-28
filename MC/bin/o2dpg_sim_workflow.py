@@ -20,7 +20,7 @@
 import sys
 import importlib.util
 import argparse
-from os import environ, mkdir
+from os import environ, mkdir, getcwd
 from os.path import join, dirname, isdir
 import random
 import json
@@ -109,6 +109,7 @@ parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS
                                                             # (consider doing this rather in O2 digitization code directly)
 parser.add_argument('--run-anchored', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--alternative-reco-software', default="", help=argparse.SUPPRESS) # power feature to set CVFMS alienv software version for reco steps (different from default)
+parser.add_argument('--dpl-child-driver', default="", help="Child driver to use in DPL processes (export mode)")
 
 # QC related arguments
 parser.add_argument('--include-qc', '--include-full-qc', action='store_true', help='includes QC in the workflow, both per-tf processing and finalization')
@@ -259,16 +260,21 @@ if args.condition_not_after:
    # this is for the time-machine CCDB mechanism
    globalenv['ALICEO2_CCDB_CONDITION_NOT_AFTER'] = args.condition_not_after
    # this is enforcing the use of local CCDB caching
-   if os.environ.get('ALICEO2_CCDB_LOCALCACHE') == None:
-       print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + os.getcwd() + '/.ccdb')
-       globalenv['ALICEO2_CCDB_LOCALCACHE'] = os.getcwd() + "/.ccdb"
-   globalenv['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = 'ON'
+   if environ.get('ALICEO2_CCDB_LOCALCACHE') == None:
+       print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + getcwd() + '/.ccdb')
+       globalenv['ALICEO2_CCDB_LOCALCACHE'] = getcwd() + "/.ccdb"
+   else:
+       # fixes the workflow to use and remember externally provided path
+       globalenv['ALICEO2_CCDB_LOCALCACHE'] = environ.get('ALICEO2_CCDB_LOCALCACHE')
+   globalenv['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = '${ALICEO2_CCDB_LOCALCACHE:+"ON"}'
 
 workflow['stages'].append(createGlobalInitTask(globalenv))
 ####
 
 def getDPL_global_options(bigshm=False, ccdbbackend=True):
    common=" -b --run "
+   if len(args.dpl_child_driver) > 0:
+     common=common + ' --child-driver ' + str(args.dpl_child_driver)
    if ccdbbackend:
      common=common + " --condition-not-after " + str(args.condition_not_after)
    if args.noIPC!=None:

@@ -977,6 +977,12 @@ def influx(args):
     # always the same
     row_tags = table_name + tags_out
 
+    def replace_None(value):
+        # helper to replace None by string null
+        if value is None:
+            return "null"
+        return value
+
     out_file = join(output_dir, "influxDB.dat")
 
     summary = None
@@ -991,7 +997,7 @@ def influx(args):
                 s += f",web_storage={join(args.web_storage, tests[0]['rel_path_plot'])}"
             s += f" histogram_name=\"{histo_name}\""
             for test in tests:
-                s += f",{test['test_name']}={REL_VAL_SEVERITY_MAP[test['result']]},{test['test_name']}_value={test['value']},{test['test_name']}_threshold={test['threshold']}"
+                s += f",{test['test_name']}={REL_VAL_SEVERITY_MAP[test['result']]},{test['test_name']}_value={replace_None(test['value'])},{test['test_name']}_threshold={replace_None(test['threshold'])}"
             f.write(f"{s}\n")
     return 0
 
