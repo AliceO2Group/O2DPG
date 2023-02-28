@@ -75,6 +75,8 @@ exec_test()
     local ini_path=${1}
     local generator=${2} # for now one of "Pythia8" or "External", at this point we know that settings for the generator are defined in this ini
     local generator_lower=$(echo "${generator}" | tr '[:upper:]' '[:lower:]')
+    # TODO Potentially, one could run an external generator that derives from GeneratorPythia8 and so could probably use configuration for TriggerPythia8
+    local trigger=${3:+-t ${generator_lower}}
     local RET=0
     # this is how our test script is expected to be called
     local test_script=$(get_test_script_path_for_ini ${ini_path})
@@ -83,7 +85,7 @@ exec_test()
     echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_GENERIC_KINE}
     echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_SIM}
     # run the simulation, fail if not successful
-    o2-sim -g ${generator_lower} --noGeant -n 100 -j 4 --configFile ${ini_path} >> ${LOG_FILE_SIM} 2>&1
+    o2-sim -g ${generator_lower} ${trigger} --noGeant -n 100 -j 4 --configFile ${ini_path} >> ${LOG_FILE_SIM} 2>&1
     RET=${?}
     [[ "${RET}" != "0" ]] && { remove_artifacts ; return ${RET} ; }
 
@@ -118,6 +120,7 @@ check_generators()
         # check if this generator is mentioned in the INI file and only then test it
         if [[ "$(grep ${g} ${ini_path})" != "" ]] ; then
             local look_for=$(grep " ${g}.*\(\)" ${test_script})
+            local has_trigger="$(grep Trigger${g} ${ini_path})"
             [[ -z "${look_for}" ]] && continue
             echo -n "Test ${TEST_COUNTER}: ${ini_path} with generator ${g}"
             tested_any=1
@@ -127,7 +130,7 @@ check_generators()
             mkdir ${test_dir}
             pushd ${test_dir} > /dev/null
                 # one single test
-                exec_test ${ini_path} ${g}
+                exec_test ${ini_path} ${g} ${has_trigger}
                 RET=${?}
             popd > /dev/null
             if [[ "${RET}" != "0" ]] ; then
