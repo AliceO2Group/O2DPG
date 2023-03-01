@@ -1,0 +1,16 @@
+#!/bin/bash
+if [[ "0$HOSTNAME" == "0epn002.internal" && "0$ROCR_VISIBLE_DEVICES" == "00,1,2,3" ]]; then
+  # We are on the testnode, NUMA domain 1, try local apptainer
+  shift
+  echo "Running /usr/bin/apptainer exec --net --network async-sriov --dns=\"137.138.17.5\" $@" > /home/drohr/grid-wrapper/log/test.$(date -u +%Y%m%d-%H%M%S).log
+  exec /usr/bin/apptainer exec --net --network ptp --dns="137.138.17.5" "$@"
+elif [[ "0$HOSTNAME" == "0epn002.internal" && "0$ROCR_VISIBLE_DEVICES" == "04,5,6,7" ]]; then
+  # We are on the testnode, NUMA domain 1, try local apptainer
+  shift
+  echo "Running /usr/bin/apptainer exec --net --network async-sriov --dns=\"137.138.17.5\" $@" > /home/drohr/grid-wrapper/log/test.$(date -u +%Y%m%d-%H%M%S).log
+  exec /usr/bin/apptainer exec --net --network ptp --dns="137.138.17.5" "$@"
+else
+  # Not on the testnode, just forward to the CVMFS installation
+  echo "Running /cvmfs/alice.cern.ch/containers/bin/apptainer/current/bin/apptainer $@" > /home/drohr/grid-wrapper/log/normal.$(date -u +%Y%m%d-%H%M%S).log
+  exec /cvmfs/alice.cern.ch/containers/bin/apptainer/current/bin/apptainer "$@"
+fi
