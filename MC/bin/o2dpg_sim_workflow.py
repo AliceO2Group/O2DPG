@@ -546,7 +546,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    QEDdigiargs = ""
    if includeQED:
      NEventsQED=10000 # 35K for a full timeframe?
-     QED_task=createTask(name='qedsim_'+str(tf), needs=([],[PreCollContextTask['name']])[args.pregenCollContext == True], tf=tf, cwd=timeframeworkdir, cpu='1')
+     qedneeds=[GRP_TASK['name']]
+     if args.pregenCollContext == True:
+       qedneeds.append(PreCollContextTask['name'])
+     QED_task=createTask(name='qedsim_'+str(tf), needs=qedneeds, tf=tf, cwd=timeframeworkdir, cpu='1')
      ########################################################################################################
      #
      # ATTENTION: CHANGING THE PARAMETERS/CUTS HERE MIGHT INVALIDATE THE QED INTERACTION RATES USED ELSEWHERE
