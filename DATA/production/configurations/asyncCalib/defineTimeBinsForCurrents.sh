@@ -9,5 +9,5 @@ fi
 sed -rn 's/.*turl="([^"]*)".*/\1/p' $1 | sort -u > o2currents_tpc.txt
 
 # now extracting timBins.log
-cp $O2DPG_ROOT/DATA/production/configurations/asyncCalib/prepareBins.C
+cp $O2DPG_ROOT/DATA/production/configurations/asyncCalib/prepareBins.C .
 root -b -q "prepareBins.C+(\"o2currents_tpc.txt\", $TIMEFRAMESPERJOB)"
