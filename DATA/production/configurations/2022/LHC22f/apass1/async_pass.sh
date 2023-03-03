@@ -29,6 +29,12 @@ elif [[ "${1##*.}" == "xml" ]]; then
     shift
 fi
 
+if [[ -f list.list ]]; then
+  echo "Processing will be on the following list of files:"
+  cat list.list
+  echo -e "\n"
+fi
+
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
   key="$1"
