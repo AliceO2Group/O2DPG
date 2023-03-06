@@ -144,6 +144,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
       add_QC_JSON MCH_DIGITS $O2DPG_ROOT/DATA/production/qc-async/mch-digits.json
       if has_processing_step "MCH_RECO"; then
         add_QC_JSON MCH_RECO $O2DPG_ROOT/DATA/production/qc-async/mch-reco.json
+        add_QC_JSON MCH_ERRORS $O2DPG_ROOT/DATA/production/qc-async/mch-errors.json
       fi
       if has_track_source "MCH"; then
         add_QC_JSON MCH_TRACKS $O2DPG_ROOT/DATA/production/qc-async/mch-tracks.json
