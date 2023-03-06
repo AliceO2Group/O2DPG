@@ -31,9 +31,9 @@ do
     echo Processing workflow $wf
     export GEN_TOPO_WORKFLOW_NAME=$wf
     export WORKFLOWMODE=dds
-    /home/epn/pdp/gen_topo.sh > $HOME/gen_topo_calib/dplTest/${GEN_TOPO_WORKFLOW_NAME}.xml
+    /opt/alisw/el8/GenTopo/bin/gen_topo.sh > $HOME/gen_topo_calib/dplTest/${GEN_TOPO_WORKFLOW_NAME}.xml
     # export WORKFLOWMODE=print
-    # /home/epn/pdp/gen_topo.sh > $HOME/gen_topo_calib/dpl/${GEN_TOPO_WORKFLOW_NAME}.sh
+    # /opt/alisw/el8/GenTopo/bin/gen_topo.sh > $HOME/gen_topo_calib/dpl/${GEN_TOPO_WORKFLOW_NAME}.sh
 
 done
 
