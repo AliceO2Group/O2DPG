@@ -28,6 +28,6 @@ if [[ $nLines -eq 0 ]]; then
   echo "ERROR: Problem creating list for jobs to submit"
 else
   # Add line for job over full run
-  echo "all 0 0" >> $TIMEBINLOGFILENAME
+  #echo "all 0 0" >> $TIMEBINLOGFILENAME
   echo "Number of jobs to submit for SCD map creation: $nLines"
 fi
