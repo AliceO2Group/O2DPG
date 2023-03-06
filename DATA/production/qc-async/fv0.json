@@ -46,7 +46,7 @@
       },
       "checks": {
       "FV0CFDEff": {
-        "active": "false",
+        "active": "true",
         "className": "o2::quality_control_modules::fv0::CFDEffCheck",
         "moduleName": "QcFV0",
         "policy": "OnAny",
@@ -58,7 +58,8 @@
         }],
         "checkParameters": {
           "thresholdWarning": "0.8",
-          "thresholdError": "0.6"
+          "thresholdError": "0.6",
+		  "ccdbUrl": "alice-ccdb.cern.ch"
         }
       }
     }
