@@ -995,7 +995,7 @@ def influx(args):
             common_string = f"{row_tags},type_global={tests[0]['type_global']},type_specific={tests[0]['type_specific']},id={i}"
             if args.web_storage:
                 common_string += f",web_storage={join(args.web_storage, tests[0]['rel_path_plot'])}"
-            common_string += f",histogram_name=\"{histo_name}\""
+            common_string += f",histogram_name={histo_name}"
             for test in tests:
                 test_string = common_string + f",test_name={test['test_name']} status={REL_VAL_SEVERITY_MAP[test['result']]}"
                 for key in ("value", "threshold"):
