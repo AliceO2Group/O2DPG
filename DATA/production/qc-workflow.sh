@@ -46,7 +46,7 @@ QC_CONFIG_OVERRIDE=
 if [[ -z $QC_JSON_FROM_OUTSIDE && ! -z $GEN_TOPO_QC_JSON_FILE && -f $GEN_TOPO_QC_JSON_FILE ]]; then
   QC_JSON_FROM_OUTSIDE=$GEN_TOPO_QC_JSON_FILE
 elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
-  if [[ $EPNSYNCMODE == 1 || "0$GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL" == "01" ]]; then
+  if [[ $EPNSYNCMODE == 1 || "0$GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL" == "01" ]]; then # Sync processing running on the EPN
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=consul://o2/components/qc/ANY/any/tpc-full-qcmn
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=consul://o2/components/qc/ANY/any/its-qcmn-epn-full
     if [[ -z "$QC_JSON_MFT" ]]; then
@@ -99,7 +99,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
       fi
     fi
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json # this must be last
-  elif [[ $SYNCMODE == 1 ]]; then
+  elif [[ $SYNCMODE == 1 ]]; then # Sync processing running locally (CI, laptop)
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
     if [[ -z "$QC_JSON_MFT" ]]; then
@@ -130,7 +130,9 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
       fi
     fi
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json # this must be last
-  else
+
+    QC_CONFIG_OVERRIDE+="qc.config.conditionDB.url=${DPL_CONDITION_BACKEND:-http://alice-ccdb.cern.ch};"
+  else # Async processing
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-async/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-async/its.json
     [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-async/mft.json
