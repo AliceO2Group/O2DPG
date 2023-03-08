@@ -158,6 +158,7 @@ if [[ -z $EVE_NTH_EVENT ]]; then
   elif [[ $BEAMTYPE == "pp" && "0$ED_VERTEX_MODE" == "01" ]]; then
     [[ -z $EVE_NTH_EVENT ]] && EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
   fi
+  [[ ! -z $EPN_GLOBAL_SCALING ]] && EVE_NTH_EVENT=$(($EVE_NTH_EVENT * $EPN_GLOBAL_SCALING))
 fi
 
 if [[ "0$HIGH_RATE_PP" == "01" ]]; then
