@@ -1216,8 +1216,10 @@ for tf in range(1, NTIMEFRAMES + 1):
      aodinfosources += ',EMC'
    if isActive('CPV'):
      aodneeds += [ CPVRECOtask['name'] ]
+     aodinfosources += ',CPV'
    if isActive('PHS'):
      aodneeds += [ PHSRECOtask['name'] ]
+     aodinfosources += ',PHS'
    if isActive('MID'):
       aodneeds += [ MIDRECOtask['name'] ]
       aodinfosources += ',MID'
