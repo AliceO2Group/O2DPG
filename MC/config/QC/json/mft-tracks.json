@@ -26,42 +26,28 @@
       }
     },
     "tasks": {
-      "Digits": {
+      "Tracks": {
         "active": "true",
-        "className": "o2::quality_control_modules::mft::QcMFTDigitTask",
+        "className": "o2::quality_control_modules::mft::QcMFTTrackTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
-        "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
           "type": "direct",
-          "query": "randomdigit:MFT/DIGITS/0;digitsrof:MFT/DIGITSROF/0"
+          "query": "tracks:MFT/TRACKS/0;tracksrofs:MFT/MFTTrackROF/0"
         },
-        "taskParameters": {
-          "FLP": "0",
-          "NoiseScan" : "0",
-          "maxDigitROFSize" : "5000",
-          "maxDuration" : "60000",
-          "timeBinSize" : "0.1",
-          "ROFLengthInBC" : "198"
+        "taskParameters" : {
+          "ROFLengthInBC": "594",
+          "MaxTrackROFSize": "10000",
+          "MaxClusterROFSize": "50000",
+          "MaxDuration": "60000",
+          "TimeBinSize": "0.1"
         },
         "location": "remote"
       }
     },
-    "checks": {
-      "Digits": {
-        "active": "true",
-        "className": "o2::quality_control_modules::mft::QcMFTDigitCheck",
-        "moduleName": "QcMFT",
-        "detectorName": "MFT",
-        "policy": "OnEachSeparately",
-        "dataSource": [{
-          "type": "Task",
-          "name": "Digits"
-        }]
-      }
-    }
+    "checks": {}
   },
   "dataSamplingPolicies": [
   ]

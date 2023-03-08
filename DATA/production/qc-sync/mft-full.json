@@ -19,7 +19,7 @@
         "url": "http://ali-consul.cern.ch:8500"
       },
       "conditionDB": {
-        "url": "http://alice-ccdb.cern.ch"
+        "url": "o2-ccdb.internal"
       }
     },
     "tasks": {
@@ -35,9 +35,7 @@
           "query": "filter:MFT/RAWDATA"
         },
         "location": "local",
-        "localMachines": [
-          "flp"
-        ],
+        "localMachines": [ "flp" ],
         "remoteMachine": "any",
         "remotePort": "47798"
       },
@@ -58,12 +56,10 @@
           "maxDigitROFSize" : "5000",
           "maxDuration" : "60000",
           "timeBinSize" : "0.1",
-          "ROFLengthInBC" : "198"
+          "ROFLengthInBC" : "594"
         },
         "location": "local",
-        "localMachines": [
-          "flp"
-        ],
+        "localMachines" : [ "flp" ], 
         "remoteMachine": "any",
         "remotePort": "47799"
       },
@@ -78,42 +74,40 @@
           "type": "dataSamplingPolicy",
           "name": "mft-clusters"
         },
-        "location": "local",
-        "localMachines": [
-          "epn",
-          "localhost"
-        ],
         "taskParameters" : {
-          "maxClusterROFSize" : "5000",
+          "maxClusterROFSize" : "50000",
           "maxDuration" : "60000",
           "timeBinSize" : "0.1",
-          "ROFLengthInBC" : "198",
+          "ROFLengthInBC" : "594",
           "geomFileName" : "o2sim_geometry-aligned.root"
         },
+        "location": "local",
+        "localMachines": [
+          "epn", "localhost"
+        ],
         "remoteMachine": "alio2-cr1-qme05.cern.ch",
         "remotePort": "47797",
         "localControl": "odc"
       },
       "MFTAsyncTask": {
         "active": "true",
-        "className" : "o2::quality_control_modules::mft::QcMFTAsyncTask",
+        "className" : "o2::quality_control_modules::mft::QcMFTTrackTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "120",
         "maxNumberCycles": "-1",
         "dataSource" : {
           "type" : "direct",
-          "query" : "tracks:MFT/TRACKS/0;tracksrofs:MFT/MFTTrackROF/0;clusters:MFT/COMPCLUSTERS/0;clustersrofs:MFT/CLUSTERSROF/0"
+          "query" : "tracks:MFT/TRACKS/0;tracksrofs:MFT/MFTTrackROF/0"
         },
         "location": "local",
         "localMachines": [
-          "epn",
-          "localhost"
+          "epn", "localhost"
         ],
         "taskParameters" : {
-          "ROFLengthInBC": "198",
-          "MaxTrackROFSize": "1000",
-          "MaxClusterROFSize": "5000",
+          "ROFLengthInBC": "594",
+          "MaxTrackROFSize": "10000",
+          "MaxClusterROFSize": "50000",
           "MaxDuration": "60000",
           "TimeBinSize": "0.1"
         },
@@ -130,20 +124,18 @@
         "detectorName": "MFT",
         "policy": "OnEachSeparately",
         "checkParameters" : {
-          "WarningThresholdMedium" : "0",
-          "WarningThresholdBad" : "10",
-          "ErrorThresholdMedium" : "200",
-          "ErrorThresholdBad" : "300",
-          "FaultThresholdMedium" : "200",
-          "FaultThresholdBad" : "300"
+          "WarningThresholdMedium" : "10",
+          "WarningThresholdBad" : "20",
+          "ErrorThresholdMedium" : "40",
+          "ErrorThresholdBad" : "150",
+          "FaultThresholdMedium" : "10",
+          "FaultThresholdBad" : "20"
         },
-        "dataSource": [
-          {
-            "type": "Task",
-            "name": "MFTReadoutTask",
-            "MOs": ["mDDWSummary","mSummaryChipOk","mSummaryChipFault", "mSummaryChipError", "mSummaryChipWarning", "mRDHSummary"]
-          }
-        ]
+        "dataSource": [{
+          "type": "Task",
+          "name": "MFTReadoutTask",
+          "MOs" : ["mDDWSummary","mSummaryChipOk","mSummaryChipFault", "mSummaryChipError", "mSummaryChipWarning", "mZoneSummaryChipWarning", "mZoneSummaryChipError", "mZoneSummaryChipFault", "mRDHSummary"]
+        }]
       },
       "MFTDigitCheck": {
         "active": "true",
@@ -151,27 +143,63 @@
         "moduleName": "QcMFT",
         "detectorName": "MFT",
         "policy": "OnEachSeparately",
-        "dataSource": [
-          {
-            "type": "Task",
-            "name": "MFTDigitTask",
-            "MOs"  : ["mDigitChipOccupancy","mDigitOccupancySummary","mDigitChipStdDev"]
-          }
-        ]
+        "checkParameters" : {
+          "ZoneThresholdMedium" : "2",
+          "ZoneThresholdBad" : "5"
+        },
+        "dataSource": [{
+          "type": "Task",
+          "name": "MFTDigitTask",
+          "MOs" : ["mDigitChipOccupancy","mDigitOccupancySummary","mDigitChipStdDev"]
+        }]
       },
       "MFTClusterCheck": {
         "active": "true",
-        "dataSource": [
-          {
+        "dataSource": [{
             "type": "Task",
             "name": "MFTClusterTask",
-            "MOs" : ["mClusterOccupancy","mClusterPatternIndex","mClusterSizeSummary","mGroupedClusterSizeSummary","mClusterOccupancySummary"]
-          }
-        ],
+            "MOs" : ["mClusterOccupancy","mClusterPatternIndex","mClusterSizeSummary", "mGroupedClusterSizeSummary","mClusterOccupancySummary"]
+        }],
+        "checkParameters" : {
+          "ZoneThresholdMedium" : "2",
+          "ZoneThresholdBad" : "5"
+        },
         "className": "o2::quality_control_modules::mft::QcMFTClusterCheck",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "policy": "OnEachSeparately"
+        "policy": "OnAny"
+      },
+      "MFTIncrEntrCheck": {
+        "active": "false",
+        "className": "o2::quality_control_modules::common::IncreasingEntries",
+        "moduleName": "QcCommon",
+        "policy": "OnEachSeparately",
+        "detectorName": "MFT",
+        "checkParameters": {
+          "mustIncrease" : "true"
+        },
+        "dataSource": [
+          {
+            "type": "Task",
+            "name": "MFTReadoutTask",
+            "MOs" : ["mSummaryChipError"]
+          },
+          {
+            "type": "Task",
+            "name": "MFTDigitTask",
+            "MOs" : ["mDigitChipOccupancy"]
+          },
+          {
+            "type": "Task",
+            "name": "MFTClusterTask",
+            "MOs" : ["mClusterOccupancy"]
+          },
+          {
+            "type": "Task",
+            "name": "MFTAsyncTask",
+            "MOs" : ["mTrackROFNEntries"]
+          }
+        ]
       }
     },
     "postprocessing": {
@@ -221,22 +249,91 @@
         "stopTrigger": [
           "userorcontrol"
         ]
+      },
+      "MFTOccupancyTrend": {
+        "active": "true",
+        "className": "o2::quality_control::postprocessing::TrendingTask",
+        "moduleName": "QcMFT",
+        "detectorName": "MFT",
+        "dataSources": [
+          {
+            "type": "repository",
+            "path": "MFT/MO/MFTDigitTask",
+            "names": [ "mDigitChipOccupancy" ],
+            "reductorName": "o2::quality_control_modules::mft::QcMFTOccupancyTrend",
+            "moduleName": "QcMFT"
+          }
+        ],
+        "plots": [
+          {
+            "name": "mDigitEmptyChipsTrend",
+            "title": "Trend of total number of chips with no digits",
+            "varexp": "mDigitChipOccupancy.binContentOverflow:time",
+            "selection": "",
+            "option": "*L",
+            "graphAxisLabel": "Chips with no digits:time"
+          }
+        ],
+        "initTrigger": [
+          "userorcontrol"
+        ],
+        "updateTrigger": [
+          "newobject:qcdb:MFT/MO/MFTDigitTask/mDigitChipOccupancy"
+        ],
+        "stopTrigger": [
+          "userorcontrol"
+        ]
+      },
+      "MFTTrendSlices": {
+        "active": "true",
+        "className": "o2::quality_control::postprocessing::SliceTrendingTask",
+        "moduleName": "QcMFT",
+        "detectorName": "MFT",
+        "dataSources": [
+          {
+            "type": "repository",
+            "path": "MFT/MO/MFTDigitTask",
+            "names": [ "mDigitChipOccupancy" ],
+            "reductorName": "o2::quality_control_modules::common::TH1SliceReductor",
+            "axisDivision": [ [ "1", "468", "936" ] ],
+            "moduleName": "QcMFT"
+          }
+        ],
+        "plots": [
+          {
+            "name": "mMeanDigitOccupancyPerHalfMFTTrend",
+            "title": "Mean digit occupancy trend for each MFT half",
+            "varexp": "mDigitChipOccupancy.meanY:multigraphtime",
+            "selection": "",
+            "option": "*L",
+            "graphErrors": "errMeanY:0.5",
+            "graphYRange": "",
+            "graphXRange": "",
+            "graphAxisLabel": "Mean digit occupancy for H0 (blue) and H1 (yellow):time"
+          }
+        ],
+        "initTrigger": [
+          "userorcontrol"
+        ],
+        "updateTrigger": [
+          "newobject:qcdb:MFT/MO/MFTDigitTask/mDigitChipOccupancy"
+        ],
+        "stopTrigger": [
+          "userorcontrol"
+        ]
       }
-    }
+    }    
   },
   "dataSamplingPolicies": [
     {
       "id": "mft-clusters",
       "active": "true",
-      "machines": [
-        "epn",
-        "localhost"
-      ],
+      "machines": [ "epn", "localhost" ],
       "query": "randomcluster:MFT/COMPCLUSTERS/0;clustersrof:MFT/CLUSTERSROF/0;patterns:MFT/PATTERNS/0;cldict:MFT/CLUSDICT/0?lifetime=condition&ccdb-path=MFT/Calib/ClusterDictionary",
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.01",
+          "fraction": "0.005",
           "seed": "0"
         }
       ],

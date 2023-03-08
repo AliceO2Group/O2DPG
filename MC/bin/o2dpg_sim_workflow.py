@@ -546,16 +546,20 @@ for tf in range(1, NTIMEFRAMES + 1):
    QEDdigiargs = ""
    if includeQED:
      NEventsQED=10000 # 35K for a full timeframe?
-     QED_task=createTask(name='qedsim_'+str(tf), needs=([],[PreCollContextTask['name']])[args.pregenCollContext == True], tf=tf, cwd=timeframeworkdir, cpu='1')
+     qedneeds=[GRP_TASK['name']]
+     if args.pregenCollContext == True:
+       qedneeds.append(PreCollContextTask['name'])
+     QED_task=createTask(name='qedsim_'+str(tf), needs=qedneeds, tf=tf, cwd=timeframeworkdir, cpu='1')
      ########################################################################################################
      #
      # ATTENTION: CHANGING THE PARAMETERS/CUTS HERE MIGHT INVALIDATE THE QED INTERACTION RATES USED ELSEWHERE
      #
      ########################################################################################################
-     QED_task['cmd'] = 'o2-sim -e TGeant3  --field '  + str(BFIELD) + '                 \
-                          -j ' + str('1')      +  ' -o qed_' + str(tf) + '              \
-                          -n ' + str(NEventsQED) + ' -m PIPE ITS MFT FT0 FV0 FDD        \
-                          -g extgen --configKeyValues \"GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;Diamond.width[2]=6.\" --run ' + str(args.run) # + (' ',' --fromCollContext collisioncontext.root')[args.pregenCollContext]
+     QED_task['cmd'] = 'o2-sim -e TGeant3  --field '  + str(BFIELD) + '                                               \
+                          -j ' + str('1')      +  ' -o qed_' + str(tf) + '                                            \
+                          -n ' + str(NEventsQED) + ' -m PIPE ITS MFT FT0 FV0 FDD '                                    \
+                        + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run) \
+                        + ' -g extgen --configKeyValues \"GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;Diamond.width[2]=6.\"'  # + (' ',' --fromCollContext collisioncontext.root')[args.pregenCollContext]
      QED_task['cmd'] += '; RC=$?; QEDXSecCheck=`grep xSectionQED qedgenparam.ini | sed \'s/xSectionQED=//\'`'
      QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected) + ' = $QEDXSecCheck"; [[ ${RC} == 0 ]]'
      # TODO: propagate the Xsecion ratio dynamically
@@ -1080,16 +1084,16 @@ for tf in range(1, NTIMEFRAMES + 1):
        addQCPerTF(taskName='mftDigitsQC' + str(flp),
                   needs=[getDigiTaskName("MFT")],
                   readerCommand='o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root',
-                  configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-' + str(flp) + '.json',
+                  configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-digits-' + str(flp) + '.json',
                   objectsFile='mftDigitsQC.root')
      addQCPerTF(taskName='mftClustersQC',
                 needs=[MFTRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types none --cluster-types MFT',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json')
-     addQCPerTF(taskName='mftAsyncQC',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-clusters.json')
+     addQCPerTF(taskName='mftTracksQC',
                 needs=[MFTRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types MFT --cluster-types MFT',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-async.json')
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks.json')
 
      ### TPC
      # addQCPerTF(taskName='tpcTrackingQC',
@@ -1212,8 +1216,10 @@ for tf in range(1, NTIMEFRAMES + 1):
      aodinfosources += ',EMC'
    if isActive('CPV'):
      aodneeds += [ CPVRECOtask['name'] ]
+     aodinfosources += ',CPV'
    if isActive('PHS'):
      aodneeds += [ PHSRECOtask['name'] ]
+     aodinfosources += ',PHS'
    if isActive('MID'):
       aodneeds += [ MIDRECOtask['name'] ]
       aodinfosources += ',MID'

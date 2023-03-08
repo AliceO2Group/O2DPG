@@ -992,13 +992,18 @@ def influx(args):
         for i, (histo_name, tests) in enumerate(summary.items()):
             if not tests:
                 continue
-            s = f"{row_tags},type_global={tests[0]['type_global']},type_specific={tests[0]['type_specific']},id={i}"
+            common_string = f"{row_tags},type_global={tests[0]['type_global']},type_specific={tests[0]['type_specific']},id={i}"
             if args.web_storage:
-                s += f",web_storage={join(args.web_storage, tests[0]['rel_path_plot'])}"
-            s += f" histogram_name=\"{histo_name}\""
+                common_string += f",web_storage={join(args.web_storage, tests[0]['rel_path_plot'])}"
+            common_string += f",histogram_name={histo_name}"
             for test in tests:
-                s += f",{test['test_name']}={REL_VAL_SEVERITY_MAP[test['result']]},{test['test_name']}_value={replace_None(test['value'])},{test['test_name']}_threshold={replace_None(test['threshold'])}"
-            f.write(f"{s}\n")
+                test_string = common_string + f",test_name={test['test_name']} status={REL_VAL_SEVERITY_MAP[test['result']]}"
+                for key in ("value", "threshold"):
+                    value = test[key]
+                    if value is None:
+                        continue
+                    test_string += f",{key}={value}"
+                f.write(f"{test_string}\n")
     return 0
 
 def dir_comp(args):
