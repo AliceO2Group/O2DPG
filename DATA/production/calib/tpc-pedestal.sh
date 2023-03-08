@@ -15,7 +15,7 @@ CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
 CALIB_CONFIG="TPCCalibPedestal.LastTimeBin=12000"
 EXTRA_CONFIG=" "
-EXTRA_CONFIG=" --publish-after-tfs 100 --max-events 120 --lanes 36"
+EXTRA_CONFIG=" --publish-after-tfs 400 --max-events 30 --lanes 36"
 CCDB_PATH="--ccdb-path http://o2-ccdb.internal"
 HOST=localhost
 QC_CONFIG="consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
