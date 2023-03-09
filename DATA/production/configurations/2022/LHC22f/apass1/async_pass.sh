@@ -391,10 +391,58 @@ echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS
 
 # reco and matching
 # print workflow
-env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list > workflowconfig.log
-# run it
-if [[ "0$RUN_WORKFLOW" != "00" ]]; then
-  env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
+  env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list > workflowconfig.log
+  # run it
+  if [[ "0$RUN_WORKFLOW" != "00" ]]; then
+    env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+  fi
+else
+  # running the wf in split mode
+  echo "We will run the workflow in SPLIT mode!"
+  WORKFLOW_PARAMETERS_START=$WORKFLOW_PARAMETERS
+
+  if [[ -z "$ALIEN_JDL_SPLITSTEP" ]] || [[ "$ALIEN_JDL_SPLITSTEP" -eq 1 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 1 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq "all" ]]; then
+    # 1. TPC decoding + reco
+    echo "Step 1) Decoding and reconstructing TPC"
+    echo "Step 1) Decoding and reconstructing TPC" > workflowconfig.log
+    for i in AOD QC CALIB CALIB_LOCAL_INTEGRATED_AGGREGATOR; do
+      export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
+    done
+    env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    # run it
+    if [[ "0$RUN_WORKFLOW" != "00" ]]; then
+      env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+    fi
+  fi
+
+  if [[ -z "$ALIEN_JDL_SPLITSTEP" ]] || [[ "$ALIEN_JDL_SPLITSTEP" -eq 2 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 2 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq "all" ]]; then
+    # 2. the other detectors decoding + reco
+    WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS_START
+    echo "Step 2) Decoding and reconstructing ALL-TPC"
+    echo -e "\nStep 2) Decoding and reconstructing ALL-TPC" >> workflowconfig.log
+    for i in AOD QC CALIB CALIB_LOCAL_INTEGRATED_AGGREGATOR; do
+      export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
+    done
+    env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    # run it
+    if [[ "0$RUN_WORKFLOW" != "00" ]]; then
+      env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+    fi
+  fi
+
+  if [[ -z "$ALIEN_JDL_SPLITSTEP" ]] || [[ "$ALIEN_JDL_SPLITSTEP" -eq 3 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 3 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq "all" ]]; then
+    # 3. matching, QC, calib, AOD
+    WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS_START
+    echo "Step 3) matching, QC, calib, AOD"
+    echo -e "\nStep 3) matching, QC, calib, AOD" >> workflowconfig.log
+    export TIMEFRAME_RATE_LIMIT=0
+    env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV,PHS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    # run it
+    if [[ "0$RUN_WORKFLOW" != "00" ]]; then
+      env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+    fi
+  fi
 fi
 
 # now extract all performance metrics
