@@ -112,11 +112,12 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 	exit 2
     fi
     tar -xzvf commonInput.tgz
+    if [[ -f o2sim_grp.root ]]; then rm o2sim_grp.root; fi
     SELECTSETTINGSSCRIPT="$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/selectSettings.sh"
     if [[ -f "selectSettings.sh" ]]; then
       SELECTSETTINGSSCRIPT="selectSettings.sh"
     fi
-    source $SELECTSETTINGSSCRIPT
+    source $SELECTSETTINGSSCRIPT || { echo "$SELECTSETTINGSSCRIPT failed" && exit 4; }
     # run specific archive
     if [[ ! -f runInput_$RUNNUMBER.tgz ]]; then
 	echo "No runInput_$RUNNUMBER.tgz, let's hope we don't need it"
@@ -174,44 +175,44 @@ echo "Checking current directory content"
 ls -altr
 
 ln -s $O2DPG_ROOT/DATA/common/gen_topo_helper_functions.sh
-source gen_topo_helper_functions.sh
+source gen_topo_helper_functions.sh || { echo "gen_topo_helper_functions.sh failed" && exit 5; }
 
 if [[ -f "setenv_extra.sh" ]]; then
-    source setenv_extra.sh $RUNNUMBER $BEAMTYPE
+  source setenv_extra.sh $RUNNUMBER $BEAMTYPE || { echo "setenv_extra.sh (local file) failed" && exit 6; }
 else
-    echo "************************************************************************************"
-    echo "No ad-hoc setenv_extra settings for current async processing; using the one in O2DPG"
-    echo "************************************************************************************"
-    if [[ -f $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh ]]; then
-	ln -s $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh
-	source setenv_extra.sh $RUNNUMBER $BEAMTYPE
-    else
-	echo "*********************************************************************************************************"
-	echo "No setenev_extra for $ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS in O2DPG"
-	echo "                No special settings will be used"
-	echo "*********************************************************************************************************"
-    fi
+  echo "************************************************************************************"
+  echo "No ad-hoc setenv_extra settings for current async processing; using the one in O2DPG"
+  echo "************************************************************************************"
+  if [[ -f $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh ]]; then
+    ln -s $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh
+    source setenv_extra.sh $RUNNUMBER $BEAMTYPE || { echo "setenv_extra.sh (O2DPG) failed" && exit 7; }
+  else
+    echo "*********************************************************************************************************"
+    echo "No setenev_extra for $ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS in O2DPG"
+    echo "                No special settings will be used"
+    echo "*********************************************************************************************************"
+  fi
 fi
 
 rm -f /dev/shm/*
 
 if [[ -f run-workflow-on-inputlist.sh ]]; then
-    echo "Use run-workflow-on-inputlist.sh macro passed as input"
+  echo "Use run-workflow-on-inputlist.sh macro passed as input"
 else
-    echo "Use run-workflow-on-inputlist.sh macro from O2"
-    cp $O2_ROOT/prodtests/full-system-test/run-workflow-on-inputlist.sh .
+  echo "Use run-workflow-on-inputlist.sh macro from O2"
+  cp $O2_ROOT/prodtests/full-system-test/run-workflow-on-inputlist.sh .
 fi
 
 if [[ -z $DPL_WORKFLOW_FROM_OUTSIDE ]]; then
-    echo "Use dpl-workflow.sh from O2"
-    cp $O2_ROOT/prodtests/full-system-test/dpl-workflow.sh .
+  echo "Use dpl-workflow.sh from O2"
+  cp $O2_ROOT/prodtests/full-system-test/dpl-workflow.sh .
 else
-    echo "Use dpl-workflow.sh passed as input"
-    cp $DPL_WORKFLOW_FROM_OUTSIDE .
+  echo "Use dpl-workflow.sh passed as input"
+  cp $DPL_WORKFLOW_FROM_OUTSIDE .
 fi
 
 if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
-    echo "QC json from outside is $QC_JSON_FROM_OUTSIDE"
+  echo "QC json from outside is $QC_JSON_FROM_OUTSIDE"
 fi
 
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
@@ -396,6 +397,13 @@ if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
   # run it
   if [[ "0$RUN_WORKFLOW" != "00" ]]; then
     env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+    exitcode=$?
+    echo "exitcode = $exitcode"
+    if [[ $exitcode -ne 0 ]]; then
+      echo "exit code from processing is " $exitcode > validation_error.message
+      echo "exit code from processing is " $exitcode
+      exit $exitcode
+    fi
   fi
 else
   # running the wf in split mode
@@ -413,6 +421,13 @@ else
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      exitcode=$?
+      echo "exitcode = $exitcode"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from Step 1 of processing is " $exitcode > validation_error.message
+	echo "exit code from Step 1 of processing is " $exitcode
+	exit $exitcode
+     fi
     fi
   fi
 
@@ -428,6 +443,13 @@ else
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      exitcode=$?
+      echo "exitcode = $exitcode"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from Step 2 of processing is " $exitcode > validation_error.message
+	echo "exit code from Step 2 of processing is " $exitcode
+	exit $exitcode
+     fi
     fi
   fi
 
@@ -437,10 +459,17 @@ else
     echo "Step 3) matching, QC, calib, AOD"
     echo -e "\nStep 3) matching, QC, calib, AOD" >> workflowconfig.log
     export TIMEFRAME_RATE_LIMIT=0
-    env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV,PHS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      exitcode=$?
+      echo "exitcode = $exitcode"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from Step 3 of processing is " $exitcode > validation_error.message
+	echo "exit code from Step 3 of processing is " $exitcode
+	exit $exitcode
+     fi
     fi
   fi
 fi
@@ -483,6 +512,13 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       cd tmpAOD
       ln -s ../list.list .
       o2-aod-merger --input list.list
+      exitcode=$?
+      echo "exitcode = $exitcode"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from aod-merger for latest file is " $exitcode > validation_error.message
+	echo "exit code from aod-merger for latest file is " $exitcode
+	exit $exitcode
+     fi
       MERGED_SIZE=`wc -c AO2D.root | awk '{print $1}'`
       echo "Size of merged file: $MERGED_SIZE"
       cd ..
@@ -514,6 +550,13 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       fi
       ls AO2D.root > list.list
       o2-aod-merger --input list.list --output AO2D_merged.root
+      exitcode=$?
+      echo "exitcode = $exitcode"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from aod-merger to merge DFs is " $exitcode > validation_error.message
+	echo "exit code from aod-merger to merge DFs is " $exitcode
+	exit $exitcode
+      fi
       echo "Checking AO2Ds with merged DFs"
       root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
       exitcode=$?
@@ -526,8 +569,17 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
 	mv AO2D_merged.root AO2D.root
       fi
       if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
+	# creating the analysis wf
 	${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
+	# running it
 	${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
+	exitcode=$?
+	echo "exitcode = $exitcode"
+	if [[ $exitcode -ne 0 ]]; then
+	  echo "exit code from Analysis QC is " $exitcode > validation_error.message
+	  echo "exit code from Analysis QC is " $exitcode
+	  exit $exitcode
+	fi
 	if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
 	  mv Analysis/MergedAnalyses/AnalysisResults.root .
 	else
