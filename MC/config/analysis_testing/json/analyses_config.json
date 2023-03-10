@@ -1,0 +1,224 @@
+{
+    "analyses": [
+        {
+            "name": "MCHistograms",
+            "enabled": true,
+            "expected_output": null,
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
+            },
+             "tasks": ["o2-analysis-timestamp",
+                       "o2-analysis-track-propagation",
+                       "o2-analysistutorial-mc-histograms"]
+        },
+        {
+            "name": "Efficiency",
+            "enabled": true,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
+                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json"
+            },
+            "tasks": ["o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-trackselection",
+                      "o2-analysis-event-selection",
+                      "o2-analysis-qa-efficiency"]
+        },
+        {
+            "name": "EventTrackQA",
+            "enabled": true,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
+                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json"
+            },
+            "tasks": ["o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-trackselection",
+                      "o2-analysis-event-selection",
+                      "o2-analysis-qa-event-track"]
+        },
+        {
+            "name": "K0STrackingEfficiencyQA",
+            "enabled": false,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
+                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json"
+            },
+            "tasks": ["o2-analysis-lf-lambdakzerobuilder",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-trackselection",
+                      "o2-analysis-pid-tof-base",
+                      "o2-analysis-pid-tof",
+                      "o2-analysis-pid-tof-full",
+                      "o2-analysis-pid-tpc-base",
+                      "o2-analysis-pid-tpc-full",
+                      "o2-analysis-event-selection",
+                      "o2-analysis-timestamp",
+                      "o2-analysis-multiplicity-table",
+                      "o2-analysis-qa-k0s-tracking-efficiency",
+                      "o2-analysis-perf-k0s-resolution"]
+        },
+        {
+            "name": "Validation",
+            "enabled": true,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
+                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json"
+            },
+            "tasks": ["o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-validation"]
+        },
+        {
+            "name": "PIDFull",
+            "enabled": false,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
+                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json"
+            },
+            "tasks": ["o2-analysis-ft0-corrected-table",
+                      "o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-trackselection",
+                      "o2-analysis-event-selection",
+                      "o2-analysis-pid-tof-base",
+                      "o2-analysis-pid-tof",
+                      "o2-analysis-pid-tof-full",
+                      "o2-analysis-pid-tof-qa",
+                      "o2-analysis-pid-tof-qa-evtime",
+                      "o2-analysis-pid-tof-beta",
+                      "o2-analysis-pid-tof-qa-beta",
+                      "o2-analysis-pid-tpc-base",
+                      "o2-analysis-pid-tpc-full"]
+        },
+        {
+            "name": "PWGMMMFT",
+            "enabled": true,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
+                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json"
+            },
+            "tasks": ["o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-trackselection",
+                      "o2-analysis-event-selection",
+                      "o2-analysis-multiplicity-table",
+                      "o2-analysis-mm-track-propagation",
+                      "o2-analysis-mm-dndeta-mft"]
+        },
+        {
+            "name": "EventSelectionQA",
+            "enabled": true,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
+                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json"
+            },
+            "tasks": ["o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-event-selection",
+                      "o2-analysis-event-selection-qa"]
+        },
+        {
+            "name": "WeakDecayTutorial",
+            "enabled": true,
+            "expected_output": null,
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
+            },
+            "tasks": ["o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysistutorial-weak-decay-iteration"]
+        },
+        {
+            "name": "CheckDataModelMC",
+            "enabled": true,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
+            },
+            "tasks": ["o2-analysis-check-data-model-mc"]
+        },
+        {
+            "name": "LK0CFFemto",
+            "enabled": false,
+            "expected_output": ["AnalysisResults.root", "QAResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
+            },
+            "tasks": ["o2-analysis-multiplicity-table --aod-writer-json aodWriterTempConfig.json",
+                      "o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-event-selection",
+                      "o2-analysis-pid-tof-base",
+                      "o2-analysis-pid-tof",
+                      "o2-analysis-pid-tpc-base",
+                      "o2-analysis-pid-tpc",
+                      "o2-analysis-lf-lambdakzerobuilder",
+                      "o2-analysis-cf-femtodream-producer"]
+        },
+        {
+            "name": "PWGMMFwdVertexing",
+            "enabled": true,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
+            },
+            "tasks": ["o2-analysis-timestamp",
+                      "o2-analysis-mm-vertexing-fwd"]
+        },
+        {
+            "name": "MCSimpleValidation",
+            "enabled": true,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
+            },
+            "tasks": ["o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-trackselection",
+                      "o2-analysis-event-selection",
+                      "o2-analysis-task-mc-simple-qc"]
+        },
+        {
+            "name": "PWGMMMDnDeta",
+            "enabled": false,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
+            },
+            "tasks": ["o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-event-selection",
+                      "o2-analysis-mm-particles-to-tracks",
+                      "o2-analysis-mm-dndeta"]
+        },
+        {
+            "name": "PWGHFD0",
+            "enabled": false,
+            "expected_output": ["AnalysisResults.root"],
+            "config": {
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
+            },
+            "tasks": ["o2-analysis-hf-track-index-skims-creator",
+                      "o2-analysis-hf-candidate-creator-2prong",
+                      "o2-analysis-hf-d0-candidate-selector",
+                      "o2-analysis-hf-task-d0",
+                      "o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-trackselection",
+                      "o2-analysis-event-selection",
+                      "o2-analysis-multiplicity-table",
+                      "o2-analysis-pid-tpc-base",
+                      "o2-analysis-pid-tpc-full",
+                      "o2-analysis-pid-tof-base",
+                      "o2-analysis-pid-tof-full"]
+        }
+    ]
+}
