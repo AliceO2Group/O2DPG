@@ -144,10 +144,10 @@ def load_analyses(analyses_only=None, include_disabled_analyses=False):
 
     collect_analyses = []
     for ana in analyses_config:
+        if analyses_only and ana["name"] not in analyses_only:
+            continue
         if not ana.get("enabled", False) and not include_disabled_analyses:
             print(f"INFO: Analysis {ana['name']} not added since it is disabled")
-            continue
-        if analyses_only and ana["name"] in analyses_only:
             continue
         collect_analyses.append(ana)
 

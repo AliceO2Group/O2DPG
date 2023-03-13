@@ -2,7 +2,7 @@
     "analyses": [
         {
             "name": "MCHistograms",
-            "enabled": true,
+            "enabled": false,
             "expected_output": null,
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
@@ -41,7 +41,7 @@
         },
         {
             "name": "K0STrackingEfficiencyQA",
-            "enabled": false,
+            "enabled": true,
             "expected_output": ["AnalysisResults.root"],
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
@@ -63,7 +63,7 @@
         },
         {
             "name": "Validation",
-            "enabled": true,
+            "enabled": false,
             "expected_output": ["AnalysisResults.root"],
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
@@ -75,7 +75,7 @@
         },
         {
             "name": "PIDFull",
-            "enabled": false,
+            "enabled": true,
             "expected_output": ["AnalysisResults.root"],
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
@@ -114,7 +114,7 @@
         },
         {
             "name": "EventSelectionQA",
-            "enabled": true,
+            "enabled": false,
             "expected_output": ["AnalysisResults.root"],
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
@@ -127,7 +127,7 @@
         },
         {
             "name": "WeakDecayTutorial",
-            "enabled": true,
+            "enabled": false,
             "expected_output": null,
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
