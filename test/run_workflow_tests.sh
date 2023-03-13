@@ -53,6 +53,7 @@ get_all_workflows()
 test_single_wf()
 {
     local wf_script=${1}
+    local execute=${2}
     make_wf_creation_script ${wf_script} ${wf_script_local}
     local has_wf_script_local=${?}
     echo -n "Test ${TEST_COUNTER}: ${wfs}"
@@ -66,13 +67,31 @@ test_single_wf()
     echo "Test ${wf_line} from ${wfs}" > ${LOG_FILE_WF}
     bash ${wf_script_local} >> ${LOG_FILE_WF} 2>&1
     local ret_this=${?}
-    [[ "${ret_this}" != "0" ]] && echo "[FATAL]: O2DPG_TEST Workflow creation failed" >> ${LOG_FILE_WF}
+    if [[ "${ret_this}" != "0" ]] ; then
+        echo "[FATAL]: O2DPG_TEST Workflow creation failed" >> ${LOG_FILE_WF}
+    elif [[ "${execute}" != "" ]] ; then
+        ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 -tt aod >> ${LOG_FILE_WF} 2>&1
+        ret_this=${?}
+        [[ "${ret_this}" != "0" ]] && echo "[FATAL]: O2DPG_TEST Workflow execution failed" >> ${LOG_FILE_WF}
+    fi
     return ${ret_this}
 }
 
 run_workflow_creation()
 {
-    local wf_scripts=${@}
+    local wf_scripts=
+    local execute=
+    while [ "$1" != "" ] ; do
+        case $1 in
+            --execute ) shift
+                        execute=1
+                        ;;
+            * )         wf_scripts+="${1} "
+                        shift
+                        ;;
+        esac
+    done
+
     local RET=0
     local wf_script_local="wf.sh"
 
@@ -81,12 +100,11 @@ run_workflow_creation()
         [[ "${wf_line}" == "" ]] && continue
 
         ((TEST_COUNTER++))
-
         local test_dir=${TEST_COUNTER}_$(basename ${wfs})_dir
         rm -rf ${test_dir} 2> /dev/null
         mkdir ${test_dir}
         pushd ${test_dir} > /dev/null
-            test_single_wf ${wfs}
+            test_single_wf ${wfs} ${execute}
             local ret_this=${?}
             [[ "${ret_this}" != "0" ]] && RET=${ret_this}
         popd > /dev/null
@@ -108,6 +126,38 @@ collect_changed_pwg_wf_files()
         [[ "${WF_FILES}" == *"${wfs}"* ]] && continue || WF_FILES+=" ${wfs} "
     done
 }
+
+print_usage()
+{
+    echo
+    echo "usage: run_workflow_tests.sh"
+    echo
+    echo "  ENVIRONMENT VARIABLES:"
+    echo
+    echo "  O2DPG_TEST_REPO_DIR : Point to the source repository you want to test."
+    echo "  O2DPG_TEST_HASH_BASE : The base hash you want to use for comparison (optional)"
+    echo "  O2DPG_TEST_HASH_HEAD : The head hash you want to use for comparison (optional)"
+    echo
+    echo "  If O2DPG_TEST_HASH_BASE is not set, it will be looked for ALIBUILD_BASE_HASH."
+    echo "  If also not set, this will be set to HEAD~1. However, if there are unstaged"
+    echo "  changes, it will be set to HEAD."
+    echo
+    echo "  If O2DPG_TEST_HASH_HEAD is not set, it will be looked for ALIBUILD_HEAD_HASH."
+    echo "  If also not set, this will be set to HEAD. However, if there are unstaged"
+    echo "  changes, it will left blank."
+    echo
+}
+
+while [ "$1" != "" ] ; do
+    case $1 in
+        --help|-h )          print_usage
+                             exit 1
+                             ;;
+        * )                  echo "Unknown argument ${1}"
+                             exit 1
+                             ;;
+    esac
+done
 
 echo
 echo "##############################"
@@ -201,7 +251,7 @@ if [[ "${changed_wf_bin}" != "" ]] ; then
     echo "### Test bin-related workflow creation ###"
     echo
     # Run all the bin test WF creations
-    run_workflow_creation $(get_all_workflows "MC/bin/tests")
+    run_workflow_creation $(get_all_workflows "MC/bin/tests") --execute
     ret_global_bin=${?}
     echo
 fi

@@ -901,7 +901,7 @@
     "ddEdxPreSelectK0Short": "1",
     "ddEdxPreSelectLambda": "0",
     "ddEdxPreSelectionWindow": "7",
-    "processBuildAll": "0",
+    "processBuildAll": "1",
     "processBuildMCAssociated": "0",
     "processBuildValiddEdx": "0",
     "processBuildValiddEdxMCAssociated": "0"
