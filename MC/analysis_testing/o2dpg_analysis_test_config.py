@@ -59,6 +59,7 @@ def check(args):
     with open (args.config, "r") as f:
         analyses = json.load(f)["analyses"]
 
+    task_exists = False
     for ana in analyses:
         if ana["name"] == args.task:
             if args.status:
@@ -68,7 +69,7 @@ def check(args):
             return 0
 
     # analysis not found
-    print(f"WARNING: Analysis {args.task} unknown")
+    print(f"UNKNOWN")
     return 1
 
 def main():
@@ -90,6 +91,7 @@ def main():
     check_parser = sub_parsers.add_parser("check", parents=[config_parser])
     check_parser.add_argument("-t", "--task", help="analysis task to check", required=True)
     check_parser.add_argument("--status", action="store_true", help="check if task is enabled or disabled")
+    check_parser.add_argument("--exists", action="store_true", help="check if task exists")
     check_parser.add_argument("--applicable-to", dest="applicable_to", action="store_true", help="check if valid for MC or data")
     check_parser.set_defaults(func=check)
 
