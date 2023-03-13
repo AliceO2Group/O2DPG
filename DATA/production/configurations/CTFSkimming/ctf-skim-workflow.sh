@@ -79,7 +79,7 @@ add_W o2-ctf-writer-workflow "--output-dir $CTF_DIR --min-file-size ${CTF_MINSIZ
 
 # ---------------------------------------------------------------------------------------------------------------------
 # DPL run binary
-WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
+WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT -b"
 
 [[ $WORKFLOWMODE == "print" || "0$PRINT_WORKFLOW" == "01" ]] && echo "#Workflow command:\n\n${WORKFLOW}\n" | sed -e "s/\\\\n/\n/g" -e"s/| */| \\\\\n/g" | eval cat $( [[ $WORKFLOWMODE == "dds" ]] && echo '1>&2')
 if [[ $WORKFLOWMODE != "print" ]]; then eval $WORKFLOW; else true; fi
