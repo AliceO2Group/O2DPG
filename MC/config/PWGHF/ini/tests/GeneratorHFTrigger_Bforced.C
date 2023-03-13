@@ -5,18 +5,18 @@ int External()
     float ratioTrigger = 1./3; // one event triggered out of 3
     std::vector<int> checkPdgHadron{411, 421, 431, 443, 4122, 4132, 4232, 4332, 511, 521, 531, 5122};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{
-        {411, {{-321, 211, 211}, {-313, 211}, {311, 211}, {333, 211}}}, // D+
-        {421, {{-321, 211}}}, // D0
-        {431, {{333, 211}}}, // Ds+
+        {411, {{-321, 211, 211}, {-313, 211}, {211, 311}, {211, 333}}}, // D+
+        {421, {{-321, 211}, {-321, 111, 211}}}, // D0
+        {431, {{211, 333}}}, // Ds+
         {443, {{-11, 11}}}, // Jpsi
-        {4122, {{2212, -313}, {2224, -321}, {3124, 211}, {2212, -321, 211}}}, // Lc+
-        {4132, {{3312, 211}}}, // Xic0
-        {4232, {{2212, -313}, {3324, -321}, {3312, 211, 211}, {2212, -321, 211}}}, // Xic+
-        {4332, {{3334, 211}}}, // Omegac+
+        {4122, {{-313, 2212}, {-321, 2224}, {211, 3124}, {-321, 211, 2212}}}, // Lc+
+        {4132, {{211, 3312}}}, // Xic0
+        {4232, {{-313, 2212}, {-321, 3324}, {211, 211, 3312}, {-321, 211, 2212}}}, // Xic+
+        {4332, {{211, 3334}}} // Omegac+
         {511, {{-411, 211}, {-413, 211}, {-211, 431}}}, // B0
         {521, {{-421, 211}}}, // B+
         {531, {{-431, 211}}}, // Bs
-        {5122, {{4122, -211}}}, // Lb
+        {5122, {{-211, 4122}}}, // Lb
     };
 
     TFile file(path.c_str(), "READ");
@@ -91,7 +91,7 @@ int External()
     }
 
     float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
-    if (fracForcedDecays < 0.75) // we put some tolerance (e.g. due to oscillations which might change the final state)
+    if (fracForcedDecays < 0.85) // we put some tolerance (e.g. due to oscillations which might change the final state)
     {
         std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
         return 1;
