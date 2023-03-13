@@ -128,8 +128,6 @@ else
     fi
 fi
 
-rm -f /dev/shm/*
-
 if [[ -f run-workflow-on-inputlist.sh ]]; then
     echo "Use run-workflow-on-inputlist.sh macro passed as input"
 else
