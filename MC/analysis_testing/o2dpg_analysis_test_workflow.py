@@ -234,7 +234,7 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
     for ana in load_analyses(analyses_only, include_disabled_analyses=include_disabled_analyses):
         configuration = ana.get("config", {}).get(data_or_mc, None)
         if not configuration:
-            print(f"INFO: Analysis {ana['name']} not added since no configuration found for {is_mc}")
+            print(f"INFO: Analysis {ana['name']} not added since no configuration found for {data_or_mc}")
             continue
         # sanitize path
         configuration = configuration.replace("json://", "")
