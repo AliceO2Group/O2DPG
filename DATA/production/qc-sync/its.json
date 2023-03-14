@@ -74,7 +74,8 @@
           "NtracksMAX"  : "100",
           "doTTree": "0",
           "nBCbins" : "103",
-          "dicttimestamp" : 0
+          "dicttimestamp" : "0",
+	  "doNorm" : "1"
         },
         "localMachines": [
           "localhost", "epn"

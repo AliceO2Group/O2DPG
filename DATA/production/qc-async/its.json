@@ -69,7 +69,8 @@
           "NtracksMAX"  : "5000",
           "doTTree": "0",
 	  "nBCbins" : "103",
-	  "dicttimestamp" : 0
+	  "dicttimestamp" : "0",
+	  "doNorm" : "1"
         }
       }
     },
