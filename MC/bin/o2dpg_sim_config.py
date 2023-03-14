@@ -3,10 +3,6 @@ def create_sim_config(args):
     # based on arguments args (run number, energy, ...) originally passed
     # to o2dpg_sim_workflow.py
 
-    COLTYPEIR = args.col
-    if args.embedding==True:
-        COLTYPEIR = args.colBkg
-
     config = {}
     def add(cfg, flatconfig):
        for entry in flatconfig:
@@ -15,6 +11,12 @@ def create_sim_config(args):
            d = cfg.get(mk,{})
            d[sk] = flatconfig[entry]
            cfg[mk] = d
+
+    COLTYPEIR = args.col
+    if args.embedding==True:
+        COLTYPEIR = args.colBkg
+        add(config, {"ITSCATrackerParam.trackletsPerClusterLimit": 20,
+                     "ITSCATrackerParam.cellsPerClusterLimit": "20"})
 
     # some specific settings for pp productions
     if COLTYPEIR == 'pp':
