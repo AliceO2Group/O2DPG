@@ -105,6 +105,8 @@ fi
 
 echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions and mode $MODE
 
+export timeUsed=0
+
 ###if [[ $MODE == "remote" ]]; then
     # common archive
     if [[ ! -f commonInput.tgz ]]; then
@@ -178,14 +180,18 @@ ln -s $O2DPG_ROOT/DATA/common/gen_topo_helper_functions.sh
 source gen_topo_helper_functions.sh || { echo "gen_topo_helper_functions.sh failed" && exit 5; }
 
 if [[ -f "setenv_extra.sh" ]]; then
-  source setenv_extra.sh $RUNNUMBER $BEAMTYPE || { echo "setenv_extra.sh (local file) failed" && exit 6; }
+  echo "Time used so far, before setenv_extra = $timeUsed s"
+  time source setenv_extra.sh $RUNNUMBER $BEAMTYPE || { echo "setenv_extra.sh (local file) failed" && exit 6; }
+  echo "Time used so far, after setenv_extra = $timeUsed s"
 else
   echo "************************************************************************************"
   echo "No ad-hoc setenv_extra settings for current async processing; using the one in O2DPG"
   echo "************************************************************************************"
   if [[ -f $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh ]]; then
     ln -s $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh
-    source setenv_extra.sh $RUNNUMBER $BEAMTYPE || { echo "setenv_extra.sh (O2DPG) failed" && exit 7; }
+    echo "Timeu used so far, before setenv_extra = $timeUsed s"
+    time source setenv_extra.sh $RUNNUMBER $BEAMTYPE || { echo "setenv_extra.sh (O2DPG) failed" && exit 7; }
+    echo "Time used so far, after setenv_extra = $timeUsed s"
   else
     echo "*********************************************************************************************************"
     echo "No setenev_extra for $ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS in O2DPG"
@@ -394,8 +400,12 @@ if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
   env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list > workflowconfig.log
   # run it
   if [[ "0$RUN_WORKFLOW" != "00" ]]; then
-    env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
-    exitcode=$?
+    timeStart=`date +%s`
+    time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+    timeEnd=`date +%s`
+    timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+    delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+    echo "Time spent in running the workflow = $delta s"
     echo "exitcode = $exitcode"
     if [[ $exitcode -ne 0 ]]; then
       echo "exit code from processing is " $exitcode > validation_error.message
@@ -418,7 +428,12 @@ else
     env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
-      env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      timeStart=`date +%s`
+      time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      timeEnd=`date +%s`
+      timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      echo "Time spent in running the workflow, Step 1 = $delta s"
       exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
@@ -440,7 +455,12 @@ else
     env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
-      env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      timeStart=`date +%s`
+      time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      timeEnd=`date +%s`
+      timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      echo "Time spent in running the workflow, Step 2 = $delta s"
       exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
@@ -460,7 +480,12 @@ else
     env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
-      env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      timeStart=`date +%s`
+      time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      timeEnd=`date +%s`
+      timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      echo "Time spent in running the workflow, Step 3 = $delta s"
       exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
@@ -475,10 +500,15 @@ fi
 # now extract all performance metrics
 IFS=$'\n'
 if [[ -f "performanceMetrics.json" ]]; then
+    timeStart=`date +%s`
     for workflow in `grep ': {' performanceMetrics.json`; do
 	strippedWorkflow=`echo $workflow | cut -d\" -f2`
 	cat performanceMetrics.json | jq '.'\"${strippedWorkflow}\"'' > ${strippedWorkflow}_metrics.json
     done
+    timeEnd=`date +%s`
+    timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+    delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+    echo "Time spent in splitting the metrics files = $delta s"
 fi
 
 if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
@@ -509,7 +539,12 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       mkdir tmpAOD
       cd tmpAOD
       ln -s ../list.list .
-      o2-aod-merger --input list.list
+      timeStart=`date +%s`
+      time o2-aod-merger --input list.list
+      timeEnd=`date +%s`
+      timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+      delta=$(( $timeEnd-$timeStart ))
+      echo "Time spent in merging last AOD files, to reach a good size for that too = $delta s"
       exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
@@ -533,13 +568,21 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   # retrieving again the list of AOD files, in case it changed after the merging above
   AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
   AOD_LIST=`find . -name AO2D.root`
+  timeStart=`date +%s`
+  timeUsedCheck=0
+  timeUsedMerge=0
+  timeUsedCheckMergedAOD=0
+  timeUsedAnalysisQC=0
   for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
     AOD_DIR=`echo $AOD_LIST | cut -d' ' -f$i | sed -e 's/AO2D.root//'`
     echo "Verifying, Merging DFs, and potentially running analysis QC for AOD file in $AOD_DIR"
     cd $AOD_DIR
     if [[ -f "AO2D.root" ]]; then
       echo "Checking AO2Ds with un-merged DFs"
-      root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
+      timeStartCheck=`date +%s`
+      time root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
+      timeEndCheck=`date +%s`
+      timeUsedCheck=$(( $timeUsedCheck+$timeEndCheck-$timeStartCheck ))
       exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D check is " $exitcode > validation_error.message
@@ -547,7 +590,10 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
 	exit $exitcode
       fi
       ls AO2D.root > list.list
-      o2-aod-merger --input list.list --output AO2D_merged.root
+      timeStartMerge=`date +%s`
+      time o2-aod-merger --input list.list --output AO2D_merged.root
+      timeEndMerge=`date +%s`
+      timeUsedMerge=$(( $timeUsedMerge+$timeEndMerge-$timeStartMerge ))
       exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
@@ -556,7 +602,10 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
 	exit $exitcode
       fi
       echo "Checking AO2Ds with merged DFs"
-      root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
+      timeStartCheckMergedAOD=`date +%s`
+      time root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
+      timeEndCheckMergedAOD=`date +%s`
+      timeUsedCheckMergedAOD=$(( $timeUsedCheckMergedAOD+$timeEndCheckMergedAOD-$timeStartCheckMergedAOD ))
       exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D with merged DFs check is " $exitcode > validation_error.message
@@ -567,10 +616,13 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
 	mv AO2D_merged.root AO2D.root
       fi
       if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
+	timeStartAnalysisQC=`date +%s`
 	# creating the analysis wf
-	${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
+	time ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
 	# running it
-	${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
+	time ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
+	timeEndAnalysisQC=`date +%s`
+	timeUsedAnalysisQC=$(( $timeUsedAnalysisQC+$timeEndAnalysisQC-$timeStartAnalysisQC ))
 	exitcode=$?
 	echo "exitcode = $exitcode"
 	if [[ $exitcode -ne 0 ]]; then
@@ -592,7 +644,18 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
     fi
     cd ..
   done
+  echo "Time spend in checking initial AODs = $timeUsedCheck s"
+  echo "Time spend in merging AODs = $timeUsedMerge s"
+  echo "Time spend in checking final AODs = $timeUsedCheckMergedAOD s"
+  if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
+    echo "Time spend in AnalysisQC = $timeUsedAnalysisQC s"
+  else
+    echo "No timing reported for Analysis QC, since it was not run"
+  fi
 fi
+
+timeUsed=$(( $timeUsed+$timeUsedCheck+$timeUsedMerge+$timeUsedCheckMergedAOD+$timeUsedAnalysisQC ))
+echo "Time used for processing = $timeUsed s"
 
 if [[ $ALIEN_JDL_QCOFF != 1 ]]; then
   # copying the QC json file here
