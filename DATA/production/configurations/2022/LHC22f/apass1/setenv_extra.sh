@@ -149,7 +149,13 @@ fi
 PERIODLETTER=${PERIOD: -1}
 VDRIFTPARAMOPTION=
 if [[ $PERIODLETTER < m ]]; then
-  root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/getTPCvdrift.C+($RUNNUMBER)"
+  echo "In setenv_extra: time used so far = $timeUsed s"
+  timeStart=`date +%s`
+  time root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/getTPCvdrift.C+($RUNNUMBER)"
+  timeEnd=`date +%s`
+  timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+  delta=$(( $timeEnd-$timeStart ))
+  echo "Time spent to get VDrift for TPC = $delta s"
   export VDRIFT=`cat vdrift.txt`
   VDRIFTPARAMOPTION="TPCGasParam.DriftV=$VDRIFT"
   echo "Setting TPC vdrift to $VDRIFT"
@@ -160,7 +166,13 @@ fi
 # IR
 if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]]; then
   cp $O2DPG_ROOT/DATA/production/common/getIRandDuration.C ./
-  root -b -q "getIRandDuration.C+($RUNNUMBER)"
+  echo "In setenv_extra: time used so far = $timeUsed"
+  timeStart=`date +%s`
+  time root -b -q "getIRandDuration.C+($RUNNUMBER)"
+  timeEnd=`date +%s`
+  timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+  delta=$(( $timeEnd-$timeStart ))
+  echo "Time spent in getting IR and duration of the run = $delta s"
   export RUN_IR=`cat IR.txt`
   export RUN_DURATION=`cat Duration.txt`
 fi
