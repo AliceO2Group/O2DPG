@@ -589,31 +589,33 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
 	echo "exit code from AO2D check is " $exitcode
 	exit $exitcode
       fi
-      ls AO2D.root > list.list
-      timeStartMerge=`date +%s`
-      time o2-aod-merger --input list.list --output AO2D_merged.root
-      timeEndMerge=`date +%s`
-      timeUsedMerge=$(( $timeUsedMerge+$timeEndMerge-$timeStartMerge ))
-      exitcode=$?
-      echo "exitcode = $exitcode"
-      if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from aod-merger to merge DFs is " $exitcode > validation_error.message
-	echo "exit code from aod-merger to merge DFs is " $exitcode
-	exit $exitcode
-      fi
-      echo "Checking AO2Ds with merged DFs"
-      timeStartCheckMergedAOD=`date +%s`
-      time root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
-      timeEndCheckMergedAOD=`date +%s`
-      timeUsedCheckMergedAOD=$(( $timeUsedCheckMergedAOD+$timeEndCheckMergedAOD-$timeStartCheckMergedAOD ))
-      exitcode=$?
-      if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from AO2D with merged DFs check is " $exitcode > validation_error.message
-	echo "exit code from AO2D with merged DFs check is " $exitcode
-	echo "We will keep the AO2Ds with unmerged DFs"
-      else
-	echo "All ok, replacing initial AO2D.root file with the one with merged DFs"
-	mv AO2D_merged.root AO2D.root
+      if [[ -z $ALIEN_JDL_DONOTMERGEAODS ]] || [[ $ALIEN_JDL_DONOTMERGEAODS == 0 ]]; then
+	ls AO2D.root > list.list
+	timeStartMerge=`date +%s`
+	time o2-aod-merger --input list.list --output AO2D_merged.root
+	timeEndMerge=`date +%s`
+	timeUsedMerge=$(( $timeUsedMerge+$timeEndMerge-$timeStartMerge ))
+	exitcode=$?
+	echo "exitcode = $exitcode"
+	if [[ $exitcode -ne 0 ]]; then
+	  echo "exit code from aod-merger to merge DFs is " $exitcode > validation_error.message
+	  echo "exit code from aod-merger to merge DFs is " $exitcode
+	  exit $exitcode
+	fi
+	echo "Checking AO2Ds with merged DFs"
+	timeStartCheckMergedAOD=`date +%s`
+	time root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
+	timeEndCheckMergedAOD=`date +%s`
+	timeUsedCheckMergedAOD=$(( $timeUsedCheckMergedAOD+$timeEndCheckMergedAOD-$timeStartCheckMergedAOD ))
+	exitcode=$?
+	if [[ $exitcode -ne 0 ]]; then
+	  echo "exit code from AO2D with merged DFs check is " $exitcode > validation_error.message
+	  echo "exit code from AO2D with merged DFs check is " $exitcode
+	  echo "We will keep the AO2Ds with unmerged DFs"
+	else
+	  echo "All ok, replacing initial AO2D.root file with the one with merged DFs"
+	  mv AO2D_merged.root AO2D.root
+	fi
       fi
       if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
 	timeStartAnalysisQC=`date +%s`
@@ -645,8 +647,10 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
     cd ..
   done
   echo "Time spend in checking initial AODs = $timeUsedCheck s"
-  echo "Time spend in merging AODs = $timeUsedMerge s"
-  echo "Time spend in checking final AODs = $timeUsedCheckMergedAOD s"
+  if [[ -z $ALIEN_JDL_DONOTMERGEAODS ]] || [[ $ALIEN_JDL_DONOTMERGEAODS == 0 ]]; then
+    echo "Time spend in merging AODs = $timeUsedMerge s"
+    echo "Time spend in checking final AODs = $timeUsedCheckMergedAOD s"
+  fi
   if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
     echo "Time spend in AnalysisQC = $timeUsedAnalysisQC s"
   else
