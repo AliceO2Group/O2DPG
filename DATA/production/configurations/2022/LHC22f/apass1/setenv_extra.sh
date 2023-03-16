@@ -188,13 +188,13 @@ fi
 
 echo "BeamType = $BEAMTYPE"
 
-if [[ $ALIEN_JDL_ENABLEMONITORING == "0" ]]; then
-  export ENABLE_METRICS=0
+if [[ $ALIEN_JDL_ENABLEMONITORING == "1" ]]; then
+  # add the performance metrics
+  export ENABLE_METRICS=1
+  export ARGS_ALL_EXTRA=" --resources-monitoring 50 --resources-monitoring-dump-interval 50"
 else
   # remove monitoring-backend
-  export ENABLE_METRICS=1
-  # add the performance metrics
-  export ARGS_ALL_EXTRA=" --resources-monitoring 50 --resources-monitoring-dump-interval 50"
+  export ENABLE_METRICS=0
 fi
 
 #ALIGNLEVEL=0: before December 2022 alignment, 1: after December 2022 alignment
