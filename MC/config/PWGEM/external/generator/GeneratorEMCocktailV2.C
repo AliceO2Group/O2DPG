@@ -441,7 +441,7 @@ GenerateEMCocktail(Int_t collisionsSystem = GeneratorParamEMlibV2::kpp7TeV,
 
   auto decayer = new TPythia6Decayer();
   auto decayerconfig = new PythiaDecayerConfig();
-  // if (externalDecayer) decayer->SetDecayerExodus();
+  if (externalDecayer) decayerconfig->SetDecayerExodus();
   if (decayLongLived)
     decayerconfig->DecayLongLivedParticles();
   if (useLMeeDecaytable.Length() > 0) {
