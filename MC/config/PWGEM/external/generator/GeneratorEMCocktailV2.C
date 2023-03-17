@@ -20,7 +20,7 @@ private:
 class GeneratorEMCocktailV2 : public GeneratorCocktail {
 public:
   GeneratorEMCocktailV2()
-      : fDecayer(nullptr), fDecayerConfig(nullptr), fDecayMode(kAll),
+      : fDecayer(nullptr), fDecayMode(kAll),
         fWeightingMode(kNonAnalog), fParametrizationFile(""),
         fParametrizationDir(""), fV2ParametrizationDir(""), fNPart(1000),
         fCollisionSystem(GeneratorParamEMlibV2::kpp7TeV),
@@ -89,10 +89,7 @@ public:
   void SetParametrizationFileV2Directory(TString paramDir) {
     fV2ParametrizationDir = paramDir;
   }
-  void SetDecayer(TPythia6Decayer *const decayer) { fDecayer = decayer; }
-  void SetDecayerConfig(PythiaDecayerConfig *const decayerconfig) {
-    fDecayerConfig = decayerconfig;
-  }
+  void SetDecayer(PythiaDecayerConfig *const decayer) { fDecayer = decayer; }
   void SetDecayMode(Decay_t decay) { fDecayMode = decay; }
   void SetWeightingMode(Weighting_t weight) { fWeightingMode = weight; }
   void SetNPart(Int_t npart) { fNPart = npart; }
@@ -236,7 +233,6 @@ public:
     genSource->SetYRange(fYMin, fYMax);
     genSource->SetWeighting(fWeightingMode);
     genSource->SetDecayer(fDecayer);
-    genSource->SetDecayerConfig(fDecayerConfig);
     genSource->SetForceDecay(fDecayMode);
     genSource->SetForceGammaConversion(kFALSE);
     genSource->Init();
@@ -379,8 +375,7 @@ public:
   };
 
 private:
-  TPythia6Decayer *fDecayer;           // External decayer
-  PythiaDecayerConfig *fDecayerConfig; // External decayer config
+  PythiaDecayerConfig *fDecayer;
   Decay_t fDecayMode; // decay mode in which resonances are forced to decay,
                       // default: kAll
   Weighting_t fWeightingMode;    // weighting mode: kAnalog or kNonAnalog
@@ -438,12 +433,10 @@ GenerateEMCocktail(Int_t collisionsSystem = GeneratorParamEMlibV2::kpp7TeV,
                    Double_t yGenRange = 0.1, TString useLMeeDecaytable = "",
                    Int_t weightingMode = 1) {
   auto gener = new o2::eventgen::GeneratorEMCocktailV2();
+  auto decayer = new PythiaDecayerConfig();
+  if (externalDecayer) decayer->SetDecayerExodus();
+  if (decayLongLived) decayer->DecayLongLivedParticles();
 
-  auto decayer = new TPythia6Decayer();
-  auto decayerconfig = new PythiaDecayerConfig();
-  if (externalDecayer) decayerconfig->SetDecayerExodus();
-  if (decayLongLived)
-    decayerconfig->DecayLongLivedParticles();
   if (useLMeeDecaytable.Length() > 0) {
     decayer->SetDecayTableFile(useLMeeDecaytable.Data());
     decayer->ReadDecayTable();
@@ -484,7 +477,6 @@ GenerateEMCocktail(Int_t collisionsSystem = GeneratorParamEMlibV2::kpp7TeV,
   }
 
   gener->SetDecayer(decayer);
-  gener->SetDecayerConfig(decayerconfig);
 
   if (weightingMode == 0) {
     gener->SetWeightingMode(kAnalog); // kAnalog    => weight ~ 1
