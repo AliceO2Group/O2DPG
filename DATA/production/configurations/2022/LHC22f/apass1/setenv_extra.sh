@@ -64,7 +64,7 @@ fi
 # The "wrong" +1 offset request for ITS (0) must produce alarm since shifts are not supported there
 if [[ $PERIOD == "LHC22s" ]]; then
   # CTP asked to extract their digits
-  add_comma_separated ADD_EXTRA_WORKFLOW="o2-ctp-digit-writer"
+  add_comma_separated ADD_EXTRA_WORKFLOW "o2-ctp-digit-writer"
 
   TPCITSTIMEERR="0.3"
   TPCITSTIMEBIAS="0"
@@ -79,13 +79,7 @@ if [[ $PERIOD == "LHC22s" ]]; then
     TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
   elif [[ $RUNNUMBER -eq 529414 ]]; then
     ZDC_BC_SHIFT=0
-    TPCCLUSTERTIMESHIFT="-3."  # 24/62 BC
-    if [[ -f list.list ]]; then
-      threshCTF="/alice/data/2022/LHC22s/529414/raw/2340/o2_ctf_run00529414_orbit0010200192_tf0000072971_epn086.root"
-      ctf0=`head -n1 list.list`
-      ctf0=${ctf0/alien:\/\//}
-      [[ $ctf0 < $threshCTF ]] && TPCCLUSTERTIMESHIFT="-3." || TPCCLUSTERTIMESHIFT="-7.75"
-    fi
+    TPCCLUSTERTIMESHIFT="-7.75"  # 62 BC
   elif [[ $RUNNUMBER -eq 529418 ]]; then
     ZDC_BC_SHIFT=102488091157
     TPCCLUSTERTIMESHIFT="-5.5"  # 44 BC
@@ -199,7 +193,7 @@ fi
 
 #ALIGNLEVEL=0: before December 2022 alignment, 1: after December 2022 alignment
 ALIGNLEVEL=1
-if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == "LHC22c" || $PERIOD == "LHC22d" || $PERIOD == "LHC22e" || $PERIOD == "LHC22f" ]]; then
+if [[ "0$OLDVERSION" != "01" ]] && [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == "LHC22c" || $PERIOD == "LHC22d" || $PERIOD == "LHC22e" || $PERIOD == "LHC22f" ]]; then
   ALIGNLEVEL=0
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
     # extract pass number
