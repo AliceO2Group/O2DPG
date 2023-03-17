@@ -1,105 +1,104 @@
 {
-    "bc-selection-task": {
-      "processRun2": "false",
-      "processRun3": "true"
+  "bc-selection-task": {
+    "processRun2": "false",
+    "processRun3": "true"
+  },
+  "event-selection-task": {
+    "isMC": "false",
+    "muonSelection": "0",
+    "processRun2": "false",
+    "processRun3": "true",
+    "syst": "pp"
+  },
+  "qa-event-track": {
+    "binsPt": {
+      "values": [
+        "0",
+        "0",
+        "0.10000000000000001",
+        "0.20000000000000001",
+        "0.29999999999999999",
+        "0.40000000000000002",
+        "0.5",
+        "0.59999999999999998",
+        "0.69999999999999996",
+        "0.80000000000000004",
+        "0.90000000000000002",
+        "1",
+        "1.1000000000000001",
+        "1.2",
+        "1.3",
+        "1.3999999999999999",
+        "1.5",
+        "2",
+        "5",
+        "10",
+        "20",
+        "50"
+      ]
     },
-    "event-selection-task": {
-      "isMC": "false",
-      "muonSelection": "0",
-      "processRun2": "false",
-      "processRun3": "true",
-      "syst": "pp"
+    "binsTrackMultiplcity": {
+      "values": [
+        "200",
+        "0",
+        "200"
+      ]
     },
-    "qa-event-track": {
-      "binsPt": {
-        "values": [
-          "0",
-          "0",
-          "0.10000000000000001",
-          "0.20000000000000001",
-          "0.29999999999999999",
-          "0.40000000000000002",
-          "0.5",
-          "0.59999999999999998",
-          "0.69999999999999996",
-          "0.80000000000000004",
-          "0.90000000000000002",
-          "1",
-          "1.1000000000000001",
-          "1.2",
-          "1.3",
-          "1.3999999999999999",
-          "1.5",
-          "2",
-          "5",
-          "10",
-          "20",
-          "50"
-        ]
-      },
-      "binsTrackMultiplcity": {
-        "values": [
-          "200",
-          "0",
-          "200"
-        ]
-      },
-      "binsVertexPosXY": {
-        "values": [
-          "500",
-          "-1",
-          "1"
-        ]
-      },
-      "binsVertexPosZ": {
-        "values": [
-          "100",
-          "-20",
-          "20"
-        ]
-      },
-      "fractionOfSampledEvents": "1",
-      "isRun3": "true",
-      "maxEta": "2",
-      "maxPhi": "10",
-      "maxPt": "1e+10",
-      "minEta": "-2",
-      "minPhi": "-1",
-      "minPt": "-10",
-      "processData": "true",
-      "processDataIU": "false",
-      "processDataIUFiltered": "false",
-      "processMC": "false",
-      "processTableData": "false",
-      "processTableMC": "false",
-      "selectCharge": "0",
-      "selectGoodEvents": "true",
-      "selectMaxVtxZ": "100",
-      "selectPID": "0",
-      "selectPrim": "false",
-      "selectSec": "false",
-      "targetNumberOfEvents": "10000000",
-      "trackSelection": "1"
+    "binsVertexPosXY": {
+      "values": [
+        "500",
+        "-1",
+        "1"
+      ]
     },
-    "track-propagation": {
-      "ccdb-url": "http://alice-ccdb.cern.ch",
-      "geoPath": "GLO/Config/GeometryAligned",
-      "grpmagPath": "GLO/Config/GRPMagField",
-      "lutPath": "GLO/Param/MatLUT",
-      "mVtxPath": "GLO/Calib/MeanVertex",
-      "processCovariance": "true",
-      "processStandard": "false",
-      "minPropagationDistance": "5"
+    "binsVertexPosZ": {
+      "values": [
+        "100",
+        "-20",
+        "20"
+      ]
     },
-    "track-selection": {
-      "compatibilityIU": "false",
-      "etaMax": "0.800000012",
-      "etaMin": "-0.800000012",
-      "isRun3": "true",
-      "itsMatching": "1",
-      "produceFBextendedTable": "true",
-      "ptMax": "1e+10",
-      "ptMin": "0.100000001"
-    }
+    "fractionOfSampledEvents": "1",
+    "isRun3": "true",
+    "maxEta": "2",
+    "maxPhi": "10",
+    "maxPt": "1e+10",
+    "minEta": "-2",
+    "minPhi": "-1",
+    "minPt": "-10",
+    "processData": "true",
+    "processDataIU": "false",
+    "processDataIUFiltered": "false",
+    "processMC": "false",
+    "processTableData": "false",
+    "processTableMC": "false",
+    "selectCharge": "0",
+    "selectGoodEvents": "true",
+    "selectMaxVtxZ": "100",
+    "selectPID": "0",
+    "selectPrim": "false",
+    "selectSec": "false",
+    "targetNumberOfEvents": "10000000",
+    "trackSelection": "1"
+  },
+  "track-propagation": {
+    "ccdb-url": "http://alice-ccdb.cern.ch",
+    "geoPath": "GLO/Config/GeometryAligned",
+    "grpmagPath": "GLO/Config/GRPMagField",
+    "lutPath": "GLO/Param/MatLUT",
+    "mVtxPath": "GLO/Calib/MeanVertex",
+    "minPropagationDistance": "5",
+    "processCovariance": "true",
+    "processStandard": "false"
+  },
+  "track-selection": {
+    "compatibilityIU": "false",
+    "etaMax": "0.800000012",
+    "etaMin": "-0.800000012",
+    "isRun3": "true",
+    "itsMatching": "1",
+    "produceFBextendedTable": "true",
+    "ptMax": "1e+10",
+    "ptMin": "0.100000001"
   }
-  
+}
