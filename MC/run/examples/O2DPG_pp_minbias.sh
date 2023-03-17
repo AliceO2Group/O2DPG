@@ -47,12 +47,21 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600  -col pp -gen pythia8 -pro
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt aod ${MEMLIMIT} ${CPULIMIT}
 RETMC=${?}
 
+
+RETQC=0
 if [ "${DOQC}" != "" ] && [ "${RETMC}" = "0" ]; then
     # run QC if requested
     ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC ${MEMLIMIT} ${CPULIMIT}
+    RETQC=${?}
 fi
 
+RETANA=0
 if [ "${DOANALYSIS}" != "" ] && [ "${RETMC}" = "0" ]; then
     # run test analyses if requested
     ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt "Analysis_" ${MEMLIMIT} ${CPULIMIT}
+    RETANA=${?}
 fi
+
+RET=$((${RETMC} + ${RETQC} + ${RETANA}))
+
+return ${RET} 2>/dev/null || exit ${RET}

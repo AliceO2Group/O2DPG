@@ -4,16 +4,16 @@
 # into HI events, both Pythia8
 # Select the event depending detector acceptance and/or outgoing parton flavour
 # using PYTHIA8 hooks.
-# Execute: ./run_dirgamma_hook.sh 
-# and PARTICLE_ACCEPTANCE, see 
+# Execute: ./run_dirgamma_hook.sh
+# and PARTICLE_ACCEPTANCE, see
 # $O2DPG_ROOT/MC/config/PWGGAJE/hooks/prompt_gamma_hook.C
 
-#set -x 
+#set -x
 
 # ----------- LOAD UTILITY FUNCTIONS --------------------------
 . ${O2_ROOT}/share/scripts/jobutils.sh
 
-# ----------- START ACTUAL JOB  ----------------------------- 
+# ----------- START ACTUAL JOB  -----------------------------
 
 RNDSEED=${RNDSEED:-0}   # [default = 0] time-based random seed
 NSIGEVENTS=${NSIGEVENTS:-2}
@@ -34,7 +34,7 @@ pthatbin_loweredges=(5 11 21 36 57 84)
 pthatbin_higheredges=(11 21 36 57 84 -1)
 
 # Recover environmental vars for pt binning
-#PTHATBIN=${PTHATBIN:-1} 
+#PTHATBIN=${PTHATBIN:-1}
 
 if [ -z "$PTHATBIN" ]; then
     echo "Open Pt-hat range set"
@@ -73,5 +73,3 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY}                
 
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
-
-exit 0
