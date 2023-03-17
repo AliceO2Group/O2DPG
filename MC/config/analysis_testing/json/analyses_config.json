@@ -31,7 +31,7 @@
             "expected_output": ["AnalysisResults.root"],
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
-                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data-qa-event-track.json"
+                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-EventTrackQA-data.json"
             },
             "tasks": ["o2-analysis-timestamp",
                       "o2-analysis-track-propagation",
