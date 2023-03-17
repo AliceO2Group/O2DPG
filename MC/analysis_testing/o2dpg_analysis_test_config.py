@@ -3,7 +3,7 @@
 import sys
 import argparse
 from os import environ
-from os.path import join
+from os.path import join, exists
 import json
 
 # make sure O2DPG + O2 is loaded
@@ -59,7 +59,6 @@ def check(args):
     with open (args.config, "r") as f:
         analyses = json.load(f)["analyses"]
 
-    task_exists = False
     for ana in analyses:
         if ana["name"] == args.task:
             if args.status:
@@ -71,6 +70,89 @@ def check(args):
     # analysis not found
     print(f"UNKNOWN")
     return 1
+
+
+def show_tasks(args):
+    """
+    Browse through analyses and see what is en-/disabled
+    """
+    if not args.enabled and not args.disabled:
+        args.enabled = True
+        args.disabled = True
+
+    analyses = None
+    with open (args.config, "r") as f:
+        analyses = json.load(f)["analyses"]
+
+    for ana in analyses:
+        if (args.enabled and ana["enabled"]) or (args.disabled and not ana["enabled"]):
+            print(ana["name"])
+
+    return 0
+
+
+def validate_output(args):
+    analyses = None
+    with open (args.config, "r") as f:
+        analyses = json.load(f)["analyses"]
+
+    # global return code
+    ret = 0
+    # whether or not check analyses that are by default disabled
+    include_disabled = args.include_disabled
+
+    for ana in analyses:
+        analysis_name = ana["name"]
+
+        if args.tasks:
+            if analysis_name in args.tasks:
+                # tasks were specified explicitly, make sure to take them into account at all costs
+                include_disabled = True
+            else:
+                continue
+
+        if not ana["enabled"] and not include_disabled:
+            # continue if disabled and not including those
+            continue
+
+        analysis_dir = join(args.directory, analysis_name)
+
+        if not exists(analysis_dir):
+            print(f"Expected output directory {analysis_dir} for analysis {analysis_name} does not exist.")
+            ret = 1
+            continue
+
+        if not ana["expected_output"]:
+            # expected to have no output
+            continue
+
+        for expected_output in ana["expected_output"]:
+            expected_output = join(analysis_dir, expected_output)
+            if not exists(expected_output):
+                print(f"Expected output {expected_output} for analysis {analysis_name} does not exist.")
+                ret = 1
+
+        logfile = join(analysis_dir, f"Analysis_{analysis_name}.log")
+
+        if exists(logfile):
+            exit_code = "0"
+            with open(logfile, "r") as f:
+                for line in f:
+                    if "TASK-EXIT-CODE:" in line:
+                        exit_code = line.strip().split()[1]
+                        if exit_code != "0":
+                            print(f"Analysis {analysis_name} had non-zero exit code {exit_code}.")
+                            ret = 1
+                            break
+            if exit_code != "0":
+                continue
+            logfile_done = join(analysis_dir, f"Analysis_{analysis_name}.log_done")
+            if not exists(logfile_done):
+                print(f"Apparently, analysis {analysis_name} did not run successfully, {logfile_done} does not exist.")
+                ret = 1
+
+    return ret
+
 
 def main():
     """entry point when run directly from command line"""
@@ -87,13 +169,25 @@ def main():
     modify_parser.add_argument("--disable-tasks", dest="disable_tasks", nargs="*", help="analysis task names to disable (if enabled), takes precedence over --enable-tasks")
     modify_parser.set_defaults(func=modify)
 
+    # Show enabled or disabled tasks
+    show_parser = sub_parsers.add_parser("show-tasks", parents=[config_parser])
+    show_parser.add_argument("--enabled", action="store_true", help="show enabled tasks")
+    show_parser.add_argument("--disabled", action="store_true", help="show disabled tasks")
+    show_parser.set_defaults(func=show_tasks)
+
     # check properties of a task
     check_parser = sub_parsers.add_parser("check", parents=[config_parser])
     check_parser.add_argument("-t", "--task", help="analysis task to check", required=True)
     check_parser.add_argument("--status", action="store_true", help="check if task is enabled or disabled")
-    check_parser.add_argument("--exists", action="store_true", help="check if task exists")
     check_parser.add_argument("--applicable-to", dest="applicable_to", action="store_true", help="check if valid for MC or data")
     check_parser.set_defaults(func=check)
+
+    # check properties of a task
+    validate_parser = sub_parsers.add_parser("validate-output", parents=[config_parser])
+    validate_parser.add_argument("-t", "--tasks", nargs="*", help="analysis tasks to validate; if not specified, all analyses a validated")
+    validate_parser.add_argument("-d", "--directory", help="top directory (usually called \"Analysis\") where to find individual analysis directories", required=True)
+    validate_parser.add_argument("--include-disabled", action="store_true", help="include tasks that are usually switched of (not needed if task is specified explicitly with --task)")
+    validate_parser.set_defaults(func=validate_output)
 
     # parse and run
     args = parser.parse_args()
