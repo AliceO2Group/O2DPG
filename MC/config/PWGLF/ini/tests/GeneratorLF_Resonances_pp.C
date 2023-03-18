@@ -2,38 +2,37 @@ int External()
 {
     std::string path{"o2sim_Kine.root"};
     int numberOfInjectedSignalsPerEvent{10};
-    std::vector<int> injectedPDGs{
+    std::vector<int> injectedPDGs = {
         313,     // K0*0
         -313,    // K0*0bar
         323,     // K*+-
         -323,    // K*bar+-
         333,     // phi
         9010221, // f_0(980)
-        // 9030221, // f_0(1500)
-        // 10331,   // f_0(1710)
-        113,   // rho(770)0
-        213,   // rho(770)+
-        -213,  // rho(770)bar-
-        3224,  // Sigma(1385)+
-        -3224, // Sigma(1385)bar-
-        3124,  // Lambda(1520)0
-        -3124, // Lambda(1520)0bar
-        3324,  // Xi(1530)0
-        -3324  // Xi(1530)0bar
-        // 123314,  // Xi(1820)-
-        // -123314, // Xi(1820)+
-        // 123324,  // Xi(1820)0
-        // -123324  // Xi(1820)0bar
+        113,     // rho(770)0
+        213,     // rho(770)+
+        -213,    // rho(770)bar-
+        3224,    // Sigma(1385)+
+        -3224,   // Sigma(1385)bar-
+        3124,    // Lambda(1520)0
+        -3124,   // Lambda(1520)0bar
+        3324,    // Xi(1530)0
+        -3324    // Xi(1530)0bar
     };
-    std::vector<std::vector<int>> decayDaughters{
-        {321, 211},   // K0*0
-        {-321, -211}, // K0*0bar
-        {311, 211},   // K*+-
-        {-311, -211}, // K*bar+-
-        {321, 321},   // phi
-        {211, 211},   // f_0(980)
-        //{211, 211},         // f_0(1500)
-        //{211, 211},         // f_0(1710)
+    // TODO: add decay daughters
+    // 9030221, // f_0(1500)
+    // 10331,   // f_0(1710)
+    // 123314,  // Xi(1820)-
+    // -123314, // Xi(1820)+
+    // 123324,  // Xi(1820)0
+    // -123324  // Xi(1820)0bar
+    std::vector<std::vector<int>> decayDaughters = {
+        {321, 211},    // K0*0
+        {-321, -211},  // K0*0bar
+        {311, 211},    // K*+-
+        {-311, -211},  // K*bar+-
+        {321, 321},    // phi
+        {211, 211},    // f_0(980)
         {211, 211},    // rho(770)0
         {211, 111},    // rho(770)+
         {-211, -111},  // rho(770)bar-
@@ -43,16 +42,20 @@ int External()
         {-3212, -321}, // Lambda(1520)0bar
         {3312, 211},   // Xi(1530)0
         {-3312, -211}  // Xi(1530)0bar
-        // {211, 211, 111},    // Xi(1820)-
-        // {-211, -211, -111}, // Xi(1820)+
-        // {211, 211, 111},    // Xi(1820)0
-        // {-211, -211, -111}  // Xi(1820)0bar
     };
+    // TODO: add decay daughters
+    // {211, 211},         // f_0(1500)
+    // {211, 211},         // f_0(1710)
+    // {211, 211, 111},    // Xi(1820)-
+    // {-211, -211, -111}, // Xi(1820)+
+    // {211, 211, 111},    // Xi(1820)0
+    // {-211, -211, -111}  // Xi(1820)0bar
 
-    std::cout << "Check for injected particles:";
-    for (auto pdg : injectedPDGs)
+    auto nInjection = injectedPDGs.size();
+    std::cout << "Check for injected particles: " << nInjection;
+    for (int i = 0; i < nInjection; i++)
     {
-        std::cout << "\ndecay PDG " << pdg;
+        std::cout << "\n" << i << " PDG " << injectedPDGs[i];
     }
     std::cout << "\n";
 
@@ -64,26 +67,42 @@ int External()
     }
 
     auto tree = (TTree *)file.Get("o2sim");
+    if (!tree)
+    {
+        std::cerr << "Cannot find tree o2sim in file " << path << "\n";
+        return 1;
+    }
     std::vector<o2::MCTrack> *tracks{};
     tree->SetBranchAddress("MCTrack", &tracks);
 
-    std::vector<int> nSignal(injectedPDGs.size(), 0);
-    std::vector<std::vector<int>> nDecays;
-    for (int i = 0; i < injectedPDGs.size(); i++)
+    std::vector<int> nSignal;
+    for (int i = 0; i < nInjection; i++)
     {
-        nDecays.push_back(std::vector<int>(decayDaughters[i].size(), 0));
+        nSignal.push_back(0);
+    }
+    std::vector<std::vector<int>> nDecays;
+    for (int i = 0; i < nInjection; i++)
+    {
+        std::vector<int> nDecay;
+        for (int j = 0; j < decayDaughters[i].size(); j++)
+        {
+            nDecay.push_back(0);
+        }
+        nDecays.push_back(nDecay);
     }
     auto nEvents = tree->GetEntries();
-
     for (int i = 0; i < nEvents; i++)
     {
-        tree->GetEntry(i);
-        for (auto &track : *tracks)
+        auto check = tree->GetEntry(i);
+        std::cout << "Event " << i << ", " << check << "\n";
+        for (int idxMCTrack = 0; idxMCTrack < tracks->size(); ++idxMCTrack)
         {
+            auto track = tracks->at(idxMCTrack);
             auto pdg = track.GetPdgCode();
+            std::cout << pdg << "\n";
             auto it = std::find(injectedPDGs.begin(), injectedPDGs.end(), pdg);
             int index = std::distance(injectedPDGs.begin(), it); // index of injected PDG
-            if (it != injectedPDGs.end()) // found
+            if (it != injectedPDGs.end())                        // found
             {
                 // count signal PDG
                 nSignal[index]++;
@@ -91,11 +110,11 @@ int External()
                 {
                     auto pdgDau = tracks->at(j).GetPdgCode();
                     // count decay PDGs
-                    for (int i = 0, n = decayDaughters[index].size(); i < n; ++i)
+                    for (int idxDaughter = 0; idxDaughter < decayDaughters[index].size(); ++idxDaughter)
                     {
-                        if (pdgDau == decayDaughters[index][i])
+                        if (pdgDau == decayDaughters[index][idxDaughter])
                         {
-                            nDecays[index][i]++;
+                            nDecays[index][idxDaughter]++;
                         }
                     }
                 }
@@ -104,7 +123,7 @@ int External()
     }
     std::cout << "--------------------------------\n";
     std::cout << "# Events: " << nEvents << "\n";
-    for (int i = 0; i < injectedPDGs.size(); i++)
+    for (int i = 0; i < nInjection; i++)
     {
         std::cout << "# Mother \n";
         std::cout << injectedPDGs[i] << ": " << nSignal[i] << "\n";
@@ -127,12 +146,5 @@ int External()
         }
     }
 
-    return 0;
-}
-
-int Pythia8()
-{
-    // THIS IS OBVIOUSLY NOT HOW A TEST SHOULD LOOK LIKE.
-    // We are wating for the G4 patch with the correct Omega_c lifetime, then it will be updated
     return 0;
 }
