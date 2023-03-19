@@ -65,24 +65,24 @@ fi
 if [[ $PERIOD == "LHC22s" ]]; then
   # CTP asked to extract their digits
   add_comma_separated ADD_EXTRA_WORKFLOW "o2-ctp-digit-writer"
-
+  # set all TPC shifts to 86 BCs (= -10.75 TB) as the jitter is due to the bad VDrift calibration
   TPCITSTIMEERR="0.3"
   TPCITSTIMEBIAS="0"
   if [[ $RUNNUMBER -eq 529397 ]]; then
     ZDC_BC_SHIFT=0
-    TPCCLUSTERTIMESHIFT="-11.25" # 90 BC
+    TPCCLUSTERTIMESHIFT="-10.75"
   elif [[ $RUNNUMBER -eq 529399 ]]; then
     ZDC_BC_SHIFT=0
-    TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
+    TPCCLUSTERTIMESHIFT="-10.75"
   elif [[ $RUNNUMBER -eq 529403 ]]; then
     ZDC_BC_SHIFT=213268844053
-    TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
+    TPCCLUSTERTIMESHIFT="-10.75"
   elif [[ $RUNNUMBER -eq 529414 ]]; then
     ZDC_BC_SHIFT=0
-    TPCCLUSTERTIMESHIFT="-7.75"  # 62 BC
+    TPCCLUSTERTIMESHIFT="-10.75"
   elif [[ $RUNNUMBER -eq 529418 ]]; then
     ZDC_BC_SHIFT=102488091157
-    TPCCLUSTERTIMESHIFT="-5.5"  # 44 BC
+    TPCCLUSTERTIMESHIFT="-10.75"
   else
     ZDC_BC_SHIFT=0
   fi
