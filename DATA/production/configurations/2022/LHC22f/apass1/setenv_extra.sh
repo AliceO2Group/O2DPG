@@ -13,7 +13,7 @@ if [[ -n $ALIEN_JDL_WORKFLOWDETECTORS ]]; then
   export WORKFLOW_DETECTORS=$ALIEN_JDL_WORKFLOWDETECTORS
 else
   export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
-  if [[ $RUNNUMBER == 528529 ]] || [[ $RUNNUMBER == 528529 ]]; then
+  if [[ $RUNNUMBER == 528529 ]] || [[ $RUNNUMBER == 528530 ]]; then
     # removing MID for these runs: it was noisy and therefore declared bad, and makes the reco crash
     export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
   fi
