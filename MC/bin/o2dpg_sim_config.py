@@ -85,6 +85,6 @@ def create_sim_config(args):
     if args.col == "PbPb" or (args.embedding and args.colBkg == "PbPb"):
         add(config, {"ITSCATrackerParam.trackletsPerClusterLimit": 20,
                      "ITSCATrackerParam.cellsPerClusterLimit": 20,
-                     "ITSVertexerParam.lowMultXYcut2": 0.f})
+                     "ITSVertexerParam.lowMultXYcut2": "0.f"})
 
     return config
