@@ -11,7 +11,7 @@ R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGHF/external/generator)
 
 
 FairGenerator*
-GeneratorBeautyToEle_EvtGen(double rapidityMin = -2., double rapidityMax = 2., bool ispp = true, bool verbose = false, TString pdgs = "511;521;531;541;5112;5122;5232;5132;5332;411;421;431;4122;4132;4232;4332")
+GeneratorBeautyToEle_EvtGen(double rapidityMin = -2., double rapidityMax = 2., bool ispp = true, bool forcedecay = true, bool verbose = false, TString pdgs = "511;521;531;541;5112;5122;5232;5132;5332;411;421;431;4122;4132;4232;4332")
 {
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorHF>();
   gen->setRapidity(rapidityMin,rapidityMax);
@@ -27,11 +27,13 @@ GeneratorBeautyToEle_EvtGen(double rapidityMin = -2., double rapidityMax = 2., b
   TObjArray *obj = pdgs.Tokenize(";");
   gen->SetSizePdg(obj->GetEntriesFast());
   for(int i=0; i<obj->GetEntriesFast(); i++) {
-   spdg = obj->At(i)->GetName();
-   gen->AddPdg(std::stoi(spdg),i);
-   printf("PDG %d \n",std::stoi(spdg));
+    spdg = obj->At(i)->GetName();
+    gen->AddPdg(std::stoi(spdg),i);
+    printf("PDG %d \n",std::stoi(spdg));
   }
-  gen->SetForceDecay(kEvtSemiElectronic);
+  if(forcedecay) gen->SetForceDecay(kEvtSemiElectronic);
+  else gen->SetForceDecay(kEvtAll);
+   //}
   // set random seed
   gen->readString("Random:setSeed on");
   uint random_seed;

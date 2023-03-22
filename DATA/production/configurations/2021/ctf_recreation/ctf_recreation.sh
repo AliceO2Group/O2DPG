@@ -109,8 +109,6 @@ echo "processing run $RUNNUMBER, from year $YEAR and period $PERIOD with beamtyp
 echo "Checking current directory content"
 ls -altr 
 
-rm -f /dev/shm/*
-
 export WORKFLOW_PARAMETERS=CTF
 if [[ -f "setenv_extra_ctf_recreation_$DETCONFIG.sh" ]]; then
     source setenv_extra_ctf_recreation_$DETCONFIG.sh 

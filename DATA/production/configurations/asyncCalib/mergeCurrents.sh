@@ -29,5 +29,14 @@ WORKFLOW+="o2-dpl-run $ARGS_ALL"
 
 echo "#Workflow command:\n\n${WORKFLOW}\n" | sed -e "s/\\\\n/\n/g" -e"s/| */| \\\\\n/g"
 
-eval $WORKFLOW
+echo "mergeCurrents.sh : Really starting it"
+
+echo | eval $WORKFLOW
+
+exitcode=$?
+
+echo "mergeCurrents.sh : Workflow finished"
+
+exit $exitcode
+
 

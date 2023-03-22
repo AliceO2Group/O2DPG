@@ -15,10 +15,16 @@ FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
 JSON_FILES=
 OUTPUT_SUFFIX=
 
+if [[ "0$GEN_TOPO_DEPLOYMENT_TYPE" == "0ALICE_STAGING" ]]; then
+  GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-mvs00.cern.ch
+else
+  GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-aliecs.cern.ch
+fi
+
 add_QC_JSON() {
   if [[ ${2} =~ ^consul://.* ]]; then
     TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
-    curl -s -o $TMP_FILENAME "http://alio2-cr1-hv-aliecs.cern.ch:8500/v1/kv/${2/consul:\/\//}?raw"
+    curl -s -o $TMP_FILENAME "http://${GEN_TOPO_QC_CONSUL_SERVER}:8500/v1/kv/${2/consul:\/\//}?raw"
     if [[ $? != 0 ]]; then
       echo "Error fetching QC JSON $2"
       exit 1
@@ -40,14 +46,14 @@ QC_CONFIG_OVERRIDE=
 if [[ -z $QC_JSON_FROM_OUTSIDE && ! -z $GEN_TOPO_QC_JSON_FILE && -f $GEN_TOPO_QC_JSON_FILE ]]; then
   QC_JSON_FROM_OUTSIDE=$GEN_TOPO_QC_JSON_FILE
 elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
-  if [[ $EPNSYNCMODE == 1 || "0$GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL" == "01" ]]; then
+  if [[ $EPNSYNCMODE == 1 || "0$GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL" == "01" ]]; then # Sync processing running on the EPN
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=consul://o2/components/qc/ANY/any/tpc-full-qcmn
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=consul://o2/components/qc/ANY/any/its-qcmn-epn-full
     if [[ -z "$QC_JSON_MFT" ]]; then
       if has_detector MFT && has_processing_step MFT_RECO; then
-        QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-track-full-qcmn
-      else
         QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-qcmn
+      else
+        QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-no-tracks-qcmn
       fi
     fi
     if [[ -z "$QC_JSON_TOF" ]]; then
@@ -93,14 +99,14 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
       fi
     fi
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json # this must be last
-  elif [[ $SYNCMODE == 1 ]]; then
+  elif [[ $SYNCMODE == 1 ]]; then # Sync processing running locally (CI, laptop)
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
     if [[ -z "$QC_JSON_MFT" ]]; then
       if has_processing_step MFT_RECO; then
-        QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft_track.json
+        QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft-full.json
       else
-        QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft.json
+        QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-sync/mft-full-no-tracks.json
       fi
     fi
     [[ -z "$QC_JSON_TOF" ]] && QC_JSON_TOF=$O2DPG_ROOT/DATA/production/qc-sync/tof.json
@@ -124,7 +130,9 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
       fi
     fi
     [[ -z "$QC_JSON_GLOBAL" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json # this must be last
-  else
+
+    QC_CONFIG_OVERRIDE+="qc.config.conditionDB.url=${DPL_CONDITION_BACKEND:-http://alice-ccdb.cern.ch};"
+  else # Async processing
     [[ -z "$QC_JSON_TPC" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-async/tpc.json
     [[ -z "$QC_JSON_ITS" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-async/its.json
     [[ -z "$QC_JSON_MFT" ]] && QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-async/mft.json
@@ -138,6 +146,7 @@ elif [[ -z $QC_JSON_FROM_OUTSIDE ]]; then
       add_QC_JSON MCH_DIGITS $O2DPG_ROOT/DATA/production/qc-async/mch-digits.json
       if has_processing_step "MCH_RECO"; then
         add_QC_JSON MCH_RECO $O2DPG_ROOT/DATA/production/qc-async/mch-reco.json
+        add_QC_JSON MCH_ERRORS $O2DPG_ROOT/DATA/production/qc-async/mch-errors.json
       fi
       if has_track_source "MCH"; then
         add_QC_JSON MCH_TRACKS $O2DPG_ROOT/DATA/production/qc-async/mch-tracks.json

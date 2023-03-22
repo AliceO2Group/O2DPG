@@ -13,7 +13,7 @@ if [[ -n $ALIEN_JDL_WORKFLOWDETECTORS ]]; then
   export WORKFLOW_DETECTORS=$ALIEN_JDL_WORKFLOWDETECTORS
 else
   export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
-  if [[ $RUNNUMBER == 528529 ]] || [[ $RUNNUMBER == 528529 ]]; then
+  if [[ $RUNNUMBER == 528529 ]] || [[ $RUNNUMBER == 528530 ]]; then
     # removing MID for these runs: it was noisy and therefore declared bad, and makes the reco crash
     export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
   fi
@@ -64,31 +64,25 @@ fi
 # The "wrong" +1 offset request for ITS (0) must produce alarm since shifts are not supported there
 if [[ $PERIOD == "LHC22s" ]]; then
   # CTP asked to extract their digits
-  add_comma_separated ADD_EXTRA_WORKFLOW="o2-ctp-digit-writer"
-
+  add_comma_separated ADD_EXTRA_WORKFLOW "o2-ctp-digit-writer"
+  # set all TPC shifts to 86 BCs (= -10.75 TB) as the jitter is due to the bad VDrift calibration
   TPCITSTIMEERR="0.3"
   TPCITSTIMEBIAS="0"
   if [[ $RUNNUMBER -eq 529397 ]]; then
     ZDC_BC_SHIFT=0
-    TPCCLUSTERTIMESHIFT="-11.25" # 90 BC
+    TPCCLUSTERTIMESHIFT="-10.75"
   elif [[ $RUNNUMBER -eq 529399 ]]; then
     ZDC_BC_SHIFT=0
-    TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
+    TPCCLUSTERTIMESHIFT="-10.75"
   elif [[ $RUNNUMBER -eq 529403 ]]; then
     ZDC_BC_SHIFT=213268844053
-    TPCCLUSTERTIMESHIFT="-10.75" # 86 BC
+    TPCCLUSTERTIMESHIFT="-10.75"
   elif [[ $RUNNUMBER -eq 529414 ]]; then
     ZDC_BC_SHIFT=0
-    TPCCLUSTERTIMESHIFT="-3."  # 24/62 BC
-    if [[ -f list.list ]]; then
-      threshCTF="/alice/data/2022/LHC22s/529414/raw/2340/o2_ctf_run00529414_orbit0010200192_tf0000072971_epn086.root"
-      ctf0=`head -n1 list.list`
-      ctf0=${ctf0/alien:\/\//}
-      [[ $ctf0 < $threshCTF ]] && TPCCLUSTERTIMESHIFT="-3." || TPCCLUSTERTIMESHIFT="-7.75"
-    fi
+    TPCCLUSTERTIMESHIFT="-10.75"
   elif [[ $RUNNUMBER -eq 529418 ]]; then
     ZDC_BC_SHIFT=102488091157
-    TPCCLUSTERTIMESHIFT="-5.5"  # 44 BC
+    TPCCLUSTERTIMESHIFT="-10.75"
   else
     ZDC_BC_SHIFT=0
   fi
@@ -149,7 +143,13 @@ fi
 PERIODLETTER=${PERIOD: -1}
 VDRIFTPARAMOPTION=
 if [[ $PERIODLETTER < m ]]; then
-  root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/getTPCvdrift.C+($RUNNUMBER)"
+  echo "In setenv_extra: time used so far = $timeUsed s"
+  timeStart=`date +%s`
+  time root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/getTPCvdrift.C+($RUNNUMBER)"
+  timeEnd=`date +%s`
+  timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+  delta=$(( $timeEnd-$timeStart ))
+  echo "Time spent to get VDrift for TPC = $delta s"
   export VDRIFT=`cat vdrift.txt`
   VDRIFTPARAMOPTION="TPCGasParam.DriftV=$VDRIFT"
   echo "Setting TPC vdrift to $VDRIFT"
@@ -160,7 +160,13 @@ fi
 # IR
 if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]]; then
   cp $O2DPG_ROOT/DATA/production/common/getIRandDuration.C ./
-  root -b -q "getIRandDuration.C+($RUNNUMBER)"
+  echo "In setenv_extra: time used so far = $timeUsed"
+  timeStart=`date +%s`
+  time root -b -q "getIRandDuration.C+($RUNNUMBER)"
+  timeEnd=`date +%s`
+  timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+  delta=$(( $timeEnd-$timeStart ))
+  echo "Time spent in getting IR and duration of the run = $delta s"
   export RUN_IR=`cat IR.txt`
   export RUN_DURATION=`cat Duration.txt`
 fi
@@ -176,18 +182,18 @@ fi
 
 echo "BeamType = $BEAMTYPE"
 
-if [[ $ALIEN_JDL_ENABLEMONITORING == "0" ]]; then
-  export ENABLE_METRICS=0
+if [[ $ALIEN_JDL_ENABLEMONITORING == "1" ]]; then
+  # add the performance metrics
+  export ENABLE_METRICS=1
+  export ARGS_ALL_EXTRA=" --resources-monitoring 50 --resources-monitoring-dump-interval 50"
 else
   # remove monitoring-backend
-  export ENABLE_METRICS=1
-  # add the performance metrics
-  export ARGS_ALL_EXTRA=" --resources-monitoring 50 --resources-monitoring-dump-interval 50"
+  export ENABLE_METRICS=0
 fi
 
 #ALIGNLEVEL=0: before December 2022 alignment, 1: after December 2022 alignment
 ALIGNLEVEL=1
-if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == "LHC22c" || $PERIOD == "LHC22d" || $PERIOD == "LHC22e" || $PERIOD == "LHC22f" ]]; then
+if [[ "0$OLDVERSION" != "01" ]] && [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == "LHC22c" || $PERIOD == "LHC22d" || $PERIOD == "LHC22e" || $PERIOD == "LHC22f" ]]; then
   ALIGNLEVEL=0
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
     # extract pass number
@@ -309,8 +315,11 @@ if [[ $BEAMTYPE == "pp" || $PERIOD == "LHC22s" ]]; then
 else
   export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
 fi
+
 # ad-hoc settings for MCH
-export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow="MCHClustering.lowestPadCharge=15;MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6;MCHDigitFilter.timeOffset=126"
+if [[ $BEAMTYPE == "pp" ]]; then
+  export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow="MCHClustering.lowestPadCharge=15;MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6;MCHDigitFilter.timeOffset=126"
+fi
 
 # possibly adding calib steps as done online
 # could be done better, so that more could be enabled in one go
@@ -340,7 +349,7 @@ if [[ $ADD_CALIB == "1" ]]; then
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
-    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="--enable-itsonly --tracking-sources ITS,TPC,TRD,TOF,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF"
+    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="--process-seeds --enable-itsonly --tracking-sources ITS,TPC,TRD,TOF,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF"
     # ad-hoc settings for TPC residual extraction
     export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="--output-type trackParams,unbinnedResid"
     if [[ $ALIEN_JDL_DEBUGRESIDUALEXTRACTION == "1" ]]; then

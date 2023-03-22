@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Embed jet-jet events in a pre-defined pT hard bin and weighted 
+# Embed jet-jet events in a pre-defined pT hard bin and weighted
 # into HI events, both Pythia8
-# Execute: ./run_jets_embedding.sh 
+# Execute: ./run_jets_embedding.sh
 # Set at least before running PTHATBIN with 1 to 21
 
 #set -x
@@ -10,7 +10,7 @@
 # ----------- LOAD UTILITY FUNCTIONS --------------------------
 . ${O2_ROOT}/share/scripts/jobutils.sh
 
-# ----------- START ACTUAL JOB  ----------------------------- 
+# ----------- START ACTUAL JOB  -----------------------------
 
 RNDSEED=${RNDSEED:-0}   # [default = 0] time-based random seed
 NSIGEVENTS=${NSIGEVENTS:-2}
@@ -31,7 +31,7 @@ pthatbin_loweredges=(0 5 7 9 12 16 21 28 36 45 57 70 85 99 115 132 150 169 190 2
 pthatbin_higheredges=( 5 7 9 12 16 21 28 36 45 57 70 85 99 115 132 150 169 190 212 235 -1)
 
 # Recover environmental vars for pt binning
-#PTHATBIN=${PTHATBIN:-1} 
+#PTHATBIN=${PTHATBIN:-1}
 
 if [ -z "$PTHATBIN" ]; then
     echo "Open Pt-hat range set"
@@ -51,5 +51,3 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} \
                                            -weightPow ${WEIGHTPOW}
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
-
-exit 0

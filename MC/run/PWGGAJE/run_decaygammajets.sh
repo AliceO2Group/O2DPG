@@ -2,17 +2,17 @@
 
 # Generate jet-jet events, PYTHIA8 in a given pt hard bin and weighted.
 # Select the event depending min Pt and acceptance of decay photons.
-# Execute: ./run_decaygammajets.sh 
+# Execute: ./run_decaygammajets.sh
 # Set at least before running PTHATBIN with 1 to 6
-# PARTICLE_ACCEPTANCE and CONFIG_DECAYGAMMA_PTMIN, see 
+# PARTICLE_ACCEPTANCE and CONFIG_DECAYGAMMA_PTMIN, see
 # $O2DPG_ROOT/MC/config/PWGGAJE/trigger/decay_gamma_jet.C
 
-#set -x 
+#set -x
 
 # ----------- LOAD UTILITY FUNCTIONS --------------------------
 . ${O2_ROOT}/share/scripts/jobutils.sh
 
-# ----------- START ACTUAL JOB  ----------------------------- 
+# ----------- START ACTUAL JOB  -----------------------------
 
 RNDSEED=${RNDSEED:-0}   # [default = 0] time-based random seed
 
@@ -85,5 +85,3 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen py
 
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
-
-exit 0

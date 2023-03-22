@@ -26,8 +26,6 @@ if [[ -z "$CTF_DIR" ]]; then echo \$CTF_DIR missing; exit 1; fi
 if [[ -z "$CALIB_DIR" ]]; then echo \$CALIB_DIR missing; exit 1; fi
 if [[ -z "$EPN2EOS_METAFILES_DIR" ]]; then echo \$EPN2EOS_METAFILES_DIR missing; exit 1; fi
 if [[ -z "$GEN_TOPO_WORKDIR" ]]; then echo \$GEN_TOPO_WORKDIR missing; exit 1; fi
-if [[ -z "$GEN_TOPO_STDERR_LOGGING" ]]; then echo \$GEN_TOPO_STDERR_LOGGING missing; exit 1; fi
-if [[ -z "$IS_SIMULATED_DATA" ]]; then echo \$IS_SIMULATED_DATA missing; exit 1; fi
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]]; then echo \$GEN_TOPO_ODC_EPN_TOPO_ARGS missing; exit 1; fi
 if [[ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]]; then echo \$GEN_TOPO_EPN_CCDB_SERVER missing; exit 1; fi
 
@@ -97,7 +95,7 @@ if [[ "0$GEN_TOPO_CACHEABLE" == "01" ]]; then
   cp $GEN_TOPO_WORKDIR/output.xml cache/$GEN_TOPO_CACHE_HASH
 fi
 
-if [[ ! -z $ECS_ENVIRONMENT_ID && -d "/var/log/topology/" ]]; then
+if [[ ! -z $ECS_ENVIRONMENT_ID && -d "/var/log/topology/" && $USER == "epn" ]]; then
   GEN_TOPO_LOG_FILE=/var/log/topology/topology-$(date -u +%Y%m%d-%H%M%S)-$ECS_ENVIRONMENT_ID.xml
   cp $GEN_TOPO_WORKDIR/output.xml $GEN_TOPO_LOG_FILE
   nohup gzip $GEN_TOPO_LOG_FILE &> /dev/null &

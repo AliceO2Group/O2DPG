@@ -47,24 +47,24 @@ if [[ ! -z $OPTIMIZED_PARALLEL_ASYNC ]]; then
     NGPURECOTHREADS=8
     NTRDTRKTHREADS=2
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_4gpu" ]]; then
-    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=32
-    [[ -z $SHMSIZE ]] && SHMSIZE=80000000000
+    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=40
+    [[ -z $SHMSIZE ]] && SHMSIZE=100000000000
     NGPURECOTHREADS=8
     NTRDTRKTHREADS=2
     NGPUS=4
     N_TPCTRK=4
-    MULTIPLICITY_PROCESS_globalfwd_track_matcher=2
-    MULTIPLICITY_PROCESS_pvertex_track_matching=3
-    MULTIPLICITY_PROCESS_primary_vertexing=2
-    MULTIPLICITY_PROCESS_TRDTRACKLETTRANSFORMER=2
-    MULTIPLICITY_PROCESS_aod_producer_workflow=3
-    MULTIPLICITY_PROCESS_trd_globaltracking_TPC_ITS_TPC_=3
-    MULTIPLICITY_PROCESS_tof_matcher=8
-    MULTIPLICITY_PROCESS_mch_cluster_finder=12
-    MULTIPLICITY_PROCESS_mch_track_finder=6
-    MULTIPLICITY_PROCESS_tpc_entropy_decoder=8
-    MULTIPLICITY_PROCESS_itstpc_track_matcher=12
-    MULTIPLICITY_PROCESS_its_tracker=12
+    N_FWDMATCH=2
+    N_PRIMVTXMATCH=3
+    N_PRIMVTX=2
+    N_TRDTRKTRANS=2
+    N_AODPROD=3
+    N_TRDTRK=3
+    N_TOFMATCH=8
+    N_MCHCL=12
+    N_MCHTRK=6
+    N_TPCENTDEC=8
+    N_TPCITS=12
+    N_ITSTRK=12
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_4gpu" ]]; then
     [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=20
     [[ -z $SHMSIZE ]] && SHMSIZE=128000000000 # SHM_LIMIT 3/4
@@ -81,9 +81,9 @@ if [[ ! -z $OPTIMIZED_PARALLEL_ASYNC ]]; then
     N_TOFMATCH=$(math_max $((3 * $NGPUS / 4)) 1)
     N_HMPCLUS=$(math_max $((3 * $NGPUS / 4)) 1)
     CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="ITSVertexerParam.nThreads=3;ITSCATrackerParam.nThreads=3;"
-    MULTIPLICITY_PROCESS_mch_cluster_finder=2
-    MULTIPLICITY_PROCESS_pvertex_track_matching=2
-    MULTIPLICITY_PROCESS_primary_vertexing=3
+    N_MCHCL=2
+    N_PRIMVTXMATCH=2
+    N_PRIMVTX=3
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_64cpu" ]]; then
     NGPURECOTHREADS=6
     NTRDTRKTHREADS=2
@@ -158,6 +158,7 @@ if [[ -z $EVE_NTH_EVENT ]]; then
   elif [[ $BEAMTYPE == "pp" && "0$ED_VERTEX_MODE" == "01" ]]; then
     [[ -z $EVE_NTH_EVENT ]] && EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
   fi
+  [[ ! -z $EPN_GLOBAL_SCALING ]] && EVE_NTH_EVENT=$(($EVE_NTH_EVENT * $EPN_GLOBAL_SCALING))
 fi
 
 if [[ "0$HIGH_RATE_PP" == "01" ]]; then
