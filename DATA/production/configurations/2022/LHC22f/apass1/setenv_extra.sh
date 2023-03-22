@@ -232,9 +232,13 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   elif [[ $PERIOD == "LHC22n" || $PERIOD == "LHC22o" || $PERIOD == "LHC22r" || $PERIOD == "LHC22t" ]]; then # B+, ~500 kHZ, at the moment simply invert corrections tuned on LHC22m (B-)
     TRACKTUNETPCINNER="trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.useTPCInnerCorr=true;trackTuneParams.tpcParInner[0]=-2.32e-01;trackTuneParams.tpcParInner[1]=0.;trackTuneParams.tpcParInner[2]=0.0138;trackTuneParams.tpcParInner[3]=0.;trackTuneParams.tpcParInner[4]=0.08;trackTuneParams.tpcCovInner[0]=0.25;trackTuneParams.tpcCovInner[2]=2.25e-4;trackTuneParams.tpcCovInner[3]=2.25e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
     CUT_MATCH_CHI2=60
-  elif [[ $PERIOD == "LHC22q" ]]; then # B+, low rate, at the moment do not unbias but expand cov matrix
-    TRACKTUNETPCINNER="trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.useTPCInnerCorr=false;trackTuneParams.tpcCovInner[0]=0.25;trackTuneParams.tpcCovInner[2]=2.25e-4;trackTuneParams.tpcCovInner[3]=2.25e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
-    CUT_MATCH_CHI2=60
+  elif [[ $PERIOD == "LHC22q" ]]; then # B+, low rate, at the moment do not unbias but expand cov matrix (the expansion is not done if there is the alien JDL var ALIEN_JDL_NOEXTRAERR22Q)
+    if [[ -z $ALIEN_JDL_NOEXTRAERR22Q ]]; then
+	 TRACKTUNETPCINNER="trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.useTPCInnerCorr=false;trackTuneParams.tpcCovInner[0]=0.25;trackTuneParams.tpcCovInner[2]=2.25e-4;trackTuneParams.tpcCovInner[3]=2.25e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
+	 CUT_MATCH_CHI2=60
+    else
+      CUT_MATCH_CHI2=250
+    fi
   fi
   export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;;tpcitsMatch.crudeAbsDiffCut[0]=6;tpcitsMatch.crudeAbsDiffCut[1]=6;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=5;tpcitsMatch.crudeNSigma2Cut[0]=100;tpcitsMatch.crudeNSigma2Cut[1]=100;tpcitsMatch.crudeNSigma2Cut[2]=100;tpcitsMatch.crudeNSigma2Cut[3]=100;tpcitsMatch.crudeNSigma2Cut[4]=100;"
 fi
