@@ -98,14 +98,14 @@
         },
         {
           "name": "TPCSkimming",
-          "enabled": true,
+          "enabled": false,
           "expected_output": [
             "AnalysisResults.root",
             "AnalysisResults_trees.root"
           ],
           "config": {
-            "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-skimming.json",
-            "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-skimming.json"
+            "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-TPCSkimming.json",
+            "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-TPCSkimming.json"
           },
           "tasks": [
             "o2-analysis-pid-tof-full",
