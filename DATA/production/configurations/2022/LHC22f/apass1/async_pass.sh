@@ -635,10 +635,10 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
 	echo "exit code from one process merging DFs inside AO2D for ${aods[$i]} is " $exitcode > validation_error.message
 	echo "exit code from one process merging DFs inside AO2D for ${aods[$i]} is " $exitcode
 	echo "We will keep the AO2Ds with unmerged DFs"
-	mergedok[${aods[$i]}]=0
+	mergedok[$((10#${aods[$i]}))]=0
       else
 	echo "Merging of DFs inside the AO2D in ${aods[$i]} worked correctly"
-	mergedok[${aods[$i]}]=1
+	mergedok[$((10#${aods[$i]}))]=1
       fi
     done
     timeEndMerge=`date +%s`
@@ -648,7 +648,7 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
     for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
       AOD_FILE=`echo $AOD_LIST | cut -d' ' -f$i`
       AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
-      if [[ ${mergedok[$AOD_DIR]} == 0 ]]; then
+      if [[ ${mergedok[$((10#$AOD_DIR))]} == 0 ]]; then
 	echo "Merging for $AOD_DIR did NOT work, we will do nothing for this file"
 	continue
       else
