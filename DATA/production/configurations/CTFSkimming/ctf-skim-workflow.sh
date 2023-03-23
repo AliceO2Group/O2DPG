@@ -16,6 +16,14 @@ if [[ -z $CTF_MAX_PER_FILE ]];         then CTF_MAX_PER_FILE="10000"; fi        
 source $GEN_TOPO_MYDIR/getCommonArgs.sh || { echo "getCommonArgs.sh failed" 1>&2 && exit 1; }
 source $GEN_TOPO_MYDIR/workflow-setup.sh || { echo "workflow-setup.sh failed" 1>&2 && exit 1; }
 
+TIMEFRAME_RATE_LIMIT=2
+[[ -z $NUMAID ]] && NUMAID="0"
+if [[ $ALIEN_JDL_CPUCORES == 8 ]]; then
+  export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
+  export MULTIPLICITY_PROCESS_tpc_entropy_encoder=2
+  TIMEFRAME_RATE_LIMIT=3
+fi
+
 [[ -z $SHM_MANAGER_SHMID ]] && ( [[ $EXTINPUT == 1 ]] || [[ $NUMAGPUIDS != 0 ]] ) && ARGS_ALL+=" --no-cleanup"
 [[ ! -z $TIMEFRAME_RATE_LIMIT ]] && [[ $TIMEFRAME_RATE_LIMIT != 0 ]] && ARGS_ALL+=" --timeframes-rate-limit $TIMEFRAME_RATE_LIMIT --timeframes-rate-limit-ipcid $NUMAID"
 [[ ! -z $TIMEFRAME_SHM_LIMIT ]] && ARGS_ALL+=" --timeframes-shm-limit $TIMEFRAME_SHM_LIMIT"
@@ -55,13 +63,6 @@ fi
 
 [[ -z $DEF_MARGIN_BWD ]] && DEF_MARGIN_BWD=55 # default backward margin to account for time misalignments
 [[ -z $DEF_MARGIN_FWD ]] && DEF_MARGIN_FWD=55 # default backward margin to account for time misalignments
-
-if [[ $ALIEN_JDL_CPUCORES == 8 ]]; then
-  export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
-  MULTIPLICITY_PROCESS_tpc_entropy_encoder=2
-else
-  export TIMEFRAME_RATE_LIMIT=2
-fi
 
 add_W o2-ctf-reader-workflow "--ctf-data-subspec 1 --ir-frames-files $IRFRAMES $SKIP_SKIMMED_OUT_TF --ctf-input $CTFLIST ${INPUT_FILE_COPY_CMD+--copy-cmd} ${INPUT_FILE_COPY_CMD} --onlyDet $WORKFLOW_DETECTORS $ALLOW_MISSING_DET --pipeline $(get_N tpc-entropy-decoder TPC REST 1 TPCENTDEC)"
 
