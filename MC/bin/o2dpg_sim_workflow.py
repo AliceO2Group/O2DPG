@@ -212,11 +212,40 @@ def retrieve_sor(run_number):
 
     return int(SOR)
 
+
+# check and sanitize config-key values (extract and remove diamond vertex arguments into finalDiamondDict)
+def extractVertexArgs(configKeyValuesStr, finalDiamondDict):
+  # tokenize configKeyValueStr on ;
+  tokens=configKeyValuesStr.split(';')
+  for t in tokens:
+    if "Diamond" in t:
+      left, right = t.split("=")
+      value = finalDiamondDict.get(left,None)
+      if value == None:
+        finalDiamondDict[left] = right
+      else:
+        # we have seen this before, check if consistent right hand side, otherwise crash
+        if value != right:
+          print("Inconsistent repetition in Diamond values; Aborting")
+          sys.exit(1)
+
+vertexDict = {}
+extractVertexArgs(args.confKey, vertexDict)
+extractVertexArgs(args.confKeyBkg, vertexDict)
+CONFKEYMV=""
+# rebuild vertex only config-key string
+for e in vertexDict:
+  if len(CONFKEYMV) > 0:
+    CONFKEYMV+=';'
+  CONFKEYMV+=str(e) + '=' + str(vertexDict[e])
+
+print ("Diamond is " + CONFKEYMV)
+
 # Recover mean vertex settings from external txt file
 if  len(args.meanVertexPerRunTxtFile) > 0:
-  if "Diamond" in args.confKey :
+  if len(CONFKEYMV) > 0:
      print("confKey already sets diamond, stop!")
-     sys.exit()
+     sys.exit(1)
   #df = pd.read_csv(args.vertexPerRunFile, sep=" ", header=None) # for single space
   df = pd.read_csv(args.meanVertexPerRunTxtFile, delimiter="\t", header=None) # for tabular
   df.columns = ["runNumber", "vx", "vy", "vz", "sx", "sy", "sz"]
@@ -261,8 +290,8 @@ if args.condition_not_after:
    globalenv['ALICEO2_CCDB_CONDITION_NOT_AFTER'] = args.condition_not_after
    # this is enforcing the use of local CCDB caching
    if environ.get('ALICEO2_CCDB_LOCALCACHE') == None:
-       print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + getcwd() + '/.ccdb')
-       globalenv['ALICEO2_CCDB_LOCALCACHE'] = getcwd() + "/.ccdb"
+       print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + getcwd() + '/ccdb')
+       globalenv['ALICEO2_CCDB_LOCALCACHE'] = getcwd() + "/ccdb"
    else:
        # fixes the workflow to use and remember externally provided path
        globalenv['ALICEO2_CCDB_LOCALCACHE'] = environ.get('ALICEO2_CCDB_LOCALCACHE')
@@ -294,13 +323,17 @@ qcdir = "QC"
 if (includeLocalQC or includeFullQC) and not isdir(qcdir):
     mkdir(qcdir)
 
-# create the GRPs
+# create/publish the GRPs and other GLO objects for consistent use further down the pipeline
 orbitsPerTF=int(args.orbitsPerTF)
 GRP_TASK = createTask(name='grpcreate', cpu='0')
 GRP_TASK['cmd'] = 'o2-grp-simgrp-tool createGRPs --run ' + str(args.run) + ' --publishto ${ALICEO2_CCDB_LOCALCACHE:-.ccdb} -o grp --hbfpertf ' + str(orbitsPerTF) + ' --field ' + args.field
 GRP_TASK['cmd'] += ' --readoutDets ' + " ".join(activeDetectors) + ' --print ' + ('','--lhcif-CCDB')[args.run_anchored]
 if (not args.run_anchored == True) and len(args.bcPatternFile) > 0:
     GRP_TASK['cmd'] += '  --bcPatternFile ' + str(args.bcPatternFile)
+if len(CONFKEYMV) > 0:
+    # this is allowing the possibility to setup/use a different MeanVertex object than the one from CCDB
+    GRP_TASK['cmd'] += ' --vertex Diamond --configKeyValues ' + CONFKEYMV
+
 workflow['stages'].append(GRP_TASK)
 
 if doembedding:
@@ -388,7 +421,8 @@ if doembedding:
         BKGtask['cmd']='${O2_ROOT}/bin/o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
                      + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)                    \
                      + ' --field '  + str(BFIELD) + ' '    + str(CONFKEYBKG) \
-                     + ('',' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)
+                     + ('',' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)        \
+                     + ' --vertexMode kCCDB'
 
         if not "all" in activeDetectors:
            BKGtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
@@ -617,7 +651,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                   + ' --field ' + str(BFIELD)    + ' -j ' + str(NWORKERS) + ' -g ' + str(GENERATOR)   \
                   + ' '         + str(TRIGGER)   + ' '    + str(CONFKEY)  + ' '    + str(INIFILE)     \
                   + ' -o '      + signalprefix   + ' '    + embeddinto                                \
-                  + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)
+                  + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)   \
+                  + ' --vertexMode kCCDB'
    if not "all" in activeDetectors:
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
    if args.pregenCollContext == True:
