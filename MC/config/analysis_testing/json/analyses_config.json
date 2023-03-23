@@ -97,16 +97,16 @@
                       "o2-analysis-pid-tpc-full"]
         },
         {
-          "config": {
-            "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-skimming.json",
-            "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-skimming.json"
-          },
+          "name": "TPCSkimming",
           "enabled": true,
           "expected_output": [
             "AnalysisResults.root",
             "AnalysisResults_trees.root"
           ],
-          "name": "TPCSkimming",
+          "config": {
+            "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-skimming.json",
+            "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-skimming.json"
+          },
           "tasks": [
             "o2-analysis-pid-tof-full",
             "o2-analysis-pid-tof-beta",
