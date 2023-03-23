@@ -121,7 +121,7 @@
             "o2-analysis-pid-tpc-full",
             "o2-analysis-event-selection",
             "o2-analysis-pid-tpc-base",
-            "o2-analysis-pid-tpc-skimscreation"
+            "o2-analysis-pid-tpc-skimscreation --aod-writer-keep AOD/TPCSKIMV0TREE/0,AOD/TPCTOFSKIMTREE/0"
           ]
         },
         {
