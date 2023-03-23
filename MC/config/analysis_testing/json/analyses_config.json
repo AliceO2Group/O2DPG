@@ -97,6 +97,34 @@
                       "o2-analysis-pid-tpc-full"]
         },
         {
+          "config": {
+            "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-skimming.json",
+            "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-skimming.json"
+          },
+          "enabled": true,
+          "expected_output": [
+            "AnalysisResults.root",
+            "AnalysisResults_trees.root"
+          ],
+          "name": "TPCSkimming",
+          "tasks": [
+            "o2-analysis-pid-tof-full",
+            "o2-analysis-pid-tof-beta",
+            "o2-analysis-pid-tof-base",
+            "o2-analysis-multiplicity-table",
+            "o2-analysis-trackselection",
+            "o2-analysis-track-propagation",
+            "o2-analysis-pid-tpc-qa",
+            "o2-analysis-timestamp",
+            "o2-analysis-lf-lambdakzerobuilder",
+            "o2-analysis-dq-v0-selector",
+            "o2-analysis-pid-tpc-full",
+            "o2-analysis-event-selection",
+            "o2-analysis-pid-tpc-base",
+            "o2-analysis-pid-tpc-skimscreation"
+          ]
+        },
+        {
             "name": "PWGMMMFT",
             "enabled": true,
             "expected_output": ["AnalysisResults.root"],
