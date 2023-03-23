@@ -198,7 +198,7 @@ fi
 
 #ALIGNLEVEL=0: before December 2022 alignment, 1: after December 2022 alignment
 ALIGNLEVEL=1
-if [[ "0$OLDVERSION" != "01" ]] && [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == "LHC22c" || $PERIOD == "LHC22d" || $PERIOD == "LHC22e" || $PERIOD == "LHC22f" ]]; then
+if [[ "0$OLDVERSION" == "01" ]] && [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == "LHC22c" || $PERIOD == "LHC22d" || $PERIOD == "LHC22e" || $PERIOD == "LHC22f" ]]; then
   ALIGNLEVEL=0
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
     # extract pass number
@@ -214,10 +214,11 @@ if [[ "0$OLDVERSION" != "01" ]] && [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" ||
 fi
 
 # some settings in common between workflows and affecting ITS-TPC matching
-CUT_MATCH_CHI2=160
+CUT_MATCH_CHI2=250
 if [[ $ALIGNLEVEL == 0 ]]; then
   ERRIB="9e-4"
   ERROB="1e-2"
+  CUT_MATCH_CHI2=160
   export ITS_CONFIG=" --tracking-mode sync_misaligned"
   export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=10.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;tpcitsMatch.crudeAbsDiffCut[0]=5;tpcitsMatch.crudeAbsDiffCut[1]=5;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=10;tpcitsMatch.crudeNSigma2Cut[0]=200;tpcitsMatch.crudeNSigma2Cut[1]=200;tpcitsMatch.crudeNSigma2Cut[2]=200;tpcitsMatch.crudeNSigma2Cut[3]=200;tpcitsMatch.crudeNSigma2Cut[4]=900;"
 elif [[ $ALIGNLEVEL == 1 ]]; then
