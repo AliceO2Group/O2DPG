@@ -16,8 +16,16 @@ if [[ -z $CTF_MAX_PER_FILE ]];         then CTF_MAX_PER_FILE="10000"; fi        
 source $GEN_TOPO_MYDIR/getCommonArgs.sh || { echo "getCommonArgs.sh failed" 1>&2 && exit 1; }
 source $GEN_TOPO_MYDIR/workflow-setup.sh || { echo "workflow-setup.sh failed" 1>&2 && exit 1; }
 
+TIMEFRAME_RATE_LIMIT=2
+[[ -z $NUMAID ]] && NUMAID="0"
+if [[ $ALIEN_JDL_CPUCORES == 8 ]]; then
+  export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
+  export MULTIPLICITY_PROCESS_tpc_entropy_encoder=2
+  TIMEFRAME_RATE_LIMIT=3
+fi
+
 [[ -z $SHM_MANAGER_SHMID ]] && ( [[ $EXTINPUT == 1 ]] || [[ $NUMAGPUIDS != 0 ]] ) && ARGS_ALL+=" --no-cleanup"
-[[ ! -z $TIMEFRAME_RATE_LIMIT ]] && [[ $TIMEFRAME_RATE_LIMIT != 0 ]] && ARGS_ALL+=" --timeframes-rate-limit $TIMEFRAME_RATE_LIMIT --timeframes-rate-limit-ipcid $NUMAID"
+[[ ! -z $TIMEFRAME_RATE_LIMIT ]] && [[ $TIMEFRAME_RATE_LIMIT != 0 ]] && ARGS_ALL+=" --timeframes-rate-limit $TIMEFRAME_RATE_LIMIT --timeframes-rate-limit-ipcid $(($NUMAID + 10 * ${O2JOBID:-0}))"
 [[ ! -z $TIMEFRAME_SHM_LIMIT ]] && ARGS_ALL+=" --timeframes-shm-limit $TIMEFRAME_SHM_LIMIT"
 
 { source $O2DPG_ROOT/DATA/production/workflow-multiplicities.sh; [[ $? != 0 ]] && echo "workflow-multiplicities.sh failed" 1>&2 && exit 1; }
@@ -79,7 +87,7 @@ add_W o2-ctf-writer-workflow "--output-dir $CTF_DIR --min-file-size ${CTF_MINSIZ
 
 # ---------------------------------------------------------------------------------------------------------------------
 # DPL run binary
-WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
+WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT -b"
 
 [[ $WORKFLOWMODE == "print" || "0$PRINT_WORKFLOW" == "01" ]] && echo "#Workflow command:\n\n${WORKFLOW}\n" | sed -e "s/\\\\n/\n/g" -e"s/| */| \\\\\n/g" | eval cat $( [[ $WORKFLOWMODE == "dds" ]] && echo '1>&2')
 if [[ $WORKFLOWMODE != "print" ]]; then eval $WORKFLOW; else true; fi
