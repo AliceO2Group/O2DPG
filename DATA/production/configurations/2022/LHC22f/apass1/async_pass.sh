@@ -579,6 +579,7 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   if [[ -n $ALIEN_JDL_MAXPOOLSIZEAODMERGING ]]; then
     MAX_POOL_SIZE=$ALIEN_JDL_MAXPOOLSIZEAODMERGING
   fi
+  echo "Max number of parallel AOD mergers will be $MAX_POOL_SIZE"
   JOB_LIST=job-list.txt
   if [[ -f $JOB_LIST ]]; then
     rm $JOB_LIST
@@ -620,6 +621,7 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
     while IFS= read -r line; do
       while [[ $CURRENT_POOL_SIZE -ge $MAX_POOL_SIZE ]]; do
 	CURRENT_POOL_SIZE=`jobs -r | wc -l`
+	sleep 1
       done
       run_AOD_merging $line &
       arr[$i]=$!
@@ -632,9 +634,9 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       wait ${arr[$i]}
       exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from one process merging DFs inside AO2D for ${aods[$i]} is " $exitcode > validation_error.message
-	echo "exit code from one process merging DFs inside AO2D for ${aods[$i]} is " $exitcode
-	echo "We will keep the AO2Ds with unmerged DFs"
+	echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode > validation_error.message
+	echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode
+	echo "As a consequence, we will keep the AO2Ds with unmerged DFs for ${aods[$i]}"
 	mergedok[$((10#${aods[$i]}))]=0
       else
 	echo "Merging of DFs inside the AO2D in ${aods[$i]} worked correctly"
@@ -648,15 +650,16 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
     for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
       AOD_FILE=`echo $AOD_LIST | cut -d' ' -f$i`
       AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
+      echo "Inspecting $AOD_DIR:"
       if [[ ${mergedok[$((10#$AOD_DIR))]} == 0 ]]; then
-	echo "Merging for $AOD_DIR did NOT work, we will do nothing for this file"
+	echo "Merging for $AOD_DIR DID NOT work, we will do nothing for this file"
 	continue
       else
-	echo "Merging for $AOD_DIR did work, let's continue"
+	echo "Merging for $AOD_DIR DID work, let's continue"
       fi
       cd $AOD_DIR
       # now checking them
-      echo "Checking AO2Ds with merged DFs"
+      echo "Checking AO2Ds with merged DFs in $AOD_DIR"
       timeStartCheckMergedAOD=`date +%s`
       time root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
       timeEndCheckMergedAOD=`date +%s`
