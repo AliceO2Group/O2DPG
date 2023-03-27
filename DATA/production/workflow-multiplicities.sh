@@ -12,6 +12,10 @@ SOURCE_GUARD_MULTIPLICITIES=1
 [[ -z $NMFTTHREADS ]] && NMFTTHREADS=2
 
 [[ -z $SVERTEX_THREADS ]] && SVERTEX_THREADS=$(( $SYNCMODE == 1 ? 1 : 2 ))
+
+[[ -z $ITSTRK_THREADS ]] && ITSTRK_THREADS=1
+[[ -z $ITSTPC_THREADS ]] && ITSTPC_THREADS=1
+
 # FIXME: multithreading in the itsmft reconstruction does not work on macOS.
 if [[ $(uname) == "Darwin" ]]; then
     NITSDECTHREADS=1
