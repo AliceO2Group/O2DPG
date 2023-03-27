@@ -4,6 +4,7 @@ R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/external/generator)
 namespace o2 {
 namespace eventgen {
 
+
 class CocktailParam : public GeneratorTGenerator {
 public:
   CocktailParam(GeneratorParam *thisGenerator)
@@ -432,6 +433,16 @@ GenerateEMCocktail(Int_t collisionsSystem = GeneratorParamEMlibV2::kpp7TeV,
                    Bool_t toFixEP = 0, // notimplemented
                    Double_t yGenRange = 0.1, TString useLMeeDecaytable = "",
                    Int_t weightingMode = 1) {
+
+  TString O2DPG_ROOT = TString(getenv("O2DPG_ROOT"));
+  paramFile=paramFile.ReplaceAll("$O2DPG_ROOT",O2DPG_ROOT);
+  paramFile=paramFile.ReplaceAll("${O2DPG_ROOT}",O2DPG_ROOT);
+  useLMeeDecaytable=useLMeeDecaytable.ReplaceAll("$O2DPG_ROOT",O2DPG_ROOT);
+  useLMeeDecaytable=useLMeeDecaytable.ReplaceAll("${O2DPG_ROOT}",O2DPG_ROOT);
+  if (paramFile.BeginsWith("alien://")){
+    TGrid::Connect("alien://");
+  }
+
   auto gener = new o2::eventgen::GeneratorEMCocktailV2();
   auto decayer = new PythiaDecayerConfig();
   if (externalDecayer) decayer->SetDecayerExodus();
@@ -444,9 +455,7 @@ GenerateEMCocktail(Int_t collisionsSystem = GeneratorParamEMlibV2::kpp7TeV,
   (TPythia6::Instance())
       ->SetMSTU(22, pythiaErrorTolerance); // tolerance for error due to rhos
 
-  if (paramFile.BeginsWith("alien://")){
-    TGrid::Connect("alien://");
-  }
+
   gener->SetParametrizationFile(paramFile);
   gener->SetParametrizationFileDirectory(paramFileDir);
   gener->SetNPart(numberOfParticles);
