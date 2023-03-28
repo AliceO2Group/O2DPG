@@ -332,7 +332,7 @@ if (not args.run_anchored == True) and len(args.bcPatternFile) > 0:
     GRP_TASK['cmd'] += '  --bcPatternFile ' + str(args.bcPatternFile)
 if len(CONFKEYMV) > 0:
     # this is allowing the possibility to setup/use a different MeanVertex object than the one from CCDB
-    GRP_TASK['cmd'] += ' --vertex Diamond --configKeyValues ' + CONFKEYMV
+    GRP_TASK['cmd'] += ' --vertex Diamond --configKeyValues "' + CONFKEYMV + '"'
 
 workflow['stages'].append(GRP_TASK)
 
