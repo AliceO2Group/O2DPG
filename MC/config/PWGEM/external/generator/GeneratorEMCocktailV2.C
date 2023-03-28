@@ -352,7 +352,7 @@ public:
         // add the particle
         mParticles.push_back(p);
         auto &pEdit = mParticles.back();
-        o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(pEdit, false);
+        o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(pEdit, o2::mcgenstatus::getHepMCStatusCode(pEdit.GetStatusCode())==1);
         // set the normalization
         double weight = dNdy * pEdit.GetWeight();
         if (fUseYWeighting) {
