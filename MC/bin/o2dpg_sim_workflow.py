@@ -232,7 +232,7 @@ def extractVertexArgs(configKeyValuesStr, finalDiamondDict):
 vertexDict = {}
 extractVertexArgs(args.confKey, vertexDict)
 extractVertexArgs(args.confKeyBkg, vertexDict)
-CONFKEYMV=""
+CONFKEYMV="\""
 # rebuild vertex only config-key string
 for e in vertexDict:
   if len(CONFKEYMV) > 0:
@@ -259,8 +259,8 @@ if  len(args.meanVertexPerRunTxtFile) > 0:
   print("** Using mean vertex parameters from file",args.meanVertexPerRunTxtFile,"for run =",args.run,
   ": \n \t vx =",MV_VX,", vy =",MV_VY,", vz =",MV_VZ,",\n \t sx =",MV_SX,", sy =",MV_SY,", sz =",MV_SZ)
   CONFKEYMV='Diamond.width[2]='+str(MV_SZ)+';Diamond.width[1]='+str(MV_SY)+';Diamond.width[0]='+str(MV_SX)+';Diamond.position[2]='+str(MV_VZ)+';Diamond.position[1]='+str(MV_VY)+';Diamond.position[0]='+str(MV_VX)+';'
-  args.confKey=args.confKey + CONFKEYMV
-  args.confKeyBkg=args.confKeyBkg + CONFKEYMV
+  args.confKey=args.confKey + CONFKEYMV + "\""
+  args.confKeyBkg=args.confKeyBkg + CONFKEYMV + "\""
   print("** confKey args + MeanVertex:",args.confKey)
 
 # ----------- START WORKFLOW CONSTRUCTION -----------------------------
@@ -332,7 +332,7 @@ if (not args.run_anchored == True) and len(args.bcPatternFile) > 0:
     GRP_TASK['cmd'] += '  --bcPatternFile ' + str(args.bcPatternFile)
 if len(CONFKEYMV) > 0:
     # this is allowing the possibility to setup/use a different MeanVertex object than the one from CCDB
-    GRP_TASK['cmd'] += ' --vertex Diamond --configKeyValues ' + CONFKEYMV
+    GRP_TASK['cmd'] += ' --vertex Diamond --configKeyValues ' + CONFKEYMV + "\""
 
 workflow['stages'].append(GRP_TASK)
 
