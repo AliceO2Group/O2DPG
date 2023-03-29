@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # used to avoid sourcing this file 2x
-if [[ -z $SOURCE_GUARD_FUNCTIONS ]]; then
+if [[ -z ${SOURCE_GUARD_FUNCTIONS:-} ]]; then
 SOURCE_GUARD_FUNCTIONS=1
 
 has_detector()
@@ -81,7 +81,7 @@ _check_multiple()
   CHECKER=$1
   shift
   while true; do
-    if [[ "0$1" == "0" ]]; then return 0; fi
+    if [[ -z ${1:-} ]]; then return 0; fi
     if ! $CHECKER $1; then return 1; fi
     shift
   done
@@ -133,7 +133,7 @@ add_comma_separated()
   fi
 
   for ((i = 2; i <= $#; i++ )); do
-    if [[ -z ${!1} ]]; then
+    if [[ -z ${!1:-} ]]; then
       eval $1+="${!i}"
     else
       eval $1+=",${!i}"
@@ -152,7 +152,7 @@ add_semicolon_separated()
   fi
 
   for ((i = 2; i <= $#; i++ )); do
-    if [[ -z ${!1} ]]; then
+    if [[ -z ${!1:-} ]]; then
       eval $1+="${!i}"
     else
       eval $1+="\;${!i}"
