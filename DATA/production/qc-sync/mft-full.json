@@ -80,6 +80,16 @@
           "timeBinSize" : "0.1",
           "ROFLengthInBC" : "594"
         },
+	"grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "false",
+            "needPropagatorD":  "false"
+	},
         "location": "local",
         "localMachines": [
           "epn", "localhost"
