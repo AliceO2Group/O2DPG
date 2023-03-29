@@ -115,18 +115,6 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 export timeUsed=0
 
 ###if [[ $MODE == "remote" ]]; then
-    # common archive
-    if [[ ! -f commonInput.tgz ]]; then
-	echo "No commonInput.tgz found exiting"
-	exit 2
-    fi
-    tar -xzvf commonInput.tgz
-    if [[ -f o2sim_grp.root ]]; then rm o2sim_grp.root; fi
-    SELECTSETTINGSSCRIPT="$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/selectSettings.sh"
-    if [[ -f "selectSettings.sh" ]]; then
-      SELECTSETTINGSSCRIPT="selectSettings.sh"
-    fi
-    source $SELECTSETTINGSSCRIPT || { echo "$SELECTSETTINGSSCRIPT failed" && exit 4; }
     # run specific archive
     if [[ ! -f runInput_$RUNNUMBER.tgz ]]; then
 	echo "No runInput_$RUNNUMBER.tgz, let's hope we don't need it"

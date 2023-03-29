@@ -43,6 +43,16 @@
           "NbinsMultiplicity": "15000",
           "applyCalib": "True",
           "NoiseClassSelection": "1"
+        },
+	  "grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "false",
+          "needPropagatorD":  "false"
         }
       }
     },
