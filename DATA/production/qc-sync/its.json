@@ -38,6 +38,7 @@
         "location": "local",
         "mergingMode": "entire",
         "taskParameters": {
+          "isLocalGeometry": "0",
           "layer": "1111111",
           "clusterDictionaryPath": "",
           "nThreads": "1",
@@ -45,7 +46,7 @@
           "dicttimestamp" : "0",
           "publishSummary1D": "0"
         },
-	"grpGeomRequest" : {
+        "grpGeomRequest" : {
           "geomRequest": "Aligned",
           "askGRPECS": "false",
           "askGRPLHCIF": "false",
@@ -54,8 +55,8 @@
           "askTime": "false",
           "askOnceAllButField": "false",
           "needPropagatorD":  "false"
-         },
-          "localMachines": [
+        },
+        "localMachines": [
           "localhost", "epn"
         ],
         "localControl": "odc",
