@@ -225,7 +225,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   ERRIB="100e-8"
   ERROB="100e-8"
   [[ -z $TPCITSTIMEERR ]] && TPCITSTIMEERR="0.2"
-  export ITS_CONFIG=" --tracking-mode async"
+  [[ -z $ITS_CONFIG || "$ITS_CONFIG" != *"--tracking-mode"* ]] && export ITS_CONFIG+=" --tracking-mode async"
   # this is to account for the TPC tracks bias due to the distortions: increment cov.matrix diagonal at the TPC inner boundary, unbias params
   if [[ $PERIOD == "LHC22m" || $PERIOD == "LHC22p"  ]]; then # B-, ~500 kHZ
     TRACKTUNETPCINNER="trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.useTPCInnerCorr=true;trackTuneParams.tpcParInner[0]=2.32e-01;trackTuneParams.tpcParInner[1]=0.;trackTuneParams.tpcParInner[2]=-0.0138;trackTuneParams.tpcParInner[3]=0.;trackTuneParams.tpcParInner[4]=0.08;trackTuneParams.tpcCovInner[0]=0.25;trackTuneParams.tpcCovInner[2]=2.25e-4;trackTuneParams.tpcCovInner[3]=2.25e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
