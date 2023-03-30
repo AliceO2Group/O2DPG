@@ -14,7 +14,6 @@ if [[ -z $CTF_MAX_PER_FILE ]];         then CTF_MAX_PER_FILE="10000"; fi        
 
 # Set general arguments
 source $GEN_TOPO_MYDIR/getCommonArgs.sh || { echo "getCommonArgs.sh failed" 1>&2 && exit 1; }
-source $GEN_TOPO_MYDIR/workflow-setup.sh || { echo "workflow-setup.sh failed" 1>&2 && exit 1; }
 
 TIMEFRAME_RATE_LIMIT=2
 [[ -z $NUMAID ]] && NUMAID="0"
