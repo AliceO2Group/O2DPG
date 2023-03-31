@@ -444,7 +444,7 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_1.log
-      ./$STATSCRIPT latest_reco_1.log
+      ./$STATSCRIPT latest_reco_1.log reco_1
     fi
   fi
 
@@ -473,18 +473,21 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_2.log
-      ./$STATSCRIPT latest_reco_2.log
+      ./$STATSCRIPT latest_reco_2.log reco_2
       # let's compare to previous step
       if [[ -f latest_reco_1.log ]]; then
-	nCTFsFilesInspected_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_latest_reco_1.log_stat.txt | sed 's/\(^[0-9]*\)_.*/\1/'`
-	nCTFsFilesOK_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_latest_reco_1.log_stat.txt | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
-	nCTFsProcessed_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_latest_reco_1.log_stat.txt | sed 's/^[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
-	nCTFsFilesInspected_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_latest_reco_2.log_stat.txt | sed 's/\(^[0-9]*\)_.*/\1/'`
-	nCTFsFilesOK_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_latest_reco_2.log_stat.txt | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
-	nCTFsProcessed_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_latest_reco_2.log_stat.txt | sed 's/^[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
-	if [[ $nCTFsFilesInspected_step1 != $nCTFsFilesInspected_step2 ]] || [[ $nCTFsFilesOK_step1 != $nCTFsFilesOK_step2 ]] || [[ $nCTFsProcessed_step1 != $nCTFsProcessed_step2 ]]; then
+	nCTFsFilesInspected_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
+	nCTFsFilesFailed_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsFilesOK_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsProcessed_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
+	nCTFsFilesInspected_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
+	nCTFsFilesFailed_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsFilesOK_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/^[0-9]*_[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsProcessed_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/^[0-9]*_[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
+	if [[ $nCTFsFilesInspected_step1 != $nCTFsFilesInspected_step2 ]] || [[ $nCTFsFilesFailed_step1 != $nCTFsFilesFailed_step2 ]] || [[ $nCTFsFilesOK_step1 != $nCTFsFilesOK_step2 ]] || [[ $nCTFsProcessed_step1 != $nCTFsProcessed_step2 ]]; then
 	  echo "Inconsistency between step 1 and step 2 in terms of number of CTFs (files or single CTFs) found:"
 	  echo "nCTFsFilesInspected_step1 = $nCTFsFilesInspected_step1, nCTFsFilesInspected_step2 = $nCTFsFilesInspected_step2"
+	  echo "nCTFsFilesFailed_step1 = $nCTFsFilesFailed_step1, nCTFsFilesFailed_step2 = $nCTFsFilesFailed_step2"
 	  echo "nCTFsFilesOK_step1 = $nCTFsFilesOK_step1, nCTFsFilesOK_step2 = $nCTFsFilesOK_step2"
 	  echo "nCTFsProcessed_step1 = $nCTFsProcessed_step1, nCTFsProcessed_step2 = $nCTFsProcessed_step2"
 	  echo "Inconsistency between step 1 and step 2 in terms of number of CTFs (files or single CTFs) found:" > validation_error.message
