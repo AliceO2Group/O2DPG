@@ -24,7 +24,12 @@ echo "*********************** mode = ${MODE}"
 unset ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow
 if [[ $MODE == "remote" ]]; then
   export INPUT_FILE_COPY_CMD="\"alien_cp ?src file://?dst\""
-  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+="--remote-regex \"^alien:///alice/data/.+\""
+  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --remote-regex \"^alien:///alice/data/.+\""
+fi
+
+# adjusting for trigger LM_L0 correction, which was not there before July 2022
+if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC22e" ]] || [[ $PERIOD == "LHC22f" ]] ; then
+  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --correct-trd-trigger-offset"
 fi
 
 # checking for remapping
@@ -50,10 +55,10 @@ echo "PERIOD = $PERIOD"
 export ADD_EXTRA_WORKFLOW=
 
 # other ad-hoc settings for CTF reader
-export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+="--allow-missing-detectors $REMAPPING"
+export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --allow-missing-detectors $REMAPPING"
 echo RUN = $RUNNUMBER
 if [[ $RUNNUMBER -ge 521889 ]]; then
-  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --its-digits --mft-digits"
+  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --its-digits --mft-digits"
   export DISABLE_DIGIT_CLUSTER_INPUT="--digits-from-upstream"
   MAXBCDIFFTOMASKBIAS_ITS="ITSClustererParam.maxBCDiffToMaskBias=10"
   MAXBCDIFFTOMASKBIAS_MFT="MFTClustererParam.maxBCDiffToMaskBias=10"
@@ -92,7 +97,7 @@ if [[ $PERIOD == "LHC22s" ]]; then
   fi
   CTP_BC_SHIFT=-293
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]]; then
-    export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+="TriggerOffsetsParam.customOffset[2]=1;TriggerOffsetsParam.customOffset[4]=1;TriggerOffsetsParam.customOffset[5]=1;TriggerOffsetsParam.customOffset[6]=1;TriggerOffsetsParam.customOffset[7]=1;TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;TriggerOffsetsParam.customOffset[16]=$CTP_BC_SHIFT"
+    export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+=";TriggerOffsetsParam.customOffset[2]=1;TriggerOffsetsParam.customOffset[4]=1;TriggerOffsetsParam.customOffset[5]=1;TriggerOffsetsParam.customOffset[6]=1;TriggerOffsetsParam.customOffset[7]=1;TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;TriggerOffsetsParam.customOffset[16]=$CTP_BC_SHIFT"
   fi
   export PVERTEXER+=";pvertexer.dbscanDeltaT=1;pvertexer.maxMultRatDebris=1.;"
 fi
@@ -121,7 +126,7 @@ if [[ $PERIOD == "LHC22q" ]]; then
     ZDC_BC_SHIFT=3079675091988
   fi
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]]; then
-    [[ ! -z $ZDC_BC_SHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+="TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
+    [[ ! -z $ZDC_BC_SHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+=";TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
   fi
 fi
 
@@ -194,7 +199,7 @@ echo "BeamType = $BEAMTYPE"
 if [[ $ALIEN_JDL_ENABLEMONITORING == "1" ]]; then
   # add the performance metrics
   export ENABLE_METRICS=1
-  export ARGS_ALL_EXTRA+=" --resources-monitoring 50 --resources-monitoring-dump-interval 50"
+  export ARGS_ALL_EXTRA="$ARGS_ALL_EXTRA --resources-monitoring 50 --resources-monitoring-dump-interval 50"
 else
   # remove monitoring-backend
   export ENABLE_METRICS=0
@@ -272,21 +277,21 @@ if [[ $BEAMTYPE == "PbPb" ]]; then
 elif [[ $BEAMTYPE == "pp" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
 fi
-export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow+="$MAXBCDIFFTOMASKBIAS_ITS;$EXTRA_ITSRECO_CONFIG;"
+export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow+=";$MAXBCDIFFTOMASKBIAS_ITS;$EXTRA_ITSRECO_CONFIG;"
 
 # in the ALIGNLEVEL there was inconsistency between the internal errors of sync_misaligned and ITSEXTRAERR
 if [[ $ALIGNLEVEL != 0 ]]; then
- export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow+="$ITSEXTRAERR;"
+ export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow+=";$ITSEXTRAERR;"
 fi
 
 # ad-hoc options for GPU reco workflow
-export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_global.dEdxDisableResidualGainMap=1;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
-[[ ! -z $TPCCLUSTERTIMESHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.clustersShiftTimebins=$TPCCLUSTERTIMESHIFT;"
+export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_global.dEdxDisableResidualGainMap=1;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
+[[ ! -z $TPCCLUSTERTIMESHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.clustersShiftTimebins=$TPCCLUSTERTIMESHIFT;"
 
 # ad-hoc settings for TOF reco
 # export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow+="--use-ccdb --ccdb-url-tof \"http://alice-ccdb.cern.ch\""
 # since commit on Dec, 4
-export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow+="--use-ccdb"
+export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="$ARGS_EXTRA_PROCESS_o2_tof_reco_workflow --use-ccdb"
 
 # ad-hoc options for primary vtx workflow
 #export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2.;pvertexer.nSigmaTimeTrack=4.;pvertexer.timeMarginTrackTime=0.5;pvertexer.timeMarginVertexTime=7.;pvertexer.nSigmaTimeCut=10;pvertexer.dbscanMaxDist2=30;pvertexer.dcaTolerance=3.;pvertexer.pullIniCut=100;pvertexer.addZSigma2=0.1;pvertexer.tukey=20.;pvertexer.addZSigma2Debris=0.01;pvertexer.addTimeSigma2Debris=1.;pvertexer.maxChi2Mean=30;pvertexer.timeMarginReattach=3.;pvertexer.addTimeSigma2Debris=1.;"
@@ -298,13 +303,13 @@ if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == 
   EXTRA_PRIMVTX_TimeMargin="pvertexer.timeMarginVertexTime=1.3"
 fi
 
-export PVERTEXER+="pvertexer.acceptableScale2=9;pvertexer.minScale2=2;$EXTRA_PRIMVTX_TimeMargin;"
+export PVERTEXER+=";pvertexer.acceptableScale2=9;pvertexer.minScale2=2;$EXTRA_PRIMVTX_TimeMargin;"
 if [[ $ALIGNLEVEL == 1 ]]; then
   if [[ $BEAMTYPE == "pp" ]]; then
-    export PVERTEXER+="pvertexer.maxChi2TZDebris=40;pvertexer.maxChi2Mean=12;pvertexer.maxMultRatDebris=1.;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
+    export PVERTEXER+=";pvertexer.maxChi2TZDebris=40;pvertexer.maxChi2Mean=12;pvertexer.maxMultRatDebris=1.;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
   elif [[ $BEAMTYPE == "PbPb" ]]; then
     # at the moment placeholder
-    export PVERTEXER+="pvertexer.maxChi2Mean=12;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
+    export PVERTEXER+=";pvertexer.maxChi2Mean=12;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
   fi
 fi
 
@@ -312,42 +317,42 @@ fi
 # secondary vertexing
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
 
-export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow+="$PVERTEXER;$VDRIFTPARAMOPTION;"
-export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow+="$SVTX"
+export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow+=";$PVERTEXER;$VDRIFTPARAMOPTION;"
+export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=";$SVTX"
 
-export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+="$ITSEXTRAERR;$ITSTPCMATCH;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
-[[ ! -z "${TPCITSTIMEBIAS}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+="tpcitsMatch.globalTimeBiasMUS=$TPCITSTIMEBIAS;"
-[[ ! -z "${TPCITSTIMEERR}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+="tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;"
+export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";$ITSEXTRAERR;$ITSTPCMATCH;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
+[[ ! -z "${TPCITSTIMEBIAS}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";tpcitsMatch.globalTimeBiasMUS=$TPCITSTIMEBIAS;"
+[[ ! -z "${TPCITSTIMEERR}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;"
 
 # enabling AfterBurner
-has_detector FT0 && export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow+="--use-ft0"
+has_detector FT0 && export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="$ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow --use-ft0"
 
 # ad-hoc settings for TOF matching
-export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow+="--output-type matching-info,calib-info --enable-dia"
-export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+="$ITSEXTRAERR;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
+export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="$ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow --output-type matching-info,calib-info --enable-dia"
+export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$ITSEXTRAERR;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
 
 # ad-hoc settings for TRD matching
-export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+="$ITSEXTRAERR;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
+export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
 
 # ad-hoc settings for FT0
-export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow+="--ft0-reconstructor"
+export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow="$ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow --ft0-reconstructor"
 
 # ad-hoc settings for FV0
-export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow+="--fv0-reconstructor"
+export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="$ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow --fv0-reconstructor"
 
 # ad-hoc settings for FDD
 #...
 
 # ad-hoc settings for MFT
 if [[ $BEAMTYPE == "pp" || $PERIOD == "LHC22s" ]]; then
-  export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow+="MFTTracking.RBins=30;MFTTracking.PhiBins=120;MFTTracking.ZVtxMin=-13;MFTTracking.ZVtxMax=13;MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
+  export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow+=";MFTTracking.RBins=30;MFTTracking.PhiBins=120;MFTTracking.ZVtxMin=-13;MFTTracking.ZVtxMax=13;MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
 else
-  export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow+="MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
+  export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow+=";MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
 fi
 
 # ad-hoc settings for MCH
 if [[ $BEAMTYPE == "pp" ]]; then
-  export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow+="MCHClustering.lowestPadCharge=15;MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6;MCHDigitFilter.timeOffset=126"
+  export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow+=";MCHClustering.lowestPadCharge=15;MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6;MCHDigitFilter.timeOffset=126"
 fi
 
 # possibly adding calib steps as done online
@@ -378,19 +383,19 @@ if [[ $ADD_CALIB == "1" ]]; then
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
-    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+="--process-seeds --enable-itsonly --tracking-sources ITS,TPC,TRD,TOF,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF"
+    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --process-seeds --enable-itsonly --tracking-sources ITS,TPC,TRD,TOF,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF"
     # ad-hoc settings for TPC residual extraction
-    export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator+="--output-type trackParams,unbinnedResid"
+    export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="$ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator --output-type trackParams,unbinnedResid"
     if [[ $ALIEN_JDL_DEBUGRESIDUALEXTRACTION == "1" ]]; then
-      export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+="scdcalib.maxTracksPerCalibSlot=-1;scdcalib.minPtNoOuterPoint=0.8;scdcalib.minTPCNClsNoOuterPoint=120"
-      export ARGS_EXTRA_PROCESS_o2_trd_global_tracking+="--enable-qc"
+      export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=";scdcalib.maxTracksPerCalibSlot=-1;scdcalib.minPtNoOuterPoint=0.8;scdcalib.minTPCNClsNoOuterPoint=120"
+      export ARGS_EXTRA_PROCESS_o2_trd_global_tracking+="$ARGS_EXTRA_PROCESS_o2_trd_global_tracking --enable-qc"
     fi
   fi
   export CALIB_EMC_ASYNC_RECALIB="$ALIEN_JDL_DOEMCCALIB"
   if [[ $ALIEN_JDL_DOTRDVDRIFTEXBCALIB == "1" ]]; then
     export CALIB_TRD_VDRIFTEXB="$ALIEN_JDL_DOTRDVDRIFTEXBCALIB"
-    export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow+="--enable-root-output"
-    export ARGS_EXTRA_PROCESS_o2_trd_global_tracking+="--enable-qc"
+    export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow="$ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow --enable-root-output"
+    export ARGS_EXTRA_PROCESS_o2_trd_global_tracking="$ARGS_EXTRA_PROCESS_o2_trd_global_tracking --enable-qc"
   fi
   if [[ $ALIEN_JDL_DOMEANVTXCALIB == 1 ]]; then
     export CALIB_PRIMVTX_MEANVTX="$ALIEN_JDL_DOMEANVTXCALIB"
@@ -410,7 +415,7 @@ if [[ $ALIEN_JDL_EXTRACTCURRENTS == 1 ]]; then
   has_detector_reco FV0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-fv0-integrate-cluster-workflow"
   has_detector_reco TOF && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tof-integrate-cluster-workflow"
   if [[ $ALIEN_JDL_DISABLE3DCURRENTS != 1 ]]; then
-    export ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow+="--process-3D-currents --nSlicesTF 1"
+    export ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow--process-3D-currents --nSlicesTF 1"
   fi
   has_detector_reco TPC && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-integrate-cluster-workflow"
 fi
@@ -421,9 +426,9 @@ if [[ $ALIEN_JDL_AODOFF != "1" ]]; then
 fi
 
 # ad-hoc settings for AOD
-export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+="--aod-writer-maxfilesize $AOD_FILE_SIZE"
+export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="$ARGS_EXTRA_PROCESS_o2_aod_producer_workflow --aod-writer-maxfilesize $AOD_FILE_SIZE"
 if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC22e" ]] || [[ $PERIOD == "LHC22f" ]] || [[ $PERIOD == "LHC22m" ]] || [[ "$RUNNUMBER" == @(526463|526465|526466|526467|526468|526486|526505|526508|526510|526512|526525|526526|526528|526534|526559|526596|526606|526612|526638|526639|526641|526643|526647|526649|526689|526712|526713|526714|526715|526716|526719|526720|526776|526886|526926|526927|526928|526929|526934|526935|526937|526938|526963|526964|526966|526967|526968|527015|527016|527028|527031|527033|527034|527038|527039|527041|527057|527076|527108|527109|527228|527237|527259|527260|527261|527262|527345|527347|527349|527446|527518|527523|527734) ]] ; then
-  export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --aod-producer-workflow \"--ctpreadout-create 1\""
+  export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="$ARGS_EXTRA_PROCESS_o2_aod_producer_workflow --aod-producer-workflow \"--ctpreadout-create 1\""
 fi
 
 # Enabling QC
