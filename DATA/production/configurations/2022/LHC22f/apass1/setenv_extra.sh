@@ -29,7 +29,9 @@ fi
 
 # adjusting for trigger LM_L0 correction, which was not there before July 2022
 if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC22e" ]] || [[ $PERIOD == "LHC22f" ]] ; then
-  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --correct-trd-trigger-offset"
+  if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]]; then
+    export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --correct-trd-trigger-offset"
+  fi
 fi
 
 # checking for remapping
@@ -292,6 +294,9 @@ fi
 
 # ad-hoc options for GPU reco workflow
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_global.dEdxDisableResidualGainMap=1;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
+if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
+  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_global.dEdxDisableResidualGain=1"
+fi
 [[ ! -z $TPCCLUSTERTIMESHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.clustersShiftTimebins=$TPCCLUSTERTIMESHIFT;"
 
 # ad-hoc settings for TOF reco
