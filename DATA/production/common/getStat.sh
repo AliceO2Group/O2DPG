@@ -29,8 +29,8 @@ echo nCTFsProcessed = $nCTFsProcessed
 echo PVs = $PVs
 
 if [[ -n $2 ]]; then
-  touch ${nCTFsFilesInspected}_${nCTFsFilesFailed}_${nCTFsFilesOK}_${nCTFsProcessed}_${PVs}_${2}.stat
+  touch ${nCTFsFilesInspected}_${nCTFsFilesOK}_${nCTFsFilesFailed}_${nCTFsProcessed}_${PVs}_${2}.stat
 fi
 
-touch ${nCTFsFilesInspected}_${nCTFsFilesFailed}_${nCTFsFilesOK}_${nCTFsProcessed}_${PVs}.stat
+touch ${nCTFsFilesInspected}_${nCTFsFilesOK}_${nCTFsFilesFailed}_${nCTFsProcessed}_${PVs}.stat
 
