@@ -91,7 +91,9 @@ if [[ $PERIOD == "LHC22s" ]]; then
     ZDC_BC_SHIFT=0
   fi
   CTP_BC_SHIFT=-293
-  export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+="TriggerOffsetsParam.customOffset[2]=1;TriggerOffsetsParam.customOffset[4]=1;TriggerOffsetsParam.customOffset[5]=1;TriggerOffsetsParam.customOffset[6]=1;TriggerOffsetsParam.customOffset[7]=1;TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;TriggerOffsetsParam.customOffset[16]=$CTP_BC_SHIFT"
+  if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]]; then
+    export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+="TriggerOffsetsParam.customOffset[2]=1;TriggerOffsetsParam.customOffset[4]=1;TriggerOffsetsParam.customOffset[5]=1;TriggerOffsetsParam.customOffset[6]=1;TriggerOffsetsParam.customOffset[7]=1;TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;TriggerOffsetsParam.customOffset[16]=$CTP_BC_SHIFT"
+  fi
   export PVERTEXER+=";pvertexer.dbscanDeltaT=1;pvertexer.maxMultRatDebris=1.;"
 fi
 
@@ -118,7 +120,9 @@ if [[ $PERIOD == "LHC22q" ]]; then
   elif [[ $RUNNUMBER -eq 529043 ]]; then
     ZDC_BC_SHIFT=3079675091988
   fi
-  [[ ! -z $ZDC_BC_SHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+="TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
+  if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]]; then
+    [[ ! -z $ZDC_BC_SHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+="TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
+  fi
 fi
 
 # ITSTPC vs FT0 time shift
@@ -228,15 +232,30 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   [[ -z $ITS_CONFIG || "$ITS_CONFIG" != *"--tracking-mode"* ]] && export ITS_CONFIG+=" --tracking-mode async"
   # this is to account for the TPC tracks bias due to the distortions: increment cov.matrix diagonal at the TPC inner boundary, unbias params
   if [[ $PERIOD == "LHC22m" || $PERIOD == "LHC22p"  ]]; then # B-, ~500 kHZ
-    TRACKTUNETPCINNER="trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.useTPCInnerCorr=true;trackTuneParams.tpcParInner[0]=2.32e-01;trackTuneParams.tpcParInner[1]=0.;trackTuneParams.tpcParInner[2]=-0.0138;trackTuneParams.tpcParInner[3]=0.;trackTuneParams.tpcParInner[4]=0.08;trackTuneParams.tpcCovInner[0]=0.25;trackTuneParams.tpcCovInner[2]=2.25e-4;trackTuneParams.tpcCovInner[3]=2.25e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
+    TRACKTUNEPARAMSDATAONLY="trackTuneParams.useTPCInnerCorr=true;trackTuneParams.tpcParInner[0]=2.32e-01;trackTuneParams.tpcParInner[1]=0.;trackTuneParams.tpcParInner[2]=-0.0138;trackTuneParams.tpcParInner[3]=0.;trackTuneParams.tpcParInner[4]=0.08"
+    if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
+      # unsetting debiasing for MC
+      TRACKTUNEPARAMSDATAONLY=""
+    fi
+    TRACKTUNETPCINNER="$TRACKTUNEPARAMSDATAONLY;trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.25;trackTuneParams.tpcCovInner[2]=2.25e-4;trackTuneParams.tpcCovInner[3]=2.25e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
     CUT_MATCH_CHI2=60
   elif [[ $PERIOD == "LHC22n" || $PERIOD == "LHC22o" || $PERIOD == "LHC22r" || $PERIOD == "LHC22t" ]]; then # B+, ~500 kHZ, at the moment simply invert corrections tuned on LHC22m (B-)
-    TRACKTUNETPCINNER="trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.useTPCInnerCorr=true;trackTuneParams.tpcParInner[0]=-2.32e-01;trackTuneParams.tpcParInner[1]=0.;trackTuneParams.tpcParInner[2]=0.0138;trackTuneParams.tpcParInner[3]=0.;trackTuneParams.tpcParInner[4]=0.08;trackTuneParams.tpcCovInner[0]=0.25;trackTuneParams.tpcCovInner[2]=2.25e-4;trackTuneParams.tpcCovInner[3]=2.25e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
+    TRACKTUNEPARAMSDATAONLY="trackTuneParams.useTPCInnerCorr=true;trackTuneParams.tpcParInner[0]=-2.32e-01;trackTuneParams.tpcParInner[1]=0.;trackTuneParams.tpcParInner[2]=0.0138;trackTuneParams.tpcParInner[3]=0.;trackTuneParams.tpcParInner[4]=0.08"
+    if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
+      # unsetting debiasing for MC
+      TRACKTUNEPARAMSDATAONLY=""
+    fi
+    TRACKTUNETPCINNER="$TRACKTUNEPARAMSDATAONLY;trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.25;trackTuneParams.tpcCovInner[2]=2.25e-4;trackTuneParams.tpcCovInner[3]=2.25e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
     CUT_MATCH_CHI2=60
   elif [[ $PERIOD == "LHC22q" ]]; then # B+, low rate, at the moment do not unbias but expand cov matrix (the expansion is not done if there is the alien JDL var ALIEN_JDL_NOEXTRAERR22Q)
     if [[ -z $ALIEN_JDL_NOEXTRAERR22Q ]]; then
-	 TRACKTUNETPCINNER="trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.useTPCInnerCorr=false;trackTuneParams.tpcCovInner[0]=0.25;trackTuneParams.tpcCovInner[2]=2.25e-4;trackTuneParams.tpcCovInner[3]=2.25e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
-	 CUT_MATCH_CHI2=60
+      TRACKTUNEPARAMSDATAONLY=""
+      if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
+	# unsetting debiasing for MC
+	TRACKTUNEPARAMSDATAONLY=""
+      fi
+      TRACKTUNETPCINNER="$TRACKTUNEPARAMSDATAONLY;trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.useTPCInnerCorr=false;trackTuneParams.tpcCovInner[0]=0.25;trackTuneParams.tpcCovInner[2]=2.25e-4;trackTuneParams.tpcCovInner[3]=2.25e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
+      CUT_MATCH_CHI2=60
     else
       CUT_MATCH_CHI2=250
     fi
