@@ -34,6 +34,10 @@ elif [[ "${1##*.}" == "xml" ]]; then
     sed -rn 's/.*turl="([^"]*)".*/\1/p' $1 > list.list
     export MODE="remote"
     shift
+elif [[ $1 != "list.list" && "${1##*.}" == "list" ]]; then
+    cp $1 list.list
+    export MODE="remote"
+    shift
 fi
 
 if [[ -f list.list ]]; then
