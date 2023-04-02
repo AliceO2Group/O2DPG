@@ -39,19 +39,28 @@ N_TPCTRK=$NGPUS
 if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
   # Tuned multiplicities for async processing
   if [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_8cpu" ]]; then
-    NGPURECOTHREADS=5
     [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=3
+    NGPURECOTHREADS=5
+  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_16cpu" ]]; then
+    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=8
+    [[ -z $SHMSIZE ]] && SHMSIZE=22000000000
+    NGPURECOTHREADS=9
+    NTRDTRKTHREADS=3
+    ITSTRK_THREADS=3
+    ITSTPC_THREADS=3
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_1gpu" ]]; then
     [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=8
-    [[ -z $SHMSIZE ]] && SHMSIZE=24000000000
+    [[ -z $SHMSIZE ]] && SHMSIZE=20000000000
     N_TOFMATCH=2
     N_MCHCL=3
-    N_TPCENTDEC=3
+    N_TPCENTDEC=2
     N_TPCITS=3
     N_MCHTRK=2
     N_ITSTRK=3
     NGPURECOTHREADS=8
-    NTRDTRKTHREADS=2
+    NTRDTRKTHREADS=3
+    ITSTRK_THREADS=2
+    ITSTPC_THREADS=2
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_4gpu" ]]; then
     [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=36
     [[ -z $SHMSIZE ]] && SHMSIZE=90000000000
@@ -103,6 +112,9 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_MCHTRK=1
     N_TOFMATCH=9
     N_TPCTRK=6
+  else
+    echo "Invalid optimized setting '$OPTIMIZED_PARALLEL_ASYNC'" 1>&2
+    exit 1
   fi
 elif [[ $EPNPIPELINES != 0 ]]; then
   RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15) * ($NUMAGPUIDS != 0 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
