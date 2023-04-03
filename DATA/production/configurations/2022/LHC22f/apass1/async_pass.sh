@@ -392,6 +392,8 @@ echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS
 
 [[ -z $NTIMEFRAMES ]] && export NTIMEFRAMES=-1
 
+export O2JOBID=$ALIEN_PROC_ID
+
 STATSCRIPT="$O2DPG_ROOT/DATA/production/common/getStat.sh"
 if [[ -f "getStat.sh" ]]; then
   STATSCRIPT="getStat.sh"

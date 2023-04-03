@@ -25,7 +25,15 @@ if [[ ${ALIEN_JDL_CPUCORES:-} == 8 ]]; then
 fi
 
 [[ -z ${SHM_MANAGER_SHMID:-} ]] && ( [[ ${EXTINPUT:-} == 1 ]] || [[ ${NUMAGPUIDS:-} != 0 ]] ) && ARGS_ALL+=" --no-cleanup"
-[[ ! -z ${TIMEFRAME_RATE_LIMIT:-} ]] && [[ ${TIMEFRAME_RATE_LIMIT:-} != 0 ]] && ARGS_ALL+=" --timeframes-rate-limit $TIMEFRAME_RATE_LIMIT --timeframes-rate-limit-ipcid $(($NUMAID + 10 * ${O2JOBID:-0}))"
+
+# let's set O2JOBID and SHMEMID
+O2JOBIDscript="$O2DPG_ROOT/DATA/production/common/setVarsFromALIEN_PROC_ID.sh"
+if [[ -f "setVarsFromALIEN_PROC_ID.sh" ]]; then
+  O2JOBIDscript="setVarsFromALIEN_PROC_ID.sh"
+fi
+source $O2JOBIDscript
+
+[[ ! -z ${TIMEFRAME_RATE_LIMIT:-} ]] && [[ ${TIMEFRAME_RATE_LIMIT:-} != 0 ]] && ARGS_ALL+=" --timeframes-rate-limit $TIMEFRAME_RATE_LIMIT --timeframes-rate-limit-ipcid $(($NUMAID + ${O2JOBID:-0}))"
 [[ ! -z ${TIMEFRAME_SHM_LIMIT:-} ]] && ARGS_ALL+=" --timeframes-shm-limit $TIMEFRAME_SHM_LIMIT"
 
 { source $O2DPG_ROOT/DATA/production/workflow-multiplicities.sh; [[ $? != 0 ]] && echo "workflow-multiplicities.sh failed" 1>&2 && exit 1; }
