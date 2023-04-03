@@ -52,7 +52,7 @@
           "askGRPMagField": "true",
           "askMatLUT": "false",
           "askTime": "false",
-          "askOnceAllButField": "false",
+          "askOnceAllButField": "true",
           "needPropagatorD":  "false"
         },
         "saveObjectsToFile" : "TOFmatchedITSTPCTOF_TPCTOF.root",
