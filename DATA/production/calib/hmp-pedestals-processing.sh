@@ -2,13 +2,14 @@
 
 # ------------------------------------------------------------------------
 #         ALICE HMPID detector
-# Workflow to calculate pedestals   v.0.2  = 2/03/2022
+# Workflow to calculate pedestals   v.1.0  = 4/04/2023
 #
 #  Extra Env Variables:
 #     HMP_SIGMACUT : The value of sigams for the threshold cut [=4]
-#     HMP_CCDB_REC : True if we want the recording into ALICE CCDB
+#     HMP_CCDB_REC : True if we want the recording into ALICE CCDB [=False]
 #     HMP_PED_TAG :  A string that tags the pedestals [=Latest]
-#
+#     HMP_NODCSCCDB_REC : True if we want disable DCS CCDB recording [=False]
+#     HMP_FILES_REC : True if we want store on files (Only for debug) [=False]
 #
 #
 #   Auth. A.Franco  - INFN  Sez.BARI - ITALY
@@ -64,7 +65,7 @@ then
 fi
 if [ $HMP_CCDB_REC == 'true' ];
 then
-  WORKFLOW+="--use-ccdb --ccdb-uri 'http://alice-ccdb.cern.ch' "
+  WORKFLOW+="--use-ccdb --ccdb-uri 'http://o2-ccdb.internal' "
 fi
 if [ $HMP_FILES_REC == 'true' ];
 then
@@ -74,13 +75,13 @@ fi
 WORKFLOW+="--files-basepath 'HMP/Calib/Pedestals' "
 WORKFLOW+="--pedestals-tag ${HMP_PED_TAG} --sigmacut ${HMP_SIGMACUT} | "
 
-WORKFLOW+="o2-dpl-run ${ARGS_ALL} "
+WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
 
 if [ $WORKFLOWMODE == "print" ]; then
   echo "HMPID Pedestals Calculation (v.0.1) Workflow command:"
   echo $WORKFLOW | sed "s/| */|\n/g"
 else
   # Execute the command we have assembled
-  WORKFLOW+=" --$WORKFLOWMODE"
+  WORKFLOW+=" --$WORKFLOWMODE ${WORKFLOWMODE_FILE}"
   eval $WORKFLOW
 fi
