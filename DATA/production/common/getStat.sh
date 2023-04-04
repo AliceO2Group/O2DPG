@@ -14,12 +14,11 @@ nCTFsProcessed=$((nCTFsProcessed + 1))
 
 if [[ $nCTFsFilesInspected != $((nCTFsFilesFailed + nCTFsFilesOK)) ]]; then
   echo "Something went wrong with parsing the log file: CTF files inspected ($nCTFsFilesInspected) is not the sum of those successfully processed ($nCTFsFilesOK) and those that failed ($nCTFsFilesFailed)"
-else
-  while read -r line; do
-    currentPVs=`echo $line | sed 's/^.*Found \([0-9]*\) PVs.*/\1/'`
-    PVs=$((PVs + currentPVs))
-  done < <(grep "Found" $1 | grep "PVs")
 fi
+while read -r line; do
+  currentPVs=`echo $line | sed 's/^.*Found \([0-9]*\) PVs.*/\1/'`
+  PVs=$((PVs + currentPVs))
+done < <(grep "Found" $1 | grep "PVs")
 
 echo CTFsFilesProcessedMsg = $CTFsFilesProcessedMsg
 echo nCTFsFilesInspected = $nCTFsFilesInspected
