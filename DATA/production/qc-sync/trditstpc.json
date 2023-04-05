@@ -124,6 +124,35 @@
           "3",
           "1"
         ]
+      },
+      "TRDPulseHeightTrackMatch": {
+        "active": "true",
+        "taskName": "TRDPulseHeightTrackMatch",
+        "className": "o2::quality_control_modules::trd::PulseHeightTrackMatch",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "dataSamplingPolicy",
+          "name": "trdall"
+        },
+        "taskParameters": {
+          "peakregionstart": "7.0",
+          "peakregionend": "20.0",
+          "pulseheightpeaklower": "1.0",
+          "pulseheightpeakupper": "5.0"
+        },
+        "location": "local",
+        "localMachines": [
+          "epn",
+          "localhost"
+        ],
+        "remoteMachine": "alio2-cr1-qc05.cern.ch",
+        "remotePort": "47745",
+        "mergingMode": "delta",
+        "mergerCycleMultiplier": "2",
+        "localControl": "odc"
       }
     }
   },
@@ -132,7 +161,7 @@
       "id": "trdall",
       "active": "true",
       "machines": [],
-      "query": "digits:TRD/DIGITS/0;tracklets:TRD/TRACKLETS/0;triggers:TRD/TRKTRGRD/0;rawstats:TRD/RAWSTATS/0",
+      "query": "digits:TRD/DIGITS/0;tracklets:TRD/TRACKLETS/0;triggers:TRD/TRKTRGRD/0;rawstats:TRD/RAWSTATS/0;tracks:TRD/MATCH_ITSTPC;trigrectrk:TRD/TRGREC_ITSTPC",
       "samplingConditions": [
         {
           "condition": "random",

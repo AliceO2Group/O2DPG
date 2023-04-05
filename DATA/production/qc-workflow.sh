@@ -87,7 +87,13 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
       fi
     fi
     [[ -z "${QC_JSON_CPV:-}" ]] && QC_JSON_CPV=consul://o2/components/qc/ANY/any/cpv-physics-qcmn-epn
-    [[ -z "${QC_JSON_TRD:-}" ]] && QC_JSON_TRD=consul://o2/components/qc/ANY/any/trd-full-qcmn-nopulseheight-epn
+    if [[ -z "${QC_JSON_TRD:-}" ]]; then
+      if has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRD; then
+        QC_JSON_TRD=consul://o2/components/qc/ANY/any/trd-full-qcmn-epn
+      else
+        QC_JSON_TRD=consul://o2/components/qc/ANY/any/trd-full-qcmn-nopulseheight-epn
+      fi
+    fi
     [[ -z "${QC_JSON_PHS:-}" ]] && QC_JSON_PHS=consul://o2/components/qc/ANY/any/phos-raw-clusters-epn
     [[ -z "${QC_JSON_GLO_PRIMVTX:-}" ]] && QC_JSON_GLO_PRIMVTX=consul://o2/components/qc/ANY/any/glo-vtx-qcmn-epn
     [[ -z "${QC_JSON_GLO_ITSTPC:-}" ]] && QC_JSON_GLO_ITSTPC=consul://o2/components/qc/ANY/any/glo-itstpc-mtch-qcmn-epn
@@ -119,7 +125,14 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     [[ -z "${QC_JSON_MID:-}" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid-digits.json && has_processing_step MID_RECO && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid.json
     [[ -z "${QC_JSON_CPV:-}" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-sync/cpv.json
     [[ -z "${QC_JSON_PHS:-}" ]] && QC_JSON_PHS=$O2DPG_ROOT/DATA/production/qc-sync/phs.json
-    [[ -z "${QC_JSON_TRD:-}" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-sync/trd.json
+    if [[ -z "${QC_JSON_TRD:-}" ]]; then
+      if has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRD; then
+        QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-sync/trditstpc.json
+      else
+        QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-sync/trd.json
+      fi
+    fi
+
     [[ -z "${QC_JSON_GLO_PRIMVTX:-}" ]] && QC_JSON_GLO_PRIMVTX=$O2DPG_ROOT/DATA/production/qc-sync/glo-vtx-qcmn-epn.json
     [[ -z "${QC_JSON_GLO_ITSTPC:-}" ]] && QC_JSON_GLO_ITSTPC=$O2DPG_ROOT/DATA/production/qc-sync/glo-itstpc-mtch-qcmn-epn.json
     if [[ -z "${QC_JSON_TOF_MATCH:-}" ]]; then
@@ -154,7 +167,13 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     fi
     [[ -z "${QC_JSON_CPV:-}" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-async/cpv.json
     [[ -z "${QC_JSON_PHS:-}" ]] && QC_JSON_PHS=$O2DPG_ROOT/DATA/production/qc-async/phs.json
-    [[ -z "${QC_JSON_TRD:-}" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-async/trd.json
+    if [[ -z "${QC_JSON_TRD:-}" ]]; then
+      if has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRD; then
+        QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-async/trditstpc.json
+      else
+        QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-async/trd.json
+      fi
+    fi
     # the following two ($QC_JSON_PRIMVTX and $QC_JSON_ITSTPC) replace $QC_JSON_GLO for async processing
     [[ -z "${QC_JSON_GLO_PRIMVTX:-}" ]] && QC_JSON_GLO_PRIMVTX=$O2DPG_ROOT/DATA/production/qc-async/primvtx.json
     [[ -z "${QC_JSON_GLO_ITSTPC:-}" ]] && QC_JSON_GLO_ITSTPC=$O2DPG_ROOT/DATA/production/qc-async/itstpc.json
