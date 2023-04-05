@@ -42,9 +42,18 @@
           "nThreads": "1",
 	  "nBCbins" : "103",
 	  "dicttimestamp" : "0",
-	  "geomPath" : "o2sim_geometry-aligned.root",
           "publishDetailedSummary": "0",
 	  "publishSummary1D": "0"
+        },
+	"grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         }
       },
       "ITSTracks": {

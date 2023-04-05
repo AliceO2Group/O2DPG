@@ -1,26 +1,32 @@
 #!/bin/bash
 
-if [[ -z $SOURCE_GUARD_MULTIPLICITIES ]]; then
+if [[ -z ${SOURCE_GUARD_MULTIPLICITIES:-} ]]; then
 SOURCE_GUARD_MULTIPLICITIES=1
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Threads
 
-[[ -z $NITSDECTHREADS ]] && NITSDECTHREADS=2
-[[ -z $NMFTDECTHREADS ]] && NMFTDECTHREADS=2
+: ${NITSDECTHREADS:=2}
+: ${NMFTDECTHREADS:=2}
 
-[[ -z $NMFTTHREADS ]] && NMFTTHREADS=2
+: ${NMFTTHREADS:=2}
 
-[[ -z $SVERTEX_THREADS ]] && SVERTEX_THREADS=$(( $SYNCMODE == 1 ? 1 : 2 ))
+: ${SVERTEX_THREADS:=$(( $SYNCMODE == 1 ? 1 : 2 ))}
+
+: ${ITSTRK_THREADS:=1}
+: ${ITSTPC_THREADS:=1}
+
+: ${HIGH_RATE_PP:=0}
+
 # FIXME: multithreading in the itsmft reconstruction does not work on macOS.
 if [[ $(uname) == "Darwin" ]]; then
     NITSDECTHREADS=1
     NMFTDECTHREADS=1
 fi
 
-[[ $SYNCMODE == 1 ]] && NTRDTRKTHREADS=1
+if [[ $SYNCMODE == 1 ]]; then NTRDTRKTHREADS=1; else NTRDTRKTHREADS=; fi
 
-[[ -z $NGPURECOTHREADS ]] && NGPURECOTHREADS=-1 # -1 = auto-detect
+: ${NGPURECOTHREADS:=-1} # -1 = auto-detect
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Process multiplicities
@@ -30,39 +36,51 @@ N_F_RAW=$MULTIPLICITY_FACTOR_RAWDECODERS
 N_F_CTF=$MULTIPLICITY_FACTOR_CTFENCODERS
 
 N_TPCTRK=$NGPUS
-if [[ ! -z $OPTIMIZED_PARALLEL_ASYNC ]]; then
+if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
   # Tuned multiplicities for async processing
   if [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_8cpu" ]]; then
-    NGPURECOTHREADS=5
     [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=3
+    NGPURECOTHREADS=5
+  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_16cpu" ]]; then
+    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=8
+    [[ -z $SHMSIZE ]] && SHMSIZE=22000000000
+    NGPURECOTHREADS=9
+    NTRDTRKTHREADS=3
+    ITSTRK_THREADS=3
+    ITSTPC_THREADS=3
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_1gpu" ]]; then
     [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=8
-    [[ -z $SHMSIZE ]] && SHMSIZE=24000000000
+    [[ -z $SHMSIZE ]] && SHMSIZE=20000000000
     N_TOFMATCH=2
     N_MCHCL=3
-    N_TPCENTDEC=3
+    N_TPCENTDEC=2
     N_TPCITS=3
     N_MCHTRK=2
     N_ITSTRK=3
     NGPURECOTHREADS=8
-    NTRDTRKTHREADS=2
+    NTRDTRKTHREADS=3
+    ITSTRK_THREADS=2
+    ITSTPC_THREADS=2
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_4gpu" ]]; then
-    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=40
-    [[ -z $SHMSIZE ]] && SHMSIZE=100000000000
+    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=36
+    [[ -z $SHMSIZE ]] && SHMSIZE=90000000000
     NGPURECOTHREADS=8
     NTRDTRKTHREADS=2
+    ITSTRK_THREADS=2
+    ITSTPC_THREADS=2
     NGPUS=4
     N_TPCTRK=4
     N_FWDMATCH=2
-    N_PRIMVTXMATCH=3
-    N_PRIMVTX=2
-    N_TRDTRKTRANS=2
-    N_AODPROD=3
-    N_TRDTRK=3
+    N_PRIMVTXMATCH=1
+    N_PRIMVTX=1
+    N_SECVTX=2
+    N_TRDTRKTRANS=1
+    N_AODPROD=4
+    N_TRDTRK=5
     N_TOFMATCH=8
     N_MCHCL=12
     N_MCHTRK=6
-    N_TPCENTDEC=8
+    N_TPCENTDEC=6
     N_TPCITS=12
     N_ITSTRK=12
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_4gpu" ]]; then
@@ -94,6 +112,9 @@ if [[ ! -z $OPTIMIZED_PARALLEL_ASYNC ]]; then
     N_MCHTRK=1
     N_TOFMATCH=9
     N_TPCTRK=6
+  else
+    echo "Invalid optimized setting '$OPTIMIZED_PARALLEL_ASYNC'" 1>&2
+    exit 1
   fi
 elif [[ $EPNPIPELINES != 0 ]]; then
   RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15) * ($NUMAGPUIDS != 0 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
@@ -104,7 +125,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
     if [[ "0$GEN_TOPO_AUTOSCALE_PROCESSES" == "01" && $RUNTYPE == "PHYSICS" ]]; then
       N_MCHCL=$(math_max $((6 * 100 / $RECO_NUM_NODES_WORKFLOW_CMP)) 1)
     fi
-    if [[ "0$HIGH_RATE_PP" == "01" ]]; then
+    if [[ "$HIGH_RATE_PP" == "1" ]]; then
       N_TPCITS=$(math_max $((5 * $EPNPIPELINES * $NGPUS / 4)) 1)
       N_TPCENT=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
       N_TOFMATCH=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
@@ -150,25 +171,25 @@ elif [[ $EPNPIPELINES != 0 ]]; then
   fi
 fi
 
-if [[ -z $EVE_NTH_EVENT ]]; then
+if [[ -z ${EVE_NTH_EVENT:-} ]]; then
   if [[ $BEAMTYPE == "PbPb" ]]; then
-    [[ -z $EVE_NTH_EVENT ]] && EVE_NTH_EVENT=2
-  elif [[ "0$HIGH_RATE_PP" == "01" ]]; then
-    [[ -z $EVE_NTH_EVENT ]] && EVE_NTH_EVENT=10
-  elif [[ $BEAMTYPE == "pp" && "0$ED_VERTEX_MODE" == "01" ]]; then
-    [[ -z $EVE_NTH_EVENT ]] && EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
+    EVE_NTH_EVENT=2
+  elif [[ "$HIGH_RATE_PP" == "1" ]]; then
+    EVE_NTH_EVENT=10
+  elif [[ $BEAMTYPE == "pp" && "${ED_VERTEX_MODE:-}" == "1" ]]; then
+    EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
   fi
-  [[ ! -z $EPN_GLOBAL_SCALING ]] && EVE_NTH_EVENT=$(($EVE_NTH_EVENT * $EPN_GLOBAL_SCALING))
+  [[ ! -z ${EPN_GLOBAL_SCALING:-} ]] && EVE_NTH_EVENT=$(($EVE_NTH_EVENT * $EPN_GLOBAL_SCALING))
 fi
 
-if [[ "0$HIGH_RATE_PP" == "01" ]]; then
-  [[ -z $CUT_RANDOM_FRACTION_ITS ]] && CUT_RANDOM_FRACTION_ITS=0.97
+if [[ "$HIGH_RATE_PP" == "1" ]]; then
+  : ${CUT_RANDOM_FRACTION_ITS:=0.97}
 else
-  [[ -z $CUT_RANDOM_FRACTION_ITS ]] && CUT_RANDOM_FRACTION_ITS=0.95
+  : ${CUT_RANDOM_FRACTION_ITS:=0.95}
 fi
-[[ -z $CUT_RANDOM_FRACTION_MCH ]] && [[ $RUNTYPE != "COSMICS" ]] && CUT_RANDOM_FRACTION_MCH=0.7
+[[ $RUNTYPE != "COSMICS" ]] && : ${CUT_RANDOM_FRACTION_MCH:=0.7}
 
-#if [[ "0$HIGH_RATE_PP" == "01" ]]; then
+#if [[ "$HIGH_RATE_PP" == "1" ]]; then
   # Extra settings for HIGH_RATE_PP
 #fi
 

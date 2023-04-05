@@ -24,7 +24,7 @@ if [[ ! -z $GEN_TOPO_LOGDATE ]]; then
   echo "$GEN_TOPO_LOGDATE $ECS_ENVIRONMENT_ID : Topology generation return value: $RETVAL" >> /var/log/topology/gen-topo.log
   if [[ $RETVAL != 0 ]]; then
     while read STDERRLINE; do
-      echo "$GEN_TOPO_LOGDATE $ECS_ENVIRONMENT_ID :     $STDERRLINE >> /var/log/topology/gen-topo.log
+      echo "$GEN_TOPO_LOGDATE $ECS_ENVIRONMENT_ID :     $STDERRLINE" >> /var/log/topology/gen-topo.log
     done < $STDERRFILE
   fi
 fi

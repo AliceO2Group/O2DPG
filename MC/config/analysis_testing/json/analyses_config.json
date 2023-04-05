@@ -2,8 +2,8 @@
     "analyses": [
         {
             "name": "MCHistograms",
-            "enabled": false,
-            "expected_output": null,
+            "enabled": true,
+            "expected_output": ["AnalysisResults.root"],
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
             },
@@ -31,7 +31,7 @@
             "expected_output": ["AnalysisResults.root"],
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
-                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json"
+                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-EventTrackQA-data.json"
             },
             "tasks": ["o2-analysis-timestamp",
                       "o2-analysis-track-propagation",
@@ -97,6 +97,34 @@
                       "o2-analysis-pid-tpc-full"]
         },
         {
+          "name": "TPCSkimming",
+          "enabled": false,
+          "expected_output": [
+            "AnalysisResults.root",
+            "AnalysisResults_trees.root"
+          ],
+          "config": {
+            "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-TPCSkimming.json",
+            "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-TPCSkimming.json"
+          },
+          "tasks": [
+            "o2-analysis-pid-tof-full",
+            "o2-analysis-pid-tof-beta",
+            "o2-analysis-pid-tof-base",
+            "o2-analysis-multiplicity-table",
+            "o2-analysis-trackselection",
+            "o2-analysis-track-propagation",
+            "o2-analysis-pid-tpc-qa",
+            "o2-analysis-timestamp",
+            "o2-analysis-lf-lambdakzerobuilder",
+            "o2-analysis-dq-v0-selector",
+            "o2-analysis-pid-tpc-full",
+            "o2-analysis-event-selection",
+            "o2-analysis-pid-tpc-base",
+            "o2-analysis-pid-tpc-skimscreation --aod-writer-keep AOD/TPCSKIMV0TREE/0,AOD/TPCTOFSKIMTREE/0"
+          ]
+        },
+        {
             "name": "PWGMMMFT",
             "enabled": true,
             "expected_output": ["AnalysisResults.root"],
@@ -114,7 +142,7 @@
         },
         {
             "name": "EventSelectionQA",
-            "enabled": false,
+            "enabled": true,
             "expected_output": ["AnalysisResults.root"],
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",

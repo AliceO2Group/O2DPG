@@ -24,7 +24,7 @@
         },
         "tasks": {
             "MCHErrors": {
-                "active": "true",
+                "active": "false",
                 "taskName": "Errors",
                 "className": "o2::quality_control_modules::muonchambers::ErrorTask",
                 "moduleName": "QcMuonChambers",
@@ -33,7 +33,7 @@
                 "maxNumberCycles": "-1",
                 "dataSource": {
                     "type": "direct",
-                    "query": "errors:MCH/ERRORS/0"
+                    "query": "errors:MCH/PROCERRORS/0"
                 }
             }
         }

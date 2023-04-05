@@ -51,9 +51,17 @@
           "minNTPCClustersCut" : "60",
           "minDCACut" : "100.f",
           "minDCACutY" : "10.f",
-          "grpFileName" : "o2sim_grp.root",
-          "geomFileName" : "o2sim_geometry-aligned.root",
           "isMC" : "true"
+        },
+	"grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         },
         "location" : "remote",
         "saveObjectsToFile" : "ITSTPCmatched.root",

@@ -10,6 +10,13 @@
 # export ALIEN_JDL_LPMPASSNAME=apass4
 # export ALIEN_JDL_LPMANCHORYEAR=2021
 
+# function to run AOD merging
+run_AOD_merging() {
+  o2-aod-merger --input list_$1.list --output $1/AO2D_merged.root > $1/merging.log
+  exitcode=$?
+  return $exitcode
+}
+
 # to skip positional arg parsing before the randomizing part.
 inputarg="${1}"
 
@@ -25,6 +32,10 @@ if [[ "${1##*.}" == "root" ]]; then
     shift
 elif [[ "${1##*.}" == "xml" ]]; then
     sed -rn 's/.*turl="([^"]*)".*/\1/p' $1 > list.list
+    export MODE="remote"
+    shift
+elif [[ $1 != "list.list" && "${1##*.}" == "list" ]]; then
+    cp $1 list.list
     export MODE="remote"
     shift
 fi
@@ -108,18 +119,6 @@ echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions an
 export timeUsed=0
 
 ###if [[ $MODE == "remote" ]]; then
-    # common archive
-    if [[ ! -f commonInput.tgz ]]; then
-	echo "No commonInput.tgz found exiting"
-	exit 2
-    fi
-    tar -xzvf commonInput.tgz
-    if [[ -f o2sim_grp.root ]]; then rm o2sim_grp.root; fi
-    SELECTSETTINGSSCRIPT="$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/selectSettings.sh"
-    if [[ -f "selectSettings.sh" ]]; then
-      SELECTSETTINGSSCRIPT="selectSettings.sh"
-    fi
-    source $SELECTSETTINGSSCRIPT || { echo "$SELECTSETTINGSSCRIPT failed" && exit 4; }
     # run specific archive
     if [[ ! -f runInput_$RUNNUMBER.tgz ]]; then
 	echo "No runInput_$RUNNUMBER.tgz, let's hope we don't need it"
@@ -394,6 +393,11 @@ echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS
 
 [[ -z $NTIMEFRAMES ]] && export NTIMEFRAMES=-1
 
+STATSCRIPT="$O2DPG_ROOT/DATA/production/common/getStat.sh"
+if [[ -f "getStat.sh" ]]; then
+  STATSCRIPT="getStat.sh"
+fi
+
 # reco and matching
 # print workflow
 if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
@@ -412,6 +416,8 @@ if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
       echo "exit code from processing is " $exitcode
       exit $exitcode
     fi
+    mv latest.log latest_reco_1.log
+    ./$STATSCRIPT latest_reco_1.log
   fi
 else
   # running the wf in split mode
@@ -440,7 +446,9 @@ else
 	echo "exit code from Step 1 of processing is " $exitcode > validation_error.message
 	echo "exit code from Step 1 of processing is " $exitcode
 	exit $exitcode
-     fi
+      fi
+      mv latest.log latest_reco_1.log
+      ./$STATSCRIPT latest_reco_1.log reco_1
     fi
   fi
 
@@ -467,7 +475,32 @@ else
 	echo "exit code from Step 2 of processing is " $exitcode > validation_error.message
 	echo "exit code from Step 2 of processing is " $exitcode
 	exit $exitcode
-     fi
+      fi
+      mv latest.log latest_reco_2.log
+      ./$STATSCRIPT latest_reco_2.log reco_2
+      # let's compare to previous step
+      if [[ -f latest_reco_1.log ]]; then
+	nCTFsFilesInspected_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
+	nCTFsFilesOK_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsFilesFailed_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsProcessed_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
+	nCTFsFilesInspected_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
+	nCTFsFilesOK_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsFilesFailed_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/^[0-9]*_[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsProcessed_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/^[0-9]*_[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
+	if [[ $nCTFsFilesInspected_step1 != $nCTFsFilesInspected_step2 ]] || [[ $nCTFsFilesFailed_step1 != $nCTFsFilesFailed_step2 ]] || [[ $nCTFsFilesOK_step1 != $nCTFsFilesOK_step2 ]] || [[ $nCTFsProcessed_step1 != $nCTFsProcessed_step2 ]]; then
+	  echo "Inconsistency between step 1 and step 2 in terms of number of CTFs (files or single CTFs) found:"
+	  echo "nCTFsFilesInspected_step1 = $nCTFsFilesInspected_step1, nCTFsFilesInspected_step2 = $nCTFsFilesInspected_step2"
+	  echo "nCTFsFilesOK_step1 = $nCTFsFilesOK_step1, nCTFsFilesOK_step2 = $nCTFsFilesOK_step2"
+	  echo "nCTFsFilesFailed_step1 = $nCTFsFilesFailed_step1, nCTFsFilesFailed_step2 = $nCTFsFilesFailed_step2"
+	  echo "nCTFsProcessed_step1 = $nCTFsProcessed_step1, nCTFsProcessed_step2 = $nCTFsProcessed_step2"
+	  echo "Inconsistency between step 1 and step 2 in terms of number of CTFs (files or single CTFs) found:" > validation_error.message
+	  echo "nCTFsFilesInspected_step1 = $nCTFsFilesInspected_step1, nCTFsFilesInspected_step2 = $nCTFsFilesInspected_step2" > validation_error.message
+	  echo "nCTFsFilesOK_step1 = $nCTFsFilesOK_step1, nCTFsFilesOK_step2 = $nCTFsFilesOK_step2" > validation_error.message
+	  echo "nCTFsProcessed_step1 = $nCTFsProcessed_step1, nCTFsProcessed_step2 = $nCTFsProcessed_step2" > validation_error.message
+	  exit 1000
+	fi
+      fi
     fi
   fi
 
@@ -492,7 +525,8 @@ else
 	echo "exit code from Step 3 of processing is " $exitcode > validation_error.message
 	echo "exit code from Step 3 of processing is " $exitcode
 	exit $exitcode
-     fi
+      fi
+      mv latest.log latest_reco_3.log
     fi
   fi
 fi
@@ -568,17 +602,27 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   # retrieving again the list of AOD files, in case it changed after the merging above
   AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
   AOD_LIST=`find . -name AO2D.root`
+  MAX_POOL_SIZE=${ALIEN_JDL_CPUCORES-8}
+  if [[ -n $ALIEN_JDL_MAXPOOLSIZEAODMERGING ]]; then
+    MAX_POOL_SIZE=$ALIEN_JDL_MAXPOOLSIZEAODMERGING
+  fi
+  echo "Max number of parallel AOD mergers will be $MAX_POOL_SIZE"
+  JOB_LIST=job-list.txt
+  if [[ -f $JOB_LIST ]]; then
+    rm $JOB_LIST
+  fi
   timeStart=`date +%s`
   timeUsedCheck=0
   timeUsedMerge=0
   timeUsedCheckMergedAOD=0
   timeUsedAnalysisQC=0
+  # preparing list of AODs to be merged internally
   for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
-    AOD_DIR=`echo $AOD_LIST | cut -d' ' -f$i | sed -e 's/AO2D.root//'`
-    echo "Verifying, Merging DFs, and potentially running analysis QC for AOD file in $AOD_DIR"
+    AOD_FILE=`echo $AOD_LIST | cut -d' ' -f$i`
+    AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
     cd $AOD_DIR
     if [[ -f "AO2D.root" ]]; then
-      echo "Checking AO2Ds with un-merged DFs"
+      echo "Checking AO2Ds with un-merged DFs in $AOD_DIR"
       timeStartCheck=`date +%s`
       time root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
       timeEndCheck=`date +%s`
@@ -589,19 +633,60 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
 	echo "exit code from AO2D check is " $exitcode
 	exit $exitcode
       fi
-      ls AO2D.root > list.list
-      timeStartMerge=`date +%s`
-      time o2-aod-merger --input list.list --output AO2D_merged.root
-      timeEndMerge=`date +%s`
-      timeUsedMerge=$(( $timeUsedMerge+$timeEndMerge-$timeStartMerge ))
+    fi
+    cd -
+    ls $AOD_FILE > list_$AOD_DIR.list
+    echo "$AOD_DIR" >> $JOB_LIST
+  done
+  if [[ -z $ALIEN_JDL_DONOTMERGEAODS ]] || [[ $ALIEN_JDL_DONOTMERGEAODS == 0 ]]; then
+    # spawning the parallel merging
+    timeStartMerge=`date +%s`
+    arr=()
+    aods=()
+    mergedok=()
+    i=0
+    while IFS= read -r line; do
+      while [[ $CURRENT_POOL_SIZE -ge $MAX_POOL_SIZE ]]; do
+	CURRENT_POOL_SIZE=`jobs -r | wc -l`
+	sleep 1
+      done
+      run_AOD_merging $line &
+      arr[$i]=$!
+      aods[$i]=$line
+      i=$((i+1))
+      CURRENT_POOL_SIZE=`jobs -r | wc -l`
+    done < $JOB_LIST
+    # collecting return codes of the merging processes
+    for i in ${!arr[@]}; do
+      wait ${arr[$i]}
       exitcode=$?
-      echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from aod-merger to merge DFs is " $exitcode > validation_error.message
-	echo "exit code from aod-merger to merge DFs is " $exitcode
-	exit $exitcode
+	echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode > validation_error.message
+	echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode
+	echo "As a consequence, we will keep the AO2Ds with unmerged DFs for ${aods[$i]}"
+	mergedok[$((10#${aods[$i]}))]=0
+      else
+	echo "Merging of DFs inside the AO2D in ${aods[$i]} worked correctly"
+	mergedok[$((10#${aods[$i]}))]=1
       fi
-      echo "Checking AO2Ds with merged DFs"
+    done
+    timeEndMerge=`date +%s`
+    timeUsedMerge=$(( $timeUsedMerge+$timeEndMerge-$timeStartMerge ))
+    # Checking the merged AODs, and replacing the original ones with the merged ones if all is ok
+    # This loop could be merged with the above, but for now we keep them separate
+    for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
+      AOD_FILE=`echo $AOD_LIST | cut -d' ' -f$i`
+      AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
+      echo "Inspecting $AOD_DIR:"
+      if [[ ${mergedok[$((10#$AOD_DIR))]} == 0 ]]; then
+	echo "Merging for $AOD_DIR DID NOT work, we will do nothing for this file"
+	continue
+      else
+	echo "Merging for $AOD_DIR DID work, let's continue"
+      fi
+      cd $AOD_DIR
+      # now checking them
+      echo "Checking AO2Ds with merged DFs in $AOD_DIR"
       timeStartCheckMergedAOD=`date +%s`
       time root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
       timeEndCheckMergedAOD=`date +%s`
@@ -615,40 +700,49 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
 	echo "All ok, replacing initial AO2D.root file with the one with merged DFs"
 	mv AO2D_merged.root AO2D.root
       fi
-      if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
-	timeStartAnalysisQC=`date +%s`
-	# creating the analysis wf
-	time ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
-	# running it
-	time ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
-	timeEndAnalysisQC=`date +%s`
-	timeUsedAnalysisQC=$(( $timeUsedAnalysisQC+$timeEndAnalysisQC-$timeStartAnalysisQC ))
-	exitcode=$?
-	echo "exitcode = $exitcode"
-	if [[ $exitcode -ne 0 ]]; then
-	  echo "exit code from Analysis QC is " $exitcode > validation_error.message
-	  echo "exit code from Analysis QC is " $exitcode
-	  exit $exitcode
-	fi
-	if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
-	  mv Analysis/MergedAnalyses/AnalysisResults.root .
-	else
-	  echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
-	fi
-	if ls Analysis/*/*.log 1> /dev/null 2>&1; then
-	  mv Analysis/*/*.log .
-	fi
-      else
-	echo "Analysis QC will not be run, ALIEN_JDL_RUNANALYSISQC = $ALIEN_JDL_RUNANALYSISQC"
-      fi
-    fi
-    cd ..
-  done
-  echo "Time spend in checking initial AODs = $timeUsedCheck s"
-  echo "Time spend in merging AODs = $timeUsedMerge s"
-  echo "Time spend in checking final AODs = $timeUsedCheckMergedAOD s"
+      cd ..
+    done
+  fi
+  # running analysis QC if requested
   if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
-    echo "Time spend in AnalysisQC = $timeUsedAnalysisQC s"
+    for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
+      AOD_FILE=`echo $AOD_LIST | cut -d' ' -f$i`
+      AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
+      cd $AOD_DIR
+      timeStartAnalysisQC=`date +%s`
+      # creating the analysis wf
+      time ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
+      # running it
+      time ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
+      timeEndAnalysisQC=`date +%s`
+      timeUsedAnalysisQC=$(( $timeUsedAnalysisQC+$timeEndAnalysisQC-$timeStartAnalysisQC ))
+      exitcode=$?
+      echo "exitcode = $exitcode"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from Analysis QC is " $exitcode > validation_error.message
+	echo "exit code from Analysis QC is " $exitcode
+	exit $exitcode
+      fi
+      if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
+	mv Analysis/MergedAnalyses/AnalysisResults.root .
+      else
+	echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
+      fi
+      if ls Analysis/*/*.log 1> /dev/null 2>&1; then
+	mv Analysis/*/*.log .
+      fi
+      cd ..
+    done
+  else
+    echo "Analysis QC will not be run, ALIEN_JDL_RUNANALYSISQC = $ALIEN_JDL_RUNANALYSISQC"
+  fi
+  echo "Time spent in checking initial AODs = $timeUsedCheck s"
+  if [[ -z $ALIEN_JDL_DONOTMERGEAODS ]] || [[ $ALIEN_JDL_DONOTMERGEAODS == 0 ]]; then
+    echo "Time spent in merging AODs = $timeUsedMerge s"
+    echo "Time spent in checking final AODs = $timeUsedCheckMergedAOD s"
+  fi
+  if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
+    echo "Time spent in AnalysisQC = $timeUsedAnalysisQC s"
   else
     echo "No timing reported for Analysis QC, since it was not run"
   fi
