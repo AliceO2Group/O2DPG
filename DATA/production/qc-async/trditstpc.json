@@ -54,6 +54,19 @@
           "type": "direct",
           "query": "digits:TRD/DIGITS;tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
         }
+      },
+      "TRDPulseHeightTrackMatch": {
+        "active": "true",
+        "taskName": "PulseHeightTrackMatch",
+        "className": "o2::quality_control_modules::trd::PulseHeightTrackMatch",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "digits:TRD/DIGITS/0;tracklets:TRD/TRACKLETS/0;triggers:TRD/TRKTRGRD/0;tracks:TRD/MATCH_ITSTPC;trigrectrk:TRD/TRGREC_ITSTPC"
+        }
       }
     }
   },
