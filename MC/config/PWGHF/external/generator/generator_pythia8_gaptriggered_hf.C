@@ -136,6 +136,9 @@ private:
 // Charm-enriched
 FairGenerator *GeneratorPythia8GapTriggeredCharm(int inputTriggerRatio, float yMin=-1.5, float yMax=1.5) {
   auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, 4);
+  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
+  myGen->readString("Random:setSeed on");
+  myGen->readString("Random:seed " + std::to_string(seed));
   myGen->setQuarkRapidity(yMin, yMax);
   return myGen;
 }
@@ -143,6 +146,9 @@ FairGenerator *GeneratorPythia8GapTriggeredCharm(int inputTriggerRatio, float yM
 // Beauty-enriched
 FairGenerator *GeneratorPythia8GapTriggeredBeauty(int inputTriggerRatio, float yMin=-1.5, float yMax=1.5) {
   auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, 5);
+  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
+  myGen->readString("Random:setSeed on");
+  myGen->readString("Random:seed " + std::to_string(seed));
   myGen->setQuarkRapidity(yMin, yMax);
   return myGen;
 }
