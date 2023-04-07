@@ -228,9 +228,10 @@ FairGenerator* generateLongLivedMultiple(std::vector<int> PDGs, std::vector<int>
 ///___________________________________________________________
 /// Create generator via an array of configurations
 FairGenerator* generateLongLivedMultiple(std::vector<GeneratorPythia8LongLivedGunMultiple::ConfigContainer> cfg,
-                                         std::vector<GeneratorPythia8LongLivedGunMultiple::ConfigContainer> cfgGenDecayed)
+                                         std::vector<GeneratorPythia8LongLivedGunMultiple::ConfigContainer> cfgGenDecayed,
+                                         bool injectOnePerEvent = true)
 {
-  GeneratorPythia8LongLivedGunMultiple* multiGun = new GeneratorPythia8LongLivedGunMultiple();
+  GeneratorPythia8LongLivedGunMultiple* multiGun = new GeneratorPythia8LongLivedGunMultiple(injectOnePerEvent);
   for (const auto& c : cfg) {
     LOGF(info, "Adding gun %i", multiGun->getNGuns());
     c.print();
@@ -247,7 +248,7 @@ FairGenerator* generateLongLivedMultiple(std::vector<GeneratorPythia8LongLivedGu
 
 ///___________________________________________________________
 /// Create generator via input file
-FairGenerator* generateLongLivedMultiple(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun")
+FairGenerator* generateLongLivedMultiple(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun", bool injectOnePerEvent = true)
 {
   configuration = gSystem->ExpandPathName(configuration.c_str());
   LOGF(info, "Using configuration file '%s'", configuration.c_str());
@@ -279,7 +280,7 @@ FairGenerator* generateLongLivedMultiple(std::string configuration = "${O2DPG_RO
     LOGF(fatal, "Can't open '%s' !", configuration.c_str());
     return nullptr;
   }
-  return generateLongLivedMultiple(cfgVec, cfgVecGenDecayed);
+  return generateLongLivedMultiple(cfgVec, cfgVecGenDecayed, injectOnePerEvent);
 }
 
 ///___________________________________________________________
