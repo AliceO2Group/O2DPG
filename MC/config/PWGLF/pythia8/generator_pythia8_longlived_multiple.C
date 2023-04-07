@@ -39,10 +39,11 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   ~GeneratorPythia8LongLivedGunMultiple() = default;
 
   int mConfigToUse = -1;
+  int mEventCounter = 0;
   //__________________________________________________________________
   Bool_t generateEvent() override
   {
-    LOG(info) << "generateEvent";
+    LOG(info) << "generateEvent" << mEventCounter;
     if (!mPythia.next()) {
       return false;
     }
@@ -50,7 +51,7 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
     mConfigToUse = mOneInjectionPerEvent ? static_cast<int>(gRandom->Uniform(0.f, getNGuns())) : -1;
     LOGF(info, "Using configuration %i out of %lli, %lli transport decayed, %lli generator decayed", mConfigToUse, getNGuns(), mGunConfigs.size(), mGunConfigsGenDecayed.size());
 
-    int nConfig = mGunConfigs.size();
+    int nConfig = mGunConfigs.size();// We start counting from the configurations of the transport decayed particles
     for (const ConfigContainer& cfg : mGunConfigsGenDecayed) {
       if (mConfigToUse >= 0 && nConfig != mConfigToUse) {
         nConfig++;
@@ -89,7 +90,7 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   //__________________________________________________________________
   Bool_t importParticles() override
   {
-    LOG(info) << "importParticles";
+    LOG(info) << "importParticles " << mEventCounter++;
     GeneratorPythia8::importParticles();
     int nConfig = 0;
     for (const ConfigContainer& cfg : mGunConfigs) {
@@ -188,6 +189,20 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   //__________________________________________________________________
   long int getNGuns() const { return mGunConfigs.size() + mGunConfigsGenDecayed.size(); }
 
+  //__________________________________________________________________
+  void print()
+  {
+    LOG(info) << "GeneratorPythia8LongLivedGunMultiple configuration with " << getNGuns() << " guns:";
+    LOG(info) << "Particles decayed by the transport:";
+    for (const auto& cfg : mGunConfigs) {
+      cfg.print();
+    }
+    LOG(info) << "Particles decayed by the generator:";
+    for (const auto& cfg : mGunConfigsGenDecayed) {
+      cfg.print();
+    }
+  }
+
  private:
   const bool mOneInjectionPerEvent = true;            // if true, only one injection per event is performed, i.e. if multiple PDG (including antiparticles) are requested to be injected only one will be done per event
   std::vector<ConfigContainer> mGunConfigs;           // List of gun configurations to use
@@ -222,10 +237,11 @@ FairGenerator* generateLongLivedMultiple(std::vector<GeneratorPythia8LongLivedGu
     multiGun->addGun(c);
   }
   for (const auto& c : cfgGenDecayed) {
-    LOGF(info, "Adding gun %i", multiGun->getNGuns());
+    LOGF(info, "Adding gun %i, particle will be decayed by the generator", multiGun->getNGuns());
     c.print();
     multiGun->addGunGenDecayed(c);
   }
+  multiGun->print();
   return multiGun;
 }
 
