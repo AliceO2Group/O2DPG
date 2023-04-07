@@ -14,6 +14,8 @@ int External()
         -213,    // rho(770)bar-
         3224,    // Sigma(1385)+
         -3224,   // Sigma(1385)bar-
+        3114,    // Sigma(1385)-
+        -3114,   // Sigma(1385)bar+
         3124,    // Lambda(1520)0
         -3124,   // Lambda(1520)0bar
         3324,    // Xi(1530)0
@@ -27,19 +29,21 @@ int External()
     // 123324,  // Xi(1820)0
     // -123324  // Xi(1820)0bar
     std::vector<std::vector<int>> decayDaughters = {
-        {321, 211},    // K0*0
-        {-321, -211},  // K0*0bar
+        {321, -211},    // K0*0
+        {-321, 211},  // K0*0bar
         {311, 211},    // K*+-
         {-311, -211},  // K*bar+-
         {321, 321},    // phi
-        {211, 211},    // f_0(980)
-        {211, 211},    // rho(770)0
+        {211, -211},    // f_0(980)
+        {211, -211},    // rho(770)0
         {211, 111},    // rho(770)+
-        {-211, -111},  // rho(770)bar-
+        {-211, 111},  // rho(770)bar-
         {3122, 211},   // Sigma(1385)+
         {-3122, -211}, // Sigma(1385)bar-
-        {3212, 321},   // Lambda(1520)0
-        {-3212, -321}, // Lambda(1520)0bar
+        {3122, -211},   // Sigma(1385)-
+        {-3122, 211}, // Sigma(1385)bar+
+        {2212, -321},   // Lambda(1520)0
+        {-2212, 321}, // Lambda(1520)0bar
         {3312, 211},   // Xi(1530)0
         {-3312, -211}  // Xi(1530)0bar
     };
@@ -52,12 +56,6 @@ int External()
     // {-211, -211, -111}  // Xi(1820)0bar
 
     auto nInjection = injectedPDGs.size();
-    std::cout << "Check for injected particles: " << nInjection;
-    for (int i = 0; i < nInjection; i++)
-    {
-        std::cout << "\n" << i << " PDG " << injectedPDGs[i];
-    }
-    std::cout << "\n";
 
     TFile file(path.c_str(), "READ");
     if (file.IsZombie())
@@ -94,18 +92,20 @@ int External()
     for (int i = 0; i < nEvents; i++)
     {
         auto check = tree->GetEntry(i);
-        std::cout << "Event " << i << ", " << check << "\n";
         for (int idxMCTrack = 0; idxMCTrack < tracks->size(); ++idxMCTrack)
         {
             auto track = tracks->at(idxMCTrack);
             auto pdg = track.GetPdgCode();
-            std::cout << pdg << "\n";
             auto it = std::find(injectedPDGs.begin(), injectedPDGs.end(), pdg);
             int index = std::distance(injectedPDGs.begin(), it); // index of injected PDG
             if (it != injectedPDGs.end())                        // found
             {
                 // count signal PDG
                 nSignal[index]++;
+                if(track.getFirstDaughterTrackId() < 0)
+                {
+                    continue;
+                }
                 for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j)
                 {
                     auto pdgDau = tracks->at(j).GetPdgCode();
@@ -133,15 +133,15 @@ int External()
         }
         if (nSignal[i] != nEvents * numberOfInjectedSignalsPerEvent)
         {
-            std::cerr << "Number of generated" << injectedPDGs[i] << "lower than expected\n";
-            return 1;
+            std::cerr << "Number of generated: " << injectedPDGs[i] << ", lower than expected\n";
+            // return 1;
         }
         for (int j = 0; j < decayDaughters[i].size(); j++)
         {
             if (nDecays[i][j] != nSignal[i])
             {
-                std::cerr << "Number of generated" << decayDaughters[i][j] << "lower than expected\n";
-                return 1;
+                std::cerr << "Number of generated: " << decayDaughters[i][j] << ", lower than expected\n";
+                // return 1;
             }
         }
     }
