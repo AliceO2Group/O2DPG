@@ -134,7 +134,7 @@ fi
 
 # ITSTPC vs FT0 time shift
 if [[ -z $TPCCLUSTERTIMESHIFT ]]; then
-  SHIFTSCRIPT="$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/ShiftMap.sh"
+  SHIFTSCRIPT="$O2DPG_ROOT/DATA/production/configurations/asyncReco/ShiftMap.sh"
   if [[ -f "ShiftMap.sh" ]]; then
     SHIFTSCRIPT="ShiftMap.sh"
   fi
@@ -155,36 +155,19 @@ else
     echo "************************************************************"
 fi
 
-# TPC vdrift
-PERIODLETTER=${PERIOD: -1}
-VDRIFTPARAMOPTION=
-if [[ $PERIODLETTER < m ]]; then
-  echo "In setenv_extra: time used so far = $timeUsed s"
-  timeStart=`date +%s`
-  time root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/getTPCvdrift.C+($RUNNUMBER)"
-  timeEnd=`date +%s`
-  timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-  delta=$(( $timeEnd-$timeStart ))
-  echo "Time spent to get VDrift for TPC = $delta s"
-  export VDRIFT=`cat vdrift.txt`
-  VDRIFTPARAMOPTION="TPCGasParam.DriftV=$VDRIFT"
-  echo "Setting TPC vdrift to $VDRIFT"
-else
-  echo "TPC vdrift will be taken from CCDB"
-fi
-
 # IR
-if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]]; then
+if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]] || [[ -z $RUN_BFIELD ]]; then
   cp $O2DPG_ROOT/DATA/production/common/getIRandDuration.C ./
   echo "In setenv_extra: time used so far = $timeUsed"
   timeStart=`date +%s`
-  time root -b -q "getIRandDuration.C+($RUNNUMBER)"
+  time o2-calibration-get-run-parameters -r $RUNNUMBER
   timeEnd=`date +%s`
   timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
   delta=$(( $timeEnd-$timeStart ))
   echo "Time spent in getting IR and duration of the run = $delta s"
   export RUN_IR=`cat IR.txt`
   export RUN_DURATION=`cat Duration.txt`
+  export RUN_BFIELD=`cat BField.txt`
 fi
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
 echo "Duration of current run ($RUNNUMBER) = $RUN_DURATION"
@@ -238,7 +221,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   [[ -z $TPCITSTIMEERR ]] && TPCITSTIMEERR="0.2"
   [[ -z $ITS_CONFIG || "$ITS_CONFIG" != *"--tracking-mode"* ]] && export ITS_CONFIG+=" --tracking-mode async"
   # this is to account for the TPC tracks bias due to the distortions: increment cov.matrix diagonal at the TPC inner boundary, unbias params
-  if [[ $PERIOD == "LHC22m" || $PERIOD == "LHC22p"  ]]; then # B-, ~500 kHZ
+  if [[ $PERIOD == "LHC22m" || $PERIOD == "LHC22p" ]] || [[ $RUN_IR -ge 30000 && $RUN_BFIELD -lt 0 ]]; then # B-, ~500 kHZ
     TRACKTUNEPARAMSDATAONLY="trackTuneParams.useTPCInnerCorr=true;trackTuneParams.tpcParInner[0]=2.32e-01;trackTuneParams.tpcParInner[1]=0.;trackTuneParams.tpcParInner[2]=-0.0138;trackTuneParams.tpcParInner[3]=0.;trackTuneParams.tpcParInner[4]=0.08"
     if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
       # unsetting debiasing for MC
@@ -246,7 +229,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     fi
     TRACKTUNETPCINNER="$TRACKTUNEPARAMSDATAONLY;trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.25;trackTuneParams.tpcCovInner[2]=2.25e-4;trackTuneParams.tpcCovInner[3]=2.25e-4;trackTuneParams.tpcCovInner[4]=0.0256;"
     CUT_MATCH_CHI2=60
-  elif [[ $PERIOD == "LHC22n" || $PERIOD == "LHC22o" || $PERIOD == "LHC22r" || $PERIOD == "LHC22t" ]]; then # B+, ~500 kHZ, at the moment simply invert corrections tuned on LHC22m (B-)
+  elif [[ $PERIOD == "LHC22n" || $PERIOD == "LHC22o" || $PERIOD == "LHC22r" || $PERIOD == "LHC22t" ]] || [[ $RUN_IR -ge 30000 && $RUN_BFIELD -gt 0 ]]; then # B+, ~500 kHZ, at the moment simply invert corrections tuned on LHC22m (B-)
     TRACKTUNEPARAMSDATAONLY="trackTuneParams.useTPCInnerCorr=true;trackTuneParams.tpcParInner[0]=-2.32e-01;trackTuneParams.tpcParInner[1]=0.;trackTuneParams.tpcParInner[2]=0.0138;trackTuneParams.tpcParInner[3]=0.;trackTuneParams.tpcParInner[4]=0.08"
     if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
       # unsetting debiasing for MC
@@ -256,7 +239,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     CUT_MATCH_CHI2=60
     #
     # these are low rate periods which require debiasing only against the static distortions
-  elif [[ $PERIOD == "LHC22e" || $PERIOD == "LHC22f" || $PERIOD == "LHC22q" || $PERIOD == "LHC22s" ]]; then # B+, low rate, at the moment do not unbias but expand cov matrix (the expansion is not done if there is the alien JDL var ALIEN_JDL_NOEXTRAERR22Q)
+  elif [[ $PERIOD == "LHC22e" || $PERIOD == "LHC22f" || $PERIOD == "LHC22q" || $PERIOD == "LHC22s" ]] || [[ $RUN_IR -lt 30000 && $RUN_BFIELD -gt 0 ]]; then # B+, low rate, at the moment do not unbias but expand cov matrix (the expansion is not done if there is the alien JDL var ALIEN_JDL_NOEXTRAERR22Q)
     TRACKTUNEPARAMSDATAONLY="trackTuneParams.useTPCInnerCorr=true;trackTuneParams.tpcParInner[0]=-5e-02;trackTuneParams.tpcParInner[1]=0.;trackTuneParams.tpcParInner[2]=0.0033;trackTuneParams.tpcParInner[3]=0.;trackTuneParams.tpcParInner[4]=0.02"
     if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
       # unsetting debiasing for MC
@@ -264,7 +247,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     fi
     TRACKTUNETPCINNER="$TRACKTUNEPARAMSDATAONLY;trackTuneParams.sourceLevelTPC=true;trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.025;trackTuneParams.tpcCovInner[2]=0.2e-4;trackTuneParams.tpcCovInner[3]=0.2e-4;trackTuneParams.tpcCovInner[4]=0.002;"
     CUT_MATCH_CHI2=60
-  elif [[ $PERIOD == "LHC22c" || $PERIOD == "LHC22d" ]]; then # B-, low rate, at the moment do not unbias but expand cov matrix (the expansion is not done if there is the alien JDL var ALIEN_JDL_NOEXTRAERR22Q)
+  elif [[ $PERIOD == "LHC22c" || $PERIOD == "LHC22d" ]] || [[ $RUN_IR -lt 30000 && $RUN_BFIELD -lt 0 ]]; then # B-, low rate, at the moment do not unbias but expand cov matrix (the expansion is not done if there is the alien JDL var ALIEN_JDL_NOEXTRAERR22Q)
     TRACKTUNEPARAMSDATAONLY="trackTuneParams.useTPCInnerCorr=true;trackTuneParams.tpcParInner[0]=5e-02;trackTuneParams.tpcParInner[1]=0.;trackTuneParams.tpcParInner[2]=-0.0033;trackTuneParams.tpcParInner[3]=0.;trackTuneParams.tpcParInner[4]=0.02"
     if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
       # unsetting debiasing for MC
@@ -293,7 +276,7 @@ if [[ $ALIGNLEVEL != 0 ]]; then
 fi
 
 # ad-hoc options for GPU reco workflow
-export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_global.dEdxDisableResidualGainMap=1;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
+export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_global.dEdxDisableResidualGainMap=1;$TRACKTUNETPCINNER;"
 if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
   export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_global.dEdxDisableResidualGain=1"
 fi
@@ -310,7 +293,7 @@ export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="$ARGS_EXTRA_PROCESS_o2_tof_reco_
 #export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2.;pvertexer.nSigmaTimeTrack=4.;pvertexer.timeMarginTrackTime=0.5;pvertexer.timeMarginVertexTime=7.;pvertexer.nSigmaTimeCut=10;pvertexer.dbscanMaxDist2=36;pvertexer.dcaTolerance=3.;pvertexer.pullIniCut=100;pvertexer.addZSigma2=0.1;pvertexer.tukey=20.;pvertexer.addZSigma2Debris=0.01;pvertexer.addTimeSigma2Debris=1.;pvertexer.maxChi2Mean=30;pvertexer.timeMarginReattach=3.;pvertexer.addTimeSigma2Debris=1.;pvertexer.dbscanDeltaT=24;pvertexer.maxChi2TZDebris=100;pvertexer.maxMultRatDebris=1.;pvertexer.dbscanAdaptCoef=20.;pvertexer.timeMarginVertexTime=1.3"
 # updated on 7 Sept 2022
 EXTRA_PRIMVTX_TimeMargin=""
-if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == LHC22* ]]; then
+if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == LHC22* || $PERIOD == LHC23* ]]; then
   EXTRA_PRIMVTX_TimeMargin="pvertexer.timeMarginVertexTime=1.3"
 fi
 
@@ -328,10 +311,10 @@ fi
 # secondary vertexing
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
 
-export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow+=";$PVERTEXER;$VDRIFTPARAMOPTION;"
+export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow+=";$PVERTEXER;"
 export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=";$SVTX"
 
-export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";$ITSEXTRAERR;$ITSTPCMATCH;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
+export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";$ITSEXTRAERR;$ITSTPCMATCH;$TRACKTUNETPCINNER;"
 [[ ! -z "${TPCITSTIMEBIAS}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";tpcitsMatch.globalTimeBiasMUS=$TPCITSTIMEBIAS;"
 [[ ! -z "${TPCITSTIMEERR}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;"
 
@@ -340,10 +323,10 @@ has_detector FT0 && export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="$ARGS_EX
 
 # ad-hoc settings for TOF matching
 export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="$ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow --output-type matching-info,calib-info --enable-dia"
-export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$ITSEXTRAERR;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
+export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$ITSEXTRAERR;$TRACKTUNETPCINNER;"
 
 # ad-hoc settings for TRD matching
-export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$VDRIFTPARAMOPTION;$TRACKTUNETPCINNER;"
+export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$TRACKTUNETPCINNER;"
 
 # ad-hoc settings for FT0
 export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow="$ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow --ft0-reconstructor"

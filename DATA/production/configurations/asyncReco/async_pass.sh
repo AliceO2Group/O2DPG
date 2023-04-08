@@ -95,17 +95,10 @@ fi
 # period
 if [[ -n "$ALIEN_JDL_LPMPRODUCTIONTAG" ]]; then
     export PERIOD="$ALIEN_JDL_LPMPRODUCTIONTAG"
-    if [[ -n "$ALIEN_JDL_O2DPGPATH" ]]; then
-      export O2DPGPATH="$ALIEN_JDL_O2DPGPATH"
-    else
-      export O2DPGPATH="$PERIOD"
-    fi
 fi
 
 # pass
-if [[ -n "$ALIEN_JDL_O2DPGPASSPATH" ]]; then
-  export PASS="$ALIEN_JDL_O2DPGPASSPATH"
-elif [[ -n "$ALIEN_JDL_LPMPASSNAME" ]]; then
+if [[ -n "$ALIEN_JDL_LPMPASSNAME" ]]; then
   export PASS="$ALIEN_JDL_LPMPASSNAME"
 fi
 
@@ -186,14 +179,14 @@ else
   echo "************************************************************************************"
   echo "No ad-hoc setenv_extra settings for current async processing; using the one in O2DPG"
   echo "************************************************************************************"
-  if [[ -f $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh ]]; then
-    ln -s $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh
-    echo "Timeu used so far, before setenv_extra = $timeUsed s"
+  if [[ -f $O2DPG_ROOT/DATA/production/configurations/asyncReco/setenv_extra.sh ]]; then
+    ln -s $O2DPG_ROOT/DATA/production/configurations/asyncReco/setenv_extra.sh
+    echo "Time used so far, before setenv_extra = $timeUsed s"
     time source setenv_extra.sh $RUNNUMBER $BEAMTYPE || { echo "setenv_extra.sh (O2DPG) failed" && exit 7; }
     echo "Time used so far, after setenv_extra = $timeUsed s"
   else
     echo "*********************************************************************************************************"
-    echo "No setenev_extra for $ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS in O2DPG"
+    echo "No setenev_extra from $O2DPG_ROOT/DATA/production/configurations/asyncReco/ in O2DPG"
     echo "                No special settings will be used"
     echo "*********************************************************************************************************"
   fi
