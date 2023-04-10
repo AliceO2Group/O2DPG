@@ -16,7 +16,7 @@
         "periodName": "SimChallenge"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "no-op://"
       },
       "consul": {
         "url": ""
@@ -26,7 +26,7 @@
       }
     },
     "tasks": {
-      "ITSClusterTask": {
+      "Clusters": {
         "active": "true",
         "className": "o2::quality_control_modules::its::ITSClusterTask",
         "moduleName": "QcITS",
@@ -42,12 +42,21 @@
           "layer": "1111111",
           "nThreads": "1",
 	  "nBCbins" : "103",
-	  "dicttimestamp" : 0,
-	  "geomPath" : "o2sim_geometry-aligned.root",
+	  "dicttimestamp" : 0
 	  "publishSummary1D": "0"
+        },
+	"grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         }
       },
-      "ITSTrackTask": {
+      "Tracks": {
         "active": "true",
         "className": "o2::quality_control_modules::its::ITSTrackTask",
         "moduleName": "QcITS",
@@ -64,7 +73,7 @@
           "vertexXYsize": "0.5",
           "vertexZsize": "15",
           "vertexRsize": "0.8",
-          "NtracksMAX"  : "100",
+          "NtracksMAX"  : "5000",
           "doTTree": "0",
 	  "nBCbins" : "103",
 	  "dicttimestamp" : "0"
@@ -72,7 +81,7 @@
       }
     },
     "checks": {
-      "ITSClusterCheck": {
+      "Clusters": {
         "active": "true",
         "className": "o2::quality_control_modules::its::ITSClusterCheck",
         "moduleName": "QcITS",
@@ -92,7 +101,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "ITSClusterTask",
+            "name": "Clusters",
             "MOs": [
               "Layer0/AverageClusterSize",
               "Layer1/AverageClusterSize",
@@ -112,7 +121,7 @@
           }
         ]
       },
-      "ITSTrackCheck": {
+      "Tracks": {
         "active": "true",
         "className": "o2::quality_control_modules::its::ITSTrackCheck",
         "moduleName": "QcITS",
@@ -121,7 +130,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "ITSTrackTask",
+            "name": "Tracks",
             "MOs": [
               "NClusters",
               "PhiDistribution",
@@ -146,7 +155,7 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.3",
+          "fraction": "1",
           "seed": "1441"
         }
       ],
@@ -160,7 +169,7 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.3",
+          "fraction": "1",
           "seed": "1441"
         }
       ],

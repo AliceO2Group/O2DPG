@@ -147,6 +147,9 @@ void ExtractTree(TTree* tree, TDirectory* outDir, std::string const& basedOnTree
   TLeaf* obj = nullptr;
   TFile* basedOnTreeFile = nullptr;
   auto prefix = !currentPrefix.empty() ? currentPrefix + "_" + tree->GetName() : tree->GetName();
+  if (prefix.rfind("DF_", 0) == 0) {
+    prefix = std::string("DF_merged_") + tree->GetName();
+  }
   if (!basedOnTree.empty()) {
     basedOnTreeFile = new TFile(basedOnTree.c_str(), "READ");
   }
@@ -202,6 +205,7 @@ void ExtractTree(TTree* tree, TDirectory* outDir, std::string const& basedOnTree
     }
     WriteObject(currentHist, outDir);
   }
+  BUFFER_DIR->Clear();
 }
 
 // extract everything from a o2::quality_control::core::MonitorObjectCollection object

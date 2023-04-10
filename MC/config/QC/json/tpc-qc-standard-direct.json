@@ -21,7 +21,7 @@
         "filterDiscardLevel": "1"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "no-op://"
       },
       "consul": {
         "url": ""

@@ -57,6 +57,8 @@ class GeneratorEvtGen : public T
 
   // overriden methods
   Bool_t Init() override { return T::Init() && InitEvtGen(); };
+  // particles imported vie GeneratorTGenerator::importParticles will be flagged to be tracked automatically
+  // if their HepMC status is 1; everything else must be flagged explcitly as done below.
   Bool_t importParticles() override { return T::importParticles() && makeEvtGenDecays(); };
 
   // external setters
@@ -81,7 +83,7 @@ class GeneratorEvtGen : public T
 
     EvtRandom::setRandomEngine(mEng);
 
-    char* decayTablePath = gSystem->ExpandPathName("$EVTGEN_ROOT/share/EvtGen/DECAY_2010.DEC"); // default decay table
+    char* decayTablePath = gSystem->ExpandPathName("$EVTGEN_ROOT/share/EvtGen/DECAY.DEC"); // default decay table
     char* particleTablePath = gSystem->ExpandPathName("$EVTGEN_ROOT/share/EvtGen/evt.pdl");     // particle table
     std::list<EvtDecayBase*> extraModels;
 
@@ -186,7 +188,8 @@ class GeneratorEvtGen : public T
     // 0 -> mother particle
     T::mParticles[indexMother].SetFirstDaughter(mEvtstdhep->getFirstDaughter(0) + T::mParticles.size() - 1);
     T::mParticles[indexMother].SetLastDaughter(mEvtstdhep->getLastDaughter(0) + T::mParticles.size() - 1);
-    T::mParticles[indexMother].SetStatusCode(11);
+    // set another HepMC code and switch off transport
+    mcutils::MCGenHelper::encodeParticleStatusAndTracking(T::mParticles[indexMother], 11, 0, false);
     if (mDebug)
       std::cout << "index mother " << indexMother << " first daughter " << mEvtstdhep->getFirstDaughter(0) + T::mParticles.size() - 1 << " last daughter " << mEvtstdhep->getLastDaughter(0) + T::mParticles.size() - 1 << std::endl;
     for (int i = 1; i < mEvtstdhep->getNPart(); i++) {
@@ -231,6 +234,8 @@ class GeneratorEvtGen : public T
       t = x4.get(0) * kconvT + T::mParticles[indexMother].T();  //[s]
 
       T::mParticles.push_back(TParticle(partnum, istat, jmotherfirst, -1, jdaugfirst, jdauglast, px, py, pz, e, x, y, z, t));
+      // make sure status codes are properly encoded and enable transport if HepMC status ==1
+      mcutils::MCGenHelper::encodeParticleStatusAndTracking(T::mParticles.back(), istat == 1);
       ////
       if (mDebug)
         std::cout << "   -> PDG " << partnum << " STATUS " << istat << " position in the array" << T::mParticles.size() - 1 << " mother " << jmotherfirst << " First daughter" << jdaugfirst << " Last daughter " << jdauglast << std::endl;

@@ -5,7 +5,7 @@
 [ ! "${O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
 
 # load utility functions
-. ${O2_ROOT}/share/scripts/jobutils.sh 
+. ${O2_ROOT}/share/scripts/jobutils.sh
 
 ECM=${ECM:-13600}
 RNDSEED=${RNDSEED:-0}

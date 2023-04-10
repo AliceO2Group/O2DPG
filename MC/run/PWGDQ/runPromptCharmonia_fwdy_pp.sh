@@ -13,6 +13,7 @@ NSIGEVENTS=${NSIGEVENTS:-1}
 NBKGEVENTS=${NBKGEVENTS:-1}
 NWORKERS=${NWORKERS:-8}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
+TARGETTASK=${TARGETTASK:+-tt ${TARGETTASK}}
 
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -e TGeant4 -mod "--skipModules ZDC" \
 	-confKey "GeneratorExternal.fileName=${O2DPG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorParamPromptJpsiToMuonEvtGen_pp13TeV.C;GeneratorExternal.funcName=GeneratorParamPromptJpsiToMuonEvtGen_pp13TeV()"  \
@@ -20,4 +21,4 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -gen external -j ${NWORKER
 
 
 # run workflow
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json ${TARGETTASK}

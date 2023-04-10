@@ -56,6 +56,11 @@ class user_generator_class : public Generator
       particle.SetPdgCode(22);
       particle.SetMomentum(lv);
       mParticles.push_back(particle);
+      // this does the correct encoding of status code and transport flag
+      // since the status code is set to 1 above and because it is the default criterion for when
+      // a particle should be tracked, it would be sufficient to do
+      // o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back(), particle.GetStatusCode() == 1);
       return true;
     }
     if (mSelectedConfiguration.compare("two_protons_and_two_photons") == 0) {
@@ -64,21 +69,30 @@ class user_generator_class : public Generator
       particle.SetPdgCode(2212);
       particle.SetMomentum(lv);
       mParticles.push_back(particle);
+      // see comments in previous branch
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       // another proton
       lv.SetPtEtaPhiM(10., 0.5, -M_PI, 0.93827200);
       particle.SetPdgCode(2212);
       particle.SetMomentum(lv);
       mParticles.push_back(particle);
+      // see comments in previous branch
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       // one photon
       lv.SetPtEtaPhiM(10., -0.5, M_PI, 0.);
       particle.SetPdgCode(22);
       particle.SetMomentum(lv);
       mParticles.push_back(particle);
+      // see comments in previous branch
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       // another photon
       lv.SetPtEtaPhiM(10., -0.5, -M_PI, 0.);
       particle.SetPdgCode(22);
       particle.SetMomentum(lv);
       mParticles.push_back(particle);
+      // see comments in previous branch
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
+      
       return true;
     }
 

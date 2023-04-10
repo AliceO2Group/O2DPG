@@ -21,7 +21,7 @@ fi
 
 # checking for remapping
 if [[ $remappingITS == 1 ]] || [[ $remappingMFT == 1 ]]; then
-  REMAPPING="--condition-remap \"https://alice-ccdb.cern.ch/RecITSMFT="
+  REMAPPING="--condition-remap \"http://alice-ccdb.cern.ch/RecITSMFT="
   if [[ $remappingITS == 1 ]]; then
     REMAPPING=$REMAPPING"ITS/Calib/ClusterDictionary"
     if [[ $remappingMFT == 1 ]]; then
@@ -51,7 +51,7 @@ fi
 # TPC vdrift
 CCDB_TPC_VDRIFT="http://ccdb-test.cern.ch:8080"
 if [[ $RUNNUMBER -ge 518737 ]]; then
-  CCDB_TPC_VDRIFT="https://alice-ccdb.cern.ch"
+  CCDB_TPC_VDRIFT="http://alice-ccdb.cern.ch"
 fi
 echo "CCDB for TPC Vdrift = $CCDB_TPC_VDRIFT"
 root -b -q "$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$ALIEN_JDL_LPMPASSNAME/getTPCvdrift.C+($RUNNUMBER, \"$CCDB_TPC_VDRIFT\" )"
@@ -77,7 +77,7 @@ export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow="ITSVertexerParam.phiCut=0.5;IT
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="TPCGasParam.DriftV=$VDRIFT;GPU_global.dEdxDisableResidualGainMap=1"
 
 # ad-hoc settings for TOF reco
-# export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"https://alice-ccdb.cern.ch\""
+# export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb --ccdb-url-tof \"http://alice-ccdb.cern.ch\""
 # since commit on Dec, 4
 export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--use-ccdb"
 
@@ -115,7 +115,7 @@ export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow="$MFT_STROBELGT;MFTTracking.for
 export ARGS_EXTRA_PROCESS_o2_mft_reco_workflow=" --run-assessment "
 
 # ad-hoc settings for MCH
-export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow="MCHClustering.lowestPadCharge=20;MCHClustering.defaultClusterResolution=0.4;MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6;MCHDigitFilter.timeOffset=126"
+export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow="MCHClustering.lowestPadCharge=15;MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6;MCHDigitFilter.timeOffset=126"
 
 # Enabling AOD
 export WORKFLOW_PARAMETERS="AOD,${WORKFLOW_PARAMETERS}"

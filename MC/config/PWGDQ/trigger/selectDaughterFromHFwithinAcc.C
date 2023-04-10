@@ -13,9 +13,9 @@ R__ADD_INCLUDE_PATH($O2DPG_ROOT)
 /// =================================================================================================================================
 Int_t GetFlavour(Int_t pdgCode);
 
-o2::eventgen::Trigger selectDaughterFromHFwithinAcc(Int_t pdgPartForAccCut = 443, Bool_t cutOnSingleChild = kTRUE, double rapidityMin = -1., double rapidityMax = -1.)
+o2::eventgen::Trigger selectDaughterFromHFwithinAcc(Int_t pdgPartForAccCut = 443, Bool_t cutOnSingleChild = kTRUE, double rapidityMin = -1., double rapidityMax = -1., int minNb = -1)
 {
-  return [pdgPartForAccCut, cutOnSingleChild, rapidityMin, rapidityMax](const std::vector<TParticle>& particles) -> bool {
+  return [pdgPartForAccCut, cutOnSingleChild, rapidityMin, rapidityMax, minNb](const std::vector<TParticle>& particles) -> bool {
     int nsig = 0;
     int mpdg = -1;
     int mpdgUpperFamily = -1;
@@ -34,9 +34,11 @@ o2::eventgen::Trigger selectDaughterFromHFwithinAcc(Int_t pdgPartForAccCut = 443
         mpdgUpperFamily = (mpdg > 1000 ? mpdg + 1000 : mpdg + 100);
         if (GetFlavour(mpdg) == 5 || GetFlavour(mpdgUpperFamily) == 5) { // keep particles from (b->) c
           rapidity = particle.Y();
-          if ((rapidity > rapidityMin) && (rapidity < rapidityMax))
+          if ((rapidity > rapidityMin) && (rapidity < rapidityMax)) {
             isSelectedY = kTRUE;
-        }
+            nsig++;
+	  }
+	}
       }
       ///////
       if (!cutOnSingleChild && TMath::Abs(particle.GetPdgCode()) == pdgPartForAccCut) {
@@ -48,12 +50,18 @@ o2::eventgen::Trigger selectDaughterFromHFwithinAcc(Int_t pdgPartForAccCut = 443
         if ((GetFlavour(mpdg) == 5) || (GetFlavour(mpdg) == 4)) {
           isHF = kTRUE;
           rapidity = particle.Y();
-          if ((rapidity < rapidityMin) || (rapidity > rapidityMax))
+          if ((rapidity < rapidityMin) || (rapidity > rapidityMax)) {
             isSelectedY = kFALSE;
+	  }
+	  else {
+	    nsig++;
+	  }
         }
       }
     }
     //
+    if ((minNb > 0) && (nsig < minNb)) 
+      return kFALSE;
     if (cutOnSingleChild && !isSelectedY)
       return kFALSE;
     if (!cutOnSingleChild && !(isHF && isSelectedY))

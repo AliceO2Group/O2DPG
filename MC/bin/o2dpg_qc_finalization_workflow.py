@@ -75,9 +75,9 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
   MFTDigitsQCneeds = []
   for flp in range(5):
     MFTDigitsQCneeds.extend(['mftDigitsQC'+str(flp)+'_local'+str(tf) for tf in range(1, ntimeframes + 1)])
-  add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-digit-0.json', MFTDigitsQCneeds)
-  add_QC_finalization('mftClustersQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-cluster.json')
-  add_QC_finalization('mftAsyncQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/qc-mft-async.json')
+  add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mft-digits-0.json', MFTDigitsQCneeds)
+  add_QC_finalization('mftClustersQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mft-clusters.json')
+  add_QC_finalization('mftTracksQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks.json')
   add_QC_finalization('emcCellQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/emc-cell-task.json')
   #add_QC_finalization('tpcTrackingQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-tracking-direct.json')
   add_QC_finalization('tpcStandardQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-standard-direct.json')

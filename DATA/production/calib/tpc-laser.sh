@@ -63,7 +63,8 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
     --input-spec "$CALIB_INSPEC"  \
-    --configKeyValues "TPCDigitDump.LastTimeBin=600;$ARGS_ALL_CONFIG" \
+    --configKeyValues "TPCDigitDump.NoiseThreshold=3;TPCDigitDump.LastTimeBin=600;$ARGS_ALL_CONFIG" \
+    --pedestal-url /home/wiechula/processData/inputFilesTracking/triggeredLaser/pedestals.openchannels.root \
     --pipeline tpc-raw-to-digits-0:20 \
     --remove-duplicates \
     --send-ce-digits \
@@ -74,12 +75,12 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --disable-mc \
     --pipeline tpc-zsEncoder:20,tpc-tracker:8 \
     $GPU_CONFIG \
-    --condition-remap file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS \
+    --condition-remap "file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPMagField" \
     --configKeyValues "$ARGS_ALL_CONFIG;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1" \
     | o2-tpc-laser-track-filter $ARGS_ALL \
-    | o2-tpc-calib-laser-tracks  $ARGS_ALL --use-filtered-tracks --min-tfs ${TPC_LASER_EVENTS}\
+    | o2-tpc-calib-laser-tracks  $ARGS_ALL --use-filtered-tracks --only-publish-on-eos\
     | o2-tpc-calib-pad-raw $ARGS_ALL \
-    --configKeyValues "TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=150;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=502;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null" \
+    --configKeyValues "TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=502;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null" \
     --lanes 36 \
     --calib-type ce \
     --publish-after-tfs 50 \

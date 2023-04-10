@@ -45,7 +45,7 @@ def update_workflow_resource_requirements(workflow, n_workers):
 
 
 def createTask(name='', needs=[], tf=-1, cwd='./', lab=[], cpu=1, relative_cpu=None, mem=500, n_workers=8):
-    """create and attach new task
+    """Creates and new task. A task is a dictionary/class with typically the following attributes
 
     Args:
         name: str
@@ -80,6 +80,18 @@ def createTask(name='', needs=[], tf=-1, cwd='./', lab=[], cpu=1, relative_cpu=N
              'cwd' : cwd }
 
 
+def createGlobalInitTask(envdict):
+    """Returns a special task that is recognized by the executor as
+       a task whose environment section is to be globally applied to all tasks of
+       a workflow.
+
+       envdict: dictionary of environment variables and values to be globally applied to all tasks
+    """
+    t = createTask(name = '__global_init_task__')
+    t['cmd'] = 'NO-COMMAND'
+    t['env'] = envdict
+    return t
+
 def summary_workflow(workflow):
     print("=== WORKFLOW SUMMARY ===\n")
     print(f"-> There are {len(workflow)} tasks")
@@ -95,7 +107,7 @@ def dump_workflow(workflow, filename):
             name of the output file
     """
 
-    # Sanity checks
+    # Sanity checks on list of tasks
     check_workflow(workflow)
     taskwrapper_string = "${O2_ROOT}/share/scripts/jobutils2.sh; taskwrapper"
     # prepare for dumping, deepcopy to detach from this instance
@@ -109,7 +121,6 @@ def dump_workflow(workflow, filename):
         s['cmd'] = trimString(s['cmd'])
     # make the final dict to be dumped
     dump_workflow = {"stages": dump_workflow}
-
     filename = make_workflow_filename(filename)
     
     with open(filename, 'w') as outfile:

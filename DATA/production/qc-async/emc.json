@@ -23,8 +23,9 @@
       }
     },
     "tasks": {
-      "CellTask": {
+      "CellTaskEMCAL": {
         "active": "true",
+        "taskName": "Cells",
         "className": "o2::quality_control_modules::emcal::CellTask",
         "moduleName": "QcEMCAL",
         "detectorName": "EMC",
@@ -33,6 +34,33 @@
         "dataSource": {
           "type": "direct",
           "query": "emcal-cells:EMC/CELLS/0;emcal-triggerecords:EMC/CELLSTRGR/0"
+        }
+      },
+      "ClusterTaskEMCAL": {
+        "active": "true",
+        "taskName": "Clusters",
+        "className": "o2::quality_control_modules::emcal::ClusterTask",
+        "moduleName": "QcEMCAL",
+        "detectorName": "EMC",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "emcal-cells:EMC/CELLS/0;emcal-triggerecords:EMC/CELLSTRGR/0"
+        },
+        "taskParameters": {
+          "useInternalClusterizer": "true",
+          "bindingCellTriggerRecords": "emcal-triggerecords",
+          "calibrateCells": "false",
+          "clusterizerSeedThreshold": "0.5",
+          "clusterizerCellTreshold": "0.1",
+          "clusterizerDoGradientCut": "true",
+          "clusterizerGradientCut": "0.03",
+          "clusterizerMinTime": "-300.",
+          "clusterizerMaxTime": "300.",
+          "clusterizerMaxTimeDelta": "1000.",
+          "hasInvMassMesons": "true",
+          "mesonClustersRejectExotics": 1
         }
       }
     }

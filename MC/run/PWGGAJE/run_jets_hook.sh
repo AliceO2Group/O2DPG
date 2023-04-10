@@ -8,7 +8,7 @@
 # ----------- LOAD UTILITY FUNCTIONS --------------------------
 . ${O2_ROOT}/share/scripts/jobutils.sh
 
-# ----------- START ACTUAL JOB  ----------------------------- 
+# ----------- START ACTUAL JOB  -----------------------------
 
 RNDSEED=${RNDSEED:-0}   # [default = 0] time-based random seed
 
@@ -64,5 +64,3 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen py
                                             -weightPow ${WEIGHTPOW}
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
-
-exit 0

@@ -30,9 +30,10 @@
             }
         },
         "tasks": {
-            "TaskFT0TOF": {
+            "TOFPID": {
                 "active": "true",
                 "className": "o2::quality_control_modules::pid::TaskFT0TOF",
+                "taskName": "PID",
                 "moduleName": "QcTOF",
                 "detectorName": "TOF",
                 "cycleDurationSeconds": "10",
@@ -50,9 +51,17 @@
                     "minNTPCClustersCut": "60",
                     "useFT0": "true",
                     "minDCACut": "100.f",
-                    "minDCACutY": "10.f",
-                    "grpFileName": "o2sim_grp.root",
-                    "geomFileName": "o2sim_geometry-aligned.root"
+                    "minDCACutY": "10.f"
+                },
+	        "grpGeomRequest" : {
+		   "geomRequest": "Aligned",
+                   "askGRPECS": "false",
+                   "askGRPLHCIF": "false",
+                   "askGRPMagField": "true",
+                   "askMatLUT": "false",
+                   "askTime": "false",
+                   "askOnceAllButField": "true",
+                   "needPropagatorD":  "false"
                 },
                 "": "For debugging, path to the file where to save. If empty or missing it won't save."
             }

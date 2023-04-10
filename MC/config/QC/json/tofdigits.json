@@ -14,7 +14,7 @@
 	"provenance" : "qc_mc"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "no-op://"
       },
       "consul": {
         "url": ""
@@ -24,7 +24,7 @@
       }
     },
     "tasks": {
-      "TaskDigits": {
+      "Digits": {
         "active": "true",
         "className": "o2::quality_control_modules::tof::TaskDigits",
         "moduleName": "QcTOF",
@@ -37,13 +37,27 @@
           "name": "tof-digits"
         },
         "taskParameters": {
-          "Diagnostic": "true"
+          "Diagnostic": "true",
+          "PerChannel": "True",
+          "RangeMaxMultiplicity": "15000",
+          "NbinsMultiplicity": "15000",
+          "applyCalib": "True"
+        },
+	  "grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         },
         "location": "remote"
       }
     },
     "checks": {
-      "TOFRawsMulti": {
+      "Multiplicity": {
         "active": "true",
         "className": "o2::quality_control_modules::tof::CheckRawMultiplicity",
         "moduleName": "QcTOF",
@@ -52,14 +66,14 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "TaskDigits",
+            "name": "Digits",
             "MOs": [
               "TOFRawsMulti"
             ]
           }
         ]
       },
-      "TOFRawsTime": {
+      "Time": {
         "active": "true",
         "className": "o2::quality_control_modules::tof::CheckRawTime",
         "moduleName": "QcTOF",
@@ -68,14 +82,14 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "TaskDigits",
+            "name": "Digits",
             "MOs": [
               "TOFRawsTime"
             ]
           }
         ]
       },
-      "TOFRawsToT": {
+      "ToT": {
         "active": "true",
         "className": "o2::quality_control_modules::tof::CheckRawToT",
         "moduleName": "QcTOF",
@@ -84,14 +98,14 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "TaskDigits",
+            "name": "Digits",
             "MOs": [
               "TOFRawsToT"
             ]
           }
         ]
       },
-      "TOFRawHitMap": {
+      "HitMap": {
         "active": "false",
         "className": "o2::quality_control_modules::tof::CheckHitMap",
         "moduleName": "QcTOF",
@@ -100,7 +114,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "TaskDigits",
+            "name": "Digits",
             "MOs": [
               "TOFRawHitMap"
             ]
@@ -118,7 +132,7 @@
       "samplingConditions": [
         {
           "condition": "random",
-          "fraction": "0.1",
+          "fraction": "1.0",
           "seed": "1234"
         }
       ],

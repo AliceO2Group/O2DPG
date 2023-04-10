@@ -16,7 +16,7 @@
         "periodName": "SimChallenge"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "no-op://"
       },
       "consul": {
         "url": ""
@@ -30,7 +30,7 @@
       }
     },
     "tasks": {
-      "DigitTask": {
+      "Digits": {
         "active": "true",
         "className": "o2::quality_control_modules::trd::DigitsTask",
         "moduleName": "QcTRD",
