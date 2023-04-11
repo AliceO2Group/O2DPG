@@ -85,7 +85,7 @@ public:
         const double py{pt * std::sin(phi)};
         const double pz{pt * std::sinh(eta)};
         const double et{std::hypot(std::hypot(pt, pz), mMass)};
-        sign *= mAlternatingPDGsign ? -1 : 1;
+        sign *= 1 - 2 * mAlternatingPDGsign;
         mParticles.push_back(TParticle(sign * mPdg, 1, -1, -1, -1, -1, px, py, pz, et, 0., 0., 0., 0.));
         // make sure status code is encoded properly. Transport flag will be set by default and we have nothing
         // to do since all pushed particles should be tracked.
