@@ -44,17 +44,15 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   Bool_t generateEvent() override
   {
     LOG(info) << "generateEvent" << mEventCounter;
-    if (!mPythia.next()) {
-      return false;
-    }
+    mPythia.event.reset();
 
     mConfigToUse = mOneInjectionPerEvent ? static_cast<int>(gRandom->Uniform(0.f, getNGuns())) : -1;
     LOGF(info, "Using configuration %i out of %lli, %lli transport decayed, %lli generator decayed", mConfigToUse, getNGuns(), mGunConfigs.size(), mGunConfigsGenDecayed.size());
 
     int nConfig = mGunConfigs.size();// We start counting from the configurations of the transport decayed particles
     for (const ConfigContainer& cfg : mGunConfigsGenDecayed) {
-      if (mConfigToUse >= 0 && nConfig != mConfigToUse) {
-        nConfig++;
+      nConfig++;
+      if (mConfigToUse >= 0 && (nConfig - 1) != mConfigToUse) {
         continue;
       }
 
@@ -79,11 +77,13 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
         particle.xProd(0.f);
         particle.yProd(0.f);
         particle.zProd(0.f);
-
-        mPythia.event.append(particle);
+        LOG(info) << "Appending particle " << i << "/" << cfg.nInject - 1 << " pdg = " << particle.id() << " at position " << mPythia.event.append(particle) << "/" << mPythia.event.size();
       }
     }
     mPythia.next();
+    LOG(info) << "Eventlisting";
+    mPythia.event.list(1);
+    mPythia.stat();
     return true;
   }
 
@@ -94,8 +94,8 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
     GeneratorPythia8::importParticles();
     int nConfig = 0;
     for (const ConfigContainer& cfg : mGunConfigs) {
-      if (mConfigToUse >= 0 && nConfig != mConfigToUse) {
-        nConfig++;
+      nConfig++;
+      if (mConfigToUse >= 0 && (nConfig - 1) != mConfigToUse) {
         continue;
       }
       LOGF(info, "Injecting %i particles with PDG %i, pT in [%f, %f]", cfg.nInject, cfg.pdg, cfg.ptMin, cfg.ptMax);
@@ -229,9 +229,9 @@ FairGenerator* generateLongLivedMultiple(std::vector<int> PDGs, std::vector<int>
 /// Create generator via an array of configurations
 FairGenerator* generateLongLivedMultiple(std::vector<GeneratorPythia8LongLivedGunMultiple::ConfigContainer> cfg,
                                          std::vector<GeneratorPythia8LongLivedGunMultiple::ConfigContainer> cfgGenDecayed,
-                                         bool injectOnePerEvent = true)
+                                         bool injectOnePDGPerEvent = true)
 {
-  GeneratorPythia8LongLivedGunMultiple* multiGun = new GeneratorPythia8LongLivedGunMultiple(injectOnePerEvent);
+  GeneratorPythia8LongLivedGunMultiple* multiGun = new GeneratorPythia8LongLivedGunMultiple(injectOnePDGPerEvent);
   for (const auto& c : cfg) {
     LOGF(info, "Adding gun %i", multiGun->getNGuns());
     c.print();
@@ -248,7 +248,8 @@ FairGenerator* generateLongLivedMultiple(std::vector<GeneratorPythia8LongLivedGu
 
 ///___________________________________________________________
 /// Create generator via input file
-FairGenerator* generateLongLivedMultiple(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun", bool injectOnePerEvent = true)
+FairGenerator* generateLongLivedMultiple(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun",
+                                         bool injectOnePDGPerEvent = true)
 {
   configuration = gSystem->ExpandPathName(configuration.c_str());
   LOGF(info, "Using configuration file '%s'", configuration.c_str());
@@ -280,11 +281,12 @@ FairGenerator* generateLongLivedMultiple(std::string configuration = "${O2DPG_RO
     LOGF(fatal, "Can't open '%s' !", configuration.c_str());
     return nullptr;
   }
-  return generateLongLivedMultiple(cfgVec, cfgVecGenDecayed, injectOnePerEvent);
+  return generateLongLivedMultiple(cfgVec, cfgVecGenDecayed, injectOnePDGPerEvent);
 }
 
 ///___________________________________________________________
-void generator_pythia8_longlived_multiple()
-{
-  Printf("Compiled correctly!");
-}
+/// Create generator via input file injecting all particles
+FairGenerator* generateLongLivedMultipleInjectInAllEvents(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun") { return generateLongLivedMultiple(configuration, false); }
+
+///___________________________________________________________
+void generator_pythia8_longlived_multiple() { Printf("Compiled correctly!"); }
