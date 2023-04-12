@@ -64,7 +64,7 @@ if [[ -z "${TFLOOP:-}" ]];         then export TFLOOP=0; fi                    #
 if [[ -z "${NTIMEFRAMES:-}" ]];    then export NTIMEFRAMES=-1; fi              # max number of time frames to process, <=0 : unlimited
 if [[ -z "${CTFDICT_NTF:-}" ]];    then export CTFDICT_NTF=100; fi             # auto-save CTF dictionary after each CTFDICT_NTF TFs (if > 0)
 if [[ -z "${CTF_MAXDETEXT:-}" ]];  then export CTF_MAXDETEXT=0; fi             # extend CTF output dir.name by detectors names if their number does not exceed this
-if [[ -z "${TFDELAY:-}" ]];        then export TFDELAY=100; fi                 # Delay in seconds between publishing time frames
+if [[ -z "${TFDELAY:-}" ]];        then export TFDELAY=0; fi                   # Delay in seconds between publishing time frames
 if [[ -z "${GPUTYPE:-}" ]];        then export GPUTYPE=CPU; fi                 # GPU Tracking backend to use, can be CPU / CUDA / HIP / OCL / OCL2
 if [[ -z "${DDSHMSIZE:-}" ]];      then export DDSHMSIZE=$(( 8 << 10 )); fi    # Size of shared memory for DD Input
 if [[ -z "${DDHDRSIZE:-}" ]];      then export DDHDRSIZE=$(( 1 << 10 )); fi    # Size of shared memory for DD Input
