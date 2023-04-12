@@ -127,6 +127,10 @@ int External()
     {
         std::cout << "# Mother \n";
         std::cout << injectedPDGs[i] << ": " << nSignal[i] << "\n";
+        if (nSignal[i] == 0){
+            std::cerr << "No generated: " << injectedPDGs[i] << "\n";
+            return 1; // At least one of the injected particles should be generated
+        }
         for (int j = 0; j < decayDaughters[i].size(); j++)
         {
             std::cout << "# Daughter " << decayDaughters[i][j] << ": " << nDecays[i][j] << "\n";
@@ -134,17 +138,8 @@ int External()
         if (nSignal[i] != nEvents * numberOfInjectedSignalsPerEvent)
         {
             std::cerr << "Number of generated: " << injectedPDGs[i] << ", lower than expected\n";
-            // return 1;
-        }
-        for (int j = 0; j < decayDaughters[i].size(); j++)
-        {
-            if (nDecays[i][j] != nSignal[i])
-            {
-                std::cerr << "Number of generated: " << decayDaughters[i][j] << ", lower than expected\n";
-                // return 1;
-            }
+            // return 1; // Don't need to return 1, since the number of generated particles is not the same for each event
         }
     }
-
     return 0;
 }
