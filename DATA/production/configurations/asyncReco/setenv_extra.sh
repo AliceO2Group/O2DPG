@@ -23,8 +23,12 @@ fi
 echo "*********************** mode = ${MODE}"
 unset ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow
 if [[ $MODE == "remote" ]]; then
-  export INPUT_FILE_COPY_CMD="\"alien_cp ?src file://?dst\""
-  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --remote-regex \"^alien:///alice/data/.+\""
+  if [[ $ALIEN_JDL_REMOTEREADING != 1 ]]; then
+    export INPUT_FILE_COPY_CMD="\"alien_cp ?src file://?dst\""
+    export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --remote-regex \"^alien:///alice/data/.+\""
+  else
+    export INPUT_FILE_COPY_CMD="no-copy"
+  fi
 fi
 
 # adjusting for trigger LM_L0 correction, which was not there before July 2022
@@ -433,6 +437,9 @@ export QC_CONFIG_PARAM="--local-batch=QC.root --override-values \"qc.config.Acti
 export GEN_TOPO_WORKDIR="./"
 #export QC_JSON_FROM_OUTSIDE="QC-20211214.json"
 
+if [[ -n $ALIEN_JDL_QCJSONFROMOUTSIDE ]]; then
+  QC_JSON_FROM_OUTSIDE=$ALIEN_JDL_QCJSONFROMOUTSIDE
+fi
 if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
     sed -i 's/REPLACE_ME_RUNNUMBER/'"${RUNNUMBER}"'/g' $QC_JSON_FROM_OUTSIDE
     sed -i 's/REPLACE_ME_PASS/'"${PASS}"'/g' $QC_JSON_FROM_OUTSIDE
