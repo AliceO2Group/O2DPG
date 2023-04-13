@@ -198,7 +198,7 @@ def determine_timestamp(sor, eor, splitinfo, cycle, ntf):
     print (f"End-of-run : {eor}")
     time_length_inmus = 1000*(eor - sor) # time length in micro seconds
     timestamp_delta = time_length_inmus / totaljobs
-    HBF_per_timeframe = 256 # 256 orbits per timeframe --> should be taken from GRP or common constant in all O2DPG
+    HBF_per_timeframe = 128 # 128 orbits per timeframe --> should be taken from GRP or common constant in all O2DPG; note that 2023 has 32!!
 
     ntimeframes = time_length_inmus / (HBF_per_timeframe * LHCOrbitMUS)
     norbits = time_length_inmus / LHCOrbitMUS
