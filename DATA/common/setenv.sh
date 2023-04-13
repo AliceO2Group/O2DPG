@@ -200,7 +200,6 @@ fi
 # this option requires well calibrated timing beween different detectors, at the moment suppress it
 #has_detector_reco FT0 && PVERTEX_CONFIG+=" --validate-with-ft0"
 
-
 # Sanity checks on env variables
 if [[ $(( $EXTINPUT + $CTFINPUT + $RAWTFINPUT + $DIGITINPUT )) -ge 2 ]]; then
   echo Only one of EXTINPUT / CTFINPUT / RAWTFINPUT / DIGITINPUT must be set
