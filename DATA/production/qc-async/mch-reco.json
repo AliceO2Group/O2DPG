@@ -24,7 +24,7 @@
         },
         "tasks": {
             "MCHRofs": {
-                "active": "true",
+                "active": "false",
                 "taskName": "ROFs",
                 "className": "o2::quality_control_modules::muonchambers::PhysicsTaskRofs",
                 "moduleName": "QcMuonChambers",
@@ -37,7 +37,7 @@
                 }
             },
             "MCHPreclusters": {
-                "active": "true",
+                "active": "false",
                 "taskName": "Preclusters",
                 "className": "o2::quality_control_modules::muonchambers::PhysicsTaskPreclusters",
                 "moduleName": "QcMuonChambers",
@@ -52,7 +52,7 @@
         },
         "checks": {
             "MCHPreclusters": {
-                "active": "true",
+                "active": "false",
                 "checkName": "Preclusters",
                 "className": "o2::quality_control_modules::muonchambers::PhysicsPreclustersCheck",
                 "moduleName": "QcMuonChambers",

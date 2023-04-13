@@ -24,7 +24,7 @@
         },
         "tasks": {
             "MCHTracks": {
-                "active": "true",
+                "active": "false",
                 "taskName": "Tracks",
                 "className": "o2::quality_control_modules::muon::TracksTask",
                 "moduleName": "QcMUONCommon",

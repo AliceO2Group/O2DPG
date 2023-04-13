@@ -24,7 +24,7 @@
         },
         "tasks": {
             "MCHDigits": {
-                "active": "true",
+                "active": "false",
                 "taskName": "Digits",
                 "className": "o2::quality_control_modules::muonchambers::PhysicsTaskDigits",
                 "moduleName": "QcMuonChambers",
@@ -42,7 +42,7 @@
         },
         "checks": {
             "MCHDigits": {
-                "active": "true",
+                "active": "false",
                 "checkName": "Digits",
                 "className": "o2::quality_control_modules::muonchambers::PhysicsCheck",
                 "moduleName": "QcMuonChambers",
