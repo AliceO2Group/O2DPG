@@ -213,7 +213,6 @@ fi
 
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
 ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
-ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 
 # TFDELAY and throttling
 export TFDELAYSECONDS=40
@@ -541,7 +540,7 @@ fi
 if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   # flag to possibly enable Analysis QC
   [[ -z ${ALIEN_JDL_RUNANALYSISQC+x} ]] && ALIEN_JDL_RUNANALYSISQC=1
-  
+
   # merging last AOD file in case it is too small; threshold put at 80% of the required file size
   AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
   AOD_LIST=`find . -name AO2D.root`
@@ -590,7 +589,7 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       rm -rf tmpAOD
     fi
   fi
-  
+
   # now checking all AO2D files and running the analysis QC
   # retrieving again the list of AOD files, in case it changed after the merging above
   AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
