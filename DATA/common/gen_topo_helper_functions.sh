@@ -76,6 +76,11 @@ workflow_has_parameter()
   [[ $WORKFLOW_PARAMETERS =~ (^|,)"$1"(,|$) ]]
 }
 
+has_processing_step()
+{
+  [[ ${WORKFLOW_EXTRA_PROCESSING_STEPS:-} =~ (^|,)"$1"(,|$) ]]
+}
+
 _check_multiple()
 {
   CHECKER=$1
@@ -158,6 +163,63 @@ add_semicolon_separated()
       eval $1+="\;${!i}"
     fi
   done
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Helper functions for multiplicities
+
+get_N() # USAGE: get_N [processor-name] [DETECTOR_NAME] [RAW|CTF|REST] [threads, to be used for process scaling. 0 = do not scale this one process] [optional name [FOO] of variable "$N_[FOO]" with default, default = 1]
+{
+  local NAME_FACTOR="N_F_$3"
+  local NAME_DET="MULTIPLICITY_FACTOR_DETECTOR_$2"
+  local NAME_PROC="MULTIPLICITY_PROCESS_${1//-/_}"
+  local NAME_PROC_FACTOR="MULTIPLICITY_FACTOR_PROCESS_${1//-/_}"
+  local NAME_DEFAULT="N_${5:-}"
+  local MULT=${!NAME_PROC:-$((${!NAME_FACTOR} * ${!NAME_DET:-1} * ${!NAME_PROC_FACTOR:-1} * ${!NAME_DEFAULT:-1}))}
+  [[ ! -z ${EPN_GLOBAL_SCALING:-} && $1 != "gpu-reconstruction" ]] && MULT=$(($MULT * $EPN_GLOBAL_SCALING))
+  if [[ -z ${NAME_PROC} && "0$GEN_TOPO_AUTOSCALE_PROCESSES" == "01" && ($WORKFLOWMODE != "print" || $GEN_TOPO_RUN_HOME_TEST == 1) && $4 != 0 ]]; then
+    echo $1:\$\(\(\($MULT*\$AUTOSCALE_PROCESS_FACTOR/100\) \< 16 ? \($MULT*\$AUTOSCALE_PROCESS_FACTOR/100\) : 16\)\)
+  else
+    echo $1:$MULT
+  fi
+}
+
+math_max()
+{
+  echo $(($1 > $2 ? $1 : $2))
+}
+math_min()
+{
+  echo $(($1 < $2 ? $1 : $2))
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Helper to check if root ouput is requested for certain process
+
+needs_root_output()
+{
+  local NAME_PROC_ENABLE_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_${1//-/_}"
+  [[ ! -z ${!NAME_PROC_ENABLE_ROOT_OUTPUT+x} ]]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Helper to add binaries to workflow adding automatic and custom arguments
+
+add_W() # Add binarry to workflow command USAGE: add_W [BINARY] [COMMAND_LINE_OPTIONS] [CONFIG_KEY_VALUES] [Add ARGS_ALL_CONFIG, optional, default = 1]
+{
+  local NAME_PROC_ARGS="ARGS_EXTRA_PROCESS_${1//-/_}"
+  local NAME_PROC_CONFIG="CONFIG_EXTRA_PROCESS_${1//-/_}"
+  local KEY_VALUES=
+  [[ "0${4:-}" != "00" ]] && KEY_VALUES+="$ARGS_ALL_CONFIG;"
+  [[ ! -z "${3:-}" ]] && KEY_VALUES+="$3;"
+  [[ ! -z ${!NAME_PROC_CONFIG:-} ]] && KEY_VALUES+="${!NAME_PROC_CONFIG};"
+  [[ ! -z "$KEY_VALUES" ]] && KEY_VALUES="--configKeyValues \"$KEY_VALUES\""
+  local WFADD="$1 $ARGS_ALL ${2:-} ${!NAME_PROC_ARGS:-} $KEY_VALUES | "
+  local NAME_PROC_ENABLE_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_${1//-/_}"
+  if [[ ! -z $DISABLE_ROOT_OUTPUT ]] && needs_root_output $1 ; then
+      WFADD=${WFADD//$DISABLE_ROOT_OUTPUT/}
+  fi
+  WORKFLOW+=$WFADD
 }
 
 fi # functions.sh sourced

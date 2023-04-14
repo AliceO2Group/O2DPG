@@ -14,9 +14,6 @@ END_TF=$3
 [[ -f gen_topo_helper_functions.sh ]] && rm gen_topo_helper_functions.sh
 ln -s $O2DPG_ROOT/DATA/common/gen_topo_helper_functions.sh
 source gen_topo_helper_functions.sh
-[[ -f workflow-setup.sh ]] && rm workflow-setup.sh
-ln -s $O2DPG_ROOT/DATA/production/workflow-setup.sh
-source workflow-setup.sh || { echo "workflow-setup.sh failed" 1>&2 && exit 1; }
 
 # we start with an empty wf
 WORKFLOW=
