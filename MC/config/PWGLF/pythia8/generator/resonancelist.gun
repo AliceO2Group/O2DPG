@@ -1,0 +1,18 @@
+# PDG       N      ptMin   ptMax     DecayByGenerator
+313         10     0.2     10        genDecayed
+-313        10     0.2     10        genDecayed
+323         10     0.2     10        genDecayed
+-323        10     0.2     10        genDecayed
+333         10     0.2     10        genDecayed
+9010221     10     0.2     10        genDecayed
+113         10     0.2     10        genDecayed
+213         10     0.2     10        genDecayed
+-213        10     0.2     10        genDecayed
+3114        10     0.2     10        genDecayed
+-3114       10     0.2     10        genDecayed
+3224        10     0.2     10        genDecayed
+-3224       10     0.2     10        genDecayed
+3124        10     0.2     10        genDecayed
+-3124       10     0.2     10        genDecayed
+3324        10     0.2     10        genDecayed
+-3324       10     0.2     10        genDecayed
