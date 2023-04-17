@@ -60,7 +60,7 @@
   "perf-k0s-resolution": {
     "etaBins": {
       "values": [
-        2,
+        10,
         -1,
         1
       ]
@@ -68,9 +68,9 @@
     "eventSelection": "1",
     "mBins": {
       "values": [
-        200,
-        0.4,
-        0.6
+        300,
+        0.35,
+        0.65
       ]
     },
     "nSigTPC": "10",
@@ -83,9 +83,9 @@
     },
     "phiBins": {
       "values": [
-        4,
+        18,
         0,
-        6.28
+        6.2831853
       ]
     },
     "rapidity": "0.5",
