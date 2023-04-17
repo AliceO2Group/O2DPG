@@ -198,7 +198,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     echo This script must be run via the gen_topo scripts, or a GEN_TOPO_WORKDIR must be provided where merged JSONS are stored 1>&2
     exit 1
   fi
- 
+
 
   # TOF matching
   if has_detector_qc TOF && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"TOF_MATCH"(,|$) ]] && [ ! -z "${QC_JSON_TOF_MATCH:-}" ]; then
@@ -271,7 +271,7 @@ fi
 
 [[ ! -z $QC_CONFIG_OVERRIDE ]] && QC_CONFIG+=" --override-values \"$QC_CONFIG_OVERRIDE\""
 
-if [[ ! -z "$QC_JSON_FROM_OUTSIDE" ]]; then
+if [[ ! -z "${QC_JSON_FROM_OUTSIDE:-}" ]]; then
   if [[ ! -f $QC_JSON_FROM_OUTSIDE ]]; then
     echo QC JSON FILE $QC_JSON_FROM_OUTSIDE missing 1>&2
     exit 1
