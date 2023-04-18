@@ -43,7 +43,8 @@
           "nThreads": "1",
           "nBCbins" : "103",
           "dicttimestamp" : "0",
-          "publishSummary1D": "0"
+          "publishSummary1D": "0",
+	  "publishDetailedSummary": "0"
         },
 	"grpGeomRequest" : {
           "geomRequest": "Aligned",
@@ -83,7 +84,8 @@
           "NtracksMAX"  : "100",
           "doTTree": "0",
           "nBCbins" : "103",
-          "dicttimestamp" : 0
+          "dicttimestamp" : 0,
+	  "doNorm": "1"
         },
         "localMachines": [
           "localhost", "epn"
