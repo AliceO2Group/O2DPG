@@ -24,6 +24,7 @@ if has_detector_calib TRD && has_detectors ITS TPC TRD && has_detector_matching 
 if has_detector_calib EMC && has_detector_reco EMC; then CAN_DO_CALIB_EMC_BADCHANNELCALIB=1; CAN_DO_CALIB_EMC_TIMECALIB=1; else CAN_DO_CALIB_EMC_BADCHANNELCALIB=0; CAN_DO_CALIB_EMC_TIMECALIB=0; fi
 if has_detector_calib PHS && has_detector_reco PHS; then CAN_DO_CALIB_PHS_ENERGYCALIB=0; CAN_DO_CALIB_PHS_BADMAPCALIB=1; CAN_DO_CALIB_PHS_TURNONCALIB=1; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=1; CAN_DO_CALIB_PHS_L1PHASE=1; else CAN_DO_CALIB_PHS_ENERGYCALIB=0; CAN_DO_CALIB_PHS_BADMAPCALIB=0; CAN_DO_CALIB_PHS_TURNONCALIB=0; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=0; CAN_DO_CALIB_PHS_L1PHASE=0; fi
 if has_detector_calib CPV && has_detector_reco CPV; then CAN_DO_CALIB_CPV_GAIN=1; else CAN_DO_CALIB_CPV_GAIN=0; fi
+if has_detector_calib FT0; then CAN_DO_CALIB_FT0_TIMEOFFSET=1; else CAN_DO_CALIB_FT0_TIMEOFFSET=0; fi
 if has_detector_calib ZDC && has_processing_step ZDC_RECO; then CAN_DO_CALIB_ZDC_TDC=1; else CAN_DO_CALIB_ZDC_TDC=0; fi
 # for async recalibration
 if has_detector_calib EMC && has_detector_reco EMC && [[ $SYNCMODE != 1 ]]; then CAN_DO_CALIB_EMC_ASYNC_RECALIB=1; else CAN_DO_CALIB_EMC_ASYNC_RECALIB=0; fi
@@ -116,7 +117,14 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
   if [[ $CAN_DO_CALIB_ZDC_TDC == 1 ]]; then
     if [[ -z ${CALIB_ZDC_TDC+x} ]]; then CALIB_ZDC_TDC=1; fi
   fi
+
+  # calibrations for FT0
+  if [[ $CAN_DO_CALIB_FT0_TIMEOFFSET == 1 ]]; then
+    if [[ -z ${CALIB_FT0_TIMEOFFSET+x} ]]; then CALIB_FT0_TIMEOFFSET=1; fi
+  fi
 fi
+
+( [[ -z ${CALIB_FT0_TIMEOFFSET:-} ]] || [[ $CAN_DO_CALIB_FT0_TIMEOFFSET == 0 ]] ) && CALIB_FT0_TIMEOFFSET=0
 
 ( [[ -z ${CALIB_PRIMVTX_MEANVTX:-} ]] || [[ $CAN_DO_CALIB_PRIMVTX_MEANVTX == 0 ]] ) && CALIB_PRIMVTX_MEANVTX=0
 ( [[ -z ${CALIB_TOF_LHCPHASE:-} ]] || [[ $CAN_DO_CALIB_TOF_LHCPHASE == 0 ]] ) && CALIB_TOF_LHCPHASE=0
@@ -161,6 +169,7 @@ if [[ "0${GEN_TOPO_VERBOSE:-}" == "01" ]]; then
   echo "CALIB_TPC_SAC = $CALIB_TPC_SAC" 1>&2
   echo "CALIB_CPV_GAIN = $CALIB_CPV_GAIN" 1>&2
   echo "CALIB_ZDC_TDC = $CALIB_ZDC_TDC" 1>&2
+  echo "CALIB_FT0_TIMEOFFSET = $CALIB_FT0_TIMEOFFSET" 1>&2
   echo "Calibrations for async:" 1>&2
   echo "CALIB_EMC_ASYNC_RECALIB = $CALIB_EMC_ASYNC_RECALIB" 1>&2
 fi
@@ -247,6 +256,10 @@ if [[ -z ${CALIBDATASPEC_FORWARD_TF:-} ]]; then
   if [[ $CALIB_ZDC_TDC == 1 ]]; then
     add_semicolon_separated CALIBDATASPEC_FORWARD_TF "tdcZDC:ZDC/TDCCALIBDATA/0"
     add_semicolon_separated CALIBDATASPEC_FORWARD_TF "histoZDC:ZDC/TDC_1DH"
+  fi
+  # FT0
+  if [[ $CALIB_FT0_TIMEOFFSET == 1 ]]; then
+    add_semicolon_separated CALIBDATASPEC_FORWARD_TF "timeSpectraFT0:FT0/CALIB_INFO/0"
   fi
 fi
 
