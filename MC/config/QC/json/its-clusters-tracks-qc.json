@@ -42,8 +42,9 @@
           "layer": "1111111",
           "nThreads": "1",
 	  "nBCbins" : "103",
-	  "dicttimestamp" : 0
-	  "publishSummary1D": "0"
+	  "dicttimestamp" : "0",
+	  "publishSummary1D": "0",
+	  "publishDetailedSummary": "1"
         },
 	"grpGeomRequest" : {
           "geomRequest": "Aligned",
@@ -76,7 +77,8 @@
           "NtracksMAX"  : "5000",
           "doTTree": "0",
 	  "nBCbins" : "103",
-	  "dicttimestamp" : "0"
+	  "dicttimestamp" : "0",
+	  "doNorm": "1"
         }
       }
     },
