@@ -152,6 +152,7 @@ ITSMFT_STROBES=""
 [[ ! -z ${ITS_STROBE:-} ]] && ITSMFT_STROBES+="ITSAlpideParam.roFrameLengthInBC=$ITS_STROBE;"
 [[ ! -z ${MFT_STROBE:-} ]] && ITSMFT_STROBES+="MFTAlpideParam.roFrameLengthInBC=$MFT_STROBE;"
 
+if [[ -z "${SKIP_TPC_CLUSTERSTRACKS_OUTPUT:-}" ]];      then export SKIP_TPC_CLUSTERSTRACKS_OUTPUT=1; fi 
 
 # Set active reconstruction steps (defaults added according to SYNCMODE)
 for i in `echo $LIST_OF_GLORECO | sed "s/,/ /g"`; do
