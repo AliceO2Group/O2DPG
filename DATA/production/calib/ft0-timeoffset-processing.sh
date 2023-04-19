@@ -9,7 +9,7 @@ source common/getCommonArgs.sh
 PROXY_INSPEC_EOS="eos:***/INFORMATION"
 PROXY_INSPEC_DD="dd:FLP/DISTSUBTIMEFRAME/0"
 PROXY_INSPEC="digits:FT0/DIGITSBC/0;channels:FT0/DIGITSCH/0;${PROXY_INSPEC_DD};${PROXY_INSPEC_EOS}"
-PROXY_OUTSPEC="calib:FT0/CALIB_INFO/0"
+PROXY_OUTSPEC="calib:FT0/TIME_SPECTRA/0"
 PROXY_NAME="ft0-timeoffset-input-proxy"
 WORKFLOW="o2-dpl-raw-proxy ${ARGS_ALL} --dataspec \"${PROXY_INSPEC}\" --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@${INRAWCHANNAME},transport=shmem,rateLogging=1\" | "
 WORKFLOW+="o2-calibration-ft0-time-spectra-processor ${ARGS_ALL} | "
