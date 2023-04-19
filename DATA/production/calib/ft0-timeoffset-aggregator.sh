@@ -7,7 +7,7 @@ source common/setenv.sh
 source common/getCommonArgs.sh
 
 PROXY_INSPEC_EOS="eos:***/INFORMATION"
-PROXY_INSPEC="calib:FT0/CALIB_INFO/0;${PROXY_INSPEC_EOS}"
+PROXY_INSPEC="calib:FT0/TIME_SPECTRA/0;${PROXY_INSPEC_EOS}"
 CALIB_TIME_OFFSET_CONFIG="FT0CalibParam.mNExtraSlots=0"
 
 WORKFLOW="o2-dpl-raw-proxy ${ARGS_ALL} --proxy-name ft0-timeoffset-input-proxy --dataspec \"${PROXY_INSPEC}\" --network-interface ib0 --channel-config \"name=ft0-timeoffset-input-proxy,method=bind,type=pull,rateLogging=1,transport=zeromq\" | "

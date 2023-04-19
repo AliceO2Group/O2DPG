@@ -259,7 +259,7 @@ if [[ -z ${CALIBDATASPEC_FORWARD_TF:-} ]]; then
   fi
   # FT0
   if [[ $CALIB_FT0_TIMEOFFSET == 1 ]]; then
-    add_semicolon_separated CALIBDATASPEC_FORWARD_TF "timeSpectraFT0:FT0/CALIB_INFO/0"
+    add_semicolon_separated CALIBDATASPEC_FORWARD_TF "timeSpectraFT0:FT0/TIME_SPECTRA/0"
   fi
 fi
 
