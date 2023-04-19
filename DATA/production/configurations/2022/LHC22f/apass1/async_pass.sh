@@ -392,15 +392,12 @@ echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS
 
 [[ -z $NTIMEFRAMES ]] && export NTIMEFRAMES=-1
 
-# let's get the last 5 digits of ALIEN_PROC_ID, to be passed to define NUMAID and shm-segment-id via O2JOBID, which are int and int16 respectively. Then we make them an int16
-ALIEN_PROC_ID_MAX_NDIGITS=5
-ALIEN_PROC_ID_LENTGH=`echo $ALIEN_PROC_ID | wc -l`
-ALIEN_PROC_ID_OFFSET=$((ALIEN_PROC_ID_LENTGH - ALIEN_PROC_ID_MAX_NDIGITS))
-# lets's take the last 5 digits
-ALIEN_PROC_ID_OFFSET_SHORT=${ALIEN_PROC_ID:$((ALIEN_PROC_ID_OFFSET))}
-# let's make them int16
-export O2JOBID=$((ALIEN_PROC_ID_OFFSET & 0x7fff))
-echo "ALIEN_PROC_ID = $ALIEN_PROC_ID, we will set O2JOBID = $O2JOBID"
+# let's set O2JOBID and SHMEMID
+O2JOBIDscript="$O2DPG_ROOT/DATA/production/common/setVarsFromALIEN_PROC_ID.sh"
+if [[ -f "setVarsFromALIEN_PROC_ID.sh" ]]; then
+  O2JOBIDscript="setVarsFromALIEN_PROC_ID.sh"
+fi
+source $O2JOBIDscript
 
 STATSCRIPT="$O2DPG_ROOT/DATA/production/common/getStat.sh"
 if [[ -f "getStat.sh" ]]; then
