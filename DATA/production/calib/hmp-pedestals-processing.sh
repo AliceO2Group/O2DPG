@@ -72,7 +72,7 @@ then
   WORKFLOW+="--use-files "
 fi
 
-WORKFLOW+="--files-basepath 'HMP/Calib/Pedestals' "
+WORKFLOW+="--files-basepath 'HMP' "
 WORKFLOW+="--pedestals-tag ${HMP_PED_TAG} --sigmacut ${HMP_SIGMACUT} | "
 
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
