@@ -159,6 +159,24 @@ else
     echo "************************************************************"
 fi
 
+# TPC vdrift
+PERIODLETTER=${PERIOD: -1}
+VDRIFTPARAMOPTION=
+if [[ $$ALIEN_JDL_LPMANCHORYEAR == "2022" ]] && [[ $PERIODLETTER < m ]]; then
+  echo "In setenv_extra: time used so far = $timeUsed s"
+  timeStart=`date +%s`
+  time root -b -q "$O2DPG_ROOT/DATA/production/common/getTPCvdrift.C+($RUNNUMBER)"
+  timeEnd=`date +%s`
+  timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+  delta=$(( $timeEnd-$timeStart ))
+  echo "Time spent to get VDrift for TPC = $delta s"
+  export VDRIFT=`cat vdrift.txt`
+  VDRIFTPARAMOPTION="TPCGasParam.DriftV=$VDRIFT"
+  echo "Setting TPC vdrift to $VDRIFT"
+else
+  echo "TPC vdrift will be taken from CCDB"
+fi
+
 # IR
 if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]] || [[ -z $RUN_BFIELD ]]; then
   cp $O2DPG_ROOT/DATA/production/common/getIRandDuration.C ./
@@ -280,7 +298,7 @@ if [[ $ALIGNLEVEL != 0 ]]; then
 fi
 
 # ad-hoc options for GPU reco workflow
-export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_global.dEdxDisableResidualGainMap=1;$TRACKTUNETPCINNER;"
+export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_global.dEdxDisableResidualGainMap=1;$TRACKTUNETPCINNER;$VDRIFTPARAMOPTION;"
 if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
   export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_global.dEdxDisableResidualGain=1"
 fi
@@ -315,10 +333,10 @@ fi
 # secondary vertexing
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
 
-export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow+=";$PVERTEXER;"
+export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow+=";$PVERTEXER;$VDRIFTPARAMOPTION;"
 export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=";$SVTX"
 
-export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";$ITSEXTRAERR;$ITSTPCMATCH;$TRACKTUNETPCINNER;"
+export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";$ITSEXTRAERR;$ITSTPCMATCH;$TRACKTUNETPCINNER;$VDRIFTPARAMOPTION;"
 [[ ! -z "${TPCITSTIMEBIAS}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";tpcitsMatch.globalTimeBiasMUS=$TPCITSTIMEBIAS;"
 [[ ! -z "${TPCITSTIMEERR}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;"
 
@@ -327,10 +345,10 @@ has_detector FT0 && export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="$ARGS_EX
 
 # ad-hoc settings for TOF matching
 export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="$ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow --output-type matching-info,calib-info --enable-dia"
-export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$ITSEXTRAERR;$TRACKTUNETPCINNER;"
+export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$ITSEXTRAERR;$TRACKTUNETPCINNER;$VDRIFTPARAMOPTION;"
 
 # ad-hoc settings for TRD matching
-export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$TRACKTUNETPCINNER;"
+export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$TRACKTUNETPCINNER;$VDRIFTPARAMOPTION;"
 
 # ad-hoc settings for FT0
 export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow="$ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow --ft0-reconstructor"
