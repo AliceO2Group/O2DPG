@@ -25,7 +25,6 @@ from os.path import join, dirname, isdir
 import random
 import json
 import itertools
-import time
 import requests, re
 pandas_available = True
 try:
@@ -674,7 +673,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if not "all" in activeDetectors:
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
    if args.pregenCollContext == True:
-      SGNtask['cmd'] += ' --fromCollContext collisioncontext.root' 
+      SGNtask['cmd'] += ' --fromCollContext collisioncontext.root'
    workflow['stages'].append(SGNtask)
 
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
@@ -1365,6 +1364,6 @@ if includeAnalysis:
 # adjust for alternate (RECO) software environments
 adjust_RECO_environment(workflow, args.alternative_reco_software)
 
-dump_workflow(workflow['stages'], args.o)
+dump_workflow(workflow['stages'], args.o, meta=vars(args))
 
 exit (0)
