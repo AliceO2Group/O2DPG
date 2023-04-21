@@ -97,7 +97,7 @@ def summary_workflow(workflow):
     print(f"-> There are {len(workflow)} tasks")
 
 
-def dump_workflow(workflow, filename):
+def dump_workflow(workflow, filename, meta=None):
     """write this workflow to a file
 
     Args:
@@ -111,20 +111,22 @@ def dump_workflow(workflow, filename):
     check_workflow(workflow)
     taskwrapper_string = "${O2_ROOT}/share/scripts/jobutils2.sh; taskwrapper"
     # prepare for dumping, deepcopy to detach from this instance
-    dump_workflow = deepcopy(workflow)
+    to_dump = deepcopy(workflow)
 
-    for s in dump_workflow:
+    for s in to_dump:
         if s["cmd"] and taskwrapper_string not in s["cmd"]:
             # insert taskwrapper stuff if not there already, only do it if cmd string is not empty
             s['cmd'] = '. ' + taskwrapper_string + ' ' + s['name']+'.log \'' + s['cmd'] + '\''
         # remove unnecessary whitespaces for better readibility
         s['cmd'] = trimString(s['cmd'])
     # make the final dict to be dumped
-    dump_workflow = {"stages": dump_workflow}
+    to_dump = {"stages": to_dump}
     filename = make_workflow_filename(filename)
+    if meta:
+        to_dump["meta"] = meta
     
     with open(filename, 'w') as outfile:
-        json.dump(dump_workflow, outfile, indent=2)
+        json.dump(to_dump, outfile, indent=2)
 
     print(f"Workflow saved at {filename}")
 
@@ -133,8 +135,10 @@ def read_workflow(filename):
     workflow = None
     filename = make_workflow_filename(filename)
     with open(filename, "r") as wf_file:
-        workflow = json.load(wf_file)["stages"]
-    return workflow
+        loaded = json.load(wf_file)
+        workflow =loaded["stages"]
+        meta = loaded.get("meta", None)
+    return workflow, meta
 
 
 def check_workflow_dependencies(workflow, collect_warnings, collect_errors):

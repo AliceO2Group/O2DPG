@@ -28,6 +28,9 @@ import argparse
 import psutil
 max_system_mem=psutil.virtual_memory().total
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '.', 'o2dpg_workflow_utils'))
+from o2dpg_workflow_utils import read_workflow
+
 # defining command line options
 parser = argparse.ArgumentParser(description='Parallel execution of a (O2-DPG) DAG data/job pipeline under resource contraints.', 
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -78,7 +81,14 @@ actionlogger = setup_logger('pipeline_action_logger', ('pipeline_action_' + str(
 metriclogger = setup_logger('pipeline_metric_logger', ('pipeline_metric_' + str(os.getpid()) + '.log', args.action_logfile)[args.action_logfile!=None])
 
 # Immediately log imposed memory and CPU limit as well as further useful meta info
-metriclogger.info({"cpu_limit": args.cpu_limit, "mem_limit": args.mem_limit, "workflow_file": os.path.abspath(args.workflowfile), "target_task": args.target_tasks, "rerun_from": args.rerun_from, "target_labels": args.target_labels})
+_ , meta = read_workflow(args.workflowfile)
+meta["cpu_limit"] = args.cpu_limit
+meta["mem_limit"] = args.mem_limit
+meta["workflow_file"] = os.path.abspath(args.workflowfile)
+meta["target_task"] = args.target_tasks
+meta["rerun_from"] = args.rerun_from
+meta["target_labels"] = args.target_labels
+metriclogger.info(meta)
 
 # for debugging without terminal access
 # TODO: integrate into standard logger
@@ -425,24 +435,25 @@ def update_resource_estimates(workflow, resource_json):
 
         new_resources = resource_dict[name]
 
-        oldmem = task["resources"]["mem"]
-        newmem = new_resources.get("mem", task["resources"]["mem"])
-        actionlogger.info("Updating mem estimate for " + task["name"] + " from " + str(oldmem) + " to " + str(newmem))
-        task["resources"]["mem"] = newmem
-        # should we really be correcting for relative_cpu, when we have an outer estimate ??
-        oldcpu = task["resources"]["cpu"]
-        newcpu = new_resources.get("cpu", task["resources"]["cpu"])
-        actionlogger.info("Updating cpu estimate for " + task["name"] + " from " + str(oldcpu) + " to " + str(newcpu))
-        task["resources"]["cpu"] = newcpu
+        # memory
+        newmem = new_resources.get("mem", None)
+        if newmem is not None:
+            oldmem = task["resources"]["mem"]
+            actionlogger.info("Updating mem estimate for " + task["name"] + " from " + str(oldmem) + " to " + str(newmem))
+            task["resources"]["mem"] = newmem
+        newcpu = new_resources.get("cpu", None)
 
-        # CPU is a bit more invlolved
-        # if "cpu" in new_resources:
-        #    cpu = new_resources["cpu"]
-        #    rel_cpu = task["resources"]["relative_cpu"]
-        #    if rel_cpu is not None:
-        #        # respect the relative CPU settings
-        #        cpu *= rel_cpu
-        #    task["resources"]["cpu"] = cpu
+        # cpu
+        if newcpu is not None:
+            oldcpu = task["resources"]["cpu"]
+            rel_cpu = task["resources"]["relative_cpu"]
+            if rel_cpu is not None:
+               # respect the relative CPU settings
+               # By default, the CPU value in the workflow is already scaled if relative_cpu is given.
+               # The new estimate on the other hand is not yet scaled so it needs to be done here.
+               newcpu *= rel_cpu
+            actionlogger.info("Updating cpu estimate for " + task["name"] + " from " + str(oldcpu) + " to " + str(newcpu))
+            task["resources"]["cpu"] = newcpu
 
 # a function to read a software environment determined by alienv into
 # a python dictionary
@@ -1335,6 +1346,7 @@ Use the `--produce-script myscript.sh` option for this.
            statusmsg = "with failures"
 
         print ('\n**** Pipeline done ' + statusmsg + ' (global_runtime : {:.3f}s) *****\n'.format(endtime-starttime))
+        actionlogger.debug("global_runtime : {:.3f}s".format(endtime-starttime))
         return errorencountered
 
 
