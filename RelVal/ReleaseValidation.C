@@ -4,12 +4,6 @@
 #include <vector>
 #include <filesystem>
 
-TFile* fileSummaryOutput = nullptr;
-TFile* fileTestSummary = nullptr;
-
-TString prefix = "";
-int correlationCase = 0; // at the moment I assume no error correlation ..
-
 struct TestResult {
   double value = 0.0;
   bool comparable = true;
@@ -42,8 +36,8 @@ int maxUserTests()
 // define a global epsilon
 double EPSILON = 0.00001;
 
-void CompareHistos(TH1* hA, TH1* hB, int whichTests, bool firstComparison, bool finalComparison, std::unordered_map<std::string, std::vector<TestResult>>& allTests);
-void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color);
+void CompareHistos(TH1* hA, TH1* hB, int whichTests, std::unordered_map<std::string, std::vector<TestResult>>& allTests, std::string const& labelA, std::string const& labelB);
+void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legendMetrics, int color, std::string const& labelA, std::string const& labelB);
 bool PotentiallySameHistograms(TH1*, TH1*);
 TestResult CompareChiSquare(TH1* hA, TH1* hB, bool areComparable);
 TestResult CompareKolmogorov(TH1* hA, TH1* hB, bool areComparable);
@@ -84,7 +78,7 @@ int isEmptyHisto(TH1* h)
 }
 
 // overlay 2 1D histograms
-void overlay1D(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color, std::string const& outputDir)
+void overlay1D(TH1* hA, TH1* hB, std::string const& labelA, std::string const& labelB, TLegend& legend, int color, std::string const& outputDir)
 {
   TCanvas c("overlay", "", 800, 800);
   c.cd();
@@ -100,14 +94,14 @@ void overlay1D(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color,
   TRatioPlot rp(hA, hB);
   rp.Draw("same");
   rp.GetUpperPad()->cd();
-  TLatex toutc(0.2, 0.85, compLabel.Data());
-  toutc.SetNDC();
-  toutc.SetTextColor(color);
-  toutc.SetTextFont(62);
-  toutc.Draw();
   legend.Draw();
   rp.GetLowerRefGraph()->SetMinimum(0.);
   rp.GetLowerRefGraph()->SetMaximum(10.);
+  TLegend legendOverlay(0.2, 0.6, 0.5, 0.8);
+  legendOverlay.SetFillStyle(0);
+  legendOverlay.AddEntry(hA, labelA.c_str());
+  legendOverlay.AddEntry(hB, labelB.c_str());
+  legendOverlay.Draw("same");
 
   auto graph = rp.GetLowerRefGraph();
   auto xLow = hA->GetBinCenter(std::min(hA->FindFirstBinAbove(), hB->FindFirstBinAbove()));
@@ -127,8 +121,12 @@ void overlay1D(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color,
 }
 
 // overlay 2 1D histograms
-void overlay2D(TH2* hA, TH2* hB, TLegend& legend, TString& compLabel, int color, std::string const& outputDir)
+void overlay2D(TH2* hA, TH2* hB, std::string const& labelA, std::string const& labelB, TLegend& legend, int color, std::string const& outputDir)
 {
+  auto newTitleA = std::string(hA->GetTitle()) + "(" + labelA + ")";
+  auto newTitleB = std::string(hB->GetTitle()) + "(" + labelB + ")";
+  hA->SetTitle(newTitleA.c_str());
+  hB->SetTitle(newTitleB.c_str());
   TCanvas c("overlay", "", 2400, 800);
   c.Divide(3, 1);
   c.cd(1);
@@ -141,11 +139,6 @@ void overlay2D(TH2* hA, TH2* hB, TLegend& legend, TString& compLabel, int color,
   hDiv->Divide(hB);
   c.cd(3);
   hDiv->Draw("colz");
-  TLatex toutc(0.2, 0.85, compLabel.Data());
-  toutc.SetNDC();
-  toutc.SetTextColor(color);
-  toutc.SetTextFont(62);
-  toutc.Draw();
   legend.Draw();
 
   auto savePath = outputDir + "/" + hA->GetName() + ".png";
@@ -154,7 +147,7 @@ void overlay2D(TH2* hA, TH2* hB, TLegend& legend, TString& compLabel, int color,
 }
 
 // entry point for overlay plots
-void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, int color)
+void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legendMetrics, int color, std::string const& labelA, std::string const& labelB)
 {
   std::string outputDir("overlayPlots");
   if (!std::filesystem::exists(outputDir)) {
@@ -173,11 +166,11 @@ void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, 
   if (hA2D && hB2D) {
     // could be casted to 2D, so plot that
     // overlay2D(hA2D, hB2D, outputDir);
-    overlay2D(hA2D, hB2D, legend, compLabel, color, outputDir);
+    overlay2D(hA2D, hB2D, labelA, labelB, legendMetrics, color, outputDir);
     return;
   }
 
-  overlay1D(hA, hB, legend, compLabel, color, outputDir);
+  overlay1D(hA, hB, labelA, labelB, legendMetrics, color, outputDir);
 }
 
 // what to give as input:
@@ -188,7 +181,7 @@ void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legend, TString& compLabel, 
 // 6) select if files have to be taken from the grid or not
 // 7) choose if specific critic plots have to be saved in a second .pdf file
 
-void ReleaseValidation(std::string const& filename1, std::string const& filename2, int whichTests)
+void ReleaseValidation(std::string const& filename1, std::string const& filename2, int whichTests, std::string const& labelA="batch_i", std::string const& labelB="batch_j")
 {
   gROOT->SetBatch();
 
@@ -207,11 +200,6 @@ void ReleaseValidation(std::string const& filename1, std::string const& filename
   // collect test results to store them as JSON later
   std::unordered_map<std::string, std::vector<TestResult>> allTestsMap;
 
-  // open the two files (just created), look at the histograms and make statistical tests
-  bool isLastComparison = false; // It is true only when the last histogram of the file is considered,
-  // in order to properly close the pdf
-  bool isFirstComparison = true; // to properly open the pdf file
-
   TIter next(extractedFile1.GetListOfKeys());
   TKey* key{};
   int nSimilarHistos{};
@@ -224,9 +212,6 @@ void ReleaseValidation(std::string const& filename1, std::string const& filename
     auto hA = static_cast<TH1*>(key->ReadObj());
     auto oname = key->GetName();
     auto hB = static_cast<TH1*>(extractedFile2.Get(oname));
-
-    if (nComparisons + nNotFound == nkeys - 1)
-      isLastComparison = true;
 
     if (!hB) {
       // That could still happen in case we compare either comletely different file by accident or something has been changed/added/removed
@@ -242,11 +227,9 @@ void ReleaseValidation(std::string const& filename1, std::string const& filename
 
     std::cout << "Comparing " << hA->GetName() << " and " << hB->GetName() << "\n";
 
-    CompareHistos(hA, hB, whichTests, isFirstComparison, isLastComparison, allTestsMap);
+    CompareHistos(hA, hB, whichTests, allTestsMap, labelA, labelB);
 
     nComparisons++;
-    if (nComparisons == 1)
-      isFirstComparison = false;
   }
   std::cout << "\n##### Summary #####\nNumber of histograms compared: " << nComparisons
             << "\nNumber of potentially same histograms: " << nSimilarHistos << "\n";
@@ -375,13 +358,12 @@ void RegisterTestResult(std::unordered_map<std::string, std::vector<TestResult>>
   allTests[histogramName].push_back(testResult);
 }
 
-void CompareHistos(TH1* hA, TH1* hB, int whichTests, bool firstComparison, bool finalComparison, std::unordered_map<std::string, std::vector<TestResult>>& allTests)
+void CompareHistos(TH1* hA, TH1* hB, int whichTests, std::unordered_map<std::string, std::vector<TestResult>>& allTests, std::string const& labelA, std::string const& labelB)
 {
 
   double integralA = hA->Integral();
   double integralB = hB->Integral();
 
-  TString outc = "";
   int colt = 1;
 
   // Bit Mask
@@ -390,8 +372,9 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, bool firstComparison, bool 
 
   auto areComparable = CheckComparable(hA, hB);
 
-  TLegend legendOverlayPlot(0.6, 0.6, 0.9, 0.8);
-  legendOverlayPlot.SetBorderSize(1);
+  TLegend legendMetricsOverlayPlot(0.6, 0.6, 0.9, 0.8);
+  legendMetricsOverlayPlot.SetBorderSize(1);
+  legendMetricsOverlayPlot.SetFillStyle(0);
 
   // test if each of the 3 bits is turned on in subset ‘i = whichTests’?
   // if yes, process the bit
@@ -400,7 +383,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, bool firstComparison, bool 
     auto testResult = CompareChiSquare(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
     if (testResult.comparable) {
-      legendOverlayPlot.AddEntry((TObject*)nullptr, Form("#chi^{2} / N_{bins} = %f", testResult.value), "");
+      legendMetricsOverlayPlot.AddEntry((TObject*)nullptr, Form("#chi^{2} / N_{bins} = %f", testResult.value), "");
     }
   }
 
@@ -408,7 +391,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, bool firstComparison, bool 
     auto testResult = CompareKolmogorov(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
     if (testResult.comparable) {
-      legendOverlayPlot.AddEntry((TObject*)nullptr, Form("Kolmogorov prob. = %f", testResult.value), "");
+      legendMetricsOverlayPlot.AddEntry((TObject*)nullptr, Form("Kolmogorov prob. = %f", testResult.value), "");
     }
   }
 
@@ -416,7 +399,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, bool firstComparison, bool 
     auto testResult = CompareNentr(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
     if (testResult.comparable) {
-      legendOverlayPlot.AddEntry((TObject*)nullptr, Form("entriesdiff = %f", testResult.value), "");
+      legendMetricsOverlayPlot.AddEntry((TObject*)nullptr, Form("entriesdiff = %f", testResult.value), "");
     }
   }
 
@@ -424,7 +407,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, bool firstComparison, bool 
     std::cerr << "WARNING: Cannot draw histograms due to the fact that all entries are in under- or overflow bins\n";
     return;
   }
-  PlotOverlayAndRatio(hA, hB, legendOverlayPlot, outc, colt);
+  PlotOverlayAndRatio(hA, hB, legendMetricsOverlayPlot, colt, labelA, labelB);
 }
 
 // chi2
@@ -481,7 +464,7 @@ TestResult CompareNentr(TH1* hA, TH1* hB, bool areComparable)
   double entriesdiff = TMath::Abs(integralA - integralB) / error;
   */
   res.value = entriesdiff;
-  
+
   return res;
 }
 

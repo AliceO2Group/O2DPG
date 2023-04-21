@@ -416,7 +416,7 @@ def plot_compare_summaries(summaries, fields, out_dir, *, labels=None, include_p
         ax.set_xticks(range(len(histogram_names_intersection)))
         ax.set_xticklabels(histogram_names_intersection, rotation=90)
         ax.tick_params("both", labelsize=20)
-        save_path = join(out_dir, f"plot_{test_name}_{'_'.join(labels)}.png")
+        save_path = join(out_dir, f"values_thresholds_{test_name}.png")
         figure.tight_layout()
         figure.savefig(save_path)
         plt.close(figure)
@@ -659,7 +659,7 @@ def rel_val_files(files1, files2, args, output_dir):
         cmd = f"root -l -b -q {ROOT_MACRO_EXTRACT}{cmd}"
         run_macro(cmd, log_file_extract)
 
-    cmd = f"\\(\\\"{file_1}\\\",\\\"{file_2}\\\",{args.test}\\)"
+    cmd = f"\\(\\\"{file_1}\\\",\\\"{file_2}\\\",{args.test},\\\"{args.labels[0]}\\\",\\\"{args.labels[1]}\\\"\\)"
     cmd = f"root -l -b -q {ROOT_MACRO_RELVAL}{cmd}"
     print("Running RelVal on extracted objects")
     run_macro(cmd, log_file_rel_val)
@@ -737,7 +737,6 @@ def make_global_summary(in_dir):
         type_specific = relpath(rel_val_path, in_dir)
         rel_path_plot = join(type_specific, "overlayPlots")
         type_global = type_specific.split("/")[0]
-        make_summary = {}
         for histo_name, tests in current_summary.items():
             summary[histo_name] = tests
             # loop over tests done
@@ -807,7 +806,7 @@ def rel_val(args):
         makedirs(args.output)
     if isdir(args.input1[0]) and isdir(args.input2[0]):
         if len(args.input1) > 1 or len(args.input2) > 1:
-            print("ERROR: When you want to validate the contents of directories, you can only compare excatly one directory to exactly on other directory.")
+            print("ERROR: When you want to validate the contents of directories, you can only compare exactly one directory to exactly on other directory.")
             return 1
         if not args.dir_config:
             print("ERROR: RelVal to be run on 2 directories. Please provide a configuration what to validate.")
@@ -1056,16 +1055,17 @@ def main():
     common_file_parser = argparse.ArgumentParser(add_help=False)
     common_file_parser.add_argument("-i", "--input1", nargs="*", help="EITHER first set of input files for comparison OR first input directory from simulation for comparison", required=True)
     common_file_parser.add_argument("-j", "--input2", nargs="*", help="EITHER second set of input files for comparison OR second input directory from simulation for comparison", required=True)
+    common_file_parser.add_argument("--labels", nargs=2, help="labels you want to appear in the plot legends in case of overlay plots from batches -i and -j", default=("batch_i", "batch_j"))
 
     common_threshold_parser = argparse.ArgumentParser(add_help=False)
     common_threshold_parser.add_argument("--use-values-as-thresholds", nargs="*", dest="use_values_as_thresholds", help="Use values from another run as thresholds for this one")
     common_threshold_parser.add_argument("--combine-thresholds", dest="combine_thresholds",  choices=["mean", "max/min"], help="Arithmetic mean or maximum/minimum is chosen as threshold value", default="mean")
     for test, thresh in zip(REL_VAL_TEST_NAMES, REL_VAL_TEST_DEFAULT_THRESHOLDS):
-        test_dahsed = test.replace("_", "-")
-        common_threshold_parser.add_argument(f"--with-test-{test_dahsed}", dest=f"with_{test}", action="store_true", help=f"run {test} test")
-        common_threshold_parser.add_argument(f"--test-{test_dahsed}-threshold", dest=f"{test}_threshold", type=float, help=f"{test} threshold", default=thresh)
+        test_dashed = test.replace("_", "-")
+        common_threshold_parser.add_argument(f"--with-test-{test_dashed}", dest=f"with_{test}", action="store_true", help=f"run {test} test")
+        common_threshold_parser.add_argument(f"--test-{test_dashed}-threshold", dest=f"{test}_threshold", type=float, help=f"{test} threshold", default=thresh)
         # The following only take effect for thresholds given via an input file
-        common_threshold_parser.add_argument(f"--test-{test_dahsed}-threshold-margin", dest=f"{test}_threshold_margin", type=float, help=f"Margin to apply to the {test} threshold extracted from file", default=1.0)
+        common_threshold_parser.add_argument(f"--test-{test_dashed}-threshold-margin", dest=f"{test}_threshold_margin", type=float, help=f"Margin to apply to the {test} threshold extracted from file", default=1.0)
 
     common_pattern_parser = argparse.ArgumentParser(add_help=False)
     common_pattern_parser.add_argument("--include-patterns", dest="include_patterns", nargs="*", help="include objects whose name includes at least one of the given patterns (takes precedence)")
@@ -1093,7 +1093,6 @@ def main():
     inspect_parser.set_defaults(func=inspect)
 
     compare_parser = sub_parsers.add_parser("compare", parents=[common_file_parser, common_pattern_parser])
-    compare_parser.add_argument("--labels", nargs=2, help="labels you want to appear in the plot legend (if --plot is given) of the value-threshold comparison plot", default=("rel_val_1", "rel_val_2"))
     compare_parser.add_argument("--output", "-o", help="output directory", default="rel_val_comparison")
     compare_parser.add_argument("--difference", action="store_true", help="plot histograms with different severity")
     compare_parser.add_argument("--compare-values", action="store_true", help="plot value and threshold comparisons of RelVals")
