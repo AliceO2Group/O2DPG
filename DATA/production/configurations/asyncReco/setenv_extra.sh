@@ -5,8 +5,10 @@
 
 export SETENV_NO_ULIMIT=1
 
-# to avoid memory issues
-export DPL_DEFAULT_PIPELINE_LENGTH=16
+# to avoid memory issues - we don't do this on the EPNs, since it can affect the performance
+if [[ $ALIEN_JDL_USEGPUS != 1 ]]; then
+  export DPL_DEFAULT_PIPELINE_LENGTH=16
+fi
 
 # detector list
 if [[ -n $ALIEN_JDL_WORKFLOWDETECTORS ]]; then
