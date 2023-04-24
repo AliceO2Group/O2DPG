@@ -33,7 +33,7 @@ if [[ -f "setVarsFromALIEN_PROC_ID.sh" ]]; then
 fi
 source $O2JOBIDscript
 
-[[ ! -z ${TIMEFRAME_RATE_LIMIT:-} ]] && [[ ${TIMEFRAME_RATE_LIMIT:-} != 0 ]] && ARGS_ALL+=" --timeframes-rate-limit $TIMEFRAME_RATE_LIMIT --timeframes-rate-limit-ipcid $(($NUMAID + ${O2JOBID:-0}))"
+[[ ! -z ${TIMEFRAME_RATE_LIMIT:-} ]] && [[ ${TIMEFRAME_RATE_LIMIT:-} != 0 ]] && ARGS_ALL+=" --timeframes-rate-limit $TIMEFRAME_RATE_LIMIT --timeframes-rate-limit-ipcid ${O2JOBID:-$NUMAID}"
 [[ ! -z ${TIMEFRAME_SHM_LIMIT:-} ]] && ARGS_ALL+=" --timeframes-shm-limit $TIMEFRAME_SHM_LIMIT"
 
 { source $O2DPG_ROOT/DATA/production/workflow-multiplicities.sh; [[ $? != 0 ]] && echo "workflow-multiplicities.sh failed" 1>&2 && exit 1; }
