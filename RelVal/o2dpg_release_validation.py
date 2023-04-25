@@ -539,6 +539,21 @@ def calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args):
     return the_thresholds
 
 
+def write_single_summary(comp_objects, meta_info, path):
+    with open(path, "w") as f:
+        json.dump({"objects": comp_objects, "meta_info": meta_info}, f, indent=2)
+
+
+def read_single_summary(path):
+    with open(path, "r") as f:
+        d = json.load(f)
+        return d.get("objects", {}), d.get("meta_info", {})
+
+
+def make_single_meta_info(args):
+    return {"batch_i": [abspath(path) for path in args.input1], "batch_j": [abspath(path) for path in args.input2]}
+
+
 def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, exclude_patterns=None, flags=None, flags_summary=None):
     """
     Make the usual summary
@@ -557,7 +572,6 @@ def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, e
                 result = "WARNING"
         return result
 
-    user_thresholds = {}
     this_summary = {}
 
     default_thresholds = {t: getattr(args, f"{t}_threshold") for t in REL_VAL_TEST_NAMES}
@@ -663,19 +677,27 @@ def rel_val_files(files1, files2, args, output_dir):
     cmd = f"root -l -b -q {ROOT_MACRO_RELVAL}{cmd}"
     print("Running RelVal on extracted objects")
     run_macro(cmd, log_file_rel_val)
+    # This comes from the ROOT macro
     json_path = join(output_dir, "RelVal.json")
 
-    if exists(json_path):
-        # go through all we found
-        rel_val_summary = None
-        with open(json_path, "r") as f:
-            rel_val_summary = json.load(f)
-        final_summary = make_single_summary(rel_val_summary, args, output_dir)
-        with open(join(output_dir, "Summary.json"), "w") as f:
-            json.dump(final_summary, f, indent=2)
-        plot_pie_charts(final_summary, output_dir, "")
-        plot_values_thresholds(final_summary, output_dir, "")
-        plot_summary_grid(final_summary, None, None, None, join(output_dir, "SummaryTests.png"))
+    if not exists(json_path):
+        # something went wrong
+        print(f"ERROR: Something went wrong, cannot find {json_path} which was supposed to be created by ROOT, log file is")
+        with open(log_file_rel_val, "r") as f:
+            print(f.read())
+        return 1
+
+    # go through all we found
+    rel_val_summary = None
+    with open(json_path, "r") as f:
+        rel_val_summary = json.load(f)
+    final_summary = make_single_summary(rel_val_summary, args, output_dir)
+    meta_info = make_single_meta_info(args)
+    write_single_summary(final_summary, meta_info, join(output_dir, "Summary.json"))
+
+    plot_pie_charts(final_summary, output_dir, "")
+    plot_values_thresholds(final_summary, output_dir, "")
+    plot_summary_grid(final_summary, None, None, None, join(output_dir, "SummaryTests.png"))
 
     return 0
 
@@ -727,11 +749,15 @@ def make_global_summary(in_dir):
     file_paths = glob(f"{in_dir}/**/Summary.json", recursive=True)
     summary = {}
 
+    batch_i = []
+    batch_j = []
+
     for path in file_paths:
         # go through all we found
-        current_summary = None
-        with open(path, "r") as f:
-            current_summary = json.load(f)
+        current_summary, meta_info = read_single_summary(path)
+        batch_i.extend(meta_info.get("batch_i", []))
+        batch_j.extend(meta_info.get("batch_j", []))
+
         # remove the file name, used as the top key for this collection
         rel_val_path = "/".join(path.split("/")[:-1])
         type_specific = relpath(rel_val_path, in_dir)
@@ -745,7 +771,8 @@ def make_global_summary(in_dir):
                 test["type_global"] = type_global
                 test["type_specific"] = type_specific
                 test["rel_path_plot"] = join(rel_path_plot, f"{histo_name}.png")
-    return summary
+
+    return summary, {"batch_i": batch_i, "batch_j": batch_j}
 
 
 def rel_val_sim_dirs(args):
@@ -825,11 +852,11 @@ def rel_val(args):
     if not exists(args.output):
         makedirs(args.output)
     func(args)
-    global_summary = make_global_summary(args.output)
-    with open(join(args.output, "SummaryGlobal.json"), "w") as f:
-        json.dump(global_summary, f, indent=2)
+    global_summary, meta_info = make_global_summary(args.output)
+    write_single_summary(global_summary, meta_info, join(args.output, "SummaryGlobal.json"))
     print_summary(global_summary)
     return 0
+
 
 def get_filepath(d):
     summary_global = join(d, "SummaryGlobal.json")
@@ -840,6 +867,7 @@ def get_filepath(d):
         return summary
     print(f"Can neither find {summary_global} nor {summary}. Nothing to work with.")
     return None
+
 
 def copy_overlays(path, output_dir,summary):
     """
@@ -856,6 +884,7 @@ def copy_overlays(path, output_dir,summary):
         else:
             print(f"File {filename} not found.")
     return 0
+
 
 def inspect(args):
     """
@@ -875,12 +904,9 @@ def inspect(args):
     include_patterns, exclude_patterns = load_patterns(args.include_patterns, args.exclude_patterns)
     flags = args.flags
     flags_summary = args.flags_summary
-    current_summary = None
-    with open(path, "r") as f:
-        current_summary = json.load(f)
+    current_summary, meta_info = read_single_summary(path)
     summary = make_single_summary(current_summary, args, output_dir, include_patterns, exclude_patterns, flags, flags_summary)
-    with open(join(output_dir, "Summary.json"), "w") as f:
-        json.dump(summary, f, indent=2)
+    write_single_summary(summary, meta_info, join(output_dir, "Summary.json"))
     print_summary(summary, include_patterns)
 
     if args.plot:
@@ -976,17 +1002,9 @@ def influx(args):
     # always the same
     row_tags = table_name + tags_out
 
-    def replace_None(value):
-        # helper to replace None by string null
-        if value is None:
-            return "null"
-        return value
-
     out_file = join(output_dir, "influxDB.dat")
 
-    summary = None
-    with open(json_in, "r") as f:
-        summary = json.load(f)
+    summary, _ = read_single_summary(json_in)
     with open(out_file, "w") as f:
         for i, (histo_name, tests) in enumerate(summary.items()):
             if not tests:
@@ -1005,6 +1023,7 @@ def influx(args):
                 f.write(f"{test_string}\n")
     return 0
 
+
 def dir_comp(args):
     """
     Entry point for RelVal
@@ -1022,6 +1041,7 @@ def dir_comp(args):
         json.dump(file_sizes_to_json, f, indent=2)
     return 0
 
+
 def print_table(args):
     """
     Print the filtered histogram names of a Summary.json as list to screen
@@ -1033,8 +1053,7 @@ def print_table(args):
             return 1
 
     include_patterns, exclude_patterns = load_patterns(args.include_patterns, args.exclude_patterns, False)
-    with open(path, "r") as f:
-        summary = json.load(f)
+    summary, _ = read_single_summary(path)
     for histo_name, tests in summary.items():
         if not check_patterns(histo_name, include_patterns, exclude_patterns):
             continue
@@ -1043,6 +1062,7 @@ def print_table(args):
         print(f"{histo_name}")
 
     return 0
+
 
 def print_header():
     print(f"\n{'#' * 25}\n#{' ' * 23}#\n# RUN ReleaseValidation #\n#{' ' * 23}#\n{'#' * 25}\n")
