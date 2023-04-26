@@ -340,31 +340,36 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]]; then
   export GPUTYPE="HIP"
   export GPUMEMSIZE=$((25 << 30))
   if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
-    if [[ $keep -eq 0 ]]; then
-      if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
-	export MULTIPLICITY_PROCESS_tof_matcher=2
-	export MULTIPLICITY_PROCESS_mch_cluster_finder=3
-	export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
-	export MULTIPLICITY_PROCESS_itstpc_track_matcher=3
-	export MULTIPLICITY_PROCESS_its_tracker=2
+    if [[ "ALIEN_JDL_USEFULLNUMADOMAIN" == 0 ]]; then
+      if [[ $keep -eq 0 ]]; then
+	if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
+	  export OPTIMIZED_PARALLEL_ASYNC=pp_1gpu  # sets the multiplicities to optimized defaults for this configuration (1 job with 1 gpu on EPNs)
+	else
+	  # forcing multiplicities to be 1
+	  export MULTIPLICITY_PROCESS_tof_matcher=1
+	  export MULTIPLICITY_PROCESS_mch_cluster_finder=1
+	  export MULTIPLICITY_PROCESS_tpc_entropy_decoder=1
+	  export MULTIPLICITY_PROCESS_itstpc_track_matcher=1
+	  export MULTIPLICITY_PROCESS_its_tracker=1
+	  export OMP_NUM_THREADS=4
+	fi
+	export TIMEFRAME_RATE_LIMIT=8
       else
-	# forcing multiplicities to be 1
-	export MULTIPLICITY_PROCESS_tof_matcher=1
-	export MULTIPLICITY_PROCESS_mch_cluster_finder=1
-	export MULTIPLICITY_PROCESS_tpc_entropy_decoder=1
-	export MULTIPLICITY_PROCESS_itstpc_track_matcher=1
-	export MULTIPLICITY_PROCESS_its_tracker=1
+	export TIMEFRAME_RATE_LIMIT=4
       fi
-      export TIMEFRAME_RATE_LIMIT=8
+      export SHMSIZE=30000000000
     else
-      export TIMEFRAME_RATE_LIMIT=4
+      export DPL_SMOOTH_RATE_LIMITING=1
+      if [[ $BEAMTYPE == "pp" ]]; then
+	export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, pp)
+	export TIMEFRAME_RATE_LIMIT=40
+	export SHMSIZE=100000000000
+      else  # PbPb
+	export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, PbPb)
+	export TIMEFRAME_RATE_LIMIT=20
+	export SHMSIZE=128000000000
+      fi
     fi
-    if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
-      export OMP_NUM_THREADS=8
-    else
-      export OMP_NUM_THREADS=4
-    fi
-    export SHMSIZE=30000000000
   fi
 else
   # David, Oct 13th
@@ -378,7 +383,7 @@ else
     elif (( $(echo "$RUN_IR < 50000" | bc -l) )); then
       export TIMEFRAME_RATE_LIMIT=6
     fi
-    export OMP_NUM_THREADS=6
+    export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu # sets the multiplicities to optimized defaults for this configuration (grid)
     export SHMSIZE=16000000000
   fi
 fi
