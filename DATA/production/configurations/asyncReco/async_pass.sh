@@ -17,6 +17,8 @@ run_AOD_merging() {
   return $exitcode
 }
 
+timeStartFullProcessing=`date +%s`
+
 # to skip positional arg parsing before the randomizing part.
 inputarg="${1}"
 
@@ -409,7 +411,7 @@ if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
       exit $exitcode
     fi
     mv latest.log latest_reco_1.log
-    ./$STATSCRIPT latest_reco_1.log
+    $STATSCRIPT latest_reco_1.log
   fi
 else
   # running the wf in split mode
@@ -440,7 +442,7 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_1.log
-      ./$STATSCRIPT latest_reco_1.log reco_1
+      $STATSCRIPT latest_reco_1.log reco_1
     fi
   fi
 
@@ -469,7 +471,7 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_2.log
-      ./$STATSCRIPT latest_reco_2.log reco_2
+      $STATSCRIPT latest_reco_2.log reco_2
       # let's compare to previous step
       if [[ -f latest_reco_1.log ]]; then
 	nCTFsFilesInspected_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
@@ -740,8 +742,11 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   fi
 fi
 
-timeUsed=$(( $timeUsed+$timeUsedCheck+$timeUsedMerge+$timeUsedCheckMergedAOD+$timeUsedAnalysisQC ))
-echo "Time used for processing = $timeUsed s"
+
+timeEndFullProcessing=`date +%s`
+timeUsedFullProcessing=$(( $timeEndFullProcessing+$timeStartFullProcessing ))
+
+echo "Time used for processing = $timeUsedFullProcessing s"
 
 if [[ $ALIEN_JDL_QCOFF != 1 ]]; then
   # copying the QC json file here
