@@ -49,7 +49,7 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
     mConfigToUse = mOneInjectionPerEvent ? static_cast<int>(gRandom->Uniform(0.f, getNGuns())) : -1;
     LOGF(info, "Using configuration %i out of %lli, %lli transport decayed, %lli generator decayed", mConfigToUse, getNGuns(), mGunConfigs.size(), mGunConfigsGenDecayed.size());
 
-    int nConfig = mGunConfigs.size();// We start counting from the configurations of the transport decayed particles
+    int nConfig = mGunConfigs.size(); // We start counting from the configurations of the transport decayed particles
     for (const ConfigContainer& cfg : mGunConfigsGenDecayed) {
       nConfig++;
       if (mConfigToUse >= 0 && (nConfig - 1) != mConfigToUse) {
