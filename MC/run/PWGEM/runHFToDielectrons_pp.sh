@@ -18,7 +18,7 @@ NWORKERS=${NWORKERS:-8}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
 
 #generate random number
-RNDSIG=$((0 + $RANDOM % 100))
+RNDSIG=$(($RANDOM % 100))
 echo $RNDSIG
 
 if [[ $RNDSIG -ge 0 && $RNDSIG -lt 20 ]];
