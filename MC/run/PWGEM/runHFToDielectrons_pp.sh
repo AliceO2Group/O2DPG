@@ -18,16 +18,16 @@ NWORKERS=${NWORKERS:-8}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
 
 #generate random number
-RNDSIG=$((1 + $RANDOM % 100))
+RNDSIG=$((0 + $RANDOM % 100))
 echo $RNDSIG
 
-if [[ $RNDSIG -ge 0 && $RNDSIG -lt 40 ]];
+if [[ $RNDSIG -ge 0 && $RNDSIG -lt 20 ]];
 then
         CONFIGNAME="GeneratorHF_ccbarToDielectrons.ini"
-elif [[ $RNDSIG -ge 40 && $RNDSIG -lt 60 ]];
+elif [[ $RNDSIG -ge 20 && $RNDSIG -lt 40 ]];
 then
         CONFIGNAME="GeneratorHF_bbbarToDielectrons.ini"
-elif [[ $RNDSIG -ge 60 && $RNDSIG -lt 100 ]];
+elif [[ $RNDSIG -ge 40 && $RNDSIG -lt 100 ]];
 then
         CONFIGNAME="GeneratorHF_bbbarToDDbarToDielectrons.ini"
 fi
