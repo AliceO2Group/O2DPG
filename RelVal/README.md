@@ -12,8 +12,8 @@ There are 2 ROOT macros which can in principle be used as-is. Their functionalit
 
 This macro allows to compare 2 ROOT files that contain `TH1` objects. Objects are considered to correspond to each other if they have the same name.
 At the moment, 3 different comparisons are implemented:
-1. `chi2`: Chi2 test of compared histograms,
-1. `bin_cont`: relative difference of normalised bin content of both histograms,
+1. `chi2`: Chi2 test of compared histograms (see also the [ROOT documentation](https://root.cern.ch/doc/master/classTH1.html#ab7d63c7c177ccbf879b5dc31f2311b27)),
+1. `kolmogorov`: shape comparison using Kolmogorov test (see also the [ROOT documentation](https://root.cern.ch/doc/master/classTH1.html#aeadcf087afe6ba203bcde124cfabbee4)),
 1. `num_entries`: relative difference in the number of entries.
 
 The first 2 tests are considered critical, hence if the threshold is exceeded, the comparison result is named `BAD`. Also the third test is considered critical in case efficiencies are compared coming from `TEfficiency` objects.
@@ -59,7 +59,7 @@ python o2dpg_release_validation.py rel-val -i <first-list-of-files> -j <second-l
 ```
 This performs all of the above mentioned tests. If only certain tests should be performed, this can be achieved with the flags `--with-test-<which-test>` where `<which-test>` is one of
 1. `chi2`,
-1. `bin-cont`,
+1. `kolmogorov`,
 1. `num-entries`.
 
 By default, all of them are switched on.
@@ -96,10 +96,10 @@ There are various plots created during the RelVal run. For each compared file th
 
 ## More details of `rel-val` command
 
-As mentioned above, the basic usage of the `rel-val` sub-command is straightforward. But there are quite a few more options available and some of them will be explained briefly below.
+As mentioned above, the basic usage of the `rel-val` sub-command is straightforward. But there are quite a few more options available and some of them will be explained briefly below. In fact, most of them also apply to the `inspect` sub-command.
 
 ### Setting new/custom thresholds from another RelVal run
-Each RelVal run produces a `Summary.json` file in the corresponding output directories. Among other things, it contains the computed values of all tests for each compared histogram pair. Such a `Summary.json` can now be used as a input file for a future RelVal to set all thresholds according to the values. In fact, multiple such files can be passed and for each historgam-test combination, the mean or max of the previously calculated values can be used to set the new thresholds.
+Each RelVal run produces a `Summary.json` file in the corresponding output directories. Among other things, it contains the computed values of all tests for each compared histogram pair. Such a `Summary.json` can now be used as a input file for a future RelVal to set all thresholds according to the values. In fact, multiple such files can be passed and for each histogram-test combination, the mean or max of the previously calculated values can be used to set the new thresholds.
 
 ```bash
 python ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i <first-list-of-files> -j <second-list-of-files> --use-values-as-thresholds <list-of-summaries> [--combine-thresholds {mean,max}] [--test-<name>-threshold-margin <value>]
@@ -114,23 +114,5 @@ There is an ongoing effort to unify the names of QC objects inside MC and data Q
 
 MC QC objects are usually distributed over multiple files while those from data are all contained in one single file. It is possible to directly compare them with
 ```bash
-python ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i ${MC_PRODUCTION}/QC/*.root -j ${DATA_PRODUCTION}/QC.root [--inlcude-dirs <include-directories]
+python ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i ${MC_PRODUCTION}/QC/*.root -j ${DATA_PRODUCTION}/QC.root [--include-dirs <include-directories>]
 ```
-
-### Apply to entire simulation outcome
-
-**This is still under development and does not yet work when e.g. comparing an MC directory to a data directory.**
-
-In addition to simply comparing 2 ROOT files, the script offers the possibility of comparing 2 corresponding directories that contain simulation artifacts (and potentially QC and analysis results). It is not foreseen to run over everything inside those directories but the files must be specifiec via a small config file. See [this example](config/rel_val_sim_dirs_default.json). It is passed via the option `--dirs-config`. In addition, top-level keys can be enabled(disabled) with `--dirs-config-enable <keys>`(`dirs-config-disable <keys>`) where disabling takes precedence.
-
-**NOTE** That each single one of the comparisons is only done if mutual files were found in the 2 corresponding directories. As an example, one could do
-```bash
-cd ${DIR1}
-python o2dpg_workflow_runner.py -f <workflow-json1>
-cd ${DIR2}
-# potentially something has changed in the software or the simulation/reconstruction parameters
-python o2dpg_workflow_runner.py -f <workflow-json2>
-python ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i ${DIR1} -j ${DIR2} --dirs-config ${O2DPG_ROOT}/RelVal/config/rel_val_sim_dirs_default.json --dirs-config-enable QC [-o <output/dir>] [<test-flags>]
-```
-This would run the RelVal von everything specified under the top key `QC`.
-

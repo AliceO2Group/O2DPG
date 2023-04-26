@@ -106,7 +106,7 @@ if O2DPG_ROOT is None:
 ROOT_MACRO_EXTRACT=join(O2DPG_ROOT, "RelVal", "ExtractAndFlatten.C")
 ROOT_MACRO_RELVAL=join(O2DPG_ROOT, "RelVal", "ReleaseValidation.C")
 
-from ROOT import TFile, gDirectory, gROOT, TChain, TH1D
+from ROOT import gROOT
 
 DETECTORS_OF_INTEREST_HITS = ["ITS", "TOF", "EMC", "TRD", "PHS", "FT0", "HMP", "MFT", "FDD", "FV0", "MCH", "MID", "CPV", "ZDC", "TPC"]
 
@@ -300,7 +300,7 @@ def plot_pie_charts(summary, out_dir, title, include_patterns=None, exclude_patt
             continue
         # loop over tests done
         for test in tests:
-            test_name = test["test_name"];
+            test_name = test["test_name"]
             if test_name not in test_n_hist_map:
                 test_n_hist_map[test_name] = {}
             result = test["result"]
@@ -340,7 +340,7 @@ def extract_from_summary(summary, fields, include_patterns=None, exclude_pattern
             continue
         # loop over tests done
         for test in tests:
-            test_name = test["test_name"];
+            test_name = test["test_name"]
             if test_name not in test_histo_value_map:
                 test_histo_value_map[test_name] = {field: [] for field in fields}
                 test_histo_value_map[test_name]["histograms"] = []
@@ -728,7 +728,7 @@ def map_histos_to_severity(summary, include_patterns=None, exclude_patterns=None
     return test_n_hist_map
 
 
-def print_summary(summary, include_patterns=None, exclude_patterns=None):
+def print_summary(summary, include_patterns=None, exclude_patterns=None, long=False):
     """
     Check if any 2 histograms have a given severity level after RelVal
     """
@@ -739,6 +739,9 @@ def print_summary(summary, include_patterns=None, exclude_patterns=None):
     print(f"\n#####\nNumber of compared histograms: {n_all}\nBased on critical tests, severities are\n")
     for sev, histos in test_n_hist_map.items():
         print(f"  {sev}: {len(histos)}")
+        if long:
+            for i, h in enumerate(histos, start=1):
+                print(f"    {i}. {h}")
     print("#####\n")
 
 
@@ -854,7 +857,7 @@ def rel_val(args):
     func(args)
     global_summary, meta_info = make_global_summary(args.output)
     write_single_summary(global_summary, meta_info, join(args.output, "SummaryGlobal.json"))
-    print_summary(global_summary)
+    print_summary(global_summary, long=args.long)
     return 0
 
 
@@ -907,7 +910,7 @@ def inspect(args):
     current_summary, meta_info = read_single_summary(path)
     summary = make_single_summary(current_summary, args, output_dir, include_patterns, exclude_patterns, flags, flags_summary)
     write_single_summary(summary, meta_info, join(output_dir, "Summary.json"))
-    print_summary(summary, include_patterns)
+    print_summary(summary, include_patterns, long=args.long)
 
     if args.plot:
         plot_pie_charts(summary, output_dir, "", include_patterns, exclude_patterns)
@@ -1095,17 +1098,20 @@ def main():
     common_flags_parser.add_argument("--flags", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(REL_VAL_SEVERITY_MAP.keys()))
     common_flags_parser.add_argument("--flags-summary", dest="flags_summary", nargs="*", help="extract all objects which have this severity flag as overall test result", choices=list(REL_VAL_SEVERITY_MAP.keys()))
 
+    common_verbosity_parser = argparse.ArgumentParser(add_help=False)
+    common_verbosity_parser.add_argument("--long", action="store_true", help="enhance verbosity")
+
     sub_parsers = parser.add_subparsers(dest="command")
-    rel_val_parser = sub_parsers.add_parser("rel-val", parents=[common_file_parser, common_threshold_parser])
+    rel_val_parser = sub_parsers.add_parser("rel-val", parents=[common_file_parser, common_threshold_parser, common_verbosity_parser])
     rel_val_parser.add_argument("--dir-config", dest="dir_config", help="What to take into account in a given directory")
     rel_val_parser.add_argument("--dir-config-enable", dest="dir_config_enable", nargs="*", help="only enable these top keys in your dir-config")
     rel_val_parser.add_argument("--dir-config-disable", dest="dir_config_disable", nargs="*", help="disable these top keys in your dir-config (precedence over dir-config-enable)")
-    rel_val_parser.add_argument("--include-dirs", dest="include_dirs", nargs="*", help="only inlcude directories; note that each pattern is assumed to start in the top-directory (at the moment no regex or *)")
+    rel_val_parser.add_argument("--include-dirs", dest="include_dirs", nargs="*", help="only include directories; note that each pattern is assumed to start in the top-directory (at the moment no regex or *)")
     rel_val_parser.add_argument("--add", action="store_true", help="If given and there is already a RelVal in the output directory, extracted objects will be added to the existing ones")
     rel_val_parser.add_argument("--output", "-o", help="output directory", default="rel_val")
     rel_val_parser.set_defaults(func=rel_val)
 
-    inspect_parser = sub_parsers.add_parser("inspect", parents=[common_threshold_parser, common_pattern_parser, common_flags_parser])
+    inspect_parser = sub_parsers.add_parser("inspect", parents=[common_threshold_parser, common_pattern_parser, common_flags_parser, common_verbosity_parser])
     inspect_parser.add_argument("path", help="either complete file path to a Summary.json or SummaryGlobal.json or directory where one of the former is expected to be")
     inspect_parser.add_argument("--plot", action="store_true", help="Plot the summary grid")
     inspect_parser.add_argument("--output", "-o", help="output directory, by default points to directory where the Summary.json was found")
