@@ -306,7 +306,7 @@ EOF
       echo "cp file:${PWD}/${MY_JOBNAMEDATE}.jdl alien://${MY_JOBWORKDIR}/${MY_JOBNAMEDATE}.jdl@DISK=1" >> ${command_file}  # copy the jdl
       echo "cp file:${THIS_SCRIPT} alien://${MY_BINDIR}/${MY_JOBNAMEDATE}.sh@DISK=1" >> ${command_file}  # copy current job script to AliEn
       [ ! "${CONTINUE_WORKDIR}" ] && echo "cp file:${MY_JOBSCRIPT} alien://${MY_JOBWORKDIR}/alien_jobscript.sh" >> ${command_file}
-    ) &> alienlog.txt
+    ) > alienlog.txt 2>&1
 
     pok "Submitting job \"${MY_JOBNAMEDATE}\" from $PWD"
     (
@@ -314,7 +314,7 @@ EOF
 
       # finally we do a single call to alien:
       alien.py < ${command_file}
-    ) &>> alienlog.txt
+    ) >> alienlog.txt 2>&1
 
     MY_JOBID=$( (grep 'Your new job ID is' alienlog.txt | grep -oE '[0-9]+' || true) | sort -n | tail -n1)
     if [[ $MY_JOBID ]]; then
