@@ -217,7 +217,11 @@ def determine_timestamp(sor, eor, splitinfo, cycle, ntf):
     maxcycles = maxtimeframesperjob // ntf
     print (f"We can do this amount of cycle iterations to achieve 100%: ", maxcycles)
     
-    return sor, int(thisjobID * maxcycles) + cycle
+    production_offset = int(thisjobID * maxcycles) + cycle
+    timestamp_of_production = sor + production_offset * ntf * HBF_per_timeframe * LHCOrbitMUS / 1000
+    assert (timestamp_of_production >= sor)
+    assert (timestamp_of_production <= eor)
+    return int(timestamp_of_production), production_offset
 
 def main():
     parser = argparse.ArgumentParser(description='Creates an O2DPG simulation workflow, anchored to a given LHC run. The workflows are time anchored at regular positions within a run as a function of production size, split-id and cycle.')
@@ -254,12 +258,13 @@ def main():
     # MC job to run
     timestamp, prod_offset = determine_timestamp(sor_eor["SOR"], sor_eor["EOR"], [args.split_id, args.prod_split], args.cycle, args.tf)
     # this is anchored to
+    print ("Determined start-of-run to be: ", sor_eor["SOR"])
     print ("Determined timestamp to be : ", timestamp)
     print ("Determined offset to be : ", prod_offset)
 
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
-    forwardargs = " ".join([ a for a in args.forward if a != '--' ]) + " -tf " + str(args.tf) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(sor_eor["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb"
+    forwardargs = " ".join([ a for a in args.forward if a != '--' ]) + " -tf " + str(args.tf) + " --sor " + str(sor_eor["EOR"]) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(sor_eor["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb"
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
     print ("Creating time-anchored workflow...")
     os.system(cmd)

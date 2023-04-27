@@ -107,6 +107,7 @@ parser.add_argument('--no-tpc-digitchunking', action='store_true', help=argparse
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring)
                                                             # (consider doing this rather in O2 digitization code directly)
+parser.add_argument('--sor', default=-1, type=int, help=argparse.SUPPRESS) # may pass start of run with this (otherwise it is autodetermined from run number)
 parser.add_argument('--run-anchored', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--alternative-reco-software', default="", help=argparse.SUPPRESS) # power feature to set CVFMS alienv software version for reco steps (different from default)
 parser.add_argument('--dpl-child-driver', default="", help="Child driver to use in DPL processes (export mode)")
@@ -266,9 +267,12 @@ if  len(args.meanVertexPerRunTxtFile) > 0:
 # ----------- START WORKFLOW CONSTRUCTION -----------------------------
 
 # set the time to start of run (if no timestamp specified)
+if args.sor==-1:
+   args.sor = retrieve_sor(args.run)
+   assert (args.sor != 0)
+
 if args.timestamp==-1:
-   args.timestamp = retrieve_sor(args.run)
-   assert (args.timestamp != 0)
+   args.timestamp = args.sor
 
 NTIMEFRAMES=int(args.tf)
 NWORKERS=args.j
@@ -715,8 +719,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                             "HBFUtils.runNumber" : args.run }
    # we set the timestamp here only if specified explicitely (otherwise it will come from
    # the simulation GRP and digitization)
-   if (args.timestamp != -1):
-      globalTFConfigValues["HBFUtils.startTime"] = args.timestamp
+   if (args.sor != -1):
+      globalTFConfigValues["HBFUtils.startTime"] = args.sor
 
    def putConfigValues(localCF = {}):
      """
