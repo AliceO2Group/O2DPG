@@ -17,6 +17,8 @@ else
   ULIMIT_S=`ulimit -S -n`
   ULIMIT_H=`ulimit -H -n`
   ULIMIT_REQ=4000
+  [[ $ULIMIT_S == "unlimited" ]] && ULIMIT_S=$ULIMIT_REQ
+  [[ $ULIMIT_H == "unlimited" ]] && ULIMIT_H=$ULIMIT_REQ
   if [[ $ULIMIT_H -gt $ULIMIT_S ]] && [[ $ULIMIT_S -lt $ULIMIT_REQ ]]; then
     ulimit -S -n $(($ULIMIT_H > $ULIMIT_REQ ? $ULIMIT_REQ : $ULIMIT_H))
   fi
