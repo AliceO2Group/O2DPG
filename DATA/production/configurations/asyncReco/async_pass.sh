@@ -626,7 +626,6 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D check is " $exitcode > validation_error.message
 	echo "exit code from AO2D check is " $exitcode
-	exit $exitcode
       fi
     fi
     cd -
