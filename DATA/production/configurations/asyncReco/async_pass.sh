@@ -431,11 +431,11 @@ else
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
       time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      delta=$(( $timeEnd-$timeStart ))
       echo "Time spent in running the workflow, Step 1 = $delta s"
-      exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from Step 1 of processing is " $exitcode > validation_error.message
@@ -460,11 +460,11 @@ else
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
       time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      delta=$(( $timeEnd-$timeStart ))
       echo "Time spent in running the workflow, Step 2 = $delta s"
-      exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from Step 2 of processing is " $exitcode > validation_error.message
@@ -510,11 +510,11 @@ else
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
       time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      delta=$(( $timeEnd-$timeStart ))
       echo "Time spent in running the workflow, Step 3 = $delta s"
-      exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from Step 3 of processing is " $exitcode > validation_error.message
@@ -536,7 +536,7 @@ if [[ -f "performanceMetrics.json" ]]; then
     done
     timeEnd=`date +%s`
     timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-    delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+    delta=$(( $timeEnd-$timeStart ))
     echo "Time spent in splitting the metrics files = $delta s"
 fi
 
@@ -570,11 +570,11 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       ln -s ../list.list .
       timeStart=`date +%s`
       time o2-aod-merger --input list.list
+      exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
       delta=$(( $timeEnd-$timeStart ))
       echo "Time spent in merging last AOD files, to reach a good size for that too = $delta s"
-      exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from aod-merger for latest file is " $exitcode > validation_error.message
@@ -620,9 +620,9 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       echo "Checking AO2Ds with un-merged DFs in $AOD_DIR"
       timeStartCheck=`date +%s`
       time root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
+      exitcode=$?
       timeEndCheck=`date +%s`
       timeUsedCheck=$(( $timeUsedCheck+$timeEndCheck-$timeStartCheck ))
-      exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D check is " $exitcode > validation_error.message
 	echo "exit code from AO2D check is " $exitcode
@@ -684,9 +684,9 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       echo "Checking AO2Ds with merged DFs in $AOD_DIR"
       timeStartCheckMergedAOD=`date +%s`
       time root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
+      exitcode=$?
       timeEndCheckMergedAOD=`date +%s`
       timeUsedCheckMergedAOD=$(( $timeUsedCheckMergedAOD+$timeEndCheckMergedAOD-$timeStartCheckMergedAOD ))
-      exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D with merged DFs check is " $exitcode > validation_error.message
 	echo "exit code from AO2D with merged DFs check is " $exitcode
@@ -709,9 +709,9 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       time ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
       # running it
       time ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
+      exitcode=$?
       timeEndAnalysisQC=`date +%s`
       timeUsedAnalysisQC=$(( $timeUsedAnalysisQC+$timeEndAnalysisQC-$timeStartAnalysisQC ))
-      exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from Analysis QC is " $exitcode > validation_error.message
