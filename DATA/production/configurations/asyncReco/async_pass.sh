@@ -400,9 +400,10 @@ if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
   if [[ "0$RUN_WORKFLOW" != "00" ]]; then
     timeStart=`date +%s`
     time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+    exitcode=$?
     timeEnd=`date +%s`
     timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-    delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+    delta=$(( $timeEnd-$timeStart ))
     echo "Time spent in running the workflow = $delta s"
     echo "exitcode = $exitcode"
     if [[ $exitcode -ne 0 ]]; then
