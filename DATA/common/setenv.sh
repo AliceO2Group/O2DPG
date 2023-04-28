@@ -17,7 +17,13 @@ else
   ULIMIT_S=`ulimit -S -n`
   ULIMIT_H=`ulimit -H -n`
   ULIMIT_REQ=4000
-  if [[ $ULIMIT_H -gt $ULIMIT_S ]] && [[ $ULIMIT_S -lt $ULIMIT_REQ ]]; then
+  # check first of all these limits are in fact unlimited (to prevent errors in numeric comparison)
+  if [[ "${ULIMIT_H}" == "unlimited" ]]; then
+     if [[ (! "$ULIMIT_S" == "unlimited") && ($ULIMIT_S -lt $ULIMIT_REQ) ]]; then
+        ulimit -S -n $ULIMIT_REQ
+     fi
+  # otherwise these variables are numeric and can be compared
+  elif [[ $ULIMIT_H -gt $ULIMIT_S ]] &&  [[ $ULIMIT_S -lt $ULIMIT_REQ ]]; then
     ulimit -S -n $(($ULIMIT_H > $ULIMIT_REQ ? $ULIMIT_REQ : $ULIMIT_H))
   fi
   ULIMIT_FINAL=`ulimit -n`
