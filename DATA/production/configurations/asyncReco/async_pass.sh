@@ -362,7 +362,7 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]]; then
       export DPL_SMOOTH_RATE_LIMITING=1
       if [[ $BEAMTYPE == "pp" ]]; then
 	export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, pp)
-	export TIMEFRAME_RATE_LIMIT=40
+	export TIMEFRAME_RATE_LIMIT=45
 	export SHMSIZE=100000000000
       else  # PbPb
 	export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, PbPb)
