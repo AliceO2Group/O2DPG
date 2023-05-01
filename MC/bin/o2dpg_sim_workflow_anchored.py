@@ -193,7 +193,7 @@ def retrieve_GRP(ccdbreader, timestamp):
     ts, grp = ccdbreader.fetch(grp_path, "o2::parameters::GRPObject", timestamp = timestamp)
     return grp
 
-def retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, run_number, finaltime):
+def retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, run_number, finaltime, ft0_eff):
     """
     retrieves the CTP scalers object for a given timestamp and run_number
     and calculates the interation rate to be applied in Monte Carlo digitizers
@@ -209,7 +209,7 @@ def retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, run_number, finaltime
       # true rate (input from Chiara Zampolli)
       ts, grplhcif = ccdbreader.fetch("GLO/Config/GRPLHCIF", "o2::parameters::GRPLHCIFData", timestamp = timestamp)
       coll_bunches = grplhcif.getBunchFilling().getNBunches()
-      mu = - math.log(1. - rate.first / 11245 / coll_bunches)
+      mu = - math.log(1. - rate.first / 11245 / coll_bunches) / ft0_eff
       finalRate = coll_bunches * mu * 11245
       return finalRate
 
@@ -262,6 +262,7 @@ def main():
     parser.add_argument("--split-id", type=int, help="The split id of this job within the whole production --prod-split)", default=0)
     parser.add_argument("-tf", type=int, help="number of timeframes per job", default=1)
     parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
+    parser.add_argument("--ft0-eff", type=float, dest="ft0_eff", help="FT0 eff needed for IR", default=0.759)
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
 
@@ -301,7 +302,7 @@ def main():
     # retrieve interaction rate
     rate = None
     if args.ccdb_IRate == True:
-       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000.)
+       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000., args.ft0_eff)
 
        if rate != None:
          # if the rate calculation was successful we will use it, otherwise we fall back to some rate given as part
