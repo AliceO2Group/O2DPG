@@ -25,9 +25,6 @@
 #                                            [--with-test-num-entries]
 #                                            [--test-num-entries-threshold NUM_ENTRIES_THRESHOLD]
 #                                            [--test-num-entries-threshold-margin NUM_ENTRIES_THRESHOLD_MARGIN]
-#                                            [--dir-config DIR_CONFIG]
-#                                            [--dir-config-enable [DIR_CONFIG_ENABLE ...]]
-#                                            [--dir-config-disable [DIR_CONFIG_DISABLE ...]]
 #                                            [--include-dirs [INCLUDE_DIRS ...]]
 #                                            [--add] [--output OUTPUT]
 #
@@ -63,13 +60,6 @@
 #   --test-num-entries-threshold-margin NUM_ENTRIES_THRESHOLD_MARGIN
 #                         Margin to apply to the num_entries threshold extracted
 #                         from file
-#   --dir-config DIR_CONFIG
-#                         What to take into account in a given directory
-#   --dir-config-enable [DIR_CONFIG_ENABLE ...]
-#                         only enable these top keys in your dir-config
-#   --dir-config-disable [DIR_CONFIG_DISABLE ...]
-#                         disable these top keys in your dir-config (precedence
-#                         over dir-config-enable)
 #   --include-dirs [INCLUDE_DIRS ...]
 #                         only inlcude directories; note that each pattern is
 #                         assumed to start in the top-directory (at the moment
@@ -702,10 +692,6 @@ def rel_val_files(files1, files2, args, output_dir):
     return 0
 
 
-def rel_val_files_only(args):
-    return rel_val_files(args.input1, args.input2, args, args.output)
-
-
 def map_histos_to_severity(summary, include_patterns=None, exclude_patterns=None):
     """
     Map the histogram names to their severity of the test
@@ -778,44 +764,6 @@ def make_global_summary(in_dir):
     return summary, {"batch_i": batch_i, "batch_j": batch_j}
 
 
-def rel_val_sim_dirs(args):
-    """
-    Make full RelVal for 2 simulation directories
-    """
-    dir1 = args.input1[0]
-    dir2 = args.input2[0]
-    output_dir = args.output
-
-    config = args.dir_config
-    with open(config, "r") as f:
-        config = json.load(f)
-
-    run_over_keys = list(config.keys())
-    if args.dir_config_enable:
-        run_over_keys = [rok for rok in run_over_keys if rok in args.dir_config_enable]
-    if args.dir_config_disable:
-        run_over_keys = [rok for rok in run_over_keys if rok not in args.dir_config_disable]
-    if not run_over_keys:
-        print("WARNING: All keys in config disabled, nothing to do")
-        return 0
-
-    for rok in run_over_keys:
-        current_dir_config = config[rok]
-        # now run over name and path (to glob)
-        for name, path in current_dir_config.items():
-            current_files = find_mutual_files((dir1, dir2), path)
-            if not current_files:
-                print(f"WARNING: Nothing found for search key {name} under path {path}, continue")
-                continue
-            in1 = [join(dir1, cf) for cf in current_files]
-            in2 = [join(dir2, cf) for cf in current_files]
-            current_output_dir = join(output_dir, rok, name)
-            if not exists(current_output_dir):
-                makedirs(current_output_dir)
-            rel_val_files(in1, in2, args, current_output_dir)
-    return 0
-
-
 def rel_val(args):
     """
     Entry point for RelVal
@@ -834,27 +782,7 @@ def rel_val(args):
         args.test = default_sum
     if not exists(args.output):
         makedirs(args.output)
-    if isdir(args.input1[0]) and isdir(args.input2[0]):
-        if len(args.input1) > 1 or len(args.input2) > 1:
-            print("ERROR: When you want to validate the contents of directories, you can only compare exactly one directory to exactly on other directory.")
-            return 1
-        if not args.dir_config:
-            print("ERROR: RelVal to be run on 2 directories. Please provide a configuration what to validate.")
-            return 1
-        func = rel_val_sim_dirs
-    else:
-        func = rel_val_files_only
-        for f in args.input1 + args.input2:
-            if not isfile(f):
-                func = None
-                break
-        # simply check if files, assume that they would be ROOT files in that case
-    if not func:
-        print("ERROR: Please provide either 2 sets of files or 2 simulation directories as input.")
-        return 1
-    if not exists(args.output):
-        makedirs(args.output)
-    func(args)
+    rel_val_files(args.input1, args.input2, args, args.output)
     global_summary, meta_info = make_global_summary(args.output)
     write_single_summary(global_summary, meta_info, join(args.output, "SummaryGlobal.json"))
     print_summary(global_summary, long=args.long)
@@ -1103,9 +1031,6 @@ def main():
 
     sub_parsers = parser.add_subparsers(dest="command")
     rel_val_parser = sub_parsers.add_parser("rel-val", parents=[common_file_parser, common_threshold_parser, common_verbosity_parser])
-    rel_val_parser.add_argument("--dir-config", dest="dir_config", help="What to take into account in a given directory")
-    rel_val_parser.add_argument("--dir-config-enable", dest="dir_config_enable", nargs="*", help="only enable these top keys in your dir-config")
-    rel_val_parser.add_argument("--dir-config-disable", dest="dir_config_disable", nargs="*", help="disable these top keys in your dir-config (precedence over dir-config-enable)")
     rel_val_parser.add_argument("--include-dirs", dest="include_dirs", nargs="*", help="only include directories; note that each pattern is assumed to start in the top-directory (at the moment no regex or *)")
     rel_val_parser.add_argument("--add", action="store_true", help="If given and there is already a RelVal in the output directory, extracted objects will be added to the existing ones")
     rel_val_parser.add_argument("--output", "-o", help="output directory", default="rel_val")
