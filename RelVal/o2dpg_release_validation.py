@@ -870,8 +870,7 @@ def compare(args):
         return 1
     summaries = [join(i, s) for i in inputs for s in summaries]
     for i, _ in enumerate(summaries):
-        with open(summaries[i], "r") as f:
-            summaries[i] = json.load(f)
+        summaries[i], _ = read_single_summary(summaries[i])
 
     if not args.difference and not args.compare_values:
         args.difference, args.compare_values = (True, True)
