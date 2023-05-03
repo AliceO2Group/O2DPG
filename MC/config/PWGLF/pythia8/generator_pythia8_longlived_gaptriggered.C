@@ -25,7 +25,7 @@ public:
     mPtMax = pt_max;
     mMass = getMass(input_pdg);
     mGeneratedEvents = 0;
-    mAlternatingPDGsign = false;
+    mAlternatingPDGsign = true;
   }
 
   /// Destructor
@@ -115,9 +115,10 @@ private:
 };
 
 ///___________________________________________________________
-FairGenerator *generateLongLivedGapTriggered(int mPdg, int input_trigger_ratio, int n_injected = 1, float pt_min = 1, float pt_max = 10)
+FairGenerator *generateLongLivedGapTriggered(int mPdg, int input_trigger_ratio, int n_injected = 1, float pt_min = 1, float pt_max = 10, bool alternate_sign = true)
 {
   auto myGen = new GeneratorPythia8LongLivedGapTriggered(mPdg, input_trigger_ratio, n_injected, pt_min, pt_max);
+  myGen->setAlternatingPDGsign(alternate_sign);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
   myGen->readString("Random:seed " + std::to_string(seed));
