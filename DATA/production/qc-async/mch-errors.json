@@ -24,7 +24,7 @@
         },
         "tasks": {
             "MCHErrors": {
-                "active": "false",
+                "active": "true",
                 "taskName": "Errors",
                 "className": "o2::quality_control_modules::muonchambers::ErrorTask",
                 "moduleName": "QcMuonChambers",

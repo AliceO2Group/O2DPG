@@ -23,10 +23,9 @@
             }
         },
         "tasks": {
-            "MCHRofs": {
+            "Rofs": {
                 "active": "true",
-                "taskName": "ROFs",
-                "className": "o2::quality_control_modules::muonchambers::PhysicsTaskRofs",
+                "className": "o2::quality_control_modules::muonchambers::RofsTask",
                 "moduleName": "QcMuonChambers",
                 "detectorName": "MCH",
                 "cycleDurationSeconds": "300",
@@ -34,37 +33,38 @@
                 "dataSource": {
                     "type": "direct",
                     "query": "digits:MCH/DIGITS;rofs:MCH/DIGITROFS"
+                },
+                "taskParameters": {
+                    "Diagnostic": "false"
                 }
             },
             "MCHPreclusters": {
                 "active": "true",
                 "taskName": "Preclusters",
-                "className": "o2::quality_control_modules::muonchambers::PhysicsTaskPreclusters",
+                "className": "o2::quality_control_modules::muonchambers::PreclustersTask",
                 "moduleName": "QcMuonChambers",
                 "detectorName": "MCH",
-                "cycleDurationSeconds": "540",
+                "cycleDurationSeconds": "300",
                 "maxNumberCycles": "-1",
                 "dataSource": {
                     "type": "direct",
                     "query": "preclusters:MCH/PRECLUSTERS/0;preclusterdigits:MCH/PRECLUSTERDIGITS/0"
                 }
-            }
-        },
-        "checks": {
-            "MCHPreclusters": {
+            },
+            "FRofs": {
                 "active": "true",
-                "checkName": "Preclusters",
-                "className": "o2::quality_control_modules::muonchambers::PhysicsPreclustersCheck",
+                "className": "o2::quality_control_modules::muonchambers::RofsTask",
                 "moduleName": "QcMuonChambers",
                 "detectorName": "MCH",
-                "policy": "OnAny",
-                "dataSource": [
-                    {
-                        "type": "Task",
-                        "name": "MCHPreclusters",
-                        "MOs": "all"
-                    }
-                ]
+                "cycleDurationSeconds": "300",
+                "maxNumberCycles": "-1",
+                "dataSource": {
+                    "type": "direct",
+                    "query": "digits:MCH/F-DIGITS;rofs:MCH/TC-F-DIGITROFS"
+                },
+                "taskParameters": {
+                    "Diagnostic": "false"
+                }
             }
         }
     }
