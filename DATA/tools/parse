@@ -221,7 +221,12 @@ for line in f:
                 if 'GEN_TOPO_STDERR_LOGGING' in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
                     odccommand += ' --mon tools/monitoring_workflows/epnstderrlog.xml'
                 if args[1] != '':
-                    odccommand += ' --prependexe "' + modulecmd + ' module load ' + args[1] + ' 2>&1 ; export O2_NO_CATCHALL_EXCEPTIONS=1 ; "'
+                    odccommand += ' --prependexe "' + modulecmd + ' module load ' + args[1] + ' 2>&1 ; export O2_NO_CATCHALL_EXCEPTIONS=1 ; '
+                    if 'GEN_TOPO_ENV_AT_RUNTIME' in os.environ:
+                        env_at_runtime = os.environ['GEN_TOPO_ENV_AT_RUNTIME'].split(',')
+                        for i in env_at_runtime:
+                            odccommand += i + '=' + os.environ[i] + ' ; '
+                    odccommand += '"'
                 odccommand += ' -o ' + sys.argv[3]
                 print('Running ODC command', odccommand)
                 if os.system(odccommand) != 0:
