@@ -197,6 +197,7 @@ while [ $# -gt 0 ] ; do
         --prodsplit) PRODSPLIT=$2; shift 2 ;; # allows to set JDL production split level (useful to easily replicate workflows)
         --singularity) SINGULARITY=ON; shift 1 ;; # run everything inside singularity
         --wait) WAITFORALIEN=ON; shift 1 ;; #wait for alien jobs to finish
+        --outputspec) OUTPUTSPEC=$2; shift 2 ;; #provide comma separate list of JDL file specs to be put as part of JDL Output field (example '"*.log@disk=1","*.root@disk=2"')
 	-h) Usage ; exit ;;
         *) break ;;
     esac
@@ -275,10 +276,6 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
 Executable = "${MY_BINDIR}/${MY_JOBNAMEDATE}.sh";
 Arguments = "${CONTINUE_WORKDIR:+"-c ${CONTINUE_WORKDIR}"} --local ${O2TAG:+--o2tag ${O2TAG}} --ttl ${JOBTTL} --label ${JOBLABEL:-label} ${MATTERMOSTHOOK:+--mattermost ${MATTERMOSTHOOK}} ${CONTROLSERVER:+--controlserver ${CONTROLSERVER}}";
 InputFile = "LF:${MY_JOBWORKDIR}/alien_jobscript.sh";
-Output = {
-  "logs*.zip@disk=2",
-  "AO2D.root@disk=1"
-};
 ${PRODSPLIT:+Split = ${QUOT}production:1-${PRODSPLIT}${QUOT};}
 OutputDir = "${MY_JOBWORKDIR}/${PRODSPLIT:+#alien_counter_03i#}";
 Requirements = member(other.GridPartitions,"${GRIDPARTITION:-multicore_8}");
@@ -286,6 +283,8 @@ CPUCores = "${CPUCORES}";
 MemorySize = "60GB";
 TTL=${JOBTTL};
 EOF
+  echo "Output = {"${OUTPUTSPEC:-\"logs*.zip@disk=1\",\"AO2D.root@disk=1\"}"};" >> "${MY_JOBNAMEDATE}.jdl"
+
 # "output_arch.zip:output/*@disk=2",
 # "checkpoint*.tar@disk=2"
 
