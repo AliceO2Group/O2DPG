@@ -201,12 +201,14 @@ else
   cp $O2_ROOT/prodtests/full-system-test/run-workflow-on-inputlist.sh .
 fi
 
-if [[ -z $DPL_WORKFLOW_FROM_OUTSIDE ]]; then
+if [[ -f dpl-workflow.sh ]]; then
+  echo "Use dpl-workflow.sh passed as input"
+elif [[ -z $ALIEN_JDL_DPLWORKFLOWFROMOUTSIDE ]]; then
   echo "Use dpl-workflow.sh from O2"
   cp $O2_ROOT/prodtests/full-system-test/dpl-workflow.sh .
 else
   echo "Use dpl-workflow.sh passed as input"
-  cp $DPL_WORKFLOW_FROM_OUTSIDE .
+  cp $ALIEN_JDL_DPLWORKFLOWFROMOUTSIDE .
 fi
 
 if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
