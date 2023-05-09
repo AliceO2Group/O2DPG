@@ -3,7 +3,9 @@
 
 # process flags passed to the script
 
-export SETENV_NO_ULIMIT=1
+if [[ -z "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 1 ]]; then
+  export SETENV_NO_ULIMIT=1
+fi
 
 # to avoid memory issues - we don't do this on the EPNs, since it can affect the performance
 if [[ $ALIEN_JDL_USEGPUS != 1 ]]; then
