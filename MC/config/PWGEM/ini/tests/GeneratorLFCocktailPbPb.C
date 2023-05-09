@@ -22,7 +22,7 @@ int External()
         for (auto& track : *tracks) {
             auto pdg = track.GetPdgCode();
             auto y = track.GetRapidity();
-            if ((pdg == 111) || (pdg == 221) || (pdg == 331) || (pdg == 223) || (pdg == 113) || (pdg == 333)) || (pdg == 443) {
+            if ((pdg == 111) || (pdg == 221) || (pdg == 331) || (pdg == 223) || (pdg == 113) || (pdg == 333) || (pdg == 443)) {
                if ((y>-1.2) && (y<1.2)) { 
                   nMesons++;
                   Int_t counterel = 0;
