@@ -3,7 +3,7 @@
 
 # process flags passed to the script
 
-if [[ -z "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 1 ]]; then
+if [[ -z "$ALIEN_JDL_USEGPUS" || $ALIEN_JDL_USEGPUS != 1 ]]; then
   export SETENV_NO_ULIMIT=1
 fi
 
