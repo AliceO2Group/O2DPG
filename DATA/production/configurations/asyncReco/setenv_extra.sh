@@ -253,16 +253,16 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   # enabling TPC calibration scaling
   # the default is to use CTP, unless specified differently in the JDL...
   INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-CTP}
-  #...but for 2022 data, where we will rely on different settings depending on the period
+  #...but for 2022 data, where we will rely on different settings depending on the period; note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2022" ]]; then
-    INST_IR_FOR_TPC="CTPCCDB"
+    INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-CTPCCDB}
   fi
   if [[ $PERIOD == "LHC22s" ]]; then
-    INST_IR_FOR_TPC=0 # in this way, only TPC/Calib/CorrectionMaps is applied, and we know that for 22s it is the same as TPC/Calib/CorrectionMapsRef
+    INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-0} # in this way, only TPC/Calib/CorrectionMaps is applied, and we know that for 22s it is the same as TPC/Calib/CorrectionMapsRef; note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
   fi
-  # in MC, we set it to a negative value to disable completely the corrections
+  # in MC, we set it to a negative value to disable completely the corrections; note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
-    INST_IR_FOR_TPC="-1"
+    INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC--1}
   fi
 
   # now we set the options
