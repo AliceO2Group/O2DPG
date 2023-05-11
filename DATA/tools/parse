@@ -225,7 +225,7 @@ for line in f:
                     if 'GEN_TOPO_ENV_AT_RUNTIME' in os.environ:
                         env_at_runtime = os.environ['GEN_TOPO_ENV_AT_RUNTIME'].split(',')
                         for i in env_at_runtime:
-                            odccommand += i + '=' + os.environ[i] + ' ; '
+                            odccommand += 'export ' + i + '=' + os.environ[i] + ' ; '
                     odccommand += '"'
                 odccommand += ' -o ' + sys.argv[3]
                 print('Running ODC command', odccommand)
