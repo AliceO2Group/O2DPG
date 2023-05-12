@@ -13,7 +13,7 @@ SOURCE_GUARD_SETENV_CALIB=1
 
 # define the conditions for each calibration
 if has_detector_calib ITS && has_detectors_reco ITS && has_detector_matching PRIMVTX && [[ ! -z "$VERTEXING_SOURCES" ]]; then CAN_DO_CALIB_PRIMVTX_MEANVTX=1; else CAN_DO_CALIB_PRIMVTX_MEANVTX=0; fi
-if has_detector_calib TOF && has_detector_reco TOF; then CAN_DO_CALIB_TOF_DIAGNOSTICS=1; else CAN_DO_CALIB_TOF_DIAGNOSTICS=0; fi
+if has_detector_calib TOF && has_detector_reco TOF; then CAN_DO_CALIB_TOF_DIAGNOSTICS=1; CAN_DO_CALIB_TOF_INTEGRATEDCURR=1; else CAN_DO_CALIB_TOF_DIAGNOSTICS=0; CAN_DO_CALIB_TOF_INTEGRATEDCURR=0; fi
 if has_detector_calib TOF && has_detector_reco TOF && (( has_detectors_reco ITS TPC && has_detector_matching ITSTPCTOF ) || ( has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRDTOF )); then CAN_DO_CALIB_TOF_LHCPHASE=1; CAN_DO_CALIB_TOF_CHANNELOFFSETS=1; else CAN_DO_CALIB_TOF_LHCPHASE=0; CAN_DO_CALIB_TOF_CHANNELOFFSETS=0; fi
 if has_detector_calib TPC && has_detectors ITS TPC TOF TRD && has_detector_matching ITSTPCTRDTOF; then CAN_DO_CALIB_TPC_SCDCALIB=1; else CAN_DO_CALIB_TPC_SCDCALIB=0; fi
 if has_detector_calib TPC && has_processing_step TPC_DEDX; then CAN_DO_CALIB_TPC_TIMEGAIN=1; CAN_DO_CALIB_TPC_RESPADGAIN=1; else CAN_DO_CALIB_TPC_TIMEGAIN=0; CAN_DO_CALIB_TPC_RESPADGAIN=0; fi
@@ -25,6 +25,8 @@ if has_detector_calib EMC && has_detector_reco EMC; then CAN_DO_CALIB_EMC_BADCHA
 if has_detector_calib PHS && has_detector_reco PHS; then CAN_DO_CALIB_PHS_ENERGYCALIB=0; CAN_DO_CALIB_PHS_BADMAPCALIB=1; CAN_DO_CALIB_PHS_TURNONCALIB=1; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=1; CAN_DO_CALIB_PHS_L1PHASE=1; else CAN_DO_CALIB_PHS_ENERGYCALIB=0; CAN_DO_CALIB_PHS_BADMAPCALIB=0; CAN_DO_CALIB_PHS_TURNONCALIB=0; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=0; CAN_DO_CALIB_PHS_L1PHASE=0; fi
 if has_detector_calib CPV && has_detector_reco CPV; then CAN_DO_CALIB_CPV_GAIN=1; else CAN_DO_CALIB_CPV_GAIN=0; fi
 if has_detector_calib FT0; then CAN_DO_CALIB_FT0_TIMEOFFSET=1; CAN_DO_CALIB_FT0_INTEGRATEDCURR=1; else CAN_DO_CALIB_FT0_TIMEOFFSET=0; CAN_DO_CALIB_FT0_INTEGRATEDCURR=0; fi
+if has_detector_calib FV0; then CAN_DO_CALIB_FV0_INTEGRATEDCURR=1; else CAN_DO_CALIB_FV0_INTEGRATEDCURR=0; fi
+if has_detector_calib FDD; then CAN_DO_CALIB_FDD_INTEGRATEDCURR=1; else CAN_DO_CALIB_FDD_INTEGRATEDCURR=0; fi
 if has_detector_calib ZDC && has_processing_step ZDC_RECO; then CAN_DO_CALIB_ZDC_TDC=1; else CAN_DO_CALIB_ZDC_TDC=0; fi
 # for async recalibration
 if has_detector_calib EMC && has_detector_reco EMC && [[ $SYNCMODE != 1 ]]; then CAN_DO_CALIB_EMC_ASYNC_RECALIB=1; else CAN_DO_CALIB_EMC_ASYNC_RECALIB=0; fi
@@ -52,6 +54,9 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
   fi
   if [[ $CAN_DO_CALIB_TOF_CHANNELOFFSETS == 1 ]]; then
     if [[ -z ${CALIB_TOF_CHANNELOFFSETS+x} ]]; then CALIB_TOF_CHANNELOFFSETS=1; fi
+  fi
+  if [[ $CAN_DO_CALIB_TOF_INTEGRATEDCURR == 1 ]]; then
+    if [[ -z ${CALIB_TOF_INTEGRATEDCURR+x} ]]; then CALIB_TOF_INTEGRATEDCURR=1; fi
   fi
 
   # calibrations for TPC
@@ -118,21 +123,30 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
     if [[ -z ${CALIB_ZDC_TDC+x} ]]; then CALIB_ZDC_TDC=1; fi
   fi
 
-  # calibrations for FT0
+  # calibrations for FIT
   if [[ $CAN_DO_CALIB_FT0_TIMEOFFSET == 1 ]]; then
     if [[ -z ${CALIB_FT0_TIMEOFFSET+x} ]]; then CALIB_FT0_TIMEOFFSET=1; fi
   fi
   if [[ $CAN_DO_CALIB_FT0_INTEGRATEDCURR == 1 ]]; then
     if [[ -z ${CALIB_FT0_INTEGRATEDCURR+x} ]]; then CALIB_FT0_INTEGRATEDCURR=1; fi
   fi
+  if [[ $CAN_DO_CALIB_FV0_INTEGRATEDCURR == 1 ]]; then
+    if [[ -z ${CALIB_FV0_INTEGRATEDCURR+x} ]]; then CALIB_FV0_INTEGRATEDCURR=1; fi
+  fi
+  if [[ $CAN_DO_CALIB_FDD_INTEGRATEDCURR == 1 ]]; then
+    if [[ -z ${CALIB_FDD_INTEGRATEDCURR+x} ]]; then CALIB_FDD_INTEGRATEDCURR=1; fi
+  fi
 fi
 
 ( [[ -z ${CALIB_FT0_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_FT0_INTEGRATEDCURR == 0 ]] ) && CALIB_FT0_INTEGRATEDCURR=0
+( [[ -z ${CALIB_FV0_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_FV0_INTEGRATEDCURR == 0 ]] ) && CALIB_FV0_INTEGRATEDCURR=0
+( [[ -z ${CALIB_FDD_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_FDD_INTEGRATEDCURR == 0 ]] ) && CALIB_FDD_INTEGRATEDCURR=0
 ( [[ -z ${CALIB_FT0_TIMEOFFSET:-} ]] || [[ $CAN_DO_CALIB_FT0_TIMEOFFSET == 0 ]] ) && CALIB_FT0_TIMEOFFSET=0
 ( [[ -z ${CALIB_PRIMVTX_MEANVTX:-} ]] || [[ $CAN_DO_CALIB_PRIMVTX_MEANVTX == 0 ]] ) && CALIB_PRIMVTX_MEANVTX=0
 ( [[ -z ${CALIB_TOF_LHCPHASE:-} ]] || [[ $CAN_DO_CALIB_TOF_LHCPHASE == 0 ]] ) && CALIB_TOF_LHCPHASE=0
 ( [[ -z ${CALIB_TOF_CHANNELOFFSETS:-} ]] || [[ $CAN_DO_CALIB_TOF_CHANNELOFFSETS == 0 ]] ) && CALIB_TOF_CHANNELOFFSETS=0
 ( [[ -z ${CALIB_TOF_DIAGNOSTICS:-} ]] || [[ $CAN_DO_CALIB_TOF_DIAGNOSTICS == 0 ]] ) && CALIB_TOF_DIAGNOSTICS=0
+( [[ -z ${CALIB_TOF_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_TOF_INTEGRATEDCURR == 0 ]] ) && CALIB_TOF_INTEGRATEDCURR=0
 ( [[ -z ${CALIB_TPC_SCDCALIB:-} ]] || [[ $CAN_DO_CALIB_TPC_SCDCALIB == 0 ]] ) && CALIB_TPC_SCDCALIB=0
 ( [[ -z ${CALIB_TPC_TIMEGAIN:-} ]] || [[ $CAN_DO_CALIB_TPC_TIMEGAIN == 0 ]] ) && CALIB_TPC_TIMEGAIN=0
 ( [[ -z ${CALIB_TPC_RESPADGAIN:-} ]] || [[ $CAN_DO_CALIB_TPC_RESPADGAIN == 0 ]] ) && CALIB_TPC_RESPADGAIN=0
@@ -157,6 +171,7 @@ if [[ "0${GEN_TOPO_VERBOSE:-}" == "01" ]]; then
   echo "CALIB_TOF_LHCPHASE = $CALIB_TOF_LHCPHASE" 1>&2
   echo "CALIB_TOF_CHANNELOFFSETS = $CALIB_TOF_CHANNELOFFSETS" 1>&2
   echo "CALIB_TOF_DIAGNOSTICS = $CALIB_TOF_DIAGNOSTICS" 1>&2
+  echo "CALIB_TOF_INTEGRATEDCURR = $CALIB_TOF_INTEGRATEDCURR" 1>&2
   echo "CALIB_EMC_BADCHANNELCALIB = $CALIB_EMC_BADCHANNELCALIB" 1>&2
   echo "CALIB_EMC_TIMECALIB = $CALIB_EMC_TIMECALIB" 1>&2
   echo "CALIB_PHS_ENERGYCALIB = $CALIB_PHS_ENERGYCALIB" 1>&2
@@ -173,6 +188,8 @@ if [[ "0${GEN_TOPO_VERBOSE:-}" == "01" ]]; then
   echo "CALIB_ZDC_TDC = $CALIB_ZDC_TDC" 1>&2
   echo "CALIB_FT0_TIMEOFFSET = $CALIB_FT0_TIMEOFFSET" 1>&2
   echo "CALIB_FT0_INTEGRATEDCURR = $CALIB_FT0_INTEGRATEDCURR" 1>&2
+  echo "CALIB_FV0_INTEGRATEDCURR = $CALIB_FV0_INTEGRATEDCURR" 1>&2
+  echo "CALIB_FDD_INTEGRATEDCURR = $CALIB_FDD_INTEGRATEDCURR" 1>&2
   echo "Calibrations for async:" 1>&2
   echo "CALIB_EMC_ASYNC_RECALIB = $CALIB_EMC_ASYNC_RECALIB" 1>&2
 fi
@@ -185,6 +202,7 @@ if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   # TOF
   if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibTOF:TOF/CALIBDATA/0"; fi
   if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "diagWords:TOF/DIAFREQ/0"; fi
+  if [[ $CALIB_TOF_INTEGRATEDCURR == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_SPORADIC "integrCurrNTOF:TOF/ITOFCN/0"; add_semicolon_separated CALIBDATASPEC_BARREL_SPORADIC "integrCurrQTOF:TOF/ITOFCQ/0"; fi
 
   # TPC
   if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then
@@ -268,9 +286,15 @@ fi
 
 # define spec for proxy for sporadic outputs from forward detectors
 if [[ -z ${CALIBDATASPEC_FORWARD_SPORADIC:-} ]]; then
-  # FT0
+  # FIT
   if [[ $CALIB_FT0_INTEGRATEDCURR == 1 ]]; then
     add_semicolon_separated CALIBDATASPEC_FORWARD_SPORADIC "integrCurrFT0:FT0/IFT0C/0"
+  fi
+  if [[ $CALIB_FV0_INTEGRATEDCURR == 1 ]]; then
+    add_semicolon_separated CALIBDATASPEC_FORWARD_SPORADIC "integrCurrFV0:FV0/IFV0C/0"
+  fi
+  if [[ $CALIB_FDD_INTEGRATEDCURR == 1 ]]; then
+    add_semicolon_separated CALIBDATASPEC_FORWARD_SPORADIC "integrCurrFDD:FDD/IFDDC/0"
   fi
 fi
 
