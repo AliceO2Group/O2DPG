@@ -500,7 +500,7 @@ def calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args):
         user_thresholds = []
         for file_name in list_of_threshold_files:
             with open(file_name, "r") as f:
-                user_thresholds.append(json.load(f))
+                user_thresholds.append(json.load(f).get("objects",{}))
 
         for histo_name, tests in rel_val_dict.items():
             this_histo_thresholds=[]
@@ -516,13 +516,20 @@ def calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args):
                         if ref_test["test_name"] == test_name:
                             threshold_list.append(ref_test["value"])
                 if args.combine_thresholds == "mean":
-                    these_thresholds["value"] = pow(margins_thresholds[test_name],REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[test_name]]) * sum(threshold_list) / len(threshold_list)
+                    tuned_threshold = pow(margins_thresholds[test_name],REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[test_name]]) * sum(threshold_list) / len(threshold_list)
                 else:
                     if REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[test_name]] == 1:
                         maxmin = max(threshold_list)
                     else:
                         maxmin = min(threshold_list)
-                    these_thresholds["value"] = pow(margins_thresholds[test_name],REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[test_name]]) * maxmin
+                    tuned_threshold = pow(margins_thresholds[test_name],REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[test_name]]) * maxmin
+                if args.combine_tuned_and_fixed_thresholds:
+                    if REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[test_name]] == 1:
+                        these_thresholds["value"] = max(tuned_threshold,default_thresholds[test_name])
+                    else:
+                        these_thresholds["value"] = min(tuned_threshold,default_thresholds[test_name])
+                else:
+                    these_thresholds["value"] = tuned_threshold
                 this_histo_thresholds.append(these_thresholds)
             the_thresholds[histo_name] = this_histo_thresholds
 
@@ -1010,6 +1017,7 @@ def main():
     common_threshold_parser = argparse.ArgumentParser(add_help=False)
     common_threshold_parser.add_argument("--use-values-as-thresholds", nargs="*", dest="use_values_as_thresholds", help="Use values from another run as thresholds for this one")
     common_threshold_parser.add_argument("--combine-thresholds", dest="combine_thresholds",  choices=["mean", "max/min"], help="Arithmetic mean or maximum/minimum is chosen as threshold value", default="mean")
+    common_threshold_parser.add_argument("--combine-tuned-and-fixed-thresholds",dest="combine_tuned_and_fixed_thresholds", action="store_true", help="Combine the result from 'combine-thresholds' with the fixed threshold value using maximum/minimum")
     for test, thresh in zip(REL_VAL_TEST_NAMES, REL_VAL_TEST_DEFAULT_THRESHOLDS):
         test_dashed = test.replace("_", "-")
         common_threshold_parser.add_argument(f"--with-test-{test_dashed}", dest=f"with_{test}", action="store_true", help=f"run {test} test")
