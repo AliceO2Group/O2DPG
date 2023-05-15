@@ -260,7 +260,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   if [[ $PERIOD == "LHC22s" ]]; then
     INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-0} # in this way, only TPC/Calib/CorrectionMaps is applied, and we know that for 22s it is the same as TPC/Calib/CorrectionMapsRef; note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
   fi
-  # in MC, we set it to a negative value to disable completely the corrections; note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
+  # in MC, we set it to a negative value to disable completely the corrections (not yet operational though, please check O2);
+  # note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
     INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC--1}
   fi
@@ -273,7 +274,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     echo "Passed valued for scaling is zero, only TPC/Calib/CorrectionMaps will be applied"
     export TPC_CORR_SCALING+=" --corrmap-lumi-inst $INST_IR_FOR_TPC "
   elif [[ $INST_IR_FOR_TPC -lt 0 ]]; then # do not apply any correction
-    echo "Passed valued for scaling is smaller than zero, we will not apply any correction"
+    echo "Passed valued for scaling is smaller than zero, no scaling will be applied"
+    echo "NOTA BENE: In the future, this value will signal to not apply any correction at all, which is not operational yet (but please check, as it depends on O2)"
     export TPC_CORR_SCALING+=" --corrmap-lumi-inst $INST_IR_FOR_TPC "
   elif [[ $INST_IR_FOR_TPC == "CTPCCDB" ]]; then # using what we have in the CCDB CTP counters, extracted at the beginning of the script
     echo "Using CTP CCDB which gave the mean IR of the run at the beginning of the script ($RUN_IR Hz)"
@@ -307,7 +309,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
 fi
 
 # adding additional cluster errors
-TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalY=0.01;GPU_rec_tpc.clusterError2AdditionalZ=0.0225;"
+# the values below should be squared, but the validation of those values (0.01 and 0.0225) is ongoing
+TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;"
 TRACKTUNETPC="$TPCEXTRAERR"
 
 # combining parameters
