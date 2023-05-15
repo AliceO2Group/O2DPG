@@ -187,7 +187,7 @@ def add_analysis_post_processing_tasks(workflow):
         workflow.append(task)
 
 
-def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, needs=None, autoset_converters=False, include_disabled_analyses=False):
+def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, needs=None, autoset_converters=False, include_disabled_analyses=False, timeout=None):
     """Add default analyses to user workflow
 
     Args:
@@ -249,6 +249,8 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
                 ana["tasks"].append(i)
         piped_analysis = f" --configuration {configuration} | ".join(ana["tasks"])
         piped_analysis += f" --configuration {configuration} --aod-file {input_aod}"
+        if timeout is not None:
+            piped_analysis += f" --timeout {timeout}"
         workflow.append(create_ana_task(ana["name"], piped_analysis, output_dir, needs=needs, is_mc=is_mc))
 
     # append potential post-processing
@@ -306,7 +308,7 @@ def run(args):
         return 1
 
     workflow = []
-    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, autoset_converters=args.autoset_converters, include_disabled_analyses=args.include_disabled)
+    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, autoset_converters=args.autoset_converters, include_disabled_analyses=args.include_disabled, timeout=args.timeout)
     if args.with_qc_upload:
         add_analysis_qc_upload_tasks(workflow, args.period_name, args.run_number, args.pass_name)
     if not workflow:
@@ -330,6 +332,7 @@ def main():
     parser.add_argument("--only-analyses", dest="only_analyses", nargs="*", help="filter only on these analyses")
     parser.add_argument("--include-disabled", dest="include_disabled", action="store_true", help="ignore if an analysis is disabled an run anyway")
     parser.add_argument("--autoset-converters", dest="autoset_converters", action="store_true", help="Compatibility mode to automatically set the converters for the analysis")
+    parser.add_argument("--timeout", type=int, default=None, help="Timeout for analysis tasks in seconds.")
     parser.set_defaults(func=run)
     args = parser.parse_args()
     return(args.func(args))

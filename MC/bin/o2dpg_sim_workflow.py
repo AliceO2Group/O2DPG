@@ -107,6 +107,7 @@ parser.add_argument('--no-tpc-digitchunking', action='store_true', help=argparse
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring)
                                                             # (consider doing this rather in O2 digitization code directly)
+parser.add_argument('--sor', default=-1, type=int, help=argparse.SUPPRESS) # may pass start of run with this (otherwise it is autodetermined from run number)
 parser.add_argument('--run-anchored', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--alternative-reco-software', default="", help=argparse.SUPPRESS) # power feature to set CVFMS alienv software version for reco steps (different from default)
 parser.add_argument('--dpl-child-driver', default="", help="Child driver to use in DPL processes (export mode)")
@@ -266,9 +267,12 @@ if  len(args.meanVertexPerRunTxtFile) > 0:
 # ----------- START WORKFLOW CONSTRUCTION -----------------------------
 
 # set the time to start of run (if no timestamp specified)
+if args.sor==-1:
+   args.sor = retrieve_sor(args.run)
+   assert (args.sor != 0)
+
 if args.timestamp==-1:
-   args.timestamp = retrieve_sor(args.run)
-   assert (args.timestamp != 0)
+   args.timestamp = args.sor
 
 NTIMEFRAMES=int(args.tf)
 NWORKERS=args.j
@@ -326,7 +330,7 @@ if (includeLocalQC or includeFullQC) and not isdir(qcdir):
 # create/publish the GRPs and other GLO objects for consistent use further down the pipeline
 orbitsPerTF=int(args.orbitsPerTF)
 GRP_TASK = createTask(name='grpcreate', cpu='0')
-GRP_TASK['cmd'] = 'o2-grp-simgrp-tool createGRPs --run ' + str(args.run) + ' --publishto ${ALICEO2_CCDB_LOCALCACHE:-.ccdb} -o grp --hbfpertf ' + str(orbitsPerTF) + ' --field ' + args.field
+GRP_TASK['cmd'] = 'o2-grp-simgrp-tool createGRPs --timestamp ' + str(args.timestamp) + ' --run ' + str(args.run) + ' --publishto ${ALICEO2_CCDB_LOCALCACHE:-.ccdb} -o grp --hbfpertf ' + str(orbitsPerTF) + ' --field ' + args.field
 GRP_TASK['cmd'] += ' --readoutDets ' + " ".join(activeDetectors) + ' --print ' + ('','--lhcif-CCDB')[args.run_anchored]
 if (not args.run_anchored == True) and len(args.bcPatternFile) > 0:
     GRP_TASK['cmd'] += '  --bcPatternFile ' + str(args.bcPatternFile)
@@ -715,8 +719,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                             "HBFUtils.runNumber" : args.run }
    # we set the timestamp here only if specified explicitely (otherwise it will come from
    # the simulation GRP and digitization)
-   if (args.timestamp != -1):
-      globalTFConfigValues["HBFUtils.startTime"] = args.timestamp
+   if (args.sor != -1):
+      globalTFConfigValues["HBFUtils.startTime"] = args.sor
 
    def putConfigValues(localCF = {}):
      """
@@ -929,7 +933,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(ITSRECOtask)
 
    FT0RECOtask=createTask(name='ft0reco_'+str(tf), needs=[getDigiTaskName("FT0")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
-   FT0RECOtask['cmd'] = '${O2_ROOT}/bin/o2-ft0-reco-workflow ' + getDPL_global_options() + putConfigValues()
+   FT0RECOtask['cmd'] = '${O2_ROOT}/bin/o2-ft0-reco-workflow --disable-time-offset-calib ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(FT0RECOtask)
 
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)

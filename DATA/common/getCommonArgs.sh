@@ -9,7 +9,7 @@ if [[ -z $SEVERITY || -z $NUMAID || -z $SHMSIZE || -z $FILEWORKDIR || -z $EPNSYN
   exit 1
 fi
 
-ARGS_ALL="--session ${OVERRIDE_SESSION:-default} --severity $SEVERITY --shm-segment-id $(($NUMAID + 10 * ${O2JOBID:-0})) --shm-segment-size $SHMSIZE ${ARGS_ALL_EXTRA:-} --early-forward-policy noraw"
+ARGS_ALL="--session ${OVERRIDE_SESSION:-default} --severity $SEVERITY --shm-segment-id ${O2JOBSHMID:-$NUMAID} --shm-segment-size $SHMSIZE ${ARGS_ALL_EXTRA:-} --early-forward-policy noraw"
 ARGS_ALL_CONFIG="NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirGRP=$FILEWORKDIRRUN;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;${ALL_EXTRA_CONFIG:-}"
 if [[ $EPNSYNCMODE == 1 ]]; then
   ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
@@ -20,7 +20,7 @@ elif [[ "${ENABLE_METRICS:-}" != "1" ]]; then
   ARGS_ALL+=" --monitoring-backend no-op://"
 fi
 [[ $SHMTHROW == 0 ]] && ARGS_ALL+=" --bad-alloc-max-attempts 60 --bad-alloc-attempt-interval 1000"
-[[ ! -z ${SHM_MANAGER_SHMID:-} && "0$GEN_TOPO_CALIB_WORKFLOW" != "01" ]] && ARGS_ALL+=" --no-cleanup --shm-no-cleanup on --shmid $SHM_MANAGER_SHMID"
+[[ ! -z ${SHM_MANAGER_SHMID:-} && ${GEN_TOPO_CALIB_WORKFLOW:-} != 1 ]] && ARGS_ALL+=" --no-cleanup --shm-no-cleanup on --shmid $SHM_MANAGER_SHMID"
 [[ $NORATELOG == 1 ]] && ARGS_ALL+=" --fairmq-rate-logging 0"
 
 fi # getCommonArgs.sh sourced

@@ -17,6 +17,8 @@ run_AOD_merging() {
   return $exitcode
 }
 
+timeStartFullProcessing=`date +%s`
+
 # to skip positional arg parsing before the randomizing part.
 inputarg="${1}"
 
@@ -199,12 +201,14 @@ else
   cp $O2_ROOT/prodtests/full-system-test/run-workflow-on-inputlist.sh .
 fi
 
-if [[ -z $DPL_WORKFLOW_FROM_OUTSIDE ]]; then
+if [[ -f dpl-workflow.sh ]]; then
+  echo "Use dpl-workflow.sh passed as input"
+elif [[ -z $ALIEN_JDL_DPLWORKFLOWFROMOUTSIDE ]]; then
   echo "Use dpl-workflow.sh from O2"
   cp $O2_ROOT/prodtests/full-system-test/dpl-workflow.sh .
 else
   echo "Use dpl-workflow.sh passed as input"
-  cp $DPL_WORKFLOW_FROM_OUTSIDE .
+  cp $ALIEN_JDL_DPLWORKFLOWFROMOUTSIDE .
 fi
 
 if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
@@ -213,7 +217,6 @@ fi
 
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
 ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
-ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 
 # TFDELAY and throttling
 export TFDELAYSECONDS=40
@@ -339,31 +342,36 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]]; then
   export GPUTYPE="HIP"
   export GPUMEMSIZE=$((25 << 30))
   if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
-    if [[ $keep -eq 0 ]]; then
-      if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
-	export MULTIPLICITY_PROCESS_tof_matcher=2
-	export MULTIPLICITY_PROCESS_mch_cluster_finder=3
-	export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
-	export MULTIPLICITY_PROCESS_itstpc_track_matcher=3
-	export MULTIPLICITY_PROCESS_its_tracker=2
+    if [[ "ALIEN_JDL_USEFULLNUMADOMAIN" == 0 ]]; then
+      if [[ $keep -eq 0 ]]; then
+	if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
+	  export OPTIMIZED_PARALLEL_ASYNC=pp_1gpu  # sets the multiplicities to optimized defaults for this configuration (1 job with 1 gpu on EPNs)
+	else
+	  # forcing multiplicities to be 1
+	  export MULTIPLICITY_PROCESS_tof_matcher=1
+	  export MULTIPLICITY_PROCESS_mch_cluster_finder=1
+	  export MULTIPLICITY_PROCESS_tpc_entropy_decoder=1
+	  export MULTIPLICITY_PROCESS_itstpc_track_matcher=1
+	  export MULTIPLICITY_PROCESS_its_tracker=1
+	  export OMP_NUM_THREADS=4
+	fi
+	export TIMEFRAME_RATE_LIMIT=8
       else
-	# forcing multiplicities to be 1
-	export MULTIPLICITY_PROCESS_tof_matcher=1
-	export MULTIPLICITY_PROCESS_mch_cluster_finder=1
-	export MULTIPLICITY_PROCESS_tpc_entropy_decoder=1
-	export MULTIPLICITY_PROCESS_itstpc_track_matcher=1
-	export MULTIPLICITY_PROCESS_its_tracker=1
+	export TIMEFRAME_RATE_LIMIT=4
       fi
-      export TIMEFRAME_RATE_LIMIT=8
+      export SHMSIZE=30000000000
     else
-      export TIMEFRAME_RATE_LIMIT=4
+      export DPL_SMOOTH_RATE_LIMITING=1
+      if [[ $BEAMTYPE == "pp" ]]; then
+	export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, pp)
+	export TIMEFRAME_RATE_LIMIT=45
+	export SHMSIZE=100000000000
+      else  # PbPb
+	export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, PbPb)
+	export TIMEFRAME_RATE_LIMIT=20
+	export SHMSIZE=128000000000
+      fi
     fi
-    if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
-      export OMP_NUM_THREADS=8
-    else
-      export OMP_NUM_THREADS=4
-    fi
-    export SHMSIZE=30000000000
   fi
 else
   # David, Oct 13th
@@ -377,7 +385,7 @@ else
     elif (( $(echo "$RUN_IR < 50000" | bc -l) )); then
       export TIMEFRAME_RATE_LIMIT=6
     fi
-    export OMP_NUM_THREADS=6
+    export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu # sets the multiplicities to optimized defaults for this configuration (grid)
     export SHMSIZE=16000000000
   fi
 fi
@@ -385,6 +393,13 @@ fi
 echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS} TIMEFRAME_RATE_LIMIT ${TIMEFRAME_RATE_LIMIT}"
 
 [[ -z $NTIMEFRAMES ]] && export NTIMEFRAMES=-1
+
+# let's set O2JOBID and SHMEMID
+O2JOBIDscript="$O2DPG_ROOT/DATA/production/common/setVarsFromALIEN_PROC_ID.sh"
+if [[ -f "setVarsFromALIEN_PROC_ID.sh" ]]; then
+  O2JOBIDscript="setVarsFromALIEN_PROC_ID.sh"
+fi
+source $O2JOBIDscript
 
 STATSCRIPT="$O2DPG_ROOT/DATA/production/common/getStat.sh"
 if [[ -f "getStat.sh" ]]; then
@@ -399,9 +414,10 @@ if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
   if [[ "0$RUN_WORKFLOW" != "00" ]]; then
     timeStart=`date +%s`
     time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+    exitcode=$?
     timeEnd=`date +%s`
     timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-    delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+    delta=$(( $timeEnd-$timeStart ))
     echo "Time spent in running the workflow = $delta s"
     echo "exitcode = $exitcode"
     if [[ $exitcode -ne 0 ]]; then
@@ -410,7 +426,7 @@ if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
       exit $exitcode
     fi
     mv latest.log latest_reco_1.log
-    ./$STATSCRIPT latest_reco_1.log
+    $STATSCRIPT latest_reco_1.log
   fi
 else
   # running the wf in split mode
@@ -429,11 +445,11 @@ else
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
       time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      delta=$(( $timeEnd-$timeStart ))
       echo "Time spent in running the workflow, Step 1 = $delta s"
-      exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from Step 1 of processing is " $exitcode > validation_error.message
@@ -441,7 +457,7 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_1.log
-      ./$STATSCRIPT latest_reco_1.log reco_1
+      $STATSCRIPT latest_reco_1.log reco_1
     fi
   fi
 
@@ -458,11 +474,11 @@ else
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
       time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      delta=$(( $timeEnd-$timeStart ))
       echo "Time spent in running the workflow, Step 2 = $delta s"
-      exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from Step 2 of processing is " $exitcode > validation_error.message
@@ -470,7 +486,7 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_2.log
-      ./$STATSCRIPT latest_reco_2.log reco_2
+      $STATSCRIPT latest_reco_2.log reco_2
       # let's compare to previous step
       if [[ -f latest_reco_1.log ]]; then
 	nCTFsFilesInspected_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
@@ -508,11 +524,11 @@ else
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
       time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      delta=$(( $timeEnd-$timeStart ))
       echo "Time spent in running the workflow, Step 3 = $delta s"
-      exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from Step 3 of processing is " $exitcode > validation_error.message
@@ -534,14 +550,14 @@ if [[ -f "performanceMetrics.json" ]]; then
     done
     timeEnd=`date +%s`
     timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-    delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+    delta=$(( $timeEnd-$timeStart ))
     echo "Time spent in splitting the metrics files = $delta s"
 fi
 
 if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   # flag to possibly enable Analysis QC
   [[ -z ${ALIEN_JDL_RUNANALYSISQC+x} ]] && ALIEN_JDL_RUNANALYSISQC=1
-  
+
   # merging last AOD file in case it is too small; threshold put at 80% of the required file size
   AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
   AOD_LIST=`find . -name AO2D.root`
@@ -568,11 +584,11 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       ln -s ../list.list .
       timeStart=`date +%s`
       time o2-aod-merger --input list.list
+      exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
       delta=$(( $timeEnd-$timeStart ))
       echo "Time spent in merging last AOD files, to reach a good size for that too = $delta s"
-      exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from aod-merger for latest file is " $exitcode > validation_error.message
@@ -590,7 +606,7 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       rm -rf tmpAOD
     fi
   fi
-  
+
   # now checking all AO2D files and running the analysis QC
   # retrieving again the list of AOD files, in case it changed after the merging above
   AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
@@ -618,13 +634,12 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       echo "Checking AO2Ds with un-merged DFs in $AOD_DIR"
       timeStartCheck=`date +%s`
       time root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
+      exitcode=$?
       timeEndCheck=`date +%s`
       timeUsedCheck=$(( $timeUsedCheck+$timeEndCheck-$timeStartCheck ))
-      exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D check is " $exitcode > validation_error.message
 	echo "exit code from AO2D check is " $exitcode
-	exit $exitcode
       fi
     fi
     cd -
@@ -682,9 +697,9 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       echo "Checking AO2Ds with merged DFs in $AOD_DIR"
       timeStartCheckMergedAOD=`date +%s`
       time root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
+      exitcode=$?
       timeEndCheckMergedAOD=`date +%s`
       timeUsedCheckMergedAOD=$(( $timeUsedCheckMergedAOD+$timeEndCheckMergedAOD-$timeStartCheckMergedAOD ))
-      exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D with merged DFs check is " $exitcode > validation_error.message
 	echo "exit code from AO2D with merged DFs check is " $exitcode
@@ -707,9 +722,9 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       time ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
       # running it
       time ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
+      exitcode=$?
       timeEndAnalysisQC=`date +%s`
       timeUsedAnalysisQC=$(( $timeUsedAnalysisQC+$timeEndAnalysisQC-$timeStartAnalysisQC ))
-      exitcode=$?
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from Analysis QC is " $exitcode > validation_error.message
@@ -741,8 +756,11 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   fi
 fi
 
-timeUsed=$(( $timeUsed+$timeUsedCheck+$timeUsedMerge+$timeUsedCheckMergedAOD+$timeUsedAnalysisQC ))
-echo "Time used for processing = $timeUsed s"
+
+timeEndFullProcessing=`date +%s`
+timeUsedFullProcessing=$(( $timeEndFullProcessing+$timeStartFullProcessing ))
+
+echo "Time used for processing = $timeUsedFullProcessing s"
 
 if [[ $ALIEN_JDL_QCOFF != 1 ]]; then
   # copying the QC json file here

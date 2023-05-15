@@ -17,6 +17,8 @@ else
   ULIMIT_S=`ulimit -S -n`
   ULIMIT_H=`ulimit -H -n`
   ULIMIT_REQ=4000
+  [[ $ULIMIT_S == "unlimited" ]] && ULIMIT_S=$ULIMIT_REQ
+  [[ $ULIMIT_H == "unlimited" ]] && ULIMIT_H=$ULIMIT_REQ
   if [[ $ULIMIT_H -gt $ULIMIT_S ]] && [[ $ULIMIT_S -lt $ULIMIT_REQ ]]; then
     ulimit -S -n $(($ULIMIT_H > $ULIMIT_REQ ? $ULIMIT_REQ : $ULIMIT_H))
   fi
@@ -64,7 +66,7 @@ if [[ -z "${TFLOOP:-}" ]];         then export TFLOOP=0; fi                    #
 if [[ -z "${NTIMEFRAMES:-}" ]];    then export NTIMEFRAMES=-1; fi              # max number of time frames to process, <=0 : unlimited
 if [[ -z "${CTFDICT_NTF:-}" ]];    then export CTFDICT_NTF=100; fi             # auto-save CTF dictionary after each CTFDICT_NTF TFs (if > 0)
 if [[ -z "${CTF_MAXDETEXT:-}" ]];  then export CTF_MAXDETEXT=0; fi             # extend CTF output dir.name by detectors names if their number does not exceed this
-if [[ -z "${TFDELAY:-}" ]];        then export TFDELAY=100; fi                 # Delay in seconds between publishing time frames
+if [[ -z "${TFDELAY:-}" ]];        then export TFDELAY=0; fi                   # Delay in seconds between publishing time frames
 if [[ -z "${GPUTYPE:-}" ]];        then export GPUTYPE=CPU; fi                 # GPU Tracking backend to use, can be CPU / CUDA / HIP / OCL / OCL2
 if [[ -z "${DDSHMSIZE:-}" ]];      then export DDSHMSIZE=$(( 8 << 10 )); fi    # Size of shared memory for DD Input
 if [[ -z "${DDHDRSIZE:-}" ]];      then export DDHDRSIZE=$(( 1 << 10 )); fi    # Size of shared memory for DD Input
@@ -94,6 +96,7 @@ if [[ -z "${IS_SIMULATED_DATA:-}" ]]; then export IS_SIMULATED_DATA=1; fi       
 if [[ -z "${CTF_DIR:-}" ]];           then CTF_DIR=$FILEWORKDIR; fi             # Directory where to store CTFs
 if [[ -z "${CALIB_DIR:-}" ]];         then CALIB_DIR="/dev/null"; fi            # Directory where to store output from calibration workflows, /dev/null : skip their writing
 if [[ -z "${EPN2EOS_METAFILES_DIR:-}" ]]; then EPN2EOS_METAFILES_DIR="/dev/null"; fi # Directory where to store epn2eos files metada, /dev/null : skip their writing
+if [[ -z "${TPC_CORR_SCALING:-}" ]]; then export TPC_CORR_SCALING=""; fi      # TPC corr.map lumi scaling options, any combination of --require-ctp-lumi, --corrmap-lumi-mean <float>, --corrmap-lumi-inst <float>
 if [[ $EPNSYNCMODE == 0 ]]; then
   if [[ -z "${SHMSIZE:-}" ]];       then export SHMSIZE=$(( 8 << 30 )); fi    # Size of shared memory for messages
   if [[ -z "${NGPUS:-}" ]];         then export NGPUS=1; fi                   # Number of GPUs to use, data distributed round-robin
@@ -133,6 +136,74 @@ if [[ -z "${MULTIPLICITY_FACTOR_REST:-}" ]]; then export MULTIPLICITY_FACTOR_RES
 
 if [[ `uname` == Darwin ]]; then export UDS_PREFIX=; else export UDS_PREFIX="@"; fi
 
+# Env variables required for workflow setup
+if [[ $SYNCMODE == 1 ]]; then
+  if [[ -z "${WORKFLOW_DETECTORS_MATCHING+x}" ]]; then export WORKFLOW_DETECTORS_MATCHING="ITSTPC,ITSTPCTRD,ITSTPCTOF,ITSTPCTRDTOF,PRIMVTX"; fi # Select matchings that are enabled in sync mode
+else
+  if [[ -z "${WORKFLOW_DETECTORS_MATCHING+x}" ]]; then export WORKFLOW_DETECTORS_MATCHING="ALL"; fi # All matching / vertexing enabled in async mode
+fi
+
+LIST_OF_ASYNC_RECO_STEPS="MID MCH MFT FDD FV0 ZDC HMP"
+
+DISABLE_DIGIT_ROOT_INPUT="--disable-root-input"
+: ${DISABLE_DIGIT_CLUSTER_INPUT="--clusters-from-upstream"}
+
+# Special detector related settings
+MID_FEEID_MAP="$FILEWORKDIR/mid-feeId_mapper.txt"
+
+ITSMFT_STROBES=""
+[[ ! -z ${ITS_STROBE:-} ]] && ITSMFT_STROBES+="ITSAlpideParam.roFrameLengthInBC=$ITS_STROBE;"
+[[ ! -z ${MFT_STROBE:-} ]] && ITSMFT_STROBES+="MFTAlpideParam.roFrameLengthInBC=$MFT_STROBE;"
+
+
+# Set active reconstruction steps (defaults added according to SYNCMODE)
+for i in `echo $LIST_OF_GLORECO | sed "s/,/ /g"`; do
+  has_processing_step MATCH_$i && add_comma_separated WORKFLOW_DETECTORS_MATCHING $i # Enable extra matchings requested via WORKFLOW_EXTRA_PROCESSING_STEPS
+done
+if [[ $SYNCMODE == 1 ]]; then # Add default steps for synchronous mode
+  add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS ENTROPY_ENCODER
+else # Add default steps for async mode
+  for i in $LIST_OF_ASYNC_RECO_STEPS; do
+    has_detector_reco $i && add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS ${i}_RECO
+  done
+  add_comma_separated WORKFLOW_EXTRA_PROCESSING_STEPS TPC_DEDX
+fi
+
+# Assemble matching sources
+TRD_SOURCES=
+TOF_SOURCES=
+TRACK_SOURCES=
+has_detectors_reco ITS TPC && has_detector_matching ITSTPC && add_comma_separated TRACK_SOURCES "ITS-TPC"
+has_detectors_reco TPC TRD && has_detector_matching TPCTRD && { add_comma_separated TRD_SOURCES TPC; add_comma_separated TRACK_SOURCES "TPC-TRD"; }
+has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRD && { add_comma_separated TRD_SOURCES ITS-TPC; add_comma_separated TRACK_SOURCES "ITS-TPC-TRD"; }
+has_detectors_reco TPC TOF && has_detector_matching TPCTOF && { add_comma_separated TOF_SOURCES TPC; add_comma_separated TRACK_SOURCES "TPC-TOF"; }
+has_detectors_reco ITS TPC TOF && has_detector_matching ITSTPC && has_detector_matching ITSTPCTOF && { add_comma_separated TOF_SOURCES ITS-TPC; add_comma_separated TRACK_SOURCES "ITS-TPC-TOF"; }
+has_detectors_reco TPC TRD TOF && has_detector_matching TPCTRD && has_detector_matching TPCTRDTOF && { add_comma_separated TOF_SOURCES TPC-TRD; add_comma_separated TRACK_SOURCES "TPC-TRD-TOF"; }
+has_detectors_reco ITS TPC TRD TOF && has_detector_matching ITSTPCTRD && has_detector_matching ITSTPCTRDTOF && { add_comma_separated TOF_SOURCES ITS-TPC-TRD; add_comma_separated TRACK_SOURCES "ITS-TPC-TRD-TOF"; }
+has_detectors_reco MFT MCH && has_detector_matching MFTMCH && add_comma_separated TRACK_SOURCES "MFT-MCH"
+has_detectors_reco MCH MID && has_detector_matching MCHMID && add_comma_separated TRACK_SOURCES "MCH-MID"
+for det in `echo $LIST_OF_DETECTORS | sed "s/,/ /g"`; do
+  if [[ $LIST_OF_ASYNC_RECO_STEPS =~ (^| )${det}( |$) ]]; then
+    has_detector ${det} && has_processing_step ${det}_RECO && add_comma_separated TRACK_SOURCES "$det"
+  else
+    has_detector_reco $det && add_comma_separated TRACK_SOURCES "$det"
+  fi
+done
+
+: ${VERTEXING_SOURCES:="$TRACK_SOURCES"}
+: ${VERTEX_TRACK_MATCHING_SOURCES:="$TRACK_SOURCES"}
+[[ ! -z $VERTEXING_SOURCES ]] && PVERTEX_CONFIG+=" --vertexing-sources $VERTEXING_SOURCES"
+[[ ! -z $VERTEX_TRACK_MATCHING_SOURCES ]] && PVERTEX_CONFIG+=" --vertex-track-matching-sources $VERTEX_TRACK_MATCHING_SOURCES"
+
+if [[ -z ${SVERTEXING_SOURCES:-} ]]; then
+  SVERTEXING_SOURCES="$VERTEXING_SOURCES"
+  [[ -z ${TPC_TRACKS_SVERTEXING:-} ]] && SVERTEXING_SOURCES=$(echo $SVERTEXING_SOURCES | sed -E -e "s/(^|,)TPC(-TRD|-TOF)+//g" -e "s/,TPC,/,/")
+fi
+
+# this option requires well calibrated timing beween different detectors, at the moment suppress it
+#has_detector_reco FT0 && PVERTEX_CONFIG+=" --validate-with-ft0"
+
+# Sanity checks on env variables
 if [[ $(( $EXTINPUT + $CTFINPUT + $RAWTFINPUT + $DIGITINPUT )) -ge 2 ]]; then
   echo Only one of EXTINPUT / CTFINPUT / RAWTFINPUT / DIGITINPUT must be set
   exit 1

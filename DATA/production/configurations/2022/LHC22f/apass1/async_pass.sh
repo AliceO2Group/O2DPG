@@ -220,7 +220,6 @@ fi
 
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
 ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
-ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 
 # TFDELAY and throttling
 export TFDELAYSECONDS=40
@@ -392,6 +391,13 @@ fi
 echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS} TIMEFRAME_RATE_LIMIT ${TIMEFRAME_RATE_LIMIT}"
 
 [[ -z $NTIMEFRAMES ]] && export NTIMEFRAMES=-1
+
+# let's set O2JOBID and SHMEMID
+O2JOBIDscript="$O2DPG_ROOT/DATA/production/common/setVarsFromALIEN_PROC_ID.sh"
+if [[ -f "setVarsFromALIEN_PROC_ID.sh" ]]; then
+  O2JOBIDscript="setVarsFromALIEN_PROC_ID.sh"
+fi
+source $O2JOBIDscript
 
 STATSCRIPT="$O2DPG_ROOT/DATA/production/common/getStat.sh"
 if [[ -f "getStat.sh" ]]; then

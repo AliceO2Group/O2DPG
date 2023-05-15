@@ -62,8 +62,8 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     ITSTRK_THREADS=2
     ITSTPC_THREADS=2
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_4gpu" ]]; then
-    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=36
-    [[ -z $SHMSIZE ]] && SHMSIZE=90000000000
+    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=45
+    [[ -z $SHMSIZE ]] && SHMSIZE=100000000000
     NGPURECOTHREADS=8
     NTRDTRKTHREADS=2
     ITSTRK_THREADS=2
@@ -122,7 +122,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
   if [[ $BEAMTYPE == "pp" ]]; then
     N_ITSRAWDEC=$(math_max $((6 * $EPNPIPELINES * $NGPUS / 4)) 1)
     N_MFTRAWDEC=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
-    if [[ "0$GEN_TOPO_AUTOSCALE_PROCESSES" == "01" && $RUNTYPE == "PHYSICS" ]]; then
+    if [[ "${GEN_TOPO_AUTOSCALE_PROCESSES:-}" == "1" && $RUNTYPE == "PHYSICS" ]]; then
       N_MCHCL=$(math_max $((6 * 100 / $RECO_NUM_NODES_WORKFLOW_CMP)) 1)
     fi
     if [[ "$HIGH_RATE_PP" == "1" ]]; then
@@ -153,7 +153,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
     N_TPCTRK=8
     NGPURECOTHREADS=4
   fi
-  if [[ "0$GEN_TOPO_AUTOSCALE_PROCESSES" == "01" ]]; then
+  if [[ "${GEN_TOPO_AUTOSCALE_PROCESSES:-}" == "1" ]]; then
     # Scale some multiplicities with the number of nodes
     N_ITSRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSRAWDEC:-1}) # This means, if we have 60 EPN nodes, we need at least 3 ITS RAW decoders (will be scaled down by a factor of two automatically if we have 2 NUMA domains)
     N_MFTRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTRAWDEC:-1})

@@ -142,7 +142,7 @@
         },
         {
             "name": "EventSelectionQA",
-            "enabled": true,
+            "enabled": false,
             "expected_output": ["AnalysisResults.root"],
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",

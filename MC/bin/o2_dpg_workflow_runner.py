@@ -1155,6 +1155,24 @@ class WorkflowExecutor:
         outF.close()
 
 
+    # print error message when no progress can be made
+    def noprogress_errormsg(self):
+        # TODO: rather than writing this out here; refer to the documentation discussion this?
+        msg = """Scheduler runtime error: The scheduler is not able to make progress although we have a non-zero candidate set.
+
+Explanation: This is typically the case because the **ESTIMATED** resource requirements for some tasks
+in the workflow exceed the available number of CPU cores or the memory (as explicitely or implicitely determined from the
+--cpu-limit and --mem-limit options). Often, this might be the case on laptops with <=16GB of RAM if one of the tasks
+is demanding ~16GB. In this case, one could try to tell the scheduler to use a slightly higher memory limit
+with an explicit --mem-limit option (for instance `--mem-limit 20000` to set to 20GB). This might work whenever the
+**ACTUAL** resource usage of the tasks is smaller than anticipated (because only small test cases are run).
+
+In addition it might be worthwile running the workflow without this resource aware, dynamic scheduler.
+This is possible by converting the json workflow into a linearized shell script and by directly executing the shell script.
+Use the `--produce-script myscript.sh` option for this.
+"""
+        print (msg, file=sys.stderr)
+
     def execute(self):
         starttime = time.perf_counter()
         psutil.cpu_percent(interval=None)
@@ -1249,7 +1267,7 @@ class WorkflowExecutor:
                 actionlogger.debug('Sorted current candidates: ' + str([(c,self.idtotask[c]) for c in candidates]))
                 self.try_job_from_candidates(candidates, self.process_list, finished)
                 if len(candidates) > 0 and len(self.process_list) == 0:
-                    print("Runtime error: Not able to make progress: Nothing scheduled although non-zero candidate set", file=sys.stderr)
+                    self.noprogress_errormsg()
                     send_webhook(self.args.webhook,"Unable to make further progress: Quitting")
                     errorencountered = True
                     break
