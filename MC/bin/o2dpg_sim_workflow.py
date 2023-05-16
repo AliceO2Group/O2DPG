@@ -486,6 +486,14 @@ MATBUD_DOWNLOADER_TASK = createTask(name='matbuddownloader', cpu='0')
 MATBUD_DOWNLOADER_TASK['cmd'] = '[ -f matbud.root ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p GLO/Param/MatLUT -o matbud.root --no-preserve-path --timestamp ' + str(args.timestamp) + ' --created-not-after ' + str(args.condition_not_after)
 workflow['stages'].append(MATBUD_DOWNLOADER_TASK)
 
+# We download trivial TPC space charge corrections to be applied during
+# reco. This is necessary to have consistency (decalibration and calibration) between digitization and reconstruction ... until digitization can
+# also apply this effect via CCDB.
+TPC_SPACECHARGE_DOWNLOADER_TASK = createTask(name='tpc_spacecharge_downloader', cpu='0')
+TPC_SPACECHARGE_DOWNLOADER_TASK['cmd'] = '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p TPC/Calib/CorrectionMapRef TPC/Calib/CorrectionMap --timestamp 1 --created-not-after ' + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE}'
+workflow['stages'].append(TPC_SPACECHARGE_DOWNLOADER_TASK)
+
+
 # loop over timeframes
 for tf in range(1, NTIMEFRAMES + 1):
    TFSEED = SIMSEED + tf
@@ -795,7 +803,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    workflow['stages'].append(ContextTask)
 
-   tpcdigineeds=[ContextTask['name'], LinkGRPFileTask['name']]
+   tpcdigineeds=[ContextTask['name'], LinkGRPFileTask['name'], TPC_SPACECHARGE_DOWNLOADER_TASK['name']]
    if usebkgcache:
       tpcdigineeds += [ BKG_HITDOWNLOADER_TASKS['TPC']['name'] ]
 
