@@ -32,7 +32,7 @@ int External()
         for (auto &track : *tracks)
         {
             auto pdg = track.GetPdgCode();
-            if (pdg == checkPdgSignal)
+            if (std::abs(pdg) == checkPdgSignal)
             {
                 // count signal PDG
                 nSignal++;
@@ -43,7 +43,7 @@ int External()
                     // count decay PDGs
                     for (int i = 0, n = checkPdgDecays.size(); i < n; ++i)
                     {
-                        if (pdgDau == checkPdgDecays[i])
+                        if (std::abs(pdgDau) == checkPdgDecays[i])
                         {
                             nDecays[i]++;
                         }

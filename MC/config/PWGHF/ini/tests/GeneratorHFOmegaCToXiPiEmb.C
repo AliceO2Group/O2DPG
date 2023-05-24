@@ -63,7 +63,7 @@ int External()
             {
                 nAntiPi++;
             }
-            else if (pdg == checkPdgSignal)
+            else if (std::abs(pdg) == checkPdgSignal)
             {
                 nSignal++;
                 auto child0 = o2::mcutils::MCTrackNavigator::getDaughter0(track, *tracks);
