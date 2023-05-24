@@ -1224,6 +1224,11 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[ITSRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
+     
+     addQCPerTF(taskName='ITSTracksClusters',
+                needs=[ITSRECOtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json')
 
    #secondary vertexer
    svfinder_threads = ' --threads 1 '

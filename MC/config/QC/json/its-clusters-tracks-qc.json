@@ -35,8 +35,8 @@
         "maxNumberCycles": "-1",
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "compclus"
+          "type": "direct",
+          "query": "compclus:ITS/COMPCLUSTERS/0;clustersrof:ITS/CLUSTERSROF/0;patterns:ITS/PATTERNS/0"
         },
         "taskParameters": {
           "layer": "1111111",
@@ -66,8 +66,8 @@
         "maxNumberCycles": "-1",
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "tracks"
+          "type": "direct",
+          "query": "Verticesrof:ITS/VERTICESROF/0;Vertices:ITS/VERTICES/0;tracks:ITS/TRACKS/0;rofs:ITS/ITSTrackROF/0;clustersrof:ITS/CLUSTERSROF/0;compclus:ITS/COMPCLUSTERS/0;patterns:ITS/PATTERNS/0;clusteridx:ITS/TRACKCLSID/0"
         },
         "taskParameters": {
           "runNumberPath": "",
@@ -147,35 +147,5 @@
         ]
       }
     }
-  },
-  "dataSamplingPolicies": [
-    {
-      "id": "compclus",
-      "active": "true",
-      "machines": [],
-      "query": "compclus:ITS/COMPCLUSTERS/0;clustersrof:ITS/CLUSTERSROF/0;patterns:ITS/PATTERNS/0",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "1",
-          "seed": "1441"
-        }
-      ],
-      "blocking": "false"
-    },
-    {
-      "id": "tracks",
-      "active": "true",
-      "machines": [],
-      "query": "Verticesrof:ITS/VERTICESROF/0;Vertices:ITS/VERTICES/0;tracks:ITS/TRACKS/0;rofs:ITS/ITSTrackROF/0;clustersrof:ITS/CLUSTERSROF/0;compclus:ITS/COMPCLUSTERS/0;patterns:ITS/PATTERNS/0;clusteridx:ITS/TRACKCLSID/0",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "1",
-          "seed": "1441"
-        }
-      ],
-      "blocking": "false"
-    }
-  ]
+  } 
 }
