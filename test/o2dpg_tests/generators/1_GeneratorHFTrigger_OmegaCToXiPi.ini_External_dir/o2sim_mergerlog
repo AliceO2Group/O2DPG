@@ -1,0 +1,1341 @@
+[[01;36m15:40:24[0m][[01;32mINFO[0m] 
+      ______      _    _______  _________ 
+     / ____/___ _(_)_______   |/  /_  __ \    version 1.4.56
+    / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+   / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+  /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2022 GSI
+
+[[01;36m15:40:24[0m][[01;35mSTATE[0m] Starting FairMQ state machine --> IDLE
+[[01;36m15:40:24[0m][[01;33mWARN[0m] Signal handling (e.g. Ctrl-C) has been deactivated.
+[[01;36m15:40:24[0m][[01;35mSTATE[0m] IDLE ---> INITIALIZING DEVICE
+[[01;36m15:40:24[0m][[01;35mSTATE[0m] INITIALIZING DEVICE ---> INITIALIZED
+[[01;36m15:40:24[0m][[01;35mSTATE[0m] INITIALIZED ---> BINDING
+[[01;36m15:40:24[0m][[01;35mSTATE[0m] BINDING ---> BOUND
+[[01;36m15:40:24[0m][[01;35mSTATE[0m] BOUND ---> CONNECTING
+[[01;36m15:40:24[0m][[01;35mSTATE[0m] CONNECTING ---> DEVICE READY
+[[01;36m15:40:24[0m][[01;35mSTATE[0m] DEVICE READY ---> INITIALIZING TASK
+[[01;36m15:40:24[0m][[01;32mINFO[0m] INIT HIT MERGER
+[[01;36m15:40:25[0m][[01;32mINFO[0m] Waiting for configuration answer 
+[[01;36m15:40:25[0m][[01;32mINFO[0m] Configuration answer received, containing 1032 bytes 
+[[01;36m15:40:25[0m][[01;32mINFO[0m] COMMUNICATED ENGINE O2TrivialMCEngine
+[[01;36m15:40:25[0m][[01;33mWARN[0m]  O2HitMerger: Some Detectors are potentially missing in this initialization 
+[[01;36m15:40:25[0m][[01;32mINFO[0m] OCCUPYING A SEGMENT IN A SHARED REGION
+[[01;36m15:40:25[0m][[01;32mINFO[0m] FOUND ID TO ATTACH 98336
+[[01;36m15:40:25[0m][[01;32mINFO[0m] TRYING ADDRESS 0x7f04e3fff000
+[[01;36m15:40:25[0m][[01;32mINFO[0m] ASSIGNED PIPE HANDLE 13
+[[01;36m15:40:25[0m][[01;35mSTATE[0m] INITIALIZING TASK ---> READY
+[[01;36m15:40:25[0m][[01;35mSTATE[0m] READY ---> RUNNING
+[[01;36m15:40:25[0m][[01;32mINFO[0m] fair::mq::Device running...
+[[01;36m15:42:15[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 1 part 3 out of 6
+[[01;36m15:42:15[0m][[01;32mINFO[0m] HitMerger processing took 0.00443101
+[[01;36m15:42:15[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 1 part 5 out of 6
+[[01;36m15:42:15[0m][[01;32mINFO[0m] HitMerger processing took 8.08239e-05
+[[01;36m15:42:15[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 1 part 1 out of 6
+[[01;36m15:42:15[0m][[01;32mINFO[0m] HitMerger processing took 6.29425e-05
+[[01;36m15:42:15[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 1 part 4 out of 6
+[[01;36m15:42:15[0m][[01;32mINFO[0m] HitMerger processing took 5.98431e-05
+[[01;36m15:42:15[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 1 part 2 out of 6
+[[01;36m15:42:15[0m][[01;32mINFO[0m] HitMerger processing took 5.6982e-05
+[[01;36m15:42:15[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 1 part 6 out of 6
+[[01;36m15:42:15[0m][[01;32mINFO[0m] Event 1 complete. Marking as flushable
+[[01;36m15:42:15[0m][[01;32mINFO[0m] HitMerger processing took 0.000160933
+[[01;36m15:42:15[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 2 part 1 out of 1
+[[01;36m15:42:15[0m][[01;32mINFO[0m] Event 2 complete. Marking as flushable
+[[01;36m15:42:15[0m][[01;32mINFO[0m] HitMerger processing took 5.00679e-05
+[[01;36m15:42:15[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:42:15[0m][[01;32mINFO[0m] Merge and flush event 1
+HitMerger entry: 5 nprimry:   186 trackoffset:   186 
+HitMerger entry: 4 nprimry:   500 trackoffset:   500 
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 5     5     5     5 
+merge 4     1     1     4 
+merge 3     3     3     3 
+merge 2     0     0     2 
+merge 1     4     4     1 
+merge 0     2     2     0 
+[[01;36m15:42:15[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 3 part 1 out of 4
+[[01;36m15:42:15[0m][[01;32mINFO[0m] HitMerger processing took 0.0992
+[[01;36m15:42:15[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 3 part 2 out of 4
+[[01;36m15:42:15[0m][[01;32mINFO[0m] HitMerger processing took 0.000106096
+[[01;36m15:42:15[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 3 part 3 out of 4
+[[01;36m15:42:15[0m][[01;32mINFO[0m] HitMerger processing took 0.000252008
+[[01;36m15:42:15[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 3 part 4 out of 4
+[[01;36m15:42:15[0m][[01;32mINFO[0m] Event 3 complete. Marking as flushable
+[[01;36m15:42:15[0m][[01;32mINFO[0m] HitMerger processing took 0.000106812
+[[01;36m15:42:15[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:42:15[0m][[01;32mINFO[0m] Merge/flush for event 1 took 0.111586
+[[01;36m15:42:15[0m][[01;32mINFO[0m] Merge and flush event 2
+HitMerger entry: 0 nprimry:   179 trackoffset:   179 
+[[01;36m15:42:15[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:42:15[0m][[01;32mINFO[0m] Merge/flush for event 2 took 7.31945e-05
+[[01;36m15:42:15[0m][[01;32mINFO[0m] Merge and flush event 3
+HitMerger entry: 3 nprimry:   244 trackoffset:   244 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:42:15[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:42:15[0m][[01;32mINFO[0m] Merge/flush for event 3 took 0.00019598
+[[01;36m15:42:15[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:44:05[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 4 part 2 out of 2
+[[01;36m15:44:05[0m][[01;32mINFO[0m] HitMerger processing took 0.000231981
+[[01;36m15:44:05[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 4 part 1 out of 2
+[[01;36m15:44:05[0m][[01;32mINFO[0m] Event 4 complete. Marking as flushable
+[[01;36m15:44:05[0m][[01;32mINFO[0m] HitMerger processing took 0.000324011
+[[01;36m15:44:05[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:44:05[0m][[01;32mINFO[0m] Merge and flush event 4
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   282 trackoffset:   282 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:44:05[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:44:05[0m][[01;32mINFO[0m] Merge/flush for event 4 took 0.000231981
+[[01;36m15:44:05[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:44:05[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 5 part 1 out of 2
+[[01;36m15:44:05[0m][[01;32mINFO[0m] HitMerger processing took 0.000183821
+[[01;36m15:44:05[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 5 part 2 out of 2
+[[01;36m15:44:05[0m][[01;32mINFO[0m] Event 5 complete. Marking as flushable
+[[01;36m15:44:05[0m][[01;32mINFO[0m] HitMerger processing took 0.000101089
+[[01;36m15:44:05[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 6 part 1 out of 1
+[[01;36m15:44:05[0m][[01;32mINFO[0m] Event 6 complete. Marking as flushable
+[[01;36m15:44:05[0m][[01;32mINFO[0m] HitMerger processing took 7.70092e-05
+[[01;36m15:44:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 7 part 1 out of 5
+[[01;36m15:44:47[0m][[01;32mINFO[0m] HitMerger processing took 0.000174999
+[[01;36m15:44:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 7 part 2 out of 5
+[[01;36m15:44:47[0m][[01;32mINFO[0m] HitMerger processing took 0.000111103
+[[01;36m15:44:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 7 part 3 out of 5
+[[01;36m15:44:47[0m][[01;32mINFO[0m] HitMerger processing took 0.000108004
+[[01;36m15:44:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 7 part 5 out of 5
+[[01;36m15:44:47[0m][[01;32mINFO[0m] HitMerger processing took 4.1008e-05
+[[01;36m15:44:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 7 part 4 out of 5
+[[01;36m15:44:47[0m][[01;32mINFO[0m] Event 7 complete. Marking as flushable
+[[01;36m15:44:47[0m][[01;32mINFO[0m] HitMerger processing took 0.00019002
+[[01;36m15:44:47[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:44:47[0m][[01;32mINFO[0m] Merge and flush event 5
+HitMerger entry: 1 nprimry:   428 trackoffset:   428 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:44:47[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:44:47[0m][[01;32mINFO[0m] Merge/flush for event 5 took 0.000302076
+[[01;36m15:44:47[0m][[01;32mINFO[0m] Merge and flush event 6
+HitMerger entry: 0 nprimry:   151 trackoffset:   151 
+[[01;36m15:44:47[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:44:47[0m][[01;32mINFO[0m] Merge/flush for event 6 took 5.91278e-05
+[[01;36m15:44:47[0m][[01;32mINFO[0m] Merge and flush event 7
+HitMerger entry: 4 nprimry:   500 trackoffset:   500 
+HitMerger entry: 3 nprimry:     8 trackoffset:     8 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 4     3     3     4 
+merge 3     4     4     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:44:47[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:44:47[0m][[01;32mINFO[0m] Merge/flush for event 7 took 0.000237942
+[[01;36m15:44:47[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:44:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 8 part 2 out of 2
+[[01;36m15:44:47[0m][[01;32mINFO[0m] HitMerger processing took 7.70092e-05
+[[01;36m15:44:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 8 part 1 out of 2
+[[01;36m15:44:47[0m][[01;32mINFO[0m] Event 8 complete. Marking as flushable
+[[01;36m15:44:47[0m][[01;32mINFO[0m] HitMerger processing took 0.000141144
+[[01;36m15:44:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 9 part 1 out of 1
+[[01;36m15:44:47[0m][[01;32mINFO[0m] Event 9 complete. Marking as flushable
+[[01;36m15:44:47[0m][[01;32mINFO[0m] HitMerger processing took 8.41618e-05
+[[01;36m15:45:38[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 10 part 1 out of 4
+[[01;36m15:45:38[0m][[01;32mINFO[0m] HitMerger processing took 0.000240803
+[[01;36m15:45:38[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 10 part 2 out of 4
+[[01;36m15:45:38[0m][[01;32mINFO[0m] HitMerger processing took 0.000105858
+[[01;36m15:45:38[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 10 part 3 out of 4
+[[01;36m15:45:38[0m][[01;32mINFO[0m] HitMerger processing took 0.000102043
+[[01;36m15:45:38[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 10 part 4 out of 4
+[[01;36m15:45:38[0m][[01;32mINFO[0m] Event 10 complete. Marking as flushable
+[[01;36m15:45:38[0m][[01;32mINFO[0m] HitMerger processing took 0.0001688
+[[01;36m15:45:38[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:45:38[0m][[01;32mINFO[0m] Merge and flush event 8
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    56 trackoffset:    56 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:45:38[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:45:38[0m][[01;32mINFO[0m] Merge/flush for event 8 took 0.000218153
+[[01;36m15:45:38[0m][[01;32mINFO[0m] Merge and flush event 9
+HitMerger entry: 0 nprimry:   266 trackoffset:   266 
+[[01;36m15:45:38[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:45:38[0m][[01;32mINFO[0m] Merge/flush for event 9 took 3.79086e-05
+[[01;36m15:45:38[0m][[01;32mINFO[0m] Merge and flush event 10
+HitMerger entry: 3 nprimry:   399 trackoffset:   399 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:45:38[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:45:38[0m][[01;32mINFO[0m] Merge/flush for event 10 took 0.000143766
+[[01;36m15:45:38[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:45:38[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 11 part 2 out of 2
+[[01;36m15:45:38[0m][[01;32mINFO[0m] HitMerger processing took 0.000104189
+[[01;36m15:45:38[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 11 part 1 out of 2
+[[01;36m15:45:38[0m][[01;32mINFO[0m] Event 11 complete. Marking as flushable
+[[01;36m15:45:38[0m][[01;32mINFO[0m] HitMerger processing took 0.000113964
+[[01;36m15:45:38[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 12 part 2 out of 2
+[[01;36m15:45:38[0m][[01;32mINFO[0m] HitMerger processing took 9.20296e-05
+[[01;36m15:45:38[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 12 part 1 out of 2
+[[01;36m15:45:38[0m][[01;32mINFO[0m] Event 12 complete. Marking as flushable
+[[01;36m15:45:38[0m][[01;32mINFO[0m] HitMerger processing took 0.000144958
+[[01;36m15:46:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 13 part 2 out of 2
+[[01;36m15:46:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000245094
+[[01;36m15:46:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 13 part 1 out of 2
+[[01;36m15:46:00[0m][[01;32mINFO[0m] Event 13 complete. Marking as flushable
+[[01;36m15:46:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000195026
+[[01;36m15:46:00[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:46:00[0m][[01;32mINFO[0m] Merge and flush event 11
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   154 trackoffset:   154 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:46:00[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:46:00[0m][[01;32mINFO[0m] Merge/flush for event 11 took 0.000200033
+[[01;36m15:46:00[0m][[01;32mINFO[0m] Merge and flush event 12
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    73 trackoffset:    73 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:46:00[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:46:00[0m][[01;32mINFO[0m] Merge/flush for event 12 took 6.79493e-05
+[[01;36m15:46:00[0m][[01;32mINFO[0m] Merge and flush event 13
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   189 trackoffset:   189 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:46:00[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:46:00[0m][[01;32mINFO[0m] Merge/flush for event 13 took 8.29697e-05
+[[01;36m15:46:00[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:46:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 14 part 1 out of 1
+[[01;36m15:46:00[0m][[01;32mINFO[0m] Event 14 complete. Marking as flushable
+[[01;36m15:46:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000117064
+[[01;36m15:46:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 15 part 2 out of 2
+[[01;36m15:46:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000108957
+[[01;36m15:46:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 15 part 1 out of 2
+[[01;36m15:46:00[0m][[01;32mINFO[0m] Event 15 complete. Marking as flushable
+[[01;36m15:46:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000140905
+[[01;36m15:46:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 16 part 1 out of 3
+[[01;36m15:46:46[0m][[01;32mINFO[0m] HitMerger processing took 0.00026989
+[[01;36m15:46:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 16 part 3 out of 3
+[[01;36m15:46:46[0m][[01;32mINFO[0m] HitMerger processing took 6.41346e-05
+[[01;36m15:46:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 16 part 2 out of 3
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Event 16 complete. Marking as flushable
+[[01;36m15:46:46[0m][[01;32mINFO[0m] HitMerger processing took 0.000174999
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge and flush event 14
+HitMerger entry: 0 nprimry:   255 trackoffset:   255 
+[[01;36m15:46:46[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge/flush for event 14 took 0.000149012
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge and flush event 15
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   277 trackoffset:   277 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:46:46[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge/flush for event 15 took 9.20296e-05
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge and flush event 16
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   179 trackoffset:   179 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     1     1     2 
+merge 1     2     2     1 
+merge 0     0     0     0 
+[[01;36m15:46:46[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge/flush for event 16 took 9.29832e-05
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:46:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 17 part 1 out of 1
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Event 17 complete. Marking as flushable
+[[01;36m15:46:46[0m][[01;32mINFO[0m] HitMerger processing took 0.000123024
+[[01;36m15:46:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 18 part 1 out of 1
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Event 18 complete. Marking as flushable
+[[01;36m15:46:46[0m][[01;32mINFO[0m] HitMerger processing took 0.000118017
+[[01;36m15:46:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 19 part 2 out of 2
+[[01;36m15:46:46[0m][[01;32mINFO[0m] HitMerger processing took 0.000113964
+[[01;36m15:46:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 19 part 1 out of 2
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Event 19 complete. Marking as flushable
+[[01;36m15:46:46[0m][[01;32mINFO[0m] HitMerger processing took 0.000169992
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge and flush event 17
+HitMerger entry: 0 nprimry:   207 trackoffset:   207 
+[[01;36m15:46:46[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge/flush for event 17 took 0.000169992
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge and flush event 18
+HitMerger entry: 0 nprimry:   174 trackoffset:   174 
+[[01;36m15:46:46[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge/flush for event 18 took 4.31538e-05
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge and flush event 19
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   236 trackoffset:   236 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:46:46[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Merge/flush for event 19 took 0.000140905
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:46:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 20 part 1 out of 1
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Event 20 complete. Marking as flushable
+[[01;36m15:46:46[0m][[01;32mINFO[0m] HitMerger processing took 0.000118971
+[[01;36m15:46:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 21 part 1 out of 3
+[[01;36m15:46:46[0m][[01;32mINFO[0m] HitMerger processing took 0.000129938
+[[01;36m15:46:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 21 part 2 out of 3
+[[01;36m15:46:46[0m][[01;32mINFO[0m] HitMerger processing took 9.20296e-05
+[[01;36m15:46:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 21 part 3 out of 3
+[[01;36m15:46:46[0m][[01;32mINFO[0m] Event 21 complete. Marking as flushable
+[[01;36m15:46:46[0m][[01;32mINFO[0m] HitMerger processing took 9.67979e-05
+[[01;36m15:47:59[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 22 part 1 out of 5
+[[01;36m15:47:59[0m][[01;32mINFO[0m] HitMerger processing took 0.00020504
+[[01;36m15:47:59[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 22 part 2 out of 5
+[[01;36m15:47:59[0m][[01;32mINFO[0m] HitMerger processing took 7.98702e-05
+[[01;36m15:47:59[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 22 part 3 out of 5
+[[01;36m15:47:59[0m][[01;32mINFO[0m] HitMerger processing took 0.000112057
+[[01;36m15:47:59[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 22 part 4 out of 5
+[[01;36m15:47:59[0m][[01;32mINFO[0m] HitMerger processing took 0.000112057
+[[01;36m15:47:59[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 22 part 5 out of 5
+[[01;36m15:47:59[0m][[01;32mINFO[0m] Event 22 complete. Marking as flushable
+[[01;36m15:47:59[0m][[01;32mINFO[0m] HitMerger processing took 0.000146151
+[[01;36m15:47:59[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:47:59[0m][[01;32mINFO[0m] Merge and flush event 20
+HitMerger entry: 0 nprimry:   279 trackoffset:   279 
+[[01;36m15:47:59[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:47:59[0m][[01;32mINFO[0m] Merge/flush for event 20 took 0.000217915
+[[01;36m15:47:59[0m][[01;32mINFO[0m] Merge and flush event 21
+HitMerger entry: 2 nprimry:   362 trackoffset:   362 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:47:59[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:47:59[0m][[01;32mINFO[0m] Merge/flush for event 21 took 0.000207901
+[[01;36m15:47:59[0m][[01;32mINFO[0m] Merge and flush event 22
+HitMerger entry: 4 nprimry:   451 trackoffset:   451 
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 4     4     4     4 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:47:59[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:47:59[0m][[01;32mINFO[0m] Merge/flush for event 22 took 0.000445843
+[[01;36m15:47:59[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:47:59[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 23 part 1 out of 1
+[[01;36m15:47:59[0m][[01;32mINFO[0m] Event 23 complete. Marking as flushable
+[[01;36m15:47:59[0m][[01;32mINFO[0m] HitMerger processing took 9.41753e-05
+[[01;36m15:47:59[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 24 part 1 out of 1
+[[01;36m15:47:59[0m][[01;32mINFO[0m] Event 24 complete. Marking as flushable
+[[01;36m15:47:59[0m][[01;32mINFO[0m] HitMerger processing took 0.000124931
+[[01;36m15:48:03[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 25 part 1 out of 1
+[[01;36m15:48:03[0m][[01;32mINFO[0m] Event 25 complete. Marking as flushable
+[[01;36m15:48:03[0m][[01;32mINFO[0m] HitMerger processing took 0.000198841
+[[01;36m15:48:03[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:48:03[0m][[01;32mINFO[0m] Merge and flush event 23
+HitMerger entry: 0 nprimry:   108 trackoffset:   108 
+[[01;36m15:48:03[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:48:03[0m][[01;32mINFO[0m] Merge/flush for event 23 took 0.000218868
+[[01;36m15:48:03[0m][[01;32mINFO[0m] Merge and flush event 24
+HitMerger entry: 0 nprimry:   413 trackoffset:   413 
+[[01;36m15:48:03[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:48:03[0m][[01;32mINFO[0m] Merge/flush for event 24 took 7.51019e-05
+[[01;36m15:48:03[0m][[01;32mINFO[0m] Merge and flush event 25
+HitMerger entry: 0 nprimry:   236 trackoffset:   236 
+[[01;36m15:48:03[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 26 part 1 out of 1
+[[01;36m15:48:03[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:48:03[0m][[01;32mINFO[0m] Merge/flush for event 25 took 5.79357e-05
+[[01;36m15:48:03[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:48:03[0m][[01;32mINFO[0m] Event 26 complete. Marking as flushable
+[[01;36m15:48:03[0m][[01;32mINFO[0m] HitMerger processing took 0.000117064
+[[01;36m15:48:03[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 27 part 1 out of 1
+[[01;36m15:48:03[0m][[01;32mINFO[0m] Event 27 complete. Marking as flushable
+[[01;36m15:48:03[0m][[01;32mINFO[0m] HitMerger processing took 9.10759e-05
+[[01;36m15:48:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 28 part 1 out of 4
+[[01;36m15:48:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000150204
+[[01;36m15:48:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 28 part 2 out of 4
+[[01;36m15:48:23[0m][[01;32mINFO[0m] HitMerger processing took 8.29697e-05
+[[01;36m15:48:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 28 part 4 out of 4
+[[01;36m15:48:23[0m][[01;32mINFO[0m] HitMerger processing took 4.29153e-05
+[[01;36m15:48:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 28 part 3 out of 4
+[[01;36m15:48:23[0m][[01;32mINFO[0m] Event 28 complete. Marking as flushable
+[[01;36m15:48:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000155926
+[[01;36m15:48:23[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:48:23[0m][[01;32mINFO[0m] Merge and flush event 26
+HitMerger entry: 0 nprimry:   159 trackoffset:   159 
+[[01;36m15:48:23[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:48:23[0m][[01;32mINFO[0m] Merge/flush for event 26 took 0.000163078
+[[01;36m15:48:23[0m][[01;32mINFO[0m] Merge and flush event 27
+HitMerger entry: 0 nprimry:   151 trackoffset:   151 
+[[01;36m15:48:23[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:48:23[0m][[01;32mINFO[0m] Merge/flush for event 27 took 5.07832e-05
+[[01;36m15:48:23[0m][[01;32mINFO[0m] Merge and flush event 28
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   106 trackoffset:   106 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:48:23[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:48:23[0m][[01;32mINFO[0m] Merge/flush for event 28 took 0.000187159
+[[01;36m15:48:23[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:48:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 29 part 1 out of 3
+[[01;36m15:48:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000113964
+[[01;36m15:48:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 29 part 2 out of 3
+[[01;36m15:48:23[0m][[01;32mINFO[0m] HitMerger processing took 8.58307e-05
+[[01;36m15:48:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 29 part 3 out of 3
+[[01;36m15:48:23[0m][[01;32mINFO[0m] Event 29 complete. Marking as flushable
+[[01;36m15:48:23[0m][[01;32mINFO[0m] HitMerger processing took 8.70228e-05
+[[01;36m15:48:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 30 part 1 out of 1
+[[01;36m15:48:23[0m][[01;32mINFO[0m] Event 30 complete. Marking as flushable
+[[01;36m15:48:23[0m][[01;32mINFO[0m] HitMerger processing took 5.50747e-05
+[[01;36m15:49:33[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 31 part 1 out of 5
+[[01;36m15:49:33[0m][[01;32mINFO[0m] HitMerger processing took 0.00029397
+[[01;36m15:49:33[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 31 part 2 out of 5
+[[01;36m15:49:33[0m][[01;32mINFO[0m] HitMerger processing took 0.000121832
+[[01;36m15:49:33[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 31 part 3 out of 5
+[[01;36m15:49:33[0m][[01;32mINFO[0m] HitMerger processing took 0.000110865
+[[01;36m15:49:33[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 31 part 5 out of 5
+[[01;36m15:49:33[0m][[01;32mINFO[0m] HitMerger processing took 6.00815e-05
+[[01;36m15:49:33[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 31 part 4 out of 5
+[[01;36m15:49:33[0m][[01;32mINFO[0m] Event 31 complete. Marking as flushable
+[[01;36m15:49:33[0m][[01;32mINFO[0m] HitMerger processing took 0.000228882
+[[01;36m15:49:33[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:49:33[0m][[01;32mINFO[0m] Merge and flush event 29
+HitMerger entry: 2 nprimry:   423 trackoffset:   423 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:49:33[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:49:33[0m][[01;32mINFO[0m] Merge/flush for event 29 took 0.000375986
+[[01;36m15:49:33[0m][[01;32mINFO[0m] Merge and flush event 30
+HitMerger entry: 0 nprimry:   102 trackoffset:   102 
+[[01;36m15:49:33[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:49:33[0m][[01;32mINFO[0m] Merge/flush for event 30 took 5.60284e-05
+[[01;36m15:49:33[0m][[01;32mINFO[0m] Merge and flush event 31
+HitMerger entry: 4 nprimry:   500 trackoffset:   500 
+HitMerger entry: 3 nprimry:    39 trackoffset:    39 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 4     3     3     4 
+merge 3     4     4     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:49:33[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:49:33[0m][[01;32mINFO[0m] Merge/flush for event 31 took 0.00031209
+[[01;36m15:49:33[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:49:33[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 32 part 1 out of 2
+[[01;36m15:49:33[0m][[01;32mINFO[0m] HitMerger processing took 0.000108004
+[[01;36m15:49:33[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 32 part 2 out of 2
+[[01;36m15:49:33[0m][[01;32mINFO[0m] Event 32 complete. Marking as flushable
+[[01;36m15:49:33[0m][[01;32mINFO[0m] HitMerger processing took 0.000135899
+[[01;36m15:49:33[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 33 part 1 out of 1
+[[01;36m15:49:33[0m][[01;32mINFO[0m] Event 33 complete. Marking as flushable
+[[01;36m15:49:33[0m][[01;32mINFO[0m] HitMerger processing took 5.6982e-05
+[[01;36m15:51:49[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 34 part 1 out of 3
+[[01;36m15:51:49[0m][[01;32mINFO[0m] HitMerger processing took 0.000274897
+[[01;36m15:51:49[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 34 part 3 out of 3
+[[01;36m15:51:49[0m][[01;32mINFO[0m] HitMerger processing took 9.20296e-05
+[[01;36m15:51:49[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 34 part 2 out of 3
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Event 34 complete. Marking as flushable
+[[01;36m15:51:49[0m][[01;32mINFO[0m] HitMerger processing took 0.000179052
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Merge and flush event 32
+HitMerger entry: 1 nprimry:   348 trackoffset:   348 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:51:49[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Merge/flush for event 32 took 0.00022006
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Merge and flush event 33
+HitMerger entry: 0 nprimry:   141 trackoffset:   141 
+[[01;36m15:51:49[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Merge/flush for event 33 took 4.1008e-05
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Merge and flush event 34
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   376 trackoffset:   376 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     1     1     2 
+merge 1     2     2     1 
+merge 0     0     0     0 
+[[01;36m15:51:49[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 35 part 1 out of 1
+[[01;36m15:51:49[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Event 35 complete. Marking as flushable
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Merge/flush for event 34 took 0.000134945
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Merge and flush event 35
+HitMerger entry: 0 nprimry:   204 trackoffset:   204 
+[[01;36m15:51:49[0m][[01;32mINFO[0m] HitMerger processing took 0.000140905
+[[01;36m15:51:49[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Merge/flush for event 35 took 4.48227e-05
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:51:49[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 36 part 1 out of 1
+[[01;36m15:51:49[0m][[01;32mINFO[0m] Event 36 complete. Marking as flushable
+[[01;36m15:51:49[0m][[01;32mINFO[0m] HitMerger processing took 5.81741e-05
+[[01;36m15:52:08[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 37 part 2 out of 2
+[[01;36m15:52:08[0m][[01;32mINFO[0m] HitMerger processing took 0.000211
+[[01;36m15:52:08[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 37 part 1 out of 2
+[[01;36m15:52:08[0m][[01;32mINFO[0m] Event 37 complete. Marking as flushable
+[[01;36m15:52:08[0m][[01;32mINFO[0m] HitMerger processing took 0.000174999
+[[01;36m15:52:08[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:52:08[0m][[01;32mINFO[0m] Merge and flush event 36
+HitMerger entry: 0 nprimry:    30 trackoffset:    30 
+[[01;36m15:52:08[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:52:08[0m][[01;32mINFO[0m] Merge/flush for event 36 took 0.000195026
+[[01;36m15:52:08[0m][[01;32mINFO[0m] Merge and flush event 37
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   274 trackoffset:   274 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:52:08[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:52:08[0m][[01;32mINFO[0m] Merge/flush for event 37 took 0.000129938
+[[01;36m15:52:08[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:52:08[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 38 part 1 out of 1
+[[01;36m15:52:08[0m][[01;32mINFO[0m] Event 38 complete. Marking as flushable
+[[01;36m15:52:08[0m][[01;32mINFO[0m] HitMerger processing took 0.000128984
+[[01;36m15:52:08[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 39 part 1 out of 1
+[[01;36m15:52:08[0m][[01;32mINFO[0m] Event 39 complete. Marking as flushable
+[[01;36m15:52:08[0m][[01;32mINFO[0m] HitMerger processing took 0.00011301
+[[01;36m15:52:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 40 part 1 out of 4
+[[01;36m15:52:47[0m][[01;32mINFO[0m] HitMerger processing took 0.00028801
+[[01;36m15:52:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 40 part 2 out of 4
+[[01;36m15:52:47[0m][[01;32mINFO[0m] HitMerger processing took 0.000138044
+[[01;36m15:52:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 40 part 4 out of 4
+[[01;36m15:52:47[0m][[01;32mINFO[0m] HitMerger processing took 4.50611e-05
+[[01;36m15:52:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 40 part 3 out of 4
+[[01;36m15:52:47[0m][[01;32mINFO[0m] Event 40 complete. Marking as flushable
+[[01;36m15:52:47[0m][[01;32mINFO[0m] HitMerger processing took 0.000153065
+[[01;36m15:52:47[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:52:47[0m][[01;32mINFO[0m] Merge and flush event 38
+HitMerger entry: 0 nprimry:   269 trackoffset:   269 
+[[01;36m15:52:47[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:52:47[0m][[01;32mINFO[0m] Merge/flush for event 38 took 0.000215054
+[[01;36m15:52:47[0m][[01;32mINFO[0m] Merge and flush event 39
+HitMerger entry: 0 nprimry:   167 trackoffset:   167 
+[[01;36m15:52:47[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:52:47[0m][[01;32mINFO[0m] Merge/flush for event 39 took 5.38826e-05
+[[01;36m15:52:47[0m][[01;32mINFO[0m] Merge and flush event 40
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:     1 trackoffset:     1 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:52:47[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:52:47[0m][[01;32mINFO[0m] Merge/flush for event 40 took 0.000180006
+[[01;36m15:52:47[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:52:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 41 part 2 out of 2
+[[01;36m15:52:47[0m][[01;32mINFO[0m] HitMerger processing took 7.41482e-05
+[[01;36m15:52:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 41 part 1 out of 2
+[[01;36m15:52:47[0m][[01;32mINFO[0m] Event 41 complete. Marking as flushable
+[[01;36m15:52:47[0m][[01;32mINFO[0m] HitMerger processing took 9.39369e-05
+[[01;36m15:52:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 42 part 1 out of 5
+[[01;36m15:52:47[0m][[01;32mINFO[0m] HitMerger processing took 0.000148058
+[[01;36m15:52:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 42 part 2 out of 5
+[[01;36m15:52:47[0m][[01;32mINFO[0m] HitMerger processing took 8.79765e-05
+[[01;36m15:52:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 42 part 5 out of 5
+[[01;36m15:52:47[0m][[01;32mINFO[0m] HitMerger processing took 3.57628e-05
+[[01;36m15:52:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 42 part 3 out of 5
+[[01;36m15:52:47[0m][[01;32mINFO[0m] HitMerger processing took 7.20024e-05
+[[01;36m15:52:47[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 42 part 4 out of 5
+[[01;36m15:52:47[0m][[01;32mINFO[0m] Event 42 complete. Marking as flushable
+[[01;36m15:52:47[0m][[01;32mINFO[0m] HitMerger processing took 8.70228e-05
+[[01;36m15:53:17[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 43 part 1 out of 4
+[[01;36m15:53:17[0m][[01;32mINFO[0m] HitMerger processing took 0.00020504
+[[01;36m15:53:17[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 43 part 2 out of 4
+[[01;36m15:53:17[0m][[01;32mINFO[0m] HitMerger processing took 8.79765e-05
+[[01;36m15:53:17[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 43 part 4 out of 4
+[[01;36m15:53:17[0m][[01;32mINFO[0m] HitMerger processing took 5.50747e-05
+[[01;36m15:53:17[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 43 part 3 out of 4
+[[01;36m15:53:17[0m][[01;32mINFO[0m] Event 43 complete. Marking as flushable
+[[01;36m15:53:17[0m][[01;32mINFO[0m] HitMerger processing took 0.000154018
+[[01;36m15:53:17[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:53:17[0m][[01;32mINFO[0m] Merge and flush event 41
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   237 trackoffset:   237 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:53:17[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:53:17[0m][[01;32mINFO[0m] Merge/flush for event 41 took 0.000263929
+[[01;36m15:53:17[0m][[01;32mINFO[0m] Merge and flush event 42
+HitMerger entry: 4 nprimry:   500 trackoffset:   500 
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:    45 trackoffset:    45 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 4     2     2     3 
+merge 3     4     4     2 
+merge 2     3     3     4 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:53:17[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:53:17[0m][[01;32mINFO[0m] Merge/flush for event 42 took 0.000217915
+[[01;36m15:53:17[0m][[01;32mINFO[0m] Merge and flush event 43
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   255 trackoffset:   255 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:53:17[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:53:17[0m][[01;32mINFO[0m] Merge/flush for event 43 took 0.00018692
+[[01;36m15:53:17[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:53:17[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 44 part 1 out of 1
+[[01;36m15:53:17[0m][[01;32mINFO[0m] Event 44 complete. Marking as flushable
+[[01;36m15:53:17[0m][[01;32mINFO[0m] HitMerger processing took 0.000130892
+[[01;36m15:53:17[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 45 part 1 out of 1
+[[01;36m15:53:17[0m][[01;32mINFO[0m] Event 45 complete. Marking as flushable
+[[01;36m15:53:17[0m][[01;32mINFO[0m] HitMerger processing took 0.000112772
+[[01;36m15:56:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 46 part 1 out of 3
+[[01;36m15:56:01[0m][[01;32mINFO[0m] HitMerger processing took 0.000216007
+[[01;36m15:56:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 46 part 3 out of 3
+[[01;36m15:56:01[0m][[01;32mINFO[0m] HitMerger processing took 6.79493e-05
+[[01;36m15:56:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 46 part 2 out of 3
+[[01;36m15:56:01[0m][[01;32mINFO[0m] Event 46 complete. Marking as flushable
+[[01;36m15:56:01[0m][[01;32mINFO[0m] HitMerger processing took 0.000169992
+[[01;36m15:56:01[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:56:01[0m][[01;32mINFO[0m] Merge and flush event 44
+HitMerger entry: 0 nprimry:   361 trackoffset:   361 
+[[01;36m15:56:01[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:56:01[0m][[01;32mINFO[0m] Merge/flush for event 44 took 0.000206947
+[[01;36m15:56:01[0m][[01;32mINFO[0m] Merge and flush event 45
+HitMerger entry: 0 nprimry:   277 trackoffset:   277 
+[[01;36m15:56:01[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:56:01[0m][[01;32mINFO[0m] Merge/flush for event 45 took 5.38826e-05
+[[01;36m15:56:01[0m][[01;32mINFO[0m] Merge and flush event 46
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   317 trackoffset:   317 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     1     1     2 
+merge 1     2     2     1 
+merge 0     0     0     0 
+[[01;36m15:56:01[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:56:01[0m][[01;32mINFO[0m] Merge/flush for event 46 took 0.000144005
+[[01;36m15:56:01[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:56:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 47 part 1 out of 1
+[[01;36m15:56:01[0m][[01;32mINFO[0m] Event 47 complete. Marking as flushable
+[[01;36m15:56:01[0m][[01;32mINFO[0m] HitMerger processing took 0.000111103
+[[01;36m15:56:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 48 part 1 out of 3
+[[01;36m15:56:01[0m][[01;32mINFO[0m] HitMerger processing took 9.41753e-05
+[[01;36m15:56:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 48 part 2 out of 3
+[[01;36m15:56:01[0m][[01;32mINFO[0m] HitMerger processing took 8.98838e-05
+[[01;36m15:56:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 48 part 3 out of 3
+[[01;36m15:56:01[0m][[01;32mINFO[0m] Event 48 complete. Marking as flushable
+[[01;36m15:56:01[0m][[01;32mINFO[0m] HitMerger processing took 6.31809e-05
+[[01;36m15:56:09[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 49 part 4 out of 4
+[[01;36m15:56:09[0m][[01;32mINFO[0m] HitMerger processing took 0.000221968
+[[01;36m15:56:09[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 49 part 1 out of 4
+[[01;36m15:56:09[0m][[01;32mINFO[0m] HitMerger processing took 0.000117779
+[[01;36m15:56:09[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 49 part 2 out of 4
+[[01;36m15:56:09[0m][[01;32mINFO[0m] HitMerger processing took 0.00011611
+[[01;36m15:56:09[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 49 part 3 out of 4
+[[01;36m15:56:09[0m][[01;32mINFO[0m] Event 49 complete. Marking as flushable
+[[01;36m15:56:09[0m][[01;32mINFO[0m] HitMerger processing took 0.000216961
+[[01;36m15:56:09[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:56:09[0m][[01;32mINFO[0m] Merge and flush event 47
+HitMerger entry: 0 nprimry:   493 trackoffset:   493 
+[[01;36m15:56:09[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:56:09[0m][[01;32mINFO[0m] Merge/flush for event 47 took 0.000170946
+[[01;36m15:56:09[0m][[01;32mINFO[0m] Merge and flush event 48
+HitMerger entry: 2 nprimry:   235 trackoffset:   235 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:56:09[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:56:09[0m][[01;32mINFO[0m] Merge/flush for event 48 took 0.000118971
+[[01;36m15:56:09[0m][[01;32mINFO[0m] Merge and flush event 49
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    38 trackoffset:    38 
+merge 3     0     0     1 
+merge 2     3     3     0 
+merge 1     2     2     3 
+merge 0     1     1     2 
+[[01;36m15:56:09[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:56:09[0m][[01;32mINFO[0m] Merge/flush for event 49 took 0.000154018
+[[01;36m15:56:09[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:56:09[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 50 part 1 out of 4
+[[01;36m15:56:09[0m][[01;32mINFO[0m] HitMerger processing took 0.000221014
+[[01;36m15:56:09[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 50 part 2 out of 4
+[[01;36m15:56:09[0m][[01;32mINFO[0m] HitMerger processing took 9.10759e-05
+[[01;36m15:56:09[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 50 part 3 out of 4
+[[01;36m15:56:09[0m][[01;32mINFO[0m] HitMerger processing took 9.01222e-05
+[[01;36m15:56:09[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 50 part 4 out of 4
+[[01;36m15:56:09[0m][[01;32mINFO[0m] Event 50 complete. Marking as flushable
+[[01;36m15:56:09[0m][[01;32mINFO[0m] HitMerger processing took 5.50747e-05
+[[01;36m15:56:09[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 51 part 1 out of 1
+[[01;36m15:56:09[0m][[01;32mINFO[0m] Event 51 complete. Marking as flushable
+[[01;36m15:56:09[0m][[01;32mINFO[0m] HitMerger processing took 7.60555e-05
+[[01;36m15:56:49[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 52 part 1 out of 1
+[[01;36m15:56:49[0m][[01;32mINFO[0m] Event 52 complete. Marking as flushable
+[[01;36m15:56:49[0m][[01;32mINFO[0m] HitMerger processing took 0.000343084
+[[01;36m15:56:49[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:56:49[0m][[01;32mINFO[0m] Merge and flush event 50
+HitMerger entry: 3 nprimry:   135 trackoffset:   135 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:56:49[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:56:49[0m][[01;32mINFO[0m] Merge/flush for event 50 took 0.000452042
+[[01;36m15:56:49[0m][[01;32mINFO[0m] Merge and flush event 51
+HitMerger entry: 0 nprimry:   128 trackoffset:   128 
+[[01;36m15:56:49[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:56:49[0m][[01;32mINFO[0m] Merge/flush for event 51 took 5.22137e-05
+[[01;36m15:56:49[0m][[01;32mINFO[0m] Merge and flush event 52
+HitMerger entry: 0 nprimry:   414 trackoffset:   414 
+[[01;36m15:56:49[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:56:49[0m][[01;32mINFO[0m] Merge/flush for event 52 took 7.70092e-05
+[[01;36m15:56:49[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:56:49[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 53 part 1 out of 1
+[[01;36m15:56:49[0m][[01;32mINFO[0m] Event 53 complete. Marking as flushable
+[[01;36m15:56:49[0m][[01;32mINFO[0m] HitMerger processing took 0.00011301
+[[01;36m15:56:49[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 54 part 2 out of 2
+[[01;36m15:56:49[0m][[01;32mINFO[0m] HitMerger processing took 5.19753e-05
+[[01;36m15:56:49[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 54 part 1 out of 2
+[[01;36m15:56:49[0m][[01;32mINFO[0m] Event 54 complete. Marking as flushable
+[[01;36m15:56:49[0m][[01;32mINFO[0m] HitMerger processing took 9.39369e-05
+[[01;36m15:57:32[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 55 part 1 out of 4
+[[01;36m15:57:32[0m][[01;32mINFO[0m] HitMerger processing took 0.000194073
+[[01;36m15:57:32[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 55 part 2 out of 4
+[[01;36m15:57:32[0m][[01;32mINFO[0m] HitMerger processing took 5.50747e-05
+[[01;36m15:57:32[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 55 part 3 out of 4
+[[01;36m15:57:32[0m][[01;32mINFO[0m] HitMerger processing took 5.00679e-05
+[[01;36m15:57:32[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 55 part 4 out of 4
+[[01;36m15:57:32[0m][[01;32mINFO[0m] Event 55 complete. Marking as flushable
+[[01;36m15:57:32[0m][[01;32mINFO[0m] HitMerger processing took 9.10759e-05
+[[01;36m15:57:32[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:57:32[0m][[01;32mINFO[0m] Merge and flush event 53
+HitMerger entry: 0 nprimry:   497 trackoffset:   497 
+[[01;36m15:57:32[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:57:32[0m][[01;32mINFO[0m] Merge/flush for event 53 took 0.000227928
+[[01;36m15:57:32[0m][[01;32mINFO[0m] Merge and flush event 54
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   127 trackoffset:   127 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:57:32[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:57:32[0m][[01;32mINFO[0m] Merge/flush for event 54 took 0.000123024
+[[01;36m15:57:32[0m][[01;32mINFO[0m] Merge and flush event 55
+HitMerger entry: 3 nprimry:   213 trackoffset:   213 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:57:32[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:57:32[0m][[01;32mINFO[0m] Merge/flush for event 55 took 0.000207901
+[[01;36m15:57:32[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:57:32[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 56 part 2 out of 2
+[[01;36m15:57:32[0m][[01;32mINFO[0m] HitMerger processing took 5.81741e-05
+[[01;36m15:57:32[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 56 part 1 out of 2
+[[01;36m15:57:32[0m][[01;32mINFO[0m] Event 56 complete. Marking as flushable
+[[01;36m15:57:32[0m][[01;32mINFO[0m] HitMerger processing took 8.98838e-05
+[[01;36m15:57:32[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 57 part 1 out of 1
+[[01;36m15:57:32[0m][[01;32mINFO[0m] Event 57 complete. Marking as flushable
+[[01;36m15:57:32[0m][[01;32mINFO[0m] HitMerger processing took 9.70364e-05
+[[01;36m15:57:43[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 58 part 3 out of 3
+[[01;36m15:57:43[0m][[01;32mINFO[0m] HitMerger processing took 0.000217915
+[[01;36m15:57:43[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 58 part 2 out of 3
+[[01;36m15:57:43[0m][[01;32mINFO[0m] HitMerger processing took 0.00011301
+[[01;36m15:57:43[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 58 part 1 out of 3
+[[01;36m15:57:43[0m][[01;32mINFO[0m] Event 58 complete. Marking as flushable
+[[01;36m15:57:43[0m][[01;32mINFO[0m] HitMerger processing took 0.000185013
+[[01;36m15:57:43[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:57:43[0m][[01;32mINFO[0m] Merge and flush event 56
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   132 trackoffset:   132 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:57:43[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:57:43[0m][[01;32mINFO[0m] Merge/flush for event 56 took 0.000262976
+[[01;36m15:57:43[0m][[01;32mINFO[0m] Merge and flush event 57
+HitMerger entry: 0 nprimry:   332 trackoffset:   332 
+[[01;36m15:57:43[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:57:43[0m][[01;32mINFO[0m] Merge/flush for event 57 took 7.10487e-05
+[[01;36m15:57:43[0m][[01;32mINFO[0m] Merge and flush event 58
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   266 trackoffset:   266 
+merge 2     0     0     2 
+merge 1     1     1     1 
+merge 0     2     2     0 
+[[01;36m15:57:43[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:57:43[0m][[01;32mINFO[0m] Merge/flush for event 58 took 0.00019598
+[[01;36m15:57:43[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:57:43[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 59 part 2 out of 2
+[[01;36m15:57:43[0m][[01;32mINFO[0m] HitMerger processing took 8.70228e-05
+[[01;36m15:57:43[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 60 part 1 out of 1
+[[01;36m15:57:43[0m][[01;32mINFO[0m] Event 60 complete. Marking as flushable
+[[01;36m15:57:43[0m][[01;32mINFO[0m] HitMerger processing took 5.19753e-05
+[[01;36m15:57:43[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 59 part 1 out of 2
+[[01;36m15:57:43[0m][[01;32mINFO[0m] Event 59 complete. Marking as flushable
+[[01;36m15:57:43[0m][[01;32mINFO[0m] HitMerger processing took 0.000111103
+[[01;36m15:58:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 61 part 1 out of 4
+[[01;36m15:58:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000273943
+[[01;36m15:58:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 61 part 2 out of 4
+[[01;36m15:58:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000103951
+[[01;36m15:58:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 61 part 4 out of 4
+[[01;36m15:58:23[0m][[01;32mINFO[0m] HitMerger processing took 5.60284e-05
+[[01;36m15:58:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 61 part 3 out of 4
+[[01;36m15:58:23[0m][[01;32mINFO[0m] Event 61 complete. Marking as flushable
+[[01;36m15:58:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000167131
+[[01;36m15:58:23[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:58:23[0m][[01;32mINFO[0m] Merge and flush event 59
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   309 trackoffset:   309 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:58:23[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:58:23[0m][[01;32mINFO[0m] Merge/flush for event 59 took 0.000236988
+[[01;36m15:58:23[0m][[01;32mINFO[0m] Merge and flush event 60
+HitMerger entry: 0 nprimry:    13 trackoffset:    13 
+[[01;36m15:58:23[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:58:23[0m][[01;32mINFO[0m] Merge/flush for event 60 took 4.22001e-05
+[[01;36m15:58:23[0m][[01;32mINFO[0m] Merge and flush event 61
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   225 trackoffset:   225 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m15:58:23[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:58:23[0m][[01;32mINFO[0m] Merge/flush for event 61 took 0.000204086
+[[01;36m15:58:23[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:58:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 62 part 3 out of 3
+[[01;36m15:58:23[0m][[01;32mINFO[0m] HitMerger processing took 7.48634e-05
+[[01;36m15:58:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 62 part 1 out of 3
+[[01;36m15:58:23[0m][[01;32mINFO[0m] HitMerger processing took 9.60827e-05
+[[01;36m15:58:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 62 part 2 out of 3
+[[01;36m15:58:23[0m][[01;32mINFO[0m] Event 62 complete. Marking as flushable
+[[01;36m15:58:23[0m][[01;32mINFO[0m] HitMerger processing took 9.39369e-05
+[[01;36m15:58:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 63 part 2 out of 3
+[[01;36m15:58:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000123024
+[[01;36m15:58:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 63 part 1 out of 3
+[[01;36m15:58:23[0m][[01;32mINFO[0m] HitMerger processing took 7.79629e-05
+[[01;36m15:58:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 63 part 3 out of 3
+[[01;36m15:58:23[0m][[01;32mINFO[0m] Event 63 complete. Marking as flushable
+[[01;36m15:58:23[0m][[01;32mINFO[0m] HitMerger processing took 7.48634e-05
+[[01;36m15:58:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 64 part 2 out of 2
+[[01;36m15:58:46[0m][[01;32mINFO[0m] HitMerger processing took 0.000226974
+[[01;36m15:58:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 64 part 1 out of 2
+[[01;36m15:58:46[0m][[01;32mINFO[0m] Event 64 complete. Marking as flushable
+[[01;36m15:58:46[0m][[01;32mINFO[0m] HitMerger processing took 0.000201225
+[[01;36m15:58:46[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:58:46[0m][[01;32mINFO[0m] Merge and flush event 62
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    41 trackoffset:    41 
+merge 2     0     0     1 
+merge 1     2     2     0 
+merge 0     1     1     2 
+[[01;36m15:58:46[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:58:46[0m][[01;32mINFO[0m] Merge/flush for event 62 took 0.000303984
+[[01;36m15:58:46[0m][[01;32mINFO[0m] Merge and flush event 63
+HitMerger entry: 2 nprimry:   314 trackoffset:   314 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:58:46[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:58:46[0m][[01;32mINFO[0m] Merge/flush for event 63 took 0.000180006
+[[01;36m15:58:46[0m][[01;32mINFO[0m] Merge and flush event 64
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   200 trackoffset:   200 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:58:46[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:58:46[0m][[01;32mINFO[0m] Merge/flush for event 64 took 0.000112057
+[[01;36m15:58:46[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:58:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 65 part 1 out of 1
+[[01;36m15:58:46[0m][[01;32mINFO[0m] Event 65 complete. Marking as flushable
+[[01;36m15:58:46[0m][[01;32mINFO[0m] HitMerger processing took 0.000246048
+[[01;36m15:58:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 66 part 2 out of 2
+[[01;36m15:58:46[0m][[01;32mINFO[0m] HitMerger processing took 6.22272e-05
+[[01;36m15:58:46[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 66 part 1 out of 2
+[[01;36m15:58:46[0m][[01;32mINFO[0m] Event 66 complete. Marking as flushable
+[[01;36m15:58:46[0m][[01;32mINFO[0m] HitMerger processing took 9.48906e-05
+[[01;36m15:59:25[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 67 part 2 out of 2
+[[01;36m15:59:25[0m][[01;32mINFO[0m] HitMerger processing took 0.000261068
+[[01;36m15:59:25[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 67 part 1 out of 2
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Event 67 complete. Marking as flushable
+[[01;36m15:59:25[0m][[01;32mINFO[0m] HitMerger processing took 0.000184059
+[[01;36m15:59:25[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 68 part 1 out of 1
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Event 68 complete. Marking as flushable
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Merge and flush event 65
+HitMerger entry: 0 nprimry:   288 trackoffset:   288 
+[[01;36m15:59:25[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Merge/flush for event 65 took 0.000219107
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Merge and flush event 66
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    95 trackoffset:    95 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:59:25[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Merge/flush for event 66 took 0.000102043
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Merge and flush event 67
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   226 trackoffset:   226 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m15:59:25[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Merge/flush for event 67 took 8.39233e-05
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Merge and flush event 68
+HitMerger entry: 0 nprimry:    23 trackoffset:    23 
+[[01;36m15:59:25[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Merge/flush for event 68 took 3.21865e-05
+[[01;36m15:59:25[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m15:59:26[0m][[01;32mINFO[0m] HitMerger processing took 0.0477619
+[[01;36m15:59:26[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:59:26[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 69 part 1 out of 1
+[[01;36m15:59:26[0m][[01;32mINFO[0m] Event 69 complete. Marking as flushable
+[[01;36m15:59:26[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m15:59:26[0m][[01;32mINFO[0m] Merge and flush event 69
+[[01;36m15:59:26[0m][[01;32mINFO[0m] HitMerger processing took 0.000230074
+HitMerger entry: 0 nprimry:   396 trackoffset:   396 
+[[01;36m15:59:26[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m15:59:26[0m][[01;32mINFO[0m] Merge/flush for event 69 took 0.000224113
+[[01;36m15:59:26[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:00:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 70 part 1 out of 4
+[[01;36m16:00:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000754833
+[[01;36m16:00:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 70 part 2 out of 4
+[[01;36m16:00:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000310898
+[[01;36m16:00:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 70 part 4 out of 4
+[[01;36m16:00:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000140905
+[[01;36m16:00:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 70 part 3 out of 4
+[[01;36m16:00:00[0m][[01;32mINFO[0m] Event 70 complete. Marking as flushable
+[[01;36m16:00:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000591993
+[[01;36m16:00:00[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:00:00[0m][[01;32mINFO[0m] Merge and flush event 70
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   316 trackoffset:   316 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m16:00:00[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:00:00[0m][[01;32mINFO[0m] Merge/flush for event 70 took 0.00127912
+[[01;36m16:00:00[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:00:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 71 part 1 out of 2
+[[01;36m16:00:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000639915
+[[01;36m16:00:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 72 part 1 out of 1
+[[01;36m16:00:00[0m][[01;32mINFO[0m] Event 72 complete. Marking as flushable
+[[01;36m16:00:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000325203
+[[01;36m16:00:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 71 part 2 out of 2
+[[01;36m16:00:00[0m][[01;32mINFO[0m] Event 71 complete. Marking as flushable
+[[01;36m16:00:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000197887
+[[01;36m16:01:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 73 part 1 out of 3
+[[01;36m16:01:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000601053
+[[01;36m16:01:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 73 part 3 out of 3
+[[01;36m16:01:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000349998
+[[01;36m16:01:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 73 part 2 out of 3
+[[01;36m16:01:00[0m][[01;32mINFO[0m] Event 73 complete. Marking as flushable
+[[01;36m16:01:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000427008
+[[01;36m16:01:00[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:01:00[0m][[01;32mINFO[0m] Merge and flush event 71
+HitMerger entry: 1 nprimry:   438 trackoffset:   438 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m16:01:00[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:01:00[0m][[01;32mINFO[0m] Merge/flush for event 71 took 0.000771046
+[[01;36m16:01:00[0m][[01;32mINFO[0m] Merge and flush event 72
+HitMerger entry: 0 nprimry:   250 trackoffset:   250 
+[[01;36m16:01:00[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:01:00[0m][[01;32mINFO[0m] Merge/flush for event 72 took 0.000106812
+[[01;36m16:01:00[0m][[01;32mINFO[0m] Merge and flush event 73
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   183 trackoffset:   183 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     1     1     2 
+merge 1     2     2     1 
+merge 0     0     0     0 
+[[01;36m16:01:00[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:01:00[0m][[01;32mINFO[0m] Merge/flush for event 73 took 0.000390053
+[[01;36m16:01:00[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:01:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 74 part 2 out of 2
+[[01;36m16:01:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000385046
+[[01;36m16:01:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 75 part 1 out of 1
+[[01;36m16:01:00[0m][[01;32mINFO[0m] Event 75 complete. Marking as flushable
+[[01;36m16:01:00[0m][[01;32mINFO[0m] HitMerger processing took 0.00011301
+[[01;36m16:01:00[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 74 part 1 out of 2
+[[01;36m16:01:00[0m][[01;32mINFO[0m] Event 74 complete. Marking as flushable
+[[01;36m16:01:00[0m][[01;32mINFO[0m] HitMerger processing took 0.000165939
+[[01;36m16:03:04[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 76 part 1 out of 3
+[[01;36m16:03:04[0m][[01;32mINFO[0m] HitMerger processing took 0.000510931
+[[01;36m16:03:04[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 76 part 3 out of 3
+[[01;36m16:03:04[0m][[01;32mINFO[0m] HitMerger processing took 0.00011301
+[[01;36m16:03:04[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 76 part 2 out of 3
+[[01;36m16:03:04[0m][[01;32mINFO[0m] Event 76 complete. Marking as flushable
+[[01;36m16:03:04[0m][[01;32mINFO[0m] HitMerger processing took 0.000441074
+[[01;36m16:03:04[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:03:04[0m][[01;32mINFO[0m] Merge and flush event 74
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   208 trackoffset:   208 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m16:03:04[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:03:04[0m][[01;32mINFO[0m] Merge/flush for event 74 took 0.00115085
+[[01;36m16:03:04[0m][[01;32mINFO[0m] Merge and flush event 75
+HitMerger entry: 0 nprimry:    10 trackoffset:    10 
+[[01;36m16:03:04[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:03:04[0m][[01;32mINFO[0m] Merge/flush for event 75 took 0.000113964
+[[01;36m16:03:04[0m][[01;32mINFO[0m] Merge and flush event 76
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   466 trackoffset:   466 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     1     1     2 
+merge 1     2     2     1 
+merge 0     0     0     0 
+[[01;36m16:03:04[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:03:04[0m][[01;32mINFO[0m] Merge/flush for event 76 took 0.000502825
+[[01;36m16:03:04[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:03:04[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 77 part 2 out of 2
+[[01;36m16:03:04[0m][[01;32mINFO[0m] HitMerger processing took 0.000433207
+[[01;36m16:03:04[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 77 part 1 out of 2
+[[01;36m16:03:04[0m][[01;32mINFO[0m] Event 77 complete. Marking as flushable
+[[01;36m16:03:04[0m][[01;32mINFO[0m] HitMerger processing took 0.000148058
+[[01;36m16:03:05[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 78 part 2 out of 3
+[[01;36m16:03:05[0m][[01;32mINFO[0m] HitMerger processing took 0.000555992
+[[01;36m16:03:05[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 78 part 1 out of 3
+[[01;36m16:03:05[0m][[01;32mINFO[0m] HitMerger processing took 0.000132084
+[[01;36m16:03:05[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 78 part 3 out of 3
+[[01;36m16:03:05[0m][[01;32mINFO[0m] Event 78 complete. Marking as flushable
+[[01;36m16:03:05[0m][[01;32mINFO[0m] HitMerger processing took 0.000150919
+[[01;36m16:03:20[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 79 part 2 out of 2
+[[01;36m16:03:20[0m][[01;32mINFO[0m] HitMerger processing took 0.000797033
+[[01;36m16:03:20[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 79 part 1 out of 2
+[[01;36m16:03:20[0m][[01;32mINFO[0m] Event 79 complete. Marking as flushable
+[[01;36m16:03:20[0m][[01;32mINFO[0m] HitMerger processing took 0.000414133
+[[01;36m16:03:20[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:03:20[0m][[01;32mINFO[0m] Merge and flush event 77
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   156 trackoffset:   156 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m16:03:20[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:03:20[0m][[01;32mINFO[0m] Merge/flush for event 77 took 0.00101304
+[[01;36m16:03:20[0m][[01;32mINFO[0m] Merge and flush event 78
+HitMerger entry: 2 nprimry:   469 trackoffset:   469 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m16:03:20[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:03:20[0m][[01;32mINFO[0m] Merge/flush for event 78 took 0.000478029
+[[01;36m16:03:20[0m][[01;32mINFO[0m] Merge and flush event 79
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   305 trackoffset:   305 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m16:03:20[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:03:20[0m][[01;32mINFO[0m] Merge/flush for event 79 took 0.000289202
+[[01;36m16:03:20[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:03:20[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 80 part 1 out of 1
+[[01;36m16:03:20[0m][[01;32mINFO[0m] Event 80 complete. Marking as flushable
+[[01;36m16:03:20[0m][[01;32mINFO[0m] HitMerger processing took 0.00088501
+[[01;36m16:03:20[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 81 part 2 out of 3
+[[01;36m16:03:20[0m][[01;32mINFO[0m] HitMerger processing took 0.000576019
+[[01;36m16:03:20[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 81 part 3 out of 3
+[[01;36m16:03:20[0m][[01;32mINFO[0m] HitMerger processing took 0.000128031
+[[01;36m16:03:20[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 81 part 1 out of 3
+[[01;36m16:03:20[0m][[01;32mINFO[0m] Event 81 complete. Marking as flushable
+[[01;36m16:03:20[0m][[01;32mINFO[0m] HitMerger processing took 0.000354052
+[[01;36m16:04:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 82 part 2 out of 4
+[[01;36m16:04:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000656843
+[[01;36m16:04:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 82 part 1 out of 4
+[[01;36m16:04:23[0m][[01;32mINFO[0m] HitMerger processing took 0.0001688
+[[01;36m16:04:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 82 part 4 out of 4
+[[01;36m16:04:23[0m][[01;32mINFO[0m] HitMerger processing took 9.41753e-05
+[[01;36m16:04:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 82 part 3 out of 4
+[[01;36m16:04:23[0m][[01;32mINFO[0m] Event 82 complete. Marking as flushable
+[[01;36m16:04:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000767946
+[[01;36m16:04:23[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:04:23[0m][[01;32mINFO[0m] Merge and flush event 80
+HitMerger entry: 0 nprimry:   176 trackoffset:   176 
+[[01;36m16:04:23[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:04:23[0m][[01;32mINFO[0m] Merge/flush for event 80 took 0.0007689
+[[01;36m16:04:23[0m][[01;32mINFO[0m] Merge and flush event 81
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   398 trackoffset:   398 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     1     1     0 
+merge 1     0     0     2 
+merge 0     2     2     1 
+[[01;36m16:04:23[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:04:23[0m][[01;32mINFO[0m] Merge/flush for event 81 took 0.000638962
+[[01;36m16:04:23[0m][[01;32mINFO[0m] Merge and flush event 82
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   170 trackoffset:   170 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m16:04:23[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:04:23[0m][[01;32mINFO[0m] Merge/flush for event 82 took 0.000403881
+[[01;36m16:04:23[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:04:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 83 part 2 out of 2
+[[01;36m16:04:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000367165
+[[01;36m16:04:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 83 part 1 out of 2
+[[01;36m16:04:23[0m][[01;32mINFO[0m] Event 83 complete. Marking as flushable
+[[01;36m16:04:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000176191
+[[01;36m16:04:23[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 84 part 1 out of 1
+[[01;36m16:04:23[0m][[01;32mINFO[0m] Event 84 complete. Marking as flushable
+[[01;36m16:04:23[0m][[01;32mINFO[0m] HitMerger processing took 0.000531912
+[[01;36m16:06:02[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 85 part 1 out of 1
+[[01;36m16:06:02[0m][[01;32mINFO[0m] Event 85 complete. Marking as flushable
+[[01;36m16:06:02[0m][[01;32mINFO[0m] HitMerger processing took 0.000859976
+[[01;36m16:06:02[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:06:02[0m][[01;32mINFO[0m] Merge and flush event 83
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    38 trackoffset:    38 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m16:06:02[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:06:02[0m][[01;32mINFO[0m] Merge/flush for event 83 took 0.000931025
+[[01;36m16:06:02[0m][[01;32mINFO[0m] Merge and flush event 84
+HitMerger entry: 0 nprimry:   240 trackoffset:   240 
+[[01;36m16:06:02[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:06:02[0m][[01;32mINFO[0m] Merge/flush for event 84 took 0.000150919
+[[01;36m16:06:02[0m][[01;32mINFO[0m] Merge and flush event 85
+HitMerger entry: 0 nprimry:   210 trackoffset:   210 
+[[01;36m16:06:02[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:06:02[0m][[01;32mINFO[0m] Merge/flush for event 85 took 8.98838e-05
+[[01;36m16:06:02[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:06:02[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 86 part 1 out of 1
+[[01;36m16:06:02[0m][[01;32mINFO[0m] Event 86 complete. Marking as flushable
+[[01;36m16:06:02[0m][[01;32mINFO[0m] HitMerger processing took 0.00019002
+[[01;36m16:06:02[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 87 part 1 out of 1
+[[01;36m16:06:02[0m][[01;32mINFO[0m] Event 87 complete. Marking as flushable
+[[01;36m16:06:02[0m][[01;32mINFO[0m] HitMerger processing took 0.000541925
+[[01;36m16:06:25[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 88 part 1 out of 6
+[[01;36m16:06:25[0m][[01;32mINFO[0m] HitMerger processing took 0.00048399
+[[01;36m16:06:25[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 88 part 2 out of 6
+[[01;36m16:06:25[0m][[01;32mINFO[0m] HitMerger processing took 0.000148058
+[[01;36m16:06:25[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 88 part 4 out of 6
+[[01;36m16:06:25[0m][[01;32mINFO[0m] HitMerger processing took 0.000195026
+[[01;36m16:06:25[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 88 part 3 out of 6
+[[01;36m16:06:25[0m][[01;32mINFO[0m] HitMerger processing took 0.00013113
+[[01;36m16:06:25[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 88 part 5 out of 6
+[[01;36m16:06:25[0m][[01;32mINFO[0m] HitMerger processing took 0.00025177
+[[01;36m16:06:25[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 88 part 6 out of 6
+[[01;36m16:06:25[0m][[01;32mINFO[0m] Event 88 complete. Marking as flushable
+[[01;36m16:06:25[0m][[01;32mINFO[0m] HitMerger processing took 0.000726938
+[[01;36m16:06:25[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:06:25[0m][[01;32mINFO[0m] Merge and flush event 86
+HitMerger entry: 0 nprimry:   135 trackoffset:   135 
+[[01;36m16:06:25[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:06:25[0m][[01;32mINFO[0m] Merge/flush for event 86 took 0.000696898
+[[01;36m16:06:25[0m][[01;32mINFO[0m] Merge and flush event 87
+HitMerger entry: 0 nprimry:   147 trackoffset:   147 
+[[01;36m16:06:25[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:06:25[0m][[01;32mINFO[0m] Merge/flush for event 87 took 8.29697e-05
+[[01;36m16:06:25[0m][[01;32mINFO[0m] Merge and flush event 88
+HitMerger entry: 5 nprimry:   322 trackoffset:   322 
+HitMerger entry: 4 nprimry:   500 trackoffset:   500 
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 5     5     5     5 
+merge 4     4     4     4 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m16:06:25[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:06:25[0m][[01;32mINFO[0m] Merge/flush for event 88 took 0.00115609
+[[01;36m16:06:25[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:06:25[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 89 part 1 out of 1
+[[01;36m16:06:25[0m][[01;32mINFO[0m] Event 89 complete. Marking as flushable
+[[01;36m16:06:25[0m][[01;32mINFO[0m] HitMerger processing took 0.000433922
+[[01;36m16:06:25[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 90 part 1 out of 1
+[[01;36m16:06:25[0m][[01;32mINFO[0m] Event 90 complete. Marking as flushable
+[[01;36m16:06:25[0m][[01;32mINFO[0m] HitMerger processing took 0.000319004
+[[01;36m16:06:29[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 91 part 4 out of 4
+[[01;36m16:06:29[0m][[01;32mINFO[0m] HitMerger processing took 0.00067997
+[[01;36m16:06:29[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 91 part 1 out of 4
+[[01;36m16:06:29[0m][[01;32mINFO[0m] HitMerger processing took 0.000313997
+[[01;36m16:06:29[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 91 part 3 out of 4
+[[01;36m16:06:29[0m][[01;32mINFO[0m] HitMerger processing took 0.000161886
+[[01;36m16:06:29[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 91 part 2 out of 4
+[[01;36m16:06:29[0m][[01;32mINFO[0m] Event 91 complete. Marking as flushable
+[[01;36m16:06:29[0m][[01;32mINFO[0m] HitMerger processing took 0.000528812
+[[01;36m16:06:29[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:06:29[0m][[01;32mINFO[0m] Merge and flush event 89
+HitMerger entry: 0 nprimry:   154 trackoffset:   154 
+[[01;36m16:06:29[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:06:29[0m][[01;32mINFO[0m] Merge/flush for event 89 took 0.000679016
+[[01;36m16:06:29[0m][[01;32mINFO[0m] Merge and flush event 90
+HitMerger entry: 0 nprimry:   195 trackoffset:   195 
+[[01;36m16:06:29[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:06:29[0m][[01;32mINFO[0m] Merge/flush for event 90 took 0.000149012
+[[01;36m16:06:29[0m][[01;32mINFO[0m] Merge and flush event 91
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   141 trackoffset:   141 
+merge 3     0     0     1 
+merge 2     2     2     2 
+merge 1     3     3     0 
+merge 0     1     1     3 
+[[01;36m16:06:29[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:06:29[0m][[01;32mINFO[0m] Merge/flush for event 91 took 0.000905991
+[[01;36m16:06:29[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:06:29[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 92 part 1 out of 1
+[[01;36m16:06:29[0m][[01;32mINFO[0m] Event 92 complete. Marking as flushable
+[[01;36m16:06:29[0m][[01;32mINFO[0m] HitMerger processing took 0.000426054
+[[01;36m16:06:29[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 93 part 1 out of 1
+[[01;36m16:06:29[0m][[01;32mINFO[0m] Event 93 complete. Marking as flushable
+[[01;36m16:06:29[0m][[01;32mINFO[0m] HitMerger processing took 0.00039196
+[[01;36m16:07:37[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 94 part 1 out of 3
+[[01;36m16:07:37[0m][[01;32mINFO[0m] HitMerger processing took 0.000468016
+[[01;36m16:07:37[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 94 part 3 out of 3
+[[01;36m16:07:37[0m][[01;32mINFO[0m] HitMerger processing took 0.000133991
+[[01;36m16:07:37[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 94 part 2 out of 3
+[[01;36m16:07:37[0m][[01;32mINFO[0m] Event 94 complete. Marking as flushable
+[[01;36m16:07:37[0m][[01;32mINFO[0m] HitMerger processing took 0.000324965
+[[01;36m16:07:37[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:07:37[0m][[01;32mINFO[0m] Merge and flush event 92
+HitMerger entry: 0 nprimry:   181 trackoffset:   181 
+[[01;36m16:07:37[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:07:37[0m][[01;32mINFO[0m] Merge/flush for event 92 took 0.000460863
+[[01;36m16:07:37[0m][[01;32mINFO[0m] Merge and flush event 93
+HitMerger entry: 0 nprimry:   160 trackoffset:   160 
+[[01;36m16:07:37[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:07:37[0m][[01;32mINFO[0m] Merge/flush for event 93 took 6.38962e-05
+[[01;36m16:07:37[0m][[01;32mINFO[0m] Merge and flush event 94
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   407 trackoffset:   407 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     1     1     2 
+merge 1     2     2     1 
+merge 0     0     0     0 
+[[01;36m16:07:37[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:07:37[0m][[01;32mINFO[0m] Merge/flush for event 94 took 0.000334978
+[[01;36m16:07:37[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:07:37[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 95 part 2 out of 2
+[[01;36m16:07:37[0m][[01;32mINFO[0m] HitMerger processing took 0.000294924
+[[01;36m16:07:37[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 95 part 1 out of 2
+[[01;36m16:07:37[0m][[01;32mINFO[0m] Event 95 complete. Marking as flushable
+[[01;36m16:07:37[0m][[01;32mINFO[0m] HitMerger processing took 0.000182867
+[[01;36m16:07:37[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 96 part 1 out of 1
+[[01;36m16:07:37[0m][[01;32mINFO[0m] Event 96 complete. Marking as flushable
+[[01;36m16:07:37[0m][[01;32mINFO[0m] HitMerger processing took 0.000108957
+[[01;36m16:13:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 97 part 4 out of 4
+[[01;36m16:13:01[0m][[01;32mINFO[0m] HitMerger processing took 0.000868082
+[[01;36m16:13:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 97 part 1 out of 4
+[[01;36m16:13:01[0m][[01;32mINFO[0m] HitMerger processing took 0.000226021
+[[01;36m16:13:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 97 part 2 out of 4
+[[01;36m16:13:01[0m][[01;32mINFO[0m] HitMerger processing took 0.000253916
+[[01;36m16:13:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 97 part 3 out of 4
+[[01;36m16:13:01[0m][[01;32mINFO[0m] Event 97 complete. Marking as flushable
+[[01;36m16:13:01[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:13:01[0m][[01;32mINFO[0m] Merge and flush event 95
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    17 trackoffset:    17 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m16:13:01[0m][[01;32mINFO[0m] HitMerger processing took 0.000883818
+[[01;36m16:13:01[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:13:01[0m][[01;32mINFO[0m] Merge/flush for event 95 took 0.000876904
+[[01;36m16:13:01[0m][[01;32mINFO[0m] Merge and flush event 96
+HitMerger entry: 0 nprimry:    87 trackoffset:    87 
+[[01;36m16:13:01[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:13:01[0m][[01;32mINFO[0m] Merge/flush for event 96 took 0.000126123
+[[01;36m16:13:01[0m][[01;32mINFO[0m] Merge and flush event 97
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   115 trackoffset:   115 
+merge 3     0     0     1 
+merge 2     3     3     0 
+merge 1     2     2     3 
+merge 0     1     1     2 
+[[01;36m16:13:01[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:13:01[0m][[01;32mINFO[0m] Merge/flush for event 97 took 0.000575066
+[[01;36m16:13:01[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:13:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 98 part 2 out of 2
+[[01;36m16:13:01[0m][[01;32mINFO[0m] HitMerger processing took 0.000590086
+[[01;36m16:13:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 98 part 1 out of 2
+[[01;36m16:13:01[0m][[01;32mINFO[0m] Event 98 complete. Marking as flushable
+[[01;36m16:13:01[0m][[01;32mINFO[0m] HitMerger processing took 0.000162125
+[[01;36m16:13:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 99 part 1 out of 2
+[[01;36m16:13:01[0m][[01;32mINFO[0m] HitMerger processing took 0.000650167
+[[01;36m16:13:01[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 99 part 2 out of 2
+[[01;36m16:13:01[0m][[01;32mINFO[0m] Event 99 complete. Marking as flushable
+[[01;36m16:13:01[0m][[01;32mINFO[0m] HitMerger processing took 0.000794888
+[[01;36m16:19:38[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 100 part 1 out of 3
+[[01;36m16:19:38[0m][[01;32mINFO[0m] HitMerger processing took 0.00029707
+[[01;36m16:19:38[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 100 part 2 out of 3
+[[01;36m16:19:38[0m][[01;32mINFO[0m] HitMerger processing took 8.4877e-05
+[[01;36m16:19:38[0m][[01;32mINFO[0m] SIMDATA channel got 3 parts for event 100 part 3 out of 3
+[[01;36m16:19:38[0m][[01;32mINFO[0m] Event 100 complete. Marking as flushable
+[[01;36m16:19:38[0m][[01;32mINFO[0m] ALL EVENTS HERE; CHECKSUM 5050
+[[01;36m16:19:38[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:19:38[0m][[01;32mINFO[0m] Merge and flush event 98
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   126 trackoffset:   126 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[[01;36m16:19:38[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:19:38[0m][[01;32mINFO[0m] Merge/flush for event 98 took 0.000332117
+[[01;36m16:19:38[0m][[01;32mINFO[0m] Merge and flush event 99
+HitMerger entry: 1 nprimry:   396 trackoffset:   396 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m16:19:38[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:19:38[0m][[01;32mINFO[0m] Merge/flush for event 99 took 0.00014782
+[[01;36m16:19:38[0m][[01;32mINFO[0m] Merge and flush event 100
+HitMerger entry: 2 nprimry:   185 trackoffset:   185 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[[01;36m16:19:38[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m16:19:38[0m][[01;32mINFO[0m] Merge/flush for event 100 took 0.000145912
+[[01;36m16:19:38[0m][[01;32mINFO[0m] Writing TTrees
+[[01;36m16:19:38[0m][[01;32mINFO[0m] Launching merge kernel 
+[[01;36m16:19:38[0m][[01;32mINFO[0m] HitMerger processing took 0.0622649
+[[01;36m16:19:38[0m][[01;35mSTATE[0m] RUNNING ---> READY
