@@ -296,7 +296,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export TPC_CORR_SCALING+=" --corrmap-lumi-mean $ALIEN_JDL_MEANIRFORTPC "
   fi
 
-  if [[ $PERIOD != @(LHC22c|LHC22d|LHC22e|LHC22f|LHC22s) ]] ; then
+  if [[ $PERIOD != @(LHC22c|LHC22d|LHC22e|LHC22f) ]] ; then
     echo "Setting TPCCLUSTERTIMESHIFT to 0"
     TPCCLUSTERTIMESHIFT=0
   else
