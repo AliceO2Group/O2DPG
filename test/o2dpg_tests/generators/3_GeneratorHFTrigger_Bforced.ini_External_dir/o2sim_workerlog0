@@ -1,0 +1,2991 @@
+[INFO] BINDING TO ADDRESS ipc:///tmp/o2sim-worker-notifications-724187 type pub
+[INFO] Parsed primary server address ipc:///tmp/o2sim-primary-get-724187
+[INFO] Parsed primary server status address ipc:///tmp/o2sim-primserv-info-724187
+[INFO] Parsed merger address ipc:///tmp/o2sim-hitmerger-simdata-724187
+[INFO] Waiting for configuration answer 
+[INFO] Configuration answer received, containing 1032 bytes 
+[INFO] COMMUNICATED ENGINE O2TrivialMCEngine
+[15:18:21][INFO] Setting up the simulation ...
+[15:18:21][INFO] Init CcdApi with UserAgentID: alice-serv14-1685020701-tRnHq6, Host: http://alice-ccdb.cern.ch/
+[15:18:21][INFO] Init CcdApi with UserAgentID: alice-serv14-1685020701-tRnHq6, Host: http://alice-ccdb.cern.ch
+[15:18:21][INFO] Initialized CCDB Manager at URL: http://alice-ccdb.cern.ch
+[15:18:21][INFO] Initialized CCDB Manager with timestamp : 1685020700041
+[15:18:21][INFO] Initializing without Geant transport by applying very tight geometry cuts
+[15:18:21][INFO] RNG INITIAL SEED 7357114723531474506
+[15:18:21][INFO] Media file used: /home/ceres/zanone/work/o2new/sw/ubuntu2004_x86-64/O2/dev-local4/share/Detectors/Geometry/media.geo
+[15:18:21][INFO] MagneticField::CreateField: Maximim possible beam energy for requested beam is assumed
+[15:18:21][INFO] MagneticField::Print: Maps:
+[15:18:21][INFO] MagneticField::Print: Solenoid (-1*)5 kG, Dipole ON (-1) 
+[15:18:21][INFO] MagneticField::Print: Machine B fields for p-p  beam (7000 GeV): QGrad: 22.0002 Dipole: 37.8781
+[15:18:21][INFO] MagneticField::Print: Uses Sol30_Dip6_Hole  of $(O2_ROOT)/share/Common/maps/mfchebKGI_sym.root
+[15:18:21][INFO] Hit creation disabled for all detectors
+[15:18:21][INFO] O2RUNSIM SPECIFIC INIT CALLED
+[15:18:21][INFO] FairRootFileSink initialized.
+[15:18:21][INFO]  - cbmroot_0
+[15:18:21][INFO]     - o2sim_724192.root
+Info in <TGeoManager::TGeoManager>: Geometry FAIRGeom, FAIR geometry created
+[15:18:21][INFO] FairGeoMedia: Read media 
+[15:18:21][INFO] MagFieldContFact::createContainer: Creating mag.field container MagFieldParam
+[15:18:21][INFO] Loading simulation plugin libO2O2TrivialMCEngineSetup
+[15:18:21][INFO] Setting up O2TrivialMCEngine sim from library code
+
+=============================================================
+ Virtual Monte Carlo Library
+ Version 2.0 ( 10 February 2022 )
+=============================================================
+[15:18:21][INFO] No magnetic field found; using default tracking values 2 10 to initialize media
+
+[15:18:21][INFO] Field in CAVE: 2
+Warning in <TVirtualMC::Mixture>: Not implemented in this trivial engine
+Warning in <TVirtualMC::Mixture>: Not implemented in this trivial engine
+Warning in <TVirtualMC::Medium>: Not implemented in this trivial engine
+Warning in <TVirtualMC::Medium>: Not implemented in this trivial engine
+[15:18:21][INFO] Setting up CAVE without ZDC
+Info in <TGeoManager::SetTopVolume>: Top volume is cave. Master volume is cave
+Info in <TGeoNavigator::BuildCache>: --- Maximum geometry depth set to 100
+Info in <TGeoManager::CheckGeometry>: Fixing runtime shapes...
+Info in <TGeoManager::CheckGeometry>: ...Nothing to fix
+Warning in <TGeoManager::CheckGeometry>: Volume "cave" has no medium: assigned dummy medium and material
+Warning in <TGeoManager::CheckGeometry>: Volume "barrel" has no medium: assigned dummy medium and material
+Warning in <TGeoManager::CheckGeometry>: Volume "caveRB24" has no medium: assigned dummy medium and material
+Info in <TGeoManager::CloseGeometry>: Counting nodes...
+Info in <TGeoManager::Voxelize>: Voxelizing...
+Info in <TGeoManager::CloseGeometry>: Building cache...
+Info in <TGeoManager::CountLevels>: max level = 1, max placements = 2
+Info in <TGeoManager::CloseGeometry>: 3 nodes/ 3 volume UID's in FAIR geometry
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+[15:18:21][INFO] TGeometry will not be imported to VMC
+
+Warning in <TVirtualMC::SecondariesAreOrdered>: Not implemented in this trivial engine
+[15:18:21][INFO] Stack.storeSecondaries : true		[ CODE ]
+Stack.pruneKine : true		[ CODE ]
+Stack.transportPrimary : all		[ CODE ]
+Stack.transportPrimaryFileName : 		[ CODE ]
+Stack.transportPrimaryFuncName : 		[ CODE ]
+Stack.transportPrimaryInvert : false		[ CODE ]
+
+[15:18:21][INFO] Setup global cuts and processes
+[15:18:21][INFO] Set default settings for processes and cuts.
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetProcess>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetCut>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetCut>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetCut>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetCut>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetCut>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetCut>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetCut>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetCut>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetCut>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetCut>: Not implemented in this trivial engine
+Warning in <TVirtualMC::SetCut>: Not implemented in this trivial engine
+[15:18:21][INFO] Special process settings are enabled.
+[15:18:21][INFO] Special cut settings are enabled.
+[15:18:21][INFO] FairMCApplication::InitGeometry: 0
+[15:18:21][INFO] Simulation RunID: 1685020701
+[15:18:21][INFO] CREATING BRANCH MCTrack
+[15:18:21][INFO] Creating branch for MCTrack with address 0x209d310
+[15:18:21][INFO] CREATING BRANCH TrackRefs
+[15:18:21][INFO] Creating branch for TrackRefs with address 0x209d3d0
+Warning in <TVirtualMC::Init>: Not implemented in this trivial engine
+Warning in <TVirtualMC::BuildPhysics>: Not implemented in this trivial engine
+[15:18:21][INFO] Monte Carlo Engine Initialisation with: O2TrivialMCEngine
+[15:18:22][INFO] ***  FairBaseParSet written to ROOT file   version: 1
+[15:18:22][INFO] ***  FairGeoParSet written to ROOT file   version: 1
+[15:18:22][INFO] ***  MagFieldParam written to ROOT file   version: 1
+--------------------------------------------------------------------------------
+--------------  actual containers in runtime database  -------------------------
+FairBaseParSet                                 class for parameter io
+FairGeoParSet                                  class for Geo parameter
+MagFieldParam                                  Mag. Field Parameters
+--------------  runs, versions  ------------------------------------------------
+run id
+  container                                        1st-inp    2nd-inp    output
+run: 1685020701
+  FairBaseParSet                                1685020701         -1          1
+  FairGeoParSet                                 1685020701         -1          1
+  MagFieldParam                                         -1         -1          1
+--------------  input/output  --------------------------------------------------
+first input: none
+second input: none
+output:
+OBJ: FairParRootFile	o2sim_724192_par.root	 : 0 at: 0x8e54d10
+Root file I/O o2sim_724192_par.root is open
+detector I/Os:  FairGenericParIo
+ *** TDatabasePDG::AddParticle: particle with PDGcode=3124 already defined
+ *** TDatabasePDG::AddAntiParticle: can't redefine parameters
+Run: 1685020701
+Fill:      0
+Period: , isMC:0
+LHC State: 
+Start: Fri Mar  7 10:34:01 55366
+End  : Fri Apr 18 03:34:01 55366
+1st orbit: 0, 256 orbits per TF
+Beam0: Z:A =   0:  0, Energy = 0.000
+Beam1: Z:A =   0:  0, Energy = 0.000
+sqrt[s]    = 0.000
+crossing angle (radian) = 0.000000e+00
+magnet currents (A) L3 = 0.000, Dipole = 0
+Detectors: Cont.RO Triggers
+VMC: 0x8a65380
+[15:18:22][INFO] Init: Real time 1.01349 s, CPU time 0.64s
+[15:18:22][INFO] Init: Memory used 558.406 MB
+[15:18:22][INFO] MEM-STAMP END OF SIM INIT558.406 558.406 MB
+
+[15:18:22][INFO] Running with 4 sim workers 
+[15:18:22][INFO] CONNECTING TO ADDRESS ipc:///tmp/o2sim-workerinternal-724187 type push
+[15:18:22][STATE] Starting FairMQ state machine --> IDLE
+[15:18:22][INFO] OCCUPYING A SEGMENT IN A SHARED REGION
+[15:18:22][INFO] FOUND ID TO ATTACH 98325
+[15:18:22][INFO] TRYING ADDRESS 0x7f5517fff000
+[15:18:22][INFO] SEGMENTCOUNT 0
+[15:18:22][INFO] SHARED MEM OCCUPIED AT ID 98325 AND SEGMENT COUNTER 0
+[15:18:22][INFO] [W0] Requesting work chunk
+[15:18:22][INFO] [W0] Waiting for answer
+[15:18:22][INFO] CONNECTING TO ADDRESS ipc:///tmp/o2sim-workerinternal-724187 type push
+[15:18:22][INFO] BINDING TO ADDRESS ipc:///tmp/o2sim-workerinternal-724187 type pull
+[15:18:22][INFO] CONNECTING TO ADDRESS ipc:///tmp/o2sim-workerinternal-724187 type push
+[15:18:22][STATE] Starting FairMQ state machine --> IDLE
+[15:18:22][INFO] OCCUPYING A SEGMENT IN A SHARED REGION
+[15:18:22][INFO] FOUND ID TO ATTACH 98325
+[15:18:22][INFO] TRYING ADDRESS 0x7f5517fff000
+[15:18:22][INFO] SEGMENTCOUNT 1
+[15:18:22][INFO] SHARED MEM OCCUPIED AT ID 98325 AND SEGMENT COUNTER 1
+[15:18:22][INFO] [W1] Requesting work chunk
+[15:18:22][INFO] [W1] Waiting for answer
+[15:18:22][INFO] CONNECTING TO ADDRESS ipc:///tmp/o2sim-workerinternal-724187 type push
+[15:18:22][STATE] Starting FairMQ state machine --> IDLE
+[15:18:22][INFO] OCCUPYING A SEGMENT IN A SHARED REGION
+[15:18:22][INFO] FOUND ID TO ATTACH 98325
+[15:18:22][INFO] TRYING ADDRESS 0x7f5517fff000
+[15:18:22][INFO] SEGMENTCOUNT 2
+[15:18:22][INFO] SHARED MEM OCCUPIED AT ID 98325 AND SEGMENT COUNTER 2
+[15:18:22][INFO] [W3] Requesting work chunk
+[15:18:22][INFO] [W3] Waiting for answer
+[15:18:22][STATE] Starting FairMQ state machine --> IDLE
+[15:18:22][INFO] OCCUPYING A SEGMENT IN A SHARED REGION
+[15:18:22][INFO] FOUND ID TO ATTACH 98325
+[15:18:22][INFO] TRYING ADDRESS 0x7f5517fff000
+[15:18:22][INFO] SEGMENTCOUNT 3
+[15:18:22][INFO] SHARED MEM OCCUPIED AT ID 98325 AND SEGMENT COUNTER 3
+[15:18:22][INFO] [W2] Requesting work chunk
+[15:18:22][INFO] [W2] Waiting for answer
+[15:18:44][INFO] [W2] Primary chunk received
+[15:18:44][INFO] [W0] Primary chunk received
+[15:18:44][INFO] [W2] Processing 500 primary particles for event 1/100 part 1/2
+[15:18:44][INFO] Setting seed for this sub-event to 9524721565098865326
+[15:18:44][INFO] [W0] Processing 445 primary particles for event 1/100 part 2/2
+[15:18:44][INFO] Setting seed for this sub-event to 9524721565098865326
+[15:18:44][INFO] Stack: 500 out of 500 stored 
+
+[15:18:44][INFO] Found nonconforming detector CAVE
+[15:18:44][INFO] This event/chunk did 0 steps
+[15:18:44][INFO] Stack: 445 out of 445 stored 
+
+[15:18:44][INFO] Found nonconforming detector CAVE
+[15:18:44][INFO] sending message with 3 parts
+[15:18:44][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 292 primaries
+[15:18:44][INFO] [W2] TIME-STAMP 22.3147	
+[15:18:44][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:44][INFO] [W2] Requesting work chunk
+[15:18:44][INFO] [W2] Waiting for answer
+[15:18:44][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:44][INFO] [W0] TIME-STAMP 22.3199	
+[15:18:44][INFO] [W0] MEM-STAMP 239.207 239.207 MB
+
+[15:18:44][INFO] [W0] Requesting work chunk
+[15:18:44][INFO] [W0] Waiting for answer
+[15:18:44][INFO] [W1] Primary chunk received
+[15:18:44][INFO] [W2] Primary chunk received
+[15:18:44][INFO] [W3] Primary chunk received
+[15:18:44][INFO] [W2] Processing 321 primary particles for event 2/100 part 3/3
+[15:18:44][INFO] Setting seed for this sub-event to 9524721565098865327
+[15:18:44][INFO] Stack: 321 out of 321 stored 
+
+[15:18:44][INFO] Found nonconforming detector CAVE
+[15:18:44][INFO] This event/chunk did 0 steps
+[15:18:44][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:44][INFO] [W2] TIME-STAMP 22.324	
+[15:18:44][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:44][INFO] [W2] Requesting work chunk
+[15:18:44][INFO] [W2] Waiting for answer
+[15:18:44][INFO] [W3] Processing 500 primary particles for event 2/100 part 2/3
+[15:18:44][INFO] Setting seed for this sub-event to 9524721565098865327
+[15:18:44][INFO] [W0] Primary chunk received
+[15:18:44][INFO] [W0] Processing 81 primary particles for event 3/100 part 1/1
+[15:18:44][INFO] Setting seed for this sub-event to 9524721565098865328
+[15:18:44][INFO] Stack: 81 out of 81 stored 
+
+[15:18:44][INFO] Found nonconforming detector CAVE
+[15:18:44][INFO] This event/chunk did 0 steps
+[15:18:44][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 39 primaries
+[15:18:44][INFO] Stack: 500 out of 500 stored 
+
+[15:18:44][INFO] [W0] TIME-STAMP 22.3299	
+[15:18:44][INFO] Found nonconforming detector CAVE
+[15:18:44][INFO] [W0] MEM-STAMP 239.207 239.207 MB
+
+[15:18:44][INFO] [W0] Requesting work chunk
+[15:18:44][INFO] This event/chunk did 0 steps
+[15:18:44][INFO] [W0] Waiting for answer
+[15:18:44][INFO] [W1] Processing 500 primary particles for event 2/100 part 1/3
+[15:18:44][INFO] Setting seed for this sub-event to 9524721565098865327
+[15:18:44][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 49 primaries
+[15:18:44][INFO] [W3] TIME-STAMP 22.3262	
+[15:18:44][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:44][INFO] [W3] Requesting work chunk
+[15:18:44][INFO] [W3] Waiting for answer
+[15:18:44][INFO] Stack: 500 out of 500 stored 
+
+[15:18:44][INFO] Found nonconforming detector CAVE
+[15:18:44][INFO] This event/chunk did 0 steps
+[15:18:44][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 367 primaries
+[15:18:44][INFO] [W1] TIME-STAMP 22.3278	
+[15:18:44][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:44][INFO] [W1] Requesting work chunk
+[15:18:44][INFO] [W1] Waiting for answer
+[15:18:45][INFO] [W2] Primary chunk received
+[15:18:45][INFO] [W2] Processing 500 primary particles for event 4/100 part 1/3
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865329
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] [W0] Primary chunk received
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 378 primaries
+[15:18:45][INFO] [W2] TIME-STAMP 22.8345	
+[15:18:45][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:45][INFO] [W2] Requesting work chunk
+[15:18:45][INFO] [W2] Waiting for answer
+[15:18:45][INFO] [W3] Primary chunk received
+[15:18:45][INFO] [W0] Processing 500 primary particles for event 4/100 part 2/3
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865329
+[15:18:45][INFO] [W3] Processing 353 primary particles for event 4/100 part 3/3
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865329
+[15:18:45][INFO] Stack: 353 out of 353 stored 
+
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:45][INFO] [W3] TIME-STAMP 22.8358	
+[15:18:45][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:45][INFO] [W3] Requesting work chunk
+[15:18:45][INFO] sending message with 3 parts
+[15:18:45][INFO] [W3] Waiting for answer
+Info in <TVirtualMC::processEventImpl>: Popped 56 primaries
+[15:18:45][INFO] [W0] TIME-STAMP 22.8399	
+[15:18:45][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:45][INFO] [W0] Requesting work chunk
+[15:18:45][INFO] [W0] Waiting for answer
+[15:18:45][INFO] [W1] Primary chunk received
+[15:18:45][INFO] [W1] Processing 172 primary particles for event 5/100 part 1/1
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865330
+[15:18:45][INFO] Stack: 172 out of 172 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 62 primaries
+[15:18:45][INFO] [W1] TIME-STAMP 22.8383	
+[15:18:45][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:45][INFO] [W1] Requesting work chunk
+[15:18:45][INFO] [W1] Waiting for answer
+[15:18:45][INFO] [W2] Primary chunk received
+[15:18:45][INFO] [W2] Processing 500 primary particles for event 6/100 part 1/4
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865331
+[15:18:45][INFO] [W0] Primary chunk received
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 363 primaries
+[15:18:45][INFO] [W2] TIME-STAMP 22.8535	
+[15:18:45][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:45][INFO] [W2] Requesting work chunk
+[15:18:45][INFO] [W2] Waiting for answer
+[15:18:45][INFO] [W3] Primary chunk received
+[15:18:45][INFO] [W0] Processing 500 primary particles for event 6/100 part 2/4
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865331
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] [W1] Primary chunk received
+[15:18:45][INFO] [W3] Processing 500 primary particles for event 6/100 part 3/4
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865331
+[15:18:45][INFO] sending message with 3 parts
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+Info in <TVirtualMC::processEventImpl>: Popped 46 primaries
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] [W0] TIME-STAMP 22.8588	
+[15:18:45][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:45][INFO] [W1] Processing 210 primary particles for event 6/100 part 4/4
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865331
+[15:18:45][INFO] sending message with 3 parts
+[15:18:45][INFO] [W0] Requesting work chunk
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:45][INFO] [W0] Waiting for answer
+[15:18:45][INFO] [W3] TIME-STAMP 22.8549	
+[15:18:45][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:45][INFO] Stack: 210 out of 210 stored 
+
+[15:18:45][INFO] [W3] Requesting work chunk
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] [W3] Waiting for answer
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:45][INFO] [W1] TIME-STAMP 22.8559	
+[15:18:45][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:45][INFO] [W1] Requesting work chunk
+[15:18:45][INFO] [W1] Waiting for answer
+[15:18:45][INFO] [W2] Primary chunk received
+[15:18:45][INFO] [W2] Processing 500 primary particles for event 7/100 part 1/3
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865332
+[15:18:45][INFO] [W0] Primary chunk received
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 360 primaries
+[15:18:45][INFO] [W2] TIME-STAMP 23.1961	
+[15:18:45][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:45][INFO] [W2] Requesting work chunk
+[15:18:45][INFO] [W2] Waiting for answer
+[15:18:45][INFO] [W0] Processing 500 primary particles for event 7/100 part 2/3
+[15:18:45][INFO] [W3] Primary chunk received
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865332
+[15:18:45][INFO] [W1] Primary chunk received
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] [W1] Processing 14 primary particles for event 8/100 part 1/1
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865333
+[15:18:45][INFO] Stack: 14 out of 14 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 4 primaries
+[15:18:45][INFO] [W3] Processing 416 primary particles for event 7/100 part 3/3
+Info in <TVirtualMC::processEventImpl>: Popped 65 primaries
+[15:18:45][INFO] [W1] TIME-STAMP 23.1982	
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865332
+[15:18:45][INFO] [W0] TIME-STAMP 23.2014	
+[15:18:45][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:45][INFO] [W1] Requesting work chunk
+[15:18:45][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:45][INFO] [W1] Waiting for answer
+[15:18:45][INFO] [W0] Requesting work chunk
+[15:18:45][INFO] [W0] Waiting for answer
+[15:18:45][INFO] Stack: 416 out of 416 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:45][INFO] [W3] TIME-STAMP 23.1976	
+[15:18:45][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:45][INFO] [W3] Requesting work chunk
+[15:18:45][INFO] [W3] Waiting for answer
+[15:18:45][INFO] [W2] Primary chunk received
+[15:18:45][INFO] [W2] Processing 62 primary particles for event 9/100 part 1/1
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865334
+[15:18:45][INFO] Stack: 62 out of 62 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 19 primaries
+[15:18:45][INFO] [W2] TIME-STAMP 23.1975	
+[15:18:45][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:45][INFO] [W2] Requesting work chunk
+[15:18:45][INFO] [W2] Waiting for answer
+[15:18:45][INFO] [W0] Primary chunk received
+[15:18:45][INFO] [W0] Processing 500 primary particles for event 10/100 part 1/4
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865335
+[15:18:45][INFO] [W3] Primary chunk received
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 414 primaries
+[15:18:45][INFO] [W0] TIME-STAMP 23.4583	
+[15:18:45][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:45][INFO] [W0] Requesting work chunk
+[15:18:45][INFO] [W0] Waiting for answer
+[15:18:45][INFO] [W1] Primary chunk received
+[15:18:45][INFO] [W3] Processing 500 primary particles for event 10/100 part 2/4
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865335
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] [W1] Processing 500 primary particles for event 10/100 part 3/4
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865335
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 188 primaries
+[15:18:45][INFO] [W2] Primary chunk received
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] [W3] TIME-STAMP 23.4549	
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:45][INFO] [W3] Requesting work chunk
+[15:18:45][INFO] [W3] Waiting for answer
+[15:18:45][INFO] [W0] Primary chunk received
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 15 primaries
+[15:18:45][INFO] [W1] TIME-STAMP 23.456	
+[15:18:45][INFO] [W0] Processing 77 primary particles for event 11/100 part 1/1
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865336
+[15:18:45][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:45][INFO] Stack: 77 out of 77 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] [W1] Requesting work chunk
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] [W1] Waiting for answer
+[15:18:45][INFO] [W2] Processing 496 primary particles for event 10/100 part 4/4
+[15:18:45][INFO] sending message with 3 parts
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865335
+Info in <TVirtualMC::processEventImpl>: Popped 26 primaries
+[15:18:45][INFO] [W0] TIME-STAMP 23.4593	
+[15:18:45][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:45][INFO] [W0] Requesting work chunk
+[15:18:45][INFO] [W0] Waiting for answer
+[15:18:45][INFO] Stack: 496 out of 496 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:45][INFO] [W2] TIME-STAMP 23.4547	
+[15:18:45][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:45][INFO] [W2] Requesting work chunk
+[15:18:45][INFO] [W2] Waiting for answer
+[15:18:45][INFO] [W3] Primary chunk received
+[15:18:45][INFO] [W3] Processing 500 primary particles for event 12/100 part 1/4
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865337
+[15:18:45][INFO] [W2] Primary chunk received
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 410 primaries
+[15:18:45][INFO] [W3] TIME-STAMP 23.4772	
+[15:18:45][INFO] [W2] Processing 500 primary particles for event 12/100 part 2/4
+[15:18:45][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865337
+[15:18:45][INFO] [W3] Requesting work chunk
+[15:18:45][INFO] [W3] Waiting for answer
+[15:18:45][INFO] [W1] Primary chunk received
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 90 primaries
+[15:18:45][INFO] [W2] TIME-STAMP 23.4767	
+[15:18:45][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:45][INFO] [W2] Requesting work chunk
+[15:18:45][INFO] [W2] Waiting for answer
+[15:18:45][INFO] [W1] Processing 500 primary particles for event 12/100 part 3/4
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865337
+[15:18:45][INFO] [W0] Primary chunk received
+[15:18:45][INFO] Stack: 500 out of 500 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 2 primaries
+[15:18:45][INFO] [W1] TIME-STAMP 23.4787	
+[15:18:45][INFO] [W0] Processing 359 primary particles for event 12/100 part 4/4
+[15:18:45][INFO] Setting seed for this sub-event to 9524721565098865337
+[15:18:45][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:45][INFO] [W1] Requesting work chunk
+[15:18:45][INFO] [W1] Waiting for answer
+[15:18:45][INFO] Stack: 359 out of 359 stored 
+
+[15:18:45][INFO] Found nonconforming detector CAVE
+[15:18:45][INFO] This event/chunk did 0 steps
+[15:18:45][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:45][INFO] [W0] TIME-STAMP 23.4821	
+[15:18:45][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:45][INFO] [W0] Requesting work chunk
+[15:18:45][INFO] [W0] Waiting for answer
+[15:18:46][INFO] [W3] Primary chunk received
+[15:18:46][INFO] [W3] Processing 500 primary particles for event 13/100 part 1/4
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865338
+[15:18:46][INFO] [W0] Primary chunk received
+[15:18:46][INFO] Stack: 500 out of 500 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 429 primaries
+[15:18:46][INFO] [W3] TIME-STAMP 23.5285	
+[15:18:46][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:46][INFO] [W3] Requesting work chunk
+[15:18:46][INFO] [W3] Waiting for answer
+[15:18:46][INFO] [W0] Processing 500 primary particles for event 13/100 part 2/4
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865338
+[15:18:46][INFO] [W2] Primary chunk received
+[15:18:46][INFO] Stack: 500 out of 500 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 177 primaries
+[15:18:46][INFO] [W0] TIME-STAMP 23.533	
+[15:18:46][INFO] [W1] Primary chunk received
+[15:18:46][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:46][INFO] [W2] Processing 500 primary particles for event 13/100 part 3/4
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865338
+[15:18:46][INFO] [W0] Requesting work chunk
+[15:18:46][INFO] [W0] Waiting for answer
+[15:18:46][INFO] Stack: 500 out of 500 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] sending message with 3 parts
+[15:18:46][INFO] [W1] Processing 356 primary particles for event 13/100 part 4/4
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865338
+Info in <TVirtualMC::processEventImpl>: Popped 4 primaries
+[15:18:46][INFO] [W2] TIME-STAMP 23.5285	
+[15:18:46][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:46][INFO] [W2] Requesting work chunk
+[15:18:46][INFO] [W2] Waiting for answer
+[15:18:46][INFO] Stack: 356 out of 356 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:46][INFO] [W1] TIME-STAMP 23.5302	
+[15:18:46][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:46][INFO] [W1] Requesting work chunk
+[15:18:46][INFO] [W1] Waiting for answer
+[15:18:46][INFO] [W3] Primary chunk received
+[15:18:46][INFO] [W3] Processing 500 primary particles for event 14/100 part 1/2
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865339
+[15:18:46][INFO] [W1] Primary chunk received
+[15:18:46][INFO] Stack: 500 out of 500 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] [W1] Processing 410 primary particles for event 14/100 part 2/2
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865339
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 309 primaries
+[15:18:46][INFO] [W3] TIME-STAMP 23.5321	
+[15:18:46][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:46][INFO] [W3] Requesting work chunk
+[15:18:46][INFO] Stack: 410 out of 410 stored 
+
+[15:18:46][INFO] [W3] Waiting for answer
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 7 primaries
+[15:18:46][INFO] [W1] TIME-STAMP 23.5331	
+[15:18:46][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:46][INFO] [W1] Requesting work chunk
+[15:18:46][INFO] [W1] Waiting for answer
+[15:18:46][INFO] [W0] Primary chunk received
+[15:18:46][INFO] [W0] Processing 118 primary particles for event 15/100 part 1/1
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865340
+[15:18:46][INFO] Stack: 118 out of 118 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 63 primaries
+[15:18:46][INFO] [W0] TIME-STAMP 23.5371	
+[15:18:46][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:46][INFO] [W0] Requesting work chunk
+[15:18:46][INFO] [W0] Waiting for answer
+[15:18:46][INFO] [W2] Primary chunk received
+[15:18:46][INFO] [W2] Processing 401 primary particles for event 16/100 part 1/1
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865341
+[15:18:46][INFO] Stack: 401 out of 401 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 152 primaries
+[15:18:46][INFO] [W2] TIME-STAMP 23.7832	
+[15:18:46][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:46][INFO] [W2] Requesting work chunk
+[15:18:46][INFO] [W2] Waiting for answer
+[15:18:46][INFO] [W3] Primary chunk received
+[15:18:46][INFO] [W3] Processing 396 primary particles for event 17/100 part 1/1
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865342
+[15:18:46][INFO] Stack: 396 out of 396 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 155 primaries
+[15:18:46][INFO] [W3] TIME-STAMP 23.7865	
+[15:18:46][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:46][INFO] [W3] Requesting work chunk
+[15:18:46][INFO] [W3] Waiting for answer
+[15:18:46][INFO] [W1] Primary chunk received
+[15:18:46][INFO] [W1] Processing 500 primary particles for event 18/100 part 1/3
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865343
+[15:18:46][INFO] [W0] Primary chunk received
+[15:18:46][INFO] Stack: 500 out of 500 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] [W2] Primary chunk received
+[15:18:46][INFO] [W0] Processing 500 primary particles for event 18/100 part 2/3
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865343
+[15:18:46][INFO] sending message with 3 parts
+[15:18:46][INFO] Stack: 500 out of 500 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 319 primaries
+[15:18:46][INFO] [W2] Processing 83 primary particles for event 18/100 part 3/3
+[15:18:46][INFO] [W1] TIME-STAMP 23.7975	
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865343
+[15:18:46][INFO] sending message with 3 parts
+[15:18:46][INFO] Stack: 83 out of 83 stored 
+
+Info in <TVirtualMC::processEventImpl>: Popped 16 primaries
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:46][INFO] [W0] TIME-STAMP 23.8007	
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:46][INFO] [W1] Requesting work chunk
+[15:18:46][INFO] [W0] Requesting work chunk
+[15:18:46][INFO] [W1] Waiting for answer
+[15:18:46][INFO] sending message with 3 parts
+[15:18:46][INFO] [W0] Waiting for answer
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:46][INFO] [W2] TIME-STAMP 23.796	
+[15:18:46][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:46][INFO] [W2] Requesting work chunk
+[15:18:46][INFO] [W2] Waiting for answer
+[15:18:46][INFO] [W3] Primary chunk received
+[15:18:46][INFO] [W1] Primary chunk received
+[15:18:46][INFO] [W3] Processing 500 primary particles for event 19/100 part 1/3
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865344
+[15:18:46][INFO] [W0] Primary chunk received
+[15:18:46][INFO] Stack: 500 out of 500 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] [W1] Processing 500 primary particles for event 19/100 part 2/3
+[15:18:46][INFO] [W0] Processing 88 primary particles for event 19/100 part 3/3
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865344
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865344
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 300 primaries
+[15:18:46][INFO] Stack: 88 out of 88 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] [W3] TIME-STAMP 23.9976	
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:46][INFO] [W3] Requesting work chunk
+[15:18:46][INFO] Stack: 500 out of 500 stored 
+
+[15:18:46][INFO] sending message with 3 parts
+[15:18:46][INFO] [W3] Waiting for answer
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:46][INFO] [W0] TIME-STAMP 24.0017	
+[15:18:46][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:46][INFO] [W0] Requesting work chunk
+[15:18:46][INFO] [W0] Waiting for answer
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 2 primaries
+[15:18:46][INFO] [W1] TIME-STAMP 23.9987	
+[15:18:46][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:46][INFO] [W1] Requesting work chunk
+[15:18:46][INFO] [W1] Waiting for answer
+[15:18:46][INFO] [W2] Primary chunk received
+[15:18:46][INFO] [W2] Processing 13 primary particles for event 20/100 part 1/1
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865345
+[15:18:46][INFO] Stack: 13 out of 13 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 6 primaries
+[15:18:46][INFO] [W2] TIME-STAMP 23.9974	
+[15:18:46][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:46][INFO] [W2] Requesting work chunk
+[15:18:46][INFO] [W2] Waiting for answer
+[15:18:46][INFO] [W3] Primary chunk received
+[15:18:46][INFO] [W3] Processing 396 primary particles for event 21/100 part 1/1
+[15:18:46][INFO] Setting seed for this sub-event to 9524721565098865346
+[15:18:46][INFO] Stack: 396 out of 396 stored 
+
+[15:18:46][INFO] Found nonconforming detector CAVE
+[15:18:46][INFO] This event/chunk did 0 steps
+[15:18:46][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 166 primaries
+[15:18:46][INFO] [W3] TIME-STAMP 24.0007	
+[15:18:46][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:46][INFO] [W3] Requesting work chunk
+[15:18:46][INFO] [W3] Waiting for answer
+[15:18:47][INFO] [W1] Primary chunk received
+[15:18:47][INFO] [W0] Primary chunk received
+[15:18:47][INFO] [W1] Processing 500 primary particles for event 22/100 part 1/4
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865347
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 390 primaries
+[15:18:47][INFO] [W1] TIME-STAMP 24.5662	
+[15:18:47][INFO] [W0] Processing 500 primary particles for event 22/100 part 2/4
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865347
+[15:18:47][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W1] Requesting work chunk
+[15:18:47][INFO] [W2] Primary chunk received
+[15:18:47][INFO] [W1] Waiting for answer
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] [W3] Primary chunk received
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 87 primaries
+[15:18:47][INFO] [W0] TIME-STAMP 24.5697	
+[15:18:47][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:47][INFO] [W0] Requesting work chunk
+[15:18:47][INFO] [W0] Waiting for answer
+[15:18:47][INFO] [W3] Processing 97 primary particles for event 22/100 part 4/4
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865347
+[15:18:47][INFO] [W2] Processing 500 primary particles for event 22/100 part 3/4
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865347
+[15:18:47][INFO] Stack: 97 out of 97 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] sending message with 3 parts
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:47][INFO] [W3] TIME-STAMP 24.566	
+[15:18:47][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:47][INFO] [W3] Requesting work chunk
+[15:18:47][INFO] sending message with 3 parts
+[15:18:47][INFO] [W3] Waiting for answer
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:47][INFO] [W2] TIME-STAMP 24.5653	
+[15:18:47][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W2] Requesting work chunk
+[15:18:47][INFO] [W2] Waiting for answer
+[15:18:47][INFO] [W1] Primary chunk received
+[15:18:47][INFO] [W1] Processing 223 primary particles for event 23/100 part 1/1
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865348
+[15:18:47][INFO] Stack: 223 out of 223 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 90 primaries
+[15:18:47][INFO] [W1] TIME-STAMP 24.5683	
+[15:18:47][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W1] Requesting work chunk
+[15:18:47][INFO] [W1] Waiting for answer
+[15:18:47][INFO] [W2] Primary chunk received
+[15:18:47][INFO] [W2] Processing 500 primary particles for event 24/100 part 1/3
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865349
+[15:18:47][INFO] [W0] Primary chunk received
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 357 primaries
+[15:18:47][INFO] [W2] TIME-STAMP 24.5763	
+[15:18:47][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W2] Requesting work chunk
+[15:18:47][INFO] [W2] Waiting for answer
+[15:18:47][INFO] [W3] Primary chunk received
+[15:18:47][INFO] [W0] Processing 500 primary particles for event 24/100 part 2/3
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865349
+[15:18:47][INFO] [W3] Processing 192 primary particles for event 24/100 part 3/3
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865349
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] Stack: 192 out of 192 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:47][INFO] sending message with 3 parts
+[15:18:47][INFO] [W3] TIME-STAMP 24.5775	
+Info in <TVirtualMC::processEventImpl>: Popped 56 primaries
+[15:18:47][INFO] [W0] TIME-STAMP 24.5816	
+[15:18:47][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:47][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:47][INFO] [W3] Requesting work chunk
+[15:18:47][INFO] [W0] Requesting work chunk
+[15:18:47][INFO] [W3] Waiting for answer
+[15:18:47][INFO] [W0] Waiting for answer
+[15:18:47][INFO] [W1] Primary chunk received
+[15:18:47][INFO] [W1] Processing 500 primary particles for event 25/100 part 1/4
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865350
+[15:18:47][INFO] [W2] Primary chunk received
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 410 primaries
+[15:18:47][INFO] [W1] TIME-STAMP 25.0485	
+[15:18:47][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W2] Processing 500 primary particles for event 25/100 part 2/4
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865350
+[15:18:47][INFO] [W1] Requesting work chunk
+[15:18:47][INFO] [W1] Waiting for answer
+[15:18:47][INFO] [W0] Primary chunk received
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 70 primaries
+[15:18:47][INFO] [W2] TIME-STAMP 25.0472	
+[15:18:47][INFO] [W3] Primary chunk received
+[15:18:47][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W2] Requesting work chunk
+[15:18:47][INFO] [W2] Waiting for answer
+[15:18:47][INFO] [W0] Processing 500 primary particles for event 25/100 part 3/4
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865350
+[15:18:47][INFO] [W3] Processing 140 primary particles for event 25/100 part 4/4
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865350
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] Stack: 140 out of 140 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:47][INFO] [W0] TIME-STAMP 25.0523	
+[15:18:47][INFO] sending message with 3 parts
+[15:18:47][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:47][INFO] [W0] Requesting work chunk
+[15:18:47][INFO] [W0] Waiting for answer
+[15:18:47][INFO] [W3] TIME-STAMP 25.0483	
+[15:18:47][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:47][INFO] [W3] Requesting work chunk
+[15:18:47][INFO] [W3] Waiting for answer
+[15:18:47][INFO] [W1] Primary chunk received
+[15:18:47][INFO] [W1] Processing 402 primary particles for event 26/100 part 1/1
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865351
+[15:18:47][INFO] Stack: 402 out of 402 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 163 primaries
+[15:18:47][INFO] [W1] TIME-STAMP 25.0507	
+[15:18:47][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W1] Requesting work chunk
+[15:18:47][INFO] [W1] Waiting for answer
+[15:18:47][INFO] [W2] Primary chunk received
+[15:18:47][INFO] [W2] Processing 422 primary particles for event 27/100 part 1/1
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865352
+[15:18:47][INFO] Stack: 422 out of 422 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 166 primaries
+[15:18:47][INFO] [W2] TIME-STAMP 25.0513	
+[15:18:47][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W2] Requesting work chunk
+[15:18:47][INFO] [W2] Waiting for answer
+[15:18:47][INFO] [W0] Primary chunk received
+[15:18:47][INFO] [W3] Primary chunk received
+[15:18:47][INFO] [W0] Processing 500 primary particles for event 28/100 part 1/2
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865353
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] [W3] Processing 227 primary particles for event 28/100 part 2/2
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865353
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] Stack: 227 out of 227 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 254 primaries
+[15:18:47][INFO] [W0] TIME-STAMP 25.0961	
+[15:18:47][INFO] sending message with 3 parts
+[15:18:47][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:47][INFO] [W0] Requesting work chunk
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:47][INFO] [W0] Waiting for answer
+[15:18:47][INFO] [W3] TIME-STAMP 25.0921	
+[15:18:47][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:47][INFO] [W3] Requesting work chunk
+[15:18:47][INFO] [W3] Waiting for answer
+[15:18:47][INFO] [W1] Primary chunk received
+[15:18:47][INFO] [W1] Processing 500 primary particles for event 29/100 part 1/2
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865354
+[15:18:47][INFO] [W2] Primary chunk received
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 306 primaries
+[15:18:47][INFO] [W1] TIME-STAMP 25.1002	
+[15:18:47][INFO] [W2] Processing 355 primary particles for event 29/100 part 2/2
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865354
+[15:18:47][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W1] Requesting work chunk
+[15:18:47][INFO] [W1] Waiting for answer
+[15:18:47][INFO] Stack: 355 out of 355 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 2 primaries
+[15:18:47][INFO] [W2] TIME-STAMP 25.0988	
+[15:18:47][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W2] Requesting work chunk
+[15:18:47][INFO] [W2] Waiting for answer
+[15:18:47][INFO] [W0] Primary chunk received
+[15:18:47][INFO] [W0] Processing 500 primary particles for event 30/100 part 1/2
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865355
+[15:18:47][INFO] [W3] Primary chunk received
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 311 primaries
+[15:18:47][INFO] [W0] TIME-STAMP 25.1096	
+[15:18:47][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:47][INFO] [W0] Requesting work chunk
+[15:18:47][INFO] [W0] Waiting for answer
+[15:18:47][INFO] [W3] Processing 417 primary particles for event 30/100 part 2/2
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865355
+[15:18:47][INFO] Stack: 417 out of 417 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 8 primaries
+[15:18:47][INFO] [W3] TIME-STAMP 25.1059	
+[15:18:47][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:47][INFO] [W3] Requesting work chunk
+[15:18:47][INFO] [W3] Waiting for answer
+[15:18:47][INFO] [W1] Primary chunk received
+[15:18:47][INFO] [W1] Processing 500 primary particles for event 31/100 part 1/2
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865356
+[15:18:47][INFO] [W2] Primary chunk received
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 295 primaries
+[15:18:47][INFO] [W1] TIME-STAMP 25.2154	
+[15:18:47][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W2] Processing 368 primary particles for event 31/100 part 2/2
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865356
+[15:18:47][INFO] [W1] Requesting work chunk
+[15:18:47][INFO] [W1] Waiting for answer
+[15:18:47][INFO] Stack: 368 out of 368 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] [W0] Primary chunk received
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:47][INFO] [W2] TIME-STAMP 25.214	
+[15:18:47][INFO] [W0] Processing 176 primary particles for event 32/100 part 1/1
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865357
+[15:18:47][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W2] Requesting work chunk
+[15:18:47][INFO] [W2] Waiting for answer
+[15:18:47][INFO] Stack: 176 out of 176 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 80 primaries
+[15:18:47][INFO] [W0] TIME-STAMP 25.219	
+[15:18:47][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:47][INFO] [W0] Requesting work chunk
+[15:18:47][INFO] [W0] Waiting for answer
+[15:18:47][INFO] [W3] Primary chunk received
+[15:18:47][INFO] [W3] Processing 173 primary particles for event 33/100 part 1/1
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865358
+[15:18:47][INFO] Stack: 173 out of 173 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 90 primaries
+[15:18:47][INFO] [W3] TIME-STAMP 25.2164	
+[15:18:47][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:47][INFO] [W3] Requesting work chunk
+[15:18:47][INFO] [W3] Waiting for answer
+[15:18:47][INFO] [W1] Primary chunk received
+[15:18:47][INFO] [W2] Primary chunk received
+[15:18:47][INFO] [W1] Processing 500 primary particles for event 34/100 part 1/2
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865359
+[15:18:47][INFO] [W2] Processing 199 primary particles for event 34/100 part 2/2
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865359
+[15:18:47][INFO] Stack: 199 out of 199 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] Stack: 500 out of 500 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:47][INFO] [W2] TIME-STAMP 25.3485	
+[15:18:47][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W2] Requesting work chunk
+[15:18:47][INFO] sending message with 3 parts
+[15:18:47][INFO] [W2] Waiting for answer
+Info in <TVirtualMC::processEventImpl>: Popped 245 primaries
+[15:18:47][INFO] [W1] TIME-STAMP 25.3502	
+[15:18:47][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:47][INFO] [W1] Requesting work chunk
+[15:18:47][INFO] [W1] Waiting for answer
+[15:18:47][INFO] [W0] Primary chunk received
+[15:18:47][INFO] [W0] Processing 167 primary particles for event 35/100 part 1/1
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865360
+[15:18:47][INFO] Stack: 167 out of 167 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 84 primaries
+[15:18:47][INFO] [W3] Primary chunk received
+[15:18:47][INFO] [W0] TIME-STAMP 25.3546	
+[15:18:47][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:47][INFO] [W0] Requesting work chunk
+[15:18:47][INFO] [W0] Waiting for answer
+[15:18:47][INFO] [W3] Processing 66 primary particles for event 36/100 part 1/1
+[15:18:47][INFO] Setting seed for this sub-event to 9524721565098865361
+[15:18:47][INFO] Stack: 66 out of 66 stored 
+
+[15:18:47][INFO] Found nonconforming detector CAVE
+[15:18:47][INFO] This event/chunk did 0 steps
+[15:18:47][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 30 primaries
+[15:18:47][INFO] [W3] TIME-STAMP 25.3508	
+[15:18:47][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:47][INFO] [W3] Requesting work chunk
+[15:18:47][INFO] [W3] Waiting for answer
+[15:18:48][INFO] [W1] Primary chunk received
+[15:18:48][INFO] [W2] Primary chunk received
+[15:18:48][INFO] [W1] Processing 500 primary particles for event 37/100 part 1/2
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865362
+[15:18:48][INFO] [W2] Processing 400 primary particles for event 37/100 part 2/2
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865362
+[15:18:48][INFO] Stack: 500 out of 500 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] Stack: 400 out of 400 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] sending message with 3 parts
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 282 primaries
+Info in <TVirtualMC::processEventImpl>: Popped 1 primaries
+[15:18:48][INFO] [W2] TIME-STAMP 26.057	
+[15:18:48][INFO] [W1] TIME-STAMP 26.0586	
+[15:18:48][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:48][INFO] [W2] Requesting work chunk
+[15:18:48][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:48][INFO] [W2] Waiting for answer
+[15:18:48][INFO] [W1] Requesting work chunk
+[15:18:48][INFO] [W1] Waiting for answer
+[15:18:48][INFO] [W0] Primary chunk received
+[15:18:48][INFO] [W0] Processing 239 primary particles for event 38/100 part 1/1
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865363
+[15:18:48][INFO] Stack: 239 out of 239 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 96 primaries
+[15:18:48][INFO] [W0] TIME-STAMP 26.0633	
+[15:18:48][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:48][INFO] [W0] Requesting work chunk
+[15:18:48][INFO] [W0] Waiting for answer
+[15:18:48][INFO] [W3] Primary chunk received
+[15:18:48][INFO] [W1] Primary chunk received
+[15:18:48][INFO] [W3] Processing 500 primary particles for event 39/100 part 1/3
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865364
+[15:18:48][INFO] [W2] Primary chunk received
+[15:18:48][INFO] [W2] Processing 13 primary particles for event 39/100 part 3/3
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865364
+[15:18:48][INFO] Stack: 13 out of 13 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] Stack: 500 out of 500 stored 
+
+[15:18:48][INFO] sending message with 3 parts
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:48][INFO] [W2] TIME-STAMP 26.0667	
+[15:18:48][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:48][INFO] [W2] Requesting work chunk
+[15:18:48][INFO] [W1] Processing 500 primary particles for event 39/100 part 2/3
+[15:18:48][INFO] [W2] Waiting for answer
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865364
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 298 primaries
+[15:18:48][INFO] [W3] TIME-STAMP 26.0676	
+[15:18:48][INFO] Stack: 500 out of 500 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:48][INFO] [W3] Requesting work chunk
+[15:18:48][INFO] [W3] Waiting for answer
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 12 primaries
+[15:18:48][INFO] [W1] TIME-STAMP 26.0686	
+[15:18:48][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:48][INFO] [W1] Requesting work chunk
+[15:18:48][INFO] [W1] Waiting for answer
+[15:18:48][INFO] [W0] Primary chunk received
+[15:18:48][INFO] [W3] Primary chunk received
+[15:18:48][INFO] [W0] Processing 500 primary particles for event 40/100 part 1/3
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865365
+[15:18:48][INFO] [W1] Primary chunk received
+[15:18:48][INFO] Stack: 500 out of 500 stored 
+
+[15:18:48][INFO] [W1] Processing 23 primary particles for event 40/100 part 3/3
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865365
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] Stack: 23 out of 23 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] [W3] Processing 500 primary particles for event 40/100 part 2/3
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865365
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:48][INFO] [W1] TIME-STAMP 26.3639	
+[15:18:48][INFO] sending message with 3 parts
+[15:18:48][INFO] Stack: 500 out of 500 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+Info in <TVirtualMC::processEventImpl>: Popped 318 primaries
+[15:18:48][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] [W0] TIME-STAMP 26.3671	
+[15:18:48][INFO] [W1] Requesting work chunk
+[15:18:48][INFO] [W1] Waiting for answer
+[15:18:48][INFO] [W2] Primary chunk received
+[15:18:48][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:48][INFO] [W0] Requesting work chunk
+[15:18:48][INFO] [W0] Waiting for answer
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 10 primaries
+[15:18:48][INFO] [W2] Processing 89 primary particles for event 41/100 part 1/1
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865366
+[15:18:48][INFO] [W3] TIME-STAMP 26.3633	
+[15:18:48][INFO] Stack: 89 out of 89 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:48][INFO] [W3] Requesting work chunk
+[15:18:48][INFO] sending message with 3 parts
+[15:18:48][INFO] [W3] Waiting for answer
+Info in <TVirtualMC::processEventImpl>: Popped 37 primaries
+[15:18:48][INFO] [W2] TIME-STAMP 26.3626	
+[15:18:48][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:48][INFO] [W2] Requesting work chunk
+[15:18:48][INFO] [W2] Waiting for answer
+[15:18:48][INFO] [W1] Primary chunk received
+[15:18:48][INFO] [W1] Processing 500 primary particles for event 42/100 part 1/4
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865367
+[15:18:48][INFO] [W2] Primary chunk received
+[15:18:48][INFO] Stack: 500 out of 500 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 380 primaries
+[15:18:48][INFO] [W2] Processing 500 primary particles for event 42/100 part 2/4
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865367
+[15:18:48][INFO] [W1] TIME-STAMP 26.3785	
+[15:18:48][INFO] [W0] Primary chunk received
+[15:18:48][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:48][INFO] [W1] Requesting work chunk
+[15:18:48][INFO] Stack: 500 out of 500 stored 
+
+[15:18:48][INFO] [W1] Waiting for answer
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] [W3] Primary chunk received
+[15:18:48][INFO] [W3] Processing 14 primary particles for event 42/100 part 4/4
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865367
+[15:18:48][INFO] Stack: 14 out of 14 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] sending message with 3 parts
+[15:18:48][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 79 primaries
+[15:18:48][INFO] [W2] TIME-STAMP 26.3771	
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:48][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:48][INFO] [W3] TIME-STAMP 26.3779	
+[15:18:48][INFO] [W2] Requesting work chunk
+[15:18:48][INFO] [W2] Waiting for answer
+[15:18:48][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:48][INFO] [W0] Processing 500 primary particles for event 42/100 part 3/4
+[15:18:48][INFO] [W3] Requesting work chunk
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865367
+[15:18:48][INFO] [W3] Waiting for answer
+[15:18:48][INFO] Stack: 500 out of 500 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:48][INFO] [W0] TIME-STAMP 26.3823	
+[15:18:48][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:48][INFO] [W0] Requesting work chunk
+[15:18:48][INFO] [W0] Waiting for answer
+[15:18:48][INFO] [W1] Primary chunk received
+[15:18:48][INFO] [W1] Processing 279 primary particles for event 43/100 part 1/1
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865368
+[15:18:48][INFO] Stack: 279 out of 279 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 110 primaries
+[15:18:48][INFO] [W1] TIME-STAMP 26.4745	
+[15:18:48][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:48][INFO] [W1] Requesting work chunk
+[15:18:48][INFO] [W1] Waiting for answer
+[15:18:48][INFO] [W0] Primary chunk received
+[15:18:48][INFO] [W2] Primary chunk received
+[15:18:48][INFO] [W2] Processing 31 primary particles for event 44/100 part 2/2
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865369
+[15:18:48][INFO] Stack: 31 out of 31 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:48][INFO] [W2] TIME-STAMP 26.4761	
+[15:18:48][INFO] [W0] Processing 500 primary particles for event 44/100 part 1/2
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865369
+[15:18:48][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:48][INFO] [W2] Requesting work chunk
+[15:18:48][INFO] [W2] Waiting for answer
+[15:18:48][INFO] Stack: 500 out of 500 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 178 primaries
+[15:18:48][INFO] [W0] TIME-STAMP 26.4811	
+[15:18:48][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:48][INFO] [W0] Requesting work chunk
+[15:18:48][INFO] [W0] Waiting for answer
+[15:18:48][INFO] [W3] Primary chunk received
+[15:18:48][INFO] [W3] Processing 152 primary particles for event 45/100 part 1/1
+[15:18:48][INFO] Setting seed for this sub-event to 9524721565098865370
+[15:18:48][INFO] Stack: 152 out of 152 stored 
+
+[15:18:48][INFO] Found nonconforming detector CAVE
+[15:18:48][INFO] This event/chunk did 0 steps
+[15:18:48][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 72 primaries
+[15:18:48][INFO] [W3] TIME-STAMP 26.4789	
+[15:18:48][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:48][INFO] [W3] Requesting work chunk
+[15:18:48][INFO] [W3] Waiting for answer
+[15:18:49][INFO] [W1] Primary chunk received
+[15:18:49][INFO] [W0] Primary chunk received
+[15:18:49][INFO] [W1] Processing 500 primary particles for event 46/100 part 1/3
+[15:18:49][INFO] Setting seed for this sub-event to 9524721565098865371
+[15:18:49][INFO] [W2] Primary chunk received
+[15:18:49][INFO] Stack: 500 out of 500 stored 
+
+[15:18:49][INFO] Found nonconforming detector CAVE
+[15:18:49][INFO] This event/chunk did 0 steps
+[15:18:49][INFO] [W2] Processing 224 primary particles for event 46/100 part 3/3
+[15:18:49][INFO] Setting seed for this sub-event to 9524721565098865371
+[15:18:49][INFO] Stack: 224 out of 224 stored 
+
+[15:18:49][INFO] Found nonconforming detector CAVE
+[15:18:49][INFO] This event/chunk did 0 steps
+[15:18:49][INFO] sending message with 3 parts
+[15:18:49][INFO] [W0] Processing 500 primary particles for event 46/100 part 2/3
+[15:18:49][INFO] Setting seed for this sub-event to 9524721565098865371
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:49][INFO] sending message with 3 parts
+[15:18:49][INFO] [W2] TIME-STAMP 26.5856	
+Info in <TVirtualMC::processEventImpl>: Popped 356 primaries
+[15:18:49][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:49][INFO] [W2] Requesting work chunk
+[15:18:49][INFO] [W1] TIME-STAMP 26.5873	
+[15:18:49][INFO] [W2] Waiting for answer
+[15:18:49][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:49][INFO] [W1] Requesting work chunk
+[15:18:49][INFO] Stack: 500 out of 500 stored 
+
+[15:18:49][INFO] [W1] Waiting for answer
+[15:18:49][INFO] Found nonconforming detector CAVE
+[15:18:49][INFO] This event/chunk did 0 steps
+[15:18:49][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 44 primaries
+[15:18:49][INFO] [W0] TIME-STAMP 26.5907	
+[15:18:49][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:49][INFO] [W0] Requesting work chunk
+[15:18:49][INFO] [W0] Waiting for answer
+[15:18:49][INFO] [W3] Primary chunk received
+[15:18:49][INFO] [W3] Processing 205 primary particles for event 47/100 part 1/1
+[15:18:49][INFO] Setting seed for this sub-event to 9524721565098865372
+[15:18:49][INFO] Stack: 205 out of 205 stored 
+
+[15:18:49][INFO] Found nonconforming detector CAVE
+[15:18:49][INFO] This event/chunk did 0 steps
+[15:18:49][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 94 primaries
+[15:18:49][INFO] [W3] TIME-STAMP 26.588	
+[15:18:49][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:49][INFO] [W3] Requesting work chunk
+[15:18:49][INFO] [W3] Waiting for answer
+[15:18:49][INFO] [W1] Primary chunk received
+[15:18:49][INFO] [W0] Primary chunk received
+[15:18:49][INFO] [W1] Processing 500 primary particles for event 48/100 part 1/4
+[15:18:49][INFO] Setting seed for this sub-event to 9524721565098865373
+[15:18:49][INFO] Stack: 500 out of 500 stored 
+
+[15:18:49][INFO] Found nonconforming detector CAVE
+[15:18:49][INFO] This event/chunk did 0 steps
+[15:18:49][INFO] [W2] Primary chunk received
+[15:18:49][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 384 primaries
+[15:18:49][INFO] [W0] Processing 500 primary particles for event 48/100 part 2/4
+[15:18:49][INFO] [W1] TIME-STAMP 26.6071	
+[15:18:49][INFO] Setting seed for this sub-event to 9524721565098865373
+[15:18:49][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:49][INFO] [W1] Requesting work chunk
+[15:18:49][INFO] [W1] Waiting for answer
+[15:18:49][INFO] Stack: 500 out of 500 stored 
+
+[15:18:49][INFO] Found nonconforming detector CAVE
+[15:18:49][INFO] This event/chunk did 0 steps
+[15:18:49][INFO] [W3] Primary chunk received
+[15:18:49][INFO] [W2] Processing 500 primary particles for event 48/100 part 3/4
+[15:18:49][INFO] Setting seed for this sub-event to 9524721565098865373
+[15:18:49][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 82 primaries
+[15:18:49][INFO] [W0] TIME-STAMP 26.6106	
+[15:18:49][INFO] Stack: 500 out of 500 stored 
+
+[15:18:49][INFO] Found nonconforming detector CAVE
+[15:18:49][INFO] This event/chunk did 0 steps
+[15:18:49][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:49][INFO] [W0] Requesting work chunk
+[15:18:49][INFO] [W0] Waiting for answer
+[15:18:49][INFO] [W3] Processing 256 primary particles for event 48/100 part 4/4
+[15:18:49][INFO] Setting seed for this sub-event to 9524721565098865373
+[15:18:49][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:49][INFO] [W2] TIME-STAMP 26.6059	
+[15:18:49][INFO] Stack: 256 out of 256 stored 
+
+[15:18:49][INFO] Found nonconforming detector CAVE
+[15:18:49][INFO] This event/chunk did 0 steps
+[15:18:49][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:49][INFO] [W2] Requesting work chunk
+[15:18:49][INFO] [W2] Waiting for answer
+[15:18:49][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:49][INFO] [W3] TIME-STAMP 26.6068	
+[15:18:49][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:49][INFO] [W3] Requesting work chunk
+[15:18:49][INFO] [W3] Waiting for answer
+[15:18:49][INFO] [W1] Primary chunk received
+[15:18:49][INFO] [W1] Processing 483 primary particles for event 49/100 part 1/1
+[15:18:49][INFO] Setting seed for this sub-event to 9524721565098865374
+[15:18:49][INFO] Stack: 483 out of 483 stored 
+
+[15:18:49][INFO] Found nonconforming detector CAVE
+[15:18:49][INFO] This event/chunk did 0 steps
+[15:18:49][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 162 primaries
+[15:18:49][INFO] [W1] TIME-STAMP 26.9454	
+[15:18:49][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:49][INFO] [W1] Requesting work chunk
+[15:18:49][INFO] [W1] Waiting for answer
+[15:18:49][INFO] [W3] Primary chunk received
+[15:18:49][INFO] [W3] Processing 175 primary particles for event 50/100 part 1/1
+[15:18:49][INFO] Setting seed for this sub-event to 9524721565098865375
+[15:18:49][INFO] Stack: 175 out of 175 stored 
+
+[15:18:49][INFO] Found nonconforming detector CAVE
+[15:18:49][INFO] This event/chunk did 0 steps
+[15:18:49][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 80 primaries
+[15:18:49][INFO] [W3] TIME-STAMP 26.9452	
+[15:18:49][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:49][INFO] [W3] Requesting work chunk
+[15:18:49][INFO] [W3] Waiting for answer
+[15:18:49][INFO] [W0] Primary chunk received
+[15:18:49][INFO] [W0] Processing 172 primary particles for event 51/100 part 1/1
+[15:18:49][INFO] Setting seed for this sub-event to 9524721565098865376
+[15:18:49][INFO] Stack: 172 out of 172 stored 
+
+[15:18:49][INFO] Found nonconforming detector CAVE
+[15:18:49][INFO] This event/chunk did 0 steps
+[15:18:49][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 81 primaries
+[15:18:49][INFO] [W0] TIME-STAMP 26.9501	
+[15:18:49][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:49][INFO] [W0] Requesting work chunk
+[15:18:49][INFO] [W0] Waiting for answer
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] [W2] Processing 500 primary particles for event 52/100 part 1/4
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865377
+[15:18:50][INFO] [W1] Primary chunk received
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 435 primaries
+[15:18:50][INFO] [W2] TIME-STAMP 27.6687	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] [W2] Waiting for answer
+[15:18:50][INFO] [W3] Primary chunk received
+[15:18:50][INFO] [W1] Processing 500 primary particles for event 52/100 part 2/4
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865377
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] [W3] Processing 500 primary particles for event 52/100 part 3/4
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865377
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 184 primaries
+[15:18:50][INFO] [W1] TIME-STAMP 27.6708	
+[15:18:50][INFO] [W0] Primary chunk received
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] [W1] Requesting work chunk
+[15:18:50][INFO] [W1] Waiting for answer
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 11 primaries
+[15:18:50][INFO] [W3] TIME-STAMP 27.6702	
+[15:18:50][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:50][INFO] [W3] Requesting work chunk
+[15:18:50][INFO] [W3] Waiting for answer
+[15:18:50][INFO] [W0] Processing 477 primary particles for event 52/100 part 4/4
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865377
+[15:18:50][INFO] Stack: 477 out of 477 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:50][INFO] [W0] TIME-STAMP 27.6747	
+[15:18:50][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:50][INFO] [W0] Requesting work chunk
+[15:18:50][INFO] [W0] Waiting for answer
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] [W2] Processing 182 primary particles for event 53/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865378
+[15:18:50][INFO] Stack: 182 out of 182 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 92 primaries
+[15:18:50][INFO] [W2] TIME-STAMP 27.6707	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] [W2] Waiting for answer
+[15:18:50][INFO] [W1] Primary chunk received
+[15:18:50][INFO] [W3] Primary chunk received
+[15:18:50][INFO] [W1] Processing 500 primary particles for event 54/100 part 1/2
+[15:18:50][INFO] [W3] Processing 208 primary particles for event 54/100 part 2/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865379
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865379
+[15:18:50][INFO] Stack: 208 out of 208 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] sending message with 3 parts
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:50][INFO] [W3] TIME-STAMP 27.674	
+[15:18:50][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:50][INFO] [W3] Requesting work chunk
+[15:18:50][INFO] [W3] Waiting for answer
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 223 primaries
+[15:18:50][INFO] [W1] TIME-STAMP 27.675	
+[15:18:50][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W1] Requesting work chunk
+[15:18:50][INFO] [W1] Waiting for answer
+[15:18:50][INFO] [W0] Primary chunk received
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] [W0] Processing 500 primary particles for event 55/100 part 1/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865380
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] [W2] Processing 417 primary particles for event 55/100 part 2/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865380
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 306 primaries
+[15:18:50][INFO] [W0] TIME-STAMP 27.7033	
+[15:18:50][INFO] Stack: 417 out of 417 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] [W0] Requesting work chunk
+[15:18:50][INFO] [W0] Waiting for answer
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 7 primaries
+[15:18:50][INFO] [W2] TIME-STAMP 27.6986	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] [W2] Waiting for answer
+[15:18:50][INFO] [W1] Primary chunk received
+[15:18:50][INFO] [W1] Processing 233 primary particles for event 56/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865381
+[15:18:50][INFO] Stack: 233 out of 233 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 103 primaries
+[15:18:50][INFO] [W1] TIME-STAMP 27.7016	
+[15:18:50][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W1] Requesting work chunk
+[15:18:50][INFO] [W1] Waiting for answer
+[15:18:50][INFO] [W3] Primary chunk received
+[15:18:50][INFO] [W3] Processing 140 primary particles for event 57/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865382
+[15:18:50][INFO] Stack: 140 out of 140 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 73 primaries
+[15:18:50][INFO] [W3] TIME-STAMP 27.7012	
+[15:18:50][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:50][INFO] [W3] Requesting work chunk
+[15:18:50][INFO] [W3] Waiting for answer
+[15:18:50][INFO] [W0] Primary chunk received
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] [W1] Primary chunk received
+[15:18:50][INFO] [W0] Processing 500 primary particles for event 58/100 part 1/3
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865383
+[15:18:50][INFO] [W1] Processing 37 primary particles for event 58/100 part 3/3
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865383
+[15:18:50][INFO] Stack: 37 out of 37 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] [W2] Processing 500 primary particles for event 58/100 part 2/3
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865383
+[15:18:50][INFO] sending message with 3 parts
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] [W1] TIME-STAMP 27.7734	
+[15:18:50][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] sending message with 3 parts
+[15:18:50][INFO] [W1] Requesting work chunk
+Info in <TVirtualMC::processEventImpl>: Popped 14 primaries
+[15:18:50][INFO] [W1] Waiting for answer
+[15:18:50][INFO] [W2] TIME-STAMP 27.7719	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] sending message with 3 parts
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] [W2] Waiting for answer
+Info in <TVirtualMC::processEventImpl>: Popped 332 primaries
+[15:18:50][INFO] [W0] TIME-STAMP 27.7768	
+[15:18:50][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:50][INFO] [W0] Requesting work chunk
+[15:18:50][INFO] [W0] Waiting for answer
+[15:18:50][INFO] [W3] Primary chunk received
+[15:18:50][INFO] [W3] Processing 313 primary particles for event 59/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865384
+[15:18:50][INFO] Stack: 313 out of 313 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 133 primaries
+[15:18:50][INFO] [W3] TIME-STAMP 27.7736	
+[15:18:50][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:50][INFO] [W3] Requesting work chunk
+[15:18:50][INFO] [W3] Waiting for answer
+[15:18:50][INFO] [W0] Primary chunk received
+[15:18:50][INFO] [W0] Processing 194 primary particles for event 60/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865385
+[15:18:50][INFO] Stack: 194 out of 194 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 95 primaries
+[15:18:50][INFO] [W0] TIME-STAMP 27.7786	
+[15:18:50][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:50][INFO] [W0] Requesting work chunk
+[15:18:50][INFO] [W0] Waiting for answer
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] [W2] Processing 481 primary particles for event 61/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865386
+[15:18:50][INFO] Stack: 481 out of 481 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 181 primaries
+[15:18:50][INFO] [W2] TIME-STAMP 27.8475	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] [W2] Waiting for answer
+[15:18:50][INFO] [W1] Primary chunk received
+[15:18:50][INFO] [W1] Processing 113 primary particles for event 62/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865387
+[15:18:50][INFO] Stack: 113 out of 113 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 48 primaries
+[15:18:50][INFO] [W1] TIME-STAMP 27.8496	
+[15:18:50][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W1] Requesting work chunk
+[15:18:50][INFO] [W1] Waiting for answer
+[15:18:50][INFO] [W3] Primary chunk received
+[15:18:50][INFO] [W3] Processing 255 primary particles for event 63/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865388
+[15:18:50][INFO] Stack: 255 out of 255 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 112 primaries
+[15:18:50][INFO] [W3] TIME-STAMP 27.8506	
+[15:18:50][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:50][INFO] [W3] Requesting work chunk
+[15:18:50][INFO] [W3] Waiting for answer
+[15:18:50][INFO] [W0] Primary chunk received
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] [W2] Processing 64 primary particles for event 64/100 part 2/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865389
+[15:18:50][INFO] Stack: 64 out of 64 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:50][INFO] [W2] TIME-STAMP 27.994	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] [W2] Waiting for answer
+[15:18:50][INFO] [W0] Processing 500 primary particles for event 64/100 part 1/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865389
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 194 primaries
+[15:18:50][INFO] [W0] TIME-STAMP 27.9992	
+[15:18:50][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:50][INFO] [W0] Requesting work chunk
+[15:18:50][INFO] [W0] Waiting for answer
+[15:18:50][INFO] [W1] Primary chunk received
+[15:18:50][INFO] [W3] Primary chunk received
+[15:18:50][INFO] [W1] Processing 500 primary particles for event 65/100 part 1/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865390
+[15:18:50][INFO] [W3] Processing 236 primary particles for event 65/100 part 2/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865390
+[15:18:50][INFO] Stack: 236 out of 236 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] sending message with 3 parts
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:50][INFO] [W3] TIME-STAMP 27.9995	
+[15:18:50][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:50][INFO] [W3] Requesting work chunk
+[15:18:50][INFO] [W3] Waiting for answer
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 252 primaries
+[15:18:50][INFO] [W1] TIME-STAMP 28.0005	
+[15:18:50][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W1] Requesting work chunk
+[15:18:50][INFO] [W1] Waiting for answer
+[15:18:50][INFO] [W0] Primary chunk received
+[15:18:50][INFO] [W0] Processing 142 primary particles for event 66/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865391
+[15:18:50][INFO] Stack: 142 out of 142 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 50 primaries
+[15:18:50][INFO] [W0] TIME-STAMP 28.0043	
+[15:18:50][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:50][INFO] [W0] Requesting work chunk
+[15:18:50][INFO] [W0] Waiting for answer
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] [W1] Primary chunk received
+[15:18:50][INFO] [W1] Processing 99 primary particles for event 67/100 part 2/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865392
+[15:18:50][INFO] Stack: 99 out of 99 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] [W2] Processing 500 primary particles for event 67/100 part 1/2
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865392
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:50][INFO] [W1] TIME-STAMP 28.2762	
+[15:18:50][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W1] Requesting work chunk
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] [W1] Waiting for answer
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+[15:18:50][INFO] [W3] Primary chunk received
+Info in <TVirtualMC::processEventImpl>: Popped 230 primaries
+[15:18:50][INFO] [W2] TIME-STAMP 28.2749	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W3] Processing 21 primary particles for event 68/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865393
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] Stack: 21 out of 21 stored 
+
+[15:18:50][INFO] [W2] Waiting for answer
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 9 primaries
+[15:18:50][INFO] [W3] TIME-STAMP 28.2758	
+[15:18:50][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:50][INFO] [W3] Requesting work chunk
+[15:18:50][INFO] [W3] Waiting for answer
+[15:18:50][INFO] [W0] Primary chunk received
+[15:18:50][INFO] [W0] Processing 500 primary particles for event 69/100 part 1/5
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865394
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 416 primaries
+[15:18:50][INFO] [W2] Processing 500 primary particles for event 69/100 part 2/5
+[15:18:50][INFO] [W0] TIME-STAMP 28.302	
+[15:18:50][INFO] [W1] Primary chunk received
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865394
+[15:18:50][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:50][INFO] [W0] Requesting work chunk
+[15:18:50][INFO] [W0] Waiting for answer
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 160 primaries
+[15:18:50][INFO] [W2] TIME-STAMP 28.2975	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W3] Primary chunk received
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] [W2] Waiting for answer
+[15:18:50][INFO] [W1] Processing 500 primary particles for event 69/100 part 3/5
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865394
+[15:18:50][INFO] [W0] Primary chunk received
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] [W3] Processing 500 primary particles for event 69/100 part 4/5
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865394
+[15:18:50][INFO] [W0] Processing 173 primary particles for event 69/100 part 5/5
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865394
+[15:18:50][INFO] sending message with 3 parts
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Stack: 173 out of 173 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 11 primaries
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] [W1] TIME-STAMP 28.2996	
+[15:18:50][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] sending message with 3 parts
+[15:18:50][INFO] sending message with 3 parts
+[15:18:50][INFO] [W1] Requesting work chunk
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:50][INFO] [W1] Waiting for answer
+[15:18:50][INFO] [W0] TIME-STAMP 28.3029	
+[15:18:50][INFO] [W3] TIME-STAMP 28.2989	
+[15:18:50][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:50][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:50][INFO] [W3] Requesting work chunk
+[15:18:50][INFO] [W0] Requesting work chunk
+[15:18:50][INFO] [W3] Waiting for answer
+[15:18:50][INFO] [W0] Waiting for answer
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] [W2] Processing 408 primary particles for event 70/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865395
+[15:18:50][INFO] Stack: 408 out of 408 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 162 primaries
+[15:18:50][INFO] [W2] TIME-STAMP 28.3082	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] [W2] Waiting for answer
+[15:18:50][INFO] [W1] Primary chunk received
+[15:18:50][INFO] [W1] Processing 242 primary particles for event 71/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865396
+[15:18:50][INFO] Stack: 242 out of 242 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 94 primaries
+[15:18:50][INFO] [W1] TIME-STAMP 28.3113	
+[15:18:50][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W1] Requesting work chunk
+[15:18:50][INFO] [W1] Waiting for answer
+[15:18:50][INFO] [W3] Primary chunk received
+[15:18:50][INFO] [W0] Primary chunk received
+[15:18:50][INFO] [W0] Processing 19 primary particles for event 72/100 part 2/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865397
+[15:18:50][INFO] Stack: 19 out of 19 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:50][INFO] [W3] Processing 500 primary particles for event 72/100 part 1/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865397
+[15:18:50][INFO] [W0] TIME-STAMP 28.316	
+[15:18:50][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:50][INFO] [W0] Requesting work chunk
+[15:18:50][INFO] [W0] Waiting for answer
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 161 primaries
+[15:18:50][INFO] [W3] TIME-STAMP 28.3122	
+[15:18:50][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:50][INFO] [W3] Requesting work chunk
+[15:18:50][INFO] [W3] Waiting for answer
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] [W1] Primary chunk received
+[15:18:50][INFO] [W1] Processing 35 primary particles for event 73/100 part 2/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865398
+[15:18:50][INFO] Stack: 35 out of 35 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:50][INFO] [W2] Processing 500 primary particles for event 73/100 part 1/2
+[15:18:50][INFO] [W1] TIME-STAMP 28.4073	
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865398
+[15:18:50][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W1] Requesting work chunk
+[15:18:50][INFO] [W1] Waiting for answer
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 201 primaries
+[15:18:50][INFO] [W2] TIME-STAMP 28.406	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] [W2] Waiting for answer
+[15:18:50][INFO] [W3] Primary chunk received
+[15:18:50][INFO] [W3] Processing 300 primary particles for event 74/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865399
+[15:18:50][INFO] Stack: 300 out of 300 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 96 primaries
+[15:18:50][INFO] [W3] TIME-STAMP 28.4091	
+[15:18:50][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:50][INFO] [W3] Requesting work chunk
+[15:18:50][INFO] [W3] Waiting for answer
+[15:18:50][INFO] [W0] Primary chunk received
+[15:18:50][INFO] [W0] Processing 500 primary particles for event 75/100 part 1/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865400
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 308 primaries
+[15:18:50][INFO] [W0] TIME-STAMP 28.4204	
+[15:18:50][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:50][INFO] [W0] Requesting work chunk
+[15:18:50][INFO] [W0] Waiting for answer
+[15:18:50][INFO] [W2] Processing 438 primary particles for event 75/100 part 2/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865400
+[15:18:50][INFO] Stack: 438 out of 438 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 10 primaries
+[15:18:50][INFO] [W2] TIME-STAMP 28.4159	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] [W2] Waiting for answer
+[15:18:50][INFO] [W1] Primary chunk received
+[15:18:50][INFO] [W3] Primary chunk received
+[15:18:50][INFO] [W1] Processing 500 primary particles for event 76/100 part 1/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865401
+[15:18:50][INFO] [W3] Processing 329 primary particles for event 76/100 part 2/2
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865401
+[15:18:50][INFO] Stack: 500 out of 500 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] Stack: 329 out of 329 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 302 primaries
+[15:18:50][INFO] sending message with 3 parts
+[15:18:50][INFO] [W1] TIME-STAMP 28.4807	
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:50][INFO] [W3] TIME-STAMP 28.4799	
+[15:18:50][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W1] Requesting work chunk
+[15:18:50][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:50][INFO] [W1] Waiting for answer
+[15:18:50][INFO] [W3] Requesting work chunk
+[15:18:50][INFO] [W3] Waiting for answer
+[15:18:50][INFO] [W0] Primary chunk received
+[15:18:50][INFO] [W0] Processing 186 primary particles for event 77/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865402
+[15:18:50][INFO] Stack: 186 out of 186 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 90 primaries
+[15:18:50][INFO] [W0] TIME-STAMP 28.4859	
+[15:18:50][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:50][INFO] [W0] Requesting work chunk
+[15:18:50][INFO] [W0] Waiting for answer
+[15:18:50][INFO] [W2] Primary chunk received
+[15:18:50][INFO] [W2] Processing 288 primary particles for event 78/100 part 1/1
+[15:18:50][INFO] Setting seed for this sub-event to 9524721565098865403
+[15:18:50][INFO] Stack: 288 out of 288 stored 
+
+[15:18:50][INFO] Found nonconforming detector CAVE
+[15:18:50][INFO] This event/chunk did 0 steps
+[15:18:50][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 141 primaries
+[15:18:50][INFO] [W2] TIME-STAMP 28.4837	
+[15:18:50][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:50][INFO] [W2] Requesting work chunk
+[15:18:50][INFO] [W2] Waiting for answer
+[15:18:51][INFO] [W1] Primary chunk received
+[15:18:51][INFO] [W3] Primary chunk received
+[15:18:51][INFO] [W1] Processing 500 primary particles for event 79/100 part 1/3
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865404
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] [W0] Primary chunk received
+[15:18:51][INFO] [W3] Processing 500 primary particles for event 79/100 part 2/3
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865404
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 323 primaries
+[15:18:51][INFO] [W1] TIME-STAMP 28.5249	
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W1] Requesting work chunk
+[15:18:51][INFO] [W1] Waiting for answer
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] [W0] Processing 273 primary particles for event 79/100 part 3/3
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865404
+Info in <TVirtualMC::processEventImpl>: Popped 35 primaries
+[15:18:51][INFO] [W3] TIME-STAMP 28.5242	
+[15:18:51][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:51][INFO] Stack: 273 out of 273 stored 
+
+[15:18:51][INFO] [W3] Requesting work chunk
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] [W3] Waiting for answer
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:51][INFO] [W0] TIME-STAMP 28.5284	
+[15:18:51][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:51][INFO] [W0] Requesting work chunk
+[15:18:51][INFO] [W0] Waiting for answer
+[15:18:51][INFO] [W2] Primary chunk received
+[15:18:51][INFO] [W2] Processing 500 primary particles for event 80/100 part 1/3
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865405
+[15:18:51][INFO] [W1] Primary chunk received
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] [W3] Primary chunk received
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 349 primaries
+[15:18:51][INFO] [W2] TIME-STAMP 28.5326	
+[15:18:51][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W1] Processing 500 primary particles for event 80/100 part 2/3
+[15:18:51][INFO] [W3] Processing 178 primary particles for event 80/100 part 3/3
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865405
+[15:18:51][INFO] [W2] Requesting work chunk
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865405
+[15:18:51][INFO] [W2] Waiting for answer
+[15:18:51][INFO] Stack: 178 out of 178 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] [W3] TIME-STAMP 28.5335	
+[15:18:51][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:51][INFO] [W3] Requesting work chunk
+[15:18:51][INFO] [W3] Waiting for answer
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 37 primaries
+[15:18:51][INFO] [W1] TIME-STAMP 28.5345	
+[15:18:51][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W1] Requesting work chunk
+[15:18:51][INFO] [W1] Waiting for answer
+[15:18:51][INFO] [W0] Primary chunk received
+[15:18:51][INFO] [W0] Processing 197 primary particles for event 81/100 part 1/1
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865406
+[15:18:51][INFO] Stack: 197 out of 197 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 85 primaries
+[15:18:51][INFO] [W0] TIME-STAMP 28.5389	
+[15:18:51][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:51][INFO] [W0] Requesting work chunk
+[15:18:51][INFO] [W0] Waiting for answer
+[15:18:51][INFO] [W2] Primary chunk received
+[15:18:51][INFO] [W1] Primary chunk received
+[15:18:51][INFO] [W2] Processing 500 primary particles for event 82/100 part 1/4
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865407
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] [W1] Processing 500 primary particles for event 82/100 part 2/4
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865407
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 411 primaries
+[15:18:51][INFO] [W2] TIME-STAMP 28.771	
+[15:18:51][INFO] [W3] Primary chunk received
+[15:18:51][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] [W2] Requesting work chunk
+[15:18:51][INFO] [W2] Waiting for answer
+Info in <TVirtualMC::processEventImpl>: Popped 85 primaries
+[15:18:51][INFO] [W1] TIME-STAMP 28.7727	
+[15:18:51][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W1] Requesting work chunk
+[15:18:51][INFO] [W1] Waiting for answer
+[15:18:51][INFO] [W3] Processing 500 primary particles for event 82/100 part 3/4
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865407
+[15:18:51][INFO] [W0] Primary chunk received
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] [W0] Processing 315 primary particles for event 82/100 part 4/4
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865407
+[15:18:51][INFO] [W3] TIME-STAMP 28.7723	
+[15:18:51][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:51][INFO] [W3] Requesting work chunk
+[15:18:51][INFO] Stack: 315 out of 315 stored 
+
+[15:18:51][INFO] [W3] Waiting for answer
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:51][INFO] [W0] TIME-STAMP 28.7765	
+[15:18:51][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:51][INFO] [W0] Requesting work chunk
+[15:18:51][INFO] [W0] Waiting for answer
+[15:18:51][INFO] [W2] Primary chunk received
+[15:18:51][INFO] [W2] Processing 150 primary particles for event 83/100 part 1/1
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865408
+[15:18:51][INFO] Stack: 150 out of 150 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 82 primaries
+[15:18:51][INFO] [W2] TIME-STAMP 28.7726	
+[15:18:51][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W2] Requesting work chunk
+[15:18:51][INFO] [W2] Waiting for answer
+[15:18:51][INFO] [W1] Primary chunk received
+[15:18:51][INFO] [W3] Primary chunk received
+[15:18:51][INFO] [W1] Processing 500 primary particles for event 84/100 part 1/3
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865409
+[15:18:51][INFO] [W0] Primary chunk received
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] [W3] Processing 500 primary particles for event 84/100 part 2/3
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865409
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 335 primaries
+[15:18:51][INFO] [W0] Processing 251 primary particles for event 84/100 part 3/3
+Info in <TVirtualMC::processEventImpl>: Popped 16 primaries
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865409
+[15:18:51][INFO] [W1] TIME-STAMP 28.7854	
+[15:18:51][INFO] [W3] TIME-STAMP 28.7846	
+[15:18:51][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:51][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W3] Requesting work chunk
+[15:18:51][INFO] [W3] Waiting for answer
+[15:18:51][INFO] [W1] Requesting work chunk
+[15:18:51][INFO] Stack: 251 out of 251 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] [W1] Waiting for answer
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:51][INFO] [W0] TIME-STAMP 28.7889	
+[15:18:51][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:51][INFO] [W0] Requesting work chunk
+[15:18:51][INFO] [W0] Waiting for answer
+[15:18:51][INFO] [W2] Primary chunk received
+[15:18:51][INFO] [W2] Processing 500 primary particles for event 85/100 part 1/2
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865410
+[15:18:51][INFO] [W1] Primary chunk received
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 300 primaries
+[15:18:51][INFO] [W2] TIME-STAMP 28.8589	
+[15:18:51][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W1] Processing 409 primary particles for event 85/100 part 2/2
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865410
+[15:18:51][INFO] [W2] Requesting work chunk
+[15:18:51][INFO] [W2] Waiting for answer
+[15:18:51][INFO] Stack: 409 out of 409 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 7 primaries
+[15:18:51][INFO] [W1] TIME-STAMP 28.8607	
+[15:18:51][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W1] Requesting work chunk
+[15:18:51][INFO] [W1] Waiting for answer
+[15:18:51][INFO] [W3] Primary chunk received
+[15:18:51][INFO] [W3] Processing 500 primary particles for event 86/100 part 1/3
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865411
+[15:18:51][INFO] [W0] Primary chunk received
+[15:18:51][INFO] [W2] Primary chunk received
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] [W2] Processing 8 primary particles for event 86/100 part 3/3
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865411
+[15:18:51][INFO] Stack: 8 out of 8 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 290 primaries
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:51][INFO] [W3] TIME-STAMP 28.8683	
+[15:18:51][INFO] [W2] TIME-STAMP 28.8676	
+[15:18:51][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:51][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W0] Processing 500 primary particles for event 86/100 part 2/3
+[15:18:51][INFO] [W3] Requesting work chunk
+[15:18:51][INFO] [W2] Requesting work chunk
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865411
+[15:18:51][INFO] [W3] Waiting for answer
+[15:18:51][INFO] [W2] Waiting for answer
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:51][INFO] [W0] TIME-STAMP 28.8726	
+[15:18:51][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:51][INFO] [W0] Requesting work chunk
+[15:18:51][INFO] [W0] Waiting for answer
+[15:18:51][INFO] [W1] Primary chunk received
+[15:18:51][INFO] [W1] Processing 173 primary particles for event 87/100 part 1/1
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865412
+[15:18:51][INFO] Stack: 173 out of 173 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 65 primaries
+[15:18:51][INFO] [W1] TIME-STAMP 28.8709	
+[15:18:51][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W1] Requesting work chunk
+[15:18:51][INFO] [W1] Waiting for answer
+[15:18:51][INFO] [W3] Primary chunk received
+[15:18:51][INFO] [W0] Primary chunk received
+[15:18:51][INFO] [W3] Processing 500 primary particles for event 88/100 part 1/4
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865413
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] [W2] Primary chunk received
+[15:18:51][INFO] [W0] Processing 500 primary particles for event 88/100 part 2/4
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865413
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 399 primaries
+[15:18:51][INFO] [W3] TIME-STAMP 29.303	
+[15:18:51][INFO] [W1] Primary chunk received
+[15:18:51][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:51][INFO] [W3] Requesting work chunk
+[15:18:51][INFO] [W3] Waiting for answer
+[15:18:51][INFO] [W2] Processing 500 primary particles for event 88/100 part 3/4
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865413
+Info in <TVirtualMC::processEventImpl>: Popped 104 primaries
+[15:18:51][INFO] [W0] TIME-STAMP 29.3072	
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:51][INFO] [W1] Processing 178 primary particles for event 88/100 part 4/4
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865413
+[15:18:51][INFO] [W0] Requesting work chunk
+[15:18:51][INFO] [W0] Waiting for answer
+[15:18:51][INFO] Stack: 178 out of 178 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] This event/chunk did 0 steps
+Info in <TVirtualMC::processEventImpl>: Popped 1 primaries
+[15:18:51][INFO] [W2] TIME-STAMP 29.3026	
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W2] Requesting work chunk
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:51][INFO] [W2] Waiting for answer
+[15:18:51][INFO] [W1] TIME-STAMP 29.3043	
+[15:18:51][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W1] Requesting work chunk
+[15:18:51][INFO] [W1] Waiting for answer
+[15:18:51][INFO] [W3] Primary chunk received
+[15:18:51][INFO] [W1] Primary chunk received
+[15:18:51][INFO] [W3] Processing 500 primary particles for event 89/100 part 1/2
+[15:18:51][INFO] [W1] Processing 75 primary particles for event 89/100 part 2/2
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865414
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865414
+[15:18:51][INFO] Stack: 75 out of 75 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+[15:18:51][INFO] Stack: 500 out of 500 stored 
+
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] [W1] TIME-STAMP 29.3069	
+[15:18:51][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:51][INFO] [W1] Requesting work chunk
+[15:18:51][INFO] [W1] Waiting for answer
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 188 primaries
+[15:18:51][INFO] [W3] TIME-STAMP 29.3062	
+[15:18:51][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:51][INFO] [W3] Requesting work chunk
+[15:18:51][INFO] [W3] Waiting for answer
+[15:18:51][INFO] [W0] Primary chunk received
+[15:18:51][INFO] [W0] Processing 243 primary particles for event 90/100 part 1/1
+[15:18:51][INFO] Setting seed for this sub-event to 9524721565098865415
+[15:18:51][INFO] Stack: 243 out of 243 stored 
+
+[15:18:51][INFO] Found nonconforming detector CAVE
+[15:18:51][INFO] This event/chunk did 0 steps
+[15:18:51][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 115 primaries
+[15:18:51][INFO] [W0] TIME-STAMP 29.3109	
+[15:18:51][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:51][INFO] [W0] Requesting work chunk
+[15:18:51][INFO] [W0] Waiting for answer
+[15:18:52][INFO] [W2] Primary chunk received
+[15:18:52][INFO] [W2] Processing 500 primary particles for event 91/100 part 1/4
+[15:18:52][INFO] Setting seed for this sub-event to 9524721565098865416
+[15:18:52][INFO] [W1] Primary chunk received
+[15:18:52][INFO] Stack: 500 out of 500 stored 
+
+[15:18:52][INFO] Found nonconforming detector CAVE
+[15:18:52][INFO] This event/chunk did 0 steps
+[15:18:52][INFO] sending message with 3 parts
+[15:18:52][INFO] [W1] Processing 500 primary particles for event 91/100 part 2/4
+Info in <TVirtualMC::processEventImpl>: Popped 405 primaries
+[15:18:52][INFO] Setting seed for this sub-event to 9524721565098865416
+[15:18:52][INFO] [W2] TIME-STAMP 29.6324	
+[15:18:52][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:52][INFO] [W2] Requesting work chunk
+[15:18:52][INFO] [W0] Primary chunk received
+[15:18:52][INFO] [W2] Waiting for answer
+[15:18:52][INFO] Stack: 500 out of 500 stored 
+
+[15:18:52][INFO] Found nonconforming detector CAVE
+[15:18:52][INFO] This event/chunk did 0 steps
+[15:18:52][INFO] sending message with 3 parts
+[15:18:52][INFO] [W3] Primary chunk received
+Info in <TVirtualMC::processEventImpl>: Popped 111 primaries
+[15:18:52][INFO] [W1] TIME-STAMP 29.6344	
+[15:18:52][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:52][INFO] [W1] Requesting work chunk
+[15:18:52][INFO] [W3] Processing 229 primary particles for event 91/100 part 4/4
+[15:18:52][INFO] [W1] Waiting for answer
+[15:18:52][INFO] Setting seed for this sub-event to 9524721565098865416
+[15:18:52][INFO] [W0] Processing 500 primary particles for event 91/100 part 3/4
+[15:18:52][INFO] Setting seed for this sub-event to 9524721565098865416
+[15:18:52][INFO] Stack: 229 out of 229 stored 
+
+[15:18:52][INFO] Found nonconforming detector CAVE
+[15:18:52][INFO] This event/chunk did 0 steps
+[15:18:52][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:52][INFO] Stack: 500 out of 500 stored 
+
+[15:18:52][INFO] [W3] TIME-STAMP 29.6339	
+[15:18:52][INFO] Found nonconforming detector CAVE
+[15:18:52][INFO] This event/chunk did 0 steps
+[15:18:52][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:52][INFO] [W3] Requesting work chunk
+[15:18:52][INFO] [W3] Waiting for answer
+[15:18:52][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:52][INFO] [W0] TIME-STAMP 29.6381	
+[15:18:52][INFO] [W2] Primary chunk received
+[15:18:52][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:52][INFO] [W0] Requesting work chunk
+[15:18:52][INFO] [W0] Waiting for answer
+[15:18:52][INFO] [W2] Processing 175 primary particles for event 92/100 part 1/1
+[15:18:52][INFO] Setting seed for this sub-event to 9524721565098865417
+[15:18:52][INFO] Stack: 175 out of 175 stored 
+
+[15:18:52][INFO] Found nonconforming detector CAVE
+[15:18:52][INFO] This event/chunk did 0 steps
+[15:18:52][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 86 primaries
+[15:18:52][INFO] [W2] TIME-STAMP 29.6336	
+[15:18:52][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:52][INFO] [W2] Requesting work chunk
+[15:18:52][INFO] [W2] Waiting for answer
+[15:18:52][INFO] [W3] Primary chunk received
+[15:18:52][INFO] [W2] Primary chunk received
+[15:18:52][INFO] [W3] Processing 500 primary particles for event 93/100 part 1/3
+[15:18:52][INFO] Setting seed for this sub-event to 9524721565098865418
+[15:18:52][INFO] Stack: 500 out of 500 stored 
+
+[15:18:52][INFO] Found nonconforming detector CAVE
+[15:18:52][INFO] This event/chunk did 0 steps
+[15:18:52][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 375 primaries
+[15:18:52][INFO] [W3] TIME-STAMP 29.6439	
+[15:18:52][INFO] [W0] Primary chunk received
+[15:18:52][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:52][INFO] [W2] Processing 500 primary particles for event 93/100 part 2/3
+[15:18:52][INFO] [W3] Requesting work chunk
+[15:18:52][INFO] Setting seed for this sub-event to 9524721565098865418
+[15:18:52][INFO] [W3] Waiting for answer
+[15:18:52][INFO] Stack: 500 out of 500 stored 
+
+[15:18:52][INFO] Found nonconforming detector CAVE
+[15:18:52][INFO] This event/chunk did 0 steps
+[15:18:52][INFO] [W0] Processing 331 primary particles for event 93/100 part 3/3
+[15:18:52][INFO] Setting seed for this sub-event to 9524721565098865418
+[15:18:52][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 66 primaries
+[15:18:52][INFO] [W2] TIME-STAMP 29.6435	
+[15:18:52][INFO] Stack: 331 out of 331 stored 
+
+[15:18:52][INFO] Found nonconforming detector CAVE
+[15:18:52][INFO] This event/chunk did 0 steps
+[15:18:52][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:52][INFO] [W2] Requesting work chunk
+[15:18:52][INFO] [W2] Waiting for answer
+[15:18:52][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:52][INFO] [W0] TIME-STAMP 29.6484	
+[15:18:52][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:52][INFO] [W0] Requesting work chunk
+[15:18:52][INFO] [W0] Waiting for answer
+[15:18:52][INFO] [W1] Primary chunk received
+[15:18:52][INFO] [W1] Processing 364 primary particles for event 94/100 part 1/1
+[15:18:52][INFO] Setting seed for this sub-event to 9524721565098865419
+[15:18:52][INFO] Stack: 364 out of 364 stored 
+
+[15:18:52][INFO] Found nonconforming detector CAVE
+[15:18:52][INFO] This event/chunk did 0 steps
+[15:18:52][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 171 primaries
+[15:18:52][INFO] [W1] TIME-STAMP 30.1809	
+[15:18:52][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:52][INFO] [W1] Requesting work chunk
+[15:18:52][INFO] [W1] Waiting for answer
+[15:18:52][INFO] [W2] Primary chunk received
+[15:18:52][INFO] [W2] Processing 330 primary particles for event 95/100 part 1/1
+[15:18:52][INFO] Setting seed for this sub-event to 9524721565098865420
+[15:18:52][INFO] Stack: 330 out of 330 stored 
+
+[15:18:52][INFO] Found nonconforming detector CAVE
+[15:18:52][INFO] This event/chunk did 0 steps
+[15:18:52][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 153 primaries
+[15:18:52][INFO] [W2] TIME-STAMP 30.1801	
+[15:18:52][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:52][INFO] [W2] Requesting work chunk
+[15:18:52][INFO] [W2] Waiting for answer
+[15:18:52][INFO] [W0] Primary chunk received
+[15:18:52][INFO] [W0] Processing 198 primary particles for event 96/100 part 1/1
+[15:18:52][INFO] Setting seed for this sub-event to 9524721565098865421
+[15:18:52][INFO] Stack: 198 out of 198 stored 
+
+[15:18:52][INFO] Found nonconforming detector CAVE
+[15:18:52][INFO] This event/chunk did 0 steps
+[15:18:52][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 77 primaries
+[15:18:52][INFO] [W0] TIME-STAMP 30.1856	
+[15:18:52][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:52][INFO] [W0] Requesting work chunk
+[15:18:52][INFO] [W0] Waiting for answer
+[15:18:53][INFO] [W1] Primary chunk received
+[15:18:53][INFO] [W3] Primary chunk received
+[15:18:53][INFO] [W1] Processing 500 primary particles for event 97/100 part 1/5
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865422
+[15:18:53][INFO] [W2] Primary chunk received
+[15:18:53][INFO] [W3] Processing 500 primary particles for event 97/100 part 2/5
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865422
+[15:18:53][INFO] Stack: 500 out of 500 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] Stack: 500 out of 500 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] sending message with 3 parts
+[15:18:53][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 426 primaries
+Info in <TVirtualMC::processEventImpl>: Popped 217 primaries
+[15:18:53][INFO] [W3] TIME-STAMP 30.558	
+[15:18:53][INFO] [W1] TIME-STAMP 30.5588	
+[15:18:53][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:53][INFO] [W3] Requesting work chunk
+[15:18:53][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:53][INFO] [W3] Waiting for answer
+[15:18:53][INFO] [W2] Processing 500 primary particles for event 97/100 part 3/5
+[15:18:53][INFO] [W1] Requesting work chunk
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865422
+[15:18:53][INFO] [W1] Waiting for answer
+[15:18:53][INFO] [W0] Primary chunk received
+[15:18:53][INFO] Stack: 500 out of 500 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 56 primaries
+[15:18:53][INFO] [W2] TIME-STAMP 30.5576	
+[15:18:53][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:53][INFO] [W0] Processing 500 primary particles for event 97/100 part 4/5
+[15:18:53][INFO] [W2] Requesting work chunk
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865422
+[15:18:53][INFO] [W2] Waiting for answer
+[15:18:53][INFO] Stack: 500 out of 500 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] [W3] Primary chunk received
+[15:18:53][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:53][INFO] [W0] TIME-STAMP 30.5628	
+[15:18:53][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:53][INFO] [W0] Requesting work chunk
+[15:18:53][INFO] [W0] Waiting for answer
+[15:18:53][INFO] [W3] Processing 444 primary particles for event 97/100 part 5/5
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865422
+[15:18:53][INFO] Stack: 444 out of 444 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:53][INFO] [W3] TIME-STAMP 30.5591	
+[15:18:53][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:53][INFO] [W3] Requesting work chunk
+[15:18:53][INFO] [W3] Waiting for answer
+[15:18:53][INFO] [W2] Primary chunk received
+[15:18:53][INFO] [W1] Primary chunk received
+[15:18:53][INFO] [W2] Processing 500 primary particles for event 98/100 part 1/3
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865423
+[15:18:53][INFO] Stack: 500 out of 500 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] [W1] Processing 500 primary particles for event 98/100 part 2/3
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865423
+[15:18:53][INFO] [W0] Primary chunk received
+[15:18:53][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 352 primaries
+[15:18:53][INFO] [W2] TIME-STAMP 30.5691	
+[15:18:53][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:53][INFO] Stack: 500 out of 500 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] [W2] Requesting work chunk
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] [W2] Waiting for answer
+[15:18:53][INFO] [W0] Processing 203 primary particles for event 98/100 part 3/3
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865423
+[15:18:53][INFO] sending message with 3 parts
+[15:18:53][INFO] Stack: 203 out of 203 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+Info in <TVirtualMC::processEventImpl>: Popped 36 primaries
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] [W1] TIME-STAMP 30.5709	
+[15:18:53][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:53][INFO] sending message with 3 parts
+[15:18:53][INFO] [W1] Requesting work chunk
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:53][INFO] [W1] Waiting for answer
+[15:18:53][INFO] [W0] TIME-STAMP 30.5741	
+[15:18:53][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:53][INFO] [W0] Requesting work chunk
+[15:18:53][INFO] [W0] Waiting for answer
+[15:18:53][INFO] [W3] Primary chunk received
+[15:18:53][INFO] [W3] Processing 166 primary particles for event 99/100 part 1/1
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865424
+[15:18:53][INFO] Stack: 166 out of 166 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 71 primaries
+[15:18:53][INFO] [W3] TIME-STAMP 30.5709	
+[15:18:53][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:53][INFO] [W3] Requesting work chunk
+[15:18:53][INFO] [W3] Waiting for answer
+[15:18:53][INFO] [W2] Primary chunk received
+[15:18:53][INFO] [W1] Primary chunk received
+[15:18:53][INFO] [W2] Processing 500 primary particles for event 100/100 part 1/5
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865425
+[15:18:53][INFO] Stack: 500 out of 500 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] [W1] Processing 500 primary particles for event 100/100 part 2/5
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865425
+[15:18:53][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 432 primaries
+[15:18:53][INFO] [W2] TIME-STAMP 30.6101	
+[15:18:53][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:53][INFO] [W2] Requesting work chunk
+[15:18:53][INFO] [W2] Waiting for answer
+[15:18:53][INFO] [W0] Primary chunk received
+[15:18:53][INFO] Stack: 500 out of 500 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 194 primaries
+[15:18:53][INFO] [W1] TIME-STAMP 30.6119	
+[15:18:53][INFO] [W1] MEM-STAMP 240.426 240.426 MB
+
+[15:18:53][INFO] [W1] Requesting work chunk
+[15:18:53][INFO] [W1] Waiting for answer
+[15:18:53][INFO] [W0] Processing 500 primary particles for event 100/100 part 3/5
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865425
+[15:18:53][INFO] [W3] Primary chunk received
+[15:18:53][INFO] Stack: 500 out of 500 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] [W1] Primary chunk received
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] No payload; Server in state SERVING
+[15:18:53][INFO] [W2] Primary chunk received
+[15:18:53][INFO] [W1] simulation is done
+[15:18:53][INFO] FINISHING
+[15:18:53][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 37 primaries
+[15:18:53][INFO] [W2] Processing 144 primary particles for event 100/100 part 5/5
+[15:18:53][INFO] [W0] TIME-STAMP 30.6155	
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865425
+[15:18:53][INFO] [W0] MEM-STAMP 240.582 240.582 MB
+
+[15:18:53][INFO] Stack: 144 out of 144 stored 
+
+[15:18:53][INFO] [W3] Processing 500 primary particles for event 100/100 part 4/5
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] [W0] Requesting work chunk
+[15:18:53][INFO] Setting seed for this sub-event to 9524721565098865425
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] [W0] Waiting for answer
+[15:18:53][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:53][INFO] [W2] TIME-STAMP 30.6109	
+[15:18:53][INFO] Stack: 500 out of 500 stored 
+
+[15:18:53][INFO] Found nonconforming detector CAVE
+[15:18:53][INFO] This event/chunk did 0 steps
+[15:18:53][INFO] [W2] MEM-STAMP 240.426 240.426 MB
+
+[15:18:53][INFO] [W2] Requesting work chunk
+[15:18:53][INFO] [W2] Waiting for answer
+[15:18:53][INFO] sending message with 3 parts
+Info in <TVirtualMC::processEventImpl>: Popped 0 primaries
+[15:18:53][INFO] [W3] TIME-STAMP 30.6118	
+[15:18:53][INFO] [W3] MEM-STAMP 559.457 559.457 MB
+
+[15:18:53][INFO] [W3] Requesting work chunk
+[15:18:53][INFO] [W3] Waiting for answer
+[15:18:53][INFO] 724298 caught signal 15 from source 724187
+[15:18:53][INFO] 724301 caught signal 15 from source 724187
+[15:18:53][INFO] 724293 caught signal 15 from source 724187
+[15:18:53][INFO] 724192 caught signal 15 from source 724187
