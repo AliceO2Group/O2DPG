@@ -1,0 +1,9 @@
+### Testing /misc/alidata141/alice_u/zanone/o2new/O2DPG/MC/config/PWGHF/ini/GeneratorHFTrigger_Bforced.ini with generator External ###
+
+Processing External.C...
+--------------------------------
+# Events: 100
+# 5 (anti)quarks: 489
+# signal hadrons: 174
+# signal hadrons decaying in the correct channel: 143
+(int) 0
