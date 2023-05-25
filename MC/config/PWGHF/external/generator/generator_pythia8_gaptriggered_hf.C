@@ -145,3 +145,15 @@ FairGenerator *GeneratorPythia8GapTriggeredBeauty(int inputTriggerRatio, float y
   myGen->setQuarkRapidity(yMin, yMax);
   return myGen;
 }
+
+// Omegac0-enriched
+FairGenerator *GeneratorPythia8GapTriggeredOmegac0(int inputTriggerRatio, float yQuarkMin=-1.5, float yQuarkMax=1.5, float yHadronMin=-1.5, float yHadronMax=1.5) {
+  auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, 4);
+  myGen->addTriggerOnHadron(4332);
+  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
+  myGen->readString("Random:setSeed on");
+  myGen->readString("Random:seed " + std::to_string(seed));
+  myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
+  myGen->setHadronRapidity(yHadronMin, yHadronMax);
+  return myGen;
+}

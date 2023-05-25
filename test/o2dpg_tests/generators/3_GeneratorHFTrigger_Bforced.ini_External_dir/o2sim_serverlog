@@ -1,0 +1,1565 @@
+o2-sim-primary-server-device-runner
+--control
+static
+--id
+primary-server
+--mq-config
+o2simtopology_724187.json
+--severity
+debug
+-g
+external
+--noGeant
+-n
+100
+-j
+4
+--configFile
+/misc/alidata141/alice_u/zanone/o2new/O2DPG/MC/config/PWGHF/ini/GeneratorHFTrigger_Bforced.ini
+$$$$
+[[01;36m15:18:20[0m][[01;32mINFO[0m] 
+      ______      _    _______  _________ 
+     / ____/___ _(_)_______   |/  /_  __ \    version 1.4.56
+    / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+   / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+  /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2022 GSI
+
+[[01;36m15:18:20[0m][[01;35mSTATE[0m] Starting FairMQ state machine --> IDLE
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] PID: 724190
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Loaded plugin: 'config', version '1.4.56', maintainer 'FairRootGroup <fairroot@gsi.de>', homepage 'https://github.com/FairRootGroup/FairMQ'
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Loaded plugin: 'control', version '1.4.56', maintainer 'FairRootGroup <fairroot@gsi.de>', homepage 'https://github.com/FairRootGroup/FairMQ'
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Running builtin controller: static
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Plugin 'control' is setting up signal handling for SIGINT and SIGTERM
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Configuration: 
+CCDBUrl                       = http://alice-ccdb.cern.ch                                                                      <string>         [default] 
+asservice                     = false                                                                                          <bool>           [default] 
+bMax                          = 0                                                                                              <float>          [default] 
+bad-alloc-attempt-interval    = 50                                                                                             <int>            [default] 
+catch-signals                 = 1                                                                                              <int>            [default] 
+chunkSize                     = 500                                                                                            <unsigned>       [default] 
+chunkSizeI                    = -1                                                                                             <int>            [default] 
+color                         = true                                                                                           <bool>           [default] 
+configFile                    = /misc/alidata141/alice_u/zanone/o2new/O2DPG/MC/config/PWGHF/ini/GeneratorHFTrigger_Bforced.ini <string>         [provided]
+configKeyValues               =                                                                                                <string>         [default] 
+control                       = static                                                                                         <string>         [provided]
+embedIntoFile                 =                                                                                                <string>         [default] 
+extKinFile                    = Kinematics.root                                                                                <string>         [default] 
+field                         = -5                                                                                             <string>         [default] 
+file-severity                 = debug                                                                                          <string>         [default] 
+forwardKine                   = false                                                                                          <bool>           [default] 
+fromCollContext               =                                                                                                <string>         [default] 
+generator                     = external                                                                                       <string>         [provided]
+id                            = primary-server                                                                                 <string>         [provided]
+init-timeout                  = 120                                                                                            <int>            [default] 
+io-threads                    = 1                                                                                              <int>            [default] 
+isMT                          = false                                                                                          <bool>           [default] 
+log-to-file                   =                                                                                                <string>         [default] 
+logseverity                   = INFO                                                                                           <string>         [default] 
+logverbosity                  = medium                                                                                         <string>         [default] 
+mcEngine                      = TGeant4                                                                                        <string>         [default] 
+modules                       = all                                                                                            <vector<string>> [default] 
+mq-config                     = o2simtopology_724187.json                                                                      <string>         [provided]
+nEvents                       = 100                                                                                            <unsigned>       [provided]
+network-interface             = default                                                                                        <string>         [default] 
+noDiscOutput                  = false                                                                                          <bool>           [default] 
+noGeant                       = true                                                                                           <bool>           [provided]
+nworkers                      = 4                                                                                              <int>            [provided]
+ofi-size-hint                 = 0                                                                                              <unsigned long>  [default] 
+outPrefix                     = o2sim                                                                                          <string>         [default] 
+rate                          = 0                                                                                              <float>          [default] 
+readoutDetectors              =                                                                                                <vector<string>> [default] 
+run                           = -1                                                                                             <int>            [default] 
+seed                          = 0                                                                                              <unsigned long>  [default] 
+session                       = default                                                                                        <string>         [default] 
+severity                      = debug                                                                                          <string>         [provided]
+shm-allocation                = rbtree_best_fit                                                                                <string>         [default] 
+shm-mlock-segment             = false                                                                                          <bool>           [default] 
+shm-mlock-segment-on-creation = false                                                                                          <bool>           [default] 
+shm-monitor                   = true                                                                                           <bool>           [default] 
+shm-no-cleanup                = false                                                                                          <bool>           [default] 
+shm-segment-id                = 0                                                                                              <unsigned short> [default] 
+shm-segment-size              = 2147483648                                                                                     <unsigned long>  [default] 
+shm-throw-bad-alloc           = true                                                                                           <bool>           [default] 
+shm-zero-segment              = false                                                                                          <bool>           [default] 
+shm-zero-segment-on-creation  = false                                                                                          <bool>           [default] 
+skipModules                   =                                                                                                <vector<string>> [default] 
+skipReadoutDetectors          =                                                                                                <vector<string>> [default] 
+startEvent                    = 0                                                                                              <unsigned>       [default] 
+transport                     = zeromq                                                                                         <string>         [default] 
+trigger                       =                                                                                                <string>         [default] 
+verbosity                     = medium                                                                                         <string>         [default] 
+vertexMode                    = kDiamondParam                                                                                  <string>         [default] 
+
+[[01;36m15:18:20[0m][[01;35mSTATE[0m] IDLE ---> INITIALIZING DEVICE
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] mq-config: Using default JSON parser
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Parsing JSON from o2simtopology_724187.json ...
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Setting 'zeromq' as default transport for the device
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Adding 'zeromq' transport
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Transport: Using ZeroMQ library, version: 4.3.3
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Initializing transport for channel o2sim-primserv-info[0]: default
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Reusing existing 'zeromq' transport
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Initializing transport for channel primary-notifications[0]: default
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Reusing existing 'zeromq' transport
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Initializing transport for channel primary-get[0]: default
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Reusing existing 'zeromq' transport
+[[01;36m15:18:20[0m][[01;35mSTATE[0m] INITIALIZING DEVICE ---> INITIALIZED
+[[01;36m15:18:20[0m][[01;35mSTATE[0m] INITIALIZED ---> BINDING
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Validating channel 'o2sim-primserv-info[0]'... VALID
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Created socket primary-server.o2sim-primserv-info[0].rep
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Attached channel o2sim-primserv-info[0] to ipc:///tmp/o2sim-primserv-info-724187 (bind) (rep)
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Validating channel 'primary-notifications[0]'... VALID
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Created socket primary-server.primary-notifications[0].pub
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Attached channel primary-notifications[0] to ipc:///tmp/o2sim-primary-notifications-724187 (bind) (pub)
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Validating channel 'primary-get[0]'... VALID
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Created socket primary-server.primary-get[0].rep
+[[01;36m15:18:20[0m][[01;34mDEBUG[0m] Attached channel primary-get[0] to ipc:///tmp/o2sim-primary-get-724187 (bind) (rep)
+[[01;36m15:18:20[0m][[01;35mSTATE[0m] BINDING ---> BOUND
+[[01;36m15:18:20[0m][[01;35mSTATE[0m] BOUND ---> CONNECTING
+[[01;36m15:18:20[0m][[01;35mSTATE[0m] CONNECTING ---> DEVICE READY
+[[01;36m15:18:20[0m][[01;35mSTATE[0m] DEVICE READY ---> INITIALIZING TASK
+[[01;36m15:18:20[0m][[01;32mINFO[0m] INITTASK CHANGING STATE TO INIT
+[[01;36m15:18:20[0m][[01;32mINFO[0m] Init Server device 
+[[01;36m15:18:20[0m][[01;32mINFO[0m] Stack.storeSecondaries : true		[ CODE ]
+Stack.pruneKine : true		[ CODE ]
+Stack.transportPrimary : all		[ CODE ]
+Stack.transportPrimaryFileName : 		[ CODE ]
+Stack.transportPrimaryFuncName : 		[ CODE ]
+Stack.transportPrimaryInvert : false		[ CODE ]
+
+[[01;36m15:18:20[0m][[01;32mINFO[0m] ENGINE SET TO TGeant4
+[[01;36m15:18:20[0m][[01;32mINFO[0m] CHUNK SIZE SET TO 500
+[[01;36m15:18:20[0m][[01;32mINFO[0m] RNG INITIAL SEED 9524721565098865325
+[[01;36m15:18:20[0m][[01;32mINFO[0m] LAUNCHING STATUS THREAD
+[[01;36m15:18:20[0m][[01;32mINFO[0m] INFO REQUEST RECEIVED
+[[01;36m15:18:20[0m][[01;32mINFO[0m] Received config request
+[[01;36m15:18:20[0m][[01;32mINFO[0m] config reply send 
+[[01;36m15:18:20[0m][[01;32mINFO[0m] INFO REQUEST RECEIVED
+[[01;36m15:18:20[0m][[01;32mINFO[0m] Received config request
+[[01;36m15:18:20[0m][[01;32mINFO[0m] config reply send 
+[[01;36m15:18:20[0m][[01;32mINFO[0m] Init CcdApi with UserAgentID: alice-serv14-1685020700-uFBgVa, Host: http://alice-ccdb.cern.ch/
+[[01;36m15:18:20[0m][[01;32mINFO[0m] Init CcdApi with UserAgentID: alice-serv14-1685020700-uFBgVa, Host: http://alice-ccdb.cern.ch
+[[01;36m15:18:20[0m][[01;32mINFO[0m] MagneticField::CreateField: Maximim possible beam energy for requested beam is assumed
+[[01;36m15:18:20[0m][[01;32mINFO[0m] MagneticField::Print: Maps:
+[[01;36m15:18:20[0m][[01;32mINFO[0m] MagneticField::Print: Solenoid (-1*)5 kG, Dipole ON (-1) 
+[[01;36m15:18:20[0m][[01;32mINFO[0m] MagneticField::Print: Machine B fields for p-p  beam (7000 GeV): QGrad: 22.0002 Dipole: 37.8781
+[[01;36m15:18:20[0m][[01;32mINFO[0m] MagneticField::Print: Uses Sol30_Dip6_Hole  of $(O2_ROOT)/share/Common/maps/mfchebKGI_sym.root
+Info in <TGeoGlobalMagField::SetField>: Global magnetic field set to <Maps>
+Info in <TGeoGlobalMagField::Lock>: Global magnetic field <Maps> is now locked
+ *** TDatabasePDG::AddParticle: particle with PDGcode=3124 already defined
+ *** TDatabasePDG::AddAntiParticle: can't redefine parameters
+[[01;36m15:18:20[0m][[01;32mINFO[0m] Setting up external generator with following parameters
+[[01;36m15:18:20[0m][[01;32mINFO[0m] GeneratorExternal.fileName : ${O2DPG_ROOT}/MC/config/PWGHF/external/generator/generator_pythia8_gaptriggered_hf.C		[ RT ]
+GeneratorExternal.funcName : GeneratorPythia8GapTriggeredBeauty(3, -5, 5)		[ RT ]
+
+
+ *------------------------------------------------------------------------------------* 
+ |                                                                                    | 
+ |  *------------------------------------------------------------------------------*  | 
+ |  |                                                                              |  | 
+ |  |                                                                              |  | 
+ |  |   PPP   Y   Y  TTTTT  H   H  III    A      Welcome to the Lund Monte Carlo!  |  | 
+ |  |   P  P   Y Y     T    H   H   I    A A     This is PYTHIA version 8.304      |  | 
+ |  |   PPP     Y      T    HHHHH   I   AAAAA    Last date of change:  9 Apr 2021  |  | 
+ |  |   P       Y      T    H   H   I   A   A                                      |  | 
+ |  |   P       Y      T    H   H  III  A   A    Now is 25 May 2023 at 15:18:24    |  | 
+ |  |                                                                              |  | 
+ |  |   Christian Bierlich;  Department of Astronomy and Theoretical Physics,      |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: christian.bierlich@thep.lu.se                                   |  | 
+ |  |   Nishita Desai;  Department of Theoretical Physics, Tata Institute,         |  | 
+ |  |      Homi Bhabha Road, Mumbai 400005, India;                                 |  | 
+ |  |      e-mail: desai@theory.tifr.res.in                                        |  | 
+ |  |   Leif Gellersen;  Department of Astronomy and Theoretical Physics,          |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: leif.gellersen@thep.lu.se                                       |  | 
+ |  |   Ilkka Helenius;  Department of Physics, University of Jyvaskyla,           |  | 
+ |  |      P.O. Box 35, FI-40014 University of Jyvaskyla, Finland;                 |  | 
+ |  |      e-mail: ilkka.m.helenius@jyu.fi                                         |  | 
+ |  |   Philip Ilten;  Department of Physics,                                      |  | 
+ |  |      University of Cincinnati, Cincinnati, OH 45221, USA;                    |  | 
+ |  |      e-mail: philten@cern.ch                                                 |  | 
+ |  |   Leif Lonnblad;  Department of Astronomy and Theoretical Physics,           |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: leif.lonnblad@thep.lu.se                                        |  | 
+ |  |   Stephen Mrenna;  Computing Division, Simulations Group,                    |  | 
+ |  |      Fermi National Accelerator Laboratory, MS 234, Batavia, IL 60510, USA;  |  | 
+ |  |      e-mail: mrenna@fnal.gov                                                 |  | 
+ |  |   Stefan Prestel;  Department of Astronomy and Theoretical Physics,          |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: stefan.prestel@thep.lu.se                                       |  | 
+ |  |   Christian Preuss;  School of Physics and Astronomy,                        |  | 
+ |  |      Monash University, PO Box 27, 3800 Melbourne, Australia;                |  | 
+ |  |      e-mail: christian.preuss@monash.edu                                     |  | 
+ |  |   Torbjorn Sjostrand;  Department of Astronomy and Theoretical Physics,      |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: torbjorn@thep.lu.se                                             |  | 
+ |  |   Peter Skands;  School of Physics and Astronomy,                            |  | 
+ |  |      Monash University, PO Box 27, 3800 Melbourne, Australia;                |  | 
+ |  |      e-mail: peter.skands@monash.edu                                         |  | 
+ |  |   Marius Utheim;  Department of Astronomy and Theoretical Physics,           |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: marius.utheim@thep.lu.se                                        |  | 
+ |  |   Rob Verheyen;  Department of Physics and Astronomy,                        |  | 
+ |  |      University College London, Gower St, Bloomsbury, London WC1E 6BT, UK;   |  | 
+ |  |      e-mail: r.verheyen@ucl.ac.uk                                            |  | 
+ |  |                                                                              |  | 
+ |  |   The main program reference is 'An Introduction to PYTHIA 8.2',             |  | 
+ |  |   T. Sjostrand et al, Comput. Phys. Commun. 191 (2015) 159                   |  | 
+ |  |   [arXiv:1410.3012 [hep-ph]]                                                 |  | 
+ |  |                                                                              |  | 
+ |  |   The main physics reference is the 'PYTHIA 6.4 Physics and Manual',         |  | 
+ |  |   T. Sjostrand, S. Mrenna and P. Skands, JHEP05 (2006) 026 [hep-ph/0603175]  |  | 
+ |  |                                                                              |  | 
+ |  |   An archive of program versions and documentation is found on the web:      |  | 
+ |  |   http://www.thep.lu.se/Pythia                                               |  | 
+ |  |                                                                              |  | 
+ |  |   This program is released under the GNU General Public Licence version 2.   |  | 
+ |  |   Please respect the MCnet Guidelines for Event Generator Authors and Users. |  | 
+ |  |                                                                              |  | 
+ |  |   Disclaimer: this program comes without any guarantees.                     |  | 
+ |  |   Beware of errors and use common sense when interpreting results.           |  | 
+ |  |                                                                              |  | 
+ |  |   Copyright (C) 2021 Torbjorn Sjostrand                                      |  | 
+ |  |                                                                              |  | 
+ |  |                                                                              |  | 
+ |  *------------------------------------------------------------------------------*  | 
+ |                                                                                    | 
+ *------------------------------------------------------------------------------------* 
+
+[[01;36m15:18:24[0m][[01;32mINFO[0m] Instance 'Pythia8' generator with following parameters
+[[01;36m15:18:24[0m][[01;32mINFO[0m] GeneratorPythia8.config : ${O2DPG_ROOT}/MC/config/PWGHF/pythia8/generator/pythia8_charmtriggers_with_Bforced_decay.cfg		[ RT ]
+GeneratorPythia8.hooksFileName : 		[ CODE ]
+GeneratorPythia8.hooksFuncName : 		[ CODE ]
+
+[[01;36m15:18:24[0m][[01;32mINFO[0m] Initialising primary generator
+[[01;36m15:18:24[0m][[01;32mINFO[0m] Reading configuration from file: /misc/alidata141/alice_u/zanone/o2new/O2DPG/MC/config/PWGHF/pythia8/generator/pythia8_charmtriggers_with_Bforced_decay.cfg
+
+ *-------  PYTHIA Process Initialization  --------------------------*
+ |                                                                  |
+ | We collide p+ with p+ at a CM energy of 1.350e+04 GeV            |
+ |                                                                  |
+ |------------------------------------------------------------------|
+ |                                                    |             |
+ | Subprocess                                    Code |   Estimated |
+ |                                                    |    max (mb) |
+ |                                                    |             |
+ |------------------------------------------------------------------|
+ |                                                    |             |
+ | non-diffractive                                101 |   5.680e+01 |
+ | A B -> X B single diffractive                  103 |   6.429e+00 |
+ | A B -> A X single diffractive                  104 |   6.429e+00 |
+ | A B -> X X double diffractive                  105 |   8.840e+00 |
+ | A B -> A X B central diffractive               106 |   0.000e+00 |
+ |                                                                  |
+ *-------  End PYTHIA Process Initialization -----------------------*
+
+ *-------  PYTHIA Multiparton Interactions Initialization  ---------* 
+ |                                                                  | 
+ |                   sigmaNonDiffractive =    56.80 mb              | 
+ |                                                                  | 
+ |    pT0 =  2.63 gives sigmaInteraction =   324.48 mb: accepted    | 
+ |                                                                  | 
+ *-------  End PYTHIA Multiparton Interactions Initialization  -----* 
+
+ *-------  PYTHIA Multiparton Interactions Initialization  ---------* 
+ |                                                                  | 
+ |                          diffraction XB                          | 
+ |                                                                  | 
+ |   diffractive mass = 1.00e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.56 gives sigmaInteraction =    25.11 mb: accepted    | 
+ |   diffractive mass = 1.62e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.62 gives sigmaInteraction =    23.96 mb: accepted    | 
+ |   diffractive mass = 2.61e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.69 gives sigmaInteraction =    22.11 mb: accepted    | 
+ |   diffractive mass = 4.23e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.76 gives sigmaInteraction =    20.05 mb: accepted    | 
+ |   diffractive mass = 6.84e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.84 gives sigmaInteraction =    18.22 mb: accepted    | 
+ |   diffractive mass = 1.11e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.93 gives sigmaInteraction =    16.87 mb: accepted    | 
+ |   diffractive mass = 1.79e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.04 gives sigmaInteraction =    16.65 mb: accepted    | 
+ |   diffractive mass = 2.89e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.15 gives sigmaInteraction =    17.00 mb: accepted    | 
+ |   diffractive mass = 4.67e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.27 gives sigmaInteraction =    18.67 mb: accepted    | 
+ |   diffractive mass = 7.55e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.41 gives sigmaInteraction =    21.43 mb: accepted    | 
+ |   diffractive mass = 1.22e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.57 gives sigmaInteraction =    25.20 mb: accepted    | 
+ |   diffractive mass = 1.98e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.74 gives sigmaInteraction =    30.51 mb: accepted    | 
+ |   diffractive mass = 3.19e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.93 gives sigmaInteraction =    36.56 mb: accepted    | 
+ |   diffractive mass = 5.16e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.14 gives sigmaInteraction =    43.66 mb: accepted    | 
+ |   diffractive mass = 8.35e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.37 gives sigmaInteraction =    52.30 mb: accepted    | 
+ |   diffractive mass = 1.35e+04 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.63 gives sigmaInteraction =    61.93 mb: accepted    | 
+ |                                                                  | 
+ *-------  End PYTHIA Multiparton Interactions Initialization  -----* 
+ PYTHIA Warning in MultipartonInteractions::init: maximum increased by factor 4.190
+
+ *-------  PYTHIA Multiparton Interactions Initialization  ---------* 
+ |                                                                  | 
+ |                          diffraction AX                          | 
+ |                                                                  | 
+ |   diffractive mass = 1.00e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.56 gives sigmaInteraction =    25.07 mb: accepted    | 
+ |   diffractive mass = 1.62e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.62 gives sigmaInteraction =    23.97 mb: accepted    | 
+ |   diffractive mass = 2.61e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.69 gives sigmaInteraction =    22.26 mb: accepted    | 
+ |   diffractive mass = 4.23e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.76 gives sigmaInteraction =    20.13 mb: accepted    | 
+ |   diffractive mass = 6.84e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.84 gives sigmaInteraction =    18.22 mb: accepted    | 
+ |   diffractive mass = 1.11e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.93 gives sigmaInteraction =    16.90 mb: accepted    | 
+ |   diffractive mass = 1.79e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.04 gives sigmaInteraction =    16.52 mb: accepted    | 
+ |   diffractive mass = 2.89e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.15 gives sigmaInteraction =    17.05 mb: accepted    | 
+ |   diffractive mass = 4.67e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.27 gives sigmaInteraction =    18.74 mb: accepted    | 
+ |   diffractive mass = 7.55e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.41 gives sigmaInteraction =    21.55 mb: accepted    | 
+ |   diffractive mass = 1.22e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.57 gives sigmaInteraction =    25.32 mb: accepted    | 
+ |   diffractive mass = 1.98e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.74 gives sigmaInteraction =    30.62 mb: accepted    | 
+ |   diffractive mass = 3.19e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.93 gives sigmaInteraction =    36.85 mb: accepted    | 
+ |   diffractive mass = 5.16e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.14 gives sigmaInteraction =    44.33 mb: accepted    | 
+ |   diffractive mass = 8.35e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.37 gives sigmaInteraction =    53.00 mb: accepted    | 
+ |   diffractive mass = 1.35e+04 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.63 gives sigmaInteraction =    62.22 mb: accepted    | 
+ |                                                                  | 
+ *-------  End PYTHIA Multiparton Interactions Initialization  -----* 
+
+ *-------  PYTHIA Multiparton Interactions Initialization  ---------* 
+ |                                                                  | 
+ |                          diffraction AXB                         | 
+ |                                                                  | 
+ |   diffractive mass = 1.00e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.56 gives sigmaInteraction =     5.95 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =     8.72 mb: rejected    | 
+ |    pT0 =  0.45 gives sigmaInteraction =    13.10 mb: accepted    | 
+ |   diffractive mass = 1.62e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.62 gives sigmaInteraction =     4.77 mb: rejected    | 
+ |    pT0 =  0.56 gives sigmaInteraction =     7.00 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =    10.23 mb: rejected    | 
+ |    pT0 =  0.45 gives sigmaInteraction =    15.27 mb: accepted    | 
+ |   diffractive mass = 2.61e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.69 gives sigmaInteraction =     3.85 mb: rejected    | 
+ |    pT0 =  0.62 gives sigmaInteraction =     5.48 mb: rejected    | 
+ |    pT0 =  0.56 gives sigmaInteraction =     7.79 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =    11.40 mb: accepted    | 
+ |   diffractive mass = 4.23e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.76 gives sigmaInteraction =     3.11 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     4.31 mb: rejected    | 
+ |    pT0 =  0.62 gives sigmaInteraction =     6.12 mb: rejected    | 
+ |    pT0 =  0.55 gives sigmaInteraction =     8.57 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =    12.41 mb: accepted    | 
+ |   diffractive mass = 6.84e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.84 gives sigmaInteraction =     2.73 mb: rejected    | 
+ |    pT0 =  0.76 gives sigmaInteraction =     3.63 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     4.94 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =     6.75 mb: rejected    | 
+ |    pT0 =  0.55 gives sigmaInteraction =     9.34 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =    13.13 mb: accepted    | 
+ |   diffractive mass = 1.11e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.93 gives sigmaInteraction =     2.52 mb: rejected    | 
+ |    pT0 =  0.84 gives sigmaInteraction =     3.22 mb: rejected    | 
+ |    pT0 =  0.76 gives sigmaInteraction =     4.24 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     5.56 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =     7.60 mb: rejected    | 
+ |    pT0 =  0.55 gives sigmaInteraction =    10.25 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =    14.07 mb: accepted    | 
+ |   diffractive mass = 1.79e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.04 gives sigmaInteraction =     2.54 mb: rejected    | 
+ |    pT0 =  0.93 gives sigmaInteraction =     3.16 mb: rejected    | 
+ |    pT0 =  0.84 gives sigmaInteraction =     3.94 mb: rejected    | 
+ |    pT0 =  0.76 gives sigmaInteraction =     4.99 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     6.42 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =     8.42 mb: rejected    | 
+ |    pT0 =  0.55 gives sigmaInteraction =    11.07 mb: accepted    | 
+ |   diffractive mass = 2.89e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.15 gives sigmaInteraction =     2.75 mb: rejected    | 
+ |    pT0 =  1.03 gives sigmaInteraction =     3.30 mb: rejected    | 
+ |    pT0 =  0.93 gives sigmaInteraction =     4.00 mb: rejected    | 
+ |    pT0 =  0.84 gives sigmaInteraction =     4.89 mb: rejected    | 
+ |    pT0 =  0.75 gives sigmaInteraction =     6.00 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     7.55 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =     9.55 mb: rejected    | 
+ |    pT0 =  0.55 gives sigmaInteraction =    12.39 mb: accepted    | 
+ |   diffractive mass = 4.67e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.27 gives sigmaInteraction =     3.09 mb: rejected    | 
+ |    pT0 =  1.15 gives sigmaInteraction =     3.63 mb: rejected    | 
+ |    pT0 =  1.03 gives sigmaInteraction =     4.33 mb: rejected    | 
+ |    pT0 =  0.93 gives sigmaInteraction =     5.08 mb: rejected    | 
+ |    pT0 =  0.84 gives sigmaInteraction =     6.05 mb: rejected    | 
+ |    pT0 =  0.75 gives sigmaInteraction =     7.23 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     8.83 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =    11.06 mb: accepted    | 
+ |   diffractive mass = 7.55e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.41 gives sigmaInteraction =     3.54 mb: rejected    | 
+ |    pT0 =  1.27 gives sigmaInteraction =     4.16 mb: rejected    | 
+ |    pT0 =  1.14 gives sigmaInteraction =     4.88 mb: rejected    | 
+ |    pT0 =  1.03 gives sigmaInteraction =     5.63 mb: rejected    | 
+ |    pT0 =  0.93 gives sigmaInteraction =     6.50 mb: rejected    | 
+ |    pT0 =  0.83 gives sigmaInteraction =     7.63 mb: rejected    | 
+ |    pT0 =  0.75 gives sigmaInteraction =     8.97 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =    10.60 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =    12.85 mb: accepted    | 
+ |   diffractive mass = 1.22e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.57 gives sigmaInteraction =     4.09 mb: rejected    | 
+ |    pT0 =  1.41 gives sigmaInteraction =     4.78 mb: rejected    | 
+ |    pT0 =  1.27 gives sigmaInteraction =     5.55 mb: rejected    | 
+ |    pT0 =  1.14 gives sigmaInteraction =     6.40 mb: rejected    | 
+ |    pT0 =  1.03 gives sigmaInteraction =     7.32 mb: rejected    | 
+ |    pT0 =  0.92 gives sigmaInteraction =     8.36 mb: rejected    | 
+ |    pT0 =  0.83 gives sigmaInteraction =     9.55 mb: rejected    | 
+ |    pT0 =  0.75 gives sigmaInteraction =    11.17 mb: accepted    | 
+ |   diffractive mass = 1.98e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.74 gives sigmaInteraction =     4.74 mb: rejected    | 
+ |    pT0 =  1.56 gives sigmaInteraction =     5.51 mb: rejected    | 
+ |    pT0 =  1.41 gives sigmaInteraction =     6.38 mb: rejected    | 
+ |    pT0 =  1.27 gives sigmaInteraction =     7.28 mb: rejected    | 
+ |    pT0 =  1.14 gives sigmaInteraction =     8.30 mb: rejected    | 
+ |    pT0 =  1.03 gives sigmaInteraction =     9.37 mb: rejected    | 
+ |    pT0 =  0.92 gives sigmaInteraction =    10.50 mb: rejected    | 
+ |    pT0 =  0.83 gives sigmaInteraction =    12.01 mb: accepted    | 
+ |   diffractive mass = 3.19e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.93 gives sigmaInteraction =     5.35 mb: rejected    | 
+ |    pT0 =  1.73 gives sigmaInteraction =     6.23 mb: rejected    | 
+ |    pT0 =  1.56 gives sigmaInteraction =     7.32 mb: rejected    | 
+ |    pT0 =  1.40 gives sigmaInteraction =     8.34 mb: rejected    | 
+ |    pT0 =  1.26 gives sigmaInteraction =     9.41 mb: rejected    | 
+ |    pT0 =  1.14 gives sigmaInteraction =    10.61 mb: rejected    | 
+ |    pT0 =  1.02 gives sigmaInteraction =    12.02 mb: accepted    | 
+ |   diffractive mass = 5.16e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.14 gives sigmaInteraction =     6.02 mb: rejected    | 
+ |    pT0 =  1.92 gives sigmaInteraction =     7.05 mb: rejected    | 
+ |    pT0 =  1.73 gives sigmaInteraction =     8.21 mb: rejected    | 
+ |    pT0 =  1.56 gives sigmaInteraction =     9.35 mb: rejected    | 
+ |    pT0 =  1.40 gives sigmaInteraction =    10.64 mb: rejected    | 
+ |    pT0 =  1.26 gives sigmaInteraction =    12.12 mb: accepted    | 
+ |   diffractive mass = 8.35e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.37 gives sigmaInteraction =     6.55 mb: rejected    | 
+ |    pT0 =  2.13 gives sigmaInteraction =     7.72 mb: rejected    | 
+ |    pT0 =  1.92 gives sigmaInteraction =     9.10 mb: rejected    | 
+ |    pT0 =  1.73 gives sigmaInteraction =    10.44 mb: rejected    | 
+ |    pT0 =  1.55 gives sigmaInteraction =    11.77 mb: accepted    | 
+ |   diffractive mass = 1.35e+04 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.63 gives sigmaInteraction =     7.34 mb: rejected    | 
+ |    pT0 =  2.36 gives sigmaInteraction =     8.52 mb: rejected    | 
+ |    pT0 =  2.13 gives sigmaInteraction =    10.00 mb: rejected    | 
+ |    pT0 =  1.91 gives sigmaInteraction =    11.49 mb: accepted    | 
+ |                                                                  | 
+ *-------  End PYTHIA Multiparton Interactions Initialization  -----* 
+
+ *-------  PYTHIA Flag + Mode + Parm + Word + FVec + MVec + PVec + WVec Settings (changes only)  ------------------* 
+ |                                                                                                                 | 
+ | Name                                          |                      Now |      Default         Min         Max | 
+ |                                               |                          |                                      | 
+ | Beams:eCM                                     |                13500.000 |    14000.000         0.0             | 
+ | ParticleDecays:limitTau0                      |                       on |          off                         | 
+ | Random:seed                                   |                888053933 |           -1               900000000 | 
+ | Random:setSeed                                |                       on |          off                         | 
+ | SoftQCD:inelastic                             |                       on |          off                         | 
+ |                                                                                                                 | 
+ *-------  End PYTHIA Flag + Mode + Parm + Word + FVec + MVec + PVec + WVec Settings  -----------------------------* 
+
+ --------  PYTHIA Particle Data Table (changed only)  ------------------------------------------------------------------------------
+ 
+      id   name            antiName         spn chg col      m0        mWidth      mMin       mMax       tau0    res dec ext vis wid
+             no onMode   bRatio   meMode     products 
+
+     113  rho0                                3   0   0    0.77549    0.14910    0.30000    1.50000  0.00000e+00   0   1   0   1   0
+              0     1   0.9988447    2      211     -211 
+              1     0   0.0005993    3      111       22 
+              2     0   0.0002997    3      221       22 
+              3     1   0.0001009    1      211     -211      111 
+              4     0   0.0000471    3       11      -11 
+              5     0   0.0000454    3       13      -13 
+              6     0   0.0000449    0      111      111       22 
+              7     1   0.0000180    0      211     -211      211     -211 
+
+     313  K*0              K*bar0             3   0   0    0.89594    0.04870    0.64527    1.20000  0.00000e+00   0   1   0   1   0
+              0     1   0.6649467    2      321     -211 
+              1     0   0.3326633    2      311      111 
+              2     0   0.0023900    3      311       22 
+
+     333  phi                                 3   0   0    1.01946    0.00426    1.00000    1.04000  0.00000e+00   0   1   0   1   0
+              0     1   0.4893042    2      321     -321 
+              1     0   0.3422127    2      130      310 
+              2     0   0.0420984    0     -213      211 
+              3     0   0.0420984    0      113      111 
+              4     0   0.0420984    0      213     -211 
+              5     0   0.0270000    1      211     -211      111 
+              6     0   0.0130981    0      221       22 
+              7     0   0.0012708    0      111       22 
+              8     0   0.0002956    0       11      -11 
+              9     0   0.0002872    0       13      -13 
+             10     0   0.0001151   11      221       11      -11 
+             11     0   0.0000740    2      211     -211 
+             12     0   0.0000470    0      223      111 
+
+     411  D+               D-                 1   3   0    1.86962    0.00000    1.86962    1.86962  3.11800e-01   0   1   0   1   0
+              0     1   0.0752000    0     -321      211      211 
+              1     1   0.0104000    0     -313      211 
+              2     0   0.0156000    0      311      211 
+              3     1   0.0027600    0      333      211 
+
+     421  D0               Dbar0              1   0   0    1.86486    0.00000    1.86486    1.86486  1.22900e-01   0   1   0   1   0
+              0     0   0.0034000   22      -11       12     -211 
+              1     0   0.0022000   22      -11       12     -213 
+              2     0   0.0350000   22      -11       12     -321 
+              3     0   0.0225000   22      -11       12     -323 
+              4     0   0.0015000   22      -11       12     -325 
+              5     0   0.0014000   22      -11       12   -10323 
+              6     0   0.0034000   22      -13       14     -211 
+              7     0   0.0022000   22      -13       14     -213 
+              8     0   0.0340000   22      -13       14     -321 
+              9     0   0.0214000   22      -13       14     -323 
+             10     0   0.0015000   22      -13       14     -325 
+             11     0   0.0014000   22      -13       14   -10323 
+             12     0   0.0011000   22      -11       12      311     -211 
+             13     0   0.0006000   22      -11       12     -321      111 
+             14     0   0.0011000   22      -13       14      311     -211 
+             15     0   0.0006000   22      -13       14     -321      111 
+             16     0   0.0008000    0      111      111 
+             17     0   0.0020000    0      113      111 
+             18     0   0.0006000    0      130      130 
+             19     0   0.0015000    0      211     -211 
+             20     0   0.0040000    0      213     -211 
+             21     0   0.0040000    0     -213      211 
+             22     0   0.0010000    0      221      111 
+             23     0   0.0010000    0      221      221 
+             24     0   0.0006000    0      310      310 
+             25     0   0.0212000    0      311      111 
+             26     0   0.0071000    0      311      221 
+             27     0   0.0210000    0      311      223 
+             28     0   0.0004000    0      313      311 
+             29     0   0.0014000    0      313     -313 
+             30     0   0.0085000    0     -313      111 
+             31     0   0.0146000    0     -313      113 
+             32     0   0.0190000    0     -313      221 
+             33     0   0.0110000    0     -313      223 
+             34     0   0.0008000    0     -313      311 
+             35     1   0.0001500    0      321     -211 
+             36     0   0.0043000    0      321     -321 
+             37     1   0.0383000    0     -321      211 
+             38     0   0.0035000    0      323     -321 
+             39     0   0.0610000    0     -323      213 
+             40     0   0.0018000    0     -323      321 
+             41     0   0.0010000    0      331      111 
+             42     0   0.0172000    0      331      311 
+             43     0   0.0020000    0      331     -313 
+             44     0   0.0007000    0      333      111 
+             45     0   0.0086000    0      333      311 
+             46     0   0.0071000    0   -10313      111 
+             47     0   0.0107000    0   -10323      211 
+             48     0   0.0730000    0    20213     -321 
+             49     0   0.0010000    0      111      111      111 
+             50     0   0.0060000    0      211     -211      111 
+             51     0   0.0270000    0      211     -211      130 
+             52     0   0.0270000    0      310      211     -211 
+             53     0   0.0008000    0      310      310      310 
+             54     0   0.0078000    0      311      111      111 
+             55     0   0.0116000    0     -313      111      111 
+             56     0   0.0225000    0     -313      211     -211 
+             57     0   0.0005000    0      321     -211      111 
+             58     0   0.0051000    0      321     -321      311 
+             59     0   0.1390000    0     -321      211      111 
+             60     0   0.0060000    0     -321      211      113 
+             61     0   0.0068000    0     -321      213      111 
+             62     0   0.0100000    0     -321      221      211 
+             63     0   0.0303000    0     -321      223      211 
+             64     0   0.0100000    0     -323      211      111 
+             65     0   0.0075000    0      331     -321      211 
+             66     0   0.0011000    0      333      211     -211 
+             67     0   0.0073000    0      211      211     -211     -211 
+             68     0   0.0050000    0      211     -211      111      111 
+             69     0   0.0143000    0      311      111      111      111 
+             70     0   0.0085000    0      311      211     -211      111 
+             71     0   0.0015000    0      311      311      111      111 
+             72     0   0.0015000    0      311      311      211     -211 
+             73     0   0.0030000    0      321     -321      111      111 
+             74     0   0.0025000    0      321     -321      211     -211 
+             75     0   0.0257500    0     -321      211      111      111 
+             76     0   0.0074000    0     -321      211      211     -211 
+             77     0   0.0177000    0      211      211     -211     -211      111 
+             78     0   0.0060000    0      211     -211      111      111      111 
+             79     0   0.0058000    0      311      211      211     -211     -211 
+             80     0   0.0638000    0      311      211     -211      111      111 
+             81     0   0.0038000    0     -321      211      111      111      111 
+             82     0   0.0038000    0     -321      211      211     -211      111 
+             83     0   0.0192000    0      311      211     -211      111      111      111 
+
+     431  D_s+             D_s-               1   3   0    1.96849    0.00000    1.96849    1.96849  1.49900e-01   0   1   0   1   0
+              0     0   0.0061600    0      -13       14 
+              1     0   0.0640000    0      -15       16 
+              2     0   0.0307000   22      -11       12      221 
+              3     0   0.0027000   22      -11       12      311 
+              4     0   0.0010000   22      -11       12     -313 
+              5     0   0.0106000   22      -11       12      331 
+              6     0   0.0242000   22      -11       12      333 
+              7     0   0.0307000   22      -13       14      221 
+              8     0   0.0027000   22      -13       14      311 
+              9     0   0.0010000   22      -13       14     -313 
+             10     0   0.0106000   22      -13       14      331 
+             11     0   0.0242000   22      -13       14      333 
+             12     0   0.0010000    0      211      111 
+             13     0   0.0004000    0      211      113 
+             14     0   0.0004000    0      213      111 
+             15     0   0.0210000    0      221      211 
+             16     0   0.1310400    0      221      213 
+             17     0   0.0034000    0      223      211 
+             18     0   0.0023000    0      225      211 
+             19     0   0.0040000    0      311      211 
+             20     0   0.0015000    0      311      213 
+             21     0   0.0079000    0      313      211 
+             22     0   0.0050000    0      313      213 
+             23     0   0.0015000    0      321      113 
+             24     0   0.0002000    0      321      221 
+             25     0   0.0440000    0      321      311 
+             26     0   0.0400000    0      321     -313 
+             27     0   0.0530000    0      323      311 
+             28     0   0.0700000    0      323     -313 
+             29     0   0.0470000    0      331      211 
+             30     0   0.1220000    0      331      213 
+             31     0   0.0002000    0      331      321 
+             32     1   0.0440000    0      333      211 
+             33     0   0.0820000    0      333      213 
+             34     0   0.0003000    0      333      321 
+             35     0   0.0025000    0    20213      311 
+             36     0   0.0100000    0  9010221      211 
+             37     0   0.0000500    0      211      111      111 
+             38     0   0.0000500    0      211      211     -211 
+             39     0   0.0150000    0      221      211      111 
+             40     0   0.0010000    0      311      211      111 
+             41     0   0.0050000    0      313      211      111 
+             42     0   0.0002000    0      321      221      111 
+             43     0   0.0030000    0      321      311      111 
+             44     0   0.0012000    0      321     -313      111 
+             45     0   0.0002000    0      321      321     -321 
+             46     0   0.0110000    0      321     -321      211 
+             47     0   0.0012000    0      323      311      111 
+             48     0   0.0040000    0      323     -313      111 
+             49     0   0.0150000    0      331      211      111 
+             50     0   0.0002000    0      331      321      111 
+             51     0   0.0100000    0      333      211      111 
+             52     0   0.0050000    0      221      211      111      111 
+             53     0   0.0050000    0      221      211      211     -211 
+             54     0   0.0002000    0      321      221      211     -211 
+             55     0   0.0010000    0      321      311      111      111 
+             56     0   0.0010000    0      321      311      211     -211 
+             57     0   0.0002000    0      331      321      211     -211 
+             58     0   0.0050000    0      333      211      111      111 
+             59     0   0.0080000    0      333      211      211     -211 
+             60     0   0.0043000    0      321     -321      211      211     -211 
+
+     443  J/psi                               3   0   0    3.09692    0.00009    3.09602    3.09782  0.00000e+00   0   1   0   1   0
+              0     0   0.8023950   43       83      -83 
+              1     1   0.0594000    0       11      -11 
+              2     0   0.0593000    0       13      -13 
+              3     0   0.0130000    0      441       22 
+              4     0   0.0056000    0      113      111 
+              5     0   0.0056500    0      213     -211 
+              6     0   0.0056500    0     -213      211 
+              7     0   0.0036000    0      115      113 
+              8     0   0.0036000    0     -215      213 
+              9     0   0.0036000    0      215     -213 
+             10     0   0.0043000    0      225      223 
+             11     0   0.0022000    0      313     -315 
+             12     0   0.0022000    0      323     -325 
+             13     0   0.0022000    0     -323      325 
+             14     0   0.0025000    0      321     -323 
+             15     0   0.0025000    0     -321      323 
+             16     0   0.0021000    0      311     -313 
+             17     0   0.0021000    0     -311      313 
+             18     0   0.0019000    0    20323     -321 
+             19     0   0.0019000    0   -20323      321 
+             20     0   0.0015000    0    10213     -211 
+             21     0   0.0015000    0   -10213      211 
+             22     0   0.0023000    0    10113      111 
+             23     0   0.0004800    0    10331      223 
+             24     0   0.0007400    0      223      221 
+             25     0   0.0003600    0    10331      333 
+             26     0   0.0008000    0      333      335 
+             27     0   0.0006800    0    20333      223 
+             28     0   0.0007400    0      333      221 
+             29     0   0.0004500    0      223      111 
+             30     0   0.0004000    0      333      331 
+             31     0   0.0003200    0      333  9010221 
+             32     0   0.0002600    0      333    20223 
+             33     0   0.0001930    0      113      221 
+             34     0   0.0001820    0      223      331 
+             35     0   0.0001400    0      223  9010221 
+             36     0   0.0001050    0      113      331 
+             37     0   0.0011000    0     2224    -2224 
+             38     0   0.0005150    0     3112    -3112 
+             39     0   0.0005900    0     3314    -3314 
+             40     0   0.0003200    0     3324    -3324 
+             41     0   0.0003200    0     3324    -3324 
+             42     0   0.0001550    0     3114    -3114 
+             43     0   0.0001550    0     3224    -3224 
+
+     511  B0               Bbar0              1   0   0    5.27958    0.00000    5.27958    5.27958  4.58700e-01   0   1   0   1   0
+              0     1   0.3000000    0     -411      211 
+              1     1   0.3000000    0     -413      211 
+              2     1   0.3000000    0      431     -211 
+
+     521  B+               B-                 1   3   0    5.27925    0.00000    5.27925    5.27925  4.91100e-01   0   1   0   1   0
+              0     1   0.0050000    0     -421      211 
+
+     531  B_s0             B_sbar0            1   0   0    5.36677    0.00000    5.36677    5.36677  4.39000e-01   0   1   0   1   0
+              0     1   0.0026000    0     -431      211 
+
+    2224  Delta++          Deltabar--         4   6   0    1.23200    0.11700    1.08000    2.00000  0.00000e+00   0   1   0   1   0
+              0     1   1.0000000    4     2212      211 
+
+    4112  Sigma_c0         Sigma_cbar0        2   0   0    2.45374    0.00216    2.43176    2.47576  0.00000e+00   0   1   0   1   0
+              0     0   1.0000000    0     4122     -211 
+
+    4122  Lambda_c+        Lambda_cbar-       2   3   0    2.28646    0.00000    2.28646    2.28646  5.99000e-02   0   1   0   1   0
+              0     1   0.0196000  100     2212     -313 
+              1     1   0.0108000  100     2224     -321 
+              2     1   0.0220000  100     3124      211 
+              3     1   0.0350000    0     2212     -321      211 
+
+    4132  Xi_c0            Xi_cbar0           2   0   0    2.47088    0.00000    2.47088    2.47088  3.36000e-02   0   1   0   1   0
+              0     0   0.0200000   22      -11       12        3     3101 
+              1     0   0.0050000   22      -11       12        3     3103 
+              2     0   0.0200000   22      -13       14        3     3101 
+              3     0   0.0050000   22      -13       14        3     3103 
+              4     0   0.5400000   42        2       -1        3     3101 
+              5     0   0.2100000   42        3     3201 
+              6     0   0.1000000   42        3     3203 
+              7     0   0.1000000   42        2     3303 
+              8     1   0.2000000    0     3312      211 
+
+    4232  Xi_c+            Xi_cbar-           2   3   0    2.46780    0.00000    2.46780    2.46780  1.32000e-01   0   1   0   1   0
+              0     0   0.0280000   22      -11       12        3     3201 
+              1     0   0.0070000   22      -11       12        3     3203 
+              2     0   0.0280000   22      -13       14        3     3201 
+              3     0   0.0070000   22      -13       14        3     3203 
+              4     0   0.9300000   42        2       -1        3     3201 
+              5     1   0.2000000    0     2212     -313 
+              6     1   0.2000000    0     2212     -321      211 
+              7     1   0.2000000    0     3324      211 
+              8     1   0.2000000    0     3312      211      211 
+
+    4332  Omega_c0         Omega_cbar0        2   0   0    2.69520    0.00000    2.69520    2.69520  8.00000e-02   0   1   0   1   0
+              0     0   0.0180000   22      -11       12        3     3303 
+              1     0   0.0180000   22      -13       14        3     3303 
+              2     0   0.9640000   42        2       -1        3     3303 
+
+    5122  Lambda_b0        Lambda_bbar0       2   0   0    5.61940    0.00000    5.61940    5.61940  4.41000e-01   0   1   0   1   0
+              0     1   0.0040000    0     4122     -211 
+
+  102134  Lambda(1520)0    Lambda(1520)bar0   4   0   0    1.51950    0.01560    1.47000    1.60000  0.00000e+00   0   1   0   1   0
+              0     0   0.2299440    5     2112     -311 
+              1     1   0.2299440    5     2212     -321 
+              2     0   0.1430760    5     3112      211 
+              3     0   0.1430760    5     3212      111 
+              4     0   0.1430760    5     3222     -211 
+              5     0   0.0340660    4     3114      211 
+              6     0   0.0340660    4     3214      111 
+              7     0   0.0340660    4     3224     -211 
+              8     0   0.0086870    3     3122       22 
+
+ --------  End PYTHIA Particle Data Table  -----------------------------------------------------------------------------------------
+
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Generator initialization took 23.7s
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00640042,-0.0152323,-0.00239037)
+
+ --------  PYTHIA Info Listing  ---------------------------------------- 
+ 
+ Beam A: id =   2212, pz =  6.750e+03, e =  6.750e+03, m =  9.383e-01.
+ Beam B: id =   2212, pz = -6.750e+03, e =  6.750e+03, m =  9.383e-01.
+
+ Process A B -> A X single diffractive with code 104 is 2 -> 2.
+ It has s =  1.822e+08,    t = -1.010e-01,    u = -1.822e+08,
+       pT =  3.178e-01,   m3 =  9.383e-01,   m4 =  1.346e+00,
+    theta =  4.708e-05,  phi =  4.373e-01.
+
+ --------  End PYTHIA Info Listing  ------------------------------------
+
+ --------  PYTHIA Event Listing  (hard process)  -----------------------------------------------------------------------------------
+ 
+    no         id  name            status     mothers   daughters     colours      p_x        p_y        p_z         e          m 
+     0         90  (system)           -11     0     0     0     0     0     0      0.000      0.000      0.000  13500.000  13500.000
+     1       2212  (p+)               -12     0     0     3     0     0     0      0.000      0.000   6750.000   6750.000      0.938
+     2       2212  (p+)               -12     0     0     4     0     0     0      0.000      0.000  -6750.000   6750.000      0.938
+     3       2212  p+                  14     1     0     0     0     0     0      0.288      0.135   6750.000   6750.000      0.938
+     4    9902210  p_diffr+            15     2     0     0     0     0     0     -0.288     -0.135  -6750.000   6750.000      1.346
+                                   Charge sum:  2.000           Momentum sum:      0.000      0.000      0.000  13500.000  13500.000
+
+ --------  End PYTHIA Event Listing  -----------------------------------------------------------------------------------------------
+
+ --------  PYTHIA Event Listing  (complete event)  ---------------------------------------------------------------------------------
+ 
+    no         id  name            status     mothers   daughters     colours      p_x        p_y        p_z         e          m 
+     0         90  (system)           -11     0     0     0     0     0     0      0.000      0.000      0.000  13500.000  13500.000
+     1       2212  (p+)               -12     0     0     3     0     0     0      0.000      0.000   6750.000   6750.000      0.938
+     2       2212  (p+)               -12     0     0     4     0     0     0      0.000      0.000  -6750.000   6750.000      0.938
+     3       2212  p+                  14     1     0     0     0     0     0      0.288      0.135   6750.000   6750.000      0.938
+     4    9902210  (p_diffr+)         -15     2     0     5     7     0     0     -0.288     -0.135  -6750.000   6750.000      1.346
+     5         21  (g)                -24     4     0     8     0   102   101     -0.214     -0.100   -456.606    456.606      0.000
+     6          2  (u)                -63     4     0     9     9   101     0      0.045     -0.315  -3873.824   3873.824      0.224
+     7       2101  (ud_0)             -63     4     0     8     0     0   102     -0.119      0.281  -2419.570   2419.570      0.449
+     8       2101  (ud_0)             -73     7     5    10    10     0   101     -0.333      0.181  -2876.175   2876.176      0.747
+     9          2  (u)                -71     6     6    11    12   101     0      0.045     -0.315  -3873.824   3873.824      0.224
+    10       2101  (ud_0)             -71     8     8    11    12     0   101     -0.333      0.181  -2876.175   2876.176      0.747
+    11        111  (pi0)              -82     9    10    13    14     0     0     -0.018      0.187  -2742.456   2742.456      0.135
+    12       2212  p+                  82     9    10     0     0     0     0     -0.270     -0.322  -4007.544   4007.544      0.938
+    13         22  gamma               91    11     0     0     0     0     0     -0.003      0.113   -768.280    768.280      0.000
+    14         22  gamma               91    11     0     0     0     0     0     -0.015      0.074  -1974.176   1974.176      0.000
+                                   Charge sum:  2.000           Momentum sum:      0.000      0.000      0.000  13500.000  13500.000
+
+ --------  End PYTHIA Event Listing  -----------------------------------------------------------------------------------------------
+ PYTHIA Error in Pythia::check: unknown particle code , i = 1375, id = 3124
+ PYTHIA Error in Pythia::next: check of event revealed problems  
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Event generation took 0.2s and produced 945 primaries 
+[[01;36m15:18:44[0m][[01;32mINFO[0m] ASSIGNED PIPE HANDLE 11
+[[01;36m15:18:44[0m][[01;32mINFO[0m] INITTASK CHANGING STATE TO SERVING
+[[01;36m15:18:44[0m][[01;35mSTATE[0m] INITIALIZING TASK ---> READY
+[[01;36m15:18:44[0m][[01;35mSTATE[0m] READY ---> RUNNING
+[[01;36m15:18:44[0m][[01;32mINFO[0m] fair::mq::Device running...
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:44[0m][[01;32mINFO[0m] treating ev 1 part 1 out of 2
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Sending 445 particles
+[[01;36m15:18:44[0m][[01;32mINFO[0m] treating ev 1 part 2 out of 2
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00760305,0.00272009,0.00173747)
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1321 primaries 
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:44[0m][[01;32mINFO[0m] treating ev 2 part 1 out of 3
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:44[0m][[01;32mINFO[0m] treating ev 2 part 2 out of 3
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Sending 321 particles
+[[01;36m15:18:44[0m][[01;32mINFO[0m] treating ev 2 part 3 out of 3
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00139324,0.010744,0.00815035)
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Event generation took 0s and produced 81 primaries 
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Sending 81 particles
+[[01;36m15:18:44[0m][[01;32mINFO[0m] treating ev 3 part 1 out of 1
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:44[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00159986,0.00188505,0.0070605)
+ PYTHIA Warning in SimpleSpaceShower::pT2nextQCD: weight above unity  
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation took 0.51s and produced 1353 primaries 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 4 part 1 out of 3
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 4 part 2 out of 3
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 353 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 4 part 3 out of 3
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00987408,-0.0110903,-0.0127234)
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation took 0s and produced 172 primaries 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 172 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 5 part 1 out of 1
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0107194,-0.00406215,0.0114884)
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation took 0.02s and produced 1710 primaries 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 6 part 1 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 6 part 2 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 6 part 3 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 210 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 6 part 4 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00139908,-0.00206381,-0.00216429)
+ PYTHIA Warning in Pythia::check: not quite matched particle energy/momentum/mass  
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation took 0.34s and produced 1416 primaries 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 7 part 1 out of 3
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 7 part 2 out of 3
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 416 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 7 part 3 out of 3
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0117792,-0.00470926,0.00362911)
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation took 0s and produced 14 primaries 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 14 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 8 part 1 out of 1
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00323095,-0.00621059,0.00562499)
+ PYTHIA Error in BeamRemnants::setKinematics: kinematics construction failed  
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation took 0s and produced 62 primaries 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 62 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 9 part 1 out of 1
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00247039,0.00527471,-0.00727182)
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation took 0.25s and produced 1996 primaries 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 10 part 1 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 10 part 2 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 10 part 3 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 496 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 10 part 4 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0265825,0.00705301,0.00399809)
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation took 0s and produced 77 primaries 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 77 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 11 part 1 out of 1
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00291017,-0.00588529,-0.00676798)
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation took 0.02s and produced 1859 primaries 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 12 part 1 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 12 part 2 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 12 part 3 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sending 359 particles
+[[01;36m15:18:45[0m][[01;32mINFO[0m] treating ev 12 part 4 out of 4
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:45[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00590757,-0.00615681,0.0146871)
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation took 0.05s and produced 1856 primaries 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 13 part 1 out of 4
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 13 part 2 out of 4
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 13 part 3 out of 4
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 356 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 13 part 4 out of 4
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0183108,-0.0150338,0.000228465)
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation took 0s and produced 910 primaries 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 14 part 1 out of 2
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 410 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 14 part 2 out of 2
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0238338,-0.00970081,0.0148263)
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 118 primaries 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 118 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 15 part 1 out of 1
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0127269,-0.00716121,-0.00570715)
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation took 0.25s and produced 401 primaries 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 401 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 16 part 1 out of 1
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00179185,-0.0033858,-0.02329)
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation took 0s and produced 396 primaries 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 396 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 17 part 1 out of 1
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.013928,-0.0109349,-0.0167929)
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1083 primaries 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 18 part 1 out of 3
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 18 part 2 out of 3
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 83 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 18 part 3 out of 3
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0017328,-0.00103968,0.0127971)
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation took 0.2s and produced 1088 primaries 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 19 part 1 out of 3
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 19 part 2 out of 3
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 88 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 19 part 3 out of 3
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00722396,0.00573021,0.00130839)
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation took 0s and produced 13 primaries 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 13 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 20 part 1 out of 1
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00747155,-0.0101454,0.0165723)
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation took 0s and produced 396 primaries 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sending 396 particles
+[[01;36m15:18:46[0m][[01;32mINFO[0m] treating ev 21 part 1 out of 1
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:46[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0169517,-0.00432686,0.00704659)
+
+ Pythia::next(): 1000 events have been generated 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0.57s and produced 1597 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 22 part 1 out of 4
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 22 part 2 out of 4
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 22 part 3 out of 4
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 97 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 22 part 4 out of 4
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00119572,0.000373685,-0.0109751)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0s and produced 223 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 223 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 23 part 1 out of 1
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00421853,0.014658,-0.00073739)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1192 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 24 part 1 out of 3
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 24 part 2 out of 3
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 192 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 24 part 3 out of 3
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0103785,-0.0120521,0.0127446)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0.47s and produced 1640 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 25 part 1 out of 4
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 25 part 2 out of 4
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 25 part 3 out of 4
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 140 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 25 part 4 out of 4
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (-9.65257e-05,-0.00221153,0.000389113)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0s and produced 402 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 402 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 26 part 1 out of 1
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00600304,-0.0184977,0.00231855)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 422 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 422 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 27 part 1 out of 1
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0188567,-0.00527126,0.00734088)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0.04s and produced 727 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 28 part 1 out of 2
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 227 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 28 part 2 out of 2
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.000459386,-0.00386957,-0.00115185)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0s and produced 855 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 29 part 1 out of 2
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 355 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 29 part 2 out of 2
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00843975,-0.00617927,-0.000275789)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0s and produced 917 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 30 part 1 out of 2
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 417 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 30 part 2 out of 2
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0169711,0.0081416,0.0149271)
+ PYTHIA Warning in StringFragmentation::fragmentToJunction: bad convergence junction rest frame  
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0.11s and produced 868 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 31 part 1 out of 2
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 368 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 31 part 2 out of 2
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00970755,0.00911354,-0.003608)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0s and produced 176 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 176 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 32 part 1 out of 1
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00576166,0.00348803,0.000839021)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0s and produced 173 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 173 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 33 part 1 out of 1
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00225538,0.00284573,-0.000181699)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0.14s and produced 699 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 34 part 1 out of 2
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 199 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 34 part 2 out of 2
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00679799,0.00509482,0.0016584)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0s and produced 167 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 167 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 35 part 1 out of 1
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0103476,0.00336075,0.0155272)
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation took 0s and produced 66 primaries 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sending 66 particles
+[[01;36m15:18:47[0m][[01;32mINFO[0m] treating ev 36 part 1 out of 1
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:47[0m][[01;32mINFO[0m] Sampled interacting vertex (0.015652,-0.010468,0.00752102)
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation took 0.71s and produced 900 primaries 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 37 part 1 out of 2
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 400 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 37 part 2 out of 2
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00367581,-0.00310862,-0.00965392)
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation took 0s and produced 239 primaries 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 239 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 38 part 1 out of 1
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0108978,-0.0123992,-0.00713886)
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1013 primaries 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 39 part 1 out of 3
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 39 part 2 out of 3
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 13 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 39 part 3 out of 3
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0152445,0.0104166,-0.0271947)
+
+ Pythia::next(): 2000 events have been generated 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation took 0.3s and produced 1023 primaries 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 40 part 1 out of 3
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 40 part 2 out of 3
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 23 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 40 part 3 out of 3
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0175144,-0.00444997,-0.0202057)
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation took 0s and produced 89 primaries 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 89 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 41 part 1 out of 1
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sampled interacting vertex (0.000912021,0.00548496,-0.0069063)
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1514 primaries 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 42 part 1 out of 4
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 42 part 2 out of 4
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 42 part 3 out of 4
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 14 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 42 part 4 out of 4
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0145407,0.00273465,0.00134276)
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation took 0.09s and produced 279 primaries 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 279 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 43 part 1 out of 1
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00902104,-0.00149006,-0.0023095)
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation took 0s and produced 531 primaries 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 44 part 1 out of 2
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 31 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 44 part 2 out of 2
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0180337,0.0214763,-0.00169414)
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 152 primaries 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sending 152 particles
+[[01;36m15:18:48[0m][[01;32mINFO[0m] treating ev 45 part 1 out of 1
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:48[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00379137,-0.0231533,-0.00741963)
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation took 0.1s and produced 1224 primaries 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:49[0m][[01;32mINFO[0m] treating ev 46 part 1 out of 3
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:49[0m][[01;32mINFO[0m] treating ev 46 part 2 out of 3
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sending 224 particles
+[[01;36m15:18:49[0m][[01;32mINFO[0m] treating ev 46 part 3 out of 3
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0100524,0.00626861,0.00511379)
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 205 primaries 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sending 205 particles
+[[01;36m15:18:49[0m][[01;32mINFO[0m] treating ev 47 part 1 out of 1
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00780216,0.00600459,0.00158872)
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation took 0.02s and produced 1756 primaries 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:49[0m][[01;32mINFO[0m] treating ev 48 part 1 out of 4
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:49[0m][[01;32mINFO[0m] treating ev 48 part 2 out of 4
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:49[0m][[01;32mINFO[0m] treating ev 48 part 3 out of 4
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sending 256 particles
+[[01;36m15:18:49[0m][[01;32mINFO[0m] treating ev 48 part 4 out of 4
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0112891,-0.00454745,0.0110512)
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation took 0.34s and produced 483 primaries 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sending 483 particles
+[[01;36m15:18:49[0m][[01;32mINFO[0m] treating ev 49 part 1 out of 1
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00394026,-0.0106026,-0.00357308)
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation took 0s and produced 175 primaries 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sending 175 particles
+[[01;36m15:18:49[0m][[01;32mINFO[0m] treating ev 50 part 1 out of 1
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00615559,0.00303413,0.0166005)
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation took 0s and produced 172 primaries 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sending 172 particles
+[[01;36m15:18:49[0m][[01;32mINFO[0m] treating ev 51 part 1 out of 1
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:49[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0022638,-0.00266659,0.00259455)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.72s and produced 1977 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 52 part 1 out of 4
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 52 part 2 out of 4
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 52 part 3 out of 4
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 477 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 52 part 4 out of 4
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0162696,-0.00603967,-0.000589347)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 182 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 182 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 53 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00411391,0.00925396,0.00244723)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 708 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 54 part 1 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 208 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 54 part 2 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.010249,-0.00681281,0.010033)
+ PYTHIA Warning in MultipartonInteractions::pTnext: weight above unity  
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.02s and produced 917 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 55 part 1 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 417 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 55 part 2 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0107122,-0.00540016,-0.00259437)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 233 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 233 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 56 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00977964,-0.00578542,0.0124434)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 140 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 140 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 57 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00183313,0.000182785,-0.00416044)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.07s and produced 1037 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 58 part 1 out of 3
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 58 part 2 out of 3
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 37 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 58 part 3 out of 3
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00580515,-0.0124065,-0.00529232)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 313 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 313 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 59 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00126829,0.0250985,0.00951564)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 194 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 194 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 60 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00582861,-0.00487298,0.0128576)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.07s and produced 481 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 481 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 61 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.000231338,0.0147862,-0.00765502)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 113 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 113 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 62 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.000686543,0.0115112,0.000354005)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 255 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 255 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 63 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00516021,-0.0167272,0.00735415)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.14s and produced 564 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 64 part 1 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 64 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 64 part 2 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0118386,-0.0123345,0.00421906)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 736 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 65 part 1 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 236 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 65 part 2 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0152935,0.00479749,0.00359932)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 142 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 142 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 66 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0180906,-0.00562759,0.00748611)
+
+ Pythia::next(): 3000 events have been generated 
+ PYTHIA Warning in MultipartonInteractions::pTfirst: weight above unity  
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.28s and produced 599 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 67 part 1 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 99 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 67 part 2 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0153244,-0.0072677,0.00616991)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 21 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 21 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 68 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00706341,-0.00240598,-0.00625628)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.02s and produced 2173 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 69 part 1 out of 5
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 69 part 2 out of 5
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 69 part 3 out of 5
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 69 part 4 out of 5
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 173 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 69 part 5 out of 5
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00287307,0.00827245,-0.00548313)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 408 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 408 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 70 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.027555,0.00338196,-0.00151772)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 242 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 242 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 71 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00958498,0.0045082,0.00617064)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 519 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 72 part 1 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 19 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 72 part 2 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0146465,0.00805115,-0.0182164)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.09s and produced 535 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 73 part 1 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 35 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 73 part 2 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0148018,-0.0165819,-0.011818)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 300 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 300 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 74 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.000697688,-0.0118248,-0.00643806)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 938 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 75 part 1 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 438 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 75 part 2 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0128261,0.0114635,0.00291938)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.06s and produced 829 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 76 part 1 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 329 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 76 part 2 out of 2
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00261024,-0.0111579,0.0236466)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0s and produced 186 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 186 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 77 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.007643,-0.0196134,-0.00537267)
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 288 primaries 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sending 288 particles
+[[01;36m15:18:50[0m][[01;32mINFO[0m] treating ev 78 part 1 out of 1
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:50[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00481265,-0.00883476,0.00627512)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0.04s and produced 1273 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 79 part 1 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 79 part 2 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 273 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 79 part 3 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00414362,-0.017957,-0.00275656)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1178 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 80 part 1 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 80 part 2 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 178 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 80 part 3 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (0.027818,0.00436009,-0.028202)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0s and produced 197 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 197 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 81 part 1 out of 1
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00231792,-0.00544132,-0.0168192)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0.23s and produced 1815 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 82 part 1 out of 4
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 82 part 2 out of 4
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 82 part 3 out of 4
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 315 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 82 part 4 out of 4
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00666586,0.000969178,0.0018546)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0s and produced 150 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 150 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 83 part 1 out of 1
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00766945,0.018427,0.00727752)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1251 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 84 part 1 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 84 part 2 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 251 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 84 part 3 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00806901,0.0228041,0.00698226)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0.07s and produced 909 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 85 part 1 out of 2
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 409 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 85 part 2 out of 2
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0134989,0.00198498,-0.00294904)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1008 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 86 part 1 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 86 part 2 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 8 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 86 part 3 out of 3
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00544479,-0.00290828,-0.00192328)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0s and produced 173 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 173 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 87 part 1 out of 1
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00225142,0.00548168,-0.00893712)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0.43s and produced 1678 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 88 part 1 out of 4
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 88 part 2 out of 4
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 88 part 3 out of 4
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 178 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 88 part 4 out of 4
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0116909,0.0110632,0.00107423)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 575 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 89 part 1 out of 2
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 75 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 89 part 2 out of 2
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00229206,-0.00211097,-0.0106726)
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation took 0s and produced 243 primaries 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sending 243 particles
+[[01;36m15:18:51[0m][[01;32mINFO[0m] treating ev 90 part 1 out of 1
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:51[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0102238,0.004076,0.00588898)
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation took 0.32s and produced 1729 primaries 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:52[0m][[01;32mINFO[0m] treating ev 91 part 1 out of 4
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:52[0m][[01;32mINFO[0m] treating ev 91 part 2 out of 4
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:52[0m][[01;32mINFO[0m] treating ev 91 part 3 out of 4
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sending 229 particles
+[[01;36m15:18:52[0m][[01;32mINFO[0m] treating ev 91 part 4 out of 4
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00849029,-0.010417,0.0262797)
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 175 primaries 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sending 175 particles
+[[01;36m15:18:52[0m][[01;32mINFO[0m] treating ev 92 part 1 out of 1
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0128352,0.00816524,0.00869345)
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation took 0s and produced 1331 primaries 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:52[0m][[01;32mINFO[0m] treating ev 93 part 1 out of 3
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:52[0m][[01;32mINFO[0m] treating ev 93 part 2 out of 3
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sending 331 particles
+[[01;36m15:18:52[0m][[01;32mINFO[0m] treating ev 93 part 3 out of 3
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0176273,-0.00520212,-0.00622783)
+
+ Pythia::next(): 4000 events have been generated 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation took 0.53s and produced 364 primaries 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sending 364 particles
+[[01;36m15:18:52[0m][[01;32mINFO[0m] treating ev 94 part 1 out of 1
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00872284,0.00580047,0.00907223)
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation took 0s and produced 330 primaries 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sending 330 particles
+[[01;36m15:18:52[0m][[01;32mINFO[0m] treating ev 95 part 1 out of 1
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00487507,0.00153932,0.00727952)
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation took 0s and produced 198 primaries 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sending 198 particles
+[[01;36m15:18:52[0m][[01;32mINFO[0m] treating ev 96 part 1 out of 1
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:52[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0109121,-0.00443328,-0.0103308)
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Event generation took 0.38s and produced 2444 primaries 
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 97 part 1 out of 5
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 97 part 2 out of 5
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 97 part 3 out of 5
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 97 part 4 out of 5
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 444 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 97 part 5 out of 5
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00159213,-0.00305297,-0.0109179)
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1203 primaries 
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 98 part 1 out of 3
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 98 part 2 out of 3
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 203 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 98 part 3 out of 3
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0191927,-0.0121487,0.0124727)
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Event generation took 0s and produced 166 primaries 
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 166 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 99 part 1 out of 1
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00171179,-0.0122223,-0.00826932)
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Event generation took 0.04s and produced 2144 primaries 
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 100 part 1 out of 5
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 100 part 2 out of 5
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 100 part 3 out of 5
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 100 part 4 out of 5
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Sending 144 particles
+[[01;36m15:18:53[0m][[01;32mINFO[0m] treating ev 100 part 5 out of 5
+[[01;36m15:18:53[0m][[01;32mINFO[0m] CONDRUN CHANGING STATE TO STOPPED
+[[01;36m15:18:53[0m][[01;32mINFO[0m] Waiting info thread
+[[01;36m15:18:53[0m][[01;35mSTATE[0m] RUNNING ---> READY
+[[01;36m15:18:53[0m][[01;35mSTATE[0m] READY ---> RESETTING TASK
+[[01;36m15:18:53[0m][[01;35mSTATE[0m] RESETTING TASK ---> DEVICE READY
+[[01;36m15:18:53[0m][[01;35mSTATE[0m] DEVICE READY ---> RESETTING DEVICE
+[[01;36m15:18:53[0m][[01;35mSTATE[0m] RESETTING DEVICE ---> IDLE
+[[01;36m15:18:53[0m][[01;35mSTATE[0m] IDLE ---> EXITING
+[[01;36m15:18:53[0m][[01;35mSTATE[0m] Exiting FairMQ state machine
