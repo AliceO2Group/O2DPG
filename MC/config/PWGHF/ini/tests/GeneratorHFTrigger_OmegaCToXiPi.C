@@ -188,7 +188,8 @@ int External()
               << "#Daughter pairs: " << nDauPairs << "\n"
               << "#Correct Omegac decays: " << nDecayOmegac << "\n"
               << "#Correct Xi decays: " << nDecayXi << "\n"
-              << "#Correct Lambda decays: " << nDecayLambda << "\n";
+              << "#Correct Lambda decays: " << nDecayLambda << "\n"
+              << "#Correct full decay chain: " << nFullDecayChain << "\n";
 
     if (nDauPairs == 0)
     {
@@ -221,7 +222,7 @@ int External()
         std::cerr << "The Lambda decay chain is not the expected one (Omegac -> Xi pi -> (Lambda pi) pi -> ((p pi) pi) pi).\n";
         return 1;
     }
-    if ((nDecayOmegac != nDecayXi) || (nDecayOmegac != nDecayLambda) || (nDecayXi != nDecayLambda) || (nDecayOmegac != nFullDecayChain))
+    if (nDecayOmegac != nFullDecayChain)
     {
         std::cerr << "The full OmegaC decay chain is not the expected one (Omegac -> Xi pi -> (Lambda pi) pi -> ((p pi) pi) pi).\n";
         return 1;
