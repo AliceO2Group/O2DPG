@@ -167,7 +167,7 @@ fi
 # TPC vdrift
 PERIODLETTER=${PERIOD: -1}
 VDRIFTPARAMOPTION=
-if [[ $$ALIEN_JDL_LPMANCHORYEAR == "2022" ]] && [[ $PERIODLETTER < m ]]; then
+if [[ $ALIEN_JDL_LPMANCHORYEAR == "2022" ]] && [[ $PERIODLETTER < m ]]; then
   echo "In setenv_extra: time used so far = $timeUsed s"
   timeStart=`date +%s`
   time root -b -q "$O2DPG_ROOT/DATA/production/common/getTPCvdrift.C+($RUNNUMBER)"
