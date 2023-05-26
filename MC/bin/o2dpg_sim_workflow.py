@@ -27,7 +27,11 @@ import json
 import itertools
 import time
 import requests, re
-import pandas as pd
+pandas_available = True
+try:
+    import pandas as pd
+except (ImportError, ValueError):  # ARM architecture has problems with pandas + numpy
+    pandas_available = False
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
@@ -243,26 +247,28 @@ for e in vertexDict:
 print ("Diamond is " + CONFKEYMV)
 
 # Recover mean vertex settings from external txt file
-if  len(args.meanVertexPerRunTxtFile) > 0:
-  if len(CONFKEYMV) > 0:
-     print("confKey already sets diamond, stop!")
-     sys.exit(1)
-  #df = pd.read_csv(args.vertexPerRunFile, sep=" ", header=None) # for single space
-  df = pd.read_csv(args.meanVertexPerRunTxtFile, delimiter="\t", header=None) # for tabular
-  df.columns = ["runNumber", "vx", "vy", "vz", "sx", "sy", "sz"]
-  #print(df) # print full table
-  MV_SX = float(df.loc[df['runNumber'].eq(args.run), 'sx'])
-  MV_SY = float(df.loc[df['runNumber'].eq(args.run), 'sy'])
-  MV_SZ = float(df.loc[df['runNumber'].eq(args.run), 'sz'])
-  MV_VX = float(df.loc[df['runNumber'].eq(args.run), 'vx'])
-  MV_VY = float(df.loc[df['runNumber'].eq(args.run), 'vy'])
-  MV_VZ = float(df.loc[df['runNumber'].eq(args.run), 'vz'])
-  print("** Using mean vertex parameters from file",args.meanVertexPerRunTxtFile,"for run =",args.run,
-  ": \n \t vx =",MV_VX,", vy =",MV_VY,", vz =",MV_VZ,",\n \t sx =",MV_SX,", sy =",MV_SY,", sz =",MV_SZ)
-  CONFKEYMV='Diamond.width[2]='+str(MV_SZ)+';Diamond.width[1]='+str(MV_SY)+';Diamond.width[0]='+str(MV_SX)+';Diamond.position[2]='+str(MV_VZ)+';Diamond.position[1]='+str(MV_VY)+';Diamond.position[0]='+str(MV_VX)+';'
-  args.confKey=args.confKey + CONFKEYMV
-  args.confKeyBkg=args.confKeyBkg + CONFKEYMV
-  print("** confKey args + MeanVertex:",args.confKey)
+if (pandas_available):
+  if  len(args.meanVertexPerRunTxtFile) > 0:
+    if len(CONFKEYMV) > 0:
+       print("confKey already sets diamond, stop!")
+       sys.exit(1)
+    df = pd.read_csv(args.meanVertexPerRunTxtFile, delimiter="\t", header=None) # for tabular
+    df.columns = ["runNumber", "vx", "vy", "vz", "sx", "sy", "sz"]
+    #print(df) # print full table
+    MV_SX = float(df.loc[df['runNumber'].eq(args.run), 'sx'])
+    MV_SY = float(df.loc[df['runNumber'].eq(args.run), 'sy'])
+    MV_SZ = float(df.loc[df['runNumber'].eq(args.run), 'sz'])
+    MV_VX = float(df.loc[df['runNumber'].eq(args.run), 'vx'])
+    MV_VY = float(df.loc[df['runNumber'].eq(args.run), 'vy'])
+    MV_VZ = float(df.loc[df['runNumber'].eq(args.run), 'vz'])
+    print("** Using mean vertex parameters from file",args.meanVertexPerRunTxtFile,"for run =",args.run,
+    ": \n \t vx =",MV_VX,", vy =",MV_VY,", vz =",MV_VZ,",\n \t sx =",MV_SX,", sy =",MV_SY,", sz =",MV_SZ)
+    CONFKEYMV='Diamond.width[2]='+str(MV_SZ)+';Diamond.width[1]='+str(MV_SY)+';Diamond.width[0]='+str(MV_SX)+';Diamond.position[2]='+str(MV_VZ)+';Diamond.position[1]='+str(MV_VY)+';Diamond.position[0]='+str(MV_VX)+';'
+    args.confKey=args.confKey + CONFKEYMV
+    args.confKeyBkg=args.confKeyBkg + CONFKEYMV
+    print("** confKey args + MeanVertex:",args.confKey)
+else:
+   print ("Pandas not available. Not reading mean vertex from external file")
 
 # ----------- START WORKFLOW CONSTRUCTION -----------------------------
 
