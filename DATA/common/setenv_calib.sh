@@ -202,7 +202,6 @@ if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   # TOF
   if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibTOF:TOF/CALIBDATA/0"; fi
   if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "diagWords:TOF/DIAFREQ/0"; fi
-  if [[ $CALIB_TOF_INTEGRATEDCURR == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_SPORADIC "integrCurrNTOF:TOF/ITOFCN/0"; add_semicolon_separated CALIBDATASPEC_BARREL_SPORADIC "integrCurrQTOF:TOF/ITOFCQ/0"; fi
 
   # TPC
   if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then
@@ -225,6 +224,11 @@ if [[ -z ${CALIBDATASPEC_BARREL_SPORADIC:-} ]]; then
   # TPC
   if [[ $CALIB_TPC_RESPADGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_SPORADIC "trackGainHistoTPC:TPC/TRACKGAINHISTOS/0"; fi
   if [[ $CALIB_TPC_TIMEGAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_SPORADIC "tpcmips:TPC/MIPS/0"; fi
+  # TOF
+  if [[ $CALIB_TOF_INTEGRATEDCURR == 1 ]]; then
+    add_semicolon_separated CALIBDATASPEC_BARREL_SPORADIC "integrCurrNTOF:TOF/ITOFCN/0"
+    add_semicolon_separated CALIBDATASPEC_BARREL_SPORADIC "integrCurrQTOF:TOF/ITOFCQ/0"
+  fi
 fi
 
 # define spec for proxy for TPC IDCs - Side A
