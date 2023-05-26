@@ -197,6 +197,10 @@ if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]] || [[ -z $RUN_BFIELD ]]; then
   export RUN_BFIELD=`cat BField.txt`
 fi
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
+if (( $(echo "$RUN_IR <= 0" | bc -l) )); then
+  echo "Changing run IR to 1 Hz, because $RUN_IR makes no sense"
+  RUN_IR=1
+fi
 echo "Duration of current run ($RUNNUMBER) = $RUN_DURATION"
 
 # For runs shorter than 10 minutes we have only a single slot.
@@ -259,6 +263,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   fi
   if [[ $PERIOD == "LHC22s" ]]; then
     INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-0} # in this way, only TPC/Calib/CorrectionMaps is applied, and we know that for 22s it is the same as TPC/Calib/CorrectionMapsRef; note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
+  elif [[ $PERIOD == @(LHC22c|LHC22d|LHC22e|LHC22f) ]]; then
+    INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-1} # scaling with very small value for low IR
   fi
   # in MC, we set it to a negative value to disable completely the corrections (not yet operational though, please check O2);
   # note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
