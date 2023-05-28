@@ -122,9 +122,8 @@ def dump_workflow(workflow, filename, meta=None):
     # make the final dict to be dumped
     to_dump = {"stages": to_dump}
     filename = make_workflow_filename(filename)
-    if meta:
-        to_dump["meta"] = meta
-    
+    to_dump["meta"] = meta if meta else {}
+
     with open(filename, 'w') as outfile:
         json.dump(to_dump, outfile, indent=2)
 
@@ -137,7 +136,7 @@ def read_workflow(filename):
     with open(filename, "r") as wf_file:
         loaded = json.load(wf_file)
         workflow =loaded["stages"]
-        meta = loaded.get("meta", None)
+        meta = loaded.get("meta", {})
     return workflow, meta
 
 
@@ -150,7 +149,7 @@ def check_workflow_dependencies(workflow, collect_warnings, collect_errors):
         collect_errors: list
             collect all errors that might come up
     """
-    
+
     is_sane = True
     needed = []
     names = []
@@ -158,7 +157,7 @@ def check_workflow_dependencies(workflow, collect_warnings, collect_errors):
     for s in workflow:
         needed.extend(s["needs"])
         names.append(s["name"])
-    
+
     # remove potential duplicates
     needed = list(set(needed))
 
@@ -196,7 +195,7 @@ def check_workflow_unique_names(workflow, collect_warnings, collect_errors):
 def check_workflow(workflow):
     """Conduct sanity checks for this workflow
     """
-    
+
     collect_warnings = []
     collect_errors = []
     is_sane = check_workflow_dependencies(workflow, collect_warnings, collect_errors) and check_workflow_unique_names(workflow, collect_warnings, collect_errors)
