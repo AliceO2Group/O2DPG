@@ -931,6 +931,20 @@ def influx(args):
   return 0
 
 
+def pandas_to_json(args):
+  """
+  Turn a pipeline_metric file to pands and dump to JSON
+
+  Potentially be useful for later inspection
+  """
+  resources_single = extract_resources(args.pipelines)
+  resources = resources_single[0]
+  for m in resources_single[1:]:
+    resources += m
+  resources.df.to_json(args.output, indent=2)
+  return 0
+
+
 def main():
 
   parser = argparse.ArgumentParser(description="Metrics evaluation of O2 simulation workflow")
@@ -939,14 +953,14 @@ def main():
   plot_parser = sub_parsers.add_parser("history", help="Plot (multiple) metrcis from extracted metrics JSON file(s)")
   plot_parser.set_defaults(func=history)
   plot_parser.add_argument("-p", "--pipelines", nargs="*", help="pipeline_metric files from o2_dpg_workflow_runner", required=True)
-  plot_parser.add_argument("--output", help="output_directory", default="resource_history")
+  plot_parser.add_argument("--output", help="output directory", default="resource_history")
   plot_parser.add_argument("--filter-task", dest="filter_task", help="regex to filter only on certain task names in pipeline iterations")
   plot_parser.add_argument("--suffix", help="a suffix put at the end of the output file names")
 
   plot_comparison_parser = sub_parsers.add_parser("compare", help="Compare resources from pipeline_metric file")
   plot_comparison_parser.set_defaults(func=compare)
   plot_comparison_parser.add_argument("-p", "--pipelines", nargs="*", help="pipeline_metric files from o2_dpg_workflow_runner", required=True)
-  plot_comparison_parser.add_argument("--output", help="output_directory", default="resource_comparison")
+  plot_comparison_parser.add_argument("--output", help="output directory", default="resource_comparison")
   plot_comparison_parser.add_argument("--names", nargs="*", help="assign one custom name per pipeline")
   plot_comparison_parser.add_argument("--feature", help="feature to be investigated", required=True, choices=FEATURES)
 
@@ -956,6 +970,12 @@ def main():
   influx_parser.add_argument("--table-base", dest="table_base", help="base name of InfluxDB table name", default="O2DPG_MC")
   influx_parser.add_argument("--output", "-o", help="output file name", default="metrics_influxDB.dat")
   influx_parser.add_argument("--tags", help="key-value pairs, seperated by \";\", for example: alidist=1234567;o2=7654321;tag=someTag")
+
+  pandas_json_parser = sub_parsers.add_parser("pandas-json", help="read pipeline_metric file, convert to pandas and write to JSON")
+  pandas_json_parser.set_defaults(func=pandas_to_json)
+  pandas_json_parser.add_argument("-p", "--pipelines", nargs="*", help="pipeline file to be converted", required=True)
+  pandas_json_parser.add_argument("-o", "--output", help="custom output filename", default="df.json")
+
 
   args = parser.parse_args()
   return args.func(args)
