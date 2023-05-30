@@ -697,6 +697,10 @@ class WorkflowExecutor:
           actionlogger.debug ('Condition check --normal-- for  ' + str(tid) + ':' + str(self.idtotask[tid]) + ' CPU ' + str(okcpu) + ' MEM ' + str(okmem))
           return (okcpu and okmem)
       else:
+          # only backfill one job at a time
+          if self.curcpubooked_backfill > 0:
+              return False
+
           # not backfilling jobs which either take much memory or use lot's of CPU anyway
           # conditions are somewhat arbitrary and can be played with
           if float(self.cpuperid[tid]) > 0.9*float(self.args.cpu_limit):
