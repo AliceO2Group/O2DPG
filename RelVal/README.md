@@ -94,9 +94,9 @@ There are various plots created during the RelVal run. For each compared file th
 * pie charts showing the fraction of test results per test,
 * 1D plots showing the computed value and threshold per test.
 
-## More details of `rel-val` command
+## More details of `rel-val` and `inspect` commands
 
-As mentioned above, the basic usage of the `rel-val` sub-command is straightforward. But there are quite a few more options available and some of them will be explained briefly below. In fact, most of them also apply to the `inspect` sub-command.
+As mentioned above, the basic usage of the `rel-val` and `inspect` sub-commands are straightforward. But there are quite a few more options available and some of them will be explained briefly below.
 
 ### Setting new/custom thresholds from another RelVal run
 Each RelVal run produces a `Summary.json` file in the corresponding output directories. Among other things, it contains the computed values of all tests for each compared histogram pair. Such a `Summary.json` can now be used as a input file for a future RelVal to set all thresholds according to the values. In fact, multiple such files can be passed and for each histogram-test combination, the mean or max of the previously calculated values can be used to set the new thresholds.
@@ -105,6 +105,13 @@ Each RelVal run produces a `Summary.json` file in the corresponding output direc
 python ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i <first-list-of-files> -j <second-list-of-files> --use-values-as-thresholds <list-of-summaries> [--combine-thresholds {mean,max}] [--test-<name>-threshold-margin <value>]
 ```
 In addition, a margin for each test can be provided as shown in the command above. This is a factor by which the threshold is multiplied. So to add a `10%` margin for the chi2 test, simply put `test-chi2-threshold-margin 1.1`.
+
+### Passing flattened files directly
+Usually, files are passed with the `-i` and `-j` arguments to `rel-val` and the first step is the extraction of all objects which will be written as `TH1` to a flat target ROOT file. It is also possible to skip this step if 2 of those flattened ROOT files are already available. In that case, run
+```bash
+python ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i <first-flattened-file> -j <second-flattened-file> --no-extract --output <new-output-directory>
+```
+Only one file is accepted per `-i` and `-j`. Note, that any previous results will not be overwritten if the directory passed to `--output` does not yet exist.
 
 ## RelVal for QC (examples)
 
