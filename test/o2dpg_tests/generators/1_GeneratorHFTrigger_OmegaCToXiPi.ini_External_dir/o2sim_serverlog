@@ -1,0 +1,3199 @@
+o2-sim-primary-server-device-runner
+--control
+static
+--id
+primary-server
+--mq-config
+o2simtopology_850664.json
+--severity
+debug
+-g
+external
+--noGeant
+-n
+100
+-j
+4
+--configFile
+/misc/alidata141/alice_u/zanone/o2new/O2DPG/MC/config/PWGHF/ini/GeneratorHFTrigger_OmegaCToXiPi.ini
+$$$$
+[[01;36m16:27:34[0m][[01;32mINFO[0m] 
+      ______      _    _______  _________ 
+     / ____/___ _(_)_______   |/  /_  __ \    version 1.4.56
+    / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+   / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+  /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2022 GSI
+
+[[01;36m16:27:34[0m][[01;35mSTATE[0m] Starting FairMQ state machine --> IDLE
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] PID: 850669
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Loaded plugin: 'config', version '1.4.56', maintainer 'FairRootGroup <fairroot@gsi.de>', homepage 'https://github.com/FairRootGroup/FairMQ'
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Loaded plugin: 'control', version '1.4.56', maintainer 'FairRootGroup <fairroot@gsi.de>', homepage 'https://github.com/FairRootGroup/FairMQ'
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Running builtin controller: static
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Plugin 'control' is setting up signal handling for SIGINT and SIGTERM
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Configuration: 
+CCDBUrl                       = http://alice-ccdb.cern.ch                                                                           <string>         [default] 
+asservice                     = false                                                                                               <bool>           [default] 
+bMax                          = 0                                                                                                   <float>          [default] 
+bad-alloc-attempt-interval    = 50                                                                                                  <int>            [default] 
+catch-signals                 = 1                                                                                                   <int>            [default] 
+chunkSize                     = 500                                                                                                 <unsigned>       [default] 
+chunkSizeI                    = -1                                                                                                  <int>            [default] 
+color                         = true                                                                                                <bool>           [default] 
+configFile                    = /misc/alidata141/alice_u/zanone/o2new/O2DPG/MC/config/PWGHF/ini/GeneratorHFTrigger_OmegaCToXiPi.ini <string>         [provided]
+configKeyValues               =                                                                                                     <string>         [default] 
+control                       = static                                                                                              <string>         [provided]
+embedIntoFile                 =                                                                                                     <string>         [default] 
+extKinFile                    = Kinematics.root                                                                                     <string>         [default] 
+field                         = -5                                                                                                  <string>         [default] 
+file-severity                 = debug                                                                                               <string>         [default] 
+forwardKine                   = false                                                                                               <bool>           [default] 
+fromCollContext               =                                                                                                     <string>         [default] 
+generator                     = external                                                                                            <string>         [provided]
+id                            = primary-server                                                                                      <string>         [provided]
+init-timeout                  = 120                                                                                                 <int>            [default] 
+io-threads                    = 1                                                                                                   <int>            [default] 
+isMT                          = false                                                                                               <bool>           [default] 
+log-to-file                   =                                                                                                     <string>         [default] 
+logseverity                   = INFO                                                                                                <string>         [default] 
+logverbosity                  = medium                                                                                              <string>         [default] 
+mcEngine                      = TGeant4                                                                                             <string>         [default] 
+modules                       = all                                                                                                 <vector<string>> [default] 
+mq-config                     = o2simtopology_850664.json                                                                           <string>         [provided]
+nEvents                       = 100                                                                                                 <unsigned>       [provided]
+network-interface             = default                                                                                             <string>         [default] 
+noDiscOutput                  = false                                                                                               <bool>           [default] 
+noGeant                       = true                                                                                                <bool>           [provided]
+nworkers                      = 4                                                                                                   <int>            [provided]
+ofi-size-hint                 = 0                                                                                                   <unsigned long>  [default] 
+outPrefix                     = o2sim                                                                                               <string>         [default] 
+rate                          = 0                                                                                                   <float>          [default] 
+readoutDetectors              =                                                                                                     <vector<string>> [default] 
+run                           = -1                                                                                                  <int>            [default] 
+seed                          = 0                                                                                                   <unsigned long>  [default] 
+session                       = default                                                                                             <string>         [default] 
+severity                      = debug                                                                                               <string>         [provided]
+shm-allocation                = rbtree_best_fit                                                                                     <string>         [default] 
+shm-mlock-segment             = false                                                                                               <bool>           [default] 
+shm-mlock-segment-on-creation = false                                                                                               <bool>           [default] 
+shm-monitor                   = true                                                                                                <bool>           [default] 
+shm-no-cleanup                = false                                                                                               <bool>           [default] 
+shm-segment-id                = 0                                                                                                   <unsigned short> [default] 
+shm-segment-size              = 2147483648                                                                                          <unsigned long>  [default] 
+shm-throw-bad-alloc           = true                                                                                                <bool>           [default] 
+shm-zero-segment              = false                                                                                               <bool>           [default] 
+shm-zero-segment-on-creation  = false                                                                                               <bool>           [default] 
+skipModules                   =                                                                                                     <vector<string>> [default] 
+skipReadoutDetectors          =                                                                                                     <vector<string>> [default] 
+startEvent                    = 0                                                                                                   <unsigned>       [default] 
+transport                     = zeromq                                                                                              <string>         [default] 
+trigger                       =                                                                                                     <string>         [default] 
+verbosity                     = medium                                                                                              <string>         [default] 
+vertexMode                    = kDiamondParam                                                                                       <string>         [default] 
+
+[[01;36m16:27:34[0m][[01;35mSTATE[0m] IDLE ---> INITIALIZING DEVICE
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] mq-config: Using default JSON parser
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Parsing JSON from o2simtopology_850664.json ...
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Setting 'zeromq' as default transport for the device
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Adding 'zeromq' transport
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Transport: Using ZeroMQ library, version: 4.3.3
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Initializing transport for channel o2sim-primserv-info[0]: default
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Reusing existing 'zeromq' transport
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Initializing transport for channel primary-notifications[0]: default
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Reusing existing 'zeromq' transport
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Initializing transport for channel primary-get[0]: default
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Reusing existing 'zeromq' transport
+[[01;36m16:27:34[0m][[01;35mSTATE[0m] INITIALIZING DEVICE ---> INITIALIZED
+[[01;36m16:27:34[0m][[01;35mSTATE[0m] INITIALIZED ---> BINDING
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Validating channel 'o2sim-primserv-info[0]'... VALID
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Created socket primary-server.o2sim-primserv-info[0].rep
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Attached channel o2sim-primserv-info[0] to ipc:///tmp/o2sim-primserv-info-850664 (bind) (rep)
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Validating channel 'primary-notifications[0]'... VALID
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Created socket primary-server.primary-notifications[0].pub
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Attached channel primary-notifications[0] to ipc:///tmp/o2sim-primary-notifications-850664 (bind) (pub)
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Validating channel 'primary-get[0]'... VALID
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Created socket primary-server.primary-get[0].rep
+[[01;36m16:27:34[0m][[01;34mDEBUG[0m] Attached channel primary-get[0] to ipc:///tmp/o2sim-primary-get-850664 (bind) (rep)
+[[01;36m16:27:34[0m][[01;35mSTATE[0m] BINDING ---> BOUND
+[[01;36m16:27:34[0m][[01;35mSTATE[0m] BOUND ---> CONNECTING
+[[01;36m16:27:34[0m][[01;35mSTATE[0m] CONNECTING ---> DEVICE READY
+[[01;36m16:27:34[0m][[01;35mSTATE[0m] DEVICE READY ---> INITIALIZING TASK
+[[01;36m16:27:34[0m][[01;32mINFO[0m] INITTASK CHANGING STATE TO INIT
+[[01;36m16:27:34[0m][[01;32mINFO[0m] Init Server device 
+[[01;36m16:27:34[0m][[01;32mINFO[0m] Stack.storeSecondaries : true		[ CODE ]
+Stack.pruneKine : true		[ CODE ]
+Stack.transportPrimary : all		[ CODE ]
+Stack.transportPrimaryFileName : 		[ CODE ]
+Stack.transportPrimaryFuncName : 		[ CODE ]
+Stack.transportPrimaryInvert : false		[ CODE ]
+
+[[01;36m16:27:34[0m][[01;32mINFO[0m] ENGINE SET TO TGeant4
+[[01;36m16:27:34[0m][[01;32mINFO[0m] CHUNK SIZE SET TO 500
+[[01;36m16:27:34[0m][[01;32mINFO[0m] RNG INITIAL SEED 6070684819942935532
+[[01;36m16:27:35[0m][[01;32mINFO[0m] LAUNCHING STATUS THREAD
+[[01;36m16:27:35[0m][[01;32mINFO[0m] INFO REQUEST RECEIVED
+[[01;36m16:27:35[0m][[01;32mINFO[0m] Received config request
+[[01;36m16:27:35[0m][[01;32mINFO[0m] config reply send 
+[[01;36m16:27:35[0m][[01;32mINFO[0m] INFO REQUEST RECEIVED
+[[01;36m16:27:35[0m][[01;32mINFO[0m] Received config request
+[[01;36m16:27:35[0m][[01;32mINFO[0m] config reply send 
+[[01;36m16:27:35[0m][[01;32mINFO[0m] Init CcdApi with UserAgentID: alice-serv14-1685024855-v6nYoY, Host: http://alice-ccdb.cern.ch/
+[[01;36m16:27:35[0m][[01;32mINFO[0m] Init CcdApi with UserAgentID: alice-serv14-1685024855-v6nYoY, Host: http://alice-ccdb.cern.ch
+[[01;36m16:27:35[0m][[01;32mINFO[0m] MagneticField::CreateField: Maximim possible beam energy for requested beam is assumed
+[[01;36m16:27:35[0m][[01;32mINFO[0m] MagneticField::Print: Maps:
+[[01;36m16:27:35[0m][[01;32mINFO[0m] MagneticField::Print: Solenoid (-1*)5 kG, Dipole ON (-1) 
+[[01;36m16:27:35[0m][[01;32mINFO[0m] MagneticField::Print: Machine B fields for p-p  beam (7000 GeV): QGrad: 22.0002 Dipole: 37.8781
+[[01;36m16:27:35[0m][[01;32mINFO[0m] MagneticField::Print: Uses Sol30_Dip6_Hole  of $(O2_ROOT)/share/Common/maps/mfchebKGI_sym.root
+Info in <TGeoGlobalMagField::SetField>: Global magnetic field set to <Maps>
+Info in <TGeoGlobalMagField::Lock>: Global magnetic field <Maps> is now locked
+ *** TDatabasePDG::AddParticle: particle with PDGcode=3124 already defined
+ *** TDatabasePDG::AddAntiParticle: can't redefine parameters
+[[01;36m16:27:35[0m][[01;32mINFO[0m] Setting up external generator with following parameters
+[[01;36m16:27:35[0m][[01;32mINFO[0m] GeneratorExternal.fileName : ${O2DPG_ROOT}/MC/config/PWGHF/external/generator/generator_pythia8_gaptriggered_hf.C		[ RT ]
+GeneratorExternal.funcName : GeneratorPythia8GapTriggeredOmegac0(3,-5,5,-5,5)		[ RT ]
+
+
+ *------------------------------------------------------------------------------------* 
+ |                                                                                    | 
+ |  *------------------------------------------------------------------------------*  | 
+ |  |                                                                              |  | 
+ |  |                                                                              |  | 
+ |  |   PPP   Y   Y  TTTTT  H   H  III    A      Welcome to the Lund Monte Carlo!  |  | 
+ |  |   P  P   Y Y     T    H   H   I    A A     This is PYTHIA version 8.304      |  | 
+ |  |   PPP     Y      T    HHHHH   I   AAAAA    Last date of change:  9 Apr 2021  |  | 
+ |  |   P       Y      T    H   H   I   A   A                                      |  | 
+ |  |   P       Y      T    H   H  III  A   A    Now is 25 May 2023 at 16:27:39    |  | 
+ |  |                                                                              |  | 
+ |  |   Christian Bierlich;  Department of Astronomy and Theoretical Physics,      |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: christian.bierlich@thep.lu.se                                   |  | 
+ |  |   Nishita Desai;  Department of Theoretical Physics, Tata Institute,         |  | 
+ |  |      Homi Bhabha Road, Mumbai 400005, India;                                 |  | 
+ |  |      e-mail: desai@theory.tifr.res.in                                        |  | 
+ |  |   Leif Gellersen;  Department of Astronomy and Theoretical Physics,          |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: leif.gellersen@thep.lu.se                                       |  | 
+ |  |   Ilkka Helenius;  Department of Physics, University of Jyvaskyla,           |  | 
+ |  |      P.O. Box 35, FI-40014 University of Jyvaskyla, Finland;                 |  | 
+ |  |      e-mail: ilkka.m.helenius@jyu.fi                                         |  | 
+ |  |   Philip Ilten;  Department of Physics,                                      |  | 
+ |  |      University of Cincinnati, Cincinnati, OH 45221, USA;                    |  | 
+ |  |      e-mail: philten@cern.ch                                                 |  | 
+ |  |   Leif Lonnblad;  Department of Astronomy and Theoretical Physics,           |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: leif.lonnblad@thep.lu.se                                        |  | 
+ |  |   Stephen Mrenna;  Computing Division, Simulations Group,                    |  | 
+ |  |      Fermi National Accelerator Laboratory, MS 234, Batavia, IL 60510, USA;  |  | 
+ |  |      e-mail: mrenna@fnal.gov                                                 |  | 
+ |  |   Stefan Prestel;  Department of Astronomy and Theoretical Physics,          |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: stefan.prestel@thep.lu.se                                       |  | 
+ |  |   Christian Preuss;  School of Physics and Astronomy,                        |  | 
+ |  |      Monash University, PO Box 27, 3800 Melbourne, Australia;                |  | 
+ |  |      e-mail: christian.preuss@monash.edu                                     |  | 
+ |  |   Torbjorn Sjostrand;  Department of Astronomy and Theoretical Physics,      |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: torbjorn@thep.lu.se                                             |  | 
+ |  |   Peter Skands;  School of Physics and Astronomy,                            |  | 
+ |  |      Monash University, PO Box 27, 3800 Melbourne, Australia;                |  | 
+ |  |      e-mail: peter.skands@monash.edu                                         |  | 
+ |  |   Marius Utheim;  Department of Astronomy and Theoretical Physics,           |  | 
+ |  |      Lund University, Solvegatan 14A, SE-223 62 Lund, Sweden;                |  | 
+ |  |      e-mail: marius.utheim@thep.lu.se                                        |  | 
+ |  |   Rob Verheyen;  Department of Physics and Astronomy,                        |  | 
+ |  |      University College London, Gower St, Bloomsbury, London WC1E 6BT, UK;   |  | 
+ |  |      e-mail: r.verheyen@ucl.ac.uk                                            |  | 
+ |  |                                                                              |  | 
+ |  |   The main program reference is 'An Introduction to PYTHIA 8.2',             |  | 
+ |  |   T. Sjostrand et al, Comput. Phys. Commun. 191 (2015) 159                   |  | 
+ |  |   [arXiv:1410.3012 [hep-ph]]                                                 |  | 
+ |  |                                                                              |  | 
+ |  |   The main physics reference is the 'PYTHIA 6.4 Physics and Manual',         |  | 
+ |  |   T. Sjostrand, S. Mrenna and P. Skands, JHEP05 (2006) 026 [hep-ph/0603175]  |  | 
+ |  |                                                                              |  | 
+ |  |   An archive of program versions and documentation is found on the web:      |  | 
+ |  |   http://www.thep.lu.se/Pythia                                               |  | 
+ |  |                                                                              |  | 
+ |  |   This program is released under the GNU General Public Licence version 2.   |  | 
+ |  |   Please respect the MCnet Guidelines for Event Generator Authors and Users. |  | 
+ |  |                                                                              |  | 
+ |  |   Disclaimer: this program comes without any guarantees.                     |  | 
+ |  |   Beware of errors and use common sense when interpreting results.           |  | 
+ |  |                                                                              |  | 
+ |  |   Copyright (C) 2021 Torbjorn Sjostrand                                      |  | 
+ |  |                                                                              |  | 
+ |  |                                                                              |  | 
+ |  *------------------------------------------------------------------------------*  | 
+ |                                                                                    | 
+ *------------------------------------------------------------------------------------* 
+
+[[01;36m16:27:39[0m][[01;32mINFO[0m] Instance 'Pythia8' generator with following parameters
+[[01;36m16:27:39[0m][[01;32mINFO[0m] GeneratorPythia8.config : ${O2DPG_ROOT}/MC/config/PWGHF/pythia8/generator/pythia8_charmtriggers_omegactoxipi.cfg		[ RT ]
+GeneratorPythia8.hooksFileName : 		[ CODE ]
+GeneratorPythia8.hooksFuncName : 		[ CODE ]
+
+[[01;36m16:27:39[0m][[01;32mINFO[0m] Initialising primary generator
+[[01;36m16:27:39[0m][[01;32mINFO[0m] Reading configuration from file: /misc/alidata141/alice_u/zanone/o2new/O2DPG/MC/config/PWGHF/pythia8/generator/pythia8_charmtriggers_omegactoxipi.cfg
+
+ *-------  PYTHIA Process Initialization  --------------------------*
+ |                                                                  |
+ | We collide p+ with p+ at a CM energy of 1.360e+04 GeV            |
+ |                                                                  |
+ |------------------------------------------------------------------|
+ |                                                    |             |
+ | Subprocess                                    Code |   Estimated |
+ |                                                    |    max (mb) |
+ |                                                    |             |
+ |------------------------------------------------------------------|
+ |                                                    |             |
+ | non-diffractive                                101 |   5.687e+01 |
+ | A B -> X B single diffractive                  103 |   6.432e+00 |
+ | A B -> A X single diffractive                  104 |   6.432e+00 |
+ | A B -> X X double diffractive                  105 |   8.848e+00 |
+ | A B -> A X B central diffractive               106 |   0.000e+00 |
+ |                                                                  |
+ *-------  End PYTHIA Process Initialization -----------------------*
+
+ *-------  PYTHIA Multiparton Interactions Initialization  ---------* 
+ |                                                                  | 
+ |                   sigmaNonDiffractive =    56.87 mb              | 
+ |                                                                  | 
+ |    pT0 =  2.63 gives sigmaInteraction =   320.71 mb: accepted    | 
+ |                                                                  | 
+ *-------  End PYTHIA Multiparton Interactions Initialization  -----* 
+
+ *-------  PYTHIA Multiparton Interactions Initialization  ---------* 
+ |                                                                  | 
+ |                          diffraction XB                          | 
+ |                                                                  | 
+ |   diffractive mass = 1.00e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.56 gives sigmaInteraction =    25.20 mb: accepted    | 
+ |   diffractive mass = 1.62e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.62 gives sigmaInteraction =    24.23 mb: accepted    | 
+ |   diffractive mass = 2.62e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.69 gives sigmaInteraction =    22.13 mb: accepted    | 
+ |   diffractive mass = 4.23e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.76 gives sigmaInteraction =    20.11 mb: accepted    | 
+ |   diffractive mass = 6.85e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.84 gives sigmaInteraction =    18.28 mb: accepted    | 
+ |   diffractive mass = 1.11e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.93 gives sigmaInteraction =    16.98 mb: accepted    | 
+ |   diffractive mass = 1.79e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.04 gives sigmaInteraction =    16.54 mb: accepted    | 
+ |   diffractive mass = 2.90e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.15 gives sigmaInteraction =    17.16 mb: accepted    | 
+ |   diffractive mass = 4.69e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.28 gives sigmaInteraction =    18.61 mb: accepted    | 
+ |   diffractive mass = 7.59e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.41 gives sigmaInteraction =    21.55 mb: accepted    | 
+ |   diffractive mass = 1.23e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.57 gives sigmaInteraction =    25.50 mb: accepted    | 
+ |   diffractive mass = 1.99e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.74 gives sigmaInteraction =    30.29 mb: accepted    | 
+ |   diffractive mass = 3.21e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.93 gives sigmaInteraction =    36.70 mb: accepted    | 
+ |   diffractive mass = 5.20e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.14 gives sigmaInteraction =    44.69 mb: accepted    | 
+ |   diffractive mass = 8.41e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.37 gives sigmaInteraction =    52.88 mb: accepted    | 
+ |   diffractive mass = 1.36e+04 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.63 gives sigmaInteraction =    61.66 mb: accepted    | 
+ |                                                                  | 
+ *-------  End PYTHIA Multiparton Interactions Initialization  -----* 
+ PYTHIA Warning in MultipartonInteractions::init: maximum increased by factor 4.168
+
+ *-------  PYTHIA Multiparton Interactions Initialization  ---------* 
+ |                                                                  | 
+ |                          diffraction AX                          | 
+ |                                                                  | 
+ |   diffractive mass = 1.00e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.56 gives sigmaInteraction =    25.12 mb: accepted    | 
+ |   diffractive mass = 1.62e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.62 gives sigmaInteraction =    24.25 mb: accepted    | 
+ |   diffractive mass = 2.62e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.69 gives sigmaInteraction =    22.33 mb: accepted    | 
+ |   diffractive mass = 4.23e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.76 gives sigmaInteraction =    20.13 mb: accepted    | 
+ |   diffractive mass = 6.85e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.84 gives sigmaInteraction =    18.22 mb: accepted    | 
+ |   diffractive mass = 1.11e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.93 gives sigmaInteraction =    16.96 mb: accepted    | 
+ |   diffractive mass = 1.79e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.04 gives sigmaInteraction =    16.58 mb: accepted    | 
+ |   diffractive mass = 2.90e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.15 gives sigmaInteraction =    16.95 mb: accepted    | 
+ |   diffractive mass = 4.69e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.28 gives sigmaInteraction =    18.76 mb: accepted    | 
+ |   diffractive mass = 7.59e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.41 gives sigmaInteraction =    21.53 mb: accepted    | 
+ |   diffractive mass = 1.23e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.57 gives sigmaInteraction =    25.68 mb: accepted    | 
+ |   diffractive mass = 1.99e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.74 gives sigmaInteraction =    30.75 mb: accepted    | 
+ |   diffractive mass = 3.21e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.93 gives sigmaInteraction =    36.86 mb: accepted    | 
+ |   diffractive mass = 5.20e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.14 gives sigmaInteraction =    43.74 mb: accepted    | 
+ |   diffractive mass = 8.41e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.37 gives sigmaInteraction =    53.11 mb: accepted    | 
+ |   diffractive mass = 1.36e+04 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.63 gives sigmaInteraction =    62.26 mb: accepted    | 
+ |                                                                  | 
+ *-------  End PYTHIA Multiparton Interactions Initialization  -----* 
+
+ *-------  PYTHIA Multiparton Interactions Initialization  ---------* 
+ |                                                                  | 
+ |                          diffraction AXB                         | 
+ |                                                                  | 
+ |   diffractive mass = 1.00e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.56 gives sigmaInteraction =     5.88 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =     8.79 mb: rejected    | 
+ |    pT0 =  0.45 gives sigmaInteraction =    13.22 mb: accepted    | 
+ |   diffractive mass = 1.62e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.62 gives sigmaInteraction =     4.82 mb: rejected    | 
+ |    pT0 =  0.56 gives sigmaInteraction =     6.96 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =    10.23 mb: rejected    | 
+ |    pT0 =  0.45 gives sigmaInteraction =    15.23 mb: accepted    | 
+ |   diffractive mass = 2.62e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.69 gives sigmaInteraction =     3.81 mb: rejected    | 
+ |    pT0 =  0.62 gives sigmaInteraction =     5.49 mb: rejected    | 
+ |    pT0 =  0.56 gives sigmaInteraction =     7.89 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =    11.44 mb: accepted    | 
+ |   diffractive mass = 4.23e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.76 gives sigmaInteraction =     3.13 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     4.35 mb: rejected    | 
+ |    pT0 =  0.62 gives sigmaInteraction =     6.10 mb: rejected    | 
+ |    pT0 =  0.55 gives sigmaInteraction =     8.68 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =    12.26 mb: accepted    | 
+ |   diffractive mass = 6.85e+01 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.84 gives sigmaInteraction =     2.72 mb: rejected    | 
+ |    pT0 =  0.76 gives sigmaInteraction =     3.61 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     4.87 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =     6.74 mb: rejected    | 
+ |    pT0 =  0.55 gives sigmaInteraction =     9.38 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =    13.21 mb: accepted    | 
+ |   diffractive mass = 1.11e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  0.93 gives sigmaInteraction =     2.51 mb: rejected    | 
+ |    pT0 =  0.84 gives sigmaInteraction =     3.25 mb: rejected    | 
+ |    pT0 =  0.76 gives sigmaInteraction =     4.23 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     5.61 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =     7.45 mb: rejected    | 
+ |    pT0 =  0.55 gives sigmaInteraction =    10.13 mb: rejected    | 
+ |    pT0 =  0.50 gives sigmaInteraction =    14.00 mb: accepted    | 
+ |   diffractive mass = 1.79e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.04 gives sigmaInteraction =     2.53 mb: rejected    | 
+ |    pT0 =  0.93 gives sigmaInteraction =     3.16 mb: rejected    | 
+ |    pT0 =  0.84 gives sigmaInteraction =     3.93 mb: rejected    | 
+ |    pT0 =  0.76 gives sigmaInteraction =     4.98 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     6.41 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =     8.33 mb: rejected    | 
+ |    pT0 =  0.55 gives sigmaInteraction =    11.08 mb: accepted    | 
+ |   diffractive mass = 2.90e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.15 gives sigmaInteraction =     2.75 mb: rejected    | 
+ |    pT0 =  1.03 gives sigmaInteraction =     3.33 mb: rejected    | 
+ |    pT0 =  0.93 gives sigmaInteraction =     4.00 mb: rejected    | 
+ |    pT0 =  0.84 gives sigmaInteraction =     4.88 mb: rejected    | 
+ |    pT0 =  0.75 gives sigmaInteraction =     5.99 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     7.47 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =     9.55 mb: rejected    | 
+ |    pT0 =  0.55 gives sigmaInteraction =    12.27 mb: accepted    | 
+ |   diffractive mass = 4.69e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.28 gives sigmaInteraction =     3.10 mb: rejected    | 
+ |    pT0 =  1.15 gives sigmaInteraction =     3.69 mb: rejected    | 
+ |    pT0 =  1.03 gives sigmaInteraction =     4.33 mb: rejected    | 
+ |    pT0 =  0.93 gives sigmaInteraction =     5.12 mb: rejected    | 
+ |    pT0 =  0.84 gives sigmaInteraction =     6.13 mb: rejected    | 
+ |    pT0 =  0.75 gives sigmaInteraction =     7.26 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =     8.93 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =    10.94 mb: rejected    | 
+ |    pT0 =  0.55 gives sigmaInteraction =    13.78 mb: accepted    | 
+ |   diffractive mass = 7.59e+02 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.41 gives sigmaInteraction =     3.54 mb: rejected    | 
+ |    pT0 =  1.27 gives sigmaInteraction =     4.15 mb: rejected    | 
+ |    pT0 =  1.15 gives sigmaInteraction =     4.84 mb: rejected    | 
+ |    pT0 =  1.03 gives sigmaInteraction =     5.66 mb: rejected    | 
+ |    pT0 =  0.93 gives sigmaInteraction =     6.59 mb: rejected    | 
+ |    pT0 =  0.83 gives sigmaInteraction =     7.58 mb: rejected    | 
+ |    pT0 =  0.75 gives sigmaInteraction =     8.98 mb: rejected    | 
+ |    pT0 =  0.68 gives sigmaInteraction =    10.63 mb: rejected    | 
+ |    pT0 =  0.61 gives sigmaInteraction =    12.90 mb: accepted    | 
+ |   diffractive mass = 1.23e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.57 gives sigmaInteraction =     4.12 mb: rejected    | 
+ |    pT0 =  1.41 gives sigmaInteraction =     4.82 mb: rejected    | 
+ |    pT0 =  1.27 gives sigmaInteraction =     5.56 mb: rejected    | 
+ |    pT0 =  1.14 gives sigmaInteraction =     6.41 mb: rejected    | 
+ |    pT0 =  1.03 gives sigmaInteraction =     7.27 mb: rejected    | 
+ |    pT0 =  0.93 gives sigmaInteraction =     8.32 mb: rejected    | 
+ |    pT0 =  0.83 gives sigmaInteraction =     9.51 mb: rejected    | 
+ |    pT0 =  0.75 gives sigmaInteraction =    11.07 mb: accepted    | 
+ |   diffractive mass = 1.99e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.74 gives sigmaInteraction =     4.73 mb: rejected    | 
+ |    pT0 =  1.57 gives sigmaInteraction =     5.50 mb: rejected    | 
+ |    pT0 =  1.41 gives sigmaInteraction =     6.39 mb: rejected    | 
+ |    pT0 =  1.27 gives sigmaInteraction =     7.25 mb: rejected    | 
+ |    pT0 =  1.14 gives sigmaInteraction =     8.25 mb: rejected    | 
+ |    pT0 =  1.03 gives sigmaInteraction =     9.49 mb: rejected    | 
+ |    pT0 =  0.92 gives sigmaInteraction =    10.55 mb: rejected    | 
+ |    pT0 =  0.83 gives sigmaInteraction =    11.98 mb: accepted    | 
+ |   diffractive mass = 3.21e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  1.93 gives sigmaInteraction =     5.35 mb: rejected    | 
+ |    pT0 =  1.74 gives sigmaInteraction =     6.27 mb: rejected    | 
+ |    pT0 =  1.56 gives sigmaInteraction =     7.25 mb: rejected    | 
+ |    pT0 =  1.41 gives sigmaInteraction =     8.32 mb: rejected    | 
+ |    pT0 =  1.27 gives sigmaInteraction =     9.46 mb: rejected    | 
+ |    pT0 =  1.14 gives sigmaInteraction =    10.69 mb: rejected    | 
+ |    pT0 =  1.02 gives sigmaInteraction =    11.87 mb: accepted    | 
+ |   diffractive mass = 5.20e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.14 gives sigmaInteraction =     6.01 mb: rejected    | 
+ |    pT0 =  1.92 gives sigmaInteraction =     7.03 mb: rejected    | 
+ |    pT0 =  1.73 gives sigmaInteraction =     8.08 mb: rejected    | 
+ |    pT0 =  1.56 gives sigmaInteraction =     9.33 mb: rejected    | 
+ |    pT0 =  1.40 gives sigmaInteraction =    10.64 mb: rejected    | 
+ |    pT0 =  1.26 gives sigmaInteraction =    12.21 mb: accepted    | 
+ |   diffractive mass = 8.41e+03 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.37 gives sigmaInteraction =     6.63 mb: rejected    | 
+ |    pT0 =  2.13 gives sigmaInteraction =     7.84 mb: rejected    | 
+ |    pT0 =  1.92 gives sigmaInteraction =     9.08 mb: rejected    | 
+ |    pT0 =  1.73 gives sigmaInteraction =    10.46 mb: rejected    | 
+ |    pT0 =  1.56 gives sigmaInteraction =    11.96 mb: accepted    | 
+ |   diffractive mass = 1.36e+04 GeV and sigmaNorm =    10.00 mb    | 
+ |    pT0 =  2.63 gives sigmaInteraction =     7.23 mb: rejected    | 
+ |    pT0 =  2.37 gives sigmaInteraction =     8.58 mb: rejected    | 
+ |    pT0 =  2.13 gives sigmaInteraction =    10.07 mb: rejected    | 
+ |    pT0 =  1.92 gives sigmaInteraction =    11.49 mb: accepted    | 
+ |                                                                  | 
+ *-------  End PYTHIA Multiparton Interactions Initialization  -----* 
+
+ *-------  PYTHIA Flag + Mode + Parm + Word + FVec + MVec + PVec + WVec Settings (changes only)  ------------------* 
+ |                                                                                                                 | 
+ | Name                                          |                      Now |      Default         Min         Max | 
+ |                                               |                          |                                      | 
+ | Beams:eCM                                     |                13600.000 |    14000.000         0.0             | 
+ | ParticleDecays:limitTau0                      |                       on |          off                         | 
+ | ParticleDecays:tau0Max                        |                100.00000 |     10.00000         0.0             | 
+ | Random:seed                                   |                202247148 |           -1               900000000 | 
+ | Random:setSeed                                |                       on |          off                         | 
+ | SoftQCD:inelastic                             |                       on |          off                         | 
+ |                                                                                                                 | 
+ *-------  End PYTHIA Flag + Mode + Parm + Word + FVec + MVec + PVec + WVec Settings  -----------------------------* 
+
+ --------  PYTHIA Particle Data Table (changed only)  ------------------------------------------------------------------------------
+ 
+      id   name            antiName         spn chg col      m0        mWidth      mMin       mMax       tau0    res dec ext vis wid
+             no onMode   bRatio   meMode     products 
+
+    3122  Lambda0          Lambdabar0         2   0   0    1.11568    0.00000    1.11568    1.11568  7.89000e+01   0   1   0   1   0
+              0     1   0.6391668    0     2212     -211 
+              1     0   0.3580935    0     2112      111 
+              2     0   0.0017505    0     2112       22 
+              3     0   0.0008322   22      -12       11     2212 
+              4     0   0.0001570   22      -14       13     2212 
+
+    3312  Xi-              Xibar+             2  -3   0    1.32171    0.00000    1.32171    1.32171  4.91000e+01   0   1   0   1   0
+              0     1   0.9988730    0     3122     -211 
+              1     0   0.0001270    0     3112       22 
+              2     0   0.0005630   22      -12       11     3122 
+              3     0   0.0003500   22      -14       13     3122 
+              4     0   0.0000870   22      -12       11     3212 
+
+    4332  Omega_c0         Omega_cbar0        2   0   0    2.69520    0.00000    2.69520    2.69520  8.00000e-02   0   1   0   1   0
+              0     0   0.0180000   22      -11       12        3     3303 
+              1     0   0.0180000   22      -13       14        3     3303 
+              2     0   0.9640000   42        2       -1        3     3303 
+              3     1   0.0200000    0     3312      211 
+
+ --------  End PYTHIA Particle Data Table  -----------------------------------------------------------------------------------------
+
+[[01;36m16:28:01[0m][[01;32mINFO[0m] Generator initialization took 25.63s
+[[01;36m16:28:01[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:28:01[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00541115,-0.00801184,0.000276209)
+
+ --------  PYTHIA Info Listing  ---------------------------------------- 
+ 
+ Beam A: id =   2212, pz =  6.800e+03, e =  6.800e+03, m =  9.383e-01.
+ Beam B: id =   2212, pz = -6.800e+03, e =  6.800e+03, m =  9.383e-01.
+
+ In 1: id =   21, x =  6.644e-04, pdf =  1.402e+01 at Q2 =  9.979e+00.
+ In 2: id =   21, x =  5.852e-04, pdf =  1.462e+01 at same Q2.
+
+ Process non-diffractive with code 101 is 2 -> 2.
+ Subprocess g g -> g g with code 111 is 2 -> 2.
+ It has sHat =  7.192e+01,    tHat = -1.197e+01,    uHat = -5.995e+01,
+       pTHat =  3.159e+00,   m3Hat =  0.000e+00,   m4Hat =  0.000e+00,
+    thetaHat =  8.405e-01,  phiHat =  2.844e+00.
+     alphaEM =  7.555e-03,  alphaS =  2.568e-01    at Q2 =  1.690e+01.
+
+ Impact parameter b =  1.157e+00 gives enhancement factor =  3.394e-01.
+ Max pT scale for MPI =  3.159e+00, ISR =  3.159e+00, FSR =  3.159e+00.
+ Number of MPI =     3, ISR =     5, FSRproc =    11, FSRreson =     0.
+
+ --------  End PYTHIA Info Listing  ------------------------------------
+
+ --------  PYTHIA Event Listing  (hard process)  -----------------------------------------------------------------------------------
+ 
+    no         id  name            status     mothers   daughters     colours      p_x        p_y        p_z         e          m 
+     0         90  (system)           -11     0     0     0     0     0     0      0.000      0.000      0.000  13600.000  13600.000
+     1       2212  (p+)               -12     0     0     3     0     0     0      0.000      0.000   6800.000   6800.000      0.938
+     2       2212  (p+)               -12     0     0     4     0     0     0      0.000      0.000  -6800.000   6800.000      0.938
+     3         21  (g)                -21     1     0     5     6   102   101      0.000      0.000      4.518      4.518      0.000
+     4         21  (g)                -21     2     0     5     6   104   103      0.000      0.000     -3.979      3.979      0.000
+     5         21  g                   23     3     4     0     0   104   101      0.927     -3.020      3.104      4.428      0.000
+     6         21  g                   23     3     4     0     0   102   103     -0.927      3.020     -2.565      4.069      0.000
+                                   Charge sum:  0.000           Momentum sum:      0.000      0.000      0.539      8.498      8.480
+
+ --------  End PYTHIA Event Listing  -----------------------------------------------------------------------------------------------
+
+ --------  PYTHIA Event Listing  (complete event)  ---------------------------------------------------------------------------------
+ 
+    no         id  name            status     mothers   daughters     colours      p_x        p_y        p_z         e          m 
+     0         90  (system)           -11     0     0     0     0     0     0      0.000      0.000      0.000  13600.000  13600.000
+     1       2212  (p+)               -12     0     0    76     0     0     0      0.000      0.000   6800.000   6800.000      0.938
+     2       2212  (p+)               -12     0     0    77     0     0     0      0.000      0.000  -6800.000   6800.000      0.938
+     3         21  (g)                -21    11     0     5     6   102   101      0.000      0.000      4.518      4.518      0.000
+     4         21  (g)                -21    12    12     5     6   104   103      0.000      0.000     -3.979      3.979      0.000
+     5         21  (g)                -23     3     4    13    13   104   101      0.927     -3.020      3.104      4.428      0.000
+     6         21  (g)                -23     3     4    14    14   102   103     -0.927      3.020     -2.565      4.069      0.000
+     7         21  (g)                -31    22     0     9    10   106   107      0.000      0.000      0.380      0.380      0.000
+     8          1  (d)                -31    23    23     9    10   105     0      0.000      0.000    -19.639     19.639      0.000
+     9         21  (g)                -33     7     8    24    24   105   107      1.634     -2.026     -6.664      7.154      0.000
+    10          1  (d)                -33     7     8    25    25   106     0     -1.634      2.026    -12.595     12.865      0.330
+    11         21  (g)                -41    16     0    15     3   108   101      0.000      0.000      6.435      6.435      0.000
+    12         21  (g)                -42    17    17     4     4   104   103     -0.000      0.000     -3.979      3.979      0.000
+    13         21  (g)                -44     5     5    18    18   104   101      1.450     -4.140      3.683      5.728      0.000
+    14         21  (g)                -44     6     6    19    19   102   103     -0.823      2.796     -1.320      3.199      0.000
+    15         21  (g)                -43    11     0    20    20   108   102     -0.628      1.344      0.092      1.486      0.000
+    16          2  (u)                -41    27    27    21    11   108     0     -0.000     -0.000   1060.370   1060.370      0.000
+    17         21  (g)                -42    28     0    12    12   104   103     -0.000     -0.000     -3.979      3.979      0.000
+    18         21  (g)                -44    13    13    29    29   104   101      0.506     -5.542      3.390      6.516      0.000
+    19         21  (g)                -44    14    14    30    30   102   103     -1.011      2.516     -0.869      2.848      0.000
+    20         21  (g)                -44    15    15    31    31   108   102     -0.786      1.109      0.274      1.387      0.000
+    21          2  (u)                -43    16     0    32    32   101     0      1.291      1.917   1053.597   1053.599      0.330
+    22         21  (g)                -41    69    69    26     7   109   107      0.000     -0.000    121.069    121.069      0.000
+    23          1  (d)                -42    90    90     8     8   105     0     -0.000      0.000    -19.639     19.639      0.000
+    24         21  (g)                -44     9     9    91    91   105   107      1.855     -3.345    -12.751     13.312      0.000
+    25          1  (d)                -44    10    10    39    39   106     0     -1.513      1.299     -6.445      6.754      0.330
+    26         21  (g)                -43    22     0    37    38   109   106     -0.342      2.045    120.625    120.642      0.000
+    27          2  (u)                -42    76    76    16    16   108     0     -0.000     -0.000   1060.370   1060.370      0.000
+    28         21  (g)                -41    77    77    33    17   110   103      0.000      0.000     -4.299      4.299      0.000
+    29         21  (g)                -44    18    18    34    35   104   101      0.884     -4.858      2.318      5.455      0.000
+    30         21  (g)                -44    19    19    79    79   102   103     -0.562      3.329     -0.336      3.393      0.000
+    31         21  (g)                -44    20    20    80    80   108   102     -0.651      1.353      0.451      1.568      0.000
+    32          2  (u)                -44    21    21    36    36   101     0      1.291      1.917   1050.724   1050.726      0.330
+    33         21  (g)                -43    28     0    63    63   110   104     -0.962     -1.741      2.914      3.528      0.000
+    34         21  (g)                -51    29     0    42    42   104   111      0.771     -4.319      1.507      4.638      0.000
+    35         21  (g)                -51    29     0    40    41   111   101      0.144     -0.495     25.330     25.335      0.000
+    36          2  (u)                -52    32    32    72    72   101     0      1.261      1.873   1026.206   1026.208      0.330
+    37         21  (g)                -51    26     0    67    68   109   112     -0.180      2.892     98.850     98.893      0.000
+    38         21  (g)                -51    26     0    55    56   112   106     -0.167     -0.843     21.754     21.771      0.000
+    39          1  (d)                -52    25    25    57    57   106     0     -1.508      1.295     -6.424      6.733      0.330
+    40         21  (g)                -51    35     0    66    66   113   101      0.785     -1.294     13.617     13.700      0.000
+    41         21  (g)                -51    35     0    54    54   111   113     -0.613      0.644     11.767     11.801      0.000
+    42         21  (g)                -52    34    34    52    53   104   111      0.743     -4.164      1.453      4.472      0.000
+    43         21  (g)                -31    47     0    45    46   114   115      0.000      0.000     48.718     48.718      0.000
+    44         21  (g)                -31    48    48    45    46   116   117      0.000      0.000     -4.057      4.057      0.000
+    45         21  (g)                -33    43    44    49    49   114   117     -0.265      1.083     48.635     48.648      0.000
+    46         21  (g)                -33    43    44    50    50   116   115      0.265     -1.083     -3.974      4.128      0.000
+    47         21  (g)                -41    99    99    51    43   118   115      0.000      0.000     51.217     51.217      0.000
+    48         21  (g)                -42   100   100    44    44   116   117      0.000      0.000     -4.057      4.057      0.000
+    49         21  (g)                -44    45    45   101   101   114   117     -0.040      1.747     49.822     49.852      0.000
+    50         21  (g)                -44    46    46   102   102   116   115      0.265     -1.082     -3.869      4.026      0.000
+    51         21  (g)                -43    47     0   103   103   118   114     -0.226     -0.665      1.206      1.396      0.000
+    52         21  (g)                -51    42     0    61    62   104   119      0.992     -4.151      1.569      4.547      0.000
+    53         21  (g)                -51    42     0    85    85   119   111     -0.314      0.055      1.120      1.164      0.000
+    54         21  (g)                -52    41    41    64    65   111   113     -0.549      0.576     10.532     10.562      0.000
+    55         21  (g)                -51    38     0    60    60   112   120     -0.059     -0.648     21.713     21.722      0.000
+    56         21  (g)                -51    38     0    58    59   120   106     -0.162     -0.148     -0.191      0.291      0.000
+    57          1  (d)                -52    39    39    92    92   106     0     -1.453      1.248     -6.192      6.490      0.330
+    58         21  (g)                -51    56     0    95    95   121   106      0.424     -0.295      0.204      0.556      0.000
+    59         21  (g)                -51    56     0    96    96   120   121     -0.591      0.096      1.304      1.435      0.000
+    60         21  (g)                -52    55    55    94    94   112   120     -0.055     -0.597     20.014     20.023      0.000
+    61         21  (g)                -51    52     0    78    78   122   119      0.956     -2.329      1.407      2.884      0.000
+    62         21  (g)                -51    52     0    86    86   104   122     -0.087     -2.046      0.536      2.117      0.000
+    63         21  (g)                -52    33    33    82    82   110   104     -0.838     -1.517      2.539      3.074      0.000
+    64          3  (s)                -51    54     0    84    84   111     0      0.105     -0.009      7.944      7.960      0.500
+    65         -3  (sbar)             -51    54     0    87    87     0   113     -0.431      0.219      6.449      6.487      0.500
+    66         21  (g)                -52    40    40    70    71   113   101      0.562     -0.927      9.755      9.815      0.000
+    67         21  (g)                -51    37     0    93    93   123   112     -0.345      0.401     11.556     11.568      0.000
+    68         21  (g)                -51    37     0    73    74   109   123      0.165      2.492    102.631    102.661      0.000
+    69         21  (g)                -53    75    75    22    22   109   107      0.000     -0.000    136.406    136.406      0.000
+    70         21  (g)                -51    66     0    83    83   113   124      0.173     -0.100      0.491      0.531      0.000
+    71         21  (g)                -51    66     0    88    88   124   101      0.401     -0.809     19.467     19.488      0.000
+    72          2  (u)                -52    36    36    81    81   101     0      1.248      1.854   1016.002   1016.005      0.330
+    73         21  (g)                -51    68     0    97    97   125   123      0.515      1.135     43.685     43.702      0.000
+    74         21  (g)                -51    68     0    98    98   109   125     -0.350      1.357     77.862     77.875      0.000
+    75         21  (g)                -53    89    89    69    69   109   107      0.000     -0.000    155.322    155.322      0.000
+    76          2  (u)                -61     1     0    27    27   103     0      2.370     -1.919   1060.279   1060.283      0.000
+    77         21  (g)                -61     2     0    28    28   105   103      0.739      2.441     -3.920      4.677      0.000
+    78         21  (g)                -62    61    61   110     0   122   121      1.086     -1.912      0.890      2.373      0.000
+    79         21  (g)                -62    30    30   127   127   102   103     -0.236      4.383      0.729      4.450      0.000
+    80         21  (g)                -62    31    31   128   128   108   102     -0.552      1.667      0.831      1.943      0.000
+    81          2  (u)                -62    72    72   117   117   101     0      3.521      0.015   1016.549   1016.555      0.330
+    82         21  (g)                -62    63    63   109     0   110   104     -0.787     -1.369      2.059      2.595      0.000
+    83         21  (g)                -62    70    70   112     0   113   124      0.178     -0.089      0.479      0.519      0.000
+    84          3  (s)                -62    64    64   167   167   111     0      0.124     -0.019      7.950      7.967      0.500
+    85         21  (g)                -62    53    53   108     0   119   111     -0.307      0.065      1.110      1.154      0.000
+    86         21  (g)                -62    62    62   170   170   104   122      0.051     -1.598      0.015      1.599      0.000
+    87         -3  (sbar)             -62    65    65   112     0     0   113     -0.414      0.217      6.476      6.512      0.500
+    88         21  (g)                -62    71    71   111     0   124   112      0.446     -0.838     19.270     19.293      0.000
+    89         21  (g)                -61     1     0    75    75   106   103      0.108     -0.461    155.286    155.286      0.000
+    90          1  (d)                -61     2     0    23    23   103     0      1.215      1.748    -19.584     19.700      0.000
+    91         21  (g)                -62    24    24   173   173   105   116      2.661     -2.185    -12.811     13.266      0.000
+    92          1  (d)                -62    57    57   151   151   106     0     -1.061      1.812     -6.161      6.518      0.330
+    93         21  (g)                -62    67    67   130   130   123   114     -0.337      0.367     11.561     11.572      0.000
+    94         21  (g)                -62    60    60   111     0   112   101     -0.040     -0.656     19.981     19.991      0.000
+    95         21  (g)                -62    58    58   110     0   121   120      0.435     -0.281      0.204      0.557      0.000
+    96         21  (g)                -62    59    59   108     0   120   119     -0.586      0.098      1.290      1.420      0.000
+    97         21  (g)                -62    73    73   131   131   125   123      0.546      1.005     43.742     43.757      0.000
+    98         21  (g)                -62    74    74   126   126   103   125     -0.295      1.126     77.896     77.905      0.000
+    99         21  (g)                -61     1     0    47    47   117   117     -2.192      2.719     51.245     51.364      0.000
+   100         21  (g)                -61     2     0    48    48   115   115     -2.433     -1.897     -3.464      4.639      0.000
+   101         21  (g)                -62    49    49   129   129   114   108     -2.175      4.365     49.404     49.644      0.000
+   102         21  (g)                -62    50    50   172   172   116   118     -2.107     -2.912     -3.081      4.734      0.000
+   103         21  (g)                -62    51    51   109     0   118   110     -0.344     -0.630      1.458      1.625      0.000
+   104       2101  (ud_0)             -63     1     0   152   152     0   106     -0.286     -0.339   5532.103   5532.103      0.579
+   105          2  (u)                -63     2     0   113   113   127     0      0.031     -0.601  -1012.727   1012.727      0.330
+   106       2101  (ud_0)             -63     2     0   174   174     0   105      0.368      0.114  -5106.052   5106.052      0.579
+   107         -1  (dbar)             -63     2     0   114   114     0   127      0.080     -1.805   -653.166    653.168      0.330
+   108         21  (g)                -73    85    96   168   168   120   111     -0.894      0.163      2.400      2.574      0.200
+   109         21  (g)                -73    82   103   171   171   118   104     -1.131     -1.999      3.517      4.220      0.404
+   110         21  (g)                -73    78    95   169   169   122   120      1.522     -2.193      1.093      2.929      0.509
+   111         21  (g)                -73    88    94   118   118   124   101      0.406     -1.493     39.251     39.285      0.536
+   112         -3  (sbar)             -73    87    83   119   119     0   124     -0.236      0.128      6.956      7.031      0.994
+   113          2  (u)                -71   105   105   115   116   127     0      0.031     -0.601  -1012.727   1012.727      0.330
+   114         -1  (dbar)             -71   107   107   115   116     0   127      0.080     -1.805   -653.166    653.168      0.330
+   115        213  (rho+)             -83   113   114   203   204     0     0      0.258     -1.027   -875.556    875.557      0.982
+   116        223  (omega)            -84   113   114   243   245     0     0     -0.146     -1.380   -790.337    790.339      0.802
+   117          2  (u)                -71    81    81   120   125   101     0      3.521      0.015   1016.549   1016.555      0.330
+   118         21  (g)                -71   111   111   120   125   124   101      0.406     -1.493     39.251     39.285      0.536
+   119         -3  (sbar)             -71   112   112   120   125     0   124     -0.236      0.128      6.956      7.031      0.994
+   120        211  pi+                 83   117   119     0     0     0     0      0.877      0.230    303.866    303.868      0.140
+   121       -213  (rho-)             -83   117   119   205   206     0     0      2.049      0.061    646.007    646.011      0.854
+   122        221  (eta)              -83   117   119   246   247     0     0      0.947     -0.823     50.438     50.457      0.548
+   123        211  pi+                 83   117   119     0     0     0     0     -0.171     -1.095     53.740     53.752      0.140
+   124       -211  pi-                 84   117   119     0     0     0     0     -0.019      0.104      0.531      0.559      0.140
+   125        323  (K*+)              -84   117   119   207   208     0     0      0.008      0.172      8.172      8.225      0.912
+   126         21  (g)                -71    98    98   132   150   103   125     -0.295      1.126     77.896     77.905      0.000
+   127         21  (g)                -71    79    79   132   150   102   103     -0.236      4.383      0.729      4.450      0.000
+   128         21  (g)                -71    80    80   132   150   108   102     -0.552      1.667      0.831      1.943      0.000
+   129         21  (g)                -71   101   101   132   150   114   108     -2.175      4.365     49.404     49.644      0.000
+   130         21  (g)                -71    93    93   132   150   123   114     -0.337      0.367     11.561     11.572      0.000
+   131         21  (g)                -71    97    97   132   150   125   123      0.546      1.005     43.742     43.757      0.000
+   132        111  (pi0)              -83   126   131   248   249     0     0     -0.157      0.097      0.142      0.269      0.135
+   133        211  pi+                 83   126   131     0     0     0     0     -0.373      0.896      7.549      7.612      0.140
+   134        223  (omega)            -83   126   131   250   252     0     0     -0.572      0.928     22.333     22.373      0.783
+   135        311  (K0)               -83   126   131   209   209     0     0     -0.734      1.910     23.357     23.451      0.498
+   136       -311  (Kbar0)            -83   126   131   210   210     0     0     -0.110      0.693     11.336     11.369      0.498
+   137        221  (eta)              -83   126   131   253   254     0     0     -0.044      0.296     18.907     18.917      0.548
+   138        223  (omega)            -83   126   131   255   257     0     0     -0.365      0.031     26.025     26.040      0.781
+   139       -213  (rho-)             -83   126   131   211   212     0     0     -0.229      0.827     16.559     16.603      0.845
+   140       2212  p+                  83   126   131     0     0     0     0      0.521      0.677     20.894     20.933      0.938
+   141      -2212  pbar-               83   126   131     0     0     0     0     -0.008     -0.024      7.646      7.703      0.938
+   142        111  (pi0)              -83   126   131   258   259     0     0     -0.008      0.260      2.504      2.521      0.135
+   143        323  (K*+)              -83   126   131   213   214     0     0     -0.243     -0.047     12.672     12.708      0.927
+   144       -313  (K*bar0)           -83   126   131   215   216     0     0     -0.051      0.411      7.747      7.813      0.924
+   145       -211  pi-                 83   126   131     0     0     0     0     -0.209     -0.246      0.302      0.463      0.140
+   146        321  K+                  84   126   131     0     0     0     0      0.105      2.143      0.934      2.392      0.494
+   147       -313  (K*bar0)           -84   126   131   217   218     0     0     -0.422      1.618      0.860      2.087      0.904
+   148       3112  (Sigma-)           -84   126   131   260   261     0     0     -0.598      1.511      1.645      2.604      1.197
+   149      -3112  (Sigmabar+)        -84   126   131   262   263     0     0      0.033      0.299      1.491      1.936      1.197
+   150       -211  pi-                 84   126   131     0     0     0     0      0.416      0.630      1.261      1.476      0.140
+   151          1  (d)                -71    92    92   153   166   106     0     -1.061      1.812     -6.161      6.518      0.330
+   152       2101  (ud_0)             -71   104   104   153   166     0   106     -0.286     -0.339   5532.103   5532.103      0.579
+   153       3212  (Sigma0)           -83   151   152   264   265     0     0     -0.320      1.612     -3.174      3.768      1.193
+   154      -3222  (Sigmabar-)        -83   151   152   266   267     0     0     -0.647     -0.170     -1.920      2.355      1.189
+   155        111  (pi0)              -83   151   152   268   269     0     0     -0.263      0.173     -0.119      0.363      0.135
+   156        321  K+                  83   151   152     0     0     0     0      0.205      0.363      0.513      0.825      0.494
+   157       -311  (Kbar0)            -83   151   152   219   219     0     0      0.106     -0.502      0.865      1.122      0.498
+   158       -211  pi-                 83   151   152     0     0     0     0     -0.415      0.456      1.284      1.431      0.140
+   159        221  (eta)              -83   151   152   270   272     0     0      0.706     -0.121      1.735      1.955      0.548
+   160        211  pi+                 84   151   152     0     0     0     0     -0.332      0.038      6.251      6.262      0.140
+   161       3122  (Lambda0)          -84   151   152   273   274     0     0     -0.284     -0.307     24.303     24.332      1.116
+   162      -3122  (Lambdabar0)       -84   151   152   275   276     0     0     -0.090      0.617    912.006    912.007      1.116
+   163       -211  pi-                 84   151   152     0     0     0     0      0.227     -0.408    135.083    135.084      0.140
+   164        113  (rho0)             -84   151   152   220   221     0     0      0.214     -0.235    303.607    303.609      0.892
+   165       2224  (Delta++)          -84   151   152   222   223     0     0     -0.179     -0.058   1666.831   1666.831      1.178
+   166       -211  pi-                 84   151   152     0     0     0     0     -0.276      0.016   2478.677   2478.677      0.140
+   167          3  (s)                -71    84    84   175   202   111     0      0.124     -0.019      7.950      7.967      0.500
+   168         21  (g)                -71   108   108   175   202   120   111     -0.894      0.163      2.400      2.574      0.200
+   169         21  (g)                -71   110   110   175   202   122   120      1.522     -2.193      1.093      2.929      0.509
+   170         21  (g)                -71    86    86   175   202   104   122      0.051     -1.598      0.015      1.599      0.000
+   171         21  (g)                -71   109   109   175   202   118   104     -1.131     -1.999      3.517      4.220      0.404
+   172         21  (g)                -71   102   102   175   202   116   118     -2.107     -2.912     -3.081      4.734      0.000
+   173         21  (g)                -71    91    91   175   202   105   116      2.661     -2.185    -12.811     13.266      0.000
+   174       2101  (ud_0)             -71   106   106   175   202     0   105      0.368      0.114  -5106.052   5106.052      0.579
+   175       -323  (K*-)              -83   167   174   224   225     0     0     -0.448     -0.163      7.942      8.041      1.161
+   176        213  (rho+)             -83   167   174   226   227     0     0      0.104     -0.636      2.326      2.534      0.771
+   177        311  (K0)               -83   167   174   228   228     0     0      0.091      0.323      0.520      0.794      0.498
+   178       -321  K-                  83   167   174     0     0     0     0     -0.120     -1.550      0.100      1.635      0.494
+   179        213  (rho+)             -83   167   174   229   230     0     0      1.001     -0.930      1.048      1.867      0.721
+   180       -213  (rho-)             -83   167   174   231   232     0     0     -0.523     -1.468      1.162      2.058      0.676
+   181        221  (eta)              -83   167   174   277   279     0     0     -0.022     -0.508      0.053      0.749      0.548
+   182        211  pi+                 83   167   174     0     0     0     0     -0.460     -0.405     -0.005      0.629      0.140
+   183       -211  pi-                 83   167   174     0     0     0     0     -0.068     -0.201      0.476      0.540      0.140
+   184        211  pi+                 83   167   174     0     0     0     0     -0.135     -0.202     -0.544      0.612      0.140
+   185        111  (pi0)              -83   167   174   280   281     0     0     -1.019     -0.455      0.135      1.132      0.135
+   186       -211  pi-                 83   167   174     0     0     0     0      0.177     -1.257     -0.569      1.398      0.140
+   187        223  (omega)            -83   167   174   282   283     0     0      0.227      0.333     -1.434      1.684      0.786
+   188        221  (eta)              -83   167   174   284   286     0     0      0.140     -0.801     -1.081      1.459      0.548
+   189        211  pi+                 83   167   174     0     0     0     0     -0.423     -0.566     -0.057      0.722      0.140
+   190       -211  pi-                 84   167   174     0     0     0     0      0.354     -0.706     -4.368      4.441      0.140
+   191        213  (rho+)             -84   167   174   233   234     0     0     -0.343     -0.627     -5.615      5.752      1.020
+   192        311  (K0)               -84   167   174   235   235     0     0      1.046      0.065     -4.622      4.765      0.498
+   193       -311  (Kbar0)            -84   167   174   236   236     0     0      0.688     -0.894    -15.082     15.132      0.498
+   194       -211  pi-                 84   167   174     0     0     0     0     -0.325     -0.045    -16.194     16.198      0.140
+   195        221  (eta)              -84   167   174   287   289     0     0     -0.071      0.301     -7.326      7.353      0.548
+   196       3212  (Sigma0)           -84   167   174   290   291     0     0      0.518     -0.276    -96.527     96.536      1.193
+   197      -3212  (Sigmabar0)        -84   167   174   292   293     0     0     -0.042     -0.149   -254.008    254.011      1.193
+   198        211  pi+                 84   167   174     0     0     0     0     -0.157     -0.274    -31.368     31.370      0.140
+   199       -213  (rho-)             -84   167   174   237   238     0     0      0.089      0.317   -381.166    381.166      0.713
+   200        321  K+                  84   167   174     0     0     0     0      0.035      0.591   -399.675    399.675      0.494
+   201       3324  (Xi*0)             -84   167   174   294   295     0     0      0.258     -0.456  -3363.666   3363.666      1.531
+   202        311  (K0)               -84   167   174   239   239     0     0      0.021      0.011   -537.423    537.423      0.498
+   203        211  pi+                 91   115     0     0     0     0     0     -0.057      0.130   -211.728    211.728      0.140
+   204        111  (pi0)              -91   115     0   296   297     0     0      0.315     -1.157   -663.828    663.829      0.135
+   205       -211  pi-                 91   121     0     0     0     0     0      0.573     -0.341    215.491    215.492      0.140
+   206        111  (pi0)              -91   121     0   298   299     0     0      1.476      0.402    430.516    430.519      0.135
+   207        321  K+                  91   125     0     0     0     0     0     -0.154      0.293      3.838      3.884      0.494
+   208        111  (pi0)              -91   125     0   300   301     0     0      0.162     -0.120      4.334      4.341      0.135
+   209        310  (K_S0)             -91   135   135   302   303     0     0     -0.734      1.910     23.357     23.451      0.498
+   210        130  K_L0                91   136   136     0     0     0     0     -0.110      0.693     11.336     11.369      0.498
+   211       -211  pi-                 91   139     0     0     0     0     0     -0.425      0.156      8.123      8.137      0.140
+   212        111  (pi0)              -91   139     0   304   305     0     0      0.196      0.670      8.436      8.466      0.135
+   213        321  K+                  91   143     0     0     0     0     0      0.129     -0.169      7.925      7.943      0.494
+   214        111  (pi0)              -91   143     0   306   307     0     0     -0.372      0.122      4.747      4.765      0.135
+   215       -311  (Kbar0)            -91   144     0   240   240     0     0     -0.043     -0.030      2.800      2.844      0.498
+   216        111  (pi0)              -91   144     0   308   309     0     0     -0.008      0.442      4.948      4.969      0.135
+   217       -311  (Kbar0)            -91   147     0   241   241     0     0     -0.010      0.599      0.485      0.917      0.498
+   218        111  (pi0)              -91   147     0   310   311     0     0     -0.412      1.019      0.375      1.169      0.135
+   219        310  (K_S0)             -91   157   157   312   313     0     0      0.106     -0.502      0.865      1.122      0.498
+   220        211  pi+                 91   164     0     0     0     0     0      0.274     -0.394    280.112    280.112      0.140
+   221       -211  pi-                 91   164     0     0     0     0     0     -0.061      0.159     23.495     23.496      0.140
+   222       2212  p+                  91   165     0     0     0     0     0     -0.104     -0.044   1578.765   1578.766      0.938
+   223        211  pi+                 91   165     0     0     0     0     0     -0.075     -0.014     88.065     88.065      0.140
+   224       -311  (Kbar0)            -91   175     0   242   242     0     0      0.232     -0.045      3.555      3.598      0.498
+   225       -211  pi-                 91   175     0     0     0     0     0     -0.680     -0.118      4.386      4.443      0.140
+   226        211  pi+                 91   176     0     0     0     0     0      0.289     -0.669      1.458      1.636      0.140
+   227        111  (pi0)              -91   176     0   314   315     0     0     -0.184      0.032      0.868      0.898      0.135
+   228        310  (K_S0)             -91   177   177   316   317     0     0      0.091      0.323      0.520      0.794      0.498
+   229        211  pi+                 91   179     0     0     0     0     0      0.735     -0.987      0.885      1.523      0.140
+   230        111  (pi0)              -91   179     0   318   319     0     0      0.266      0.057      0.163      0.345      0.135
+   231       -211  pi-                 91   180     0     0     0     0     0     -0.582     -0.722      0.635      1.133      0.140
+   232        111  (pi0)              -91   180     0   320   321     0     0      0.059     -0.747      0.526      0.925      0.135
+   233        211  pi+                 91   191     0     0     0     0     0      0.308     -0.294     -2.981      3.015      0.140
+   234        111  (pi0)              -91   191     0   322   323     0     0     -0.651     -0.333     -2.634      2.737      0.135
+   235        310  (K_S0)             -91   192   192   324   325     0     0      1.046      0.065     -4.622      4.765      0.498
+   236        130  K_L0                91   193   193     0     0     0     0      0.688     -0.894    -15.082     15.132      0.498
+   237       -211  pi-                 91   199     0     0     0     0     0      0.137      0.259   -363.149    363.149      0.140
+   238        111  (pi0)              -91   199     0   326   327     0     0     -0.048      0.058    -18.017     18.018      0.135
+   239        130  K_L0                91   202   202     0     0     0     0      0.021      0.011   -537.423    537.423      0.498
+   240        130  K_L0                91   215   215     0     0     0     0     -0.043     -0.030      2.800      2.844      0.498
+   241        310  (K_S0)             -91   217   217   328   329     0     0     -0.010      0.599      0.485      0.917      0.498
+   242        310  (K_S0)             -91   224   224   330   331     0     0      0.232     -0.045      3.555      3.598      0.498
+   243        211  pi+                 91   116     0     0     0     0     0     -0.025     -0.659   -344.088    344.088      0.140
+   244       -211  pi-                 91   116     0     0     0     0     0      0.138     -0.121    -71.721     71.721      0.140
+   245        111  (pi0)              -91   116     0   332   333     0     0     -0.259     -0.599   -374.529    374.529      0.135
+   246         22  gamma               91   122     0     0     0     0     0      0.528     -0.133     16.456     16.465      0.000
+   247         22  gamma               91   122     0     0     0     0     0      0.420     -0.689     33.982     33.992      0.000
+   248         22  gamma               91   132     0     0     0     0     0     -0.159      0.054      0.064      0.180      0.000
+   249         22  gamma               91   132     0     0     0     0     0      0.003      0.043      0.078      0.089      0.000
+   250        211  pi+                 91   134     0     0     0     0     0      0.044      0.186      1.878      1.893      0.140
+   251       -211  pi-                 91   134     0     0     0     0     0     -0.335      0.260      8.771      8.782      0.140
+   252        111  (pi0)              -91   134     0   334   335     0     0     -0.281      0.482     11.684     11.698      0.135
+   253         22  gamma               91   137     0     0     0     0     0     -0.029     -0.142      8.322      8.324      0.000
+   254         22  gamma               91   137     0     0     0     0     0     -0.015      0.437     10.585     10.594      0.000
+   255        211  pi+                 91   138     0     0     0     0     0     -0.240     -0.107      9.631      9.636      0.140
+   256       -211  pi-                 91   138     0     0     0     0     0     -0.189      0.257     12.669     12.674      0.140
+   257        111  (pi0)              -91   138     0   336   337     0     0      0.064     -0.120      3.725      3.730      0.135
+   258         22  gamma               91   142     0     0     0     0     0      0.015      0.267      2.366      2.381      0.000
+   259         22  gamma               91   142     0     0     0     0     0     -0.023     -0.006      0.138      0.140      0.000
+   260       2112  n0                  91   148     0     0     0     0     0     -0.342      0.969      1.260      1.877      0.940
+   261       -211  pi-                 91   148     0     0     0     0     0     -0.257      0.542      0.385      0.727      0.140
+   262      -2112  nbar0               91   149     0     0     0     0     0     -0.041      0.399      1.386      1.721      0.940
+   263        211  pi+                 91   149     0     0     0     0     0      0.074     -0.100      0.106      0.215      0.140
+   264       3122  (Lambda0)          -91   153     0   338   339     0     0     -0.337      1.625     -3.168      3.746      1.116
+   265         22  gamma               91   153     0     0     0     0     0      0.017     -0.013     -0.007      0.022      0.000
+   266      -2112  nbar0               91   154     0     0     0     0     0     -0.597     -0.303     -1.738      2.086      0.940
+   267       -211  pi-                 91   154     0     0     0     0     0     -0.049      0.132     -0.182      0.269      0.140
+   268         22  gamma               91   155     0     0     0     0     0     -0.194      0.161     -0.142      0.289      0.000
+   269         22  gamma               91   155     0     0     0     0     0     -0.069      0.012      0.022      0.074      0.000
+   270        211  pi+                 91   159     0     0     0     0     0      0.301      0.010      0.935      0.992      0.140
+   271       -211  pi-                 91   159     0     0     0     0     0      0.292     -0.031      0.405      0.519      0.140
+   272        111  (pi0)              -91   159     0   340   341     0     0      0.113     -0.100      0.394      0.443      0.135
+   273       2212  p+                  91   161     0     0     0     0     0     -0.191     -0.297     18.898     18.924      0.938
+   274       -211  pi-                 91   161     0     0     0     0     0     -0.094     -0.010      5.405      5.408      0.140
+   275      -2212  pbar-               91   162     0     0     0     0     0     -0.016      0.439    710.718    710.719      0.938
+   276        211  pi+                 91   162     0     0     0     0     0     -0.073      0.178    201.288    201.288      0.140
+   277        111  (pi0)              -91   181     0   342   343     0     0     -0.069     -0.213     -0.105      0.282      0.135
+   278        111  (pi0)              -91   181     0   344   345     0     0     -0.007     -0.207      0.165      0.297      0.135
+   279        111  (pi0)              -91   181     0   346   347     0     0      0.054     -0.088     -0.007      0.170      0.135
+   280         22  gamma               91   185     0     0     0     0     0     -0.853     -0.386      0.063      0.938      0.000
+   281         22  gamma               91   185     0     0     0     0     0     -0.165     -0.069      0.072      0.193      0.000
+   282        111  (pi0)              -91   187     0   348   349     0     0     -0.180     -0.093     -0.194      0.311      0.135
+   283         22  gamma               91   187     0     0     0     0     0      0.406      0.426     -1.240      1.372      0.000
+   284        111  (pi0)              -91   188     0   350   351     0     0      0.125     -0.441     -0.544      0.724      0.135
+   285        111  (pi0)              -91   188     0   352   353     0     0      0.062     -0.049     -0.210      0.262      0.135
+   286        111  (pi0)              -91   188     0   354   355     0     0     -0.048     -0.312     -0.327      0.474      0.135
+   287        211  pi+                 91   195     0     0     0     0     0     -0.003      0.026     -1.047      1.057      0.140
+   288       -211  pi-                 91   195     0     0     0     0     0     -0.156      0.137     -3.861      3.869      0.140
+   289        111  (pi0)              -91   195     0   356   357     0     0      0.088      0.138     -2.417      2.426      0.135
+   290       3122  (Lambda0)          -91   196     0   358   359     0     0      0.547     -0.216    -92.619     92.627      1.116
+   291         22  gamma               91   196     0     0     0     0     0     -0.029     -0.060     -3.908      3.909      0.000
+   292      -3122  (Lambdabar0)       -91   197     0   360   361     0     0     -0.022     -0.211   -242.814    242.816      1.116
+   293         22  gamma               91   197     0     0     0     0     0     -0.020      0.062    -11.195     11.195      0.000
+   294       3312  (Xi-)              -91   201     0   362   363     0     0      0.167     -0.526  -2887.058   2887.058      1.322
+   295        211  pi+                 91   201     0     0     0     0     0      0.091      0.069   -476.608    476.608      0.140
+   296         22  gamma               91   204     0     0     0     0     0      0.071     -0.509   -290.808    290.809      0.000
+   297         22  gamma               91   204     0     0     0     0     0      0.244     -0.648   -373.020    373.020      0.000
+   298         22  gamma               91   206     0     0     0     0     0      1.345      0.405    393.132    393.134      0.000
+   299         22  gamma               91   206     0     0     0     0     0      0.131     -0.003     37.384     37.385      0.000
+   300         22  gamma               91   208     0     0     0     0     0      0.047     -0.108      1.593      1.597      0.000
+   301         22  gamma               91   208     0     0     0     0     0      0.115     -0.012      2.741      2.744      0.000
+   302        211  pi+                 91   209     0     0     0     0     0     -0.189      0.485      4.385      4.418      0.140
+   303       -211  pi-                 91   209     0     0     0     0     0     -0.545      1.426     18.972     19.034      0.140
+   304         22  gamma               91   212     0     0     0     0     0      0.080      0.274      4.266      4.276      0.000
+   305         22  gamma               91   212     0     0     0     0     0      0.116      0.396      4.170      4.190      0.000
+   306         22  gamma               91   214     0     0     0     0     0     -0.226      0.091      2.150      2.164      0.000
+   307         22  gamma               91   214     0     0     0     0     0     -0.146      0.031      2.597      2.601      0.000
+   308         22  gamma               91   216     0     0     0     0     0      0.024      0.106      1.855      1.858      0.000
+   309         22  gamma               91   216     0     0     0     0     0     -0.033      0.336      3.093      3.112      0.000
+   310         22  gamma               91   218     0     0     0     0     0     -0.149      0.536      0.216      0.597      0.000
+   311         22  gamma               91   218     0     0     0     0     0     -0.263      0.483      0.160      0.573      0.000
+   312        111  (pi0)              -91   219     0   364   365     0     0      0.115     -0.118      0.062      0.221      0.135
+   313        111  (pi0)              -91   219     0   366   367     0     0     -0.009     -0.384      0.803      0.900      0.135
+   314         22  gamma               91   227     0     0     0     0     0     -0.005      0.015      0.006      0.017      0.000
+   315         22  gamma               91   227     0     0     0     0     0     -0.179      0.017      0.863      0.881      0.000
+   316        111  (pi0)              -91   228     0   368   369     0     0      0.113      0.017      0.001      0.177      0.135
+   317        111  (pi0)              -91   228     0   370   371     0     0     -0.022      0.306      0.518      0.617      0.135
+   318         22  gamma               91   230     0     0     0     0     0      0.267      0.081      0.143      0.313      0.000
+   319         22  gamma               91   230     0     0     0     0     0     -0.000     -0.024      0.019      0.031      0.000
+   320         22  gamma               91   232     0     0     0     0     0      0.087     -0.641      0.411      0.767      0.000
+   321         22  gamma               91   232     0     0     0     0     0     -0.028     -0.105      0.115      0.159      0.000
+   322         22  gamma               91   234     0     0     0     0     0     -0.468     -0.174     -1.861      1.927      0.000
+   323         22  gamma               91   234     0     0     0     0     0     -0.183     -0.159     -0.773      0.810      0.000
+   324        111  (pi0)              -91   235     0   372   373     0     0      0.794      0.206     -3.604      3.699      0.135
+   325        111  (pi0)              -91   235     0   374   375     0     0      0.252     -0.141     -1.018      1.066      0.135
+   326         22  gamma               91   238     0     0     0     0     0      0.016     -0.028     -1.651      1.651      0.000
+   327         22  gamma               91   238     0     0     0     0     0     -0.064      0.086    -16.366     16.366      0.000
+   328        211  pi+                 91   241     0     0     0     0     0      0.120      0.244      0.403      0.506      0.140
+   329       -211  pi-                 91   241     0     0     0     0     0     -0.130      0.355      0.081      0.411      0.140
+   330        211  pi+                 91   242     0     0     0     0     0      0.016     -0.204      1.482      1.503      0.140
+   331       -211  pi-                 91   242     0     0     0     0     0      0.217      0.158      2.073      2.095      0.140
+   332         22  gamma               91   245     0     0     0     0     0     -0.196     -0.475   -321.612    321.613      0.000
+   333         22  gamma               91   245     0     0     0     0     0     -0.063     -0.123    -52.916     52.916      0.000
+   334         22  gamma               91   252     0     0     0     0     0     -0.079      0.045      1.576      1.578      0.000
+   335         22  gamma               91   252     0     0     0     0     0     -0.201      0.437     10.108     10.120      0.000
+   336         22  gamma               91   257     0     0     0     0     0     -0.010     -0.018      0.078      0.081      0.000
+   337         22  gamma               91   257     0     0     0     0     0      0.074     -0.102      3.647      3.649      0.000
+   338       2212  p+                  91   264     0     0     0     0     0     -0.380      1.473     -2.878      3.387      0.938
+   339       -211  pi-                 91   264     0     0     0     0     0      0.043      0.152     -0.290      0.359      0.140
+   340         22  gamma               91   272     0     0     0     0     0      0.110     -0.010      0.189      0.219      0.000
+   341         22  gamma               91   272     0     0     0     0     0      0.003     -0.090      0.205      0.224      0.000
+   342         22  gamma               91   277     0     0     0     0     0     -0.037     -0.223     -0.105      0.249      0.000
+   343         22  gamma               91   277     0     0     0     0     0     -0.031      0.010     -0.000      0.033      0.000
+   344         22  gamma               91   278     0     0     0     0     0     -0.063     -0.128      0.062      0.156      0.000
+   345         22  gamma               91   278     0     0     0     0     0      0.056     -0.079      0.103      0.142      0.000
+   346         22  gamma               91   279     0     0     0     0     0     -0.002     -0.007      0.054      0.054      0.000
+   347         22  gamma               91   279     0     0     0     0     0      0.056     -0.082     -0.060      0.116      0.000
+   348         22  gamma               91   282     0     0     0     0     0     -0.121      0.012     -0.080      0.145      0.000
+   349         22  gamma               91   282     0     0     0     0     0     -0.059     -0.105     -0.114      0.166      0.000
+   350         22  gamma               91   284     0     0     0     0     0      0.068     -0.179     -0.132      0.233      0.000
+   351         22  gamma               91   284     0     0     0     0     0      0.057     -0.262     -0.411      0.491      0.000
+   352         22  gamma               91   285     0     0     0     0     0     -0.027     -0.002      0.001      0.028      0.000
+   353         22  gamma               91   285     0     0     0     0     0      0.090     -0.047     -0.211      0.234      0.000
+   354         22  gamma               91   286     0     0     0     0     0      0.003     -0.278     -0.295      0.405      0.000
+   355         22  gamma               91   286     0     0     0     0     0     -0.050     -0.033     -0.032      0.069      0.000
+   356         22  gamma               91   289     0     0     0     0     0      0.044      0.091     -0.622      0.630      0.000
+   357         22  gamma               91   289     0     0     0     0     0      0.044      0.047     -1.796      1.797      0.000
+   358       2212  p+                  91   290     0     0     0     0     0      0.361     -0.153    -71.987     71.995      0.938
+   359       -211  pi-                 91   290     0     0     0     0     0      0.185     -0.064    -20.631     20.633      0.140
+   360      -2212  pbar-               91   292     0     0     0     0     0     -0.059     -0.128   -220.101    220.103      0.938
+   361        211  pi+                 91   292     0     0     0     0     0      0.037     -0.083    -22.713     22.714      0.140
+   362       3122  (Lambda0)          -91   294     0   376   377     0     0      0.260     -0.489  -2378.423   2378.423      1.116
+   363       -211  pi-                 91   294     0     0     0     0     0     -0.093     -0.037   -508.635    508.635      0.140
+   364         22  gamma               91   312     0     0     0     0     0      0.137     -0.090      0.079      0.182      0.000
+   365         22  gamma               91   312     0     0     0     0     0     -0.023     -0.028     -0.017      0.039      0.000
+   366         22  gamma               91   313     0     0     0     0     0      0.008     -0.365      0.793      0.873      0.000
+   367         22  gamma               91   313     0     0     0     0     0     -0.017     -0.019      0.010      0.027      0.000
+   368         22  gamma               91   316     0     0     0     0     0      0.117      0.058     -0.018      0.132      0.000
+   369         22  gamma               91   316     0     0     0     0     0     -0.004     -0.040      0.020      0.045      0.000
+   370         22  gamma               91   317     0     0     0     0     0     -0.006      0.055      0.221      0.228      0.000
+   371         22  gamma               91   317     0     0     0     0     0     -0.016      0.251      0.297      0.389      0.000
+   372         22  gamma               91   324     0     0     0     0     0      0.044      0.024     -0.395      0.399      0.000
+   373         22  gamma               91   324     0     0     0     0     0      0.750      0.182     -3.209      3.300      0.000
+   374         22  gamma               91   325     0     0     0     0     0      0.217     -0.060     -0.633      0.671      0.000
+   375         22  gamma               91   325     0     0     0     0     0      0.036     -0.081     -0.385      0.395      0.000
+   376       2212  p+                  91   362     0     0     0     0     0      0.163     -0.317  -1924.814   1924.814      0.938
+   377       -211  pi-                 91   362     0     0     0     0     0      0.097     -0.172   -453.608    453.608      0.140
+                                   Charge sum:  2.000           Momentum sum:      0.000      0.000      0.000  13600.000  13600.000
+
+ --------  End PYTHIA Event Listing  -----------------------------------------------------------------------------------------------
+ PYTHIA Warning in SimpleSpaceShower::pT2nextQCD: weight above unity  
+ PYTHIA Warning in Pythia::check: not quite matched particle energy/momentum/mass  
+ PYTHIA Error in BeamRemnants::setKinematics: kinematics construction failed  
+ PYTHIA Error in StringFragmentation::fragment: stuck in joining  
+ PYTHIA Error in Pythia::next: hadronLevel failed; try again  
+
+ Pythia::next(): 1000 events have been generated 
+ PYTHIA Warning in StringFragmentation::fragmentToJunction: bad convergence junction rest frame  
+
+ Pythia::next(): 2000 events have been generated 
+
+ Pythia::next(): 3000 events have been generated 
+
+ Pythia::next(): 4000 events have been generated 
+
+ Pythia::next(): 5000 events have been generated 
+
+ Pythia::next(): 6000 events have been generated 
+ PYTHIA Warning in Pythia::check: energy-momentum not quite conserved  
+
+ Pythia::next(): 7000 events have been generated 
+
+ Pythia::next(): 8000 events have been generated 
+
+ Pythia::next(): 9000 events have been generated 
+
+ Pythia::next(): 10000 events have been generated 
+
+ Pythia::next(): 11000 events have been generated 
+
+ Pythia::next(): 12000 events have been generated 
+
+ Pythia::next(): 13000 events have been generated 
+
+ Pythia::next(): 14000 events have been generated 
+
+ Pythia::next(): 15000 events have been generated 
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Event generation took 31.63s and produced 1664 primaries 
+[[01;36m16:28:32[0m][[01;32mINFO[0m] ASSIGNED PIPE HANDLE 11
+[[01;36m16:28:32[0m][[01;32mINFO[0m] INITTASK CHANGING STATE TO SERVING
+[[01;36m16:28:32[0m][[01;35mSTATE[0m] INITIALIZING TASK ---> READY
+[[01;36m16:28:32[0m][[01;35mSTATE[0m] READY ---> RUNNING
+[[01;36m16:28:32[0m][[01;32mINFO[0m] fair::mq::Device running...
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:28:32[0m][[01;32mINFO[0m] treating ev 1 part 1 out of 4
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:28:32[0m][[01;32mINFO[0m] treating ev 1 part 2 out of 4
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:28:32[0m][[01;32mINFO[0m] treating ev 1 part 3 out of 4
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Sending 164 particles
+[[01;36m16:28:32[0m][[01;32mINFO[0m] treating ev 1 part 4 out of 4
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00587853,0.00972826,-0.00363843)
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 489 primaries 
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Sending 489 particles
+[[01;36m16:28:32[0m][[01;32mINFO[0m] treating ev 2 part 1 out of 1
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0141251,-0.0132381,0.0113464)
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Event generation took 0s and produced 237 primaries 
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Sending 237 particles
+[[01;36m16:28:32[0m][[01;32mINFO[0m] treating ev 3 part 1 out of 1
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:28:32[0m][[01;32mINFO[0m] Sampled interacting vertex (0.015836,-0.00149935,0.0150018)
+
+ Pythia::next(): 16000 events have been generated 
+
+ Pythia::next(): 17000 events have been generated 
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Event generation took 4.07s and produced 1423 primaries 
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:28:36[0m][[01;32mINFO[0m] treating ev 4 part 1 out of 3
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:28:36[0m][[01;32mINFO[0m] treating ev 4 part 2 out of 3
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Sending 423 particles
+[[01;36m16:28:36[0m][[01;32mINFO[0m] treating ev 4 part 3 out of 3
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00408198,-0.0102266,0.000946258)
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Event generation took 0s and produced 495 primaries 
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Sending 495 particles
+[[01;36m16:28:36[0m][[01;32mINFO[0m] treating ev 5 part 1 out of 1
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00197213,0.0128146,-0.00153098)
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Event generation took 0s and produced 329 primaries 
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Sending 329 particles
+[[01;36m16:28:36[0m][[01;32mINFO[0m] treating ev 6 part 1 out of 1
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:28:36[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00207964,-0.00683963,-0.0100696)
+
+ Pythia::next(): 18000 events have been generated 
+
+ Pythia::next(): 19000 events have been generated 
+
+ Pythia::next(): 20000 events have been generated 
+
+ Pythia::next(): 21000 events have been generated 
+ PYTHIA Warning in SimpleSpaceShower::pT2nextQCD: small daughter PDF  
+
+ Pythia::next(): 22000 events have been generated 
+
+ Pythia::next(): 23000 events have been generated 
+ PYTHIA Error in StringFragmentation::fragmentToJunction: caught in junction flavour loop  
+
+ Pythia::next(): 24000 events have been generated 
+
+ Pythia::next(): 25000 events have been generated 
+
+ Pythia::next(): 26000 events have been generated 
+
+ Pythia::next(): 27000 events have been generated 
+
+ Pythia::next(): 28000 events have been generated 
+
+ Pythia::next(): 29000 events have been generated 
+
+ Pythia::next(): 30000 events have been generated 
+
+ Pythia::next(): 31000 events have been generated 
+
+ Pythia::next(): 32000 events have been generated 
+ PYTHIA Error in SimpleSpaceShower::pT2nearThreshold: stuck in loop  
+
+ Pythia::next(): 33000 events have been generated 
+
+ Pythia::next(): 34000 events have been generated 
+
+ Pythia::next(): 35000 events have been generated 
+
+ Pythia::next(): 36000 events have been generated 
+
+ Pythia::next(): 37000 events have been generated 
+
+ Pythia::next(): 38000 events have been generated 
+
+ Pythia::next(): 39000 events have been generated 
+
+ Pythia::next(): 40000 events have been generated 
+
+ Pythia::next(): 41000 events have been generated 
+
+ Pythia::next(): 42000 events have been generated 
+
+ Pythia::next(): 43000 events have been generated 
+
+ Pythia::next(): 44000 events have been generated 
+
+ Pythia::next(): 45000 events have been generated 
+
+ Pythia::next(): 46000 events have been generated 
+
+ Pythia::next(): 47000 events have been generated 
+
+ Pythia::next(): 48000 events have been generated 
+ PYTHIA Warning in MultipartonInteractions::pTnext: weight above unity  
+
+ Pythia::next(): 49000 events have been generated 
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Event generation took 73.16s and produced 1158 primaries 
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:29:49[0m][[01;32mINFO[0m] treating ev 7 part 1 out of 3
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:29:49[0m][[01;32mINFO[0m] treating ev 7 part 2 out of 3
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Sending 158 particles
+[[01;36m16:29:49[0m][[01;32mINFO[0m] treating ev 7 part 3 out of 3
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0168408,0.00891155,0.0124897)
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 802 primaries 
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:29:49[0m][[01;32mINFO[0m] treating ev 8 part 1 out of 2
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Sending 302 particles
+[[01;36m16:29:49[0m][[01;32mINFO[0m] treating ev 8 part 2 out of 2
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00466893,0.00959993,-0.00529899)
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 167 primaries 
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Sending 167 particles
+[[01;36m16:29:49[0m][[01;32mINFO[0m] treating ev 9 part 1 out of 1
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:29:49[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00246191,0.00488626,0.0038513)
+
+ Pythia::next(): 50000 events have been generated 
+
+ Pythia::next(): 51000 events have been generated 
+
+ Pythia::next(): 52000 events have been generated 
+
+ Pythia::next(): 53000 events have been generated 
+
+ Pythia::next(): 54000 events have been generated 
+
+ Pythia::next(): 55000 events have been generated 
+
+ Pythia::next(): 56000 events have been generated 
+
+ Pythia::next(): 57000 events have been generated 
+
+ Pythia::next(): 58000 events have been generated 
+
+ Pythia::next(): 59000 events have been generated 
+
+ Pythia::next(): 60000 events have been generated 
+
+ Pythia::next(): 61000 events have been generated 
+
+ Pythia::next(): 62000 events have been generated 
+
+ Pythia::next(): 63000 events have been generated 
+
+ Pythia::next(): 64000 events have been generated 
+
+ Pythia::next(): 65000 events have been generated 
+
+ Pythia::next(): 66000 events have been generated 
+
+ Pythia::next(): 67000 events have been generated 
+
+ Pythia::next(): 68000 events have been generated 
+
+ Pythia::next(): 69000 events have been generated 
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Event generation took 80.61s and produced 577 primaries 
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:31:10[0m][[01;32mINFO[0m] treating ev 10 part 1 out of 2
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Sending 77 particles
+[[01;36m16:31:10[0m][[01;32mINFO[0m] treating ev 10 part 2 out of 2
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00419123,0.00680434,0.0210963)
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Event generation took 0s and produced 300 primaries 
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Sending 300 particles
+[[01;36m16:31:10[0m][[01;32mINFO[0m] treating ev 11 part 1 out of 1
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0101294,0.00870118,-0.0154476)
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Event generation took 0.02s and produced 1669 primaries 
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:31:10[0m][[01;32mINFO[0m] treating ev 12 part 1 out of 4
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:31:10[0m][[01;32mINFO[0m] treating ev 12 part 2 out of 4
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:31:10[0m][[01;32mINFO[0m] treating ev 12 part 3 out of 4
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Sending 169 particles
+[[01;36m16:31:10[0m][[01;32mINFO[0m] treating ev 12 part 4 out of 4
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:31:10[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00849166,0.00151101,-0.0035619)
+
+ Pythia::next(): 70000 events have been generated 
+
+ Pythia::next(): 71000 events have been generated 
+
+ Pythia::next(): 72000 events have been generated 
+
+ Pythia::next(): 73000 events have been generated 
+
+ Pythia::next(): 74000 events have been generated 
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Event generation took 18.38s and produced 1653 primaries 
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:31:29[0m][[01;32mINFO[0m] treating ev 13 part 1 out of 4
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:31:29[0m][[01;32mINFO[0m] treating ev 13 part 2 out of 4
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:31:29[0m][[01;32mINFO[0m] treating ev 13 part 3 out of 4
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Sending 153 particles
+[[01;36m16:31:29[0m][[01;32mINFO[0m] treating ev 13 part 4 out of 4
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0114132,0.0128057,-0.00728728)
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 123 primaries 
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Sending 123 particles
+[[01;36m16:31:29[0m][[01;32mINFO[0m] treating ev 14 part 1 out of 1
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.014549,0.0151156,0.00557158)
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Event generation took 0s and produced 263 primaries 
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Sending 263 particles
+[[01;36m16:31:29[0m][[01;32mINFO[0m] treating ev 15 part 1 out of 1
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:31:29[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00117941,-0.0140483,0.0133184)
+
+ Pythia::next(): 75000 events have been generated 
+
+ Pythia::next(): 76000 events have been generated 
+
+ Pythia::next(): 77000 events have been generated 
+
+ Pythia::next(): 78000 events have been generated 
+
+ Pythia::next(): 79000 events have been generated 
+
+ Pythia::next(): 80000 events have been generated 
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Event generation took 25.34s and produced 365 primaries 
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Sending 365 particles
+[[01;36m16:31:54[0m][[01;32mINFO[0m] treating ev 16 part 1 out of 1
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00386272,0.00474713,-0.0110128)
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Event generation took 0s and produced 142 primaries 
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Sending 142 particles
+[[01;36m16:31:54[0m][[01;32mINFO[0m] treating ev 17 part 1 out of 1
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.020457,-0.00264641,0.000242785)
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Event generation took 0s and produced 480 primaries 
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Sending 480 particles
+[[01;36m16:31:54[0m][[01;32mINFO[0m] treating ev 18 part 1 out of 1
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:31:54[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00935553,-0.00440679,-0.000707612)
+
+ Pythia::next(): 81000 events have been generated 
+
+ Pythia::next(): 82000 events have been generated 
+
+ Pythia::next(): 83000 events have been generated 
+
+ Pythia::next(): 84000 events have been generated 
+
+ Pythia::next(): 85000 events have been generated 
+
+ Pythia::next(): 86000 events have been generated 
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Event generation took 23.48s and produced 434 primaries 
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Sending 434 particles
+[[01;36m16:32:18[0m][[01;32mINFO[0m] treating ev 19 part 1 out of 1
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00837963,-0.00724817,0.00486158)
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 796 primaries 
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:32:18[0m][[01;32mINFO[0m] treating ev 20 part 1 out of 2
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Sending 296 particles
+[[01;36m16:32:18[0m][[01;32mINFO[0m] treating ev 20 part 2 out of 2
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Sampled interacting vertex (0.000920483,-0.00149389,0.0017212)
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 305 primaries 
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Sending 305 particles
+[[01;36m16:32:18[0m][[01;32mINFO[0m] treating ev 21 part 1 out of 1
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:32:18[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0219677,-0.00675196,0.00152431)
+
+ Pythia::next(): 87000 events have been generated 
+
+ Pythia::next(): 88000 events have been generated 
+
+ Pythia::next(): 89000 events have been generated 
+
+ Pythia::next(): 90000 events have been generated 
+
+ Pythia::next(): 91000 events have been generated 
+
+ Pythia::next(): 92000 events have been generated 
+
+ Pythia::next(): 93000 events have been generated 
+
+ Pythia::next(): 94000 events have been generated 
+
+ Pythia::next(): 95000 events have been generated 
+
+ Pythia::next(): 96000 events have been generated 
+
+ Pythia::next(): 97000 events have been generated 
+
+ Pythia::next(): 98000 events have been generated 
+
+ Pythia::next(): 99000 events have been generated 
+
+ Pythia::next(): 100000 events have been generated 
+
+ Pythia::next(): 101000 events have been generated 
+
+ Pythia::next(): 102000 events have been generated 
+
+ Pythia::next(): 103000 events have been generated 
+
+ Pythia::next(): 104000 events have been generated 
+
+ Pythia::next(): 105000 events have been generated 
+
+ Pythia::next(): 106000 events have been generated 
+
+ Pythia::next(): 107000 events have been generated 
+
+ Pythia::next(): 108000 events have been generated 
+
+ Pythia::next(): 109000 events have been generated 
+
+ Pythia::next(): 110000 events have been generated 
+
+ Pythia::next(): 111000 events have been generated 
+
+ Pythia::next(): 112000 events have been generated 
+
+ Pythia::next(): 113000 events have been generated 
+
+ Pythia::next(): 114000 events have been generated 
+
+ Pythia::next(): 115000 events have been generated 
+
+ Pythia::next(): 116000 events have been generated 
+
+ Pythia::next(): 117000 events have been generated 
+
+ Pythia::next(): 118000 events have been generated 
+
+ Pythia::next(): 119000 events have been generated 
+
+ Pythia::next(): 120000 events have been generated 
+
+ Pythia::next(): 121000 events have been generated 
+
+ Pythia::next(): 122000 events have been generated 
+
+ Pythia::next(): 123000 events have been generated 
+
+ Pythia::next(): 124000 events have been generated 
+
+ Pythia::next(): 125000 events have been generated 
+
+ Pythia::next(): 126000 events have been generated 
+
+ Pythia::next(): 127000 events have been generated 
+
+ Pythia::next(): 128000 events have been generated 
+
+ Pythia::next(): 129000 events have been generated 
+
+ Pythia::next(): 130000 events have been generated 
+
+ Pythia::next(): 131000 events have been generated 
+
+ Pythia::next(): 132000 events have been generated 
+
+ Pythia::next(): 133000 events have been generated 
+ PYTHIA Warning in TauDecays::decay: unknown correlated tau production, assuming from unpolarized photon  
+
+ Pythia::next(): 134000 events have been generated 
+
+ Pythia::next(): 135000 events have been generated 
+
+ Pythia::next(): 136000 events have been generated 
+
+ Pythia::next(): 137000 events have been generated 
+
+ Pythia::next(): 138000 events have been generated 
+
+ Pythia::next(): 139000 events have been generated 
+
+ Pythia::next(): 140000 events have been generated 
+
+ Pythia::next(): 141000 events have been generated 
+
+ Pythia::next(): 142000 events have been generated 
+
+ Pythia::next(): 143000 events have been generated 
+
+ Pythia::next(): 144000 events have been generated 
+
+ Pythia::next(): 145000 events have been generated 
+
+ Pythia::next(): 146000 events have been generated 
+
+ Pythia::next(): 147000 events have been generated 
+
+ Pythia::next(): 148000 events have been generated 
+
+ Pythia::next(): 149000 events have been generated 
+
+ Pythia::next(): 150000 events have been generated 
+
+ Pythia::next(): 151000 events have been generated 
+
+ Pythia::next(): 152000 events have been generated 
+
+ Pythia::next(): 153000 events have been generated 
+
+ Pythia::next(): 154000 events have been generated 
+
+ Pythia::next(): 155000 events have been generated 
+
+ Pythia::next(): 156000 events have been generated 
+
+ Pythia::next(): 157000 events have been generated 
+
+ Pythia::next(): 158000 events have been generated 
+
+ Pythia::next(): 159000 events have been generated 
+
+ Pythia::next(): 160000 events have been generated 
+
+ Pythia::next(): 161000 events have been generated 
+
+ Pythia::next(): 162000 events have been generated 
+
+ Pythia::next(): 163000 events have been generated 
+
+ Pythia::next(): 164000 events have been generated 
+
+ Pythia::next(): 165000 events have been generated 
+
+ Pythia::next(): 166000 events have been generated 
+
+ Pythia::next(): 167000 events have been generated 
+
+ Pythia::next(): 168000 events have been generated 
+
+ Pythia::next(): 169000 events have been generated 
+
+ Pythia::next(): 170000 events have been generated 
+
+ Pythia::next(): 171000 events have been generated 
+
+ Pythia::next(): 172000 events have been generated 
+
+ Pythia::next(): 173000 events have been generated 
+
+ Pythia::next(): 174000 events have been generated 
+
+ Pythia::next(): 175000 events have been generated 
+
+ Pythia::next(): 176000 events have been generated 
+
+ Pythia::next(): 177000 events have been generated 
+
+ Pythia::next(): 178000 events have been generated 
+
+ Pythia::next(): 179000 events have been generated 
+
+ Pythia::next(): 180000 events have been generated 
+
+ Pythia::next(): 181000 events have been generated 
+ PYTHIA Warning in MultipartonInteractions::pTfirst: weight above unity  
+
+ Pythia::next(): 182000 events have been generated 
+
+ Pythia::next(): 183000 events have been generated 
+
+ Pythia::next(): 184000 events have been generated 
+
+ Pythia::next(): 185000 events have been generated 
+
+ Pythia::next(): 186000 events have been generated 
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Event generation took 354.35s and produced 1966 primaries 
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:38:12[0m][[01;32mINFO[0m] treating ev 22 part 1 out of 4
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:38:12[0m][[01;32mINFO[0m] treating ev 22 part 2 out of 4
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:38:12[0m][[01;32mINFO[0m] treating ev 22 part 3 out of 4
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Sending 466 particles
+[[01;36m16:38:12[0m][[01;32mINFO[0m] treating ev 22 part 4 out of 4
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0124167,-0.0170117,0.0159393)
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Event generation took 0s and produced 178 primaries 
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Sending 178 particles
+[[01;36m16:38:12[0m][[01;32mINFO[0m] treating ev 23 part 1 out of 1
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00584001,0.00162127,0.00917739)
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Event generation took 0s and produced 82 primaries 
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Sending 82 particles
+[[01;36m16:38:12[0m][[01;32mINFO[0m] treating ev 24 part 1 out of 1
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:38:12[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0142456,0.00244334,-0.00184098)
+
+ Pythia::next(): 187000 events have been generated 
+
+ Pythia::next(): 188000 events have been generated 
+
+ Pythia::next(): 189000 events have been generated 
+
+ Pythia::next(): 190000 events have been generated 
+
+ Pythia::next(): 191000 events have been generated 
+
+ Pythia::next(): 192000 events have been generated 
+
+ Pythia::next(): 193000 events have been generated 
+
+ Pythia::next(): 194000 events have been generated 
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Event generation took 31.75s and produced 1185 primaries 
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:38:44[0m][[01;32mINFO[0m] treating ev 25 part 1 out of 3
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:38:44[0m][[01;32mINFO[0m] treating ev 25 part 2 out of 3
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Sending 185 particles
+[[01;36m16:38:44[0m][[01;32mINFO[0m] treating ev 25 part 3 out of 3
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0132943,0.00588581,-0.00100028)
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Event generation took 0s and produced 10 primaries 
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Sending 10 particles
+[[01;36m16:38:44[0m][[01;32mINFO[0m] treating ev 26 part 1 out of 1
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00602095,-0.00467248,0.00514037)
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 925 primaries 
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:38:44[0m][[01;32mINFO[0m] treating ev 27 part 1 out of 2
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Sending 425 particles
+[[01;36m16:38:44[0m][[01;32mINFO[0m] treating ev 27 part 2 out of 2
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:38:44[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0169241,0.0192808,-0.0194603)
+
+ Pythia::next(): 195000 events have been generated 
+ PYTHIA Warning in TauDecays::decay: maximum decay weight exceeded in tau decay  
+
+ Pythia::next(): 196000 events have been generated 
+
+ Pythia::next(): 197000 events have been generated 
+
+ Pythia::next(): 198000 events have been generated 
+
+ Pythia::next(): 199000 events have been generated 
+
+ Pythia::next(): 200000 events have been generated 
+
+ Pythia::next(): 201000 events have been generated 
+
+ Pythia::next(): 202000 events have been generated 
+
+ Pythia::next(): 203000 events have been generated 
+
+ Pythia::next(): 204000 events have been generated 
+
+ Pythia::next(): 205000 events have been generated 
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Event generation took 39.1s and produced 720 primaries 
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:39:23[0m][[01;32mINFO[0m] treating ev 28 part 1 out of 2
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Sending 220 particles
+[[01;36m16:39:23[0m][[01;32mINFO[0m] treating ev 28 part 2 out of 2
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0178078,0.015224,-0.0081617)
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+Warning in <TParticle::SetPdgCode>: PDG code 990 unknown from TDatabasePDG
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Event generation took 0s and produced 109 primaries 
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Sending 109 particles
+[[01;36m16:39:23[0m][[01;32mINFO[0m] treating ev 29 part 1 out of 1
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0095076,-0.0069802,-0.000342173)
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Event generation took 0s and produced 55 primaries 
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Sending 55 particles
+[[01;36m16:39:23[0m][[01;32mINFO[0m] treating ev 30 part 1 out of 1
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:39:23[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00616363,0.00619263,0.0119838)
+
+ Pythia::next(): 206000 events have been generated 
+
+ Pythia::next(): 207000 events have been generated 
+
+ Pythia::next(): 208000 events have been generated 
+
+ Pythia::next(): 209000 events have been generated 
+
+ Pythia::next(): 210000 events have been generated 
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Event generation took 19.4s and produced 386 primaries 
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Sending 386 particles
+[[01;36m16:39:43[0m][[01;32mINFO[0m] treating ev 31 part 1 out of 1
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.000996624,0.000363209,-0.00256385)
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 375 primaries 
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Sending 375 particles
+[[01;36m16:39:43[0m][[01;32mINFO[0m] treating ev 32 part 1 out of 1
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00689195,0.00879748,0.0144936)
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Event generation took 0s and produced 433 primaries 
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Sending 433 particles
+[[01;36m16:39:43[0m][[01;32mINFO[0m] treating ev 33 part 1 out of 1
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:39:43[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0157709,-0.00612597,0.00476939)
+
+ Pythia::next(): 211000 events have been generated 
+
+ Pythia::next(): 212000 events have been generated 
+
+ Pythia::next(): 213000 events have been generated 
+
+ Pythia::next(): 214000 events have been generated 
+
+ Pythia::next(): 215000 events have been generated 
+
+ Pythia::next(): 216000 events have been generated 
+
+ Pythia::next(): 217000 events have been generated 
+
+ Pythia::next(): 218000 events have been generated 
+
+ Pythia::next(): 219000 events have been generated 
+
+ Pythia::next(): 220000 events have been generated 
+
+ Pythia::next(): 221000 events have been generated 
+
+ Pythia::next(): 222000 events have been generated 
+
+ Pythia::next(): 223000 events have been generated 
+
+ Pythia::next(): 224000 events have been generated 
+
+ Pythia::next(): 225000 events have been generated 
+
+ Pythia::next(): 226000 events have been generated 
+
+ Pythia::next(): 227000 events have been generated 
+
+ Pythia::next(): 228000 events have been generated 
+
+ Pythia::next(): 229000 events have been generated 
+
+ Pythia::next(): 230000 events have been generated 
+
+ Pythia::next(): 231000 events have been generated 
+
+ Pythia::next(): 232000 events have been generated 
+
+ Pythia::next(): 233000 events have been generated 
+
+ Pythia::next(): 234000 events have been generated 
+
+ Pythia::next(): 235000 events have been generated 
+
+ Pythia::next(): 236000 events have been generated 
+
+ Pythia::next(): 237000 events have been generated 
+
+ Pythia::next(): 238000 events have been generated 
+
+ Pythia::next(): 239000 events have been generated 
+
+ Pythia::next(): 240000 events have been generated 
+
+ Pythia::next(): 241000 events have been generated 
+
+ Pythia::next(): 242000 events have been generated 
+
+ Pythia::next(): 243000 events have been generated 
+
+ Pythia::next(): 244000 events have been generated 
+
+ Pythia::next(): 245000 events have been generated 
+
+ Pythia::next(): 246000 events have been generated 
+
+ Pythia::next(): 247000 events have been generated 
+
+ Pythia::next(): 248000 events have been generated 
+
+ Pythia::next(): 249000 events have been generated 
+
+ Pythia::next(): 250000 events have been generated 
+
+ Pythia::next(): 251000 events have been generated 
+
+ Pythia::next(): 252000 events have been generated 
+
+ Pythia::next(): 253000 events have been generated 
+
+ Pythia::next(): 254000 events have been generated 
+
+ Pythia::next(): 255000 events have been generated 
+
+ Pythia::next(): 256000 events have been generated 
+
+ Pythia::next(): 257000 events have been generated 
+
+ Pythia::next(): 258000 events have been generated 
+
+ Pythia::next(): 259000 events have been generated 
+
+ Pythia::next(): 260000 events have been generated 
+
+ Pythia::next(): 261000 events have been generated 
+
+ Pythia::next(): 262000 events have been generated 
+
+ Pythia::next(): 263000 events have been generated 
+
+ Pythia::next(): 264000 events have been generated 
+
+ Pythia::next(): 265000 events have been generated 
+
+ Pythia::next(): 266000 events have been generated 
+
+ Pythia::next(): 267000 events have been generated 
+
+ Pythia::next(): 268000 events have been generated 
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Event generation took 121.29s and produced 584 primaries 
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:41:44[0m][[01;32mINFO[0m] treating ev 34 part 1 out of 2
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Sending 84 particles
+[[01;36m16:41:44[0m][[01;32mINFO[0m] treating ev 34 part 2 out of 2
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00545867,0.00331494,-0.0193154)
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Event generation took 0s and produced 532 primaries 
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:41:44[0m][[01;32mINFO[0m] treating ev 35 part 1 out of 2
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Sending 32 particles
+[[01;36m16:41:44[0m][[01;32mINFO[0m] treating ev 35 part 2 out of 2
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0157766,-0.0204386,-0.0165571)
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Event generation took 0s and produced 138 primaries 
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Sending 138 particles
+[[01;36m16:41:44[0m][[01;32mINFO[0m] treating ev 36 part 1 out of 1
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:41:44[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00257063,-0.00564238,0.000249927)
+
+ Pythia::next(): 269000 events have been generated 
+
+ Pythia::next(): 270000 events have been generated 
+
+ Pythia::next(): 271000 events have been generated 
+
+ Pythia::next(): 272000 events have been generated 
+
+ Pythia::next(): 273000 events have been generated 
+
+ Pythia::next(): 274000 events have been generated 
+
+ Pythia::next(): 275000 events have been generated 
+
+ Pythia::next(): 276000 events have been generated 
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Event generation took 16.2s and produced 382 primaries 
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Sending 382 particles
+[[01;36m16:42:00[0m][[01;32mINFO[0m] treating ev 37 part 1 out of 1
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0097737,-0.00305544,0.0138408)
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Event generation took 0s and produced 94 primaries 
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Sending 94 particles
+[[01;36m16:42:00[0m][[01;32mINFO[0m] treating ev 38 part 1 out of 1
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00605613,0.0129959,0.0155272)
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Event generation took 0s and produced 283 primaries 
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Sending 283 particles
+[[01;36m16:42:00[0m][[01;32mINFO[0m] treating ev 39 part 1 out of 1
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:00[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00548912,0.00682993,0.00415682)
+
+ Pythia::next(): 277000 events have been generated 
+
+ Pythia::next(): 278000 events have been generated 
+
+ Pythia::next(): 279000 events have been generated 
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Event generation took 5.88s and produced 2014 primaries 
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:06[0m][[01;32mINFO[0m] treating ev 40 part 1 out of 5
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:06[0m][[01;32mINFO[0m] treating ev 40 part 2 out of 5
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:06[0m][[01;32mINFO[0m] treating ev 40 part 3 out of 5
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:06[0m][[01;32mINFO[0m] treating ev 40 part 4 out of 5
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sending 14 particles
+[[01;36m16:42:06[0m][[01;32mINFO[0m] treating ev 40 part 5 out of 5
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00534318,-0.00736971,-0.013865)
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Event generation took 0s and produced 502 primaries 
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:06[0m][[01;32mINFO[0m] treating ev 41 part 1 out of 2
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sending 2 particles
+[[01;36m16:42:06[0m][[01;32mINFO[0m] treating ev 41 part 2 out of 2
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0150638,0.00908888,0.00374746)
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Event generation took 0s and produced 641 primaries 
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:06[0m][[01;32mINFO[0m] treating ev 42 part 1 out of 2
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sending 141 particles
+[[01;36m16:42:06[0m][[01;32mINFO[0m] treating ev 42 part 2 out of 2
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:06[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00401263,-0.00196283,-0.000655796)
+
+ Pythia::next(): 280000 events have been generated 
+
+ Pythia::next(): 281000 events have been generated 
+
+ Pythia::next(): 282000 events have been generated 
+
+ Pythia::next(): 283000 events have been generated 
+
+ Pythia::next(): 284000 events have been generated 
+
+ Pythia::next(): 285000 events have been generated 
+
+ Pythia::next(): 286000 events have been generated 
+
+ Pythia::next(): 287000 events have been generated 
+
+ Pythia::next(): 288000 events have been generated 
+
+ Pythia::next(): 289000 events have been generated 
+
+ Pythia::next(): 290000 events have been generated 
+
+ Pythia::next(): 291000 events have been generated 
+
+ Pythia::next(): 292000 events have been generated 
+
+ Pythia::next(): 293000 events have been generated 
+
+ Pythia::next(): 294000 events have been generated 
+
+ Pythia::next(): 295000 events have been generated 
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Event generation took 32.29s and produced 1572 primaries 
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:38[0m][[01;32mINFO[0m] treating ev 43 part 1 out of 4
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:38[0m][[01;32mINFO[0m] treating ev 43 part 2 out of 4
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:38[0m][[01;32mINFO[0m] treating ev 43 part 3 out of 4
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Sending 72 particles
+[[01;36m16:42:38[0m][[01;32mINFO[0m] treating ev 43 part 4 out of 4
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00385213,-0.00237017,0.00350555)
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Event generation took 0s and produced 431 primaries 
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Sending 431 particles
+[[01;36m16:42:38[0m][[01;32mINFO[0m] treating ev 44 part 1 out of 1
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00323015,0.00958202,0.0026905)
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Event generation took 0s and produced 826 primaries 
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:38[0m][[01;32mINFO[0m] treating ev 45 part 1 out of 2
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Sending 326 particles
+[[01;36m16:42:38[0m][[01;32mINFO[0m] treating ev 45 part 2 out of 2
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:38[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00296703,0.0209186,-0.0257898)
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Event generation took 0.64s and produced 2278 primaries 
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:39[0m][[01;32mINFO[0m] treating ev 46 part 1 out of 5
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:39[0m][[01;32mINFO[0m] treating ev 46 part 2 out of 5
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:39[0m][[01;32mINFO[0m] treating ev 46 part 3 out of 5
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:39[0m][[01;32mINFO[0m] treating ev 46 part 4 out of 5
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sending 278 particles
+[[01;36m16:42:39[0m][[01;32mINFO[0m] treating ev 46 part 5 out of 5
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00211472,0.0134085,0.0026014)
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Event generation took 0s and produced 228 primaries 
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sending 228 particles
+[[01;36m16:42:39[0m][[01;32mINFO[0m] treating ev 47 part 1 out of 1
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.000781948,0.00708127,-0.00608368)
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1800 primaries 
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:39[0m][[01;32mINFO[0m] treating ev 48 part 1 out of 4
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:39[0m][[01;32mINFO[0m] treating ev 48 part 2 out of 4
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:42:39[0m][[01;32mINFO[0m] treating ev 48 part 3 out of 4
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sending 300 particles
+[[01;36m16:42:39[0m][[01;32mINFO[0m] treating ev 48 part 4 out of 4
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:42:39[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00304637,0.0104007,-0.00889099)
+
+ Pythia::next(): 296000 events have been generated 
+
+ Pythia::next(): 297000 events have been generated 
+
+ Pythia::next(): 298000 events have been generated 
+
+ Pythia::next(): 299000 events have been generated 
+
+ Pythia::next(): 300000 events have been generated 
+
+ Pythia::next(): 301000 events have been generated 
+
+ Pythia::next(): 302000 events have been generated 
+
+ Pythia::next(): 303000 events have been generated 
+
+ Pythia::next(): 304000 events have been generated 
+
+ Pythia::next(): 305000 events have been generated 
+
+ Pythia::next(): 306000 events have been generated 
+
+ Pythia::next(): 307000 events have been generated 
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Event generation took 24.12s and produced 817 primaries 
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:43:03[0m][[01;32mINFO[0m] treating ev 49 part 1 out of 2
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Sending 317 particles
+[[01;36m16:43:03[0m][[01;32mINFO[0m] treating ev 49 part 2 out of 2
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0012248,0.000284972,0.000234484)
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Event generation took 0s and produced 154 primaries 
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Sending 154 particles
+[[01;36m16:43:03[0m][[01;32mINFO[0m] treating ev 50 part 1 out of 1
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00739596,0.00835282,0.0194747)
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Event generation took 0s and produced 305 primaries 
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Sending 305 particles
+[[01;36m16:43:03[0m][[01;32mINFO[0m] treating ev 51 part 1 out of 1
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:43:03[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00292117,-0.000542021,-0.0195279)
+
+ Pythia::next(): 308000 events have been generated 
+
+ Pythia::next(): 309000 events have been generated 
+
+ Pythia::next(): 310000 events have been generated 
+
+ Pythia::next(): 311000 events have been generated 
+
+ Pythia::next(): 312000 events have been generated 
+
+ Pythia::next(): 313000 events have been generated 
+
+ Pythia::next(): 314000 events have been generated 
+
+ Pythia::next(): 315000 events have been generated 
+
+ Pythia::next(): 316000 events have been generated 
+
+ Pythia::next(): 317000 events have been generated 
+
+ Pythia::next(): 318000 events have been generated 
+
+ Pythia::next(): 319000 events have been generated 
+
+ Pythia::next(): 320000 events have been generated 
+
+ Pythia::next(): 321000 events have been generated 
+
+ Pythia::next(): 322000 events have been generated 
+
+ Pythia::next(): 323000 events have been generated 
+
+ Pythia::next(): 324000 events have been generated 
+
+ Pythia::next(): 325000 events have been generated 
+
+ Pythia::next(): 326000 events have been generated 
+
+ Pythia::next(): 327000 events have been generated 
+
+ Pythia::next(): 328000 events have been generated 
+
+ Pythia::next(): 329000 events have been generated 
+
+ Pythia::next(): 330000 events have been generated 
+
+ Pythia::next(): 331000 events have been generated 
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Event generation took 76.57s and produced 2026 primaries 
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:44:20[0m][[01;32mINFO[0m] treating ev 52 part 1 out of 5
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:44:20[0m][[01;32mINFO[0m] treating ev 52 part 2 out of 5
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:44:20[0m][[01;32mINFO[0m] treating ev 52 part 3 out of 5
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:44:20[0m][[01;32mINFO[0m] treating ev 52 part 4 out of 5
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Sending 26 particles
+[[01;36m16:44:20[0m][[01;32mINFO[0m] treating ev 52 part 5 out of 5
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00792494,0.015924,0.00547339)
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 251 primaries 
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Sending 251 particles
+[[01;36m16:44:20[0m][[01;32mINFO[0m] treating ev 53 part 1 out of 1
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0139772,0.00586552,-0.00179997)
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Event generation took 0s and produced 191 primaries 
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Sending 191 particles
+[[01;36m16:44:20[0m][[01;32mINFO[0m] treating ev 54 part 1 out of 1
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:44:20[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00610435,0.0188556,0.0101792)
+
+ Pythia::next(): 332000 events have been generated 
+
+ Pythia::next(): 333000 events have been generated 
+
+ Pythia::next(): 334000 events have been generated 
+
+ Pythia::next(): 335000 events have been generated 
+
+ Pythia::next(): 336000 events have been generated 
+
+ Pythia::next(): 337000 events have been generated 
+
+ Pythia::next(): 338000 events have been generated 
+
+ Pythia::next(): 339000 events have been generated 
+
+ Pythia::next(): 340000 events have been generated 
+
+ Pythia::next(): 341000 events have been generated 
+
+ Pythia::next(): 342000 events have been generated 
+
+ Pythia::next(): 343000 events have been generated 
+
+ Pythia::next(): 344000 events have been generated 
+
+ Pythia::next(): 345000 events have been generated 
+
+ Pythia::next(): 346000 events have been generated 
+
+ Pythia::next(): 347000 events have been generated 
+
+ Pythia::next(): 348000 events have been generated 
+
+ Pythia::next(): 349000 events have been generated 
+
+ Pythia::next(): 350000 events have been generated 
+
+ Pythia::next(): 351000 events have been generated 
+
+ Pythia::next(): 352000 events have been generated 
+
+ Pythia::next(): 353000 events have been generated 
+
+ Pythia::next(): 354000 events have been generated 
+
+ Pythia::next(): 355000 events have been generated 
+
+ Pythia::next(): 356000 events have been generated 
+
+ Pythia::next(): 357000 events have been generated 
+
+ Pythia::next(): 358000 events have been generated 
+
+ Pythia::next(): 359000 events have been generated 
+
+ Pythia::next(): 360000 events have been generated 
+
+ Pythia::next(): 361000 events have been generated 
+
+ Pythia::next(): 362000 events have been generated 
+
+ Pythia::next(): 363000 events have been generated 
+
+ Pythia::next(): 364000 events have been generated 
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Event generation took 120.17s and produced 1233 primaries 
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:20[0m][[01;32mINFO[0m] treating ev 55 part 1 out of 3
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:20[0m][[01;32mINFO[0m] treating ev 55 part 2 out of 3
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Sending 233 particles
+[[01;36m16:46:20[0m][[01;32mINFO[0m] treating ev 55 part 3 out of 3
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0122481,0.0143152,0.00813481)
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Event generation took 0s and produced 187 primaries 
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Sending 187 particles
+[[01;36m16:46:20[0m][[01;32mINFO[0m] treating ev 56 part 1 out of 1
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0078165,0.000890333,0.0089788)
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 881 primaries 
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:20[0m][[01;32mINFO[0m] treating ev 57 part 1 out of 2
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Sending 381 particles
+[[01;36m16:46:20[0m][[01;32mINFO[0m] treating ev 57 part 2 out of 2
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:20[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00612986,0.00143171,0.00669743)
+
+ Pythia::next(): 365000 events have been generated 
+
+ Pythia::next(): 366000 events have been generated 
+
+ Pythia::next(): 367000 events have been generated 
+
+ Pythia::next(): 368000 events have been generated 
+
+ Pythia::next(): 369000 events have been generated 
+
+ Pythia::next(): 370000 events have been generated 
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Event generation took 21.49s and produced 1314 primaries 
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:42[0m][[01;32mINFO[0m] treating ev 58 part 1 out of 3
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:42[0m][[01;32mINFO[0m] treating ev 58 part 2 out of 3
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Sending 314 particles
+[[01;36m16:46:42[0m][[01;32mINFO[0m] treating ev 58 part 3 out of 3
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00731658,0.00429238,-0.00788756)
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Event generation took 0s and produced 715 primaries 
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:42[0m][[01;32mINFO[0m] treating ev 59 part 1 out of 2
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Sending 215 particles
+[[01;36m16:46:42[0m][[01;32mINFO[0m] treating ev 59 part 2 out of 2
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.013429,0.00738681,-5.49543e-05)
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 246 primaries 
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Sending 246 particles
+[[01;36m16:46:42[0m][[01;32mINFO[0m] treating ev 60 part 1 out of 1
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:42[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00636095,-0.00351956,0.00783689)
+
+ Pythia::next(): 371000 events have been generated 
+
+ Pythia::next(): 372000 events have been generated 
+
+ Pythia::next(): 373000 events have been generated 
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Event generation took 7.23s and produced 1578 primaries 
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:49[0m][[01;32mINFO[0m] treating ev 61 part 1 out of 4
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:49[0m][[01;32mINFO[0m] treating ev 61 part 2 out of 4
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:49[0m][[01;32mINFO[0m] treating ev 61 part 3 out of 4
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sending 78 particles
+[[01;36m16:46:49[0m][[01;32mINFO[0m] treating ev 61 part 4 out of 4
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00623138,-0.00715353,-0.00698027)
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 628 primaries 
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:49[0m][[01;32mINFO[0m] treating ev 62 part 1 out of 2
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sending 128 particles
+[[01;36m16:46:49[0m][[01;32mINFO[0m] treating ev 62 part 2 out of 2
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00646211,-0.00410696,0.00360597)
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1085 primaries 
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:49[0m][[01;32mINFO[0m] treating ev 63 part 1 out of 3
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:49[0m][[01;32mINFO[0m] treating ev 63 part 2 out of 3
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sending 85 particles
+[[01;36m16:46:49[0m][[01;32mINFO[0m] treating ev 63 part 3 out of 3
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:49[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0052443,0.00918917,0.00493848)
+
+ Pythia::next(): 374000 events have been generated 
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Event generation took 3.72s and produced 1128 primaries 
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:53[0m][[01;32mINFO[0m] treating ev 64 part 1 out of 3
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:53[0m][[01;32mINFO[0m] treating ev 64 part 2 out of 3
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Sending 128 particles
+[[01;36m16:46:53[0m][[01;32mINFO[0m] treating ev 64 part 3 out of 3
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00186329,0.00404797,-0.000437683)
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Event generation took 0s and produced 364 primaries 
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Sending 364 particles
+[[01;36m16:46:53[0m][[01;32mINFO[0m] treating ev 65 part 1 out of 1
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00585249,-0.00877646,-0.0126517)
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Event generation took 0.02s and produced 1190 primaries 
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:53[0m][[01;32mINFO[0m] treating ev 66 part 1 out of 3
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:46:53[0m][[01;32mINFO[0m] treating ev 66 part 2 out of 3
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Sending 190 particles
+[[01;36m16:46:53[0m][[01;32mINFO[0m] treating ev 66 part 3 out of 3
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:46:53[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00229104,0.000254891,0.0064942)
+
+ Pythia::next(): 375000 events have been generated 
+
+ Pythia::next(): 376000 events have been generated 
+
+ Pythia::next(): 377000 events have been generated 
+
+ Pythia::next(): 378000 events have been generated 
+ PYTHIA Warning in HadronWidths::pickMasses: angular momentum and running widths not used  
+
+ Pythia::next(): 379000 events have been generated 
+
+ Pythia::next(): 380000 events have been generated 
+
+ Pythia::next(): 381000 events have been generated 
+
+ Pythia::next(): 382000 events have been generated 
+
+ Pythia::next(): 383000 events have been generated 
+
+ Pythia::next(): 384000 events have been generated 
+
+ Pythia::next(): 385000 events have been generated 
+
+ Pythia::next(): 386000 events have been generated 
+
+ Pythia::next(): 387000 events have been generated 
+
+ Pythia::next(): 388000 events have been generated 
+
+ Pythia::next(): 389000 events have been generated 
+
+ Pythia::next(): 390000 events have been generated 
+
+ Pythia::next(): 391000 events have been generated 
+
+ Pythia::next(): 392000 events have been generated 
+ PYTHIA Warning in StringFragmentation::fragmentToJunction: Negative invariant masses in junction rest frame  
+
+ Pythia::next(): 393000 events have been generated 
+
+ Pythia::next(): 394000 events have been generated 
+
+ Pythia::next(): 395000 events have been generated 
+
+ Pythia::next(): 396000 events have been generated 
+
+ Pythia::next(): 397000 events have been generated 
+
+ Pythia::next(): 398000 events have been generated 
+
+ Pythia::next(): 399000 events have been generated 
+
+ Pythia::next(): 400000 events have been generated 
+
+ Pythia::next(): 401000 events have been generated 
+
+ Pythia::next(): 402000 events have been generated 
+
+ Pythia::next(): 403000 events have been generated 
+
+ Pythia::next(): 404000 events have been generated 
+
+ Pythia::next(): 405000 events have been generated 
+
+ Pythia::next(): 406000 events have been generated 
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Event generation took 115.58s and produced 1628 primaries 
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:48:49[0m][[01;32mINFO[0m] treating ev 67 part 1 out of 4
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:48:49[0m][[01;32mINFO[0m] treating ev 67 part 2 out of 4
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:48:49[0m][[01;32mINFO[0m] treating ev 67 part 3 out of 4
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sending 128 particles
+[[01;36m16:48:49[0m][[01;32mINFO[0m] treating ev 67 part 4 out of 4
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0146956,0.000604238,0.00659905)
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1190 primaries 
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:48:49[0m][[01;32mINFO[0m] treating ev 68 part 1 out of 3
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:48:49[0m][[01;32mINFO[0m] treating ev 68 part 2 out of 3
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sending 190 particles
+[[01;36m16:48:49[0m][[01;32mINFO[0m] treating ev 68 part 3 out of 3
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0060222,-0.0149331,-0.0035605)
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Event generation took 0.02s and produced 1924 primaries 
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:48:49[0m][[01;32mINFO[0m] treating ev 69 part 1 out of 4
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:48:49[0m][[01;32mINFO[0m] treating ev 69 part 2 out of 4
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:48:49[0m][[01;32mINFO[0m] treating ev 69 part 3 out of 4
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sending 424 particles
+[[01;36m16:48:49[0m][[01;32mINFO[0m] treating ev 69 part 4 out of 4
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:48:49[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00686626,0.00279728,-0.00835423)
+
+ Pythia::next(): 407000 events have been generated 
+
+ Pythia::next(): 408000 events have been generated 
+
+ Pythia::next(): 409000 events have been generated 
+
+ Pythia::next(): 410000 events have been generated 
+
+ Pythia::next(): 411000 events have been generated 
+
+ Pythia::next(): 412000 events have been generated 
+
+ Pythia::next(): 413000 events have been generated 
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Event generation took 27.57s and produced 2408 primaries 
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:49:16[0m][[01;32mINFO[0m] treating ev 70 part 1 out of 5
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:49:16[0m][[01;32mINFO[0m] treating ev 70 part 2 out of 5
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:49:16[0m][[01;32mINFO[0m] treating ev 70 part 3 out of 5
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:49:16[0m][[01;32mINFO[0m] treating ev 70 part 4 out of 5
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Sending 408 particles
+[[01;36m16:49:16[0m][[01;32mINFO[0m] treating ev 70 part 5 out of 5
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.019265,-0.00354381,-0.00644166)
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Event generation took 0s and produced 21 primaries 
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Sending 21 particles
+[[01;36m16:49:16[0m][[01;32mINFO[0m] treating ev 71 part 1 out of 1
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00352207,0.00299168,-0.00975255)
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Event generation took 0.02s and produced 326 primaries 
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Sending 326 particles
+[[01;36m16:49:16[0m][[01;32mINFO[0m] treating ev 72 part 1 out of 1
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:49:16[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00711231,0.00166618,0.000870841)
+
+ Pythia::next(): 414000 events have been generated 
+
+ Pythia::next(): 415000 events have been generated 
+
+ Pythia::next(): 416000 events have been generated 
+
+ Pythia::next(): 417000 events have been generated 
+
+ Pythia::next(): 418000 events have been generated 
+
+ Pythia::next(): 419000 events have been generated 
+
+ Pythia::next(): 420000 events have been generated 
+
+ Pythia::next(): 421000 events have been generated 
+
+ Pythia::next(): 422000 events have been generated 
+
+ Pythia::next(): 423000 events have been generated 
+
+ Pythia::next(): 424000 events have been generated 
+
+ Pythia::next(): 425000 events have been generated 
+
+ Pythia::next(): 426000 events have been generated 
+
+ Pythia::next(): 427000 events have been generated 
+
+ Pythia::next(): 428000 events have been generated 
+
+ Pythia::next(): 429000 events have been generated 
+
+ Pythia::next(): 430000 events have been generated 
+
+ Pythia::next(): 431000 events have been generated 
+
+ Pythia::next(): 432000 events have been generated 
+
+ Pythia::next(): 433000 events have been generated 
+
+ Pythia::next(): 434000 events have been generated 
+
+ Pythia::next(): 435000 events have been generated 
+
+ Pythia::next(): 436000 events have been generated 
+
+ Pythia::next(): 437000 events have been generated 
+
+ Pythia::next(): 438000 events have been generated 
+
+ Pythia::next(): 439000 events have been generated 
+
+ Pythia::next(): 440000 events have been generated 
+
+ Pythia::next(): 441000 events have been generated 
+
+ Pythia::next(): 442000 events have been generated 
+
+ Pythia::next(): 443000 events have been generated 
+
+ Pythia::next(): 444000 events have been generated 
+
+ Pythia::next(): 445000 events have been generated 
+
+ Pythia::next(): 446000 events have been generated 
+
+ Pythia::next(): 447000 events have been generated 
+
+ Pythia::next(): 448000 events have been generated 
+
+ Pythia::next(): 449000 events have been generated 
+
+ Pythia::next(): 450000 events have been generated 
+
+ Pythia::next(): 451000 events have been generated 
+
+ Pythia::next(): 452000 events have been generated 
+
+ Pythia::next(): 453000 events have been generated 
+
+ Pythia::next(): 454000 events have been generated 
+
+ Pythia::next(): 455000 events have been generated 
+
+ Pythia::next(): 456000 events have been generated 
+
+ Pythia::next(): 457000 events have been generated 
+
+ Pythia::next(): 458000 events have been generated 
+
+ Pythia::next(): 459000 events have been generated 
+
+ Pythia::next(): 460000 events have been generated 
+
+ Pythia::next(): 461000 events have been generated 
+
+ Pythia::next(): 462000 events have been generated 
+
+ Pythia::next(): 463000 events have been generated 
+
+ Pythia::next(): 464000 events have been generated 
+
+ Pythia::next(): 465000 events have been generated 
+
+ Pythia::next(): 466000 events have been generated 
+
+ Pythia::next(): 467000 events have been generated 
+
+ Pythia::next(): 468000 events have been generated 
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Event generation took 203.8s and produced 1189 primaries 
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:52:40[0m][[01;32mINFO[0m] treating ev 73 part 1 out of 3
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:52:40[0m][[01;32mINFO[0m] treating ev 73 part 2 out of 3
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Sending 189 particles
+[[01;36m16:52:40[0m][[01;32mINFO[0m] treating ev 73 part 3 out of 3
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00811834,-0.0035779,-0.00103672)
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Event generation took 0s and produced 156 primaries 
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Sending 156 particles
+[[01;36m16:52:40[0m][[01;32mINFO[0m] treating ev 74 part 1 out of 1
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0216767,0.0150732,-0.0174241)
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 171 primaries 
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Sending 171 particles
+[[01;36m16:52:40[0m][[01;32mINFO[0m] treating ev 75 part 1 out of 1
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:52:40[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00658897,-0.00669795,0.0110302)
+
+ Pythia::next(): 469000 events have been generated 
+
+ Pythia::next(): 470000 events have been generated 
+
+ Pythia::next(): 471000 events have been generated 
+
+ Pythia::next(): 472000 events have been generated 
+
+ Pythia::next(): 473000 events have been generated 
+
+ Pythia::next(): 474000 events have been generated 
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Event generation took 21.99s and produced 737 primaries 
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:53:02[0m][[01;32mINFO[0m] treating ev 76 part 1 out of 2
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Sending 237 particles
+[[01;36m16:53:02[0m][[01;32mINFO[0m] treating ev 76 part 2 out of 2
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00940012,0.00589265,-0.0188091)
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 803 primaries 
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:53:02[0m][[01;32mINFO[0m] treating ev 77 part 1 out of 2
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Sending 303 particles
+[[01;36m16:53:02[0m][[01;32mINFO[0m] treating ev 77 part 2 out of 2
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0115232,0.0052586,0.00942864)
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1473 primaries 
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:53:02[0m][[01;32mINFO[0m] treating ev 78 part 1 out of 3
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:53:02[0m][[01;32mINFO[0m] treating ev 78 part 2 out of 3
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Sending 473 particles
+[[01;36m16:53:02[0m][[01;32mINFO[0m] treating ev 78 part 3 out of 3
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:53:02[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0103836,0.00585125,0.00309501)
+
+ Pythia::next(): 475000 events have been generated 
+
+ Pythia::next(): 476000 events have been generated 
+
+ Pythia::next(): 477000 events have been generated 
+
+ Pythia::next(): 478000 events have been generated 
+
+ Pythia::next(): 479000 events have been generated 
+
+ Pythia::next(): 480000 events have been generated 
+
+ Pythia::next(): 481000 events have been generated 
+
+ Pythia::next(): 482000 events have been generated 
+
+ Pythia::next(): 483000 events have been generated 
+
+ Pythia::next(): 484000 events have been generated 
+
+ Pythia::next(): 485000 events have been generated 
+
+ Pythia::next(): 486000 events have been generated 
+
+ Pythia::next(): 487000 events have been generated 
+
+ Pythia::next(): 488000 events have been generated 
+
+ Pythia::next(): 489000 events have been generated 
+
+ Pythia::next(): 490000 events have been generated 
+
+ Pythia::next(): 491000 events have been generated 
+
+ Pythia::next(): 492000 events have been generated 
+
+ Pythia::next(): 493000 events have been generated 
+
+ Pythia::next(): 494000 events have been generated 
+
+ Pythia::next(): 495000 events have been generated 
+
+ Pythia::next(): 496000 events have been generated 
+
+ Pythia::next(): 497000 events have been generated 
+
+ Pythia::next(): 498000 events have been generated 
+
+ Pythia::next(): 499000 events have been generated 
+
+ Pythia::next(): 500000 events have been generated 
+
+ Pythia::next(): 501000 events have been generated 
+
+ Pythia::next(): 502000 events have been generated 
+
+ Pythia::next(): 503000 events have been generated 
+
+ Pythia::next(): 504000 events have been generated 
+
+ Pythia::next(): 505000 events have been generated 
+
+ Pythia::next(): 506000 events have been generated 
+
+ Pythia::next(): 507000 events have been generated 
+
+ Pythia::next(): 508000 events have been generated 
+
+ Pythia::next(): 509000 events have been generated 
+
+ Pythia::next(): 510000 events have been generated 
+
+ Pythia::next(): 511000 events have been generated 
+
+ Pythia::next(): 512000 events have been generated 
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Event generation took 137.06s and produced 1689 primaries 
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:55:20[0m][[01;32mINFO[0m] treating ev 79 part 1 out of 4
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:55:20[0m][[01;32mINFO[0m] treating ev 79 part 2 out of 4
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:55:20[0m][[01;32mINFO[0m] treating ev 79 part 3 out of 4
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sending 189 particles
+[[01;36m16:55:20[0m][[01;32mINFO[0m] treating ev 79 part 4 out of 4
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00994071,0.00653345,0.0123355)
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1637 primaries 
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:55:20[0m][[01;32mINFO[0m] treating ev 80 part 1 out of 4
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:55:20[0m][[01;32mINFO[0m] treating ev 80 part 2 out of 4
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:55:20[0m][[01;32mINFO[0m] treating ev 80 part 3 out of 4
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sending 137 particles
+[[01;36m16:55:20[0m][[01;32mINFO[0m] treating ev 80 part 4 out of 4
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0117155,-0.00518091,-0.0296206)
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 899 primaries 
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:55:20[0m][[01;32mINFO[0m] treating ev 81 part 1 out of 2
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sending 399 particles
+[[01;36m16:55:20[0m][[01;32mINFO[0m] treating ev 81 part 2 out of 2
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:55:20[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00457526,-0.0119321,-0.0186819)
+
+ Pythia::next(): 513000 events have been generated 
+
+ Pythia::next(): 514000 events have been generated 
+
+ Pythia::next(): 515000 events have been generated 
+
+ Pythia::next(): 516000 events have been generated 
+
+ Pythia::next(): 517000 events have been generated 
+
+ Pythia::next(): 518000 events have been generated 
+
+ Pythia::next(): 519000 events have been generated 
+
+ Pythia::next(): 520000 events have been generated 
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Event generation took 27.75s and produced 328 primaries 
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Sending 328 particles
+[[01;36m16:55:47[0m][[01;32mINFO[0m] treating ev 82 part 1 out of 1
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0277284,-0.00281595,0.00305296)
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Event generation took 0s and produced 152 primaries 
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Sending 152 particles
+[[01;36m16:55:47[0m][[01;32mINFO[0m] treating ev 83 part 1 out of 1
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00742174,0.0199744,-0.00845319)
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 815 primaries 
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:55:47[0m][[01;32mINFO[0m] treating ev 84 part 1 out of 2
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Sending 315 particles
+[[01;36m16:55:47[0m][[01;32mINFO[0m] treating ev 84 part 2 out of 2
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:55:47[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00862142,-0.0118806,-0.00355625)
+
+ Pythia::next(): 521000 events have been generated 
+
+ Pythia::next(): 522000 events have been generated 
+
+ Pythia::next(): 523000 events have been generated 
+
+ Pythia::next(): 524000 events have been generated 
+
+ Pythia::next(): 525000 events have been generated 
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Event generation took 12.27s and produced 1813 primaries 
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:56:00[0m][[01;32mINFO[0m] treating ev 85 part 1 out of 4
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:56:00[0m][[01;32mINFO[0m] treating ev 85 part 2 out of 4
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:56:00[0m][[01;32mINFO[0m] treating ev 85 part 3 out of 4
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Sending 313 particles
+[[01;36m16:56:00[0m][[01;32mINFO[0m] treating ev 85 part 4 out of 4
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Sampled interacting vertex (0.000136197,-0.0184716,-7.5033e-06)
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Event generation took 0s and produced 35 primaries 
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Sending 35 particles
+[[01;36m16:56:00[0m][[01;32mINFO[0m] treating ev 86 part 1 out of 1
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00956471,-0.00216032,-0.0151535)
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Event generation took 0s and produced 259 primaries 
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Sending 259 particles
+[[01;36m16:56:00[0m][[01;32mINFO[0m] treating ev 87 part 1 out of 1
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:56:00[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00572655,-0.00646605,-0.015436)
+
+ Pythia::next(): 526000 events have been generated 
+
+ Pythia::next(): 527000 events have been generated 
+
+ Pythia::next(): 528000 events have been generated 
+
+ Pythia::next(): 529000 events have been generated 
+
+ Pythia::next(): 530000 events have been generated 
+
+ Pythia::next(): 531000 events have been generated 
+
+ Pythia::next(): 532000 events have been generated 
+
+ Pythia::next(): 533000 events have been generated 
+
+ Pythia::next(): 534000 events have been generated 
+
+ Pythia::next(): 535000 events have been generated 
+
+ Pythia::next(): 536000 events have been generated 
+
+ Pythia::next(): 537000 events have been generated 
+
+ Pythia::next(): 538000 events have been generated 
+
+ Pythia::next(): 539000 events have been generated 
+
+ Pythia::next(): 540000 events have been generated 
+
+ Pythia::next(): 541000 events have been generated 
+
+ Pythia::next(): 542000 events have been generated 
+
+ Pythia::next(): 543000 events have been generated 
+
+ Pythia::next(): 544000 events have been generated 
+
+ Pythia::next(): 545000 events have been generated 
+
+ Pythia::next(): 546000 events have been generated 
+
+ Pythia::next(): 547000 events have been generated 
+
+ Pythia::next(): 548000 events have been generated 
+
+ Pythia::next(): 549000 events have been generated 
+
+ Pythia::next(): 550000 events have been generated 
+
+ Pythia::next(): 551000 events have been generated 
+
+ Pythia::next(): 552000 events have been generated 
+
+ Pythia::next(): 553000 events have been generated 
+
+ Pythia::next(): 554000 events have been generated 
+
+ Pythia::next(): 555000 events have been generated 
+
+ Pythia::next(): 556000 events have been generated 
+
+ Pythia::next(): 557000 events have been generated 
+
+ Pythia::next(): 558000 events have been generated 
+
+ Pythia::next(): 559000 events have been generated 
+
+ Pythia::next(): 560000 events have been generated 
+
+ Pythia::next(): 561000 events have been generated 
+
+ Pythia::next(): 562000 events have been generated 
+
+ Pythia::next(): 563000 events have been generated 
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Event generation took 75.81s and produced 2265 primaries 
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:57:15[0m][[01;32mINFO[0m] treating ev 88 part 1 out of 5
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:57:15[0m][[01;32mINFO[0m] treating ev 88 part 2 out of 5
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:57:15[0m][[01;32mINFO[0m] treating ev 88 part 3 out of 5
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:57:15[0m][[01;32mINFO[0m] treating ev 88 part 4 out of 5
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sending 265 particles
+[[01;36m16:57:15[0m][[01;32mINFO[0m] treating ev 88 part 5 out of 5
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0236187,-0.00450299,0.0102641)
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Event generation took 0s and produced 143 primaries 
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sending 143 particles
+[[01;36m16:57:15[0m][[01;32mINFO[0m] treating ev 89 part 1 out of 1
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sampled interacting vertex (0.015118,0.00899889,0.00175993)
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1324 primaries 
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:57:15[0m][[01;32mINFO[0m] treating ev 90 part 1 out of 3
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:57:15[0m][[01;32mINFO[0m] treating ev 90 part 2 out of 3
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sending 324 particles
+[[01;36m16:57:15[0m][[01;32mINFO[0m] treating ev 90 part 3 out of 3
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:57:15[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00467752,0.0125973,0.00640552)
+
+ Pythia::next(): 564000 events have been generated 
+
+ Pythia::next(): 565000 events have been generated 
+
+ Pythia::next(): 566000 events have been generated 
+
+ Pythia::next(): 567000 events have been generated 
+
+ Pythia::next(): 568000 events have been generated 
+
+ Pythia::next(): 569000 events have been generated 
+
+ Pythia::next(): 570000 events have been generated 
+
+ Pythia::next(): 571000 events have been generated 
+
+ Pythia::next(): 572000 events have been generated 
+
+ Pythia::next(): 573000 events have been generated 
+
+ Pythia::next(): 574000 events have been generated 
+
+ Pythia::next(): 575000 events have been generated 
+
+ Pythia::next(): 576000 events have been generated 
+
+ Pythia::next(): 577000 events have been generated 
+
+ Pythia::next(): 578000 events have been generated 
+
+ Pythia::next(): 579000 events have been generated 
+
+ Pythia::next(): 580000 events have been generated 
+
+ Pythia::next(): 581000 events have been generated 
+
+ Pythia::next(): 582000 events have been generated 
+
+ Pythia::next(): 583000 events have been generated 
+
+ Pythia::next(): 584000 events have been generated 
+
+ Pythia::next(): 585000 events have been generated 
+
+ Pythia::next(): 586000 events have been generated 
+
+ Pythia::next(): 587000 events have been generated 
+
+ Pythia::next(): 588000 events have been generated 
+
+ Pythia::next(): 589000 events have been generated 
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Event generation took 49.52s and produced 196 primaries 
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Sending 196 particles
+[[01;36m16:58:05[0m][[01;32mINFO[0m] treating ev 91 part 1 out of 1
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00905587,-0.0134219,-0.00714171)
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 395 primaries 
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Sending 395 particles
+[[01;36m16:58:05[0m][[01;32mINFO[0m] treating ev 92 part 1 out of 1
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.013724,0.00355224,0.00129227)
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Event generation took 0s and produced 695 primaries 
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:58:05[0m][[01;32mINFO[0m] treating ev 93 part 1 out of 2
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Sending 195 particles
+[[01;36m16:58:05[0m][[01;32mINFO[0m] treating ev 93 part 2 out of 2
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:58:05[0m][[01;32mINFO[0m] Sampled interacting vertex (0.0232441,-0.000776874,0.0049664)
+
+ Pythia::next(): 590000 events have been generated 
+
+ Pythia::next(): 591000 events have been generated 
+
+ Pythia::next(): 592000 events have been generated 
+
+ Pythia::next(): 593000 events have been generated 
+
+ Pythia::next(): 594000 events have been generated 
+
+ Pythia::next(): 595000 events have been generated 
+
+ Pythia::next(): 596000 events have been generated 
+
+ Pythia::next(): 597000 events have been generated 
+
+ Pythia::next(): 598000 events have been generated 
+
+ Pythia::next(): 599000 events have been generated 
+
+ Pythia::next(): 600000 events have been generated 
+
+ Pythia::next(): 601000 events have been generated 
+
+ Pythia::next(): 602000 events have been generated 
+
+ Pythia::next(): 603000 events have been generated 
+
+ Pythia::next(): 604000 events have been generated 
+
+ Pythia::next(): 605000 events have been generated 
+
+ Pythia::next(): 606000 events have been generated 
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Event generation took 31.63s and produced 1879 primaries 
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:58:37[0m][[01;32mINFO[0m] treating ev 94 part 1 out of 4
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:58:37[0m][[01;32mINFO[0m] treating ev 94 part 2 out of 4
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:58:37[0m][[01;32mINFO[0m] treating ev 94 part 3 out of 4
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Sending 379 particles
+[[01;36m16:58:37[0m][[01;32mINFO[0m] treating ev 94 part 4 out of 4
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.00585849,0.0200836,0.00407778)
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 248 primaries 
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Sending 248 particles
+[[01;36m16:58:37[0m][[01;32mINFO[0m] treating ev 95 part 1 out of 1
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Sampled interacting vertex (0.000766347,-0.0114428,0.00815694)
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Event generation took 0s and produced 78 primaries 
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Sending 78 particles
+[[01;36m16:58:37[0m][[01;32mINFO[0m] treating ev 96 part 1 out of 1
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:58:37[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00340878,-0.00203685,0.00771216)
+
+ Pythia::next(): 607000 events have been generated 
+
+ Pythia::next(): 608000 events have been generated 
+
+ Pythia::next(): 609000 events have been generated 
+
+ Pythia::next(): 610000 events have been generated 
+
+ Pythia::next(): 611000 events have been generated 
+
+ Pythia::next(): 612000 events have been generated 
+
+ Pythia::next(): 613000 events have been generated 
+
+ Pythia::next(): 614000 events have been generated 
+
+ Pythia::next(): 615000 events have been generated 
+
+ Pythia::next(): 616000 events have been generated 
+
+ Pythia::next(): 617000 events have been generated 
+
+ Pythia::next(): 618000 events have been generated 
+
+ Pythia::next(): 619000 events have been generated 
+
+ Pythia::next(): 620000 events have been generated 
+
+ Pythia::next(): 621000 events have been generated 
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Event generation took 29.12s and produced 1092 primaries 
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:59:06[0m][[01;32mINFO[0m] treating ev 97 part 1 out of 3
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:59:06[0m][[01;32mINFO[0m] treating ev 97 part 2 out of 3
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Sending 92 particles
+[[01;36m16:59:06[0m][[01;32mINFO[0m] treating ev 97 part 3 out of 3
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00483053,0.000516867,0.00216914)
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Event generation took 0s and produced 102 primaries 
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Sending 102 particles
+[[01;36m16:59:06[0m][[01;32mINFO[0m] treating ev 98 part 1 out of 1
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Sampled interacting vertex (0.00511428,-0.0188621,0.0259198)
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Event generation took 0.01s and produced 1489 primaries 
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:59:06[0m][[01;32mINFO[0m] treating ev 99 part 1 out of 3
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m16:59:06[0m][[01;32mINFO[0m] treating ev 99 part 2 out of 3
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Sending 489 particles
+[[01;36m16:59:06[0m][[01;32mINFO[0m] treating ev 99 part 3 out of 3
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Event generation started 
+[[01;36m16:59:06[0m][[01;32mINFO[0m] Sampled interacting vertex (-0.0125913,0.00497999,0.00359342)
+
+ Pythia::next(): 622000 events have been generated 
+
+ Pythia::next(): 623000 events have been generated 
+
+ Pythia::next(): 624000 events have been generated 
+
+ Pythia::next(): 625000 events have been generated 
+
+ Pythia::next(): 626000 events have been generated 
+
+ Pythia::next(): 627000 events have been generated 
+
+ Pythia::next(): 628000 events have been generated 
+
+ Pythia::next(): 629000 events have been generated 
+
+ Pythia::next(): 630000 events have been generated 
+
+ Pythia::next(): 631000 events have been generated 
+
+ Pythia::next(): 632000 events have been generated 
+
+ Pythia::next(): 633000 events have been generated 
+
+ Pythia::next(): 634000 events have been generated 
+
+ Pythia::next(): 635000 events have been generated 
+
+ Pythia::next(): 636000 events have been generated 
+
+ Pythia::next(): 637000 events have been generated 
+
+ Pythia::next(): 638000 events have been generated 
+
+ Pythia::next(): 639000 events have been generated 
+
+ Pythia::next(): 640000 events have been generated 
+
+ Pythia::next(): 641000 events have been generated 
+
+ Pythia::next(): 642000 events have been generated 
+
+ Pythia::next(): 643000 events have been generated 
+
+ Pythia::next(): 644000 events have been generated 
+
+ Pythia::next(): 645000 events have been generated 
+
+ Pythia::next(): 646000 events have been generated 
+
+ Pythia::next(): 647000 events have been generated 
+
+ Pythia::next(): 648000 events have been generated 
+
+ Pythia::next(): 649000 events have been generated 
+
+ Pythia::next(): 650000 events have been generated 
+
+ Pythia::next(): 651000 events have been generated 
+
+ Pythia::next(): 652000 events have been generated 
+
+ Pythia::next(): 653000 events have been generated 
+
+ Pythia::next(): 654000 events have been generated 
+
+ Pythia::next(): 655000 events have been generated 
+
+ Pythia::next(): 656000 events have been generated 
+
+ Pythia::next(): 657000 events have been generated 
+
+ Pythia::next(): 658000 events have been generated 
+
+ Pythia::next(): 659000 events have been generated 
+
+ Pythia::next(): 660000 events have been generated 
+
+ Pythia::next(): 661000 events have been generated 
+
+ Pythia::next(): 662000 events have been generated 
+
+ Pythia::next(): 663000 events have been generated 
+
+ Pythia::next(): 664000 events have been generated 
+
+ Pythia::next(): 665000 events have been generated 
+
+ Pythia::next(): 666000 events have been generated 
+
+ Pythia::next(): 667000 events have been generated 
+
+ Pythia::next(): 668000 events have been generated 
+
+ Pythia::next(): 669000 events have been generated 
+
+ Pythia::next(): 670000 events have been generated 
+
+ Pythia::next(): 671000 events have been generated 
+
+ Pythia::next(): 672000 events have been generated 
+
+ Pythia::next(): 673000 events have been generated 
+
+ Pythia::next(): 674000 events have been generated 
+
+ Pythia::next(): 675000 events have been generated 
+
+ Pythia::next(): 676000 events have been generated 
+
+ Pythia::next(): 677000 events have been generated 
+
+ Pythia::next(): 678000 events have been generated 
+
+ Pythia::next(): 679000 events have been generated 
+
+ Pythia::next(): 680000 events have been generated 
+
+ Pythia::next(): 681000 events have been generated 
+
+ Pythia::next(): 682000 events have been generated 
+
+ Pythia::next(): 683000 events have been generated 
+
+ Pythia::next(): 684000 events have been generated 
+
+ Pythia::next(): 685000 events have been generated 
+
+ Pythia::next(): 686000 events have been generated 
+
+ Pythia::next(): 687000 events have been generated 
+
+ Pythia::next(): 688000 events have been generated 
+
+ Pythia::next(): 689000 events have been generated 
+
+ Pythia::next(): 690000 events have been generated 
+
+ Pythia::next(): 691000 events have been generated 
+
+ Pythia::next(): 692000 events have been generated 
+
+ Pythia::next(): 693000 events have been generated 
+
+ Pythia::next(): 694000 events have been generated 
+
+ Pythia::next(): 695000 events have been generated 
+
+ Pythia::next(): 696000 events have been generated 
+
+ Pythia::next(): 697000 events have been generated 
+
+ Pythia::next(): 698000 events have been generated 
+
+ Pythia::next(): 699000 events have been generated 
+
+ Pythia::next(): 700000 events have been generated 
+
+ Pythia::next(): 701000 events have been generated 
+
+ Pythia::next(): 702000 events have been generated 
+
+ Pythia::next(): 703000 events have been generated 
+
+ Pythia::next(): 704000 events have been generated 
+
+ Pythia::next(): 705000 events have been generated 
+
+ Pythia::next(): 706000 events have been generated 
+
+ Pythia::next(): 707000 events have been generated 
+
+ Pythia::next(): 708000 events have been generated 
+
+ Pythia::next(): 709000 events have been generated 
+
+ Pythia::next(): 710000 events have been generated 
+
+ Pythia::next(): 711000 events have been generated 
+
+ Pythia::next(): 712000 events have been generated 
+
+ Pythia::next(): 713000 events have been generated 
+
+ Pythia::next(): 714000 events have been generated 
+
+ Pythia::next(): 715000 events have been generated 
+
+ Pythia::next(): 716000 events have been generated 
+
+ Pythia::next(): 717000 events have been generated 
+
+ Pythia::next(): 718000 events have been generated 
+
+ Pythia::next(): 719000 events have been generated 
+
+ Pythia::next(): 720000 events have been generated 
+
+ Pythia::next(): 721000 events have been generated 
+
+ Pythia::next(): 722000 events have been generated 
+
+ Pythia::next(): 723000 events have been generated 
+
+ Pythia::next(): 724000 events have been generated 
+
+ Pythia::next(): 725000 events have been generated 
+
+ Pythia::next(): 726000 events have been generated 
+
+ Pythia::next(): 727000 events have been generated 
+
+ Pythia::next(): 728000 events have been generated 
+
+ Pythia::next(): 729000 events have been generated 
+
+ Pythia::next(): 730000 events have been generated 
+
+ Pythia::next(): 731000 events have been generated 
+
+ Pythia::next(): 732000 events have been generated 
+
+ Pythia::next(): 733000 events have been generated 
+
+ Pythia::next(): 734000 events have been generated 
+
+ Pythia::next(): 735000 events have been generated 
+
+ Pythia::next(): 736000 events have been generated 
+
+ Pythia::next(): 737000 events have been generated 
+
+ Pythia::next(): 738000 events have been generated 
+
+ Pythia::next(): 739000 events have been generated 
+
+ Pythia::next(): 740000 events have been generated 
+
+ Pythia::next(): 741000 events have been generated 
+
+ Pythia::next(): 742000 events have been generated 
+
+ Pythia::next(): 743000 events have been generated 
+
+ Pythia::next(): 744000 events have been generated 
+
+ Pythia::next(): 745000 events have been generated 
+
+ Pythia::next(): 746000 events have been generated 
+
+ Pythia::next(): 747000 events have been generated 
+
+ Pythia::next(): 748000 events have been generated 
+
+ Pythia::next(): 749000 events have been generated 
+
+ Pythia::next(): 750000 events have been generated 
+
+ Pythia::next(): 751000 events have been generated 
+
+ Pythia::next(): 752000 events have been generated 
+
+ Pythia::next(): 753000 events have been generated 
+
+ Pythia::next(): 754000 events have been generated 
+
+ Pythia::next(): 755000 events have been generated 
+
+ Pythia::next(): 756000 events have been generated 
+
+ Pythia::next(): 757000 events have been generated 
+
+ Pythia::next(): 758000 events have been generated 
+[[01;36m17:07:04[0m][[01;32mINFO[0m] Event generation took 477.4s and produced 554 primaries 
+[[01;36m17:07:04[0m][[01;32mINFO[0m] Sending 500 particles
+[[01;36m17:07:04[0m][[01;32mINFO[0m] treating ev 100 part 1 out of 2
+[[01;36m17:07:04[0m][[01;32mINFO[0m] Sending 54 particles
+[[01;36m17:07:04[0m][[01;32mINFO[0m] treating ev 100 part 2 out of 2
+[[01;36m17:07:04[0m][[01;32mINFO[0m] CONDRUN CHANGING STATE TO STOPPED
+[[01;36m17:07:04[0m][[01;32mINFO[0m] Waiting info thread
+[[01;36m17:07:04[0m][[01;32mINFO[0m] Received device shutdown request (signal 15).
+[[01;36m17:07:04[0m][[01;32mINFO[0m] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[[01;36m17:07:04[0m][[01;35mSTATE[0m] Transition STOP incoming, but another state transition is already ongoing.
+[[01;36m17:07:04[0m][[01;35mSTATE[0m] RUNNING ---> READY
+[[01;36m17:07:04[0m][[01;35mSTATE[0m] READY ---> RESETTING TASK
+[[01;36m17:07:04[0m][[01;35mSTATE[0m] RESETTING TASK ---> DEVICE READY
+[[01;36m17:07:04[0m][[01;35mSTATE[0m] DEVICE READY ---> RESETTING DEVICE
+[[01;36m17:07:04[0m][[01;35mSTATE[0m] RESETTING DEVICE ---> IDLE
+[[01;36m17:07:04[0m][[01;35mSTATE[0m] IDLE ---> EXITING
+[[01;36m17:07:04[0m][[01;35mSTATE[0m] Exiting FairMQ state machine
