@@ -934,8 +934,11 @@ for tf in range(1, NTIMEFRAMES + 1):
      workflow['stages'].append(tpcclus)
      tpcreconeeds.append(tpcclus['name'])
 
+   tpc_corr_scaling_options = anchorConfig.get('tpc-corr-scaling','')
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
-   TPCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' + putConfigValuesNew(["GPU_global","TPCGasParam"], {"GPU_proc.ompThreads":NWORKERS}) + ('',' --disable-mc')[args.no_mc_labels]
+   TPCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' \
+                        + putConfigValuesNew(["GPU_global","TPCGasParam", "GPU_rec_tpc", "trackTuneParams"], {"GPU_proc.ompThreads":NWORKERS}) + ('',' --disable-mc')[args.no_mc_labels] \
+                        + tpc_corr_scaling_options
    workflow['stages'].append(TPCRECOtask)
 
    ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS"), MATBUD_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
@@ -950,7 +953,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(FT0RECOtask)
 
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
-   ITSTPCMATCHtask['cmd']= '${O2_ROOT}/bin/o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\" --use-ft0' + putConfigValuesNew(['MFTClustererParam', 'ITSCATrackerParam', 'tpcitsMatch', 'TPCGasParam', 'ITSClustererParam'], {"NameConf.mDirMatLUT" : ".."})
+   ITSTPCMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\" --use-ft0' \
+                          + putConfigValuesNew(['MFTClustererParam', 'ITSCATrackerParam', 'tpcitsMatch', 'TPCGasParam', 'ITSClustererParam, GPU_rec_tpc, trackTuneParams'], {"NameConf.mDirMatLUT" : ".."}) \
+                          + tpc_corr_scaling_options
    workflow['stages'].append(ITSTPCMATCHtask)
 
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
@@ -962,8 +967,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    TRDTRACKINGtask2['cmd'] = '${O2_ROOT}/bin/o2-trd-global-tracking ' + getDPL_global_options(bigshm=True) + ('',' --disable-mc')[args.no_mc_labels] \
                               + putConfigValuesNew(['ITSClustererParam',
                                                    'ITSCATrackerParam',
-                                                    'TPCGasParam'], {"NameConf.mDirMatLUT" : ".."})                                    \
-                             + " --track-sources " + anchorConfig.get("o2-trd-global-tracking-options",{}).get("track-sources","all")
+                                                   'trackTuneParams',
+                                                   'GPU_rec_tpc',
+                                                   'TPCGasParam'], {"NameConf.mDirMatLUT" : ".."})                                    \
+                             + " --track-sources " + anchorConfig.get("o2-trd-global-tracking-options",{}).get("track-sources","all")  \
+                             + tpc_corr_scaling_options
    workflow['stages'].append(TRDTRACKINGtask2)
 
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], getDigiTaskName("TOF")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -980,8 +988,11 @@ for tf in range(1, NTIMEFRAMES + 1):
                               + putConfigValuesNew(["ITSClustererParam",
                                                     'TPCGasParam',
                                                     'ITSCATrackerParam',
-                                                    'MFTClustererParam'])                         \
-                              + " --track-sources " + anchorConfig.get("o2-tof-matcher-workflow-options",{}).get("track-sources",toftracksrcdefault) + (' --combine-devices','')[args.no_combine_dpl_devices]
+                                                    'MFTClustererParam',
+                                                    'GPU_recp_tpc',
+                                                    'trackTuneParams'])                         \
+                              + " --track-sources " + anchorConfig.get("o2-tof-matcher-workflow-options",{}).get("track-sources",toftracksrcdefault) + (' --combine-devices','')[args.no_combine_dpl_devices] \
+                              + tpc_corr_scaling_options
    workflow['stages'].append(TOFTPCMATCHERtask)
 
    # MFT reco: needing access to kinematics (when assessment enabled)
