@@ -4,86 +4,15 @@
 # 1. 2 corresponding ROOT files containing either histograms or QC Monitoring objects
 # 2. 2 corresponding simulation directories
 #
-# The RelVal suite is run with
+# The RelVal suite is for instance run with
 # o2dpg_release_validation.py rel-val -i <file-or-sim-dir1> -j <file-or-sim-dir2>
 #
-# If 2 sim directories should be compared, it the files to be compared must be given via a config JSON
-# via --dirs-config
-# See O2DPG/RelVal/config/rel_val_sim_dirs_default.json for as an example
-#
-# The full help message would be
-# usage: o2dpg_release_validation.py rel-val [-h] -i [INPUT1 ...] -j
-#                                            [INPUT2 ...]
-#                                            [--use-values-as-thresholds [USE_VALUES_AS_THRESHOLDS ...]]
-#                                            [--combine-thresholds {mean,max/min}]
-#                                            [--with-test-chi2]
-#                                            [--test-chi2-threshold CHI2_THRESHOLD]
-#                                            [--test-chi2-threshold-margin CHI2_THRESHOLD_MARGIN]
-#                                            [--with-test-bin-cont]
-#                                            [--test-bin-cont-threshold BIN_CONT_THRESHOLD]
-#                                            [--test-bin-cont-threshold-margin BIN_CONT_THRESHOLD_MARGIN]
-#                                            [--with-test-num-entries]
-#                                            [--test-num-entries-threshold NUM_ENTRIES_THRESHOLD]
-#                                            [--test-num-entries-threshold-margin NUM_ENTRIES_THRESHOLD_MARGIN]
-#                                            [--include-dirs [INCLUDE_DIRS ...]]
-#                                            [--add] [--output OUTPUT]
-#
-# optional arguments:
-#   -h, --help            show this help message and exit
-#   -i [INPUT1 ...], --input1 [INPUT1 ...]
-#                         EITHER first set of input files for comparison OR
-#                         first input directory from simulation for comparison
-#   -j [INPUT2 ...], --input2 [INPUT2 ...]
-#                         EITHER second set of input files for comparison OR
-#                         second input directory from simulation for comparison
-#   --use-values-as-thresholds [USE_VALUES_AS_THRESHOLDS ...]
-#                         Use values from another run as thresholds for this one
-#   --combine-thresholds {mean,max/min}
-#                         Arithmetic mean or maximum/minimum is chosen as threshold
-#                         value
-#   --with-test-chi2      run chi2 test
-#   --test-chi2-threshold CHI2_THRESHOLD
-#                         chi2 threshold
-#   --test-chi2-threshold-margin CHI2_THRESHOLD_MARGIN
-#                         Margin to apply to the chi2 threshold extracted from
-#                         file
-#   --with-test-bin-cont  run bin_cont test
-#   --test-bin-cont-threshold BIN_CONT_THRESHOLD
-#                         bin_cont threshold
-#   --test-bin-cont-threshold-margin BIN_CONT_THRESHOLD_MARGIN
-#                         Margin to apply to the bin_cont threshold extracted
-#                         from file
-#   --with-test-num-entries
-#                         run num_entries test
-#   --test-num-entries-threshold NUM_ENTRIES_THRESHOLD
-#                         num_entries threshold
-#   --test-num-entries-threshold-margin NUM_ENTRIES_THRESHOLD_MARGIN
-#                         Margin to apply to the num_entries threshold extracted
-#                         from file
-#   --include-dirs [INCLUDE_DIRS ...]
-#                         only inlcude directories; note that each pattern is
-#                         assumed to start in the top-directory (at the moment
-#                         no regex or *)
-#   --add                 If given and there is already a RelVal in the output
-#                         directory, extracted objects will be added to the
-#                         existing ones
-#   --output OUTPUT, -o OUTPUT
-#                         output directory
 
 import sys
 import argparse
-import re
+import importlib.util
 from os import environ, makedirs, remove
-from os.path import join, abspath, exists, isdir, dirname, basename, relpath
-from glob import glob
-from subprocess import Popen, PIPE, STDOUT
-from pathlib import Path
-from itertools import combinations
-from shlex import split
-import json
-import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
-import seaborn
+from os.path import join, abspath, exists, dirname, basename, isfile
 from shutil import copy
 
 # make sure O2DPG + O2 is loaded
@@ -93,121 +22,134 @@ if O2DPG_ROOT is None:
     print('ERROR: This needs O2DPG loaded')
     sys.exit(1)
 
-sys.path.append(join(dirname(__file__), '.', 'o2dpg_release_validation_variables'))
+
+O2DPG_ROOT = environ.get("O2DPG_ROOT")
+spec = importlib.util.spec_from_file_location("o2dpg_release_validation_variables", join(O2DPG_ROOT, "RelVal", 'o2dpg_release_validation_variables.py'))
+o2dpg_release_validation_variables = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(o2dpg_release_validation_variables)
+sys.modules["o2dpg_release_validation_variables"] = o2dpg_release_validation_variables
 import o2dpg_release_validation_variables as variables
 
-sys.path.append(join(dirname(__file__), '.', 'o2dpg_release_validation_utils'))
+spec = importlib.util.spec_from_file_location("o2dpg_release_validation_utils", join(O2DPG_ROOT, "RelVal", 'o2dpg_release_validation_utils.py'))
+o2dpg_release_validation_utils = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(o2dpg_release_validation_utils)
+sys.modules["o2dpg_release_validation_utils"] = o2dpg_release_validation_utils
 from o2dpg_release_validation_utils import *
+
+spec = importlib.util.spec_from_file_location("o2dpg_release_validation_plot", join(O2DPG_ROOT, "RelVal", 'o2dpg_release_validation_plot.py'))
+o2dpg_release_validation_plot = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(o2dpg_release_validation_plot)
+sys.modules["o2dpg_release_validation_plot"] = o2dpg_release_validation_plot
+from o2dpg_release_validation_plot import plot_pie_charts, plot_summary_grid, plot_compare_summaries
+
 
 ROOT_MACRO_EXTRACT=join(O2DPG_ROOT, "RelVal", "ExtractAndFlatten.C")
 ROOT_MACRO_RELVAL=join(O2DPG_ROOT, "RelVal", "ReleaseValidation.C")
+ROOT_MACRO_METRICS=join(O2DPG_ROOT, "RelVal", "ReleaseValidationMetrics.C")
 
 from ROOT import gROOT
 
 gROOT.SetBatch()
 
 
-def plot_compare_summaries(summaries, fields, out_dir, *, labels=None, include_patterns=None, exclude_patterns=None):
+def metrics_from_root():
     """
-    if labels is given, it needs to have the same length as summaries
+    Simply get all registered metrics that are defined in the ROOT macro
     """
-    test_histo_value_maps = [extract_from_summary(summary, fields, include_patterns, exclude_patterns) for summary in summaries]
+    log_file_name = join("/tmp", "RelValMetrics.log")
+    if exists(log_file_name):
+        remove(log_file_name)
+    cmd = f"root -l -b -q {ROOT_MACRO_METRICS}"
+    ret = run_macro(cmd, log_file_name)
+    if ret > 0:
+        return ret
 
-    # need to get intersection of tests
-    test_names = list(set().union(*[list(t.keys()) for t in test_histo_value_maps]))
-
-    if not labels:
-        labels = [f"summary_{i}" for i, _ in enumerate(summaries)]
-
-    for test_name in test_names:
-        if test_name == variables.REL_VAL_TEST_SUMMARY_NAME:
-            continue
-        histogram_names_intersection = []
-        # First we figure out the intersection of histograms ==> histograms in common
-        for test_histo_value_map in test_histo_value_maps:
-            if test_name not in test_histo_value_map:
+    with open(log_file_name, "r") as f:
+        current_metric = None
+        for line in f:
+            if current_metric is None and "METRIC" in line:
+                current_metric = line.split()[1]
                 continue
-            this_map = test_histo_value_map[test_name]
-            if not histogram_names_intersection:
-                histogram_names_intersection = this_map["histograms"]
-            histogram_names_intersection =  list(set(histogram_names_intersection) & set(this_map["histograms"]))
-        values = {field: [[] for _ in test_histo_value_maps] for field in fields}
-        # now fill the correct values of the fields for the histograms in common
-        for map_index, test_histo_value_map in enumerate(test_histo_value_maps):
-            this_map = test_histo_value_map[test_name]
-            for histo_name in histogram_names_intersection:
-                i = this_map["histograms"].index(histo_name)
-                for f in fields:
-                    values[f][map_index].append(this_map[f][i])
+            if "enabled" in line:
+                print(current_metric)
+                current_metric = None
+    return 0
 
-        # now plot
-        figure, ax = plt.subplots(figsize=(20, 20))
-        for field, values_lists in values.items():
-            for label, single_values in zip(labels, values_lists):
-                ax.plot(range(len(histogram_names_intersection)), single_values, label=f"{label}_{field}")
-        ax.legend(loc="best", fontsize=20)
-        ax.set_xticks(range(len(histogram_names_intersection)))
-        ax.set_xticklabels(histogram_names_intersection, rotation=90)
-        ax.tick_params("both", labelsize=20)
-        save_path = join(out_dir, f"values_thresholds_{test_name}.png")
-        figure.tight_layout()
-        figure.savefig(save_path)
-        plt.close(figure)
-
-
-def extract(input_filenames, target_filename, include_file_directories=None, add_if_exists=False, reference_extracted=None):
+def extract(input_filenames, target_filename, include_file_directories="", add_if_exists=False, reference_extracted=""):
     """
     Wrap the extraction of objects to be compared
 
     Will be extracted (from TH1, QC objects, TTree etc.), converted to TH1 and put into a flat ROOT file structure.
 
     Args:
+        target_filename: str
+            path to file where extracted objects should be saved
+        include_file_directories: iterable or "" (default: "")
+            only consider a ROOT sub-directory if it contains any of the strings given in the iterable
+        add_if_exists: bool (default: False)
+            if target_filename already exists, update instead of recreate
         reference_extracted: str
-        is used in case of the extraction of TTrees in which case the x-axis binning will be set according to that reference
-        to make objects comparable.
-
-        include_file_directories: list or None
-        will be passed to the ROOT macro and if not None, only sub-directories matching that will be browsed and extracted
+            is used in case of the extraction of TTrees in which case the x-axis binning will be set
+            according to that reference to make objects comparable.
+    Returns:
+        bool
+            True in case of success, False otherwise
     """
-    if not include_file_directories:
-        include_file_directories = ""
 
-    if not reference_extracted:
-        reference_extracted = ""
-
-    if include_file_directories:
-        include_file_directories = ",".join(include_file_directories)
-    else:
-        include_file_directories = ""
+    include_file_directories = ",".join(include_file_directories) if include_file_directories else ""
 
     if exists(target_filename) and not add_if_exists:
+        # this file will otherwise be updated if it exists
         remove(target_filename)
 
     # The ROOT macro is run inside the cwd and puts basename there
     cwd = dirname(target_filename)
     target_filename = basename(target_filename)
-    log_file_name = f"{target_filename}_extract_and_flatten.log"
+    log_file_name = join(cwd, f"{target_filename}_extract_and_flatten.log")
 
     print(f"Extraction of files\n{','.join(input_filenames)}")
 
     for f in input_filenames:
         f = abspath(f)
+        print(f)
         cmd = f"\\(\\\"{f}\\\",\\\"{target_filename}\\\",\\\"{reference_extracted}\\\",\\\"{include_file_directories}\\\"\\)"
         cmd = f"root -l -b -q {ROOT_MACRO_EXTRACT}{cmd}"
-        run_macro(cmd, log_file_name, cwd)
+        ret = run_macro(cmd, log_file_name, cwd)
+        if ret != 0:
+            print(f"ERROR: Extracting from file {f} failed. Please check logfile {abspath(join(cwd, log_file_name))}")
+            return False
+
+    return True
 
 
-def rel_val_files(files1, files2, args, output_dir, no_extract=False):
+def rel_val_root(files1, files2, include_root_dirs, add_to_previous, metrics_enabled, metrics_disabled, label1, label2, output_dir, no_extract=False):
     """
     RelVal for 2 ROOT files, simply a wrapper around ReleaseValidation.C macro
 
     Args:
+        files1: iterable
+            first batch of files to compare
+        files2: iterable
+            second batch of files to compare
+        add_to_previous: bool
+            whether of not extracted objects should be added to existing file (objects therein, if they exist)
+        metrics_enabled: iterable or None
+            names of metrics to be enabled
+        metrics_disabled: iterable or None
+            names of metrics to be disabled
+        label1, label2: str
+            label the overlay plots
+        output_dir: str
+            path of output directory; will be created if it doesn't exist
         no_extract: bool
-        If True, expect files1 and files2 to be of length 1. These are expected to already contain extracted objects.
-        Hence, extraction will be skipped and objects from these files will directly be compared.
-        Potential previous results will not be overwritten but the new ones will be dumped into a new directory (as usual)
+            If True, expect files1 and files2 to be of length 1. These are expected to already contain extracted objects.
+            Hence, extraction will be skipped and objects from these files will directly be compared.
+            Potential previous results will not be overwritten but the new ones will be dumped into a new directory (as usual)
+    Returns:
+        str or None
+            in case of success, return the path to the JSON with computed metrics
+            None otherwise
     """
-
     print("==> Process and compare 2 sets of files <==")
 
     # prepare the output directory
@@ -220,66 +162,173 @@ def rel_val_files(files1, files2, args, output_dir, no_extract=False):
     file_2 = abspath(join(output_dir, "extracted_objects_2.root"))
 
     if no_extract:
-        # in this case we expect the input files to be what we would otherwise extract firt
+        # in this case we expect the input files to be what we would otherwise extract first
         if len(files1) != 1 or len(files2) != 1:
             print(f"ERROR: --no-extract option was passed and expecting list of files to be of length 1 each. However, received lengths of {len(files1)} and {len(files2)}")
             return 1
         file_1 = abspath(files1[0])
         file_2 = abspath(files2[0])
-    else:
-        # extract all objects and put into flat ROOT file structure
-        extract(files1, file_1, args.include_dirs, args.add)
-        extract(files2, file_2, args.include_dirs, args.add, reference_extracted=file_1)
+    elif not extract(files1, file_1, include_root_dirs, add_to_previous) or not extract(files2, file_2, include_root_dirs, add_to_previous, reference_extracted=file_1):
+        return None
 
     # RelVal on flattened files
-    cmd = f"\\(\\\"{file_1}\\\",\\\"{file_2}\\\",{args.test},\\\"{args.labels[0]}\\\",\\\"{args.labels[1]}\\\"\\)"
+    metrics_enabled = ";".join(metrics_enabled) if metrics_enabled else ""
+    metrics_disabled = ";".join(metrics_disabled) if metrics_disabled else ""
+
+    cmd = f"\\(\\\"{file_1}\\\",\\\"{file_2}\\\",\\\"{metrics_enabled}\\\",\\\"{metrics_disabled}\\\",\\\"{label1}\\\",\\\"{label2}\\\"\\)"
     cmd = f"root -l -b -q {ROOT_MACRO_RELVAL}{cmd}"
     print("Running RelVal on extracted objects")
-    run_macro(cmd, log_file_rel_val, cwd=output_dir)
+    ret = run_macro(cmd, log_file_rel_val, cwd=output_dir)
 
     # This comes from the ROOT macro
     json_path = join(output_dir, "RelVal.json")
 
-    if not exists(json_path):
+    if not exists(json_path) or ret > 0:
         # something went wrong
-        print(f"ERROR: Something went wrong, cannot find {json_path} which was supposed to be created by ROOT, log file is")
+        print(f"ERROR: Something went wrong during the calculation of metrics, log file at {log_file_rel_val} reads")
         with open(log_file_rel_val, "r") as f:
             print(f.read())
-        return 1
+        return None
 
-    # go through all we found
-    rel_val_summary = None
-    with open(json_path, "r") as f:
-        rel_val_summary = json.load(f)
-    final_summary = make_single_summary(rel_val_summary, args, output_dir)
-    meta_info = make_single_meta_info(args)
-    write_single_summary(final_summary, meta_info, join(output_dir, "Summary.json"))
-    plot_pie_charts(final_summary, output_dir, "")
-    plot_values_thresholds(final_summary, output_dir, "")
-    plot_summary_grid(final_summary, None, None, None, join(output_dir, "SummaryTests.png"))
-    print_summary(final_summary, long=args.long)
+    return json_path
 
-    return 0
+
+def load_rel_val(json_path, include_patterns=None, exclude_patterns=None, enable_metrics=None, disable_metrics=None):
+    """
+    Wrapper to create RelVal and set some properties
+
+    Args:
+        json_path: str
+            path to JSON file with metrics (and potentially results)
+        include_patterns: str or None (default: None)
+            regex of patterns to be matched against object names to include only certain objects
+        exclude_patterns: str or None (default: None)
+            regex of patterns to be matched against object names to exclude certain objects
+    Returns
+        RelVal
+    """
+    rel_val = RelVal()
+    rel_val.set_object_name_patterns(include_patterns, exclude_patterns)
+    rel_val.enable_metrics(enable_metrics)
+    rel_val.disable_metrics(disable_metrics)
+    rel_val.load((json_path,))
+    return rel_val
+
+
+def initialise_evaluator(rel_val, thresholds, thresholds_default, thresholds_margins, thresholds_combine, regions):
+    """
+    Wrapper to create an evaluator
+
+    Args:
+        rel_val: RelVal
+            the RelVal object that should potentially be tested and is used to derive default threshold
+        thresholds: iterable or None
+            if not None, iterable of string as the paths to RelVal JSONs
+        thresholds_defaults: iterable of 2-tuples or None
+            assign a default threshold value (tuple[1]) to a metric name (tuple[0])
+        threshold_margins: iterable of 2-tuples or None
+            add a margin given in percent (tuple[1]) to a threshold value of a metric name (tuple[0])
+        thresholds_combine: str
+            either "mean" or "extreme", how threshold values extracted from argument thresholds should be combined
+        regions: iterable or None
+            if not None, iterable of string as the paths to RelVal JSONs
+    Returns:
+        Evaluator
+    """
+    evaluator = Evaluator()
+
+    # initialise to run tests on proper mean +- std
+    if regions:
+        rel_val_regions = get_summaries_or_from_file(regions)
+        initialise_regions(evaluator, rel_val_regions)
+
+    # initialise to run tests on thresholds
+    thresholds_default = {metric_name: float(value) for metric_name, value in thresholds_default} if thresholds_default else None
+    rel_val_thresholds = None
+    if thresholds:
+        thresholds_margins = {metric_name: float(value) for metric_name, value in thresholds_margins} if thresholds_margins else None
+        rel_val_thresholds = get_summaries_or_from_file(thresholds)
+    initialise_thresholds(evaluator, rel_val, rel_val_thresholds, thresholds_default, thresholds_margins, thresholds_combine)
+
+    evaluator.initialise()
+    return evaluator
 
 
 def rel_val(args):
     """
-    Entry point for RelVal
+    Entry point for ReleaseValidation
+
+    This is reached either from rel-val or inspect sub-commands
     """
-    if args.add:
-        print(f"NOTE: Extracted objects will be added to existing ones in case there was already a RelVal at {args.output}.\n")
-    # construct the bit mask
-    args.test = 0
-    default_sum = 0
-    for i, t in enumerate(variables.REL_VAL_TEST_NAMES):
-        bit = 2**i
-        args.test += bit * getattr(args, f"with_{t}")
-        default_sum += bit
-    if not args.test:
-        args.test = default_sum
+    def interpret_results(result, metric):
+        """
+        Taking in a result and the metric it was derived from, assign an interpretation
+        """
+        is_critical = args.is_critical is None or metric.name in args.is_critical
+        if not metric.comparable and is_critical:
+            result.interpretation = variables.REL_VAL_INTERPRETATION_CRIT_NC
+            return
+        if not metric.comparable:
+            result.interpretation = variables.REL_VAL_INTERPRETATION_NONCRIT_NC
+            return
+        if result.result_flag == Result.FLAG_UNKNOWN:
+            result.interpretation = variables.REL_VAL_INTERPRETATION_UNKNOWN
+            return
+        if result.result_flag == Result.FLAG_PASSED:
+            result.interpretation = variables.REL_VAL_INTERPRETATION_GOOD
+            return
+        if result.result_flag == Result.FLAG_FAILED and is_critical:
+            result.interpretation = variables.REL_VAL_INTERPRETATION_BAD
+            return
+        result.interpretation = variables.REL_VAL_INTERPRETATION_WARNING
+
     if not exists(args.output):
         makedirs(args.output)
-    rel_val_files(args.input1, args.input2, args, args.output, args.no_extract)
+
+    need_apply = False
+    if hasattr(args, "json_path"):
+        # this comes from the inspect command
+        json_path = get_summary_path(args.json_path)
+        annotations = None
+        include_patterns, exclude_patterns = (args.include_patterns, args.exclude_patterns)
+    else:
+        # in this case, new input ROOT files were provided and we need to apply all our tests
+        need_apply = True
+        include_patterns, exclude_patterns = (None, None)
+        if args.add:
+            print(f"NOTE: Extracted objects will be added to existing ones in case there was already a RelVal at {args.output}.\n")
+        json_path = rel_val_root(args.input1, args.input2, args.include_dirs, args.add, args.enable_metric, args.disable_metric, args.labels[0], args.labels[1], args.output, args.no_extract)
+        if json_path is None:
+            return 1
+        annotations = {"batch_i": [abspath(p) for p in args.input1],
+                       "batch_j": [abspath(p) for p in args.input2]}
+
+    rel_val = load_rel_val(json_path, include_patterns, exclude_patterns, args.enable_metric, args.disable_metric)
+
+    if need_apply or args.use_values_as_thresholds or args.default_threshold or args.regions:
+        evaluator = initialise_evaluator(rel_val, args.use_values_as_thresholds, args.default_threshold, args.margin_threshold, args.combine_thresholds, args.regions)
+        rel_val.apply(evaluator)
+        # assign interpretations to the results we got
+    rel_val.interpret(interpret_results)
+
+    def filter_on_interpretations(result):
+        # only consider those results that match a flag requested by the user
+        return not args.interpretations or result.interpretation in args.interpretations
+
+    # filter results, in this case cased on their interpretation; this will add an additional mask whenever applicable so that
+    # object_names, metric_names, results
+    # returned from RelVal match the condition of the filter function
+    rel_val.filter_results(filter_on_interpretations)
+    # if this comes from inspecting, there will be the annotations from the rel-val before that ==> re-write it
+    rel_val.write(join(args.output, "Summary.json"), annotations=annotations or rel_val.annotations[0])
+
+    if not args.no_plot:
+        # plot various different figures for user inspection
+        plot_pie_charts(rel_val, variables.REL_VAL_SEVERITIES, variables.REL_VAL_SEVERITY_COLOR_MAP, args.output)
+        plot_compare_summaries((rel_val,), args.output)
+        plot_summary_grid(rel_val, variables.REL_VAL_SEVERITIES, variables.REL_VAL_SEVERITY_COLOR_MAP, args.output)
+    print_summary(rel_val, variables.REL_VAL_SEVERITIES, long=args.print_long)
+
     return 0
 
 
@@ -300,37 +349,6 @@ def copy_overlays(path, output_dir,summary):
     return 0
 
 
-def inspect(args):
-    """
-    Inspect a Summary.json in view of RelVal severity
-    """
-    path = get_summary_path(args.path)
-    if not path:
-        return 1
-
-    output_dir = args.output or join(dirname(path), "user_summary")
-    if not exists(output_dir):
-        makedirs(output_dir)
-
-    include_patterns, exclude_patterns = load_patterns(args.include_patterns, args.exclude_patterns)
-    flags = args.flags
-    flags_summary = args.flags_summary
-    current_summary, meta_info = read_single_summary(path)
-    summary = make_single_summary(current_summary, args, output_dir, include_patterns, exclude_patterns, flags, flags_summary)
-    write_single_summary(summary, meta_info, join(output_dir, "Summary.json"))
-    print_summary(summary, include_patterns, long=args.long)
-
-    if args.plot:
-        plot_pie_charts(summary, output_dir, "", include_patterns, exclude_patterns)
-        plot_values_thresholds(summary, output_dir, "", include_patterns, exclude_patterns)
-        plot_summary_grid(summary, args.flags, include_patterns, exclude_patterns, join(output_dir, "SummaryTests.png"))
-
-    if args.copy_overlays:
-        copy_overlays(path, output_dir,summary)
-
-    return 0
-
-
 def compare(args):
     """
     Compare 2 RelVal outputs with one another
@@ -339,52 +357,51 @@ def compare(args):
         print("ERROR: You can only compare exactly one RelVal output to exactly to one other RelVal output at the moment.")
         return 1
 
-    inputs = (args.input1[0], args.input2[0])
     output_dir = args.output
 
-    # load everything
-    include_patterns, exclude_patterns = load_patterns(args.include_patterns, args.exclude_patterns)
-    inputs = [join(get_summary_path(input_path)) for input_path in inputs]
+    # load
+    rel_val1 = load_rel_val(get_summary_path(args.input1[0]), args.include_patterns, args.exclude_patterns, args.enable_metric, args.disable_metric)
+    rel_val2 = load_rel_val(get_summary_path(args.input2[0]), args.include_patterns, args.exclude_patterns, args.enable_metric, args.disable_metric)
 
-    if not all(inputs):
-        print(f"ERROR: Cannot find {inputs[0]} and {inputs[1]}")
-        return 1
+    # get the test and metric names they have in common
+    test_names = np.intersect1d(rel_val1.known_test_names, rel_val2.known_test_names)
+    metric_names = np.intersect1d(rel_val1.known_metrics, rel_val2.known_metrics)
 
-    # only read the summaries, without meta info
-    summaries = [read_single_summary(input_path)[0] for input_path in inputs]
+    print("METRIC NAME, TEST NAME, INTERPRETATION, #IN COMMON, #ONLY IN FIRST, #ONLY IN SECOND")
+    for metric_name in metric_names:
+        for test_name in test_names:
+            object_names1, results1 = rel_val1.get_result_per_metric_and_test(metric_name, test_name)
+            object_names2, results2 = rel_val2.get_result_per_metric_and_test(metric_name, test_name)
 
-    if not args.difference and not args.compare_values:
-        args.difference, args.compare_values = (True, True)
+            for interpretation in variables.REL_VAL_SEVERITIES:
+                if args.interpretations and interpretation not in args.interpretations:
+                    continue
+                # object names of Results matching an interpretation
+                object_names_interpretation1 = object_names1[count_interpretations(results1, interpretation)]
+                object_names_interpretation2 = object_names2[count_interpretations(results2, interpretation)]
+                # elements in 1 that are not in 2...
+                only_in1 = np.setdiff1d(object_names_interpretation1, object_names_interpretation2)
+                # ...and the other way round
+                only_in2 = np.setdiff1d(object_names_interpretation2, object_names_interpretation1)
+                # ...as well as elements they have in common
+                in_common = np.intersect1d(object_names_interpretation1, object_names_interpretation2)
+                s = f"{metric_name}, {test_name}, {interpretation}, {len(in_common)}, {len(only_in1)}, {len(only_in2)}"
+                if args.print_long:
+                    in_common = ";".join(in_common) if len(in_common) else "NONE"
+                    only_in1 = ";".join(only_in1) if len(only_in1) else "NONE"
+                    only_in2 = ";".join(only_in2) if len(only_in2) else "NONE"
+                    s += f", {in_common}, {only_in1}, {only_in2}"
+                print(s)
+
+
+
 
     # plot comparison of values and thresholds of both RelVals per test
-    if args.compare_values:
+    if args.plot:
         if not exists(output_dir):
             makedirs(output_dir)
-        plot_compare_summaries(summaries, ["threshold", "value"], output_dir, labels=args.labels, include_patterns=include_patterns, exclude_patterns=exclude_patterns)
+        plot_compare_summaries((rel_val1, rel_val2), output_dir, labels=args.labels)
 
-    # print the histogram names with different severities per test
-    if args.difference:
-        s = "\nCOMPARING RELVAL SUMMARY\n"
-        summaries = [map_histos_to_severity(summary, include_patterns, exclude_patterns) for summary in summaries]
-        print("Histograms with different RelVal results from 2 RelVal runs")
-        for severity, use in zip(variables.REL_VAL_SEVERITY_MAP, variables.REL_VAL_SEVERITIES_USE_SUMMARY):
-            if not use:
-                continue
-            intersection = list(set(summaries[0][severity]) & set(summaries[1][severity]))
-            s += f"==> SEVERITY {severity} <=="
-            print(f"==> SEVERITY {severity} <==")
-            s += "\n"
-            for i, summary in enumerate(summaries):
-                print(f"FILE {i+1}")
-                s += f"FILE {i+1}: "
-                counter = 0
-                for histo_name in summary[severity]:
-                    if histo_name not in intersection:
-                        print(f"  {histo_name}")
-                        counter += 1
-                s += f"{counter}   "
-            s += "\n"
-        print(s)
     return 0
 
 
@@ -392,11 +409,9 @@ def influx(args):
     """
     Create an influxDB metrics file
     """
-    output_dir = args.dir
-    json_in = join(output_dir, "Summary.json")
-    if not exists(json_in):
-        print(f"Cannot find expected JSON summary {json_in}.")
-        return 1
+    rel_val = load_rel_val(get_summary_path(args.path))
+
+    output_path = args.path if isfile(args.path) else join(args.path, "influxDB.dat")
     table_name = "O2DPG_MC_ReleaseValidation"
     if args.table_suffix:
         table_name = f"{table_name}_{args.table_suffix}"
@@ -413,63 +428,55 @@ def influx(args):
     # always the same
     row_tags = table_name + tags_out
 
-    out_file = join(output_dir, "influxDB.dat")
-
-    summary, _ = read_single_summary(json_in)
-    with open(out_file, "w") as f:
-        for i, (histo_name, tests) in enumerate(summary.items()):
-            if not tests:
-                continue
-            common_string = f"{row_tags},id={i}"
-            if args.web_storage:
-                common_string += f",web_storage={join(args.web_storage, tests[0]['rel_path_plot'])}"
-            common_string += f",histogram_name={histo_name}"
-            for test in tests:
-                test_string = common_string + f",test_name={test['test_name']} status={variables.REL_VAL_SEVERITY_MAP[test['result']]}"
-                for key in ("value", "threshold"):
-                    value = test[key]
-                    if value is None:
-                        continue
-                    test_string += f",{key}={value}"
-                f.write(f"{test_string}\n")
+    with open(output_path, "w") as f:
+        object_names, metric_names, result_names, results = rel_val.query_results()
+        for i, (object_name, metric_name, result_name, result) in enumerate(zip(object_names, metric_names, result_names, results)):
+            common_string = f"{row_tags},id={i},histogram_name={object_name},metric_name={metric_name},test_name={result_name} status={variables.REL_VAL_SEVERITY_MAP[result.interpretation]}"
+            if result.value is not None:
+                common_string += f",value={result.value}"
+            if result.mean is not None:
+                common_string += f",threshold={result.mean}"
+            f.write(f"{common_string}\n")
     return 0
 
 
-def dir_comp(args):
+def print_simple(args):
     """
-    Entry point for RelVal
+    Simply print line-by-line
+
+    object names (--object-names)
+
+    metric names (--metric-names)
+
+    test names (--test-names)
     """
-    dir1 = args.input1[0]
-    dir2 = args.input2[0]
-    if not isdir(dir1) or not isdir(dir2):
-        print("ERROR: This comparison requires 2 directories as input")
-        return 1
-    if not exists(args.output):
-        makedirs(args.output)
-    # file sizes, this is just done on everything to be found in both directories
-    file_sizes_to_json = file_sizes([dir1, dir2], args.threshold)
-    with open(join(args.output, "file_sizes.json"), "w") as f:
-        json.dump(file_sizes_to_json, f, indent=2)
-    return 0
 
+    if not args.path:
+        if not args.metric_names:
+            return 0
+        return metrics_from_root()
 
-def print_table(args):
-    """
-    Print the filtered histogram names of a Summary.json as list to screen
-    """
-    path = get_summary_path(args.path)
-    if not path:
-        return 1
+    rel_val = load_rel_val(get_summary_path(args.path), args.include_patterns, args.exclude_patterns, args.enable_metric, args.disable_metric)
 
-    include_patterns, exclude_patterns = load_patterns(args.include_patterns, args.exclude_patterns, False)
-    summary, _ = read_single_summary(path)
-    for histo_name, tests in summary.items():
-        if not check_patterns(histo_name, include_patterns, exclude_patterns):
-            continue
-        if not check_flags(tests, args.flags, args.flags_summary):
-            continue
-        print(f"{histo_name}")
+    def filter_on_interpretations(result):
+        # only consider those results that match a flag requested by the user
+        return not args.interpretations or result.interpretation in args.interpretations
 
+    rel_val.filter_results(filter_on_interpretations)
+    if args.metric_names:
+        for metric_name in rel_val.known_metrics:
+            print(metric_name)
+    if args.test_names and rel_val.number_of_tests:
+        for test_name in rel_val.known_test_names:
+            print(test_name)
+    if args.object_names:
+        if rel_val.number_of_tests:
+            # we have tests, so we go for object names with interpretations
+            object_names, _ = rel_val.get_result_per_metric_and_test()
+        else:
+            object_names = rel_val.known_objects
+        for object_name in np.unique(object_names):
+            print(object_name)
     return 0
 
 
@@ -477,76 +484,76 @@ def print_header():
     print(f"\n{'#' * 25}\n#{' ' * 23}#\n# RUN ReleaseValidation #\n#{' ' * 23}#\n{'#' * 25}\n")
 
 
+# we define the parser here
+
+COMMON_FILE_PARSER = argparse.ArgumentParser(add_help=False)
+COMMON_FILE_PARSER.add_argument("-i", "--input1", nargs="*", help="EITHER first set of input files for comparison OR first input directory from simulation for comparison", required=True)
+COMMON_FILE_PARSER.add_argument("-j", "--input2", nargs="*", help="EITHER second set of input files for comparison OR second input directory from simulation for comparison", required=True)
+COMMON_FILE_PARSER.add_argument("--labels", nargs=2, help="labels you want to appear in the plot legends in case of overlay plots from batches -i and -j", default=("batch_i", "batch_j"))
+COMMON_FILE_PARSER.add_argument("--no-extract", dest="no_extract", action="store_true", help="no extraction but immediately expect histograms present for comparison")
+
+COMMON_THRESHOLD_PARSER = argparse.ArgumentParser(add_help=False)
+COMMON_THRESHOLD_PARSER.add_argument("--regions", help="Use calculated regions to test status")
+COMMON_THRESHOLD_PARSER.add_argument("--default-threshold", dest="default_threshold", action="append", nargs=2)
+COMMON_THRESHOLD_PARSER.add_argument("--use-values-as-thresholds", nargs="*", dest="use_values_as_thresholds", help="Use values from another run as thresholds for this one")
+COMMON_THRESHOLD_PARSER.add_argument("--combine-thresholds", dest="combine_thresholds",  choices=["mean", "extreme"], help="Arithmetic mean or extreme value is chosen as threshold", default="mean")
+COMMON_THRESHOLD_PARSER.add_argument("--margin-threshold", dest="margin_threshold", action="append", nargs=2)
+
+COMMON_METRIC_PARSER = argparse.ArgumentParser(add_help=False)
+COMMON_METRIC_PARSER.add_argument("--enable-metric", dest="enable_metric", nargs="*")
+COMMON_METRIC_PARSER.add_argument("--disable-metric", dest="disable_metric", nargs="*")
+
+COMMON_PATTERN_PARSER = argparse.ArgumentParser(add_help=False)
+COMMON_PATTERN_PARSER.add_argument("--include-patterns", dest="include_patterns", nargs="*", help="include objects whose name includes at least one of the given patterns (takes precedence)")
+COMMON_PATTERN_PARSER.add_argument("--exclude-patterns", dest="exclude_patterns", nargs="*", help="exclude objects whose name includes at least one of the given patterns")
+
+COMMON_FLAGS_PARSER = argparse.ArgumentParser(add_help=False)
+COMMON_FLAGS_PARSER.add_argument("--interpretations", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(variables.REL_VAL_SEVERITY_MAP.keys()))
+COMMON_FLAGS_PARSER.add_argument("--is-critical", dest="is_critical", nargs="*", help="set names of metrics that are assumed to be critical")
+
+COMMON_VERBOSITY_PARSER = argparse.ArgumentParser(add_help=False)
+COMMON_VERBOSITY_PARSER.add_argument("--print-long", dest="print_long", action="store_true", help="enhance verbosity")
+COMMON_VERBOSITY_PARSER.add_argument("--no-plot", dest="no_plot", action="store_true", help="suppress plotting")
+
+PARSER = argparse.ArgumentParser(description='Wrapping ReleaseValidation macro')
+SUB_PARSERS = PARSER.add_subparsers(dest="command")
+REL_VAL_PARSER = SUB_PARSERS.add_parser("rel-val", parents=[COMMON_FILE_PARSER, COMMON_METRIC_PARSER, COMMON_THRESHOLD_PARSER, COMMON_FLAGS_PARSER, COMMON_VERBOSITY_PARSER])
+REL_VAL_PARSER.add_argument("--include-dirs", dest="include_dirs", nargs="*", help="only include directories; note that each pattern is assumed to start in the top-directory (at the moment no regex or *)")
+REL_VAL_PARSER.add_argument("--add", action="store_true", help="If given and there is already a RelVal in the output directory, extracted objects will be added to the existing ones")
+REL_VAL_PARSER.add_argument("--output", "-o", help="output directory", default="rel_val")
+REL_VAL_PARSER.add_argument("--copy-overlays", dest="copy_overlays", action="store_true", help="Copy overlay plots that meet the filter criteria to output directory")
+REL_VAL_PARSER.set_defaults(func=rel_val)
+
+INSPECT_PARSER = SUB_PARSERS.add_parser("inspect", parents=[COMMON_THRESHOLD_PARSER, COMMON_METRIC_PARSER, COMMON_PATTERN_PARSER, COMMON_FLAGS_PARSER, COMMON_VERBOSITY_PARSER])
+INSPECT_PARSER.add_argument("--path", dest="json_path", help="either complete file path to a Summary.json or directory where one of the former is expected to be", required=True)
+INSPECT_PARSER.add_argument("--output", "-o", help="output directory", default="rel_val_inspect")
+INSPECT_PARSER.add_argument("--copy-overlays", dest="copy_overlays", action="store_true", help="Copy overlay plots that meet the filter criteria to output directory")
+INSPECT_PARSER.set_defaults(func=rel_val)
+
+COMPARE_PARSER = SUB_PARSERS.add_parser("compare", parents=[COMMON_FILE_PARSER, COMMON_PATTERN_PARSER, COMMON_METRIC_PARSER, COMMON_VERBOSITY_PARSER, COMMON_FLAGS_PARSER])
+COMPARE_PARSER.add_argument("--output", "-o", help="output directory", default="rel_val_comparison")
+COMPARE_PARSER.add_argument("--difference", action="store_true", help="plot histograms with different severity")
+COMPARE_PARSER.add_argument("--plot", action="store_true", help="plot value and threshold comparisons of RelVals")
+COMPARE_PARSER.set_defaults(func=compare)
+
+INFLUX_PARSER = SUB_PARSERS.add_parser("influx")
+INFLUX_PARSER.add_argument("--path", help="directory where ReleaseValidation was run", required=True)
+INFLUX_PARSER.add_argument("--tags", nargs="*", help="tags to be added for influx, list of key=value")
+INFLUX_PARSER.add_argument("--table-suffix", dest="table_suffix", help="prefix for table name")
+INFLUX_PARSER.add_argument("--output", "-o", help="output path; if not given, a file influxDB.dat is places inside the RelVal directory")
+INFLUX_PARSER.set_defaults(func=influx)
+
+PRINT_PARSER = SUB_PARSERS.add_parser("print", parents=[COMMON_METRIC_PARSER, COMMON_PATTERN_PARSER, COMMON_FLAGS_PARSER])
+PRINT_PARSER.add_argument("--path", help="either complete file path to a Summary.json or directory where one of the former is expected to be")
+PRINT_PARSER.add_argument("--metric-names", dest="metric_names", action="store_true")
+PRINT_PARSER.add_argument("--test-names", dest="test_names", action="store_true")
+PRINT_PARSER.add_argument("--object-names", dest="object_names", action="store_true")
+PRINT_PARSER.set_defaults(func=print_simple)
+
 def main():
     """entry point when run directly from command line"""
-    parser = argparse.ArgumentParser(description='Wrapping ReleaseValidation macro')
-
-    common_file_parser = argparse.ArgumentParser(add_help=False)
-    common_file_parser.add_argument("-i", "--input1", nargs="*", help="EITHER first set of input files for comparison OR first input directory from simulation for comparison", required=True)
-    common_file_parser.add_argument("-j", "--input2", nargs="*", help="EITHER second set of input files for comparison OR second input directory from simulation for comparison", required=True)
-    common_file_parser.add_argument("--labels", nargs=2, help="labels you want to appear in the plot legends in case of overlay plots from batches -i and -j", default=("batch_i", "batch_j"))
-    common_file_parser.add_argument("--no-extract", dest="no_extract", action="store_true", help="no extraction but immediately expect histograms present for comparison")
-
-    common_threshold_parser = argparse.ArgumentParser(add_help=False)
-    common_threshold_parser.add_argument("--use-values-as-thresholds", nargs="*", dest="use_values_as_thresholds", help="Use values from another run as thresholds for this one")
-    common_threshold_parser.add_argument("--combine-thresholds", dest="combine_thresholds",  choices=["mean", "max/min"], help="Arithmetic mean or maximum/minimum is chosen as threshold value", default="mean")
-    common_threshold_parser.add_argument("--combine-tuned-and-fixed-thresholds",dest="combine_tuned_and_fixed_thresholds", action="store_true", help="Combine the result from 'combine-thresholds' with the fixed threshold value using maximum/minimum")
-    for test, thresh in zip(variables.REL_VAL_TEST_NAMES, variables.REL_VAL_TEST_DEFAULT_THRESHOLDS):
-        test_dashed = test.replace("_", "-")
-        common_threshold_parser.add_argument(f"--with-test-{test_dashed}", dest=f"with_{test}", action="store_true", help=f"run {test} test")
-        common_threshold_parser.add_argument(f"--test-{test_dashed}-threshold", dest=f"{test}_threshold", type=float, help=f"{test} threshold", default=thresh)
-        # The following only take effect for thresholds given via an input file
-        common_threshold_parser.add_argument(f"--test-{test_dashed}-threshold-margin", dest=f"{test}_threshold_margin", type=float, help=f"Margin to apply to the {test} threshold extracted from file", default=1.0)
-
-    common_pattern_parser = argparse.ArgumentParser(add_help=False)
-    common_pattern_parser.add_argument("--include-patterns", dest="include_patterns", nargs="*", help="include objects whose name includes at least one of the given patterns (takes precedence)")
-    common_pattern_parser.add_argument("--exclude-patterns", dest="exclude_patterns", nargs="*", help="exclude objects whose name includes at least one of the given patterns")
-
-    common_flags_parser = argparse.ArgumentParser(add_help=False)
-    common_flags_parser.add_argument("--flags", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(variables.REL_VAL_SEVERITY_MAP.keys()))
-    common_flags_parser.add_argument("--flags-summary", dest="flags_summary", nargs="*", help="extract all objects which have this severity flag as overall test result", choices=list(variables.REL_VAL_SEVERITY_MAP.keys()))
-
-    common_verbosity_parser = argparse.ArgumentParser(add_help=False)
-    common_verbosity_parser.add_argument("--long", action="store_true", help="enhance verbosity")
-
-    sub_parsers = parser.add_subparsers(dest="command")
-    rel_val_parser = sub_parsers.add_parser("rel-val", parents=[common_file_parser, common_threshold_parser, common_verbosity_parser])
-    rel_val_parser.add_argument("--include-dirs", dest="include_dirs", nargs="*", help="only include directories; note that each pattern is assumed to start in the top-directory (at the moment no regex or *)")
-    rel_val_parser.add_argument("--add", action="store_true", help="If given and there is already a RelVal in the output directory, extracted objects will be added to the existing ones")
-    rel_val_parser.add_argument("--output", "-o", help="output directory", default="rel_val")
-    rel_val_parser.set_defaults(func=rel_val)
-
-    inspect_parser = sub_parsers.add_parser("inspect", parents=[common_threshold_parser, common_pattern_parser, common_flags_parser, common_verbosity_parser])
-    inspect_parser.add_argument("path", help="either complete file path to a Summary.json or directory where one of the former is expected to be")
-    inspect_parser.add_argument("--plot", action="store_true", help="Plot the summary grid")
-    inspect_parser.add_argument("--output", "-o", help="output directory, by default points to directory where the Summary.json was found")
-    inspect_parser.add_argument("--copy-overlays", dest="copy_overlays", action="store_true", help="Copy overlay plots that meet the filter criteria to output directory")
-    inspect_parser.set_defaults(func=inspect)
-
-    compare_parser = sub_parsers.add_parser("compare", parents=[common_file_parser, common_pattern_parser])
-    compare_parser.add_argument("--output", "-o", help="output directory", default="rel_val_comparison")
-    compare_parser.add_argument("--difference", action="store_true", help="plot histograms with different severity")
-    compare_parser.add_argument("--compare-values", action="store_true", help="plot value and threshold comparisons of RelVals")
-    compare_parser.set_defaults(func=compare)
-
-    influx_parser = sub_parsers.add_parser("influx")
-    influx_parser.add_argument("--dir", help="directory where ReleaseValidation was run", required=True)
-    influx_parser.add_argument("--web-storage", dest="web_storage", help="full base URL where the RelVal results are supposed to be")
-    influx_parser.add_argument("--tags", nargs="*", help="tags to be added for influx, list of key=value")
-    influx_parser.add_argument("--table-suffix", dest="table_suffix", help="prefix for table name")
-    influx_parser.set_defaults(func=influx)
-
-    print_parser = sub_parsers.add_parser("print", parents=[common_pattern_parser, common_flags_parser])
-    print_parser.add_argument("path", help="either complete file path to a Summary.json or directory where one of the former is expected to be")
-    print_parser.set_defaults(func=print_table)
-
-    file_size_parser = sub_parsers.add_parser("file-sizes", parents=[common_file_parser])
-    file_size_parser.add_argument("--threshold", type=float, default=0.5, help="threshold for how far file sizes are allowed to diverge before warning")
-    file_size_parser.add_argument("--output", "-o", help="output directory", default="file_sizes")
-    file_size_parser.set_defaults(func=dir_comp)
-
-    args = parser.parse_args()
-    if not args.command == "print":
+    args = PARSER.parse_args()
+    if args.command != "print":
         print_header()
     return(args.func(args))
 
