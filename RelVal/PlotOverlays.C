@@ -104,7 +104,7 @@ void overlay2D(std::vector<TH1*> hVec1, std::vector<std::string> labelVec, TLege
 }
 
 // entry point for overlay plots from ReleaseValidation.C
-void PlotOverlayAndRatio(std::vector<TH1*> hVec, std::vector<std::string> labelVec, std::string outputDir, TLegend* legendMetrics = nullptr)
+void PlotOverlayAndRatio(std::vector<TH1*> hVec, std::vector<std::string> labelVec, std::string outputDir = "overlayPlots", TLegend* legendMetrics = nullptr)
 {
   if (!std::filesystem::exists(outputDir)) {
     std::filesystem::create_directory(outputDir);
