@@ -268,7 +268,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   fi
   # in MC, we set it to a negative value to disable completely the corrections (not yet operational though, please check O2);
   # note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
-  if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
+  if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]] && [[ $O2DPG_ENABLE_TPC_DISTORTIONS != "ON" ]]; then
     INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC--1}
   fi
 
