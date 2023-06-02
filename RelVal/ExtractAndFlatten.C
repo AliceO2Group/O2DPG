@@ -1,12 +1,7 @@
-#include <iostream>
-#include <string>
-#include <vector>
-
 void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& basedOnTree = "", std::string const& currentPrefix = "", std::vector<std::string>* includeDirs = nullptr);
 void ExtractTree(TTree* tree, TDirectory* outDir, std::string const& basedOnTree = "", std::string const& currentPrefix = "");
 void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix = "");
 void WriteHisto(TH1* obj, TDirectory* outDir, std::string const& currentPrefix = "");
-void WriteProfile(TProfile* obj, TDirectory* outDir, std::string const& currentPrefix = "");
 void WriteTEfficiency(TEfficiency* obj, TDirectory* outDir, std::string const& currentPrefix = "");
 void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix = "");
 bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefix = "");
@@ -24,7 +19,7 @@ bool checkFileOpen(TFile* file)
 // outputFilename: Where to store histograms of flattened output
 // basedOnTree: This is in principle only needed for TTrees to determine the x-axis range and binning
 
-void ExtractAndFlatten(std::string const& filename, std::string const& outputFilename, std::string const& basedOnTree = "", std::string const& includeDirsString = "")
+int ExtractAndFlatten(std::string const& filename, std::string const& outputFilename, std::string const& basedOnTree = "", std::string const& includeDirsString = "")
 {
   gROOT->SetBatch();
 
@@ -54,12 +49,14 @@ void ExtractAndFlatten(std::string const& filename, std::string const& outputFil
   TFile inFile(filename.c_str(), "READ");
   if (!checkFileOpen(&inFile)) {
     std::cerr << "File " << filename << " could not be opened\n";
-    return;
+    return 1;
   }
   TFile extractedFile(outputFilename.c_str(), "UPDATE");
   ExtractAndFlattenDirectory(&inFile, &extractedFile, basedOnTree, "", includeDirs);
   inFile.Close();
   extractedFile.Close();
+
+  return 0;
 }
 
 // writing a TObject to a TDirectory
@@ -70,10 +67,21 @@ void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix)
   histo->SetName(name.c_str());
   auto hasObject = (TH1*)dir->Get(name.c_str());
   if (hasObject) {
+    std::cout << "Found object " << histo->GetName() << "\n";
     hasObject->Add(histo);
     dir->WriteTObject(hasObject, name.c_str(), "Overwrite");
     return;
   }
+  dir->WriteTObject(histo);
+}
+
+// writing a TObject to a TDirectory
+void WriteToDirectoryEff(TEfficiency* histo, TDirectory* dir, std::string const& prefix)
+{
+  std::string name = prefix + histo->GetName();
+
+  histo->SetName(name.c_str());
+
   dir->WriteTObject(histo);
 }
 
@@ -242,10 +250,6 @@ bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefi
     WriteTEfficiency(eff, outDir, currentPrefix);
     return true;
   }
-  if (auto prof = dynamic_cast<TProfile*>(o)) {
-    WriteProfile(prof, outDir, currentPrefix);
-    return true;
-  }
   if (auto hist = dynamic_cast<TH1*>(o)) {
     WriteHisto(hist, outDir, currentPrefix);
     return true;
@@ -263,29 +267,26 @@ void WriteHisto(TH1* hA, TDirectory* outDir, std::string const& currentPrefix)
 // Implementation to extract TH1 from TEfficieny and write them
 void WriteTEfficiency(TEfficiency* hEff, TDirectory* outDir, std::string const& currentPrefix)
 { // should I further develop that?
-  // separate numerator and denominator of the efficiency
-  auto hEffNomin = (TH1*)hEff->GetPassedHistogram(); // eff nominator
-  auto hEffDenom = (TH1*)hEff->GetTotalHistogram();  // eff denominator
-  hEffNomin->SetName(Form("%s_numeratorFromTEfficiency", hEffNomin->GetName()));
-  hEffDenom->SetName(Form("%s_denominatorFromTEfficiency", hEffDenom->GetName()));
+  // separate numerator and denominator of the efficiency.
+  // NOTE These have no directory assigned -> GOOD
+  auto hEffNumerator = (TH1*)hEff->GetCopyPassedHisto(); // eff nominator
+  auto hEffDenominator = (TH1*)hEff->GetCopyTotalHisto();  // eff denominator
+  hEffNumerator->SetName(Form("%s_numeratorFromTEfficiency", hEff->GetName()));
+  hEffDenominator->SetName(Form("%s_denominatorFromTEfficiency", hEff->GetName()));
 
   // recreate the efficiency dividing numerator for denominator:
-  auto heff = (TH1*)(hEffNomin->Clone("heff"));
-  heff->SetTitle(Form("%s", hEff->GetTitle()));
-  heff->SetName(Form("%s_ratioFromTEfficiency", hEff->GetName()));
-  heff->Divide(hEffNomin, hEffDenom, 1.0, 1.0, "B");
+  auto hEffWrite = (TH1*)(hEffNumerator->Clone(Form("%s_ratioFromTEfficiency", hEff->GetName())));
+  // we need to take away ownership of the currently set directory. Otherwise it might be written twice!
+  hEffWrite->SetDirectory(nullptr);
+  hEffWrite->SetTitle(Form("%s", hEff->GetTitle()));
+  hEffWrite->Divide(hEffNumerator, hEffDenominator, 1., 1., "B");
 
-  WriteToDirectory(hEffNomin, outDir, currentPrefix);
-  WriteToDirectory(hEffDenom, outDir, currentPrefix);
-  WriteToDirectory(heff, outDir, currentPrefix);
-}
+  WriteToDirectory(hEffNumerator, outDir, currentPrefix);
+  WriteToDirectory(hEffDenominator, outDir, currentPrefix);
+  WriteToDirectory(hEffWrite, outDir, currentPrefix);
 
-// Implementation to write TProfile
-void WriteProfile(TProfile* hProf, TDirectory* outDir, std::string const& currentPrefix)
-{ // should I further develop that?
+  delete hEffNumerator;
+  delete hEffDenominator;
+  delete hEffWrite;
 
-  auto hprofx = (TH1D*)hProf->ProjectionX();
-
-  WriteToDirectory(hProf, outDir, currentPrefix);
-  WriteToDirectory(hprofx, outDir, currentPrefix);
 }

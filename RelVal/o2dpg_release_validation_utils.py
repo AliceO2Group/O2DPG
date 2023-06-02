@@ -1,485 +1,616 @@
 #!/usr/bin/env python3
 #
-# Definition common functionality
+# Definition of common functionality
 
-import sys
-import argparse
 import re
-from os.path import join, abspath, exists, isdir, dirname
-from glob import glob
+from os.path import join, exists, isdir
+from itertools import product
 from subprocess import Popen, PIPE, STDOUT
-from pathlib import Path
-from itertools import combinations
 from shlex import split
 import json
-import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
-import seaborn
-
-sys.path.append(join(dirname(__file__), '.', 'o2dpg_release_validation_variables'))
-import o2dpg_release_validation_variables as variables
+import numpy as np
 
 
-def find_mutual_files(dirs, glob_pattern, *, grep=None):
+def remove_outliers(data, m=6.):
     """
-    Find mutual files recursively in list of dirs
-
-    Args:
-        dirs: iterable
-            directories to take into account
-        glob_pattern: str
-            pattern used to apply glob to only seach for some files
-        grep: iterable
-            additional list of patterns to grep for
-    Returns:
-        list: intersection of found files
+    Helper to remove outliers from a list of floats
     """
-    files = []
-    for d in dirs:
-        glob_path = f"{d}/**/{glob_pattern}"
-        files.append(glob(glob_path, recursive=True))
-
-    for f, d in zip(files, dirs):
-        f.sort()
-        for i, _ in enumerate(f):
-            # strip potential leading /
-            f[i] = f[i][len(d):].lstrip("/")
-
-    # build the intersection
-    if not files:
-        return []
-
-    intersection = files[0]
-    for f in files[1:]:
-        intersection = list(set(intersection) & set(f))
-
-    # apply additional grepping if patterns are given
-    if grep:
-        intersection_cache = intersection.copy()
-        intersection = []
-        for g in grep:
-            for ic in intersection_cache:
-                if g in ic:
-                    intersection.append(ic)
-
-    # Sort for convenience
-    intersection.sort()
-
-    return intersection
+    if not data:
+        return None, None
+    data = np.array(data)
+    d = np.abs(data - np.median(data))
+    mdev = np.median(d)
+    s = d / (mdev if mdev else 1.)
+    print(s)
+    return data[s < m], data[s >= m]
 
 
-def exceeding_difference_thresh(sizes, threshold=0.1):
+def default_evaluation(limits):
     """
-    Find indices in sizes where value exceeds threshold
+    Return a lambda f(value) -> bool
+
+    Indicates pass/fail (True/False) for a given value
     """
-    diff_indices = []
-    for i1, i2 in combinations(range(len(sizes)), 2):
-        diff = abs(sizes[i1] - sizes[i2])
-        if diff / sizes[i2] > threshold or diff / sizes[i2] > threshold:
-            diff_indices.append((i1, i2))
-    return diff_indices
+    if limits[0] is None and limits[1] is None:
+        return lambda x: None
+    if limits[0] is not None and limits[1] is None:
+        return lambda x: x > limits[0]
+    if limits[0] is None and limits[1] is not None:
+        return lambda x: x < limits[1]
+    return lambda x: limits[0] < x < limits[1]
 
 
-def file_sizes(dirs, threshold):
+def compute_limits(mean, std):
     """
-    Compare file sizes of mutual files in given dirs
+    Compute numerical limits for a given mean and std
     """
-    intersection = find_mutual_files(dirs, "*.root")
+    if mean is None or std is None:
+        return (None, None)
+    low, high = (std[0], std[1])
+    if low is not None and high is None:
+        return ((mean - low), None)
+    if low is None and high is not None:
+        return (None, (mean + high))
+    return ((mean - low), (mean + high))
 
-    # prepare for convenient printout
-    max_col_lengths = [0] * (len(dirs) + 1)
-    sizes = [[] for _ in dirs]
 
-    # extract file sizes
-    for f in intersection:
-        max_col_lengths[0] = max(max_col_lengths[0], len(f))
-        for i, d in enumerate(dirs):
-            size = Path(join(d, f)).stat().st_size
-            max_col_lengths[i + 1] = max(max_col_lengths[i + 1], len(str(size)))
-            sizes[i].append(size)
+class Result:
+    """
+    Holds some result values after testing a metric value against corresponding limits
 
-    # prepare dictionary to be dumped and prepare printout
-    collect_dict = {"directories": dirs, "files": {}, "threshold": threshold}
-    top_row = "| " + " | ".join(dirs) + " |"
-    print(f"\n{top_row}\n")
-    for i, f in enumerate(intersection):
-        compare_sizes = []
-        o = f"{f:<{max_col_lengths[0]}}"
-        for j, s in enumerate(sizes):
-            o += f" | {str(s[i]):<{max_col_lengths[j+1]}}"
-            compare_sizes.append(s[i])
-        o = f"| {o} |"
+    This is the smallest granularity that we will have in the end
+    """
+    FLAG_UNKNOWN = 0
+    FLAG_PASSED = 1
+    FLAG_FAILED = 2
 
-        diff_indices =  exceeding_difference_thresh(compare_sizes, threshold)
-        if diff_indices:
-            o += f"  <==  EXCEEDING threshold of {threshold} at columns {diff_indices} |"
-            collect_dict["files"][f] = compare_sizes
+    def __init__(self, name=None, value=None, result_flag=FLAG_UNKNOWN, n_sigmas=None, mean=None, interpretation=None, non_comparable_note=None, in_dict=None):
+        self.name = name
+        self.value = value
+        self.result_flag = result_flag
+        self.n_sigmas = n_sigmas
+        self.mean = mean
+        self.interpretation = interpretation
+        self.non_comparable_note = non_comparable_note
+        if in_dict is not None:
+            self.from_dict(in_dict)
+
+    def as_dict(self):
+        return {"result_name": self.name,
+                "value": self.value,
+                "result_flag": self.result_flag,
+                "n_sigmas": self.n_sigmas,
+                "mean": self.mean,
+                "interpretation": self.interpretation,
+                "non_comparable_note": self.non_comparable_note}
+
+    def from_dict(self, in_dict):
+        self.name = in_dict["result_name"]
+        self.value = in_dict["value"]
+        self.result_flag = in_dict["result_flag"]
+        self.n_sigmas = in_dict["n_sigmas"]
+        self.mean = in_dict["mean"]
+        self.interpretation = in_dict["interpretation"]
+        self.non_comparable_note = in_dict["non_comparable_note"]
+
+
+class Metric:
+    def __init__(self, object_name=None, name=None, value=None, proposed_threshold=None, comparable=None, lower_is_better=None, non_comparable_note=None, in_dict=None):
+        self.object_name = object_name
+        self.name = name
+        self.value = value
+        self.comparable = comparable
+        self.proposed_threshold = proposed_threshold
+        self.lower_is_better = lower_is_better
+        self.non_comparable_note = non_comparable_note
+        if in_dict is not None:
+            self.from_dict(in_dict)
+
+    def as_dict(self):
+        return {"object_name": self.object_name,
+                "metric_name": self.name,
+                "value": self.value,
+                "comparable": self.comparable,
+                "proposed_threshold": self.proposed_threshold,
+                "lower_is_better": self.lower_is_better,
+                "non_comparable_note": self.non_comparable_note}
+
+    def from_dict(self, in_dict):
+        self.object_name = in_dict["object_name"]
+        self.name = in_dict["metric_name"]
+        self.value = in_dict["value"]
+        self.comparable = in_dict["comparable"]
+        self.proposed_threshold = in_dict["proposed_threshold"]
+        self.lower_is_better = in_dict["lower_is_better"]
+        self.non_comparable_note = in_dict["non_comparable_note"]
+
+
+class TestLimits:
+    """
+    Combines functionality to hold limits, test against values and constructing Result objects
+    """
+    def __init__(self, name, mean=None, std=None, test_function=default_evaluation):
+        self.name = name
+        self.mean = mean
+        self.std = std
+        self.limits = compute_limits(mean, std)
+        self.test_function = test_function(self.limits)
+
+    def set_test_function(self, test_function):
+        """
+        Set a test function that, based on limits,
+        returns a lambda function to evaluate pass/fail for a given value
+        """
+        self.test_function = test_function(self.limits)
+
+    def test(self, metric):
+        """
+        Evaluate a value and return Result object
+        """
+        value = metric.value
+
+        if value is None:
+            return Result(self.name, non_comparable_note=metric.non_comparable_note)
+        if not self.test_function or self.mean is None:
+            return Result(self.name, value, non_comparable_note=metric.non_comparable_note)
+        n_sigmas = self.std[int(value > self.mean)]
+        if n_sigmas == 0:
+            n_sigmas = None
+        elif n_sigmas is not None:
+            n_sigmas = abs(self.mean - value) / n_sigmas if n_sigmas != 0 else 0
+
+        # NOTE Here we want the test_function to directly return the test flag
+        test_flag = self.test_function(value)
+        if test_flag:
+            test_flag = Result.FLAG_PASSED
+        elif test_flag is None:
+            test_flag = Result.FLAG_UNKNOWN
         else:
-            o += " OK |"
-        print(o)
-    return collect_dict
+            test_flag = Result.FLAG_FAILED
+        return Result(self.name, value, test_flag, n_sigmas, self.mean, non_comparable_note=metric.non_comparable_note)
 
 
-def load_patterns(include_patterns, exclude_patterns, print_loaded=True):
-    """
-    Load include patterns to be used for regex comparion
-    """
-    def load_this_patterns(patterns):
-        if not patterns or not patterns[0].startswith("@"):
-            return patterns
-        with open(include_patterns[0][1:], "r") as f:
-            return f.read().splitlines()
+class Evaluator:
 
-    include_patterns = load_this_patterns(include_patterns)
-    exclude_patterns = load_this_patterns(exclude_patterns)
-    if print_loaded:
-        if include_patterns:
-            print("Following patterns are included:")
-            for ip in include_patterns:
-                print(f"  - {ip}")
-        if exclude_patterns:
-            print("Following patterns are excluded:")
-            for ep in exclude_patterns:
-                print(f"  - {ep}")
-    return include_patterns, exclude_patterns
+    def __init__(self):
+        self.object_names = []
+        self.metric_names = []
+        self.test_names = []
+        self.tests = []
+        self.mask_any = None
+
+    def add_limits(self, object_name, metric_name, test_limits):
+        self.object_names.append(object_name)
+        self.metric_names.append(metric_name)
+        self.test_names.append(test_limits.name)
+        self.tests.append(test_limits)
+
+    def initialise(self):
+        self.object_names = np.array(self.object_names, dtype=str)
+        self.metric_names = np.array(self.metric_names, dtype=str)
+        self.test_names = np.array(self.test_names, dtype=str)
+        self.tests = np.array(self.tests, dtype=TestLimits)
+
+        # fill up tests
+        # The following guarantees that we have all metrics and all tests for the object names
+        # NOTE Probably there is a more elegant way?!
+        test_names_known = np.unique(self.test_names)
+        metric_names_known = np.unique(self.metric_names)
+        object_names_known = np.unique(self.object_names)
+
+        object_names_to_add = []
+        metric_names_to_add = []
+        test_names_to_add = []
+
+        for object_name, metric_name in product(object_names_known, metric_names_known):
+            mask = (self.object_names == object_name) & (self.metric_names == metric_name)
+            if not np.any(mask):
+                object_names_to_add.extend([object_name] * len(test_names_known))
+                metric_names_to_add.extend([metric_name] * len(test_names_known))
+                test_names_to_add.extend(test_names_known)
+                continue
+            present_test_names = self.test_names[mask]
+            test_names_not_present = test_names_known[~np.isin(present_test_names, test_names_known)]
+            test_names_to_add.extend(test_names_not_present)
+            metric_names_to_add.extend([metric_name] * len(test_names_not_present))
+            object_names_to_add.extend([object_name] * len(test_names_not_present))
+
+        self.object_names = np.array(np.append(self.object_names, object_names_to_add))
+        self.metric_names = np.array(np.append(self.metric_names, metric_names_to_add))
+        self.test_names = np.array(np.append(self.test_names, test_names_to_add))
+        self.tests = np.array(np.append(self.tests, [TestLimits(tnta) for tnta in test_names_to_add]))
+
+        self.mask_any = np.full(self.test_names.shape, True)
+
+    def test(self, metrics):
+        """
+        We expect all arguments to have the same length
+        They must not be None
+        """
+
+        # get all tests registered for the given arguments
+        results = []
+        return_metrics_idx = []
+
+        # probably there is a better way
+        for idx, metric in enumerate(metrics):
+            mask = (self.object_names == metric.object_name) & (self.metric_names == metric.name)
+            if not np.any(mask):
+                continue
+            for t in self.tests[mask]:
+                return_metrics_idx.append(idx)
+                results.append(t.test(metric))
+
+        return np.array(return_metrics_idx, dtype=int), np.array(results, dtype=Result)
 
 
-def check_patterns(name, include_patterns, exclude_patterns):
-    """
-    check a name against a list of regex
-    """
-    if not include_patterns and not exclude_patterns:
-        return True
-    if include_patterns:
-        for ip in include_patterns:
-            if re.search(ip, name):
-                return True
+class RelVal:
+
+    KEY_OBJECTS = "objects"
+    KEY_OBJECT_NAME = "object_name"
+    KEY_ANNOTATIONS = "annotations"
+
+    def __init__(self):
+        # metric names that should be considered (if empty, all)
+        self.include_metrics = []
+        self.exclude_metrics = []
+        # lists of regex to include/exclude objects by name
+        self.include_patterns = None
+        self.exclude_patterns = None
+
+        # collecting everything we have; all of the following will have the same length in the end
+        self.object_names = None
+        self.metric_names = None
+        # metric objects
+        self.metrics = None
+
+        # object and metric names known to this RelVal
+        self.known_objects = None
+        self.known_metrics = None
+
+        # collecting all results; all of the following will have the same length in the end
+        self.results = None
+        # indices to refer to self.object_names, self.metric_names and self.metrics
+        self.results_to_metrics_idx = None
+        self.known_test_names = None
+
+        # to store some annotations
+        self.annotations = None
+
+    def enable_metrics(self, metrics):
+        if not metrics:
+            return
+        for metric in metrics:
+            if metric in self.include_metrics:
+                continue
+            self.include_metrics.append(metric)
+
+    def disable_metrics(self, metrics):
+        if not metrics:
+            return
+        for metric in metrics:
+            if metric in self.exclude_metrics:
+                continue
+            self.exclude_metrics.append(metric)
+
+    def consider_metric(self, metric_name):
+        """
+        whether or not a certain metric should be taken into account
+        """
+        if self.exclude_metrics and metric_name in self.exclude_metrics:
+            return False
+        if not self.include_metrics or metric_name in self.include_metrics:
+            return True
         return False
-    if exclude_patterns:
-        for ip in exclude_patterns:
-            if re.search(ip, name):
+
+    def set_object_name_patterns(self, include_patterns, exclude_patterns):
+        """
+        Load include patterns to be used for regex comparison
+        """
+        def load_this_patterns(patterns):
+            if not patterns or not patterns[0].startswith("@"):
+                return patterns
+            with open(patterns[0][1:], "r") as f:
+                return f.read().splitlines()
+
+        self.include_patterns = load_this_patterns(include_patterns)
+        self.exclude_patterns = load_this_patterns(exclude_patterns)
+
+    def consider_object(self, object_name):
+        """
+        check a name against a list of regex to decide whether or not it should be included
+        """
+        if not self.include_patterns and not self.exclude_patterns:
+            return True
+
+        if self.include_patterns:
+            for ip in self.include_patterns:
+                if re.search(ip, object_name):
+                    return True
+            return False
+
+        # we can only reach this point if there are no include_patterns
+        # that, in turn, means that there are exclude_patterns, cause otherwise
+        # we would have returned in the very beginning
+        for ip in self.exclude_patterns:
+            if re.search(ip, object_name):
                 return False
         return True
-    return False
 
+    @staticmethod
+    def read(path_or_dict):
+        """
+        convenience wrapper to read metrics/results from JSON or a dictionary
+        """
+        if isinstance(path_or_dict, dict):
+            return path_or_dict
+        with open(path_or_dict, "r") as f:
+            return json.load(f)
 
-def check_flags(tests, flags, flags_summary):
-    """
-    include histograms based on the flags
-    """
-    if not flags and not flags_summary:
+    def add_metric(self, metric):
+        """
+        Add a metric
+        """
+        object_name = metric.object_name
+        if not self.consider_object(object_name) or not self.consider_metric(metric.name):
+            return False
+        self.object_names.append(object_name)
+        self.metric_names.append(metric.name)
+        self.metrics.append(metric)
         return True
-    for test in tests:
-        if test["test_name"] == variables.REL_VAL_TEST_SUMMARY_NAME:
-            if flags_summary:
-                for f in flags_summary:
-                    if test["result"] == f:
-                        return True
-        elif flags:
-            for f in flags:
-                if test["result"] == f:
-                    return True
-    return False
+
+    def add_result(self, metric_idx, result):
+        metric = self.metrics[metric_idx]
+        object_name = metric.object_name
+        if not self.consider_object(object_name) or not self.consider_metric(metric.name):
+            return
+        self.results_to_metrics_idx.append(metric_idx)
+        self.results.append(result)
+
+    def load(self, summaries_to_test):
+
+        self.annotations = []
+        self.object_names = []
+        self.metric_names = []
+        self.metrics = []
+        self.results_to_metrics_idx = []
+        self.results = []
+
+        for summary_to_test in summaries_to_test:
+            summary_to_test = self.read(summary_to_test)
+            if annotations := summary_to_test.get(RelVal.KEY_ANNOTATIONS, None):
+                self.annotations.append(annotations)
+            for line in summary_to_test[RelVal.KEY_OBJECTS]:
+                metric = Metric(in_dict=line)
+                if not self.add_metric(metric):
+                    continue
+
+                if "result_name" in line:
+                    # NOTE We could think about not duplicating metrics.
+                    #      Because there is the same metric for each of the corresponding test results
+                    self.add_result(len(self.metrics) - 1, Result(in_dict=line))
+
+        self.known_objects = np.unique(self.object_names)
+        self.known_metrics = np.unique(self.metric_names)
+
+        self.object_names = np.array(self.object_names, dtype=str)
+        self.metric_names = np.array(self.metric_names, dtype=str)
+        self.metrics = np.array(self.metrics, dtype=Metric)
+        self.any_mask = np.full(self.object_names.shape, True)
+
+        # at this point results are still a list
+        self.results_to_metrics_idx = np.array(self.results_to_metrics_idx, dtype=int) if self.results else None
+        self.test_names_results = np.array([r.name for r in self.results]) if self.results else None
+        self.known_test_names = np.unique(self.test_names_results) if self.results else None
+        self.result_filter_mask = np.full(self.known_test_names.shape, True)  if self.results else None
+        self.results = np.array(self.results, dtype=Result) if self.results else None
+
+    def get_metrics(self, object_name=None, metric_name=None):
+        """
+        extract all metrics matching a given object_name or metric_name
+
+        Args:
+            object_name: str or None
+                the object name to look for; if None, any object_name is taken into account
+            metric_name: str or None
+                the metric name to look for; if None, any metric_name is taken into account
+
+        NOTE that at the moment, metrics can only be searched by a single string of object or metric name.
+             It is not possible to match multiple for now...
+        """
+        mask = self.any_mask if object_name is None else np.isin(self.object_names, object_name)
+        mask = mask & (self.any_mask if metric_name is None else np.isin(self.metric_names, metric_name))
+        return self.object_names[mask], self.metric_names[mask], self.metrics[mask]
+
+    def apply(self, evaluator):
+        """
+        Apply loaded tests
+        """
+        # Now, we need to remove the duplicates in object_names and metric_names as well as remove the corresponding duplicates of metrics
+        if self.results is not None:
+            object_metric_names = np.vstack((self.object_names, self.metric_names)).T
+            _, idx = np.unique(object_metric_names, return_index=True, axis=0)
+            self.metrics = self.metrics[idx]
+            self.object_names = self.object_names[idx]
+            self.metric_names = self.metric_names[idx]
+            self.any_mask = np.full(self.object_names.shape, True)
+
+        self.results_to_metrics_idx, self.results = evaluator.test(self.metrics)
+        self.test_names_results = np.array([r.name for r in self.results])
+        self.known_test_names = np.unique(self.test_names_results)
+        self.result_filter_mask = np.full(self.known_test_names.shape, True)
+
+    def interpret(self, interpret_func):
+        for metric_idx, result in zip(self.results_to_metrics_idx, self.results):
+            interpret_func(result, self.metrics[metric_idx])
+
+    def filter_results(self, filter_func):
+        if self.results is None:
+            return
+        self.result_filter_mask = [filter_func(result) for result in self.results]
+
+    def query_results(self, query_func=None):
+        mask = np.array([query_func is None or query_func(result) for result in enumerate(self.results)])
+        mask = mask & self.result_filter_mask
+        idx = self.results_to_metrics_idx[mask]
+        return np.take(self.object_names, idx), np.take(self.metric_names, idx), self.test_names_results[idx], self.results[idx]
+
+    @property
+    def number_of_tests(self):
+        return len(self.known_test_names) if self.results is not None else 0
+
+    @property
+    def number_of_metrics(self):
+        return len(self.known_metrics)
+
+    @property
+    def number_of_objects(self):
+        return len(self.known_objects)
+
+    def get_test_name(self, idx):
+        return self.known_test_names[idx]
+
+    def get_metric_name(self, idx):
+        return self.known_metrics[idx]
+
+    def get_result_per_metric_and_test(self, metric_index_or_name=None, test_index_or_name=None):
+        test_name = test_index_or_name if (isinstance(test_index_or_name, str) or test_index_or_name is None) else self.known_test_names[test_index_or_name]
+        metric_name = metric_index_or_name if (isinstance(metric_index_or_name, str) or metric_index_or_name is None) else self.known_metrics[metric_index_or_name]
+        metric_idx = np.argwhere(self.metric_names == metric_name) if metric_name is not None else self.results_to_metrics_idx
+        mask = np.isin(self.results_to_metrics_idx, metric_idx) & self.result_filter_mask
+        if test_name is not None:
+            mask = mask & (self.test_names_results == test_name)
+        return np.take(self.object_names, self.results_to_metrics_idx[mask]), self.results[mask]
+
+    def get_result_matrix_objects_metrics(self, test_index):
+        mask = self.test_names_results == (self.known_test_names[test_index])
+        idx = self.results_to_metrics_idx[mask]
+        results = self.results[mask]
+        object_names = np.take(self.object_names, idx)
+        metric_names = np.take(self.metric_names, idx)
+
+        idx = np.lexsort((metric_names, object_names))
+
+        object_names = np.sort(np.unique(object_names))
+        metric_names = np.sort(np.unique(metric_names))
+
+        return metric_names, object_names, np.reshape(results[idx], (len(object_names), len(metric_names)))
+
+    def write(self, filepath, annotations=None):
+
+        all_objects = []
+
+        # TODO return one flat dictionary not a nested one
+        def make_dict_include_results(object_name, metric, result):
+            return {RelVal.KEY_OBJECT_NAME: object_name} | metric.as_dict() | result.as_dict()
+
+        def make_dict_exclude_results(object_name, metric, *args):
+            return {RelVal.KEY_OBJECT_NAME: object_name} | metric.as_dict()
+
+        if self.results is None:
+            object_names = self.object_names
+            metrics = self.metrics
+            results = np.empty(metric.shape, dtype=bool)
+            make_dict = make_dict_exclude_results
+        else:
+            object_names = np.take(self.object_names, self.results_to_metrics_idx)
+            metrics = np.take(self.metrics, self.results_to_metrics_idx)
+            results = self.results
+            make_dict = make_dict_include_results
+
+        for object_name, metric, result in zip(object_names, metrics, results):
+            all_objects.append(make_dict(object_name, metric, result))
+
+        final_dict = {RelVal.KEY_OBJECTS: all_objects,
+                      RelVal.KEY_ANNOTATIONS: annotations}
+
+        with open(filepath, "w") as f:
+            json.dump(final_dict, f)
 
 
-def plot_pie_charts(summary, out_dir, title, include_patterns=None, exclude_patterns=None):
+def get_summaries_or_from_file(in_objects):
 
-    print("==> Plot pie charts <==")
-
-    test_n_hist_map = {}
-
-    # need to re-arrange the JSON structure abit for per-test result pie charts
-    for histo_name, tests in summary.items():
-        # check if histo_name is in include patterns
-        if not check_patterns(histo_name, include_patterns, exclude_patterns):
-            continue
-        # loop over tests done
-        for test in tests:
-            test_name = test["test_name"]
-            if test_name not in test_n_hist_map:
-                test_n_hist_map[test_name] = {}
-            result = test["result"]
-            if result not in test_n_hist_map[test_name]:
-                test_n_hist_map[test_name][result] = 0
-            test_n_hist_map[test_name][result] += 1
-
-    for which_test, flags in test_n_hist_map.items():
-        labels = []
-        colors = []
-        n_histos = []
-        for flag, count in flags.items():
-            labels.append(flag)
-            n_histos.append(count)
-            colors.append(variables.REL_VAL_SEVERITY_COLOR_MAP[flag])
-
-        figure, ax = plt.subplots(figsize=(20, 20))
-        ax.pie(n_histos, explode=[0.05 for _ in labels], labels=labels, autopct="%1.1f%%", startangle=90, textprops={"fontsize": 30}, colors=colors)
-        ax.axis("equal")
-        ax.axis("equal")
-
-        figure.suptitle(f"{title} ({which_test})", fontsize=40)
-        save_path = join(out_dir, f"pie_chart_{which_test}.png")
-        figure.savefig(save_path)
-        plt.close(figure)
+    if len(in_objects) == 1 and in_objects[0].startswith("@"):
+        with open(in_objects[0][1:], "r") as f:
+            return f.read().splitlines()
+    return in_objects
 
 
-def extract_from_summary(summary, fields, include_patterns=None, exclude_patterns=None):
-    """
-    Extract a fields from summary per test and histogram name
-    """
-    test_histo_value_map = {}
-    # need to re-arrange the JSON structure abit for per-test result pie charts
-    for histo_name, tests in summary.items():
-        # check if histo_name is in include patterns
-        if not check_patterns(histo_name, include_patterns, exclude_patterns):
-            continue
-        # loop over tests done
-        for test in tests:
-            test_name = test["test_name"]
-            if test_name not in test_histo_value_map:
-                test_histo_value_map[test_name] = {field: [] for field in fields}
-                test_histo_value_map[test_name]["histograms"] = []
-            if not test["comparable"]:
-                continue
-            test_histo_value_map[test_name]["histograms"].append(histo_name)
-            for field in fields:
-                test_histo_value_map[test_name][field].append(test[field])
-    return test_histo_value_map
+def initialise_thresholds(evaluator, rel_val, rel_val_thresholds, thresholds_default, thresholds_margin, thresholds_combine="mean"):
 
+    # The default thresholds will be derived and set for all the objects and metrics that we find in the RelVal to test
+    _, _, metrics = rel_val.get_metrics()
+    for metric in metrics:
+        proposed_threshold = thresholds_default.get(metric.name, metric.proposed_threshold) if thresholds_default else metric.proposed_threshold
+        std = (None, 0) if metric.lower_is_better else (0, None)
+        evaluator.add_limits(metric.object_name, metric.name, TestLimits("threshold_default", proposed_threshold, std))
 
-def plot_values_thresholds(summary, out_dir, title, include_patterns=None, exclude_patterns=None):
-    print("==> Plot values and thresholds <==")
-    test_histo_value_map = extract_from_summary(summary, ["value", "threshold"], include_patterns, exclude_patterns)
-
-    for which_test, histos_values_thresolds in test_histo_value_map.items():
-        if which_test == variables.REL_VAL_TEST_SUMMARY_NAME:
-            continue
-        figure, ax = plt.subplots(figsize=(20, 20))
-        ax.plot(range(len(histos_values_thresolds["histograms"])), histos_values_thresolds["value"], label="values", marker="x")
-        ax.plot(range(len(histos_values_thresolds["histograms"])), histos_values_thresolds["threshold"], label="thresholds", marker="o")
-        ax.legend(loc="best", fontsize=20)
-        ax.set_xticks(range(len(histos_values_thresolds["histograms"])))
-        ax.set_xticklabels(histos_values_thresolds["histograms"], rotation=90)
-        ax.tick_params("both", labelsize=20)
-
-        figure.suptitle(f"{title} ({which_test})", fontsize=40)
-        save_path = join(out_dir, f"test_values_thresholds_{which_test}.png")
-        figure.tight_layout()
-        figure.savefig(save_path)
-        plt.close(figure)
-
-
-def plot_summary_grid(summary, flags, include_patterns, exclude_patterns, output_path):
-
-    print("==> Plot summary grid <==")
-
-    colors = [None] * len(variables.REL_VAL_SEVERITY_MAP)
-    for name, color in variables.REL_VAL_SEVERITY_COLOR_MAP.items():
-        colors[variables.REL_VAL_SEVERITY_MAP[name]] = color
-    cmap = LinearSegmentedColormap.from_list("Custom", colors, len(colors))
-    collect_for_grid = []
-    collect_names = []
-    collect_annotations = []
-
-    for name, batch in summary.items():
-        if not check_patterns(name, include_patterns, exclude_patterns):
-            continue
-        include_this = not flags
-        collect_flags_per_test = [0] * len(variables.REL_VAL_TEST_NAMES_MAP_SUMMARY)
-        collect_annotations_per_test = [""] * len(variables.REL_VAL_TEST_NAMES_MAP_SUMMARY)
-        for test in batch:
-            test_name = test["test_name"]
-            if test_name not in variables.REL_VAL_TEST_NAMES_MAP_SUMMARY:
-                continue
-            if flags and not include_this:
-                for f in flags:
-                    if test["result"] == f:
-                        include_this = True
-                        break
-
-            res = test["result"]
-            ind = variables.REL_VAL_TEST_NAMES_MAP_SUMMARY[test_name]
-            if ind != len(variables.REL_VAL_TEST_NAMES_MAP):
-                value_annotaion = f"{test['value']:.3f}" if test["comparable"] else "---"
-                collect_annotations_per_test[ind] = f"{test['threshold']:.3f}; {value_annotaion}"
-            collect_flags_per_test[ind] = variables.REL_VAL_SEVERITY_MAP[res]
-
-        if not include_this:
-            continue
-        collect_for_grid.append(collect_flags_per_test)
-        collect_names.append(name)
-        collect_annotations.append(collect_annotations_per_test)
-
-    if not collect_for_grid:
-        print("WARNING: Nothing to plot for summary grid")
+    if not rel_val_thresholds:
+        # no need to go further if no user-specific thresholds are given
         return
 
-    figure, ax = plt.subplots(figsize=(20, 20))
-    collect_for_grid = [c for _, c in sorted(zip(collect_names, collect_for_grid))]
-    collect_annotations = [c for _, c in sorted(zip(collect_names, collect_annotations))]
-    collect_names.sort()
-    seaborn.heatmap(collect_for_grid, ax=ax, cmap=cmap, vmin=-0.5, vmax=len(variables.REL_VAL_SEVERITY_MAP) - 0.5, yticklabels=collect_names, xticklabels=variables.REL_VAL_TEST_NAMES_SUMMARY, linewidths=0.5, annot=collect_annotations, fmt="")
-    cbar = ax.collections[0].colorbar
-    cbar.set_ticks(range(len(variables.REL_VAL_SEVERITY_MAP)))
-    cbar.set_ticklabels(variables.REL_VAL_SEVERITIES)
-    ax.set_title("Test summary (threshold; value)", fontsize=30)
-    figure.tight_layout()
-    figure.savefig(output_path)
-    plt.close(figure)
-
-
-def calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args):
-    """
-    calculate thresholds
-    """
-    the_thresholds={}
-
-    if not args.use_values_as_thresholds:
-        for histo_name, tests in rel_val_dict.items():
-            this_histo_thresholds=[]
-            for t in tests:
-                test_name = t["test_name"]
-                if test_name == variables.REL_VAL_TEST_SUMMARY_NAME:
-                    continue
-                these_thresholds={}
-                these_thresholds["test_name"] = test_name
-                these_thresholds["value"] = default_thresholds[test_name]
-                this_histo_thresholds.append(these_thresholds)
-            the_thresholds[histo_name] = this_histo_thresholds
-
-    else:
-        if args.use_values_as_thresholds[0].startswith("@"):
-            with open(args.use_values_as_thresholds[0][1:], "r") as f:
-                list_of_threshold_files = f.read().splitlines()
-        else:
-            list_of_threshold_files = args.use_values_as_thresholds
-
-        user_thresholds = []
-        for file_name in list_of_threshold_files:
-            with open(file_name, "r") as f:
-                user_thresholds.append(json.load(f).get("objects",{}))
-
-        for histo_name, tests in rel_val_dict.items():
-            this_histo_thresholds=[]
-            for t in tests:
-                these_thresholds={}
-                test_name = t["test_name"]
-                if test_name == variables.REL_VAL_TEST_SUMMARY_NAME:
-                    continue
-                these_thresholds["test_name"] = test_name
-                threshold_list = []
-                for ut in user_thresholds:
-                    for ref_test in ut.get(histo_name, []):
-                        if ref_test["test_name"] == test_name:
-                            threshold_list.append(ref_test["value"])
-                if args.combine_thresholds == "mean":
-                    tuned_threshold = pow(margins_thresholds[test_name], variables.REL_VAL_TEST_UPPER_LOWER_THRESHOLD[variables.REL_VAL_TEST_NAMES_MAP[test_name]]) * sum(threshold_list) / len(threshold_list)
-                else:
-                    if REL_VAL_TEST_UPPER_LOWER_THRESHOLD[REL_VAL_TEST_NAMES_MAP[test_name]] == 1:
-                        maxmin = max(threshold_list)
-                    else:
-                        maxmin = min(threshold_list)
-                    tuned_threshold = pow(margins_thresholds[test_name], variables.REL_VAL_TEST_UPPER_LOWER_THRESHOLD[variables.REL_VAL_TEST_NAMES_MAP[test_name]]) * maxmin
-                if args.combine_tuned_and_fixed_thresholds:
-                    if variables.REL_VAL_TEST_UPPER_LOWER_THRESHOLD[variables.REL_VAL_TEST_NAMES_MAP[test_name]] == 1:
-                        these_thresholds["value"] = max(tuned_threshold,default_thresholds[test_name])
-                    else:
-                        these_thresholds["value"] = min(tuned_threshold,default_thresholds[test_name])
-                else:
-                    these_thresholds["value"] = tuned_threshold
-                this_histo_thresholds.append(these_thresholds)
-            the_thresholds[histo_name] = this_histo_thresholds
-
-    return the_thresholds
-
-
-def write_single_summary(comp_objects, meta_info, path):
-    with open(path, "w") as f:
-        json.dump({"objects": comp_objects, "meta_info": meta_info}, f, indent=2)
-
-
-def read_single_summary(path):
-    with open(path, "r") as f:
-        d = json.load(f)
-        return d.get("objects", {}), d.get("meta_info", {})
-
-
-def make_single_meta_info(args):
-    return {"batch_i": [abspath(path) for path in args.input1], "batch_j": [abspath(path) for path in args.input2]}
-
-
-def make_single_summary(rel_val_dict, args, output_dir, include_patterns=None, exclude_patterns=None, flags=None, flags_summary=None):
-    """
-    Make the usual summary
-    """
-    def assign_result_flag(is_critical, comparable, passed):
-        result = "GOOD"
-        if is_critical:
-            if not comparable:
-                result = "CRIT_NC"
-            elif not passed:
-                result = "BAD"
-        else:
-            if not comparable:
-                result = "NONCRIT_NC"
-            elif not passed:
-                result = "WARNING"
-        return result
-
-    this_summary = {}
-
-    default_thresholds = {t: getattr(args, f"{t}_threshold") for t in variables.REL_VAL_TEST_NAMES}
-    margins_thresholds = {t: getattr(args, f"{t}_threshold_margin") for t in variables.REL_VAL_TEST_NAMES}
-    test_enabled = {t: getattr(args, f"with_{t}") for t in variables.REL_VAL_TEST_NAMES}
-    if not any(test_enabled.values()):
-        test_enabled = {t: True for t in test_enabled}
-
-    the_thresholds = calc_thresholds(rel_val_dict, default_thresholds, margins_thresholds, args)
-    with open(join(output_dir, "used_thresholds.json"), "w") as f:
-            json.dump(the_thresholds, f, indent=2)
-
-    for histo_name, tests in rel_val_dict.items():
-        if not check_patterns(histo_name, include_patterns, exclude_patterns):
-            continue
-        test_summary = {"test_name": variables.REL_VAL_TEST_SUMMARY_NAME,
-                        "value": None,
-                        "threshold": None,
-                        "result": None}
-        is_critical_summary = False
-        passed_summary = True
-        is_comparable_summary = True
-        these_tests = []
-        for t in tests:
-            if t["test_name"] == variables.REL_VAL_TEST_SUMMARY_NAME or not test_enabled[t["test_name"]]:
+    for object_name in rel_val_thresholds.known_objects:
+        for metric_name in rel_val_thresholds.known_metrics:
+            _, _, metrics = rel_val_thresholds.get_metrics((object_name,), (metric_name,))
+            if not np.any(metrics):
                 continue
-            test_name = t["test_name"]
-            test_id = variables.REL_VAL_TEST_NAMES_MAP[test_name]
-            threshold = the_thresholds[histo_name][variables.REL_VAL_TEST_NAMES_MAP[test_name]]["value"]
-            t["threshold"] = threshold
 
-            comparable = t["comparable"]
-            passed = True
-            is_critical = variables.REL_VAL_TEST_CRITICAL[test_id] or histo_name.find("_ratioFromTEfficiency") != -1
-            if comparable:
-                passed = t["value"] * variables.REL_VAL_TEST_UPPER_LOWER_THRESHOLD[variables.REL_VAL_TEST_NAMES_MAP[t["test_name"]]] <=  threshold * variables.REL_VAL_TEST_UPPER_LOWER_THRESHOLD[variables.REL_VAL_TEST_NAMES_MAP[t["test_name"]]]
+            values = [m.value for m in metrics if m.comparable]
 
-            t["result"] = assign_result_flag(is_critical, comparable, passed)
+            lower_is_better = metrics[0].lower_is_better
+            factor = 1 if lower_is_better else -1
 
-            is_critical_summary = is_critical or is_critical_summary
-            is_comparable_summary = comparable and is_comparable_summary
-            if is_critical:
-                # only mark potentially as failed if we run over a critical test
-                passed_summary = passed_summary and passed
-            these_tests.append(t)
+            if not values:
+                continue
+            if thresholds_combine == "mean":
+                mean_central = np.mean(values)
+            else:
+                mean_central = factor * max([factor * v for v in values])
 
-        test_summary["result"] = assign_result_flag(is_critical_summary, is_comparable_summary, passed_summary)
-        test_summary["comparable"] = is_comparable_summary
-        these_tests.append(test_summary)
-        if not check_flags(these_tests, flags, flags_summary):
-            continue
-        this_summary[histo_name] = these_tests
+            if factor > 0:
+                low = None
+                up = (1 + thresholds_margin[metric_name]) * mean_central
+            else:
+                up = None
+                low = (1 - thresholds_margin) * mean_central
+            evaluator.add_limits(object_name, metric_name, TestLimits("threshold_user", mean_central, (low, up)))
 
-    return this_summary
+
+def initialise_regions(evaluator, regions):
+    rel_val_regions = RelVal()
+    rel_val_regions.load(regions)
+    for object_name in rel_val_regions.known_objects:
+        for metric_name in rel_val_regions.known_metrics:
+            _, _, metrics = rel_val_regions.get_metrics((object_name,), (metric_name,))
+            values = [m.value for m in metrics if m.comparable]
+            proposed_threshold = metrics[0].proposed_threshold
+            lower_is_better = metrics[0].lower_is_better
+            values_central = []
+            values_outlier = []
+            for v in values:
+                diff = v - proposed_threshold
+                if (diff < 0 and lower_is_better) or (diff > 0 and not lower_is_better):
+                    # if the value is below and lower is better (or the other way round), then accept it
+                    values_central.append(v)
+                    continue
+                if diff != 0:
+                    diff = abs(proposed_threshold / diff)
+                    if diff < 0.1:
+                        # this means we accept up to an order of magnitude
+                        values_outlier.append(v)
+                        continue
+                values_central.append(v)
+
+            mean_central = np.mean(values_central)
+            std_central = np.std(values_central)
+            if np.any(values_outlier):
+                mean_outlier = np.mean(values_outlier)
+                std_outlier = np.std(values_outlier)
+            else:
+                mean_outlier = None
+                std_outlier = None
+            evaluator.add_limits(object_name, metric_name, TestLimits("regions_tight", mean_central, (std_central, std_central)))
+            evaluator.add_limits(object_name, metric_name, TestLimits("regions_loose", mean_outlier, (std_outlier, std_outlier)))
 
 
 def run_macro(cmd, log_file, cwd=None):
@@ -489,45 +620,34 @@ def run_macro(cmd, log_file, cwd=None):
         log_file.write(line)
     p.wait()
     log_file.close()
+    return p.returncode
 
 
-def map_histos_to_severity(summary, include_patterns=None, exclude_patterns=None):
+def count_interpretations(results, interpretation):
     """
-    Map the histogram names to their severity of the test
+    return indices where results have a certain interpretation
     """
-    test_n_hist_map = {s: [] for i, s in enumerate(variables.REL_VAL_SEVERITIES) if variables.REL_VAL_SEVERITIES_USE_SUMMARY[i]}
-
-    # need to re-arrange the JSON structure abit for per-test result pie charts
-    for histo_name, tests in summary.items():
-        # check if histo_name is in include_patterns
-        if not check_patterns(histo_name, include_patterns, exclude_patterns):
-            continue
-        # loop over tests done
-        for test in tests:
-            test_name = test["test_name"]
-            if test_name != variables.REL_VAL_TEST_SUMMARY_NAME:
-                continue
-            result = test["result"]
-            test_n_hist_map[result].append(histo_name)
-
-    return test_n_hist_map
+    return np.array([result.interpretation == interpretation for result in results], dtype=bool)
 
 
-def print_summary(summary, include_patterns=None, exclude_patterns=None, long=False):
+def print_summary(rel_val, interpretations, long=False):
     """
     Check if any 2 histograms have a given severity level after RelVal
     """
+    print("\n##### RELVAL SUMMARY #####\n")
+    for metric_name in rel_val.known_metrics:
+        for test_name in rel_val.known_test_names:
+            object_names, results = rel_val.get_result_per_metric_and_test(metric_name, test_name)
+            print(f"METRIC: {metric_name}, TEST: {test_name}")
+            for interpretation in interpretations:
+                object_names_interpretation = object_names[count_interpretations(results, interpretation)]
+                percent = len(object_names_interpretation) / rel_val.number_of_objects
+                print(f"  {interpretation}: {len(object_names_interpretation)} ({percent * 100:.2f}%)")
+                if long:
+                    for object_name in object_names_interpretation:
+                        print(f"    {object_name}")
 
-    test_n_hist_map = map_histos_to_severity(summary, include_patterns, exclude_patterns)
-
-    n_all = sum(len(v) for v in test_n_hist_map.values())
-    print(f"\n#####\nNumber of compared histograms: {n_all}\nBased on critical tests, severities are\n")
-    for sev, histos in test_n_hist_map.items():
-        print(f"  {sev}: {len(histos)}")
-        if long:
-            for i, h in enumerate(histos, start=1):
-                print(f"    {i}. {h}")
-    print("#####\n")
+    print("\n##########################\n")
 
 
 def get_summary_path(path):
