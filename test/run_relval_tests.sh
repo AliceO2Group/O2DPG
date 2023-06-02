@@ -47,7 +47,7 @@ test_relval()
     root -l -b -q ${O2DPG_ROOT}/test/RelVal/createTestFile.C\(\"${filename2}\"\) >> ${LOG_FILE} 2>&1
     root -l -b -q ${O2DPG_ROOT}/test/RelVal/createTestFile.C\(\"${filename3}\"\) >> ${LOG_FILE} 2>&1
     echo "### Testing RelVal ###" > ${LOG_FILE}
-    # RelVal
+    # rel-val
     ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i ${filename1} -j ${filename2} -o rel_val_${filename1}_${filename2}_dir >> ${LOG_FILE} 2>&1
     local ret=$?
     [[ ${ret} != "0" ]] && { echo "[FATAL]: O2DPG_TEST failed" >> ${LOG_FILE} ; return ${ret} ; }
@@ -55,10 +55,10 @@ test_relval()
     ret=$?
     [[ ${ret} != "0" ]] && { echo "[FATAL]: O2DPG_TEST failed" >> ${LOG_FILE} ; return ${ret} ; }
     # inspect
-    ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py inspect rel_val_${filename1}_${filename2}_dir >> ${LOG_FILE} 2>&1
+    ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py inspect --path rel_val_${filename1}_${filename2}_dir >> ${LOG_FILE} 2>&1
     ret=$?
     [[ ${ret} != "0" ]] && { echo "[FATAL]: O2DPG_TEST failed" >> ${LOG_FILE} ; return ${ret} ; }
-    ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py inspect rel_val_${filename1}_${filename3}_dir >> ${LOG_FILE} 2>&1
+    ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py inspect --path rel_val_${filename1}_${filename3}_dir >> ${LOG_FILE} 2>&1
     ret=$?
     [[ ${ret} != "0" ]] && { echo "[FATAL]: O2DPG_TEST failed" >> ${LOG_FILE} ; return ${ret} ; }
     # compare
@@ -66,7 +66,11 @@ test_relval()
     ret=$?
     [[ ${ret} != "0" ]] && { echo "[FATAL]: O2DPG_TEST failed" >> ${LOG_FILE} ; return ${ret} ; }
     # influx
-    ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py influx --dir rel_val_${filename1}_${filename2}_dir >> ${LOG_FILE} 2>&1
+    ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py influx --path rel_val_${filename1}_${filename2}_dir >> ${LOG_FILE} 2>&1
+    ret=$?
+    [[ ${ret} != "0" ]] && { echo "[FATAL]: O2DPG_TEST failed" >> ${LOG_FILE} ; return ${ret} ; }
+    # view
+    ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py print --object-names --interpretations GOOD --path rel_val_${filename1}_${filename2}_dir >> ${LOG_FILE} 2>&1
     ret=$?
     [[ ${ret} != "0" ]] && { echo "[FATAL]: O2DPG_TEST failed" >> ${LOG_FILE} ; return ${ret} ; }
     return ${ret}
