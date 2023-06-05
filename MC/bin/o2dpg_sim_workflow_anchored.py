@@ -121,11 +121,13 @@ def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp, objtype_external = N
     jsonTString = TBufferJSON.ConvertToJSON(obj, TClass.GetClass(objtype))
     return json.loads(jsonTString.Data())
 
-def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
+def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number, rct = None):
     """
     Retrieves start of run (sor), end of run (eor) and other global parameters from the GRPECS object,
     given a run number. We first need to find the right object
     ... but this is possible with a browsing request and meta_data filtering.
+    Optionally, we can pass an existing result from RCT/Info/RunInformation to check for consistency.
+    In this case and when information is inconsistent we will take time from RCT and issue a warning message.
     """
 
     # make a simple HTTP request on the "browsing" endpoint
@@ -164,6 +166,17 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
 
     SOR=int(grp["mTimeStart"]) # in milliseconds
     EOR=int(grp["mTimeEnd"])
+    # cross check with RCT if available
+    if rct != None:
+       # verify that the variaous sor_eor information are the same
+       if SOR != rct["SOR"]:
+         print ("WARNING: Inconsistent SOR information on CCDB (divergence between GRPECS and RCT) ... will take RCT one")
+         SOR=rct["SOR"]
+
+       if EOR != rct["EOR"]:
+         print ("WARNING: Inconsistent EOR information on CCDB (divergence between GRPECS and RCT) ... will take RCT one")
+         EOR=rct["EOR"]
+
     # fetch orbit reset to calculate orbitFirst
     ts, oreset = ccdbreader.fetch("CTP/Calib/OrbitReset", "vector<Long64_t>", timestamp = SOR)
     print ("All orbit resets")
@@ -273,17 +286,10 @@ def main():
     ccdbreader = CCDBAccessor(args.ccdb_url)
     # fetch the EOR/SOR
     rct_sor_eor = retrieve_sor_eor(ccdbreader, args.run_number) # <-- from RCT/Info
-    GLOparams = retrieve_sor_eor_fromGRPECS(ccdbreader, args.run_number)
+    GLOparams = retrieve_sor_eor_fromGRPECS(ccdbreader, args.run_number, rct=rct_sor_eor)
     if not GLOparams:
        print ("No time info found")
        sys.exit(1)
-
-    # verify that the variaous sor_eor information are the same
-    if GLOparams["SOR"] != rct_sor_eor["SOR"]:
-       print ("Inconsistent SOR information on CCDB")
-
-    if GLOparams["EOR"] != rct_sor_eor["EOR"]:
-       print ("Inconsistent EOR information on CCDB")
 
     # determine timestamp, and production offset for the final
     # MC job to run
