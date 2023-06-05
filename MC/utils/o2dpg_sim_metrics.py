@@ -7,6 +7,7 @@ from copy import deepcopy
 import argparse
 import re
 from datetime import datetime
+from time import time_ns
 import matplotlib.pyplot as plt
 import matplotlib
 import json
@@ -146,6 +147,8 @@ class Resources:
     self.df = None
     self.number_of_timeframes = None
     self.name = None
+    # use this as an id in the dataframe later
+    self.timestamp = int(time_ns() / 1000)
 
     if pipeline_path:
       self.extract_from_pipeline(pipeline_path)
@@ -180,6 +183,9 @@ class Resources:
     length = len(self.dict_for_df[list(self.dict_for_df.keys())[0]])
     for key, value in self.meta.items():
       self.dict_for_df[key] = [value] * length
+
+    # this can be used as an identifier for concatenated dfs for instance
+    self.dict_for_df["id"] = [self.timestamp] * length
 
   def convert_columns_to_float_if_possible(self):
     """
@@ -337,7 +343,7 @@ def save_figure(figure, path):
   plt.close(figure)
 
 
-def make_histo(x, y, xlabel, ylabel, ax=None, cmap=None, norm=True, title=None, sort=True, **kwargs):
+def make_histo(x, y, xlabel, ylabel, ax=None, cmap=None, norm=True, title=None, sort=True, annotate=None, **kwargs):
   """
   Make a histogram
 
@@ -364,6 +370,8 @@ def make_histo(x, y, xlabel, ylabel, ax=None, cmap=None, norm=True, title=None, 
   # sort the x-tick names according to increasing y-values
   if sort:
     y = y.copy()
+    if annotate and len(annotate) == len(y):
+      annotate = [i for _, i in sorted(zip(y, annotate))]
     x = [i for _, i in sorted(zip(y, x))]
     y.sort()
 
@@ -378,7 +386,13 @@ def make_histo(x, y, xlabel, ylabel, ax=None, cmap=None, norm=True, title=None, 
     step = 1. / len(y)
     colors = [cmap(i * step) for i, _ in enumerate(y)]
 
-  ax.bar(x, y, color=colors, **kwargs)
+  bars = ax.bar(x, y, color=colors, **kwargs)
+  if annotate and len(annotate) ==  len(x):
+    # annotate the bar chart with potential given annotations
+    for bar, an in zip(bars, annotate):
+      height = bar.get_height()
+      ax.annotate(f"Avg.: {an:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height), xytext=(0, 3), textcoords="offset points", ha='center', va='bottom', rotation=90, fontsize=20)
+
   ax.set_xticks(range(len(x)))
   ax.set_xticklabels(x)
   ax.tick_params("both", labelsize=30)
@@ -463,7 +477,7 @@ def make_pie(labels, y, ax=None, cmap=None, title=None, **kwargs):
   return figure, ax
 
 
-def plot_histo_and_pie(x, y, xlabel, ylabel, path, **kwargs):
+def plot_histo_and_pie(x, y, xlabel, ylabel, path, annotate=None, **kwargs):
   """
   Plot 3 axes:
   1. absolute values
@@ -492,7 +506,7 @@ def plot_histo_and_pie(x, y, xlabel, ylabel, path, **kwargs):
   title = kwargs.pop("title", None)
   scale = kwargs.pop("scale", 1.)
   y = [i * scale for i in y]
-  make_histo(x, y, xlabel, ylabel, axes[0], norm=False, **kwargs)
+  make_histo(x, y, xlabel, ylabel, axes[0], norm=False, annotate=annotate, **kwargs)
   make_pie(x, y, axes[1], **kwargs)
   if title:
     figure.suptitle(title, fontsize=60)
@@ -544,7 +558,7 @@ def resources_per_iteration(resources, fields, task_filter=None, per_what=None):
   return list(range(start, end + 1)), values
 
 
-def plot_resource_history(json_pipelines, out_dir, filter=None, suffix=""):
+def plot_resource_history(json_pipelines, out_dir, filter=None, suffix="", labels=None):
   """
   Plotting resource history
 
@@ -575,10 +589,11 @@ def plot_resource_history(json_pipelines, out_dir, filter=None, suffix=""):
 
   # to have different styles for resources from different pipelines, for better visual presentation
   linestyles = ["solid", "dashed", "dashdot"]
+  labels = labels if labels and len(labels) == len(json_pipelines) else [jp.name for jp in json_pipelines]
 
   for jp_i, jp in enumerate(json_pipelines):
 
-    name = jp.name
+    name = labels[jp_i]
     n_cpu = jp.meta["cpu_limit"]
     iterations, iterations_y = resources_per_iteration(jp, metrics, filter)
 
@@ -706,13 +721,18 @@ def get_resources_per_task_within_category(res, category=None):
   if category:
     df = res.df.query(f"category == '{category}'")[["name"] + METRICS]
   task_names = df["name"].unique()
-  resources_per_task = {metric: [0] * len(task_names) for metric in METRICS}
+  # the first entry is the maximum, the second the average
+  resources_max_mean = {"max": [0] * len(task_names), "mean": [0] * len(task_names)}
+  resources_per_task = {metric: deepcopy(resources_max_mean) for metric in METRICS}
   for i, tn in enumerate(task_names):
     # skim down to particular name and from this get the maximum
     df_name = df.query(f"name == '{tn}'")
     for key, current_res in resources_per_task.items():
         # extracted value is added to this category
-        current_res[i] = max(df_name[key].values)
+        values = df_name[key].values
+        if len(values):
+          current_res["max"][i] = max(df_name[key].values)
+          current_res["mean"][i] = np.mean(df_name[key].values)
 
   return task_names, resources_per_task
 
@@ -742,7 +762,7 @@ def history(args):
     makedirs(out_dir)
 
   # plot the history off all our resources
-  plot_resource_history(resources, out_dir, args.filter_task, args.suffix)
+  plot_resource_history(resources, out_dir, args.filter_task, args.suffix, args.names)
 
   # a unified color map
   cmap = matplotlib.cm.get_cmap("coolwarm")
@@ -774,24 +794,24 @@ def history(args):
 
     # per single task
     task_names, resources_per_task = get_resources_per_task_within_category(res)
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_TIME], "task", "$\mathrm{walltime}\,\,[s]$", join(out_dir, f"walltimes_tasks.png"), cmap=cmap, title="TIME")
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_CPU], "task", "$\#\mathrm{CPU}$", join(out_dir, f"cpu_tasks.png"), cmap=cmap, title="CPU")
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_USS], "task", "$\mathrm{USS}\,\,[MB]$", join(out_dir, f"uss_tasks.png"), cmap=cmap, title="USS")
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_PSS], "task", "$\mathrm{PSS}\,\,[MB]$", join(out_dir, f"pss_tasks.png"), cmap=cmap, title="PSS")
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_TIME]["max"], "task", "$\mathrm{walltime}\,\,[s]$", join(out_dir, f"walltimes_tasks.png"), cmap=cmap, title="TIME")
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_CPU]["max"], "task", "$\max\left(\#\mathrm{CPU}\\right)$", join(out_dir, f"cpu_tasks.png"), cmap=cmap, title="CPU", annotate=resources_per_task[METRIC_NAME_CPU]["mean"])
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_USS]["max"], "task", "$\max\left(\mathrm{USS}\,\,[MB]\\right)$", join(out_dir, f"uss_tasks.png"), cmap=cmap, title="USS", annotate=resources_per_task[METRIC_NAME_USS]["mean"])
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_PSS]["max"], "task", "$\max\left(\mathrm{PSS}\,\,[MB]\\right)$", join(out_dir, f"pss_tasks.png"), cmap=cmap, title="PSS", annotate=resources_per_task[METRIC_NAME_PSS]["mean"])
 
     # per task within digi category
     task_names, resources_per_task = get_resources_per_task_within_category(res, "digi")
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_TIME], "task", "$\mathrm{walltime}\,\,[s]$", join(out_dir, f"walltimes_tasks_digi.png"), cmap=cmap, title="TIME (digi)")
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_CPU], "task", "$\#\mathrm{CPU}$", join(out_dir, f"cpu_tasks_digi.png"), cmap=cmap, title="CPU (digi)")
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_USS], "task", "$\mathrm{USS}\,\,[MB]$", join(out_dir, f"uss_tasks_digi.png"), cmap=cmap, title="USS (digi)")
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_PSS], "task", "$\mathrm{PSS}\,\,[MB]$", join(out_dir, f"pss_tasks_digi.png"), cmap=cmap, title="PSS (digi)")
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_TIME]["max"], "task", "$\mathrm{walltime}\,\,[s]$", join(out_dir, f"walltimes_tasks_digi.png"), cmap=cmap, title="TIME (digi)")
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_CPU]["max"], "task", "$\max\left(\#\mathrm{CPU}\\right)$", join(out_dir, f"cpu_tasks_digi.png"), cmap=cmap, title="CPU (digi)", annotate=resources_per_task[METRIC_NAME_CPU]["mean"])
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_USS]["max"], "task", "$\max\left(\mathrm{USS}\,\,[MB]\\right)$", join(out_dir, f"uss_tasks_digi.png"), cmap=cmap, title="USS (digi)", annotate=resources_per_task[METRIC_NAME_USS]["mean"])
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_PSS]["max"], "task", "$\max\left(\mathrm{PSS}\,\,[MB]\\right)$", join(out_dir, f"pss_tasks_digi.png"), cmap=cmap, title="PSS (digi)", annotate=resources_per_task[METRIC_NAME_PSS]["mean"])
 
     # per task within reco category
     task_names, resources_per_task = get_resources_per_task_within_category(res, "reco")
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_TIME], "task", "$\mathrm{walltime}\,\,[s]$", join(out_dir, f"walltimes_tasks_reco.png"), cmap=cmap, title="TIME (reco)")
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_CPU], "task", "$\#\mathrm{CPU}$", join(out_dir, f"cpu_tasks_reco.png"), cmap=cmap, title="CPU (reco)")
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_USS], "task", "$\mathrm{USS}\,\,[MB]$", join(out_dir, f"uss_tasks_reco.png"), cmap=cmap, title="USS (reco)")
-    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_PSS], "task", "$\mathrm{PSS}\,\,[MB]$", join(out_dir, f"pss_tasks_reco.png"), cmap=cmap, title="PSS (reco)")
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_TIME]["max"], "task", "$\mathrm{walltime}\,\,[s]$", join(out_dir, f"walltimes_tasks_reco.png"), cmap=cmap, title="TIME (reco)")
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_CPU]["max"], "task", "$\max\left(\#\mathrm{CPU}\\right)$", join(out_dir, f"cpu_tasks_reco.png"), cmap=cmap, title="CPU (reco)", annotate=resources_per_task[METRIC_NAME_CPU]["mean"])
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_USS]["max"], "task", "$\max\left(\mathrm{USS}\,\,[MB]\\right)$", join(out_dir, f"uss_tasks_reco.png"), cmap=cmap, title="USS (reco)", annotate=resources_per_task[METRIC_NAME_USS]["mean"])
+    plot_histo_and_pie(task_names, resources_per_task[METRIC_NAME_PSS]["max"], "task", "$\max\left(\mathrm{PSS}\,\,[MB]\\right)$", join(out_dir, f"pss_tasks_reco.png"), cmap=cmap, title="PSS (reco)", annotate=resources_per_task[METRIC_NAME_PSS]["mean"])
 
   return 0
 
@@ -896,24 +916,42 @@ def influx(args):
   # get the history for metrics of interest
   _, iterations_y = resources_per_iteration(resources, METRICS)
 
-  categories, values = get_resources_per_category(resources)
+  def make_db_string(names, values, metric_name, sub_key=None):
+    # this is the final table name for resources accumulated in categories
+    table_suffix = metric_name if sub_key is None else f"{metric_name}_{sub_key}"
+    tab_name = f"{args.table_base}_workflows_{table_suffix}"
+    # start assembling the string for the influx file to be uploaded
+    db_string = f"{tab_name}{tags}"
+    # accumulate the total resources for this metric
+    total = 0
+    # resource measurements go into the fields and are separated from the tags by a whitespace
+    fields = []
+    values_to_extract = values[metric_name]
+    if sub_key:
+      values_to_extract = values_to_extract[sub_key]
+    for name, val in zip(names, values_to_extract):
+      if sub_key is not None:
+        val = val
+      fields.append(f"{name}={val}")
+      total += val
+    # join fields by comma...
+    fields = ",".join(fields)
+    # ...add to the string and write to file
+    db_string += f" {fields},total={total}"
+    return db_string
+
+
+  categories, values_categories = get_resources_per_category(resources)
+  tasks, values_tasks = get_resources_per_task_within_category(resources)
   with open(args.output, "w") as f:
     for metric_id, metric_name in enumerate(METRICS):
-      # this is the final table name for resources accumulated in categories
-      tab_name = f"{args.table_base}_workflows_{metric_name}"
-      # start assembling the string for the influx file to be uploaded
-      db_string = f"{tab_name}{tags}"
-      # accumulate the total resources for this metric
-      total = 0
-      # resource measurements go into the fields and are separated from the tags by a whitespace
-      fields = []
-      for cat, val in zip(categories, values[metric_name]):
-        fields.append(f"{cat}={val}")
-        total += val
-      # join fields by comma...
-      fields = ",".join(fields)
-      # ...add to the string and write to file
-      db_string += f" {fields},total={total}"
+      # write for categories
+      db_string = make_db_string(categories, values_categories, metric_name)
+      f.write(f"{db_string}\n")
+      # write for single tasks
+      db_string = make_db_string(tasks, values_tasks, metric_name, "max")
+      f.write(f"{db_string}\n")
+      db_string = make_db_string(tasks, values_tasks, metric_name, "mean")
       f.write(f"{db_string}\n")
 
       if metric_name == METRIC_NAME_TIME:
@@ -956,6 +994,7 @@ def main():
   plot_parser.add_argument("--output", help="output directory", default="resource_history")
   plot_parser.add_argument("--filter-task", dest="filter_task", help="regex to filter only on certain task names in pipeline iterations")
   plot_parser.add_argument("--suffix", help="a suffix put at the end of the output file names")
+  plot_parser.add_argument("--names", nargs="*", help="assign one custom name per pipeline")
 
   plot_comparison_parser = sub_parsers.add_parser("compare", help="Compare resources from pipeline_metric file")
   plot_comparison_parser.set_defaults(func=compare)
