@@ -401,20 +401,19 @@ def build_dag_properties(workflowspec):
     global_next_tasks = tup[1]
 
     
-    # a simple score for importance of nodes
-    # for each task find number of nodes that depend on a task -> might be weighted with CPU and MEM needs
-    importance_score = [ 0 for n in nodes ]
     dependency_cache = {}
-    for n in nodes:
-        importance_score[n] = len(find_all_dependent_tasks(global_next_tasks, n, dependency_cache))
-        actionlogger.info("Score for " + str(globaltaskuniverse[n][0]['name']) + " is " + str(importance_score[n]))
-
     # weight influences scheduling order can be anything user defined ... for the moment we just prefer to stay within a timeframe
+    # then take the number of tasks that depend on a task as further weight
+    # TODO: bring in resource estimates from runtime, CPU, MEM
+    # TODO: make this a policy of the runner to study different strategies
     def getweight(tid):
-        return globaltaskuniverse[tid][0]['timeframe']
+        return (globaltaskuniverse[tid][0]['timeframe'], len(find_all_dependent_tasks(global_next_tasks, tid, dependency_cache)))
     
     task_weights = [ getweight(tid) for tid in range(len(globaltaskuniverse)) ]
-        
+
+    for tid in range(len(globaltaskuniverse)):
+        actionlogger.info("Score for " + str(globaltaskuniverse[tid][0]['name']) + " is " + str(task_weights[tid]))
+
     # print (global_next_tasks)
     return { 'nexttasks' : global_next_tasks, 'weights' : task_weights, 'topological_ordering' : tup[0] }
 
@@ -1274,7 +1273,7 @@ Use the `--produce-script myscript.sh` option for this.
             while True:
                 # sort candidate list according to task weights
                 candidates = [ (tid, self.taskweights[tid]) for tid in candidates ]
-                candidates.sort(key=lambda tup: tup[1])
+                candidates.sort(key=lambda tup: (tup[1][0],-tup[1][1])) # prefer small and same timeframes first then prefer important tasks within frameframe
                 # remove weights
                 candidates = [ tid for tid,_ in candidates ]
 
