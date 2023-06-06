@@ -253,7 +253,8 @@
             "enabled": true,
             "expected_output": ["AnalysisResults.root"],
             "config" : {
-                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json"
+                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json",
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
             },
             "tasks": ["o2-analysis-je-emc-eventselection-qa",
                       "o2-analysis-je-emc-cellmonitor",
