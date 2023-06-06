@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include "PlotOverlays.C"
 
 struct TestResult {
   double value = 0.0;
@@ -37,7 +38,6 @@ int maxUserTests()
 double EPSILON = 0.00001;
 
 void CompareHistos(TH1* hA, TH1* hB, int whichTests, std::unordered_map<std::string, std::vector<TestResult>>& allTests, std::string const& labelA, std::string const& labelB);
-void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legendMetrics, int color, std::string const& labelA, std::string const& labelB);
 bool PotentiallySameHistograms(TH1*, TH1*);
 TestResult CompareChiSquare(TH1* hA, TH1* hB, bool areComparable);
 TestResult CompareKolmogorov(TH1* hA, TH1* hB, bool areComparable);
@@ -75,102 +75,6 @@ int isEmptyHisto(TH1* h)
     return 2;
   }
   return 0;
-}
-
-// overlay 2 1D histograms
-void overlay1D(TH1* hA, TH1* hB, std::string const& labelA, std::string const& labelB, TLegend& legend, int color, std::string const& outputDir)
-{
-  TCanvas c("overlay", "", 800, 800);
-  c.cd();
-  hA->SetLineColor(kRed + 2);
-  hA->SetLineStyle(1);
-  hA->SetLineWidth(1);
-  hA->SetStats(0);
-  hB->SetLineColor(kBlue + 1);
-  hB->SetLineStyle(10);
-  hB->SetLineWidth(1);
-  hB->SetStats(0);
-
-  TRatioPlot rp(hA, hB);
-  rp.Draw("same");
-  rp.GetUpperPad()->cd();
-  legend.Draw();
-  rp.GetLowerRefGraph()->SetMinimum(0.);
-  rp.GetLowerRefGraph()->SetMaximum(10.);
-  TLegend legendOverlay(0.2, 0.6, 0.5, 0.8);
-  legendOverlay.SetFillStyle(0);
-  legendOverlay.AddEntry(hA, labelA.c_str());
-  legendOverlay.AddEntry(hB, labelB.c_str());
-  legendOverlay.Draw("same");
-
-  auto graph = rp.GetLowerRefGraph();
-  auto xLow = hA->GetBinCenter(std::min(hA->FindFirstBinAbove(), hB->FindFirstBinAbove()));
-  auto xUp = hA->GetBinCenter(std::min(hA->FindLastBinAbove(), hB->FindLastBinAbove()));
-  TF1 func("func", "[0] * x + [1]", xLow, xUp);
-  func.SetParameter(0, 0.);
-  func.SetParameter(1, 1.);
-  // find first and last bin above 0
-
-  graph->Fit(&func, "EMR");
-  rp.GetLowerPad()->cd();
-  func.Draw("same");
-
-  auto savePath = outputDir + "/" + hA->GetName() + ".png";
-  c.SaveAs(savePath.c_str());
-  c.Close();
-}
-
-// overlay 2 1D histograms
-void overlay2D(TH2* hA, TH2* hB, std::string const& labelA, std::string const& labelB, TLegend& legend, int color, std::string const& outputDir)
-{
-  auto newTitleA = std::string(hA->GetTitle()) + "(" + labelA + ")";
-  auto newTitleB = std::string(hB->GetTitle()) + "(" + labelB + ")";
-  hA->SetTitle(newTitleA.c_str());
-  hB->SetTitle(newTitleB.c_str());
-  TCanvas c("overlay", "", 2400, 800);
-  c.Divide(3, 1);
-  c.cd(1);
-  hA->SetStats(0);
-  hA->Draw("colz");
-  c.cd(2);
-  hB->SetStats(0);
-  hB->Draw("colz");
-  auto hDiv = (TH2*)hA->Clone(Form("%s_ratio", hA->GetName()));
-  hDiv->Divide(hB);
-  c.cd(3);
-  hDiv->Draw("colz");
-  legend.Draw();
-
-  auto savePath = outputDir + "/" + hA->GetName() + ".png";
-  c.SaveAs(savePath.c_str());
-  c.Close();
-}
-
-// entry point for overlay plots
-void PlotOverlayAndRatio(TH1* hA, TH1* hB, TLegend& legendMetrics, int color, std::string const& labelA, std::string const& labelB)
-{
-  std::string outputDir("overlayPlots");
-  if (!std::filesystem::exists(outputDir)) {
-    std::filesystem::create_directory(outputDir);
-  }
-  auto hA3D = dynamic_cast<TH3*>(hA);
-  auto hB3D = dynamic_cast<TH3*>(hB);
-  if (hA3D || hB3D) {
-    std::cerr << "Cannot yet overlay 3D histograms\nSkipping " << hA->GetName() << "\n";
-    return;
-  }
-
-  auto hA2D = dynamic_cast<TH2*>(hA);
-  auto hB2D = dynamic_cast<TH2*>(hB);
-
-  if (hA2D && hB2D) {
-    // could be casted to 2D, so plot that
-    // overlay2D(hA2D, hB2D, outputDir);
-    overlay2D(hA2D, hB2D, labelA, labelB, legendMetrics, color, outputDir);
-    return;
-  }
-
-  overlay1D(hA, hB, labelA, labelB, legendMetrics, color, outputDir);
 }
 
 // what to give as input:
@@ -364,17 +268,15 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, std::unordered_map<std::str
   double integralA = hA->Integral();
   double integralB = hB->Integral();
 
-  int colt = 1;
-
   // Bit Mask
   // my 3 possible tests are: 1) chi2;  2) meandiff; 3) entriesdiff.  These tests can be combined in 7 different ways
   // std::vector<std::string> tests;
 
   auto areComparable = CheckComparable(hA, hB);
 
-  TLegend legendMetricsOverlayPlot(0.6, 0.6, 0.9, 0.8);
-  legendMetricsOverlayPlot.SetBorderSize(1);
-  legendMetricsOverlayPlot.SetFillStyle(0);
+  TLegend* legendMetricsOverlayPlot = new TLegend(0.65, 0.6, 0.9, 0.8);
+  legendMetricsOverlayPlot->SetBorderSize(1);
+  legendMetricsOverlayPlot->SetFillStyle(0);
 
   // test if each of the 3 bits is turned on in subset ‘i = whichTests’?
   // if yes, process the bit
@@ -383,7 +285,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, std::unordered_map<std::str
     auto testResult = CompareChiSquare(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
     if (testResult.comparable) {
-      legendMetricsOverlayPlot.AddEntry((TObject*)nullptr, Form("#chi^{2} / N_{bins} = %f", testResult.value), "");
+      legendMetricsOverlayPlot->AddEntry((TObject*)nullptr, Form("#chi^{2} / N_{bins} = %f", testResult.value), "");
     }
   }
 
@@ -391,7 +293,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, std::unordered_map<std::str
     auto testResult = CompareKolmogorov(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
     if (testResult.comparable) {
-      legendMetricsOverlayPlot.AddEntry((TObject*)nullptr, Form("Kolmogorov prob. = %f", testResult.value), "");
+      legendMetricsOverlayPlot->AddEntry((TObject*)nullptr, Form("Kolmogorov prob. = %f", testResult.value), "");
     }
   }
 
@@ -399,7 +301,7 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, std::unordered_map<std::str
     auto testResult = CompareNentr(hA, hB, areComparable);
     RegisterTestResult(allTests, hA->GetName(), testResult);
     if (testResult.comparable) {
-      legendMetricsOverlayPlot.AddEntry((TObject*)nullptr, Form("entriesdiff = %f", testResult.value), "");
+      legendMetricsOverlayPlot->AddEntry((TObject*)nullptr, Form("entriesdiff = %f", testResult.value), "");
     }
   }
 
@@ -407,7 +309,10 @@ void CompareHistos(TH1* hA, TH1* hB, int whichTests, std::unordered_map<std::str
     std::cerr << "WARNING: Cannot draw histograms due to the fact that all entries are in under- or overflow bins\n";
     return;
   }
-  PlotOverlayAndRatio(hA, hB, legendMetricsOverlayPlot, colt, labelA, labelB);
+
+  std::vector<TH1*> hVec{hA,hB};
+  std::vector<std::string> labelVec{labelA,labelB};
+  PlotOverlayAndRatio(hVec, labelVec, "overlayPlots", legendMetricsOverlayPlot);
 }
 
 // chi2
