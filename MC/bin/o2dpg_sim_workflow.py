@@ -1320,6 +1320,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    if environ.get('O2DPG_AOD_NOTRUNCATE') != None or environ.get('ALIEN_JDL_O2DPG_AOD_NOTRUNCATE') != None:
       AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
+   
+   AODtask['cmd'] += ' --disable-strangeness-tracking' # disable strangeness tracking for the moment
 
    workflow['stages'].append(AODtask)
 
