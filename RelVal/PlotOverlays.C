@@ -9,36 +9,42 @@ void overlay1D(std::vector<TH1*> hVec, std::vector<std::string> labelVec, TLegen
   c.cd();
 
 
-  TPad lower_pad("lower_pad","lower_pad",0,0,1.,0.2);
-  TPad upper_pad("upper_pad","upper_pad",0,0.2,1.,1.);
+  TPad lower_pad("lower_pad","lower_pad",0,0.05,1.,0.3);
+  TPad upper_pad("upper_pad","upper_pad",0,0.25,1.,1.);
   upper_pad.Draw();
   lower_pad.Draw();
 
-  const int colors[6]={kRed,kBlue,kGreen,kMagenta,kCyan,kOrange};
+  const int colors[6]={kRed,kBlue,kGreen,kMagenta,kCyan,kOrange}; //TODO what if more then 6 histograms
+  const int linestyles[6]={1,10,2,9,8,7}; //TODO what if more then 6 histograms
 
   TLegend legendOverlay(0.65, 0.8, 0.9, 0.9);
   legendOverlay.SetFillStyle(0);
   int counter = 0;
   for (auto h : hVec){
+    upper_pad.cd();
     h->SetStats(0);
-    h->SetLineStyle(1);
+    h->SetLineStyle(linestyles[counter]);
     h->SetLineWidth(1);
     h->SetLineColor(colors[counter]);
+    TH1F* hClone = (TH1F*)h->Clone();
 
+    h->GetXaxis()->SetLabelSize(0.);
+    h->GetXaxis()->SetLabelOffset(999);
+    h->GetYaxis()->SetLabelSize(0.05);
 
     legendOverlay.AddEntry(h, labelVec[counter].c_str());
 
-    upper_pad.cd();
     h->Draw("same E hist");
 
-
     lower_pad.cd();
-    TH1F* hClone = (TH1F*)h->Clone();
-    hClone->Divide(hVec[0]);
+    hClone->Divide(h,hVec[0],1.0,1.0,"B"); // error option?
     hClone->SetTitle("");
+    hClone->SetLineStyle(1);
     hClone->GetYaxis()->SetRangeUser(0.,10.);
+    hClone->GetYaxis()->SetLabelSize(0.125);
+    hClone->GetXaxis()->SetLabelSize(0.125);
     if (counter>0){
-      hClone->Draw("same E");
+      hClone->Draw("same E1");
     }
     else {
       hClone->Draw("same");
@@ -136,16 +142,22 @@ void PlotOverlays(initializer_list<std::string> fileNames_list, initializer_list
     std::vector<TH1*> hVec;
     hVec.push_back(static_cast<TH1*>(key->ReadObj()));
     auto oname = key->GetName();
+    bool foundAll = true;
     for (int i=1; i<files.size();i++){
       auto hNew = static_cast<TH1*>(files[i]->Get(oname));
       if (!hNew) {
         // That could still happen in case we compare either comletely different file by accident or something has been changed/added/removed
-        std::cerr << "ERROR: Histogram " << oname << " not found in file " << fileNames[i].c_str() << ". Continue with next\n";
-        // TODO: but then the labels are off
-        continue;
+        foundAll = false;
+        std::cerr << "ERROR: Histogram " << oname << " not found in file " << fileNames[i].c_str() << "\n";
       }
       hVec.push_back(hNew);
     }
-    PlotOverlayAndRatio(hVec, labelVec, outputDir);
+    if (foundAll){
+      PlotOverlayAndRatio(hVec, labelVec, outputDir);
+    }
+    else {
+      std::cerr << "ERROR: Histogram " << oname << " not found in all files\n";
+      return;
+    }
   }
 }
