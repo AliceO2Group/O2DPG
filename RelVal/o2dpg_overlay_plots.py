@@ -58,9 +58,10 @@ def call_plot_overlays(nInput, output_dir, labels):
         cmd = cmd + f"\\\"{f}\\\","
     cmd = cmd[:-1]
     cmd = cmd + f"}},{{"
-    for l in labels:
-        cmd = cmd + f"\\\"{l}\\\","
-    cmd = cmd[:-1]
+    if labels:
+        for l in labels:
+            cmd = cmd + f"\\\"{l}\\\","
+        cmd = cmd[:-1]
     cmd = cmd + f"}},\\\"{output_dir}\\\"\\)"
     cmd = f"root -l -b -q {ROOT_MACRO_OVERLAYS}{cmd}"
     log_file_extract = join(output_dir, "plot_overlays.log")
@@ -79,7 +80,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", nargs="*", help="list of ROOT files", required=True)
     parser.add_argument("-o", "--output", help="output directory", default="overlayPlots")
-    parser.add_argument("-l", "--labels", nargs="*", help="plot labels", default="overlayPlots")
+    parser.add_argument("-l", "--labels", nargs="*", help="plot labels")
     parser.add_argument("--clean", help="delete newfile.root files after macro has finished", action="store_true")
     args = parser.parse_args()
     call_extract_and_flatten(args.input, args.output)
