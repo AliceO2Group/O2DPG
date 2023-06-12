@@ -1,0 +1,1288 @@
+[15:52:58][INFO] 
+      ______      _    _______  _________ 
+     / ____/___ _(_)_______   |/  /_  __ \    version 1.4.56
+    / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+   / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+  /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2022 GSI
+
+[15:52:58][STATE] Starting FairMQ state machine --> IDLE
+[15:52:58][WARN] Signal handling (e.g. Ctrl-C) has been deactivated.
+[15:52:58][STATE] IDLE ---> INITIALIZING DEVICE
+[15:52:58][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[15:52:58][STATE] INITIALIZED ---> BINDING
+[15:52:58][STATE] BINDING ---> BOUND
+[15:52:58][STATE] BOUND ---> CONNECTING
+[15:52:58][STATE] CONNECTING ---> DEVICE READY
+[15:52:58][STATE] DEVICE READY ---> INITIALIZING TASK
+[15:52:58][INFO] INIT HIT MERGER
+[15:52:58][INFO] Waiting for configuration answer 
+[15:52:58][INFO] Configuration answer received, containing 1032 bytes 
+[15:52:58][INFO] COMMUNICATED ENGINE O2TrivialMCEngine
+[15:52:59][WARN]  O2HitMerger: Some Detectors are potentially missing in this initialization 
+[15:52:59][INFO] OCCUPYING A SEGMENT IN A SHARED REGION
+[15:52:59][INFO] FOUND ID TO ATTACH 1179695
+[15:52:59][INFO] TRYING ADDRESS 0x7fd2f3fff000
+[15:52:59][INFO] ASSIGNED PIPE HANDLE 13
+[15:52:59][STATE] INITIALIZING TASK ---> READY
+[15:52:59][STATE] READY ---> RUNNING
+[15:52:59][INFO] fair::mq::Device running...
+[15:52:59][INFO] SIMDATA channel got 3 parts for event 1 part 3 out of 3
+[15:52:59][INFO] HitMerger processing took 0.00528002
+[15:52:59][INFO] SIMDATA channel got 3 parts for event 1 part 1 out of 3
+[15:52:59][INFO] HitMerger processing took 9.20296e-05
+[15:52:59][INFO] SIMDATA channel got 3 parts for event 1 part 2 out of 3
+[15:52:59][INFO] Event 1 complete. Marking as flushable
+[15:52:59][INFO] HitMerger processing took 0.000226021
+[15:52:59][INFO] SIMDATA channel got 3 parts for event 2 part 2 out of 2
+[15:52:59][INFO] HitMerger processing took 6.91414e-05
+[15:52:59][INFO] Launching merge kernel 
+[15:52:59][INFO] Merge and flush event 1
+[15:52:59][INFO] SIMDATA channel got 3 parts for event 2 part 1 out of 2
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   108 trackoffset:   108 
+merge 2     0     0     1 
+merge 1     2     2     0 
+[15:52:59][INFO] Event 2 complete. Marking as flushable
+[15:52:59][INFO] HitMerger processing took 0.000125885
+merge 0     1     1     2 
+[15:52:59][INFO] SIMDATA channel got 3 parts for event 3 part 2 out of 2
+[15:52:59][INFO] HitMerger processing took 0.000115871
+[15:52:59][INFO] SIMDATA channel got 3 parts for event 3 part 1 out of 2
+[15:52:59][INFO] Event 3 complete. Marking as flushable
+[15:52:59][INFO] HitMerger processing took 0.000110149
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 4 part 1 out of 3
+[15:53:00][INFO] HitMerger processing took 0.038676
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 5 part 2 out of 3
+[15:53:00][INFO] HitMerger processing took 0.000416994
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 4 part 2 out of 3
+[15:53:00][INFO] HitMerger processing took 0.000113964
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 4 part 3 out of 3
+[15:53:00][INFO] outtree has file o2sim_Kine.root
+[15:53:00][INFO] Event 4 complete. Marking as flushable
+[15:53:00][INFO] Merge/flush for event 1 took 0.142211
+[15:53:00][INFO] HitMerger processing took 0.000110865
+[15:53:00][INFO] Merge and flush event 2
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   380 trackoffset:   380 
+merge 1     0     0     1 
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 5 part 1 out of 3
+merge 0     1     1     0 
+[15:53:00][INFO] HitMerger processing took 0.00010705
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 5 part 3 out of 3
+[15:53:00][INFO] outtree has file o2sim_Kine.root
+[15:53:00][INFO] Event 5 complete. Marking as flushable
+[15:53:00][INFO] Merge/flush for event 2 took 0.000181913
+[15:53:00][INFO] Merge and flush event 3
+[15:53:00][INFO] HitMerger processing took 7.70092e-05
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   285 trackoffset:   285 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 6 part 1 out of 1
+[15:53:00][INFO] Event 6 complete. Marking as flushable
+[15:53:00][INFO] HitMerger processing took 5.6982e-05
+[15:53:00][INFO] outtree has file o2sim_Kine.root
+[15:53:00][INFO] Merge/flush for event 3 took 0.000109196
+[15:53:00][INFO] Merge and flush event 4
+HitMerger entry: 2 nprimry:   418 trackoffset:   418 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:00][INFO] outtree has file o2sim_Kine.root
+[15:53:00][INFO] Merge/flush for event 4 took 0.000157118
+[15:53:00][INFO] Merge and flush event 5
+HitMerger entry: 2 nprimry:   414 trackoffset:   414 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:00][INFO] outtree has file o2sim_Kine.root
+[15:53:00][INFO] Merge/flush for event 5 took 0.000123978
+[15:53:00][INFO] Merge and flush event 6
+HitMerger entry: 0 nprimry:   249 trackoffset:   249 
+[15:53:00][INFO] outtree has file o2sim_Kine.root
+[15:53:00][INFO] Merge/flush for event 6 took 3.60012e-05
+[15:53:00][INFO] Writing TTrees
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 7 part 1 out of 4
+[15:53:00][INFO] HitMerger processing took 0.000232935
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 7 part 2 out of 4
+[15:53:00][INFO] HitMerger processing took 9.89437e-05
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 7 part 4 out of 4
+[15:53:00][INFO] HitMerger processing took 7.10487e-05
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 7 part 3 out of 4
+[15:53:00][INFO] Event 7 complete. Marking as flushable
+[15:53:00][INFO] HitMerger processing took 0.000111103
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 8 part 1 out of 1
+[15:53:00][INFO] Event 8 complete. Marking as flushable
+[15:53:00][INFO] HitMerger processing took 8.58307e-05
+[15:53:00][INFO] SIMDATA channel got 3 parts for event 9 part 1 out of 1
+[15:53:00][INFO] Event 9 complete. Marking as flushable
+[15:53:00][INFO] HitMerger processing took 5.60284e-05
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 10 part 1 out of 4
+[15:53:03][INFO] HitMerger processing took 0.000283957
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 10 part 2 out of 4
+[15:53:03][INFO] HitMerger processing took 8.89301e-05
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 10 part 3 out of 4
+[15:53:03][INFO] HitMerger processing took 7.9155e-05
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 10 part 4 out of 4
+[15:53:03][INFO] Event 10 complete. Marking as flushable
+[15:53:03][INFO] HitMerger processing took 0.000240803
+[15:53:03][INFO] Launching merge kernel 
+[15:53:03][INFO] Merge and flush event 7
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   324 trackoffset:   324 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:03][INFO] outtree has file o2sim_Kine.root
+[15:53:03][INFO] Merge/flush for event 7 took 0.000419855
+[15:53:03][INFO] Merge and flush event 8
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 11 part 1 out of 1
+HitMerger entry: 0 nprimry:   376 trackoffset:   376 
+[15:53:03][INFO] Event 11 complete. Marking as flushable
+[15:53:03][INFO] HitMerger processing took 6.79493e-05
+[15:53:03][INFO] outtree has file o2sim_Kine.root
+[15:53:03][INFO] Merge/flush for event 8 took 7.58171e-05
+[15:53:03][INFO] Merge and flush event 9
+HitMerger entry: 0 nprimry:   173 trackoffset:   173 
+[15:53:03][INFO] outtree has file o2sim_Kine.root
+[15:53:03][INFO] Merge/flush for event 9 took 5.10216e-05
+[15:53:03][INFO] Merge and flush event 10
+HitMerger entry: 3 nprimry:   365 trackoffset:   365 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:03][INFO] outtree has file o2sim_Kine.root
+[15:53:03][INFO] Merge/flush for event 10 took 0.000219107
+[15:53:03][INFO] Merge and flush event 11
+HitMerger entry: 0 nprimry:   104 trackoffset:   104 
+[15:53:03][INFO] outtree has file o2sim_Kine.root
+[15:53:03][INFO] Merge/flush for event 11 took 4.50611e-05
+[15:53:03][INFO] Writing TTrees
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 12 part 1 out of 1
+[15:53:03][INFO] Event 12 complete. Marking as flushable
+[15:53:03][INFO] HitMerger processing took 5.29289e-05
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 13 part 2 out of 4
+[15:53:03][INFO] HitMerger processing took 0.000264883
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 13 part 1 out of 4
+[15:53:03][INFO] HitMerger processing took 7.48634e-05
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 13 part 3 out of 4
+[15:53:03][INFO] HitMerger processing took 7.10487e-05
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 13 part 4 out of 4
+[15:53:03][INFO] Event 13 complete. Marking as flushable
+[15:53:03][INFO] HitMerger processing took 0.000190973
+[15:53:03][INFO] Launching merge kernel 
+[15:53:03][INFO] Merge and flush event 12
+HitMerger entry: 0 nprimry:    98 trackoffset:    98 
+[15:53:03][INFO] outtree has file o2sim_Kine.root
+[15:53:03][INFO] Merge/flush for event 12 took 0.000194073
+[15:53:03][INFO] Merge and flush event 13
+HitMerger entry: 3 nprimry:   469 trackoffset:   469 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:03][INFO] outtree has file o2sim_Kine.root
+[15:53:03][INFO] Merge/flush for event 13 took 0.00027895
+[15:53:03][INFO] Writing TTrees
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 14 part 1 out of 1
+[15:53:03][INFO] Event 14 complete. Marking as flushable
+[15:53:03][INFO] HitMerger processing took 6.38962e-05
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 15 part 1 out of 3
+[15:53:03][INFO] HitMerger processing took 0.000193834
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 15 part 3 out of 3
+[15:53:03][INFO] HitMerger processing took 4.3869e-05
+[15:53:03][INFO] SIMDATA channel got 3 parts for event 15 part 2 out of 3
+[15:53:03][INFO] Event 15 complete. Marking as flushable
+[15:53:03][INFO] HitMerger processing took 7.29561e-05
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 16 part 1 out of 6
+[15:53:04][INFO] HitMerger processing took 0.00026989
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 16 part 2 out of 6
+[15:53:04][INFO] HitMerger processing took 7.20024e-05
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 16 part 3 out of 6
+[15:53:04][INFO] HitMerger processing took 7.89165e-05
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 16 part 4 out of 6
+[15:53:04][INFO] HitMerger processing took 7.20024e-05
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 16 part 5 out of 6
+[15:53:04][INFO] HitMerger processing took 7.70092e-05
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 16 part 6 out of 6
+[15:53:04][INFO] Event 16 complete. Marking as flushable
+[15:53:04][INFO] HitMerger processing took 0.000172853
+[15:53:04][INFO] Launching merge kernel 
+[15:53:04][INFO] Merge and flush event 14
+HitMerger entry: 0 nprimry:   265 trackoffset:   265 
+[15:53:04][INFO] outtree has file o2sim_Kine.root
+[15:53:04][INFO] Merge/flush for event 14 took 0.000206947
+[15:53:04][INFO] Merge and flush event 15
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   229 trackoffset:   229 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     1     1     2 
+merge 1     2     2     1 
+merge 0     0     0     0 
+[15:53:04][INFO] outtree has file o2sim_Kine.root
+[15:53:04][INFO] Merge/flush for event 15 took 0.000203848
+[15:53:04][INFO] Merge and flush event 16
+HitMerger entry: 5 nprimry:   109 trackoffset:   109 
+HitMerger entry: 4 nprimry:   500 trackoffset:   500 
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 5     5     5     5 
+merge 4     4     4     4 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:04][INFO] outtree has file o2sim_Kine.root
+[15:53:04][INFO] Merge/flush for event 16 took 0.000334978
+[15:53:04][INFO] Writing TTrees
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 17 part 1 out of 4
+[15:53:04][INFO] HitMerger processing took 0.00020504
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 17 part 2 out of 4
+[15:53:04][INFO] HitMerger processing took 7.51019e-05
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 17 part 3 out of 4
+[15:53:04][INFO] HitMerger processing took 6.29425e-05
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 17 part 4 out of 4
+[15:53:04][INFO] Event 17 complete. Marking as flushable
+[15:53:04][INFO] HitMerger processing took 5.4121e-05
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 18 part 2 out of 2
+[15:53:04][INFO] HitMerger processing took 3.60012e-05
+[15:53:04][INFO] SIMDATA channel got 3 parts for event 18 part 1 out of 2
+[15:53:04][INFO] Event 18 complete. Marking as flushable
+[15:53:04][INFO] HitMerger processing took 7.70092e-05
+[15:53:05][INFO] SIMDATA channel got 3 parts for event 19 part 1 out of 1
+[15:53:05][INFO] Event 19 complete. Marking as flushable
+[15:53:05][INFO] HitMerger processing took 0.000378847
+[15:53:05][INFO] Launching merge kernel 
+[15:53:05][INFO] Merge and flush event 17
+HitMerger entry: 3 nprimry:   192 trackoffset:   192 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:05][INFO] SIMDATA channel got 3 parts for event 20 part 1 out of 1
+[15:53:05][INFO] Event 20 complete. Marking as flushable
+[15:53:05][INFO] HitMerger processing took 6.10352e-05
+[15:53:05][INFO] outtree has file o2sim_Kine.root
+[15:53:05][INFO] Merge/flush for event 17 took 0.000362873
+[15:53:05][INFO] Merge and flush event 18
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    55 trackoffset:    55 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:05][INFO] outtree has file o2sim_Kine.root
+[15:53:05][INFO] Merge/flush for event 18 took 0.000108004
+[15:53:05][INFO] Merge and flush event 19
+HitMerger entry: 0 nprimry:   368 trackoffset:   368 
+[15:53:05][INFO] outtree has file o2sim_Kine.root
+[15:53:05][INFO] Merge/flush for event 19 took 6.69956e-05
+[15:53:05][INFO] Merge and flush event 20
+HitMerger entry: 0 nprimry:    58 trackoffset:    58 
+[15:53:05][INFO] outtree has file o2sim_Kine.root
+[15:53:05][INFO] Merge/flush for event 20 took 4.1008e-05
+[15:53:05][INFO] Writing TTrees
+[15:53:05][INFO] SIMDATA channel got 3 parts for event 21 part 1 out of 1
+[15:53:05][INFO] Event 21 complete. Marking as flushable
+[15:53:05][INFO] HitMerger processing took 0.000109911
+[15:53:05][INFO] SIMDATA channel got 3 parts for event 22 part 2 out of 4
+[15:53:05][INFO] HitMerger processing took 0.000252008
+[15:53:05][INFO] SIMDATA channel got 3 parts for event 22 part 1 out of 4
+[15:53:05][INFO] HitMerger processing took 0.000106096
+[15:53:05][INFO] SIMDATA channel got 3 parts for event 22 part 4 out of 4
+[15:53:05][INFO] HitMerger processing took 5.38826e-05
+[15:53:05][INFO] SIMDATA channel got 3 parts for event 22 part 3 out of 4
+[15:53:05][INFO] Event 22 complete. Marking as flushable
+[15:53:05][INFO] HitMerger processing took 0.000216007
+[15:53:05][INFO] Launching merge kernel 
+[15:53:05][INFO] Merge and flush event 21
+HitMerger entry: 0 nprimry:   351 trackoffset:   351 
+[15:53:05][INFO] outtree has file o2sim_Kine.root
+[15:53:05][INFO] Merge/flush for event 21 took 0.000209093
+[15:53:05][INFO] Merge and flush event 22
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   160 trackoffset:   160 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:05][INFO] outtree has file o2sim_Kine.root
+[15:53:05][INFO] Merge/flush for event 22 took 0.000252008
+[15:53:05][INFO] Writing TTrees
+[15:53:05][INFO] SIMDATA channel got 3 parts for event 23 part 1 out of 2
+[15:53:05][INFO] HitMerger processing took 0.000133991
+[15:53:05][INFO] SIMDATA channel got 3 parts for event 23 part 2 out of 2
+[15:53:05][INFO] Event 23 complete. Marking as flushable
+[15:53:05][INFO] HitMerger processing took 0.000109911
+[15:53:05][INFO] SIMDATA channel got 3 parts for event 24 part 1 out of 1
+[15:53:05][INFO] Event 24 complete. Marking as flushable
+[15:53:05][INFO] HitMerger processing took 6.60419e-05
+[15:53:08][INFO] SIMDATA channel got 3 parts for event 25 part 1 out of 5
+[15:53:08][INFO] HitMerger processing took 0.000299931
+[15:53:08][INFO] SIMDATA channel got 3 parts for event 25 part 2 out of 5
+[15:53:08][INFO] HitMerger processing took 0.000108004
+[15:53:08][INFO] SIMDATA channel got 3 parts for event 25 part 3 out of 5
+[15:53:08][INFO] HitMerger processing took 0.000125885
+[15:53:08][INFO] SIMDATA channel got 3 parts for event 25 part 4 out of 5
+[15:53:08][INFO] HitMerger processing took 0.000106812
+[15:53:08][INFO] SIMDATA channel got 3 parts for event 25 part 5 out of 5
+[15:53:08][INFO] Event 25 complete. Marking as flushable
+[15:53:08][INFO] HitMerger processing took 0.000189066
+[15:53:08][INFO] Launching merge kernel 
+[15:53:08][INFO] Merge and flush event 23
+HitMerger entry: 1 nprimry:   496 trackoffset:   496 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:08][INFO] outtree has file o2sim_Kine.root
+[15:53:08][INFO] Merge/flush for event 23 took 0.000290871
+[15:53:08][INFO] Merge and flush event 24
+HitMerger entry: 0 nprimry:   155 trackoffset:   155 
+[15:53:08][INFO] outtree has file o2sim_Kine.root
+[15:53:08][INFO] Merge/flush for event 24 took 4.3869e-05
+[15:53:08][INFO] Merge and flush event 25
+HitMerger entry: 4 nprimry:   358 trackoffset:   358 
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 4     4     4     4 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:08][INFO] outtree has file o2sim_Kine.root
+[15:53:08][INFO] Merge/flush for event 25 took 0.000291109
+[15:53:08][INFO] Writing TTrees
+[15:53:08][INFO] SIMDATA channel got 3 parts for event 26 part 1 out of 1
+[15:53:08][INFO] Event 26 complete. Marking as flushable
+[15:53:08][INFO] HitMerger processing took 9.01222e-05
+[15:53:08][INFO] SIMDATA channel got 3 parts for event 27 part 1 out of 1
+[15:53:08][INFO] Event 27 complete. Marking as flushable
+[15:53:08][INFO] HitMerger processing took 7.48634e-05
+[15:53:08][INFO] SIMDATA channel got 3 parts for event 28 part 1 out of 1
+[15:53:08][INFO] Event 28 complete. Marking as flushable
+[15:53:08][INFO] HitMerger processing took 0.000325918
+[15:53:08][INFO] Launching merge kernel 
+[15:53:08][INFO] Merge and flush event 26
+HitMerger entry: 0 nprimry:   155 trackoffset:   155 
+[15:53:08][INFO] outtree has file o2sim_Kine.root
+[15:53:08][INFO] Merge/flush for event 26 took 0.000202179
+[15:53:08][INFO] Merge and flush event 27
+HitMerger entry: 0 nprimry:   161 trackoffset:   161 
+[15:53:08][INFO] outtree has file o2sim_Kine.root
+[15:53:08][INFO] Merge/flush for event 27 took 6.60419e-05
+[15:53:08][INFO] Merge and flush event 28
+HitMerger entry: 0 nprimry:   315 trackoffset:   315 
+[15:53:08][INFO] outtree has file o2sim_Kine.root
+[15:53:08][INFO] Merge/flush for event 28 took 6.50883e-05
+[15:53:08][INFO] Writing TTrees
+[15:53:08][INFO] SIMDATA channel got 3 parts for event 29 part 1 out of 1
+[15:53:08][INFO] Event 29 complete. Marking as flushable
+[15:53:08][INFO] HitMerger processing took 0.000109911
+[15:53:08][INFO] SIMDATA channel got 3 parts for event 30 part 1 out of 1
+[15:53:08][INFO] Event 30 complete. Marking as flushable
+[15:53:08][INFO] HitMerger processing took 9.58443e-05
+[15:53:12][INFO] SIMDATA channel got 3 parts for event 31 part 1 out of 1
+[15:53:12][INFO] Event 31 complete. Marking as flushable
+[15:53:12][INFO] HitMerger processing took 0.000386953
+[15:53:12][INFO] Launching merge kernel 
+[15:53:12][INFO] Merge and flush event 29
+HitMerger entry: 0 nprimry:   300 trackoffset:   300 
+[15:53:12][INFO] outtree has file o2sim_Kine.root
+[15:53:12][INFO] Merge/flush for event 29 took 0.000226021
+[15:53:12][INFO] Merge and flush event 30
+HitMerger entry: 0 nprimry:   287 trackoffset:   287 
+[15:53:12][INFO] outtree has file o2sim_Kine.root
+[15:53:12][INFO] Merge/flush for event 30 took 7.39098e-05
+[15:53:12][INFO] Merge and flush event 31
+HitMerger entry: 0 nprimry:   292 trackoffset:   292 
+[15:53:12][INFO] outtree has file o2sim_Kine.root
+[15:53:12][INFO] Merge/flush for event 31 took 7.20024e-05
+[15:53:12][INFO] Writing TTrees
+[15:53:12][INFO] SIMDATA channel got 3 parts for event 32 part 1 out of 2
+[15:53:12][INFO] HitMerger processing took 0.000175953
+[15:53:12][INFO] SIMDATA channel got 3 parts for event 32 part 2 out of 2
+[15:53:12][INFO] Event 32 complete. Marking as flushable
+[15:53:12][INFO] HitMerger processing took 0.000110149
+[15:53:12][INFO] SIMDATA channel got 3 parts for event 33 part 1 out of 1
+[15:53:12][INFO] Event 33 complete. Marking as flushable
+[15:53:12][INFO] HitMerger processing took 7.70092e-05
+[15:53:13][INFO] SIMDATA channel got 3 parts for event 34 part 1 out of 5
+[15:53:13][INFO] HitMerger processing took 0.000270128
+[15:53:13][INFO] SIMDATA channel got 3 parts for event 34 part 2 out of 5
+[15:53:13][INFO] HitMerger processing took 8.60691e-05
+[15:53:13][INFO] SIMDATA channel got 3 parts for event 34 part 3 out of 5
+[15:53:13][INFO] HitMerger processing took 7.89165e-05
+[15:53:13][INFO] SIMDATA channel got 3 parts for event 34 part 4 out of 5
+[15:53:13][INFO] HitMerger processing took 7.70092e-05
+[15:53:13][INFO] SIMDATA channel got 3 parts for event 34 part 5 out of 5
+[15:53:13][INFO] Event 34 complete. Marking as flushable
+[15:53:13][INFO] HitMerger processing took 0.000147104
+[15:53:13][INFO] Launching merge kernel 
+[15:53:13][INFO] Merge and flush event 32
+HitMerger entry: 1 nprimry:   452 trackoffset:   452 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:13][INFO] outtree has file o2sim_Kine.root
+[15:53:13][INFO] Merge/flush for event 32 took 0.000260115
+[15:53:13][INFO] Merge and flush event 33
+HitMerger entry: 0 nprimry:   237 trackoffset:   237 
+[15:53:13][INFO] outtree has file o2sim_Kine.root
+[15:53:13][INFO] Merge/flush for event 33 took 3.48091e-05
+[15:53:13][INFO] Merge and flush event 34
+HitMerger entry: 4 nprimry:    80 trackoffset:    80 
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 4     4     4     4 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:13][INFO] outtree has file o2sim_Kine.root
+[15:53:13][INFO] Merge/flush for event 34 took 0.000195026
+[15:53:13][INFO] Writing TTrees
+[15:53:13][INFO] SIMDATA channel got 3 parts for event 35 part 1 out of 2
+[15:53:13][INFO] HitMerger processing took 0.000121832
+[15:53:13][INFO] SIMDATA channel got 3 parts for event 35 part 2 out of 2
+[15:53:13][INFO] Event 35 complete. Marking as flushable
+[15:53:13][INFO] HitMerger processing took 8.51154e-05
+[15:53:13][INFO] SIMDATA channel got 3 parts for event 36 part 1 out of 1
+[15:53:13][INFO] Event 36 complete. Marking as flushable
+[15:53:13][INFO] HitMerger processing took 0.00011611
+[15:53:15][INFO] SIMDATA channel got 3 parts for event 37 part 1 out of 1
+[15:53:15][INFO] Event 37 complete. Marking as flushable
+[15:53:15][INFO] HitMerger processing took 0.000381947
+[15:53:15][INFO] Launching merge kernel 
+[15:53:15][INFO] Merge and flush event 35
+HitMerger entry: 1 nprimry:   400 trackoffset:   400 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:15][INFO] outtree has file o2sim_Kine.root
+[15:53:15][INFO] Merge/flush for event 35 took 0.00031209
+[15:53:15][INFO] Merge and flush event 36
+HitMerger entry: 0 nprimry:   164 trackoffset:   164 
+[15:53:15][INFO] outtree has file o2sim_Kine.root
+[15:53:15][INFO] Merge/flush for event 36 took 5.29289e-05
+[15:53:15][INFO] Merge and flush event 37
+HitMerger entry: 0 nprimry:   492 trackoffset:   492 
+[15:53:15][INFO] outtree has file o2sim_Kine.root
+[15:53:15][INFO] Merge/flush for event 37 took 7.48634e-05
+[15:53:15][INFO] Writing TTrees
+[15:53:15][INFO] SIMDATA channel got 3 parts for event 38 part 1 out of 1
+[15:53:15][INFO] Event 38 complete. Marking as flushable
+[15:53:15][INFO] HitMerger processing took 0.000135183
+[15:53:15][INFO] SIMDATA channel got 3 parts for event 39 part 1 out of 1
+[15:53:15][INFO] Event 39 complete. Marking as flushable
+[15:53:15][INFO] HitMerger processing took 9.60827e-05
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 40 part 1 out of 3
+[15:53:16][INFO] HitMerger processing took 0.000273943
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 40 part 2 out of 3
+[15:53:16][INFO] HitMerger processing took 8.29697e-05
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 40 part 3 out of 3
+[15:53:16][INFO] Event 40 complete. Marking as flushable
+[15:53:16][INFO] HitMerger processing took 0.000178099
+[15:53:16][INFO] Launching merge kernel 
+[15:53:16][INFO] Merge and flush event 38
+HitMerger entry: 0 nprimry:   443 trackoffset:   443 
+[15:53:16][INFO] outtree has file o2sim_Kine.root
+[15:53:16][INFO] Merge/flush for event 38 took 0.000189781
+[15:53:16][INFO] Merge and flush event 39
+HitMerger entry: 0 nprimry:   468 trackoffset:   468 
+[15:53:16][INFO] outtree has file o2sim_Kine.root
+[15:53:16][INFO] Merge/flush for event 39 took 4.79221e-05
+[15:53:16][INFO] Merge and flush event 40
+HitMerger entry: 2 nprimry:   399 trackoffset:   399 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:16][INFO] outtree has file o2sim_Kine.root
+[15:53:16][INFO] Merge/flush for event 40 took 0.000134945
+[15:53:16][INFO] Writing TTrees
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 41 part 1 out of 1
+[15:53:16][INFO] Event 41 complete. Marking as flushable
+[15:53:16][INFO] HitMerger processing took 7.70092e-05
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 42 part 2 out of 2
+[15:53:16][INFO] HitMerger processing took 4.31538e-05
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 42 part 1 out of 2
+[15:53:16][INFO] Event 42 complete. Marking as flushable
+[15:53:16][INFO] HitMerger processing took 0.000105858
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 43 part 2 out of 2
+[15:53:16][INFO] HitMerger processing took 0.000115156
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 43 part 1 out of 2
+[15:53:16][INFO] Event 43 complete. Marking as flushable
+[15:53:16][INFO] HitMerger processing took 0.000183821
+[15:53:16][INFO] Launching merge kernel 
+[15:53:16][INFO] Merge and flush event 41
+HitMerger entry: 0 nprimry:   238 trackoffset:   238 
+[15:53:16][INFO] outtree has file o2sim_Kine.root
+[15:53:16][INFO] Merge/flush for event 41 took 0.000190973
+[15:53:16][INFO] Merge and flush event 42
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    10 trackoffset:    10 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:16][INFO] outtree has file o2sim_Kine.root
+[15:53:16][INFO] Merge/flush for event 42 took 0.000108004
+[15:53:16][INFO] Merge and flush event 43
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   223 trackoffset:   223 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:16][INFO] outtree has file o2sim_Kine.root
+[15:53:16][INFO] Merge/flush for event 43 took 0.000159025
+[15:53:16][INFO] Writing TTrees
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 44 part 1 out of 4
+[15:53:16][INFO] HitMerger processing took 0.000174046
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 44 part 2 out of 4
+[15:53:16][INFO] HitMerger processing took 9.5129e-05
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 44 part 4 out of 4
+[15:53:16][INFO] HitMerger processing took 7.51019e-05
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 44 part 3 out of 4
+[15:53:16][INFO] Event 44 complete. Marking as flushable
+[15:53:16][INFO] HitMerger processing took 0.000110149
+[15:53:16][INFO] SIMDATA channel got 3 parts for event 45 part 1 out of 1
+[15:53:16][INFO] Event 45 complete. Marking as flushable
+[15:53:16][INFO] HitMerger processing took 7.70092e-05
+[15:53:19][INFO] SIMDATA channel got 3 parts for event 46 part 1 out of 3
+[15:53:19][INFO] HitMerger processing took 0.000272989
+[15:53:19][INFO] SIMDATA channel got 3 parts for event 46 part 2 out of 3
+[15:53:19][INFO] HitMerger processing took 8.29697e-05
+[15:53:19][INFO] SIMDATA channel got 3 parts for event 46 part 3 out of 3
+[15:53:19][INFO] Event 46 complete. Marking as flushable
+[15:53:19][INFO] HitMerger processing took 0.000152111
+[15:53:19][INFO] Launching merge kernel 
+[15:53:19][INFO] Merge and flush event 44
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   313 trackoffset:   313 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:19][INFO] outtree has file o2sim_Kine.root
+[15:53:19][INFO] Merge/flush for event 44 took 0.00029397
+[15:53:19][INFO] Merge and flush event 45
+HitMerger entry: 0 nprimry:    90 trackoffset:    90 
+[15:53:19][INFO] outtree has file o2sim_Kine.root
+[15:53:19][INFO] Merge/flush for event 45 took 2.90871e-05
+[15:53:19][INFO] Merge and flush event 46
+HitMerger entry: 2 nprimry:   304 trackoffset:   304 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:19][INFO] outtree has file o2sim_Kine.root
+[15:53:19][INFO] Merge/flush for event 46 took 0.00011301
+[15:53:19][INFO] Writing TTrees
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 47 part 1 out of 1
+[15:53:20][INFO] Event 47 complete. Marking as flushable
+[15:53:20][INFO] HitMerger processing took 0.00012207
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 48 part 1 out of 1
+[15:53:20][INFO] Event 48 complete. Marking as flushable
+[15:53:20][INFO] HitMerger processing took 0.000108004
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 49 part 3 out of 3
+[15:53:20][INFO] HitMerger processing took 0.000183105
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 49 part 1 out of 3
+[15:53:20][INFO] HitMerger processing took 8.58307e-05
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 49 part 2 out of 3
+[15:53:20][INFO] Event 49 complete. Marking as flushable
+[15:53:20][INFO] HitMerger processing took 0.000189066
+[15:53:20][INFO] Launching merge kernel 
+[15:53:20][INFO] Merge and flush event 47
+HitMerger entry: 0 nprimry:   412 trackoffset:   412 
+[15:53:20][INFO] outtree has file o2sim_Kine.root
+[15:53:20][INFO] Merge/flush for event 47 took 0.000177145
+[15:53:20][INFO] Merge and flush event 48
+HitMerger entry: 0 nprimry:   489 trackoffset:   489 
+[15:53:20][INFO] outtree has file o2sim_Kine.root
+[15:53:20][INFO] Merge/flush for event 48 took 5.22137e-05
+[15:53:20][INFO] Merge and flush event 49
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    67 trackoffset:    67 
+merge 2     0     0     1 
+merge 1     2     2     0 
+merge 0     1     1     2 
+[15:53:20][INFO] outtree has file o2sim_Kine.root
+[15:53:20][INFO] Merge/flush for event 49 took 0.000100136
+[15:53:20][INFO] Writing TTrees
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 50 part 3 out of 3
+[15:53:20][INFO] HitMerger processing took 5.10216e-05
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 50 part 2 out of 3
+[15:53:20][INFO] HitMerger processing took 0.000102043
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 50 part 1 out of 3
+[15:53:20][INFO] Event 50 complete. Marking as flushable
+[15:53:20][INFO] HitMerger processing took 0.000110149
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 51 part 3 out of 3
+[15:53:20][INFO] HitMerger processing took 6.00815e-05
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 51 part 1 out of 3
+[15:53:20][INFO] HitMerger processing took 9.48906e-05
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 51 part 2 out of 3
+[15:53:20][INFO] Event 51 complete. Marking as flushable
+[15:53:20][INFO] HitMerger processing took 9.91821e-05
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 52 part 2 out of 2
+[15:53:20][INFO] HitMerger processing took 0.000184059
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 52 part 1 out of 2
+[15:53:20][INFO] Event 52 complete. Marking as flushable
+[15:53:20][INFO] HitMerger processing took 0.000208139
+[15:53:20][INFO] Launching merge kernel 
+[15:53:20][INFO] Merge and flush event 50
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    25 trackoffset:    25 
+merge 2     0     0     2 
+merge 1     1     1     1 
+merge 0     2     2     0 
+[15:53:20][INFO] outtree has file o2sim_Kine.root
+[15:53:20][INFO] Merge/flush for event 50 took 0.000286102
+[15:53:20][INFO] Merge and flush event 51
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    26 trackoffset:    26 
+merge 2     0     0     1 
+merge 1     2     2     0 
+merge 0     1     1     2 
+[15:53:20][INFO] outtree has file o2sim_Kine.root
+[15:53:20][INFO] Merge/flush for event 51 took 0.000110865
+[15:53:20][INFO] Merge and flush event 52
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   324 trackoffset:   324 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:20][INFO] outtree has file o2sim_Kine.root
+[15:53:20][INFO] Merge/flush for event 52 took 0.000156879
+[15:53:20][INFO] Writing TTrees
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 53 part 1 out of 1
+[15:53:20][INFO] Event 53 complete. Marking as flushable
+[15:53:20][INFO] HitMerger processing took 8.32081e-05
+[15:53:20][INFO] SIMDATA channel got 3 parts for event 54 part 1 out of 1
+[15:53:20][INFO] Event 54 complete. Marking as flushable
+[15:53:20][INFO] HitMerger processing took 6.91414e-05
+[15:53:22][INFO] SIMDATA channel got 3 parts for event 55 part 1 out of 2
+[15:53:22][INFO] HitMerger processing took 0.000282049
+[15:53:22][INFO] SIMDATA channel got 3 parts for event 55 part 2 out of 2
+[15:53:22][INFO] Event 55 complete. Marking as flushable
+[15:53:22][INFO] HitMerger processing took 0.000210047
+[15:53:22][INFO] Launching merge kernel 
+[15:53:22][INFO] Merge and flush event 53
+HitMerger entry: 0 nprimry:   240 trackoffset:   240 
+[15:53:22][INFO] outtree has file o2sim_Kine.root
+[15:53:22][INFO] Merge/flush for event 53 took 0.000174999
+[15:53:22][INFO] Merge and flush event 54
+HitMerger entry: 0 nprimry:   200 trackoffset:   200 
+[15:53:22][INFO] outtree has file o2sim_Kine.root
+[15:53:22][INFO] Merge/flush for event 54 took 3.50475e-05
+[15:53:22][INFO] Merge and flush event 55
+HitMerger entry: 1 nprimry:   437 trackoffset:   437 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:22][INFO] outtree has file o2sim_Kine.root
+[15:53:22][INFO] Merge/flush for event 55 took 0.000111818
+[15:53:22][INFO] Writing TTrees
+[15:53:22][INFO] SIMDATA channel got 3 parts for event 56 part 1 out of 4
+[15:53:22][INFO] HitMerger processing took 0.000129938
+[15:53:22][INFO] SIMDATA channel got 3 parts for event 56 part 2 out of 4
+[15:53:22][INFO] HitMerger processing took 8.89301e-05
+[15:53:22][INFO] SIMDATA channel got 3 parts for event 56 part 4 out of 4
+[15:53:22][INFO] HitMerger processing took 5.4121e-05
+[15:53:22][INFO] SIMDATA channel got 3 parts for event 56 part 3 out of 4
+[15:53:22][INFO] Event 56 complete. Marking as flushable
+[15:53:22][INFO] HitMerger processing took 9.10759e-05
+[15:53:22][INFO] SIMDATA channel got 3 parts for event 57 part 3 out of 3
+[15:53:22][INFO] HitMerger processing took 5.60284e-05
+[15:53:22][INFO] SIMDATA channel got 3 parts for event 57 part 1 out of 3
+[15:53:22][INFO] HitMerger processing took 8.60691e-05
+[15:53:22][INFO] SIMDATA channel got 3 parts for event 57 part 2 out of 3
+[15:53:22][INFO] Event 57 complete. Marking as flushable
+[15:53:22][INFO] HitMerger processing took 8.98838e-05
+[15:53:24][INFO] SIMDATA channel got 3 parts for event 58 part 1 out of 4
+[15:53:24][INFO] HitMerger processing took 0.000313044
+[15:53:24][INFO] SIMDATA channel got 3 parts for event 58 part 2 out of 4
+[15:53:24][INFO] HitMerger processing took 0.000102043
+[15:53:24][INFO] SIMDATA channel got 3 parts for event 58 part 3 out of 4
+[15:53:24][INFO] HitMerger processing took 9.39369e-05
+[15:53:24][INFO] SIMDATA channel got 3 parts for event 58 part 4 out of 4
+[15:53:24][INFO] Event 58 complete. Marking as flushable
+[15:53:24][INFO] HitMerger processing took 0.000172138
+[15:53:24][INFO] Launching merge kernel 
+[15:53:24][INFO] Merge and flush event 56
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   236 trackoffset:   236 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:24][INFO] outtree has file o2sim_Kine.root
+[15:53:24][INFO] Merge/flush for event 56 took 0.000472069
+[15:53:24][INFO] Merge and flush event 57
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    41 trackoffset:    41 
+merge 2     0     0     1 
+merge 1     2     2     0 
+merge 0     1     1     2 
+[15:53:24][INFO] outtree has file o2sim_Kine.root
+[15:53:24][INFO] Merge/flush for event 57 took 0.000189066
+[15:53:24][INFO] Merge and flush event 58
+HitMerger entry: 3 nprimry:   361 trackoffset:   361 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:24][INFO] outtree has file o2sim_Kine.root
+[15:53:24][INFO] Merge/flush for event 58 took 0.000267982
+[15:53:24][INFO] Writing TTrees
+[15:53:24][INFO] SIMDATA channel got 3 parts for event 59 part 2 out of 2
+[15:53:24][INFO] HitMerger processing took 0.000102043
+[15:53:24][INFO] SIMDATA channel got 3 parts for event 59 part 1 out of 2
+[15:53:24][INFO] Event 59 complete. Marking as flushable
+[15:53:24][INFO] HitMerger processing took 0.000105143
+[15:53:24][INFO] SIMDATA channel got 3 parts for event 60 part 1 out of 1
+[15:53:24][INFO] Event 60 complete. Marking as flushable
+[15:53:24][INFO] HitMerger processing took 4.69685e-05
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 61 part 1 out of 4
+[15:53:25][INFO] HitMerger processing took 0.000252008
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 61 part 2 out of 4
+[15:53:25][INFO] HitMerger processing took 0.000102997
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 61 part 4 out of 4
+[15:53:25][INFO] HitMerger processing took 5.10216e-05
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 61 part 3 out of 4
+[15:53:25][INFO] Event 61 complete. Marking as flushable
+[15:53:25][INFO] HitMerger processing took 0.000211
+[15:53:25][INFO] Launching merge kernel 
+[15:53:25][INFO] Merge and flush event 59
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   249 trackoffset:   249 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:25][INFO] outtree has file o2sim_Kine.root
+[15:53:25][INFO] Merge/flush for event 59 took 0.000314951
+[15:53:25][INFO] Merge and flush event 60
+HitMerger entry: 0 nprimry:    10 trackoffset:    10 
+[15:53:25][INFO] outtree has file o2sim_Kine.root
+[15:53:25][INFO] Merge/flush for event 60 took 4.79221e-05
+[15:53:25][INFO] Merge and flush event 61
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   132 trackoffset:   132 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     2     2     3 
+merge 2     3     3     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:25][INFO] outtree has file o2sim_Kine.root
+[15:53:25][INFO] Merge/flush for event 61 took 0.000267029
+[15:53:25][INFO] Writing TTrees
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 62 part 1 out of 1
+[15:53:25][INFO] Event 62 complete. Marking as flushable
+[15:53:25][INFO] HitMerger processing took 0.000108004
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 63 part 2 out of 2
+[15:53:25][INFO] HitMerger processing took 5.31673e-05
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 63 part 1 out of 2
+[15:53:25][INFO] Event 63 complete. Marking as flushable
+[15:53:25][INFO] HitMerger processing took 0.000100136
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 64 part 1 out of 3
+[15:53:25][INFO] HitMerger processing took 0.000179052
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 64 part 2 out of 3
+[15:53:25][INFO] HitMerger processing took 7.89165e-05
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 64 part 3 out of 3
+[15:53:25][INFO] Event 64 complete. Marking as flushable
+[15:53:25][INFO] HitMerger processing took 8.51154e-05
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 65 part 1 out of 1
+[15:53:25][INFO] Event 65 complete. Marking as flushable
+[15:53:25][INFO] HitMerger processing took 6.48499e-05
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 66 part 1 out of 4
+[15:53:25][INFO] HitMerger processing took 9.799e-05
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 66 part 4 out of 4
+[15:53:25][INFO] HitMerger processing took 3.09944e-05
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 66 part 2 out of 4
+[15:53:25][INFO] HitMerger processing took 7.08103e-05
+[15:53:25][INFO] SIMDATA channel got 3 parts for event 66 part 3 out of 4
+[15:53:25][INFO] Event 66 complete. Marking as flushable
+[15:53:25][INFO] HitMerger processing took 8.60691e-05
+[15:53:26][INFO] SIMDATA channel got 3 parts for event 67 part 1 out of 4
+[15:53:26][INFO] HitMerger processing took 0.000226021
+[15:53:26][INFO] SIMDATA channel got 3 parts for event 67 part 2 out of 4
+[15:53:26][INFO] HitMerger processing took 8.2016e-05
+[15:53:26][INFO] SIMDATA channel got 3 parts for event 67 part 3 out of 4
+[15:53:26][INFO] HitMerger processing took 8.29697e-05
+[15:53:26][INFO] SIMDATA channel got 3 parts for event 67 part 4 out of 4
+[15:53:26][INFO] Event 67 complete. Marking as flushable
+[15:53:26][INFO] HitMerger processing took 0.000165939
+[15:53:26][INFO] Launching merge kernel 
+[15:53:26][INFO] Merge and flush event 62
+HitMerger entry: 0 nprimry:   455 trackoffset:   455 
+[15:53:26][INFO] outtree has file o2sim_Kine.root
+[15:53:26][INFO] Merge/flush for event 62 took 0.000193834
+[15:53:26][INFO] Merge and flush event 63
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   102 trackoffset:   102 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:26][INFO] outtree has file o2sim_Kine.root
+[15:53:26][INFO] Merge/flush for event 63 took 0.000116825
+[15:53:26][INFO] Merge and flush event 64
+HitMerger entry: 2 nprimry:   444 trackoffset:   444 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:26][INFO] outtree has file o2sim_Kine.root
+[15:53:26][INFO] Merge/flush for event 64 took 0.000165939
+[15:53:26][INFO] Merge and flush event 65
+HitMerger entry: 0 nprimry:   206 trackoffset:   206 
+[15:53:26][INFO] outtree has file o2sim_Kine.root
+[15:53:26][INFO] Merge/flush for event 65 took 4.88758e-05
+[15:53:26][INFO] Merge and flush event 66
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:    15 trackoffset:    15 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     1     1     2 
+merge 2     3     3     1 
+merge 1     2     2     3 
+merge 0     0     0     0 
+[15:53:26][INFO] outtree has file o2sim_Kine.root
+[15:53:26][INFO] Merge/flush for event 66 took 0.00023818
+[15:53:26][INFO] Merge and flush event 67
+HitMerger entry: 3 nprimry:   340 trackoffset:   340 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:26][INFO] outtree has file o2sim_Kine.root
+[15:53:26][INFO] Merge/flush for event 67 took 0.000195026
+[15:53:26][INFO] Writing TTrees
+[15:53:26][INFO] SIMDATA channel got 3 parts for event 68 part 2 out of 2
+[15:53:26][INFO] HitMerger processing took 6.79493e-05
+[15:53:26][INFO] SIMDATA channel got 3 parts for event 68 part 1 out of 2
+[15:53:26][INFO] Event 68 complete. Marking as flushable
+[15:53:26][INFO] HitMerger processing took 9.5129e-05
+[15:53:26][INFO] SIMDATA channel got 3 parts for event 69 part 1 out of 1
+[15:53:26][INFO] Event 69 complete. Marking as flushable
+[15:53:26][INFO] HitMerger processing took 7.20024e-05
+[15:53:27][INFO] SIMDATA channel got 3 parts for event 70 part 1 out of 1
+[15:53:27][INFO] Event 70 complete. Marking as flushable
+[15:53:27][INFO] HitMerger processing took 0.000282049
+[15:53:27][INFO] Launching merge kernel 
+[15:53:27][INFO] Merge and flush event 68
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   185 trackoffset:   185 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:27][INFO] SIMDATA channel got 3 parts for event 71 part 1 out of 1
+[15:53:27][INFO] Event 71 complete. Marking as flushable
+[15:53:27][INFO] HitMerger processing took 6.50883e-05
+[15:53:27][INFO] outtree has file o2sim_Kine.root
+[15:53:27][INFO] Merge/flush for event 68 took 0.000268936
+[15:53:27][INFO] Merge and flush event 69
+HitMerger entry: 0 nprimry:   286 trackoffset:   286 
+[15:53:27][INFO] outtree has file o2sim_Kine.root
+[15:53:27][INFO] Merge/flush for event 69 took 6.00815e-05
+[15:53:27][INFO] Merge and flush event 70
+HitMerger entry: 0 nprimry:   286 trackoffset:   286 
+[15:53:27][INFO] outtree has file o2sim_Kine.root
+[15:53:27][INFO] Merge/flush for event 70 took 5.6982e-05
+[15:53:27][INFO] Merge and flush event 71
+HitMerger entry: 0 nprimry:   118 trackoffset:   118 
+[15:53:27][INFO] outtree has file o2sim_Kine.root
+[15:53:27][INFO] Merge/flush for event 71 took 4.50611e-05
+[15:53:27][INFO] Writing TTrees
+[15:53:27][INFO] SIMDATA channel got 3 parts for event 72 part 2 out of 2
+[15:53:27][INFO] HitMerger processing took 5.60284e-05
+[15:53:27][INFO] SIMDATA channel got 3 parts for event 72 part 1 out of 2
+[15:53:27][INFO] Event 72 complete. Marking as flushable
+[15:53:27][INFO] HitMerger processing took 9.29832e-05
+[15:53:27][INFO] SIMDATA channel got 3 parts for event 73 part 1 out of 5
+[15:53:27][INFO] HitMerger processing took 0.000187874
+[15:53:27][INFO] SIMDATA channel got 3 parts for event 73 part 2 out of 5
+[15:53:27][INFO] HitMerger processing took 9.60827e-05
+[15:53:27][INFO] SIMDATA channel got 3 parts for event 73 part 3 out of 5
+[15:53:27][INFO] HitMerger processing took 7.67708e-05
+[15:53:27][INFO] SIMDATA channel got 3 parts for event 73 part 5 out of 5
+[15:53:27][INFO] HitMerger processing took 5.50747e-05
+[15:53:27][INFO] SIMDATA channel got 3 parts for event 73 part 4 out of 5
+[15:53:27][INFO] Event 73 complete. Marking as flushable
+[15:53:27][INFO] HitMerger processing took 8.70228e-05
+[15:53:27][INFO] SIMDATA channel got 3 parts for event 74 part 1 out of 1
+[15:53:27][INFO] Event 74 complete. Marking as flushable
+[15:53:27][INFO] HitMerger processing took 6.60419e-05
+[15:53:27][INFO] SIMDATA channel got 3 parts for event 75 part 1 out of 1
+[15:53:27][INFO] Event 75 complete. Marking as flushable
+[15:53:27][INFO] HitMerger processing took 5.10216e-05
+[15:53:28][INFO] SIMDATA channel got 3 parts for event 76 part 1 out of 4
+[15:53:28][INFO] HitMerger processing took 0.000266075
+[15:53:28][INFO] SIMDATA channel got 3 parts for event 76 part 2 out of 4
+[15:53:28][INFO] HitMerger processing took 9.17912e-05
+[15:53:28][INFO] SIMDATA channel got 3 parts for event 76 part 3 out of 4
+[15:53:28][INFO] HitMerger processing took 8.79765e-05
+[15:53:28][INFO] SIMDATA channel got 3 parts for event 76 part 4 out of 4
+[15:53:28][INFO] Event 76 complete. Marking as flushable
+[15:53:28][INFO] HitMerger processing took 0.000136137
+[15:53:28][INFO] Launching merge kernel 
+[15:53:28][INFO] Merge and flush event 72
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   102 trackoffset:   102 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:28][INFO] outtree has file o2sim_Kine.root
+[15:53:28][INFO] Merge/flush for event 72 took 0.000225067
+[15:53:28][INFO] Merge and flush event 73
+HitMerger entry: 4 nprimry:   500 trackoffset:   500 
+HitMerger entry: 3 nprimry:   241 trackoffset:   241 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 4     3     3     4 
+merge 3     4     4     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:28][INFO] outtree has file o2sim_Kine.root
+[15:53:28][INFO] Merge/flush for event 73 took 0.000228882
+[15:53:28][INFO] Merge and flush event 74
+HitMerger entry: 0 nprimry:   231 trackoffset:   231 
+[15:53:28][INFO] outtree has file o2sim_Kine.root
+[15:53:28][INFO] Merge/flush for event 74 took 4.50611e-05
+[15:53:28][INFO] Merge and flush event 75
+HitMerger entry: 0 nprimry:   108 trackoffset:   108 
+[15:53:28][INFO] outtree has file o2sim_Kine.root
+[15:53:28][INFO] Merge/flush for event 75 took 3.69549e-05
+[15:53:28][INFO] Merge and flush event 76
+HitMerger entry: 3 nprimry:   201 trackoffset:   201 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:28][INFO] outtree has file o2sim_Kine.root
+[15:53:28][INFO] Merge/flush for event 76 took 0.000174046
+[15:53:28][INFO] Writing TTrees
+[15:53:28][INFO] SIMDATA channel got 3 parts for event 77 part 1 out of 1
+[15:53:28][INFO] Event 77 complete. Marking as flushable
+[15:53:28][INFO] HitMerger processing took 7.20024e-05
+[15:53:28][INFO] SIMDATA channel got 3 parts for event 78 part 1 out of 1
+[15:53:28][INFO] Event 78 complete. Marking as flushable
+[15:53:28][INFO] HitMerger processing took 5.79357e-05
+[15:53:32][INFO] SIMDATA channel got 3 parts for event 79 part 1 out of 6
+[15:53:32][INFO] HitMerger processing took 0.000258923
+[15:53:32][INFO] SIMDATA channel got 3 parts for event 79 part 2 out of 6
+[15:53:32][INFO] HitMerger processing took 8.58307e-05
+[15:53:32][INFO] SIMDATA channel got 3 parts for event 79 part 3 out of 6
+[15:53:32][INFO] HitMerger processing took 0.000101089
+[15:53:32][INFO] SIMDATA channel got 3 parts for event 79 part 4 out of 6
+[15:53:32][INFO] HitMerger processing took 0.000104904
+[15:53:32][INFO] SIMDATA channel got 3 parts for event 79 part 6 out of 6
+[15:53:32][INFO] HitMerger processing took 4.19617e-05
+[15:53:32][INFO] SIMDATA channel got 3 parts for event 79 part 5 out of 6
+[15:53:32][INFO] Event 79 complete. Marking as flushable
+[15:53:32][INFO] HitMerger processing took 0.000189066
+[15:53:32][INFO] Launching merge kernel 
+[15:53:32][INFO] Merge and flush event 77
+HitMerger entry: 0 nprimry:   215 trackoffset:   215 
+[15:53:32][INFO] outtree has file o2sim_Kine.root
+[15:53:32][INFO] Merge/flush for event 77 took 0.00022006
+[15:53:32][INFO] Merge and flush event 78
+HitMerger entry: 0 nprimry:   130 trackoffset:   130 
+[15:53:32][INFO] outtree has file o2sim_Kine.root
+[15:53:32][INFO] Merge/flush for event 78 took 5.4121e-05
+[15:53:32][INFO] Merge and flush event 79
+HitMerger entry: 5 nprimry:   500 trackoffset:   500 
+HitMerger entry: 4 nprimry:   106 trackoffset:   106 
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 5     4     4     5 
+merge 4     5     5     4 
+merge 3     3     3     3 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:32][INFO] outtree has file o2sim_Kine.root
+[15:53:32][INFO] Merge/flush for event 79 took 0.000345945
+[15:53:32][INFO] Writing TTrees
+[15:53:32][INFO] SIMDATA channel got 3 parts for event 80 part 2 out of 2
+[15:53:32][INFO] HitMerger processing took 6.60419e-05
+[15:53:32][INFO] SIMDATA channel got 3 parts for event 80 part 1 out of 2
+[15:53:32][INFO] Event 80 complete. Marking as flushable
+[15:53:32][INFO] HitMerger processing took 9.89437e-05
+[15:53:32][INFO] SIMDATA channel got 3 parts for event 81 part 1 out of 1
+[15:53:32][INFO] Event 81 complete. Marking as flushable
+[15:53:32][INFO] HitMerger processing took 9.39369e-05
+[15:53:33][INFO] SIMDATA channel got 3 parts for event 82 part 2 out of 2
+[15:53:33][INFO] HitMerger processing took 0.000204086
+[15:53:33][INFO] SIMDATA channel got 3 parts for event 82 part 1 out of 2
+[15:53:33][INFO] Event 82 complete. Marking as flushable
+[15:53:33][INFO] HitMerger processing took 0.000215054
+[15:53:33][INFO] Launching merge kernel 
+[15:53:33][INFO] Merge and flush event 80
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    40 trackoffset:    40 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:33][INFO] outtree has file o2sim_Kine.root
+[15:53:33][INFO] Merge/flush for event 80 took 0.000164986
+[15:53:33][INFO] Merge and flush event 81
+HitMerger entry: 0 nprimry:   265 trackoffset:   265 
+[15:53:33][INFO] outtree has file o2sim_Kine.root
+[15:53:33][INFO] Merge/flush for event 81 took 6.10352e-05
+[15:53:33][INFO] Merge and flush event 82
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    49 trackoffset:    49 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:33][INFO] outtree has file o2sim_Kine.root
+[15:53:33][INFO] Merge/flush for event 82 took 9.70364e-05
+[15:53:33][INFO] Writing TTrees
+[15:53:33][INFO] SIMDATA channel got 3 parts for event 83 part 1 out of 1
+[15:53:33][INFO] Event 83 complete. Marking as flushable
+[15:53:33][INFO] HitMerger processing took 7.20024e-05
+[15:53:33][INFO] SIMDATA channel got 3 parts for event 84 part 2 out of 2
+[15:53:33][INFO] HitMerger processing took 4.69685e-05
+[15:53:33][INFO] SIMDATA channel got 3 parts for event 84 part 1 out of 2
+[15:53:33][INFO] Event 84 complete. Marking as flushable
+[15:53:33][INFO] HitMerger processing took 9.70364e-05
+[15:53:34][INFO] SIMDATA channel got 3 parts for event 85 part 4 out of 4
+[15:53:34][INFO] HitMerger processing took 0.000236034
+[15:53:34][INFO] SIMDATA channel got 3 parts for event 85 part 3 out of 4
+[15:53:34][INFO] HitMerger processing took 8.60691e-05
+[15:53:34][INFO] SIMDATA channel got 3 parts for event 85 part 2 out of 4
+[15:53:34][INFO] HitMerger processing took 8.51154e-05
+[15:53:34][INFO] SIMDATA channel got 3 parts for event 85 part 1 out of 4
+[15:53:34][INFO] Event 85 complete. Marking as flushable
+[15:53:34][INFO] HitMerger processing took 0.000198126
+[15:53:34][INFO] Launching merge kernel 
+[15:53:34][INFO] Merge and flush event 83
+HitMerger entry: 0 nprimry:   169 trackoffset:   169 
+[15:53:34][INFO] SIMDATA channel got 3 parts for event 86 part 1 out of 1
+[15:53:34][INFO] Event 86 complete. Marking as flushable
+[15:53:34][INFO] HitMerger processing took 7.51019e-05
+[15:53:34][INFO] outtree has file o2sim_Kine.root
+[15:53:34][INFO] Merge/flush for event 83 took 0.000192881
+[15:53:34][INFO] Merge and flush event 84
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    81 trackoffset:    81 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:34][INFO] SIMDATA channel got 3 parts for event 87 part 1 out of 1
+[15:53:34][INFO] Event 87 complete. Marking as flushable
+[15:53:34][INFO] HitMerger processing took 6.50883e-05
+[15:53:34][INFO] outtree has file o2sim_Kine.root
+[15:53:34][INFO] Merge/flush for event 84 took 0.000124931
+[15:53:34][INFO] Merge and flush event 85
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   128 trackoffset:   128 
+merge 3     0     0     3 
+merge 2     1     1     2 
+merge 1     2     2     1 
+merge 0     3     3     0 
+[15:53:34][INFO] outtree has file o2sim_Kine.root
+[15:53:34][INFO] Merge/flush for event 85 took 0.000211
+[15:53:34][INFO] Merge and flush event 86
+HitMerger entry: 0 nprimry:   191 trackoffset:   191 
+[15:53:34][INFO] outtree has file o2sim_Kine.root
+[15:53:34][INFO] Merge/flush for event 86 took 5.38826e-05
+[15:53:34][INFO] Merge and flush event 87
+HitMerger entry: 0 nprimry:    81 trackoffset:    81 
+[15:53:34][INFO] outtree has file o2sim_Kine.root
+[15:53:34][INFO] Merge/flush for event 87 took 4.29153e-05
+[15:53:34][INFO] Writing TTrees
+[15:53:35][INFO] SIMDATA channel got 3 parts for event 88 part 1 out of 2
+[15:53:35][INFO] HitMerger processing took 0.000252962
+[15:53:35][INFO] SIMDATA channel got 3 parts for event 88 part 2 out of 2
+[15:53:35][INFO] Event 88 complete. Marking as flushable
+[15:53:35][INFO] HitMerger processing took 0.000169039
+[15:53:35][INFO] Launching merge kernel 
+[15:53:35][INFO] Merge and flush event 88
+HitMerger entry: 1 nprimry:   305 trackoffset:   305 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:35][INFO] outtree has file o2sim_Kine.root
+[15:53:35][INFO] Merge/flush for event 88 took 0.000210047
+[15:53:35][INFO] Writing TTrees
+[15:53:35][INFO] SIMDATA channel got 3 parts for event 89 part 1 out of 1
+[15:53:35][INFO] Event 89 complete. Marking as flushable
+[15:53:35][INFO] HitMerger processing took 9.08375e-05
+[15:53:35][INFO] SIMDATA channel got 3 parts for event 90 part 2 out of 2
+[15:53:35][INFO] HitMerger processing took 5.19753e-05
+[15:53:35][INFO] SIMDATA channel got 3 parts for event 90 part 1 out of 2
+[15:53:35][INFO] Event 90 complete. Marking as flushable
+[15:53:35][INFO] HitMerger processing took 9.67979e-05
+[15:53:35][INFO] SIMDATA channel got 3 parts for event 91 part 3 out of 3
+[15:53:35][INFO] HitMerger processing took 0.000243902
+[15:53:35][INFO] SIMDATA channel got 3 parts for event 91 part 1 out of 3
+[15:53:35][INFO] HitMerger processing took 9.799e-05
+[15:53:35][INFO] SIMDATA channel got 3 parts for event 91 part 2 out of 3
+[15:53:35][INFO] Event 91 complete. Marking as flushable
+[15:53:35][INFO] HitMerger processing took 0.000199795
+[15:53:35][INFO] Launching merge kernel 
+[15:53:35][INFO] Merge and flush event 89
+HitMerger entry: 0 nprimry:   312 trackoffset:   312 
+[15:53:35][INFO] outtree has file o2sim_Kine.root
+[15:53:35][INFO] Merge/flush for event 89 took 0.000198126
+[15:53:35][INFO] Merge and flush event 90
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   147 trackoffset:   147 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:35][INFO] outtree has file o2sim_Kine.root
+[15:53:35][INFO] Merge/flush for event 90 took 0.000144005
+[15:53:35][INFO] Merge and flush event 91
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    46 trackoffset:    46 
+merge 2     0     0     1 
+merge 1     2     2     0 
+merge 0     1     1     2 
+[15:53:35][INFO] outtree has file o2sim_Kine.root
+[15:53:35][INFO] Merge/flush for event 91 took 0.000166893
+[15:53:35][INFO] Writing TTrees
+[15:53:35][INFO] SIMDATA channel got 3 parts for event 92 part 2 out of 2
+[15:53:35][INFO] HitMerger processing took 6.31809e-05
+[15:53:35][INFO] SIMDATA channel got 3 parts for event 92 part 1 out of 2
+[15:53:35][INFO] Event 92 complete. Marking as flushable
+[15:53:35][INFO] HitMerger processing took 0.000109911
+[15:53:35][INFO] SIMDATA channel got 3 parts for event 93 part 1 out of 1
+[15:53:35][INFO] Event 93 complete. Marking as flushable
+[15:53:35][INFO] HitMerger processing took 0.000103951
+[15:53:36][INFO] SIMDATA channel got 3 parts for event 94 part 1 out of 1
+[15:53:36][INFO] Event 94 complete. Marking as flushable
+[15:53:36][INFO] HitMerger processing took 0.000357866
+[15:53:36][INFO] Launching merge kernel 
+[15:53:36][INFO] Merge and flush event 92
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   118 trackoffset:   118 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:36][INFO] outtree has file o2sim_Kine.root
+[15:53:36][INFO] Merge/flush for event 92 took 0.000265837
+[15:53:36][INFO] Merge and flush event 93
+HitMerger entry: 0 nprimry:   414 trackoffset:   414 
+[15:53:36][INFO] outtree has file o2sim_Kine.root
+[15:53:36][INFO] Merge/flush for event 93 took 8.39233e-05
+[15:53:36][INFO] Merge and flush event 94
+HitMerger entry: 0 nprimry:   274 trackoffset:   274 
+[15:53:36][INFO] outtree has file o2sim_Kine.root
+[15:53:36][INFO] Merge/flush for event 94 took 6.79493e-05
+[15:53:36][INFO] Writing TTrees
+[15:53:36][INFO] SIMDATA channel got 3 parts for event 95 part 1 out of 1
+[15:53:36][INFO] Event 95 complete. Marking as flushable
+[15:53:36][INFO] HitMerger processing took 0.000116825
+[15:53:36][INFO] SIMDATA channel got 3 parts for event 96 part 1 out of 1
+[15:53:36][INFO] Event 96 complete. Marking as flushable
+[15:53:36][INFO] HitMerger processing took 8.39233e-05
+[15:53:36][INFO] SIMDATA channel got 3 parts for event 97 part 1 out of 4
+[15:53:36][INFO] HitMerger processing took 0.000216961
+[15:53:36][INFO] SIMDATA channel got 3 parts for event 97 part 4 out of 4
+[15:53:36][INFO] HitMerger processing took 4.29153e-05
+[15:53:36][INFO] SIMDATA channel got 3 parts for event 97 part 3 out of 4
+[15:53:36][INFO] HitMerger processing took 7.82013e-05
+[15:53:36][INFO] SIMDATA channel got 3 parts for event 97 part 2 out of 4
+[15:53:36][INFO] Event 97 complete. Marking as flushable
+[15:53:36][INFO] HitMerger processing took 0.000164032
+[15:53:36][INFO] Launching merge kernel 
+[15:53:36][INFO] Merge and flush event 95
+HitMerger entry: 0 nprimry:   389 trackoffset:   389 
+[15:53:36][INFO] outtree has file o2sim_Kine.root
+[15:53:36][INFO] Merge/flush for event 95 took 0.000188112
+[15:53:36][INFO] Merge and flush event 96
+HitMerger entry: 0 nprimry:   238 trackoffset:   238 
+[15:53:36][INFO] outtree has file o2sim_Kine.root
+[15:53:36][INFO] Merge/flush for event 96 took 4.41074e-05
+[15:53:36][INFO] Merge and flush event 97
+HitMerger entry: 3 nprimry:   500 trackoffset:   500 
+HitMerger entry: 2 nprimry:   500 trackoffset:   500 
+HitMerger entry: 1 nprimry:    90 trackoffset:    90 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 3     1     1     3 
+merge 2     2     2     2 
+merge 1     3     3     1 
+merge 0     0     0     0 
+[15:53:36][INFO] outtree has file o2sim_Kine.root
+[15:53:36][INFO] Merge/flush for event 97 took 0.000169039
+[15:53:36][INFO] Writing TTrees
+[15:53:36][INFO] SIMDATA channel got 3 parts for event 98 part 1 out of 1
+[15:53:36][INFO] Event 98 complete. Marking as flushable
+[15:53:36][INFO] HitMerger processing took 7.60555e-05
+[15:53:36][INFO] SIMDATA channel got 3 parts for event 99 part 2 out of 2
+[15:53:36][INFO] HitMerger processing took 4.50611e-05
+[15:53:36][INFO] SIMDATA channel got 3 parts for event 99 part 1 out of 2
+[15:53:36][INFO] Event 99 complete. Marking as flushable
+[15:53:36][INFO] HitMerger processing took 9.20296e-05
+[15:53:38][INFO] SIMDATA channel got 3 parts for event 100 part 1 out of 3
+[15:53:38][INFO] HitMerger processing took 0.000262976
+[15:53:38][INFO] SIMDATA channel got 3 parts for event 100 part 2 out of 3
+[15:53:38][INFO] HitMerger processing took 9.70364e-05
+[15:53:38][INFO] SIMDATA channel got 3 parts for event 100 part 3 out of 3
+[15:53:38][INFO] Event 100 complete. Marking as flushable
+[15:53:38][INFO] ALL EVENTS HERE; CHECKSUM 5050
+[15:53:38][INFO] Launching merge kernel 
+[15:53:38][INFO] Merge and flush event 98
+HitMerger entry: 0 nprimry:   125 trackoffset:   125 
+[15:53:38][INFO] outtree has file o2sim_Kine.root
+[15:53:38][INFO] Merge/flush for event 98 took 0.000167847
+[15:53:38][INFO] Merge and flush event 99
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:    67 trackoffset:    67 
+merge 1     0     0     1 
+merge 0     1     1     0 
+[15:53:38][INFO] outtree has file o2sim_Kine.root
+[15:53:38][INFO] Merge/flush for event 99 took 0.000102997
+[15:53:38][INFO] Merge and flush event 100
+HitMerger entry: 2 nprimry:   395 trackoffset:   395 
+HitMerger entry: 1 nprimry:   500 trackoffset:   500 
+HitMerger entry: 0 nprimry:   500 trackoffset:   500 
+merge 2     2     2     2 
+merge 1     1     1     1 
+merge 0     0     0     0 
+[15:53:38][INFO] outtree has file o2sim_Kine.root
+[15:53:38][INFO] Merge/flush for event 100 took 0.000159025
+[15:53:38][INFO] Writing TTrees
+[15:53:38][INFO] Launching merge kernel 
+[15:53:38][INFO] HitMerger processing took 0.048682
+[15:53:38][STATE] RUNNING ---> READY
