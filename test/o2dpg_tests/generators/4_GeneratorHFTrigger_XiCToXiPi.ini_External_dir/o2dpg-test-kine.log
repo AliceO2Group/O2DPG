@@ -1,0 +1,55 @@
+### Testing /misc/alidata141/alice_u/zanone/o2new/O2DPG/MC/config/PWGHF/ini/GeneratorHFTrigger_XiCToXiPi.ini with generator External ###
+
+Processing External.C...
+Check for
+signal PDG 4132
+decay PDG 211 and 211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent 4132 are PDG0: 3312 PDG1: 211
+First and last children of parent -4132 are PDG0: -3312 PDG1: -211
+#events: 100
+#charm quark: 727
+#xi: 27
+#antixi: 26
+#pi: 5115
+#antipi: 5106
+#signal tot: 34
+#signal particles: 17
+#signal anti-particles: 17
+#Daughter pairs: 34
+#Correct Xic decays: 34
+#Correct Xi decays: 34
+#Correct Lambda decays: 34
+#Correct full decay chain: 34
+(int) 0
