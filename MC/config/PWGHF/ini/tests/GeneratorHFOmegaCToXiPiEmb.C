@@ -63,7 +63,7 @@ int External()
             {
                 nAntiPi++;
             }
-            else if (pdg == checkPdgSignal)
+            else if (std::abs(pdg) == checkPdgSignal)
             {
                 nSignal++;
                 auto child0 = o2::mcutils::MCTrackNavigator::getDaughter0(track, *tracks);
@@ -264,9 +264,9 @@ int External()
         std::cerr << "The number of xi and of lambda which should be transported should be 0.\n";
         return 1;
     }
-    if (nSignal > nDauPairs)
+    if (nSignal < nDauPairs)
     {
-        std::cerr << "The number signals should be at least equaled to the number of the same as the number of daughter pairs.\n";
+        std::cerr << "The number signals should be equal or greater than the number of daughter pairs.\n";
         return 1;
     }
     if (nXi == 0 && nAntiXi == 0)
