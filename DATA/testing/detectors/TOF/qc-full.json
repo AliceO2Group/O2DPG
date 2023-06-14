@@ -16,10 +16,10 @@
         "url": "influxdb-unix:///tmp/telegraf.sock"
       },
       "consul": {
-        "url": "alio2-cr1-hv-aliecs.cern.ch:8500"
+        "url": "alio2-cr1-hv-con01.cern.ch:8500"
       },
       "conditionDB": {
-        "url": "alio2-cr1-hv-aliecs.cern.ch:8083"
+        "url": "alio2-cr1-hv-con01.cern.ch:8083"
       }
     },
    "tasks": {
