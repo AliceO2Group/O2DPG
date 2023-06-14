@@ -16,9 +16,9 @@ JSON_FILES=
 OUTPUT_SUFFIX=
 
 if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
-  GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-mvs00.cern.ch
+  GEN_TOPO_QC_CONSUL_SERVER=ali-staging.cern.ch
 else
-  GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-aliecs.cern.ch
+  GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-con01.cern.ch
 fi
 
 add_QC_JSON() {

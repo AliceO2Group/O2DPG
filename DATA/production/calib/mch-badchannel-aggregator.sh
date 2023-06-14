@@ -7,7 +7,7 @@ source common/setenv.sh
 source common/getCommonArgs.sh
 
 PROXY_INSPEC="A:MCH/PDIGITS/0"
-CONSUL_ENDPOINT="alio2-cr1-hv-aliecs.cern.ch:8500"
+CONSUL_ENDPOINT="alio2-cr1-hv-con01.cern.ch:8500"
 
 MCH_MAX_PEDESTAL=${MCH_MAX_PEDESTAL:-500.0}
 MCH_MAX_NOISE=${MCH_MAX_NOISE:-2.0}
