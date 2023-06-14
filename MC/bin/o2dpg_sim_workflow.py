@@ -107,6 +107,7 @@ parser.add_argument('--no-combine-smaller-digi', action='store_true', help=argpa
 parser.add_argument('--no-combine-dpl-devices', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--no-mc-labels', action='store_true', default=False, help=argparse.SUPPRESS)
 parser.add_argument('--no-tpc-digitchunking', action='store_true', help=argparse.SUPPRESS)
+parser.add_argument('--no-strangeness-tracking', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring)
                                                             # (consider doing this rather in O2 digitization code directly)
@@ -1268,12 +1269,23 @@ for tf in range(1, NTIMEFRAMES + 1):
    SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
    workflow['stages'].append(SVFINDERtask)
 
+   #strangeness tracking
+   if not args.no_strangeness_tracking:
+      STRACKINGtask = createTask(name='stracking_'+str(tf), needs=[SVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='5000')
+      STRACKINGtask['cmd'] = '${O2_ROOT}/bin/o2-strangeness-tracking-workflow '
+      STRACKINGtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
+      STRACKINGtask['cmd'] += getDPL_global_options(bigshm=True) + putConfigValuesNew(['strtracker'], {"NameConf.mDirMatLUT" : ".."})
+      workflow['stages'].append(STRACKINGtask)
+
   # -----------
   # produce AOD
   # -----------
    # TODO This needs further refinement, sources and dependencies should be constructed dynamically
    aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FDD,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TRD-TOF'
    aodneeds = [PVFINDERtask['name'], SVFINDERtask['name']]
+   if not args.no_strangeness_tracking:
+      aodneeds += [ STRACKINGtask['name'] ]
+
    if isActive('CTP'):
      aodinfosources += ',CTP'
    if isActive('FV0'):
@@ -1322,7 +1334,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    if environ.get('O2DPG_AOD_NOTRUNCATE') != None or environ.get('ALIEN_JDL_O2DPG_AOD_NOTRUNCATE') != None:
       AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
    
-   AODtask['cmd'] += ' --disable-strangeness-tracking' # disable strangeness tracking for the moment
+   if args.no_strangeness_tracking:
+      AODtask['cmd'] += ' --disable-strangeness-tracking'
 
    workflow['stages'].append(AODtask)
 
