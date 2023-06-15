@@ -1271,7 +1271,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    #strangeness tracking
    if not args.no_strangeness_tracking:
-      STRACKINGtask = createTask(name='stracking_'+str(tf), needs=[SVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='5000')
+      STRACKINGtask = createTask(name='stracking_'+str(tf), needs=[SVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='5000')
       STRACKINGtask['cmd'] = '${O2_ROOT}/bin/o2-strangeness-tracking-workflow '
       STRACKINGtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
       STRACKINGtask['cmd'] += getDPL_global_options(bigshm=True) + putConfigValuesNew(['strtracker'], {"NameConf.mDirMatLUT" : ".."})
