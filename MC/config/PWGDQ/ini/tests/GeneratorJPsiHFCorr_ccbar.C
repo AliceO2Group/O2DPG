@@ -40,7 +40,7 @@ int External()
                 nQuarks++;
                 continue;
             }
-            if (!isJPsiInYRange && std::abs(pdg) == 13 && track.GetRapidity()) {
+            if (!isJPsiInYRange && std::abs(pdg) == 13 && (track.GetRapidity() >= -4.5 && track.GetRapidity() < 2.)) {
                 nEventsWithJPsiInY++;
                 isJPsiInYRange = true;
             }
