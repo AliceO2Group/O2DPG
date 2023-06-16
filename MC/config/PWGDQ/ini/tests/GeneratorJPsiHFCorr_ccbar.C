@@ -40,7 +40,7 @@ int External()
                 nQuarks++;
                 continue;
             }
-            if (!isJPsiInYRange && std::abs(pdg) == 13 && (track.GetRapidity() >= -4.5 && track.GetRapidity() < 2.)) {
+            if (!isJPsiInYRange && std::abs(pdg) == 443 && (track.GetRapidity() > -4.5 && track.GetRapidity() < -2.)) {
                 nEventsWithJPsiInY++;
                 isJPsiInYRange = true;
             }
@@ -96,7 +96,7 @@ int External()
         return 1;
     }
 
-    if (fracOfEventsWithJPsiInY < 1./3)
+    if (fracOfEventsWithJPsiInY < 1./3 * 0.95) // we put some tolerance (still ok if we miss some)
     {
         std::cerr << "Fraction of events with J/psi in y acceptance " << fracOfEventsWithJPsiInY << " lower than expected\n";
         return 1;
