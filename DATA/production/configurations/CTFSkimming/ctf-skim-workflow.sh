@@ -18,11 +18,16 @@ source $GEN_TOPO_MYDIR/getCommonArgs.sh || { echo "getCommonArgs.sh failed" 1>&2
 TIMEFRAME_RATE_LIMIT=2
 : ${NUMAID:="0"}
 
-if [[ ${ALIEN_JDL_CPUCORES:-} == 8 ]]; then
-  export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
-  export MULTIPLICITY_PROCESS_tpc_entropy_encoder=2
+if [[ ${ALIEN_JDL_CPUCORES:-} == 8 ]] || [[ ${ALIEN_JDL_CPUCORES:-} == 16 ]]; then # 16 is used for jobs on EPNs
+  export MULTIPLICITY_PROCESS_tpc_entropy_decoder=3
+  export MULTIPLICITY_PROCESS_tpc_entropy_encoder=3
+  SHMSIZE=16000000000
   TIMEFRAME_RATE_LIMIT=3
 fi
+
+if [[ ! -z "$ALIEN_JDL_SHMSIZE" ]]; then export SHMSIZE=$ALIEN_JDL_SHMSIZE; fi
+if [[ ! -z "$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYDECODER" ]]; then export MULTIPLICITY_PROCESS_tpc_entropy_decoder=$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYDECODER; fi
+if [[ ! -z "$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYENCODER" ]]; then export MULTIPLICITY_PROCESS_tpc_entropy_encoder=$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYENCODER; fi
 
 [[ -z ${SHM_MANAGER_SHMID:-} ]] && ( [[ ${EXTINPUT:-} == 1 ]] || [[ ${NUMAGPUIDS:-} != 0 ]] ) && ARGS_ALL+=" --no-cleanup"
 
