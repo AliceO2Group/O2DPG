@@ -127,13 +127,13 @@ private:
 // Predefined generators:
 
 // Charm-enriched
-FairGenerator *GeneratorPythia8GapTriggeredCharm(int inputTriggerRatio, float yQuarkMin=-1.5, float yQuarkMax=1.5, float yHadronMin=-1.5, float yHadronMax=1.5, int pdgCodeCharmHadron=-9999) {
+FairGenerator *GeneratorPythia8GapTriggeredCharm(int inputTriggerRatio, float yQuarkMin=-1.5, float yQuarkMax=1.5, float yHadronMin=-1.5, float yHadronMax=1.5, int pdgCodeCharmHadron=0) {
   auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, 4);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
   myGen->readString("Random:seed " + std::to_string(seed));
   myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
-  if(pdgCodeCharmHadron != -9999) {
+  if(pdgCodeCharmHadron != 0) {
     myGen->addTriggerOnHadron(pdgCodeCharmHadron);
     myGen->setHadronRapidity(yHadronMin, yHadronMax);
   }
@@ -141,11 +141,15 @@ FairGenerator *GeneratorPythia8GapTriggeredCharm(int inputTriggerRatio, float yQ
 }
 
 // Beauty-enriched
-FairGenerator *GeneratorPythia8GapTriggeredBeauty(int inputTriggerRatio, float yMin=-1.5, float yMax=1.5) {
+FairGenerator *GeneratorPythia8GapTriggeredBeauty(int inputTriggerRatio, float yMin=-1.5, float yMax=1.5, float yHadronMin=-1.5, float yHadronMax=1.5, int pdgCodeCharmHadron=0) {
   auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, 5);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
   myGen->readString("Random:seed " + std::to_string(seed));
   myGen->setQuarkRapidity(yMin, yMax);
+  if(pdgCodeCharmHadron != 0) {
+    myGen->addTriggerOnHadron(pdgCodeCharmHadron);
+    myGen->setHadronRapidity(yHadronMin, yHadronMax);
+  }
   return myGen;
 }
