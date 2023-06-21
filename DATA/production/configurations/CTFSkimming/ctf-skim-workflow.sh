@@ -12,9 +12,6 @@ source $GEN_TOPO_MYDIR/setenv.sh || { echo "setenv.sh failed" 1>&2 && exit 1; }
 : ${CTF_MINSIZE:="2000000000"}                    # accumulate CTFs until file size reached
 : ${CTF_MAX_PER_FILE:="1000000"}                  # but no more than given number of CTFs per file
 
-# Set general arguments
-source $GEN_TOPO_MYDIR/getCommonArgs.sh || { echo "getCommonArgs.sh failed" 1>&2 && exit 1; }
-
 TIMEFRAME_RATE_LIMIT=2
 : ${NUMAID:="0"}
 
@@ -28,6 +25,9 @@ fi
 if [[ ! -z "$ALIEN_JDL_SHMSIZE" ]]; then export SHMSIZE=$ALIEN_JDL_SHMSIZE; fi
 if [[ ! -z "$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYDECODER" ]]; then export MULTIPLICITY_PROCESS_tpc_entropy_decoder=$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYDECODER; fi
 if [[ ! -z "$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYENCODER" ]]; then export MULTIPLICITY_PROCESS_tpc_entropy_encoder=$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYENCODER; fi
+
+# Set general arguments
+source $GEN_TOPO_MYDIR/getCommonArgs.sh || { echo "getCommonArgs.sh failed" 1>&2 && exit 1; }
 
 [[ -z ${SHM_MANAGER_SHMID:-} ]] && ( [[ ${EXTINPUT:-} == 1 ]] || [[ ${NUMAGPUIDS:-} != 0 ]] ) && ARGS_ALL+=" --no-cleanup"
 
