@@ -1,0 +1,171 @@
+{
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "ccdb-test.cern.ch:8080"
+      },
+      "Activity": {
+        "number": "",
+        "provenance": "qc_async",
+        "periodName": "",
+        "passName": "apass1"
+      },
+      "monitoring": {
+        "url": "no-op://"
+      },
+      "consul": {
+        "url": ""
+      },
+      "conditionDB": {
+        "url": "ccdb-test.cern.ch:8080"
+      },
+      "postprocessing": {
+        "periodSeconds": "0.1"
+      },
+      "infologger": {                     "": "Configuration of the Infologger (optional).",
+        "filterDiscardDebug": "true",     "": "Set to 1 to discard debug and trace messages (default: false)",
+        "filterDiscardLevel": "6",        "": "Message at this level or above are discarded (default: 21 - Trace)"
+      }
+    },
+    "postprocessing": {
+      "Digits": {
+        "active": "true",
+        "className": "o2::quality_control_modules::muonchambers::DigitsPostProcessing",
+        "moduleName": "QcMuonChambers",
+        "detectorName": "MCH",
+        "customization": [
+          {
+            "name": "FullHistos",
+            "value": "0"
+          },
+          {
+            "name": "ChannelRateMin",
+            "value": "0.000001"
+          },
+          {
+            "name": "ChannelRateMax",
+            "value": "10"
+          },
+          {
+            "name": "onlineMode",
+            "value": "0"
+          }
+        ],
+        "dataSources": [
+          {
+            "type": "repository",
+            "path": "MCH/MO/Digits",
+            "names": [
+              "rate:Occupancy_Elec",
+              "rate_signal:OccupancySignal_Elec",
+              "orbits:DigitOrbit_Elec",
+              "orbits_signal:DigitSignalOrbit_Elec"
+            ],
+            "reductorName": "o2::quality_control_modules::muonchambers::TH2ElecMapReductor",
+            "moduleName": "QcMuonChambers"
+          }
+        ],
+        "plots": [],
+        "initTrigger": [
+          "once"
+        ],
+        "updateTrigger": [
+          "foreachlatest:qcdb:MCH/MO/Digits/Occupancy_Elec"
+        ],
+        "stopTrigger": [
+          "userorcontrol"
+        ]
+      },
+      "Preclusters": {
+        "active": "true",
+        "className": "o2::quality_control_modules::muonchambers::PreclustersPostProcessing",
+        "moduleName": "QcMuonChambers",
+        "detectorName": "MCH",
+        "customization": [
+          {
+            "name": "FullHistos",
+            "value": "0"
+          }
+        ],
+        "dataSources": [
+          {
+            "type": "repository",
+            "path": "MCH/MO/Preclusters",
+            "names": [
+              "eff:Pseudoeff_Elec", "clcharge:ClusterChargeHist", "clsize:ClusterSizeHist"
+            ],
+            "reductorName": "o2::quality_control_modules::muonchambers::TH2ElecMapReductor",
+            "moduleName": "QcMuonChambers"
+          }
+        ],
+        "plots": [
+        ],
+        "initTrigger": [
+          "userorcontrol"
+        ],
+        "updateTrigger": [
+          "foreachlatest:qcdb:MCH/MO/Preclusters/Pseudoeff_Elec"
+        ],
+        "stopTrigger": [
+          "userorcontrol"
+        ]
+      }
+    },
+    "checks": {
+      "DigitsCheck": {
+        "active": "true",
+        "className": "o2::quality_control_modules::muonchambers::DigitsCheck",
+        "moduleName": "QcMuonChambers",
+        "detectorName": "MCH",
+        "policy": "OnAll",
+        "checkParameters": {
+          "MeanRateHistName": "RatesSignal/MeanRate",
+          "MeanRateRatioHistName": "RatesSignal/MeanRateRefRatio",
+          "GoodChanFracHistName": "RatesSignal/GoodChannelsFraction",
+          "GoodChanFracRatioHistName": "RatesSignal/GoodChannelsFractionRefRatio",
+          "MinRate": "0.00001",
+          "MaxRate": "1",
+          "MaxRateDelta": "0.1",
+          "MinGoodFraction": "0.8",
+          "MaxGoodFractionDelta": "1.15",
+          "RatePlotScaleMin": "0.000001",
+          "RatePlotScaleMax": "10",
+          "MaxBadDE_ST12": "2",
+          "MaxBadDE_ST345": "5"
+        },
+        "dataSource": [
+          {
+            "type": "PostProcessing",
+            "name": "Digits",
+            "MOs" : "all"
+          }
+        ]
+      },
+      "PreclustersCheck": {
+        "active": "true",
+        "className": "o2::quality_control_modules::muonchambers::PreclustersCheck",
+        "moduleName": "QcMuonChambers",
+        "detectorName": "MCH",
+        "policy": "OnAny",
+        "checkParameters": {
+          "MeanEffHistNameB": "Efficiency/LastCycle/MeanEfficiencyB",
+          "MeanEffHistNameNB": "Efficiency/LastCycle/MeanEfficiencyNB",
+          "MeanEffRatioHistNameB": "Efficiency/LastCycle/MeanEfficiencyRefRatioB",
+          "MeanEffRatioHistNameNB": "Efficiency/LastCycle/MeanEfficiencyRefRatioNB",
+          "MinEfficiency": "0.8",
+          "MaxEfficiencyDelta": "0.1",
+          "PseudoeffPlotScaleMin": "0.0",
+          "PseudoeffPlotScaleMax": "1.2",
+          "MaxBadDE_ST12": "2",
+          "MaxBadDE_ST345": "5"
+        },
+        "dataSource": [{
+          "type": "PostProcessing",
+          "name": "Preclusters",
+          "MOs" : "all"
+        }]
+      }
+    }
+  }
+}
