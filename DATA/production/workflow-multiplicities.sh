@@ -117,6 +117,9 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     exit 1
   fi
 elif [[ $EPNPIPELINES != 0 ]]; then
+  NTRDTRKTHREADS=2
+  ITSTRK_THREADS=2
+  ITSTPC_THREADS=2
   RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15) * ($NUMAGPUIDS != 0 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
   # Tuned multiplicities for sync pp / Pb-Pb processing
   if [[ $BEAMTYPE == "pp" ]]; then
@@ -139,7 +142,11 @@ elif [[ $EPNPIPELINES != 0 ]]; then
       N_ITSTRK=$(math_max $((6 * $EPNPIPELINES * $NGPUS / 4)) 1)
     fi
   else
-    N_ITSTRK=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
+    if [[ $BEAMTYPE == "PbPb" ]]; then
+      N_ITSTRK=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
+    elif [[ $BEAMTYPE == "cosmic" ]]; then
+      N_ITSTRK=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
+    fi
     N_ITSRAWDEC=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
     N_TPCITS=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
     N_TPCENT=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
@@ -160,6 +167,8 @@ elif [[ $EPNPIPELINES != 0 ]]; then
     if [[ $RUNTYPE == "PHYSICS" || $RUNTYPE == "COSMICS" ]]; then
       if [[ $BEAMTYPE == "pp" ]]; then
         N_ITSTRK=$(math_max $((9 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
+      elif [[ $BEAMTYPE == "cosmic" ]]; then
+        N_ITSTRK=$(math_max $((5 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
       else
         N_ITSTRK=$(math_max $((2 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
       fi
