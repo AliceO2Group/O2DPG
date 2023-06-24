@@ -38,6 +38,16 @@
                 },
                 "taskParameters": {
                     "Diagnostic": "false"
+                },
+                "grpGeomRequest": {
+                    "geomRequest": "None",
+                    "askGRPECS": "true",
+                    "askGRPLHCIF": "false",
+                    "askGRPMagField": "false",
+                    "askMatLUT": "false",
+                    "askTime": "false",
+                    "askOnceAllButField": "false",
+                    "needPropagatorD": "false"
                 }
             }
         }
