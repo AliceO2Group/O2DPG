@@ -5,13 +5,13 @@
 /// \brief  Implementation of a gun generator for multiple particles, built on generator_pythia8_longlived.C
 ///         Needs PDG, Number of injected, minimum and maximum pT. These can be provided in three ways, bundeling variables, particles or from input file
 ///         usage:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLongLivedMultiple({1000010020, 1000010030}, {10, 10}, {0.5, 0.5}, {10, 10})'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLF({1000010020, 1000010030}, {10, 10}, {0.5, 0.5}, {10, 10})'`
 ///               Here PDG, Number injected, pT limits are separated and matched by index
 ///         or:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLongLivedMultiple({{1000010020, 10, 0.5, 10}, {1000010030, 10, 0.5, 10}})'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLF({{1000010020, 10, 0.5, 10}, {1000010030, 10, 0.5, 10}})'`
 ///               Here PDG, Number injected, pT limits are separated are divided per particle
 ///         or:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLongLivedMultiple("${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun")'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLF("${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun")'`
 ///               Here PDG, Number injected, pT limits are provided via an intermediate configuration file
 ///
 
@@ -21,36 +21,70 @@
 #include "fairlogger/Logger.h"
 #include "TSystem.h"
 #include <fstream>
+#include "Generators/GeneratorPythia8Param.h"
 #endif
 #include "generator_pythia8_longlived.C"
 
 using namespace Pythia8;
 using namespace o2::mcgenstatus;
 
-class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
+class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
 {
  public:
-  /// constructor
-  GeneratorPythia8LongLivedGunMultiple(bool injOnePerEvent /*= true*/, int gapBetweenInjection /*= 0*/) : GeneratorPythia8LongLivedGun{0}, mOneInjectionPerEvent{injOnePerEvent}, mGapBetweenInjection{gapBetweenInjection}
+  /// Parametric constructor
+  GeneratorPythia8LF(bool injOnePerEvent /*= true*/,
+                     int gapBetweenInjection /*= 0*/,
+                     bool useTrigger /*= false*/,
+                     std::string pythiaCfgMb /*= "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg"*/,
+                     std::string pythiaCfgSignal /*= "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_signal.cfg"*/) : mOneInjectionPerEvent{injOnePerEvent},
+                                                                                                                          mGapBetweenInjection{gapBetweenInjection},
+                                                                                                                          mUseTriggering{useTrigger}
   {
+    LOG(info) << "GeneratorPythia8LF constructor";
+    LOG(info) << "++ injOnePerEvent: " << injOnePerEvent;
+    LOG(info) << "++ gapBetweenInjection: " << gapBetweenInjection;
+    LOG(info) << "++ useTrigger: " << useTrigger;
+    LOG(info) << "++ pythiaCfgMb: " << pythiaCfgMb;
+    LOG(info) << "++ pythiaCfgSignal: " << pythiaCfgSignal;
+    pythiaCfgMb = gSystem->ExpandPathName(pythiaCfgMb.c_str());
+    pythiaCfgSignal = gSystem->ExpandPathName(pythiaCfgSignal.c_str());
+    if (useTrigger) {
+      if (!pythiaObjectMinimumBias.readFile(pythiaCfgMb)) {
+        LOG(fatal) << "Could not pythiaObjectMinimumBias.readFile(\"" << pythiaCfgMb << "\")";
+      }
+      if (!pythiaObjectMinimumBias.init()) {
+        LOG(fatal) << "Could not pythiaObjectMinimumBias.init() from " << pythiaCfgMb;
+      }
+      if (!pythiaObjectSignal.readFile(pythiaCfgSignal)) {
+        LOG(fatal) << "Could not pythiaObjectSignal.readFile(\"" << pythiaCfgSignal << "\")";
+      }
+      if (!pythiaObjectSignal.init()) {
+        LOG(fatal) << "Could not pythiaObjectSignal.init() from " << pythiaCfgSignal;
+      }
+    } else {
+      if (pythiaCfgSignal != "") {
+        // if (pythiaCfgMb != "" || pythiaCfgSignal != "") {
+        // LOG(fatal) << "Cannot use simple injection and have a configuration file. pythiaCfgMb= `" << pythiaCfgMb << "`, pythiaCfgSignal= `" << pythiaCfgSignal << "` must be empty";
+        LOG(fatal) << "Cannot use simple injection and have a configuration file. pythiaCfgSignal= `" << pythiaCfgSignal << "` must be empty";
+      }
+    }
   }
 
   ///  Destructor
-  ~GeneratorPythia8LongLivedGunMultiple() = default;
+  ~GeneratorPythia8LF() = default;
 
-  int mConfigToUse = -1;
-  int mEventCounter = 0;
-  int mGapBetweenInjection = 0; // Gap between two signal events. 0 means injection at every event
   //__________________________________________________________________
   Bool_t generateEvent() override
   {
-    if (mGapBetweenInjection > 0) {
-      if (mGapBetweenInjection == 1 && mEventCounter % 2 == 0) {
-        LOG(info) << "Skipping event " << mEventCounter;
-        return true;
-      } else if (mEventCounter % mGapBetweenInjection != 0) {
-        LOG(info) << "Skipping event " << mEventCounter;
-        return true;
+    if (!mUseTriggering) { // If the triggering is used we handle the the gap when generating the signal
+      if (mGapBetweenInjection > 0) {
+        if (mGapBetweenInjection == 1 && mEventCounter % 2 == 0) {
+          LOG(info) << "Skipping event " << mEventCounter;
+          return true;
+        } else if (mEventCounter % mGapBetweenInjection != 0) {
+          LOG(info) << "Skipping event " << mEventCounter;
+          return true;
+        }
       }
     }
     LOG(info) << "generateEvent " << mEventCounter;
@@ -65,7 +99,45 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
       if (mConfigToUse >= 0 && (nConfig - 1) != mConfigToUse) {
         continue;
       }
+      if (mUseTriggering) {   // Do the triggering
+        bool doSignal = true; // Do signal or gap
+        if (mGapBetweenInjection > 0) {
+          if (mGapBetweenInjection == 1 && mEventCounter % 2 == 0) {
+            LOG(info) << "Generating background event " << mEventCounter;
+            doSignal = false;
+          } else if (mEventCounter % mGapBetweenInjection != 0) {
+            LOG(info) << "Generating background event " << mEventCounter;
+            doSignal = false;
+          }
+        }
 
+        if (doSignal) {
+          bool satisfiesTrigger = false;
+          while (!satisfiesTrigger) {
+            if (!pythiaObjectSignal.next()) { // eh not good, try again
+              continue;
+            }
+            //Check if triggered condition satisfied
+            for (Long_t j = 0; j < pythiaObjectSignal.event.size(); j++) {
+              Int_t pypid = pythiaObjectSignal.event[j].id();
+              Float_t pyeta = pythiaObjectSignal.event[j].eta();
+              if (pypid == cfg.pdg && cfg.etaMin < pyeta && pyeta < cfg.etaMax) {
+                satisfiesTrigger = true;
+                break;
+              }
+            }
+          }
+          mPythia.event = pythiaObjectSignal.event;
+        } else {
+          // Generate minimum-bias event
+          bool lGenerationOK = false;
+          while (!lGenerationOK)
+            lGenerationOK = pythiaObjectMinimumBias.next();
+          mPythia.event = pythiaObjectMinimumBias.event;
+        }
+        continue;
+      }
+      // Do the injection
       for (int i{0}; i < cfg.nInject; ++i) {
         const double pt = gRandom->Uniform(cfg.ptMin, cfg.ptMax);
         const double eta = gRandom->Uniform(cfg.etaMin, cfg.etaMax);
@@ -100,13 +172,15 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   //__________________________________________________________________
   Bool_t importParticles() override
   {
-    if (mGapBetweenInjection > 0) {
-      if (mGapBetweenInjection == 1 && mEventCounter % 2 == 0) {
-        LOG(info) << "Skipping importParticles event " << mEventCounter++;
-        return true;
-      } else if (mEventCounter % mGapBetweenInjection != 0) {
-        LOG(info) << "Skipping importParticles event " << mEventCounter++;
-        return true;
+    if (!mUseTriggering) { // If the triggering is used we handle the the gap when generating the signal
+      if (mGapBetweenInjection > 0) {
+        if (mGapBetweenInjection == 1 && mEventCounter % 2 == 0) {
+          LOG(info) << "Skipping importParticles event " << mEventCounter++;
+          return true;
+        } else if (mEventCounter % mGapBetweenInjection != 0) {
+          LOG(info) << "Skipping importParticles event " << mEventCounter++;
+          return true;
+        }
       }
     }
     LOG(info) << "importParticles " << mEventCounter++;
@@ -157,6 +231,9 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
                                                                                ptMax{P}
     {
       mass = GeneratorPythia8LongLivedGun::getMass(pdg);
+      if (mass <= 0) {
+        LOG(fatal) << "Could not find mass for pdg " << pdg;
+      }
       LOGF(info, "ConfigContainer: pdg = %i, nInject = %i, ptMin = %f, ptMax = %f, mass = %f", pdg, nInject, ptMin, ptMax, mass);
     };
     ConfigContainer(TObjArray* arr) : ConfigContainer(atoi(arr->At(0)->GetName()),
@@ -186,6 +263,9 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   //__________________________________________________________________
   ConfigContainer addGun(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10)
   {
+    if (mUseTriggering) { // If in trigger mode, every particle needs to be generated from pythia
+      return addGunGenDecayed(input_pdg, nInject, ptMin, ptMax);
+    }
     ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax};
     mGunConfigs.push_back(cfg);
     return cfg;
@@ -211,7 +291,7 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   //__________________________________________________________________
   void print()
   {
-    LOG(info) << "GeneratorPythia8LongLivedGunMultiple configuration with " << getNGuns() << " guns:";
+    LOG(info) << "GeneratorPythia8LF configuration with " << getNGuns() << " guns:";
     LOG(info) << "Particles decayed by the transport:";
     for (const auto& cfg : mGunConfigs) {
       cfg.print();
@@ -223,21 +303,31 @@ class GeneratorPythia8LongLivedGunMultiple : public GeneratorPythia8LongLivedGun
   }
 
  private:
-  const bool mOneInjectionPerEvent = true;            // if true, only one injection per event is performed, i.e. if multiple PDG (including antiparticles) are requested to be injected only one will be done per event
+  //  Configuration
+  const bool mOneInjectionPerEvent = true; // if true, only one injection per event is performed, i.e. if multiple PDG (including antiparticles) are requested to be injected only one will be done per event
+  const bool mUseTriggering = false;       // if true, use triggering instead of injection
+  const int mGapBetweenInjection = 0;      // Gap between two signal events. 0 means injection at every event
+
+  // Running variables
+  int mConfigToUse = -1; // Index of the configuration to use
+  int mEventCounter = 0; // Event counter
+
   std::vector<ConfigContainer> mGunConfigs;           // List of gun configurations to use
   std::vector<ConfigContainer> mGunConfigsGenDecayed; // List of gun configurations to use that will be decayed by the generator
+  Pythia pythiaObjectSignal;                          // Signal collision generator
+  Pythia pythiaObjectMinimumBias;                     // Minimum bias collision generator
 };
 
 ///___________________________________________________________
 /// Create generator via arrays of entries. By default injecting in every event and all particles
-FairGenerator* generateLongLivedMultiple(std::vector<int> PDGs, std::vector<int> nInject, std::vector<float> ptMin, std::vector<float> ptMax)
+FairGenerator* generateLF(std::vector<int> PDGs, std::vector<int> nInject, std::vector<float> ptMin, std::vector<float> ptMax)
 {
   const std::vector<unsigned long> entries = {PDGs.size(), nInject.size(), ptMin.size(), ptMax.size()};
   if (!std::equal(entries.begin() + 1, entries.end(), entries.begin())) {
     LOGF(fatal, "Not equal number of entries, check configuration");
     return nullptr;
   }
-  GeneratorPythia8LongLivedGunMultiple* multiGun = new GeneratorPythia8LongLivedGunMultiple(false, 0);
+  GeneratorPythia8LF* multiGun = new GeneratorPythia8LF(false, 0, false, "", "");
   for (unsigned long i = 0; i < entries[0]; i++) {
     multiGun->addGun(PDGs[i], nInject[i], ptMin[i], ptMax[i]);
   }
@@ -246,12 +336,15 @@ FairGenerator* generateLongLivedMultiple(std::vector<int> PDGs, std::vector<int>
 
 ///___________________________________________________________
 /// Create generator via an array of configurations
-FairGenerator* generateLongLivedMultiple(std::vector<GeneratorPythia8LongLivedGunMultiple::ConfigContainer> cfg,
-                                         std::vector<GeneratorPythia8LongLivedGunMultiple::ConfigContainer> cfgGenDecayed,
-                                         bool injectOnePDGPerEvent = true,
-                                         int gapBetweenInjection = 0)
+FairGenerator* generateLF(std::vector<GeneratorPythia8LF::ConfigContainer> cfg,
+                          std::vector<GeneratorPythia8LF::ConfigContainer> cfgGenDecayed,
+                          bool injectOnePDGPerEvent = true,
+                          int gapBetweenInjection = 0,
+                          bool useTrigger = false,
+                          std::string pythiaCfgMb = "",
+                          std::string pythiaCfgSignal = "")
 {
-  GeneratorPythia8LongLivedGunMultiple* multiGun = new GeneratorPythia8LongLivedGunMultiple(injectOnePDGPerEvent, gapBetweenInjection);
+  GeneratorPythia8LF* multiGun = new GeneratorPythia8LF(injectOnePDGPerEvent, gapBetweenInjection, useTrigger, pythiaCfgMb, pythiaCfgSignal);
   for (const auto& c : cfg) {
     LOGF(info, "Adding gun %i", multiGun->getNGuns());
     c.print();
@@ -268,15 +361,18 @@ FairGenerator* generateLongLivedMultiple(std::vector<GeneratorPythia8LongLivedGu
 
 ///___________________________________________________________
 /// Create generator via input file
-FairGenerator* generateLongLivedMultiple(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun",
-                                         bool injectOnePDGPerEvent = true,
-                                         int gapBetweenInjection = 0)
+FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun",
+                          bool injectOnePDGPerEvent = true,
+                          int gapBetweenInjection = 0,
+                          bool useTrigger = false,
+                          std::string pythiaCfgMb = "",
+                          std::string pythiaCfgSignal = "")
 {
   configuration = gSystem->ExpandPathName(configuration.c_str());
   LOGF(info, "Using configuration file '%s'", configuration.c_str());
   std::ifstream inputFile(configuration.c_str(), ios::in);
-  std::vector<GeneratorPythia8LongLivedGunMultiple::ConfigContainer> cfgVec;
-  std::vector<GeneratorPythia8LongLivedGunMultiple::ConfigContainer> cfgVecGenDecayed;
+  std::vector<GeneratorPythia8LF::ConfigContainer> cfgVec;
+  std::vector<GeneratorPythia8LF::ConfigContainer> cfgVecGenDecayed;
   if (inputFile.is_open()) {
     std::string l;
     int n = 0;
@@ -293,21 +389,46 @@ FairGenerator* generateLongLivedMultiple(std::string configuration = "${O2DPG_RO
         continue;
       }
       if (line.Contains("genDecayed")) {
-        cfgVecGenDecayed.push_back(GeneratorPythia8LongLivedGunMultiple::ConfigContainer{line.Tokenize(" ")});
+        cfgVecGenDecayed.push_back(GeneratorPythia8LF::ConfigContainer{line.Tokenize(" ")});
       } else {
-        cfgVec.push_back(GeneratorPythia8LongLivedGunMultiple::ConfigContainer{line.Tokenize(" ")});
+        cfgVec.push_back(GeneratorPythia8LF::ConfigContainer{line.Tokenize(" ")});
       }
     }
   } else {
     LOGF(fatal, "Can't open '%s' !", configuration.c_str());
     return nullptr;
   }
-  return generateLongLivedMultiple(cfgVec, cfgVecGenDecayed, injectOnePDGPerEvent, gapBetweenInjection);
+  return generateLF(cfgVec, cfgVecGenDecayed, injectOnePDGPerEvent, gapBetweenInjection, useTrigger, pythiaCfgMb, pythiaCfgSignal);
 }
 
 ///___________________________________________________________
-/// Create generator via input file injecting all particles
-FairGenerator* generateLongLivedMultipleInjectInAllEvents(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun") { return generateLongLivedMultiple(configuration, false); }
+/// Create generator via input file for the triggered mode
+FairGenerator* generateLFTriggered(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun",
+                                   int gapBetweenInjection = 0,
+                                   std::string pythiaCfgMb = "${O2_ROOT}/share/Generators/egconfig/pythia8_inel.cfg",
+                                   std::string pythiaCfgSignal = "${O2_ROOT}/share/Generators/egconfig/pythia8_inel.cfg")
+{
+  auto& param = o2::eventgen::GeneratorPythia8Param::Instance();
+  LOG(info) << "Instance LF \'Pythia8\' generator with following parameters";
+  LOG(info) << param;
+  if (param.config != "") {
+    pythiaCfgMb = param.config;
+  }
+  return generateLF(configuration, 1, gapBetweenInjection, true, pythiaCfgMb, pythiaCfgSignal);
+}
 
 ///___________________________________________________________
-void generator_pythia8_longlived_multiple() { Printf("Compiled correctly!"); }
+void generator_pythia8_longlived_multiple(bool runTest = true)
+{
+  LOG(info) << "Compiled correctly!";
+  if (!runTest) {
+    return;
+  }
+  // Injected mode
+  LOG(info) << "Testing the injected mode";
+  generateLF();
+
+  // Triggered mode
+  LOG(info) << "Testing the triggered mode";
+  generateLFTriggered();
+}
