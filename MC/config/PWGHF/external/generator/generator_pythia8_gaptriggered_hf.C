@@ -69,7 +69,7 @@ protected:
 
   bool selectEvent(const Pythia8::Event& event)
   {
-    bool isGoodAtPartonLevel = (mHadronPdg != 0) ? true : false, isGoodAtHadronLevel = (mHadronPdg != 0) ? false : true;
+    bool isGoodAtPartonLevel = false, isGoodAtHadronLevel = (mHadronPdg != 0) ? false : true;
     for (auto iPart{0}; iPart < event.size(); ++iPart) {
 
       // search for Q-Qbar mother with at least one Q in rapidity window
