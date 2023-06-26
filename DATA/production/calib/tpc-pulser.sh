@@ -32,6 +32,8 @@ EXTRA_CONFIG=" "
 EXTRA_CONFIG="--calib-type pulser --publish-after-tfs 1000 --max-events 1200 --lanes 36"
 
 CCDB_PATH="--ccdb-path http://ccdb-test.cern.ch:8080"
+#EXTRA_CONFIG="--calib-type pulser --reset-after-publish --publish-after-tfs 120 --max-events 100 --lanes 36" 
+EXTRA_CONFIG="--calib-type pulser --publish-after-tfs 120 --max-events 100 --lanes 36 --check-calib-infos" 
 
 
 o2-dpl-raw-proxy $ARGS_ALL \

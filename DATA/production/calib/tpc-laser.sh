@@ -91,8 +91,9 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --configKeyValues "TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=150;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=302;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null" \
     --lanes 36 \
     --calib-type ce \
-    --publish-after-tfs 50 \
-    --max-events 90 \
+    --publish-after-tfs 440 \
+    --max-events 300 \
+    --check-calib-infos \
     | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
     --ccdb-path http://ccdb-test.cern.ch:8080 \
     | o2-dpl-run $ARGS_ALL --dds

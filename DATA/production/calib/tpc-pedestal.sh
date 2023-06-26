@@ -29,6 +29,10 @@ CALIB_CONFIG="TPCCalibPedestal.LastTimeBin=12000"
 EXTRA_CONFIG=" "
 EXTRA_CONFIG=" --publish-after-tfs 100 --max-events 120 --lanes 36"
 CCDB_PATH="--ccdb-path http://ccdb-test.cern.ch:8080"
+EXTRA_CONFIG=" --publish-after-tfs 400 --max-events 50 --lanes 36"
+CCDB_PATH="--ccdb-path http://o2-ccdb.internal"
+HOST=localhost
+QC_CONFIG="consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
 
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \
