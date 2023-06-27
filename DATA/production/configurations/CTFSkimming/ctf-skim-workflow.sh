@@ -115,3 +115,6 @@ WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT -b --run"
 PRINT_WORKFLOW=1
 [[ ${WORKFLOWMODE:-} == "print" || "0${PRINT_WORKFLOW:-}" == "01" ]] && echo "#Workflow command:\n\n${WORKFLOW}\n" | sed -e "s/\\\\n/\n/g" -e"s/| */| \\\\\n/g" | eval cat $( [[ ${WORKFLOWMODE:-} == "dds" ]] && echo '1>&2')
 if [[ ${WORKFLOWMODE:-} != "print" ]]; then eval $WORKFLOW; else true; fi
+
+# Adding a log file with the number of skimmed CTFs. If we arrive here, it means that the processing was fine
+ls -l o2_ctf*.root | wc -l > nSkimmedCTFs.log
