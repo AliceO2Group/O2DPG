@@ -71,10 +71,14 @@ protected:
 
   bool selectEvent(const Pythia8::Event& event)
   {
+    bool isGoodAtPartonLevel;
+    bool isGoodAtHadronLevel;
     if(mDoNoQuarkTrigger){
-      bool isGoodAtPartonLevel = (mHadronPdg != 0) ? true : false, isGoodAtHadronLevel = (mHadronPdg != 0) ? false : true;
+      isGoodAtPartonLevel = (mHadronPdg != 0) ? true : false;
+      isGoodAtHadronLevel = (mHadronPdg != 0) ? false : true;
     } else {
-      bool isGoodAtPartonLevel = false, isGoodAtHadronLevel = (mHadronPdg != 0) ? false : true;
+      isGoodAtPartonLevel = false;
+      isGoodAtHadronLevel = (mHadronPdg != 0) ? false : true;
     }
 
     for (auto iPart{0}; iPart < event.size(); ++iPart) {
