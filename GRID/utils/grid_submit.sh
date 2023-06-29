@@ -190,7 +190,8 @@ while [ $# -gt 0 ] ; do
         --partition) GRIDPARTITION=$2; shift 2 ;; # allows to specificy a GRID partition for the job
         --cores) CPUCORES=$2; shift 2 ;; # allow to specify the CPU cores (check compatibility with partition !)
         --dry) DRYRUN="ON"; shift 1 ;; # do a try run and not actually interact with the GRID (just produce local jdl file)
-        --o2tag) O2TAG=$2; shift 2 ;; # 
+        --o2tag) O2TAG=$2; shift 2 ;; #
+	--packagespec) PACKAGESPEC=$2; shift 2 ;; # the alisw, cvmfs package list (command separated - example: '"VO_ALICE@FLUKA_VMC::4-1.1-vmc3-1","VO_ALICE@O2::daily-20230628-0200-1"')
         --asuser) ASUSER=$2; shift 2 ;; #
         --label) JOBLABEL=$2; shift 2 ;; # label identifying the production (e.g. as a production identifier)
         --mattermost) MATTERMOSTHOOK=$2; shift 2 ;; # if given, status and metric information about the job will be sent to this hook
@@ -272,6 +273,11 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
   # a) OutputSpec
   [[ ! ${OUTPUTSPEC} ]] && OUTPUTSPEC=$(grep "^#JDL_OUTPUT=" ${SCRIPT} | sed 's/#JDL_OUTPUT=//')
   echo "Found OutputSpec to be ${OUTPUTSPEC}"
+  # b) PackageSpec
+  [[ ! ${PACKAGESPEC} ]] && PACKAGESPEC=$(grep "^#JDL_PACKAGE=" ${SCRIPT} | sed 's/#JDL_PACKAGE=//')
+  echo "Found PackagesSpec to be ${PACKAGESPEC}"
+
+
    # Create temporary workdir to assemble files, and submit from there (or execute locally)
   cd "$(dirname "$0")"
   THIS_SCRIPT="$PWD/$(basename "$0")"
@@ -292,7 +298,8 @@ CPUCores = "${CPUCORES}";
 MemorySize = "60GB";
 TTL=${JOBTTL};
 EOF
-  echo "Output = {"${OUTPUTSPEC:-\"logs*.zip@disk=1\",\"AO2D.root@disk=1\"}"};" >> "${MY_JOBNAMEDATE}.jdl"
+  echo "Output = {"${OUTPUTSPEC:-\"logs*.zip@disk=1\",\"AO2D.root@disk=1\"}"};" >> "${MY_JOBNAMEDATE}.jdl"  # add output spec
+  echo "Packages = {"${PACKAGESPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add package spec
 
 # "output_arch.zip:output/*@disk=2",
 # "checkpoint*.tar@disk=2"
@@ -374,9 +381,12 @@ EOF
           if [ "$SUBJOBSTATUS" == "D" ]; then
              SPLITOUTDIR=$(printf "%03d" ${splitcounter})
              [ ! -f ${SPLITOUTDIR} ] && mkdir ${SPLITOUTDIR}
-             echo "Fetching result files for subjob ${splitcounter}"
-             alien.py cp ${MY_JOBWORKDIR}/${SPLITOUTDIR}/'*' file:./${SPLITOUTDIR} &> /dev/null
-          fi
+             echo "Fetching result files for subjob ${splitcounter} into ${PWD}"
+	     CPCMD="alien.py cp ${MY_JOBWORKDIR}/${SPLITOUTDIR}/* file:./${SPLITOUTDIR}"
+	     eval "${CPCMD}" 2> /dev/null
+          else
+	     echo "Not fetching files for subjob ${splitcounter} since job code is ${SUBJOBSTATUS}"
+	  fi
         done
         wait
       fi
@@ -429,17 +439,18 @@ lsb_release -a || true
 cat /etc/os-release || true
 cat /etc/redhat-release || true
 
-if [ ! "$O2_ROOT" ]; then
-  O2_PACKAGE_LATEST=`find /cvmfs/alice.cern.ch/el7-x86_64/Modules/modulefiles/O2 -name "*nightl*" -type f -printf "%f\n" | tail -n1`
-  banner "Loading O2 package $O2_PACKAGE_LATEST"
-  [ "${O2TAG}" ] && O2_PACKAGE_LATEST=${O2TAG}
-  eval "$(/cvmfs/alice.cern.ch/bin/alienv printenv O2::"$O2_PACKAGE_LATEST")"
-fi
-if [ ! "$O2DPG_ROOT" ]; then
-  O2DPG_LATEST=`find /cvmfs/alice.cern.ch/el7-x86_64/Modules/modulefiles/O2DPG -type f -printf "%f\n" | tail -n1`
-  banner "Loading O2DPG package $O2DPG_LATEST"
-  eval "$(/cvmfs/alice.cern.ch/bin/alienv printenv O2DPG::"$O2DPG_LATEST")"
-fi
+# we load the asked package list (this should now be done by JDL)
+#if [ ! "$O2_ROOT" ]; then
+#  O2_PACKAGE_LATEST=`find /cvmfs/alice.cern.ch/el7-x86_64/Modules/modulefiles/O2 -name "*nightl*" -type f -printf "%f\n" | tail -n1`
+#  banner "Loading O2 package $O2_PACKAGE_LATEST"
+#  [ "${O2TAG}" ] && O2_PACKAGE_LATEST=${O2TAG}
+#  #eval "$(/cvmfs/alice.cern.ch/bin/alienv printenv O2::"$O2_PACKAGE_LATEST")"
+#fi
+#if [ ! "$O2DPG_ROOT" ]; then
+#  O2DPG_LATEST=`find /cvmfs/alice.cern.ch/el7-x86_64/Modules/modulefiles/O2DPG -type f -printf "%f\n" | tail -n1`
+#  banner "Loading O2DPG package $O2DPG_LATEST"
+#  #eval "$(/cvmfs/alice.cern.ch/bin/alienv printenv O2DPG::"$O2DPG_LATEST")"
+#fi
 
 banner "Running workflow"
 
