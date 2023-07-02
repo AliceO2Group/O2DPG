@@ -28,12 +28,24 @@ CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
 CALIB_CONFIG="TPCCalibPulser.FirstTimeBin=80;TPCCalibPulser.LastTimeBin=160;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=10;TPCCalibPulser.XmaxQtot=510;TPCCalibPulser.NbinsWidth=100;TPCCalibPulser.XminWidth=0.3;TPCCalibPulser.XmaxWidth=0.7;TPCCalibPulser.MinimumQtot=30;TPCCalibPulser.MinimumQmax=25;TPCCalibPulser.XminT0=115;TPCCalibPulser.XmaxT0=130;TPCCalibPulser.NbinsT0=600"
 
-EXTRA_CONFIG=" "
-EXTRA_CONFIG="--calib-type pulser --publish-after-tfs 1000 --max-events 1200 --lanes 36"
-
 CCDB_PATH="--ccdb-path http://ccdb-test.cern.ch:8080"
-#EXTRA_CONFIG="--calib-type pulser --reset-after-publish --publish-after-tfs 120 --max-events 100 --lanes 36" 
-EXTRA_CONFIG="--calib-type pulser --publish-after-tfs 120 --max-events 100 --lanes 36 --check-calib-infos" 
+max_events=200
+publish_after=230
+
+
+if [[ ! -z ${TPC_CALIB_MAX_EVENTS:-} ]]; then
+    max_events=${TPC_CALIB_MAX_EVENTS}
+fi
+
+if [[ ! -z ${TPC_CALIB_PUBLISH_AFTER:-} ]]; then
+    publish_after=${TPC_CALIB_PUBLISH_AFTER}
+fi
+
+
+
+
+EXTRA_CONFIG="--calib-type pulser --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes 36 --check-calib-infos" 
+#EXTRA_CONFIG="--calib-type pulser --publish-after-tfs 2030 --max-events 200 --lanes 36 --check-calib-infos" 
 
 
 o2-dpl-raw-proxy $ARGS_ALL \

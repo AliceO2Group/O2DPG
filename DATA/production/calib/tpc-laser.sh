@@ -69,6 +69,24 @@ CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 #echo GPU_CONFIG $GPU_CONFIG_KEYS;
 
 
+max_events=300
+publish_after=440
+
+
+if [[ ! -z ${TPC_CALIB_MAX_EVENTS:-} ]]; then
+    max_events=${TPC_CALIB_MAX_EVENTS}
+fi
+
+if [[ ! -z ${TPC_CALIB_PUBLISH_AFTER:-} ]]; then
+    publish_after=${TPC_CALIB_PUBLISH_AFTER}
+fi
+
+
+
+
+
+
+
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
@@ -91,8 +109,8 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --configKeyValues "TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=150;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=302;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null" \
     --lanes 36 \
     --calib-type ce \
-    --publish-after-tfs 440 \
-    --max-events 300 \
+    --publish-after-tfs ${publish_after} \
+    --max-events ${max_events} \
     --check-calib-infos \
     | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
     --ccdb-path http://ccdb-test.cern.ch:8080 \

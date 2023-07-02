@@ -8,6 +8,21 @@ source common/getCommonArgs.sh
 
 PROXY_INSPEC="A:TPC/LASERTRACKS;B:TPC/CEDIGITS;eos:***/INFORMATION;D:TPC/CLUSREFS"
 
+max_events=200
+publish_after=430
+
+
+if [[ ! -z ${TPC_CALIB_MAX_EVENTS:-} ]]; then
+    max_events=${TPC_CALIB_MAX_EVENTS}
+fi
+
+if [[ ! -z ${TPC_CALIB_PUBLISH_AFTER:-} ]]; then
+    publish_after=${TPC_CALIB_PUBLISH_AFTER}
+fi
+
+
+
+
 WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL \
   --proxy-name tpc-laser-input-proxy \
   --dataspec \"$PROXY_INSPEC\" \
@@ -18,8 +33,8 @@ WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL \
  | o2-tpc-calib-pad-raw $ARGS_ALL \
   --configKeyValues \"TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=502;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null\" \
  --lanes 1 \
- --publish-after-tfs 120 \
- --max-events 100
+ --publish-after-tfs ${publish_after} \
+ --max-events ${max_events}
  --calib-type ce \
  --check-calib-infos \
  | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
