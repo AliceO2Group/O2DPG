@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import os
+import subprocess
+import threading
 import sys
 import shlex
 import tempfile
@@ -42,11 +44,20 @@ if 'WORKFLOWMODE' in os.environ:
 else:
     os.environ['WORKFLOWMODE'] = 'dds'
 
+if 'O2_NO_CATCHALL_EXCEPTIONS' in os.environ:
+    os.unsetenv("O2_NO_CATCHALL_EXCEPTIONS")
+
 if 'RECO_NUM_NODES_OVERRIDE' in os.environ and os.environ['RECO_NUM_NODES_OVERRIDE'] != '' and int(os.environ['RECO_NUM_NODES_OVERRIDE']) > 0:
     reco_num_nodes_override = int(os.environ['RECO_NUM_NODES_OVERRIDE'])
     os.environ['RECO_NUM_NODES_WORKFLOW'] = str(reco_num_nodes_override)
 else:
     reco_num_nodes_override = 0
+
+modulecmd = " module purge ; "
+if 'GEN_TOPO_OVERRIDE_MODULE_DIR' in os.environ:
+    mod.module('unuse', '/opt/alisw/el8/modulefiles')
+    mod.module('use', os.environ['GEN_TOPO_OVERRIDE_MODULE_DIR'])
+    modulecmd += ' module unuse /opt/alisw/el8/modulefiles 2>&1 ; module use ' + os.environ['GEN_TOPO_OVERRIDE_MODULE_DIR'] + ' 2>&1 ; '
 
 f = open(sys.argv[1], 'r')
 for line in f:
@@ -70,6 +81,7 @@ for line in f:
         reconodesmin = 0
         recoworkflows = []
         calibworkflows = []
+        calibworkflowsdds = []
         print('Found topology', sys.argv[2], '-', args)
         if 'EPNSYNCMODE' in os.environ and int(os.environ['EPNSYNCMODE']) and (not 'GEN_TOPO_RUN_HOME' in os.environ or not int(os.environ['GEN_TOPO_RUN_HOME'])):
             restore_O2DPG_ROOT = 'O2DPG_ROOT' in os.environ
@@ -90,72 +102,94 @@ for line in f:
             print('O2 not loaded')
             raise
         with tempfile.TemporaryDirectory(prefix='o2_workflow_') as tmpdir:
+            if 'GEN_TOPO_OVERRIDE_TEMPDIR' in os.environ:
+                tmpdir = os.environ['GEN_TOPO_OVERRIDE_TEMPDIR']
+            os.environ['GEN_TOPO_QC_JSON_FILE'] = os.path.abspath(tmpdir + '/qc.json')
             if NO_PROCESSING_MODE and len(args) > 2:
                 print('Cannot use DPL workflow together with DD mode', os.environ['DDMODE'])
                 raise
-            for i in range(2, len(args)):
+
+            def processSubtopology(i, args, tmpdir, reconodes, reconodesmin, recoworkflows, calibworkflows, calibworkflowsdds, threadsOK):
                 filename = tmpdir + '/wf' + str(i) + '.dds'
+                calibcores = '1'
                 if args[i].startswith('reco'):
                     wf = args[i].split(',', 3)
-                    recoworkflows.append(filename)
+                    is_calib_workflow = 0
                 elif args[i].startswith('calib'):
                     wf = args[i].split(',', 2)
-                    filenamecore = filename
-                    # filenamecore = filenamecore+ ':' + wf[1] # Currently disabled, since odc-epn-topo does not accept :[ncores]
                     wf.append(wf[2])
+                    calibcores = wf[1]
                     wf[1] = '1';
                     wf[2] = wf[1]
-                    calibworkflows.append(filenamecore)
+                    is_calib_workflow = 1
                 else:
                     print('Invalid workflow type', args[i])
                     raise
                 print('Adding', wf[0], 'workflow (', wf[2], '-', wf[1], 'nodes):', wf[3])
                 reconodes = max(reconodes, int(wf[1]))
                 reconodesmin = max(reconodesmin, int(wf[2]))
-                if 'GEN_TOPO_IGNORE_ERROR' in os.environ and int(os.environ['GEN_TOPO_IGNORE_ERROR']):
-                    command_log_filter = '"^\["'
-                else:
-                    command_log_filter = '"^\[INFO"'
-                command_preopt = ''
-                if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
-                    json_cache_path = os.environ['GEN_TOPO_WORKDIR'] + '/json_cache'
-                    filename_xml = filename
-                    if not 'GEN_TOPO_WORKDIR' in os.environ:
-                        print('$GEN_TOPO_WORKDIR not set')
-                        raise
-                    if not os.path.exists(json_cache_path):
-                        os.makedirs(json_cache_path, 0o770)
-                    filename = json_cache_path + '/dpl_tmp_' + datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S') + wf[0] + str(i) + '_' + str(random.randrange(100000000)) + '.json'
-                    command_preopt += ' WORKFLOWMODE=dump'
-                command = command_preopt + ' GLOBALDPLOPT+=" -b --dds-workflow-suffix _' + wf[0] + str(i) + '" ' + wf[3] + ' | grep -v ' + command_log_filter + ' > ' + filename + ' && [ `grep "^\[" ' + filename + ' | wc -l` == 0 ]'
-                print('Running DPL command', command)
                 if reco_num_nodes_override == 0:
                   os.environ['RECO_NUM_NODES_WORKFLOW'] = wf[1]
-                if os.system(command) != 0:
+                command_preopt = 'GEN_TOPO_CALIB_WORKFLOW=' + str(is_calib_workflow)
+                if is_calib_workflow:
+                    command_preopt += ' GEN_TOPO_CALIB_NCORES=' + calibcores
+                if os.environ['WORKFLOWMODE'] == 'dds':
+                    command_preopt += ' WORKFLOWMODE_FILE=' + filename
+                command = command_preopt + ' GLOBALDPLOPT+=" -b --dds-workflow-suffix _' + wf[0] + str(i) + '" ' + wf[3]
+                if os.environ['WORKFLOWMODE'] == 'print':
+                  command += ' > ' + filename
+                print('Running DPL command', command)
+                retVal = subprocess.run(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                tmpchk = retVal.stderr.decode() + retVal.stdout.decode()
+                haserror = 0
+                if tmpchk.find('[FATAL]') != -1 or tmpchk.find('[ERROR]') != -1 or tmpchk.find(': command not found') != -1 or tmpchk.find('No such file or directory') != -1 or tmpchk.find('bash: syntax error') != -1:
+                    print("Found error messages during topology generation")
+                    haserror = 1
+                if retVal.returncode != 0:
+                    print("Non-zero return value " + str(retVal.returncode) + " during topology generation")
+                    haserror = 1
+                if haserror != 0:
                     print('Error running command', command)
-                    ftmp = open(filename, 'r')
-                    rg = re.compile('^<topology')
-                    for line in ftmp:
-                        if re.match(rg, line):
-                            break
-                        print(line)
+                    print('stderr:', retVal.stderr.decode())
+                    print('stdout:', retVal.stdout.decode())
                     raise
-                if 'GEN_TOPO_OOM_WORKAROUND' in os.environ and int(os.environ['GEN_TOPO_OOM_WORKAROUND']):
-                    command = 'cat ' + filename + ' | o2-dpl-run -b --dds --dds-workflow-suffix _' + wf[0] + str(i) + ' --resources-monitoring 15 '  + ' | grep -v ' + command_log_filter + ' > ' + filename_xml
-                    print('Running DPL command', command)
-                    if os.system(command) != 0:
-                        print('Error running command', command)
-                    command = 'sed -i \'s,^\( *.exe.*sleep [0-9.]*;\).*\(|[^|]*./exe.\)$,\\1 cat ' + filename + ' \\2,\' ' + filename_xml
-                    os.system('cat ' + filename_xml)
-                    print('Running SED command', command)
-                    if os.system(command) != 0:
-                        print('Error running sed on XML file')
-                    os.system('cat ' + filename_xml)
-                    filename = filename_xml
+                threadsOK[i] = 1
+                if args[i].startswith('reco'):
+                    recoworkflows.append(filename)
+                elif args[i].startswith('calib'):
+                    if os.environ['WORKFLOWMODE'] == 'dds':
+                        isempty = 1
+                        ftmp = open(filename, 'r')
+                        rg = re.compile('^.*<decltask')
+                        for line in ftmp:
+                            if re.match(rg, line):
+                                isempty = 0
+                                break
+                        if isempty:
+                            return
+                    calibworkflows.append(filename)
+                    calibworkflowsdds.append(filename + ':' + calibcores)
+
+            subtopologyThreads = []
+            threadsOK = [0] * len(args)
+            for i in range(2, len(args)):
+                t = threading.Thread(target = processSubtopology, args = (i, args, tmpdir, reconodes, reconodesmin, recoworkflows, calibworkflows, calibworkflowsdds, threadsOK))
+                t.start()
+                if 'GEN_TOPO_SINGLE_THREAD' in os.environ and int(os.environ['GEN_TOPO_SINGLE_THREAD']):
+                    t.join()
+                    if not threadsOK[i]:
+                        raise
+                subtopologyThreads.append(t)
+            for t in subtopologyThreads:
+                t.join()
+            for i in range(2, len(args)):
+                if not threadsOK[i]:
+                    raise
             if reco_num_nodes_override > 0:
                 reconodes = reco_num_nodes_override
+                reconodesmin = min(reconodes, reconodesmin)
             if 'RECO_MAX_FAIL_NODES_OVERRIDE' in os.environ and os.environ['RECO_MAX_FAIL_NODES_OVERRIDE'] != '':
-                reconodesmin = max(1, reconodes - int(os.environ['RECO_NUM_NODES_OVERRIDE']))
+                reconodesmin = max(1, reconodes - int(os.environ['RECO_MAX_FAIL_NODES_OVERRIDE']))
             if os.environ['WORKFLOWMODE'] == 'dds':
                 if 'GEN_TOPO_ODC_EPN_TOPO_CMD' in os.environ:
                   odccommand = os.environ['GEN_TOPO_ODC_EPN_TOPO_CMD']
@@ -165,7 +199,7 @@ for line in f:
                   odccommand += ' ' + os.environ['GEN_TOPO_ODC_EPN_TOPO_ARGS']
                 if reconodes:
                     replacestring = ''
-                    dd_env_variables = ['DD_DISK_FRACTION', 'EPN_DD_TEST', 'EPN_DD_TEST_2', 'EPN_DD_TEST_3']
+                    dd_env_variables = ['DD_DISK_FRACTION', 'EPN_DD_TEST', 'EPN_DD_TEST_2', 'EPN_DD_TEST_3', 'SHM_MANAGER_SHMID']
                     for i in dd_env_variables:
                         if i in os.environ:
                             replacestring += ' ' + i + '=' + os.environ[i]
@@ -180,17 +214,39 @@ for line in f:
                 if len(recoworkflows):
                     odccommand += ' --reco ' + ' '.join(recoworkflows)
                 odccommand += ' --n ' + str(reconodes)
-                # odccommand += ' --nmin ' + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
+                odccommand += ' --nmin ' + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
                 if len(calibworkflows):
-                    odccommand += ' --calib ' + ' '.join(calibworkflows)
+                    calibworkflowsdds.sort(key=lambda x:int(x.split(':')[1])*-1)
+                    odccommand += ' --calib ' + ' '.join(calibworkflowsdds)
                 if 'GEN_TOPO_STDERR_LOGGING' in os.environ and int(os.environ['GEN_TOPO_STDERR_LOGGING']):
                     odccommand += ' --mon tools/monitoring_workflows/epnstderrlog.xml'
                 if args[1] != '':
-                    odccommand += ' --prependexe "module load ' + args[1] + ' 2>&1 ; "'
+                    odccommand += ' --prependexe "' + modulecmd + ' module load ' + args[1] + ' 2>&1 ; export O2_NO_CATCHALL_EXCEPTIONS=1 ; '
+                    if 'GEN_TOPO_ENV_AT_RUNTIME' in os.environ:
+                        env_at_runtime = os.environ['GEN_TOPO_ENV_AT_RUNTIME'].split(',')
+                        for i in env_at_runtime:
+                            odccommand += 'export ' + i + '=' + os.environ[i] + ' ; '
+                    odccommand += '"'
                 odccommand += ' -o ' + sys.argv[3]
+                print('Running ODC command', odccommand)
                 if os.system(odccommand) != 0:
                     print('\nError running odc: ', odccommand)
                     raise
+                if os.path.exists(os.environ['GEN_TOPO_QC_JSON_FILE']):
+                    command = 'sed -i \'s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/\'"\'"\'/\&#39;/g\' ' + os.environ['GEN_TOPO_QC_JSON_FILE']
+                    print('Running SED command for DPL JSON XML Escaping', command)
+                    if os.system(command) != 0:
+                        print('Error running sed on JSON file')
+                    command = 'sed -i ' + \
+                              '-e \'s,' + os.environ['GEN_TOPO_QC_JSON_FILE'] + ',${DDS_LOCATION}/qc.json.asset,\' ' + \
+                              '-e \'/^ *<exe reachable="true">.*o2-qc --id.*qc.json.asset.*<\/exe>$/a <assets><name>qc.json</name></assets>\' ' + \
+                              '-e \'/^ *<topology name.*>$/a <asset name="qc.json" type="inline" visibility="global" value="\' ' + \
+                              '-e \'/^ *<topology name.*>$/r ' + os.environ['GEN_TOPO_QC_JSON_FILE'] + '\' ' + \
+                              '-e \'/^ *<topology name.*>$/a " />\' ' + \
+                              sys.argv[3]
+                    print('Running final SED command for QC JSONs', command)
+                    if os.system(command) != 0:
+                        print('Error running sed')
             else:
                 outf = open(sys.argv[3], 'w+')
                 for i in recoworkflows:

@@ -13,6 +13,7 @@ import signal
 import socket
 import sys
 import traceback
+import platform
 try:
     from graphviz import Digraph
     havegraphviz=True
@@ -27,12 +28,16 @@ import argparse
 import psutil
 max_system_mem=psutil.virtual_memory().total
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '.', 'o2dpg_workflow_utils'))
+from o2dpg_workflow_utils import read_workflow
+
 # defining command line options
 parser = argparse.ArgumentParser(description='Parallel execution of a (O2-DPG) DAG data/job pipeline under resource contraints.', 
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument('-f','--workflowfile', help='Input workflow file name', required=True)
 parser.add_argument('-jmax','--maxjobs', help='Number of maximal parallel tasks.', default=100)
+parser.add_argument('-k','--keep-going', action='store_true', help='Keep executing the pipeline as far possibe (not stopping on first failure)')
 parser.add_argument('--dry-run', action='store_true', help='Show what you would do.')
 parser.add_argument('--visualize-workflow', action='store_true', help='Saves a graph visualization of workflow.')
 parser.add_argument('--target-labels', nargs='+', help='Runs the pipeline by target labels (example "TPC" or "DIGI").\
@@ -41,6 +46,7 @@ parser.add_argument('-tt','--target-tasks', nargs='+', help='Runs the pipeline b
 parser.add_argument('--produce-script', help='Produces a shell script that runs the workflow in serialized manner and quits.')
 parser.add_argument('--rerun-from', help='Reruns the workflow starting from given task (or pattern). All dependent jobs will be rerun.')
 parser.add_argument('--list-tasks', help='Simply list all tasks by name and quit.', action='store_true')
+parser.add_argument('--update-resources', dest="update_resources", help='Read resource estimates from a JSON and apply where possible.')
 
 parser.add_argument('--mem-limit', help='Set memory limit as scheduling constraint (in MB)', default=0.9*max_system_mem/1024./1024)
 parser.add_argument('--cpu-limit', help='Set CPU limit (core count)', default=8)
@@ -50,7 +56,8 @@ parser.add_argument('--stdout-on-failure', action='store_true', help='Print log 
 parser.add_argument('--webhook', help=argparse.SUPPRESS) # log some infos to this webhook channel
 parser.add_argument('--checkpoint-on-failure', help=argparse.SUPPRESS) # debug option making a debug-tarball and sending to specified address
                                                                        # argument is alien-path
-parser.add_argument('--retry-on-failure', help=argparse.SUPPRESS, default=2) # number of times a failing task is retried
+parser.add_argument('--retry-on-failure', help=argparse.SUPPRESS, default=0) # number of times a failing task is retried
+parser.add_argument('--no-rootinit-speedup', help=argparse.SUPPRESS, action='store_true') # disable init of ROOT environment vars to speedup init/startup
 parser.add_argument('--action-logfile', help='Logfilename for action logs. If none given, pipeline_action_#PID.log will be used')
 parser.add_argument('--metric-logfile', help='Logfilename for metric logs. If none given, pipeline_metric_#PID.log will be used')
 args = parser.parse_args()
@@ -74,7 +81,14 @@ actionlogger = setup_logger('pipeline_action_logger', ('pipeline_action_' + str(
 metriclogger = setup_logger('pipeline_metric_logger', ('pipeline_metric_' + str(os.getpid()) + '.log', args.action_logfile)[args.action_logfile!=None])
 
 # Immediately log imposed memory and CPU limit as well as further useful meta info
-metriclogger.info({"cpu_limit": args.cpu_limit, "mem_limit": args.mem_limit, "workflow_file": os.path.abspath(args.workflowfile), "target_task": args.target_tasks, "rerun_from": args.rerun_from, "target_labels": args.target_labels})
+_ , meta = read_workflow(args.workflowfile)
+meta["cpu_limit"] = args.cpu_limit
+meta["mem_limit"] = args.mem_limit
+meta["workflow_file"] = os.path.abspath(args.workflowfile)
+meta["target_task"] = args.target_tasks
+meta["rerun_from"] = args.rerun_from
+meta["target_labels"] = args.target_labels
+metriclogger.info(meta)
 
 # for debugging without terminal access
 # TODO: integrate into standard logger
@@ -144,8 +158,7 @@ class Graph:
  
             # increment in-degree of destination vertex by 1
             self.indegree[dest] = self.indegree[dest] + 1
- 
- 
+
 # Recursive function to find all topological orderings of a given DAG
 def findAllTopologicalOrders(graph, path, discovered, N, allpaths, maxnumber=1):
     if len(allpaths) >= maxnumber:
@@ -283,8 +296,8 @@ def build_graph(taskuniverse, workflowspec):
     return (edges, nodes)
         
 
-# loads the workflow specification
-def load_workflow(workflowfile):
+# loads json into dict, e.g. for workflow specification
+def load_json(workflowfile):
     fp=open(workflowfile)
     workflowspec=json.load(fp)
     return workflowspec
@@ -388,23 +401,95 @@ def build_dag_properties(workflowspec):
     global_next_tasks = tup[1]
 
     
-    # a simple score for importance of nodes
-    # for each task find number of nodes that depend on a task -> might be weighted with CPU and MEM needs
-    importance_score = [ 0 for n in nodes ]
     dependency_cache = {}
-    for n in nodes:
-        importance_score[n] = len(find_all_dependent_tasks(global_next_tasks, n, dependency_cache))
-        actionlogger.info("Score for " + str(globaltaskuniverse[n][0]['name']) + " is " + str(importance_score[n]))
-
     # weight influences scheduling order can be anything user defined ... for the moment we just prefer to stay within a timeframe
+    # then take the number of tasks that depend on a task as further weight
+    # TODO: bring in resource estimates from runtime, CPU, MEM
+    # TODO: make this a policy of the runner to study different strategies
     def getweight(tid):
-        return globaltaskuniverse[tid][0]['timeframe']
+        return (globaltaskuniverse[tid][0]['timeframe'], len(find_all_dependent_tasks(global_next_tasks, tid, dependency_cache)))
     
     task_weights = [ getweight(tid) for tid in range(len(globaltaskuniverse)) ]
-        
+
+    for tid in range(len(globaltaskuniverse)):
+        actionlogger.info("Score for " + str(globaltaskuniverse[tid][0]['name']) + " is " + str(task_weights[tid]))
+
     # print (global_next_tasks)
     return { 'nexttasks' : global_next_tasks, 'weights' : task_weights, 'topological_ordering' : tup[0] }
 
+# update the resource estimates of a workflow based on resources given via JSON
+def update_resource_estimates(workflow, resource_json):
+    resource_dict = load_json(resource_json)
+    stages = workflow["stages"]
+
+    for task in stages:
+        if task["timeframe"] >= 1:
+            tf = task["timeframe"]
+            name = "_".join(task["name"].split("_")[:-1])
+        else:
+            name = task["name"]
+
+        if name not in resource_dict:
+            continue
+
+        new_resources = resource_dict[name]
+
+        # memory
+        newmem = new_resources.get("mem", None)
+        if newmem is not None:
+            oldmem = task["resources"]["mem"]
+            actionlogger.info("Updating mem estimate for " + task["name"] + " from " + str(oldmem) + " to " + str(newmem))
+            task["resources"]["mem"] = newmem
+        newcpu = new_resources.get("cpu", None)
+
+        # cpu
+        if newcpu is not None:
+            oldcpu = task["resources"]["cpu"]
+            rel_cpu = task["resources"]["relative_cpu"]
+            if rel_cpu is not None:
+               # respect the relative CPU settings
+               # By default, the CPU value in the workflow is already scaled if relative_cpu is given.
+               # The new estimate on the other hand is not yet scaled so it needs to be done here.
+               newcpu *= rel_cpu
+            actionlogger.info("Updating cpu estimate for " + task["name"] + " from " + str(oldcpu) + " to " + str(newcpu))
+            task["resources"]["cpu"] = newcpu
+
+# a function to read a software environment determined by alienv into
+# a python dictionary
+def get_alienv_software_environment(packagestring):
+    """
+    packagestring is something like O2::v202298081-1,O2Physics::xxx
+    """
+    # alienv printenv packagestring --> dictionary
+    # for the moment this works with CVMFS only
+    cmd="/cvmfs/alice.cern.ch/bin/alienv printenv " + packagestring
+    proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+
+    envstring, err = proc.communicate()
+    # see if the printenv command was successful
+    if len(err.decode()) > 0:
+       print (err.decode())
+       raise Exception
+
+    # the software environment is now in the evnstring
+    # split it on semicolon
+    envstring=envstring.decode()
+    tokens=envstring.split(";")
+    # build envmap
+    envmap = {}
+    for t in tokens:
+      # check if assignment
+      if t.count("=") > 0:
+         assignment = t.rstrip().split("=")
+         envmap[assignment[0]] = assignment[1]
+      elif t.count("export") > 0:
+         # the case when we export or a simple variable
+         # need to consider the case when this has not been previously assigned
+         variable = t.split()[1]
+         if not variable in envmap:
+            envmap[variable]=""
+
+    return envmap
 
 #
 # functions for execution; encapsulated in a WorkflowExecutor class
@@ -414,7 +499,13 @@ class WorkflowExecutor:
     def __init__(self, workflowfile, args, jmax=100):
       self.args=args
       self.workflowfile = workflowfile
-      self.workflowspec = load_workflow(workflowfile)
+      self.workflowspec = load_json(workflowfile)
+      self.globalenv = self.extract_global_environment(self.workflowspec) # initialize global environment settings
+      for e in self.globalenv:
+        if os.environ.get(e, None) == None:
+           actionlogger.info("Applying global environment from init section " + str(e) + " : " + str(self.globalenv[e]))
+           os.environ[e] = str(self.globalenv[e])
+
       self.workflowspec = filter_workflow(self.workflowspec, args.target_tasks, args.target_labels)
 
       if not self.workflowspec['stages']:
@@ -437,6 +528,9 @@ class WorkflowExecutor:
           self.tasktoid[self.taskuniverse[i]]=i
           self.idtotask[i]=self.taskuniverse[i]
 
+      if args.update_resources:
+          update_resource_estimates(self.workflowspec, args.update_resources)
+
       self.maxmemperid = [ self.workflowspec['stages'][tid]['resources']['mem'] for tid in range(len(self.taskuniverse)) ]
       self.cpuperid = [ self.workflowspec['stages'][tid]['resources']['cpu'] for tid in range(len(self.taskuniverse)) ]
       self.curmembooked = 0
@@ -447,7 +541,8 @@ class WorkflowExecutor:
       self.cpulimit = float(args.cpu_limit)
       self.procstatus = { tid:'ToDo' for tid in range(len(self.workflowspec['stages'])) }
       self.taskneeds= { t:set(self.getallrequirements(t)) for t in self.taskuniverse }
-      self.stoponfailure = True
+      self.stoponfailure = not (args.keep_going == True)
+      print ("Stop on failure ",self.stoponfailure)
       self.max_jobs_parallel = int(jmax)
       self.scheduling_iteration = 0
       self.process_list = []  # list of currently scheduled tasks with normal priority
@@ -462,7 +557,12 @@ class WorkflowExecutor:
       self.internalmonitorid = 0 # internal use
       self.tids_marked_toretry = [] # sometimes we might want to retry a failed task (simply because it was "unlucky") and we put them here
       self.retry_counter = [ 0 for tid in range(len(self.taskuniverse)) ] # we keep track of many times retried already
+      self.task_retries = [ self.workflowspec['stages'][tid].get('retry_count',0) for tid in range(len(self.taskuniverse)) ] # the per task specific "retry" number -> needs to be parsed from the JSON
+
       self.semaphore_values = { self.workflowspec['stages'][tid].get('semaphore'):0 for tid in range(len(self.taskuniverse)) if self.workflowspec['stages'][tid].get('semaphore')!=None } # keeps current count of semaphores (defined in the json workflow). used to achieve user-defined "critical sections".
+      self.alternative_envs = {} # mapping of taskid to alternative software envs (to be applied on a per-task level)
+      # init alternative software environments
+      self.init_alternative_software_environments()
 
     def SIGHandler(self, signum, frame):
        # basically forcing shut down of all child processes
@@ -490,6 +590,21 @@ class WorkflowExecutor:
              pass
 
        exit (1)
+
+
+    def extract_global_environment(self, workflowspec):
+        """Checks if the workflow contains a dedicated init task
+           defining a global environment. Extract information and remove from workflowspec.
+        """
+        init_index = 0 # this has to be the first task in the workflow
+        globalenv = {}
+        if workflowspec['stages'][init_index]['name'] == '__global_init_task__':
+          env = workflowspec['stages'][init_index].get('env', None)
+          if env != None:
+            globalenv = { e : env[e] for e in env } 
+          del workflowspec['stages'][init_index]
+
+        return globalenv
 
     def getallrequirements(self, t):
         l=[]
@@ -541,12 +656,21 @@ class WorkflowExecutor:
       if self.workflowspec['stages'][tid].get('env')!=None:
           taskenv.update(self.workflowspec['stages'][tid]['env'])
 
+      # apply specific (non-default) software version, if any
+      # (this was setup earlier)
+      alternative_env = self.alternative_envs.get(tid, None)
+      if alternative_env != None:
+          actionlogger.info('Applying alternative software environment to task ' + self.idtotask[tid])
+          for entry in alternative_env:
+              # overwrite what is present in default
+              taskenv[entry] = alternative_env[entry]
+
       p = psutil.Popen(['/bin/bash','-c',c], cwd=workdir, env=taskenv)
       try:
           p.nice(nice)
           self.nicevalues[tid]=nice
       except (psutil.NoSuchProcess, psutil.AccessDenied):
-          actionlogger.error('Couldn\'t set nice value of ' + str(p.pid) + ' to ' + str(nice) + ' -- current value is ' + str(p.nice()))
+          actionlogger.error('Couldn\'t set nice value of ' + str(p.pid) + ' to ' + str(nice))
           self.nicevalues[tid]=os.nice(0)
       return p
 
@@ -572,6 +696,10 @@ class WorkflowExecutor:
           actionlogger.debug ('Condition check --normal-- for  ' + str(tid) + ':' + str(self.idtotask[tid]) + ' CPU ' + str(okcpu) + ' MEM ' + str(okmem))
           return (okcpu and okmem)
       else:
+          # only backfill one job at a time
+          if self.curcpubooked_backfill > 0:
+              return False
+
           # not backfilling jobs which either take much memory or use lot's of CPU anyway
           # conditions are somewhat arbitrary and can be played with
           if float(self.cpuperid[tid]) > 0.9*float(self.args.cpu_limit):
@@ -756,7 +884,7 @@ class WorkflowExecutor:
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         pass
 
-            resources_per_task[tid]={'iter':self.internalmonitorid, 'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS/1024./1024., 'pss':totalPSS/1024./1024, 'nice':proc.nice(), 'swap':totalSWAP, 'label':self.workflowspec['stages'][tid]['labels']}
+            resources_per_task[tid]={'iter':self.internalmonitorid, 'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS/1024./1024., 'pss':totalPSS/1024./1024, 'nice':self.nicevalues[tid], 'swap':totalSWAP, 'label':self.workflowspec['stages'][tid]['labels']}
             metriclogger.info(resources_per_task[tid])
             send_webhook(self.args.webhook, resources_per_task)
             
@@ -773,10 +901,9 @@ class WorkflowExecutor:
             # --> We could use this for corrective actions such as killing jobs currently back-filling
             # (or better hibernating)
 
-    def waitforany(self, process_list, finished):
+    def waitforany(self, process_list, finished, failingtasks):
        failuredetected = False
        failingpids = []
-       failingtasks = []
        if len(process_list)==0:
            return False
 
@@ -794,10 +921,10 @@ class WorkflowExecutor:
             finished.append(tid)
             process_list.remove(p)
             if returncode != 0:
-               print (str(tid) + ' failed ... checking retry')
+               print (str(self.idtotask[tid]) + ' failed ... checking retry')
                # we inspect if this is something "unlucky" which could be resolved by a simple resubmit
-               if self.is_worth_retrying(tid) and self.retry_counter[tid] < int(args.retry_on_failure):
-                 print (str(tid) + ' to be retried')
+               if self.is_worth_retrying(tid) and ((self.retry_counter[tid] < int(args.retry_on_failure)) or (self.retry_counter[tid] < int(self.task_retries[tid]))):
+                 print (str(self.idtotask[tid]) + ' to be retried')
                  actionlogger.info ('Task ' + str(self.idtotask[tid]) + ' failed but marked to be retried ')
                  self.tids_marked_toretry.append(tid)
                  self.retry_counter[tid] += 1
@@ -862,8 +989,8 @@ class WorkflowExecutor:
         # and copies it to a specific ALIEN location. Not a core function
         # just some tool get hold on error conditions appearing on the GRID.
 
-        def get_tar_command(dir='./', flags='cf', filename='checkpoint.tar'):
-            return 'find ' + str(dir) + ' -maxdepth 1 -type f -print0 | xargs -0 tar ' + str(flags) + ' ' + str(filename)
+        def get_tar_command(dir='./', flags='cf', findtype='f', filename='checkpoint.tar'):
+            return 'find ' + str(dir) + ' -maxdepth 1 -type ' + str(findtype) + ' -print0 | xargs -0 tar ' + str(flags) + ' ' + str(filename)
 
         if location != None:
            print ('Making a failure checkpoint')
@@ -878,8 +1005,21 @@ class WorkflowExecutor:
            tarcommand = get_tar_command(filename=fn)
            actionlogger.info("Taring " + tarcommand)
 
+           # create a README file with instruction on how to use checkpoint
+           readmefile=open('README_CHECKPOINT_PID' + str(os.getpid()) + '.txt','w')
+
+           for tid in taskids:
+             taskspec = self.workflowspec['stages'][tid]
+             name = taskspec['name']
+             readmefile.write('Checkpoint created because of failure in task ' + name + '\n')
+             readmefile.write('In order to reproduce with this checkpoint, do the following steps:\n')
+             readmefile.write('a) setup the appropriate O2sim environment using alienv\n')
+             readmefile.write('b) run: $O2DPG_ROOT/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ' + name + '$ --retry-on-failure 0\n')
+           readmefile.close()
+
            # first of all the base directory
            os.system(tarcommand)
+
            # then we add stuff for the specific timeframes ids if any
            for tid in taskids:
              taskspec = self.workflowspec['stages'][tid]
@@ -888,11 +1028,37 @@ class WorkflowExecutor:
                tarcommand = get_tar_command(dir=directory, flags='rf', filename=fn)
                actionlogger.info("Tar command is " + tarcommand)
                os.system(tarcommand)
+               # same for soft links
+               tarcommand = get_tar_command(dir=directory, flags='rf', findtype='l', filename=fn)
+               actionlogger.info("Tar command is " + tarcommand)
+               os.system(tarcommand)
+
+           # prepend file:/// to denote local file
+           fn = "file://" + fn
+           actionlogger.info("Local checkpoint file is " + fn)
 
            # location needs to be an alien path of the form alien:///foo/bar/
            copycommand='alien.py cp ' + fn + ' ' + str(location) + '@disk:1'
            actionlogger.info("Copying to alien " + copycommand)
            os.system(copycommand)
+
+    def init_alternative_software_environments(self):
+        """
+        Initiatialises alternative software environments for specific tasks, if there
+        is an annotation in the workflow specificiation.
+        """
+
+        environment_cache = {}
+        # go through all the tasks once and setup environment
+        for taskid in range(len(self.workflowspec['stages'])):
+          packagestr = self.workflowspec['stages'][taskid].get("alternative_alienv_package")
+          if packagestr == None:
+             continue
+
+          if environment_cache.get(packagestr) == None:
+             environment_cache[packagestr] = get_alienv_software_environment(packagestr)
+
+          self.alternative_envs[taskid] = environment_cache[packagestr]
 
 
     def analyse_files_and_connections(self):
@@ -987,7 +1153,14 @@ class WorkflowExecutor:
         # header
         lines.append('#!/usr/bin/env bash\n')
         lines.append('#THIS FILE IS AUTOGENERATED\n')
-        lines.append('JOBUTILS_SKIPDONE=ON\n')
+        lines.append('export JOBUTILS_SKIPDONE=ON\n')
+
+        # we record the global environment setting
+        # in particular to capture global workflow initialization
+        lines.append('#-- GLOBAL INIT SECTION FROM WORKFLOW --\n')
+        for e in self.globalenv:
+            lines.append('export ' + str(e) + '=' + str(self.globalenv[e]) + '\n')
+        lines.append('#-- TASKS FROM WORKFLOW --\n')
         for tid in taskorder:
             print ('Doing task ' + self.idtotask[tid])
             self.emit_code_for_task(tid, lines)
@@ -996,10 +1169,62 @@ class WorkflowExecutor:
         outF.close()
 
 
+    # print error message when no progress can be made
+    def noprogress_errormsg(self):
+        # TODO: rather than writing this out here; refer to the documentation discussion this?
+        msg = """Scheduler runtime error: The scheduler is not able to make progress although we have a non-zero candidate set.
+
+Explanation: This is typically the case because the **ESTIMATED** resource requirements for some tasks
+in the workflow exceed the available number of CPU cores or the memory (as explicitely or implicitely determined from the
+--cpu-limit and --mem-limit options). Often, this might be the case on laptops with <=16GB of RAM if one of the tasks
+is demanding ~16GB. In this case, one could try to tell the scheduler to use a slightly higher memory limit
+with an explicit --mem-limit option (for instance `--mem-limit 20000` to set to 20GB). This might work whenever the
+**ACTUAL** resource usage of the tasks is smaller than anticipated (because only small test cases are run).
+
+In addition it might be worthwile running the workflow without this resource aware, dynamic scheduler.
+This is possible by converting the json workflow into a linearized shell script and by directly executing the shell script.
+Use the `--produce-script myscript.sh` option for this.
+"""
+        print (msg, file=sys.stderr)
+
     def execute(self):
         starttime = time.perf_counter()
         psutil.cpu_percent(interval=None)
         os.environ['JOBUTILS_SKIPDONE'] = "ON"
+        errorencountered = False
+
+        def speedup_ROOT_Init():
+               """initialize some env variables that speed up ROOT init
+               and prevent ROOT from spawning many short-lived child
+               processes"""
+
+               # only do it on Linux
+               if platform.system() != 'Linux':
+                  return
+
+               if os.environ.get('ROOT_LDSYSPATH')!=None and os.environ.get('ROOT_CPPSYSINCL')!=None:
+                  # do nothing if already defined
+                  return
+
+               # a) the PATH for system libraries
+               # search taken from ROOT TUnixSystem
+               cmd='LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls /tmp/DOESNOTEXIST 2>&1 | grep -m 1 "system search path" | sed \'s/.*=//g\' | awk \'//{print $1}\''
+               proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+               libpath, err = proc.communicate()
+               if not (args.no_rootinit_speedup == True):
+                  print ("setting up ROOT system")
+                  os.environ['ROOT_LDSYSPATH'] = libpath.decode()
+
+               # b) the PATH for compiler includes needed by Cling
+               cmd='LC_ALL=C c++ -xc++ -E -v /dev/null 2>&1 | sed -n \'/^.include/,${/^ \/.*++/{p}}\'' # | sed \'s/ //\''
+               proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+               incpath, err = proc.communicate()
+               incpaths = [ line.lstrip() for line in incpath.decode().splitlines() ]
+               joined = ':'.join(incpaths)
+               if not (args.no_rootinit_speedup == True):
+                  os.environ['ROOT_CPPSYSINCL'] = joined
+
+        speedup_ROOT_Init()
 
         # we make our own "tmp" folder
         # where we can put stuff such as tmp socket files etc (for instance DPL FAIR-MQ sockets)
@@ -1048,7 +1273,7 @@ class WorkflowExecutor:
             while True:
                 # sort candidate list according to task weights
                 candidates = [ (tid, self.taskweights[tid]) for tid in candidates ]
-                candidates.sort(key=lambda tup: tup[1])
+                candidates.sort(key=lambda tup: (tup[1][0],-tup[1][1])) # prefer small and same timeframes first then prefer important tasks within frameframe
                 # remove weights
                 candidates = [ tid for tid,_ in candidates ]
 
@@ -1056,12 +1281,14 @@ class WorkflowExecutor:
                 actionlogger.debug('Sorted current candidates: ' + str([(c,self.idtotask[c]) for c in candidates]))
                 self.try_job_from_candidates(candidates, self.process_list, finished)
                 if len(candidates) > 0 and len(self.process_list) == 0:
-                    actionlogger.info("Not able to make progress: Nothing scheduled although non-zero candidate set")
+                    self.noprogress_errormsg()
                     send_webhook(self.args.webhook,"Unable to make further progress: Quitting")
+                    errorencountered = True
                     break
             
                 finished_from_started = [] # to account for finished when actually started
-                while self.waitforany(self.process_list, finished_from_started):
+                failing = []
+                while self.waitforany(self.process_list, finished_from_started, failing):
                     if not args.dry_run:
                         self.monitor(self.process_list) #  ---> make async to normal operation?
                         time.sleep(1) # <--- make this incremental (small wait at beginning)
@@ -1071,6 +1298,16 @@ class WorkflowExecutor:
                 finished = finished + finished_from_started
                 actionlogger.debug("finished now :" + str(finished_from_started))
                 finishedtasks = finishedtasks + finished
+
+                # if a task was marked "failed" and we come here (because
+                # we use --keep-going) ... we need to take out the pid from finished
+                if len(failing) > 0:
+                    # remove these from those marked finished in order
+                    # not to continue with their children
+                    errorencountered = True
+                    for t in failing:
+                        finished = [ x for x in finished if x != t ]
+                        finishedtasks = [ x for x in finishedtasks if x != t ]
 
                 # if a task was marked as "retry" we simply put it back into the candidate list
                 if len(self.tids_marked_toretry) > 0:
@@ -1107,10 +1344,13 @@ class WorkflowExecutor:
             self.SIGHandler(0,0)
 
         endtime = time.perf_counter()
-        print ('\n**** Pipeline done (global_runtime : {:.3f}s) *****\n'.format(endtime-starttime))
+        statusmsg = "success"
+        if errorencountered:
+           statusmsg = "with failures"
 
-
-
+        print ('\n**** Pipeline done ' + statusmsg + ' (global_runtime : {:.3f}s) *****\n'.format(endtime-starttime))
+        actionlogger.debug("global_runtime : {:.3f}s".format(endtime-starttime))
+        return errorencountered
 
 
 if args.cgroup!=None:
@@ -1120,4 +1360,4 @@ if args.cgroup!=None:
     os.system(command)
 
 executor=WorkflowExecutor(args.workflowfile,jmax=args.maxjobs,args=args)
-executor.execute()
+exit (executor.execute())

@@ -5,7 +5,7 @@
 
 /// \brief Define particle acceptance cuts for predefined detectors and detector combinations
 ///
-/// Define particle acceptance cuts for predefined detectors and detector combinations. 
+/// Define particle acceptance cuts for predefined detectors and detector combinations.
 /// Current acceptances defined based con the calorimeters and their combinations.
 ///
 /// \author Gustavo Conesa Balbastre (LPSC-IN2P3-CNRS)
@@ -25,9 +25,9 @@ enum EDetectorAcceptance_t {
 //
 bool full(Float_t phi, Float_t eta)
 {
-  if ( phi > 0.                      && 
-       phi < 360.* TMath::DegToRad() && 
-       TMath::Abs(eta) < 1.5  ) 
+  if (phi > 0. &&
+      phi < 360. * TMath::DegToRad() &&
+      TMath::Abs(eta) < 1.5)
     return true;
   else
     return false;
@@ -35,49 +35,49 @@ bool full(Float_t phi, Float_t eta)
 
 /// Check if particle is in EMCal.
 //
-bool emcal(Float_t phi, Float_t eta) 
+bool emcal(Float_t phi, Float_t eta)
 {
-  if(phi             > 80. * TMath::DegToRad() && 
-     phi             < 187.* TMath::DegToRad() && 
-     TMath::Abs(eta) < 0.7  ) 
+  if (phi > 80. * TMath::DegToRad() &&
+      phi < 187. * TMath::DegToRad() &&
+      TMath::Abs(eta) < 0.7)
     return true;
-  else 
+  else
     return false;
 }
 
 /// Check if particle is in DCal.
 //
-bool dcal(Float_t phi, Float_t eta) 
+bool dcal(Float_t phi, Float_t eta)
 {
-  Bool_t fullSM  = false;
+  Bool_t fullSM = false;
   Bool_t thirdSM = false;
-  
-  if ( phi             > 260.* TMath::DegToRad() && 
-       phi             < 320.* TMath::DegToRad() && 
-       TMath::Abs(eta) > 0.22                    && 
-       TMath::Abs(eta) < 0.7      ) 
+
+  if (phi > 260. * TMath::DegToRad() &&
+      phi < 320. * TMath::DegToRad() &&
+      TMath::Abs(eta) > 0.22 &&
+      TMath::Abs(eta) < 0.7)
     fullSM = true;
-    
-  if ( phi             > 320.* TMath::DegToRad() && 
-       phi             < 327.* TMath::DegToRad() && 
-       TMath::Abs(eta) < 0.7  ) 
+
+  if (phi > 320. * TMath::DegToRad() &&
+      phi < 327. * TMath::DegToRad() &&
+      TMath::Abs(eta) < 0.7)
     thirdSM = true;
-    
-  if ( fullSM || thirdSM )
+
+  if (fullSM || thirdSM)
     return true;
-  else 
+  else
     return false;
 }
 
 /// Check if particle is in PHOS.
 //
-bool phos(Float_t phi, Float_t eta) 
+bool phos(Float_t phi, Float_t eta)
 {
-  if ( phi             > 250 * TMath::DegToRad() && 
-       phi             < 320 * TMath::DegToRad() && 
-       TMath::Abs(eta) < 0.13  ) 
+  if (phi > 250 * TMath::DegToRad() &&
+      phi < 320 * TMath::DegToRad() &&
+      TMath::Abs(eta) < 0.13)
     return true;
-  else 
+  else
     return false;
 }
 
@@ -86,30 +86,40 @@ bool phos(Float_t phi, Float_t eta)
 //
 bool emcal_dcal(Float_t phi, Float_t eta)
 {
-  if      ( emcal(phi,eta) ) return true ;
-  else if (  dcal(phi,eta) ) return true ;
-  else                       return false;
+  if (emcal(phi, eta))
+    return true;
+  else if (dcal(phi, eta))
+    return true;
+  else
+    return false;
 }
 
 /// Check if particle is in any of the lower central barrel calorimeters:
 /// PHOS or DCal.
 //
-bool dcal_phos(Float_t phi, Float_t eta) 
+bool dcal_phos(Float_t phi, Float_t eta)
 {
-  if      ( dcal(phi,eta) ) return true ;
-  else if ( phos(phi,eta) ) return true ;
-  else                      return false;
+  if (dcal(phi, eta))
+    return true;
+  else if (phos(phi, eta))
+    return true;
+  else
+    return false;
 }
 
 /// Check if particle is in any of the central barrel calorimeters:
 /// PHOS, DCal or EMCal.
 //
-bool barrel_calorimeters(Float_t phi, Float_t eta) 
+bool barrel_calorimeters(Float_t phi, Float_t eta)
 {
-  if      ( emcal(phi,eta) ) return true ;
-  else if ( dcal (phi,eta) ) return true ;
-  else if ( phos (phi,eta) ) return true ;
-  else                       return false;
+  if (emcal(phi, eta))
+    return true;
+  else if (dcal(phi, eta))
+    return true;
+  else if (phos(phi, eta))
+    return true;
+  else
+    return false;
 }
 
 /// \return True if particle in desired acceptance.
@@ -118,34 +128,31 @@ bool barrel_calorimeters(Float_t phi, Float_t eta)
 /// \param phi : Particle phi angle in radians.
 /// \param eta : Particle eta angle.
 //
-bool 
-detector_acceptance(Int_t acceptance, Float_t phi, Float_t eta)
+bool detector_acceptance(Int_t acceptance, Float_t phi, Float_t eta)
 {
-  switch (acceptance) 
-  {
+  switch (acceptance) {
     case kAcceptance_FullDetector:
-      return full(phi,eta);
-      break;   
+      return full(phi, eta);
+      break;
     case kAcceptance_EMC:
-      return emcal(phi,eta);
-      break;    
+      return emcal(phi, eta);
+      break;
     case kAcceptance_PHS:
-      return phos(phi,eta);
+      return phos(phi, eta);
       break;
     case kAcceptance_DMC:
-      return dcal(phi,eta);
-      break; 
+      return dcal(phi, eta);
+      break;
     case kAcceptance_PHSDMC:
-      return dcal_phos(phi,eta);
+      return dcal_phos(phi, eta);
       break;
     case kAcceptance_EMCDMC:
-      return emcal_dcal(phi,eta);
+      return emcal_dcal(phi, eta);
       break;
     case kAcceptance_EMCPHSDMC:
-      return barrel_calorimeters(phi,eta);
+      return barrel_calorimeters(phi, eta);
       break;
-  }  
-  
+  }
+
   return false;
 }
-

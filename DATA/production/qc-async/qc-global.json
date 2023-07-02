@@ -17,13 +17,13 @@
         "provenance": "qc_async"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "no-op://"
       },
       "consul": {
         "url": ""
       },
       "conditionDB": {
-        "url": "alice-ccdb.cern.ch:8080"
+        "url": "alice-ccdb.cern.ch"
       },
       "infologger": {
         "filterDiscardDebug": "true",

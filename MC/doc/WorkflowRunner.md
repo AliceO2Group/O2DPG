@@ -90,6 +90,10 @@ While a workflow may be written by hand, it's more pratical to have it programma
 
 In fact such a create script could be seen as the **actual succession of former `dpg_sim.sh`**.
 
+A special task with name '__global_init_task__' can be defined as the first task of the workflow.
+The environment information of this task will be used by the runtime engine to propagate global environment variables
+to all other/normal tasks of the workflow.
+
 # Workflow example:
 
 A workflow doing a common background simulation, followed by 2 timeframes of signal MC, digitization, reconstruction and AOD might look like this graphically:

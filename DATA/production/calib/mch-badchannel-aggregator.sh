@@ -4,27 +4,22 @@ source common/setenv.sh
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Set general arguments
-ARGS_ALL="--session default --severity $SEVERITY --shm-segment-size $SHMSIZE $ARGS_ALL_EXTRA"
-ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
-ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 60"
-if [ $SHMTHROW == 0 ]; then
-  ARGS_ALL+=" --shm-throw-bad-alloc 0"
-fi
-if [ $NORATELOG == 1 ]; then
-  ARGS_ALL+=" --fairmq-rate-logging 0"
-fi
-ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;$ALL_EXTRA_CONFIG"
+source common/getCommonArgs.sh
 
 PROXY_INSPEC="A:MCH/PDIGITS/0"
-CONSUL_ENDPOINT="alio2-cr1-hv-aliecs.cern.ch:8500"
+CONSUL_ENDPOINT="alio2-cr1-hv-con01.cern.ch:8500"
 
+MCH_MAX_PEDESTAL=${MCH_MAX_PEDESTAL:-500.0}
+MCH_MAX_NOISE=${MCH_MAX_NOISE:-2.0}
+MCH_MIN_ENTRIES=${MCH_MIN_ENTRIES:-100}
+MCH_MIN_FRACTION=${MCH_MIN_FRACTION:-0.5}
 MCH_END_OF_STREAM_ONLY=${MCH_END_OF_STREAM_ONLY:-true}
-BADCHANNEL_CONFIG="${ARGS_ALL_CONFIG};MCHBadChannelCalibratorParam.maxPed=200.0;MCHBadChannelCalibratorParam.maxNoise=2.0;MCHBadChannelCalibratorParam.minRequiredNofEntriesPerChannel=100;MCHBadChannelCalibratorParam.minRequiredCalibratedFraction=0.5;MCHBadChannelCalibratorParam.onlyAtEndOfStream=${MCH_END_OF_STREAM_ONLY}"
+BADCHANNEL_CONFIG="${ARGS_ALL_CONFIG};MCHBadChannelCalibratorParam.maxPed=${MCH_MAX_PEDESTAL};MCHBadChannelCalibratorParam.maxNoise=${MCH_MAX_NOISE};MCHBadChannelCalibratorParam.minRequiredNofEntriesPerChannel=${MCH_MIN_ENTRIES};MCHBadChannelCalibratorParam.minRequiredCalibratedFraction=${MCH_MIN_FRACTION};MCHBadChannelCalibratorParam.onlyAtEndOfStream=${MCH_END_OF_STREAM_ONLY}"
 
 WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --proxy-name mch-badchannel-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=mch-badchannel-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\" | "
 WORKFLOW+="o2-calibration-mch-badchannel-calib-workflow $ARGS_ALL --configKeyValues \"$BADCHANNEL_CONFIG\" | "
 WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"http://o2-ccdb.internal\" --sspec-min 0 --sspec-max 0 | "
-WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"http://alio2-cr1-flp199.cern.ch:8083\" --sspec-min 1 --sspec-max 1 --name-extention dcs | "
+WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"http://ali-calib-dcs.cern.ch:8083\" --sspec-min 1 --sspec-max 1 --name-extention dcs | "
 WORKFLOW+="o2-qc $ARGS_ALL --config consul-json://${CONSUL_ENDPOINT}/o2/components/qc/ANY/any/mch-badchannel | "
 WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
 
@@ -33,6 +28,6 @@ if [ $WORKFLOWMODE == "print" ]; then
   echo $WORKFLOW | sed "s/| */|\n/g"
 else
   # Execute the command we have assembled
-  WORKFLOW+=" --$WORKFLOWMODE"
+  WORKFLOW+=" --$WORKFLOWMODE ${WORKFLOWMODE_FILE}"
   eval $WORKFLOW
 fi

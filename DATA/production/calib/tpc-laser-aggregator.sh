@@ -21,8 +21,6 @@ if [[ ! -z ${TPC_CALIB_PUBLISH_AFTER:-} ]]; then
 fi
 
 
-
-
 WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL \
   --proxy-name tpc-laser-input-proxy \
   --dataspec \"$PROXY_INSPEC\" \

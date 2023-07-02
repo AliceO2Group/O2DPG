@@ -16,7 +16,7 @@
         "periodName": "SimChallenge"
       },
       "monitoring" : {
-        "url" : "infologger:///debug?qc"
+        "url" : "no-op://"
       },
       "consul" : {
         "url" : ""
@@ -31,7 +31,7 @@
                        "" : "Message at this level or above are discarded (default: 21 - Trace)" }
     },
     "tasks" : {
-      "MatchedTracksITSTPC" : {
+      "MatchTrITSTPC" : {
         "active" : "true",
         "className" : "o2::quality_control_modules::glo::ITSTPCMatchingTask",
         "moduleName" : "QcGLO",
@@ -51,27 +51,21 @@
           "minNTPCClustersCut" : "60",
           "minDCACut" : "100.f",
           "minDCACutY" : "10.f",
-          "grpFileName" : "o2sim_grp.root",
-          "geomFileName" : "o2sim_geometry.root",
           "isMC" : "true"
+        },
+	"grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         },
         "location" : "remote",
         "saveObjectsToFile" : "ITSTPCmatched.root",
         "" : "For debugging, path to the file where to save. If empty or missing it won't save."
-      }
-    },
-    "checks" : {
-      "QcCheck" : {
-        "active" : "false",
-        "className" : "o2::quality_control_modules::skeleton::SkeletonCheck",
-        "moduleName" : "QcSkeleton",
-        "policy" : "OnAny",
-        "detectorName" : "TOF",
-        "dataSource" : [ {
-          "type" : "Task",
-          "name" : "QcTask",
-          "MOs" : ["example"]
-        } ]
       }
     }
   },

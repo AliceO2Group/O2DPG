@@ -1,0 +1,87 @@
+{
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "alio2-cr1-hv-qcdb1.cern.ch:8083",
+        "username": "not_applicable",
+        "password": "not_applicable",
+        "name": "not_applicable"
+      },
+      "Activity": {
+        "number": "42",
+        "type": "2"
+      },
+      "monitoring": {
+        "url": "influxdb-unix:///tmp/telegraf.sock"
+      },
+      "consul": {
+        "url": "alio2-cr1-hv-aliecs:8500"
+      },
+      "conditionDB": {
+        "url": "alio2-cr1-hv-qcdb1.cern.ch:8083"
+      }
+    },
+    "tasks" : {
+      "MatchingTOF" : {
+        "active" : "true",
+        "className" : "o2::quality_control_modules::tof::TOFMatchedTracks",
+        "moduleName" : "QcTOF",
+        "detectorName" : "TOF",
+        "cycleDurationSeconds" : "60",
+        "maxNumberCycles" : "-1",
+        "dataSource" : {
+          "type": "dataSamplingPolicy",
+          "name": "trk-clu-local"
+        },
+        "location": "local",
+        "localMachines": [
+          "epn",
+          "localhost"
+        ],
+        "remoteMachine": "alio2-cr1-qc03.cern.ch",
+        "remotePort": "47710",
+        "mergingMode": "delta",
+        "localControl": "odc",
+        "taskParameters" : {
+          "GID" : "ITS-TPC,ITS-TPC-TOF,TPC",
+          "verbose" : "false",
+          "minPtCut" : "0.3f",
+          "etaCut" : "0.8f",
+          "minNTPCClustersCut" : "60",
+          "minDCACut" : "100.f",
+          "minDCACutY" : "10.f"
+        },
+	"grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
+        }
+      }
+    }
+  },
+  "dataSamplingPolicies": [
+    {
+      "id": "trk-clu-local",
+      "active": "true",
+      "machines": [
+        "epn",
+        "localhost"
+      ],
+      "query" : "matchITSTPCTOF:TOF/MTC_ITSTPC/0;trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;trackTPC:TPC/TRACKS/0;trackTPCClRefs:TPC/CLUSREFS/0;tofcluster:TOF/CLUSTERS/0",
+      "samplingConditions": [
+        {
+          "condition": "random",
+          "fraction": "1.0",
+          "seed": "1234"
+        }
+      ],
+      "blocking": "false"
+    }
+  ]
+}

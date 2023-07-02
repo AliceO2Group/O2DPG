@@ -20,15 +20,16 @@
         "url": "infologger:///debug?qc"
       },
       "consul": {
-        "url": "http://consul-test.cern.ch:8500"
+        "url": ""
       },
       "conditionDB": {
         "url": "ccdb-test.cern.ch:8080"
       }
     },
     "tasks": {
-      "Clusters": {
+      "TPCClusters": {
         "active": "true",
+        "taskName": "Clusters",
         "className": "o2::quality_control_modules::tpc::Clusters",
         "moduleName": "QcTPC",
         "detectorName": "TPC",
@@ -36,8 +37,8 @@
         "resetAfterCycles": "1",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "direct",
-          "query": "inputClus:TPC/CLUSTERNATIVE"
+          "type": "dataSamplingPolicy",
+          "name": "tpc-clusters"
         },
         "taskParameters": {
           "mergeableOutput": "true",
@@ -49,8 +50,9 @@
           "TimeBinNBins":   "1000", "TimeBinXMin":   "0", "TimeBinXMax":   "100000"
         }
       },
-      "PID": {
+      "TPCPID": {
         "active": "true",
+        "taskName": "PID",
         "className": "o2::quality_control_modules::tpc::PID",
         "moduleName": "QcTPC",
         "detectorName": "TPC",
@@ -60,10 +62,21 @@
         "dataSource": {
           "type": "direct",
           "query" : "inputTracks:TPC/TRACKS/0"
-        }
+        },
+        "taskParameters": {
+          "cutMinNCluster": "60",
+          "cutAbsTgl": "1.",
+          "cutMindEdxTot": "10.",
+          "cutMaxdEdxTot": "2000.",
+          "cutMinpTPC": "0.05",
+          "cutMaxpTPC": "20.",
+          "cutMinpTPCMIPs": "0.45",
+          "cutMaxpTPCMIPs": "0.55"
+       }
       },
-      "Tracks": {
+      "TPCTracks": {
         "active": "true",
+        "taskName": "Tracks",
         "className": "o2::quality_control_modules::tpc::Tracks",
         "moduleName": "QcTPC",
         "detectorName": "TPC",
@@ -73,10 +86,30 @@
         "dataSource": {
           "type": "direct",
           "query" : "inputTracks:TPC/TRACKS/0"
+        },
+        "taskParameters": {
+          "cutAbsEta": "1.",
+          "cutMinNCluster": "60",
+          "cutMindEdxTot": "20."
         }
       }
     }
   },
   "dataSamplingPolicies": [
+    {
+      "id": "tpc-clusters",
+      "active": "true",
+      "machines": ["localhost"],
+      "query" : "inputClusters:TPC/CLUSTERNATIVE",
+      "outputs": "sampled-clusters:DS/CLUSTERNATIVE",
+      "samplingConditions": [
+        {
+          "condition": "random",
+          "fraction": "0.1",
+          "seed": "0"
+        }
+      ],
+      "blocking": "false"
+    }
   ]
 }

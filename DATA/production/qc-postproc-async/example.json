@@ -1,0 +1,85 @@
+{
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "ccdb-test.cern.ch:8080"
+      },
+      "Activity": {
+        "number": "",
+        "provenance": "qc_async",
+        "periodName": "",
+        "passName": "apass1"
+      },
+      "monitoring": {
+        "url": "no-op://"
+      },
+      "consul": {
+        "url": ""
+      },
+      "conditionDB": {
+        "url": "ccdb-test.cern.ch:8080"
+      },
+      "postprocessing": {
+        "periodSeconds": "0.1"
+      },
+      "infologger": {                     "": "Configuration of the Infologger (optional).",
+        "filterDiscardDebug": "true",     "": "Set to 1 to discard debug and trace messages (default: false)",
+        "filterDiscardLevel": "6",        "": "Message at this level or above are discarded (default: 21 - Trace)"
+      }
+    },
+    "postprocessing": {
+      "BeamSpotTrending": {
+        "active": "true",
+        "className": "o2::quality_control::postprocessing::TrendingTask",
+        "moduleName": "QualityControl",
+        "detectorName": "TST",
+        "producePlotsOnUpdate": "false",
+        "dataSources": [
+          {
+            "type": "repository",
+            "path": "GLO/MO/Vertexing",
+            "names": [ "vertex_X", "vertex_Y", "vertex_Z" ],
+            "reductorName": "o2::quality_control_modules::common::TH1Reductor",
+            "moduleName": "QcCommon"
+          }
+        ],
+        "plots": [
+          {
+            "name": "Vertex_X_trend",
+            "title": "Vertex X trend [cm]",
+            "varexp": "vertex_X.mean:meta.runNumber",
+            "graphErrors": "0:vertex_X.stddev/pow(vertex_X.entries,0.5)",
+            "selection": "",
+            "option": "*"
+          },
+          {
+            "name": "Vertex_Y_trend",
+            "title": "Vertex Y trend [cm]",
+            "varexp": "vertex_Y.mean:meta.runNumber",
+            "graphErrors": "0:vertex_Y.stddev/pow(vertex_Y.entries,0.5)",
+            "selection": "",
+            "option": "*"
+          },
+          {
+            "name": "Vertex_Z_trend",
+            "title": "Vertex Z trend [cm]",
+            "varexp": "vertex_Z.mean:meta.runNumber",
+            "graphErrors": "0:vertex_Z.stddev/pow(vertex_Z.entries,0.5)",
+            "selection": "",
+            "option": "*"
+          }
+        ],
+        "initTrigger": [
+          "once"
+        ],
+        "updateTrigger": [
+          "foreachlatest:qcdb:GLO/MO/Vertexing/beamSpot"
+        ],
+        "stopTrigger": [
+          "userorcontrol"
+        ]
+      }
+    }
+  }
+}

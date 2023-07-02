@@ -4,27 +4,13 @@ source common/setenv.sh
 
 export GLOBAL_SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM # for kr cluster finder
 
-ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
-if [ $EPNSYNCMODE == 1 ]; then
-  ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
-  #ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock"
-  ARGS_ALL+=" --monitoring-backend no-op://"
-else
-  ARGS_ALL+=" --monitoring-backend no-op://"
-fi
-if [ $SHMTHROW == 0 ]; then
-  ARGS_ALL+=" --shm-throw-bad-alloc 0"
-fi
-if [ $NORATELOG == 1 ]; then
-  ARGS_ALL+=" --fairmq-rate-logging 0"
-fi
+source common/getCommonArgs.sh
 if [ $NUMAGPUIDS != 0 ]; then
   ARGS_ALL+=" --child-driver 'numactl --membind $NUMAID --cpunodebind $NUMAID'"
 fi
 if [ $GPUTYPE != "CPU" ]; then
   ARGS_ALL+="  --shm-mlock-segment-on-creation 1"
 fi
-ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
 
 if [ $GPUTYPE == "HIP" ]; then
   if [ $NUMAID == 0 ] || [ $NUMAGPUIDS == 0 ]; then
@@ -64,7 +50,7 @@ QC_CONFIG="consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-full-q
 if [ $WRITER_TYPE == "EPN" ]; then
    KR_CONFIG="--writer-type ${WRITER_TYPE} --meta-output-dir /data/epn2eos_tool/epn2eos/ --output-dir /data/tf/raw --max-tf-per-file 2000 "
 else
-   KR_CONFIG="--writer-type ${WRITER_TYPE} "  
+   KR_CONFIG="--writer-type ${WRITER_TYPE} "
 fi
 
 
@@ -83,5 +69,4 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --configFile="/home/wiechula/processData/inputFilesTracking/krypton/krBoxCluster.largeBox.cuts.krMap.ini" \
     $KR_CONFIG \
     | o2-qc $ARGS_ALL --config $QC_CONFIG --local --host localhost \
-    | o2-dpl-run --dds  | grep -v ERROR
-
+    | o2-dpl-run --dds ${WORKFLOWMODE_FILE}  | grep -v ERROR

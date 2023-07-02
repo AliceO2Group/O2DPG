@@ -56,6 +56,21 @@
           "type": "dataSamplingPolicy",
           "name": "digi-local"
         },
+        "taskParameters": {
+          "PerChannel": "True",
+          "RangeMaxMultiplicity": "5000",
+          "NoiseClassSelection": "0"
+        },
+	  "grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
+        },
         "location": "local",
         "localMachines": [
           "epn",
@@ -76,9 +91,9 @@
         "dataSources": [
           {
             "type": "repository",
-            "path": "qc/TOF/MO/TaskDigits",
+            "path": "qc/TOF/MO/TaskDigits/Multiplicity",
             "names": [
-              "TOFRawsMulti"
+              "Integrated"
             ],
             "reductorName": "o2::quality_control_modules::common::TH1Reductor",
             "moduleName": "QcCommon"
@@ -88,7 +103,7 @@
           {
             "name": "mean_of_hits",
             "title": "Mean trend of TOF hits",
-            "varexp": "TOFRawsMulti.mean:time",
+            "varexp": "Integrated.mean:time",
             "selection": "",
             "option": "*L"
           }
@@ -97,7 +112,7 @@
           "userorcontrol"
         ],
         "updateTrigger": [
-          "newobject:qcdb:qc/TOF/MO/TaskDigits/TOFRawsMulti"
+          "newobject:qcdb:qc/TOF/MO/TaskDigits/Multiplicity/Integrated"
         ],
         "stopTrigger": [
           "userorcontrol"
@@ -186,7 +201,7 @@
         "localhost"
       ],
       "port": "30333",
-      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0",
+      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;diafreq:TOF/DIAFREQ/0",
       "samplingConditions": [
         {
           "condition": "random",

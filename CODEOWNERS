@@ -1,3 +1,4 @@
+* @davidrohr @martenole @shahor02 @chiarazampolli @sawenzel @benedikt-voelkel
 /DATA/production @davidrohr @martenole @shahor02 @chiarazampolli
 
 /DATA/testing/detectors/CPV
@@ -15,3 +16,6 @@
 /DATA/testing/detectors/TPC @wiechula
 /DATA/testing/detectors/TRD @martenole
 /DATA/testing/detectors/ZDC
+
+/MC @sawenzel @chiarazampolli @gconesab @benedikt-voelkel
+/RelVal @sawenzel @chiarazampolli @gconesab @benedikt-voelkel

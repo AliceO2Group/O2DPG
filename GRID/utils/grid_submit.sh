@@ -177,10 +177,11 @@ ONGRID=0
 
 JOBTTL=82000
 CPUCORES=8
+PRODSPLIT=1
 # this tells us to continue an existing job --> in this case we don't create a new workdir
 while [ $# -gt 0 ] ; do
     case $1 in
-	-c) CONTINUE_WORKDIR=$2;  shift 2 ;;   # this should be the workdir of a job to continue (without HOME and ALIEN_TOPWORKDIR)
+	      -c) CONTINUE_WORKDIR=$2;  shift 2 ;;   # this should be the workdir of a job to continue (without HOME and ALIEN_TOPWORKDIR)
         --local) LOCAL_MODE="ON"; shift 1 ;;   # if we want emulate execution in the local workdir (no GRID interaction)
         --script) SCRIPT=$2; shift 2 ;;  # the job script to submit
         --jobname) JOBNAME=$2; shift 2 ;; # the job name associated to the job --> determined directory name on GRID
@@ -189,14 +190,19 @@ while [ $# -gt 0 ] ; do
         --partition) GRIDPARTITION=$2; shift 2 ;; # allows to specificy a GRID partition for the job
         --cores) CPUCORES=$2; shift 2 ;; # allow to specify the CPU cores (check compatibility with partition !)
         --dry) DRYRUN="ON"; shift 1 ;; # do a try run and not actually interact with the GRID (just produce local jdl file)
-        --o2tag) O2TAG=$2; shift 2 ;; # 
+        --o2tag) O2TAG=$2; shift 2 ;; #
+	--packagespec) PACKAGESPEC=$2; shift 2 ;; # the alisw, cvmfs package list (command separated - example: '"VO_ALICE@FLUKA_VMC::4-1.1-vmc3-1","VO_ALICE@O2::daily-20230628-0200-1"')
         --asuser) ASUSER=$2; shift 2 ;; #
         --label) JOBLABEL=$2; shift 2 ;; # label identifying the production (e.g. as a production identifier)
         --mattermost) MATTERMOSTHOOK=$2; shift 2 ;; # if given, status and metric information about the job will be sent to this hook
         --controlserver) CONTROLSERVER=$2; shift 2 ;; # allows to give a SERVER ADDRESS/IP which can act as controller for GRID jobs
         --prodsplit) PRODSPLIT=$2; shift 2 ;; # allows to set JDL production split level (useful to easily replicate workflows)
         --singularity) SINGULARITY=ON; shift 1 ;; # run everything inside singularity
+        --wait) WAITFORALIEN=ON; shift 1 ;; #wait for alien jobs to finish
+        --outputspec) OUTPUTSPEC=$2; shift 2 ;; #provide comma separate list of JDL file specs to be put as part of JDL Output field (example '"*.log@disk=1","*.root@disk=2"')
 	-h) Usage ; exit ;;
+        --help) Usage ; exit ;;
+        --fetch-output) FETCHOUTPUT=ON; shift 1 ;; # if to fetch all JOB output locally (to make this job as if it ran locally); only works when we block until all JOBS EXIT
         *) break ;;
     esac
 done
@@ -205,6 +211,7 @@ export JOBLABEL
 export MATTERMOSTHOOK
 export CONTROLSERVER
 export PRODSPLIT
+[[ $PRODSPLIT -gt 100 ]] && echo "Production split needs to be smaller than 100 for the moment" && exit 1
 
 # analyse options:
 # we should either run with --script or with -c
@@ -253,7 +260,7 @@ fi
 
 if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
   #  --> test if alien is there?
-  which alien.py 2> /dev/null
+  which alien.py &> /dev/null
   # check exit code
   if [[ ! "$?" == "0"  ]]; then
     XJALIEN_LATEST=`find /cvmfs/alice.cern.ch/el7-x86_64/Modules/modulefiles/xjalienfs -type f -printf "%f\n" | tail -n1`
@@ -261,7 +268,17 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
     eval "$(/cvmfs/alice.cern.ch/bin/alienv printenv xjalienfs::"$XJALIEN_LATEST")"
   fi
 
-  # Create temporary workdir to assemble files, and submit from there (or execute locally)
+ 
+  # read preamble from job file which is used whenever command line not given
+  # a) OutputSpec
+  [[ ! ${OUTPUTSPEC} ]] && OUTPUTSPEC=$(grep "^#JDL_OUTPUT=" ${SCRIPT} | sed 's/#JDL_OUTPUT=//')
+  echo "Found OutputSpec to be ${OUTPUTSPEC}"
+  # b) PackageSpec
+  [[ ! ${PACKAGESPEC} ]] && PACKAGESPEC=$(grep "^#JDL_PACKAGE=" ${SCRIPT} | sed 's/#JDL_PACKAGE=//')
+  echo "Found PackagesSpec to be ${PACKAGESPEC}"
+
+
+   # Create temporary workdir to assemble files, and submit from there (or execute locally)
   cd "$(dirname "$0")"
   THIS_SCRIPT="$PWD/$(basename "$0")"
 
@@ -274,10 +291,6 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
 Executable = "${MY_BINDIR}/${MY_JOBNAMEDATE}.sh";
 Arguments = "${CONTINUE_WORKDIR:+"-c ${CONTINUE_WORKDIR}"} --local ${O2TAG:+--o2tag ${O2TAG}} --ttl ${JOBTTL} --label ${JOBLABEL:-label} ${MATTERMOSTHOOK:+--mattermost ${MATTERMOSTHOOK}} ${CONTROLSERVER:+--controlserver ${CONTROLSERVER}}";
 InputFile = "LF:${MY_JOBWORKDIR}/alien_jobscript.sh";
-Output = {
-  "logs*.zip@disk=2",
-  "AO2D.root@disk=1"
-};
 ${PRODSPLIT:+Split = ${QUOT}production:1-${PRODSPLIT}${QUOT};}
 OutputDir = "${MY_JOBWORKDIR}/${PRODSPLIT:+#alien_counter_03i#}";
 Requirements = member(other.GridPartitions,"${GRIDPARTITION:-multicore_8}");
@@ -285,6 +298,9 @@ CPUCores = "${CPUCORES}";
 MemorySize = "60GB";
 TTL=${JOBTTL};
 EOF
+  echo "Output = {"${OUTPUTSPEC:-\"logs*.zip@disk=1\",\"AO2D.root@disk=1\"}"};" >> "${MY_JOBNAMEDATE}.jdl"  # add output spec
+  echo "Packages = {"${PACKAGESPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add package spec
+
 # "output_arch.zip:output/*@disk=2",
 # "checkpoint*.tar@disk=2"
 
@@ -302,10 +318,10 @@ EOF
       [ ! "${CONTINUE_WORKDIR}" ] && echo "mkdir ${MY_JOBWORKDIR}" >> ${command_file}
       [ ! "${CONTINUE_WORKDIR}" ] && echo "mkdir ${MY_JOBWORKDIR}/output" >> ${command_file}
       echo "rm ${MY_BINDIR}/${MY_JOBNAMEDATE}.sh" >> ${command_file}    # remove current job script
-      echo "cp ${PWD}/${MY_JOBNAMEDATE}.jdl alien://${MY_JOBWORKDIR}/${MY_JOBNAMEDATE}.jdl" >> ${command_file}  # copy the jdl
-      echo "cp ${THIS_SCRIPT} alien://${MY_BINDIR}/${MY_JOBNAMEDATE}.sh" >> ${command_file}  # copy current job script to AliEn
-      [ ! "${CONTINUE_WORKDIR}" ] && echo "cp ${MY_JOBSCRIPT} alien://${MY_JOBWORKDIR}/alien_jobscript.sh" >> ${command_file}
-    ) &> alienlog.txt
+      echo "cp file:${PWD}/${MY_JOBNAMEDATE}.jdl alien://${MY_JOBWORKDIR}/${MY_JOBNAMEDATE}.jdl@DISK=1" >> ${command_file}  # copy the jdl
+      echo "cp file:${THIS_SCRIPT} alien://${MY_BINDIR}/${MY_JOBNAMEDATE}.sh@DISK=1" >> ${command_file}  # copy current job script to AliEn
+      [ ! "${CONTINUE_WORKDIR}" ] && echo "cp file:${MY_JOBSCRIPT} alien://${MY_JOBWORKDIR}/alien_jobscript.sh" >> ${command_file}
+    ) > alienlog.txt 2>&1
 
     pok "Submitting job \"${MY_JOBNAMEDATE}\" from $PWD"
     (
@@ -313,7 +329,7 @@ EOF
 
       # finally we do a single call to alien:
       alien.py < ${command_file}
-    ) &>> alienlog.txt
+    ) >> alienlog.txt 2>&1
 
     MY_JOBID=$( (grep 'Your new job ID is' alienlog.txt | grep -oE '[0-9]+' || true) | sort -n | tail -n1)
     if [[ $MY_JOBID ]]; then
@@ -321,8 +337,66 @@ EOF
     else
       per "Job submission failed: error log follows"
       cat alienlog.txt
+      exit 1
     fi
   fi
+
+
+  # wait here until all ALIEN jobs have returned
+  spin[3]="-"
+  spin[2]="/"
+  spin[1]="|"
+  spin[0]="\\"
+  JOBSTATUS="I"
+  if [ "{WAITFORALIEN}" ]; then
+    echo -n "Waiting for jobs to return ... Last status : ${spin[0]} ${JOBSTATUS}"
+  fi
+  counter=0
+  while [ "${WAITFORALIEN}" ]; do
+    # consider making this a "you call me when you are done with curl hook or something"
+    sleep 0.5
+    echo -ne "\b\b\b${spin[$((counter%4))]} ${JOBSTATUS}"
+    let counter=counter+1
+    if [ ! "${counter}" == "100" ]; then
+      continue
+    fi
+    let counter=0
+    JOBSTATUS=$(alien.py ps -j ${MY_JOBID} | awk '//{print $4}')
+    # echo -ne "Waiting for jobs to return; Last status ${JOBSTATUS}"
+    if [ "$JOBSTATUS" == "D" ]; then
+      echo "Job done"
+      WAITFORALIEN=""
+
+      if [ "${FETCHOUTPUT}" ]; then
+        SUBJOBIDS=""
+        while [ ! ${SUBJOBIDS} ]; do
+          SUBJOBIDS=($(alien.py ps --trace ${MY_JOBID} | awk '/Subjob submitted/' | sed 's/.*submitted: //' | tr '\n' ' '))
+          sleep 1
+        done
+        # TODO: make this happen in a single alien.py session and with parallel copying
+        echo "Fetching results"
+        for splitcounter in `seq 1 ${PRODSPLIT}`; do
+          # we still need to check if this particular subjob was successful
+          SUBJOBSTATUS=$(alien.py ps -j ${SUBJOBIDS[splitcounter-1]} | awk '//{print $4}')
+          if [ "$SUBJOBSTATUS" == "D" ]; then
+             SPLITOUTDIR=$(printf "%03d" ${splitcounter})
+             [ ! -f ${SPLITOUTDIR} ] && mkdir ${SPLITOUTDIR}
+             echo "Fetching result files for subjob ${splitcounter} into ${PWD}"
+	     CPCMD="alien.py cp ${MY_JOBWORKDIR}/${SPLITOUTDIR}/* file:./${SPLITOUTDIR}"
+	     eval "${CPCMD}" 2> /dev/null
+          else
+	     echo "Not fetching files for subjob ${splitcounter} since job code is ${SUBJOBSTATUS}"
+	  fi
+        done
+        wait
+      fi
+    fi
+    if [[ "${FOO:0:1}" == [EK] ]]; then
+      echo "Job error occured"
+      exit 1
+    fi
+  done
+  # get the job data products locally if requested
 
   exit 0
 fi  # <---- end if ALIEN_JOB_SUBMITTER
@@ -357,27 +431,26 @@ fi
 banner "Environment"
 env
 
+banner "Limits"
+ulimit -a
+
 banner "OS detection"
 lsb_release -a || true
 cat /etc/os-release || true
 cat /etc/redhat-release || true
 
-if [ ! "$O2_ROOT" ]; then
-  O2_PACKAGE_LATEST=`find /cvmfs/alice.cern.ch/el7-x86_64/Modules/modulefiles/O2 -name "*nightl*" -type f -printf "%f\n" | tail -n1`
-  banner "Loading O2 package $O2_PACKAGE_LATEST"
-  [ "${O2TAG}" ] && O2_PACKAGE_LATEST=${O2TAG}
-  eval "$(/cvmfs/alice.cern.ch/bin/alienv printenv O2::"$O2_PACKAGE_LATEST")"
-fi
-#if [ ! "$XJALIEN_ROOT" ]; then
-#  XJALIEN_LATEST=`find /cvmfs/alice.cern.ch/el7-x86_64/Modules/modulefiles/xjalienfs -type f -printf "%f\n" | tail -n1`
-#  banner "Loading XJALIEN package $XJALIEN_LATEST"
-#  eval "$(/cvmfs/alice.cern.ch/bin/alienv printenv xjalienfs::"$XJALIEN_LATEST")"
+# we load the asked package list (this should now be done by JDL)
+#if [ ! "$O2_ROOT" ]; then
+#  O2_PACKAGE_LATEST=`find /cvmfs/alice.cern.ch/el7-x86_64/Modules/modulefiles/O2 -name "*nightl*" -type f -printf "%f\n" | tail -n1`
+#  banner "Loading O2 package $O2_PACKAGE_LATEST"
+#  [ "${O2TAG}" ] && O2_PACKAGE_LATEST=${O2TAG}
+#  #eval "$(/cvmfs/alice.cern.ch/bin/alienv printenv O2::"$O2_PACKAGE_LATEST")"
 #fi
-if [ ! "$O2DPG_ROOT" ]; then
-  O2DPG_LATEST=`find /cvmfs/alice.cern.ch/el7-x86_64/Modules/modulefiles/O2DPG -type f -printf "%f\n" | tail -n1`
-  banner "Loading O2DPG package $O2DPG_LATEST"
-  eval "$(/cvmfs/alice.cern.ch/bin/alienv printenv O2DPG::"$O2DPG_LATEST")"
-fi
+#if [ ! "$O2DPG_ROOT" ]; then
+#  O2DPG_LATEST=`find /cvmfs/alice.cern.ch/el7-x86_64/Modules/modulefiles/O2DPG -type f -printf "%f\n" | tail -n1`
+#  banner "Loading O2DPG package $O2DPG_LATEST"
+#  #eval "$(/cvmfs/alice.cern.ch/bin/alienv printenv O2DPG::"$O2DPG_LATEST")"
+#fi
 
 banner "Running workflow"
 
@@ -395,7 +468,6 @@ if [ "${ONGRID}" = "1" ]; then
   ALIEN_JOB_OUTPUTDIR=$(grep "OutputDir" this_jdl.jdl | awk '//{print $3}' | sed 's/"//g' | sed 's/;//')
   ALIEN_DRIVER_SCRIPT=$0
 
-  #OutputDir = "/alice/cern.ch/user/a/aliperf/foo/MS3-20201118-094030"; 
   #notify_mattermost "ALIEN JOB OUTDIR IS ${ALIEN_JOB_OUTPUTDIR}" 
 
   export ALIEN_JOB_OUTPUTDIR
@@ -404,7 +476,7 @@ if [ "${ONGRID}" = "1" ]; then
 
   # ----------- FETCH PREVIOUS CHECKPOINT IN CASE WE CONTINUE A JOB ----
   if [ "${CONTINUE_WORKDIR}" ]; then
-    alien.py cp alien://${ALIEN_JOB_OUTPUTDIR}/checkpoint.tar .
+    alien.py cp alien://${ALIEN_JOB_OUTPUTDIR}/checkpoint.tar file:/.
     if [ -f checkpoint.tar ]; then
        tar -xf checkpoint.tar
        rm checkpoint.tar

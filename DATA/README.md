@@ -21,7 +21,7 @@ Another abstraction layer above the *workflows* are **topology descriptions**. T
 - The defaults (particularly also those set in the common environment files in the `common` folder) are tuned for running on a laptop / desktop.
 
 # Workflow requirements:
-- Workflows shall support 3 run modes selected via the `WORKFLOWMODE` env variable, the **dds** mode is mandatory:
+- Workflows shall support 3 run modes selected via the `WORKFLOWMODE` env variable, the **dds** mode and its ${WORKFLOWMODE_FILE} parameter are mandatory:
   - **run** (default): run the workflow
   - **print**: print the final workflow command to the console
   - **dds**: create a partial topology.
@@ -37,7 +37,7 @@ Another abstraction layer above the *workflows* are **topology descriptions**. T
   - `--infologger-severity $INFOLOGGER_SEVERITY` enables the infologger.
 
 # Configuring and selecting workflow in AliECS:
-There are 3 ways foreseenm to configure the *full topology* in AliECS: (currently only the manual XML option exists)
+There are 3 ways foreseen to configure the *full topology* in AliECS: (currently only the manual XML option exists)
 - **version of workflow repository**: In this mode, the following settings are configured in AliECS, and they uniquely identify a *full topology*. The *parser* will then create the final DDS XML file with the *full topology*:
   - A **commit hash** identifying a state of the `O2DPG` repository (this can also be a tag, and in the case of production workflows it is required to be a tag).
   - The path of a **description library file** (path relative to the DATA folder inside the `O2DPG` repository).
@@ -88,14 +88,18 @@ To set up such a workflow, a couple of points must be followed:
 - The `dataspec` of the proxies is configured in the same way as for the `readout-proxy` and the specs must be equal for corresponding input and output proxies.
 - The channels of input and output proxies (except for the *reco* `readout-proxy`) must be configured without address!
 - The output proxies must use the command line option `--proxy-channel-name [name]` with `name` being the configured channel name.
-- To run on the EPN, the *calib* input proxies must have the command line option `--network-interface ib0` (this ensures data is sent via InfiniBand not via Ethernet).
+- To run on the EPN, the *calib* input proxies of the aggregatornodes must have the command line option `--network-interface ib0` (this ensures data is sent via InfiniBand not via Ethernet). Note that this is only for the aggregator node, not for the normal processing part!
+
+Please note that for a calibration workflow the number of cores used by the workflow must be specified, and the memory limit is derrived from the number of cores (~4 GB per core, with some margin reserved for the system).
+If `SHMSIZE` is set for the workflow, it must also fit in this memory constraint. A rough guideline is 50% of the available memory. If it is not set, it defaults to 2 GB pre core.
+Please make to request a reasonable number of cores, since there are only 4 calibration nodes which are shared among all workflows.
 
 For an example, chek the calibration workflows [here](testing/examples)
 
-*NOTE* For reference, to run a workflow with calib aggregator on the EPN with AliECS, currently a node from the `online-calib` zone must be requested, by setting `odc_resources` to `[ {"zone":"online", "n":10}, {"zone":"online-calib", "n":1 } ]` (adjust the `10` to the number of required reconstruction nodes). This will be improved later and then this extra setting will not be needed anymore.
+*NOTE* For reference, to run a workflow with calib aggregator on the EPN with AliECS, currently a node from the `calib` zone must be requested, by setting `odc_resources` to `[ {"zone":"online", "n":10}, {"zone":"calib", "n":1 } ]` (adjust the `10` to the number of required reconstruction nodes). This will be improved later and then this extra setting will not be needed anymore.
 
 # The parser script:
-The **parser** is a simple python script that parses a *topology description* and generates the DDS XML file with the *full topology*. To do so, it runs all the DPL workflows with the `--dds` option and then uses the `odc-topo-epn` tool to merge the *partial topology*  into the final *full topology*.
+The **parser** is a simple python script that parses a *topology description* and generates the DDS XML file with the *full topology*. To do so, it runs all the DPL workflows with the `--dds ${WORKFLOWMODE_FILE}` option and then uses the `odc-topo-epn` tool to merge the *partial topology*  into the final *full topology*.
 The *parser* is steered by some command line options and by some environment variables (note that the env variables get also passed through to the workflows).
 - The *parser* needs a DataDistribution topology file. Example files are shipped with the parser in the `tools/datadistribution_workflows` folder for: just discarding the TF, store the TF to disk, forward the TF to DPL processing (what we need for a DPL workflow), and forward to processing while storing to disk in parallel.
 - *Parser* command line options:
@@ -115,7 +119,6 @@ DDWORKFLOW=tools/datadistribution_workflows/dd-processing.xml WORKFLOW_DETECTORS
   - `$RECO_NUM_NODES_OVERRIDE`: Overrides the number of nodes used for reconstruction (empty or 0 to disable)
   - `$DDMODE`: How to operate DataDistribution: **discard** (build TF and discard them), **disk** (build TF and store to disk), **processing** (build TF and run DPL workflow on TF data), **processing-disk** (both store TF to disk and run processing).
   - `$DDWORKFLOW`: (*alternative*): Explicit path to the XML file with the partial workflow for *DataDistribution*.
-  - `$GEN_TOPO_IGNORE_ERROR`: Ignore ERROR messages during workflow creation.
   - `$WORKFLOWMODE`: Can be set to print. In that case the parser will not create the DDS topology output, but the list of shell commands to start to run the workflows locally.
 - When run on the EPN farm for synchronous processing (indicated by the `$EPNSYNCMODE=1` variable), the *parser* will automaticall `module load` the modules specified in the *topology description*. Otherwise the user must load the respective O2 / QC version by himself.
 - The parser exports the env variable `$RECO_NUM_NODES_WORKFLOW` that contains on how many nodes the workflow will be running when running the workflow script. This can be used to tune the process multiplicities.
@@ -142,7 +145,7 @@ FILEWORKDIR=/home/epn/odc/files EPNSYNCMODE=1 DDWORKFLOW=tools/datadistribution_
 - Check out the [O2DPG](https://github.com/AliceO2Group/O2DPG) repository to your home folder on the EPN (`$HOME` in the following).
 - Copy the content of `O2DPG/DATA/testing/examples` (description library file `workflows.desc` and workflow script `example-workflow.sh`) to another place INSIDE the repository, usually under `testing/detectors/[DETECTOR]` or `testing/private/[USERNAME]`.
 - Edit the workflow script to your needs, adjust / rename the workflow in the description library file.
-  - See [here](#Topology-descriptions) for the syntax of the library file (in case it is not obvious), and make sure not to override the listed protected environment variables. The workflow script is just a bash script that starts a DPL workflow, which must have the `--dds` parameter in order to create a partial DDS topology.
+  - See [here](#Topology-descriptions) for the syntax of the library file (in case it is not obvious), and make sure not to override the listed protected environment variables. The workflow script is just a bash script that starts a DPL workflow, which must have the `--dds ${WORKFLOWMODE_FILE}` parameter in order to create a partial DDS topology.
   - Make sure that the workflow script fullfils the [requirements](#Workflow-requirements), particularly that it respects the requested environment variables.
   - Use `O2PDPSuite` for the modules to load to have the latest installed version, or `O2PDPSuite/[version]` to specify a version.
 - Create an empty folder in your `$HOME` on the EPN, in the following `$HOME/test`.
@@ -154,14 +157,12 @@ FILEWORKDIR=/home/epn/odc/files EPNSYNCMODE=1 DDWORKFLOW=tools/datadistribution_
   - If you want to specify the number of reconstruction nodes to use here, you can use `RECO_NUM_NODES_OVERRIDE`, otherwise the default from your description library file will be used (leave it empty or `=0`).
   - The `WORKFLOW_DETECTORS` and `WORKFLOW_PARAMETERS` options are optional, your workflow does not need to use them. They are mostly for more complex workflows, so you can ignore them for now`.
   - Leave `DDMODE=processing` in order to run a workflow.
-  - `GEN_TOPO_PARTITION` and `NHBPERTF` will be set by AliECS later automatically, no need to change them.
+  - `NHBPERTF` will be set by AliECS later automatically, no need to change them.
   - Change the output filename to a file somewhere in your `$HOME`, the default is `$HOME`/gen_topo_output.xml. This will be the file you have to enter in AliECS as topology.
 - Run `run.sh`
 - Put the output file (default is `$HOME/gen_topo_output.xml`) as EPN DDS topology in the AliECS GUI.
 
 When adapting your workflow, please try to follow the style of the existing workflows. The [testing/examples/example-workflow.sh](testing/examples/example-workflow.sh) should be a simple start, for a more complex example you can have a look at [testing/detectors/TPC/tpc-workflow.sh](testing/detectors/TPC/tpc-workflow.sh), and as a fulll complex example of a global workflow please look at [production/full-system-test/dpl-workflow_local.sh](production/full-system-test/dpl-workflow_local.sh)
-
-**Please note that currently when creating a workflow that contains QC, ERROR messages will be written to the console. The workflow creation scripts sees these error messages and then fails. These failures can be ignored using the `GEN_TOPO_IGNORE_ERROR=1` env variable, which is thus temporarily mandatory for all workflows containing QC.**
 
 For reference, the `run.sh` script internally uses the `parser` to create the XML file, it essentially sets some environment variables and then calls the *parser*  with all options set. So in principle, you can also use the *parser* directly to create the workflow as described [here](Creating-a-full-topology-DDS-XML-file-manually).
 
@@ -196,7 +197,6 @@ drohr-workflow: "O2PDPSuite" reco,10,10,"SHMSIZE=128000000000 testing/private/dr
 [drohr@epn245 test]$ cat run.sh
 #!/bin/bash
 
-export GEN_TOPO_PARTITION=test                                       # ECS Partition
 export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 
 # Use these settings to fetch the Workflow Repository using a hash / tag
@@ -216,7 +216,7 @@ export WORKFLOW_PARAMETERS=                                          # Additiona
 export RECO_NUM_NODES_OVERRIDE=0                                     # Override the number of EPN compute nodes to use (default is specified in description library file)
 export NHBPERTF=256                                                  # Number of HBF per TF
 
-/home/epn/pdp/gen_topo.sh > $HOME/gen_topo_output.xml
+/opt/alisw/el8/GenTopo/bin/gen_topo.sh > $HOME/gen_topo_output.xml
 [drohr@epn245 test]$ ./run.sh
 Loading ODC/0.36-1
   Loading requirement: BASE/1.0 GCC-Toolchain/v10.2.0-alice2-3 fmt/7.1.0-10 FairLogger/v1.9.1-7 zlib/v1.2.8-8 OpenSSL/v1.0.2o-9 libpng/v1.6.34-9 sqlite/v3.15.0-2 libffi/v3.2.1-2 FreeType/v2.10.1-8 Python/v3.6.10-12 Python-modules/1.0-16 boost/v1.75.0-13 ZeroMQ/v4.3.3-6 ofi/v1.7.1-8 asio/v1.19.1-2 asiofi/v0.5.1-2 DDS/3.5.16-5 FairMQ/v1.4.40-4
@@ -247,7 +247,6 @@ For reference, here is the creation of the XML for the full synchronous processi
 [drohr@epn245 test]$ cat run.sh
 #!/bin/bash
 
-export GEN_TOPO_PARTITION=test                                       # ECS Partition
 export DDMODE=processing                                             # DataDistribution mode - possible options: processing, disk, processing-disk, discard
 
 # Use these settings to fetch the Workflow Repository using a hash / tag
@@ -267,7 +266,7 @@ export WORKFLOW_PARAMETERS=EVENT_DISPLAY,CTF,GPU                     # Additiona
 export RECO_NUM_NODES_OVERRIDE=0                                     # Override the number of EPN compute nodes to use (default is specified in description library file)
 export NHBPERTF=256                                                  # Number of HBF per TF
 
-/home/epn/pdp/gen_topo.sh > $HOME/gen_topo_output.xml
+/opt/alisw/el8/GenTopo/bin/gen_topo.sh > $HOME/gen_topo_output.xml
 [drohr@epn245 test]$ ./run.sh
 Loading ODC/0.36-1
   Loading requirement: BASE/1.0 GCC-Toolchain/v10.2.0-alice2-3 fmt/7.1.0-10 FairLogger/v1.9.1-7 zlib/v1.2.8-8 OpenSSL/v1.0.2o-9 libpng/v1.6.34-9 sqlite/v3.15.0-2 libffi/v3.2.1-2 FreeType/v2.10.1-8 Python/v3.6.10-12 Python-modules/1.0-16 boost/v1.75.0-13 ZeroMQ/v4.3.3-6 ofi/v1.7.1-8 asio/v1.19.1-2 asiofi/v0.5.1-2 DDS/3.5.16-5 FairMQ/v1.4.40-4

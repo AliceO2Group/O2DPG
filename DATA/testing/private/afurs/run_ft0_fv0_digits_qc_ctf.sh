@@ -9,7 +9,6 @@ export GEN_TOPO_SOURCE=v1.3                                         # Git hash t
 # Use these settings to specify a path to the workflow repository in your home dir
 export GEN_TOPO_HASH=0                                               # Specify path to O2DataProcessing repository
 export GEN_TOPO_SOURCE=/home/afurs/O2DataProcessing            # Path to O2DataProcessing repository
-export GEN_TOPO_IGNORE_ERROR=1
 export GEN_TOPO_LIBRARY_FILE=testing/private/afurs/workflows.desc    # Topology description library file to load
 export GEN_TOPO_WORKFLOW_NAME=ft0-fv0-digits-qc-ctf                     # Name of workflow in topology description library
 export WORKFLOW_DETECTORS=FT0,FV0                                      # Optional parameter for the workflow: Detectors to run reconstruction for (comma-separated list)
@@ -25,7 +24,7 @@ export MULTIPLICITY_FACTOR_REST=1                                    # Factor to
 
 export OUTPUT_FILE_NAME=$HOME/topologies/ft0-fv0-digits-qc-ctf.xml
 
-/home/epn/pdp/gen_topo.sh > $OUTPUT_FILE_NAME
+/opt/alisw/el8/GenTopo/bin/gen_topo.sh > $OUTPUT_FILE_NAME
 if [ $? == 0 ]; then
   echo Generated XML topology $OUTPUT_FILE_NAME
 fi

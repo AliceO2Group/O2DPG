@@ -3,11 +3,8 @@
 source common/setenv.sh
 
 SEVERITY=WARNING
-ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
-ARGS_ALL+=" --infologger-severity $SEVERITY"
+source common/getCommonArgs.sh
 if [ -z $CTF_DIR ];                  then CTF_DIR=$FILEWORKDIR; fi        # Directory where to store dictionary files
-#ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock"
-ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
 CTF_DICT="--ctf-dict $FILEWORKDIR/ctf_dictionary.root"
 NTHREADS=2
 # Output directory for the CTF, to write to the current dir., remove `--output-dir  $CTFOUT` from o2-ctf-writer-workflow or set to `CTFOUT=\"""\"`
@@ -23,4 +20,4 @@ o2-dpl-raw-proxy ${ARGS_ALL} --readout-proxy "${IN_CHANNEL}" --dataspec "${PROXY
 | o2-fdd-entropy-encoder-workflow ${ARGS_ALL} --configKeyValues "$ARGS_ALL_CONFIG;" ${CTF_DICT} \
 | o2-qc ${ARGS_ALL} --local --host epn --config json://${MYDIR}/fdd-digits-ds.json \
 | o2-ctf-writer-workflow ${ARGS_ALL} ${ARGS_CTF} --configKeyValues "$ARGS_ALL_CONFIG;" --onlyDet FDD --output-dir $CTF_DIR --ctf-dict-dir $FILEWORKDIR --output-type ctf \
-| o2-dpl-run $ARGS_ALL $GLOBALDPLOPT --dds # option instead iof run to export DDS xml file
+| o2-dpl-run $ARGS_ALL $GLOBALDPLOPT --dds ${WORKFLOWMODE_FILE} # option instead iof run to export DDS xml file

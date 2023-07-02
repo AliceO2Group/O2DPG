@@ -3,7 +3,7 @@
 // Example of an implementation of a simple user generator
 // that injects particles at wish according to predefined setting
 // which are defined by configuration strings
-// 
+//
 //
 //   usage: o2sim -g external --configKeyValues 'GeneratorExternal.fileName=user_generator.C;GeneratorExternal.funcName=user_generator("one_proton_and_one_photon")'
 
@@ -13,13 +13,14 @@ using namespace o2::eventgen;
 
 class user_generator_class : public Generator
 {
-public:
-  user_generator_class() { };
+ public:
+  user_generator_class(){};
   ~user_generator_class() = default;
   void selectConfiguration(std::string val) { mSelectedConfiguration = val; };
 
   // at init we check that the selected configuration is known
-  bool Init() override {
+  bool Init() override
+  {
     Generator::Init();
     if (std::find(mKnownConfigurations.begin(), mKnownConfigurations.end(), mSelectedConfiguration) != mKnownConfigurations.end()) {
       std::cout << " --- user_generator initialised with configuration: " << mSelectedConfiguration << std::endl;
@@ -31,10 +32,11 @@ public:
 
   // it generatrEvent we do nothing
   bool generateEvent() override { return true; };
-  
+
   // at importParticles we add particles to the output particle vector
   // according to the selected configuration
-  bool importParticles() override {
+  bool importParticles() override
+  {
     TLorentzVector lv;
     TParticle particle;
     particle.SetFirstMother(-1);
@@ -54,6 +56,11 @@ public:
       particle.SetPdgCode(22);
       particle.SetMomentum(lv);
       mParticles.push_back(particle);
+      // this does the correct encoding of status code and transport flag
+      // since the status code is set to 1 above and because it is the default criterion for when
+      // a particle should be tracked, it would be sufficient to do
+      // o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back(), particle.GetStatusCode() == 1);
       return true;
     }
     if (mSelectedConfiguration.compare("two_protons_and_two_photons") == 0) {
@@ -62,21 +69,30 @@ public:
       particle.SetPdgCode(2212);
       particle.SetMomentum(lv);
       mParticles.push_back(particle);
+      // see comments in previous branch
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       // another proton
       lv.SetPtEtaPhiM(10., 0.5, -M_PI, 0.93827200);
       particle.SetPdgCode(2212);
       particle.SetMomentum(lv);
       mParticles.push_back(particle);
+      // see comments in previous branch
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       // one photon
       lv.SetPtEtaPhiM(10., -0.5, M_PI, 0.);
       particle.SetPdgCode(22);
       particle.SetMomentum(lv);
       mParticles.push_back(particle);
+      // see comments in previous branch
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       // another photon
       lv.SetPtEtaPhiM(10., -0.5, -M_PI, 0.);
       particle.SetPdgCode(22);
       particle.SetMomentum(lv);
       mParticles.push_back(particle);
+      // see comments in previous branch
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
+      
       return true;
     }
 
@@ -84,15 +100,13 @@ public:
     return false;
   };
 
-private:
-
+ private:
   const std::vector<std::string> mKnownConfigurations = {"one_proton_and_one_photon", "two_protons_and_two_photons"};
   std::string mSelectedConfiguration = "";
-  
 };
 
 FairGenerator*
-user_generator(std::string configuration = "empty")
+  user_generator(std::string configuration = "empty")
 {
   auto gen = new user_generator_class;
   gen->selectConfiguration(configuration);

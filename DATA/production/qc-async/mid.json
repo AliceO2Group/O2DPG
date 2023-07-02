@@ -23,8 +23,9 @@
       }
     },
     "tasks": {
-      "QcTaskMIDDigits": {
+      "MIDDigits": {
         "active": "true",
+        "taskName": "Digits",
         "className": "o2::quality_control_modules::mid::DigitsQcTask",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -32,8 +33,92 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "digits:MID/DATA/0;digitrofs:MID/DATAROF/0;calib:MID/DATA/1;calibrofs:MID/DATAROF/1;fet:MID/DATA/2;fetrofs:MID/DATAROF/2"
+          "query": "digits:MID/DATA;digits_rof:MID/DATAROF",
+          "query_comment" : "100% sampling"
         }
+      },
+      "MIDClusters": {
+        "active": "true",
+        "taskName": "Clusters",
+        "className": "o2::quality_control_modules::mid::ClustQcTask",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS",
+          "query_comment" : "100% sampling"
+        }
+      },
+      "MIDTracks": {
+        "active": "true",
+        "taskName": "Tracks",
+        "className": "o2::quality_control_modules::mid::TracksQcTask",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS",
+          "query_comment" : "100% sampling"
+        }
+      }
+    },
+    "checks": {
+      "MIDDigits": {
+        "active": "false",
+        "checkName": "Digits",
+        "className": "o2::quality_control_modules::mid::DigitsQcCheck",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "policy": "OnAny",
+        "checkParameters": {
+          "MeanMultThreshold": "100."
+        },
+        "dataSource": [
+          {
+            "type": "Task",
+            "name": "MIDDigits",
+            "MOs": [
+              "mMultHitMT11B",
+              "mMultHitMT12B",
+              "mMultHitMT21B",
+              "mMultHitMT22B"
+            ]
+          }
+        ]
+      },
+      "MIDClusters": {
+        "active": "false",
+        "checkName": "Clusters",
+        "className": "o2::quality_control_modules::mid::ClustQcCheck",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "policy": "OnAny",
+        "dataSource": [
+          {
+            "type": "Task",
+            "name": "MIDClusters",
+            "MOs": []
+          }
+        ]
+      },
+      "MIDTracks": {
+        "active": "false",
+        "checkName": "Tracks",
+        "className": "o2::quality_control_modules::mid::TracksQcCheck",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "policy": "OnAny",
+        "dataSource": [
+          {
+            "type": "Task",
+            "name": "MIDTracks",
+            "MOs": []
+          }
+        ]
       }
     }
   },

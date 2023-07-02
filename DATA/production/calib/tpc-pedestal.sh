@@ -2,20 +2,8 @@
 
 source common/setenv.sh
 
-ARGS_ALL="--session default --severity $SEVERITY --shm-segment-id $NUMAID --shm-segment-size $SHMSIZE"
-if [ $EPNSYNCMODE == 1 ]; then
-  ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
-  #ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock"
-  ARGS_ALL+=" --monitoring-backend no-op://"
-else
-  ARGS_ALL+=" --monitoring-backend no-op://"
-fi
-if [ $SHMTHROW == 0 ]; then
-  ARGS_ALL+=" --shm-throw-bad-alloc 0"
-fi
-if [ $NORATELOG == 1 ]; then
-  ARGS_ALL+=" --fairmq-rate-logging 0"
-fi
+source common/getCommonArgs.sh
+
 if [ $NUMAGPUIDS != 0 ]; then
   ARGS_ALL+=" --child-driver 'numactl --membind $NUMAID --cpunodebind $NUMAID'"
 fi
@@ -39,6 +27,7 @@ CALIB_CONFIG="TPCCalibPedestal.LastTimeBin=12000"
 EXTRA_CONFIG=" "
 CCDB_PATH="--ccdb-path http://ccdb-test.cern.ch:8080"
 EXTRA_CONFIG=" --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes 36"
+#EXTRA_CONFIG=" --publish-after-tfs 400 --max-events 30 --lanes 36"
 HOST=localhost
 QC_CONFIG="consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
 
@@ -51,4 +40,5 @@ o2-dpl-raw-proxy $ARGS_ALL \
     $EXTRA_CONFIG \
     | o2-calibration-ccdb-populator-workflow $ARGS_ALL \
     $CCDB_PATH \
-    | o2-dpl-run $ARGS_ALL --dds
+    | o2-qc $ARGS_ALL --config $QC_CONFIG --local --host $HOST \
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}

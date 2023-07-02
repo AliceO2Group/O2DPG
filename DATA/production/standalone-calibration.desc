@@ -1,12 +1,28 @@
-ITS-noise-calibration: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 production/calib/its-noise-processing.sh" calib,20,"NTHREADS=32 production/calib/its-noise-aggregator.sh"
+FT0-time-offset-calibration: "O2PDPSuite" reco,5,5,"production/calib/ft0-timeoffset-processing.sh" calib,1,"production/calib/ft0-timeoffset-aggregator.sh"
+
+ITS-noise-calibration: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 production/calib/its-noise-processing.sh" calib,20,"NTHREADSACC=4 NTHREADSNORM=16 NITSACCPIPELINES=16 production/calib/its-noise-aggregator.sh"
 
 ITS-noise-calibration-clusters: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 USECLUSTERS=1 production/calib/its-noise-processing.sh" calib,20,"USECLUSTERS=1 NTHREADS=32 production/calib/its-noise-aggregator.sh"
 
-ITS-thr-calibration: "O2PDPSuite" reco,40,40,"production/calib/its-threshold-processing.sh" calib,40,"production/calib/its-threshold-aggregator.sh"
+ITS-thr-tuning: "O2PDPSuite" reco,40,40,"RUNTYPE=tuning production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE=tuning production/calib/its-threshold-aggregator.sh"
 
-TOF-diagnostic-calibration: "O2PDPSuite" reco,10,10,"SHMSIZE=64000000000 production/calib/tof-standalone-reco.sh" calib,4,"production/calib/tof-diagn-aggregator.sh" 
+ITS-thr-tuning-bb: "O2PDPSuite" reco,40,40,"RUNTYPE=tuningbb production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE=tuningbb production/calib/its-threshold-aggregator.sh"
 
-TOF-time-calibration: "O2PDPSuite" reco,10,10,"SHMSIZE=64000000000 production/calib/tof-standalone-cosmic-reco-time-calib.sh" calib,4,"production/calib/tof-time-calib-aggregator.sh" 
+ITS-thr-short: "O2PDPSuite" reco,40,40,"RUNTYPE=thrshort production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE=thrshort production/calib/its-threshold-aggregator.sh"
+
+ITS-thr-full: "O2PDPSuite" reco,80,80,"RUNTYPE=thrfull production/calib/its-threshold-processing.sh" calib,80,"RUNTYPE=thrfull production/calib/its-threshold-aggregator.sh"
+
+ITS-thr-digital: "O2PDPSuite" reco,40,40,"RUNTYPE=digital production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE=digital production/calib/its-threshold-aggregator.sh"
+
+ITS-thr-pulselength: "O2PDPSuite" reco,40,40,"RUNTYPE=pulselength production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE=pulselength production/calib/its-threshold-aggregator.sh"
+
+ITS-tot-1row: "O2PDPSuite" reco,40,40,"RUNTYPE=tot1row production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE=tot1row production/calib/its-threshold-aggregator.sh"
+
+ITS-tot-fullfast: "O2PDPSuite" reco,40,40,"RUNTYPE=totfullfast production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE=totfullfast production/calib/its-threshold-aggregator.sh"
+
+TOF-diagnostic-calibration: "O2PDPSuite" reco,10,10,"SHMSIZE=120376524800 production/calib/tof-standalone-reco.sh" calib,4,"production/calib/tof-diagn-aggregator.sh"
+
+TOF-time-calibration: "O2PDPSuite" reco,10,10,"SHMSIZE=120376524800 production/calib/tof-standalone-cosmic-reco-time-calib.sh" calib,4,"production/calib/tof-time-calib-aggregator.sh"
 
 TPC-pulser: "O2PDPSuite" reco,1,1," production/calib/tpc-pulser.sh"
 
@@ -14,12 +30,18 @@ TPC-pulser-long: "O2PDPSuite" reco,1,1," production/calib/tpc-pulser-long.sh"
 
 TPC-pedestal: "O2PDPSuite" reco,1,1," production/calib/tpc-pedestal.sh"
 
-TPC-laser: "O2PDPSuite" reco,1,1,"SHMSIZE=$((128 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) STMEMSIZE=$(( 5 << 30 ))  production/calib/tpc-laser.sh"
+TPC-laser: "O2PDPSuite" reco,1,1,"SHMSIZE=$((112 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) HOSTMEMSIZE=$(( 5 << 30 ))  production/calib/tpc-laser.sh"
+
+TPC-laser-multi: "O2PDPSuite" reco,10,10,"SHMSIZE=$((64 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) HOSTMEMSIZE=$(( 5 << 30 ))  production/calib/tpc-laser-filter.sh" calib,1,"production/calib/tpc-laser-aggregator.sh"
 
 MFT-noise-calibration: "O2PDPSuite" reco,20,20,"production/calib/mft-noise-processing.sh" calib,20,"production/calib/mft-noise-aggregator.sh"
 
-MCH-badchannel-calibration: "O2PDPSuite" reco,5,5,"production/calib/mch-badchannel-processing.sh" calib,1,"production/calib/mch-badchannel-aggregator.sh"
+MCH-badchannel-calibration: "O2PDPSuite" reco,5,5,"production/calib/mch-badchannel-processing.sh" calib,20,"production/calib/mch-badchannel-aggregator.sh"
+
+MID-calib-workflow: "O2PDPSuite" reco,1,1,"production/calib/mid-badchannels.sh"
 
 PHS-pedestal-calibration: "O2PDPSuite" reco,1,1," production/calib/phs-pedestal.sh"
 
 PHS-led-calibration: "O2PDPSuite" reco,1,1," production/calib/phs-led.sh"
+
+HMP-pedestals: "O2PDPSuite" reco,1,1," production/calib/hmp-pedestals-processing.sh"

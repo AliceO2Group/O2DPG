@@ -16,17 +16,17 @@
             "periodName": "SimChallenge"
        },
         "monitoring": {
-          "url": "infologger:///debug?qc"
+          "url": "no-op://"
         },
         "consul": {
-          "url": "ccdb-test.cern.ch:8080"
+          "url": ""
         },
         "conditionDB": {
           "url":  "ccdb-test.cern.ch:8080"
         }
       },
       "tasks": {
-        "RecPointsQcTask": {
+        "RecPoints": {
           "active": "true",
           "className": "o2::quality_control_modules::ft0::RecPointsQcTask",
           "moduleName": "QcFT0",

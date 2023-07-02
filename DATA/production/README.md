@@ -1,7 +1,7 @@
 # Production workflows
 This folder stores the production workflows for global runs, in the description library file `production.desc`.
 There are currently 2 workflows:
-- `synchronous-workflow`: the default workflow using 8 GPUs and 2 NUMA domains. (Note that this workflow currently does not terminate correctly: https://alice.its.cern.ch/jira/browse/O2-2375)
+- `synchronous-workflow`: the default workflow using 8 GPUs and 2 NUMA domains.
 - `synchronous-workflow-1numa`: workfloy using only 4 GPUs without NUMA pinning. (Fully sufficient for pp)
 
 Standalone calibration workflows are contained in `standalone-calibration.desc`.
@@ -10,7 +10,7 @@ If processing is to be disabled, please use the `no-processing` workflow in `no-
 
 # Configuration options
 You can use the following options to change the workflow behavior:
-- `DDMODE` (default `processing`) : Must be `processing` (synchronous processing) or `processing-disk` (synchronous processing + storing of raw time frames to disk, not that this is the raw time frame not the CTF!). The `DDMODE` `discard` and `disk` are not compatible with the synchronous processing workflow, you must use the `no-processing.desc` workflow instead!.
+- `DDMODE` (default `processing`) : Must be `processing` (synchronous processing) or `processing-disk` (synchronous processing + storing of raw time frames to disk, note that this is the raw time frame not the CTF!). The `DDMODE` `discard` and `disk` are not compatible with the synchronous processing workflow, you must use the `no-processing.desc` workflow instead!.
 - `WORKFLOW_DETECTORS` (default `ALL`) : Comma-separated list of detectors for which the processing is enabled. If these are less detectors than participating in the run, data of the other detectors is ignored. If these are more detectors than participating in the run, the processes for the additional detectors will be started but will not do anything.
 - `WORKFLOW_DETECTORS_QC` (default `ALL`) : Comma-separated list of detectors for which to run QC, can be a subset of `WORKFLOW_DETECTORS` (for standalone detectors QC) and `WORKFLOW_DETECTORS_MATCHING` (for matching/vertexing QC). If a detector (matching/vertexing step) is not listed in `WORKFLOW_DETECTORS` (`WORKFLOW_DETECTORS_MATCHING`), the QC is automatically disabled for that detector. Only active if the `WORKFLOW_PARAMETER=QC` is set.
 - `WORKFLOW_DETECTORS_CALIB` (default `ALL`) : Comma-separated list of detectors for which to run calibration, can be a subset of `WORKFLOW_DETECTORS`. If a detector is not listed in `WORKFLOW_DETECTORS`, the calibration is automatically disabled for that detector. Only active if the `WORKFLOW_PARAMETER=CALIB` is set.
@@ -38,7 +38,8 @@ Most of these settings are configurable in the AliECS GUI. But some of the uncom
 - Factors can be provided externally to scale the multiplicity of processes further. All these factors are multiplied.
   - One factor can be provided based on the type of the processes: raw decoder (`MULTIPLICITY_FACTOR_RAWDECODERS`), CTF encoder (`MULTIPLICITY_FACTOR_CTFENCODERS`), or other reconstruction process (`MULTIPLICITY_FACTOR_REST`)
   - One factor can be provided per detector via `MULTIPLICITY_FACTOR_DETECTOR_[DET]` using the 3 character detector representation, or `MATCH` for the global matching and vertexing workflows.
-- The multiplicity of an individual process can be overridden externally (this is an override, no scaling factor) by using `MULTIPLICITY_FACTOR_PROCESS_[PROCESS_NAME]`. In the process name, dashes `-` must be replaced by underscores `_`.
+  - One factor can be provided per process via `MULTIPLICITY_FACTOR_PROCESS_[PROCESS_NAME]`. In the process name, dashes `-` must be replaced by underscores `_`.
+- The multiplicity of an individual process can be overridden externally (this is an override, no scaling factor) by using `MULTIPLICITY_PROCESS_[PROCESS_NAME]`. In the process name, dashes `-` must be replaced by underscores `_`.
 - For example, creating the workflow with `MULTIPLICITY_FACTOR_RAWDECODERS=2 MULTIPLICITY_FACTOR_DETECTOR_ITS=3 MULTIPLICITY_FACTOR_PROCESS_mft_stf_decoder=5` will scale the number of ITS raw decoders by 6, of other ITS processes by 3, of other raw decoders by 2, and will run exactly 5 `mft-stf-decoder` processes.
 
 # Additional custom control variables
@@ -46,13 +47,15 @@ For user modification of the workflow settings, the folloing *EXTRA* environment
 - `ARGS_ALL_EXTRA` : Extra command line options added to all workflows
 - `ALL_EXTRA_CONFIG` : Extra config key values added to all workflows
 - `GPU_EXTRA_CONFIG` : Extra options added to the configKeyValues of the GPU workflow
-- `ARGS_EXTRA_PROCESS_[WORKFLOW_NAME]` : Extra command line arguments for the workflow binary `WORKFLOW_NAME`. Dashes `-` must be replaced by underscores `_` in the name! E.g. `ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="--output-type clusters"`
-- `CONFIG_EXTRA_PROCESS_[WORKFLOW_NAME]` : Extra `--configKeyValues` arguments for the workflow binary `WORKFLOW_NAME`. Dashes `-` must be replaced by underscores `_` in the name! E.g. `CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow="GPU_proc.debugLevel=1;GPU_proc.ompKernels=0;"`
+- `ARGS_EXTRA_PROCESS_[WORKFLOW_NAME]` : Extra command line arguments for the workflow binary `WORKFLOW_NAME`. Dashes `-` must be replaced by underscores `_` in the name! E.g. `ARGS_EXTRA_PROCESS_o2_tof_reco_workflow='--output-type clusters'`
+- `CONFIG_EXTRA_PROCESS_[WORKFLOW_NAME]` : Extra `--configKeyValues` arguments for the workflow binary `WORKFLOW_NAME`. Dashes `-` must be replaced by underscores `_` in the name! E.g. `CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow='GPU_proc.debugLevel=1;GPU_proc.ompKernels=0;'`
+
+**IMPORTANT:** When providing additional environment variables please always use single quotes `'` instead of double quotes `"`, because otherwise there can be issues with whitespaces. E.g. `ARGS_EXTRA_PROCESS_o2_eve_display='--filter-time-min 0 --filter-time-max 120'` does work while `ARGS_EXTRA_PROCESS_o2_eve_display="--filter-time-min 0 --filter-time-max 120"` does not.
 
 In case the CTF dictionaries were created from the data drastically different from the one being compressed, the default memory allocation for the CTF buffer might be insufficient. One can apply scaling factor to the buffer size estimate (default=1.5) of particular detector by defining variable e.g. `TPC_ENC_MEMFACT=3.5`
 
 # File input for ctf-reader / raw-tf-reader
-- The variable `$INPUT_FILE_LIST` can be a comma-seperated list of file, or a file with a file-list of CTFs/raw TFs.
+- The variable `$INPUT_FILE_LIST` can be a comma-seperated list of files, or a file with a file-list of CTFs/raw TFs.
 - The variable `$INPUT_FILE_COPY_CMD` can provide a custom copy command (default is to fetch the files from EOS).
 
 # Remarks on QC

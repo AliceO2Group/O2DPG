@@ -5,7 +5,7 @@ source /home/mfasel/alice/O2DataProcessing/common/setenv.sh
 PROXY_INSPEC="A:EMC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
 NCPU=20 #$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
-ARGS_ALL="-b --session default --shm-segment-size $SHMSIZE"
+source common/getCommonArgs.sh
 #HOST='$(hostname -s)-ib'
 HOST=epn
 
@@ -52,12 +52,11 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --infologger-severity warning \
     | o2-ctf-writer-workflow $ARGS_ALL \
     --configKeyValues "${CONFKEYVAL}" \
-    --no-grp \
     --onlyDet $WORKFLOW_DETECTORS \
     --ctf-dict "${CTF_DICT}" \
     --output-dir $CTF_DIR \
-    --meta-output-dir ${CTF_METAFILES_DIR} \
+    --meta-output-dir ${EPN2EOS_METAFILES_DIR} \
     --min-file-size "${CTF_MINSIZE}" \
     --max-ctf-per-file "${CTF_MAX_PER_FILE}" \
-    | o2-dpl-run $ARGS_ALL --dds
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
     

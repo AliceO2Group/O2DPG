@@ -4,15 +4,7 @@ source common/setenv.sh
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Set general arguments
-ARGS_ALL="--session default --severity $SEVERITY --shm-segment-size $SHMSIZE $ARGS_ALL_EXTRA"
-ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
-ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 60"
-if [ $SHMTHROW == 0 ]; then
-  ARGS_ALL+=" --shm-throw-bad-alloc 0"
-fi
-if [ $NORATELOG == 1 ]; then
-  ARGS_ALL+=" --fairmq-rate-logging 0"
-fi
+source common/getCommonArgs.sh
 ARGS_ALL_CONFIG="keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;$ALL_EXTRA_CONFIG"
 
 PROXY_INSPEC="calclus:TOF/INFOCALCLUS/0;cosmics:TOF/INFOCOSMICS/0;trkcos:TOF/INFOTRACKCOS/0;trksiz:TOF/INFOTRACKSIZE/0;eos:***/INFORMATION"
@@ -27,6 +19,6 @@ if [ $WORKFLOWMODE == "print" ]; then
   echo $WORKFLOW | sed "s/| */|\n/g"
 else
   # Execute the command we have assembled
-  WORKFLOW+=" --$WORKFLOWMODE"
+  WORKFLOW+=" --$WORKFLOWMODE ${WORKFLOWMODE_FILE}"
   eval $WORKFLOW
 fi

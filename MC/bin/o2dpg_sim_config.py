@@ -22,7 +22,6 @@ def create_sim_config(args):
        add(config, {"MFTAlpideParam.roFrameLengthInBC" : 198})
        if 302000 <= int(args.run) and int(args.run) < 309999:
            add(config, {"ITSAlpideParam.roFrameLengthInBC" : 198})
-
        # ITS reco settings
        add(config, {"ITSVertexerParam.phiCut" : 0.5,
                     "ITSVertexerParam.clusterContributorsCut" : 3,
@@ -53,15 +52,17 @@ def create_sim_config(args):
           # specific tunes for high pp
           # run range taken from https://twiki.cern.ch/twiki/bin/viewauth/ALICE/O2DPGMCSamplingSchema
           # taken from JIRA https://alice.its.cern.ch/jira/browse/O2-2691
-          add(config, {"pvertexer.dbscanDeltaT" : 7,
+          # remove extra errors on time margin for tracks and ITS clusters
+          add(config, {"pvertexer.timeMarginTrackTime" : 0.,
+                       "pvertexer.dbscanDeltaT" : 7,
                        "pvertexer.maxChi2TZDebris": 50,
                        "pvertexer.maxMultRatDebris": 1.,
                        "pvertexer.dbscanAdaptCoef" : 20,
                        "pvertexer.maxVerticesPerCluster" : 20,
                        "pvertexer.dbscanMaxDist2" : 36})
-
        else:
           # generic pp
+          # remove extra errors on time margin for tracks and ITS clusters
           add(config, {"pvertexer.acceptableScale2" : 9,
                        "pvertexer.dbscanMaxDist2" : 36,
                        "pvertexer.dbscanDeltaT" : 24,
@@ -73,5 +74,17 @@ def create_sim_config(args):
     if args.mft_reco_full == True:
         add(config, {"MFTTracking.forceZeroField" : 0,
                      "MFTTracking.LTFclsRCut" : 0.0100})
+
+    # Forward matching settings
+    if args.fwdmatching_4_param == True:
+        add(config, {"FwdMatching.matchFcn" : "matchsXYPhiTanl"})
+    if args.fwdmatching_cut_4_param == True:
+        add(config, {"FwdMatching.cutFcn" : "cut3SigmaXYAngles"})
+
+    # deal with larger combinatorics
+    if args.col == "PbPb" or (args.embedding and args.colBkg == "PbPb"):
+        add(config, {"ITSCATrackerParam.trackletsPerClusterLimit": 20,
+                     "ITSCATrackerParam.cellsPerClusterLimit": 20,
+                     "ITSVertexerParam.lowMultBeamDistCut": "0."})
 
     return config
