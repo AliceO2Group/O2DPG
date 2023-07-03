@@ -258,6 +258,9 @@ if [[ -z ${CALIBDATASPEC_CALO_TF:-} ]]; then
   if [[ $CALIB_EMC_BADCHANNELCALIB == 1 ]] || [[ $CALIB_EMC_TIMECALIB == 1 ]]; then
     add_semicolon_separated CALIBDATASPEC_CALO_TF "cellsEMC:EMC/CELLS/0"
     add_semicolon_separated CALIBDATASPEC_CALO_TF "cellsTrgREMC:EMC/CELLSTRGR/0"
+    if has_detector CTP; then
+      add_semicolon_separated CALIBDATASPEC_CALO_TF "ctpdigi:CTP/DIGITS/0"
+    fi
   fi
 
   # PHS
