@@ -60,14 +60,21 @@ QC_CONFIG="consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qc
 
 max_events=300
 publish_after=440
-
+min_tracks=0
+num_lanes=36
 
 if [[ ! -z ${TPC_CALIB_MAX_EVENTS:-} ]]; then
     max_events=${TPC_CALIB_MAX_EVENTS}
 fi
+if [[ ! -z ${TPC_CALIB_MIN_TRACKS:-} ]]; then
+    min_tracks=${TPC_CALIB_MIN_TRACKS}
+fi
 
 if [[ ! -z ${TPC_CALIB_PUBLISH_AFTER:-} ]]; then
     publish_after=${TPC_CALIB_PUBLISH_AFTER}
+fi
+if [[ ! -z ${TPC_CALIB_LANES_PAD_RAW:-} ]]; then
+    num_lanes=${TPC_CALIB_LANES_PAD_RAW}
 fi
 
 
@@ -96,10 +103,10 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --condition-remap "file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPMagField" \
     --configKeyValues "$ARGS_ALL_CONFIG;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1" \
     | o2-tpc-laser-track-filter $ARGS_ALL \
-    | o2-tpc-calib-laser-tracks  $ARGS_ALL --use-filtered-tracks --only-publish-on-eos\
+    | o2-tpc-calib-laser-tracks  $ARGS_ALL --use-filtered-tracks --only-publish-on-eos --min-tfs=${min_tracks}\
     | o2-tpc-calib-pad-raw $ARGS_ALL \
     --configKeyValues "TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=502;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null" \
-    --lanes 36 \
+    --lanes ${num_lanes} \
     --calib-type ce \
     --publish-after-tfs ${publish_after} \
     --max-events ${max_events} \
