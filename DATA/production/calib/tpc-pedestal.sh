@@ -26,8 +26,7 @@ fi
 CALIB_CONFIG="TPCCalibPedestal.LastTimeBin=12000"
 EXTRA_CONFIG=" "
 CCDB_PATH="--ccdb-path http://o2-ccdb.internal"
-CCDB_PATH="--ccdb-path http://ccdb-test.cern.ch:8080"
-#EXTRA_CONFIG=" --publish-after-tfs 400 --max-events 30 --lanes 36"
+EXTRA_CONFIG=" --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes 36"
 HOST=localhost
 QC_CONFIG="consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
 
