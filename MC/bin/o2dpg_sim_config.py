@@ -22,7 +22,6 @@ def create_sim_config(args):
        add(config, {"MFTAlpideParam.roFrameLengthInBC" : 198})
        if 302000 <= int(args.run) and int(args.run) < 309999:
            add(config, {"ITSAlpideParam.roFrameLengthInBC" : 198})
-
        # ITS reco settings
        add(config, {"ITSVertexerParam.phiCut" : 0.5,
                     "ITSVertexerParam.clusterContributorsCut" : 3,
@@ -75,5 +74,17 @@ def create_sim_config(args):
     if args.mft_reco_full == True:
         add(config, {"MFTTracking.forceZeroField" : 0,
                      "MFTTracking.LTFclsRCut" : 0.0100})
+
+    # Forward matching settings
+    if args.fwdmatching_4_param == True:
+        add(config, {"FwdMatching.matchFcn" : "matchsXYPhiTanl"})
+    if args.fwdmatching_cut_4_param == True:
+        add(config, {"FwdMatching.cutFcn" : "cut3SigmaXYAngles"})
+
+    # deal with larger combinatorics
+    if args.col == "PbPb" or (args.embedding and args.colBkg == "PbPb"):
+        add(config, {"ITSCATrackerParam.trackletsPerClusterLimit": 20,
+                     "ITSCATrackerParam.cellsPerClusterLimit": 20,
+                     "ITSVertexerParam.lowMultBeamDistCut": "0."})
 
     return config

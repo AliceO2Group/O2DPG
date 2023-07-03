@@ -16,15 +16,16 @@
         "url": "influxdb-unix:///tmp/telegraf.sock"
       },
       "consul": {
-        "url": "http://ali-consul.cern.ch:8500"
+        "url": ""
       },
       "conditionDB": {
         "url": "http://localhost:8084"
       }
     },
     "tasks": {
-      "ClusterTask": {
+      "PHSClusters": {
         "active": "true",
+        "taskName": "Clusters",
         "className": "o2::quality_control_modules::phos::ClusterQcTask",
         "moduleName": "QcPHOS",
         "detectorName": "PHS",

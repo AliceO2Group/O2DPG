@@ -119,7 +119,6 @@ DDWORKFLOW=tools/datadistribution_workflows/dd-processing.xml WORKFLOW_DETECTORS
   - `$RECO_NUM_NODES_OVERRIDE`: Overrides the number of nodes used for reconstruction (empty or 0 to disable)
   - `$DDMODE`: How to operate DataDistribution: **discard** (build TF and discard them), **disk** (build TF and store to disk), **processing** (build TF and run DPL workflow on TF data), **processing-disk** (both store TF to disk and run processing).
   - `$DDWORKFLOW`: (*alternative*): Explicit path to the XML file with the partial workflow for *DataDistribution*.
-  - `$GEN_TOPO_IGNORE_ERROR`: Ignore ERROR messages during workflow creation.
   - `$WORKFLOWMODE`: Can be set to print. In that case the parser will not create the DDS topology output, but the list of shell commands to start to run the workflows locally.
 - When run on the EPN farm for synchronous processing (indicated by the `$EPNSYNCMODE=1` variable), the *parser* will automaticall `module load` the modules specified in the *topology description*. Otherwise the user must load the respective O2 / QC version by himself.
 - The parser exports the env variable `$RECO_NUM_NODES_WORKFLOW` that contains on how many nodes the workflow will be running when running the workflow script. This can be used to tune the process multiplicities.
@@ -164,8 +163,6 @@ FILEWORKDIR=/home/epn/odc/files EPNSYNCMODE=1 DDWORKFLOW=tools/datadistribution_
 - Put the output file (default is `$HOME/gen_topo_output.xml`) as EPN DDS topology in the AliECS GUI.
 
 When adapting your workflow, please try to follow the style of the existing workflows. The [testing/examples/example-workflow.sh](testing/examples/example-workflow.sh) should be a simple start, for a more complex example you can have a look at [testing/detectors/TPC/tpc-workflow.sh](testing/detectors/TPC/tpc-workflow.sh), and as a fulll complex example of a global workflow please look at [production/full-system-test/dpl-workflow_local.sh](production/full-system-test/dpl-workflow_local.sh)
-
-**Please note that currently when creating a workflow that contains QC, ERROR messages will be written to the console. The workflow creation scripts sees these error messages and then fails. These failures can be ignored using the `GEN_TOPO_IGNORE_ERROR=1` env variable, which is thus temporarily mandatory for all workflows containing QC.**
 
 For reference, the `run.sh` script internally uses the `parser` to create the XML file, it essentially sets some environment variables and then calls the *parser*  with all options set. So in principle, you can also use the *parser* directly to create the workflow as described [here](Creating-a-full-topology-DDS-XML-file-manually).
 
@@ -219,7 +216,7 @@ export WORKFLOW_PARAMETERS=                                          # Additiona
 export RECO_NUM_NODES_OVERRIDE=0                                     # Override the number of EPN compute nodes to use (default is specified in description library file)
 export NHBPERTF=256                                                  # Number of HBF per TF
 
-/home/epn/pdp/gen_topo.sh > $HOME/gen_topo_output.xml
+/opt/alisw/el8/GenTopo/bin/gen_topo.sh > $HOME/gen_topo_output.xml
 [drohr@epn245 test]$ ./run.sh
 Loading ODC/0.36-1
   Loading requirement: BASE/1.0 GCC-Toolchain/v10.2.0-alice2-3 fmt/7.1.0-10 FairLogger/v1.9.1-7 zlib/v1.2.8-8 OpenSSL/v1.0.2o-9 libpng/v1.6.34-9 sqlite/v3.15.0-2 libffi/v3.2.1-2 FreeType/v2.10.1-8 Python/v3.6.10-12 Python-modules/1.0-16 boost/v1.75.0-13 ZeroMQ/v4.3.3-6 ofi/v1.7.1-8 asio/v1.19.1-2 asiofi/v0.5.1-2 DDS/3.5.16-5 FairMQ/v1.4.40-4
@@ -269,7 +266,7 @@ export WORKFLOW_PARAMETERS=EVENT_DISPLAY,CTF,GPU                     # Additiona
 export RECO_NUM_NODES_OVERRIDE=0                                     # Override the number of EPN compute nodes to use (default is specified in description library file)
 export NHBPERTF=256                                                  # Number of HBF per TF
 
-/home/epn/pdp/gen_topo.sh > $HOME/gen_topo_output.xml
+/opt/alisw/el8/GenTopo/bin/gen_topo.sh > $HOME/gen_topo_output.xml
 [drohr@epn245 test]$ ./run.sh
 Loading ODC/0.36-1
   Loading requirement: BASE/1.0 GCC-Toolchain/v10.2.0-alice2-3 fmt/7.1.0-10 FairLogger/v1.9.1-7 zlib/v1.2.8-8 OpenSSL/v1.0.2o-9 libpng/v1.6.34-9 sqlite/v3.15.0-2 libffi/v3.2.1-2 FreeType/v2.10.1-8 Python/v3.6.10-12 Python-modules/1.0-16 boost/v1.75.0-13 ZeroMQ/v4.3.3-6 ofi/v1.7.1-8 asio/v1.19.1-2 asiofi/v0.5.1-2 DDS/3.5.16-5 FairMQ/v1.4.40-4

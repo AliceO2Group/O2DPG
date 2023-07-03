@@ -29,22 +29,22 @@ INTERACTIONRATE=${INTERACTIONRATE:-2000}
 cp ${ALIEN_JDL_ASYNCRECOSCRIPT:-$O2DPG_ROOT/DATA/production/configurations/2021/OCT/apass4/async_pass.sh} async_pass.sh
 cp $O2DPG_ROOT/DATA/production/configurations/2021/OCT/${ALIEN_JDL_LPMPASSNAME:-apass4}/setenv_extra.sh .
 #settings that are MC-specific
-sed -i 's/GPU_global.dEdxUseFullGainMap=1;GPU_global.dEdxDisableResidualGainMap=1/GPU_global.dEdxSplineTopologyCorrFile=splines_for_dedx_V1_MC_iter0_PP.root;GPU_global.dEdxDisableTopologyPol=1;GPU_global.dEdxDisableGainMap=1;GPU_global.dEdxDisableResidualGainMap=1;GPU_global.dEdxDisableResidualGain=1/' setenv_extra.sh
+sed -ibak 's/GPU_global.dEdxUseFullGainMap=1;GPU_global.dEdxDisableResidualGainMap=1/GPU_global.dEdxSplineTopologyCorrFile=splines_for_dedx_V1_MC_iter0_PP.root;GPU_global.dEdxDisableTopologyPol=1;GPU_global.dEdxDisableGainMap=1;GPU_global.dEdxDisableResidualGainMap=1;GPU_global.dEdxDisableResidualGain=1/' setenv_extra.sh
 chmod +x async_pass.sh
 
 # take out line running the workflow (if we don't have data input)
-[ ${CTF_TEST_FILE} ] || sed -i '/WORKFLOWMODE=run/d' async_pass.sh
+[ ${CTF_TEST_FILE} ] || sed -ibak '/WORKFLOWMODE=run/d' async_pass.sh
 
 # remove comments in order to set ALIEN_JDL stuff
 # (if not set already)
 if [ ! ${ALIEN_JDL_LPMRUNNUMBER} ]; then
-  sed -i 's/# export ALIEN/export ALIEN/' async_pass.sh
+  sed -ibak 's/# export ALIEN/export ALIEN/' async_pass.sh
 fi
 # fix typo
-sed -i 's/JDL_ANCHORYEAR/JDL_LPMANCHORYEAR/' async_pass.sh
+sed -ibak 's/JDL_ANCHORYEAR/JDL_LPMANCHORYEAR/' async_pass.sh
 
 # set number of timeframes to xx if necessary
-sed -i 's/NTIMEFRAMES=-1/NTIMEFRAMES=1/' async_pass.sh
+sed -ibak  's/NTIMEFRAMES=-1/NTIMEFRAMES=1/' async_pass.sh
 
 [[ ! -f commonInput.tgz ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/commonInput.tgz file:.
 [[ ! -f runInput_${RUNNUMBER} ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/runInput_${RUNNUMBER}.tgz file:.
@@ -134,9 +134,6 @@ if [ ! "$?" == "0" ]; then
   exit 1
 fi
 
-# -- DO AD-HOC ADJUSTMENTS TO WORKFLOWS (UNTIL THIS CAN BE DONE NATIVELY) --
-sed -i 's/--onlyDet TPC/--onlyDet TPC --TPCuseCCDB/' workflow.json # enables CCDB during TPC digitization
-
 # -- RUN THE MC WORKLOAD TO PRODUCE AOD --
 
 export FAIRMQ_IPC_PREFIX=./
@@ -144,42 +141,11 @@ export FAIRMQ_IPC_PREFIX=./
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
 MCRC=$?  # <--- we'll report back this code
 
-if [ "${MCRC}" = "0" ]; then
-  # publish the AODs to ALIEN
-  [ ${ALIBI_EXECUTOR_FRAMEWORK} ] && copy_ALIEN "*AO2D*"
-
+if [[ "${MCRC}" = "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
   # do QC tasks
-  if [[ "${remainingargs}" == *"--include-local-qc"* ]]; then
-    echo "Doing QC"
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
-    RC=$?
-  fi
-
-  # could take this away finally
-  if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then 
-    err_logs=$(get_error_logs $(pwd) --include-grep "QC")
-    [ ! "${RC}" -eq 0 ] && send_mattermost "--text QC stage **failed** :x: --files ${err_logs}" || send_mattermost "--text QC **passed** :white_check_mark:"
-    unset ALICEO2_CCDB_LOCALCACHE
-    # perform some analysis testing
-    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-    . ${DIR}/analysis_testing.sh
-  fi
-
-  # do analysis tasks
-  if [[ "${remainingargs}" == *"--include-analysis"* ]]; then
-    echo "Doing Analysis"
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels Analysis --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
-    RC=$?
-  fi
-
-fi
-
-# could take this way finally
-if [ ${ALIBI_EXECUTOR_FRAMEWORK} ]; then
-  # publish the original data to ALIEN
-  find ./ -name "localhos*_*" -delete
-  tar -czf mcarchive.tar.gz workflow.json tf* QC pipeline*
-  copy_ALIEN mcarchive.tar.gz
+  echo "Doing QC"
+  ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
+  RC=$?
 fi
 
 #

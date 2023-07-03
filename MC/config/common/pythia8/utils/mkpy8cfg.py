@@ -140,7 +140,7 @@ if args.ptHatMax is not None :
     fout.write('PhaseSpace:pTHatMax = %f \n' % (args.ptHatMax))
 if args.weightPower is not None :
     fout.write('PhaseSpace:bias2Selection = on \n')
-    fout.write('PhaseSpace:bias2SelectionPow = %f" \n' % (args.weightPower))
+    fout.write('PhaseSpace:bias2SelectionPow = %f \n' % (args.weightPower))
 
 fout.write('\n')
 

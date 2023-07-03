@@ -3,16 +3,26 @@
 # This is a wrapper script that sets EPN-related env variables needed for the PDP DPL Topology generation.
 # Author: David Rohr
 
-# A reference version of this script is contained in the O2DPG repository: https://github.com/AliceO2Group/O2DPG/blob/master/DATA/tools/epn/gen_topo.sh
+# This script is developed within O2DPG: https://github.com/AliceO2Group/O2DPG/blob/master/DATA/tools/epn/gen_topo.sh
+# It is installed as package GenTopo to the updateable RPM path /opt/alisw/el8/GenTopo/bin/ on the EPNs
 
 # The purpose of this script is to separate the topology generation (which is in O2DPG) from the setting of the EPN-related settings
+# This script contains only the EPN related settings
 
 # Settings for some EPN paths / names / etc.
 [[ -z "$FILEWORKDIR" ]] && export FILEWORKDIR=/home/epn/odc/files # Path to common grp / geometry / etc files
 [[ -z "$INRAWCHANNAME" ]] && export INRAWCHANNAME=tf-builder-pipe-0 # Pipe name to get data from TfBuilder
 [[ -z "$CTF_DIR" ]] && export CTF_DIR=/data/tf/compressed # Output directory for CTFs
-[[ -z "$CTF_METAFILES_DIR" ]] && [[ "0$WORKFLOWMODE" != "0print" ]] && export CTF_METAFILES_DIR=/data/epn2eos_tool/epn2eos #CTF Metafiles directory
-[[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=/scratch/services/gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
+[[ -z "$CALIB_DIR" ]] && export CALIB_DIR=/data/calibration # Output directory for calibration data
+if [[ -z "$EPN2EOS_METAFILES_DIR" ]] && [[ "0$WORKFLOWMODE" != "0print" ]]; then
+  export EPN2EOS_METAFILES_DIR=/data/epn2eos_tool/epn2eos # Directory for epn2eos meta data files
+fi
+if [[ $USER == "epn" ]]; then
+  [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=/scratch/services/gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
+else
+  [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=$HOME/gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
+  mkdir -p $HOME/gen_topo
+fi
 [[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]] && export GEN_TOPO_ODC_EPN_TOPO_ARGS="--recozone online --calibzone calib" # Arguments to pass to odc-epn-topo command
 [[ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]] && export GEN_TOPO_EPN_CCDB_SERVER="http://127.0.0.1:8084" # CCDB server to use
 if [[ "0$GEN_TOPO_ONTHEFLY" == "01" ]]; then export SHM_MANAGER_SHMID=1 ;fi
@@ -33,16 +43,9 @@ else
     [[ -z $GEN_TOPO_ODC_EPN_TOPO_CMD ]] && { echo "ERROR: no odc-epn-topo in the path" 1>&2; exit 1; }
     module purge &> /dev/null
   fi
-
-  # Set O2DPG_ROOT from the latest available O2DPG module, if not already set.
-  # Note that this does not load the module, but just needs an O2DPG path to find, which then does the bulk of the topology generation.
-  # gen_topo_o2dpg.sh is kept compatible between O2DPG versions, thus it doesn't really depend on which O2DPG version we use at this point.
-  if [[ -z $O2DPG_ROOT ]]; then
-    O2DPG_ROOT=`bash -c "module load O2DPG &> /dev/null; echo \\\$O2DPG_ROOT;"`
-  fi
 fi
-# Now we know which gen_topo_o2dpg.sh we can use, and all EPN related env variables are set, so we can run the topology generation.
-$O2DPG_ROOT/DATA/tools/epn/gen_topo_o2dpg.sh
+# Run stage 2 of GenTopo, which does the PDP part, still from hardcoded updatable RPM path
+/opt/alisw/el8/GenTopo/bin/gen_topo_o2dpg.sh
 if [ $? != 0 ]; then
   echo topology generation failed 1>&2
   exit 1

@@ -78,8 +78,10 @@ if [[ -n "$ALIEN_JDL_LPMPRODUCTIONTAG" ]]; then
 fi
 
 # pass
-if [[ -n "$ALIEN_JDL_LPMPASSNAME" ]]; then
-    export PASS="$ALIEN_JDL_LPMPASSNAME"
+if [[ -n "$ALIEN_JDL_O2DPGPASSPATH" ]]; then
+  export PASS="$ALIEN_JDL_O2DPGPASSPATH"
+elif [[ -n "$ALIEN_JDL_LPMPASSNAME" ]]; then
+  export PASS="$ALIEN_JDL_LPMPASSNAME"
 fi
 
 if [[ -z $RUNNUMBER ]] || [[ -z $PERIOD ]] || [[ -z $BEAMTYPE ]] || [[ -z $PASS ]]; then
@@ -140,8 +142,6 @@ else
     fi
 fi
 
-rm -f /dev/shm/*
-
 if [[ -f run-workflow-on-inputlist.sh ]]; then
     echo "Use run-workflow-on-inputlist.sh macro passed as input"
 else
@@ -163,7 +163,6 @@ fi
 
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
 ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
-ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 
 # reco and matching
 # print workflow

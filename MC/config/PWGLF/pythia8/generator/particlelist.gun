@@ -1,4 +1,4 @@
-# PDG           N      ptMin   ptMax
+# PDG           N      ptMin   ptMax   genDecayed
 1000010020      10     0.2     10
 -1000010020     10     0.2     10
 1000010030      10     0.2     10

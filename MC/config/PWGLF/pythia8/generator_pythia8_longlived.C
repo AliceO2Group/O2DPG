@@ -1,3 +1,5 @@
+
+#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include "Pythia8/Pythia.h"
 #include "FairGenerator.h"
 #include "FairPrimaryGenerator.h"
@@ -7,8 +9,8 @@
 #include "TDatabasePDG.h"
 #include "TMath.h"
 #include <cmath>
-
 using namespace Pythia8;
+#endif
 
 class GeneratorPythia8LongLivedGun : public o2::eventgen::GeneratorPythia8
 {
@@ -56,6 +58,9 @@ public:
       const double et{std::hypot(std::hypot(pt, pz), m)};
       sign *= randomizePDGsign ? -1 : 1;
       mParticles.push_back(TParticle(sign * pdg, 1, -1, -1, -1, -1, px, py, pz, et, 0., 0., 0., 0.));
+      // make sure status code is encoded properly. Transport flag will be set by default and we have nothing
+      // to do since all pushed particles should be tracked.
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
     }
 
     if (pdg2 != -1)
@@ -71,6 +76,9 @@ public:
         const double et{std::hypot(std::hypot(pt, pz), m)};
         sign *= randomizePDGsign ? -1 : 1;
         mParticles.push_back(TParticle(sign * pdg2, 1, -1, -1, -1, -1, px, py, pz, et, 0., 0., 0., 0.));
+        // make sure status code is encoded properly. Transport flag will be set by default and we have nothing
+        // to do since all pushed particles should be tracked.
+        o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       }
     }
 

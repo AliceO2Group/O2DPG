@@ -16,33 +16,50 @@
         "url": "infologger:///debug?qc"
       },
       "consul": {
-        "url": "http://consul-test.cern.ch:8500"
+        "url": ""
       },
       "conditionDB": {
         "url": "ccdb-test.cern.ch:8080"
       }
     },
     "tasks": {
-      "TaskDigits": {
+      "TOFDigits": {
         "active": "true",
+        "taskName": "Digits",
         "className": "o2::quality_control_modules::tof::TaskDigits",
         "moduleName": "QcTOF",
         "detectorName": "TOF",
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "digi-local"
+          "type": "direct",
+          "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS;diafreq:TOF/DIAFREQ/0",
+          "query_comment" : "100% sampling"
         },
         "taskParameters": {
           "Diagnostic": "true",
-          "NoiseClassSelection": "0"
+          "PerChannel": "True",
+          "RangeMaxMultiplicity": "15000",
+          "NbinsMultiplicity": "15000",
+          "applyCalib": "True",
+          "NoiseClassSelection": "1"
+        },
+	  "grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         }
       }
     },
     "checks": {
-      "CheckRawMultiplicity": {
+      "TOFMultiplicity": {
         "active": "true",
+        "checkName": "Multiplicity",
         "className": "o2::quality_control_modules::tof::CheckRawMultiplicity",
         "moduleName": "QcTOF",
         "policy": "OnAny",
@@ -50,7 +67,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "TaskDigits",
+            "name": "TOFDigits",
             "MOs": [
               "TOFRawsMulti"
             ]
@@ -60,24 +77,6 @@
     }
   },
   "dataSamplingPolicies": [
-    {
-      "id": "digi-local",
-      "active": "true",
-      "machines": [
-        "epn",
-        "localhost"
-      ],
-      "port": "30333",
-      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS;diafreq:TOF/DIAFREQ/0",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.1",
-          "seed": "1234"
-        }
-      ],
-      "blocking": "false"
-    }
   ]
 }
 

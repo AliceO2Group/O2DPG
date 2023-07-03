@@ -10,13 +10,11 @@ PROXY_INSPEC="tunestring:ITS/TSTR;runtype:ITS/RUNT;fittype:ITS/FITT;scantype:ITS
 
 CCDBPATH1=""
 CCDBPATH2=""
-if [ $RUNTYPE == "tuning" ] || [ $RUNTYPE == "digital" ]; then
+if [ $RUNTYPE == "tuning" ] || [ $RUNTYPE == "digital" ] || [ $RUNTYPE == "tuningbb" ]; then
   CCDBPATH1="http://alio2-cr1-flp199.cern.ch:8083"
-  CCDBPATH2="http://localhost:8084"
-elif [ $RUNTYPE == "thrshort" ]; then
-  CCDBPATH1="http://localhost:8084"
-else
-  echo Ccdb paths are empty
+  CCDBPATH2="http://o2-ccdb.internal"
+else 
+  CCDBPATH1="http://o2-ccdb.internal"
 fi
 
 WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --exit-transition-timeout 20 --proxy-name its-thr-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=its-thr-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\" | "
@@ -25,6 +23,7 @@ WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"
 if [ $RUNTYPE == "digital" ]; then
   WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"$CCDBPATH2\" --sspec-min 1 --sspec-max 1 | "
 fi
+
 WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
 
 if [ $WORKFLOWMODE == "print" ]; then

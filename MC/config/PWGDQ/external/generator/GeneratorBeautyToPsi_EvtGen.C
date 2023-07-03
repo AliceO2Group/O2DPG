@@ -15,6 +15,8 @@ FairGenerator*
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorHF>();
   gen->setRapidity(rapidityMin, rapidityMax);
   gen->setPDG(5);
+  TString pathO2table = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffBhadrons.cfg");
+  gen->readFile(pathO2table.Data());
 
   gen->setVerbose(verbose);
   if (ispp)
@@ -32,7 +34,11 @@ FairGenerator*
   gen->SetForceDecay(kEvtBPsiDiElectron);
   // set random seed
   gen->readString("Random:setSeed on");
-  gen->readString("Random:seed = 0");
+  uint random_seed;
+  unsigned long long int random_value = 0; 
+  ifstream urandom("/dev/urandom", ios::in|ios::binary);
+  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
+  gen->readString(Form("Random:seed = %d", random_value % 900000001));
   // print debug
   // gen->PrintDebug();
 
@@ -45,6 +51,8 @@ FairGenerator*
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorHF>();
   gen->setRapidity(rapidityMin, rapidityMax);
   gen->setPDG(5);
+  TString pathO2table = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffBhadrons.cfg");
+  gen->readFile(pathO2table.Data());
 
   gen->setVerbose(verbose);
   if (ispp)
@@ -62,7 +70,11 @@ FairGenerator*
   gen->SetForceDecay(kEvtBPsiDiMuon);
   // set random seed
   gen->readString("Random:setSeed on");
-  gen->readString("Random:seed = 0");
+  uint random_seed;
+  unsigned long long int random_value = 0; 
+  ifstream urandom("/dev/urandom", ios::in|ios::binary);
+  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
+  gen->readString(Form("Random:seed = %d", random_value % 900000001));
   // print debug
   // gen->PrintDebug();
 

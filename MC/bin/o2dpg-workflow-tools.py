@@ -38,10 +38,10 @@ def create(args):
         dump_workflow([], filename)
     if args.add_task:
         # add another task skeleton with name
-        workflow = read_workflow(filename)
+        workflow, meta = read_workflow(filename)
         for name in args.add_task:
             workflow.append(createTask(name=name))
-        dump_workflow(workflow, filename)
+        dump_workflow(workflow, filename, meta=meta)
 
 
 def find_task(workflow, task_name):
@@ -52,28 +52,26 @@ def find_task(workflow, task_name):
 
 
 def modify(args):
+    workflow, meta = read_workflow(args.file)
+    # try to find the requested task
+    task = find_task(workflow, args.task)
+    if not task:
+        print(f"Task with name {args.task} does not exist")
+        exit(1)
+    for attr in ("name", "needs", "timeframe", "cwd", "labels", "cmd"):
+        if hasattr(args, attr) and getattr(args, attr) is not None:
+            task[attr] = getattr(args, attr)
+    for attr in ("cpu", "relative_cpu", "mem"):
+        if hasattr(args, attr) and getattr(args, attr) is not None:
+            task["resources"][attr] = getattr(args, attr)
 
-    if args.task:
-        workflow = read_workflow(args.file)
-        # try to find the requested task
-        task = find_task(workflow, args.task)
-        if not task:
-            print(f"Task with name {args.task} does not exist")
-            exit(1)
-        for attr in ("name", "needs", "timeframe", "cwd", "labels", "cmd"):
-            if hasattr(args, attr) and getattr(args, attr) is not None:
-                task[attr] = getattr(args, attr)
-        for attr in ("cpu", "relative_cpu", "mem"):
-            if hasattr(args, attr) and getattr(args, attr) is not None:
-                task["resources"][attr] = getattr(args, attr)
-
-        dump_workflow(workflow, args.file)
+    dump_workflow(workflow, args.file, meta=meta)
 
 
 def nworkers(args):
-    workflow = read_workflow(args.file)
+    workflow, meta = read_workflow(args.file)
     update_workflow_resource_requirements(workflow, args.jobs)
-    dump_workflow(workflow, args.file)
+    dump_workflow(workflow, args.file, meta=meta)
 
 
 def inspect(args):
@@ -81,11 +79,9 @@ def inspect(args):
 
     This is at the moment more show-casing what one could do
     """
-    workflow = read_workflow(args.file)
+    workflow, meta = read_workflow(args.file)
     if args.check:
         check_workflow(workflow)
-    if args.summary:
-        summary_workflow(workflow)
     if args.task:
         task = find_task(workflow, args.task)
         if not task:
@@ -93,6 +89,10 @@ def inspect(args):
             exit(1)
         print("Here are the requested task information")
         print(task)
+    if meta:
+        print("Here are the meta information")
+        for key, value in meta.items():
+            print(f"{key}: {value}")
 
 
 def main():
@@ -136,8 +136,8 @@ def main():
     inspect_parser = sub_parsers.add_parser("inspect", help="inspect a workflow")
     inspect_parser.set_defaults(func=inspect)
     inspect_parser.add_argument("file", help="Workflow file to inspect")
-    inspect_parser.add_argument("--summary", action="store_true", help="print summary of workflow")
-    inspect_parser.add_argument("--check", action="store_true", help="Check sanity of workflow") 
+    inspect_parser.add_argument("--check", action="store_true", help="Check sanity of workflow")
+    inspect_parser.add_argument("--task", help="name of task to be inspected in detail")
 
     args = parser.parse_args()
 

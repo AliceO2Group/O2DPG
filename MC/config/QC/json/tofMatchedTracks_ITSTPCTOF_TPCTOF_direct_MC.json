@@ -16,7 +16,7 @@
         "periodName" : "SimChallenge"
       },
       "monitoring" : {
-        "url" : "infologger:///debug?qc"
+        "url" : "no-op://"
       },
       "consul" : {
         "url" : ""
@@ -31,8 +31,8 @@
         "" : "Message at this level or above are discarded (default: 21 - Trace)" }
     },
     "tasks" : {
-      "MTCITSTPCTOF" : {
-	"taskName" : "MatchTOF_ITSTPCTOF_TPCTOF",
+      "MatchTrNoTRD" : {
+	"taskName" : "MatchTrNoTRD",
         "active" : "true",
         "className" : "o2::quality_control_modules::tof::TOFMatchedTracks",
         "moduleName" : "QcTOF",
@@ -52,9 +52,17 @@
           "etaCut" : "0.8f",
           "minNTPCClustersCut" : "60",
           "minDCACut" : "100.f",
-          "minDCACutY" : "10.f",
-          "grpFileName" : "o2sim_grp.root",
-          "geomFileName" : "o2sim_geometry-aligned.root"
+          "minDCACutY" : "10.f"
+        },
+	"grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         },
         "location" : "remote",
         "saveObjectsToFile" : "TOFmatchedITSTPCTOF_TPCTOF_MC.root",

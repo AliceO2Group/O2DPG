@@ -12,7 +12,7 @@
         "passName": "apass1"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "no-op://"
       },
       "consul": {
         "url": ""
@@ -24,12 +24,12 @@
         "periodSeconds": "0.1"
       },
       "infologger": {                     "": "Configuration of the Infologger (optional).",
-        "filterDiscardDebug": "false",    "": "Set to 1 to discard debug and trace messages (default: false)",
-        "filterDiscardLevel": "99",        "": "Message at this level or above are discarded (default: 21 - Trace)"
+        "filterDiscardDebug": "true",     "": "Set to 1 to discard debug and trace messages (default: false)",
+        "filterDiscardLevel": "6",        "": "Message at this level or above are discarded (default: 21 - Trace)"
       }
     },
     "postprocessing": {
-      "TrendBeamSpot": {
+      "BeamSpotTrending": {
         "active": "true",
         "className": "o2::quality_control::postprocessing::TrendingTask",
         "moduleName": "QualityControl",

@@ -109,7 +109,7 @@ Decay Xi_c+
 0.007        e+       nu_e           Xi*0         PYTHIA 42;
 Enddecay
 
-CDecay Xi_c-
+CDecay anti-Xi_c-
 
 Decay Omega_c0
 1.0   e+     nu_e         Omega-         PYTHIA 42;

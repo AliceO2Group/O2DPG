@@ -23,8 +23,9 @@
       }
     },
     "tasks": {
-      "ITSClusterTask": {
+      "ITSClusters": {
         "active": "true",
+        "taskName": "Clusters",
         "className": "o2::quality_control_modules::its::ITSClusterTask",
         "moduleName": "QcITS",
         "detectorName": "ITS",
@@ -32,19 +33,32 @@
         "maxNumberCycles": "-1",
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "compclus"
+          "type": "direct",
+          "query": "compclus:ITS/COMPCLUSTERS/0;clustersrof:ITS/CLUSTERSROF/0;patterns:ITS/PATTERNS/0",
+          "query_comment" : "100% sampling"
         },
         "taskParameters": {
           "layer": "1111111",
           "nThreads": "1",
 	  "nBCbins" : "103",
 	  "dicttimestamp" : "0",
-	  "geomPath" : "o2sim_geometry-aligned.root"
+          "publishDetailedSummary": "1",
+	  "publishSummary1D": "0"
+        },
+	"grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         }
       },
-      "ITSTrackTask": {
+      "ITSTracks": {
         "active": "true",
+        "taskName": "Tracks",
         "className": "o2::quality_control_modules::its::ITSTrackTask",
         "moduleName": "QcITS",
         "detectorName": "ITS",
@@ -52,24 +66,27 @@
         "maxNumberCycles": "-1",
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "tracks"
+          "type": "direct",
+          "query": "Verticesrof:ITS/VERTICESROF/0;Vertices:ITS/VERTICES/0;tracks:ITS/TRACKS/0;rofs:ITS/ITSTrackROF/0;clustersrof:ITS/CLUSTERSROF/0;compclus:ITS/COMPCLUSTERS/0;patterns:ITS/PATTERNS/0;clusteridx:ITS/TRACKCLSID/0",
+          "query_comment" : "100% sampling"
         },
         "taskParameters": {
           "runNumberPath": "",
           "vertexXYsize": "0.5",
           "vertexZsize": "15",
           "vertexRsize": "0.8",
-          "NtracksMAX"  : "100",
+          "NtracksMAX"  : "5000",
           "doTTree": "0",
 	  "nBCbins" : "103",
-	  "dicttimestamp" : 0
+	  "dicttimestamp" : 0,
+	  "doNorm": "1"
         }
       }
     },
     "checks": {
-      "ITSClusterCheck": {
+      "ITSClusters": {
         "active": "true",
+        "checkName": "Clusters",
         "className": "o2::quality_control_modules::its::ITSClusterCheck",
         "moduleName": "QcITS",
         "policy": "OnEachSeparately",
@@ -88,7 +105,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "ITSClusterTask",
+            "name": "ITSClusters",
             "MOs": [
               "Layer0/AverageClusterSize",
               "Layer1/AverageClusterSize",
@@ -108,8 +125,9 @@
           }
         ]
       },
-      "ITSTrackCheck": {
+      "ITSTracks": {
         "active": "true",
+        "taskName": "Tracks",
         "className": "o2::quality_control_modules::its::ITSTrackCheck",
         "moduleName": "QcITS",
         "policy": "OnEachSeparately",
@@ -117,7 +135,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "ITSTrackTask",
+            "name": "ITSTracks",
             "MOs": [
               "NClusters",
               "PhiDistribution",
@@ -134,33 +152,5 @@
     }
   },
   "dataSamplingPolicies": [
-    {
-      "id": "compclus",
-      "active": "true",
-      "machines": [],
-      "query": "compclus:ITS/COMPCLUSTERS/0;clustersrof:ITS/CLUSTERSROF/0;patterns:ITS/PATTERNS/0",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.3",
-          "seed": "1441"
-        }
-      ],
-      "blocking": "false"
-    },
-    {
-      "id": "tracks",
-      "active": "true",
-      "machines": [],
-      "query": "Verticesrof:ITS/VERTICESROF/0;Vertices:ITS/VERTICES/0;tracks:ITS/TRACKS/0;rofs:ITS/ITSTrackROF/0;clustersrof:ITS/CLUSTERSROF/0;compclus:ITS/COMPCLUSTERS/0;patterns:ITS/PATTERNS/0;clusteridx:ITS/TRACKCLSID/0",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.3",
-          "seed": "1441"
-        }
-      ],
-      "blocking": "false"
-    }
   ]
 }

@@ -29,7 +29,6 @@ export RECO_NUM_NODES_OVERRIDE=0                                     # Override 
 export NHBPERTF=128                                                  # Number of HBF per TF
 export ALL_EXTRA_CONFIG="HBFUtils.nHBFPerTF=$NHBPERTF"
 
-export GEN_TOPO_IGNORE_ERROR=1
 
 export MULTIPLICITY_FACTOR_RAWDECODERS=1
 export MULTIPLICITY_FACTOR_CTFENCODERS=1
@@ -61,5 +60,5 @@ do
  export GEN_TOPO_WORKFLOW_NAME=$wf
  EXT="xml"   
  [ ! -z $WORKFLOWMODE ] && [ $WORKFLOWMODE == "print" ] && EXT="sh"
- /home/epn/pdp/gen_topo.sh > "$HOME/gen_topo/PB/${GEN_TOPO_WORKFLOW_NAME}.${EXT}"
+ /opt/alisw/el8/GenTopo/bin/gen_topo.sh > "$HOME/gen_topo/PB/${GEN_TOPO_WORKFLOW_NAME}.${EXT}"
 done

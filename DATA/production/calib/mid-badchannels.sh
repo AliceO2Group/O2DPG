@@ -10,13 +10,13 @@ MID_PROXY_INSPEC_EOS="eos:***/INFORMATION"
 MID_PROXY_INSPEC_DD="dd:FLP/DISTSUBTIMEFRAME/0"
 MID_RAW_PROXY_INSPEC="A:MID/RAWDATA;$MID_PROXY_INSPEC_DD;$MID_PROXY_INSPEC_EOS"
 MID_DPL_CHANNEL_CONFIG="name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=1"
-CONSUL_ENDPOINT="alio2-cr1-hv-aliecs.cern.ch:8500"
+CONSUL_ENDPOINT="alio2-cr1-hv-con01.cern.ch:8500"
 if [[ -z $CTF_CONFIG ]]; then CTF_CONFIG="--report-data-size-interval 250"; fi
 if [[ -z $CTF_DIR ]]; then CTF_DIR="$FILEWORKDIR"; fi
 if [[ -z $CTF_MINSIZE ]]; then CTF_MINSIZE="2000000000"; fi
 if [[ -z $CTF_MAX_PER_FILE ]]; then CTF_MAX_PER_FILE="10000"; fi
-if [[ -z $CTF_METAFILES_DIR ]]; then CTF_METAFILES_DIR="/dev/null"; fi
-CONFIG_CTF="--output-dir \"$CTF_DIR\" $CTF_CONFIG --output-type ctf --min-file-size ${CTF_MINSIZE} --max-ctf-per-file ${CTF_MAX_PER_FILE} --onlyDet MID $CTF_MAXDETEXT --meta-output-dir $CTF_METAFILES_DIR"
+if [[ -z $EPN2EOS_METAFILES_DIR ]]; then EPN2EOS_METAFILES_DIR="/dev/null"; fi
+CONFIG_CTF="--output-dir \"$CTF_DIR\" $CTF_CONFIG --output-type ctf --min-file-size ${CTF_MINSIZE} --max-ctf-per-file ${CTF_MAX_PER_FILE} --onlyDet MID $CTF_MAXDETEXT --meta-output-dir $EPN2EOS_METAFILES_DIR"
 
 WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --dataspec \"$MID_RAW_PROXY_INSPEC\" --channel-config \"$MID_DPL_CHANNEL_CONFIG\" | "
 WORKFLOW+="o2-mid-raw-to-digits-workflow $ARGS_ALL | "

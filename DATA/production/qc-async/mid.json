@@ -23,46 +23,53 @@
       }
     },
     "tasks": {
-      "QcTaskMIDDigits": {
+      "MIDDigits": {
         "active": "true",
+        "taskName": "Digits",
         "className": "o2::quality_control_modules::mid::DigitsQcTask",
         "moduleName": "QcMID",
         "detectorName": "MID",
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "mid-digits"
+          "type": "direct",
+          "query": "digits:MID/DATA;digits_rof:MID/DATAROF",
+          "query_comment" : "100% sampling"
         }
       },
-      "QcTaskMIDClust": {
+      "MIDClusters": {
         "active": "true",
+        "taskName": "Clusters",
         "className": "o2::quality_control_modules::mid::ClustQcTask",
         "moduleName": "QcMID",
         "detectorName": "MID",
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "mid-clusters"
+          "type": "direct",
+          "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS",
+          "query_comment" : "100% sampling"
         }
       },
-      "QcTaskMIDTracks": {
+      "MIDTracks": {
         "active": "true",
+        "taskName": "Tracks",
         "className": "o2::quality_control_modules::mid::TracksQcTask",
         "moduleName": "QcMID",
         "detectorName": "MID",
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "mid-tracks"
+          "type": "direct",
+          "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS",
+          "query_comment" : "100% sampling"
         }
       }
     },
     "checks": {
-      "QcCheckMIDDigits": {
-        "active": "true",
+      "MIDDigits": {
+        "active": "false",
+        "checkName": "Digits",
         "className": "o2::quality_control_modules::mid::DigitsQcCheck",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -73,7 +80,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcTaskMIDDigits",
+            "name": "MIDDigits",
             "MOs": [
               "mMultHitMT11B",
               "mMultHitMT12B",
@@ -83,8 +90,9 @@
           }
         ]
       },
-      "QcCheckMIDClust": {
-        "active": "true",
+      "MIDClusters": {
+        "active": "false",
+        "checkName": "Clusters",
         "className": "o2::quality_control_modules::mid::ClustQcCheck",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -92,13 +100,14 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcTaskMIDClust",
+            "name": "MIDClusters",
             "MOs": []
           }
         ]
       },
-      "QcCheckMIDTracks": {
-        "active": "true",
+      "MIDTracks": {
+        "active": "false",
+        "checkName": "Tracks",
         "className": "o2::quality_control_modules::mid::TracksQcCheck",
         "moduleName": "QcMID",
         "detectorName": "MID",
@@ -106,7 +115,7 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "QcTaskMIDTracks",
+            "name": "MIDTracks",
             "MOs": []
           }
         ]
@@ -114,47 +123,5 @@
     }
   },
   "dataSamplingPolicies": [
-    {
-      "id": "mid-tracks",
-      "active": "true",
-      "machines": [],
-      "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.1",
-          "seed": "1441"
-        }
-      ],
-      "blocking": "false"
-    },
-    {
-      "id": "mid-clusters",
-      "active": "true",
-      "machines": [],
-      "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.1",
-          "seed": "1441"
-        }
-      ],
-      "blocking": "false"
-    },
-    {
-      "id": "mid-digits",
-      "active": "true",
-      "machines": [],
-      "query": "digits:MID/DATA;digits_rof:MID/DATAROF",
-      "samplingConditions": [
-        {
-          "condition": "random",
-          "fraction": "0.1",
-          "seed": "1441"
-        }
-      ],
-      "blocking": "false"
-    }
   ]
 }

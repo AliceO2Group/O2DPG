@@ -16,17 +16,17 @@
         "periodName": "SimChallenge"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "no-op://"
       },
       "consul": {
-        "url": "http://consul-test.cern.ch:8500"
+        "url": ""
       },
       "conditionDB": {
         "url": "ccdb-test.cern.ch:8080"
       }
     },
     "tasks": {
-      "CellTask": {
+      "Cells": {
         "active": "true",
         "className": "o2::quality_control_modules::emcal::CellTask",
         "moduleName": "QcEMCAL",
