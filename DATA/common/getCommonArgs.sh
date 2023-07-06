@@ -16,6 +16,7 @@ if [[ $EPNSYNCMODE == 1 ]]; then
   ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 15"
   ARGS_ALL_CONFIG+="NameConf.mCCDBServer=$GEN_TOPO_EPN_CCDB_SERVER;"
   export DPL_CONDITION_BACKEND=$GEN_TOPO_EPN_CCDB_SERVER
+  [[ -z ${O2_DPL_DEPLOYMENT_MODE:-} ]] && O2_DPL_DEPLOYMENT_MODE=OnlineECS
 elif [[ "${ENABLE_METRICS:-}" != "1" ]]; then
   ARGS_ALL+=" --monitoring-backend no-op://"
 fi
