@@ -1,11 +1,11 @@
 int External()
 {
   std::string path{"o2sim_Kine.root"};
-  int numberOfInjectedSignalsPerEvent{5};
-  std::vector<int> injectedPDGs = {1000010020, -1000010020
-                                   1000010030, -1000010030
-                                   1000020030, -1000020030
-                                   1000020040, -1000020040
+  int numberOfInjectedSignalsPerEvent{10};
+  std::vector<int> injectedPDGs = {1000010020, -1000010020,
+                                   1000010030, -1000010030,
+                                   1000020030, -1000020030,
+                                   1000020040, -1000020040,
                                    1010010030, -1010010030};
 
   auto nInjection = injectedPDGs.size();
