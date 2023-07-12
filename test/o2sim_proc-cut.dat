@@ -1,0 +1,2470 @@
+Summary of cut settings per media.
+-- Default cut settings:
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+	PPCUTM = 0.001
+	TOFMAX = 1e+10
+-- Custom cut settings for single media:
+Global medium ID 3 (module = HALL, medium name = HALL_STST_C2):
+	CUTGAM = 1
+	CUTELE = 1
+	CUTNEU = 1
+	CUTHAD = 1
+Global medium ID 4 (module = HALL, medium name = HALL_AIR_C2):
+	CUTGAM = 1
+	CUTELE = 1
+	CUTNEU = 1
+	CUTHAD = 1
+Global medium ID 5 (module = HALL, medium name = HALL_CC_C2):
+	CUTGAM = 1
+	CUTELE = 1
+	CUTNEU = 1
+	CUTHAD = 1
+Global medium ID 6 (module = HALL, medium name = HALL_CC_C0):
+	CUTGAM = 0.001
+	CUTELE = 0.005
+	CUTNEU = 0.005
+	CUTHAD = 0.005
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 8 (module = MAG, medium name = MAG_FE_C0):
+	CUTGAM = 5e-05
+	CUTELE = 5e-05
+	CUTNEU = 5e-05
+	CUTHAD = 5e-05
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 9 (module = MAG, medium name = MAG_FE_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.01
+	CUTHAD = 0.001
+Global medium ID 10 (module = MAG, medium name = MAG_ALU_C0):
+	CUTGAM = 5e-05
+	CUTELE = 5e-05
+	CUTNEU = 5e-05
+	CUTHAD = 5e-05
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 11 (module = MAG, medium name = MAG_ALU_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.01
+	CUTHAD = 0.001
+Global medium ID 12 (module = MAG, medium name = MAG_AIR_C0):
+	CUTGAM = 5e-05
+	CUTELE = 5e-05
+	CUTNEU = 5e-05
+	CUTHAD = 5e-05
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 13 (module = MAG, medium name = MAG_AIR_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.01
+	CUTHAD = 0.001
+Global medium ID 18 (module = DIPO, medium name = DIPO_ALU_C0):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 19 (module = DIPO, medium name = DIPO_ALU_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 20 (module = DIPO, medium name = DIPO_ALU_C2):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 0.1
+	CUTHAD = 0.1
+Global medium ID 21 (module = DIPO, medium name = DIPO_AIR_C0):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 22 (module = DIPO, medium name = DIPO_AIR_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 23 (module = DIPO, medium name = DIPO_AIR_C2):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 0.1
+	CUTHAD = 0.1
+Global medium ID 24 (module = DIPO, medium name = DIPO_AIR_MUON):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+Global medium ID 28 (module = DIPO, medium name = DIPO_ST_C0):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 29 (module = DIPO, medium name = DIPO_ST_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 30 (module = DIPO, medium name = DIPO_ST_C3):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 0.1
+	CUTHAD = 0.1
+Global medium ID 31 (module = DIPO, medium name = DIPO_Coil_C1):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 32 (module = DIPO, medium name = DIPO_Coil_C2):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 33 (module = DIPO, medium name = DIPO_Coil_C3):
+	CUTGAM = 0.01
+	CUTELE = 0.1
+	CUTNEU = 0.01
+	CUTHAD = 0.01
+Global medium ID 34 (module = COMP, medium name = COMP_ALU_C0):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 1
+	CUTHAD = 1
+	CUTMUO = 0.01
+	BCUTE = 0.1
+	BCUTM = 0.1
+Global medium ID 35 (module = COMP, medium name = COMP_ALU_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 36 (module = COMP, medium name = COMP_ALU_C2):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 37 (module = COMP, medium name = COMP_FE_C0):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 1
+	CUTHAD = 1
+	CUTMUO = 0.01
+	BCUTE = 0.1
+	BCUTM = 0.1
+Global medium ID 38 (module = COMP, medium name = COMP_FE_C1):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 1
+	CUTHAD = 1
+	CUTMUO = 0.01
+	BCUTE = 0.1
+	BCUTM = 0.1
+Global medium ID 39 (module = COMP, medium name = COMP_FE_C2):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 40 (module = COMP, medium name = COMP_Cu_C0):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 1
+	CUTHAD = 1
+	CUTMUO = 0.01
+	BCUTE = 0.1
+	BCUTM = 0.1
+Global medium ID 41 (module = COMP, medium name = COMP_Cu_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 42 (module = COMP, medium name = COMP_Cu_C2):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 43 (module = PIPE, medium name = PIPE_BE):
+	CUTGAM = 5e-05
+	CUTELE = 5e-05
+	CUTNEU = 5e-05
+	CUTHAD = 5e-05
+	CUTMUO = 0.001
+	BCUTE = 5e-05
+	BCUTM = 5e-05
+	DCUTE = 5e-05
+	DCUTM = 5e-05
+Global medium ID 44 (module = PIPE, medium name = PIPE_CU):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.005
+	DCUTM = 0.005
+Global medium ID 45 (module = PIPE, medium name = PIPE_CU_NF):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.005
+	DCUTM = 0.005
+Global medium ID 46 (module = PIPE, medium name = PIPE_CU_HC):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 1
+	CUTHAD = 1
+	CUTMUO = 0.01
+	BCUTE = 0.1
+	BCUTM = 0.1
+Global medium ID 47 (module = PIPE, medium name = PIPE_CU_NFHC):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 1
+	CUTHAD = 1
+	CUTMUO = 0.01
+	BCUTE = 0.1
+	BCUTM = 0.1
+Global medium ID 48 (module = PIPE, medium name = PIPE_AIR):
+	CUTGAM = 5e-05
+	CUTELE = 5e-05
+	CUTNEU = 5e-05
+	CUTHAD = 5e-05
+	CUTMUO = 0.001
+	BCUTE = 5e-05
+	BCUTM = 5e-05
+	DCUTE = 5e-05
+	DCUTM = 5e-05
+Global medium ID 49 (module = PIPE, medium name = PIPE_AIR_HIGH):
+	CUTGAM = 1
+	CUTELE = 1
+	CUTNEU = 1
+	CUTHAD = 1
+	CUTMUO = 1
+	BCUTE = 1
+	BCUTM = 1
+	DCUTE = 1
+	DCUTM = 1
+Global medium ID 50 (module = PIPE, medium name = PIPE_AIR_NF):
+	CUTGAM = 5e-05
+	CUTELE = 5e-05
+	CUTNEU = 5e-05
+	CUTHAD = 5e-05
+	CUTMUO = 0.001
+	BCUTE = 5e-05
+	BCUTM = 5e-05
+	DCUTE = 5e-05
+	DCUTM = 5e-05
+Global medium ID 52 (module = PIPE, medium name = PIPE_VACUUM):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 53 (module = PIPE, medium name = PIPE_VACUUM_NF):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 54 (module = PIPE, medium name = PIPE_VACUUM_HC):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 1
+	CUTHAD = 1
+	CUTMUO = 0.01
+	BCUTE = 0.1
+	BCUTM = 0.1
+Global medium ID 55 (module = PIPE, medium name = PIPE_VACUUM_NFHC):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 1
+	CUTHAD = 1
+	CUTMUO = 0.01
+	BCUTE = 0.1
+	BCUTM = 0.1
+Global medium ID 56 (module = PIPE, medium name = PIPE_INOX):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 57 (module = PIPE, medium name = PIPE_INOX_NF):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 58 (module = PIPE, medium name = PIPE_INOX_HC):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 1
+	CUTHAD = 1
+	CUTMUO = 0.01
+	BCUTE = 0.1
+	BCUTM = 0.1
+Global medium ID 59 (module = PIPE, medium name = PIPE_INOX_NFHC):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 1
+	CUTHAD = 1
+	CUTMUO = 0.01
+	BCUTE = 0.1
+	BCUTM = 0.1
+Global medium ID 60 (module = PIPE, medium name = PIPE_AA5083):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 61 (module = PIPE, medium name = PIPE_AA2219):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 66 (module = ABSO, medium name = ABSO_C_C0):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 67 (module = ABSO, medium name = ABSO_C_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 68 (module = ABSO, medium name = ABSO_C_C2):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 69 (module = ABSO, medium name = ABSO_ALU_C0):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 70 (module = ABSO, medium name = ABSO_ALU_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 71 (module = ABSO, medium name = ABSO_ALU_C2):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 72 (module = ABSO, medium name = ABSO_MG_C0):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 73 (module = ABSO, medium name = ABSO_Ni/W0):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 74 (module = ABSO, medium name = ABSO_Ni/W1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 75 (module = ABSO, medium name = ABSO_Ni/W3):
+	CUTGAM = 0.1
+	CUTELE = 0.1
+	CUTNEU = 0.05
+	CUTHAD = 0.05
+Global medium ID 76 (module = ABSO, medium name = ABSO_PB_C0):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 77 (module = ABSO, medium name = ABSO_PB_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 78 (module = ABSO, medium name = ABSO_PB_C2):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 82 (module = ABSO, medium name = ABSO_AIR_C0):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 83 (module = ABSO, medium name = ABSO_AIR_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 84 (module = ABSO, medium name = ABSO_AIR_C2):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 85 (module = ABSO, medium name = ABSO_VA_C0):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.0001
+	BCUTE = 0.0001
+	BCUTM = 0.0001
+Global medium ID 86 (module = ABSO, medium name = ABSO_VA_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 87 (module = ABSO, medium name = ABSO_VA_C2):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 88 (module = ABSO, medium name = ABSO_CC_C0):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.002
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 89 (module = ABSO, medium name = ABSO_CC_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 90 (module = ABSO, medium name = ABSO_CC_C2):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 91 (module = ABSO, medium name = ABSO_CH2_C0):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 92 (module = ABSO, medium name = ABSO_CH2_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 93 (module = ABSO, medium name = ABSO_CH2_C2):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 94 (module = ABSO, medium name = ABSO_ST_C0):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 95 (module = ABSO, medium name = ABSO_ST_C1):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 96 (module = ABSO, medium name = ABSO_ST_C3):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 97 (module = SHIL, medium name = SHIL_ALU_C0          ):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 98 (module = SHIL, medium name = SHIL_ALU_C1          ):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 99 (module = SHIL, medium name = SHIL_ALU_C2          ):
+	CUTGAM = 0.01
+	CUTELE = 0.1
+	CUTNEU = 0.01
+	CUTHAD = 0.01
+Global medium ID 100 (module = SHIL, medium name = SHIL_FE_C0           ):
+	CUTGAM = 0.0002
+	CUTELE = 0.0002
+	CUTNEU = 0.001
+	CUTHAD = 0.0002
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 101 (module = SHIL, medium name = SHIL_FE_C1           ):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 102 (module = SHIL, medium name = SHIL_FE_C2           ):
+	CUTGAM = 0.01
+	CUTELE = 0.1
+	CUTNEU = 0.01
+	CUTHAD = 0.01
+Global medium ID 103 (module = SHIL, medium name = SHIL_Cu_C0           ):
+	CUTGAM = 0.0002
+	CUTELE = 0.0002
+	CUTNEU = 0.001
+	CUTHAD = 0.0002
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 104 (module = SHIL, medium name = SHIL_Cu_C1           ):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 105 (module = SHIL, medium name = SHIL_Cu_C2           ):
+	CUTGAM = 0.01
+	CUTELE = 0.1
+	CUTNEU = 0.01
+	CUTHAD = 0.01
+Global medium ID 106 (module = SHIL, medium name = SHIL_W_C0            ):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 107 (module = SHIL, medium name = SHIL_W_C1            ):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 108 (module = SHIL, medium name = SHIL_W_C2            ):
+	CUTGAM = 0.01
+	CUTELE = 0.1
+	CUTNEU = 0.01
+	CUTHAD = 0.01
+Global medium ID 109 (module = SHIL, medium name = SHIL_PB_C0           ):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 110 (module = SHIL, medium name = SHIL_PB_C1           ):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 111 (module = SHIL, medium name = SHIL_PB_C2           ):
+	CUTGAM = 0.01
+	CUTELE = 0.1
+	CUTNEU = 0.01
+	CUTHAD = 0.01
+Global medium ID 112 (module = SHIL, medium name = SHIL_INS_C0          ):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.0001
+	BCUTE = 0.0001
+	BCUTM = 0.0001
+Global medium ID 113 (module = SHIL, medium name = SHIL_INS_C1          ):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 114 (module = SHIL, medium name = SHIL_INS_C2          ):
+	CUTGAM = 0.01
+	CUTELE = 0.1
+	CUTNEU = 0.01
+	CUTHAD = 0.01
+Global medium ID 115 (module = SHIL, medium name = SHIL_AIR_C0          ):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 116 (module = SHIL, medium name = SHIL_AIR_C1          ):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 117 (module = SHIL, medium name = SHIL_AIR_C2          ):
+	CUTGAM = 0.01
+	CUTELE = 0.1
+	CUTNEU = 0.01
+	CUTHAD = 0.01
+Global medium ID 118 (module = SHIL, medium name = SHIL_AIR_MUON        ):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 1e-05
+	BCUTE = 1e-05
+	BCUTM = 1e-05
+	DCUTE = 1e-05
+	DCUTM = 1e-05
+Global medium ID 119 (module = SHIL, medium name = SHIL_VA_C0           ):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 120 (module = SHIL, medium name = SHIL_VA_C1           ):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 121 (module = SHIL, medium name = SHIL_VA_C2           ):
+	CUTGAM = 0.01
+	CUTELE = 0.1
+	CUTNEU = 0.01
+	CUTHAD = 0.01
+Global medium ID 122 (module = SHIL, medium name = SHIL_ST_C0           ):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 123 (module = SHIL, medium name = SHIL_ST_C1           ):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 124 (module = SHIL, medium name = SHIL_ST_C3           ):
+	CUTGAM = 0.01
+	CUTELE = 0.1
+	CUTNEU = 0.01
+	CUTHAD = 0.01
+Global medium ID 128 (module = SHIL, medium name = SHIL_Ni/W0           ):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.0001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 129 (module = SHIL, medium name = SHIL_Ni/W1           ):
+	CUTGAM = 0.001
+	CUTELE = 0.01
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+Global medium ID 130 (module = SHIL, medium name = SHIL_Ni/W3           ):
+	CUTGAM = 0.01
+	CUTELE = 0.1
+	CUTNEU = 0.01
+	CUTHAD = 0.01
+Global medium ID 137 (module = FRAME, medium name = FRAME_Steel):
+	CUTGAM = 5e-05
+	CUTELE = 5e-05
+	CUTNEU = 5e-05
+	CUTHAD = 5e-05
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 138 (module = FRAME, medium name = FRAME_Air):
+	CUTGAM = 5e-05
+	CUTELE = 5e-05
+	CUTNEU = 5e-05
+	CUTHAD = 5e-05
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+Global medium ID 165 (module = TRD, medium name = TRD_Gas-mix):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 1e-05
+	BCUTE = 1e-05
+	BCUTM = 1e-05
+	DCUTE = 1e-05
+	DCUTM = 1e-05
+Global medium ID 182 (module = TRD, medium name = TRD_Mylar):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 1e-05
+	BCUTE = 1e-05
+	BCUTM = 1e-05
+	DCUTE = 1e-05
+	DCUTM = 1e-05
+Global medium ID 185 (module = TPC, medium name = TPC_DriftGas1):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 1e-05
+	BCUTE = 1e-05
+	BCUTM = 1e-05
+	DCUTE = 1e-05
+	DCUTM = 1e-05
+Global medium ID 186 (module = TPC, medium name = TPC_DriftGas2):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 1e-05
+	BCUTE = 1e-05
+	BCUTM = 1e-05
+	DCUTE = 1e-05
+	DCUTM = 1e-05
+Global medium ID 187 (module = TPC, medium name = TPC_CO2):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 1e-05
+	BCUTE = 1e-05
+	BCUTM = 1e-05
+	DCUTE = 1e-05
+	DCUTM = 1e-05
+Global medium ID 188 (module = TPC, medium name = TPC_DriftGas3):
+	CUTGAM = 1e-06
+	CUTELE = 1e-06
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 1e-06
+	BCUTE = 1e-06
+	BCUTM = 1e-06
+	DCUTE = 1e-06
+	DCUTM = 1e-06
+Global medium ID 211 (module = ITS, medium name = ITS_AIR$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 212 (module = ITS, medium name = ITS_WATER$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 213 (module = ITS, medium name = ITS_SI$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 214 (module = ITS, medium name = ITS_BERILLIUM$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 215 (module = ITS, medium name = ITS_COPPER$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 216 (module = ITS, medium name = ITS_CARBON$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 217 (module = ITS, medium name = ITS_KAPTON(POLYCH2)$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 218 (module = ITS, medium name = ITS_METALSTACK$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 219 (module = ITS, medium name = ITS_GLUE_IBFPC$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 220 (module = ITS, medium name = ITS_CERAMIC$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 221 (module = ITS, medium name = ITS_K13D2U2k$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 222 (module = ITS, medium name = ITS_K13D2U120$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 223 (module = ITS, medium name = ITS_F6151B05M$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 224 (module = ITS, medium name = ITS_M60J3K$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 225 (module = ITS, medium name = ITS_M55J6K$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 226 (module = ITS, medium name = ITS_T300$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 227 (module = ITS, medium name = ITS_FGS003$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 228 (module = ITS, medium name = ITS_CarbonFleece$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 230 (module = ITS, medium name = ITS_ROHACELL$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 233 (module = ITS, medium name = ITS_PEEKCF30$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 234 (module = ITS, medium name = ITS_FLEXCABLE$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 235 (module = ITS, medium name = ITS_GLUE$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 236 (module = ITS, medium name = ITS_ALUMINUM$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 237 (module = ITS, medium name = ITS_TUNGCARB$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 238 (module = ITS, medium name = ITS_INOX304$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 239 (module = ITS, medium name = ITS_TUNGSTEN$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 245 (module = ALPIDE, medium name = ALPIDE_METALSTACK$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 246 (module = ALPIDE, medium name = ALPIDE_AIR$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 247 (module = ALPIDE, medium name = ALPIDE_SI$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 248 (module = MFT, medium name = MFT_Air$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 249 (module = MFT, medium name = MFT_Vacuum$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 250 (module = MFT, medium name = MFT_Si$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 251 (module = MFT, medium name = MFT_Readout$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 252 (module = MFT, medium name = MFT_Support$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 253 (module = MFT, medium name = MFT_Carbon$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 254 (module = MFT, medium name = MFT_Be$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 255 (module = MFT, medium name = MFT_Alu$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 256 (module = MFT, medium name = MFT_Water$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 257 (module = MFT, medium name = MFT_SiO2$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 258 (module = MFT, medium name = MFT_Inox$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 259 (module = MFT, medium name = MFT_Kapton$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 260 (module = MFT, medium name = MFT_Epoxy$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 261 (module = MFT, medium name = MFT_SE4445$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 262 (module = MFT, medium name = MFT_CarbonFiber$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 263 (module = MFT, medium name = MFT_Rohacell$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 264 (module = MFT, medium name = MFT_Polyimide$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 265 (module = MFT, medium name = MFT_PEEK$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 266 (module = MFT, medium name = MFT_FR4$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 267 (module = MFT, medium name = MFT_Cu$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 268 (module = MFT, medium name = MFT_X7Rcapacitors$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 269 (module = MFT, medium name = MFT_X7Rweld$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 270 (module = MFT, medium name = MFT_CarbonFleece$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 271 (module = MFT, medium name = MFT_CarbonFiberM46J$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 272 (module = MFT, medium name = MFT_Polypropylene$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 273 (module = MFT, medium name = MFT_Polyurethane$):
+	CUTGAM = 3e-05
+	CUTELE = 3e-05
+	CUTNEU = 3e-05
+	CUTHAD = 3e-05
+	CUTMUO = 0.001
+	BCUTE = 3e-05
+	BCUTM = 3e-05
+	DCUTE = 3e-05
+	DCUTM = 3e-05
+Global medium ID 275 (module = MCH, medium name = MCH_Tracking gas):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 1e-05
+	BCUTE = 1e-05
+	BCUTM = 1e-05
+	DCUTE = 1e-05
+	DCUTM = 1e-05
+Global medium ID 276 (module = MCH, medium name = MCH_Carbon):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 277 (module = MCH, medium name = MCH_Nomex (honey comb)):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 278 (module = MCH, medium name = MCH_Nomex (bulk)):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 279 (module = MCH, medium name = MCH_Noryl):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 280 (module = MCH, medium name = MCH_Copper):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 282 (module = MCH, medium name = MCH_Rohacell):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 283 (module = MCH, medium name = MCH_Rohacell (st 1)):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 285 (module = MCH, medium name = MCH_Plastic):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 287 (module = MCH, medium name = MCH_Inox):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 288 (module = MCH, medium name = MCH_Aluminium):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 289 (module = MID, medium name = MID_Gas):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 1e-05
+	BCUTE = 1e-05
+	BCUTM = 1e-05
+	DCUTE = 1e-05
+	DCUTM = 1e-05
+Global medium ID 290 (module = MID, medium name = MID_Bakelite):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 291 (module = MID, medium name = MID_Inox):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 292 (module = MID, medium name = MID_Aluminium):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 293 (module = MID, medium name = MID_Copper):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 296 (module = MID, medium name = MID_Nomex):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 298 (module = EMC, medium name = EMC_Lead$):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.0001
+	BCUTM = 0.0001
+	DCUTE = 0.0001
+	DCUTM = 0.0001
+Global medium ID 299 (module = EMC, medium name = EMC_Scintillator$):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.0001
+	BCUTM = 0.0001
+	DCUTE = 0.0001
+	DCUTM = 0.0001
+Global medium ID 300 (module = EMC, medium name = EMC_Al$):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.0001
+	BCUTM = 0.0001
+	DCUTE = 0.0001
+	DCUTM = 0.0001
+Global medium ID 301 (module = EMC, medium name = EMC_S steel$):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.0001
+	BCUTM = 0.0001
+	DCUTE = 0.0001
+	DCUTM = 0.0001
+Global medium ID 302 (module = EMC, medium name = EMC_Paper$):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.0001
+	BCUTM = 0.0001
+	DCUTE = 0.0001
+	DCUTM = 0.0001
+Global medium ID 304 (module = PHS, medium name = PHS_Alparts):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.0001
+	CUTHAD = 0.0001
+	CUTMUO = 0.0001
+	BCUTE = 0.0001
+	BCUTM = 0.0001
+	DCUTE = 0.0001
+	DCUTM = 0.0001
+Global medium ID 307 (module = PHS, medium name = PHS_SiAPD):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.0001
+	CUTHAD = 0.0001
+	CUTMUO = 0.0001
+	BCUTE = 0.0001
+	BCUTM = 0.0001
+	DCUTE = 0.0001
+	DCUTM = 0.0001
+Global medium ID 308 (module = PHS, medium name = PHS_ThermoInsul.):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.0001
+	CUTHAD = 0.0001
+	CUTMUO = 0.0001
+	BCUTE = 0.0001
+	BCUTM = 0.0001
+	DCUTE = 0.0001
+	DCUTM = 0.0001
+Global medium ID 327 (module = FT0, medium name = FT0_OpticalGlass$):
+	CUTGAM = 0.0005
+	CUTELE = 0.0005
+	CUTNEU = 0.0005
+	CUTHAD = 0.0005
+	CUTMUO = 0.0005
+	BCUTE = 0.0005
+	BCUTM = 0.0005
+	DCUTE = 0.0005
+	DCUTM = 0.0005
+Global medium ID 328 (module = FT0, medium name = FT0_OpticalGlassCathode$):
+	CUTGAM = 0.0005
+	CUTELE = 0.0005
+	CUTNEU = 0.0005
+	CUTHAD = 0.0005
+	CUTMUO = 0.0005
+	BCUTE = 0.0005
+	BCUTM = 0.0005
+	DCUTE = 0.0005
+	DCUTM = 0.0005
+Global medium ID 332 (module = FV0, medium name = FV0_Scintillator$):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 354 (module = FDD, medium name = FDD_BC420):
+	CUTGAM = 0.001
+	CUTELE = 0.001
+	CUTNEU = 0.001
+	CUTHAD = 0.001
+	CUTMUO = 0.001
+	BCUTE = 0.001
+	BCUTM = 0.001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 360 (module = HMP, medium name = HMP_C6F14):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.0001
+	CUTMUO = 0.0001
+	DCUTE = 0.0005
+	DCUTM = 0.0005
+Global medium ID 361 (module = HMP, medium name = HMP_SiO2):
+	CUTGAM = 0.0001
+	CUTELE = 0.0001
+	CUTNEU = 0.0001
+	CUTMUO = 0.0001
+	DCUTE = 0.001
+	DCUTM = 0.001
+Global medium ID 362 (module = HMP, medium name = HMP_CH4):
+	CUTGAM = 5e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.0001
+	CUTMUO = 0.0001
+	DCUTE = 0.0001
+	DCUTM = 0.0001
+Global medium ID 363 (module = HMP, medium name = HMP_CsI):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.0001
+	CUTMUO = 0.0001
+	DCUTE = 5e-05
+	DCUTM = 5e-05
+Global medium ID 366 (module = HMP, medium name = HMP_Cu):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.0001
+	CUTMUO = 0.0001
+	DCUTE = 5e-05
+	DCUTM = 5e-05
+Global medium ID 367 (module = HMP, medium name = HMP_W):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.0001
+	CUTMUO = 0.0001
+	DCUTE = 5e-05
+	DCUTM = 5e-05
+Global medium ID 368 (module = HMP, medium name = HMP_Al):
+	CUTGAM = 1e-05
+	CUTELE = 1e-05
+	CUTNEU = 0.0001
+	CUTMUO = 0.0001
+	DCUTE = 5e-05
+	DCUTM = 5e-05
+Summary of process settings per media.
+-- Default process settings:
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	PFIS = 0
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	MUNU = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	CKOV = 1
+-- Custom process settings for single media:
+Global medium ID 43 (module = PIPE, medium name = PIPE_BE):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 48 (module = PIPE, medium name = PIPE_AIR):
+	DRAY = 1
+Global medium ID 49 (module = PIPE, medium name = PIPE_AIR_HIGH):
+	DRAY = 1
+Global medium ID 50 (module = PIPE, medium name = PIPE_AIR_NF):
+	DRAY = 1
+Global medium ID 60 (module = PIPE, medium name = PIPE_AA5083):
+	DRAY = 1
+Global medium ID 61 (module = PIPE, medium name = PIPE_AA2219):
+	DRAY = 1
+Global medium ID 66 (module = ABSO, medium name = ABSO_C_C0):
+	DRAY = 0
+Global medium ID 72 (module = ABSO, medium name = ABSO_MG_C0):
+	DRAY = 0
+Global medium ID 88 (module = ABSO, medium name = ABSO_CC_C0):
+	DRAY = 0
+Global medium ID 118 (module = SHIL, medium name = SHIL_AIR_MUON        ):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 1
+	MULS = 1
+	RAYL = 1
+Global medium ID 165 (module = TRD, medium name = TRD_Gas-mix):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 182 (module = TRD, medium name = TRD_Mylar):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 184 (module = TPC, medium name = TPC_Air):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 185 (module = TPC, medium name = TPC_DriftGas1):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 186 (module = TPC, medium name = TPC_DriftGas2):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 187 (module = TPC, medium name = TPC_CO2):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 188 (module = TPC, medium name = TPC_DriftGas3):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 189 (module = TPC, medium name = TPC_Al):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 190 (module = TPC, medium name = TPC_Kevlar):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 191 (module = TPC, medium name = TPC_Nomex):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 192 (module = TPC, medium name = TPC_Makrolon):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 193 (module = TPC, medium name = TPC_Mylar):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 194 (module = TPC, medium name = TPC_Tedlar):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 195 (module = TPC, medium name = TPC_Prepreg1):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 196 (module = TPC, medium name = TPC_Prepreg2):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 197 (module = TPC, medium name = TPC_Prepreg3):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 198 (module = TPC, medium name = TPC_Epoxy):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 199 (module = TPC, medium name = TPC_Cu):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 200 (module = TPC, medium name = TPC_Si):
+	PAIR = 1
+	PHOT = 1
+	DRAY = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 211 (module = ITS, medium name = ITS_AIR$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 212 (module = ITS, medium name = ITS_WATER$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 213 (module = ITS, medium name = ITS_SI$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 214 (module = ITS, medium name = ITS_BERILLIUM$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 215 (module = ITS, medium name = ITS_COPPER$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 216 (module = ITS, medium name = ITS_CARBON$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 217 (module = ITS, medium name = ITS_KAPTON(POLYCH2)$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 218 (module = ITS, medium name = ITS_METALSTACK$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 219 (module = ITS, medium name = ITS_GLUE_IBFPC$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 220 (module = ITS, medium name = ITS_CERAMIC$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 221 (module = ITS, medium name = ITS_K13D2U2k$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 222 (module = ITS, medium name = ITS_K13D2U120$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 223 (module = ITS, medium name = ITS_F6151B05M$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 224 (module = ITS, medium name = ITS_M60J3K$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 225 (module = ITS, medium name = ITS_M55J6K$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 226 (module = ITS, medium name = ITS_T300$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 227 (module = ITS, medium name = ITS_FGS003$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 228 (module = ITS, medium name = ITS_CarbonFleece$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 230 (module = ITS, medium name = ITS_ROHACELL$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 233 (module = ITS, medium name = ITS_PEEKCF30$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 234 (module = ITS, medium name = ITS_FLEXCABLE$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 235 (module = ITS, medium name = ITS_GLUE$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 236 (module = ITS, medium name = ITS_ALUMINUM$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 237 (module = ITS, medium name = ITS_TUNGCARB$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 238 (module = ITS, medium name = ITS_INOX304$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 239 (module = ITS, medium name = ITS_TUNGSTEN$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 245 (module = ALPIDE, medium name = ALPIDE_METALSTACK$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 246 (module = ALPIDE, medium name = ALPIDE_AIR$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 247 (module = ALPIDE, medium name = ALPIDE_SI$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 248 (module = MFT, medium name = MFT_Air$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 249 (module = MFT, medium name = MFT_Vacuum$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 250 (module = MFT, medium name = MFT_Si$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 251 (module = MFT, medium name = MFT_Readout$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 252 (module = MFT, medium name = MFT_Support$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 253 (module = MFT, medium name = MFT_Carbon$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 254 (module = MFT, medium name = MFT_Be$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 255 (module = MFT, medium name = MFT_Alu$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 256 (module = MFT, medium name = MFT_Water$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 257 (module = MFT, medium name = MFT_SiO2$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 258 (module = MFT, medium name = MFT_Inox$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 259 (module = MFT, medium name = MFT_Kapton$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 260 (module = MFT, medium name = MFT_Epoxy$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 261 (module = MFT, medium name = MFT_SE4445$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 262 (module = MFT, medium name = MFT_CarbonFiber$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 263 (module = MFT, medium name = MFT_Rohacell$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 264 (module = MFT, medium name = MFT_Polyimide$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 265 (module = MFT, medium name = MFT_PEEK$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 266 (module = MFT, medium name = MFT_FR4$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 267 (module = MFT, medium name = MFT_Cu$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 268 (module = MFT, medium name = MFT_X7Rcapacitors$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 269 (module = MFT, medium name = MFT_X7Rweld$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 270 (module = MFT, medium name = MFT_CarbonFleece$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 271 (module = MFT, medium name = MFT_CarbonFiberM46J$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 272 (module = MFT, medium name = MFT_Polypropylene$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 273 (module = MFT, medium name = MFT_Polyurethane$):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 275 (module = MCH, medium name = MCH_Tracking gas):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 1
+	MULS = 1
+	RAYL = 1
+Global medium ID 276 (module = MCH, medium name = MCH_Carbon):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 277 (module = MCH, medium name = MCH_Nomex (honey comb)):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 278 (module = MCH, medium name = MCH_Nomex (bulk)):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 279 (module = MCH, medium name = MCH_Noryl):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 280 (module = MCH, medium name = MCH_Copper):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 282 (module = MCH, medium name = MCH_Rohacell):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 283 (module = MCH, medium name = MCH_Rohacell (st 1)):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 285 (module = MCH, medium name = MCH_Plastic):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 287 (module = MCH, medium name = MCH_Inox):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 288 (module = MCH, medium name = MCH_Aluminium):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 289 (module = MID, medium name = MID_Gas):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 1
+	MULS = 1
+	RAYL = 1
+Global medium ID 290 (module = MID, medium name = MID_Bakelite):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 291 (module = MID, medium name = MID_Inox):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 292 (module = MID, medium name = MID_Aluminium):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 293 (module = MID, medium name = MID_Copper):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 296 (module = MID, medium name = MID_Nomex):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 0
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 298 (module = EMC, medium name = EMC_Lead$):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 299 (module = EMC, medium name = EMC_Scintillator$):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 300 (module = EMC, medium name = EMC_Al$):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 301 (module = EMC, medium name = EMC_S steel$):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 302 (module = EMC, medium name = EMC_Paper$):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 304 (module = PHS, medium name = PHS_Alparts):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 307 (module = PHS, medium name = PHS_SiAPD):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 308 (module = PHS, medium name = PHS_ThermoInsul.):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 3
+	MULS = 1
+	RAYL = 1
+Global medium ID 327 (module = FT0, medium name = FT0_OpticalGlass$):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 328 (module = FT0, medium name = FT0_OpticalGlassCathode$):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 2
+	MULS = 1
+	RAYL = 1
+Global medium ID 332 (module = FV0, medium name = FV0_Scintillator$):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 1
+	MULS = 1
+	RAYL = 1
+Global medium ID 354 (module = FDD, medium name = FDD_BC420):
+	PAIR = 1
+	COMP = 1
+	PHOT = 1
+	DRAY = 1
+	ANNI = 1
+	BREM = 1
+	HADR = 1
+	DCAY = 1
+	LOSS = 1
+	MULS = 1
+	RAYL = 1
+Global medium ID 360 (module = HMP, medium name = HMP_C6F14):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 361 (module = HMP, medium name = HMP_SiO2):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 362 (module = HMP, medium name = HMP_CH4):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 363 (module = HMP, medium name = HMP_CsI):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 366 (module = HMP, medium name = HMP_Cu):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 367 (module = HMP, medium name = HMP_W):
+	DRAY = 1
+	LOSS = 1
+Global medium ID 368 (module = HMP, medium name = HMP_Al):
+	DRAY = 1
+	LOSS = 1
