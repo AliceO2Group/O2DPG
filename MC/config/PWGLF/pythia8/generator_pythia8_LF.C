@@ -1,17 +1,17 @@
 ///
-/// \file   generator_pythia8_longlived_multiple.C
+/// \file   generator_pythia8_LF.C
 /// \author Nicolò Jacazio nicolo.jacazio@cern.ch
 /// \since  05/08/2022
 /// \brief  Implementation of a gun generator for multiple particles, built on generator_pythia8_longlived.C
 ///         Needs PDG, Number of injected, minimum and maximum pT. These can be provided in three ways, bundeling variables, particles or from input file
 ///         usage:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLF({1000010020, 1000010030}, {10, 10}, {0.5, 0.5}, {10, 10})'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF.C;GeneratorExternal.funcName=generateLF({1000010020, 1000010030}, {10, 10}, {0.5, 0.5}, {10, 10})'`
 ///               Here PDG, Number injected, pT limits are separated and matched by index
 ///         or:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLF({{1000010020, 10, 0.5, 10}, {1000010030, 10, 0.5, 10}})'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF.C;GeneratorExternal.funcName=generateLF({{1000010020, 10, 0.5, 10}, {1000010030, 10, 0.5, 10}})'`
 ///               Here PDG, Number injected, pT limits are separated are divided per particle
 ///         or:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_longlived_multiple.C;GeneratorExternal.funcName=generateLF("${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun")'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF.C;GeneratorExternal.funcName=generateLF("${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei.gun")'`
 ///               Here PDG, Number injected, pT limits are provided via an intermediate configuration file
 ///
 
@@ -22,6 +22,7 @@
 #include "TSystem.h"
 #include <fstream>
 #include "Generators/GeneratorPythia8Param.h"
+#include "Generators/DecayerPythia8Param.h"
 #endif
 #include "generator_pythia8_longlived.C"
 
@@ -36,19 +37,34 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
                      int gapBetweenInjection /*= 0*/,
                      bool useTrigger /*= false*/,
                      std::string pythiaCfgMb /*= "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg"*/,
-                     std::string pythiaCfgSignal /*= "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_signal.cfg"*/) : mOneInjectionPerEvent{injOnePerEvent},
+                     std::string pythiaCfgSignal /*= "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_signal.cfg"*/) : GeneratorPythia8{},
+                                                                                                                          mOneInjectionPerEvent{injOnePerEvent},
                                                                                                                           mGapBetweenInjection{gapBetweenInjection},
                                                                                                                           mUseTriggering{useTrigger}
   {
     LOG(info) << "GeneratorPythia8LF constructor";
-    LOG(info) << "++ injOnePerEvent: " << injOnePerEvent;
-    LOG(info) << "++ gapBetweenInjection: " << gapBetweenInjection;
-    LOG(info) << "++ useTrigger: " << useTrigger;
+    LOG(info) << "++ mOneInjectionPerEvent: " << mOneInjectionPerEvent;
+    LOG(info) << "++ mGapBetweenInjection: " << mGapBetweenInjection;
+    LOG(info) << "++ mUseTriggering: " << mUseTriggering;
     LOG(info) << "++ pythiaCfgMb: " << pythiaCfgMb;
     LOG(info) << "++ pythiaCfgSignal: " << pythiaCfgSignal;
-    pythiaCfgMb = gSystem->ExpandPathName(pythiaCfgMb.c_str());
-    pythiaCfgSignal = gSystem->ExpandPathName(pythiaCfgSignal.c_str());
     if (useTrigger) {
+      mPythia.readString("ProcessLevel:all off");
+      if (pythiaCfgMb == "") { // If no configuration file is provided, use the one from the Pythia8Param
+        auto& param = o2::eventgen::GeneratorPythia8Param::Instance();
+        LOG(info) << "Instance LF \'Pythia8\' generator with following parameters for MB event";
+        LOG(info) << param;
+        pythiaCfgMb = param.config;
+      }
+      if (pythiaCfgSignal == "") { // If no configuration file is provided, use the one from the Pythia8Param
+        auto& param = o2::eventgen::GeneratorPythia8Param::Instance();
+        LOG(info) << "Instance LF \'Pythia8\' generator with following parameters for signal event";
+        LOG(info) << param;
+        pythiaCfgSignal = param.config;
+      }
+      pythiaCfgMb = gSystem->ExpandPathName(pythiaCfgMb.c_str());
+      pythiaCfgSignal = gSystem->ExpandPathName(pythiaCfgSignal.c_str());
+      LOG(info) << "  ++ Using trigger, initializing Pythia8 for trigger";
       if (!pythiaObjectMinimumBias.readFile(pythiaCfgMb)) {
         LOG(fatal) << "Could not pythiaObjectMinimumBias.readFile(\"" << pythiaCfgMb << "\")";
       }
@@ -61,13 +77,49 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
       if (!pythiaObjectSignal.init()) {
         LOG(fatal) << "Could not pythiaObjectSignal.init() from " << pythiaCfgSignal;
       }
-    } else {
+    } else { // Using simple injection with internal decay (if needed). Fetching the parameters from the configuration file of the PythiaDecayer
+      /** switch off process level **/
+      mPythia.readString("ProcessLevel:all off");
+
+      /** config **/
+      auto& paramGen = o2::eventgen::GeneratorPythia8Param::Instance();
+      if (!paramGen.config.empty()) {
+        LOG(fatal) << "Configuration file provided for \'GeneratorPythia8\' should be empty for this injection scheme";
+        return;
+      }
+      auto& param = o2::eventgen::DecayerPythia8Param::Instance();
+      LOG(info) << "Init \'GeneratorPythia8LF\' with following parameters";
+      LOG(info) << param;
+      for (int i = 0; i < 8; ++i) {
+        if (param.config[i].empty()) {
+          continue;
+        }
+        std::string config = gSystem->ExpandPathName(param.config[i].c_str());
+        LOG(info) << "GeneratorPythia8LF Reading configuration from file: " << config;
+        if (!mPythia.readFile(config, true)) {
+          LOG(fatal) << "Failed to init \'DecayerPythia8\': problems with configuration file "
+                     << config;
+          return;
+        }
+      }
+
+      /** show changed particle data **/
+      if (param.showChanged) {
+        mPythia.readString(std::string("Init:showChangedParticleData on"));
+      } else {
+        mPythia.readString(std::string("Init:showChangedParticleData off"));
+      }
+
+      /** initialise **/
+      if (!mPythia.init()) {
+        LOG(fatal) << "Failed to init \'DecayerPythia8\': init returned with error";
+        return;
+      }
       if (pythiaCfgSignal != "") {
-        // if (pythiaCfgMb != "" || pythiaCfgSignal != "") {
-        // LOG(fatal) << "Cannot use simple injection and have a configuration file. pythiaCfgMb= `" << pythiaCfgMb << "`, pythiaCfgSignal= `" << pythiaCfgSignal << "` must be empty";
         LOG(fatal) << "Cannot use simple injection and have a configuration file. pythiaCfgSignal= `" << pythiaCfgSignal << "` must be empty";
       }
     }
+    gRandom->SetSeed(0);
   }
 
   ///  Destructor
@@ -91,7 +143,7 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
     mPythia.event.reset();
 
     mConfigToUse = mOneInjectionPerEvent ? static_cast<int>(gRandom->Uniform(0.f, getNGuns())) : -1;
-    LOGF(info, "Using configuration %i out of %lli, %lli transport decayed, %lli generator decayed", mConfigToUse, getNGuns(), mGunConfigs.size(), mGunConfigsGenDecayed.size());
+    LOG(info) << "Using configuration " << mConfigToUse << " out of " << getNGuns() << ", of which " << mGunConfigs.size() << " are transport decayed and " << mGunConfigsGenDecayed.size() << " are generator decayed";
 
     int nConfig = mGunConfigs.size(); // We start counting from the configurations of the transport decayed particles
     for (const ConfigContainer& cfg : mGunConfigsGenDecayed) {
@@ -103,36 +155,42 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         bool doSignal = true; // Do signal or gap
         if (mGapBetweenInjection > 0) {
           if (mGapBetweenInjection == 1 && mEventCounter % 2 == 0) {
-            LOG(info) << "Generating background event " << mEventCounter;
             doSignal = false;
           } else if (mEventCounter % mGapBetweenInjection != 0) {
-            LOG(info) << "Generating background event " << mEventCounter;
             doSignal = false;
           }
         }
 
         if (doSignal) {
+          LOG(info) << "Generating triggered signal event for particle";
+          cfg.print();
           bool satisfiesTrigger = false;
+          int nTries = 0;
           while (!satisfiesTrigger) {
-            if (!pythiaObjectSignal.next()) { // eh not good, try again
+            if (!pythiaObjectSignal.next()) {
               continue;
             }
             //Check if triggered condition satisfied
             for (Long_t j = 0; j < pythiaObjectSignal.event.size(); j++) {
-              Int_t pypid = pythiaObjectSignal.event[j].id();
-              Float_t pyeta = pythiaObjectSignal.event[j].eta();
-              if (pypid == cfg.pdg && cfg.etaMin < pyeta && pyeta < cfg.etaMax) {
+              const int& pypid = pythiaObjectSignal.event[j].id();
+              const float& pyeta = pythiaObjectSignal.event[j].eta();
+              const float& pypt = pythiaObjectSignal.event[j].pT();
+              if (pypid == cfg.pdg && cfg.etaMin < pyeta && pyeta < cfg.etaMax && pypt > cfg.ptMin && pypt < cfg.ptMax) {
+                LOG(info) << "Found particle " << j << " " << pypid << " with eta " << pyeta << " and pT " << pypt << " in event " << mEventCounter << " after " << nTries << " tries";
                 satisfiesTrigger = true;
                 break;
               }
             }
+            nTries++;
           }
           mPythia.event = pythiaObjectSignal.event;
         } else {
+          LOG(info) << "Generating background event " << mEventCounter;
           // Generate minimum-bias event
           bool lGenerationOK = false;
-          while (!lGenerationOK)
+          while (!lGenerationOK) {
             lGenerationOK = pythiaObjectMinimumBias.next();
+          }
           mPythia.event = pythiaObjectMinimumBias.event;
         }
         continue;
@@ -149,7 +207,6 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
 
         Particle particle;
         particle.id(cfg.pdg);
-        particle.status(MCGenStatusEncoding(1, 1).fullEncoding);
         particle.status(11);
         particle.m(cfg.mass);
         particle.px(px);
@@ -159,13 +216,25 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         particle.xProd(0.f);
         particle.yProd(0.f);
         particle.zProd(0.f);
-        LOG(info) << "Appending particle " << i << "/" << cfg.nInject - 1 << " pdg = " << particle.id() << " at position " << mPythia.event.append(particle) << "/" << mPythia.event.size();
+        mPythia.particleData.mayDecay(cfg.pdg, true); // force decay
       }
     }
-    mPythia.next();
-    LOG(info) << "Eventlisting";
-    mPythia.event.list(1);
-    mPythia.stat();
+    if (!mUseTriggering) {
+      LOG(info) << "Calling next!";
+      mPythia.moreDecays();
+      mPythia.next();
+      if (mPythia.event.size() <= 2) {
+        LOG(fatal) << "Event size is " << mPythia.event.size() << ", this is not good! Check that the decay actually happened or consider not using the generator decayed particles!";
+      } else {
+        LOG(info) << "Event size is " << mPythia.event.size() << " particles";
+      }
+    }
+
+    if (mVerbose) {
+      LOG(info) << "Eventlisting";
+      mPythia.event.list(1);
+      mPythia.stat();
+    }
     return true;
   }
 
@@ -220,6 +289,13 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       }
       nConfig++;
+    }
+    if (mVerbose) {
+      LOG(info) << "Printing particles that are appended";
+      int n = 0;
+      for (const auto& p : mParticles) {
+        LOG(info) << "Particle " << n++ << " is a " << p.GetPdgCode() << " with status " << p.GetStatusCode() << " and px = " << p.Px() << " py = " << p.Py() << " pz = " << p.Pz();
+      }
     }
     return true;
   }
@@ -293,14 +369,20 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
   {
     LOG(info) << "GeneratorPythia8LF configuration with " << getNGuns() << " guns:";
     LOG(info) << "Particles decayed by the transport:";
+    int n = 0;
     for (const auto& cfg : mGunConfigs) {
+      LOG(info) << n++ << "/" << mGunConfigs.size() << ":";
       cfg.print();
     }
+    n = 0;
     LOG(info) << "Particles decayed by the generator:";
     for (const auto& cfg : mGunConfigsGenDecayed) {
+      LOG(info) << n++ << "/" << mGunConfigs.size() << ":";
       cfg.print();
     }
   }
+
+  void setVerbose(bool verbose = true) { mVerbose = verbose; }
 
  private:
   //  Configuration
@@ -311,6 +393,7 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
   // Running variables
   int mConfigToUse = -1; // Index of the configuration to use
   int mEventCounter = 0; // Event counter
+  bool mVerbose = true;  // Verbosity flag
 
   std::vector<ConfigContainer> mGunConfigs;           // List of gun configurations to use
   std::vector<ConfigContainer> mGunConfigsGenDecayed; // List of gun configurations to use that will be decayed by the generator
@@ -361,7 +444,7 @@ FairGenerator* generateLF(std::vector<GeneratorPythia8LF::ConfigContainer> cfg,
 
 ///___________________________________________________________
 /// Create generator via input file
-FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun",
+FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei.gun",
                           bool injectOnePDGPerEvent = true,
                           int gapBetweenInjection = 0,
                           bool useTrigger = false,
@@ -403,32 +486,45 @@ FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/P
 
 ///___________________________________________________________
 /// Create generator via input file for the triggered mode
-FairGenerator* generateLFTriggered(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/particlelist.gun",
+FairGenerator* generateLFTriggered(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei.gun",
                                    int gapBetweenInjection = 0,
-                                   std::string pythiaCfgMb = "${O2_ROOT}/share/Generators/egconfig/pythia8_inel.cfg",
-                                   std::string pythiaCfgSignal = "${O2_ROOT}/share/Generators/egconfig/pythia8_inel.cfg")
+                                   std::string pythiaCfgMb = "",
+                                   std::string pythiaCfgSignal = "")
 {
-  auto& param = o2::eventgen::GeneratorPythia8Param::Instance();
-  LOG(info) << "Instance LF \'Pythia8\' generator with following parameters";
-  LOG(info) << param;
-  if (param.config != "") {
-    pythiaCfgMb = param.config;
-  }
-  return generateLF(configuration, 1, gapBetweenInjection, true, pythiaCfgMb, pythiaCfgSignal);
+  return generateLF(configuration, /*injectOnePDGPerEvent=*/true, gapBetweenInjection, /*useTrigger=*/true, pythiaCfgMb, pythiaCfgSignal);
 }
 
 ///___________________________________________________________
-void generator_pythia8_longlived_multiple(bool runTest = true)
+void generator_pythia8_LF(bool testInj = true, bool testTrg = false)
 {
   LOG(info) << "Compiled correctly!";
-  if (!runTest) {
+  if (!testInj && !testTrg) {
     return;
   }
   // Injected mode
-  LOG(info) << "Testing the injected mode";
-  generateLF();
+  if (testInj) {
+    LOG(info) << "Testing the injected mode";
+    auto* gen = static_cast<GeneratorPythia8LF*>(generateLF("/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/strangeparticlelist.gun"));
+    gen->setVerbose();
+    gen->Print();
+    gen->print();
+    gen->Init();
+    gen->generateEvent();
+    gen->importParticles();
+  }
 
   // Triggered mode
-  LOG(info) << "Testing the triggered mode";
-  generateLFTriggered();
+  if (testTrg) {
+    LOG(info) << "Testing the triggered mode";
+    GeneratorPythia8LF* gen = static_cast<GeneratorPythia8LF*>(generateLFTriggered("/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/strangeparticlelist.gun",
+                                                                                   /*gapBetweenInjection=*/0,
+                                                                                   /*pythiaCfgMb=*/"/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/inel136tev.cfg",
+                                                                                   /*pythiaCfgSignal=*/"/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/inel136tev.cfg"));
+    gen->setVerbose();
+    gen->Print();
+    gen->print();
+    gen->Init();
+    gen->generateEvent();
+    gen->importParticles();
+  }
 }
