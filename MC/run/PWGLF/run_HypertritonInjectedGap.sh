@@ -19,13 +19,13 @@ SIMENGINE=${SIMENGINE:-TGeant3}
 NSIGEVENTS=${NSIGEVENTS:-1}
 NBKGEVENTS=${NBKGEVENTS:-1}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
-INTRATE=${INTRATE:-50000}
+INTRATE=${INTRATE:-500000}
 SYSTEM=${SYSTEM:-pp}
 ENERGY=${ENERGY:-13600}
 [[ ${SPLITID} != "" ]] && SEED="-seed ${SPLITID}" || SEED=""
 
 # create workflow
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${ENERGY} -col ${SYSTEM} -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} -confKey "Diamond.width[2]=6." -e ${SIMENGINE} ${SEED} -mod "--skipModules ZDC" \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${ENERGY} -col ${SYSTEM} -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} -confKey "Diamond.width[0]=0.1;Diamond.width[1]=0.1;Diamond.width[2]=6." -e ${SIMENGINE} ${SEED} -mod "--skipModules ZDC" \
         -ini ${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFHypertriton${SYSTEM}Gap.ini
 
 # run workflow
