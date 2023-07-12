@@ -9,6 +9,7 @@
 #include "TDatabasePDG.h"
 #include "TMath.h"
 #include <cmath>
+#include <vector>
 using namespace Pythia8;
 #endif
 
@@ -16,7 +17,7 @@ class GeneratorPythia8LongLivedGapTriggered : public o2::eventgen::GeneratorPyth
 {
 public:
   /// Constructor
-  GeneratorPythia8LongLivedGapTriggered(int input_pdg, int input_trigger_ratio = 1, int n_injected = 1, float pt_min = 1, float pt_max = 10)
+  GeneratorPythia8LongLivedGapTriggered(std::vector<int> input_pdg, int input_trigger_ratio = 1, int n_injected = 1, float pt_min = 1, float pt_max = 10)
   {
     mPdg = input_pdg;
     mNinjected = n_injected;
@@ -25,6 +26,7 @@ public:
     mPtMax = pt_max;
     mMass = getMass(input_pdg);
     mGeneratedEvents = 0;
+    mInjectionIndex = 0;
     mAlternatingPDGsign = true;
   }
 
@@ -52,22 +54,27 @@ public:
   void setNinjected(unsigned long n_injected) { mNinjected = n_injected; }
 
   /// Get mass from TParticlePDG
-  static double getMass(int input_pdg)
+  static std::vector<double> getMass(std::vector<int> input_pdg)
   {
-    double mass = 0;
-    if (TDatabasePDG::Instance())
+    std::vector<double> mass_vec;
+    for (auto pdg : input_pdg)
     {
-      TParticlePDG *particle = TDatabasePDG::Instance()->GetParticle(input_pdg);
-      if (particle)
+      double mass = 0;
+      if (TDatabasePDG::Instance())
       {
-        mass = particle->Mass();
+        TParticlePDG *particle = TDatabasePDG::Instance()->GetParticle(pdg);
+        if (particle)
+        {
+          mass = particle->Mass();
+        }
+        else
+        {
+          std::cout << "===> Unknown particle requested with PDG " << pdg << ", mass set to 0" << std::endl;
+        }
       }
-      else
-      {
-        std::cout << "===> Unknown particle requested with PDG " << input_pdg << ", mass set to 0" << std::endl;
-      }
+      mass_vec.push_back(mass);
     }
-    return mass;
+    return mass_vec;
   }
 
   Bool_t importParticles() override
@@ -76,6 +83,8 @@ public:
     if (mGeneratedEvents % mInverseTriggerRatio == 0)
     {
       static int sign = 1;
+      int currentPdg = mPdg[mInjectionIndex];
+      double currentMass = mMass[mInjectionIndex];
       for (int i = 0; i < mNinjected; ++i)
       {
         const double pt = gRandom->Uniform(mPtMin, mPtMax);
@@ -84,21 +93,22 @@ public:
         const double px{pt * std::cos(phi)};
         const double py{pt * std::sin(phi)};
         const double pz{pt * std::sinh(eta)};
-        const double et{std::hypot(std::hypot(pt, pz), mMass)};
+        const double et{std::hypot(std::hypot(pt, pz), currentMass)};
         sign *= 1 - 2 * mAlternatingPDGsign;
-        mParticles.push_back(TParticle(sign * mPdg, 1, -1, -1, -1, -1, px, py, pz, et, 0., 0., 0., 0.));
+        mParticles.push_back(TParticle(sign * currentPdg, 1, -1, -1, -1, -1, px, py, pz, et, 0., 0., 0., 0.));
         // make sure status code is encoded properly. Transport flag will be set by default and we have nothing
         // to do since all pushed particles should be tracked.
         o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       }
+      mInjectionIndex = ++mInjectionIndex % (int)mPdg.size();
     }
     mGeneratedEvents++;
     return true;
   }
 
 private:
-  int mPdg = 0;     /// particle mPdg code
-  double mMass = 0; /// particle mass [GeV/c^2]
+  std::vector<int> mPdg;     /// particle mPdg code
+  std::vector<double> mMass; /// particle mass [GeV/c^2]
 
   double mPtMin;        /// minimum transverse momentum for generated particles
   double mPtMax;        /// maximum transverse momentum for generated particles
@@ -111,11 +121,12 @@ private:
 
   // Control gap-triggering
   unsigned long long mGeneratedEvents; /// number of events generated so far
+  unsigned long long mInjectionIndex;  /// index of the particle in mPDG to be injected
   int mInverseTriggerRatio;            /// injection gap
 };
 
 ///___________________________________________________________
-FairGenerator *generateLongLivedGapTriggered(int mPdg, int input_trigger_ratio, int n_injected = 1, float pt_min = 1, float pt_max = 10, bool alternate_sign = true)
+FairGenerator *generateLongLivedGapTriggered(std::vector<int> mPdg, int input_trigger_ratio, int n_injected = 1, float pt_min = 1, float pt_max = 10, bool alternate_sign = true)
 {
   auto myGen = new GeneratorPythia8LongLivedGapTriggered(mPdg, input_trigger_ratio, n_injected, pt_min, pt_max);
   myGen->setAlternatingPDGsign(alternate_sign);
