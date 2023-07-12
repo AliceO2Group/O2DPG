@@ -36,7 +36,8 @@ $O2_SIM_WORKFLOW -eCM ${ENERGY} -col ${SYSTEM} -gen external \
         -j ${NWORKERS} \
         -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} \
         -confKey "Diamond.width[2]=6." \
-        ${SEED} -mod "${MODULES}" \
+        ${SEED} \
+        -procBkg inel -colBkg $SYSTEM --embedding -nb ${NBKGEVENTS} -genBkg pythia8 \
         -e ${SIMENGINE} \
         -ini $CFGINIFILE
 

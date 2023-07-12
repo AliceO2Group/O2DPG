@@ -25,7 +25,6 @@ INTRATE=${INTRATE:-50000}
 SYSTEM=${SYSTEM:-pp}
 ENERGY=${ENERGY:-13600}
 CFGINIFILE=${CFGINIFILE:-"${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFStrangenessTriggered.ini"}
-CFGINIFILE=/home/njacazio/alice/O2DPG/MC/config/PWGLF/ini/GeneratorLFStrangenessTriggered.ini
 [[ ${SPLITID} != "" ]] && SEED="-seed ${SPLITID}" || SEED=""
 
 echo "NWORKERS = $NWORKERS"
