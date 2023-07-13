@@ -185,6 +185,12 @@ else:
    print ("** Using generic config **")
    anchorConfig = create_sim_config(args)
 
+# write this config
+config_key_param_path = "user_config_key_params.json"
+with open(config_key_param_path, "w") as f:
+   print(f"INFO: Written additional config key parameters to JSON {config_key_param_path}")
+   json.dump(anchorConfig, f, indent=2)
+
 # with this we can tailor the workflow to the presence of
 # certain detectors
 activeDetectors = anchorConfig.get('o2-ctf-reader-workflow-options',{}).get('onlyDet','all')
@@ -1245,7 +1251,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[ITSRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
-     
+
      addQCPerTF(taskName='ITSTracksClusters',
                 needs=[ITSRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
@@ -1333,7 +1339,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    if environ.get('O2DPG_AOD_NOTRUNCATE') != None or environ.get('ALIEN_JDL_O2DPG_AOD_NOTRUNCATE') != None:
       AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
-   
+
    if args.no_strangeness_tracking:
       AODtask['cmd'] += ' --disable-strangeness-tracking'
 
