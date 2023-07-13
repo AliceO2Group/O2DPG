@@ -994,7 +994,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                                                     'TPCGasParam',
                                                     'ITSCATrackerParam',
                                                     'MFTClustererParam',
-                                                    'GPU_recp_tpc',
+                                                    'GPU_rec_tpc',
                                                     'trackTuneParams'])                         \
                               + " --track-sources " + anchorConfig.get("o2-tof-matcher-workflow-options",{}).get("track-sources",toftracksrcdefault) + (' --combine-devices','')[args.no_combine_dpl_devices] \
                               + tpc_corr_scaling_options
