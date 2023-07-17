@@ -51,6 +51,7 @@ parser.add_argument('--timestamp', type=int, help="Anchoring timestamp (defaults
 parser.add_argument('--condition-not-after', type=int, help="only consider CCDB objects not created after this timestamp (for TimeMachine)", default=3385078236000)
 parser.add_argument('--orbitsPerTF', type=int, help="Timeframe size in number of LHC orbits", default=128)
 parser.add_argument('--anchor-config',help="JSON file to contextualise workflow with external configs (config values etc.) for instance comping from data reco workflows.", default='')
+parser.add_argument('--dump-config',help="Dump JSON file with all settings used in workflow", default='user_config.json')
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
 parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...', default='')
@@ -186,7 +187,7 @@ else:
    anchorConfig = create_sim_config(args)
 
 # write this config
-config_key_param_path = "user_config_key_params.json"
+config_key_param_path = args.dump_config
 with open(config_key_param_path, "w") as f:
    print(f"INFO: Written additional config key parameters to JSON {config_key_param_path}")
    json.dump(anchorConfig, f, indent=2)
