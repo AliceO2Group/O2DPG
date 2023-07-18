@@ -46,7 +46,7 @@ NLANES=1
 SESSION="default"
 PIPEADD="0"
 ARGS_FILES="NameConf.mDirGRP=/home/epn/odc/files/;NameConf.mDirGeom=/home/epn/odc/files/;keyval.output_dir=/dev/null"
-QC_CONFIG="consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-full-qcmn-krypton"
+QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-full-qcmn-krypton"
 if [ $WRITER_TYPE == "EPN" ]; then
    KR_CONFIG="--writer-type ${WRITER_TYPE} --meta-output-dir /data/epn2eos_tool/epn2eos/ --output-dir /data/tf/raw --max-tf-per-file 2000 "
 else
