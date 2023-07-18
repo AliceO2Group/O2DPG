@@ -50,11 +50,17 @@ def call_extract_and_flatten(inputs, output_dir):
         run_macro(cmd, log_file_extract, output_dir)
     return 0
 
-def call_plot_overlays(nInput, output_dir, labels):
+def call_plot_overlays(inputs, output_dir, labels, no_extract):
+    nInput = len(inputs)
     output_dir = abspath(output_dir)
+    if not exists(output_dir):
+        makedirs(output_dir)
     cmd = f"\\({{"
     for i in range(nInput):
-        f = join(output_dir,FLATTENED_FILE_NAME+str(i+1)+".root")
+        if not no_extract:
+            f = join(output_dir,FLATTENED_FILE_NAME+str(i+1)+".root")
+        else:
+            f = abspath(inputs[i])
         cmd = cmd + f"\\\"{f}\\\","
     cmd = cmd[:-1]
     cmd = cmd + f"}},{{"
@@ -82,11 +88,16 @@ def main():
     parser.add_argument("-o", "--output", help="output directory", default="overlayPlots")
     parser.add_argument("-l", "--labels", nargs="*", help="plot labels")
     parser.add_argument("--clean", help="delete newfile.root files after macro has finished", action="store_true")
+    parser.add_argument("--no-extract", dest="no_extract", help="no extraction but immediately expect histograms present for comparison", action="store_true")
     args = parser.parse_args()
-    call_extract_and_flatten(args.input, args.output)
-    call_plot_overlays(len(args.input), args.output, args.labels)
+    if not args.no_extract:
+        call_extract_and_flatten(args.input, args.output)
+    call_plot_overlays(args.input, args.output, args.labels, args.no_extract)
     if args.clean:
-        clean_up(len(args.input), args.output)
+        if not args.no_extract:
+            clean_up(len(args.input), args.output)
+        else:
+            print("Nothing to clean up.")
     return 0
 
 if __name__ == "__main__":
