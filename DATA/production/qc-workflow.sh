@@ -5,6 +5,9 @@ if [[ -z "$WORKFLOW" || -z "$GEN_TOPO_MYDIR" ]]; then
   exit 1
 fi
 
+source $GEN_TOPO_MYDIR/gen_topo_helper_functions.sh || { echo "gen_topo_helper_functions.sh failed" 1>&2 && exit 1; }
+source $GEN_TOPO_MYDIR/setenv.sh || { echo "setenv.sh failed" 1>&2 && exit 1; }
+
 if [[ ! -z ${GEN_TOPO_QC_JSON_FILE:-} ]]; then
   exec 101>$GEN_TOPO_QC_JSON_FILE.lock || exit 1
   flock 101 || exit 1
@@ -14,12 +17,6 @@ FETCHTMPDIR=$(mktemp -d -t GEN_TOPO_DOWNLOAD_JSON-XXXXXX)
 
 JSON_FILES=
 OUTPUT_SUFFIX=
-
-if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
-  GEN_TOPO_QC_CONSUL_SERVER=ali-staging.cern.ch
-else
-  GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-con01.cern.ch
-fi
 
 add_QC_JSON() {
   if [[ ${2} =~ ^consul://.* ]]; then
