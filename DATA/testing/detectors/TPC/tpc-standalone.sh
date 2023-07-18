@@ -67,5 +67,5 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --pipeline tpc-tracker:8 \
     $GPU_CONFIG \
     --configKeyValues "$ARGS_ALL_CONFIG;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY" \
-    | o2-qc $ARGS_ALL --config consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-full-qcmn --local --host $HOST \
+    | o2-qc $ARGS_ALL --config consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-full-qcmn --local --host $HOST \
     | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE} | grep -v ERROR
