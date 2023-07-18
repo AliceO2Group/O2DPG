@@ -7,6 +7,7 @@ source common/setenv.sh
 # ---------------------------------------------------------------------------------------------------------------------
 # Set general arguments
 source common/getCommonArgs.sh
+source common/gen_topo_helper_functions.sh
 
 PROXY_INSPEC="A:ITS/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 PROXY_OUTSPEC="tunestring:ITS/TSTR;runtype:ITS/RUNT;fittype:ITS/FITT;scantype:ITS/SCANT;chipdonestring:ITS/QCSTR;confdbv:ITS/CONFDBV;PixTypString:ITS/PIXTYP"
@@ -42,6 +43,7 @@ do
 done
 if workflow_has_parameter QC && has_detector_qc ITS; then
   WORKFLOW+="o2-qc --config consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/its-qc-calibration --local --host epn -b $ARGS_ALL | "
+  add_QC_from_consul "/o2/components/qc/ANY/any/its-qc-calibration" "--local --host epn -b"
 fi
 WORKFLOW+="o2-dpl-output-proxy ${ARGS_ALL} --dataspec \"$PROXY_OUTSPEC\" --proxy-channel-name its-thr-input-proxy --channel-config \"name=its-thr-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0\" | "
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
