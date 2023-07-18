@@ -382,8 +382,8 @@ else
   # the optimized settings for the 8 core GRID queue without GPU are
   # (overwriting the values above)
   #
-  if [[ "$ALIEN_JDL_EPNFULLNUMACPUONLY" != 1 ]]; then
-    if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
+  if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
+    if [[ "$ALIEN_JDL_EPNFULLNUMACPUONLY" != 1 ]]; then
       export TIMEFRAME_RATE_LIMIT=3
       if (( $(echo "$RUN_IR > 800000" | bc -l) )); then
 	export TIMEFRAME_RATE_LIMIT=1
@@ -392,11 +392,11 @@ else
       fi
       export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu # sets the multiplicities to optimized defaults for this configuration (grid)
       export SHMSIZE=16000000000
+    else
+      export OPTIMIZED_PARALLEL_ASYNC=pp_64cpu # to use EPNs with full NUMA domain but without GPUs
+      export TIMEFRAME_RATE_LIMIT=32
+      SHMSIZE=90000000000
     fi
-  else
-    export OPTIMIZED_PARALLEL_ASYNC=pp_64cpu # to use EPNs with full NUMA domain but without GPUs
-    export TIMEFRAME_RATE_LIMIT=32
-    SHMSIZE=90000000000
   fi
 fi
 
