@@ -9,7 +9,7 @@ source common/getCommonArgs.sh
 #HOST='$(hostname -s)-ib'
 HOST=epn
 
-QC_CONFIG=consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/emc-qcmn-flpepn
+QC_CONFIG=consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/emc-qcmn-flpepn
 #QC_CONFIG=json:///home/epn/odc/files/emcQCTasks_multinode.json
 INFOLOGGER_SEVERITY_RAWPROXY=warning
 SEVERITY_RAWPROXY=warning
