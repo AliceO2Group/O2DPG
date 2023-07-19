@@ -145,12 +145,15 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
     mConfigToUse = mOneInjectionPerEvent ? static_cast<int>(gRandom->Uniform(0.f, getNGuns())) : -1;
     LOG(info) << "Using configuration " << mConfigToUse << " out of " << getNGuns() << ", of which " << mGunConfigs.size() << " are transport decayed and " << mGunConfigsGenDecayed.size() << " are generator decayed";
 
+    bool injectedForThisEvent = false;
     int nConfig = mGunConfigs.size(); // We start counting from the configurations of the transport decayed particles
     for (const ConfigContainer& cfg : mGunConfigsGenDecayed) {
       nConfig++;
       if (mConfigToUse >= 0 && (nConfig - 1) != mConfigToUse) {
         continue;
       }
+      LOG(info) << "Using config container ";
+      cfg.print();
       if (mUseTriggering) {   // Do the triggering
         bool doSignal = true; // Do signal or gap
         if (mGapBetweenInjection > 0) {
