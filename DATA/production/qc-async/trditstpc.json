@@ -65,7 +65,7 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "digits:TRD/DIGITS/0;tracklets:TRD/TRACKLETS/0;triggers:TRD/TRKTRGRD/0;tracks:TRD/MATCH_ITSTPC;trigrectrk:TRD/TRGREC_ITSTPC;phValues:TRD/PULSEHEIGHT"
+          "query": "phValues:TRD/PULSEHEIGHT"
         }
       }
     }
