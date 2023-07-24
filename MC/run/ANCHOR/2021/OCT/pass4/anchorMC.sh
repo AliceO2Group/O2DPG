@@ -126,13 +126,26 @@ echo "TIMESTAMP IS ${TIMESTAMP}"
 export ALICEO2_CCDB_LOCALCACHE=$PWD/.ccdb
 [ ! -d .ccdb ] && mkdir .ccdb
 
-CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Align /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Align /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TRD/Align /TOF/Align /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /PHS/Align /CPV/Align /EMC/Align /HMP/Align /MFT/Align /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /MCH/Align /MID/Align /FT0/Align /FT0/Calibration/ChannelTimeOffset /FV0/Align /FV0/Calibration/ChannelTimeOffset /FDD/Align"
+CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /FT0/Calibration/ChannelTimeOffset /FV0/Calibration/ChannelTimeOffset"
 
 ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS} -d .ccdb --timestamp ${TIMESTAMP}
 if [ ! "$?" == "0" ]; then
   echo "Problem during CCDB prefetching of ${CCDBOBJECTS}. Exiting."
   exit 1
 fi
+
+# -- Create aligned geometry using ITS and MFT ideal alignments to avoid overlaps in geant
+CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align MFT/Calib/Align"
+TIMESTAMP_IDEAL_MC=1
+${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d .ccdb --timestamp ${TIMESTAMP_IDEAL_MC}
+if [ ! "$?" == "0" ]; then
+  echo "Problem during CCDB prefetching of ${CCDBOBJECTS_IDEAL_MC}. Exiting."
+  exit 1
+fi
+
+${O2_ROOT}/bin/o2-create-aligned-geometry-workflow --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" --condition-remap=file://${ALICEO2_CCDB_LOCALCACHE}=ITS/Calib/Align,MFT/Calib/Align -b 
+mkdir -p $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned
+ln -s -f $PWD/o2sim_geometry-aligned.root $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned/snapshot.root
 
 # -- RUN THE MC WORKLOAD TO PRODUCE AOD --
 

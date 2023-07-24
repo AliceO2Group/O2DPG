@@ -51,6 +51,7 @@ parser.add_argument('--timestamp', type=int, help="Anchoring timestamp (defaults
 parser.add_argument('--condition-not-after', type=int, help="only consider CCDB objects not created after this timestamp (for TimeMachine)", default=3385078236000)
 parser.add_argument('--orbitsPerTF', type=int, help="Timeframe size in number of LHC orbits", default=128)
 parser.add_argument('--anchor-config',help="JSON file to contextualise workflow with external configs (config values etc.) for instance comping from data reco workflows.", default='')
+parser.add_argument('--dump-config',help="Dump JSON file with all settings used in workflow", default='user_config.json')
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
 parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...', default='')
@@ -184,6 +185,12 @@ else:
    # we load a generic config
    print ("** Using generic config **")
    anchorConfig = create_sim_config(args)
+
+# write this config
+config_key_param_path = args.dump_config
+with open(config_key_param_path, "w") as f:
+   print(f"INFO: Written additional config key parameters to JSON {config_key_param_path}")
+   json.dump(anchorConfig, f, indent=2)
 
 # with this we can tailor the workflow to the presence of
 # certain detectors
@@ -994,7 +1001,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                                                     'TPCGasParam',
                                                     'ITSCATrackerParam',
                                                     'MFTClustererParam',
-                                                    'GPU_recp_tpc',
+                                                    'GPU_rec_tpc',
                                                     'trackTuneParams'])                         \
                               + " --track-sources " + anchorConfig.get("o2-tof-matcher-workflow-options",{}).get("track-sources",toftracksrcdefault) + (' --combine-devices','')[args.no_combine_dpl_devices] \
                               + tpc_corr_scaling_options
@@ -1245,7 +1252,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[ITSRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
-     
+
      addQCPerTF(taskName='ITSTracksClusters',
                 needs=[ITSRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
@@ -1333,7 +1340,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    if environ.get('O2DPG_AOD_NOTRUNCATE') != None or environ.get('ALIEN_JDL_O2DPG_AOD_NOTRUNCATE') != None:
       AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
-   
+
    if args.no_strangeness_tracking:
       AODtask['cmd'] += ' --disable-strangeness-tracking'
 

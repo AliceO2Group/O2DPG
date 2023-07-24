@@ -105,6 +105,8 @@ for line in f:
             if 'GEN_TOPO_OVERRIDE_TEMPDIR' in os.environ:
                 tmpdir = os.environ['GEN_TOPO_OVERRIDE_TEMPDIR']
             os.environ['GEN_TOPO_QC_JSON_FILE'] = os.path.abspath(tmpdir + '/qc.json')
+            if os.path.exists(os.environ['GEN_TOPO_QC_JSON_FILE']):
+                os.remove(os.environ['GEN_TOPO_QC_JSON_FILE'])
             if NO_PROCESSING_MODE and len(args) > 2:
                 print('Cannot use DPL workflow together with DD mode', os.environ['DDMODE'])
                 raise

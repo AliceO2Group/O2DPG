@@ -63,34 +63,48 @@ void overlay1D(std::vector<TH1*> hVec, std::vector<std::string> labelVec, TLegen
 }
 
 // overlay 2D histograms
-// unchanged for the moment. only for two TH2
-void overlay2D(TH2* hA, TH2* hB, std::string const& labelA, std::string const& labelB, TLegend* legend, std::string const& outputDir)
+void overlay2D(std::vector<TH1*> hVec1, std::vector<std::string> labelVec, TLegend* legend, std::string const& outputDir)
 {
-  auto newTitleA = std::string(hA->GetTitle()) + "(" + labelA + ")";
-  auto newTitleB = std::string(hB->GetTitle()) + "(" + labelB + ")";
-  hA->SetTitle(newTitleA.c_str());
-  hB->SetTitle(newTitleB.c_str());
-  TCanvas c("overlay", "", 2400, 800);
-  c.Divide(3, 1);
-  c.cd(1);
-  hA->SetStats(0);
-  hA->Draw("colz");
-  c.cd(2);
-  hB->SetStats(0);
-  hB->Draw("colz");
-  auto hDiv = (TH2*)hA->Clone(Form("%s_ratio", hA->GetName()));
-  hDiv->Divide(hB);
-  c.cd(3);
-  hDiv->Draw("colz");
-  legend->Draw();
+  std::vector<TH2*> hVec;
+  for (auto h : hVec1){
+    hVec.push_back(dynamic_cast<TH2*>(h));
+  }
+  int nHistos = hVec.size();
 
-  auto savePath = outputDir + "/" + hA->GetName() + ".png";
+  TCanvas c("overlay", "", 2400, 800*(nHistos-1));
+  c.Divide(3, nHistos-1);
+  c.cd(1);
+  hVec[0]->SetTitle(hVec[0]->GetTitle() + TString("(" + labelVec[0] + ")"));
+  hVec[0]->SetStats(0);
+  hVec[0]->Draw("colz");
+
+  for (int i = 1; i<nHistos; i++){
+    auto hDiv = (TH2*)hVec[i]->Clone(Form("%s_ratio", hVec[i]->GetName()));
+    hDiv->SetTitle(hVec[i]->GetTitle() + TString("(" + labelVec[i] + "/"+labelVec[0]+")"));
+    hDiv->SetStats(0);
+    hDiv->Divide(hVec[0]);
+    hVec[i]->SetTitle(hVec[i]->GetTitle() + TString("(" + labelVec[i] + ")"));
+    hVec[i]->SetStats(0);
+
+    c.cd(i*3-1);
+    hVec[i]->Draw("colz");
+
+    c.cd(i*3);
+    hDiv->Draw("colz");
+  }
+
+  if (legend){
+    c.cd(3);
+    legend->Draw();
+  }
+
+  auto savePath = outputDir + "/" + hVec[0]->GetName() + ".png";
   c.SaveAs(savePath.c_str());
   c.Close();
 }
 
 // entry point for overlay plots from ReleaseValidation.C
-void PlotOverlayAndRatio(std::vector<TH1*> hVec, std::vector<std::string> labelVec, std::string outputDir, TLegend* legendMetrics = nullptr)
+void PlotOverlayAndRatio(std::vector<TH1*> hVec, std::vector<std::string> labelVec, std::string outputDir = "overlayPlots", TLegend* legendMetrics = nullptr)
 {
   if (!std::filesystem::exists(outputDir)) {
     std::filesystem::create_directory(outputDir);
@@ -103,16 +117,12 @@ void PlotOverlayAndRatio(std::vector<TH1*> hVec, std::vector<std::string> labelV
     return;
   	}
     if (dynamic_cast<TH2*>(h)){
-      if (hVec.size()>2){
-        std::cerr << "Cannot yet overlay more than two 2D histograms\nSkipping " << h->GetName() << "\n";
-        return;
-      }
     is2D = true;
     }
   }
 
   if (is2D){
-    overlay2D(dynamic_cast<TH2*>(hVec[0]), dynamic_cast<TH2*>(hVec[1]), labelVec[0], labelVec[1], legendMetrics, outputDir);
+    overlay2D(hVec, labelVec, legendMetrics, outputDir);
   }
   else {
     overlay1D(hVec, labelVec, legendMetrics, outputDir);

@@ -170,6 +170,23 @@ export -f checkpoint_hook_ttlbased
 export -f notify_mattermost
 export JOBUTILS_JOB_ENDHOOK=checkpoint_hook_ttlbased
 
+sanitize_tokens_with_quotes() {
+  string=$1
+  result=""
+  # Set the IFS to comma (,) to tokenize the string
+  IFS=',' read -ra tokens <<< "$string"
+  for token in "${tokens[@]}"; do
+    [[ $result ]] && result=${result}","
+    # Use pattern matching to check if the token is quoted within double quotes
+    if [[ $token =~ ^\".*\"$ ]]; then
+      result=$result$token
+    else
+      result=$result"\"${token}\""
+    fi
+  done
+  echo ${result}
+}
+
 # find out if this script is really executed on GRID
 # in this case, we should find an environment variable JALIEN_TOKEN_CERT
 ONGRID=0
@@ -273,10 +290,34 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
   # a) OutputSpec
   [[ ! ${OUTPUTSPEC} ]] && OUTPUTSPEC=$(grep "^#JDL_OUTPUT=" ${SCRIPT} | sed 's/#JDL_OUTPUT=//')
   echo "Found OutputSpec to be ${OUTPUTSPEC}"
+  if [ ! ${OUTPUTSPEC} ]; then
+    echo "No file output requested. Please add JDL_OUTPUT preamble to your script"
+    echo "Example: #JDL_OUTPUT=*.dat@disk=1,result/*.root@disk=2"
+    exit 1
+  else
+    # check if this is a list and if all parts are properly quoted
+    OUTPUTSPEC=$(sanitize_tokens_with_quotes ${OUTPUTSPEC})
+  fi
   # b) PackageSpec
   [[ ! ${PACKAGESPEC} ]] && PACKAGESPEC=$(grep "^#JDL_PACKAGE=" ${SCRIPT} | sed 's/#JDL_PACKAGE=//')
   echo "Found PackagesSpec to be ${PACKAGESPEC}"
-
+  ## sanitize package spec
+  ## "no package" defaults to O2sim
+  if [ ! ${PACKAGESPEC} ]; then
+    PACKAGESPEC="O2sim"
+    O2SIM_LATEST=`find /cvmfs/alice.cern.ch/el7-x86_64/Modules/modulefiles/O2sim -type f -printf "%f\n" | tail -n1`
+    if [ ! ${O2SIM_LATEST} ]; then
+      echo "Cannot lookup latest version of implicit package O2sim from CVFMS"
+      exit 1
+    else
+      PACKAGESPEC="${PACKAGESPEC}::${O2SIM_LATEST}"
+      echo "Autosetting Package to ${PACKAGESPEC}"
+    fi
+  fi
+  ## *) add VO_ALICE@ in case not there
+  [[ ! ${PACKAGESPEC} == VO_ALICE@* ]] && PACKAGESPEC="VO_ALICE@"${PACKAGESPEC}
+  ## *) apply quotes
+  PACKAGESPEC=$(sanitize_tokens_with_quotes ${PACKAGESPEC})
 
    # Create temporary workdir to assemble files, and submit from there (or execute locally)
   cd "$(dirname "$0")"
