@@ -48,6 +48,7 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
     LOG(info) << "++ mUseTriggering: " << mUseTriggering;
     LOG(info) << "++ pythiaCfgMb: " << pythiaCfgMb;
     LOG(info) << "++ pythiaCfgSignal: " << pythiaCfgSignal;
+    gRandom->SetSeed(0);
     if (useTrigger) {
       mPythia.readString("ProcessLevel:all off");
       if (pythiaCfgMb == "") { // If no configuration file is provided, use the one from the Pythia8Param
@@ -68,12 +69,17 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
       if (!pythiaObjectMinimumBias.readFile(pythiaCfgMb)) {
         LOG(fatal) << "Could not pythiaObjectMinimumBias.readFile(\"" << pythiaCfgMb << "\")";
       }
+      pythiaObjectMinimumBias.readString("Random:setSeed = on");
+      pythiaObjectMinimumBias.readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
+
       if (!pythiaObjectMinimumBias.init()) {
         LOG(fatal) << "Could not pythiaObjectMinimumBias.init() from " << pythiaCfgMb;
       }
       if (!pythiaObjectSignal.readFile(pythiaCfgSignal)) {
         LOG(fatal) << "Could not pythiaObjectSignal.readFile(\"" << pythiaCfgSignal << "\")";
       }
+      pythiaObjectSignal.readString("Random:setSeed = on");
+      pythiaObjectSignal.readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
       if (!pythiaObjectSignal.init()) {
         LOG(fatal) << "Could not pythiaObjectSignal.init() from " << pythiaCfgSignal;
       }
@@ -119,7 +125,6 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         LOG(fatal) << "Cannot use simple injection and have a configuration file. pythiaCfgSignal= `" << pythiaCfgSignal << "` must be empty";
       }
     }
-    gRandom->SetSeed(0);
   }
 
   ///  Destructor
