@@ -222,4 +222,25 @@ add_W() # Add binarry to workflow command USAGE: add_W [BINARY] [COMMAND_LINE_OP
   WORKFLOW+=$WFADD
 }
 
+if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
+  GEN_TOPO_QC_CONSUL_SERVER=ali-staging.cern.ch
+else
+  GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-con01.cern.ch
+fi
+
+add_QC_from_consul()
+{
+  if [[ ! -z ${GEN_TOPO_QC_JSON_FILE:-} ]]; then
+    curl -s -o $GEN_TOPO_QC_JSON_FILE "http://${GEN_TOPO_QC_CONSUL_SERVER}:8500/v1/kv${1}?raw"
+    if [[ $? != 0 ]]; then
+      echo "Error fetching QC JSON $1"
+      exit 1
+    fi
+    QC_CONFIG_ARG="json://${GEN_TOPO_QC_JSON_FILE}"
+  else
+    QC_CONFIG_ARG="consul-json://alio2-cr1-hv-con01.cern.ch:8500$1"
+  fi
+  add_W o2-qc "--config $QC_CONFIG_ARG $2"
+}
+
 fi # functions.sh sourced

@@ -37,7 +37,7 @@ if [[ $MODE == "remote" ]]; then
 fi
 
 # adjusting for trigger LM_L0 correction, which was not there before July 2022
-if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC22e" ]] || [[ $PERIOD == "LHC22f" ]] ; then
+if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC22e" ]] || [[ $PERIOD == "JUN" ]] || [[ $PERIOD == "LHC22f" ]] ; then
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]]; then
     export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --correct-trd-trigger-offset"
   fi
@@ -263,7 +263,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   fi
   if [[ $PERIOD == "LHC22s" ]]; then
     INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-0} # in this way, only TPC/Calib/CorrectionMaps is applied, and we know that for 22s it is the same as TPC/Calib/CorrectionMapsRef; note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
-  elif [[ $PERIOD == @(LHC22c|LHC22d|LHC22e|LHC22f) ]]; then
+  elif [[ $PERIOD == @(LHC22c|LHC22d|LHC22e|JUN|LHC22f) ]]; then
     INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-1} # scaling with very small value for low IR
   fi
   # in MC, we set it to a negative value to disable completely the corrections (not yet operational though, please check O2);
@@ -302,7 +302,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export TPC_CORR_SCALING+=" --corrmap-lumi-mean $ALIEN_JDL_MEANIRFORTPC "
   fi
 
-  if [[ $PERIOD != @(LHC22c|LHC22d|LHC22e|LHC22f) ]] ; then
+  if [[ $PERIOD != @(LHC22c|LHC22d|LHC22e|JUN|LHC22f) ]] ; then
     echo "Setting TPCCLUSTERTIMESHIFT to 0"
     TPCCLUSTERTIMESHIFT=0
   else
@@ -444,7 +444,7 @@ if [[ $ADD_CALIB == "1" ]]; then
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
-    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --process-seeds --enable-itsonly --tracking-sources ITS,TPC,TRD,TOF,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF"
+    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --process-seeds --enable-itsonly"
     # ad-hoc settings for TPC residual extraction
     export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="$ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator --output-type trackParams,unbinnedResid"
     if [[ $ALIEN_JDL_DEBUGRESIDUALEXTRACTION == "1" ]]; then
@@ -490,7 +490,7 @@ fi
 echo ALIEN_JDL_LPMPRODUCTIONTAG = $ALIEN_JDL_LPMPRODUCTIONTAG
 echo ALIEN_JDL_LPMPASSNAME = $ALIEN_JDL_LPMPASSNAME
 export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="$ARGS_EXTRA_PROCESS_o2_aod_producer_workflow --aod-writer-maxfilesize $AOD_FILE_SIZE --lpmp-prod-tag $ALIEN_JDL_LPMPRODUCTIONTAG --reco-pass $ALIEN_JDL_LPMPASSNAME"
-if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC22e" ]] || [[ $PERIOD == "LHC22f" ]] || [[ $PERIOD == "LHC22m" ]] || [[ "$RUNNUMBER" == @(526463|526465|526466|526467|526468|526486|526505|526508|526510|526512|526525|526526|526528|526534|526559|526596|526606|526612|526638|526639|526641|526643|526647|526649|526689|526712|526713|526714|526715|526716|526719|526720|526776|526886|526926|526927|526928|526929|526934|526935|526937|526938|526963|526964|526966|526967|526968|527015|527016|527028|527031|527033|527034|527038|527039|527041|527057|527076|527108|527109|527228|527237|527259|527260|527261|527262|527345|527347|527349|527446|527518|527523|527734) ]] ; then
+if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC22e" ]] || [[ $PERIOD == "JUN" ]] || [[ $PERIOD == "LHC22f" ]] || [[ $PERIOD == "LHC22m" ]] || [[ "$RUNNUMBER" == @(526463|526465|526466|526467|526468|526486|526505|526508|526510|526512|526525|526526|526528|526534|526559|526596|526606|526612|526638|526639|526641|526643|526647|526649|526689|526712|526713|526714|526715|526716|526719|526720|526776|526886|526926|526927|526928|526929|526934|526935|526937|526938|526963|526964|526966|526967|526968|527015|527016|527028|527031|527033|527034|527038|527039|527041|527057|527076|527108|527109|527228|527237|527259|527260|527261|527262|527345|527347|527349|527446|527518|527523|527734) ]] ; then
   export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="$ARGS_EXTRA_PROCESS_o2_aod_producer_workflow --ctpreadout-create 1"
 fi
 
