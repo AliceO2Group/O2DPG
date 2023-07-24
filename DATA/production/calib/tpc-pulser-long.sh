@@ -14,28 +14,13 @@ CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
 CALIB_CONFIG="TPCCalibPulser.FirstTimeBin=80;TPCCalibPulser.LastTimeBin=260;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=10;TPCCalibPulser.XmaxQtot=510;TPCCalibPulser.NbinsWidth=100;TPCCalibPulser.XminWidth=0.3;TPCCalibPulser.XmaxWidth=0.7;TPCCalibPulser.MinimumQtot=30;TPCCalibPulser.MinimumQmax=25;TPCCalibPulser.XminT0=125;TPCCalibPulser.XmaxT0=145;TPCCalibPulser.NbinsT0=800"
 
-CCDB_PATH="--ccdb-path http://ccdb-test.cern.ch:8080"
-max_events=200
-publish_after=230
-
-
-if [[ ! -z ${TPC_CALIB_MAX_EVENTS:-} ]]; then
-    max_events=${TPC_CALIB_MAX_EVENTS}
-fi
-
-if [[ ! -z ${TPC_CALIB_PUBLISH_AFTER:-} ]]; then
-    publish_after=${TPC_CALIB_PUBLISH_AFTER}
-fi
-
-
-
-
-EXTRA_CONFIG="--calib-type pulser --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes 36 --check-calib-infos" 
-#EXTRA_CONFIG="--calib-type pulser --publish-after-tfs 2030 --max-events 200 --lanes 36 --check-calib-infos" 
+EXTRA_CONFIG=" "
+EXTRA_CONFIG="--calib-type pulser --reset-after-publish --publish-after-tfs 200 --max-events 1000000 --lanes 36 --check-calib-infos" 
+#EXTRA_CONFIG="--calib-type pulser --publish-after-tfs 120 --max-events 10000 --lanes 36 --check-calib-infos" 
 
 CCDB_PATH="--ccdb-path http://o2-ccdb.internal"
 HOST=localhost
-QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
+QC_CONFIG="consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
 
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \

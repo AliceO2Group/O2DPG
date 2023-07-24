@@ -11,12 +11,22 @@ fi
 PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
+max_events=50
+publish_after=400
+
+if [[ ! -z ${TPC_CALIB_MAX_EVENTS:-} ]]; then
+    max_events=${TPC_CALIB_MAX_EVENTS}
+fi
+
+if [[ ! -z ${TPC_CALIB_PUBLISH_AFTER:-} ]]; then
+    publish_after=${TPC_CALIB_PUBLISH_AFTER}
+fi
 
 
 CALIB_CONFIG="TPCCalibPedestal.LastTimeBin=12000"
 EXTRA_CONFIG=" "
-EXTRA_CONFIG=" --publish-after-tfs 400 --max-events 30 --lanes 36"
 CCDB_PATH="--ccdb-path http://o2-ccdb.internal"
+EXTRA_CONFIG=" --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes 36"
 HOST=localhost
 QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
 
