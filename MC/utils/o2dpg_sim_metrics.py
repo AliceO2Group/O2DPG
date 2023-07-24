@@ -558,7 +558,7 @@ def resources_per_iteration(resources, fields, task_filter=None, per_what=None):
   return list(range(start, end + 1)), values
 
 
-def plot_resource_history(json_pipelines, out_dir, filter=None, suffix="", labels=None):
+def plot_resource_history(json_pipelines, out_dir, task_filter=None, suffix="", labels=None):
   """
   Plotting resource history
 
@@ -595,7 +595,7 @@ def plot_resource_history(json_pipelines, out_dir, filter=None, suffix="", label
 
     name = labels[jp_i]
     n_cpu = jp.meta["cpu_limit"]
-    iterations, iterations_y = resources_per_iteration(jp, metrics, filter)
+    iterations, iterations_y = resources_per_iteration(jp, metrics, task_filter)
 
     names.append(f"{jp_i}_{name}")
 
@@ -629,7 +629,7 @@ def plot_resource_history(json_pipelines, out_dir, filter=None, suffix="", label
       save_figure(figure, join(out_dir, f"{me}_min_max_average{suffix}.png"))
 
 
-def plot_resource_history_stacked(res, out_dir, per_what):
+def plot_resource_history_stacked(res, out_dir, per_what, task_filter=None):
   """
   Plotting resource history
 
@@ -650,7 +650,7 @@ def plot_resource_history_stacked(res, out_dir, per_what):
     axes.append(ax)
 
   n_cpu = res.meta["cpu_limit"]
-  iterations, iterations_y = resources_per_iteration(res, metrics, per_what=per_what)
+  iterations, iterations_y = resources_per_iteration(res, metrics, task_filter, per_what=per_what)
 
   # only print every modulo iteration on the x-axis
   modulo = 10**(max(0, len(str(len(iterations))) - 2))
@@ -777,11 +777,11 @@ def history(args):
 
     # make stacked bar charts over iterations
     # per task
-    plot_resource_history_stacked(res, out_dir, per_what="name")
+    plot_resource_history_stacked(res, out_dir, per_what="name", task_filter=args.filter_task)
     # per timeframe
-    plot_resource_history_stacked(res, out_dir, per_what="timeframe")
+    plot_resource_history_stacked(res, out_dir, per_what="timeframe", task_filter=args.filter_task)
     # per category
-    plot_resource_history_stacked(res, out_dir, per_what="category")
+    plot_resource_history_stacked(res, out_dir, per_what="category", task_filter=args.filter_task)
 
     # the following bar chart show the maximum resource needs for each task over all iterations
 
