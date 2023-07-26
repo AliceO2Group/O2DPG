@@ -1090,6 +1090,9 @@ for tf in range(1, NTIMEFRAMES + 1):
       if isActive("MID"):
          pvfinder_matching_sources += ",MID"
          pvfinderneeds += [MIDRECOtask['name']]
+      if isActive('MCH') and isActive('MID'):
+         pvfinder_matching_sources += ",MCH-MID"
+         pvfinderneeds += [MCHMIDMATCHtask['name']]
 
    if isActive('FT0'):
       pvfinderneeds += [FT0RECOtask['name']]
@@ -1295,6 +1298,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    if isActive('MID'):
       aodneeds += [ MIDRECOtask['name'] ]
       aodinfosources += ',MID'
+   if isActive('MID') and isActive('MCH'):
+      aodneeds += [ MCHMIDMATCHtask['name'] ]
+      aodinfosources += ',MCH-MID'
    if args.with_ZDC and isActive('ZDC'):
      aodneeds += [ ZDCRECOtask['name'] ]
      aodinfosources += ',ZDC'
