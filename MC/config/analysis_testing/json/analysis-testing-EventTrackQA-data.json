@@ -92,13 +92,15 @@
     "processStandard": "false"
   },
   "track-selection": {
-    "compatibilityIU": "false",
-    "etaMax": "0.800000012",
-    "etaMin": "-0.800000012",
-    "isRun3": "true",
+    "compatibilityIU": "0",
+    "dcaSetup": "0",
+    "etaMax": "0.8",
+    "etaMin": "-0.8",
+    "isRun3": "1",
     "itsMatching": "1",
-    "produceFBextendedTable": "true",
+    "produceFBextendedTable": "-1",
+    "produceTable": "1",
     "ptMax": "1e+10",
-    "ptMin": "0.100000001"
+    "ptMin": "0.1"
   }
 }
