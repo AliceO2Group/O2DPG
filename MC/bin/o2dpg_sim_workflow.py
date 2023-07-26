@@ -1094,10 +1094,13 @@ for tf in range(1, NTIMEFRAMES + 1):
    if not pvfinder_sources:
       pvfinder_sources = "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
    if not pvfinder_matching_sources:
-      pvfinder_matching_sources = "ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH,MCH-MID,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
+      pvfinder_matching_sources = "ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
       if isActive("MID"):
          pvfinder_matching_sources += ",MID"
          pvfinderneeds += [MIDRECOtask['name']]
+      if isActive('MCH') and isActive('MID'):
+         pvfinder_matching_sources += ",MCH-MID"
+         pvfinderneeds += [MCHMIDMATCHtask['name']]
 
    if isActive('FT0'):
       pvfinderneeds += [FT0RECOtask['name']]
@@ -1288,7 +1291,7 @@ for tf in range(1, NTIMEFRAMES + 1):
   # produce AOD
   # -----------
    # TODO This needs further refinement, sources and dependencies should be constructed dynamically
-   aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,MCH-MID,ITS-TPC-TOF,TPC-TOF,FT0,FDD,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TRD-TOF'
+   aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FDD,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TRD-TOF'
    aodneeds = [PVFINDERtask['name'], SVFINDERtask['name']]
    if not args.no_strangeness_tracking:
       aodneeds += [ STRACKINGtask['name'] ]
@@ -1314,6 +1317,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    if isActive('MID'):
       aodneeds += [ MIDRECOtask['name'] ]
       aodinfosources += ',MID'
+   if isActive('MID') and isActive('MCH'):
+      aodneeds += [ MCHMIDMATCHtask['name'] ]
+      aodinfosources += ',MCH-MID'
    if args.with_ZDC and isActive('ZDC'):
      aodneeds += [ ZDCRECOtask['name'] ]
      aodinfosources += ',ZDC'
