@@ -191,7 +191,7 @@ FairGenerator *GeneratorPythia8GapTriggeredBeautyForcedDecays(int inputTriggerRa
 
 // Beauty-enriched no forced decay
 FairGenerator *GeneratorPythia8GapTriggeredBeautyNoForcedDecays(int inputTriggerRatio, float yMin=-1.5, float yMax=1.5) {
-  auto myGen = new GeneratorPythia8GapTriggeredHFLepton("$O2DPG_ROOT/MC/config/common/pythia8/generator/pythia8_bbbar.cfg", 5, inputTriggerRatio);
+  auto myGen = new GeneratorPythia8GapTriggeredHFLepton("$O2DPG_ROOT/MC/config/PWGEM/pythia8/generator/pythia8_bbbar.cfg", 5, inputTriggerRatio);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
   myGen->readString("Random:seed " + std::to_string(seed));
