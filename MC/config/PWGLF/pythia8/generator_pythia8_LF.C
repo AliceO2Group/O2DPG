@@ -225,9 +225,11 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         particle.yProd(0.f);
         particle.zProd(0.f);
         mPythia.particleData.mayDecay(cfg.pdg, true); // force decay
+        mPythia.event.append(particle);
       }
+      injectedForThisEvent = true;
     }
-    if (!mUseTriggering) {
+    if (injectedForThisEvent) {
       LOG(info) << "Calling next!";
       mPythia.moreDecays();
       mPythia.next();
