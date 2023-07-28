@@ -28,7 +28,7 @@ public:
     auto seed = (gRandom->TRandom::GetSeed() % 900000000);
 
     cout<<"Initalizing extra PYTHIA object used to generate min-bias events..."<<endl;
-    TString pathconfigMB = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/common/pythia8/generator/pythia8_pp_cr2.cfg");
+    TString pathconfigMB = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGEM/pythia8/generator/pythia8_MB_gapevent.cfg");
     pythiaObjectMinimumBias.readFile(pathconfigMB.Data());
     pythiaObjectMinimumBias.readString("Random:setSeed on");
     pythiaObjectMinimumBias.readString("Random:seed " + std::to_string(seed));
