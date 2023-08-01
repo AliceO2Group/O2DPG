@@ -99,10 +99,10 @@ NSIGEVENTS=${NSIGEVENTS:-22}
 # THIS NEEDS TO COME FROM OUTSIDE
 # echo "$" | awk -F' -- ' '{print $1, $3}'
 
-baseargs="-tf ${NTIMEFRAMES} --split-id ${ALIEN_JDL_SPLITID:-0} --prod-split ${ALIEN_JDL_PRODSPLIT:-100} --run-number ${RUNNUMBER}"
+baseargs="-tf ${NTIMEFRAMES} --split-id ${ALIEN_JDL_SPLITID:-0} --prod-split ${ALIEN_JDL_PRODSPLIT:-100} --run-number ${RUNNUMBER} -eCM 900 -col pp"
 
 # THIS NEEDS TO COME FROM OUTSIDE
-remainingargs="-eCM 900 -col pp -gen pythia8 -proc cdiff -ns ${NSIGEVENTS}                                                                                                \
+remainingargs="-gen pythia8 -proc cdiff -ns ${NSIGEVENTS}                                                                                                                 \
                -interactionRate ${INTERACTIONRATE}                                                                                                                        \
                -confKey \"Diamond.width[2]=6.0;Diamond.width[0]=0.01;Diamond.width[1]=0.01;Diamond.position[0]=0.0;Diamond.position[1]=-0.035;Diamond.position[2]=0.41\"  \
               --include-local-qc --include-analysis --mft-reco-full"
