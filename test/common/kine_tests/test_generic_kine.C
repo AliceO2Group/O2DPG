@@ -11,29 +11,26 @@ int test_generic_kine()
     auto tree = (TTree *)file.Get("o2sim");
     std::vector<o2::MCTrack> *tracks{};
     tree->SetBranchAddress("MCTrack", &tracks);
-    auto nEvents = tree->GetEntries();
+    bool hasParticlesForTransport{};
 
-    for (int i = 0; i < nEvents; i++)
-    {
+    for (int i = 0; i < tree->GetEntries();; i++) {
         tree->GetEntry(i);
         int iTrack{};
-        int nToBeDone{};
-        for (auto &track : *tracks)
-        {
+        for (auto &track : *tracks) {
             iTrack++;
             if (track.getToBeDone()) {
-                nToBeDone++;
+                hasParticlesForTransport = true;
             }
 
             if (!o2::mcgenstatus::isEncoded(track.getStatusCode())) {
-                std::cerr << "Track " << iTrack << " has invalid status encoding, make sure you set the status code correctly (see https://aliceo2group.github.io/simulation/docs/generators/).\n";
+                std::cerr << "Particle " << iTrack << " has invalid status encoding, make sure you set the status code correctly (see https://aliceo2group.github.io/simulation/docs/generators/).\n";
                 return 1;
             }
         }
-        if (nToBeDone == 0) {
-            std::cerr << "Event " << i << " has no particles marked to be transported. Make sure they are marked correctly (see https://aliceo2group.github.io/simulation/docs/generators/).\n";
-            return 1;
-        }
+    }
+    if (!hasParticlesForTransport) {
+        std::cerr << "No particles marked to be transported. Make sure they are marked correctly (see https://aliceo2group.github.io/simulation/docs/generators/).\n";
+        return 1;
     }
     return 0;
 }
