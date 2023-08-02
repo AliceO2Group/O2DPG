@@ -13,7 +13,7 @@ int test_generic_kine()
     tree->SetBranchAddress("MCTrack", &tracks);
     bool hasParticlesForTransport{};
 
-    for (int i = 0; i < tree->GetEntries();; i++) {
+    for (int i = 0; i < tree->GetEntries(); i++) {
         tree->GetEntry(i);
         int iTrack{};
         for (auto &track : *tracks) {

@@ -250,7 +250,7 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         piped_analysis = f" --configuration {configuration} | ".join(ana["tasks"])
         piped_analysis += f" --configuration {configuration} --aod-file {input_aod}"
         if timeout is not None:
-            piped_analysis += f" --timeout {timeout}"
+            piped_analysis += f" --time-limit {timeout}"
         workflow.append(create_ana_task(ana["name"], piped_analysis, output_dir, needs=needs, is_mc=is_mc))
 
     # append potential post-processing
