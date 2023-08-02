@@ -81,10 +81,10 @@ public:
   }
 
   /// Set pseudorapidity
-  void setEta(float eta_min, float eta_max)
+  void setEta(float y_min, float y_max)
   {
-    mEtaMin = eta_min;
-    mEtaMax = eta_max;
+    mYmin = y_min;
+    mYmax = y_max;
   }
 
   /// Set pseudorapidity
@@ -131,12 +131,13 @@ public:
       for (int i = 0; i < mNinjected[mInjectionIndex]; ++i)
       {
         const double pt = gRandom->Uniform(mPtMin[mInjectionIndex], mPtMax[mInjectionIndex]);
-        const double eta = gRandom->Uniform(mEtaMin, mEtaMax);
+        const double rapidity = gRandom->Uniform(mYmin, mYmax);
         const double phi = gRandom->Uniform(0, TMath::TwoPi());
         const double px{pt * std::cos(phi)};
         const double py{pt * std::sin(phi)};
-        const double pz{pt * std::sinh(eta)};
-        const double et{std::hypot(std::hypot(pt, pz), currentMass)};
+        const double mt{std::hypot(pt, currentMass)};
+        const double pz{mt * std::sinh(rapidity)};
+        const double et{mt * std::cosh(rapidity)};
         sign *= 1 - 2 * mAlternatingPDGsign;
         mParticles.push_back(TParticle(sign * currentPdg, 1, -1, -1, -1, -1, px, py, pz, et, 0., 0., 0., 0.));
         // make sure status code is encoded properly. Transport flag will be set by default and we have nothing
@@ -155,8 +156,8 @@ private:
 
   std::vector<double> mPtMin; /// minimum transverse momentum for generated particles
   std::vector<double> mPtMax; /// maximum transverse momentum for generated particles
-  double mEtaMin = -1.;       /// minimum pseudorapidity for generated particles
-  double mEtaMax = +1.;       /// maximum pseudorapidity for generated particles
+  double mYmin = -1.;         /// minimum rapidity for generated particles
+  double mYmax = +1.;         /// maximum rapidity for generated particles
 
   bool mAlternatingPDGsign = true; /// bool to randomize the PDG code of the core particle
 
