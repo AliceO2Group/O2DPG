@@ -80,8 +80,8 @@ public:
     }
   }
 
-  /// Set pseudorapidity
-  void setEta(float y_min, float y_max)
+  /// Set rapidity
+  void setY(float y_min, float y_max)
   {
     mYmin = y_min;
     mYmax = y_max;
