@@ -13,19 +13,18 @@ export IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE=1
 #export ALICEO2_CCDB_LOCALCACHE=.ccdb
 
 # ----------- LOAD UTILITY FUNCTIONS --------------------------
-. ${O2_ROOT}/share/scripts/jobutils.sh
+. ${O2_ROOT}/share/scripts/jobutils.sh  
 
 # ----------- START ACTUAL JOB  -----------------------------
 
 NWORKERS=${NWORKERS:-8}
 SIMENGINE=${SIMENGINE:-TGeant4}
-NSIGEVENTS=${NSIGEVENTS:-1}
-NBKGEVENTS=${NBKGEVENTS:-1}
+NSIGEVENTS=${NSIGEVENTS:-10}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
 INTRATE=${INTRATE:-50000}
 SYSTEM=${SYSTEM:-pp}
-ENERGY=${ENERGY:-900}
-CFGINIFILE=${CFGINIFILE:-"${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFDeTrHe.ini"}
+ENERGY=${ENERGY:-13600}
+CFGINIFILE=${CFGINIFILE:-"${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFStrangenessTriggered.ini"}
 [[ ${SPLITID} != "" ]] && SEED="-seed ${SPLITID}" || SEED=""
 
 echo "NWORKERS = $NWORKERS"
@@ -37,7 +36,6 @@ $O2_SIM_WORKFLOW -eCM ${ENERGY} -col ${SYSTEM} -gen external \
         -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} \
         -confKey "Diamond.width[2]=6." \
         ${SEED} \
-        -procBkg inel -colBkg $SYSTEM --embedding -nb ${NBKGEVENTS} -genBkg pythia8 \
         -e ${SIMENGINE} \
         -ini $CFGINIFILE
 

@@ -83,6 +83,7 @@ int External()
         nSignal.push_back(0);
     }
     std::vector<std::vector<int>> nDecays;
+    std::vector<int> nNotDecayed;
     for (int i = 0; i < nInjection; i++)
     {
         std::vector<int> nDecay;
@@ -91,6 +92,7 @@ int External()
             nDecay.push_back(0);
         }
         nDecays.push_back(nDecay);
+        nNotDecayed.push_back(0);
     }
     auto nEvents = tree->GetEntries();
     for (int i = 0; i < nEvents; i++)
@@ -108,18 +110,25 @@ int External()
                 nSignal[index]++;
                 if(track.getFirstDaughterTrackId() < 0)
                 {
+                    nNotDecayed[index]++;
                     continue;
                 }
                 for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j)
                 {
                     auto pdgDau = tracks->at(j).GetPdgCode();
+                    bool foundDau= false;
                     // count decay PDGs
                     for (int idxDaughter = 0; idxDaughter < decayDaughters[index].size(); ++idxDaughter)
                     {
                         if (pdgDau == decayDaughters[index][idxDaughter])
                         {
                             nDecays[index][idxDaughter]++;
+                            foundDau= true;
+                            break;
                         }
+                    }
+                    if (!foundDau) {
+                      std::cerr << "Decay daughter not found: " << pdg << " -> " << pdgDau << "\n";
                     }
                 }
             }
@@ -130,7 +139,7 @@ int External()
     for (int i = 0; i < nInjection; i++)
     {
         std::cout << "# Mother \n";
-        std::cout << injectedPDGs[i] << ": " << nSignal[i] << "\n";
+        std::cout << injectedPDGs[i] << " generated: " << nSignal[i] << ", " << nNotDecayed[i] << " did not decay\n";
         if (nSignal[i] == 0){
             std::cerr << "No generated: " << injectedPDGs[i] << "\n";
             return 1; // At least one of the injected particles should be generated
@@ -147,3 +156,5 @@ int External()
     }
     return 0;
 }
+
+void GeneratorLF_Resonances_pp() { External(); }
