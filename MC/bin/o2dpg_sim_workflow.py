@@ -1273,19 +1273,17 @@ for tf in range(1, NTIMEFRAMES + 1):
    # Take None as default, we only add more if nothing from anchorConfig
    svfinder_sources = anchorConfig.get("o2-secondary-vertexing-workflow-options",{}).get("vertexing-sources", None)
    if not svfinder_sources:
-       svfinder_sources = "ITS,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
-       if isActive("MID"):
-           svfinder_sources += ",MID"
+      svfinder_sources = "ITS,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
+      if isActive("MID"):
+        svfinder_sources += ",MID"
    SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
+   # strangeness tracking is now called from the secondary vertexer
+   if args.no_strangeness_tracking:
+      SVFINDERtask['cmd'] += ' --disable-strangeness-tracker'
+   # if enabled, it may require MC labels
+   else:
+      SVFINDERtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    workflow['stages'].append(SVFINDERtask)
-
-   #strangeness tracking
-   if not args.no_strangeness_tracking:
-      STRACKINGtask = createTask(name='stracking_'+str(tf), needs=[SVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='5000')
-      STRACKINGtask['cmd'] = '${O2_ROOT}/bin/o2-strangeness-tracking-workflow '
-      STRACKINGtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
-      STRACKINGtask['cmd'] += getDPL_global_options(bigshm=True) + putConfigValuesNew(['strtracker'], {"NameConf.mDirMatLUT" : ".."})
-      workflow['stages'].append(STRACKINGtask)
 
   # -----------
   # produce AOD
@@ -1293,8 +1291,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    # TODO This needs further refinement, sources and dependencies should be constructed dynamically
    aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FDD,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TRD-TOF'
    aodneeds = [PVFINDERtask['name'], SVFINDERtask['name']]
-   if not args.no_strangeness_tracking:
-      aodneeds += [ STRACKINGtask['name'] ]
 
    if isActive('CTP'):
      aodinfosources += ',CTP'
