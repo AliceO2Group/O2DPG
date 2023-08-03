@@ -275,8 +275,10 @@ def main():
     parser.add_argument("--split-id", type=int, help="The split id of this job within the whole production --prod-split)", default=0)
     parser.add_argument("-tf", type=int, help="number of timeframes per job", default=1)
     parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
-    parser.add_argument("--ft0-eff", type=float, dest="ft0_eff", help="FT0 eff needed for IR", default=0.759)
+    parser.add_argument("--ft0-eff", type=float, dest="ft0_eff", help="FT0 eff needed for IR", default=-1.0)
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
+    parser.add_argument("-eCM", type=float, dest="eCM", help="Energy", default=13600)
+    parser.add_argument("-col", type=str, dest="col", help="Collision System", default="pp")
     args = parser.parse_args()
 
     # split id should not be larger than production id
@@ -307,8 +309,21 @@ def main():
     forwardargs = " ".join([ a for a in args.forward if a != '--' ])
     # retrieve interaction rate
     rate = None
+
     if args.ccdb_IRate == True:
-       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000., args.ft0_eff)
+       effT0 = args.ft0_eff
+       if effT0 < 0:
+         if args.col == "pp":
+           if args.eCM > 5000:
+             effT0 = 0.759
+           else:
+             effT0 = 0.68
+         elif args.col == "PbPb":
+           effT0 = 4.0
+         else:
+           effT0 = 0.759
+
+       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000., effT0)
 
        if rate != None:
          # if the rate calculation was successful we will use it, otherwise we fall back to some rate given as part
@@ -321,7 +336,7 @@ def main():
    
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
-    forwardargs += " -tf " + str(args.tf) + " --sor " + str(GLOparams["SOR"]) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"])
+    forwardargs += " -tf " + str(args.tf) + " --sor " + str(GLOparams["SOR"]) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(args.col) + " -eCM " + str(args.eCM)
     print ("forward args ", forwardargs)
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
     print ("Creating time-anchored workflow...")
