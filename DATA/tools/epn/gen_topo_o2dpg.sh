@@ -18,6 +18,8 @@ if [[ -z $DDMODE ]] && [[ -z $DDWORKFLOW ]]; then echo Either \$DDMODE or \$DDWO
 if [[ -z "$MULTIPLICITY_FACTOR_RAWDECODERS" ]]; then echo \$MULTIPLICITY_FACTOR_RAWDECODERS missing; exit 1; fi # Process multiplicity scaling parameter
 if [[ -z "$MULTIPLICITY_FACTOR_CTFENCODERS" ]]; then echo \$MULTIPLICITY_FACTOR_CTFENCODERS missing; exit 1; fi # Process multiplicity scaling parameter
 if [[ -z "$MULTIPLICITY_FACTOR_REST" ]]; then echo \$MULTIPLICITY_FACTOR_REST missing; exit 1; fi # Process multiplicity scaling parameter
+if [[ -z "$RECOSHMSIZE" ]]; then echo \$RECOSHMSIZE missing; exit 1; fi # SHM Size for reconstruction collections
+if [[ -z "$DDSHMSIZE" ]]; then echo \$DDSHMSIZE missing; exit 1; fi # SHM Size for DD
 
 # Check settings coming from the EPN
 if [[ -z "$FILEWORKDIR" ]]; then echo \$FILEWORKDIR missing; exit 1; fi
