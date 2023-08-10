@@ -8,6 +8,7 @@ import tempfile
 import re
 import datetime
 import random
+import time
 
 if not os.path.exists('tools/parse'):
     print('Running from incorrect directory')
@@ -150,7 +151,9 @@ for line in f:
                 if os.environ['WORKFLOWMODE'] == 'print':
                     command += ' > ' + filename
                 print('Running DPL command', command)
+                starttime = time.time()
                 retVal = subprocess.run(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                print('Execution time: ', time.time() - starttime)
                 tmpchk = retVal.stderr.decode() + retVal.stdout.decode()
                 haserror = 0
                 if tmpchk.find('[FATAL]') != -1 or tmpchk.find('[ERROR]') != -1 or tmpchk.find(': command not found') != -1 or tmpchk.find('No such file or directory') != -1 or tmpchk.find('bash: syntax error') != -1:
@@ -251,9 +254,11 @@ for line in f:
                     odccommand += '"'
                 odccommand += ' -o ' + sys.argv[3]
                 print('Running ODC command', odccommand)
+                starttime = time.time()
                 if os.system(odccommand) != 0:
                     print('\nError running odc: ', odccommand)
                     raise
+                print('Execution time: ', time.time() - starttime)
                 if os.path.exists(os.environ['GEN_TOPO_QC_JSON_FILE']):
                     command = 'sed -i \'s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/\'"\'"\'/\&#39;/g\' ' + os.environ['GEN_TOPO_QC_JSON_FILE']
                     print('Running SED command for DPL JSON XML Escaping', command)
