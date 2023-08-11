@@ -240,6 +240,8 @@ for line in f:
                     odccommand += ' --reco100 ' + ' '.join(recoworkflows_mi100)
                 odccommand += ' --n ' + str(reconodes)
                 odccommand += ' --nmin ' + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
+                if 'GEN_TOPO_MI100_NODES' in os.environ and int(os.environ['GEN_TOPO_MI100_NODES']) != -1:
+                    odccommand += ' --force-exact-node-numbers --n100 ' + os.environ['GEN_TOPO_MI100_NODES'] + ' --nmin100 ' + str(reconodesmin)
                 if len(calibworkflows):
                     calibworkflowsdds.sort(key=lambda x:int(x.split(':')[1])*-1)
                     odccommand += ' --calib ' + ' '.join(calibworkflowsdds)
