@@ -266,7 +266,7 @@ for line in f:
                         print('Error running sed on JSON file')
                     command = 'sed -i ' + \
                               '-e \'s,' + os.environ['GEN_TOPO_QC_JSON_FILE'] + ',${DDS_LOCATION}/qc.json.asset,\' ' + \
-                              '-e \'/^ *<exe reachable="true">.*o2-qc --id.*qc.json.asset.*<\/exe>$/a <assets><name>qc.json</name></assets>\' ' + \
+                              '-e \'/^ *<assets>$/a <name>qc.json</name>\' ' + \
                               '-e \'/^ *<topology name.*>$/a <asset name="qc.json" type="inline" visibility="global" value="\' ' + \
                               '-e \'/^ *<topology name.*>$/r ' + os.environ['GEN_TOPO_QC_JSON_FILE'] + '\' ' + \
                               '-e \'/^ *<topology name.*>$/a " />\' ' + \
