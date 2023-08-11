@@ -72,6 +72,9 @@ fi
 CTP_BC_SHIFT=0
 if [[ $ALIEN_JDL_LPMANCHORYEAR == "2022" ]]; then
   CTP_BC_SHIFT=-294
+if [[ $RUNNUMBER -ge 538923 ]] && [[ $RUNNUMBER -le 539908 ]]; then
+  # 3 BC offset (future direction) in CTP data observed for LHC23zd - LHC23zt
+  CTP_BC_SHIFT=-3
 fi
 if [[ $PERIOD == "LHC22s" ]]; then
   # CTP asked to extract their digits
