@@ -23,7 +23,13 @@ else
   [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=$HOME/gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
   mkdir -p $HOME/gen_topo
 fi
-[[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]] && export GEN_TOPO_ODC_EPN_TOPO_ARGS="--recozone online --calibzone calib" # Arguments to pass to odc-epn-topo command
+if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]]; then
+  if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
+    export GEN_TOPO_ODC_EPN_TOPO_ARGS="--recozone staging-mi50 --reco100zone staging-mi100 --calibzone calib"
+  else
+    export GEN_TOPO_ODC_EPN_TOPO_ARGS="--recozone online --calibzone calib"
+  fi
+fi
 [[ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]] && export GEN_TOPO_EPN_CCDB_SERVER="http://127.0.0.1:8084" # CCDB server to use
 if [[ "0$GEN_TOPO_ONTHEFLY" == "01" ]]; then export SHM_MANAGER_SHMID=1 ;fi
 
