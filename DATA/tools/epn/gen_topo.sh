@@ -45,9 +45,9 @@ else
     # If there is already something of ODC or O2PDPSuite in the environment, we should remove it to avoid collisions.
     # We set the odc-epn-topo command to be used explicitly though.
     # Note this happens only in case of on the fly generation when we run online, in case of tests this is not needed.
-    if [[ -z $GEN_TOPO_ODC_EPN_TOPO_CMD ]]; then
+    if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_CMD" ]]; then
       export GEN_TOPO_ODC_EPN_TOPO_CMD=`which odc-epn-topo`
-      [[ -z $GEN_TOPO_ODC_EPN_TOPO_CMD ]] && { echo "ERROR: no odc-epn-topo in the path" 1>&2; exit 1; }
+      [[ -z "$GEN_TOPO_ODC_EPN_TOPO_CMD" ]] && { echo "ERROR: no odc-epn-topo in the path" 1>&2; exit 1; }
     fi
     module purge &> /dev/null
   fi
