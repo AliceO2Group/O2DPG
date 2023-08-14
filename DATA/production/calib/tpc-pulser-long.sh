@@ -42,7 +42,7 @@ o2-dpl-raw-proxy ${ARGS_ALL} \
     | o2-tpc-calib-pad-raw ${ARGS_ALL} \
     --input-spec ${CALIB_INSPEC} \
     --configKeyValues "${CALIB_CONFIG}" \
-    $EXTRA_CONFIG \
+    ${EXTRA_CONFIG} \
     | o2-calibration-ccdb-populator-workflow ${ARGS_ALL} \
     --ccdb-path ${CCDB_PATH} \
     | o2-qc ${ARGS_ALL} --config ${QC_CONFIG} --local --host ${HOST} \
