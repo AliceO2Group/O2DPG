@@ -2,16 +2,22 @@
 
 source common/setenv.sh
 
-# ---------------------------------------------------------------------------------------------------------------------
-# Set general arguments
 source common/getCommonArgs.sh
 
 PROXY_INSPEC="A:TPC/LASERTRACKS;B:TPC/CEDIGITS;eos:***/INFORMATION;D:TPC/CLUSREFS"
 
-max_events=200
-publish_after=430
+CALIB_CONFIG= "TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=502;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null" \
+
+CCDB_PATH="http://o2-ccdb.internal"
+
+HOST=localhost
+
+QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
+
+max_events=300
+publish_after=440
 min_tracks=0
-num_lanes=1
+num_lanes=36
 
 if [[ ! -z ${TPC_CALIB_MAX_EVENTS:-} ]]; then
     max_events=${TPC_CALIB_MAX_EVENTS}
@@ -27,30 +33,20 @@ if [[ ! -z ${TPC_CALIB_LANES_PAD_RAW:-} ]]; then
     num_lanes=${TPC_CALIB_LANES_PAD_RAW}
 fi
 
+EXTRA_CONFIG="--calib-type ce --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes #{num_lanes} --check-calib-infos" 
 
-WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL \
+
+o2-dpl-raw-proxy $ARGS_ALL \
   --proxy-name tpc-laser-input-proxy \
-  --dataspec \"$PROXY_INSPEC\" \
+  --dataspec "${PROXY_INSPEC}" \
   --network-interface ib0 \
-  --channel-config \"name=tpc-laser-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\" \
- | o2-tpc-calib-laser-tracks  $ARGS_ALL \
+  --channel-config "name=tpc-laser-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq" \
+ | o2-tpc-calib-laser-tracks  ${ARGS_ALL} \
  --use-filtered-tracks --only-publish-on-eos --min-tfs=${min_tracks}\
- | o2-tpc-calib-pad-raw $ARGS_ALL \
-  --configKeyValues \"TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=502;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null\" \
- --lanes ${num_lanes} \
- --publish-after-tfs ${publish_after} \
- --max-events ${max_events}
- --calib-type ce \
- --check-calib-infos \
- | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
- --ccdb-path http://o2-ccdb.internal \
- | o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
-
-if [ $WORKFLOWMODE == "print" ]; then
-  echo Workflow command:
-  echo $WORKFLOW | sed "s/| */|\n/g"
-else
-  # Execute the command we have assembled
-  WORKFLOW+=" --$WORKFLOWMODE ${WORKFLOWMODE_FILE}"
-  eval $WORKFLOW
-fi
+ | o2-tpc-calib-pad-raw ${ARGS_ALL} \
+ --configKeyValues ${CALIB_CONFIG} \ 
+ ${EXTRA_CONFIG} \
+ | o2-calibration-ccdb-populator-workflow  ${ARGS_ALL} \
+ --ccdb-path ${CCDB_PATH} \
+ | o2-qc ${ARGS_ALL} --config ${QC_CONFIG} --local --host ${HOST} \
+ | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
