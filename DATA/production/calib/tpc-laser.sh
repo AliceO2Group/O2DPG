@@ -69,20 +69,21 @@ fi
 
 EXTRA_CONFIG="--calib-type ce --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes #{num_lanes} --check-calib-infos" 
 
+LASER_DECODER_ADD=''
 
-
+if [[ ! -z ${TPC_LASER_ILBZS:-} ]]; then
+    LASER_DECODER_ADD="--pedestal-url /home/wiechula/processData/inputFilesTracking/triggeredLaser/pedestals.openchannels.root -decode-type 0"
+fi
 
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
-    | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
+    | o2-tpc-raw-to-digits-workflow $ARGS_ALL  ${LASER_DECODER_ADD}\
     --input-spec "$CALIB_INSPEC"  \
     --configKeyValues "TPCDigitDump.NoiseThreshold=3;TPCDigitDump.LastTimeBin=600;$ARGS_ALL_CONFIG" \
-    --pedestal-url /home/wiechula/processData/inputFilesTracking/triggeredLaser/pedestals.openchannels.root \
     --pipeline tpc-raw-to-digits-0:20 \
     --remove-duplicates \
     --send-ce-digits \
-    --decoder-type 0 \
     | o2-tpc-reco-workflow $ARGS_ALL \
     --input-type digitizer  \
     --output-type "tracks,disable-writer" \
