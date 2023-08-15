@@ -35,6 +35,14 @@ Another abstraction layer above the *workflows* are **topology descriptions**. T
 - DPL metrics and InfoLogger (not a requirement in the sense that something would fail, but without it is difficult to debug):
   - The workflow commands should contain `--monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring 60` for the DPL metrics.
   - `--infologger-severity $INFOLOGGER_SEVERITY` enables the infologger.
+- Workflows should use as last command in the pipe the `o2-dpl-run` and add to it the `$GLOBALDPLOPT` env variable as command line argument.
+- Workflows should source these files to get common functions:
+  ```
+  source common/getCommonArgs.sh
+  source common/gen_topo_helper_functions.sh
+  ```
+- Workflows should aggregate their workflow parts in the `$WORKFLOW` variable, and use `add_W` to add a workflow, and `add_QC_from_consul` to add a QC workflow with a JSON file from consul.
+- Calibration workflows must not pollute the production CCDB in the following case (`if [[ $RUNTYPE == "SYNTHETIC" || "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then` (bash script)), in this case please e.g. upload to `ccdb-test.cern.ch`.
 
 # Configuring and selecting workflow in AliECS:
 There are 3 ways foreseen to configure the *full topology* in AliECS: (currently only the manual XML option exists)
