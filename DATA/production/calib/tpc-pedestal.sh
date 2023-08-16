@@ -36,11 +36,11 @@ EXTRA_CONFIG=" --publish-after-tfs ${publish_after} --max-events ${max_events} -
 #################################################################################################################################
 
 o2-dpl-raw-proxy ${ARGS_ALL} \
-    --dataspec ${PROXY_INSPEC} \
+    --dataspec "${PROXY_INSPEC}" \
     --readout-proxy '--channel-config "name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1"' \
     | o2-tpc-calib-pad-raw ${ARGS_ALL} \
-    --input-spec ${CALIB_INSPEC} \
-    --configKeyValues ${CALIB_CONFIG} \
+    --input-spec "${CALIB_INSPEC}" \
+    --configKeyValues "${CALIB_CONFIG}" \
     ${EXTRA_CONFIG} \
     | o2-calibration-ccdb-populator-workflow ${ARGS_ALL} \
     --ccdb-path ${CCDB_PATH} \
