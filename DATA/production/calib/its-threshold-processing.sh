@@ -26,7 +26,7 @@ ADDITIONAL_OPTIONS_CAL=""
 if [ $RUNTYPE == "tuningbb" ]; then
   ADDITIONAL_OPTIONS_CAL="--min-vcasn 30 --max-vcasn 130"
 fi
-if [ $RUNTYPE == "tot1row" ]; then
+if [[ $RUNTYPE == "tot1row" || $RUNTYPE == "vresetd" ]]; then
   ADDITIONAL_OPTIONS_DEC="--allow-empty-rofs"
   ADDITIONAL_OPTIONS_CAL="--ninj 10"
 fi
