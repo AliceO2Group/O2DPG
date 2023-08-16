@@ -124,7 +124,7 @@ public:
     if (mGeneratedEvents % mInverseTriggerRatio == 0)
     {
       static int sign = 1;
-      int indexInjection = (int)gRandom->Uniform(0, mPdg.size());
+      int injectionIndex = (int)gRandom->Uniform(0, mPdg.size());
       int currentPdg = mPdg[injectionIndex];
       double currentMass = mMass[injectionIndex];
       for (int i = 0; i < mNinjected[injectionIndex]; ++i)
