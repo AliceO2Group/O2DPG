@@ -2,39 +2,12 @@
 
 source common/setenv.sh
 
+source common/getCommonArgs.sh
 
 export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM # for kr cluster finder
 
-source common/getCommonArgs.sh
 if [ $NUMAGPUIDS != 0 ]; then
   ARGS_ALL+=" --child-driver 'numactl --membind $NUMAID --cpunodebind $NUMAID'"
-fi
-if [ $GPUTYPE != "CPU" ]; then
-  ARGS_ALL+="  --shm-mlock-segment-on-creation 1"
-fi
-
-if [ $GPUTYPE == "HIP" ]; then
-  if [ $NUMAID == 0 ] || [ $NUMAGPUIDS == 0 ]; then
-    export TIMESLICEOFFSET=0
-  else
-    export TIMESLICEOFFSET=$NGPUS
-  fi
-  GPU_CONFIG_KEY+="GPU_proc.deviceNum=0;GPU_global.mutexMemReg=true;"
-  GPU_CONFIG+=" --environment \"ROCR_VISIBLE_DEVICES={timeslice${TIMESLICEOFFSET}}\""
-  export HSA_NO_SCRATCH_RECLAIM=1
-  #export HSA_TOOLS_LIB=/opt/rocm/lib/librocm-debug-agent.so.2
-else
-  GPU_CONFIG_KEY+="GPU_proc.deviceNum=-2;"
-fi
-
-if [ $GPUTYPE != "CPU" ]; then
-  GPU_CONFIG_KEY+="GPU_proc.forceMemoryPoolSize=$GPUMEMSIZE;"
-  if [ $HOSTMEMSIZE == "0" ]; then
-    HOSTMEMSIZE=$(( 1 << 30 ))
-  fi
-fi
-if [ $HOSTMEMSIZE != "0" ]; then
-  GPU_CONFIG_KEY+="GPU_proc.forceHostMemoryPoolSize=$HOSTMEMSIZE;"
 fi
 
 PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
