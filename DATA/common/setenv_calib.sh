@@ -20,7 +20,7 @@ if has_detector_calib TPC && has_processing_step TPC_DEDX; then CAN_DO_CALIB_TPC
 if has_detector_calib TPC && has_detectors ITS TPC && has_detector_matching ITSTPC; then CAN_DO_CALIB_TPC_VDRIFTTGL=1; else CAN_DO_CALIB_TPC_VDRIFTTGL=0; fi
 if has_detector_calib TPC; then CAN_DO_CALIB_TPC_IDC=1; CAN_DO_CALIB_TPC_SAC=1; else CAN_DO_CALIB_TPC_IDC=0; CAN_DO_CALIB_TPC_SAC=0; fi
 if [[ ! -z ${FLP_IDS:-} && ! $FLP_IDS =~ (^|,)"145"(,|$) ]] || [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then CAN_DO_CALIB_TPC_SAC=0; fi
-if has_detector_calib TRD && has_detectors ITS TPC TRD && has_detector_matching ITSTPCTRD; then CAN_DO_CALIB_TRD_VDRIFTEXB=1; CAN_DO_CALIB_TRD_GAIN=1; else CAN_DO_CALIB_TRD_VDRIFTEXB=0; CAN_DO_CALIB_TRD_GAIN=0; fi
+if has_detector_calib TRD && has_detectors ITS TPC TRD && has_detector_matching ITSTPCTRD; then CAN_DO_CALIB_TRD_VDRIFTEXB=1; CAN_DO_CALIB_TRD_GAIN=1; CAN_DO_CALIB_TRD_T0=1; else CAN_DO_CALIB_TRD_VDRIFTEXB=0; CAN_DO_CALIB_TRD_GAIN=0; CAN_DO_CALIB_TRD_T0=0; fi
 if has_detector_calib EMC && has_detector_reco EMC; then CAN_DO_CALIB_EMC_BADCHANNELCALIB=1; CAN_DO_CALIB_EMC_TIMECALIB=1; else CAN_DO_CALIB_EMC_BADCHANNELCALIB=0; CAN_DO_CALIB_EMC_TIMECALIB=0; fi
 if has_detector_calib PHS && has_detector_reco PHS; then CAN_DO_CALIB_PHS_ENERGYCALIB=0; CAN_DO_CALIB_PHS_BADMAPCALIB=1; CAN_DO_CALIB_PHS_TURNONCALIB=1; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=1; CAN_DO_CALIB_PHS_L1PHASE=1; else CAN_DO_CALIB_PHS_ENERGYCALIB=0; CAN_DO_CALIB_PHS_BADMAPCALIB=0; CAN_DO_CALIB_PHS_TURNONCALIB=0; CAN_DO_CALIB_PHS_RUNBYRUNCALIB=0; CAN_DO_CALIB_PHS_L1PHASE=0; fi
 if has_detector_calib CPV && has_detector_reco CPV; then CAN_DO_CALIB_CPV_GAIN=1; else CAN_DO_CALIB_CPV_GAIN=0; fi
@@ -33,6 +33,7 @@ if has_detector_calib EMC && has_detector_reco EMC && [[ $SYNCMODE != 1 ]]; then
 
 # additional individual settings for calibration workflows
 if has_detector CTP; then export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"; else export CALIB_TPC_SCDCALIB_CTP_INPUT=""; fi
+if [[ ${DISABLE_TRD_PH:-} == 1 ]]; then CAN_DO_CALIB_TRD_T0=0; fi
 # the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
 : ${CALIB_TPC_SCDCALIB_SLOTLENGTH:=600}
 
@@ -89,6 +90,9 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
   fi
   if [[ $CAN_DO_CALIB_TRD_GAIN == 1 ]] ; then
     if [[ -z ${CALIB_TRD_GAIN+x} ]]; then CALIB_TRD_GAIN=1; fi
+  fi
+  if [[ $CAN_DO_CALIB_TRD_T0 == 1 ]] ; then
+    if [[ -z ${CALIB_TRD_T0+x} ]]; then CALIB_TRD_T0=1; fi
   fi
 
   # calibrations for EMC
@@ -158,6 +162,7 @@ fi
 ( [[ -z ${CALIB_TPC_VDRIFTTGL:-} ]] || [[ $CAN_DO_CALIB_TPC_VDRIFTTGL == 0 ]] ) && CALIB_TPC_VDRIFTTGL=0
 ( [[ -z ${CALIB_TRD_VDRIFTEXB:-} ]] || [[ $CAN_DO_CALIB_TRD_VDRIFTEXB == 0 ]] ) && CALIB_TRD_VDRIFTEXB=0
 ( [[ -z ${CALIB_TRD_GAIN:-} ]] || [[ $CAN_DO_CALIB_TRD_GAIN == 0 ]] ) && CALIB_TRD_GAIN=0
+( [[ -z ${CALIB_TRD_T0:-} ]] || [[ $CAN_DO_CALIB_TRD_T0 == 0 ]] ) && CALIB_TRD_T0=0
 ( [[ -z ${CALIB_EMC_BADCHANNELCALIB:-} ]] || [[ $CAN_DO_CALIB_EMC_BADCHANNELCALIB == 0 ]] ) && CALIB_EMC_BADCHANNELCALIB=0
 ( [[ -z ${CALIB_EMC_TIMECALIB:-} ]] || [[ $CAN_DO_CALIB_EMC_TIMECALIB == 0 ]] ) && CALIB_EMC_TIMECALIB=0
 ( [[ -z ${CALIB_PHS_ENERGYCALIB:-} ]] || [[ $CAN_DO_CALIB_PHS_ENERGYCALIB == 0 ]] ) && CALIB_PHS_ENERGYCALIB=0
@@ -185,6 +190,7 @@ if [[ "0${GEN_TOPO_VERBOSE:-}" == "01" ]]; then
   echo "CALIB_PHS_L1PHASE = $CALIB_PHS_L1PHASE" 1>&2
   echo "CALIB_TRD_VDRIFTEXB = $CALIB_TRD_VDRIFTEXB" 1>&2
   echo "CALIB_TRD_GAIN = $CALIB_TRD_GAIN" 1>&2
+  echo "CALIB_TRD_T0 = $CALIB_TRD_T0" 1>&2
   echo "CALIB_TPC_TIMEGAIN = $CALIB_TPC_TIMEGAIN" 1>&2
   echo "CALIB_TPC_RESPADGAIN = $CALIB_TPC_RESPADGAIN" 1>&2
   echo "CALIB_TPC_IDC = $CALIB_TPC_IDC" 1>&2
@@ -223,6 +229,7 @@ if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   # TRD
   if [[ $CALIB_TRD_VDRIFTEXB == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "angResHistoTRD:TRD/ANGRESHISTS/0"; fi
   if [[ $CALIB_TRD_GAIN == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "gainHistoTRD:TRD/GAINCALIBHISTS/0"; fi
+  if [[ $CALIB_TRD_T0 == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "trdph:TRD/PULSEHEIGHT/0"; fi
 fi
 
 # define spec for proxy for sporadic outputs from BARREL
