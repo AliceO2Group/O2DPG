@@ -2,6 +2,9 @@
 
 source common/setenv.sh
 
+
+export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM # for kr cluster finder
+
 source common/getCommonArgs.sh
 if [ $NUMAGPUIDS != 0 ]; then
   ARGS_ALL+=" --child-driver 'numactl --membind $NUMAID --cpunodebind $NUMAID'"
@@ -37,24 +40,33 @@ fi
 PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
+NLANES=36
+SESSION="default"
+PIPEADD="0"
+ARGS_FILES="NameConf.mDirGRP=/home/epn/odc/files/;NameConf.mDirGeom=/home/epn/odc/files/;keyval.output_dir=/dev/null"
+
+HOST=localhost
+
+QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
+
+
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \
-    --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=1'" \
+    --readout-proxy '--channel-config "name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1"' \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
     --input-spec "$CALIB_INSPEC"  \
+    --configKeyValues "$ARGS_FILES" \
     --remove-duplicates \
-    --pipeline tpc-raw-to-digits-0:6 \
-    --configKeyValues "$ARGS_ALL_CONFIG;TPCDigitDump.LastTimeBin=1000;" \
-    | o2-tpc-reco-workflow $ARGS_ALL \
-    --input-type digitizer  \
-    --output-type clusters,tracks,encoded-clusters disable-writer \
-    --disable-mc \
-    --pipeline tpc-tracker:4 \
-    $GPU_CONFIG \
-    --configKeyValues "$ARGS_ALL_CONFIG;$GPU_CONFIG_KEY;align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;" \
-    | o2-eve-display $ARGS_ALL --display-tracks TPC --display-clusters TPC --disable-mc --jsons-folder /home/ed/jsons --eve-dds-collection-index 0 --configKeyValues "$ARGS_ALL_CONFIG" \
-    | o2-ctf-writer-workflow $ARGS_ALL --configKeyValues "$ARGS_ALL_CONFIG" --output-dir $CTF_DIR --ctf-dict-dir $FILEWORKDIR --output-type ctf --onlyDet TPC \
+    --pipeline tpc-raw-to-digits-0:24 \
+    | o2-tpc-krypton-raw-filter $ARGS_ALL \
+    --configKeyValues "$ARGS_FILES" \
+    --lanes $NLANES \
+    --writer-type EPN \
+    --meta-output-dir $EPN2EOS_METAFILES_DIR \
+    --output-dir $CALIB_DIR \
+    --threshold-max 20 \
+    --max-tf-per-file 8000 \
+    --time-bins-before 20 \
+    --max-time-bins 650 \
+    | o2-qc $ARGS_ALL --config ${QC_CONFIG} --local --host $HOST \
     | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
-
-#HOST=localhost
-#| o2-qc $ARGS_ALL --config json:///home/epn/odc/files/tpcQCTasks_multinode_ALL.json --local --host $HOST \
