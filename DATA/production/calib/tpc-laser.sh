@@ -67,7 +67,7 @@ if [[ ! -z ${TPC_CALIB_LANES_PAD_RAW:-} ]]; then
     num_lanes=${TPC_CALIB_LANES_PAD_RAW}
 fi
 
-EXTRA_CONFIG="--calib-type ce --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes #{num_lanes} --check-calib-infos" 
+EXTRA_CONFIG="--calib-type ce --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes ${num_lanes} --check-calib-infos" 
 
 LASER_DECODER_ADD=''
 
