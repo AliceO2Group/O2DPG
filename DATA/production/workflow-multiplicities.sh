@@ -201,8 +201,8 @@ if [[ -z ${EVE_NTH_EVENT:-} ]]; then
     EVE_NTH_EVENT=10
   elif [[ $BEAMTYPE == "pp" && "${ED_VERTEX_MODE:-}" == "1" ]]; then
     EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
-  else # COSMICS
-    EVE_NTH_EVENT=10
+  else # COSMICS / TECHNICALS / ...
+    EVE_NTH_EVENT=1
   fi
   [[ ! -z ${EPN_GLOBAL_SCALING:-} ]] && EVE_NTH_EVENT=$(($EVE_NTH_EVENT * $EPN_GLOBAL_SCALING))
 fi
