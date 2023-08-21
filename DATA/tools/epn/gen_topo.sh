@@ -27,13 +27,16 @@ if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]]; then
   if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
     export GEN_TOPO_ODC_EPN_TOPO_ARGS="--recozone staging-mi50 --reco100zone staging-mi100 --calibzone calib"
   else
-    export GEN_TOPO_ODC_EPN_TOPO_ARGS="--recozone online --calibzone calib"
+    export GEN_TOPO_ODC_EPN_TOPO_ARGS="--recozone online-mi50 --reco100zone online-mi100 --calibzone calib"
   fi
 fi
 [[ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]] && export GEN_TOPO_EPN_CCDB_SERVER="http://127.0.0.1:8084" # CCDB server to use
 if [[ "0$GEN_TOPO_ONTHEFLY" == "01" ]]; then export SHM_MANAGER_SHMID=1 ;fi
 
-#Temporary hacks
+# Hack new topo-merger in
+if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_CMD" ]]; then
+  export GEN_TOPO_ODC_EPN_TOPO_CMD='/home/lkrcal/epn/topogen/.venv/bin/python3 /scratch/services/topo_merger/topo-merger.py'
+fi
 
 # GEN_TOPO_RUN_HOME is a debug setting used in some tests. This is not needed for online running.
 if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
