@@ -66,7 +66,7 @@ while true; do
       if [[ "0$GEN_TOPO_WIPE_CACHE" == "01" ]]; then
         rm -f cache/$GEN_TOPO_CACHE_HASH
       fi
-      echo Reusing cached XML topology 1>&2
+      echo Reusing cached XML topology $GEN_TOPO_CACHE_HASH 1>&2
       touch cache/$GEN_TOPO_CACHE_HASH
       cp cache/$GEN_TOPO_CACHE_HASH $GEN_TOPO_WORKDIR/output.xml
       break
