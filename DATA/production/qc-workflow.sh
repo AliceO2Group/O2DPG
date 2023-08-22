@@ -63,7 +63,21 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     [[ -z "${QC_JSON_FDD:-}" ]] && QC_JSON_FDD=consul://o2/components/qc/ANY/any/fdd-digits-qc-epn
     [[ -z "${QC_JSON_FT0:-}" ]] && QC_JSON_FT0=consul://o2/components/qc/ANY/any/ft0-digits-qc-epn
     [[ -z "${QC_JSON_FV0:-}" ]] && QC_JSON_FV0=consul://o2/components/qc/ANY/any/fv0-digits-qc-epn
-    [[ -z "${QC_JSON_EMC:-}" ]] && QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall
+    if [[ -z "${QC_JSON_EMC:-}" ]]; then
+      if [ "$BEAMTYPE" == "PbPb"]; then
+        if has_detector CTP; then
+          QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall-withCTP-PbPb
+        else
+          QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall-PbPb
+        fi
+      else
+        if has_detector CTP; then
+          QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall-withCTP
+        else
+          QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall
+        fi
+      fi
+    fi
     [[ -z "${QC_JSON_ZDC:-}" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=consul://o2/components/qc/ANY/any/zdc-rec-epn
     if [[ -z "${QC_JSON_MCH:-}" ]]; then
       if has_detector MCH && has_processing_step MCH_RECO; then
