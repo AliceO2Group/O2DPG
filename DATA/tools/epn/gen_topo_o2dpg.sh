@@ -99,16 +99,17 @@ while true; do
     cp $GEN_TOPO_WORKDIR/output.xml cache/$GEN_TOPO_CACHE_HASH
   fi
 
-  if [[ ! -z "$ECS_ENVIRONMENT_ID" && -d "/var/log/topology/" && $USER == "epn" ]]; then
-    GEN_TOPO_LOG_FILE=/var/log/topology/topology-$(date -u +%Y%m%d-%H%M%S)-$ECS_ENVIRONMENT_ID.xml
-    cp $GEN_TOPO_WORKDIR/output.xml $GEN_TOPO_LOG_FILE
-    nohup gzip $GEN_TOPO_LOG_FILE &> /dev/null &
-  fi
   break
 done
 
 if [[ ! -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD" ]]; then
   $GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD $GEN_TOPO_WORKDIR/output.xml
+fi
+
+if [[ ! -z "$ECS_ENVIRONMENT_ID" && -d "/var/log/topology/" && $USER == "epn" ]]; then
+  GEN_TOPO_LOG_FILE=/var/log/topology/topology-$(date -u +%Y%m%d-%H%M%S)-$ECS_ENVIRONMENT_ID.xml
+  cp $GEN_TOPO_WORKDIR/output.xml $GEN_TOPO_LOG_FILE
+  nohup gzip $GEN_TOPO_LOG_FILE &> /dev/null &
 fi
 
 cat $GEN_TOPO_WORKDIR/output.xml
