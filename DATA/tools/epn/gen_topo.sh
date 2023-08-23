@@ -37,6 +37,8 @@ if [[ "0$GEN_TOPO_ONTHEFLY" == "01" ]]; then export SHM_MANAGER_SHMID=1 ;fi
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_CMD" ]]; then
   export GEN_TOPO_ODC_EPN_TOPO_CMD='/home/lkrcal/epn/topogen/.venv/bin/python3 /scratch/services/topo_merger/topo-merger.py'
 fi
+# Command for postprocessing of topology generation after topology caching
+# GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD='...'
 
 # GEN_TOPO_RUN_HOME is a debug setting used in some tests. This is not needed for online running.
 if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
