@@ -62,6 +62,21 @@
           "hasInvMassMesons": "true",
           "mesonClustersRejectExotics": 1
         }
+      },
+      "BCTaskEMCAL": {
+        "active": "true",
+        "taskName": "BCs",
+        "className": "o2::quality_control_modules::emcal::BCTask",
+        "moduleName": "QcEMCAL",
+        "detectorName": "EMC",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "emcal-triggers:EMC/CELLSTRGR;ctp-digits:CTP/DIGITS"
+        },
+        "taskParameters": {
+        }
       }
     }
   },
