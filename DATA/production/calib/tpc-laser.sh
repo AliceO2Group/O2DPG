@@ -81,7 +81,7 @@ fi
 LASER_DECODER_ADD=''
 
 if [[ ! -z ${TPC_LASER_ILBZS:-} ]]; then
-    LASER_DECODER_ADD="--pedestal-url /home/wiechula/processData/inputFilesTracking/triggeredLaser/pedestals.openchannels.root -decode-type 0"
+    LASER_DECODER_ADD="--pedestal-url /home/wiechula/processData/inputFilesTracking/triggeredLaser/pedestals.openchannels.root --decoder-type 0"
 fi
 
 
