@@ -58,19 +58,20 @@ mkdir -p $GEN_TOPO_WORKDIR/cache || { echo Error creating directory 1>&2; exit 1
 while true; do
   if [[ $GEN_TOPO_HASH == 1 ]]; then
     cd $GEN_TOPO_WORKDIR || { echo Cannot enter work dir 1>&2; exit 1; }
-    if [[ ! -d O2DPG ]]; then git clone https://github.com/AliceO2Group/O2DPG.git 1>&2 || { echo O2DPG checkout failed 1>&2; exit 1; }; fi
     if [[ "0$GEN_TOPO_ONTHEFLY" == "01" && ! -z "$GEN_TOPO_CACHE_HASH" ]]; then
       export GEN_TOPO_CACHEABLE=1
     fi
     if [[ "0$GEN_TOPO_CACHEABLE" == "01" && -f cache/$GEN_TOPO_CACHE_HASH ]]; then
       if [[ "0$GEN_TOPO_WIPE_CACHE" == "01" ]]; then
         rm -f cache/$GEN_TOPO_CACHE_HASH
+      else
+        echo Reusing cached XML topology $GEN_TOPO_CACHE_HASH 1>&2
+        touch cache/$GEN_TOPO_CACHE_HASH
+        cp cache/$GEN_TOPO_CACHE_HASH $GEN_TOPO_WORKDIR/output.xml
+        break
       fi
-      echo Reusing cached XML topology $GEN_TOPO_CACHE_HASH 1>&2
-      touch cache/$GEN_TOPO_CACHE_HASH
-      cp cache/$GEN_TOPO_CACHE_HASH $GEN_TOPO_WORKDIR/output.xml
-      break
     fi
+    if [[ ! -d O2DPG ]]; then git clone https://github.com/AliceO2Group/O2DPG.git 1>&2 || { echo O2DPG checkout failed 1>&2; exit 1; }; fi
     cd O2DPG
     git checkout $GEN_TOPO_SOURCE &> /dev/null
     if [[ $? != 0 ]]; then
