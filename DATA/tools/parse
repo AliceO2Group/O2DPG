@@ -258,11 +258,18 @@ for line in f:
                         for i in env_at_runtime:
                             odccommand += 'export ' + i + '=' + os.environ[i] + ' ; '
                     odccommand += '"'
+                if os.path.exists(os.environ['GEN_TOPO_QC_JSON_FILE']):
+                    odccommand += f" --assets {os.environ['GEN_TOPO_QC_JSON_FILE']}"
                 odccommand += ' -o ' + sys.argv[3]
-                print('Running ODC command', odccommand)
+                print('Running topology merger command', odccommand)
                 starttime = time.time()
-                if os.system(odccommand) != 0:
-                    print('\nError running odc: ', odccommand)
+                try:
+                    out = subprocess.check_output(odccommand, stderr=subprocess.STDOUT, shell=True)
+                    print(out.decode('utf-8'))
+                    print('Topology merger finished successfully')
+                except subprocess.CalledProcessError as e:
+                    print(e.output.decode('utf-8'))
+                    print('Error running topology merger!')
                     raise
                 print('Execution time: ', time.time() - starttime)
                 if os.path.exists(os.environ['GEN_TOPO_QC_JSON_FILE']):
@@ -270,16 +277,6 @@ for line in f:
                     print('Running SED command for DPL JSON XML Escaping', command)
                     if os.system(command) != 0:
                         print('Error running sed on JSON file')
-                    command = 'sed -i ' + \
-                              '-e \'s,' + os.environ['GEN_TOPO_QC_JSON_FILE'] + ',${DDS_LOCATION}/qc.json.asset,\' ' + \
-                              '-e \'/^ *<assets>$/a <name>qc.json</name>\' ' + \
-                              '-e \'/^ *<topology name.*>$/a <asset name="qc.json" type="inline" visibility="global" value="\' ' + \
-                              '-e \'/^ *<topology name.*>$/r ' + os.environ['GEN_TOPO_QC_JSON_FILE'] + '\' ' + \
-                              '-e \'/^ *<topology name.*>$/a " />\' ' + \
-                              sys.argv[3]
-                    print('Running final SED command for QC JSONs', command)
-                    if os.system(command) != 0:
-                        print('Error running sed')
             else:
                 outf = open(sys.argv[3], 'w+')
                 for i in recoworkflows:
