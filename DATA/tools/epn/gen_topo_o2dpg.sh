@@ -58,19 +58,20 @@ mkdir -p $GEN_TOPO_WORKDIR/cache || { echo Error creating directory 1>&2; exit 1
 while true; do
   if [[ $GEN_TOPO_HASH == 1 ]]; then
     cd $GEN_TOPO_WORKDIR || { echo Cannot enter work dir 1>&2; exit 1; }
-    if [[ ! -d O2DPG ]]; then git clone https://github.com/AliceO2Group/O2DPG.git 1>&2 || { echo O2DPG checkout failed 1>&2; exit 1; }; fi
     if [[ "0$GEN_TOPO_ONTHEFLY" == "01" && ! -z "$GEN_TOPO_CACHE_HASH" ]]; then
       export GEN_TOPO_CACHEABLE=1
     fi
     if [[ "0$GEN_TOPO_CACHEABLE" == "01" && -f cache/$GEN_TOPO_CACHE_HASH ]]; then
       if [[ "0$GEN_TOPO_WIPE_CACHE" == "01" ]]; then
         rm -f cache/$GEN_TOPO_CACHE_HASH
+      else
+        echo Reusing cached XML topology $GEN_TOPO_CACHE_HASH 1>&2
+        touch cache/$GEN_TOPO_CACHE_HASH
+        cp cache/$GEN_TOPO_CACHE_HASH $GEN_TOPO_WORKDIR/output.xml
+        break
       fi
-      echo Reusing cached XML topology 1>&2
-      touch cache/$GEN_TOPO_CACHE_HASH
-      cp cache/$GEN_TOPO_CACHE_HASH $GEN_TOPO_WORKDIR/output.xml
-      break
     fi
+    if [[ ! -d O2DPG ]]; then git clone https://github.com/AliceO2Group/O2DPG.git 1>&2 || { echo O2DPG checkout failed 1>&2; exit 1; }; fi
     cd O2DPG
     git checkout $GEN_TOPO_SOURCE &> /dev/null
     if [[ $? != 0 ]]; then
@@ -98,13 +99,18 @@ while true; do
     cp $GEN_TOPO_WORKDIR/output.xml cache/$GEN_TOPO_CACHE_HASH
   fi
 
-  if [[ ! -z "$ECS_ENVIRONMENT_ID" && -d "/var/log/topology/" && $USER == "epn" ]]; then
-    GEN_TOPO_LOG_FILE=/var/log/topology/topology-$(date -u +%Y%m%d-%H%M%S)-$ECS_ENVIRONMENT_ID.xml
-    cp $GEN_TOPO_WORKDIR/output.xml $GEN_TOPO_LOG_FILE
-    nohup gzip $GEN_TOPO_LOG_FILE &> /dev/null &
-  fi
   break
 done
+
+if [[ ! -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD" ]]; then
+  $GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD $GEN_TOPO_WORKDIR/output.xml
+fi
+
+if [[ ! -z "$ECS_ENVIRONMENT_ID" && -d "/var/log/topology/" && $USER == "epn" ]]; then
+  GEN_TOPO_LOG_FILE=/var/log/topology/topology-$(date -u +%Y%m%d-%H%M%S)-$ECS_ENVIRONMENT_ID.xml
+  cp $GEN_TOPO_WORKDIR/output.xml $GEN_TOPO_LOG_FILE
+  nohup gzip $GEN_TOPO_LOG_FILE &> /dev/null &
+fi
 
 cat $GEN_TOPO_WORKDIR/output.xml
 echo Removing temporary output file $GEN_TOPO_WORKDIR/output.xml 1>&2
