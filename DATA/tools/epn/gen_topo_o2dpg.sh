@@ -107,6 +107,10 @@ while true; do
   break
 done
 
+if [[ ! -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD" ]]; then
+  $GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD $GEN_TOPO_WORKDIR/output.xml
+fi
+
 cat $GEN_TOPO_WORKDIR/output.xml
 echo Removing temporary output file $GEN_TOPO_WORKDIR/output.xml 1>&2
 rm $GEN_TOPO_WORKDIR/output.xml
