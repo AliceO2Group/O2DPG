@@ -369,7 +369,7 @@ get_proxy_connection()
   fi
 
   if workflow_has_parameter CALIB_LOCAL_AGGREGATOR; then
-    CONNECTION+=",transport=shmem,address=ipc://${UDS_PREFIX}aggregator-shm-$1"
+    CONNECTION+=",transport=zeromq,address=ipc://${UDS_PREFIX}aggregator-shm-$1"
   else
     CONNECTION+=",transport=zeromq"
   fi
