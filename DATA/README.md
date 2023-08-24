@@ -52,7 +52,7 @@ There are 3 ways foreseen to configure the *full topology* in AliECS: (currently
   - The **workflow name** inside the *description library file*.
   - **detector list**: Multiple comma-separated lists of detectors participating in the run (global list, list for qc, list for calibration, list of detectors to run reconstruction for, list of detectors to include in the CTF, list of detectors that have processing on the FLP), defaulting to `ALL` for all detectors.
   - **workflow parameters**: text field passed to workflow as environment variable for additional options.
-  - **number of nodes override**: Overrides the setting for the number of nodes required in the workflow (meant to quickly increase / decrease the EPN partition size).
+  - **number of nodes override**: Overrides the setting for the number of nodes required in the workflow (meant to quickly increase / decrease the EPN partition size). **NOTE: This setting has become mandatory now, and is used exclusively to set the number of nodes. The number specified in the workflow description is ignored**
   - **process multiplicity overrides**: Scaling factors for the process multiplicities for raw decoders, ctf encoders, and other processes.
   - **extra environment options**: Free text field where the operator can put additional environment variables, that will be forwarded to the workflow.
   - **wipe workflow cache**: Normally the XMLs are cached, when they are created from the same repository version / same workflow / same O2 version. This option clears the cache for the current partition.
@@ -67,6 +67,7 @@ A *topology description* consists of
     - Zone where to run the workflow (calib / reco)
     - For reco:
       - Number of nodes to run this workflow on
+        - **NOTE: This setting for the number of nodes is ignored now. Please use the number of nodes override in ECS!**
         - If a processor in the workflow needs to identify on which node it is running on, it can use the `$DDS_COLLECTION_INDEX` emvironment variable.
       - Minimum number of nodes required forthe workflow (in case of node failure)
         - In case the there are multiple workflows in the topology description, the largest number of nodes, and the largest minimum number of nodes are used.

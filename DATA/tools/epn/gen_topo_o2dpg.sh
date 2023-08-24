@@ -14,6 +14,7 @@ if [[ -z "${WORKFLOW_DETECTORS_QC+x}" && -z "${WORKFLOW_DETECTORS_EXCLUDE_QC+x}"
 if [[ -z "${WORKFLOW_DETECTORS_CALIB+x}" && -z "${WORKFLOW_DETECTORS_EXCLUDE_CALIB+x}" ]]; then echo \$WORKFLOW_DETECTORS_EXCLUDE_CALIB missing; exit 1; fi # Comma-separated list of detectors to run calibration for
 if [[ -z "${WORKFLOW_PARAMETERS+x}" ]]; then echo \$WORKFLOW_PARAMETERS missing; exit 1; fi # Additional parameters for workflow
 if [[ -z "${RECO_NUM_NODES_OVERRIDE+x}" ]]; then echo \$RECO_NUM_NODES_OVERRIDE missing; exit 1; fi # Override number of nodes
+if [[ -z "${RECO_MAX_FAIL_NODES_OVERRIDE+x}" ]]; then echo \$RECO_MAX_FAIL_NODES_OVERRIDE missing; exit 1; fi # Override number of nodes allowed to fail
 if [[ -z "$DDMODE" ]] && [[ -z "$DDWORKFLOW" ]]; then echo Either \$DDMODE or \$DDWORKFLOW must be set; exit 1; fi # Select data distribution workflow
 if [[ -z "$MULTIPLICITY_FACTOR_RAWDECODERS" ]]; then echo \$MULTIPLICITY_FACTOR_RAWDECODERS missing; exit 1; fi # Process multiplicity scaling parameter
 if [[ -z "$MULTIPLICITY_FACTOR_CTFENCODERS" ]]; then echo \$MULTIPLICITY_FACTOR_CTFENCODERS missing; exit 1; fi # Process multiplicity scaling parameter
@@ -28,7 +29,7 @@ if [[ -z "$CTF_DIR" ]]; then echo \$CTF_DIR missing; exit 1; fi
 if [[ -z "$CALIB_DIR" ]]; then echo \$CALIB_DIR missing; exit 1; fi
 if [[ -z "$EPN2EOS_METAFILES_DIR" ]]; then echo \$EPN2EOS_METAFILES_DIR missing; exit 1; fi
 if [[ -z "$GEN_TOPO_WORKDIR" ]]; then echo \$GEN_TOPO_WORKDIR missing; exit 1; fi
-if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]]; then echo \$GEN_TOPO_ODC_EPN_TOPO_ARGS missing; exit 1; fi
+if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_CMD" ]]; then echo \$GEN_TOPO_ODC_EPN_TOPO_CMD missing; exit 1; fi
 if [[ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]]; then echo \$GEN_TOPO_EPN_CCDB_SERVER missing; exit 1; fi
 
 # Replace TRG by CTP
@@ -103,7 +104,19 @@ while true; do
 done
 
 if [[ ! -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD" ]]; then
-  $GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD $GEN_TOPO_WORKDIR/output.xml
+  TMP_POST_CACHING_CMD="$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD $GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS"
+  TMP_POST_CACHING_NMIN=$(( $RECO_NUM_NODES_OVERRIDE > $RECO_MAX_FAIL_NODES_OVERRIDE ? $RECO_NUM_NODES_OVERRIDE - $RECO_MAX_FAIL_NODES_OVERRIDE : 0 ))
+  TMP_POST_CACHING_CMD+=" --nodes-mi50 $RECO_NUM_NODES_OVERRIDE --nmin-mi50 $TMP_POST_CACHING_NMIN"
+  if [[ -z $GEN_TOPO_MI100_NODES || $GEN_TOPO_MI100_NODES == "0" ]]; then
+    TMP_POST_CACHING_CMD+=" --force-exact-node-numbers --nodes-mi100 0 --nmin-mi100 0"
+  elif [[ ! -z $GEN_TOPO_MI100_NODES && $GEN_TOPO_MI100_NODES != "-1" ]]; then
+    TMP_POST_CACHING_NMIN=$(( $GEN_TOPO_MI100_NODES > $RECO_MAX_FAIL_NODES_OVERRIDE ? $GEN_TOPO_MI100_NODES - $RECO_MAX_FAIL_NODES_OVERRIDE : 0 ))
+    TMP_POST_CACHING_CMD+=" --force-exact-node-numbers --nodes-mi100 $GEN_TOPO_MI100_NODES --nmin-mi100 $TMP_POST_CACHING_NMIN"
+  fi
+  TMP_POST_CACHING_CMD+=" -o $GEN_TOPO_WORKDIR/output.xml.new $GEN_TOPO_WORKDIR/output.xml"
+  echo "Running post-caching topo-merger command: $TMP_POST_CACHING_CMD" 1>&2
+  eval $TMP_POST_CACHING_CMD 1>&2 || { echo Error during EPN topology-merger resource allocation 1>&2; exit 1; }
+  mv -f $GEN_TOPO_WORKDIR/output.xml.new $GEN_TOPO_WORKDIR/output.xml 1>&2
 fi
 
 if [[ ! -z "$ECS_ENVIRONMENT_ID" && -d "/var/log/topology/" && $USER == "epn" ]]; then
