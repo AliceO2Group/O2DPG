@@ -33,13 +33,7 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "digits:TRD/DIGITS;tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
-        },
-       "taskParameters": {
-          "peakregionstart": "7.0",
-          "peakregionend": "20.0",
-          "pulseheightpeaklower": "1.0",
-          "pulseheightpeakupper": "5.0"
+          "query": "digits:TRD/DIGITS;triggers:TRD/TRKTRGRD"
         }
       },
       "TRDTracklets": {
@@ -52,7 +46,37 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "digits:TRD/DIGITS;tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
+          "query": "tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
+        }
+      },
+      "PulseHeightTrackMatch": {
+        "active": "false",
+        "taskName": "PHTrackMatch",
+        "className": "o2::quality_control_modules::trd::PulseHeightTrackMatch",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "phValues:TRD/PULSEHEIGHT"
+        }
+      },
+      "TRDTracking": {
+        "active": "false",
+        "taskName": "Tracking",
+        "className": "o2::quality_control_modules::trd::TrackingTask",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "trackITSTPCTRD:TRD/MATCH_ITSTPC;trigITSTPCTRD:TRD/TRGREC_ITSTPC"
+        },
+        "taskParameters": {
+          "detailedQC": "false",
+          "trackSources": "ITS-TPC-TRD"
         }
       }
     }
@@ -60,4 +84,3 @@
   "dataSamplingPolicies": [
   ]
 }
-
