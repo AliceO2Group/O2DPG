@@ -14,23 +14,23 @@ PROXY_OUTSPEC="tunestring:ITS/TSTR;runtype:ITS/RUNT;fittype:ITS/FITT;scantype:IT
 
 CHIPMODBASE=5
 NDECODERS=6
-if [ $RUNTYPE == "digital" ]; then
+if [ $RUNTYPE_ITS == "digital" ]; then
   CHIPMODBASE=10
 fi
-if [ $RUNTYPE == "thrfull" ]; then
+if [ $RUNTYPE_ITS == "thrfull" ]; then
   CHIPMODBASE=20
   NDECODERS=10
 fi
 ADDITIONAL_OPTIONS_DEC=""
 ADDITIONAL_OPTIONS_CAL=""
-if [ $RUNTYPE == "tuningbb" ]; then
+if [ $RUNTYPE_ITS == "tuningbb" ]; then
   ADDITIONAL_OPTIONS_CAL="--min-vcasn 30 --max-vcasn 130"
 fi
-if [[ $RUNTYPE == "tot1row" || $RUNTYPE == "vresetd" ]]; then
+if [[ $RUNTYPE_ITS == "tot1row" || $RUNTYPE_ITS == "vresetd" ]]; then
   ADDITIONAL_OPTIONS_DEC="--allow-empty-rofs"
   ADDITIONAL_OPTIONS_CAL="--ninj 10"
 fi
-if [ $RUNTYPE == "totfullfast" ]; then
+if [ $RUNTYPE_ITS == "totfullfast" ]; then
   ADDITIONAL_OPTIONS_DEC="--allow-empty-rofs"
   ADDITIONAL_OPTIONS_CAL="--calculate-slope --charge-a 30 --charge-b 60 --ninj 10"
 fi

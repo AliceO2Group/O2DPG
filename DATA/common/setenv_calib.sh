@@ -271,7 +271,7 @@ if [[ -z ${CALIBDATASPEC_CALO_TF:-} ]]; then
   if [[ $CALIB_EMC_BADCHANNELCALIB == 1 ]] || [[ $CALIB_EMC_TIMECALIB == 1 ]]; then
     add_semicolon_separated CALIBDATASPEC_CALO_TF "cellsEMC:EMC/CELLS/0"
     add_semicolon_separated CALIBDATASPEC_CALO_TF "cellsTrgREMC:EMC/CELLSTRGR/0"
-    if false && has_detector CTP; then # FIXME: Currently we cannot send CTP/DIGITS to both CALO and BARREL workflow.
+    if has_detector CTP; then
       add_semicolon_separated CALIBDATASPEC_CALO_TF "ctpdigi:CTP/DIGITS/0"
     fi
   fi
@@ -369,7 +369,7 @@ get_proxy_connection()
   fi
 
   if workflow_has_parameter CALIB_LOCAL_AGGREGATOR; then
-    CONNECTION+=",transport=shmem,address=ipc://${UDS_PREFIX}aggregator-shm-$1"
+    CONNECTION+=",transport=zeromq,address=ipc://${UDS_PREFIX}aggregator-shm-$1"
   else
     CONNECTION+=",transport=zeromq"
   fi
