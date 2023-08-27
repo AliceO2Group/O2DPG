@@ -220,7 +220,7 @@ for line in f:
                   odccommand = 'odc-epn-topo'
                 if 'GEN_TOPO_ODC_EPN_TOPO_ARGS' in os.environ:
                   odccommand += ' ' + os.environ['GEN_TOPO_ODC_EPN_TOPO_ARGS']
-                if reconodes:
+                if True:
                     replacestring = ''
                     dd_env_variables = ['DD_DISK_FRACTION', 'EPN_DD_TEST', 'EPN_DD_TEST_2', 'EPN_DD_TEST_3', 'SHM_MANAGER_SHMID']
                     for i in dd_env_variables:
@@ -238,14 +238,6 @@ for line in f:
                     odccommand += ' --reco ' + ' '.join(recoworkflows)
                 if len(recoworkflows_mi100):
                     odccommand += ' --reco100 ' + ' '.join(recoworkflows_mi100)
-                odccommand += ' --n ' + str(reconodes)
-                odccommand += ' --nmin ' + str(reconodesmin) # Currently disabled, since odc-epn-topo does not accept --nmin
-                if 'GEN_TOPO_MI100_NODES' in os.environ and int(os.environ['GEN_TOPO_MI100_NODES']) > 0:
-                    if 'RECO_MAX_FAIL_NODES_OVERRIDE' in os.environ and os.environ['RECO_MAX_FAIL_NODES_OVERRIDE'] != '':
-                        reconodesmin100 = max(1, int(os.environ['GEN_TOPO_MI100_NODES']) - int(os.environ['RECO_MAX_FAIL_NODES_OVERRIDE']))
-                    else:
-                        reconodesmin100 = min(int(os.environ['GEN_TOPO_MI100_NODES']), reconodesmin)
-                    odccommand += ' --force-exact-node-numbers --n100 ' + os.environ['GEN_TOPO_MI100_NODES'] + ' --nmin100 ' + str(reconodesmin100)
                 if len(calibworkflows):
                     calibworkflowsdds.sort(key=lambda x:int(x.split(':')[1])*-1)
                     odccommand += ' --calib ' + ' '.join(calibworkflowsdds)
@@ -258,11 +250,18 @@ for line in f:
                         for i in env_at_runtime:
                             odccommand += 'export ' + i + '=' + os.environ[i] + ' ; '
                     odccommand += '"'
+                if os.path.exists(os.environ['GEN_TOPO_QC_JSON_FILE']):
+                    odccommand += f" --assets {os.environ['GEN_TOPO_QC_JSON_FILE']}"
                 odccommand += ' -o ' + sys.argv[3]
-                print('Running ODC command', odccommand)
+                print('Running topology merger command', odccommand)
                 starttime = time.time()
-                if os.system(odccommand) != 0:
-                    print('\nError running odc: ', odccommand)
+                try:
+                    out = subprocess.check_output(odccommand, stderr=subprocess.STDOUT, shell=True)
+                    print(out.decode('utf-8'))
+                    print('Topology merger finished successfully')
+                except subprocess.CalledProcessError as e:
+                    print(e.output.decode('utf-8'))
+                    print('Error running topology merger!')
                     raise
                 print('Execution time: ', time.time() - starttime)
                 if os.path.exists(os.environ['GEN_TOPO_QC_JSON_FILE']):
@@ -270,16 +269,6 @@ for line in f:
                     print('Running SED command for DPL JSON XML Escaping', command)
                     if os.system(command) != 0:
                         print('Error running sed on JSON file')
-                    command = 'sed -i ' + \
-                              '-e \'s,' + os.environ['GEN_TOPO_QC_JSON_FILE'] + ',${DDS_LOCATION}/qc.json.asset,\' ' + \
-                              '-e \'/^ *<assets>$/a <name>qc.json</name>\' ' + \
-                              '-e \'/^ *<topology name.*>$/a <asset name="qc.json" type="inline" visibility="global" value="\' ' + \
-                              '-e \'/^ *<topology name.*>$/r ' + os.environ['GEN_TOPO_QC_JSON_FILE'] + '\' ' + \
-                              '-e \'/^ *<topology name.*>$/a " />\' ' + \
-                              sys.argv[3]
-                    print('Running final SED command for QC JSONs', command)
-                    if os.system(command) != 0:
-                        print('Error running sed')
             else:
                 outf = open(sys.argv[3], 'w+')
                 for i in recoworkflows:
