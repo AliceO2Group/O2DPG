@@ -82,7 +82,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --proxy-name tpc-laser-input-proxy \
     --proxy-channel-name tpc-laser-input-proxy \
     --channel-config "name=tpc-laser-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0" \
-    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE} ${GLOBALDPLOPT}
 
 #    --pipeline tpc-tracker:4 \
 
