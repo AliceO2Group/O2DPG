@@ -72,7 +72,7 @@ EXTRA_CONFIG="--calib-type ce --publish-after-tfs ${publish_after} --max-events 
 LASER_DECODER_ADD=''
 
 if [[ ! -z ${TPC_LASER_ILBZS:-} ]]; then
-    LASER_DECODER_ADD="--pedestal-url /home/wiechula/processData/inputFilesTracking/triggeredLaser/pedestals.openchannels.root -decode-type 0"
+    LASER_DECODER_ADD="--pedestal-url /home/wiechula/processData/inputFilesTracking/triggeredLaser/pedestals.openchannels.root --decoder-type 0"
 fi
 
 o2-dpl-raw-proxy $ARGS_ALL \
@@ -99,5 +99,6 @@ o2-dpl-raw-proxy $ARGS_ALL \
     | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
     --ccdb-path ${CCDB_PATH} \
     | o2-qc ${ARGS_ALL} --config ${QC_CONFIG} --local --host ${HOST} \
-    | o2-dpl-run ${ARGS_ALL} --dds ${WORKFLOWMODE_FILE}
+    | o2-dpl-run ${ARGS_ALL} --dds ${WORKFLOWMODE_FILE} ${GLOBALDPLOPT}
+
 

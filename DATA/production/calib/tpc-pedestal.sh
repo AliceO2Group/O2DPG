@@ -45,4 +45,4 @@ o2-dpl-raw-proxy ${ARGS_ALL} \
     | o2-calibration-ccdb-populator-workflow ${ARGS_ALL} \
     --ccdb-path ${CCDB_PATH} \
     | o2-qc ${ARGS_ALL} --config ${QC_CONFIG} --local --host ${HOST} \
-    | o2-dpl-run ${ARGS_ALL} --dds ${WORKFLOWMODE_FILE}
+    | o2-dpl-run ${ARGS_ALL} --dds ${WORKFLOWMODE_FILE} ${GLOBALDPLOPT}
