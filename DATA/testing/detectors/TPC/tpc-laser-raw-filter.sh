@@ -4,6 +4,8 @@ source common/setenv.sh
 
 source common/getCommonArgs.sh
 
+source common/gen_topo_helper_functions.sh 
+
 export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM # for kr cluster finder
 
 if [ $NUMAGPUIDS != 0 ]; then
@@ -42,4 +44,4 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --time-bins-before 20 \
     --max-time-bins 650 \
     | o2-qc $ARGS_ALL --config ${QC_CONFIG} --local --host $HOST \
-    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
+    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE} ${GLOBALDPLOPT}
