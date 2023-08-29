@@ -4,6 +4,8 @@ source common/setenv.sh
 
 source common/getCommonArgs.sh
 
+source common/gen_topo_helper_functions.sh 
+
 FILEWORKDIR="/home/wiechula/processData/inputFilesTracking/triggeredLaser"
 
 FILEWORKDIR2="/home/epn/odc/files/"

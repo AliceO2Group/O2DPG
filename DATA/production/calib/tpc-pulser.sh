@@ -5,6 +5,8 @@ source common/setenv.sh
 
 source common/getCommonArgs.sh
 
+source common/gen_topo_helper_functions.sh 
+
 if [ $NUMAGPUIDS != 0 ]; then
   ARGS_ALL+=" --child-driver 'numactl --membind $NUMAID --cpunodebind $NUMAID'"
 fi
