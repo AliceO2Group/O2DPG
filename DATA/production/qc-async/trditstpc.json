@@ -53,7 +53,10 @@
         "dataSource": {
           "type": "direct",
           "query": "digits:TRD/DIGITS;tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
-        }
+        },
+        "taskParameters": {
+          "ignorelayerlabels": "1"
+        },
       },
       "TRDPulseHeightTrackMatch": {
         "active": "true",
