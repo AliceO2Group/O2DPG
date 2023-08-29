@@ -1,0 +1,36 @@
+{
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "alio2-cr1-hv-mvs00:8083",
+        "username": "not_applicable",
+        "password": "not_applicable",
+        "name": "not_applicable"
+      },
+      "Activity": {
+        "number": "42",
+        "type": "2"
+      },
+      "monitoring": {
+        "url": "influxdb-unix:///tmp/telegraf.sock"
+      },
+      "consul": {
+        "url": ""
+      },
+      "conditionDB": {
+        "url": "http://127.0.0.1:8084"
+      },
+      "infologger": {
+        "filterDiscardDebug": "true",
+        "filterDiscardLevel": "1",
+        "filterDiscardFile": "../../qc-_ID_.log",
+        "filterRotateMaxBytes": "100000000",
+        "filterRotateMaxFiles": "1"
+      },
+      "bookkeeping": {
+        "url": ""
+      }
+    }
+  }
+}
