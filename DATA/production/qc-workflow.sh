@@ -110,7 +110,11 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctof
       fi
     fi
-    [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json # this must be last
+    if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
+      [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn-staging.json # this must be last
+    else
+      [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json # this must be last
+    fi
   elif [[ $SYNCMODE == 1 ]]; then # Sync processing running locally (CI, laptop)
     [[ -z "${QC_JSON_TPC:-}" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
     [[ -z "${QC_JSON_ITS:-}" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
