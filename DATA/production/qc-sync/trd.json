@@ -28,9 +28,8 @@
       }
     },
     "tasks": {
-      "TRDRawData": {
+      "RawData": {
         "active": "true",
-        "taskName": "RawData",
         "className": "o2::quality_control_modules::trd::RawData",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
@@ -51,9 +50,8 @@
         "mergerCycleMultiplier": "2",
         "localControl": "odc"
       },
-      "TRDDigits": {
+      "Digits": {
         "active": "true",
-        "taskName": "Digits",
         "className": "o2::quality_control_modules::trd::DigitsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
@@ -78,9 +76,8 @@
           "1"
         ]
       },
-      "TRDTracklets": {
+      "Tracklets": {
         "active": "true",
-        "taskName": "Tracklets",
         "className": "o2::quality_control_modules::trd::TrackletsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
@@ -105,8 +102,8 @@
           "1"
         ]
       },
-      "PulseHeightTrackMatch": {
-        "active": "false",
+      "PHTrackMatch": {
+        "active": "true",
         "taskName": "PHTrackMatch",
         "className": "o2::quality_control_modules::trd::PulseHeightTrackMatch",
         "moduleName": "QcTRD",
@@ -131,9 +128,8 @@
           "1"
         ]
       },
-      "TRDTracking": {
+      "Tracking": {
         "active": "false",
-        "taskName": "Tracking",
         "className": "o2::quality_control_modules::trd::TrackingTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",

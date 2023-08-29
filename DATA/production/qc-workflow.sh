@@ -65,7 +65,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     [[ -z "${QC_JSON_FT0:-}" ]] && QC_JSON_FT0=consul://o2/components/qc/ANY/any/ft0-digits-qc-epn
     [[ -z "${QC_JSON_FV0:-}" ]] && QC_JSON_FV0=consul://o2/components/qc/ANY/any/fv0-digits-qc-epn
     if [[ -z "${QC_JSON_EMC:-}" ]]; then
-      if [ "$BEAMTYPE" == "PbPb"]; then
+      if [[ "$BEAMTYPE" == "PbPb" ]]; then
         if has_detector CTP; then
           QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall-withCTP-PbPb
         else
@@ -236,8 +236,8 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
   # e.g. .qc.tasks.Tracking.taskParameters.dataSource.query=\"tracks:TPC/TRACKS\;clusters:TPC/CLUSTERS\"
   if [[ -z "${DISABLE_QC_DETECTOR_CONFIG_OVERRIDE:-}" ]]; then
     if ! has_matching_qc ITSTPCTRD || ! has_detectors_reco ITS TPC TRD; then
-      add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.TRDTracking.active=false'
-      add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.PulseHeightTrackMatch.active=false'
+      add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.Tracking.active=false'
+      add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.PHTrackMatch.active=false'
     fi
   fi
 

@@ -23,9 +23,8 @@
       }
     },
     "tasks": {
-      "TRDDigits": {
+      "Digits": {
         "active": "true",
-        "taskName": "Digits",
         "className": "o2::quality_control_modules::trd::DigitsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
@@ -36,9 +35,8 @@
           "query": "digits:TRD/DIGITS;triggers:TRD/TRKTRGRD"
         }
       },
-      "TRDTracklets": {
+      "Tracklets": {
         "active": "true",
-        "taskName": "Tracklets",
         "className": "o2::quality_control_modules::trd::TrackletsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
@@ -49,9 +47,8 @@
           "query": "tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
         }
       },
-      "PulseHeightTrackMatch": {
-        "active": "false",
-        "taskName": "PHTrackMatch",
+      "PHTrackMatch": {
+        "active": "true",
         "className": "o2::quality_control_modules::trd::PulseHeightTrackMatch",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
@@ -62,9 +59,8 @@
           "query": "phValues:TRD/PULSEHEIGHT"
         }
       },
-      "TRDTracking": {
+      "Tracking": {
         "active": "false",
-        "taskName": "Tracking",
         "className": "o2::quality_control_modules::trd::TrackingTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
