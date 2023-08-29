@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
 source common/setenv.sh
+
+source common/getCommonArgs.sh
+
+source common/gen_topo_helper_functions.sh 
+
 export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM
 export GPUMEMSIZE=$(( 24 << 30 ))
 export HOSTMEMSIZE=$(( 5 << 30 ))
 export GPUTYPE="HIP"
 
-source common/getCommonArgs.sh
 
 if [ $NUMAGPUIDS != 0 ]; then
   ARGS_ALL+=" --child-driver 'numactl --membind $NUMAID --cpunodebind $NUMAID'"
