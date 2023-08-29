@@ -16,11 +16,19 @@ fi
 
 if [[ -z $NTHREADS ]] ; then NTHREADS=1; fi
 
-WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --proxy-name its-noise-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=its-noise-input-proxy,method=bind,type=pull,rateLogging=1,transport=zeromq\" | "
-WORKFLOW+="o2-its-noise-calib-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --prob-threshold 1e-6 --cut-ib 1e-2 --nthreads ${NTHREADSACC} --processing-mode 1 --pipeline its-noise-calibrator:${NITSACCPIPELINES} ${INPTYPE} | "
-WORKFLOW+="o2-its-noise-calib-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --validity-days 730 --prob-threshold 1e-6 --cut-ib 1e-2 --nthreads ${NTHREADSNORM} --processing-mode 2 ${INPTYPE} | "
-WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"http://o2-ccdb.internal\" --sspec-min 0 --sspec-max 0 | "
-WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"http://alio2-cr1-flp199.cern.ch:8083\" --sspec-min 1 --sspec-max 1 --name-extention dcs | "
+CCDBPATH1="http://o2-ccdb.internal"
+CCDBPATH2="http://alio2-cr1-flp199.cern.ch:8083"
+if [[ $RUNTYPE == "SYNTHETIC" || "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
+  CCDBPATH1="http://ccdb-test.cern.ch:8080"
+  CCDBPATH2="http://ccdb-test.cern.ch:8080"
+fi
+
+WORKFLOW=
+add_W o2-dpl-raw-proxy "--proxy-name its-noise-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=its-noise-input-proxy,method=bind,type=pull,rateLogging=1,transport=zeromq\"" "" 0
+add_W o2-its-noise-calib-workflow "--prob-threshold 1e-6 --cut-ib 1e-2 --nthreads ${NTHREADSACC} --processing-mode 1 --pipeline its-noise-calibrator:${NITSACCPIPELINES} ${INPTYPE}"
+add_W o2-its-noise-calib-workflow "--validity-days 730 --prob-threshold 1e-6 --cut-ib 1e-2 --nthreads ${NTHREADSNORM} --processing-mode 2 ${INPTYPE}"
+add_W o2-calibration-ccdb-populator-workflow "--ccdb-path=\"$CCDBPATH1\" --sspec-min 0 --sspec-max 0"
+add_W o2-calibration-ccdb-populator-workflow "--ccdb-path=\"$CCDBPATH2\" --sspec-min 1 --sspec-max 1 --name-extention dcs"
 WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
 
 if [ $WORKFLOWMODE == "print" ]; then
