@@ -1346,7 +1346,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    AOD_merge_task['cmd'] += ' [ -f input.txt ] && rm input.txt; '
    AOD_merge_task['cmd'] += ' [ -f ../AO2D_old.root ] && echo "../AO2D_old.root" > input.txt;'
    AOD_merge_task['cmd'] += ' echo "./AO2D_repaired.root" >> input.txt;'
-   AOD_merge_task['cmd'] += ' ${O2PHYSICS_ROOT}/bin/o2-aod-merger --output ../AO2D.root;'
+   AOD_merge_task['cmd'] += ' o2-aod-merger --output ../AO2D.root;'
    AOD_merge_task['cmd'] += ' rm ../AO2D_old.root || true'
    AOD_merge_task['semaphore'] = 'aodmerge' #<---- this is making sure that only one merge is running at any time
    workflow['stages'].append(AOD_merge_task)
@@ -1369,7 +1369,7 @@ aodmergerneeds = ['aod_' + str(tf) for tf in range(1, NTIMEFRAMES + 1)]
 AOD_merge_task = createTask(name='aodmerge', needs = aodmergerneeds, lab=["AOD"], mem='2000', cpu='1')
 AOD_merge_task['cmd'] = ' [ -f aodmerge_input.txt ] && rm aodmerge_input.txt; '
 AOD_merge_task['cmd'] += ' for i in `seq 1 ' + str(NTIMEFRAMES) + '`; do echo "tf${i}/AO2D.root" >> aodmerge_input.txt; done; '
-AOD_merge_task['cmd'] += ' ${O2PHYSICS_ROOT}/bin/o2-aod-merger --input aodmerge_input.txt --output AO2D.root'
+AOD_merge_task['cmd'] += ' o2-aod-merger --input aodmerge_input.txt --output AO2D.root'
 workflow['stages'].append(AOD_merge_task)
 
 job_merging = False
