@@ -26,17 +26,17 @@ fi
 [[ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]] && export GEN_TOPO_EPN_CCDB_SERVER="http://127.0.0.1:8084" # CCDB server to use
 if [[ "0$GEN_TOPO_ONTHEFLY" == "01" ]]; then export SHM_MANAGER_SHMID=1 ;fi
 
-# Command for topology generation
+# Command for topology merging
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_CMD" ]]; then
-  export GEN_TOPO_ODC_EPN_TOPO_CMD='/home/lkrcal/epn/topogen/.venv/bin/python3 /home/lkrcal/epn/topogen/topo_merger.py'
+  export GEN_TOPO_ODC_EPN_TOPO_CMD='/usr/local/bin/epn-topo-merger'
 fi
+
 # Command for postprocessing of topology generation after topology caching
-export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD='/home/lkrcal/epn/topogen/.venv/bin/python3 /home/lkrcal/epn/topogen/topo_resource_alloc.py'
+if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD" ]]; then
+  export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD='/usr/local/bin/epn-topo-alloc'
+fi
 
 # Extra arguments for topology generation
-#if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]]; then
-#  GEN_TOPO_ODC_EPN_TOPO_ARGS=
-#fi
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS" ]]; then
   if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
     export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS="--recozone staging-mi50 --reco100zone staging-mi100 --calibzone calib"
