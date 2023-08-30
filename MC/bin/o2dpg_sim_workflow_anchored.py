@@ -314,10 +314,12 @@ def main():
        effT0 = args.ft0_eff
        if effT0 < 0:
          if args.col == "pp":
-           if args.eCM > 5000:
-             effT0 = 0.759
-           else:
+           if args.eCM < 1000:
              effT0 = 0.68
+           elif args.eCM < 6000:
+             effT0 = 0.737
+           else:
+             effT0 = 0.759
          elif args.col == "PbPb":
            effT0 = 4.0
          else:
