@@ -2,7 +2,7 @@
 
 # ------------------------------------------------------------------------
 #         ALICE HMPID detector
-# Workflow to calculate pedestals   v.1.0  = 4/04/2023
+# Workflow to calculate pedestals   v.3.0  = 24/08/2023
 #
 #  Extra Env Variables:
 #     HMP_SIGMACUT : The value of sigams for the threshold cut [=4]
@@ -15,10 +15,9 @@
 #   Auth. A.Franco  - INFN  Sez.BARI - ITALY
 # ------------------------------------------------------------------------
 
-source common/setenv.sh
-# env  > /tmp/hmpid_pedestal_env_dump.txt
-
 # Set general arguments
+source common/setenv.sh
+source common/gen_topo_helper_functions.sh
 source common/getCommonArgs.sh
 
 # Define the Input/Output streams
@@ -53,35 +52,35 @@ then
     HMP_PED_TAG="Latest"
 fi
 
-#  Here we compose the workflow
-WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --dataspec \"$PROXY_INSPEC\" --channel-config \"name=readout-proxy,type=pull,"
-WORKFLOW+="method=connect,address=ipc://@$INRAWCHANNAME,rateLogging=1,transport=shmem\" | "
-
-WORKFLOW+="o2-hmpid-raw-to-pedestals-workflow ${ARGS_ALL} --configKeyValues \"$ARGS_ALL_CONFIG\" --fast-decode "
-
+# Compose the specific parameters
+SPEC_PARAM=""
 if [ $HMP_NODCSCCDB_REC == 'false' ];
 then
-  WORKFLOW+="--use-dcsccdb --dcsccdb-uri 'http://alio2-cr1-flp199.cern.ch:8083' --dcsccdb-alivehours 3 "
+  SPEC_PARAM+="--use-dcsccdb --dcsccdb-uri 'http://alio2-cr1-flp199.cern.ch:8083' --dcsccdb-alivehours 3 "
 fi
 if [ $HMP_CCDB_REC == 'true' ];
 then
-  WORKFLOW+="--use-ccdb --ccdb-uri 'http://o2-ccdb.internal' "
+  SPEC_PARAM+="--use-ccdb --ccdb-uri 'http://o2-ccdb.internal' "
 fi
 if [ $HMP_FILES_REC == 'true' ];
 then
-  WORKFLOW+="--use-files "
+  SPEC_PARAM+="--use-files "
 fi
 
-WORKFLOW+="--files-basepath 'HMP' "
-WORKFLOW+="--pedestals-tag ${HMP_PED_TAG} --sigmacut ${HMP_SIGMACUT} | "
+SPEC_PARAM+="--files-basepath 'HMP' "
+SPEC_PARAM+="--pedestals-tag ${HMP_PED_TAG} --sigmacut ${HMP_SIGMACUT}"
 
+#  Here we compose the workflow
+# Start with an empty workflow
+WORKFLOW=
+add_W o2-dpl-raw-proxy "$ARGS_ALL --dataspec \"$PROXY_INSPEC\" --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,rateLogging=1,transport=shmem\""
+add_W o2-hmpid-raw-to-pedestals-workflow "${ARGS_ALL} --configKeyValues \"$ARGS_ALL_CONFIG\" --fast-decode $SPEC_PARAM"
+
+# Finally add the o2-dpl-run workflow manually, allow for either printing the workflow or creating a topology (default)
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
 
-if [ $WORKFLOWMODE == "print" ]; then
-  echo "HMPID Pedestals Calculation (v.0.1) Workflow command:"
-  echo $WORKFLOW | sed "s/| */|\n/g"
-else
-  # Execute the command we have assembled
-  WORKFLOW+=" --$WORKFLOWMODE ${WORKFLOWMODE_FILE}"
-  eval $WORKFLOW
-fi
+[[ $WORKFLOWMODE != "print" ]] && WORKFLOW+=" --${WORKFLOWMODE} ${WORKFLOWMODE_FILE:-}"
+[[ $WORKFLOWMODE == "print" || "${PRINT_WORKFLOW:-}" == "1" ]] && echo "#HMPID Pedestals Calculation (v.3) workflow command:\n\n${WORKFLOW}\n" | sed -e "s/\\\\n/\n/g" -e"s/| */| \\\\\n/g" | eval cat $( [[ $WORKFLOWMODE == "dds" ]] && echo '1>&2')
+if [[ $WORKFLOWMODE != "print" ]]; then eval $WORKFLOW; else true; fi
+
+# -------  EOF --------
