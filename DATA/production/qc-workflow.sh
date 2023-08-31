@@ -239,9 +239,11 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
   # for strings remember to escape e.g. " and ;
   # e.g. .qc.tasks.Tracking.taskParameters.dataSource.query=\"tracks:TPC/TRACKS\;clusters:TPC/CLUSTERS\"
   if [[ -z "${DISABLE_QC_DETECTOR_CONFIG_OVERRIDE:-}" ]]; then
-    if ! has_matching_qc ITSTPCTRD || ! has_detectors_reco ITS TPC TRD; then
-      add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.Tracking.active=false'
-      add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.PHTrackMatch.active=false'
+    if has_detector_qc TRD && [[ ! -z ${QC_JSON_TRD:-} ]]; then # extra settings for TRD QC
+      if ! has_matching_qc ITSTPCTRD || ! has_detectors_reco ITS TPC TRD; then
+        add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.Tracking.active=false'
+        add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.PHTrackMatch.active=false'
+      fi
     fi
   fi
 
