@@ -12,17 +12,22 @@ source $GEN_TOPO_MYDIR/setenv.sh || { echo "setenv.sh failed" 1>&2 && exit 1; }
 : ${CTF_MINSIZE:="2000000000"}                    # accumulate CTFs until file size reached
 : ${CTF_MAX_PER_FILE:="1000000"}                  # but no more than given number of CTFs per file
 
-# Set general arguments
-source $GEN_TOPO_MYDIR/getCommonArgs.sh || { echo "getCommonArgs.sh failed" 1>&2 && exit 1; }
-
 TIMEFRAME_RATE_LIMIT=2
 : ${NUMAID:="0"}
 
-if [[ ${ALIEN_JDL_CPUCORES:-} == 8 ]]; then
-  export MULTIPLICITY_PROCESS_tpc_entropy_decoder=2
-  export MULTIPLICITY_PROCESS_tpc_entropy_encoder=2
+if [[ ${ALIEN_JDL_CPUCORES:-} == 8 ]] || [[ ${ALIEN_JDL_CPUCORES:-} == 16 ]]; then # 16 is used for jobs on EPNs
+  export MULTIPLICITY_PROCESS_tpc_entropy_decoder=3
+  export MULTIPLICITY_PROCESS_tpc_entropy_encoder=3
+  SHMSIZE=16000000000
   TIMEFRAME_RATE_LIMIT=3
 fi
+
+if [[ ! -z "$ALIEN_JDL_SHMSIZE" ]]; then export SHMSIZE=$ALIEN_JDL_SHMSIZE; fi
+if [[ ! -z "$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYDECODER" ]]; then export MULTIPLICITY_PROCESS_tpc_entropy_decoder=$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYDECODER; fi
+if [[ ! -z "$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYENCODER" ]]; then export MULTIPLICITY_PROCESS_tpc_entropy_encoder=$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYENCODER; fi
+
+# Set general arguments
+source $GEN_TOPO_MYDIR/getCommonArgs.sh || { echo "getCommonArgs.sh failed" 1>&2 && exit 1; }
 
 [[ -z ${SHM_MANAGER_SHMID:-} ]] && ( [[ ${EXTINPUT:-} == 1 ]] || [[ ${NUMAGPUIDS:-} != 0 ]] ) && ARGS_ALL+=" --no-cleanup"
 
@@ -107,5 +112,9 @@ add_W o2-ctf-writer-workflow "--output-dir $CTF_DIR --min-file-size ${CTF_MINSIZ
 # DPL run binary
 WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT -b --run"
 
+PRINT_WORKFLOW=1
 [[ ${WORKFLOWMODE:-} == "print" || "0${PRINT_WORKFLOW:-}" == "01" ]] && echo "#Workflow command:\n\n${WORKFLOW}\n" | sed -e "s/\\\\n/\n/g" -e"s/| */| \\\\\n/g" | eval cat $( [[ ${WORKFLOWMODE:-} == "dds" ]] && echo '1>&2')
 if [[ ${WORKFLOWMODE:-} != "print" ]]; then eval $WORKFLOW; else true; fi
+
+# Adding a log file with the number of skimmed CTFs. If we arrive here, it means that the processing was fine
+ls -l o2_ctf*.root | wc -l > nSkimmedCTFs.log

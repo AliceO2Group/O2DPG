@@ -178,6 +178,25 @@ def parse_important_DPL_args(cmds, flat_config):
          c['onlyDet'] = extract_args(tokens, '--onlyDet')
          flat_config[cmd + '-options'] = c
 
+      # gpu/tpc tracking
+      if cmd == 'o2-gpu-reco-workflow':
+         c = {}
+         c['gpu-reconstruction'] = extract_args(tokens, '--gpu-reconstruction')
+         flat_config[cmd + '-options'] = c
+
+      # itstpc matching
+      if cmd == 'o2-tpcits-match-workflow':
+         corrstring = ''
+         s1 = extract_args(tokens, '--corrmap-lumi-inst')
+         if s1:
+            corrstring += ' --corrmap-lumi-inst ' + s1
+         s2 = extract_args(tokens, '--corrmap-lumi-mean')
+         if s2:
+            corrstring += ' --corrmap-lumi-mean ' + s2
+         if '--require-ctp-lumi' in tokens:
+            corrstring += ' --require-ctp-lumi '
+         # these are some options applied in multiple places (so save them flatly under tpc-corr-scaling)
+         flat_config['tpc-corr-scaling'] = corrstring
 
 def print_untreated_args(cmds):
    """
@@ -201,6 +220,15 @@ def print_principalconfigkeys_pertask(cmds):
             keyset.add(k.split(".")[0])
          print (task["cmd"]," ",keyset)
 
+
+def split_string_with_quotes(string):
+    # function to split a string into tokens on whitespace but only
+    # if whitespace not within quoted section
+    pattern = r'\s+(?=(?:[^\'"]*[\'"][^\'"]*[\'"])*[^\'"]*$)'
+    # Split the string using the pattern
+    tokens = re.split(pattern, string)
+    return tokens
+
 def extract_commands(commandlist):
    commands = []
    for l in commandlist:
@@ -209,7 +237,7 @@ def extract_commands(commandlist):
        l.rstrip('\n')
        l.rstrip()
        l.rstrip('|')
-       tokens = l.split(" ")
+       tokens = split_string_with_quotes(l)
        # take out stuff we don't care about
        tokens = remove_tokens(tokens,'', 1)
        tokens = remove_tokens(tokens,'\n', 1)
@@ -238,7 +266,7 @@ def extract_commands(commandlist):
        task['configval'] = extract_config_key_values(tokens)
        tokens = remove_tokens(tokens,"--configKeyValues", 2)
 
-       # we store the remaining options for furter processing later
+       # we store the remaining options for further processing later
        task['remainingargs'] = tokens
        commands.append(task)
 

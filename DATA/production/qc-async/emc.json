@@ -16,7 +16,7 @@
         "url": "influxdb-unix:///tmp/telegraf.sock"
       },
       "consul": {
-        "url": "alio2-cr1-hv-aliecs.cern.ch:8500"
+        "url": "alio2-cr1-hv-con01.cern.ch:8500"
       },
       "conditionDB": {
         "url": "qcdb.cern.ch:8083"
@@ -61,6 +61,21 @@
           "clusterizerMaxTimeDelta": "1000.",
           "hasInvMassMesons": "true",
           "mesonClustersRejectExotics": 1
+        }
+      },
+      "BCTaskEMCAL": {
+        "active": "true",
+        "taskName": "BCs",
+        "className": "o2::quality_control_modules::emcal::BCTask",
+        "moduleName": "QcEMCAL",
+        "detectorName": "EMC",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "emcal-triggers:EMC/CELLSTRGR;ctp-digits:CTP/DIGITS"
+        },
+        "taskParameters": {
         }
       }
     }

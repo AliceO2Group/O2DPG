@@ -72,6 +72,9 @@ fi
 CTP_BC_SHIFT=0
 if [[ $ALIEN_JDL_LPMANCHORYEAR == "2022" ]]; then
   CTP_BC_SHIFT=-294
+if [[ $RUNNUMBER -ge 538923 ]] && [[ $RUNNUMBER -le 539700 ]]; then
+  # 3 BC offset (future direction) in CTP data observed for LHC23zd - LHC23zs
+  CTP_BC_SHIFT=-3
 fi
 if [[ $PERIOD == "LHC22s" ]]; then
   # CTP asked to extract their digits
@@ -99,7 +102,7 @@ if [[ $PERIOD == "LHC22s" ]]; then
   fi
   CTP_BC_SHIFT=-293
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]]; then
-    export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+=";TriggerOffsetsParam.customOffset[2]=1;TriggerOffsetsParam.customOffset[4]=1;TriggerOffsetsParam.customOffset[5]=1;TriggerOffsetsParam.customOffset[6]=1;TriggerOffsetsParam.customOffset[7]=1;TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;TriggerOffsetsParam.customOffset[16]=$CTP_BC_SHIFT"
+    export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+=";TriggerOffsetsParam.customOffset[2]=1;TriggerOffsetsParam.customOffset[4]=1;TriggerOffsetsParam.customOffset[5]=1;TriggerOffsetsParam.customOffset[6]=1;TriggerOffsetsParam.customOffset[7]=1;TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT"
   fi
   export PVERTEXER+=";pvertexer.dbscanDeltaT=1;pvertexer.maxMultRatDebris=1.;"
 fi
@@ -129,6 +132,13 @@ if [[ $PERIOD == "LHC22q" ]]; then
   fi
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]]; then
     [[ ! -z $ZDC_BC_SHIFT ]] && export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+=";TriggerOffsetsParam.customOffset[11]=$ZDC_BC_SHIFT;"
+  fi
+fi
+
+# Apply BC shift of CTP IRs (whenever it is defined)
+if [[ $CTP_BC_SHIFT -ne 0 ]]; then
+  if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]]; then
+    export CONFIG_EXTRA_PROCESS_o2_ctf_reader_workflow+=";TriggerOffsetsParam.customOffset[16]=$CTP_BC_SHIFT"
   fi
 fi
 

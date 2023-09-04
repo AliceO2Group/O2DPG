@@ -48,6 +48,20 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     NTRDTRKTHREADS=3
     ITSTRK_THREADS=3
     ITSTPC_THREADS=3
+  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_64cpu" ]]; then
+    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=32
+    [[ -z $SHMSIZE ]] && SHMSIZE=90000000000
+    NGPURECOTHREADS=12
+    NTRDTRKTHREADS=3
+    ITSTRK_THREADS=3
+    ITSTPC_THREADS=3
+    N_TPCTRK=3
+    N_ITSTRK=3
+    N_TPCITS=3
+    N_TRDTRK=2
+    N_MCHCL=3
+    N_TOFMATCH=2
+    N_TPCENTDEC=3
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_1gpu" ]]; then
     [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=8
     [[ -z $SHMSIZE ]] && SHMSIZE=20000000000
@@ -117,6 +131,9 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     exit 1
   fi
 elif [[ $EPNPIPELINES != 0 ]]; then
+  NTRDTRKTHREADS=2
+  ITSTRK_THREADS=2
+  ITSTPC_THREADS=2
   RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? $RECO_NUM_NODES_WORKFLOW : 15) * ($NUMAGPUIDS != 0 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
   # Tuned multiplicities for sync pp / Pb-Pb processing
   if [[ $BEAMTYPE == "pp" ]]; then
@@ -139,7 +156,11 @@ elif [[ $EPNPIPELINES != 0 ]]; then
       N_ITSTRK=$(math_max $((6 * $EPNPIPELINES * $NGPUS / 4)) 1)
     fi
   else
-    N_ITSTRK=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
+    if [[ $BEAMTYPE == "PbPb" ]]; then
+      N_ITSTRK=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
+    elif [[ $BEAMTYPE == "cosmic" ]]; then
+      N_ITSTRK=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
+    fi
     N_ITSRAWDEC=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
     N_TPCITS=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
     N_TPCENT=$(math_max $((3 * $EPNPIPELINES * $NGPUS / 4)) 1)
@@ -160,6 +181,8 @@ elif [[ $EPNPIPELINES != 0 ]]; then
     if [[ $RUNTYPE == "PHYSICS" || $RUNTYPE == "COSMICS" ]]; then
       if [[ $BEAMTYPE == "pp" ]]; then
         N_ITSTRK=$(math_max $((9 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
+      elif [[ $BEAMTYPE == "cosmic" ]]; then
+        N_ITSTRK=$(math_max $((5 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
       else
         N_ITSTRK=$(math_max $((2 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
       fi
@@ -178,12 +201,19 @@ if [[ -z ${EVE_NTH_EVENT:-} ]]; then
     EVE_NTH_EVENT=10
   elif [[ $BEAMTYPE == "pp" && "${ED_VERTEX_MODE:-}" == "1" ]]; then
     EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
+  else # COSMICS / TECHNICALS / ...
+    EVE_NTH_EVENT=1
   fi
   [[ ! -z ${EPN_GLOBAL_SCALING:-} ]] && EVE_NTH_EVENT=$(($EVE_NTH_EVENT * $EPN_GLOBAL_SCALING))
 fi
 
 if [[ "$HIGH_RATE_PP" == "1" ]]; then
   : ${CUT_RANDOM_FRACTION_ITS:=0.97}
+elif [[ $BEAMTYPE == "PbPb" ]]; then
+  : ${CUT_RANDOM_FRACTION_ITS:=-1}
+  : ${CUT_MULT_MIN_ITS:=100}
+  : ${CUT_MULT_MAX_ITS:=200}
+  : ${CUT_MULT_VTX_ITS:=20}
 else
   : ${CUT_RANDOM_FRACTION_ITS:=0.95}
 fi

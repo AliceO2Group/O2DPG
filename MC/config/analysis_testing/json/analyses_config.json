@@ -142,7 +142,7 @@
         },
         {
             "name": "EventSelectionQA",
-            "enabled": false,
+            "enabled": true,
             "expected_output": ["AnalysisResults.root"],
             "config": {
                 "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json",
@@ -247,6 +247,27 @@
                       "o2-analysis-pid-tpc-full",
                       "o2-analysis-pid-tof-base",
                       "o2-analysis-pid-tof-full"]
+        },
+        {
+            "name": "EMCAL",
+            "enabled": true,
+            "expected_output": ["AnalysisResults.root"],
+            "config" : {
+                "data": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-data.json",
+                "mc": "json://${O2DPG_ROOT}/MC/config/analysis_testing/json/analysis-testing-mc.json"
+            },
+            "tasks": ["o2-analysis-je-emc-eventselection-qa",
+                      "o2-analysis-je-emc-cellmonitor",
+                      "o2-analysis-je-emcal-correction-task",
+                      "o2-analysis-je-emc-clustermonitor",
+                      "o2-analysis-je-emc-tmmonitor",
+                      "o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-trackselection",
+                      "o2-analysis-event-selection", 
+                      "o2-analysis-pid-tpc-full",
+                      "o2-analysis-pid-tpc-base"
+            ]
         }
     ]
 }

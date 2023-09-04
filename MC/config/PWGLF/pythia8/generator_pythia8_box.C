@@ -63,7 +63,7 @@ public:
       sign *= randomizePDGsign ? -1 : 1;
 
       Particle myparticle;
-      myparticle.id(pdg);
+      myparticle.id(sign*pdg);
       myparticle.status(11);
       myparticle.px(px);
       myparticle.py(py);

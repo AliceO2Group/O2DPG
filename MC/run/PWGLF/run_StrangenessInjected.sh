@@ -13,13 +13,13 @@ export IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE=1
 #export ALICEO2_CCDB_LOCALCACHE=.ccdb
 
 # ----------- LOAD UTILITY FUNCTIONS --------------------------
-. ${O2_ROOT}/share/scripts/jobutils.sh  
+. ${O2_ROOT}/share/scripts/jobutils.sh
 
 # ----------- START ACTUAL JOB  -----------------------------
 
 NWORKERS=${NWORKERS:-8}
 SIMENGINE=${SIMENGINE:-TGeant4}
-NSIGEVENTS=${NSIGEVENTS:-2}
+NSIGEVENTS=${NSIGEVENTS:-1}
 NBKGEVENTS=${NBKGEVENTS:-1}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
 INTRATE=${INTRATE:-50000}

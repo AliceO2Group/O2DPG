@@ -28,23 +28,16 @@
       }
     },
     "tasks": {
-      "TRDRawData": {
+      "RawData": {
         "active": "true",
-        "taskName": "RawData",
         "className": "o2::quality_control_modules::trd::RawData",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "trdall"
-        },
-        "taskParameters": {
-          "peakregionstart": "7.0",
-          "peakregionend": "20.0",
-          "pulseheightpeaklower": "0.0",
-          "pulseheightpeakupper": "5.0"
+          "type": "direct",
+          "query": "rawstats:TRD/RAWSTATS"
         },
         "location": "local",
         "localMachines": [
@@ -52,14 +45,13 @@
           "localhost"
         ],
         "remoteMachine": "alio2-cr1-qc05.cern.ch",
-        "remotePort": "47742",
+        "remotePort": "29850",
         "mergingMode": "delta",
         "mergerCycleMultiplier": "2",
         "localControl": "odc"
       },
-      "TRDDigits": {
+      "Digits": {
         "active": "true",
-        "taskName": "Digits",
         "className": "o2::quality_control_modules::trd::DigitsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
@@ -69,20 +61,13 @@
           "type": "dataSamplingPolicy",
           "name": "trdall"
         },
-        "taskParameters": {
-          "peakregionstart": "7.0",
-          "peakregionend": "20.0",
-          "pulseheightpeaklower": "1.0",
-          "pulseheightpeakupper": "5.0",
-          "ignorelayerlabels": "1"
-        },
         "location": "local",
         "localMachines": [
           "epn",
           "localhost"
         ],
         "remoteMachine": "alio2-cr1-qc05.cern.ch",
-        "remotePort": "47743",
+        "remotePort": "29851",
         "mergingMode": "delta",
         "mergerCycleMultiplier": "2",
         "localControl": "odc",
@@ -91,9 +76,8 @@
           "1"
         ]
       },
-      "TRDTracklets": {
+      "Tracklets": {
         "active": "true",
-        "taskName": "Tracklets",
         "className": "o2::quality_control_modules::trd::TrackletsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
@@ -103,12 +87,32 @@
           "type": "dataSamplingPolicy",
           "name": "trdall"
         },
-        "taskParameters": {
-          "peakregionstart": "7.0",
-          "peakregionend": "20.0",
-          "pulseheightpeaklower": "1.0",
-          "pulseheightpeakupper": "5.0",
-          "ignorelayerlabels": "1"
+        "location": "local",
+        "localMachines": [
+          "epn",
+          "localhost"
+        ],
+        "remoteMachine": "alio2-cr1-qc05.cern.ch",
+        "remotePort": "29852",
+        "mergingMode": "delta",
+        "mergerCycleMultiplier": "2",
+        "localControl": "odc",
+        "mergersPerLayer": [
+          "3",
+          "1"
+        ]
+      },
+      "PHTrackMatch": {
+        "active": "true",
+        "taskName": "PHTrackMatch",
+        "className": "o2::quality_control_modules::trd::PulseHeightTrackMatch",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "phValues:TRD/PULSEHEIGHT"
         },
         "location": "local",
         "localMachines": [
@@ -116,10 +120,38 @@
           "localhost"
         ],
         "remoteMachine": "alio2-cr1-qc05.cern.ch",
-        "remotePort": "47744",
+        "remotePort": "29853",
         "mergingMode": "delta",
         "mergerCycleMultiplier": "2",
-        "localControl": "odc",
+        "mergersPerLayer": [
+          "3",
+          "1"
+        ]
+      },
+      "Tracking": {
+        "active": "false",
+        "className": "o2::quality_control_modules::trd::TrackingTask",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "trackITSTPCTRD:TRD/MATCH_ITSTPC;trigITSTPCTRD:TRD/TRGREC_ITSTPC"
+        },
+        "location": "local",
+        "localMachines": [
+          "epn",
+          "localhost"
+        ],
+        "taskParameters": {
+          "detailedQC": "false",
+          "trackSources": "ITS-TPC-TRD"
+        },
+        "remoteMachine": "alio2-cr1-qc05.cern.ch",
+        "remotePort": "29854",
+        "mergingMode": "delta",
+        "mergerCycleMultiplier": "2",
         "mergersPerLayer": [
           "3",
           "1"
@@ -132,7 +164,7 @@
       "id": "trdall",
       "active": "true",
       "machines": [],
-      "query": "digits:TRD/DIGITS/0;tracklets:TRD/TRACKLETS/0;triggers:TRD/TRKTRGRD/0;rawstats:TRD/RAWSTATS/0",
+      "query": "digits:TRD/DIGITS/0;tracklets:TRD/TRACKLETS/0;triggers:TRD/TRKTRGRD/0",
       "samplingConditions": [
         {
           "condition": "random",

@@ -244,6 +244,10 @@
     "pid-tr": "-1",
     "useNetworkCorrection": "0"
   },
+  "pid-multiplicity": {
+    "processIU": "0",
+    "processStandard": "1"
+  },
   "track-extension": {
     "processRun2": "false",
     "processRun3": "true"
@@ -259,12 +263,123 @@
   },
   "track-selection": {
     "compatibilityIU": "false",
-    "etaMax": "0.800000012",
-    "etaMin": "-0.800000012",
+    "etaMax": "0.8",
+    "etaMin": "-0.8",
     "isRun3": "true",
     "itsMatching": "1",
-    "produceFBextendedTable": "true",
+    "produceFBextendedTable": "-1",
     "ptMax": "1e+10",
-    "ptMin": "0.100000001"
+    "ptMin": "0.1"
+  },
+  "emcal-correction-task": {
+    "nonlinearityFunction": "DATA_TestbeamFinal_NoScale",
+    "logWeight": "4.5",
+    "exoticCellMinAmplitude": "4",
+    "clusterDefinition": "kV3Default",
+    "useWeightExotic": "0",
+    "disableNonLin": "0",
+    "exoticCellDiffTime": "1e+06",
+    "exoticCellInCrossMinAmplitude": "0.1",
+    "maxMatchingDistance": "0.4",
+    "exoticCellFraction": "0.97",
+    "hasShaperCorrection": "1",
+    "isMC": "0",
+    "hasPropagatedTracks": "0",
+    "processFull": "1",
+    "selectedCellType": "1",
+    "processStandalone": "0",
+    "processMCFull": "0"
+  },
+  "cell-monitor": {
+    "minCellTimeMain": "-50",
+    "maxCellTimeMain": "100",
+    "minCellAmplitudeTimeHists": "0.3",
+    "vetoBCID": "",
+    "selectBCID": "all",
+    "minCellAmplitude": "0"
+  },
+  "EMCClusterMonitorTaskAmbiguous": {
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "processCollisions": "0",
+    "doEventSel": "0",
+    "processAmbiguous": "1",
+    "clusterDefinition": "10",
+    "numclusters-binning": {
+      "values": [
+        201,
+        -0.5,
+        200.5
+      ]
+    },
+    "vetoBCID": "",
+    "selectBCID": "all",
+    "vertexCut": "-1"
+  },
+  "EMCClusterMonitorTask": {
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "processCollisions": "1",
+    "doEventSel": "0",
+    "processAmbiguous": "0",
+    "clusterDefinition": "10",
+    "numclusters-binning": {
+      "values": [
+        201,
+        -0.5,
+        200.5
+      ]
+    },
+    "vetoBCID": "",
+    "selectBCID": "all",
+    "vertexCut": "-1"
+  },
+  "emc-tmmonitor": {
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "doEventSel": "0",
+    "maxTime": "20",
+    "clusterDefinition": "10",
+    "minM02": "0.1",
+    "vetoBCID": "",
+    "processCollisions": "1",
+    "hasPropagatedTracks": "1",
+    "usePionRejection": "0",
+    "minTime": "-25",
+    "tpcNsigmaPion": {
+      "values": [
+        -3,
+        3
+      ]
+    },
+    "selectBCID": "all",
+    "tpcNsigmaElectron": {
+      "values": [
+        -1,
+        3
+      ]
+    },
+    "vertexCut": "-1",
+    "tpcNsigmaBack": {
+      "values": [
+        -10,
+        -4
+      ]
+    }
   }
 }

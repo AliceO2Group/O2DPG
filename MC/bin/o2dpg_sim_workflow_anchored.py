@@ -121,11 +121,13 @@ def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp, objtype_external = N
     jsonTString = TBufferJSON.ConvertToJSON(obj, TClass.GetClass(objtype))
     return json.loads(jsonTString.Data())
 
-def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
+def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number, rct = None):
     """
     Retrieves start of run (sor), end of run (eor) and other global parameters from the GRPECS object,
     given a run number. We first need to find the right object
     ... but this is possible with a browsing request and meta_data filtering.
+    Optionally, we can pass an existing result from RCT/Info/RunInformation to check for consistency.
+    In this case and when information is inconsistent we will take time from RCT and issue a warning message.
     """
 
     # make a simple HTTP request on the "browsing" endpoint
@@ -164,6 +166,17 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number):
 
     SOR=int(grp["mTimeStart"]) # in milliseconds
     EOR=int(grp["mTimeEnd"])
+    # cross check with RCT if available
+    if rct != None:
+       # verify that the variaous sor_eor information are the same
+       if SOR != rct["SOR"]:
+         print ("WARNING: Inconsistent SOR information on CCDB (divergence between GRPECS and RCT) ... will take RCT one")
+         SOR=rct["SOR"]
+
+       if EOR != rct["EOR"]:
+         print ("WARNING: Inconsistent EOR information on CCDB (divergence between GRPECS and RCT) ... will take RCT one")
+         EOR=rct["EOR"]
+
     # fetch orbit reset to calculate orbitFirst
     ts, oreset = ccdbreader.fetch("CTP/Calib/OrbitReset", "vector<Long64_t>", timestamp = SOR)
     print ("All orbit resets")
@@ -262,8 +275,10 @@ def main():
     parser.add_argument("--split-id", type=int, help="The split id of this job within the whole production --prod-split)", default=0)
     parser.add_argument("-tf", type=int, help="number of timeframes per job", default=1)
     parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
-    parser.add_argument("--ft0-eff", type=float, dest="ft0_eff", help="FT0 eff needed for IR", default=0.759)
+    parser.add_argument("--ft0-eff", type=float, dest="ft0_eff", help="FT0 eff needed for IR", default=-1.0)
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
+    parser.add_argument("-eCM", type=float, dest="eCM", help="Energy", default=13600)
+    parser.add_argument("-col", type=str, dest="col", help="Collision System", default="pp")
     args = parser.parse_args()
 
     # split id should not be larger than production id
@@ -273,17 +288,10 @@ def main():
     ccdbreader = CCDBAccessor(args.ccdb_url)
     # fetch the EOR/SOR
     rct_sor_eor = retrieve_sor_eor(ccdbreader, args.run_number) # <-- from RCT/Info
-    GLOparams = retrieve_sor_eor_fromGRPECS(ccdbreader, args.run_number)
+    GLOparams = retrieve_sor_eor_fromGRPECS(ccdbreader, args.run_number, rct=rct_sor_eor)
     if not GLOparams:
        print ("No time info found")
        sys.exit(1)
-
-    # verify that the variaous sor_eor information are the same
-    if GLOparams["SOR"] != rct_sor_eor["SOR"]:
-       print ("Inconsistent SOR information on CCDB")
-
-    if GLOparams["EOR"] != rct_sor_eor["EOR"]:
-       print ("Inconsistent EOR information on CCDB")
 
     # determine timestamp, and production offset for the final
     # MC job to run
@@ -301,8 +309,23 @@ def main():
     forwardargs = " ".join([ a for a in args.forward if a != '--' ])
     # retrieve interaction rate
     rate = None
+
     if args.ccdb_IRate == True:
-       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000., args.ft0_eff)
+       effT0 = args.ft0_eff
+       if effT0 < 0:
+         if args.col == "pp":
+           if args.eCM < 1000:
+             effT0 = 0.68
+           elif args.eCM < 6000:
+             effT0 = 0.737
+           else:
+             effT0 = 0.759
+         elif args.col == "PbPb":
+           effT0 = 4.0
+         else:
+           effT0 = 0.759
+
+       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000., effT0)
 
        if rate != None:
          # if the rate calculation was successful we will use it, otherwise we fall back to some rate given as part
@@ -315,7 +338,7 @@ def main():
    
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
-    forwardargs += " -tf " + str(args.tf) + " --sor " + str(GLOparams["SOR"]) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"])
+    forwardargs += " -tf " + str(args.tf) + " --sor " + str(GLOparams["SOR"]) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(args.col) + " -eCM " + str(args.eCM)
     print ("forward args ", forwardargs)
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
     print ("Creating time-anchored workflow...")

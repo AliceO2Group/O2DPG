@@ -165,6 +165,21 @@ add_semicolon_separated()
   done
 }
 
+add_pipe_separated()
+{
+  if (( $# < 2 )); then
+    echo "$# parameters received"
+    echo "Function name: ${FUNCNAME} expects at least 2 parameters:"
+    echo "it concatenates the string in 1st parameter by the following"
+    echo "ones, forming pipe-separated string. $# parameters received"
+    exit 1
+  fi
+
+  for ((i = 2; i <= $#; i++ )); do
+    eval $1+="\|${!i}"
+  done
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Helper functions for multiplicities
 
@@ -177,7 +192,7 @@ get_N() # USAGE: get_N [processor-name] [DETECTOR_NAME] [RAW|CTF|REST] [threads,
   local NAME_DEFAULT="N_${5:-}"
   local MULT=${!NAME_PROC:-$((${!NAME_FACTOR} * ${!NAME_DET:-1} * ${!NAME_PROC_FACTOR:-1} * ${!NAME_DEFAULT:-1}))}
   [[ ! -z ${EPN_GLOBAL_SCALING:-} && $1 != "gpu-reconstruction" ]] && MULT=$(($MULT * $EPN_GLOBAL_SCALING))
-  if [[ -z ${NAME_PROC} && "0$GEN_TOPO_AUTOSCALE_PROCESSES" == "01" && ($WORKFLOWMODE != "print" || $GEN_TOPO_RUN_HOME_TEST == 1) && $4 != 0 ]]; then
+  if [[ ${GEN_TOPO_AUTOSCALE_PROCESSES_GLOBAL_WORKFLOW:-} == 1 && -z ${!NAME_PROC:-} && ${GEN_TOPO_AUTOSCALE_PROCESSES:-} == 1 && ($WORKFLOWMODE != "print" || ${GEN_TOPO_RUN_HOME_TEST:-} == 1) && ${4:-} != 0 ]]; then
     echo $1:\$\(\(\($MULT*\$AUTOSCALE_PROCESS_FACTOR/100\) \< 16 ? \($MULT*\$AUTOSCALE_PROCESS_FACTOR/100\) : 16\)\)
   else
     echo $1:$MULT
@@ -220,6 +235,27 @@ add_W() # Add binarry to workflow command USAGE: add_W [BINARY] [COMMAND_LINE_OP
       WFADD=${WFADD//$DISABLE_ROOT_OUTPUT/}
   fi
   WORKFLOW+=$WFADD
+}
+
+if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
+  GEN_TOPO_QC_CONSUL_SERVER=ali-staging.cern.ch
+else
+  GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-con01.cern.ch
+fi
+
+add_QC_from_consul()
+{
+  if [[ ! -z ${GEN_TOPO_QC_JSON_FILE:-} ]]; then
+    curl -s -o $GEN_TOPO_QC_JSON_FILE "http://${GEN_TOPO_QC_CONSUL_SERVER}:8500/v1/kv${1}?raw"
+    if [[ $? != 0 ]]; then
+      echo "Error fetching QC JSON $1"
+      exit 1
+    fi
+    QC_CONFIG_ARG="json://${GEN_TOPO_QC_JSON_FILE}"
+  else
+    QC_CONFIG_ARG="consul-json://alio2-cr1-hv-con01.cern.ch:8500$1"
+  fi
+  add_W o2-qc "--config $QC_CONFIG_ARG $2"
 }
 
 fi # functions.sh sourced

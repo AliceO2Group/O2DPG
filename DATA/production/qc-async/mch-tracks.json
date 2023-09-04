@@ -19,7 +19,7 @@
                 "url": ""
             },
             "conditionDB": {
-                "url": ""
+                "url": "https://alice-ccdb.cern.ch"
             }
         },
         "tasks": {

@@ -16,7 +16,7 @@ if [ -z $PHS_CCDB_PATH ] ; then
   PHS_CCDB_PATH="http://o2-ccdb.internal"
 fi
 
-QC_CONFIG=consul-json://aliecs.cern.ch:8500/o2/components/qc/ANY/any/phs-pedestal-qc
+QC_CONFIG=consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/phs-pedestal-qc
 
 o2-dpl-raw-proxy $ARGS_ALL \
 		 --dataspec "$PROXY_INSPEC" \
