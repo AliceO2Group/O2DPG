@@ -36,7 +36,7 @@ if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD" ]]; then
   export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD='/usr/local/bin/epn-topo-alloc'
 fi
 
-# Extra arguments for topology generation
+# Extra arguments for topology merger
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS" ]]; then
   if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
     export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS="--recozone staging-mi50 --reco100zone staging-mi100 --calibzone calib"
@@ -44,6 +44,7 @@ if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS" ]]; then
     export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS="--recozone online-mi50 --reco100zone online-mi100 --calibzone calib"
   fi
 fi
+if [[ -z "$GEN_TOPO_MI100_NODES" ]]; then export GEN_TOPO_MI100_NODES=-1; fi
 
 # GEN_TOPO_RUN_HOME is a debug setting used in some tests. This is not needed for online running.
 if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
