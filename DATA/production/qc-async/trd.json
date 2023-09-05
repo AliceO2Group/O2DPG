@@ -23,9 +23,8 @@
       }
     },
     "tasks": {
-      "TRDDigits": {
+      "Digits": {
         "active": "true",
-        "taskName": "Digits",
         "className": "o2::quality_control_modules::trd::DigitsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
@@ -33,18 +32,11 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "digits:TRD/DIGITS;tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
-        },
-       "taskParameters": {
-          "peakregionstart": "7.0",
-          "peakregionend": "20.0",
-          "pulseheightpeaklower": "1.0",
-          "pulseheightpeakupper": "5.0"
+          "query": "digits:TRD/DIGITS;triggers:TRD/TRKTRGRD"
         }
       },
-      "TRDTracklets": {
+      "Tracklets": {
         "active": "true",
-        "taskName": "Tracklets",
         "className": "o2::quality_control_modules::trd::TrackletsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
@@ -52,7 +44,35 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "digits:TRD/DIGITS;tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
+          "query": "tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
+        }
+      },
+      "PHTrackMatch": {
+        "active": "true",
+        "className": "o2::quality_control_modules::trd::PulseHeightTrackMatch",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "phValues:TRD/PULSEHEIGHT"
+        }
+      },
+      "Tracking": {
+        "active": "false",
+        "className": "o2::quality_control_modules::trd::TrackingTask",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "trackITSTPCTRD:TRD/MATCH_ITSTPC;trigITSTPCTRD:TRD/TRGREC_ITSTPC"
+        },
+        "taskParameters": {
+          "detailedQC": "false",
+          "trackSources": "ITS-TPC-TRD"
         }
       }
     }
@@ -60,4 +80,3 @@
   "dataSamplingPolicies": [
   ]
 }
-
