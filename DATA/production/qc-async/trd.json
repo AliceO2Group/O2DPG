@@ -60,7 +60,7 @@
         }
       },
       "Tracking": {
-        "active": "false",
+        "active": "true",
         "className": "o2::quality_control_modules::trd::TrackingTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
