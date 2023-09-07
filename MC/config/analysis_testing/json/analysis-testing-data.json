@@ -1,4 +1,50 @@
 {
+  "EMCClusterMonitorTask": {
+    "clusterDefinition": "10",
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "doEventSel": "0",
+    "numclusters-binning": {
+      "values": [
+        201,
+        -0.5,
+        200.5
+      ]
+    },
+    "processAmbiguous": "0",
+    "processCollisions": "1",
+    "selectBCID": "all",
+    "vertexCut": "-1",
+    "vetoBCID": ""
+  },
+  "EMCClusterMonitorTaskAmbiguous": {
+    "clusterDefinition": "10",
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "doEventSel": "0",
+    "numclusters-binning": {
+      "values": [
+        201,
+        -0.5,
+        200.5
+      ]
+    },
+    "processAmbiguous": "1",
+    "processCollisions": "0",
+    "selectBCID": "all",
+    "vertexCut": "-1",
+    "vetoBCID": ""
+  },
   "ambiguous-track-propagation": {
     "ccdb-url": "http://alice-ccdb.cern.ch",
     "geoPath": "GLO/Config/GeometryAligned",
@@ -10,6 +56,71 @@
   "bc-selection-task": {
     "processRun2": "false",
     "processRun3": "true"
+  },
+  "cell-monitor": {
+    "maxCellTimeMain": "100",
+    "minCellAmplitude": "0",
+    "minCellAmplitudeTimeHists": "0.3",
+    "minCellTimeMain": "-50",
+    "selectBCID": "all",
+    "vetoBCID": ""
+  },
+  "emc-tmmonitor": {
+    "clusterDefinition": "10",
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "doEventSel": "0",
+    "hasPropagatedTracks": "1",
+    "maxTime": "20",
+    "minM02": "0.1",
+    "minTime": "-25",
+    "processCollisions": "1",
+    "selectBCID": "all",
+    "tpcNsigmaBack": {
+      "values": [
+        -10,
+        -4
+      ]
+    },
+    "tpcNsigmaElectron": {
+      "values": [
+        -1,
+        3
+      ]
+    },
+    "tpcNsigmaPion": {
+      "values": [
+        -3,
+        3
+      ]
+    },
+    "usePionRejection": "0",
+    "vertexCut": "-1",
+    "vetoBCID": ""
+  },
+  "emcal-correction-task": {
+    "clusterDefinition": "kV3Default",
+    "disableNonLin": "0",
+    "exoticCellDiffTime": "1e+06",
+    "exoticCellFraction": "0.97",
+    "exoticCellInCrossMinAmplitude": "0.1",
+    "exoticCellMinAmplitude": "4",
+    "hasPropagatedTracks": "0",
+    "hasShaperCorrection": "1",
+    "isMC": "0",
+    "logWeight": "4.5",
+    "maxMatchingDistance": "0.4",
+    "nonlinearityFunction": "DATA_TestbeamFinal_NoScale",
+    "processFull": "1",
+    "processMCFull": "0",
+    "processStandalone": "0",
+    "selectedCellType": "1",
+    "useWeightExotic": "0"
   },
   "event-selection-qa-task": {
     "isMC": "false",
@@ -60,41 +171,47 @@
   "perf-k0s-resolution": {
     "etaBins": {
       "values": [
-        10,
-        -1,
-        1
+        "20",
+        "-1",
+        "1"
       ]
     },
-    "eventSelection": "1",
+    "eventSelection": "true",
     "mBins": {
       "values": [
-        300,
-        0.35,
-        0.65
+        "300",
+        "0.35",
+        "0.65"
       ]
     },
     "nSigTPC": "10",
     "pTBins": {
       "values": [
-        200,
-        0,
-        10
+        "200",
+        "0",
+        "10"
       ]
     },
     "phiBins": {
       "values": [
-        18,
-        0,
-        6.2831853
+        "54",
+        "0",
+        "6.2831853"
       ]
     },
     "rapidity": "0.5",
+    "requireTRDneg": "0",
+    "requireTRDpos": "0",
     "v0lifetime": "3",
     "v0setting_cospa": "0.995",
     "v0setting_dcanegtopv": "0.1",
     "v0setting_dcapostopv": "0.1",
     "v0setting_dcav0dau": "1",
     "v0setting_radius": "0.9"
+  },
+  "pid-multiplicity": {
+    "processIU": "1",
+    "processStandard": "0"
   },
   "qa-efficiency": {
     "applyEvSel": "2",
@@ -222,13 +339,27 @@
     "targetNumberOfEvents": "10000000",
     "trackSelection": "1"
   },
+  "qa-k0s-tracking-efficiency": {
+    "eventSelection": "true",
+    "nSigTPC": "10",
+    "nSigmaBins": {
+      "values": [
+        "1000",
+        "-100",
+        "100"
+      ]
+    },
+    "processIU": "true",
+    "rapidity": "0.5",
+    "v0cospa": "0.995"
+  },
   "tof-signal": "",
   "tpc-pid-full": {
-    "autofetchNetworks": "1",
+    "autofetchNetworks": "true",
     "ccdb-timestamp": "0",
     "ccdb-url": "http://alice-ccdb.cern.ch",
     "ccdbPath": "Analysis/PID/TPC/Response",
-    "enableNetworkOptimizations": "1",
+    "enableNetworkOptimizations": "true",
     "networkPathCCDB": "Analysis/PID/TPC/ML",
     "networkPathLocally": "network.onnx",
     "networkSetNumThreads": "0",
@@ -242,11 +373,9 @@
     "pid-pi": "-1",
     "pid-pr": "-1",
     "pid-tr": "-1",
-    "useNetworkCorrection": "0"
-  },
-  "pid-multiplicity": {
-    "processIU": "0",
-    "processStandard": "1"
+    "recoPass": "",
+    "skipTPCOnly": "false",
+    "useNetworkCorrection": "false"
   },
   "track-extension": {
     "processRun2": "false",
@@ -263,123 +392,14 @@
   },
   "track-selection": {
     "compatibilityIU": "false",
+    "dcaSetup": "0",
     "etaMax": "0.8",
     "etaMin": "-0.8",
     "isRun3": "true",
     "itsMatching": "1",
     "produceFBextendedTable": "-1",
+    "produceTable": "-1",
     "ptMax": "1e+10",
     "ptMin": "0.1"
-  },
-  "emcal-correction-task": {
-    "nonlinearityFunction": "DATA_TestbeamFinal_NoScale",
-    "logWeight": "4.5",
-    "exoticCellMinAmplitude": "4",
-    "clusterDefinition": "kV3Default",
-    "useWeightExotic": "0",
-    "disableNonLin": "0",
-    "exoticCellDiffTime": "1e+06",
-    "exoticCellInCrossMinAmplitude": "0.1",
-    "maxMatchingDistance": "0.4",
-    "exoticCellFraction": "0.97",
-    "hasShaperCorrection": "1",
-    "isMC": "0",
-    "hasPropagatedTracks": "0",
-    "processFull": "1",
-    "selectedCellType": "1",
-    "processStandalone": "0",
-    "processMCFull": "0"
-  },
-  "cell-monitor": {
-    "minCellTimeMain": "-50",
-    "maxCellTimeMain": "100",
-    "minCellAmplitudeTimeHists": "0.3",
-    "vetoBCID": "",
-    "selectBCID": "all",
-    "minCellAmplitude": "0"
-  },
-  "EMCClusterMonitorTaskAmbiguous": {
-    "clustertime-binning": {
-      "values": [
-        1500,
-        -600,
-        900
-      ]
-    },
-    "processCollisions": "0",
-    "doEventSel": "0",
-    "processAmbiguous": "1",
-    "clusterDefinition": "10",
-    "numclusters-binning": {
-      "values": [
-        201,
-        -0.5,
-        200.5
-      ]
-    },
-    "vetoBCID": "",
-    "selectBCID": "all",
-    "vertexCut": "-1"
-  },
-  "EMCClusterMonitorTask": {
-    "clustertime-binning": {
-      "values": [
-        1500,
-        -600,
-        900
-      ]
-    },
-    "processCollisions": "1",
-    "doEventSel": "0",
-    "processAmbiguous": "0",
-    "clusterDefinition": "10",
-    "numclusters-binning": {
-      "values": [
-        201,
-        -0.5,
-        200.5
-      ]
-    },
-    "vetoBCID": "",
-    "selectBCID": "all",
-    "vertexCut": "-1"
-  },
-  "emc-tmmonitor": {
-    "clustertime-binning": {
-      "values": [
-        1500,
-        -600,
-        900
-      ]
-    },
-    "doEventSel": "0",
-    "maxTime": "20",
-    "clusterDefinition": "10",
-    "minM02": "0.1",
-    "vetoBCID": "",
-    "processCollisions": "1",
-    "hasPropagatedTracks": "1",
-    "usePionRejection": "0",
-    "minTime": "-25",
-    "tpcNsigmaPion": {
-      "values": [
-        -3,
-        3
-      ]
-    },
-    "selectBCID": "all",
-    "tpcNsigmaElectron": {
-      "values": [
-        -1,
-        3
-      ]
-    },
-    "vertexCut": "-1",
-    "tpcNsigmaBack": {
-      "values": [
-        -10,
-        -4
-      ]
-    }
   }
 }

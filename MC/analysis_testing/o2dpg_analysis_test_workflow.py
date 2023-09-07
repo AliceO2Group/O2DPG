@@ -214,6 +214,7 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
                 from ROOT import TFile
                 froot = TFile.Open(input_aod, "READ")
                 found_O2collision_001 = False
+                found_O2zdc_001 = False
                 for i in froot.GetListOfKeys():
                     if "DF_" not in i.GetName():
                         continue
@@ -223,8 +224,12 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
                         # print(j)
                         if "O2collision_001" in j.GetName():
                             found_O2collision_001 = True
+                        if "O2zdc_001" in j.GetName():
+                            found_O2zdc_001 = True
                     if not found_O2collision_001:
                         additional_workflows.append("o2-analysis-collision-converter --doNotSwap")
+                    if not found_O2zdc_001:
+                        additional_workflows.append("o2-analysis-zdc-converter")
                     break
     if input_aod.endswith(".txt") and not input_aod.startswith("@"):
         input_aod = f"@{input_aod}"
