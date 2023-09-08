@@ -244,6 +244,10 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.Tracking.active=false'
         add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.PHTrackMatch.active=false'
       fi
+      if has_matching_qc TPCTRD && has_detectors_reco TPC TRD; then # should be only enabled in async
+        add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.Tracking.dataSource.query=\"trackITSTPCTRD:TRD/MATCH_ITSTPC\;trigITSTPCTRD:TRD/TRGREC_ITSTPC\;trackTPCTRD:TRD/MATCH_TPC\;trigTPCTRD:TRD/TRGREC_TPC\"'
+        add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.Tracking.taskParameters.trackSources=\"ITS-TPC-TRD,TPC-TRD\"'
+      fi
     fi
   fi
 

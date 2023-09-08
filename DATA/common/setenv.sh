@@ -93,6 +93,7 @@ if [[ -z "${EPNSYNCMODE:-}" ]];    then export EPNSYNCMODE=0; fi               #
 if [[ -z "${BEAMTYPE:-}" ]];       then export BEAMTYPE=PbPb; fi               # Beam type, must be PbPb, pp, pPb, cosmic, technical
 if [[ -z "${RUNTYPE:-}" ]];        then export RUNTYPE=Standalone; fi          # Run Type, standalone for local tests, otherwise PHYSICS, COSMICS, TECHNICAL, SYNTHETIC
 if [[ -z "${IS_SIMULATED_DATA:-}" ]]; then export IS_SIMULATED_DATA=1; fi       # processing simulated data
+if [[ -z "${IS_TRIGGERED_DATA:-}" ]]; then export IS_TRIGGERED_DATA=0; fi       # processing triggered data (TPC triggered instead of continuous)
 if [[ -z "${CTF_DIR:-}" ]];           then CTF_DIR=$FILEWORKDIR; fi             # Directory where to store CTFs
 if [[ -z "${CALIB_DIR:-}" ]];         then CALIB_DIR="/dev/null"; fi            # Directory where to store output from calibration workflows, /dev/null : skip their writing
 if [[ -z "${EPN2EOS_METAFILES_DIR:-}" ]]; then EPN2EOS_METAFILES_DIR="/dev/null"; fi # Directory where to store epn2eos files metada, /dev/null : skip their writing
@@ -121,7 +122,7 @@ else # Defaults when running on the EPN
   if [[ -z "${SHMTHROW:-}" ]];             then export SHMTHROW=0; fi
   if [[ -z "${TIMEFRAME_SHM_LIMIT:-}" ]];  then export TIMEFRAME_SHM_LIMIT=$(( $SHMSIZE / 2 )); fi
   if [[ -z "${EDJSONS_DIR:-}" ]];          then export EDJSONS_DIR="/scratch/services/ed/jsons_${RUNTYPE}"; fi
-  if [[ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
+  if [[ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF,CTP"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
   if [[ -z "${GEN_TOPO_AUTOSCALE_PROCESSES:-}" ]];      then export GEN_TOPO_AUTOSCALE_PROCESSES=1; fi # On the EPN we should make sure to always use the node to the full extent
 fi
 # Some more options for running on the EPN
