@@ -252,11 +252,9 @@ for line in f:
                 odccommand += ' -o ' + sys.argv[3]
                 print('Running topology merger command', odccommand)
                 # Add a custom PYTHONPATH in order to import the python packages needed for the topology merger
-                epn_topo_env = os.environ.copy()
-                epn_topo_env["PYTHONPATH"] = f"/usr/local/lib/python3.9/site-packages:/usr/local/lib64/python3.9/site-packages:{epn_topo_env['PYTHONPATH']}"
                 starttime = time.time()
                 try:
-                    out = subprocess.check_output(odccommand, stderr=subprocess.STDOUT, shell=True, env=epn_topo_env)
+                    out = subprocess.check_output(odccommand, stderr=subprocess.STDOUT, shell=True)
                     print(out.decode('utf-8'))
                     print('Topology merger finished successfully')
                 except subprocess.CalledProcessError as e:
