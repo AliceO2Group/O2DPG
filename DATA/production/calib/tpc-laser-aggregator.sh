@@ -42,7 +42,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
   --network-interface ib0 \
   --channel-config "name=tpc-laser-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq" \
  | o2-tpc-calib-laser-tracks  ${ARGS_ALL} \
- --use-filtered-tracks --only-publish-on-eos --min-tfs=${min_tracks} \
+ --use-filtered-tracks  --min-tfs=${min_tracks} \
  | o2-tpc-calib-pad-raw ${ARGS_ALL} \
  --configKeyValues ${CALIB_CONFIG}  ${EXTRA_CONFIG} \
  | o2-calibration-ccdb-populator-workflow  ${ARGS_ALL} \
