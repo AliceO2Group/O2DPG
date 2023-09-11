@@ -6,7 +6,7 @@ source common/getCommonArgs.sh
 
 PROXY_INSPEC="A:TPC/LASERTRACKS;B:TPC/CEDIGITS;eos:***/INFORMATION;D:TPC/CLUSREFS"
 
-CALIB_CONFIG= "TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=502;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null" \
+CALIB_CONFIG="TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=502;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null"
 
 CCDB_PATH="http://o2-ccdb.internal"
 
@@ -33,7 +33,7 @@ if [[ ! -z ${TPC_CALIB_LANES_PAD_RAW:-} ]]; then
     num_lanes=${TPC_CALIB_LANES_PAD_RAW}
 fi
 
-EXTRA_CONFIG="--calib-type ce --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes #{num_lanes} --check-calib-infos" 
+EXTRA_CONFIG="--calib-type ce --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes ${num_lanes} --check-calib-infos" 
 
 
 o2-dpl-raw-proxy $ARGS_ALL \
@@ -42,11 +42,9 @@ o2-dpl-raw-proxy $ARGS_ALL \
   --network-interface ib0 \
   --channel-config "name=tpc-laser-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq" \
  | o2-tpc-calib-laser-tracks  ${ARGS_ALL} \
- --use-filtered-tracks --only-publish-on-eos --min-tfs=${min_tracks}\
+ --use-filtered-tracks --only-publish-on-eos --min-tfs=${min_tracks} \
  | o2-tpc-calib-pad-raw ${ARGS_ALL} \
- --configKeyValues ${CALIB_CONFIG} \ 
- ${EXTRA_CONFIG} \
+ --configKeyValues ${CALIB_CONFIG}  ${EXTRA_CONFIG} \
  | o2-calibration-ccdb-populator-workflow  ${ARGS_ALL} \
  --ccdb-path ${CCDB_PATH} \
- | o2-qc ${ARGS_ALL} --config ${QC_CONFIG} --local --host ${HOST} \
  | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
