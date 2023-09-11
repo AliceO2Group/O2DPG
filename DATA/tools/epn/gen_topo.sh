@@ -28,15 +28,15 @@ if [[ "0$GEN_TOPO_ONTHEFLY" == "01" ]]; then export SHM_MANAGER_SHMID=1 ;fi
 
 # Command for topology merging
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_CMD" ]]; then
-  export GEN_TOPO_ODC_EPN_TOPO_CMD='/usr/local/bin/epn-topo-merger'
+  export GEN_TOPO_ODC_EPN_TOPO_CMD='env - PYTHONPATH+=/usr/local/lib/python3.9/site-packages:/usr/local/lib64/python3.9/site-packages /usr/local/bin/epn-topo-merger'
 fi
 
 # Command for postprocessing of topology generation after topology caching
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD" ]]; then
-  export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD='/usr/local/bin/epn-topo-alloc'
+  export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD='env - PYTHONPATH+=/usr/local/lib/python3.9/site-packages:/usr/local/lib64/python3.9/site-packages /usr/local/bin/epn-topo-alloc'
 fi
 
-# Extra arguments for topology generation
+# Extra arguments for topology merger
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS" ]]; then
   if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
     export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS="--recozone staging-mi50 --reco100zone staging-mi100 --calibzone calib"
@@ -44,6 +44,7 @@ if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS" ]]; then
     export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS="--recozone online-mi50 --reco100zone online-mi100 --calibzone calib"
   fi
 fi
+if [[ -z "$GEN_TOPO_MI100_NODES" ]]; then export GEN_TOPO_MI100_NODES=-1; fi
 
 # GEN_TOPO_RUN_HOME is a debug setting used in some tests. This is not needed for online running.
 if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then

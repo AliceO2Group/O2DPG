@@ -29,7 +29,6 @@ public:
     setPt(pt_min, pt_max);
     mMass = getMass(input_pdg);
     mGeneratedEvents = 0;
-    mInjectionIndex = 0;
     mAlternatingPDGsign = true;
   }
 
@@ -60,7 +59,6 @@ public:
     mInverseTriggerRatio = input_trigger_ratio;
     mMass = getMass(mPdg);
     mGeneratedEvents = 0;
-    mInjectionIndex = 0;
     mAlternatingPDGsign = true;
   }
 
@@ -126,11 +124,12 @@ public:
     if (mGeneratedEvents % mInverseTriggerRatio == 0)
     {
       static int sign = 1;
-      int currentPdg = mPdg[mInjectionIndex];
-      double currentMass = mMass[mInjectionIndex];
-      for (int i = 0; i < mNinjected[mInjectionIndex]; ++i)
+      int injectionIndex = (int)gRandom->Uniform(0, mPdg.size());
+      int currentPdg = mPdg[injectionIndex];
+      double currentMass = mMass[injectionIndex];
+      for (int i = 0; i < mNinjected[injectionIndex]; ++i)
       {
-        const double pt = gRandom->Uniform(mPtMin[mInjectionIndex], mPtMax[mInjectionIndex]);
+        const double pt = gRandom->Uniform(mPtMin[injectionIndex], mPtMax[injectionIndex]);
         const double rapidity = gRandom->Uniform(mYmin, mYmax);
         const double phi = gRandom->Uniform(0, TMath::TwoPi());
         const double px{pt * std::cos(phi)};
@@ -138,13 +137,15 @@ public:
         const double mt{std::hypot(pt, currentMass)};
         const double pz{mt * std::sinh(rapidity)};
         const double et{mt * std::cosh(rapidity)};
-        sign *= 1 - 2 * mAlternatingPDGsign;
+        if (mAlternatingPDGsign)
+        {
+          sign *= 1 - 2 * (gRandom->Uniform() > 0.5);
+        }
         mParticles.push_back(TParticle(sign * currentPdg, 1, -1, -1, -1, -1, px, py, pz, et, 0., 0., 0., 0.));
         // make sure status code is encoded properly. Transport flag will be set by default and we have nothing
         // to do since all pushed particles should be tracked.
         o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       }
-      mInjectionIndex = ++mInjectionIndex % (int)mPdg.size();
     }
     mGeneratedEvents++;
     return true;
@@ -165,7 +166,6 @@ private:
 
   // Control gap-triggering
   unsigned long long mGeneratedEvents; /// number of events generated so far
-  unsigned long long mInjectionIndex;  /// index of the particle in mPDG to be injected
   int mInverseTriggerRatio;            /// injection gap
 };
 
