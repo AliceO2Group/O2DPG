@@ -19,6 +19,7 @@ publish_after=440
 min_tracks=0
 num_lanes=36
 
+
 if [[ ! -z ${TPC_CALIB_MAX_EVENTS:-} ]]; then
     max_events=${TPC_CALIB_MAX_EVENTS}
 fi
@@ -33,7 +34,14 @@ if [[ ! -z ${TPC_CALIB_LANES_PAD_RAW:-} ]]; then
     num_lanes=${TPC_CALIB_LANES_PAD_RAW}
 fi
 
-EXTRA_CONFIG="--calib-type ce --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes ${num_lanes} --check-calib-infos" 
+EXTRA_CONFIG="--calib-type ce --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes ${num_lanes} --check-calib-infos"
+
+EXTRA_CONFIG_TRACKS=""
+
+if [[ ${TPC_CALIB_TRACKS_PUBLISH_EOS:-} == 1 ]]; then
+    EXTRA_CONFIG_TRACKS="--only-publish-on-eos"
+fi
+
 
 
 o2-dpl-raw-proxy $ARGS_ALL \
@@ -41,7 +49,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
   --dataspec "${PROXY_INSPEC}" \
   --network-interface ib0 \
   --channel-config "name=tpc-laser-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq" \
- | o2-tpc-calib-laser-tracks  ${ARGS_ALL} --use-filtered-tracks  --min-tfs=${min_tracks} \
+ | o2-tpc-calib-laser-tracks  ${ARGS_ALL} --use-filtered-tracks ${EXTRA_CONFIG_TRACKS} --min-tfs=${min_tracks} \
  --condition-remap "file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPMagField;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser=TPC/Calib/LaserTracks" \
  | o2-tpc-calib-pad-raw ${ARGS_ALL} \
  --configKeyValues ${CALIB_CONFIG}  ${EXTRA_CONFIG} \

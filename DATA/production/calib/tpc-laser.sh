@@ -77,6 +77,13 @@ if [[ ! -z ${TPC_LASER_ILBZS:-} ]]; then
     LASER_DECODER_ADD="--pedestal-url /home/wiechula/processData/inputFilesTracking/triggeredLaser/pedestals.openchannels.root --decoder-type 0"
 fi
 
+EXTRA_CONFIG_TRACKS=""
+
+if [[ ${TPC_CALIB_TRACKS_PUBLISH_EOS:-} == 1 ]]; then
+    EXTRA_CONFIG_TRACKS="--only-publish-on-eos"
+fi
+
+
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
@@ -95,7 +102,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --condition-remap "file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPMagField;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser=TPC/Calib/LaserTracks" \
     --configKeyValues "${ARGS_ALL_CONFIG};align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1;GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;GPU_rec_tpc.clustersShiftTimebinsClusterizer=35" \
     | o2-tpc-laser-track-filter $ARGS_ALL \
-    | o2-tpc-calib-laser-tracks  $ARGS_ALL --use-filtered-tracks --only-publish-on-eos --min-tfs=${min_tracks}\
+    | o2-tpc-calib-laser-tracks  $ARGS_ALL --use-filtered-tracks ${EXTRA_CONFIG_TRACKS} --min-tfs=${min_tracks}\
     | o2-tpc-calib-pad-raw ${ARGS_ALL} \
     --configKeyValues ${CALIB_CONFIG} ${EXTRA_CONFIG} \
     | o2-calibration-ccdb-populator-workflow  $ARGS_ALL \
