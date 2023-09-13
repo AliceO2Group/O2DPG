@@ -41,10 +41,11 @@ o2-dpl-raw-proxy $ARGS_ALL \
   --dataspec "${PROXY_INSPEC}" \
   --network-interface ib0 \
   --channel-config "name=tpc-laser-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq" \
- | o2-tpc-calib-laser-tracks  ${ARGS_ALL} \
- --use-filtered-tracks  --min-tfs=${min_tracks} \
+ | o2-tpc-calib-laser-tracks  ${ARGS_ALL} --use-filtered-tracks  --min-tfs=${min_tracks} \
+ --condition-remap "file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPMagField;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser=TPC/Calib/LaserTracks" \
  | o2-tpc-calib-pad-raw ${ARGS_ALL} \
  --configKeyValues ${CALIB_CONFIG}  ${EXTRA_CONFIG} \
  | o2-calibration-ccdb-populator-workflow  ${ARGS_ALL} \
  --ccdb-path ${CCDB_PATH} \
  | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
+
