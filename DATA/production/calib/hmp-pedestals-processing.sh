@@ -11,6 +11,7 @@
 #     HMP_NODCSCCDB_REC : True if we want disable DCS CCDB recording [=False]
 #     HMP_FILES_REC : True if we want store on files (Only for debug) [=False]
 #
+#   14/09/2023 - rebase
 #
 #   Auth. A.Franco  - INFN  Sez.BARI - ITALY
 # ------------------------------------------------------------------------
@@ -73,8 +74,8 @@ SPEC_PARAM+="--pedestals-tag ${HMP_PED_TAG} --sigmacut ${HMP_SIGMACUT}"
 #  Here we compose the workflow
 # Start with an empty workflow
 WORKFLOW=
-add_W o2-dpl-raw-proxy "$ARGS_ALL --dataspec \"$PROXY_INSPEC\" --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,rateLogging=1,transport=shmem\""
-add_W o2-hmpid-raw-to-pedestals-workflow "${ARGS_ALL} --configKeyValues \"$ARGS_ALL_CONFIG\" --fast-decode $SPEC_PARAM"
+add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,rateLogging=1,transport=shmem\"" "" 0
+add_W o2-hmpid-raw-to-pedestals-workflow "--fast-decode $SPEC_PARAM"
 
 # Finally add the o2-dpl-run workflow manually, allow for either printing the workflow or creating a topology (default)
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
