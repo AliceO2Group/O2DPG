@@ -33,7 +33,7 @@
             }
         },
         "postprocessing": {
-            "CellsTrend": {
+            "CellTrend": {
                 "active": "true",
                 "className": "o2::quality_control::postprocessing::SliceTrendingTask",
                 "moduleName": "QualityControl",
@@ -490,7 +490,7 @@
                     "once"
                 ]
             },
-            "ClustersTrending": {
+            "ClustersTrend": {
                 "active": "true",
                 "className": "o2::quality_control::postprocessing::SliceTrendingTask",
                 "moduleName": "QualityControl",
@@ -505,6 +505,12 @@
                             "ClustE_All",
                             "ClustE_DCal",
                             "ClustE_EMCal",
+                            "ClusterELeading_All",
+                            "ClusterELeading_EMCal",
+                            "ClusterELeading_DCal",
+                            "ClusterTimeLeading_All",
+                            "ClusterTimeLeading_EMCal",
+                            "ClusterTimeLeading_DCal",
                             "M02_All",
                             "M20_DCal",
                             "M20_EMCal",
@@ -534,6 +540,27 @@
                             [
                                 "0.",
                                 "30."
+                            ]
+                        ],
+                        "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/Clusters",
+                        "names": [
+                            "Time_All",
+                            "Time_EMCal",
+                            "Time_DCal"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH2SliceReductor",
+                        "axisDivision": [
+                            [
+                                "0.",
+                                "5.0"
+                            ],
+                            [
+                                "-300.",
+                                "300."
                             ]
                         ],
                         "moduleName": "QcCommon"
@@ -672,7 +699,7 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<E_cluster> (GeV):Run number"
+                        "graphAxisLabel": "<E_{cluster}> (GeV):Run number"
                     },
                     {
                         "name": "MeanEMCALClusterEnergy",
@@ -681,7 +708,7 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<E_custer> (GeV):Run number"
+                        "graphAxisLabel": "<E_{cluster}> (GeV):Run number"
                     },
                     {
                         "name": "MeanDCALClusterEnergy",
@@ -690,7 +717,88 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<E_cluster> (GeV):Run number"
+                        "graphAxisLabel": "<E_{cluster}> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingClusterEnergy",
+                        "title": "Mean leading cluster energy (EMCAL+DCAL)",
+                        "varexp": "ClusterELeading_All.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_{cluster,lead}> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingEMCALClusterEnergy",
+                        "title": "Mean leading cluster energy (EMCAL)",
+                        "varexp": "ClusterELeading_EMCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_{cluster,lead}> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingDCALClusterEnergy",
+                        "title": "Mean leading cluster energy (DCAL)",
+                        "varexp": "ClusterELeading_DCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_{cluster,lead}> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanClusterTime",
+                        "title": "Mean cluster time (EMCAL+DCAL)",
+                        "varexp": "Time_All.meanY:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanY:.5",
+                        "graphAxisLabel": "<t_{cluster}> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanEMCALClusterTime",
+                        "title": "Mean cluster time (EMCAL)",
+                        "varexp": "Time_EMCal.meanY:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanY:.5",
+                        "graphAxisLabel": "<t_{cluster}> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanDCALClusterTime",
+                        "title": "Mean cluster time (DCAL)",
+                        "varexp": "Time_DCal.meanY:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanY:.5",
+                        "graphAxisLabel": "<t_{cluster}> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingClusterTime",
+                        "title": "Mean leading cluster time (EMCAL+DCAL)",
+                        "varexp": "ClusterTimeLeading_All.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<t_{cluster,lead}> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingEMCALClusterTime",
+                        "title": "Mean leading cluster time (EMCAL)",
+                        "varexp": "ClusterTimeLeading_EMCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<t_{cluster,lead}> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingDCALClusterTime",
+                        "title": "Mean leading cluster time (DCAL)",
+                        "varexp": "ClusterTimeLeading_DCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<t_{cluster,lead}> (ns):Run number"
                     },
                     {
                         "name": "MeanClusterM02",
@@ -731,7 +839,7 @@
                         "graphAxisLabel": "<Number of cells / cluster>:run",
                         "legendNColums" : "1",
                         "legendTextSize": "14",
-                        "legendObservableX": "E_{cell}",
+                        "legendObservableX": "N_{cell}",
                         "legendObservableY": "None",
                         "legendUnitX": "GeV" 
                     },
@@ -747,7 +855,7 @@
                         "graphAxisLabel": "<Number of cells / cluster>:run",
                         "legendNColums" : "1",
                         "legendTextSize": "14",
-                        "legendObservableX": "E_{cell}",
+                        "legendObservableX": "N_{cell}",
                         "legendObservableY": "None",
                         "legendUnitX": "GeV" 
                     },
