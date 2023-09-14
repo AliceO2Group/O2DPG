@@ -1177,9 +1177,9 @@
     "processFullWithTOFTriton": "0",
     "nSigmaBins": {
       "values": [
-        401,
-        -10.024999618530273,
-        10.024999618530273
+        400,
+        -10,
+        10
       ]
     },
     "trackSelection": "1",
@@ -1191,6 +1191,80 @@
     "expSigmaBins": {
       "values": [
         100,
+        0,
+        200
+      ]
+    },
+    "applyEvSel": "2",
+    "nBinsP": "400",
+    "deltaBins": {
+      "values": [
+        100,
+        -1000,
+        1000
+      ]
+    },
+    "processFullPion": "1"
+  },
+  "tof-pid-qa": {
+    "etaBins": {
+      "values": [
+        50,
+        -1,
+        1
+      ]
+    },
+    "applyRapidityCut": "1",
+    "phiBins": {
+      "values": [
+        25,
+        0,
+        6.283185307179586
+      ]
+    },
+    "processProton": "0",
+    "processHelium3": "0",
+    "processFullElectron": "0",
+    "processKaon": "0",
+    "processAlpha": "0",
+    "processFullHelium3": "1",
+    "minP": "0.1",
+    "logAxis": "0",
+    "processFullKaon": "1",
+    "produceDeltaTEtaPhiMap": "0",
+    "processMuon": "0",
+    "processFullDeuteron": "1",
+    "maxP": "5",
+    "processFullAlpha": "0",
+    "ptDeltaTEtaPhiMap": "3",
+    "processElectron": "0",
+    "processDeuteron": "0",
+    "trackLengthBins": {
+      "values": [
+        50,
+        0,
+        1000
+      ]
+    },
+    "processFullProton": "1",
+    "enableEvTimeSplitting": "0",
+    "enableVsMomentumHistograms": "0",
+    "processFullMuon": "0",
+    "nSigmaBins": {
+      "values": [
+        400,
+        -10,
+        10
+      ]
+    },
+    "trackSelection": "1",
+    "processFullTriton": "1",
+    "processTriton": "0",
+    "processPion": "0",
+    "splitSignalPerCharge": "1",
+    "expSigmaBins": {
+      "values": [
+        200,
         0,
         200
       ]
