@@ -165,6 +165,21 @@ add_semicolon_separated()
   done
 }
 
+add_pipe_separated()
+{
+  if (( $# < 2 )); then
+    echo "$# parameters received"
+    echo "Function name: ${FUNCNAME} expects at least 2 parameters:"
+    echo "it concatenates the string in 1st parameter by the following"
+    echo "ones, forming pipe-separated string. $# parameters received"
+    exit 1
+  fi
+
+  for ((i = 2; i <= $#; i++ )); do
+    eval $1+="\|${!i}"
+  done
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Helper functions for multiplicities
 
@@ -177,7 +192,7 @@ get_N() # USAGE: get_N [processor-name] [DETECTOR_NAME] [RAW|CTF|REST] [threads,
   local NAME_DEFAULT="N_${5:-}"
   local MULT=${!NAME_PROC:-$((${!NAME_FACTOR} * ${!NAME_DET:-1} * ${!NAME_PROC_FACTOR:-1} * ${!NAME_DEFAULT:-1}))}
   [[ ! -z ${EPN_GLOBAL_SCALING:-} && $1 != "gpu-reconstruction" ]] && MULT=$(($MULT * $EPN_GLOBAL_SCALING))
-  if [[ -z ${NAME_PROC} && "0$GEN_TOPO_AUTOSCALE_PROCESSES" == "01" && ($WORKFLOWMODE != "print" || $GEN_TOPO_RUN_HOME_TEST == 1) && $4 != 0 ]]; then
+  if [[ ${GEN_TOPO_AUTOSCALE_PROCESSES_GLOBAL_WORKFLOW:-} == 1 && -z ${!NAME_PROC:-} && ${GEN_TOPO_AUTOSCALE_PROCESSES:-} == 1 && ($WORKFLOWMODE != "print" || ${GEN_TOPO_RUN_HOME_TEST:-} == 1) && ${4:-} != 0 ]]; then
     echo $1:\$\(\(\($MULT*\$AUTOSCALE_PROCESS_FACTOR/100\) \< 16 ? \($MULT*\$AUTOSCALE_PROCESS_FACTOR/100\) : 16\)\)
   else
     echo $1:$MULT

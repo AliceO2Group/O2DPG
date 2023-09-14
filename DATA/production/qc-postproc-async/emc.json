@@ -33,7 +33,7 @@
             }
         },
         "postprocessing": {
-            "CellsTrending": {
+            "CellTrend": {
                 "active": "true",
                 "className": "o2::quality_control::postprocessing::SliceTrendingTask",
                 "moduleName": "QualityControl",
@@ -107,6 +107,158 @@
                         ],
                         "reductorName": "o2::quality_control_modules::common::TH1SliceReductor",
                         "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/Cells",
+                        "names": [
+                            "ncellsPerEventSupermodule"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH2SliceReductor",
+                        "axisDivision": [
+                            [
+                                "0.",
+                                "200."
+                            ],
+                            [
+                                "-0.5",
+                                "0.5",
+                                "1.5",
+                                "2.5",
+                                "3.5",
+                                "4.5",
+                                "5.5",
+                                "6.5",
+                                "7.5",
+                                "8.5",
+                                "9.5",
+                                "10.5",
+                                "11.5",
+                                "12.5",
+                                "13.5",
+                                "14.5",
+                                "15.5",
+                                "16.5",
+                                "17.5",
+                                "18.5",
+                                "19.5."
+                            ]
+                        ],
+                        "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/Cells",
+                        "names": [
+                            "ncellsPerEventSupermoduleWThr"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH2SliceReductor",
+                        "axisDivision": [
+                            [
+                                "0.",
+                                "20."
+                            ],
+                            [
+                                "-0.5",
+                                "0.5",
+                                "1.5",
+                                "2.5",
+                                "3.5",
+                                "4.5",
+                                "5.5",
+                                "6.5",
+                                "7.5",
+                                "8.5",
+                                "9.5",
+                                "10.5",
+                                "11.5",
+                                "12.5",
+                                "13.5",
+                                "14.5",
+                                "15.5",
+                                "16.5",
+                                "17.5",
+                                "18.5",
+                                "19.5."
+                            ]
+                        ],
+                        "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/Cells",
+                        "names": [
+                            "cellAmplitudeSupermodule_PHYS"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH2SliceReductor",
+                        "axisDivision": [
+                            [
+                                "0.",
+                                "50."
+                            ],
+                            [
+                                "-0.5",
+                                "0.5",
+                                "1.5",
+                                "2.5",
+                                "3.5",
+                                "4.5",
+                                "5.5",
+                                "6.5",
+                                "7.5",
+                                "8.5",
+                                "9.5",
+                                "10.5",
+                                "11.5",
+                                "12.5",
+                                "13.5",
+                                "14.5",
+                                "15.5",
+                                "16.5",
+                                "17.5",
+                                "18.5",
+                                "19.5."
+                            ]
+                        ],
+                        "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/Cells",
+                        "names": [
+                            "cellTimeSupermodule_PHYS"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH2SliceReductor",
+                        "axisDivision": [
+                            [
+                                "-400.",
+                                "800."
+                            ],
+                            [
+                                "-0.5",
+                                "0.5",
+                                "1.5",
+                                "2.5",
+                                "3.5",
+                                "4.5",
+                                "5.5",
+                                "6.5",
+                                "7.5",
+                                "8.5",
+                                "9.5",
+                                "10.5",
+                                "11.5",
+                                "12.5",
+                                "13.5",
+                                "14.5",
+                                "15.5",
+                                "16.5",
+                                "17.5",
+                                "18.5",
+                                "19.5."
+                            ]
+                        ],
+                        "moduleName": "QcCommon"
                     }
                 ],
                 "plots": [
@@ -125,7 +277,7 @@
                         "varexp": "NEventsPerTFPHYS.meanX:run",
                         "selection": "",
                         "option": "*L",
-                        "graphErrors": "stddevX:.5",
+                        "graphErrors": "0:.5",
                         "graphAxisLabel": "<Number of events>:Run number"
                     },
                     {
@@ -134,7 +286,7 @@
                         "varexp": "ncellsPerEventTot.meanX:run",
                         "selection": "",
                         "option": "*L",
-                        "graphErrors": "stddevX:.5",
+                        "graphErrors": "errMeanX:.5",
                         "graphAxisLabel": "<Number of cells/event>:Run number"
                     },
                     {
@@ -143,7 +295,7 @@
                         "varexp": "ncellsPerEventEMCALTot.meanX:run",
                         "selection": "",
                         "option": "*L",
-                        "graphErrors": "stddevX:.5",
+                        "graphErrors": "errMeanX:.5",
                         "graphAxisLabel": "<Number of cells/event>:Run number"
                     },
                     {
@@ -152,7 +304,7 @@
                         "varexp": "ncellsPerEventDCALTot.meanX:run",
                         "selection": "",
                         "option": "*L",
-                        "graphErrors": "stddevX:.5",
+                        "graphErrors": "errMeanX:.5",
                         "graphAxisLabel": "<Number of cells/event>:Run number"
                     },
                     {
@@ -161,7 +313,7 @@
                         "varexp": "ncellPerEventTot_Thres.meanX:run",
                         "selection": "",
                         "option": "*L",
-                        "graphErrors": "stddevX:.5",
+                        "graphErrors": "errMeanX:.5",
                         "graphAxisLabel": "<Number of cells/event>:Run number"
                     },
                     {
@@ -170,7 +322,7 @@
                         "varexp": "ncellPerEventEMCALTot_Thres.meanX:run",
                         "selection": "",
                         "option": "*L",
-                        "graphErrors": "stddevX:.5",
+                        "graphErrors": "errMeanX:.5",
                         "graphAxisLabel": "<Number of cells/event>:Run number"
                     },
                     {
@@ -179,7 +331,7 @@
                         "varexp": "ncellPerEventDCALTot_Thres.meanX:run",
                         "selection": "",
                         "option": "*L",
-                        "graphErrors": "stddevX:.5",
+                        "graphErrors": "errMeanX:.5",
                         "graphAxisLabel": "<Number of cells/event>:Run number"
                     },
                     {
@@ -189,7 +341,7 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<t_cell> (ns):Run number"
+                        "graphAxisLabel": "<t_{cell}> (ns):Run number"
                     },
                     {
                         "name": "MeanEMCALCellTime",
@@ -198,7 +350,7 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<t_cell> (ns):Run number"
+                        "graphAxisLabel": "<t_{cell}> (ns):Run number"
                     },
                     {
                         "name": "MeanDCALCellTime",
@@ -207,7 +359,7 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<t_cell> (ns):Run number"
+                        "graphAxisLabel": "<t_{cell}> (ns):Run number"
                     },
                     {
                         "name": "MeanCellEnergy",
@@ -216,7 +368,7 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<E_cell> (GeV):Run number"
+                        "graphAxisLabel": "<E_{cell}> (GeV):Run number"
                     },
                     {
                         "name": "MeanEMCALCellEnergy",
@@ -225,7 +377,7 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<E_cell> (GeV):Run number"
+                        "graphAxisLabel": "<E_{cell}> (GeV):Run number"
                     },
                     {
                         "name": "MeanDCALCellEnergy",
@@ -234,7 +386,98 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<E_cell> (GeV):Run number"
+                        "graphAxisLabel": "<E_{cell}> (GeV):Run number"
+                    },
+                    {
+                        "name": "WidthCellEnergy",
+                        "title": "Width cell energy (EMCAL+DCAL)",
+                        "varexp": "cellAmplitude_PHYS.stddevX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "0.:.5",
+                        "graphAxisLabel": "#sigma(E_{cell}) (GeV):Run number"
+                    },
+                    {
+                        "name": "WidthEMCALCellEnergy",
+                        "title": "Width cell energy (EMCAL)",
+                        "varexp": "cellAmplitudeEMCAL_PHYS.stddevX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "0.:.5",
+                        "graphAxisLabel": "#sigma(E_{cell}) (GeV):Run number"
+                    },
+                    {
+                        "name": "WidthDCALCellEnergy",
+                        "title": "Width cell energy (DCAL)",
+                        "varexp": "cellAmplitudeDCAL_PHYS.stddevX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "0.:.5",
+                        "graphAxisLabel": "#sigma(E_{cell}) (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanNumberOfCellsSupermodule",
+                        "title": "Mean number of cells / event per supermodule",
+                        "varexp": "ncellsPerEventSupermodule.meanX:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "N_{cells} / event:run",
+                        "legendNColums" : "2",
+                        "legendTextSize": "14",
+                        "legendObservableX": "None",
+                        "legendObservableY": "Supermodule",
+                        "legendCentmodeY": "True"
+                    },
+                    {
+                        "name": "MeanNumberOfCellsThresholdSupermodule",
+                        "title": "Mean number of cells (E > 500 MeV)/ event per supermodule",
+                        "varexp": "ncellsPerEventSupermoduleWThr.meanX:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "N_{cells} / event:run",
+                        "legendNColums" : "2",
+                        "legendTextSize": "14",
+                        "legendObservableX": "None",
+                        "legendObservableY": "Supermodule",
+                        "legendCentmodeY": "True"
+                    },
+                    {
+                        "name": "MeanCellEnergySupermodule",
+                        "title": "Mean cell energy per supermodule",
+                        "varexp": "cellAmplitudeSupermodule_PHYS.meanX:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "<E_{cell} > (GeV):run",
+                        "legendNColums" : "2",
+                        "legendTextSize": "14",
+                        "legendObservableX": "None",
+                        "legendObservableY": "Supermodule",
+                        "legendCentmodeY": "True"
+                    },
+                    {
+                        "name": "MeanCellTimeSupermodule",
+                        "title": "Mean cell time per supermodule",
+                        "varexp": "cellTimeSupermodule_PHYS.meanX:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "<t_{cell} > (ns):run",
+                        "legendNColums" : "2",
+                        "legendTextSize": "14",
+                        "legendObservableX": "None",
+                        "legendObservableY": "Supermodule",
+                        "legendCentmodeY": "True"
                     }
                 ],
                 "initTrigger": [
@@ -247,13 +490,13 @@
                     "once"
                 ]
             },
-            "ClustersTrending": {
+            "ClustersTrend": {
                 "active": "true",
                 "className": "o2::quality_control::postprocessing::SliceTrendingTask",
                 "moduleName": "QualityControl",
                 "detectorName": "EMC",
                 "resumeTrend": "false",
-                "producePlotsOnUpdate": "false",
+                "producePlotsOnUpdate": "true",
                 "dataSources": [
                     {
                         "type": "repository",
@@ -262,6 +505,12 @@
                             "ClustE_All",
                             "ClustE_DCal",
                             "ClustE_EMCal",
+                            "ClusterELeading_All",
+                            "ClusterELeading_EMCal",
+                            "ClusterELeading_DCal",
+                            "ClusterTimeLeading_All",
+                            "ClusterTimeLeading_EMCal",
+                            "ClusterTimeLeading_DCal",
                             "M02_All",
                             "M20_DCal",
                             "M20_EMCal",
@@ -294,6 +543,143 @@
                             ]
                         ],
                         "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/Clusters",
+                        "names": [
+                            "Time_All",
+                            "Time_EMCal",
+                            "Time_DCal"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH2SliceReductor",
+                        "axisDivision": [
+                            [
+                                "0.",
+                                "5.0"
+                            ],
+                            [
+                                "-300.",
+                                "300."
+                            ]
+                        ],
+                        "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/Clusters",
+                        "names": [
+                            "ClusterEnergySupermodule",
+                            "LeadingClusterEnergySupermodule"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH2SliceReductor",
+                        "axisDivision": [
+                            [
+                                "0.",
+                                "50."
+                            ],
+                            [
+                                "-0.5",
+                                "0.5",
+                                "1.5",
+                                "2.5",
+                                "3.5",
+                                "4.5",
+                                "5.5",
+                                "6.5",
+                                "7.5",
+                                "8.5",
+                                "9.5",
+                                "10.5",
+                                "11.5",
+                                "12.5",
+                                "13.5",
+                                "14.5",
+                                "15.5",
+                                "16.5",
+                                "17.5",
+                                "18.5",
+                                "19.5."
+                            ]
+                        ],
+                        "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/Clusters",
+                        "names": [
+                            "ClusterTimeSupermodule",
+                            "LeadingClusterTimeSupermodule"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH2SliceReductor",
+                        "axisDivision": [
+                            [
+                                "-300.",
+                                "300."
+                            ],
+                            [
+                                "-0.5",
+                                "0.5",
+                                "1.5",
+                                "2.5",
+                                "3.5",
+                                "4.5",
+                                "5.5",
+                                "6.5",
+                                "7.5",
+                                "8.5",
+                                "9.5",
+                                "10.5",
+                                "11.5",
+                                "12.5",
+                                "13.5",
+                                "14.5",
+                                "15.5",
+                                "16.5",
+                                "17.5",
+                                "18.5",
+                                "19.5."
+                            ]
+                        ],
+                        "moduleName": "QcCommon"
+                    },
+                    {
+                        "type": "repository",
+                        "path": "EMC/MO/Clusters",
+                        "names": [
+                            "NClustersPerEventSupermodule"
+                        ],
+                        "reductorName": "o2::quality_control_modules::common::TH2SliceReductor",
+                        "axisDivision": [
+                            [
+                                "0.",
+                                "200."
+                            ],
+                            [
+                                "-0.5",
+                                "0.5",
+                                "1.5",
+                                "2.5",
+                                "3.5",
+                                "4.5",
+                                "5.5",
+                                "6.5",
+                                "7.5",
+                                "8.5",
+                                "9.5",
+                                "10.5",
+                                "11.5",
+                                "12.5",
+                                "13.5",
+                                "14.5",
+                                "15.5",
+                                "16.5",
+                                "17.5",
+                                "18.5",
+                                "19.5."
+                            ]
+                        ],
+                        "moduleName": "QcCommon"
                     }
                 ],
                 "plots": [
@@ -303,7 +689,7 @@
                         "varexp": "NclustPerEvt.meanX:run",
                         "selection": "",
                         "option": "*L",
-                        "graphErrors": "stddevX:.5",
+                        "graphErrors": "errMeanX:.5",
                         "graphAxisLabel": "<Number of clusters/event>:Run number"
                     },
                     {
@@ -313,7 +699,7 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<E_cluster> (GeV):Run number"
+                        "graphAxisLabel": "<E_{cluster}> (GeV):Run number"
                     },
                     {
                         "name": "MeanEMCALClusterEnergy",
@@ -322,7 +708,7 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<E_custer> (GeV):Run number"
+                        "graphAxisLabel": "<E_{cluster}> (GeV):Run number"
                     },
                     {
                         "name": "MeanDCALClusterEnergy",
@@ -331,7 +717,88 @@
                         "selection": "",
                         "option": "*L",
                         "graphErrors": "errMeanX:.5",
-                        "graphAxisLabel": "<E_cluster> (GeV):Run number"
+                        "graphAxisLabel": "<E_{cluster}> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingClusterEnergy",
+                        "title": "Mean leading cluster energy (EMCAL+DCAL)",
+                        "varexp": "ClusterELeading_All.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_{cluster,lead}> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingEMCALClusterEnergy",
+                        "title": "Mean leading cluster energy (EMCAL)",
+                        "varexp": "ClusterELeading_EMCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_{cluster,lead}> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingDCALClusterEnergy",
+                        "title": "Mean leading cluster energy (DCAL)",
+                        "varexp": "ClusterELeading_DCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<E_{cluster,lead}> (GeV):Run number"
+                    },
+                    {
+                        "name": "MeanClusterTime",
+                        "title": "Mean cluster time (EMCAL+DCAL)",
+                        "varexp": "Time_All.meanY:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanY:.5",
+                        "graphAxisLabel": "<t_{cluster}> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanEMCALClusterTime",
+                        "title": "Mean cluster time (EMCAL)",
+                        "varexp": "Time_EMCal.meanY:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanY:.5",
+                        "graphAxisLabel": "<t_{cluster}> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanDCALClusterTime",
+                        "title": "Mean cluster time (DCAL)",
+                        "varexp": "Time_DCal.meanY:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanY:.5",
+                        "graphAxisLabel": "<t_{cluster}> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingClusterTime",
+                        "title": "Mean leading cluster time (EMCAL+DCAL)",
+                        "varexp": "ClusterTimeLeading_All.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<t_{cluster,lead}> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingEMCALClusterTime",
+                        "title": "Mean leading cluster time (EMCAL)",
+                        "varexp": "ClusterTimeLeading_EMCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<t_{cluster,lead}> (ns):Run number"
+                    },
+                    {
+                        "name": "MeanLeadingDCALClusterTime",
+                        "title": "Mean leading cluster time (DCAL)",
+                        "varexp": "ClusterTimeLeading_DCal.meanX:run",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:.5",
+                        "graphAxisLabel": "<t_{cluster,lead}> (ns):Run number"
                     },
                     {
                         "name": "MeanClusterM02",
@@ -369,7 +836,12 @@
                         "graphErrors": "errMeanY:0.5",
                         "graphYRange": "",
                         "graphXRange": "",
-                        "graphAxisLabel": "<Number of cells / cluster>:run"
+                        "graphAxisLabel": "<Number of cells / cluster>:run",
+                        "legendNColums" : "1",
+                        "legendTextSize": "14",
+                        "legendObservableX": "N_{cell}",
+                        "legendObservableY": "None",
+                        "legendUnitX": "GeV" 
                     },
                     {
                         "name": "NCellsClusterDCAL",
@@ -380,7 +852,108 @@
                         "graphErrors": "errMeanY:0.5",
                         "graphYRange": "",
                         "graphXRange": "",
-                        "graphAxisLabel": "<Number of cells / cluster>:run"
+                        "graphAxisLabel": "<Number of cells / cluster>:run",
+                        "legendNColums" : "1",
+                        "legendTextSize": "14",
+                        "legendObservableX": "N_{cell}",
+                        "legendObservableY": "None",
+                        "legendUnitX": "GeV" 
+                    },
+                    {
+                        "name": "MeanClusterEnergySupermodule",
+                        "title": "Mean cluster energy per supermodule",
+                        "varexp": "ClusterEnergySupermodule.meanX:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "<E_{cluster} > (GeV):run",
+                        "legendNColums" : "2",
+                        "legendTextSize": "14",
+                        "legendObservableX": "None",
+                        "legendObservableY": "Supermodule",
+                        "legendCentmodeY": "True"
+                    },
+                    {
+                        "name": "MeanClusterTimeSupermodule",
+                        "title": "Mean cluster time per supermodule",
+                        "varexp": "ClusterTimeSupermodule.meanX:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "<t_{cluster} > (ns):run",
+                        "legendNColums" : "2",
+                        "legendTextSize": "14",
+                        "legendObservableX": "None",
+                        "legendObservableY": "Supermodule",
+                        "legendCentmodeY": "True"
+                    },
+                    {
+                        "name": "MeanClusterTimeSupermodule",
+                        "title": "Mean cluster time per supermodule",
+                        "varexp": "ClusterTimeSupermodule.meanX:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "<t_{cluster} > (ns):run",
+                        "legendNColums" : "2",
+                        "legendTextSize": "14",
+                        "legendObservableX": "None",
+                        "legendObservableY": "Supermodule",
+                        "legendCentmodeY": "True"
+                    },
+                    {
+                        "name": "MeanNumberOfClustersSupermodule",
+                        "title": "Mean number of clusters / event per supermodule",
+                        "varexp": "NClustersPerEventSupermodule.meanX:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "N_{clusters} / event:run",
+                        "legendNColums" : "2",
+                        "legendTextSize": "14",
+                        "legendObservableX": "None",
+                        "legendObservableY": "Supermodule",
+                        "legendCentmodeY": "True"
+                    },
+                    {
+                        "name": "MeanLeadingClusterEnergySupermodule",
+                        "title": "Mean leading cluster energy per supermodule",
+                        "varexp": "LeadingClusterEnergySupermodule.meanX:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "<E_{cluster} > (GeV):run",
+                        "legendNColums" : "2",
+                        "legendTextSize": "14",
+                        "legendObservableX": "None",
+                        "legendObservableY": "Supermodule",
+                        "legendCentmodeY": "True"
+                    },
+                    {
+                        "name": "MeanLeadingClusterTimeSupermodule",
+                        "title": "Mean leading cluster time per supermodule",
+                        "varexp": "LeadingClusterTimeSupermodule.meanX:multigraphrun",
+                        "selection": "",
+                        "option": "*L",
+                        "graphErrors": "errMeanX:0.5",
+                        "graphYRange": "",
+                        "graphXRange": "",
+                        "graphAxisLabel": "<t_{cluster} > (ns):run",
+                        "legendNColums" : "2",
+                        "legendTextSize": "14",
+                        "legendObservableX": "None",
+                        "legendObservableY": "Supermodule",
+                        "legendCentmodeY": "True"
                     }
                 ],
                 "initTrigger": [

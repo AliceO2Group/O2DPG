@@ -40,6 +40,7 @@ add_QC_JSON() {
 
 QC_CONFIG=
 QC_CONFIG_OVERRIDE=
+: ${QC_DETECTOR_CONFIG_OVERRIDE:=} # set to empty string only if not already set externally
 if [[ -z ${QC_JSON_FROM_OUTSIDE:-} && ! -z ${GEN_TOPO_QC_JSON_FILE:-} && -f $GEN_TOPO_QC_JSON_FILE ]]; then
   QC_JSON_FROM_OUTSIDE=$GEN_TOPO_QC_JSON_FILE
 elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
@@ -64,7 +65,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     [[ -z "${QC_JSON_FT0:-}" ]] && QC_JSON_FT0=consul://o2/components/qc/ANY/any/ft0-digits-qc-epn
     [[ -z "${QC_JSON_FV0:-}" ]] && QC_JSON_FV0=consul://o2/components/qc/ANY/any/fv0-digits-qc-epn
     if [[ -z "${QC_JSON_EMC:-}" ]]; then
-      if [ "$BEAMTYPE" == "PbPb"]; then
+      if [[ "$BEAMTYPE" == "PbPb" ]]; then
         if has_detector CTP; then
           QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall-withCTP-PbPb
         else
@@ -98,13 +99,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
       fi
     fi
     [[ -z "${QC_JSON_CPV:-}" ]] && QC_JSON_CPV=consul://o2/components/qc/ANY/any/cpv-physics-qcmn-epn
-    if [[ -z "${QC_JSON_TRD:-}" ]]; then
-      if has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRD; then
-        QC_JSON_TRD=consul://o2/components/qc/ANY/any/trd-full-qcmn-epn
-      else
-        QC_JSON_TRD=consul://o2/components/qc/ANY/any/trd-full-qcmn-nopulseheight-epn
-      fi
-    fi
+    [[ -z "${QC_JSON_TRD:-}" ]] && QC_JSON_TRD=consul://o2/components/qc/ANY/any/trd-full-qcmn
     [[ -z "${QC_JSON_PHS:-}" ]] && QC_JSON_PHS=consul://o2/components/qc/ANY/any/phos-raw-clusters-epn
     [[ -z "${QC_JSON_GLO_PRIMVTX:-}" ]] && QC_JSON_GLO_PRIMVTX=consul://o2/components/qc/ANY/any/glo-vtx-qcmn-epn
     [[ -z "${QC_JSON_GLO_ITSTPC:-}" ]] && QC_JSON_GLO_ITSTPC=consul://o2/components/qc/ANY/any/glo-itstpc-mtch-qcmn-epn
@@ -115,7 +110,11 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctof
       fi
     fi
-    [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json # this must be last
+    if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
+      [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn-staging.json # this must be last
+    else
+      [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn.json # this must be last
+    fi
   elif [[ $SYNCMODE == 1 ]]; then # Sync processing running locally (CI, laptop)
     [[ -z "${QC_JSON_TPC:-}" ]] && QC_JSON_TPC=$O2DPG_ROOT/DATA/production/qc-sync/tpc.json
     [[ -z "${QC_JSON_ITS:-}" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-sync/its.json
@@ -136,13 +135,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     [[ -z "${QC_JSON_MID:-}" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid-digits.json && has_processing_step MID_RECO && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-sync/mid.json
     [[ -z "${QC_JSON_CPV:-}" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-sync/cpv.json
     [[ -z "${QC_JSON_PHS:-}" ]] && QC_JSON_PHS=$O2DPG_ROOT/DATA/production/qc-sync/phs.json
-    if [[ -z "${QC_JSON_TRD:-}" ]]; then
-      if has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRD; then
-        QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-sync/trditstpc.json
-      else
-        QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-sync/trd.json
-      fi
-    fi
+    [[ -z "${QC_JSON_TRD:-}" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-sync/trd.json
 
     [[ -z "${QC_JSON_GLO_PRIMVTX:-}" ]] && QC_JSON_GLO_PRIMVTX=$O2DPG_ROOT/DATA/production/qc-sync/glo-vtx-qcmn-epn.json
     [[ -z "${QC_JSON_GLO_ITSTPC:-}" ]] && QC_JSON_GLO_ITSTPC=$O2DPG_ROOT/DATA/production/qc-sync/glo-itstpc-mtch-qcmn-epn.json
@@ -178,13 +171,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     fi
     [[ -z "${QC_JSON_CPV:-}" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-async/cpv.json
     [[ -z "${QC_JSON_PHS:-}" ]] && QC_JSON_PHS=$O2DPG_ROOT/DATA/production/qc-async/phs.json
-    if [[ -z "${QC_JSON_TRD:-}" ]]; then
-      if has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRD; then
-        QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-async/trditstpc.json
-      else
-        QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-async/trd.json
-      fi
-    fi
+    [[ -z "${QC_JSON_TRD:-}" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-async/trd.json
     # the following two ($QC_JSON_PRIMVTX and $QC_JSON_ITSTPC) replace $QC_JSON_GLO for async processing
     [[ -z "${QC_JSON_GLO_PRIMVTX:-}" ]] && QC_JSON_GLO_PRIMVTX=$O2DPG_ROOT/DATA/production/qc-async/primvtx.json
     [[ -z "${QC_JSON_GLO_ITSTPC:-}" ]] && QC_JSON_GLO_ITSTPC=$O2DPG_ROOT/DATA/production/qc-async/itstpc.json
@@ -216,6 +203,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     add_QC_JSON matchTOF ${QC_JSON_TOF_MATCH}
   fi
 
+  # Detector QC
   for i in ${LIST_OF_DETECTORS//,/ }; do
     DET_JSON_FILE="QC_JSON_$i"
     if has_detector_qc $i && [ ! -z "${!DET_JSON_FILE:-}" ]; then
@@ -223,6 +211,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     fi
   done
 
+  # Global reconstruction QC
   for i in ${LIST_OF_GLORECO//,/ }; do
     DET_JSON_FILE="QC_JSON_GLO_$i"
     if has_matching_qc $i && [ ! -z "${!DET_JSON_FILE:-}" ]; then
@@ -246,6 +235,22 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     add_QC_JSON EXTRA ${QC_JSON_EXTRA}
   fi
 
+  # extra settings depending on available detectors
+  # for strings remember to escape e.g. " and ;
+  # e.g. .qc.tasks.Tracking.taskParameters.dataSource.query=\"tracks:TPC/TRACKS\;clusters:TPC/CLUSTERS\"
+  if [[ -z "${DISABLE_QC_DETECTOR_CONFIG_OVERRIDE:-}" ]]; then
+    if has_detector_qc TRD && [[ ! -z ${QC_JSON_TRD:-} ]]; then # extra settings for TRD QC
+      if ! has_matching_qc ITSTPCTRD || ! has_detectors_reco ITS TPC TRD; then
+        add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.Tracking.active=false'
+        add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.PHTrackMatch.active=false'
+      fi
+      if has_matching_qc TPCTRD && has_detectors_reco TPC TRD; then # should be only enabled in async
+        add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.Tracking.dataSource.query=\"trackITSTPCTRD:TRD/MATCH_ITSTPC\;trigITSTPCTRD:TRD/TRGREC_ITSTPC\;trackTPCTRD:TRD/MATCH_TPC\;trigTPCTRD:TRD/TRGREC_TPC\"'
+        add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.Tracking.taskParameters.trackSources=\"ITS-TPC-TRD,TPC-TRD\"'
+      fi
+    fi
+  fi
+
   if [[ ! -z "$JSON_FILES" ]]; then
     if [[ -z "${GEN_TOPO_QC_JSON_FILE:-}" ]]; then
       mkdir -p $GEN_TOPO_WORKDIR/json_cache
@@ -256,7 +261,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     else
       MERGED_JSON_FILENAME=$GEN_TOPO_QC_JSON_FILE
     fi
-    jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))' $QC_JSON_GLOBAL $JSON_FILES > $MERGED_JSON_FILENAME
+    jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($s.qc.checks)  | .qc.externalTasks += ($s.qc.externalTasks) | .qc.postprocessing += ($s.qc.postprocessing)| .dataSamplingPolicies += ($s.dataSamplingPolicies))'${QC_DETECTOR_CONFIG_OVERRIDE} $QC_JSON_GLOBAL $JSON_FILES > $MERGED_JSON_FILENAME
     if [[ $? != 0 ]]; then
       echo Merging QC workflow with JSON files $JSON_FILES failed 1>&2
       exit 1
