@@ -2,6 +2,8 @@ FT0-time-offset-calibration: "O2PDPSuite" reco,5,5,"production/calib/ft0-timeoff
 
 ITS-noise-calibration: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 production/calib/its-noise-processing.sh" calib,20,"NTHREADSACC=4 NTHREADSNORM=16 NITSACCPIPELINES=16 production/calib/its-noise-aggregator.sh"
 
+ITS-noise-calibration-test: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 production/calib/its-noise-processing.sh" calib,20,"NTHREADSACC=4 NTHREADSNORM=16 NITSACCPIPELINES=16 ISTEST=1 production/calib/its-noise-aggregator.sh"
+
 ITS-noise-calibration-clusters: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 USECLUSTERS=1 production/calib/its-noise-processing.sh" calib,20,"USECLUSTERS=1 NTHREADS=32 production/calib/its-noise-aggregator.sh"
 
 ITS-thr-tuning: "O2PDPSuite" reco,40,40,"RUNTYPE_ITS=tuning production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE_ITS=tuning production/calib/its-threshold-aggregator.sh"
