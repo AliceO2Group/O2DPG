@@ -70,7 +70,7 @@ if [[ -z "${TFDELAY:-}" ]];        then export TFDELAY=0; fi                   #
 if [[ -z "${GPUTYPE:-}" ]];        then export GPUTYPE=CPU; fi                 # GPU Tracking backend to use, can be CPU / CUDA / HIP / OCL / OCL2
 if [[ -z "${DDSHMSIZE:-}" ]];      then export DDSHMSIZE=$(( 8 << 10 )); fi    # Size of shared memory for DD Input
 if [[ -z "${DDHDRSIZE:-}" ]];      then export DDHDRSIZE=$(( 1 << 10 )); fi    # Size of shared memory for DD Input
-if [[ -z "${GPUMEMSIZE:-}" ]];     then export GPUMEMSIZE=$(( 24 << 30 )); fi  # Size of allocated GPU memory (if GPUTYPE != CPU)
+if [[ -z "${GPUMEMSIZE:-}" ]];     then export GPUMEMSIZE=$(( 14 << 30 )); fi  # Size of allocated GPU memory (if GPUTYPE != CPU)
 if [[ -z "${HOSTMEMSIZE:-}" ]];    then export HOSTMEMSIZE=0; fi               # Size of allocated host memory for GPU reconstruction (0 = default)
 if [[ -z "${CREATECTFDICT:-}" ]];  then export CREATECTFDICT=0; fi             # Create CTF dictionary
 if [[ -z "${SAVECTF:-}" ]];        then export SAVECTF=0; fi                   # Save the CTF to a ROOT file
