@@ -115,8 +115,7 @@ if [[ ! -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD" ]]; then
   fi
   TMP_POST_CACHING_CMD+=" -o $GEN_TOPO_WORKDIR/output.xml.new $GEN_TOPO_WORKDIR/output.xml"
   echo "Running post-caching topo-merger command: $TMP_POST_CACHING_CMD" 1>&2
-  # Run wih a custom PYTHONPATH in order to import the python packages needed for the topology merger
-  eval PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python3.9/site-packages:/usr/local/lib64/python3.9" $TMP_POST_CACHING_CMD 1>&2 || { echo Error during EPN topology-merger resource allocation 1>&2; exit 1; }
+  eval $TMP_POST_CACHING_CMD 1>&2 || { echo Error during EPN topology-merger resource allocation 1>&2; exit 1; }
   mv -f $GEN_TOPO_WORKDIR/output.xml.new $GEN_TOPO_WORKDIR/output.xml 1>&2
 fi
 

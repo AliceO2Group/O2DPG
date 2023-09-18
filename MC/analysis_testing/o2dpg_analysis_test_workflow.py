@@ -186,6 +186,47 @@ def add_analysis_post_processing_tasks(workflow):
         task["cmd"] = f"root -l -b -q {post_processing_macro}{cmd}"
         workflow.append(task)
 
+def get_additional_workflows(input_aod):
+    additional_workflows = []
+
+    # Treat case we have a text file as input. Use the first line in this case
+    if input_aod.endswith(".txt"):
+        if input_aod.startswith("@"):
+            input_aod = input_aod[1:]
+        with open(input_aod) as f:
+            input_aod = f.readline().strip('\n')
+
+    if input_aod.endswith(".root"):
+        from ROOT import TFile
+        if input_aod.startswith("alien://"):
+            from ROOT import TGrid
+            TGrid.Connect("alien")
+        froot = TFile.Open(input_aod, "READ")
+        found_O2collision_001 = False
+        found_O2zdc_001 = False
+        found_O2bc_001 = False
+        for i in froot.GetListOfKeys():
+            if "DF_" not in i.GetName():
+                continue
+            df_dir = froot.Get(i.GetName())
+            # print(i)
+            for j in df_dir.GetListOfKeys():
+                # print(j)
+                if "O2collision_001" in j.GetName():
+                    found_O2collision_001 = True
+                if "O2zdc_001" in j.GetName():
+                    found_O2zdc_001 = True
+                if "O2bc_001" in j.GetName():
+                    found_O2bc_001 = True
+            if not found_O2collision_001:
+                additional_workflows.append("o2-analysis-collision-converter --doNotSwap")
+            if not found_O2zdc_001:
+                additional_workflows.append("o2-analysis-zdc-converter")
+            if not found_O2bc_001:
+                additional_workflows.append("o2-analysis-bc-converter")
+            break
+    return additional_workflows
+
 
 def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, needs=None, autoset_converters=False, include_disabled_analyses=False, timeout=None):
     """Add default analyses to user workflow
@@ -206,33 +247,14 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
             if specified, list of other tasks which need to be run before
     """
 
-    additional_workflows = []
     if not input_aod.startswith("alien://"):
         input_aod = abspath(input_aod)
-        if autoset_converters: # This is needed to run with the latest TAG of the O2Physics with the older data
-            if input_aod.endswith(".root"):
-                from ROOT import TFile
-                froot = TFile.Open(input_aod, "READ")
-                found_O2collision_001 = False
-                found_O2zdc_001 = False
-                for i in froot.GetListOfKeys():
-                    if "DF_" not in i.GetName():
-                        continue
-                    df_dir = froot.Get(i.GetName())
-                    # print(i)
-                    for j in df_dir.GetListOfKeys():
-                        # print(j)
-                        if "O2collision_001" in j.GetName():
-                            found_O2collision_001 = True
-                        if "O2zdc_001" in j.GetName():
-                            found_O2zdc_001 = True
-                    if not found_O2collision_001:
-                        additional_workflows.append("o2-analysis-collision-converter --doNotSwap")
-                    if not found_O2zdc_001:
-                        additional_workflows.append("o2-analysis-zdc-converter")
-                    break
     if input_aod.endswith(".txt") and not input_aod.startswith("@"):
         input_aod = f"@{input_aod}"
+
+    additional_workflows = []
+    if autoset_converters: # This is needed to run with the latest TAG of the O2Physics with the older data
+        additional_workflows = get_additional_workflows(input_aod)
 
     data_or_mc = ANALYSIS_VALID_MC if is_mc else ANALYSIS_VALID_DATA
 

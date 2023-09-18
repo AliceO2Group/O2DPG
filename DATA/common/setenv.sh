@@ -147,6 +147,7 @@ fi
 LIST_OF_ASYNC_RECO_STEPS="MID MCH MFT FDD FV0 ZDC HMP"
 
 DISABLE_DIGIT_ROOT_INPUT="--disable-root-input"
+DISABLE_ROOT_INPUT="--disable-root-input"
 : ${DISABLE_DIGIT_CLUSTER_INPUT="--clusters-from-upstream"}
 
 # Special detector related settings
