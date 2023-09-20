@@ -93,6 +93,7 @@
                       "o2-analysis-pid-tof-qa-evtime",
                       "o2-analysis-pid-tof-beta",
                       "o2-analysis-pid-tof-qa-beta",
+                      "o2-analysis-pid-tpc-qa",
                       "o2-analysis-pid-tpc-base",
                       "o2-analysis-pid-tpc-full"]
         },
