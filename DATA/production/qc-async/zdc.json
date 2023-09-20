@@ -20,10 +20,10 @@
       },
       "conditionDB": {
         "url": "http://o2-ccdb.internal"
-      },
+      }
     },
     "tasks": {
-      "QcZDCRecTask": {
+      "ZDCRec": {
         "active": "true",
         "className": "o2::quality_control_modules::zdc::ZDCRecDataTask",
         "moduleName": "QcZDC",
@@ -39,12 +39,12 @@
           "ADCH": "1100;-100;1000",
           "TDCT": "2400;-25;25",
           "TDCA": "2050;-0.5;4099.5",
-		      "TDCAH": "2000;-0.5;3999.5",
+	  "TDCAH": "2000;-0.5;3999.5",
           "ADCSUMvsTC": "605;-100;12000;605;-100;12000",
           "ADCvsTDCT": "240;-25;25;605;-100;12000",
           "TDCDIFF": "240;-25;25;240;-25;25",
           "TDCAvsTDCT": "480;-25;25;500;-1;3999",
-		      "TDCAvsTDCA": "500;-1;3999;500;-1;3999",
+	  "TDCAvsTDCA": "500;-1;3999;500;-1;3999",
           "CENTR_ZNA": "200;-2;2;200;-2;2",
           "CENTR_ZNC": "200;-2;2;200;-2;2",
           "CENTR_ZPA": "2240;0;22.4",
@@ -52,212 +52,11 @@
         },
         "location": "local",
         "localMachines": [
-          "epn",
-          "localhost"
+          "epn", "localhost"
         ],
         "remoteMachine": "alio2-cr1-qme09.cern.ch",
         "remotePort": "47750",
-        "localControl": "odc",
-        "mergersPerLayer": [
-          "3",
-          "1"
-        ]
-      }
-    },
-    "postprocessing": {
-      "RecPP": {
-        "active": "true",
-        "className": "o2::quality_control_modules::zdc::ZDCRecDataPostProcessing",
-        "moduleName": "QcZDC",
-        "detectorName": "ZDC",
-        "customization": [
-        ],
-        "dataSourcesADC": [
-          {
-            "type": "repository",
-            "path": "ZDC/MO/QcZDCRecTask",
-            "names": [
-              "ZNAC:h_ADC_ZNA_TC",
-              "ZNA1:h_ADC_ZNA_T1",
-              "ZNA2:h_ADC_ZNA_T2",
-              "ZNA3:h_ADC_ZNA_T3",
-              "ZNA4:h_ADC_ZNA_T4",
-              "ZNAS:h_ADC_ZNA_SUM",
-              "ZPAC:h_ADC_ZPA_TC",
-              "ZPA1:h_ADC_ZPA_T1",
-              "ZPA2:h_ADC_ZPA_T2",
-              "ZPA3:h_ADC_ZPA_T3",
-              "ZPA4:h_ADC_ZPA_T4",
-              "ZPAS:h_ADC_ZPA_SUM",
-              "ZEM1:h_ADC_ZEM1",
-              "ZEM2:h_ADC_ZEM2",
-              "ZNCC:h_ADC_ZNC_TC",
-              "ZNC1:h_ADC_ZNC_T1",
-              "ZNC2:h_ADC_ZNC_T2",
-              "ZNC3:h_ADC_ZNC_T3",
-              "ZNC4:h_ADC_ZNC_T4",
-              "ZNCS:h_ADC_ZNC_SUM",
-              "ZPCC:h_ADC_ZPC_TC",
-              "ZPC1:h_ADC_ZPC_T1",
-              "ZPC2:h_ADC_ZPC_T2",
-              "ZPC3:h_ADC_ZPC_T3",
-              "ZPC4:h_ADC_ZPC_T4",
-              "ZPCS:h_ADC_ZPC_SUM"
-            ]
-          }
-        ],
-        "dataSourcesTDC": [
-          {
-            "type": "repository",
-            "path": "ZDC/MO/QcZDCRecTask",
-            "names": [
-              "ZNAC:h_TDC_ZNA_TC_V",
-              "ZNAS:h_TDC_ZNA_SUM_V",
-              "ZPAC:h_TDC_ZPA_TC_V",
-              "ZPAS:h_TDC_ZPA_SUM_V",
-              "ZEM1:h_TDC_ZEM1_V",
-              "ZEM2:h_TDC_ZEM2_V",
-              "ZNCC:h_TDC_ZNC_TC_V",
-              "ZNCS:h_TDC_ZNC_SUM_V",
-              "ZPCC:h_TDC_ZPC_TC_V",
-              "ZPCS:h_TDC_ZPC_SUM_V"
-            ]
-          }
-        ],
-        "initTrigger": [
-          "userorcontrol"
-        ],
-        "updateTrigger": [
-          "newobject:qcdb:ZDC/MO/QcZDCRecTask/h_ADC_ZNA_TC"
-        ],
-        "stopTrigger": [
-          "userorcontrol"
-        ]
-      },
-      "ZDCQuality": {
-        "active": "true",
-        "className": "o2::quality_control_modules::common::QualityTask",
-        "moduleName": "QualityControl",
-        "detectorName": "ZDC",
-        "qualityGroups": [
-          {
-            "name": "global",
-            "title": "GLOBAL ZDC QUALITY",
-            "path": "ZDC/QO",
-            "ignoreQualitiesDetails": [
-              "Null",
-              "Good",
-              "Medium",
-              "Bad"
-            ],
-            "inputObjects": [
-              {
-                "name": "ZDCQuality/ZDCQuality",
-                "title": "ZDC Quality",
-                "messageBad": "Inform on-call immediately",
-                "messageMedium": "Add bookkeeping entry",
-                "messageGood": "All checks are OK",
-                "messageNull": "Some histograms are empty!!!"
-              }
-            ]
-          },
-          {
-            "name": "details",
-            "title": "ZDC DETAILS",
-            "path": "ZDC/QO",
-            "ignoreQualitiesDetails": [],
-            "inputObjects": [
-              {
-                "name": "QcZDCRecCheck",
-                "title": "Rec check"
-              }
-            ]
-          }
-        ],
-        "initTrigger": [
-          "userorcontrol"
-        ],
-        "updateTrigger": [
-          "newobject:qcdb:ZDC/QO/ZDCQuality/ZDCQuality"
-        ],
-        "stopTrigger": [
-          "userorcontrol"
-        ]
-      }
-    },
-    "checks": {
-      "QcZDCRecCheck": {
-        "active": "true",
-        "className": "o2::quality_control_modules::zdc::ZDCRecDataCheck",
-        "moduleName": "QcZDC",
-        "detectorName": "ZDC",
-        "policy": "OnAny",
-        "checkParameters": {
-          "ADC_ZNAC": "103.6;10;20",
-          "ADC_ZNA1": "129.8;10;20",
-          "ADC_ZNA2": "131.4;10;20",
-          "ADC_ZNA3": "137.8;10;20",
-          "ADC_ZNA4": "128.6;10;20",
-          "ADC_ZNAS": "427.7;10;20",
-          "ADC_ZPAC": "101.8;10;20",
-          "ADC_ZPA1": "166.6;10;20",
-          "ADC_ZPA2": "165.2;10;20",
-          "ADC_ZPA3": "132.7;10;20",
-          "ADC_ZPA4": "135.3;10;20",
-          "ADC_ZPAS": "421.4;10;20",
-          "ADC_ZEM1": "101.1;10;20",
-          "ADC_ZEM2": "96.82;10;20",
-          "ADC_ZNCC": "99.48;10;20",
-          "ADC_ZNC1": "131.1;10;20",
-          "ADC_ZNC2": "127.8;10;20",
-          "ADC_ZNC3": "132.4;10;20",
-          "ADC_ZNC4": "135.4;10;20",
-          "ADC_ZNCS": "414.9;10;20",
-          "ADC_ZPCC": "102.2;10;20",
-          "ADC_ZPC1": "134.8;10;20",
-          "ADC_ZPC2": "135.7;10;20",
-          "ADC_ZPC3": "164.3;10;20",
-          "ADC_ZPC4": "169.0;10;20",
-          "ADC_ZPCS": "424.2;10;20",
-          "ADC_POS_MSG_X": "0.15",
-          "ADC_POS_MSG_Y": "0.92",
-          "TDC_ZNAC": "-0.66;0.10;0.20",
-          "TDC_ZNAS": "-1.36;0.10;0.20",
-          "TDC_ZPAC": "-0.94;0.10;0.20",
-          "TDC_ZPAS": "-0.17;0.10;0.20",
-          "TDC_ZEM1": "-1.08;0.10;0.20",
-          "TDC_ZEM2": "-0.26;0.10;0.20",
-          "TDC_ZNCC": "0.53;0.10;0.20",
-          "TDC_ZNCS": "-0.89;0.10;0.20",
-          "TDC_ZPCC": "1.11;0.10;0.20",
-          "TDC_ZPCS": "0.87;0.10;0.20",
-          "TDC_POS_MSG_X": "0.01",
-          "TDC_POS_MSG_Y": "0.92"
-        },
-        "dataSource": [
-          {
-            "type": "PostProcessing",
-            "name": "RecPP",
-            "MOs": [
-              "h_summary_ADC", "h_summary_TDC"
-            ]
-          }
-        ]
-      }
-    },
-    "aggregators": {
-      "ZDCQuality": {
-        "active": "true",
-        "className": "o2::quality_control_modules::common::WorstOfAllAggregator",
-        "moduleName": "QcCommon",
-        "policy": "OnAll",
-        "detectorName": "ZDC",
-        "dataSource": [
-          {
-            "type": "Check",
-            "name": "QcZDCRecCheck"
-          }
-        ]
+        "localControl": "odc"
       }
     }
   },
@@ -267,12 +66,12 @@
       "active": "true",
       "machines": [],
       "query": "zdc-bcrec:ZDC/BCREC/0;zdc-energyrec:ZDC/ENERGY/0;zdc-tdcrec:ZDC/TDCDATA/0;zdc-inforec:ZDC/INFO/0",
-      "samplingConditions": [
+      "samplingConditions": [ 
         {
           "condition": "random",
-          "fraction": "0.1",
+          "fraction": "0.3",
           "seed": "1441"
-        }
+        }     
       ],
       "blocking": "false"
     }
