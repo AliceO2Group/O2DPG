@@ -23,7 +23,7 @@
       }
     },
     "tasks": {
-      "ZDCRec": {
+      "Rec": {
         "active": "true",
         "className": "o2::quality_control_modules::zdc::ZDCRecDataTask",
         "moduleName": "QcZDC",
