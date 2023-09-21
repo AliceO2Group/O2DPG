@@ -34,8 +34,7 @@
         "className": "o2::quality_control_modules::zdc::ZDCRecDataPostProcessing",
         "moduleName": "QcZDC",
         "detectorName": "ZDC",
-        "customization": [
-        ],
+        "customization": [],
 "dataSourcesADC": [
           {
             "type": "repository",
@@ -98,41 +97,6 @@
           "userorcontrol"
         ]
       },
-      "Preclusters": {
-        "active": "true",
-        "className": "o2::quality_control_modules::muonchambers::PreclustersPostProcessing",
-        "moduleName": "QcMuonChambers",
-        "detectorName": "MCH",
-        "customization": [
-          {
-            "name": "FullHistos",
-            "value": "0"
-          }
-        ],
-        "dataSources": [
-          {
-            "type": "repository",
-            "path": "MCH/MO/Preclusters",
-            "names": [
-              "eff:Pseudoeff_Elec", "clcharge:ClusterChargeHist", "clsize:ClusterSizeHist"
-            ],
-            "reductorName": "o2::quality_control_modules::muonchambers::TH2ElecMapReductor",
-            "moduleName": "QcMuonChambers"
-          }
-        ],
-        "plots": [
-        ],
-        "initTrigger": [
-          "userorcontrol"
-        ],
-        "updateTrigger": [
-          "foreachlatest:qcdb:MCH/MO/Preclusters/Pseudoeff_Elec"
-        ],
-        "stopTrigger": [
-          "userorcontrol"
-        ]
-      }
-    },
     "ZDCQuality": {
         "active": "true",
         "className": "o2::quality_control_modules::common::QualityTask",
