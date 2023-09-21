@@ -50,13 +50,6 @@
           "CENTR_ZPA": "2240;0;22.4",
           "CENTR_ZPC": "2240;-22.4;0"
         },
-        "location": "local",
-        "localMachines": [
-          "epn", "localhost"
-        ],
-        "remoteMachine": "alio2-cr1-qme09.cern.ch",
-        "remotePort": "47750",
-        "localControl": "odc"
       }
     }
   },
