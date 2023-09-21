@@ -31,8 +31,8 @@
         "cycleDurationSeconds": "60",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "dataSamplingPolicy",
-          "name": "zdc-rec"
+          "type": "direct",
+          "query": "zdc-bcrec:ZDC/BCREC/0;zdc-energyrec:ZDC/ENERGY/0;zdc-tdcrec:ZDC/TDCDATA/0;zdc-inforec:ZDC/INFO/0"
         },
         "taskParameters": {
           "ADC": "3025;-100;12000",
