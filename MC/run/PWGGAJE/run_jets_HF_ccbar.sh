@@ -50,6 +50,7 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen ex
                                             -j ${NWORKERS} -mod "--skipModules ZDC"                           \
                                             -interactionRate 500000 -confKey "Diamond.width[2]=6." ${SEED}    \
                                             -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHFTrigger_ccbar.ini \
+                                            -weightPow ${WEIGHTPOW}
 
 # run workflow
 # allow increased timeframe parallelism with --cpu-limit 32
