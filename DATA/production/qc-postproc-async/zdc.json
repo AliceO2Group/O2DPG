@@ -38,7 +38,7 @@
         "dataSourcesADC": [
           {
             "type": "repository",
-            "path": "ZDC/MO/QcZDCRecTask",
+            "path": "ZDC/MO/Rec",
             "names": [
               "ZNAC:h_ADC_ZNA_TC",
               "ZNA1:h_ADC_ZNA_T1",
@@ -91,7 +91,7 @@
           "userorcontrol"
         ],
         "updateTrigger": [
-          "newobject:qcdb:ZDC/MO/QcZDCRecTask/h_ADC_ZNA_TC"
+          "newobject:qcdb:ZDC/MO/Rec/h_ADC_ZNA_TC"
         ],
         "stopTrigger": [
           "userorcontrol"
@@ -218,7 +218,7 @@
         "dataSource": [
           {
             "type": "Check",
-            "name": "QcZDCRecCheck"
+            "name": "RecCheck"
           }
         ]
       }
