@@ -35,7 +35,7 @@
         "moduleName": "QcZDC",
         "detectorName": "ZDC",
         "customization": [],
-"dataSourcesADC": [
+        "dataSourcesADC": [
           {
             "type": "repository",
             "path": "ZDC/MO/QcZDCRecTask",
