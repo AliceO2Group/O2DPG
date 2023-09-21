@@ -49,24 +49,8 @@
           "CENTR_ZNC": "200;-2;2;200;-2;2",
           "CENTR_ZPA": "2240;0;22.4",
           "CENTR_ZPC": "2240;-22.4;0"
-        },
+        }
       }
     }
-  },
-  "dataSamplingPolicies": [
-    {
-      "id": "zdc-rec",
-      "active": "true",
-      "machines": [],
-      "query": "zdc-bcrec:ZDC/BCREC/0;zdc-energyrec:ZDC/ENERGY/0;zdc-tdcrec:ZDC/TDCDATA/0;zdc-inforec:ZDC/INFO/0",
-      "samplingConditions": [ 
-        {
-          "condition": "random",
-          "fraction": "0.3",
-          "seed": "1441"
-        }     
-      ],
-      "blocking": "false"
-    }
-  ]
+  }
 }
