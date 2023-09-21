@@ -97,7 +97,7 @@
           "userorcontrol"
         ]
       },
-    "ZDCQuality": {
+      "ZDCQuality": {
         "active": "true",
         "className": "o2::quality_control_modules::common::QualityTask",
         "moduleName": "QualityControl",
