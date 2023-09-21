@@ -72,7 +72,7 @@
         "dataSourcesTDC": [
           {
             "type": "repository",
-            "path": "ZDC/MO/QcZDCRecTask",
+            "path": "ZDC/MO/Rec",
             "names": [
               "ZNAC:h_TDC_ZNA_TC_V",
               "ZNAS:h_TDC_ZNA_SUM_V",
@@ -148,7 +148,7 @@
         ]
       }
     },
-      "checks": {
+    "checks": {
       "RecCheck": {
         "active": "true",
         "className": "o2::quality_control_modules::zdc::ZDCRecDataCheck",
