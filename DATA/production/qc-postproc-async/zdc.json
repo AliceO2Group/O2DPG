@@ -91,7 +91,7 @@
           "userorcontrol"
         ],
         "updateTrigger": [
-          "newobject:qcdb:ZDC/MO/Rec/h_ADC_ZNA_TC"
+          "foreachlatest:qcdb:ZDC/MO/Rec/h_ADC_ZNA_TC"
         ],
         "stopTrigger": [
           "userorcontrol"
@@ -141,7 +141,7 @@
           "userorcontrol"
         ],
         "updateTrigger": [
-          "newobject:qcdb:ZDC/QO/ZDCQuality/ZDCQuality"
+          "foreachlatest:qcdb:ZDC/QO/ZDCQuality/ZDCQuality"
         ],
         "stopTrigger": [
           "userorcontrol"
@@ -224,3 +224,4 @@
       }
     }
   }
+}
