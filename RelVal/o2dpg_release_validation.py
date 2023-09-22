@@ -11,9 +11,9 @@
 import sys
 import argparse
 import importlib.util
-from os import environ, makedirs, remove
+from os import environ, makedirs, remove, rename
 from os.path import join, abspath, exists, dirname, basename, isfile
-from shutil import copy
+from shutil import copy, rmtree
 
 # make sure O2DPG + O2 is loaded
 O2DPG_ROOT=environ.get('O2DPG_ROOT')
@@ -50,6 +50,45 @@ ROOT_MACRO_METRICS=join(O2DPG_ROOT, "RelVal", "ReleaseValidationMetrics.C")
 from ROOT import gROOT
 
 gROOT.SetBatch()
+
+def copy_overlays(rel_val, input_dir, output_dir):
+    """
+    copy overlay plots in this summary from the input directory to the output directory
+    """
+    input_dir = abspath(input_dir)
+    output_dir = abspath(output_dir)
+
+    if not exists(input_dir):
+        print(f"ERROR: Input directory {input_dir} does not exist")
+        return 1
+
+    inOutSame = input_dir == output_dir
+
+    input_dir_new = input_dir + "_tmp"
+    if inOutSame:
+        # move input directory
+        rename(input_dir, input_dir_new)
+        input_dir = input_dir_new
+
+    if not exists(output_dir):
+        makedirs(output_dir)
+
+    object_names, _ = rel_val.get_result_per_metric_and_test()
+    object_names = list(set(object_names))
+
+    ret = 0
+    for object_name in object_names:
+        filename=join(input_dir, f"{object_name}.png")
+        if exists(filename):
+            copy(filename, output_dir)
+        else:
+            print(f"File {filename} not found.")
+            ret = 1
+
+    if inOutSame:
+        rmtree(input_dir)
+
+    return ret
 
 
 def metrics_from_root():
@@ -107,11 +146,11 @@ def extract(input_filenames, target_filename, include_file_directories="", add_i
     target_filename = basename(target_filename)
     log_file_name = join(cwd, f"{target_filename}_extract_and_flatten.log")
 
-    print(f"Extraction of files\n{','.join(input_filenames)}")
+    print("Extraction of files")
 
     for f in input_filenames:
         f = abspath(f)
-        print(f)
+        print(f"  {f}")
         cmd = f"\\(\\\"{f}\\\",\\\"{target_filename}\\\",\\\"{reference_extracted}\\\",\\\"{include_file_directories}\\\"\\)"
         cmd = f"root -l -b -q {ROOT_MACRO_EXTRACT}{cmd}"
         ret = run_macro(cmd, log_file_name, cwd)
@@ -286,8 +325,10 @@ def rel_val(args):
         makedirs(args.output)
 
     need_apply = False
+    is_inspect = False
     if hasattr(args, "json_path"):
         # this comes from the inspect command
+        is_inspect = True
         json_path = get_summary_path(args.json_path)
         annotations = None
         include_patterns, exclude_patterns = (args.include_patterns, args.exclude_patterns)
@@ -322,6 +363,9 @@ def rel_val(args):
     # if this comes from inspecting, there will be the annotations from the rel-val before that ==> re-write it
     rel_val.write(join(args.output, "Summary.json"), annotations=annotations or rel_val.annotations[0])
 
+    if is_inspect:
+        copy_overlays(rel_val, join(dirname(json_path), "overlayPlots"), join(args.output, "overlayPlots"))
+
     if not args.no_plot:
         # plot various different figures for user inspection
         plot_pie_charts(rel_val, variables.REL_VAL_SEVERITIES, variables.REL_VAL_SEVERITY_COLOR_MAP, args.output)
@@ -329,23 +373,6 @@ def rel_val(args):
         plot_summary_grid(rel_val, variables.REL_VAL_SEVERITIES, variables.REL_VAL_SEVERITY_COLOR_MAP, args.output)
     print_summary(rel_val, variables.REL_VAL_SEVERITIES, long=args.print_long)
 
-    return 0
-
-
-def copy_overlays(path, output_dir,summary):
-    """
-    copy overlay plots in this summary from the input directory to the output directory
-    """
-    path = join(dirname(path),"overlayPlots")
-    output_dir = join(output_dir,"overlayPlots")
-    if not exists(output_dir):
-        makedirs(output_dir)
-    for histoname in summary:
-        filename=join(path,histoname+".png")
-        if exists(filename):
-            copy(filename,output_dir)
-        else:
-            print(f"File {filename} not found.")
     return 0
 
 
@@ -392,9 +419,6 @@ def compare(args):
                     only_in2 = ";".join(only_in2) if len(only_in2) else "NONE"
                     s += f", {in_common}, {only_in1}, {only_in2}"
                 print(s)
-
-
-
 
     # plot comparison of values and thresholds of both RelVals per test
     if args.plot:
@@ -518,16 +542,14 @@ COMMON_VERBOSITY_PARSER.add_argument("--no-plot", dest="no_plot", action="store_
 PARSER = argparse.ArgumentParser(description='Wrapping ReleaseValidation macro')
 SUB_PARSERS = PARSER.add_subparsers(dest="command")
 REL_VAL_PARSER = SUB_PARSERS.add_parser("rel-val", parents=[COMMON_FILE_PARSER, COMMON_METRIC_PARSER, COMMON_THRESHOLD_PARSER, COMMON_FLAGS_PARSER, COMMON_VERBOSITY_PARSER])
-REL_VAL_PARSER.add_argument("--include-dirs", dest="include_dirs", nargs="*", help="only include directories; note that each pattern is assumed to start in the top-directory (at the moment no regex or *)")
+REL_VAL_PARSER.add_argument("--include-dirs", dest="include_dirs", nargs="*", help="only include desired directories inside ROOT file; note that each pattern is assumed to start in the top-directory (at the moment no regex or *)")
 REL_VAL_PARSER.add_argument("--add", action="store_true", help="If given and there is already a RelVal in the output directory, extracted objects will be added to the existing ones")
 REL_VAL_PARSER.add_argument("--output", "-o", help="output directory", default="rel_val")
-REL_VAL_PARSER.add_argument("--copy-overlays", dest="copy_overlays", action="store_true", help="Copy overlay plots that meet the filter criteria to output directory")
 REL_VAL_PARSER.set_defaults(func=rel_val)
 
 INSPECT_PARSER = SUB_PARSERS.add_parser("inspect", parents=[COMMON_THRESHOLD_PARSER, COMMON_METRIC_PARSER, COMMON_PATTERN_PARSER, COMMON_FLAGS_PARSER, COMMON_VERBOSITY_PARSER])
 INSPECT_PARSER.add_argument("--path", dest="json_path", help="either complete file path to a Summary.json or directory where one of the former is expected to be", required=True)
 INSPECT_PARSER.add_argument("--output", "-o", help="output directory", default="rel_val_inspect")
-INSPECT_PARSER.add_argument("--copy-overlays", dest="copy_overlays", action="store_true", help="Copy overlay plots that meet the filter criteria to output directory")
 INSPECT_PARSER.set_defaults(func=rel_val)
 
 COMPARE_PARSER = SUB_PARSERS.add_parser("compare", parents=[COMMON_FILE_PARSER, COMMON_PATTERN_PARSER, COMMON_METRIC_PARSER, COMMON_VERBOSITY_PARSER, COMMON_FLAGS_PARSER])
