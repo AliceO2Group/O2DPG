@@ -34,6 +34,15 @@
         "dataSource": {
           "type": "direct",
           "query": "emcal-cells:EMC/CELLS/0;emcal-triggerecords:EMC/CELLSTRGR/0"
+        },
+        "taskParameters": {
+          "highMultiplicity": "true",
+          "MultiplicityRange": "8000",
+          "MultiplicityRangeSM" : "600",
+          "MultiplicityRangeSMThreshold": "200",
+          "TotalEnergyRangeDetector": "700",
+          "TotalEnergyRangeSM": "200",
+          "TotalEnergyRange": "2000" 
         }
       },
       "ClusterTaskEMCAL": {
@@ -60,7 +69,9 @@
           "clusterizerMaxTime": "300.",
           "clusterizerMaxTimeDelta": "1000.",
           "hasInvMassMesons": "true",
-          "mesonClustersRejectExotics": 1
+          "mesonClustersRejectExotics": 1,
+          "mesonClusterMaxTime": "50.",
+          "MultiplicityRange":"400"
         }
       },
       "BCTaskEMCAL": {
@@ -73,9 +84,10 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "emcal-triggers:EMC/CELLSTRGR/0;ctp-digits:CTP/DIGITS"
+          "query": "emcal-triggers:EMC/CELLSTRGR;ctp-digits:CTP/DIGITS"
         },
         "taskParameters": {
+          "AliasMB" : "CMTVXTSC"
         }
       }
     }
