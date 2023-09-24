@@ -163,6 +163,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-async/emc_PbPb.json
       else
         QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-async/emc.json
+      fi
     fi
     if has_detector_qc MCH && [[ -z "${QC_JSON_MCH:-}" ]]; then
       add_QC_JSON MCH_DIGITS $O2DPG_ROOT/DATA/production/qc-async/mch-digits.json
