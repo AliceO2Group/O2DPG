@@ -21,12 +21,13 @@ class GeneratorPythia8LongLivedGapTriggered : public o2::eventgen::GeneratorPyth
 {
 public:
   /// Constructor
-  GeneratorPythia8LongLivedGapTriggered(std::vector<int> input_pdg, int input_trigger_ratio = 1, int n_injected = 1, float pt_min = 1, float pt_max = 10)
+  GeneratorPythia8LongLivedGapTriggered(std::vector<int> input_pdg, int input_trigger_ratio = 1, int n_injected = 1, float pt_min = 1, float pt_max = 10, float y_min = -1, float y_max = 1)
   {
     mPdg = input_pdg;
     setNinjected(n_injected);
     mInverseTriggerRatio = input_trigger_ratio;
     setPt(pt_min, pt_max);
+    setY(y_min, y_max);
     mMass = getMass(input_pdg);
     mGeneratedEvents = 0;
     mAlternatingPDGsign = true;
@@ -42,18 +43,22 @@ public:
     int pdg = 0;
     unsigned long n_inj = 0;
     float pt_min = 0.;
-    float pt_max = 0;
+    float pt_max = 0.;
+    float y_min = 0.;
+    float y_max = 0.;
     if (!config_file.is_open())
     {
       LOGF(fatal, "File %s cannot be opened.", expanded_file_name);
     }
     std::getline(config_file, header); // skip first line
-    while (config_file >> pdg >> n_inj >> pt_min >> pt_max)
+    while (config_file >> pdg >> n_inj >> pt_min >> pt_max >> y_min >> y_max)
     {
       mPdg.push_back(pdg);
       mNinjected.push_back(n_inj);
       mPtMin.push_back(pt_min);
       mPtMax.push_back(pt_max);
+      mYmin.push_back(y_min);
+      mYmax.push_back(y_max);
     }
     config_file.close();
     mInverseTriggerRatio = input_trigger_ratio;
@@ -81,8 +86,11 @@ public:
   /// Set rapidity
   void setY(float y_min, float y_max)
   {
-    mYmin = y_min;
-    mYmax = y_max;
+    for (auto part : mPdg)
+    {
+      mYmin.push_back(y_min);
+      mYmax.push_back(y_max);
+    }
   }
 
   /// Set pseudorapidity
@@ -130,7 +138,7 @@ public:
       for (int i = 0; i < mNinjected[injectionIndex]; ++i)
       {
         const double pt = gRandom->Uniform(mPtMin[injectionIndex], mPtMax[injectionIndex]);
-        const double rapidity = gRandom->Uniform(mYmin, mYmax);
+        const double rapidity = gRandom->Uniform(mYmin[injectionIndex], mYmax[injectionIndex]);
         const double phi = gRandom->Uniform(0, TMath::TwoPi());
         const double px{pt * std::cos(phi)};
         const double py{pt * std::sin(phi)};
@@ -157,8 +165,8 @@ private:
 
   std::vector<double> mPtMin; /// minimum transverse momentum for generated particles
   std::vector<double> mPtMax; /// maximum transverse momentum for generated particles
-  double mYmin = -1.;         /// minimum rapidity for generated particles
-  double mYmax = +1.;         /// maximum rapidity for generated particles
+  std::vector<double> mYmin; /// minimum rapidity for generated particles
+  std::vector<double> mYmax; /// maximum rapidity for generated particles
 
   bool mAlternatingPDGsign = true; /// bool to randomize the PDG code of the core particle
 
@@ -170,9 +178,9 @@ private:
 };
 
 ///___________________________________________________________
-FairGenerator *generateLongLivedGapTriggered(std::vector<int> mPdg, int input_trigger_ratio, int n_injected = 1, float pt_min = 1, float pt_max = 10, bool alternate_sign = true)
+FairGenerator *generateLongLivedGapTriggered(std::vector<int> mPdg, int input_trigger_ratio, int n_injected = 1, float pt_min = 1, float pt_max = 10, float y_min = -1, float y_max = 1, bool alternate_sign = true)
 {
-  auto myGen = new GeneratorPythia8LongLivedGapTriggered(mPdg, input_trigger_ratio, n_injected, pt_min, pt_max);
+  auto myGen = new GeneratorPythia8LongLivedGapTriggered(mPdg, input_trigger_ratio, n_injected, pt_min, pt_max, y_min, y_max);
   myGen->setAlternatingPDGsign(alternate_sign);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
