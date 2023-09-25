@@ -80,6 +80,7 @@ def QC_postprocessing_workflow(runNumber, periodName, passName, qcdbUrl):
   add_QC_postprocessing('example', 'json://${O2DPG_ROOT}/DATA/production/qc-postproc-async/example.json', needs=[], runSpecific=False, periodSpecific=False, passSpecific=True)
   add_QC_postprocessing('EMC', 'json://${O2DPG_ROOT}/DATA/production/qc-postproc-async/emc.json', needs=[], runSpecific=False, periodSpecific=True, passSpecific=True)
   add_QC_postprocessing('MCH', 'json://${O2DPG_ROOT}/DATA/production/qc-postproc-async/mch.json', needs=[], runSpecific=True, periodSpecific=True, passSpecific=True)
+  add_QC_postprocessing('ZDC', 'json://${O2DPG_ROOT}/DATA/production/qc-postproc-async/zdc.json', needs=[], runSpecific=True, periodSpecific=True, passSpecific=True)
 
   return stages
 
