@@ -108,7 +108,7 @@ parser.add_argument('--no-combine-smaller-digi', action='store_true', help=argpa
 parser.add_argument('--no-combine-dpl-devices', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--no-mc-labels', action='store_true', default=False, help=argparse.SUPPRESS)
 parser.add_argument('--no-tpc-digitchunking', action='store_true', help=argparse.SUPPRESS)
-parser.add_argument('--no-strangeness-tracking', action='store_true', help=argparse.SUPPRESS)
+parser.add_argument('--with-strangeness-tracking', action='store_true', default=False, help="Enable strangeness tracking")
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring)
                                                             # (consider doing this rather in O2 digitization code directly)
@@ -1275,8 +1275,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    svfinder_threads = ' --threads 1 '
    svfinder_cpu = 1
    if COLTYPE == "PbPb" or (doembedding and COLTYPEBKG == "PbPb"):
-     svfinder_threads = ' --threads 3 '
-     svfinder_cpu = 3
+     svfinder_threads = ' --threads 8 '
+     svfinder_cpu = 8
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
    SVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-secondary-vertexing-workflow '
    SVFINDERtask['cmd'] += getDPL_global_options(bigshm=True) + svfinder_threads + putConfigValuesNew(['svertexer'], {"NameConf.mDirMatLUT" : ".."})
@@ -1288,7 +1288,7 @@ for tf in range(1, NTIMEFRAMES + 1):
         svfinder_sources += ",MID"
    SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
    # strangeness tracking is now called from the secondary vertexer
-   if args.no_strangeness_tracking:
+   if not args.with_strangeness_tracking:
       SVFINDERtask['cmd'] += ' --disable-strangeness-tracker'
    # if enabled, it may require MC labels
    else:
@@ -1356,7 +1356,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if environ.get('O2DPG_AOD_NOTRUNCATE') != None or environ.get('ALIEN_JDL_O2DPG_AOD_NOTRUNCATE') != None:
       AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
 
-   if args.no_strangeness_tracking:
+   if not args.with_strangeness_tracking:
       AODtask['cmd'] += ' --disable-strangeness-tracking'
 
    workflow['stages'].append(AODtask)
