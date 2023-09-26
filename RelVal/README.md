@@ -42,7 +42,7 @@ The [Python script](o2dpg_release_validation.py) is the entrypoint of the RelVal
 
 The full help message of this script can be seen by typing
 ```bash
-python o2dpg_release_validation.py [<sub-command>] --help
+${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py [<sub-command>] --help
 ```
 The wrapper includes 3 different sub-commands for now
 1. `rel-val` to steer the RelVal,
@@ -82,10 +82,13 @@ ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py inspect --path <path-to-outputd
                                                         [--include-patterns <patterns>] [--exclude-patterns <patterns>] \
                                                         [--enable-metric <metric_names>] [--disable-metric <metric_names>] \
                                                         [--interpretations <interpretations_of_interest>] \
-                                                        [--critical <metric_names_considered_critical>]
+                                                        [--critical <metric_names_considered_critical>] \
+                                                        [--output|-o <target_directory>]
 ```
 All of those options, except for `--include-patterns` and `--exclude-patterns` also work with the `rel-val` command.
 The output will by default be written to `rel_val_inspect`. All plots which are produced by the `rel-val` command are produced again for a potential given sub-set depending on the given options. Only the overlay plots are not produced again.
+
+**NOTE** that with `inspect` the original overlay plots satisfying your selection criteria (e.g. `--include-patters` or `--interpretations`) are also copied over to the target directory.
 
 **Other additional optional arguments**
 * `--use-values-as-thresholds [<list_of_other_Summary.json_files>]`: By passing a set of summaries that where produced from `rel-val`, the computed metric values can be used as **new** thresholds. To decide how to combine the values for multiple metrics referring to the same object, the option `--combine-thresholds mean|extreme` can be used. Also, an additional relative margin can be added for each metric with `--margin-threshold <metric> <percent>`; this argument must be repeated for if it should be used for multiple metrics.
@@ -106,7 +109,7 @@ ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py print --metric-names
 
 To convert the final output to something that can be digested by InfluxDB, use
 ```bash
-python ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py influx --dir <rel-val-out-dir> [--tags k1=v1 k2=v2 ...] [--table-name <chosen-table-name>]
+${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py influx --dir <rel-val-out-dir> [--tags k1=v1 k2=v2 ...] [--table-name <chosen-table-name>]
 ```
 When the `--tags` argument is specified, these are injected as TAGS for InfluxDB in addition. The table name can also be specified explicitly; if not given, it defaults to `O2DPG_MC_ReleaseValidation`.
 
@@ -118,8 +121,33 @@ There is an ongoing effort to unify the names of QC objects inside MC and data Q
 
 MC QC objects are usually distributed over multiple files while those from data are all contained in one single file. It is possible to directly compare them with
 ```bash
-python ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i ${MC_PRODUCTION}/QC/*.root -j ${DATA_PRODUCTION}/QC.root [--include-dirs <include-directories>]
+${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i ${MC_PRODUCTION}/QC/*.root -j ${DATA_PRODUCTION}/QC.root [--include-dirs <include-directories>]
 ```
+
+## Run for QC
+This is a simple guide to run RelVal for QC.
+
+### If you are interested in all QC plots
+To have everything and to use this as a starting point for deeper inspections, first run
+```bash
+${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i QC_file_1.root -j QC_file_2.root -o rel_val_all [--labels meaningfulLabel1 meaningfulLabel2]
+```
+Now, there is of course a lot but from now on you are fully flexible.
+
+In order to get some insight into a specific detector, say ITS, run
+```bash
+${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py inspect --path rel_val_all --include-patterns "^ITS_" -o rel_val_ITS
+```
+This will only print pie charts and summaries for ITS and also copies all overlay plots related to ITS to your target directory `rel_val_ITS`.
+
+The `inspect` command is much faster now since no new plots are generated and metrics do not have to be recomputed. It simply filters the results according to your criteria. However, what can be re-evaluated are the computed values against new thresholds.
+
+### If you are only interested in some ROOT sub-directories to begin with
+If you only want to study for instance the ITS and CPV and there is no interest at this point to study any other detector, run
+```bash
+${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i QC_file_1.root -j QC_file_2.root -o rel_val_all --include-dirs ITS CPV [--labels meaningfulLabel1 meaningfulLabel2]
+```
+From here on, you can use the `inspect` command as usual. But there will never be detectors other than ITS and CPV.
 
 ## Expert section
 
