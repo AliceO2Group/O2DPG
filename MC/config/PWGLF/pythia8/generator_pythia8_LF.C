@@ -183,7 +183,7 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
               const int& pypid = pythiaObjectSignal.event[j].id();
               const float& pyeta = pythiaObjectSignal.event[j].eta();
               const float& pypt = pythiaObjectSignal.event[j].pT();
-              if (pypid == cfg.pdg && cfg.etaMin < pyeta && pyeta < cfg.etaMax && pypt > cfg.ptMin && pypt < cfg.ptMax) {
+              if (pypid == cfg.mPdg && cfg.mEtaMin < pyeta && pyeta < cfg.mEtaMax && pypt > cfg.mPtMin && pypt < cfg.mPtMax) {
                 LOG(info) << "Found particle " << j << " " << pypid << " with eta " << pyeta << " and pT " << pypt << " in event " << mEventCounter << " after " << nTries << " tries";
                 satisfiesTrigger = true;
                 break;
@@ -204,19 +204,19 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         continue;
       }
       // Do the injection
-      for (int i{0}; i < cfg.nInject; ++i) {
-        const double pt = gRandom->Uniform(cfg.ptMin, cfg.ptMax);
-        const double eta = gRandom->Uniform(cfg.etaMin, cfg.etaMax);
+      for (int i{0}; i < cfg.mNInject; ++i) {
+        const double pt = gRandom->Uniform(cfg.mPtMin, cfg.mPtMax);
+        const double eta = gRandom->Uniform(cfg.mEtaMin, cfg.mEtaMax);
         const double phi = gRandom->Uniform(0, TMath::TwoPi());
         const double px{pt * std::cos(phi)};
         const double py{pt * std::sin(phi)};
         const double pz{pt * std::sinh(eta)};
-        const double et{std::hypot(std::hypot(pt, pz), cfg.mass)};
+        const double et{std::hypot(std::hypot(pt, pz), cfg.mMass)};
 
         Particle particle;
-        particle.id(cfg.pdg);
+        particle.id(cfg.mPdg);
         particle.status(11);
-        particle.m(cfg.mass);
+        particle.m(cfg.mMass);
         particle.px(px);
         particle.py(py);
         particle.pz(pz);
@@ -224,7 +224,7 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         particle.xProd(0.f);
         particle.yProd(0.f);
         particle.zProd(0.f);
-        mPythia.particleData.mayDecay(cfg.pdg, true); // force decay
+        mPythia.particleData.mayDecay(cfg.mPdg, true); // force decay
         mPythia.event.append(particle);
       }
       injectedForThisEvent = true;
@@ -270,16 +270,16 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
       if (mConfigToUse >= 0 && (nConfig - 1) != mConfigToUse) {
         continue;
       }
-      LOGF(info, "Injecting %i particles with PDG %i, pT in [%f, %f]", cfg.nInject, cfg.pdg, cfg.ptMin, cfg.ptMax);
+      LOGF(info, "Injecting %i particles with PDG %i, pT in [%f, %f]", cfg.mNInject, cfg.mPdg, cfg.mPtMin, cfg.mPtMax);
 
-      for (int i{0}; i < cfg.nInject; ++i) {
-        const double pt = gRandom->Uniform(cfg.ptMin, cfg.ptMax);
-        const double eta = gRandom->Uniform(cfg.etaMin, cfg.etaMax);
+      for (int i{0}; i < cfg.mNInject; ++i) {
+        const double pt = gRandom->Uniform(cfg.mPtMin, cfg.mPtMax);
+        const double eta = gRandom->Uniform(cfg.mEtaMin, cfg.mEtaMax);
         const double phi = gRandom->Uniform(0, TMath::TwoPi());
         const double px{pt * std::cos(phi)};
         const double py{pt * std::sin(phi)};
         const double pz{pt * std::sinh(eta)};
-        const double et{std::hypot(std::hypot(pt, pz), cfg.mass)};
+        const double et{std::hypot(std::hypot(pt, pz), cfg.mMass)};
 
         // TParticle::TParticle(Int_t pdg,
         //                      Int_t status,
@@ -288,7 +288,7 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         //                      Double_t px, Double_t py, Double_t pz, Double_t etot,
         //                      Double_t vx, Double_t vy, Double_t vz, Double_t time)
 
-        mParticles.push_back(TParticle(cfg.pdg,
+        mParticles.push_back(TParticle(cfg.mPdg,
                                        MCGenStatusEncoding(1, 1).fullEncoding,
                                        -1, -1,
                                        -1, -1,
@@ -311,65 +311,82 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
   }
 
   struct ConfigContainer {
-    ConfigContainer(int input_pdg = 0, int n = 1, float p = 1, float P = 10) : pdg{input_pdg},
-                                                                               nInject{n},
-                                                                               ptMin{p},
-                                                                               ptMax{P}
+    ConfigContainer(int input_pdg = 0, int n = 1,
+                    float ptMin = 1, float ptMax = 10,
+                    float etaMin = -1, float etaMax = 1) : mPdg{input_pdg},
+                                                           mNInject{n},
+                                                           mPtMin{ptMin},
+                                                           mPtMax{ptMax},
+                                                           mEtaMin{etaMin},
+                                                           mEtaMax{etaMax}
     {
-      mass = GeneratorPythia8LongLivedGun::getMass(pdg);
-      if (mass <= 0) {
-        LOG(fatal) << "Could not find mass for pdg " << pdg;
+      mMass = GeneratorPythia8LongLivedGun::getMass(mPdg);
+      if (mMass <= 0) {
+        LOG(fatal) << "Could not find mass for mPdg " << mPdg;
       }
-      LOGF(info, "ConfigContainer: pdg = %i, nInject = %i, ptMin = %f, ptMax = %f, mass = %f", pdg, nInject, ptMin, ptMax, mass);
+      LOGF(info, "ConfigContainer: mPdg = %i, mNInject = %i, mPtMin = %f, mPtMax = %f, mEtaMin = %f, mEtaMax = %f, mMass = %f",
+           mPdg, mNInject, mPtMin, mPtMax, mEtaMin, mEtaMax, mMass);
     };
-    ConfigContainer(TObjArray* arr) : ConfigContainer(atoi(arr->At(0)->GetName()),
-                                                      atoi(arr->At(1)->GetName()),
-                                                      atof(arr->At(2)->GetName()),
-                                                      atof(arr->At(3)->GetName())){};
 
-    int pdg = 0;
-    int nInject = 1;
-    float ptMin = 1;
-    float ptMax = 10;
-    float etaMin = -1.f;
-    float etaMax = 1.f;
-    double mass = 0.f;
+    // ConfigContainer(const ConfigContainer cfg) : ConfigContainer(cfg.mPdg,
+    //                                                              cfg.mNInject,
+    //                                                              cfg.mPtMin,
+    //                                                              cfg.mPtMax,
+    //                                                              cfg.mEtaMin,
+    //                                                              cfg.mEtaMax){};
+    // ConfigContainer(TObjArray* arr) : ConfigContainer(atoi(arr->At(0)->GetName()),
+    //                                                   atoi(arr->At(1)->GetName()),
+    //                                                   atof(arr->At(2)->GetName()),
+    //                                                   atof(arr->At(3)->GetName()),
+    //                                                   atof(arr->At(4)->GetName()),
+    //                                                   atof(arr->At(5)->GetName())){};
+    // ConfigContainer(TString line) : ConfigContainer(line.Tokenize(" ")){};
+
+    // Data Members
+    int mPdg = 0;
+    int mNInject = 1;
+    float mPtMin = 1;
+    float mPtMax = 10;
+    float mEtaMin = -1.f;
+    float mEtaMax = 1.f;
+    double mMass = 0.f;
+
     void print() const
     {
-      LOGF(info, "int pdg = %i", pdg);
-      LOGF(info, "int nInject = %i", nInject);
-      LOGF(info, "float ptMin = %f", ptMin);
-      LOGF(info, "float ptMax = %f", ptMax);
-      LOGF(info, "float etaMin = %f", etaMin);
-      LOGF(info, "float etaMax = %f", etaMax);
-      LOGF(info, "double mass = %f", mass);
+      LOGF(info, "int mPdg = %i", mPdg);
+      LOGF(info, "int mNInject = %i", mNInject);
+      LOGF(info, "float mPtMin = %f", mPtMin);
+      LOGF(info, "float mPtMax = %f", mPtMax);
+      LOGF(info, "float mEtaMin = %f", mEtaMin);
+      LOGF(info, "float mEtaMax = %f", mEtaMax);
+      LOGF(info, "double mMass = %f", mMass);
     }
   };
 
   //__________________________________________________________________
-  ConfigContainer addGun(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10)
+  ConfigContainer addGun(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10, float etaMin = 1, float etaMax = 10)
   {
     if (mUseTriggering) { // If in trigger mode, every particle needs to be generated from pythia
-      return addGunGenDecayed(input_pdg, nInject, ptMin, ptMax);
+      return addGunGenDecayed(input_pdg, nInject, ptMin, ptMax, etaMin, etaMax);
     }
-    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax};
+    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax, etaMin, etaMax};
     mGunConfigs.push_back(cfg);
     return cfg;
   }
 
   //__________________________________________________________________
-  ConfigContainer addGun(ConfigContainer cfg) { return addGun(cfg.pdg, cfg.nInject, cfg.ptMin, cfg.ptMax); }
+  ConfigContainer addGun(ConfigContainer cfg) { return addGun(cfg.mPdg, cfg.mNInject, cfg.mPtMin, cfg.mPtMax, cfg.mEtaMin, cfg.mEtaMax); }
 
   //__________________________________________________________________
-  ConfigContainer addGunGenDecayed(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10)
+  ConfigContainer addGunGenDecayed(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10, float etaMin = 1, float etaMax = 10)
   {
-    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax};
+    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax, etaMin, etaMax};
     mGunConfigsGenDecayed.push_back(cfg);
     return cfg;
   }
 
   //__________________________________________________________________
-  ConfigContainer addGunGenDecayed(ConfigContainer cfg) { return addGunGenDecayed(cfg.pdg, cfg.nInject, cfg.ptMin, cfg.ptMax); }
+  ConfigContainer addGunGenDecayed(ConfigContainer cfg) { return addGunGenDecayed(cfg.mPdg, cfg.mNInject, cfg.mPtMin, cfg.mPtMax, cfg.mEtaMin, cfg.mEtaMax); }
 
   //__________________________________________________________________
   long int getNGuns() const { return mGunConfigs.size() + mGunConfigsGenDecayed.size(); }
