@@ -19,6 +19,8 @@ enum DecayModeEvt { kEvtAll = 0,
                     kEvtBJpsiDiMuon,
                     kEvtBPsiDiElectron,
                     kEvtBPsiDiMuon,
+                    kEvtBPsiAndJpsiDiElectron,
+                    kEvtBPsiAndJpsiDiMuon,
                     kEvtBSemiElectronic,
                     kEvtHadronicD,
                     kEvtHadronicDWithout4Bodies,
@@ -280,6 +282,12 @@ class GeneratorEvtGen : public T
         break;
       case kEvtBPsiDiMuon:
         SetDecayTable(Form("%s/BTOPSITOMU.DEC", pathO2.Data()));
+        break;
+      case kEvtBPsiAndJpsiDiElectron:
+        SetDecayTable(Form("%s/BTOPSIJPSITODIELECTRON.DEC", pathO2.Data()));
+        break;
+      case kEvtBPsiAndJpsiDiMuon:
+        SetDecayTable(Form("%s/BTOPSIJPSITODIMUON.DEC", pathO2.Data()));
         break;
       case kEvtBSemiElectronic:
         SetDecayTable(Form("%s/BTOELE.DEC", pathO2.Data()));
