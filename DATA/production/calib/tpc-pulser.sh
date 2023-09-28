@@ -20,7 +20,7 @@ CCDB_PATH="http://o2-ccdb.internal"
 
 HOST=localhost
 
-QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
+QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-pulser-calib-qcmn"
 
 max_events=200
 publish_after=230
