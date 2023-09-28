@@ -90,6 +90,21 @@ o2::eventgen::Trigger selectHFwithinAcc(Int_t pdgPartForAccCut = 521, Bool_t cut
   };
 }
 
+o2::eventgen::Trigger selecMultipletHFwithinAcc(TString pdgPartForAccCut="443;100443", Bool_t cutonSinglePart = kTRUE, double rapidityMin = -1., double rapidityMax = -1., int minNb = -1)
+{
+  return [pdgPartForAccCut, cutonSinglePart, rapidityMin, rapidityMax, minNb](const std::vector<TParticle>& particles) -> bool {	
+   TObjArray* obj = pdgPartForAccCut.Tokenize(";");
+   std::string spdg; Int_t pdgCode = -1;
+   for (int i = 0; i < obj->GetEntriesFast(); i++) {
+     spdg = obj->At(i)->GetName();
+     pdgCode = std::stoi(spdg);
+     if(selectDaughterFromHFwithinAcc(pdgCode,cutonSinglePart,rapidityMin,rapidityMax,minNb)) { return kTRUE; }
+     
+   }
+  return kFALSE;
+  };
+}
+
 Int_t GetFlavour(Int_t pdgCode)
 {
   //
