@@ -91,6 +91,48 @@ ANALYSIS_LABEL = "Analysis"
 ANALYSIS_LABEL_ON_MC = f"{ANALYSIS_LABEL}MC"
 ANALYSIS_VALID_MC = "mc"
 ANALYSIS_VALID_DATA = "data"
+ANALYSIS_COLLISION_SYSTEM_PP = "pp"
+ANALYSIS_COLLISION_SYSTEM_PBPB = "pbpb"
+ANALYSIS_CONFIGURATION_PREFIX = "analysis-testing"
+ANALYSIS_DEFAULT_CONFIGURATION = {ANALYSIS_COLLISION_SYSTEM_PP: {ANALYSIS_VALID_MC: join(O2DPG_ROOT, "MC", "config", "analysis_testing", "json", "default", ANALYSIS_COLLISION_SYSTEM_PP, f"{ANALYSIS_CONFIGURATION_PREFIX}-{ANALYSIS_VALID_MC}.json"),
+                                                                 ANALYSIS_VALID_DATA: join(O2DPG_ROOT, "MC", "config", "analysis_testing", "json", "default", ANALYSIS_COLLISION_SYSTEM_PP, f"{ANALYSIS_CONFIGURATION_PREFIX}-{ANALYSIS_VALID_DATA}.json")},
+                                  ANALYSIS_COLLISION_SYSTEM_PBPB: {ANALYSIS_VALID_MC: join(O2DPG_ROOT, "MC", "config", "analysis_testing", "json", "default", ANALYSIS_COLLISION_SYSTEM_PBPB, f"{ANALYSIS_CONFIGURATION_PREFIX}-{ANALYSIS_VALID_MC}.json"),
+                                                                   ANALYSIS_VALID_DATA: join(O2DPG_ROOT, "MC", "config", "analysis_testing", "json", "default", ANALYSIS_COLLISION_SYSTEM_PBPB, f"{ANALYSIS_CONFIGURATION_PREFIX}-{ANALYSIS_VALID_DATA}.json")}}
+
+
+def sanitize_configuration_path(path):
+    # sanitize path
+    path = path.replace("json://", "")
+    if path[0] != "$":
+        # only do this if there is no potential environment variable given as the first part of the path
+        path = abspath(expanduser(path))
+    return f"json://{path}"
+
+
+def get_default_configuration(data_or_mc, collision_system):
+    path = ANALYSIS_DEFAULT_CONFIGURATION.get(collision_system, None)
+    if not path:
+        print(f"ERROR: Unknown collision system {collision_system}")
+        return None
+    return path[data_or_mc]
+
+
+def get_configuration(analysis_name, data_or_mc, collision_system):
+    path = join(O2DPG_ROOT, "MC", "config", "analysis_testing", "json", analysis_name, collision_system, f"{ANALYSIS_CONFIGURATION_PREFIX}-{data_or_mc}.json")
+    if not exists(path):
+        path = get_default_configuration(data_or_mc, collision_system)
+        if not path:
+            return None
+        print(f"INFO: Use default configuration for {analysis_name}")
+        return sanitize_configuration_path(path)
+
+    return sanitize_configuration_path(path)
+
+
+def get_collision_system(collision_system=None):
+    if not collision_system:
+        return environ.get("ALIEN_JDL_LPMINTERACTIONTYPE", "pp").lower()
+    return collision_system.lower()
 
 
 def full_ana_name(raw_ana_name):
@@ -228,7 +270,7 @@ def get_additional_workflows(input_aod):
     return additional_workflows
 
 
-def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, needs=None, autoset_converters=False, include_disabled_analyses=False, timeout=None):
+def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, collision_system=None, needs=None, autoset_converters=False, include_disabled_analyses=False, timeout=None):
     """Add default analyses to user workflow
 
     Args:
@@ -257,18 +299,21 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         additional_workflows = get_additional_workflows(input_aod)
 
     data_or_mc = ANALYSIS_VALID_MC if is_mc else ANALYSIS_VALID_DATA
+    collision_system = get_collision_system(collision_system)
 
     for ana in load_analyses(analyses_only, include_disabled_analyses=include_disabled_analyses):
-        configuration = ana.get("config", {}).get(data_or_mc, None)
-        if not configuration:
-            print(f"INFO: Analysis {ana['name']} not added since no configuration found for {data_or_mc}")
+        if is_mc and not ana.get("valid_mc", False):
+            print(f"INFO: Analysis {ana['name']} not added since not valid in MC")
             continue
-        # sanitize path
-        configuration = configuration.replace("json://", "")
-        if configuration[0] != "$":
-            # only do this if there is no potential environment variable given as the first part of the path
-            configuration = abspath(expanduser(configuration))
-        configuration = f"json://{configuration}"
+        if not is_mc and not ana.get("valid_data", False):
+            print(f"INFO: Analysis {ana['name']} not added since not valid in data")
+            continue
+
+        configuration = get_configuration(ana["name"], data_or_mc, collision_system)
+        if not configuration:
+            print(f"INFO: Analysis {ana['name']} excluded due to no valid configuration")
+            continue
+        print(f"INFO: Analysis {ana['name']} uses configuration {configuration}")
 
         for i in additional_workflows:
             if i not in ana["tasks"]:
@@ -335,7 +380,7 @@ def run(args):
         return 1
 
     workflow = []
-    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, autoset_converters=args.autoset_converters, include_disabled_analyses=args.include_disabled, timeout=args.timeout)
+    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, autoset_converters=args.autoset_converters, include_disabled_analyses=args.include_disabled, timeout=args.timeout, collision_system=args.collision_system)
     if args.with_qc_upload:
         add_analysis_qc_upload_tasks(workflow, args.period_name, args.run_number, args.pass_name)
     if not workflow:
@@ -360,6 +405,7 @@ def main():
     parser.add_argument("--include-disabled", dest="include_disabled", action="store_true", help="ignore if an analysis is disabled an run anyway")
     parser.add_argument("--autoset-converters", dest="autoset_converters", action="store_true", help="Compatibility mode to automatically set the converters for the analysis")
     parser.add_argument("--timeout", type=int, default=None, help="Timeout for analysis tasks in seconds.")
+    parser.add_argument("--collision-system", dest="collision_system", help="Set the collision system. If not set, tried to be derived from ALIEN_JDL_LPMInterationType. Fallback to pp")
     parser.set_defaults(func=run)
     args = parser.parse_args()
     return(args.func(args))
