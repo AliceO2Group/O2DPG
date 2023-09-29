@@ -124,6 +124,7 @@
   },
   "event-selection-qa-task": {
     "isMC": "false",
+    "isLowFlux" : "false",
     "processRun2": "false",
     "processRun3": "true"
   },
@@ -132,7 +133,7 @@
     "muonSelection": "0",
     "processRun2": "false",
     "processRun3": "true",
-    "syst": "pp"
+    "syst": "PbPb"
   },
   "lambdakzero-builder": {
     "ccdb-url": "http://alice-ccdb.cern.ch",
