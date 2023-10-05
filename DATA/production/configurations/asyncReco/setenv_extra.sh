@@ -313,6 +313,11 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export TPC_CORR_SCALING+=" --corrmap-lumi-mean $ALIEN_JDL_MEANIRFORTPC "
   fi
 
+  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]]; then
+    unset TPC_CORR_SCALING
+    export TPC_CORR_SCALING="--ctp-lumi-factor 2.414 --require-ctp-lumi"
+  fi
+
   if [[ $PERIOD != @(LHC22c|LHC22d|LHC22e|JUN|LHC22f) ]] ; then
     echo "Setting TPCCLUSTERTIMESHIFT to 0"
     TPCCLUSTERTIMESHIFT=0
@@ -445,6 +450,8 @@ if [[ $ADD_CALIB == "1" ]]; then
   export CALIB_PHS_RUNBYRUNCALIB=0
   export CALIB_PHS_L1PHASE=0
   export CALIB_TRD_VDRIFTEXB=0
+  export CALIB_TRD_T0=0
+  export CALIB_TRD_GAIN=0
   export CALIB_TPC_TIMEGAIN=0
   export CALIB_TPC_RESPADGAIN=0
   export CALIB_TPC_VDRIFTTGL=0
@@ -455,7 +462,8 @@ if [[ $ADD_CALIB == "1" ]]; then
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
-    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --process-seeds --enable-itsonly"
+    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="scdcalib.maxTracksPerCalibSlot=35000000;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=5;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=90"
+    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --process-seeds --enable-itsonly --tracking-sources ITS,TPC,ITS-TPC"
     # ad-hoc settings for TPC residual extraction
     export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="$ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator --output-type trackParams,unbinnedResid"
     if [[ $ALIEN_JDL_DEBUGRESIDUALEXTRACTION == "1" ]]; then
@@ -474,6 +482,9 @@ if [[ $ADD_CALIB == "1" ]]; then
     export TFPERSLOTS_MEANVTX=550000 # 1 hour
     export DELAYINTFS_MEANVTX=55000  # 10 minutes
     export SVERTEXING_SOURCES=none # disable secondary vertexing
+  fi
+  if [[ $ALIEN_JDL_DOTRDGAINCALIB == 1 ]]; then
+    export CALIB_TRD_GAIN=1
   fi
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
     export CCDB_POPULATOR_UPLOAD_PATH="file://$PWD"
