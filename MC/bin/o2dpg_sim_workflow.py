@@ -866,6 +866,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                 detlist += d
          t['cmd'] += commondigicmd + ' --onlyDet ' + detlist
          t['cmd'] += ' --ccdb-tof-sa '
+         t['cmd'] += ' . --use-ccdb-emc '
          t['cmd'] += (' --combine-devices ','')[args.no_combine_dpl_devices]
          t['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
          workflow['stages'].append(t)
@@ -882,6 +883,8 @@ for tf in range(1, NTIMEFRAMES + 1):
             t['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
             if det == 'TOF':
                t['cmd'] += ' --ccdb-tof-sa'
+            if det == "EMC":
+               t['cmd'] += ' --use-ccdb-emc'
             workflow['stages'].append(t)
             return t
 
