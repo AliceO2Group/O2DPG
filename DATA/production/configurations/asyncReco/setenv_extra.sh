@@ -484,6 +484,7 @@ if [[ $ADD_CALIB == "1" ]]; then
     export SVERTEXING_SOURCES=none # disable secondary vertexing
   fi
   if [[ $ALIEN_JDL_DOTRDGAINCALIB == 1 ]]; then
+    export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow="$ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow --enable-root-output"
     export CALIB_TRD_GAIN=1
   fi
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
