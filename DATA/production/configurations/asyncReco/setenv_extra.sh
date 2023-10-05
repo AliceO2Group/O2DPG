@@ -450,6 +450,8 @@ if [[ $ADD_CALIB == "1" ]]; then
   export CALIB_PHS_RUNBYRUNCALIB=0
   export CALIB_PHS_L1PHASE=0
   export CALIB_TRD_VDRIFTEXB=0
+  export CALIB_TRD_T0=0
+  export CALIB_TRD_GAIN=0
   export CALIB_TPC_TIMEGAIN=0
   export CALIB_TPC_RESPADGAIN=0
   export CALIB_TPC_VDRIFTTGL=0
@@ -479,6 +481,9 @@ if [[ $ADD_CALIB == "1" ]]; then
     export TFPERSLOTS_MEANVTX=550000 # 1 hour
     export DELAYINTFS_MEANVTX=55000  # 10 minutes
     export SVERTEXING_SOURCES=none # disable secondary vertexing
+  fi
+  if [[ $ALIEN_JDL_DOTRDGAINCALIB == 1 ]]; then
+    export CALIB_TRD_GAIN=1
   fi
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
     export CCDB_POPULATOR_UPLOAD_PATH="file://$PWD"
