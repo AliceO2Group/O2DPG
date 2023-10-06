@@ -1376,7 +1376,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
 
    if not args.with_strangeness_tracking:
-      AODtask['cmd'] += ' --disable-strangeness-tracking'
+      AODtask['cmd'] += ' --disable-strangeness-tracker'
 
    workflow['stages'].append(AODtask)
 
