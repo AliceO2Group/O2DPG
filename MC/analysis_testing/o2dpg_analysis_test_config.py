@@ -51,10 +51,6 @@ def check(args):
             return
          print("DISABLED")
 
-    def print_applicable_to(valid_keys):
-        for vk in valid_keys:
-            print(vk)
-
     analyses = None
     with open (args.config, "r") as f:
         analyses = json.load(f)["analyses"]
@@ -64,7 +60,11 @@ def check(args):
             if args.status:
                 print_status(ana["enabled"])
             if args.applicable_to:
-                print_applicable_to([k for k, v in ana["config"].items() if v])
+                if ana.get("valid_mc", False):
+                    print("mc")
+                if ana.get("valid_data", False):
+                    print("data")
+
             return 0
 
     # analysis not found
