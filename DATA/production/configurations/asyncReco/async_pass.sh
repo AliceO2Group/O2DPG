@@ -385,13 +385,19 @@ else
   if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
     if [[ "$ALIEN_JDL_EPNFULLNUMACPUONLY" != 1 ]]; then
       export TIMEFRAME_RATE_LIMIT=3
-      if (( $(echo "$RUN_IR > 800000" | bc -l) )); then
-	export TIMEFRAME_RATE_LIMIT=1
-      elif (( $(echo "$RUN_IR < 50000" | bc -l) )); then
-	export TIMEFRAME_RATE_LIMIT=6
+      if [[ $BEAMTYPE == "pp" ]]; then
+	if (( $(echo "$RUN_IR > 800000" | bc -l) )); then
+	  export TIMEFRAME_RATE_LIMIT=1
+	elif (( $(echo "$RUN_IR < 50000" | bc -l) )); then
+	  export TIMEFRAME_RATE_LIMIT=6
+	fi
+	export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu # sets the multiplicities to optimized defaults for this configuration (grid)
+	export SHMSIZE=16000000000
+      else # PbPb
+	export TIMEFRAME_RATE_LIMIT=3
+	export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu
+	export SHMSIZE=16000000000
       fi
-      export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu # sets the multiplicities to optimized defaults for this configuration (grid)
-      export SHMSIZE=16000000000
     else
       export OPTIMIZED_PARALLEL_ASYNC=pp_64cpu # to use EPNs with full NUMA domain but without GPUs
       export TIMEFRAME_RATE_LIMIT=32
