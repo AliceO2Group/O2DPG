@@ -84,8 +84,8 @@
         "resetAfterCycles": "1",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "direct",
-          "query" : "inputTracks:TPC/TRACKS/0"
+          "type": "dataSamplingPolicy",
+          "name": "tpc-tracks"
         },
         "taskParameters": {
           "cutAbsEta": "1.",
