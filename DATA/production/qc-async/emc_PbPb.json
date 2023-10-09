@@ -69,9 +69,11 @@
           "clusterizerMaxTime": "300.",
           "clusterizerMaxTimeDelta": "1000.",
           "hasInvMassMesons": "true",
+          "mesonClusterMinE": "1.5",
           "mesonClustersRejectExotics": 1,
           "mesonClusterMaxTime": "50.",
-          "MultiplicityRange":"400"
+          "MultiplicityRange":"400",
+          "mesonMinPt": "7."
         }
       },
       "BCTaskEMCAL": {
