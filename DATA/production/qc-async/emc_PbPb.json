@@ -42,7 +42,8 @@
           "MultiplicityRangeSMThreshold": "200",
           "TotalEnergyRangeDetector": "700",
           "TotalEnergyRangeSM": "200",
-          "TotalEnergyRange": "2000" 
+          "TotalEnergyRange": "2000",
+          "TotalEnergyMaxCellTime": "25"
         }
       },
       "ClusterTaskEMCAL": {
