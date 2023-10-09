@@ -1240,7 +1240,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json')
      addQCPerTF(taskName='ITSTPCmatchQC',
                 needs=[ITSTPCMATCHtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "TPC,ITS-TPC"',
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS,TPC,ITS-TPC" ',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/ITSTPCmatchedTracks_direct_MC.json')
      if isActive('TOF'):
         addQCPerTF(taskName='TOFMatchQC',
