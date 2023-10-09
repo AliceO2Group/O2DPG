@@ -120,6 +120,20 @@
         }
       ],
       "blocking": "false"
+    },
+    {
+      "id": "tpc-tracks",
+      "active": "true",
+      "machines": [],
+      "query" : "inputTracks:TPC/TRACKS/0",
+      "samplingConditions": [
+        {
+          "condition": "random",
+          "fraction": "0.1",
+          "seed": "1234"
+        }
+      ],
+      "blocking": "false"
     }
   ]
 }
