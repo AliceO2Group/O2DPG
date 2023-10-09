@@ -408,6 +408,10 @@ has_detector FT0 && export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="$ARGS_EX
 export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="$ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow --output-type matching-info,calib-info --enable-dia --use-fit"
 export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$ITSEXTRAERR;$TRACKTUNETPC;$VDRIFTPARAMOPTION;"
 
+if [[ $ALIEN_JDL_LPMPASSNAME == "cpass0" ]]; then
+   CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";MatchTOF.nsigmaTimeCut=6;"
+fi
+
 # ad-hoc settings for TRD matching
 export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$TRACKTUNETPC;$VDRIFTPARAMOPTION;GPU_rec_trd.minTrackPt=0.3;"
 
@@ -484,6 +488,7 @@ if [[ $ADD_CALIB == "1" ]]; then
     export SVERTEXING_SOURCES=none # disable secondary vertexing
   fi
   if [[ $ALIEN_JDL_DOTRDGAINCALIB == 1 ]]; then
+    export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow="$ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow --enable-root-output"
     export CALIB_TRD_GAIN=1
   fi
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
