@@ -394,7 +394,7 @@ else
 	export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu # sets the multiplicities to optimized defaults for this configuration (grid)
 	export SHMSIZE=16000000000
       else # PbPb
-	export TIMEFRAME_RATE_LIMIT=3
+	export TIMEFRAME_RATE_LIMIT=2
 	export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu
 	export SHMSIZE=16000000000
       fi
