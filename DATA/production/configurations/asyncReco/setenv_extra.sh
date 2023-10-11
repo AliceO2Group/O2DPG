@@ -508,6 +508,12 @@ if [[ $ALIEN_JDL_EXTRACTCURRENTS == 1 ]]; then
   has_detector_reco TPC && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-integrate-cluster-workflow"
 fi
 
+# extra workflows in case we want to process the currents for time series
+if [[ $ALIEN_JDL_EXTRACTTIMESERIES == 1 ]]; then
+  if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
+  has_detector_reco TPC && has_detector_reco ITS && has_detector_reco FT0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-time-series-workflow"
+fi
+
 # Enabling AOD
 if [[ $ALIEN_JDL_AODOFF != "1" ]]; then
   export WORKFLOW_PARAMETERS="AOD,${WORKFLOW_PARAMETERS}"
