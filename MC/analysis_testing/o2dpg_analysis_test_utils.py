@@ -67,3 +67,50 @@ def get_collision_system(collision_system=None):
 def full_ana_name(raw_ana_name):
     """Make the standard name of the analysis how it should appear in the workflow"""
     return f"{ANALYSIS_LABEL}_{raw_ana_name}"
+
+
+def get_common_args_as_string(analysis_name, all_common_args):
+    """
+    all_common_args is of the form
+    [<ana_name1>-shm-segment-size <value>, <ana_name2>-readers <value>, ...]
+
+    Find common arguments for this specific analysis
+    """
+
+    def make_args_string(args_map_in):
+        out_string = ""
+        for key, value in args_map_in.items():
+            out_string += f" --{key} {value}"
+        return out_string
+
+    # default arguments for all analyses
+    args_map = {"shm-segment-size": 2000000000,
+                "readers": 1,
+                "aod-memory-rate-limit": 500000000}
+
+    # arguments dedicated for this analysis
+    args_map_overwrite = {}
+
+    if not all_common_args:
+        return make_args_string(args_map)
+
+    if len(all_common_args) % 2:
+        print("ERROR: Cannot digest common args.")
+        return None
+
+    for i in range(0, len(all_common_args), 2):
+        tokens = all_common_args[i].split("-")
+        key = "-".join(tokens[1:])
+        if tokens[0] == analysis_name:
+            # for this analysis, add to dedicated dict
+            args_map_overwrite[key] = all_common_args[i+1]
+            continue
+        if tokens[0] == "ALL":
+            # otherwise add to default dict
+            args_map[key] = all_common_args[i+1]
+
+    # overwrite default dict with dedicated arguments
+    for key, value in args_map_overwrite.items():
+        args_map[key] = value
+
+    return make_args_string(args_map)
