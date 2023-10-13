@@ -388,6 +388,12 @@ fi
 
 
 # secondary vertexing
+if [[ $ALIEN_JDL_DISABLESTRTRACKING == 1 ]]; then
+  export STRTRACKING=" --disable-strangeness-tracker "
+fi
+if [[ $ALIEN_JDL_DISABLECASCADES == 1 ]]; then
+  export ARGS_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=" --disable-cascade-finder  "
+fi
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
 # strangeness tracking
 export STRK=""
