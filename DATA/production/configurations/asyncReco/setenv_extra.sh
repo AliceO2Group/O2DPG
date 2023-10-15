@@ -315,7 +315,14 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
 
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]]; then
     unset TPC_CORR_SCALING
-    export TPC_CORR_SCALING="--ctp-lumi-factor 2.414 --require-ctp-lumi"
+    if has_detector ZDC ; then
+      export TPC_CORR_SCALING="--ctp-lumi-factor ${LUMI_SCALE:-2.414} --require-ctp-lumi"
+    else if has_detector FV0 ; then
+      export TPC_CORR_SCALING="--ctp-lumi-factor ${LUMI_SCALE_ALT:-135.0} --ctp-lumi-source 1 --require-ctp-lumi"
+    else
+      echo "Neither ZDC nor FV0 is available to provide lumi for TPC correction"
+      return 1	
+    fi
   fi
 
   if [[ $PERIOD != @(LHC22c|LHC22d|LHC22e|JUN|LHC22f) ]] ; then
