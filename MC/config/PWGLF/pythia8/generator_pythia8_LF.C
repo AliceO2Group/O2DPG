@@ -344,11 +344,11 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
           break;
         }
         if (hasGenDecayed) {
-          if (arr->GetEntries() != 6) {
+          if (arr->GetEntries() != 7) {
             LOG(fatal) << "Wrong number of entries in the configuration array, should be 6, is " << arr->GetEntries();
           }
         } else {
-          if (arr->GetEntries() != 7) {
+          if (arr->GetEntries() != 6) {
             LOG(fatal) << "Wrong number of entries in the configuration array, should be 7, is " << arr->GetEntries();
           }
         }
