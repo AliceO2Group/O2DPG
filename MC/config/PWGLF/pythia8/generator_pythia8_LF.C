@@ -328,27 +328,26 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
            mPdg, mNInject, mPtMin, mPtMax, mEtaMin, mEtaMax, mMass);
     };
 
-    // ConfigContainer(const ConfigContainer cfg) : ConfigContainer(cfg.mPdg,
-    //                                                              cfg.mNInject,
-    //                                                              cfg.mPtMin,
-    //                                                              cfg.mPtMax,
-    //                                                              cfg.mEtaMin,
-    //                                                              cfg.mEtaMax){};
-    // ConfigContainer(TObjArray* arr) : ConfigContainer(atoi(arr->At(0)->GetName()),
-    //                                                   atoi(arr->At(1)->GetName()),
-    //                                                   atof(arr->At(2)->GetName()),
-    //                                                   atof(arr->At(3)->GetName()),
-    //                                                   atof(arr->At(4)->GetName()),
-    //                                                   atof(arr->At(5)->GetName())){};
-    // ConfigContainer(TString line) : ConfigContainer(line.Tokenize(" ")){};
+    ConfigContainer(TObjArray* arr) : ConfigContainer(atoi(arr->At(0)->GetName()),
+                                                      atoi(arr->At(1)->GetName()),
+                                                      atof(arr->At(2)->GetName()),
+                                                      atof(arr->At(3)->GetName()),
+                                                      atof(arr->At(4)->GetName()),
+                                                      atof(arr->At(5)->GetName()))
+    {
+      if (arr->GetEntries() != 6) {
+        LOG(fatal) << "Wrong number of entries in the configuration array, should be 6, is " << arr->GetEntries();
+      }
+    };
+    ConfigContainer(TString line) : ConfigContainer(line.Tokenize(" ")){};
 
     // Data Members
-    int mPdg = 0;
-    int mNInject = 1;
-    float mPtMin = 1;
-    float mPtMax = 10;
-    float mEtaMin = -1.f;
-    float mEtaMax = 1.f;
+    const int mPdg = 0;
+    const int mNInject = 1;
+    const float mPtMin = 1;
+    const float mPtMax = 10;
+    const float mEtaMin = -1.f;
+    const float mEtaMax = 1.f;
     double mMass = 0.f;
 
     void print() const
@@ -499,9 +498,9 @@ FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/P
         continue;
       }
       if (line.Contains("genDecayed")) {
-        cfgVecGenDecayed.push_back(GeneratorPythia8LF::ConfigContainer{line.Tokenize(" ")});
+        cfgVecGenDecayed.push_back(GeneratorPythia8LF::ConfigContainer{line});
       } else {
-        cfgVec.push_back(GeneratorPythia8LF::ConfigContainer{line.Tokenize(" ")});
+        cfgVec.push_back(GeneratorPythia8LF::ConfigContainer{line});
       }
     }
   } else {
