@@ -23,6 +23,7 @@
 #include <fstream>
 #include "Generators/GeneratorPythia8Param.h"
 #include "Generators/DecayerPythia8Param.h"
+#include <nlohmann/json.hpp>
 #endif
 #include "generator_pythia8_longlived.C"
 
@@ -178,7 +179,7 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
             if (!pythiaObjectSignal.next()) {
               continue;
             }
-            //Check if triggered condition satisfied
+            // Check if triggered condition satisfied
             for (Long_t j = 0; j < pythiaObjectSignal.event.size(); j++) {
               const int& pypid = pythiaObjectSignal.event[j].id();
               const float& pyeta = pythiaObjectSignal.event[j].eta();
@@ -335,11 +336,31 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
                                                       atof(arr->At(4)->GetName()),
                                                       atof(arr->At(5)->GetName()))
     {
-      if (arr->GetEntries() != 6) {
-        LOG(fatal) << "Wrong number of entries in the configuration array, should be 6, is " << arr->GetEntries();
+      bool hasGenDecayed = false;
+      for (int i = 0; i < arr->GetEntries(); i++) {
+        const TString n = arr->At(i)->GetName();
+        if (n == "genDecayed") {
+          hasGenDecayed = true;
+          break;
+        }
+        if (hasGenDecayed) {
+          if (arr->GetEntries() != 6) {
+            LOG(fatal) << "Wrong number of entries in the configuration array, should be 6, is " << arr->GetEntries();
+          }
+        } else {
+          if (arr->GetEntries() != 7) {
+            LOG(fatal) << "Wrong number of entries in the configuration array, should be 7, is " << arr->GetEntries();
+          }
+        }
       }
     };
     ConfigContainer(TString line) : ConfigContainer(line.Tokenize(" ")){};
+    ConfigContainer(const nlohmann::json& jsonParams) : ConfigContainer(jsonParams["pdg"],
+                                                                        jsonParams["n"],
+                                                                        jsonParams["ptMin"],
+                                                                        jsonParams["ptMax"],
+                                                                        jsonParams["etaMin"],
+                                                                        jsonParams["etaMax"]){};
 
     // Data Members
     const int mPdg = 0;
@@ -482,7 +503,23 @@ FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/P
   std::ifstream inputFile(configuration.c_str(), ios::in);
   std::vector<GeneratorPythia8LF::ConfigContainer> cfgVec;
   std::vector<GeneratorPythia8LF::ConfigContainer> cfgVecGenDecayed;
-  if (inputFile.is_open()) {
+  if (!inputFile.is_open()) {
+    LOGF(fatal, "Can't open '%s' !", configuration.c_str());
+    return nullptr;
+  }
+  if (TString(configuration.c_str()).EndsWith(".json")) { // read from JSON file
+    nlohmann::json paramfile = nlohmann::json::parse(inputFile);
+    std::cout << "paramfile " << paramfile << std::endl;
+    for (const auto& param : paramfile) {
+      std::cout << param << std::endl;
+      // cfgVecGenDecayed.push_back(GeneratorPythia8LF::ConfigContainer{paramfile[n].template get<int>(), param});
+      if (param["genDecayed"]) {
+        cfgVecGenDecayed.push_back(GeneratorPythia8LF::ConfigContainer{param});
+      } else {
+        cfgVec.push_back(GeneratorPythia8LF::ConfigContainer{param});
+      }
+    }
+  } else {
     std::string l;
     int n = 0;
     while (getline(inputFile, l)) {
@@ -492,7 +529,6 @@ FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/P
       if (line.IsNull() || line.IsWhitespace()) {
         continue;
       }
-
       if (line.BeginsWith("#")) {
         std::cout << "Skipping\n";
         continue;
@@ -503,9 +539,6 @@ FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/P
         cfgVec.push_back(GeneratorPythia8LF::ConfigContainer{line});
       }
     }
-  } else {
-    LOGF(fatal, "Can't open '%s' !", configuration.c_str());
-    return nullptr;
   }
   return generateLF(cfgVec, cfgVecGenDecayed, injectOnePDGPerEvent, gapBetweenInjection, useTrigger, pythiaCfgMb, pythiaCfgSignal);
 }
@@ -521,7 +554,7 @@ FairGenerator* generateLFTriggered(std::string configuration = "${O2DPG_ROOT}/MC
 }
 
 ///___________________________________________________________
-void generator_pythia8_LF(bool testInj = true, bool testTrg = false)
+void generator_pythia8_LF(bool testInj = true, bool testTrg = false, const char* particleListFile = "cfg.json")
 {
   LOG(info) << "Compiled correctly!";
   if (!testInj && !testTrg) {
@@ -530,7 +563,7 @@ void generator_pythia8_LF(bool testInj = true, bool testTrg = false)
   // Injected mode
   if (testInj) {
     LOG(info) << "Testing the injected mode";
-    auto* gen = static_cast<GeneratorPythia8LF*>(generateLF("/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/strangeparticlelist.gun"));
+    auto* gen = static_cast<GeneratorPythia8LF*>(generateLF(particleListFile));
     gen->setVerbose();
     gen->Print();
     gen->print();
@@ -542,10 +575,10 @@ void generator_pythia8_LF(bool testInj = true, bool testTrg = false)
   // Triggered mode
   if (testTrg) {
     LOG(info) << "Testing the triggered mode";
-    GeneratorPythia8LF* gen = static_cast<GeneratorPythia8LF*>(generateLFTriggered("/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/strangeparticlelist.gun",
+    GeneratorPythia8LF* gen = static_cast<GeneratorPythia8LF*>(generateLFTriggered(particleListFile,
                                                                                    /*gapBetweenInjection=*/0,
-                                                                                   /*pythiaCfgMb=*/"/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/inel136tev.cfg",
-                                                                                   /*pythiaCfgSignal=*/"/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/inel136tev.cfg"));
+                                                                                   /*pythiaCfgMb=*/"inel136tev.cfg",
+                                                                                   /*pythiaCfgSignal=*/"inel136tev.cfg"));
     gen->setVerbose();
     gen->Print();
     gen->print();

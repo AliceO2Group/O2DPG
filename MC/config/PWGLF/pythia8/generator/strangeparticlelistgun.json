@@ -1,0 +1,38 @@
+{
+    "omega-": {
+        "pdg": 3334,
+        "n": 1,
+        "ptMin": 0.2,
+        "ptMax": 10,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": false
+    },
+    "antiomega+": {
+        "pdg": -3334,
+        "n": 1,
+        "ptMin": 0.2,
+        "ptMax": 10,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": false
+    },
+    "xi-": {
+        "pdg": 3312,
+        "n": 1,
+        "ptMin": 0.2,
+        "ptMax": 10,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": false
+    },
+    "antixi+": {
+        "pdg": -3312,
+        "n": 1,
+        "ptMin": 0.2,
+        "ptMax": 10,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": false
+    }
+}
