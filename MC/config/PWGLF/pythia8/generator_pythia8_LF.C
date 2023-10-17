@@ -339,18 +339,19 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
       bool hasGenDecayed = false;
       for (int i = 0; i < arr->GetEntries(); i++) {
         const TString n = arr->At(i)->GetName();
+        std::cout << n << std::endl;
         if (n == "genDecayed") {
           hasGenDecayed = true;
           break;
         }
-        if (hasGenDecayed) {
-          if (arr->GetEntries() != 7) {
-            LOG(fatal) << "Wrong number of entries in the configuration array, should be 6, is " << arr->GetEntries();
-          }
-        } else {
-          if (arr->GetEntries() != 6) {
-            LOG(fatal) << "Wrong number of entries in the configuration array, should be 7, is " << arr->GetEntries();
-          }
+      }
+      if (hasGenDecayed) {
+        if (arr->GetEntries() != 7) {
+          LOG(fatal) << "Wrong number of entries in the configuration array, should be 7, is " << arr->GetEntries();
+        }
+      } else {
+        if (arr->GetEntries() != 6) {
+          LOG(fatal) << "Wrong number of entries in the configuration array, should be 6, is " << arr->GetEntries();
         }
       }
     };
