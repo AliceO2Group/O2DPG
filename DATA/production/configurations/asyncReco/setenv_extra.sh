@@ -343,7 +343,7 @@ export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysEr
 # ad-hoc options for ITS reco workflow
 EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.trackletsPerClusterLimit=5.;ITSCATrackerParam.cellsPerClusterLimit=5.;ITSVertexerParam.clusterContributorsCut=16;"
+  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.trackletsPerClusterLimit=5.;ITSCATrackerParam.cellsPerClusterLimit=5.;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;"
 elif [[ $BEAMTYPE == "pp" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
 fi
@@ -388,6 +388,12 @@ fi
 
 
 # secondary vertexing
+if [[ $ALIEN_JDL_DISABLESTRTRACKING == 1 ]]; then
+  export STRTRACKING=" --disable-strangeness-tracker "
+fi
+if [[ $ALIEN_JDL_DISABLECASCADES == 1 ]]; then
+  export ARGS_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=" --disable-cascade-finder  "
+fi
 export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
 # strangeness tracking
 export STRK=""
@@ -466,8 +472,8 @@ if [[ $ADD_CALIB == "1" ]]; then
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
-    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="scdcalib.maxTracksPerCalibSlot=35000000;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=5;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=90"
-    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --process-seeds --enable-itsonly --tracking-sources ITS,TPC,ITS-TPC"
+    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="scdcalib.maxTracksPerCalibSlot=35000000;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=6;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=90"
+    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --process-seeds --enable-itsonly"
     # ad-hoc settings for TPC residual extraction
     export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="$ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator --output-type trackParams,unbinnedResid"
     if [[ $ALIEN_JDL_DEBUGRESIDUALEXTRACTION == "1" ]]; then
@@ -488,6 +494,7 @@ if [[ $ADD_CALIB == "1" ]]; then
     export SVERTEXING_SOURCES=none # disable secondary vertexing
   fi
   if [[ $ALIEN_JDL_DOTRDGAINCALIB == 1 ]]; then
+    export CONFIG_EXTRA_PROCESS_o2_calibration_trd_workflow="TRDCalibParams.minEntriesChamberGainCalib=999999999;TRDCalibParams.minEntriesTotalGainCalib=10000;TRDCalibParams.nTrackletsMinGainCalib=4"
     export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow="$ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow --enable-root-output"
     export CALIB_TRD_GAIN=1
   fi
@@ -506,6 +513,12 @@ if [[ $ALIEN_JDL_EXTRACTCURRENTS == 1 ]]; then
     export ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow--process-3D-currents --nSlicesTF 1"
   fi
   has_detector_reco TPC && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-integrate-cluster-workflow"
+fi
+
+# extra workflows in case we want to process the currents for time series
+if [[ $ALIEN_JDL_EXTRACTTIMESERIES == 1 ]]; then
+  if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
+  has_detector_reco TPC && has_detector_reco ITS && has_detector_reco FT0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-time-series-workflow"
 fi
 
 # Enabling AOD

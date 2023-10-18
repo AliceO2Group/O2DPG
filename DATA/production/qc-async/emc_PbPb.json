@@ -42,7 +42,8 @@
           "MultiplicityRangeSMThreshold": "200",
           "TotalEnergyRangeDetector": "700",
           "TotalEnergyRangeSM": "200",
-          "TotalEnergyRange": "2000" 
+          "TotalEnergyRange": "2000",
+          "TotalEnergyMaxCellTime": "25"
         }
       },
       "ClusterTaskEMCAL": {
@@ -69,9 +70,11 @@
           "clusterizerMaxTime": "300.",
           "clusterizerMaxTimeDelta": "1000.",
           "hasInvMassMesons": "true",
+          "mesonClusterMinE": "1.5",
           "mesonClustersRejectExotics": 1,
           "mesonClusterMaxTime": "50.",
-          "MultiplicityRange":"400"
+          "MultiplicityRange":"400",
+          "mesonMinPt": "7."
         }
       },
       "BCTaskEMCAL": {
