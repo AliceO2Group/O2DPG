@@ -30,6 +30,14 @@ public:
   ///  Destructor
   ~GeneratorPythia8GapTriggeredHF() = default;
 
+  Bool_t Init() override
+  {
+    addSubGenerator(0, "Minimum bias");
+    addSubGenerator(4, "Charm injected");
+    addSubGenerator(5, "Beauty injected");
+    return o2::eventgen::GeneratorPythia8::Init();
+  }
+
   void addTriggerOnHadron(int hadPdg) { mHadronPdg = hadPdg; };
   void setQuarkTrigger (bool doNoQuarkTrigger) { mDoNoQuarkTrigger = doNoQuarkTrigger; };
   void setQuarkRapidity(float yMin, float yMax)
@@ -56,12 +64,14 @@ protected:
           genOk = selectEvent(mPythia.event);
         }        
       }
+      notifySubGenerator(mQuarkPdg);
     } else {
       // Generate minimum-bias event
       bool genOk = false;
       while (!genOk) {
         genOk = GeneratorPythia8::generateEvent();
       }
+      notifySubGenerator(0);
     }
 
     mGeneratedEvents++;
