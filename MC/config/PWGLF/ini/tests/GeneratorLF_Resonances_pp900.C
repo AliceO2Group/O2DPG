@@ -157,4 +157,4 @@ int External()
     return 0;
 }
 
-void GeneratorLF_Resonances_pp() { External(); }
+void GeneratorLF_Resonances_pp900() { External(); }
