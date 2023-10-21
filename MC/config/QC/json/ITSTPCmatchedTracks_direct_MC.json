@@ -46,11 +46,18 @@
         "taskParameters" : {
           "GID" : "ITS-TPC,ITS",
           "verbose" : "false",
-          "minPtCut" : "0.1f",
-          "etaCut" : "1.4f",
-          "minNTPCClustersCut" : "60",
-          "minDCACut" : "100.f",
-          "minDCACutY" : "10.f",
+          "minPtITSCut": "0.f",
+          "etaITSCut": "1e10f",
+          "minNITSClustersCut": "0",
+          "maxChi2PerClusterITS": "1e10f",
+          "minPtTPCCut": "0.1f",
+          "etaTPCCut": "1.4f",
+          "minNTPCClustersCut": "60",
+          "minDCACut": "100.f",
+          "minDCACutY": "10.f",
+          "minPtCut": "0.f",
+          "maxPtCut": "1e10f",
+          "etaCut": "1e10f",
           "isMC" : "true"
         },
 	"grpGeomRequest" : {
