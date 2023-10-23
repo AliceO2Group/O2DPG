@@ -394,11 +394,11 @@ FairGenerator* GeneratorCocktailPromptCharmoniaToMuonEvtGen_pp13TeV()
   auto genCocktailEvtGen = new o2::eventgen::GeneratorEvtGen<GeneratorCocktail>();
 
   auto genJpsi = new o2::eventgen::O2_GeneratorParamJpsiFwdY;
-  genJpsi->SetNSignalPerEvent(4); // 4 J/psi generated per event by GeneratorParam
+  genJpsi->SetNSignalPerEvent(1); // 1 J/psi generated per event by GeneratorParam
   auto genPsi = new o2::eventgen::O2_GeneratorParamPsiFwdY;
-  genPsi->SetNSignalPerEvent(2);               // 2 Psi(2S) generated per event by GeneratorParam
-  genCocktailEvtGen->AddGenerator(genJpsi, 1); // 2/3 J/psi
-  genCocktailEvtGen->AddGenerator(genPsi, 1);  // 1/3 Psi(2S)
+  genPsi->SetNSignalPerEvent(1);               // 1 Psi(2S) generated per event by GeneratorParam
+  genCocktailEvtGen->AddGenerator(genJpsi, 1); // add J/psi generator
+  genCocktailEvtGen->AddGenerator(genPsi, 1);  // add Psi(2S) generator
 
   TString pdgs = "443;100443";
   std::string spdg;
