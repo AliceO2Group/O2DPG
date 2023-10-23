@@ -124,7 +124,7 @@ Bool_t Init() override
       /// check at hadron level if needed 
       int ipdg=0;
       for (auto& pdgVal : mHadronsPDGs){
-             if ( (TMath::Abs(event[ipa].id()) == pdgVal) && (event[ipa].y() > mHadronRapidityMin) && (event[ipa].y() < mHadronRapidityMax) )  { countH[ipdg]++; printf("ndaughters %d \n",event[ipa].daughterList().size()); }
+             if ( (TMath::Abs(event[ipa].id()) == pdgVal) && (event[ipa].y() > mHadronRapidityMin) && (event[ipa].y() < mHadronRapidityMax) )   countH[ipdg]++; 
              if(isOkAtPartonicLevel && countH[ipdg] >= mHadronMultiplicity) return true;
 	     ipdg++;
         }
@@ -258,7 +258,8 @@ FairGenerator*
   }
   
   TString pathO2 = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
-  gen->SetDecayTable(Form("%s/BPLUSTOKAONJPSITOELE.DEC", pathO2.Data()));
+  //gen->SetDecayTable(Form("%s/BPLUSTOKAONJPSITOELE.DEC", pathO2.Data()));
+  gen->SetDecayTable(Form("%s/BPLUSTOKAONJPSITOELEALLMODES.DEC", pathO2.Data())); // decay table including decay modes for correlated background
   // print debug
   // gen->PrintDebug();
   // set random seed
@@ -272,5 +273,81 @@ FairGenerator*
   return gen;
 }
 
+// Predefined generators:
+FairGenerator*
+  GeneratorBeautyToJpsi_EvtGenFwdY(double rapidityMin = -4.3, double rapidityMax = -2.3, bool verbose = false, TString pdgs = "511;521;531;541;5112;5122;5232;5132;5332")
+{
+  auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8NonPromptInjectedGapTriggeredDQ>();
+  gen->setRapidity(rapidityMin, rapidityMax);
+  gen->setPDG(5);
+  gen->setRapidityHadron(rapidityMin,rapidityMax);
+  gen->setHadronMultiplicity(1);
+  TString pathO2table = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffBhadrons.cfg");
+  gen->readFile(pathO2table.Data());
+  gen->setConfigMBdecays(pathO2table);
+  gen->setVerbose(verbose);
 
+  std::string spdg;
+  TObjArray* obj = pdgs.Tokenize(";");
+  gen->SetSizePdg(obj->GetEntriesFast());
+  for (int i = 0; i < obj->GetEntriesFast(); i++) {
+    spdg = obj->At(i)->GetName();
+    gen->AddPdg(std::stoi(spdg), i);
+    gen->addHadronPDGs(std::stoi(spdg));
+    printf("PDG %d \n", std::stoi(spdg));
+  }
+  gen->SetForceDecay(kEvtBJpsiDiMuon);
+
+  // set random seed
+  gen->readString("Random:setSeed on");
+  uint random_seed;
+  unsigned long long int random_value = 0;
+  ifstream urandom("/dev/urandom", ios::in|ios::binary);
+  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
+  gen->readString(Form("Random:seed = %d", random_value % 900000001));
+
+  // print debug
+  // gen->PrintDebug();
+
+  return gen;
+}
+
+
+FairGenerator*
+  GeneratorBeautyToPsiAndJpsi_EvtGenFwdY(double rapidityMin = -4.3, double rapidityMax = -2.3, bool verbose = false, TString pdgs = "511;521;531;541;5112;5122;5232;5132;5332")
+{
+  auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8NonPromptInjectedGapTriggeredDQ>();
+  gen->setRapidity(rapidityMin, rapidityMax);
+  gen->setPDG(5);
+  gen->setRapidityHadron(rapidityMin,rapidityMax);
+  gen->setHadronMultiplicity(1);
+  TString pathO2table = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffBhadrons.cfg");
+  gen->readFile(pathO2table.Data());
+  gen->setConfigMBdecays(pathO2table);
+  gen->setVerbose(verbose);
+
+  std::string spdg;
+  TObjArray* obj = pdgs.Tokenize(";");
+  gen->SetSizePdg(obj->GetEntriesFast());
+  for (int i = 0; i < obj->GetEntriesFast(); i++) {
+    spdg = obj->At(i)->GetName();
+    gen->AddPdg(std::stoi(spdg), i);
+    printf("PDG %d \n", std::stoi(spdg));
+    gen->addHadronPDGs(std::stoi(spdg));
+  }
+  gen->SetForceDecay(kEvtBPsiAndJpsiDiMuon);
+
+  // set random seed
+  gen->readString("Random:setSeed on");
+  uint random_seed;
+  unsigned long long int random_value = 0;
+  ifstream urandom("/dev/urandom", ios::in|ios::binary);
+  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
+  gen->readString(Form("Random:seed = %d", random_value % 900000001));
+
+  // print debug
+  // gen->PrintDebug();
+
+  return gen;
+}
 
