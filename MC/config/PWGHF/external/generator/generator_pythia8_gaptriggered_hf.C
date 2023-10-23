@@ -88,12 +88,18 @@ protected:
         auto daughterList = event[iPart].daughterList();
         bool hasQ = false, hasQbar = false, atSelectedY = false;
         for (auto iDau : daughterList) {
-          if (event[iDau].id() == mQuarkPdg)
+          if (event[iDau].id() == mQuarkPdg) {
             hasQ = true;
-          if (event[iDau].id() == -mQuarkPdg)
+            if ((event[iDau].y() > mQuarkRapidityMin) && (event[iDau].y() < mQuarkRapidityMax)) {
+              atSelectedY = true;
+            }
+          }
+          if (event[iDau].id() == -mQuarkPdg) {
             hasQbar = true;
-          if ((event[iDau].y() > mQuarkRapidityMin) && (event[iDau].y() < mQuarkRapidityMax))
-            atSelectedY = true;
+            if ((event[iDau].y() > mQuarkRapidityMin) && (event[iDau].y() < mQuarkRapidityMax)) {
+              atSelectedY = true;
+            }
+          }  
         }
         if (hasQ && hasQbar && atSelectedY) {
           isGoodAtPartonLevel = true;
