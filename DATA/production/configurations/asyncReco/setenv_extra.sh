@@ -206,13 +206,24 @@ if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]] || [[ -z $RUN_BFIELD ]]; then
   export RUN_IR=`cat IR.txt`
   export RUN_DURATION=`cat Duration.txt`
   export RUN_BFIELD=`cat BField.txt`
+  export RUN_DETECTOR_LIST=`cat DetList.txt`
 fi
+echo "DETECTOR LIST for current run ($RUNNUMBER) = $RUN_DETECTOR_LIST"
+echo "DURATION for current run ($RUNNUMBER) = $RUN_DURATION"
+echo "B FIELD for current run ($RUNNUMBER) = $RUN_BFIELD"
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
 if (( $(echo "$RUN_IR <= 0" | bc -l) )); then
   echo "Changing run IR to 1 Hz, because $RUN_IR makes no sense"
   RUN_IR=1
 fi
-echo "Duration of current run ($RUNNUMBER) = $RUN_DURATION"
+
+# Let's check if ZDC is in the detector list; this is needed for TPC dist correction scaling in PbPb 2023
+SCALE_WITH_ZDC=1
+SCALE_WITH_FT0=1
+isZDCinDataTaking=`echo $RUN_DETECTOR_LIST | grep ZDC`
+isFT0inDataTaking=`echo $RUN_DETECTOR_LIST | grep FT0`
+[[ -z $isZDCinDataTaking ]] && SCALE_WITH_ZDC=0
+[[ -z $isFT0inDataTaking ]] && SCALE_WITH_FT0=0
 
 # For runs shorter than 10 minutes we have only a single slot.
 # In that case we have to adopt the slot length in order to
@@ -315,7 +326,16 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
 
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]]; then
     unset TPC_CORR_SCALING
-    export TPC_CORR_SCALING="--ctp-lumi-factor 2.414 --require-ctp-lumi"
+    export TPC_CORR_SCALING=" --ctp-lumi-factor 2.414 --require-ctp-lumi"
+    if [[ $SCALE_WITH_ZDC == 0 ]]; then
+      # scaling with FT0
+      if [[ $SCALE_WITH_FT0 == 1 ]]; then
+	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --ctp-lumi-factor 135. --require-ctp-lumi '
+      else
+	echo "Neither ZDC nor FT0 are in the run, and this is from 2023 PbPb: we cannot scale TPC ditortion corrections, aborting..."
+	return 1
+      fi
+    fi
   fi
 
   if [[ $PERIOD != @(LHC22c|LHC22d|LHC22e|JUN|LHC22f) ]] ; then
