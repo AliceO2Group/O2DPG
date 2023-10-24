@@ -98,6 +98,9 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
   else:
      add_QC_finalization('tofPIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidtofNoTRD.json')
   add_QC_finalization('RecPointsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/ft0-reconstruction-config.json')
+  add_QC_finalization('CPVDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/cpv-digits-task.json')
+  add_QC_finalization('CPVClustersQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/cpv-clusters-task.json')
+  add_QC_finalization('PHSCellsClustersQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/phs-cells-clusters-task.json')
 
   # The list of QC Post-processing workflows
   add_QC_postprocessing('tofTrendingHits', 'json://${O2DPG_ROOT}/MC/config/QC/json/tof-trending-hits.json', [QC_finalize_name('tofDigitsQC')], runSpecific=False, prodSpecific=True)
