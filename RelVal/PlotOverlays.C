@@ -240,7 +240,15 @@ void overlay2D(std::vector<TH1*> hVec1, std::vector<std::string> labelVec, TLege
 
   if (legend){
     c.cd(3);
-    legend->Draw();
+    legend->SetTextSize(0.03);
+    legend->SetTextFont(62);
+    legend->Draw("same");
+    gPad->Update();
+    legend->SetX1NDC(0.4);
+    legend->SetY1NDC(0.7);
+    legend->SetX2NDC(0.89);
+    legend->SetY2NDC(0.89);
+    gPad->Modified();
   }
 
   auto savePath = outputDir + "/" + hVec[0]->GetName() + ".png";
