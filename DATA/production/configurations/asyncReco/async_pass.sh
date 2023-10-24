@@ -287,6 +287,12 @@ else
   INPUT_TYPE=CTF
 fi
 
+# enabling time reporting
+if [[ -n $ALIEN_JDL_DPLREPORTPROCESSING ]]; then
+  export DPL_REPORT_PROCESSING=$ALIEN_JDL_DPLREPORTPROCESSING
+fi
+
+# defining whether to keep files
 if [[ -n $ALIEN_JDL_PACKAGES ]]; then # if we have this env variable, it means that we are running on the grid
   # JDL can set the permille to keep; otherwise we use 2
   if [[ ! -z "$ALIEN_JDL_NKEEP" ]]; then export NKEEP=$ALIEN_JDL_NKEEP; else NKEEP=2; fi
