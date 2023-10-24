@@ -35,13 +35,13 @@ CTF_CONFIG+=" --require-free-disk 53687091200 --wait-for-free-disk $CTF_FREE_DIS
 WORKFLOW=
 add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --readout-proxy \"--channel-config \\\"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\\\"\"" "" 0
 add_W o2-trd-datareader "--disable-root-output --pipeline trd-datareader:$TRD_N_READERS"
-add_W o2-trd-kr-clusterer "--meta-output-dir $EPN2EOS_METAFILES_DIR --output-dir $CALIB_DIR --autosave-interval 105000 --pipeline trd-kr-clusterer:8"
+add_W o2-trd-kr-clusterer "--disable-root-input --meta-output-dir $EPN2EOS_METAFILES_DIR --output-dir $CALIB_DIR --autosave-interval 105000 --pipeline trd-kr-clusterer:8"
 if workflow_has_parameter QC && has_detector_qc TRD; then
   add_QC_from_consul "/o2/components/qc/ANY/any/trd-full-qcmn-test" "--local --host epn -b"
 fi
 if workflow_has_parameter CTF; then
   add_W o2-trd-entropy-encoder-workflow "$RANS_OPT --mem-factor ${TRD_ENC_MEMFACT:-1.5} --pipeline trd-entropy-encoder:$TRD_N_ENCODER"
-  add_W o2-ctf-writer-workflow "$CONFIG_CTF"
+  add_W o2-ctf-writer-workflow "$CTF_CONFIG"
 fi
 
 # Finally add the o2-dpl-run workflow manually, allow for either printing the workflow or creating a topology (default)
