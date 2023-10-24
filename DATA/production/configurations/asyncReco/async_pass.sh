@@ -42,12 +42,6 @@ elif [[ $1 != "list.list" && "${1##*.}" == "list" ]]; then
     shift
 fi
 
-if [[ -f list.list ]]; then
-  echo "Processing will be on the following list of files:"
-  cat list.list
-  echo -e "\n"
-fi
-
 # Could need sometimes to iterate just a subset of the input files
 #
 [ -z ${ALIEN_JDL_INPUTFILELIMIT} ] && ALIEN_JDL_INPUTFILELIMIT=($(cat list.list|wc -l))
