@@ -1,2 +1,2 @@
 TRD-noise: "O2PDPSuite" reco,1,1,"SHMSIZE=$((128 << 30)) testing/detectors/TRD/trd-noise.sh"
-TRD-krypton: "O2PDPSuite" reco,40,35,"SHMSIZE=$((128 << 30)) testing/detectors/TRD/trd-kryptona.sh"
+TRD-krypton: "O2PDPSuite" reco,40,35,"SHMSIZE=$((128 << 30)) testing/detectors/TRD/trd-krypton.sh"
