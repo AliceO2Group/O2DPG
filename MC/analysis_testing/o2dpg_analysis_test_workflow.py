@@ -90,9 +90,7 @@ spec.loader.exec_module(o2dpg_analysis_test_utils)
 from o2dpg_analysis_test_utils import *
 
 
-def create_ana_task(name, cmd, output_dir, *, needs=None, shmsegmentsize="--shm-segment-size 2000000000",
-                    aodmemoryratelimit="--aod-memory-rate-limit 500000000",
-                    readers="--readers 1", extraarguments="-b", is_mc=False):
+def create_ana_task(name, cmd, output_dir, *, needs=None, extraarguments="-b", is_mc=False):
     """Quick helper to create analysis task
 
     This creates an analysis task from various arguments
@@ -107,12 +105,6 @@ def create_ana_task(name, cmd, output_dir, *, needs=None, shmsegmentsize="--shm-
     Keyword args (optional):
         needs: tuple, list
             list of other tasks to be run before
-        shmsegmentsize: str
-            O2/DPL argument string for shared mem size
-        aodmemoryratelimit: str
-            O2/DPL argument string for AOD memory rate limit
-        readers: O2/DPL argument string
-            number of readers
         extraarguments: str
             O2/DPL argument string for any other desired arguments to be added to the executed cmd
     Return:
@@ -125,7 +117,7 @@ def create_ana_task(name, cmd, output_dir, *, needs=None, shmsegmentsize="--shm-
     task = createTask(name=full_ana_name(name), cwd=join(output_dir, name), lab=[ANALYSIS_LABEL, name], cpu=1, mem='2000', needs=needs)
     if is_mc:
         task["labels"].append(ANALYSIS_LABEL_ON_MC)
-    task['cmd'] = f"{cmd} {shmsegmentsize} {aodmemoryratelimit} {readers} {extraarguments}"
+    task['cmd'] = f"{cmd} {extraarguments}"
     return task
 
 
@@ -220,7 +212,7 @@ def get_additional_workflows(input_aod):
     return additional_workflows
 
 
-def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, collision_system=None, needs=None, autoset_converters=False, include_disabled_analyses=False, timeout=None):
+def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, collision_system=None, needs=None, autoset_converters=False, include_disabled_analyses=False, timeout=None, add_common_args=None):
     """Add default analyses to user workflow
 
     Args:
@@ -265,12 +257,18 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
             continue
         print(f"INFO: Analysis {ana['name']} uses configuration {configuration}")
 
+        add_common_args_ana = get_common_args_as_string(ana["name"], add_common_args)
+        if not add_common_args_ana:
+            print(f"ERROR: Cannot parse common args for analysis {ana['name']}")
+            continue
+
         for i in additional_workflows:
             if i not in ana["tasks"]:
                 # print("Appending extra task", i, "to analysis", ana["name"], "as it is not there yet and needed for conversion")
                 ana["tasks"].append(i)
         piped_analysis = f" --configuration {configuration} | ".join(ana["tasks"])
         piped_analysis += f" --configuration {configuration} --aod-file {input_aod}"
+        piped_analysis += add_common_args_ana
         if timeout is not None:
             piped_analysis += f" --time-limit {timeout}"
         workflow.append(create_ana_task(ana["name"], piped_analysis, output_dir, needs=needs, is_mc=is_mc))
@@ -330,7 +328,7 @@ def run(args):
         return 1
 
     workflow = []
-    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, autoset_converters=args.autoset_converters, include_disabled_analyses=args.include_disabled, timeout=args.timeout, collision_system=args.collision_system)
+    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, autoset_converters=args.autoset_converters, include_disabled_analyses=args.include_disabled, timeout=args.timeout, collision_system=args.collision_system, add_common_args=args.add_common_args)
     if args.with_qc_upload:
         add_analysis_qc_upload_tasks(workflow, args.period_name, args.run_number, args.pass_name)
     if not workflow:
@@ -356,6 +354,7 @@ def main():
     parser.add_argument("--autoset-converters", dest="autoset_converters", action="store_true", help="Compatibility mode to automatically set the converters for the analysis")
     parser.add_argument("--timeout", type=int, default=None, help="Timeout for analysis tasks in seconds.")
     parser.add_argument("--collision-system", dest="collision_system", help="Set the collision system. If not set, tried to be derived from ALIEN_JDL_LPMInterationType. Fallback to pp")
+    parser.add_argument("--add-common-args", dest="add_common_args", nargs="*", help="Pass additional common arguments per analysis, for instance --add-common-args EMCAL-shm-segment-size 2500000000 will add --shm-segment-size 2500000000 to the EMCAL analysis")
     parser.set_defaults(func=run)
     args = parser.parse_args()
     return(args.func(args))

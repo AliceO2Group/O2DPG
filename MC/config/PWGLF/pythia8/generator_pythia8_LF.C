@@ -23,6 +23,7 @@
 #include <fstream>
 #include "Generators/GeneratorPythia8Param.h"
 #include "Generators/DecayerPythia8Param.h"
+#include <nlohmann/json.hpp>
 #endif
 #include "generator_pythia8_longlived.C"
 
@@ -178,12 +179,12 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
             if (!pythiaObjectSignal.next()) {
               continue;
             }
-            //Check if triggered condition satisfied
+            // Check if triggered condition satisfied
             for (Long_t j = 0; j < pythiaObjectSignal.event.size(); j++) {
               const int& pypid = pythiaObjectSignal.event[j].id();
               const float& pyeta = pythiaObjectSignal.event[j].eta();
               const float& pypt = pythiaObjectSignal.event[j].pT();
-              if (pypid == cfg.pdg && cfg.etaMin < pyeta && pyeta < cfg.etaMax && pypt > cfg.ptMin && pypt < cfg.ptMax) {
+              if (pypid == cfg.mPdg && cfg.mEtaMin < pyeta && pyeta < cfg.mEtaMax && pypt > cfg.mPtMin && pypt < cfg.mPtMax) {
                 LOG(info) << "Found particle " << j << " " << pypid << " with eta " << pyeta << " and pT " << pypt << " in event " << mEventCounter << " after " << nTries << " tries";
                 satisfiesTrigger = true;
                 break;
@@ -204,19 +205,19 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         continue;
       }
       // Do the injection
-      for (int i{0}; i < cfg.nInject; ++i) {
-        const double pt = gRandom->Uniform(cfg.ptMin, cfg.ptMax);
-        const double eta = gRandom->Uniform(cfg.etaMin, cfg.etaMax);
+      for (int i{0}; i < cfg.mNInject; ++i) {
+        const double pt = gRandom->Uniform(cfg.mPtMin, cfg.mPtMax);
+        const double eta = gRandom->Uniform(cfg.mEtaMin, cfg.mEtaMax);
         const double phi = gRandom->Uniform(0, TMath::TwoPi());
         const double px{pt * std::cos(phi)};
         const double py{pt * std::sin(phi)};
         const double pz{pt * std::sinh(eta)};
-        const double et{std::hypot(std::hypot(pt, pz), cfg.mass)};
+        const double et{std::hypot(std::hypot(pt, pz), cfg.mMass)};
 
         Particle particle;
-        particle.id(cfg.pdg);
+        particle.id(cfg.mPdg);
         particle.status(11);
-        particle.m(cfg.mass);
+        particle.m(cfg.mMass);
         particle.px(px);
         particle.py(py);
         particle.pz(pz);
@@ -224,7 +225,7 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         particle.xProd(0.f);
         particle.yProd(0.f);
         particle.zProd(0.f);
-        mPythia.particleData.mayDecay(cfg.pdg, true); // force decay
+        mPythia.particleData.mayDecay(cfg.mPdg, true); // force decay
         mPythia.event.append(particle);
       }
       injectedForThisEvent = true;
@@ -270,16 +271,16 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
       if (mConfigToUse >= 0 && (nConfig - 1) != mConfigToUse) {
         continue;
       }
-      LOGF(info, "Injecting %i particles with PDG %i, pT in [%f, %f]", cfg.nInject, cfg.pdg, cfg.ptMin, cfg.ptMax);
+      LOGF(info, "Injecting %i particles with PDG %i, pT in [%f, %f]", cfg.mNInject, cfg.mPdg, cfg.mPtMin, cfg.mPtMax);
 
-      for (int i{0}; i < cfg.nInject; ++i) {
-        const double pt = gRandom->Uniform(cfg.ptMin, cfg.ptMax);
-        const double eta = gRandom->Uniform(cfg.etaMin, cfg.etaMax);
+      for (int i{0}; i < cfg.mNInject; ++i) {
+        const double pt = gRandom->Uniform(cfg.mPtMin, cfg.mPtMax);
+        const double eta = gRandom->Uniform(cfg.mEtaMin, cfg.mEtaMax);
         const double phi = gRandom->Uniform(0, TMath::TwoPi());
         const double px{pt * std::cos(phi)};
         const double py{pt * std::sin(phi)};
         const double pz{pt * std::sinh(eta)};
-        const double et{std::hypot(std::hypot(pt, pz), cfg.mass)};
+        const double et{std::hypot(std::hypot(pt, pz), cfg.mMass)};
 
         // TParticle::TParticle(Int_t pdg,
         //                      Int_t status,
@@ -288,7 +289,7 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         //                      Double_t px, Double_t py, Double_t pz, Double_t etot,
         //                      Double_t vx, Double_t vy, Double_t vz, Double_t time)
 
-        mParticles.push_back(TParticle(cfg.pdg,
+        mParticles.push_back(TParticle(cfg.mPdg,
                                        MCGenStatusEncoding(1, 1).fullEncoding,
                                        -1, -1,
                                        -1, -1,
@@ -311,65 +312,102 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
   }
 
   struct ConfigContainer {
-    ConfigContainer(int input_pdg = 0, int n = 1, float p = 1, float P = 10) : pdg{input_pdg},
-                                                                               nInject{n},
-                                                                               ptMin{p},
-                                                                               ptMax{P}
+    ConfigContainer(int input_pdg = 0, int n = 1,
+                    float ptMin = 1, float ptMax = 10,
+                    float etaMin = -1, float etaMax = 1) : mPdg{input_pdg},
+                                                           mNInject{n},
+                                                           mPtMin{ptMin},
+                                                           mPtMax{ptMax},
+                                                           mEtaMin{etaMin},
+                                                           mEtaMax{etaMax}
     {
-      mass = GeneratorPythia8LongLivedGun::getMass(pdg);
-      if (mass <= 0) {
-        LOG(fatal) << "Could not find mass for pdg " << pdg;
+      mMass = GeneratorPythia8LongLivedGun::getMass(mPdg);
+      if (mMass <= 0) {
+        LOG(fatal) << "Could not find mass for mPdg " << mPdg;
       }
-      LOGF(info, "ConfigContainer: pdg = %i, nInject = %i, ptMin = %f, ptMax = %f, mass = %f", pdg, nInject, ptMin, ptMax, mass);
+      LOGF(info, "ConfigContainer: mPdg = %i, mNInject = %i, mPtMin = %f, mPtMax = %f, mEtaMin = %f, mEtaMax = %f, mMass = %f",
+           mPdg, mNInject, mPtMin, mPtMax, mEtaMin, mEtaMax, mMass);
     };
+
     ConfigContainer(TObjArray* arr) : ConfigContainer(atoi(arr->At(0)->GetName()),
                                                       atoi(arr->At(1)->GetName()),
                                                       atof(arr->At(2)->GetName()),
-                                                      atof(arr->At(3)->GetName())){};
+                                                      atof(arr->At(3)->GetName()),
+                                                      atof(arr->At(4)->GetName()),
+                                                      atof(arr->At(5)->GetName()))
+    {
+      bool hasGenDecayed = false;
+      for (int i = 0; i < arr->GetEntries(); i++) {
+        const TString n = arr->At(i)->GetName();
+        std::cout << n << std::endl;
+        if (n == "genDecayed") {
+          hasGenDecayed = true;
+          break;
+        }
+      }
+      if (hasGenDecayed) {
+        if (arr->GetEntries() != 7) {
+          LOG(fatal) << "Wrong number of entries in the configuration array, should be 7, is " << arr->GetEntries();
+        }
+      } else {
+        if (arr->GetEntries() != 6) {
+          LOG(fatal) << "Wrong number of entries in the configuration array, should be 6, is " << arr->GetEntries();
+        }
+      }
+    };
+    ConfigContainer(TString line) : ConfigContainer(line.Tokenize(" ")){};
+    ConfigContainer(const nlohmann::json& jsonParams) : ConfigContainer(jsonParams["pdg"],
+                                                                        jsonParams["n"],
+                                                                        jsonParams["ptMin"],
+                                                                        jsonParams["ptMax"],
+                                                                        jsonParams["etaMin"],
+                                                                        jsonParams["etaMax"]){};
 
-    int pdg = 0;
-    int nInject = 1;
-    float ptMin = 1;
-    float ptMax = 10;
-    float etaMin = -1.f;
-    float etaMax = 1.f;
-    double mass = 0.f;
+    // Data Members
+    const int mPdg = 0;
+    const int mNInject = 1;
+    const float mPtMin = 1;
+    const float mPtMax = 10;
+    const float mEtaMin = -1.f;
+    const float mEtaMax = 1.f;
+    double mMass = 0.f;
+
     void print() const
     {
-      LOGF(info, "int pdg = %i", pdg);
-      LOGF(info, "int nInject = %i", nInject);
-      LOGF(info, "float ptMin = %f", ptMin);
-      LOGF(info, "float ptMax = %f", ptMax);
-      LOGF(info, "float etaMin = %f", etaMin);
-      LOGF(info, "float etaMax = %f", etaMax);
-      LOGF(info, "double mass = %f", mass);
+      LOGF(info, "int mPdg = %i", mPdg);
+      LOGF(info, "int mNInject = %i", mNInject);
+      LOGF(info, "float mPtMin = %f", mPtMin);
+      LOGF(info, "float mPtMax = %f", mPtMax);
+      LOGF(info, "float mEtaMin = %f", mEtaMin);
+      LOGF(info, "float mEtaMax = %f", mEtaMax);
+      LOGF(info, "double mMass = %f", mMass);
     }
   };
 
   //__________________________________________________________________
-  ConfigContainer addGun(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10)
+  ConfigContainer addGun(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10, float etaMin = 1, float etaMax = 10)
   {
     if (mUseTriggering) { // If in trigger mode, every particle needs to be generated from pythia
-      return addGunGenDecayed(input_pdg, nInject, ptMin, ptMax);
+      return addGunGenDecayed(input_pdg, nInject, ptMin, ptMax, etaMin, etaMax);
     }
-    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax};
+    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax, etaMin, etaMax};
     mGunConfigs.push_back(cfg);
     return cfg;
   }
 
   //__________________________________________________________________
-  ConfigContainer addGun(ConfigContainer cfg) { return addGun(cfg.pdg, cfg.nInject, cfg.ptMin, cfg.ptMax); }
+  ConfigContainer addGun(ConfigContainer cfg) { return addGun(cfg.mPdg, cfg.mNInject, cfg.mPtMin, cfg.mPtMax, cfg.mEtaMin, cfg.mEtaMax); }
 
   //__________________________________________________________________
-  ConfigContainer addGunGenDecayed(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10)
+  ConfigContainer addGunGenDecayed(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10, float etaMin = 1, float etaMax = 10)
   {
-    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax};
+    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax, etaMin, etaMax};
     mGunConfigsGenDecayed.push_back(cfg);
     return cfg;
   }
 
   //__________________________________________________________________
-  ConfigContainer addGunGenDecayed(ConfigContainer cfg) { return addGunGenDecayed(cfg.pdg, cfg.nInject, cfg.ptMin, cfg.ptMax); }
+  ConfigContainer addGunGenDecayed(ConfigContainer cfg) { return addGunGenDecayed(cfg.mPdg, cfg.mNInject, cfg.mPtMin, cfg.mPtMax, cfg.mEtaMin, cfg.mEtaMax); }
 
   //__________________________________________________________________
   long int getNGuns() const { return mGunConfigs.size() + mGunConfigsGenDecayed.size(); }
@@ -466,7 +504,23 @@ FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/P
   std::ifstream inputFile(configuration.c_str(), ios::in);
   std::vector<GeneratorPythia8LF::ConfigContainer> cfgVec;
   std::vector<GeneratorPythia8LF::ConfigContainer> cfgVecGenDecayed;
-  if (inputFile.is_open()) {
+  if (!inputFile.is_open()) {
+    LOGF(fatal, "Can't open '%s' !", configuration.c_str());
+    return nullptr;
+  }
+  if (TString(configuration.c_str()).EndsWith(".json")) { // read from JSON file
+    nlohmann::json paramfile = nlohmann::json::parse(inputFile);
+    std::cout << "paramfile " << paramfile << std::endl;
+    for (const auto& param : paramfile) {
+      std::cout << param << std::endl;
+      // cfgVecGenDecayed.push_back(GeneratorPythia8LF::ConfigContainer{paramfile[n].template get<int>(), param});
+      if (param["genDecayed"]) {
+        cfgVecGenDecayed.push_back(GeneratorPythia8LF::ConfigContainer{param});
+      } else {
+        cfgVec.push_back(GeneratorPythia8LF::ConfigContainer{param});
+      }
+    }
+  } else {
     std::string l;
     int n = 0;
     while (getline(inputFile, l)) {
@@ -476,20 +530,16 @@ FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/P
       if (line.IsNull() || line.IsWhitespace()) {
         continue;
       }
-
       if (line.BeginsWith("#")) {
         std::cout << "Skipping\n";
         continue;
       }
       if (line.Contains("genDecayed")) {
-        cfgVecGenDecayed.push_back(GeneratorPythia8LF::ConfigContainer{line.Tokenize(" ")});
+        cfgVecGenDecayed.push_back(GeneratorPythia8LF::ConfigContainer{line});
       } else {
-        cfgVec.push_back(GeneratorPythia8LF::ConfigContainer{line.Tokenize(" ")});
+        cfgVec.push_back(GeneratorPythia8LF::ConfigContainer{line});
       }
     }
-  } else {
-    LOGF(fatal, "Can't open '%s' !", configuration.c_str());
-    return nullptr;
   }
   return generateLF(cfgVec, cfgVecGenDecayed, injectOnePDGPerEvent, gapBetweenInjection, useTrigger, pythiaCfgMb, pythiaCfgSignal);
 }
@@ -505,7 +555,7 @@ FairGenerator* generateLFTriggered(std::string configuration = "${O2DPG_ROOT}/MC
 }
 
 ///___________________________________________________________
-void generator_pythia8_LF(bool testInj = true, bool testTrg = false)
+void generator_pythia8_LF(bool testInj = true, bool testTrg = false, const char* particleListFile = "cfg.json")
 {
   LOG(info) << "Compiled correctly!";
   if (!testInj && !testTrg) {
@@ -514,7 +564,7 @@ void generator_pythia8_LF(bool testInj = true, bool testTrg = false)
   // Injected mode
   if (testInj) {
     LOG(info) << "Testing the injected mode";
-    auto* gen = static_cast<GeneratorPythia8LF*>(generateLF("/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/strangeparticlelist.gun"));
+    auto* gen = static_cast<GeneratorPythia8LF*>(generateLF(particleListFile));
     gen->setVerbose();
     gen->Print();
     gen->print();
@@ -526,10 +576,10 @@ void generator_pythia8_LF(bool testInj = true, bool testTrg = false)
   // Triggered mode
   if (testTrg) {
     LOG(info) << "Testing the triggered mode";
-    GeneratorPythia8LF* gen = static_cast<GeneratorPythia8LF*>(generateLFTriggered("/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/strangeparticlelist.gun",
+    GeneratorPythia8LF* gen = static_cast<GeneratorPythia8LF*>(generateLFTriggered(particleListFile,
                                                                                    /*gapBetweenInjection=*/0,
-                                                                                   /*pythiaCfgMb=*/"/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/inel136tev.cfg",
-                                                                                   /*pythiaCfgSignal=*/"/home/njacazio/alice/O2DPG/MC/config/PWGLF/pythia8/generator/inel136tev.cfg"));
+                                                                                   /*pythiaCfgMb=*/"inel136tev.cfg",
+                                                                                   /*pythiaCfgSignal=*/"inel136tev.cfg"));
     gen->setVerbose();
     gen->Print();
     gen->print();
