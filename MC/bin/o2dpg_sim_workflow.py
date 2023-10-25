@@ -83,7 +83,6 @@ parser.add_argument('-confKeyBkg',help='embedding background configuration key v
 parser.add_argument('-colBkg',help='embedding background collision system', default='PbPb')
 
 parser.add_argument('-e',help='simengine', default='TGeant4')
-parser.add_argument('--noGeant',help='prohibits any Geant transport/physics', action='store_true')
 parser.add_argument('-tf',help='number of timeframes', default=2)
 parser.add_argument('--production-offset',help='Offset determining bunch-crossing '
                      + ' range within a (GRID) production. This number sets first orbit to '
@@ -444,8 +443,6 @@ if doembedding:
 
         if not "all" in activeDetectors:
            BKGtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
-        if args.noGeant:
-           BKGtask['cmd'] += ' --noGeant'
 
         workflow['stages'].append(BKGtask)
 
