@@ -680,8 +680,6 @@ for tf in range(1, NTIMEFRAMES + 1):
                   + ' -o '      + signalprefix   + ' '    + embeddinto                                \
                   + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)   \
                   + ' --vertexMode kCCDB'
-   if args.noGeant:
-       SGNtask['cmd'] += ' --noGeant'
    if not "all" in activeDetectors:
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
    if args.pregenCollContext == True:
