@@ -31,7 +31,7 @@ public:
   ///  Destructor
   ~GeneratorPythia8GapTriggeredHF() = default;
 
-  Bool_t Init() override
+  bool Init() override
   {
     addSubGenerator(0, "Minimum bias");
     addSubGenerator(4, "Charm injected");
