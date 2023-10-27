@@ -89,7 +89,7 @@ NSIGEVENTS=${NSIGEVENTS:-22}
 # THIS NEEDS TO COME FROM OUTSIDE
 # echo "$" | awk -F' -- ' '{print $1, $3}'
 
-baseargs="-tf ${NTIMEFRAMES} --split-id ${ALIEN_JDL_SPLITID:-0} --prod-split ${ALIEN_JDL_PRODSPLIT:-100} --run-number ${RUNNUMBER} -eCM 900 -col pp"
+baseargs="-tf ${NTIMEFRAMES} --split-id ${ALIEN_JDL_SPLITID:-1} --prod-split ${ALIEN_JDL_PRODSPLIT:-100} --run-number ${RUNNUMBER} -eCM 900 -col pp"
 
 # THIS NEEDS TO COME FROM OUTSIDE
 remainingargs="-gen pythia8 -proc cdiff -ns ${NSIGEVENTS}                                                                                                                 \
