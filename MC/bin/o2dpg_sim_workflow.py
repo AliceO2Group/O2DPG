@@ -1249,7 +1249,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json')
      addQCPerTF(taskName='ITSTPCmatchQC',
                 needs=[ITSTPCMATCHtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "TPC,ITS-TPC"',
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS,TPC,ITS-TPC" ',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/ITSTPCmatchedTracks_direct_MC.json')
      if isActive('TOF'):
         addQCPerTF(taskName='TOFMatchQC',
@@ -1271,6 +1271,24 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[ITSRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json')
+
+     ### CPV
+     if isActive('CPV'):
+        addQCPerTF(taskName='CPVDigitsQC',
+                   needs=[getDigiTaskName("CPV")],
+                   readerCommand='o2-cpv-digit-reader-workflow',
+                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/cpv-digits-task.json')
+        addQCPerTF(taskName='CPVClustersQC',
+                   needs=[CPVRECOtask['name']],
+                   readerCommand='o2-cpv-cluster-reader-workflow',
+                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/cpv-clusters-task.json')
+
+     ### PHS
+     if isActive('PHS'):
+        addQCPerTF(taskName='PHSCellsClustersQC',
+                   needs=[PHSRECOtask['name']],
+                   readerCommand='o2-phos-reco-workflow --input-type cells --output-type clusters --disable-mc --disable-root-output',
+                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/phs-cells-clusters-task.json')
 
    #secondary vertexer
    svfinder_threads = ' --threads 1 '

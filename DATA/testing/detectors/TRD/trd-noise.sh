@@ -3,6 +3,7 @@
 # Make common arguments and helper functions such as add_W available
 source common/setenv.sh
 source common/getCommonArgs.sh
+source common/gen_topo_helper_functions.sh
 
 
 # Define input data required by DPL (in this case all RAWDATA from TRD)
@@ -27,7 +28,7 @@ add_W o2-calibration-trd-workflow "--noise --calib-dds-collection-index 0"
 add_W o2-calibration-ccdb-populator-workflow "--ccdb-path $TRD_CCDB_PATH"
 
 # Finally add the o2-dpl-run workflow manually, allow for either printing the workflow or creating a topology (default)
-WORKFLOW+="o2-dpl-run $ARGS_ALL"
+WORKFLOW+="o2-dpl-run $GLOBALDPLOPT $ARGS_ALL"
 [[ $WORKFLOWMODE != "print" ]] && WORKFLOW+=" --${WORKFLOWMODE} ${WORKFLOWMODE_FILE:-}"
 [[ $WORKFLOWMODE == "print" || "${PRINT_WORKFLOW:-}" == "1" ]] && echo "#Workflow command:\n\n${WORKFLOW}\n" | sed -e "s/\\\\n/\n/g" -e"s/| */| \\\\\n/g" | eval cat $( [[ $WORKFLOWMODE == "dds" ]] && echo '1>&2')
 if [[ $WORKFLOWMODE != "print" ]]; then eval $WORKFLOW; else true; fi

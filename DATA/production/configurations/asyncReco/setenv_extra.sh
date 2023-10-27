@@ -206,13 +206,24 @@ if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]] || [[ -z $RUN_BFIELD ]]; then
   export RUN_IR=`cat IR.txt`
   export RUN_DURATION=`cat Duration.txt`
   export RUN_BFIELD=`cat BField.txt`
+  export RUN_DETECTOR_LIST=`cat DetList.txt`
 fi
+echo "DETECTOR LIST for current run ($RUNNUMBER) = $RUN_DETECTOR_LIST"
+echo "DURATION for current run ($RUNNUMBER) = $RUN_DURATION"
+echo "B FIELD for current run ($RUNNUMBER) = $RUN_BFIELD"
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
 if (( $(echo "$RUN_IR <= 0" | bc -l) )); then
   echo "Changing run IR to 1 Hz, because $RUN_IR makes no sense"
   RUN_IR=1
 fi
-echo "Duration of current run ($RUNNUMBER) = $RUN_DURATION"
+
+# Let's check if ZDC is in the detector list; this is needed for TPC dist correction scaling in PbPb 2023
+SCALE_WITH_ZDC=1
+SCALE_WITH_FT0=1
+isZDCinDataTaking=`echo $RUN_DETECTOR_LIST | grep ZDC`
+isFT0inDataTaking=`echo $RUN_DETECTOR_LIST | grep FT0`
+[[ -z $isZDCinDataTaking ]] && SCALE_WITH_ZDC=0
+[[ -z $isFT0inDataTaking ]] && SCALE_WITH_FT0=0
 
 # For runs shorter than 10 minutes we have only a single slot.
 # In that case we have to adopt the slot length in order to
@@ -315,7 +326,16 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
 
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]]; then
     unset TPC_CORR_SCALING
-    export TPC_CORR_SCALING="--ctp-lumi-factor 2.414 --require-ctp-lumi"
+    export TPC_CORR_SCALING=" --ctp-lumi-factor 2.414 --require-ctp-lumi"
+    if [[ $SCALE_WITH_ZDC == 0 ]]; then
+      # scaling with FT0
+      if [[ $SCALE_WITH_FT0 == 1 ]]; then
+	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --ctp-lumi-factor 135. --require-ctp-lumi "
+      else
+	echo "Neither ZDC nor FT0 are in the run, and this is from 2023 PbPb: we cannot scale TPC ditortion corrections, aborting..."
+	return 1
+      fi
+    fi
   fi
 
   if [[ $PERIOD != @(LHC22c|LHC22d|LHC22e|JUN|LHC22f) ]] ; then
@@ -343,7 +363,7 @@ export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysEr
 # ad-hoc options for ITS reco workflow
 EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.trackletsPerClusterLimit=5.;ITSCATrackerParam.cellsPerClusterLimit=5.;ITSVertexerParam.clusterContributorsCut=16;"
+  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.trackletsPerClusterLimit=5.;ITSCATrackerParam.cellsPerClusterLimit=5.;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;"
 elif [[ $BEAMTYPE == "pp" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
 fi
@@ -388,14 +408,14 @@ fi
 
 
 # secondary vertexing
-export SVTX="svertexer.checkV0Hypothesis=false;svertexer.checkCascadeHypothesis=false"
-# strangeness tracking
-export STRK=""
+if [[ $ALIEN_JDL_DISABLESTRTRACKING == 1 ]]; then
+  export STRTRACKING=" --disable-strangeness-tracker "
+fi
+if [[ $ALIEN_JDL_DISABLECASCADES == 1 ]]; then
+  export ARGS_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=" --disable-cascade-finder  "
+fi
 
 export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow+=";$PVERTEXER;$VDRIFTPARAMOPTION;"
-export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=";$SVTX"
-export CONFIG_EXTRA_PROCESS_o2_strangeness_tracking_workflow+=";$STRK"
-
 
 export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";$ITSEXTRAERR;$ITSTPCMATCH;$TRACKTUNETPC;$VDRIFTPARAMOPTION;"
 [[ ! -z "${TPCITSTIMEBIAS}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";tpcitsMatch.globalTimeBiasMUS=$TPCITSTIMEBIAS;"
@@ -466,8 +486,8 @@ if [[ $ADD_CALIB == "1" ]]; then
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
-    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="scdcalib.maxTracksPerCalibSlot=35000000;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=5;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=90"
-    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --process-seeds --enable-itsonly --tracking-sources ITS,TPC,ITS-TPC"
+    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="scdcalib.maxTracksPerCalibSlot=35000000;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=6;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=90"
+    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --process-seeds --enable-itsonly"
     # ad-hoc settings for TPC residual extraction
     export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="$ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator --output-type trackParams,unbinnedResid"
     if [[ $ALIEN_JDL_DEBUGRESIDUALEXTRACTION == "1" ]]; then
@@ -488,6 +508,7 @@ if [[ $ADD_CALIB == "1" ]]; then
     export SVERTEXING_SOURCES=none # disable secondary vertexing
   fi
   if [[ $ALIEN_JDL_DOTRDGAINCALIB == 1 ]]; then
+    export CONFIG_EXTRA_PROCESS_o2_calibration_trd_workflow="TRDCalibParams.minEntriesChamberGainCalib=999999999;TRDCalibParams.minEntriesTotalGainCalib=10000;TRDCalibParams.nTrackletsMinGainCalib=4"
     export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow="$ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow --enable-root-output"
     export CALIB_TRD_GAIN=1
   fi
@@ -506,6 +527,12 @@ if [[ $ALIEN_JDL_EXTRACTCURRENTS == 1 ]]; then
     export ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow--process-3D-currents --nSlicesTF 1"
   fi
   has_detector_reco TPC && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-integrate-cluster-workflow"
+fi
+
+# extra workflows in case we want to process the currents for time series
+if [[ $ALIEN_JDL_EXTRACTTIMESERIES == 1 ]]; then
+  if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
+  has_detector_reco TPC && has_detector_reco ITS && has_detector_reco FT0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-time-series-workflow"
 fi
 
 # Enabling AOD

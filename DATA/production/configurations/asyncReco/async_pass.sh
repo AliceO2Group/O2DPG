@@ -42,6 +42,12 @@ elif [[ $1 != "list.list" && "${1##*.}" == "list" ]]; then
     shift
 fi
 
+# Could need sometimes to iterate just a subset of the input files
+#
+[ -z ${ALIEN_JDL_INPUTFILELIMIT} ] && ALIEN_JDL_INPUTFILELIMIT=($(cat list.list|wc -l))
+head -${ALIEN_JDL_INPUTFILELIMIT} list.list > list.listtmp && mv list.listtmp list.list
+echo "Will iterate ${ALIEN_JDL_INPUTFILELIMIT} input files"
+
 if [[ -f list.list ]]; then
   echo "Processing will be on the following list of files:"
   cat list.list
@@ -287,6 +293,12 @@ else
   INPUT_TYPE=CTF
 fi
 
+# enabling time reporting
+if [[ -n $ALIEN_JDL_DPLREPORTPROCESSING ]]; then
+  export DPL_REPORT_PROCESSING=$ALIEN_JDL_DPLREPORTPROCESSING
+fi
+
+# defining whether to keep files
 if [[ -n $ALIEN_JDL_PACKAGES ]]; then # if we have this env variable, it means that we are running on the grid
   # JDL can set the permille to keep; otherwise we use 2
   if [[ ! -z "$ALIEN_JDL_NKEEP" ]]; then export NKEEP=$ALIEN_JDL_NKEEP; else NKEEP=2; fi
@@ -394,7 +406,7 @@ else
 	export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu # sets the multiplicities to optimized defaults for this configuration (grid)
 	export SHMSIZE=16000000000
       else # PbPb
-	export TIMEFRAME_RATE_LIMIT=3
+	export TIMEFRAME_RATE_LIMIT=2
 	export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu
 	export SHMSIZE=16000000000
       fi
