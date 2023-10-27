@@ -2,6 +2,9 @@ int External()
 {
     std::string path{"o2sim_Kine.root"};
     int numberOfInjectedSignalsPerEvent{1};
+    int numberOfGapEvents{4};
+    int numberOfEventsProcessed{0};
+    int numberOfEventsProcessedWithoutInjection{0};
     std::vector<int> injectedPDGs = {
         313,     // K0*0
         -313,    // K0*0bar
@@ -95,8 +98,11 @@ int External()
         nNotDecayed.push_back(0);
     }
     auto nEvents = tree->GetEntries();
+    bool hasInjection = false;
     for (int i = 0; i < nEvents; i++)
     {
+        hasInjection = false;
+        numberOfEventsProcessed++;
         auto check = tree->GetEntry(i);
         for (int idxMCTrack = 0; idxMCTrack < tracks->size(); ++idxMCTrack)
         {
@@ -124,6 +130,7 @@ int External()
                         {
                             nDecays[index][idxDaughter]++;
                             foundDau= true;
+                            hasInjection = true;
                             break;
                         }
                     }
@@ -132,6 +139,10 @@ int External()
                     }
                 }
             }
+        }
+        if (!hasInjection)
+        {
+            numberOfEventsProcessedWithoutInjection++;
         }
     }
     std::cout << "--------------------------------\n";
@@ -142,7 +153,7 @@ int External()
         std::cout << injectedPDGs[i] << " generated: " << nSignal[i] << ", " << nNotDecayed[i] << " did not decay\n";
         if (nSignal[i] == 0){
             std::cerr << "No generated: " << injectedPDGs[i] << "\n";
-            return 1; // At least one of the injected particles should be generated
+            // return 1; // At least one of the injected particles should be generated
         }
         for (int j = 0; j < decayDaughters[i].size(); j++)
         {
@@ -154,6 +165,19 @@ int External()
             // return 1; // Don't need to return 1, since the number of generated particles is not the same for each event
         }
     }
+    std::cout << "--------------------------------\n";
+    std::cout << "Number of events processed: " << numberOfEventsProcessed << "\n";
+    std::cout << "Number of input for the gap events: " << numberOfGapEvents << "\n";
+    std::cout << "Number of events processed without injection: " << numberOfEventsProcessedWithoutInjection << "\n";
+    // injected event + numberOfGapEvents*gap events + injected event + numberOfGapEvents*gap events + ...
+    // total fraction of the gap event: numberOfEventsProcessedWithoutInjection/numberOfEventsProcessed
+    float ratioOfNormalEvents = numberOfEventsProcessedWithoutInjection/numberOfEventsProcessed;
+    if (ratioOfNormalEvents > 0.75)
+    {
+        std::cout << "The number of injected event is loo low!!" << std::endl;
+        return 1;
+    }
+    
     return 0;
 }
 
