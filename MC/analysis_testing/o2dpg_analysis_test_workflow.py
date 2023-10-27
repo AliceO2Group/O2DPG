@@ -211,7 +211,7 @@ def get_additional_workflows(input_aod):
                 additional_workflows.append("o2-analysis-zdc-converter")
             if not found_O2bc_001:
                 additional_workflows.append("o2-analysis-bc-converter")
-            if found_O2trackextra_001:
+            if not found_O2trackextra_001:
                 additional_workflows.append("o2-analysis-tracks-extra-converter")
             break
     return additional_workflows
