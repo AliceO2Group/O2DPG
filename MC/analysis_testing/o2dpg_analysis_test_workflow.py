@@ -203,7 +203,7 @@ def get_additional_workflows(input_aod):
                     found_O2zdc_001 = True
                 if "O2bc_001" in j.GetName():
                     found_O2bc_001 = True
-                if "O2trackextra" in j.GetName():
+                if "O2trackextra_001" in j.GetName():
                     found_O2trackextra_001 = True 
             if not found_O2collision_001:
                 additional_workflows.append("o2-analysis-collision-converter --doNotSwap")
