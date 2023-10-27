@@ -189,6 +189,7 @@ def get_additional_workflows(input_aod):
         found_O2collision_001 = False
         found_O2zdc_001 = False
         found_O2bc_001 = False
+        found_O2trackextra_001 = False
         for i in froot.GetListOfKeys():
             if "DF_" not in i.GetName():
                 continue
@@ -202,12 +203,16 @@ def get_additional_workflows(input_aod):
                     found_O2zdc_001 = True
                 if "O2bc_001" in j.GetName():
                     found_O2bc_001 = True
+                if "O2trackextra_001" in j.GetName():
+                    found_O2trackextra_001 = True 
             if not found_O2collision_001:
                 additional_workflows.append("o2-analysis-collision-converter --doNotSwap")
             if not found_O2zdc_001:
                 additional_workflows.append("o2-analysis-zdc-converter")
             if not found_O2bc_001:
                 additional_workflows.append("o2-analysis-bc-converter")
+            if not found_O2trackextra_001:
+                additional_workflows.append("o2-analysis-tracks-extra-converter")
             break
     return additional_workflows
 
