@@ -1,22 +1,4 @@
 {
-    "K(892)0" : {
-        "pdg": 313,
-        "n": 1,
-        "ptMin": 0.0,
-        "ptMax": 20,
-        "etaMin": -1.2,
-        "etaMax": 1.2,
-        "genDecayed": true
-    },
-    "anti-K(892)0" : {
-        "pdg": -313,
-        "n": 1,
-        "ptMin": 0.0,
-        "ptMax": 20,
-        "etaMin": -1.2,
-        "etaMax": 1.2,
-        "genDecayed": true
-    },
     "K(892)+" : {
         "pdg": 323,
         "n": 1,
@@ -28,15 +10,6 @@
     },
     "K(892)-" : {
         "pdg": -323,
-        "n": 1,
-        "ptMin": 0.0,
-        "ptMax": 20,
-        "etaMin": -1.2,
-        "etaMax": 1.2,
-        "genDecayed": true
-    },
-    "phi(1020)" : {
-        "pdg": 333,
         "n": 1,
         "ptMin": 0.0,
         "ptMax": 20,
@@ -163,6 +136,42 @@
     },
     "K1(1270)-": {
         "pdg": -10323,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "Delta++" : {
+        "pdg": 2224,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "anti-Delta++" : {
+        "pdg": -2224,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "Delta0" : {
+        "pdg": 2114,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "anti-Delta0" : {
+        "pdg": -2114,
         "n": 1,
         "ptMin": 0.0,
         "ptMax": 20,
