@@ -1366,6 +1366,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    if args.no_strangeness_tracking:
       AODtask['cmd'] += ' --disable-strangeness-tracking'
 
+   # Enable CTP readout replay for triggered detectors (EMCAL, HMPID, PHOS/CPV, TRD)
+   # Needed untill triggers are supported in CTP simulation
+   AODtask['cmd'] += ' --ctpreadout-create 1'
+
    workflow['stages'].append(AODtask)
 
    # AOD merging / combination step (as individual stages) --> for the moment deactivated in favor or more stable global merging
