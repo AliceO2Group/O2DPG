@@ -24,7 +24,11 @@ ARGS_FILES="NameConf.mDirGRP=/home/epn/odc/files/;NameConf.mDirGeom=/home/epn/od
 
 QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-krypton-qcmn"
 
+WRITER_TYPE="--writer-type ${WRITER_TYPE} --meta-output-dir $EPN2EOS_METAFILES_DIR --output-dir $CALIB_DIR"
 
+if [[ ${TPC_KRYPTON_NO_WRITEOUT:-} == 1 ]]; then
+	WRITER_TYPE="--writer-type none"
+fi
 
 
 o2-dpl-raw-proxy $ARGS_ALL \
@@ -36,11 +40,9 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --remove-duplicates \
     --pipeline tpc-raw-to-digits-0:12 \
     | o2-tpc-krypton-clusterer $ARGS_ALL \
+    ${WRITER_TYPE} \
     --lanes $NLANES \
     --configKeyValues "$ARGS_FILES" \
     --configFile="/home/wiechula/processData/inputFilesTracking/krypton/krBoxCluster.largeBox.cuts.krMap.ini" \
-    --writer-type EPN \
-    --meta-output-dir $EPN2EOS_METAFILES_DIR \
-    --output-dir $CALIB_DIR \
     | o2-qc $ARGS_ALL --config $QC_CONFIG --local --host localhost \
     | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE} ${GLOBALDPLOPT}
