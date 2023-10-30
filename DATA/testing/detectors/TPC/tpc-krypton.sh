@@ -24,7 +24,7 @@ ARGS_FILES="NameConf.mDirGRP=/home/epn/odc/files/;NameConf.mDirGeom=/home/epn/od
 
 QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-krypton-qcmn"
 
-WRITER_TYPE="--writer-type ${WRITER_TYPE} --meta-output-dir $EPN2EOS_METAFILES_DIR --output-dir $CALIB_DIR"
+WRITER_TYPE="--writer-type EPN --meta-output-dir $EPN2EOS_METAFILES_DIR --output-dir $CALIB_DIR"
 
 if [[ ${TPC_KRYPTON_NO_WRITEOUT:-} == 1 ]]; then
 	WRITER_TYPE="--writer-type none"
@@ -38,7 +38,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --input-spec "$CALIB_INSPEC"  \
     --configKeyValues "$ARGS_FILES" \
     --remove-duplicates \
-    --pipeline tpc-raw-to-digits-0:12 \
+    --pipeline tpc-raw-to-digits-0:20 \
     | o2-tpc-krypton-clusterer $ARGS_ALL \
     ${WRITER_TYPE} \
     --lanes $NLANES \
