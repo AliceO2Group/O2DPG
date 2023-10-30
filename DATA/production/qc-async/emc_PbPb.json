@@ -87,7 +87,7 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "emcal-triggers:EMC/CELLSTRGR;ctp-digits:CTP/DIGITS"
+          "query": "emcal-triggers:EMC/CELLSTRGR/0;ctp-digits:CTP/DIGITS"
         },
         "taskParameters": {
           "AliasMB" : "CMTVXTSC"
