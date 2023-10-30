@@ -282,7 +282,7 @@ def main():
     args = parser.parse_args()
 
     # split id should not be larger than production id
-    assert(args.split_id < args.prod_split)
+    assert(args.split_id <= args.prod_split)
 
     # make a CCDB accessor object
     ccdbreader = CCDBAccessor(args.ccdb_url)
@@ -295,7 +295,7 @@ def main():
 
     # determine timestamp, and production offset for the final
     # MC job to run
-    timestamp, prod_offset = determine_timestamp(GLOparams["SOR"], GLOparams["EOR"], [args.split_id, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
+    timestamp, prod_offset = determine_timestamp(GLOparams["SOR"], GLOparams["EOR"], [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
     # this is anchored to
     print ("Determined start-of-run to be: ", GLOparams["SOR"])
     print ("Determined timestamp to be : ", timestamp)
