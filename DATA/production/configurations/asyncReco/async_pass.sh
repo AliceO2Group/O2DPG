@@ -409,6 +409,7 @@ else
 	export TIMEFRAME_RATE_LIMIT=2
 	export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu
 	export SHMSIZE=16000000000
+	export SVERTEX_THREADS=5
       fi
     else
       export OPTIMIZED_PARALLEL_ASYNC=pp_64cpu # to use EPNs with full NUMA domain but without GPUs
