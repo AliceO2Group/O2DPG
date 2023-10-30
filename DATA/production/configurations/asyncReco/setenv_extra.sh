@@ -21,6 +21,12 @@ else
     # removing MID for these runs: it was noisy and therefore declared bad, and makes the reco crash
     export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
   fi
+  # list of detectors to possibly exclude
+  if [[ -n $ALIEN_JDL_DETECTORSEXCLUDE ]]; then
+    echo "ALIEN_JDL_DETECTORSEXCLUDE = $ALIEN_JDL_DETECTORSEXCLUDE"
+    export DETECTORS_EXCLUDE=$ALIEN_JDL_DETECTORSEXCLUDE  # will be used in the async_pass.sh if we run in split mode
+    export WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE
+  fi
 fi
 
 # ad-hoc settings for CTF reader: we are on the grid, we read the files remotely
