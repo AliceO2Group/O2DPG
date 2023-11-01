@@ -42,9 +42,18 @@
           "nThreads": "1",
 	  "nBCbins" : "103",
 	  "dicttimestamp" : "0",
-	  "geomPath" : "o2sim_geometry-aligned.root",
-          "publishDetailedSummary": "0",
+          "publishDetailedSummary": "1",
 	  "publishSummary1D": "0"
+        },
+	"grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         }
       },
       "ITSTracks": {
@@ -69,7 +78,8 @@
           "NtracksMAX"  : "5000",
           "doTTree": "0",
 	  "nBCbins" : "103",
-	  "dicttimestamp" : 0
+	  "dicttimestamp" : 0,
+	  "doNorm": "1"
         }
       }
     },

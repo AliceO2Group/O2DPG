@@ -23,24 +23,35 @@ else
   [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=$HOME/gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
   mkdir -p $HOME/gen_topo
 fi
-[[ -z "$GEN_TOPO_ODC_EPN_TOPO_ARGS" ]] && export GEN_TOPO_ODC_EPN_TOPO_ARGS="--recozone online --calibzone calib" # Arguments to pass to odc-epn-topo command
 [[ -z "$GEN_TOPO_EPN_CCDB_SERVER" ]] && export GEN_TOPO_EPN_CCDB_SERVER="http://127.0.0.1:8084" # CCDB server to use
 if [[ "0$GEN_TOPO_ONTHEFLY" == "01" ]]; then export SHM_MANAGER_SHMID=1 ;fi
 
-#Temporary hacks
+# Command for topology merging
+if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_CMD" ]]; then
+  export GEN_TOPO_ODC_EPN_TOPO_CMD='env - PYTHONPATH+=/usr/local/lib/python3.9/site-packages:/usr/local/lib64/python3.9/site-packages /usr/local/bin/epn-topo-merger'
+fi
+
+# Command for postprocessing of topology generation after topology caching
+if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD" ]]; then
+  export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD='env - PYTHONPATH+=/usr/local/lib/python3.9/site-packages:/usr/local/lib64/python3.9/site-packages /usr/local/bin/epn-topo-alloc'
+fi
+
+# Extra arguments for topology merger
+if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS" ]]; then
+  if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
+    export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS="--recozone staging-mi50 --reco100zone staging-mi100 --calibzone calib"
+  else
+    export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS="--recozone online-mi50 --reco100zone online-mi100 --calibzone calib"
+  fi
+fi
+if [[ -z "$GEN_TOPO_MI100_NODES" ]]; then export GEN_TOPO_MI100_NODES=-1; fi
 
 # GEN_TOPO_RUN_HOME is a debug setting used in some tests. This is not needed for online running.
 if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
   [[ "0$GEN_TOPO_RUN_HOME_TEST" != "01" ]] && [[ $WORKFLOWMODE != "print" ]] && { echo "ERROR: GEN_TOPO_RUN_HOME is only supported with WORKFLOWMODE=print!" 1>&2; exit 1; }
 else
   if [ "0$GEN_TOPO_ONTHEFLY" == "01" ]; then
-    # In case we run the on the fly generation on the EPN, we define which odc-epn-topo binary to use.
-    # Then we purge the modules, since the topology generation will load the O2PDPSuite with the O2 version that shall run, and that includes ODC.
-    # If there is already something of ODC or O2PDPSuite in the environment, we should remove it to avoid collisions.
-    # We set the odc-epn-topo command to be used explicitly though.
-    # Note this happens only in case of on the fly generation when we run online, in case of tests this is not needed.
-    export GEN_TOPO_ODC_EPN_TOPO_CMD=`which odc-epn-topo`
-    [[ -z $GEN_TOPO_ODC_EPN_TOPO_CMD ]] && { echo "ERROR: no odc-epn-topo in the path" 1>&2; exit 1; }
+    # We purge the modules, since the topology generation will load the O2PDPSuite with the O2 version that shall run, and that includes ODC.
     module purge &> /dev/null
   fi
 fi

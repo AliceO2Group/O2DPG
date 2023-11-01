@@ -10,7 +10,7 @@
 # (using the "needs" variable and doing a "merge" operation with the original workflow)
 
 # to be eventually given externally
-testanalysis=$1 # Efficiency, EventTrackQA, MCHistograms, Validation, PIDTOF, PIDTPC, WeakDecayTutorial
+ # Efficiency, EventTrackQA, MCHistograms, Validation, PIDTOF, PIDTPC, WeakDecayTutorial
 
 # find out number of timeframes
 NTF=$(find ./ -name "tf*" -type d | wc | awk '//{print $1}')
@@ -21,13 +21,66 @@ NTF=$(find ./ -name "tf*" -type d | wc | awk '//{print $1}')
 # RC1=$?
 # echo "EXIT 1: $RC1"
 
-# run requested analysis
-$O2DPG_ROOT/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt Analysis_${testanalysis}$ --rerun-from Analysis_${testanalysis}$
-RC2=$?
-echo "EXIT 2: $RC2"
+include_disabled=
+testanalysis=
+aod=
+add_common_args=
 
-RC=0
-let RC=RC+RC1
-let RC=RC+RC2
+if [[ "${#}" == "1" ]] ; then
+    # make it backward-compatible
+    aod=$(find . -maxdepth 1 -type f -name "AO2D.root")
+    testanalysis=${1}
+else
+    while [[ $# -gt 0 ]]; do
+        key="$1"
 
+        case $key in
+            --include-disabled)
+                include_disabled=1
+                shift
+                ;;
+            --aod)
+                aod=${2}
+                shift
+                shift
+                ;;
+            --analysis)
+                testanalysis=${2}
+                shift
+                shift
+                ;;
+            --add-common-args)
+                add_common_args=" ${2} ${3} "
+                shift
+                shift
+                shift
+                ;;
+            *)
+                echo "ERROR: Unknown argument ${1}"
+                exit 1
+                ;;
+        esac
+    done
+fi
+
+# basic checks
+[[ "${testanalysis}" == "" ]] && { echo "ERROR: No analysis specified to be run" ; exit 1 ; }
+[[ "${aod}" == "" ]] && { echo "ERROR: No AOD found to be analysed" ; exit 1 ; }
+[[ "${add_common_args}" != "" ]] && add_common_args="--add-common-args ${add_common_args}"
+
+# check if enabled
+enabled=$($O2DPG_ROOT/MC/analysis_testing/o2dpg_analysis_test_config.py check -t ${testanalysis} --status)
+[[ "${enabled}" == "UNKNOWN" ]] && { echo "ERROR: Analysis ${testanalysis} unknown" ; exit 1 ; }
+[[ "${enabled}" == "DISABLED" && "${include_disabled}" == "" ]] && { echo "WARNING: Analysis ${testanalysis} is disabled" ; exit 0 ; }
+
+mkdir Analysis 2>/dev/null
+include_disabled=${include_disabled:+--include-disabled}
+workflow_path="Analysis/workflow_analysis_test_${testanalysis}.json"
+rm ${workflow_path} 2>/dev/null
+$O2DPG_ROOT/MC/analysis_testing/o2dpg_analysis_test_workflow.py --is-mc -f ${aod} -o ${workflow_path} --only-analyses ${testanalysis} ${include_disabled} ${add_common_args}
+[[ ! -f "${workflow_path}" ]] && { echo "Could not construct workflow for analysis ${testanalysis}" ; exit 1 ; }
+$O2DPG_ROOT/MC/bin/o2_dpg_workflow_runner.py -f ${workflow_path} -tt Analysis_${testanalysis}$ --rerun-from Analysis_${testanalysis}$
+
+RC=$?
+echo "EXIT with: $RC"
 exit ${RC}

@@ -1,8 +1,4 @@
 #!/bin/bash
 
-if [ "0$O2_ROOT" == "0" ]; then
-    echo O2 environment not loaded 1>&2
-    exit 1
-fi
-
-source $O2_ROOT/prodtests/full-system-test/workflow-setup.sh || { echo "workflow-setup.sh failed" 1>&2 && exit 1; }
+# This file is here until the references to it in O2 have been removed.
+# The content has been moved to setenv.sh and gen_topo_helper_functions.sh

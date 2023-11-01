@@ -108,8 +108,8 @@
         "resetAfterCycles": "10",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "direct",
-          "query": "inputTracks:TPC/TRACKS/0"
+          "type": "dataSamplingPolicy",
+          "name": "tpc-tracks"
         },
         "taskParameters": {
           "cutAbsEta": "1.",
@@ -144,6 +144,20 @@
           "fraction": "0.01",
           "seed": "0",
           "timesliceId": "tfCounter"
+        }
+      ],
+      "blocking": "false"
+    },
+    {
+      "id": "tpc-tracks",
+      "active": "true",
+      "machines": [],
+      "query" : "inputTracks:TPC/TRACKS/0",
+      "samplingConditions": [
+        {
+          "condition": "random",
+          "fraction": "0.01",
+          "seed": "1234"
         }
       ],
       "blocking": "false"

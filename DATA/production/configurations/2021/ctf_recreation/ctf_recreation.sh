@@ -109,8 +109,6 @@ echo "processing run $RUNNUMBER, from year $YEAR and period $PERIOD with beamtyp
 echo "Checking current directory content"
 ls -altr 
 
-rm -f /dev/shm/*
-
 export WORKFLOW_PARAMETERS=CTF
 if [[ -f "setenv_extra_ctf_recreation_$DETCONFIG.sh" ]]; then
     source setenv_extra_ctf_recreation_$DETCONFIG.sh 
@@ -147,7 +145,6 @@ fi
 
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
 ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
-ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 
 export TFDELAY=0.1
 if [[ $DETCONFIG == "centralBarrel" ]]; then

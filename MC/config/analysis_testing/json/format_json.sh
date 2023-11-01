@@ -2,9 +2,13 @@
 
 # Script to format the json files
 
-jq -S . analysis-testing-data.json  > a.json
-mv a.json analysis-testing-data.json
-jq -S . analysis-testing-mc.json  > b.json
-mv b.json analysis-testing-mc.json
-
-
+for i in $(ls *.json); do
+    case "$i" in
+    *analyses_config.json*)
+        continue
+        ;;
+    esac
+    echo "Formatting $i"
+    jq -S . $i >a.json
+    mv a.json $i
+done

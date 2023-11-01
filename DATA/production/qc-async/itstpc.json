@@ -39,7 +39,7 @@
         "dataSource" : {
           "type" : "direct",
           "query_comment" : "checking every matched track",
-          "query" : "trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;trackTPC:TPC/TRACKS;trackTPCClRefs:TPC/CLUSREFS"
+          "query" : "trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;trackTPC:TPC/TRACKS;trackTPCClRefs:TPC/CLUSREFS;trackITS:ITS/TRACKS/0;trackITSROF:ITS/ITSTrackROF/0;trackITSClIdx:ITS/TRACKCLSID/0;alpparITS:ITS/ALPIDEPARAM/0?lifetime=condition&ccdb-path=ITS/Config/AlpideParam"
         },
         "taskParameters" : {
           "GID" : "ITS-TPC,ITS",
@@ -48,9 +48,17 @@
           "etaCut" : "1.4f",
           "minNTPCClustersCut" : "60",
           "minDCACut" : "100.f",
-          "minDCACutY" : "10.f",
-          "grpFileName" : "o2sim_grp.root",
-          "geomFileName" : "o2sim_geometry-aligned.root"
+          "minDCACutY" : "10.f"
+        },
+	"grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         },
         "saveObjectsToFile" : "ITSTPCmatched.root",
         "" : "For debugging, path to the file where to save. If empty or missing it won't save."

@@ -28,6 +28,9 @@ import argparse
 import psutil
 max_system_mem=psutil.virtual_memory().total
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '.', 'o2dpg_workflow_utils'))
+from o2dpg_workflow_utils import read_workflow
+
 # defining command line options
 parser = argparse.ArgumentParser(description='Parallel execution of a (O2-DPG) DAG data/job pipeline under resource contraints.', 
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -78,7 +81,14 @@ actionlogger = setup_logger('pipeline_action_logger', ('pipeline_action_' + str(
 metriclogger = setup_logger('pipeline_metric_logger', ('pipeline_metric_' + str(os.getpid()) + '.log', args.action_logfile)[args.action_logfile!=None])
 
 # Immediately log imposed memory and CPU limit as well as further useful meta info
-metriclogger.info({"cpu_limit": args.cpu_limit, "mem_limit": args.mem_limit, "workflow_file": os.path.abspath(args.workflowfile), "target_task": args.target_tasks, "rerun_from": args.rerun_from, "target_labels": args.target_labels})
+_ , meta = read_workflow(args.workflowfile)
+meta["cpu_limit"] = args.cpu_limit
+meta["mem_limit"] = args.mem_limit
+meta["workflow_file"] = os.path.abspath(args.workflowfile)
+meta["target_task"] = args.target_tasks
+meta["rerun_from"] = args.rerun_from
+meta["target_labels"] = args.target_labels
+metriclogger.info(meta)
 
 # for debugging without terminal access
 # TODO: integrate into standard logger
@@ -391,20 +401,19 @@ def build_dag_properties(workflowspec):
     global_next_tasks = tup[1]
 
     
-    # a simple score for importance of nodes
-    # for each task find number of nodes that depend on a task -> might be weighted with CPU and MEM needs
-    importance_score = [ 0 for n in nodes ]
     dependency_cache = {}
-    for n in nodes:
-        importance_score[n] = len(find_all_dependent_tasks(global_next_tasks, n, dependency_cache))
-        actionlogger.info("Score for " + str(globaltaskuniverse[n][0]['name']) + " is " + str(importance_score[n]))
-
     # weight influences scheduling order can be anything user defined ... for the moment we just prefer to stay within a timeframe
+    # then take the number of tasks that depend on a task as further weight
+    # TODO: bring in resource estimates from runtime, CPU, MEM
+    # TODO: make this a policy of the runner to study different strategies
     def getweight(tid):
-        return globaltaskuniverse[tid][0]['timeframe']
+        return (globaltaskuniverse[tid][0]['timeframe'], len(find_all_dependent_tasks(global_next_tasks, tid, dependency_cache)))
     
     task_weights = [ getweight(tid) for tid in range(len(globaltaskuniverse)) ]
-        
+
+    for tid in range(len(globaltaskuniverse)):
+        actionlogger.info("Score for " + str(globaltaskuniverse[tid][0]['name']) + " is " + str(task_weights[tid]))
+
     # print (global_next_tasks)
     return { 'nexttasks' : global_next_tasks, 'weights' : task_weights, 'topological_ordering' : tup[0] }
 
@@ -425,24 +434,25 @@ def update_resource_estimates(workflow, resource_json):
 
         new_resources = resource_dict[name]
 
-        oldmem = task["resources"]["mem"]
-        newmem = new_resources.get("mem", task["resources"]["mem"])
-        actionlogger.info("Updating mem estimate for " + task["name"] + " from " + str(oldmem) + " to " + str(newmem))
-        task["resources"]["mem"] = newmem
-        # should we really be correcting for relative_cpu, when we have an outer estimate ??
-        oldcpu = task["resources"]["cpu"]
-        newcpu = new_resources.get("cpu", task["resources"]["cpu"])
-        actionlogger.info("Updating cpu estimate for " + task["name"] + " from " + str(oldcpu) + " to " + str(newcpu))
-        task["resources"]["cpu"] = newcpu
+        # memory
+        newmem = new_resources.get("mem", None)
+        if newmem is not None:
+            oldmem = task["resources"]["mem"]
+            actionlogger.info("Updating mem estimate for " + task["name"] + " from " + str(oldmem) + " to " + str(newmem))
+            task["resources"]["mem"] = newmem
+        newcpu = new_resources.get("cpu", None)
 
-        # CPU is a bit more invlolved
-        # if "cpu" in new_resources:
-        #    cpu = new_resources["cpu"]
-        #    rel_cpu = task["resources"]["relative_cpu"]
-        #    if rel_cpu is not None:
-        #        # respect the relative CPU settings
-        #        cpu *= rel_cpu
-        #    task["resources"]["cpu"] = cpu
+        # cpu
+        if newcpu is not None:
+            oldcpu = task["resources"]["cpu"]
+            rel_cpu = task["resources"]["relative_cpu"]
+            if rel_cpu is not None:
+               # respect the relative CPU settings
+               # By default, the CPU value in the workflow is already scaled if relative_cpu is given.
+               # The new estimate on the other hand is not yet scaled so it needs to be done here.
+               newcpu *= rel_cpu
+            actionlogger.info("Updating cpu estimate for " + task["name"] + " from " + str(oldcpu) + " to " + str(newcpu))
+            task["resources"]["cpu"] = newcpu
 
 # a function to read a software environment determined by alienv into
 # a python dictionary
@@ -686,6 +696,10 @@ class WorkflowExecutor:
           actionlogger.debug ('Condition check --normal-- for  ' + str(tid) + ':' + str(self.idtotask[tid]) + ' CPU ' + str(okcpu) + ' MEM ' + str(okmem))
           return (okcpu and okmem)
       else:
+          # only backfill one job at a time
+          if self.curcpubooked_backfill > 0:
+              return False
+
           # not backfilling jobs which either take much memory or use lot's of CPU anyway
           # conditions are somewhat arbitrary and can be played with
           if float(self.cpuperid[tid]) > 0.9*float(self.args.cpu_limit):
@@ -1139,7 +1153,14 @@ class WorkflowExecutor:
         # header
         lines.append('#!/usr/bin/env bash\n')
         lines.append('#THIS FILE IS AUTOGENERATED\n')
-        lines.append('JOBUTILS_SKIPDONE=ON\n')
+        lines.append('export JOBUTILS_SKIPDONE=ON\n')
+
+        # we record the global environment setting
+        # in particular to capture global workflow initialization
+        lines.append('#-- GLOBAL INIT SECTION FROM WORKFLOW --\n')
+        for e in self.globalenv:
+            lines.append('export ' + str(e) + '=' + str(self.globalenv[e]) + '\n')
+        lines.append('#-- TASKS FROM WORKFLOW --\n')
         for tid in taskorder:
             print ('Doing task ' + self.idtotask[tid])
             self.emit_code_for_task(tid, lines)
@@ -1147,6 +1168,24 @@ class WorkflowExecutor:
         outF.writelines(lines)
         outF.close()
 
+
+    # print error message when no progress can be made
+    def noprogress_errormsg(self):
+        # TODO: rather than writing this out here; refer to the documentation discussion this?
+        msg = """Scheduler runtime error: The scheduler is not able to make progress although we have a non-zero candidate set.
+
+Explanation: This is typically the case because the **ESTIMATED** resource requirements for some tasks
+in the workflow exceed the available number of CPU cores or the memory (as explicitely or implicitely determined from the
+--cpu-limit and --mem-limit options). Often, this might be the case on laptops with <=16GB of RAM if one of the tasks
+is demanding ~16GB. In this case, one could try to tell the scheduler to use a slightly higher memory limit
+with an explicit --mem-limit option (for instance `--mem-limit 20000` to set to 20GB). This might work whenever the
+**ACTUAL** resource usage of the tasks is smaller than anticipated (because only small test cases are run).
+
+In addition it might be worthwile running the workflow without this resource aware, dynamic scheduler.
+This is possible by converting the json workflow into a linearized shell script and by directly executing the shell script.
+Use the `--produce-script myscript.sh` option for this.
+"""
+        print (msg, file=sys.stderr)
 
     def execute(self):
         starttime = time.perf_counter()
@@ -1234,7 +1273,7 @@ class WorkflowExecutor:
             while True:
                 # sort candidate list according to task weights
                 candidates = [ (tid, self.taskweights[tid]) for tid in candidates ]
-                candidates.sort(key=lambda tup: tup[1])
+                candidates.sort(key=lambda tup: (tup[1][0],-tup[1][1])) # prefer small and same timeframes first then prefer important tasks within frameframe
                 # remove weights
                 candidates = [ tid for tid,_ in candidates ]
 
@@ -1242,7 +1281,7 @@ class WorkflowExecutor:
                 actionlogger.debug('Sorted current candidates: ' + str([(c,self.idtotask[c]) for c in candidates]))
                 self.try_job_from_candidates(candidates, self.process_list, finished)
                 if len(candidates) > 0 and len(self.process_list) == 0:
-                    print("Runtime error: Not able to make progress: Nothing scheduled although non-zero candidate set", file=sys.stderr)
+                    self.noprogress_errormsg()
                     send_webhook(self.args.webhook,"Unable to make further progress: Quitting")
                     errorencountered = True
                     break
@@ -1310,6 +1349,7 @@ class WorkflowExecutor:
            statusmsg = "with failures"
 
         print ('\n**** Pipeline done ' + statusmsg + ' (global_runtime : {:.3f}s) *****\n'.format(endtime-starttime))
+        actionlogger.debug("global_runtime : {:.3f}s".format(endtime-starttime))
         return errorencountered
 
 

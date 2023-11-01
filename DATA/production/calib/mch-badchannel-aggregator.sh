@@ -5,9 +5,10 @@ source common/setenv.sh
 # ---------------------------------------------------------------------------------------------------------------------
 # Set general arguments
 source common/getCommonArgs.sh
+source common/gen_topo_helper_functions.sh
 
 PROXY_INSPEC="A:MCH/PDIGITS/0"
-CONSUL_ENDPOINT="alio2-cr1-hv-aliecs.cern.ch:8500"
+CONSUL_ENDPOINT="alio2-cr1-hv-con01.cern.ch:8500"
 
 MCH_MAX_PEDESTAL=${MCH_MAX_PEDESTAL:-500.0}
 MCH_MAX_NOISE=${MCH_MAX_NOISE:-2.0}
@@ -20,7 +21,7 @@ WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --proxy-name mch-badchannel-input-proxy --d
 WORKFLOW+="o2-calibration-mch-badchannel-calib-workflow $ARGS_ALL --configKeyValues \"$BADCHANNEL_CONFIG\" | "
 WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"http://o2-ccdb.internal\" --sspec-min 0 --sspec-max 0 | "
 WORKFLOW+="o2-calibration-ccdb-populator-workflow $ARGS_ALL --configKeyValues \"$ARGS_ALL_CONFIG\" --ccdb-path=\"http://ali-calib-dcs.cern.ch:8083\" --sspec-min 1 --sspec-max 1 --name-extention dcs | "
-WORKFLOW+="o2-qc $ARGS_ALL --config consul-json://${CONSUL_ENDPOINT}/o2/components/qc/ANY/any/mch-badchannel | "
+add_QC_from_consul "/o2/components/qc/ANY/any/mch-badchannel" ""
 WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
 
 if [ $WORKFLOWMODE == "print" ]; then

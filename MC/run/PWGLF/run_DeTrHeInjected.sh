@@ -18,7 +18,6 @@ export IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE=1
 # ----------- START ACTUAL JOB  -----------------------------
 
 NWORKERS=${NWORKERS:-8}
-MODULES="--skipModules ZDC"
 SIMENGINE=${SIMENGINE:-TGeant4}
 NSIGEVENTS=${NSIGEVENTS:-1}
 NBKGEVENTS=${NBKGEVENTS:-1}
@@ -26,11 +25,10 @@ NTIMEFRAMES=${NTIMEFRAMES:-1}
 INTRATE=${INTRATE:-50000}
 SYSTEM=${SYSTEM:-pp}
 ENERGY=${ENERGY:-900}
-CFGINIFILE=${CFGINIFILE:-"${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFDeTrHe_${SYSTEM}.ini"}
+CFGINIFILE=${CFGINIFILE:-"${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFDeTrHe.ini"}
 [[ ${SPLITID} != "" ]] && SEED="-seed ${SPLITID}" || SEED=""
 
 echo "NWORKERS = $NWORKERS"
-echo "MODULES = $MODULES"
 
 # create workflow
 O2_SIM_WORKFLOW=${O2_SIM_WORKFLOW:-"${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py"}
@@ -38,7 +36,8 @@ $O2_SIM_WORKFLOW -eCM ${ENERGY} -col ${SYSTEM} -gen external \
         -j ${NWORKERS} \
         -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} \
         -confKey "Diamond.width[2]=6." \
-        ${SEED} -mod "${MODULES}" \
+        ${SEED} \
+        -procBkg inel -colBkg $SYSTEM --embedding -nb ${NBKGEVENTS} -genBkg pythia8 \
         -e ${SIMENGINE} \
         -ini $CFGINIFILE
 

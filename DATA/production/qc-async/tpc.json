@@ -23,7 +23,7 @@
         "url": ""
       },
       "conditionDB": {
-        "url": "ccdb-test.cern.ch:8080"
+        "url": "alice-ccdb.cern.ch"
       }
     },
     "tasks": {
@@ -84,13 +84,23 @@
         "resetAfterCycles": "1",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "direct",
-          "query" : "inputTracks:TPC/TRACKS/0"
+          "type": "dataSamplingPolicy",
+          "name": "tpc-tracks"
         },
         "taskParameters": {
           "cutAbsEta": "1.",
           "cutMinNCluster": "60",
           "cutMindEdxTot": "20."
+        },
+	"grpGeomRequest" : {
+          "geomRequest": "None",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "true",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         }
       }
     }
@@ -107,6 +117,20 @@
           "condition": "random",
           "fraction": "0.1",
           "seed": "0"
+        }
+      ],
+      "blocking": "false"
+    },
+    {
+      "id": "tpc-tracks",
+      "active": "true",
+      "machines": [],
+      "query" : "inputTracks:TPC/TRACKS/0",
+      "samplingConditions": [
+        {
+          "condition": "random",
+          "fraction": "0.1",
+          "seed": "1234"
         }
       ],
       "blocking": "false"

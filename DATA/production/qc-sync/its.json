@@ -40,12 +40,22 @@
         "taskParameters": {
           "layer": "1111111",
           "clusterDictionaryPath": "",
-          "geomPath": "",
           "nThreads": "1",
           "nBCbins" : "103",
           "dicttimestamp" : "0",
-          "publishSummary1D": "0"
+          "publishSummary1D": "0",
+	  "publishDetailedSummary": "0"
         },
+	"grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
+         },
           "localMachines": [
           "localhost", "epn"
         ],
@@ -74,7 +84,8 @@
           "NtracksMAX"  : "100",
           "doTTree": "0",
           "nBCbins" : "103",
-          "dicttimestamp" : 0
+          "dicttimestamp" : 0,
+	  "doNorm": "1"
         },
         "localMachines": [
           "localhost", "epn"

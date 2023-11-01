@@ -305,7 +305,7 @@ get_git_repo_directory()
 print_usage()
 {
     echo
-    echo "usage: run_tests.sh [--fail-immediately] [--keep-artifacts]"
+    echo "usage: run_generator_tests.sh [--fail-immediately] [--keep-artifacts]"
     echo
     echo "  FLAGS:"
     echo

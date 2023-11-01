@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-# Produces a local shell script that emulates the exection of a JDL on the GRID.
-# This can be useful for local debugging of failing GRID.
+# Produces a local shell script that emulates the execution of a JDL on the GRID.
+# This can be useful for local debugging of failing GRID jobs.
 
 # started 01.12.2022; Sandro Wenzel
 

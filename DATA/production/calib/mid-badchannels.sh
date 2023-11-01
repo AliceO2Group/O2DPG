@@ -10,7 +10,7 @@ MID_PROXY_INSPEC_EOS="eos:***/INFORMATION"
 MID_PROXY_INSPEC_DD="dd:FLP/DISTSUBTIMEFRAME/0"
 MID_RAW_PROXY_INSPEC="A:MID/RAWDATA;$MID_PROXY_INSPEC_DD;$MID_PROXY_INSPEC_EOS"
 MID_DPL_CHANNEL_CONFIG="name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=1"
-CONSUL_ENDPOINT="alio2-cr1-hv-aliecs.cern.ch:8500"
+CONSUL_ENDPOINT="alio2-cr1-hv-con01.cern.ch:8500"
 if [[ -z $CTF_CONFIG ]]; then CTF_CONFIG="--report-data-size-interval 250"; fi
 if [[ -z $CTF_DIR ]]; then CTF_DIR="$FILEWORKDIR"; fi
 if [[ -z $CTF_MINSIZE ]]; then CTF_MINSIZE="2000000000"; fi

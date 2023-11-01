@@ -10,6 +10,13 @@
 # export ALIEN_JDL_LPMPASSNAME=apass4
 # export ALIEN_JDL_LPMANCHORYEAR=2021
 
+# function to run AOD merging
+run_AOD_merging() {
+  o2-aod-merger --input list_$1.list --output $1/AO2D_merged.root > $1/merging.log
+  exitcode=$?
+  return $exitcode
+}
+
 # to skip positional arg parsing before the randomizing part.
 inputarg="${1}"
 
@@ -25,6 +32,10 @@ if [[ "${1##*.}" == "root" ]]; then
     shift
 elif [[ "${1##*.}" == "xml" ]]; then
     sed -rn 's/.*turl="([^"]*)".*/\1/p' $1 > list.list
+    export MODE="remote"
+    shift
+elif [[ $1 != "list.list" && "${1##*.}" == "list" ]]; then
+    cp $1 list.list
     export MODE="remote"
     shift
 fi
@@ -105,18 +116,9 @@ fi
 
 echo processing run $RUNNUMBER, from period $PERIOD with $BEAMTYPE collisions and mode $MODE
 
+export timeUsed=0
+
 ###if [[ $MODE == "remote" ]]; then
-    # common archive
-    if [[ ! -f commonInput.tgz ]]; then
-	echo "No commonInput.tgz found exiting"
-	exit 2
-    fi
-    tar -xzvf commonInput.tgz
-    SELECTSETTINGSSCRIPT="$O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/selectSettings.sh"
-    if [[ -f "selectSettings.sh" ]]; then
-      SELECTSETTINGSSCRIPT="selectSettings.sh"
-    fi
-    source $SELECTSETTINGSSCRIPT
     # run specific archive
     if [[ ! -f runInput_$RUNNUMBER.tgz ]]; then
 	echo "No runInput_$RUNNUMBER.tgz, let's hope we don't need it"
@@ -174,49 +176,50 @@ echo "Checking current directory content"
 ls -altr
 
 ln -s $O2DPG_ROOT/DATA/common/gen_topo_helper_functions.sh
-source gen_topo_helper_functions.sh
+source gen_topo_helper_functions.sh || { echo "gen_topo_helper_functions.sh failed" && exit 5; }
 
 if [[ -f "setenv_extra.sh" ]]; then
-    source setenv_extra.sh $RUNNUMBER $BEAMTYPE
+  echo "Time used so far, before setenv_extra = $timeUsed s"
+  time source setenv_extra.sh $RUNNUMBER $BEAMTYPE || { echo "setenv_extra.sh (local file) failed" && exit 6; }
+  echo "Time used so far, after setenv_extra = $timeUsed s"
 else
-    echo "************************************************************************************"
-    echo "No ad-hoc setenv_extra settings for current async processing; using the one in O2DPG"
-    echo "************************************************************************************"
-    if [[ -f $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh ]]; then
-	ln -s $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh
-	source setenv_extra.sh $RUNNUMBER $BEAMTYPE
-    else
-	echo "*********************************************************************************************************"
-	echo "No setenev_extra for $ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS in O2DPG"
-	echo "                No special settings will be used"
-	echo "*********************************************************************************************************"
-    fi
+  echo "************************************************************************************"
+  echo "No ad-hoc setenv_extra settings for current async processing; using the one in O2DPG"
+  echo "************************************************************************************"
+  if [[ -f $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh ]]; then
+    ln -s $O2DPG_ROOT/DATA/production/configurations/$ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS/setenv_extra.sh
+    echo "Timeu used so far, before setenv_extra = $timeUsed s"
+    time source setenv_extra.sh $RUNNUMBER $BEAMTYPE || { echo "setenv_extra.sh (O2DPG) failed" && exit 7; }
+    echo "Time used so far, after setenv_extra = $timeUsed s"
+  else
+    echo "*********************************************************************************************************"
+    echo "No setenev_extra for $ALIEN_JDL_LPMANCHORYEAR/$O2DPGPATH/$PASS in O2DPG"
+    echo "                No special settings will be used"
+    echo "*********************************************************************************************************"
+  fi
 fi
 
-rm -f /dev/shm/*
-
 if [[ -f run-workflow-on-inputlist.sh ]]; then
-    echo "Use run-workflow-on-inputlist.sh macro passed as input"
+  echo "Use run-workflow-on-inputlist.sh macro passed as input"
 else
-    echo "Use run-workflow-on-inputlist.sh macro from O2"
-    cp $O2_ROOT/prodtests/full-system-test/run-workflow-on-inputlist.sh .
+  echo "Use run-workflow-on-inputlist.sh macro from O2"
+  cp $O2_ROOT/prodtests/full-system-test/run-workflow-on-inputlist.sh .
 fi
 
 if [[ -z $DPL_WORKFLOW_FROM_OUTSIDE ]]; then
-    echo "Use dpl-workflow.sh from O2"
-    cp $O2_ROOT/prodtests/full-system-test/dpl-workflow.sh .
+  echo "Use dpl-workflow.sh from O2"
+  cp $O2_ROOT/prodtests/full-system-test/dpl-workflow.sh .
 else
-    echo "Use dpl-workflow.sh passed as input"
-    cp $DPL_WORKFLOW_FROM_OUTSIDE .
+  echo "Use dpl-workflow.sh passed as input"
+  cp $DPL_WORKFLOW_FROM_OUTSIDE .
 fi
 
 if [[ ! -z $QC_JSON_FROM_OUTSIDE ]]; then
-    echo "QC json from outside is $QC_JSON_FROM_OUTSIDE"
+  echo "QC json from outside is $QC_JSON_FROM_OUTSIDE"
 fi
 
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
 ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
-ln -sf $O2_ROOT/prodtests/full-system-test/workflow-setup.sh
 
 # TFDELAY and throttling
 export TFDELAYSECONDS=40
@@ -389,21 +392,163 @@ echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS
 
 [[ -z $NTIMEFRAMES ]] && export NTIMEFRAMES=-1
 
+# let's set O2JOBID and SHMEMID
+O2JOBIDscript="$O2DPG_ROOT/DATA/production/common/setVarsFromALIEN_PROC_ID.sh"
+if [[ -f "setVarsFromALIEN_PROC_ID.sh" ]]; then
+  O2JOBIDscript="setVarsFromALIEN_PROC_ID.sh"
+fi
+source $O2JOBIDscript
+
+STATSCRIPT="$O2DPG_ROOT/DATA/production/common/getStat.sh"
+if [[ -f "getStat.sh" ]]; then
+  STATSCRIPT="getStat.sh"
+fi
+
 # reco and matching
 # print workflow
-env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list > workflowconfig.log
-# run it
-if [[ "0$RUN_WORKFLOW" != "00" ]]; then
-  env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
+  env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list > workflowconfig.log
+  # run it
+  if [[ "0$RUN_WORKFLOW" != "00" ]]; then
+    timeStart=`date +%s`
+    time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+    timeEnd=`date +%s`
+    timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+    delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+    echo "Time spent in running the workflow = $delta s"
+    echo "exitcode = $exitcode"
+    if [[ $exitcode -ne 0 ]]; then
+      echo "exit code from processing is " $exitcode > validation_error.message
+      echo "exit code from processing is " $exitcode
+      exit $exitcode
+    fi
+    mv latest.log latest_reco_1.log
+    ./$STATSCRIPT latest_reco_1.log
+  fi
+else
+  # running the wf in split mode
+  echo "We will run the workflow in SPLIT mode!"
+  WORKFLOW_PARAMETERS_START=$WORKFLOW_PARAMETERS
+
+  if [[ -z "$ALIEN_JDL_SPLITSTEP" ]] || [[ "$ALIEN_JDL_SPLITSTEP" -eq 1 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 1 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq "all" ]]; then
+    # 1. TPC decoding + reco
+    echo "Step 1) Decoding and reconstructing TPC"
+    echo "Step 1) Decoding and reconstructing TPC" > workflowconfig.log
+    for i in AOD QC CALIB CALIB_LOCAL_INTEGRATED_AGGREGATOR; do
+      export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
+    done
+    env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    # run it
+    if [[ "0$RUN_WORKFLOW" != "00" ]]; then
+      timeStart=`date +%s`
+      time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      timeEnd=`date +%s`
+      timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      echo "Time spent in running the workflow, Step 1 = $delta s"
+      exitcode=$?
+      echo "exitcode = $exitcode"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from Step 1 of processing is " $exitcode > validation_error.message
+	echo "exit code from Step 1 of processing is " $exitcode
+	exit $exitcode
+      fi
+      mv latest.log latest_reco_1.log
+      ./$STATSCRIPT latest_reco_1.log reco_1
+    fi
+  fi
+
+  if [[ -z "$ALIEN_JDL_SPLITSTEP" ]] || [[ "$ALIEN_JDL_SPLITSTEP" -eq 2 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 2 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq "all" ]]; then
+    # 2. the other detectors decoding + reco
+    WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS_START
+    echo "Step 2) Decoding and reconstructing ALL-TPC"
+    echo -e "\nStep 2) Decoding and reconstructing ALL-TPC" >> workflowconfig.log
+    for i in AOD QC CALIB CALIB_LOCAL_INTEGRATED_AGGREGATOR; do
+      export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
+    done
+    env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    # run it
+    if [[ "0$RUN_WORKFLOW" != "00" ]]; then
+      timeStart=`date +%s`
+      time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      timeEnd=`date +%s`
+      timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      echo "Time spent in running the workflow, Step 2 = $delta s"
+      exitcode=$?
+      echo "exitcode = $exitcode"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from Step 2 of processing is " $exitcode > validation_error.message
+	echo "exit code from Step 2 of processing is " $exitcode
+	exit $exitcode
+      fi
+      mv latest.log latest_reco_2.log
+      ./$STATSCRIPT latest_reco_2.log reco_2
+      # let's compare to previous step
+      if [[ -f latest_reco_1.log ]]; then
+	nCTFsFilesInspected_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
+	nCTFsFilesOK_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsFilesFailed_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsProcessed_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
+	nCTFsFilesInspected_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
+	nCTFsFilesOK_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsFilesFailed_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/^[0-9]*_[0-9]*_\([0-9]*\)_.*/\1/'`
+	nCTFsProcessed_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/^[0-9]*_[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
+	if [[ $nCTFsFilesInspected_step1 != $nCTFsFilesInspected_step2 ]] || [[ $nCTFsFilesFailed_step1 != $nCTFsFilesFailed_step2 ]] || [[ $nCTFsFilesOK_step1 != $nCTFsFilesOK_step2 ]] || [[ $nCTFsProcessed_step1 != $nCTFsProcessed_step2 ]]; then
+	  echo "Inconsistency between step 1 and step 2 in terms of number of CTFs (files or single CTFs) found:"
+	  echo "nCTFsFilesInspected_step1 = $nCTFsFilesInspected_step1, nCTFsFilesInspected_step2 = $nCTFsFilesInspected_step2"
+	  echo "nCTFsFilesOK_step1 = $nCTFsFilesOK_step1, nCTFsFilesOK_step2 = $nCTFsFilesOK_step2"
+	  echo "nCTFsFilesFailed_step1 = $nCTFsFilesFailed_step1, nCTFsFilesFailed_step2 = $nCTFsFilesFailed_step2"
+	  echo "nCTFsProcessed_step1 = $nCTFsProcessed_step1, nCTFsProcessed_step2 = $nCTFsProcessed_step2"
+	  echo "Inconsistency between step 1 and step 2 in terms of number of CTFs (files or single CTFs) found:" > validation_error.message
+	  echo "nCTFsFilesInspected_step1 = $nCTFsFilesInspected_step1, nCTFsFilesInspected_step2 = $nCTFsFilesInspected_step2" > validation_error.message
+	  echo "nCTFsFilesOK_step1 = $nCTFsFilesOK_step1, nCTFsFilesOK_step2 = $nCTFsFilesOK_step2" > validation_error.message
+	  echo "nCTFsProcessed_step1 = $nCTFsProcessed_step1, nCTFsProcessed_step2 = $nCTFsProcessed_step2" > validation_error.message
+	  exit 1000
+	fi
+      fi
+    fi
+  fi
+
+  if [[ -z "$ALIEN_JDL_SPLITSTEP" ]] || [[ "$ALIEN_JDL_SPLITSTEP" -eq 3 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 3 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq "all" ]]; then
+    # 3. matching, QC, calib, AOD
+    WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS_START
+    echo "Step 3) matching, QC, calib, AOD"
+    echo -e "\nStep 3) matching, QC, calib, AOD" >> workflowconfig.log
+    export TIMEFRAME_RATE_LIMIT=0
+    env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    # run it
+    if [[ "0$RUN_WORKFLOW" != "00" ]]; then
+      timeStart=`date +%s`
+      time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      timeEnd=`date +%s`
+      timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+      delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+      echo "Time spent in running the workflow, Step 3 = $delta s"
+      exitcode=$?
+      echo "exitcode = $exitcode"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from Step 3 of processing is " $exitcode > validation_error.message
+	echo "exit code from Step 3 of processing is " $exitcode
+	exit $exitcode
+      fi
+      mv latest.log latest_reco_3.log
+    fi
+  fi
 fi
 
 # now extract all performance metrics
 IFS=$'\n'
 if [[ -f "performanceMetrics.json" ]]; then
+    timeStart=`date +%s`
     for workflow in `grep ': {' performanceMetrics.json`; do
 	strippedWorkflow=`echo $workflow | cut -d\" -f2`
 	cat performanceMetrics.json | jq '.'\"${strippedWorkflow}\"'' > ${strippedWorkflow}_metrics.json
     done
+    timeEnd=`date +%s`
+    timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+    delta=$(( $timeEnd-$timeStart ))    exitcode=$?
+    echo "Time spent in splitting the metrics files = $delta s"
 fi
 
 if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
@@ -434,7 +579,19 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       mkdir tmpAOD
       cd tmpAOD
       ln -s ../list.list .
-      o2-aod-merger --input list.list
+      timeStart=`date +%s`
+      time o2-aod-merger --input list.list
+      timeEnd=`date +%s`
+      timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+      delta=$(( $timeEnd-$timeStart ))
+      echo "Time spent in merging last AOD files, to reach a good size for that too = $delta s"
+      exitcode=$?
+      echo "exitcode = $exitcode"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from aod-merger for latest file is " $exitcode > validation_error.message
+	echo "exit code from aod-merger for latest file is " $exitcode
+	exit $exitcode
+     fi
       MERGED_SIZE=`wc -c AO2D.root | awk '{print $1}'`
       echo "Size of merged file: $MERGED_SIZE"
       cd ..
@@ -451,23 +608,95 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   # retrieving again the list of AOD files, in case it changed after the merging above
   AOD_LIST_COUNT=`find . -name AO2D.root | wc -w`
   AOD_LIST=`find . -name AO2D.root`
+  MAX_POOL_SIZE=${ALIEN_JDL_CPUCORES-8}
+  if [[ -n $ALIEN_JDL_MAXPOOLSIZEAODMERGING ]]; then
+    MAX_POOL_SIZE=$ALIEN_JDL_MAXPOOLSIZEAODMERGING
+  fi
+  echo "Max number of parallel AOD mergers will be $MAX_POOL_SIZE"
+  JOB_LIST=job-list.txt
+  if [[ -f $JOB_LIST ]]; then
+    rm $JOB_LIST
+  fi
+  timeStart=`date +%s`
+  timeUsedCheck=0
+  timeUsedMerge=0
+  timeUsedCheckMergedAOD=0
+  timeUsedAnalysisQC=0
+  # preparing list of AODs to be merged internally
   for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
-    AOD_DIR=`echo $AOD_LIST | cut -d' ' -f$i | sed -e 's/AO2D.root//'`
-    echo "Verifying, Merging DFs, and potentially running analysis QC for AOD file in $AOD_DIR"
+    AOD_FILE=`echo $AOD_LIST | cut -d' ' -f$i`
+    AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
     cd $AOD_DIR
     if [[ -f "AO2D.root" ]]; then
-      echo "Checking AO2Ds with un-merged DFs"
-      root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
+      echo "Checking AO2Ds with un-merged DFs in $AOD_DIR"
+      timeStartCheck=`date +%s`
+      time root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
+      timeEndCheck=`date +%s`
+      timeUsedCheck=$(( $timeUsedCheck+$timeEndCheck-$timeStartCheck ))
       exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D check is " $exitcode > validation_error.message
 	echo "exit code from AO2D check is " $exitcode
 	exit $exitcode
       fi
-      ls AO2D.root > list.list
-      o2-aod-merger --input list.list --output AO2D_merged.root
-      echo "Checking AO2Ds with merged DFs"
-      root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
+    fi
+    cd -
+    ls $AOD_FILE > list_$AOD_DIR.list
+    echo "$AOD_DIR" >> $JOB_LIST
+  done
+  if [[ -z $ALIEN_JDL_DONOTMERGEAODS ]] || [[ $ALIEN_JDL_DONOTMERGEAODS == 0 ]]; then
+    # spawning the parallel merging
+    timeStartMerge=`date +%s`
+    arr=()
+    aods=()
+    mergedok=()
+    i=0
+    while IFS= read -r line; do
+      while [[ $CURRENT_POOL_SIZE -ge $MAX_POOL_SIZE ]]; do
+	CURRENT_POOL_SIZE=`jobs -r | wc -l`
+	sleep 1
+      done
+      run_AOD_merging $line &
+      arr[$i]=$!
+      aods[$i]=$line
+      i=$((i+1))
+      CURRENT_POOL_SIZE=`jobs -r | wc -l`
+    done < $JOB_LIST
+    # collecting return codes of the merging processes
+    for i in ${!arr[@]}; do
+      wait ${arr[$i]}
+      exitcode=$?
+      if [[ $exitcode -ne 0 ]]; then
+	echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode > validation_error.message
+	echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode
+	echo "As a consequence, we will keep the AO2Ds with unmerged DFs for ${aods[$i]}"
+	mergedok[$((10#${aods[$i]}))]=0
+      else
+	echo "Merging of DFs inside the AO2D in ${aods[$i]} worked correctly"
+	mergedok[$((10#${aods[$i]}))]=1
+      fi
+    done
+    timeEndMerge=`date +%s`
+    timeUsedMerge=$(( $timeUsedMerge+$timeEndMerge-$timeStartMerge ))
+    # Checking the merged AODs, and replacing the original ones with the merged ones if all is ok
+    # This loop could be merged with the above, but for now we keep them separate
+    for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
+      AOD_FILE=`echo $AOD_LIST | cut -d' ' -f$i`
+      AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
+      echo "Inspecting $AOD_DIR:"
+      if [[ ${mergedok[$((10#$AOD_DIR))]} == 0 ]]; then
+	echo "Merging for $AOD_DIR DID NOT work, we will do nothing for this file"
+	continue
+      else
+	echo "Merging for $AOD_DIR DID work, let's continue"
+      fi
+      cd $AOD_DIR
+      # now checking them
+      echo "Checking AO2Ds with merged DFs in $AOD_DIR"
+      timeStartCheckMergedAOD=`date +%s`
+      time root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
+      timeEndCheckMergedAOD=`date +%s`
+      timeUsedCheckMergedAOD=$(( $timeUsedCheckMergedAOD+$timeEndCheckMergedAOD-$timeStartCheckMergedAOD ))
       exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
 	echo "exit code from AO2D with merged DFs check is " $exitcode > validation_error.message
@@ -477,24 +706,56 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
 	echo "All ok, replacing initial AO2D.root file with the one with merged DFs"
 	mv AO2D_merged.root AO2D.root
       fi
-      if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
-	${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
-	${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
-	if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
-	  mv Analysis/MergedAnalyses/AnalysisResults.root .
-	else
-	  echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
-	fi
-	if ls Analysis/*/*.log 1> /dev/null 2>&1; then
-	  mv Analysis/*/*.log .
-	fi
-      else
-	echo "Analysis QC will not be run, ALIEN_JDL_RUNANALYSISQC = $ALIEN_JDL_RUNANALYSISQC"
+      cd ..
+    done
+  fi
+  # running analysis QC if requested
+  if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
+    for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
+      AOD_FILE=`echo $AOD_LIST | cut -d' ' -f$i`
+      AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
+      cd $AOD_DIR
+      timeStartAnalysisQC=`date +%s`
+      # creating the analysis wf
+      time ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root
+      # running it
+      time ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -k -f workflow_analysis_test.json > analysisQC.log
+      timeEndAnalysisQC=`date +%s`
+      timeUsedAnalysisQC=$(( $timeUsedAnalysisQC+$timeEndAnalysisQC-$timeStartAnalysisQC ))
+      exitcode=$?
+      echo "exitcode = $exitcode"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from Analysis QC is " $exitcode > validation_error.message
+	echo "exit code from Analysis QC is " $exitcode
+	exit $exitcode
       fi
-    fi
-    cd ..
-  done
+      if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
+	mv Analysis/MergedAnalyses/AnalysisResults.root .
+      else
+	echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
+      fi
+      if ls Analysis/*/*.log 1> /dev/null 2>&1; then
+	mv Analysis/*/*.log .
+      fi
+      cd ..
+    done
+  else
+    echo "Analysis QC will not be run, ALIEN_JDL_RUNANALYSISQC = $ALIEN_JDL_RUNANALYSISQC"
+  fi
+  echo "Time spent in checking initial AODs = $timeUsedCheck s"
+  if [[ -z $ALIEN_JDL_DONOTMERGEAODS ]] || [[ $ALIEN_JDL_DONOTMERGEAODS == 0 ]]; then
+    echo "Time spent in merging AODs = $timeUsedMerge s"
+    echo "Time spent in checking final AODs = $timeUsedCheckMergedAOD s"
+  fi
+  if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
+    echo "Time spent in AnalysisQC = $timeUsedAnalysisQC s"
+  else
+    echo "No timing reported for Analysis QC, since it was not run"
+  fi
 fi
+
+timeUsed=$(( $timeUsed+$timeUsedCheck+$timeUsedMerge+$timeUsedCheckMergedAOD+$timeUsedAnalysisQC ))
+echo "Time used for processing = $timeUsed s"
 
 if [[ $ALIEN_JDL_QCOFF != 1 ]]; then
   # copying the QC json file here

@@ -81,5 +81,10 @@ def create_sim_config(args):
     if args.fwdmatching_cut_4_param == True:
         add(config, {"FwdMatching.cutFcn" : "cut3SigmaXYAngles"})
 
+    # deal with larger combinatorics
+    if args.col == "PbPb" or (args.embedding and args.colBkg == "PbPb"):
+        add(config, {"ITSCATrackerParam.trackletsPerClusterLimit": 20,
+                     "ITSCATrackerParam.cellsPerClusterLimit": 20,
+                     "ITSVertexerParam.lowMultBeamDistCut": "0."})
 
     return config

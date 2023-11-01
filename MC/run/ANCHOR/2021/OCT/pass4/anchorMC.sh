@@ -29,22 +29,22 @@ INTERACTIONRATE=${INTERACTIONRATE:-2000}
 cp ${ALIEN_JDL_ASYNCRECOSCRIPT:-$O2DPG_ROOT/DATA/production/configurations/2021/OCT/apass4/async_pass.sh} async_pass.sh
 cp $O2DPG_ROOT/DATA/production/configurations/2021/OCT/${ALIEN_JDL_LPMPASSNAME:-apass4}/setenv_extra.sh .
 #settings that are MC-specific
-sed -i 's/GPU_global.dEdxUseFullGainMap=1;GPU_global.dEdxDisableResidualGainMap=1/GPU_global.dEdxSplineTopologyCorrFile=splines_for_dedx_V1_MC_iter0_PP.root;GPU_global.dEdxDisableTopologyPol=1;GPU_global.dEdxDisableGainMap=1;GPU_global.dEdxDisableResidualGainMap=1;GPU_global.dEdxDisableResidualGain=1/' setenv_extra.sh
+sed -ibak 's/GPU_global.dEdxUseFullGainMap=1;GPU_global.dEdxDisableResidualGainMap=1/GPU_global.dEdxSplineTopologyCorrFile=splines_for_dedx_V1_MC_iter0_PP.root;GPU_global.dEdxDisableTopologyPol=1;GPU_global.dEdxDisableGainMap=1;GPU_global.dEdxDisableResidualGainMap=1;GPU_global.dEdxDisableResidualGain=1/' setenv_extra.sh
 chmod +x async_pass.sh
 
 # take out line running the workflow (if we don't have data input)
-[ ${CTF_TEST_FILE} ] || sed -i '/WORKFLOWMODE=run/d' async_pass.sh
+[ ${CTF_TEST_FILE} ] || sed -ibak '/WORKFLOWMODE=run/d' async_pass.sh
 
 # remove comments in order to set ALIEN_JDL stuff
 # (if not set already)
 if [ ! ${ALIEN_JDL_LPMRUNNUMBER} ]; then
-  sed -i 's/# export ALIEN/export ALIEN/' async_pass.sh
+  sed -ibak 's/# export ALIEN/export ALIEN/' async_pass.sh
 fi
 # fix typo
-sed -i 's/JDL_ANCHORYEAR/JDL_LPMANCHORYEAR/' async_pass.sh
+sed -ibak 's/JDL_ANCHORYEAR/JDL_LPMANCHORYEAR/' async_pass.sh
 
 # set number of timeframes to xx if necessary
-sed -i 's/NTIMEFRAMES=-1/NTIMEFRAMES=1/' async_pass.sh
+sed -ibak  's/NTIMEFRAMES=-1/NTIMEFRAMES=1/' async_pass.sh
 
 [[ ! -f commonInput.tgz ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/commonInput.tgz file:.
 [[ ! -f runInput_${RUNNUMBER} ]] && alien.py cp /alice/cern.ch/user/a/alidaq/OCT/apass4/runInput_${RUNNUMBER}.tgz file:.
@@ -99,10 +99,10 @@ NSIGEVENTS=${NSIGEVENTS:-22}
 # THIS NEEDS TO COME FROM OUTSIDE
 # echo "$" | awk -F' -- ' '{print $1, $3}'
 
-baseargs="-tf ${NTIMEFRAMES} --split-id ${ALIEN_JDL_SPLITID:-0} --prod-split ${ALIEN_JDL_PRODSPLIT:-100} --run-number ${RUNNUMBER}"
+baseargs="-tf ${NTIMEFRAMES} --split-id ${ALIEN_JDL_SPLITID:-1} --prod-split ${ALIEN_JDL_PRODSPLIT:-100} --run-number ${RUNNUMBER} -eCM 900 -col pp"
 
 # THIS NEEDS TO COME FROM OUTSIDE
-remainingargs="-eCM 900 -col pp -gen pythia8 -proc cdiff -ns ${NSIGEVENTS}                                                                                                \
+remainingargs="-gen pythia8 -proc cdiff -ns ${NSIGEVENTS}                                                                                                                 \
                -interactionRate ${INTERACTIONRATE}                                                                                                                        \
                -confKey \"Diamond.width[2]=6.0;Diamond.width[0]=0.01;Diamond.width[1]=0.01;Diamond.position[0]=0.0;Diamond.position[1]=-0.035;Diamond.position[2]=0.41\"  \
               --include-local-qc --include-analysis --mft-reco-full"
@@ -126,13 +126,26 @@ echo "TIMESTAMP IS ${TIMESTAMP}"
 export ALICEO2_CCDB_LOCALCACHE=$PWD/.ccdb
 [ ! -d .ccdb ] && mkdir .ccdb
 
-CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Align /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Align /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TRD/Align /TOF/Align /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /PHS/Align /CPV/Align /EMC/Align /HMP/Align /MFT/Align /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /MCH/Align /MID/Align /FT0/Align /FT0/Calibration/ChannelTimeOffset /FV0/Align /FV0/Calibration/ChannelTimeOffset /FDD/Align"
+CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /FT0/Calibration/ChannelTimeOffset /FV0/Calibration/ChannelTimeOffset"
 
 ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS} -d .ccdb --timestamp ${TIMESTAMP}
 if [ ! "$?" == "0" ]; then
   echo "Problem during CCDB prefetching of ${CCDBOBJECTS}. Exiting."
   exit 1
 fi
+
+# -- Create aligned geometry using ITS and MFT ideal alignments to avoid overlaps in geant
+CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align MFT/Calib/Align"
+TIMESTAMP_IDEAL_MC=1
+${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d .ccdb --timestamp ${TIMESTAMP_IDEAL_MC}
+if [ ! "$?" == "0" ]; then
+  echo "Problem during CCDB prefetching of ${CCDBOBJECTS_IDEAL_MC}. Exiting."
+  exit 1
+fi
+
+${O2_ROOT}/bin/o2-create-aligned-geometry-workflow --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" --condition-remap=file://${ALICEO2_CCDB_LOCALCACHE}=ITS/Calib/Align,MFT/Calib/Align -b 
+mkdir -p $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned
+ln -s -f $PWD/o2sim_geometry-aligned.root $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned/snapshot.root
 
 # -- RUN THE MC WORKLOAD TO PRODUCE AOD --
 
