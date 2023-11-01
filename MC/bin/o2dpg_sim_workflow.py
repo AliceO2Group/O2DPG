@@ -1050,7 +1050,11 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # calorimeters
    EMCRECOtask = createTask(name='emcalreco_'+str(tf), needs=[getDigiTaskName("EMC")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   EMCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-emcal-reco-workflow --input-type digits --output-type cells --infile emcaldigits.root ' + getDPL_global_options(ccdbbackend=False) + putConfigValues()
+   EMCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-emcal-reco-workflow --input-type digits --output-type cells --infile emcaldigits.root --disable-root-output --subspecificationOut 1 ' + putConfigValues()
+   EMCRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
+   EMCRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-emcal-cell-recalibrator-workflow --input-subspec 1 --output-subspec 0 --no-timecalib --no-gaincalib ' + putConfigValues()
+   EMCRECOtask['cmd'] += (' --isMC','')[args.no_mc_labels]
+   EMCRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-emcal-cell-writer-workflow --subspec 0 ' + getDPL_global_options() + putConfigValues()
    EMCRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    workflow['stages'].append(EMCRECOtask)
 
