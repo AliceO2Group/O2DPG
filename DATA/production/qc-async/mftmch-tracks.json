@@ -1,0 +1,34 @@
+{
+  "qc": {
+    "tasks": {
+      "TaskMUONTracks": {
+        "active": "true",
+        "className": "o2::quality_control_modules::muon::TracksTask",
+        "moduleName": "QcMUONCommon",
+        "detectorName": "GLO",
+        "taskName": "MUONTracks",
+        "cycleDurationSeconds": "300",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM;fwdtracks:GLO/GLFWD"
+        },
+        "taskParameters": {
+          "maxTracksPerTF": "600",
+          "GID" : "MCH,MFT,MFT-MCH"
+        },
+        "grpGeomRequest": {
+          "geomRequest": "Aligned",
+          "askGRPECS": "true",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "false",
+          "needPropagatorD": "false"
+        },
+        "location": "remote"
+      }
+    }
+  }
+}
