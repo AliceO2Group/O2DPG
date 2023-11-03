@@ -153,6 +153,13 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctof.json
       fi
     fi
+    if has_detectors_reco MFT MCH MID && has_matching_qc MFTMCH && has_matching_qc MCHMID; then
+        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=$O2DPG_ROOT/DATA/production/qc-sync/glo-mftmchmid-mtch-qcmn-epn.json
+    elif has_detectors_reco MFT MCH && has_matching_qc MFTMCH; then
+        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=$O2DPG_ROOT/DATA/production/qc-sync/glo-mftmch-mtch-qcmn-epn.json
+    elif has_detectors_reco MCH MID && has_matching_qc MCHMID; then
+        [[ -z "${QC_JSON_GLO_MCHMID:-}" ]] && QC_JSON_GLO_MCHMID=$O2DPG_ROOT/DATA/production/qc-sync/glo-mchmid-mtch-qcmn-epn.json
+    fi
     [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json # this must be last
 
     QC_CONFIG_OVERRIDE+="qc.config.conditionDB.url=${DPL_CONDITION_BACKEND:-http://alice-ccdb.cern.ch};"
