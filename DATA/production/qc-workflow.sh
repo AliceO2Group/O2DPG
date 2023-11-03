@@ -183,6 +183,13 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         add_QC_JSON MCH_TRACKS $O2DPG_ROOT/DATA/production/qc-async/mch-tracks.json
       fi
     fi
+    if has_detectors_reco MFT MCH MID && has_matching_qc MFTMCH && has_matching_qc MCHMID; then
+        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=$O2DPG_ROOT/DATA/production/qc-async/mftmchmid-tracks.json
+    elif has_detectors_reco MFT MCH && has_matching_qc MFTMCH; then
+        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=$O2DPG_ROOT/DATA/production/qc-async/mftmch-tracks.json
+    elif has_detectors_reco MCH MID && has_matching_qc MCHMID; then
+        [[ -z "${QC_JSON_GLO_MCHMID:-}" ]] && QC_JSON_GLO_MCHMID=$O2DPG_ROOT/DATA/production/qc-async/mchmid-tracks.json
+    fi
     [[ -z "${QC_JSON_CPV:-}" ]] && QC_JSON_CPV=$O2DPG_ROOT/DATA/production/qc-async/cpv.json
     [[ -z "${QC_JSON_PHS:-}" ]] && QC_JSON_PHS=$O2DPG_ROOT/DATA/production/qc-async/phs.json
     [[ -z "${QC_JSON_TRD:-}" ]] && QC_JSON_TRD=$O2DPG_ROOT/DATA/production/qc-async/trd.json
