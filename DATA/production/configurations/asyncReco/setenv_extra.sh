@@ -387,8 +387,8 @@ if [[ $ALIGNLEVEL == 1 ]]; then
   if [[ $BEAMTYPE == "pp" ]]; then
     export PVERTEXER+=";pvertexer.maxChi2TZDebris=40;pvertexer.maxChi2Mean=12;pvertexer.maxMultRatDebris=1.;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
   elif [[ $BEAMTYPE == "PbPb" ]]; then
-    # at the moment placeholder
-    export PVERTEXER+=";pvertexer.maxChi2Mean=12;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
+    export PVERTEXER+=";pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;pvertexer.maxITSOnlyFraction=0.85;pvertexer.maxTDiffDebris=1.5;pvertexer.maxZDiffDebris=0.3;pvertexer.addZSigma2Debris=0.09;pvertexer.addTimeSigma2Debris=2.25;pvertexer.maxChi2TZDebris=100;pvertexer.maxMultRatDebris=1.;pvertexer.maxTDiffDebrisExtra=-1.;pvertexer.dbscanDeltaT=-0.55;pvertexer.maxTMAD=1.;pvertexer.maxZMAD=0.04;"
+    has_detector_reco FT0 && PVERTEX_CONFIG+=" --validate-with-ft0 "
   fi
 fi
 
