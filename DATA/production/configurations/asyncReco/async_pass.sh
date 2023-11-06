@@ -353,7 +353,7 @@ fi
 echo "SETTING_ROOT_OUTPUT = $SETTING_ROOT_OUTPUT"
 
 # Enabling GPUs
-if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]]; then
+if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]] ; then
   echo "Enabling GPUS"
   export GPUTYPE="HIP"
   export GPUMEMSIZE=$((25 << 30))
@@ -456,6 +456,13 @@ if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
     fi
     mv latest.log latest_reco_1.log
     $STATSCRIPT latest_reco_1.log
+    exitcode=$?
+    echo "exit code is $exitcode"
+    if [[ $exitcode -ne 0 ]]; then
+      echo "exit code from processing is " $exitcode > validation_error.message
+      echo "exit code from processing is " $exitcode
+      exit $exitcode
+    fi
   fi
 else
   # running the wf in split mode
@@ -486,7 +493,16 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_1.log
+      if [[ -f performanceMetrics.json ]]; then
+	mv performanceMetrics.json performanceMetrics_1.json
+      fi
       $STATSCRIPT latest_reco_1.log reco_1
+      exitcode=$?
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from processing is " $exitcode > validation_error.message
+	echo "exit code from processing is " $exitcode
+	exit $exitcode
+      fi
     fi
   fi
 
@@ -515,7 +531,16 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_2.log
+      if [[ -f performanceMetrics.json ]]; then
+	mv performanceMetrics.json performanceMetrics_2.json
+      fi
       $STATSCRIPT latest_reco_2.log reco_2
+      exitcode=$?
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from processing is " $exitcode > validation_error.message
+	echo "exit code from processing is " $exitcode
+	exit $exitcode
+      fi
       # let's compare to previous step
       if [[ -f latest_reco_1.log ]]; then
 	nCTFsFilesInspected_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
@@ -569,23 +594,29 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_3.log
+      if [[ -f performanceMetrics.json ]]; then
+	mv performanceMetrics.json performanceMetrics_3.json
+      fi
     fi
   fi
 fi
 
 # now extract all performance metrics
 IFS=$'\n'
-if [[ -f "performanceMetrics.json" ]]; then
-    timeStart=`date +%s`
-    for workflow in `grep ': {' performanceMetrics.json`; do
-	strippedWorkflow=`echo $workflow | cut -d\" -f2`
-	cat performanceMetrics.json | jq '.'\"${strippedWorkflow}\"'' > ${strippedWorkflow}_metrics.json
+timeStart=`date +%s`
+for perfMetricsFiles in performanceMetrics.json performanceMetrics_1.json performanceMetrics_2.json performanceMetrics_3.json ; do
+  suffix=`echo $perfMetricsFiles | sed 's/performanceMetrics\(.*\).json/\1/'`
+  if [[ -f "performanceMetrics.json" ]]; then
+    for workflow in `grep ': {' $perfMetricsFiles`; do
+      strippedWorkflow=`echo $workflow | cut -d\" -f2`
+      cat $perfMetricsFiles | jq '.'\"${strippedWorkflow}\"'' > ${strippedWorkflow}_metrics${suffix}.json
     done
-    timeEnd=`date +%s`
-    timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-    delta=$(( $timeEnd-$timeStart ))
-    echo "Time spent in splitting the metrics files = $delta s"
-fi
+  fi
+done
+timeEnd=`date +%s`
+timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+delta=$(( $timeEnd-$timeStart ))
+echo "Time spent in splitting the metrics files = $delta s"
 
 if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   # flag to possibly enable Analysis QC

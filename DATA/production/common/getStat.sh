@@ -14,6 +14,7 @@ nCTFsProcessed=$((nCTFsProcessed + 1))
 
 if [[ $nCTFsFilesInspected != $((nCTFsFilesFailed + nCTFsFilesOK)) ]]; then
   echo "Something went wrong with parsing the log file: CTF files inspected ($nCTFsFilesInspected) is not the sum of those successfully processed ($nCTFsFilesOK) and those that failed ($nCTFsFilesFailed)"
+  exit 8
 fi
 while read -r line; do
   currentPVs=`echo $line | sed 's/^.*Found \([0-9]*\) PVs.*/\1/'`
