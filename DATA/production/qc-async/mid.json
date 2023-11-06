@@ -34,7 +34,7 @@
         "dataSource": {
           "type": "direct",
           "query": "digits:MID/DATA;digits_rof:MID/DATAROF",
-          "query_comment" : "100% sampling"
+          "query_comment": "100% sampling"
         }
       },
       "MIDClusters": {
@@ -48,7 +48,7 @@
         "dataSource": {
           "type": "direct",
           "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS",
-          "query_comment" : "100% sampling"
+          "query_comment": "100% sampling"
         }
       },
       "MIDTracks": {
@@ -62,36 +62,36 @@
         "dataSource": {
           "type": "direct",
           "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS",
-          "query_comment" : "100% sampling"
+          "query_comment": "100% sampling"
         }
       }
     },
     "checks": {
       "MIDDigits": {
-        "active": "false",
+        "active": "true",
         "checkName": "Digits",
         "className": "o2::quality_control_modules::mid::DigitsQcCheck",
         "moduleName": "QcMID",
         "detectorName": "MID",
         "policy": "OnAny",
         "checkParameters": {
-          "MeanMultThreshold": "100."
+          "MeanMultThreshold": "100.",
+          "MinMultThreshold": "0.0",
+          "NbOrbitPerTF": "32.",
+          "LocalBoardScale": "200.0",
+          "LocalBoardThreshold": "800.0",
+          "NbBadLocalBoard": "10.",
+          "NbEmptyLocalBoard": "117."
         },
         "dataSource": [
           {
             "type": "Task",
-            "name": "MIDDigits",
-            "MOs": [
-              "mMultHitMT11B",
-              "mMultHitMT12B",
-              "mMultHitMT21B",
-              "mMultHitMT22B"
-            ]
+            "name": "MIDDigits"
           }
         ]
       },
       "MIDClusters": {
-        "active": "false",
+        "active": "true",
         "checkName": "Clusters",
         "className": "o2::quality_control_modules::mid::ClustQcCheck",
         "moduleName": "QcMID",
@@ -100,28 +100,28 @@
         "dataSource": [
           {
             "type": "Task",
-            "name": "MIDClusters",
-            "MOs": []
+            "name": "MIDClusters"
           }
         ]
       },
       "MIDTracks": {
-        "active": "false",
+        "active": "true",
         "checkName": "Tracks",
         "className": "o2::quality_control_modules::mid::TracksQcCheck",
         "moduleName": "QcMID",
         "detectorName": "MID",
         "policy": "OnAny",
+        "checkParameters": {
+          "Ratio44Threshold": "0.1"
+        },
         "dataSource": [
           {
             "type": "Task",
-            "name": "MIDTracks",
-            "MOs": []
+            "name": "MIDTracks"
           }
         ]
       }
     }
   },
-  "dataSamplingPolicies": [
-  ]
+  "dataSamplingPolicies": []
 }
