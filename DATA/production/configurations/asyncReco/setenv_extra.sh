@@ -229,7 +229,7 @@ fi
 
 echo "BeamType = $BEAMTYPE"
 
-if [[ $ALIEN_JDL_ENABLEMONITORING == "1" ]]; then
+if [[ $ALIEN_JDL_ENABLEMONITORING != "0" ]]; then
   # add the performance metrics
   export ENABLE_METRICS=1
   export ARGS_ALL_EXTRA="$ARGS_ALL_EXTRA --resources-monitoring 50 --resources-monitoring-dump-interval 50"
