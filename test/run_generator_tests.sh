@@ -85,7 +85,7 @@ exec_test()
     echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_GENERIC_KINE}
     echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_SIM}
     # run the simulation, fail if not successful
-    o2-sim -g ${generator_lower} ${trigger} --noGeant -n 100 -j 4 --configFile ${ini_path} >> ${LOG_FILE_SIM} 2>&1
+    o2-sim -g ${generator_lower} ${trigger} --noGeant -n 100 -j 4 --configFile ${ini_path} --configKeyValues "GeneratorPythia8.includePartonEvent=true" >> ${LOG_FILE_SIM} 2>&1
     RET=${?}
     [[ "${RET}" != "0" ]] && { remove_artifacts ; return ${RET} ; }
 
