@@ -66,7 +66,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --send-ce-digits \
     | o2-tpc-reco-workflow $ARGS_ALL ${TPC_CORR_SCALING:-} \
     --input-type digitizer  \
-    --output-type "tracks,disable-writer" \
+    --output-type "tracks,disable-writer,clusters" \
     --disable-mc \
     --pipeline tpc-zsEncoder:20,tpc-tracker:8 \
     $GPU_CONFIG \
