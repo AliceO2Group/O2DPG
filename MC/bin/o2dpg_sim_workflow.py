@@ -1046,7 +1046,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    EMCRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    EMCRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-emcal-cell-recalibrator-workflow --input-subspec 1 --output-subspec 0 --no-timecalib --no-gaincalib ' + putConfigValues()
    EMCRECOtask['cmd'] += (' --isMC','')[args.no_mc_labels]
-   EMCRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-emcal-cell-writer-workflow --subspec 0 ' + getDPL_global_options() + putConfigValues()
+   EMCRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-emcal-cell-writer-workflow --subspec 0 ' + getDPL_global_options()
    EMCRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    workflow['stages'].append(EMCRECOtask)
 
