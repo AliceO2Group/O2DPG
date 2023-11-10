@@ -11,7 +11,7 @@ ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR;Na
 PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 
 o2-dpl-raw-proxy $ARGS_ALL \
-    --dataspec "$PROXY_INSPEC" \
+    --dataspec "$PROXY_INSPEC" --inject-missing-data \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=1'" \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
     --input-spec "$PROXY_INSPEC"  \

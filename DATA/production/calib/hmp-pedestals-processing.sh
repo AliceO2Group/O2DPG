@@ -74,7 +74,7 @@ SPEC_PARAM+="--pedestals-tag ${HMP_PED_TAG} --sigmacut ${HMP_SIGMACUT}"
 #  Here we compose the workflow
 # Start with an empty workflow
 WORKFLOW=
-add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,rateLogging=1,transport=shmem\"" "" 0
+add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,rateLogging=1,transport=shmem\"" "" 0
 add_W o2-hmpid-raw-to-pedestals-workflow "--fast-decode $SPEC_PARAM"
 
 # Finally add the o2-dpl-run workflow manually, allow for either printing the workflow or creating a topology (default)

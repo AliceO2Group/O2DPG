@@ -25,7 +25,7 @@ CTF_MINSIZE="500000000"
 CTF_MAX_PER_FILE=10000
 
 o2-dpl-raw-proxy $ARGS_ALL \
-    --dataspec "$PROXY_INSPEC" \
+    --dataspec "$PROXY_INSPEC" --inject-missing-data \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
     --severity $SEVERITY_RAWPROXY \
     --infologger-severity $INFOLOGGER_SEVERITY_RAWPROXY \
