@@ -43,6 +43,7 @@ Another abstraction layer above the *workflows* are **topology descriptions**. T
   ```
 - Workflows should aggregate their workflow parts in the `$WORKFLOW` variable, and use `add_W` to add a workflow, and `add_QC_from_consul` to add a QC workflow with a JSON file from consul.
 - Calibration workflows must not pollute the production CCDB in the following case (`if [[ $RUNTYPE == "SYNTHETIC" || "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then` (bash script)), in this case please e.g. upload to `ccdb-test.cern.ch`.
+- If a workflow uses an `o2-dpl-raw-proxy` to receive data from DataDistribution, that device must have the `--inject-missing-data` comand line option.
 
 # Configuring and selecting workflow in AliECS:
 There are 3 ways foreseen to configure the *full topology* in AliECS: (currently only the manual XML option exists)
@@ -91,6 +92,7 @@ commit=xxxx|path=xxxx file=topologies.desc topology=demo-full-topology parameter
 Calibration workflows can be different when they use an aggregator. In that case, there is processing running on each EPN, and the output is sent to an aggregator node. Communication happens via the `o2-dpl-raw-proxy` and the `o2-dpl-output-proxy`.
 To set up such a workflow, a couple of points must be followed:
 - There are 2 different shell scripts, one for the "reco" part running on each EPN, and one for the calibration aggregator "calib" part on the calibration node. There may be more than one aggregator in the topology, in that case it is one *reco* script and multiple *calib* scripts.
+- The o2-dpl-raw-proxy on a calib aggrgator workflow MUST NOT use the `--inject-missing-data` command line argument! (This is only for input proxies receiving data from DataDistribution!)
 - The *reco* script must contain an `o2-dpl-output-proxy` to send the output and each calib script must contain an `o2-dpl-raw-proxy` for the input.
 - Each of the input "raw" proxies must be assigned a unique name via the `--proxy-name [NAME]` option. Note that the *reco* script also contains an input raw proxy, with the default name `readout-proxy`.
 - The channel-name of each input proxy must match the proxy name. The *calib* input proxies' channels must use `method=bind`. The output proxies must use `method=connect` and the channel name must match the name of the input proxy they are connecting to.
