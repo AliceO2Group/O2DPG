@@ -17,7 +17,7 @@ OUT_CHANNEL="name=downstream,method=connect,address=tcp://${calibration_node},ty
 PROXY_OUTSPEC="dd:FLP/DISTSUBTIMEFRAME/0;calclus:TOF/INFOCALCLUS;cosmics:TOF/INFOCOSMICS;trkcos:TOF/INFOTRACKCOS;trksiz:TOF/INFOTRACKSIZE"
 
 
-o2-dpl-raw-proxy ${ARGS_ALL} --dataspec "${PROXY_INSPEC}" \
+o2-dpl-raw-proxy ${ARGS_ALL} --dataspec "${PROXY_INSPEC}" --inject-missing-data \
 --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=1'" \
 | o2-tof-reco-workflow --input-type raw --output-type clusters \
 ${ARGS_ALL} --configKeyValues "$ARGS_ALL_CONFIG;" \
