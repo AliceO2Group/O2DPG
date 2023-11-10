@@ -3,7 +3,7 @@
 # shellcheck disable=SC1091
 source testing/detectors/MID/mid_common.sh
 
-WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --dataspec \"$MID_RAW_PROXY_INSPEC\" --channel-config \"$MID_DPL_CHANNEL_CONFIG\" | "
+WORKFLOW="o2-dpl-raw-proxy $ARGS_ALL --dataspec \"$MID_RAW_PROXY_INSPEC\" --inject-missing-data --channel-config \"$MID_DPL_CHANNEL_CONFIG\" | "
 WORKFLOW+="o2-mid-raw-to-digits-workflow $ARGS_ALL $MID_RAW_TO_DIGITS_OPTS | "
 WORKFLOW+="o2-mid-entropy-encoder-workflow $ARGS_ALL | "
 WORKFLOW+="o2-ctf-writer-workflow $ARGS_ALL $MID_CTF_WRITER_OPTS | "

@@ -24,7 +24,7 @@ MYDIR="$(dirname $(readlink -f $0))"
 PROXY_INSPEC="x:FT0/RAWDATA;y:FV0/RAWDATA;eos:***/INFORMATION;dd:FLP/DISTSUBTIMEFRAME/0"
 IN_CHANNEL="--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=1'"
 
-o2-dpl-raw-proxy ${ARGS_ALL} --readout-proxy "${IN_CHANNEL}" --dataspec "${PROXY_INSPEC}" \
+o2-dpl-raw-proxy ${ARGS_ALL} --readout-proxy "${IN_CHANNEL}" --dataspec "${PROXY_INSPEC}" --inject-missing-data \
 | o2-fv0-flp-dpl-workflow --disable-root-output ${ARGS_ALL} --configKeyValues "$ARGS_ALL_CONFIG;" --pipeline fv0-datareader-dpl:$NTHREADS \
 | o2-ft0-flp-dpl-workflow --disable-root-output ${ARGS_ALL} --configKeyValues "$ARGS_ALL_CONFIG;" --pipeline ft0-datareader-dpl:$NTHREADS \
 | o2-qc ${ARGS_ALL} --local --host epn --config json://${MYDIR}/ft0-fv0-digits-ds.json \
