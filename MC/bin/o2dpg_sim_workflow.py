@@ -487,9 +487,6 @@ if usebkgcache:
 
 # We download some binary files, necessary for processing
 # Eventually, these files/objects should be queried directly from within these tasks?
-MATBUD_DOWNLOADER_TASK = createTask(name='matbuddownloader', cpu='0')
-MATBUD_DOWNLOADER_TASK['cmd'] = '[ -f matbud.root ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p GLO/Param/MatLUT -o matbud.root --no-preserve-path --timestamp ' + str(args.timestamp) + ' --created-not-after ' + str(args.condition_not_after)
-workflow['stages'].append(MATBUD_DOWNLOADER_TASK)
 
 # We download trivial TPC space charge corrections to be applied during
 # reco. This is necessary to have consistency (decalibration and calibration) between digitization and reconstruction ... until digitization can
@@ -946,7 +943,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    havePbPb = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb"))
    ITSMemEstimate = 12000 if havePbPb else 2000 # PbPb has much large mem requirement for now (in worst case)
-   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS"), MATBUD_DOWNLOADER_TASK['name']],
+   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS")],
                           tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem=str(ITSMemEstimate))
    ITSRECOtask['cmd'] = '${O2_ROOT}/bin/o2-its-reco-workflow --trackerCA --tracking-mode async ' + getDPL_global_options(bigshm=havePbPb) \
                         + putConfigValuesNew(["ITSVertexerParam", "ITSAlpideParam",
@@ -969,7 +966,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TRDTRACKINGtask)
 
    # FIXME This is so far a workaround to avoud a race condition for trdcalibratedtracklets.root
-   TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name'],MATBUD_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
+   TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    TRDTRACKINGtask2['cmd'] = '${O2_ROOT}/bin/o2-trd-global-tracking ' + getDPL_global_options(bigshm=True) + ('',' --disable-mc')[args.no_mc_labels] \
                               + putConfigValuesNew(['ITSClustererParam',
                                                    'ITSCATrackerParam',
