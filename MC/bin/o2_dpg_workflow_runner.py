@@ -14,6 +14,7 @@ import socket
 import sys
 import traceback
 import platform
+import tarfile
 try:
     from graphviz import Digraph
     havegraphviz=True
@@ -60,6 +61,8 @@ parser.add_argument('--retry-on-failure', help=argparse.SUPPRESS, default=0) # n
 parser.add_argument('--no-rootinit-speedup', help=argparse.SUPPRESS, action='store_true') # disable init of ROOT environment vars to speedup init/startup
 parser.add_argument('--action-logfile', help='Logfilename for action logs. If none given, pipeline_action_#PID.log will be used')
 parser.add_argument('--metric-logfile', help='Logfilename for metric logs. If none given, pipeline_metric_#PID.log will be used')
+parser.add_argument('--production-mode', action='store_true', help='Production mode')
+# will trigger special features good for non-interactive/production processing (automatic cleanup of files etc).
 args = parser.parse_args()
 
 def setup_logger(name, log_file, level=logging.INFO):
@@ -498,6 +501,7 @@ class WorkflowExecutor:
     # Constructor
     def __init__(self, workflowfile, args, jmax=100):
       self.args=args
+      self.is_productionmode = args.production_mode == True # os.getenv("ALIEN_PROC_ID") != None
       self.workflowfile = workflowfile
       self.workflowspec = load_json(workflowfile)
       self.globalenv = self.extract_global_environment(self.workflowspec) # initialize global environment settings
@@ -720,7 +724,7 @@ class WorkflowExecutor:
     def ok_to_skip(self, tid):
         done_filename = self.get_done_filename(tid)
         if os.path.exists(done_filename) and os.path.isfile(done_filename):
-            return True
+          return True
         return False
 
     def book_resources(self, tid, backfill = False):
@@ -1168,6 +1172,29 @@ class WorkflowExecutor:
         outF.writelines(lines)
         outF.close()
 
+    def production_endoftask_hook(self, tid):
+        # Executes a hook at end of a successful task, meant to be used in GRID productions.
+        # For the moment, archiving away log files, done + time files from jobutils.
+        # TODO: In future this may be much more generic tasks such as dynamic cleanup of intermediate
+        # files (when they are no longer needed).
+        # TODO: Care must be taken with the continue feature as `_done` files are stored elsewhere now
+        actionlogger.info("Cleaning up log files for task " + str(tid))
+        logf = self.get_logfile(tid)
+        donef = self.get_done_filename(tid)
+        timef = logf + "_time"
+
+        # add to tar file archive
+        tf = tarfile.open(name="pipeline_log_archive.log.tar", mode='a')
+        if tf != None:
+          tf.add(logf)
+          tf.add(donef)
+          tf.add(timef)
+          tf.close()
+
+          # remove original file
+          os.remove(logf)
+          os.remove(donef)
+          os.remove(timef)
 
     # print error message when no progress can be made
     def noprogress_errormsg(self):
@@ -1298,6 +1325,12 @@ Use the `--produce-script myscript.sh` option for this.
                 finished = finished + finished_from_started
                 actionlogger.debug("finished now :" + str(finished_from_started))
                 finishedtasks = finishedtasks + finished
+
+                if self.is_productionmode:
+                   # we can do some generic cleanup of finished tasks in non-interactive/GRID mode
+                   # TODO: this can run asynchronously
+                   for _t in finished_from_started:
+                       self.production_endoftask_hook(_t)
 
                 # if a task was marked "failed" and we come here (because
                 # we use --keep-going) ... we need to take out the pid from finished
