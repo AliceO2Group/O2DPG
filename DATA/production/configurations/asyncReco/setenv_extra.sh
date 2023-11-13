@@ -320,7 +320,10 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
       return 1
     fi
     echo "Using CTP inst lumi stored in data"
-    export TPC_CORR_SCALING+=" --require-ctp-lumi "
+    export TPC_CORR_SCALING+=" --lumi-type 1 "
+  elif [[ $INST_IR_FOR_TPC == "IDCCCDB" ]]; then
+    echo "TPC correction with IDC from CCDB will ne used"
+    export TPC_CORR_SCALING+=" --lumi-type 2 "
   else
     echo "Unknown setting for INST_IR_FOR_TPC = $INST_IR_FOR_TPC (with ALIEN_JDL_INST_IR_FOR_TPC = $ALIEN_JDL_INST_IR_FOR_TPC)"
     return 1
@@ -332,11 +335,11 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
 
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]]; then
     unset TPC_CORR_SCALING
-    export TPC_CORR_SCALING=" --ctp-lumi-factor 2.414 --require-ctp-lumi"
+    export TPC_CORR_SCALING=" --ctp-lumi-factor 2.414 --lumi-type 1"
     if [[ $SCALE_WITH_ZDC == 0 ]]; then
       # scaling with FT0
       if [[ $SCALE_WITH_FT0 == 1 ]]; then
-	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --ctp-lumi-factor 135. --require-ctp-lumi "
+	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --ctp-lumi-factor 135. --lumi-type 1 "
       else
 	echo "Neither ZDC nor FT0 are in the run, and this is from 2023 PbPb: we cannot scale TPC ditortion corrections, aborting..."
 	return 1
