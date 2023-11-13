@@ -349,7 +349,7 @@ export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysEr
 # ad-hoc options for ITS reco workflow
 EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.trackletsPerClusterLimit=5.;ITSCATrackerParam.cellsPerClusterLimit=5.;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;"
+  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.trackletsPerClusterLimit=15.;ITSCATrackerParam.cellsPerClusterLimit=35.;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;"
 elif [[ $BEAMTYPE == "pp" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
 fi
