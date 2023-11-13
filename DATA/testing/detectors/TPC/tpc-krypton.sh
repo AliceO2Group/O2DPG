@@ -32,7 +32,7 @@ fi
 
 
 o2-dpl-raw-proxy $ARGS_ALL \
-    --dataspec "$PROXY_INSPEC" \
+    --dataspec "$PROXY_INSPEC" --inject-missing-data \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
     --input-spec "$CALIB_INSPEC"  \

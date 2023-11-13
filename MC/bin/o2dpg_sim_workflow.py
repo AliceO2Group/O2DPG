@@ -495,9 +495,6 @@ if usebkgcache:
 
 # We download some binary files, necessary for processing
 # Eventually, these files/objects should be queried directly from within these tasks?
-MATBUD_DOWNLOADER_TASK = createTask(name='matbuddownloader', cpu='0')
-MATBUD_DOWNLOADER_TASK['cmd'] = '[ -f matbud.root ] || ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p GLO/Param/MatLUT -o matbud.root --no-preserve-path --timestamp ' + str(args.timestamp) + ' --created-not-after ' + str(args.condition_not_after)
-workflow['stages'].append(MATBUD_DOWNLOADER_TASK)
 
 # We download trivial TPC space charge corrections to be applied during
 # reco. This is necessary to have consistency (decalibration and calibration) between digitization and reconstruction ... until digitization can
@@ -954,7 +951,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    havePbPb = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb"))
    ITSMemEstimate = 12000 if havePbPb else 2000 # PbPb has much large mem requirement for now (in worst case)
-   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS"), MATBUD_DOWNLOADER_TASK['name']],
+   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS")],
                           tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem=str(ITSMemEstimate))
    ITSRECOtask['cmd'] = '${O2_ROOT}/bin/o2-its-reco-workflow --trackerCA --tracking-mode async ' + getDPL_global_options(bigshm=havePbPb) \
                         + putConfigValuesNew(["ITSVertexerParam", "ITSAlpideParam",
@@ -977,7 +974,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(TRDTRACKINGtask)
 
    # FIXME This is so far a workaround to avoud a race condition for trdcalibratedtracklets.root
-   TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name'],MATBUD_DOWNLOADER_TASK['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
+   TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    TRDTRACKINGtask2['cmd'] = '${O2_ROOT}/bin/o2-trd-global-tracking ' + getDPL_global_options(bigshm=True) + ('',' --disable-mc')[args.no_mc_labels] \
                               + putConfigValuesNew(['ITSClustererParam',
                                                    'ITSCATrackerParam',
@@ -1050,7 +1047,11 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # calorimeters
    EMCRECOtask = createTask(name='emcalreco_'+str(tf), needs=[getDigiTaskName("EMC")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   EMCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-emcal-reco-workflow --input-type digits --output-type cells --infile emcaldigits.root ' + getDPL_global_options(ccdbbackend=False) + putConfigValues()
+   EMCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-emcal-reco-workflow --input-type digits --output-type cells --infile emcaldigits.root --disable-root-output --subspecificationOut 1 ' + putConfigValues()
+   EMCRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
+   EMCRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-emcal-cell-recalibrator-workflow --input-subspec 1 --output-subspec 0 --no-timecalib --no-gaincalib ' + putConfigValues()
+   EMCRECOtask['cmd'] += (' --isMC','')[args.no_mc_labels]
+   EMCRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-emcal-cell-writer-workflow --subspec 0 ' + getDPL_global_options()
    EMCRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    workflow['stages'].append(EMCRECOtask)
 
@@ -1308,7 +1309,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
    # strangeness tracking is now called from the secondary vertexer
    if not args.with_strangeness_tracking:
-      SVFINDERtask['cmd'] += ' --disable-strangeness-tracker'
+      from subprocess import run
+      data = run(SVFINDERtask['cmd'].split(" ")[0] + " --help", capture_output=True, shell=True, text=True)
+      if "disable-strangeness-tracker" in data.stdout:
+         SVFINDERtask['cmd'] += ' --disable-strangeness-tracker'
    # if enabled, it may require MC labels
    else:
       SVFINDERtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
@@ -1377,6 +1381,10 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    if not args.with_strangeness_tracking:
       AODtask['cmd'] += ' --disable-strangeness-tracker'
+
+   # Enable CTP readout replay for triggered detectors (EMCAL, HMPID, PHOS/CPV, TRD)
+   # Needed untill triggers are supported in CTP simulation
+   AODtask['cmd'] += ' --ctpreadout-create 1'
 
    workflow['stages'].append(AODtask)
 

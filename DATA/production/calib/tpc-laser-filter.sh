@@ -55,7 +55,7 @@ if [[ ! -z ${TPC_LASER_ILBZS:-} ]]; then
 fi
 
 o2-dpl-raw-proxy $ARGS_ALL \
-    --dataspec "$PROXY_INSPEC" \
+    --dataspec "$PROXY_INSPEC" --inject-missing-data \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL ${LASER_DECODER_ADD} \
     --input-spec "$CALIB_INSPEC"  \
@@ -66,7 +66,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --send-ce-digits \
     | o2-tpc-reco-workflow $ARGS_ALL ${TPC_CORR_SCALING:-} \
     --input-type digitizer  \
-    --output-type "tracks,disable-writer" \
+    --output-type "tracks,disable-writer,clusters" \
     --disable-mc \
     --pipeline tpc-zsEncoder:20,tpc-tracker:8 \
     $GPU_CONFIG \

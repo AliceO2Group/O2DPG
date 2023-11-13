@@ -353,7 +353,7 @@ fi
 echo "SETTING_ROOT_OUTPUT = $SETTING_ROOT_OUTPUT"
 
 # Enabling GPUs
-if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]]; then
+if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]] ; then
   echo "Enabling GPUS"
   export GPUTYPE="HIP"
   export GPUMEMSIZE=$((25 << 30))
@@ -456,24 +456,31 @@ if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
     fi
     mv latest.log latest_reco_1.log
     $STATSCRIPT latest_reco_1.log
+    exitcode=$?
+    echo "exit code is $exitcode"
+    if [[ $exitcode -ne 0 ]]; then
+      echo "exit code from processing is " $exitcode > validation_error.message
+      echo "exit code from processing is " $exitcode
+      exit $exitcode
+    fi
   fi
 else
   # running the wf in split mode
   echo "We will run the workflow in SPLIT mode!"
   WORKFLOW_PARAMETERS_START=$WORKFLOW_PARAMETERS
 
-  if [[ -z "$ALIEN_JDL_SPLITSTEP" ]] || [[ "$ALIEN_JDL_SPLITSTEP" -eq 1 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 1 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq "all" ]]; then
+  if ([[ -z "$ALIEN_JDL_STARTSPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SPLITSTEP" ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq 1 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 1 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" == "all" ]]; then
     # 1. TPC decoding + reco
-    echo "Step 1) Decoding and reconstructing TPC"
-    echo "Step 1) Decoding and reconstructing TPC" > workflowconfig.log
+    echo "Step 1) Decoding and reconstructing TPC+CTP"
+    echo "Step 1) Decoding and reconstructing TPC+CTP" > workflowconfig.log
     for i in AOD QC CALIB CALIB_LOCAL_INTEGRATED_AGGREGATOR; do
       export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
     done
-    env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC,CTP WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
-      time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC,CTP WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
       exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
@@ -486,11 +493,20 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_1.log
+      if [[ -f performanceMetrics.json ]]; then
+	mv performanceMetrics.json performanceMetrics_1.json
+      fi
       $STATSCRIPT latest_reco_1.log reco_1
+      exitcode=$?
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from processing is " $exitcode > validation_error.message
+	echo "exit code from processing is " $exitcode
+	exit $exitcode
+      fi
     fi
   fi
 
-  if [[ -z "$ALIEN_JDL_SPLITSTEP" ]] || [[ "$ALIEN_JDL_SPLITSTEP" -eq 2 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 2 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq "all" ]]; then
+  if ([[ -z "$ALIEN_JDL_STARTSPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SPLITSTEP" ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq 2 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 2 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" == "all" ]]; then
     # 2. the other detectors decoding + reco
     WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS_START
     echo "Step 2) Decoding and reconstructing ALL-TPC"
@@ -498,11 +514,11 @@ else
     for i in AOD QC CALIB CALIB_LOCAL_INTEGRATED_AGGREGATOR; do
       export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
     done
-    env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC,$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
-      time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      time env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC,$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
       exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
@@ -515,7 +531,16 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_2.log
+      if [[ -f performanceMetrics.json ]]; then
+	mv performanceMetrics.json performanceMetrics_2.json
+      fi
       $STATSCRIPT latest_reco_2.log reco_2
+      exitcode=$?
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from processing is " $exitcode > validation_error.message
+	echo "exit code from processing is " $exitcode
+	exit $exitcode
+      fi
       # let's compare to previous step
       if [[ -f latest_reco_1.log ]]; then
 	nCTFsFilesInspected_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
@@ -542,17 +567,21 @@ else
     fi
   fi
 
-  if [[ -z "$ALIEN_JDL_SPLITSTEP" ]] || [[ "$ALIEN_JDL_SPLITSTEP" -eq 3 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 3 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq "all" ]]; then
+  if ([[ -z "$ALIEN_JDL_SPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SPLITSTEP" ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq 3 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 3 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq "all" ]]; then
     # 3. matching, QC, calib, AOD
     WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS_START
     echo "Step 3) matching, QC, calib, AOD"
     echo -e "\nStep 3) matching, QC, calib, AOD" >> workflowconfig.log
     export TIMEFRAME_RATE_LIMIT=0
-    env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    echo "Removing detectors $DETECTORS_EXCLUDE"
+    READER_DELAY=${ALIEN_JDL_READERDELAY:-30}
+    export ARGS_EXTRA_PROCESS_o2_global_track_cluster_reader+=" --reader-delay $READER_DELAY "
+    echo "extra args are $ARGS_EXTRA_PROCESS_o2_global_track_cluster_reader_workflow"
+    env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
-      time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE_QC=CPV ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+      time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_EXCLUDE_QC=CPV,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
       exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
@@ -565,23 +594,29 @@ else
 	exit $exitcode
       fi
       mv latest.log latest_reco_3.log
+      if [[ -f performanceMetrics.json ]]; then
+	mv performanceMetrics.json performanceMetrics_3.json
+      fi
     fi
   fi
 fi
 
 # now extract all performance metrics
 IFS=$'\n'
-if [[ -f "performanceMetrics.json" ]]; then
-    timeStart=`date +%s`
-    for workflow in `grep ': {' performanceMetrics.json`; do
-	strippedWorkflow=`echo $workflow | cut -d\" -f2`
-	cat performanceMetrics.json | jq '.'\"${strippedWorkflow}\"'' > ${strippedWorkflow}_metrics.json
+timeStart=`date +%s`
+for perfMetricsFiles in performanceMetrics.json performanceMetrics_1.json performanceMetrics_2.json performanceMetrics_3.json ; do
+  suffix=`echo $perfMetricsFiles | sed 's/performanceMetrics\(.*\).json/\1/'`
+  if [[ -f "performanceMetrics.json" ]]; then
+    for workflow in `grep ': {' $perfMetricsFiles`; do
+      strippedWorkflow=`echo $workflow | cut -d\" -f2`
+      cat $perfMetricsFiles | jq '.'\"${strippedWorkflow}\"'' > ${strippedWorkflow}_metrics${suffix}.json
     done
-    timeEnd=`date +%s`
-    timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-    delta=$(( $timeEnd-$timeStart ))
-    echo "Time spent in splitting the metrics files = $delta s"
-fi
+  fi
+done
+timeEnd=`date +%s`
+timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+delta=$(( $timeEnd-$timeStart ))
+echo "Time spent in splitting the metrics files = $delta s"
 
 if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   # flag to possibly enable Analysis QC
