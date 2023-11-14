@@ -25,7 +25,8 @@ public:
     mQuarkRapidityMax = -1.5;
     mHadRapidityMin = -1.5;
     mHadRapidityMax = -1.5;
-    mDoNoQuarkTrigger = quarkPdgList.size() == 0;
+    mQuarkPdg = 0;
+    mHadronPdg = 0;
     mQuarkPdgList = quarkPdgList;
     mHadronPdgList = hadronPdgList;
     if (mQuarkPdgList.size() > 1 && mHadronPdgList.size() > 1)
@@ -41,26 +42,23 @@ public:
   ///  Print the input
   void Print()
   {
-    std::cout << "********** GeneratorPythia8GapTriggeredHF configuration dump **********" << std::endl;
-    fmt::printf("* Trigger ratio: %d\n", mInverseTriggerRatio);
-    fmt::printf("* Quark pdg: %d\n", mQuarkPdg);
-    fmt::printf("* Quark rapidity: %f - %f\n", mQuarkRapidityMin, mQuarkRapidityMax);
-    fmt::printf("* Hadron pdg: %d\n", mHadronPdg);
-    fmt::printf("* Hadron rapidity: %f - %f\n", mHadRapidityMin, mHadRapidityMax);
-    fmt::printf("* No quark trigger: %d\n", mDoNoQuarkTrigger);
-    fmt::printf("* Quark pdg list: ");
+    LOG(info) << "********** GeneratorPythia8GapTriggeredHF configuration dump **********";
+    LOG(info)<<Form("* Trigger ratio: %d", mInverseTriggerRatio);
+    LOG(info)<<Form("* Quark pdg: %d", mQuarkPdg);
+    LOG(info)<<Form("* Quark rapidity: %f - %f", mQuarkRapidityMin, mQuarkRapidityMax);
+    LOG(info)<<Form("* Hadron pdg: %d", mHadronPdg);
+    LOG(info)<<Form("* Hadron rapidity: %f - %f", mHadRapidityMin, mHadRapidityMax);
+    LOG(info)<<Form("* Quark pdg list: ");
     for (auto pdg : mQuarkPdgList)
     {
-      fmt::printf("%d ", pdg);
+      LOG(info)<<Form("* %d ", pdg);
     }
-    fmt::printf("\n");
-    fmt::printf("* Hadron pdg list: ");
+    LOG(info)<<Form("* Hadron pdg list: ");
     for (auto pdg : mHadronPdgList)
     {
-      fmt::printf("%d ", pdg);
+      LOG(info)<<Form("* %d ", pdg);
     }
-    fmt::printf("\n");
-    std::cout << "***********************************************************************" << std::endl;
+    LOG(info)<<"***********************************************************************";
   }
 
   bool Init() override
@@ -71,8 +69,6 @@ public:
     return o2::eventgen::GeneratorPythia8::Init();
   }
 
-  void addTriggerOnHadron(int hadPdg) { mHadronPdgList.push_back(hadPdg); };
-  void setQuarkTrigger(bool doNoQuarkTrigger) { mDoNoQuarkTrigger = doNoQuarkTrigger; };
   void setQuarkRapidity(float yMin, float yMax)
   {
     mQuarkRapidityMin = yMin;
@@ -92,7 +88,7 @@ protected:
     // Simple straightforward check to alternate generators
     if (mGeneratedEvents % mInverseTriggerRatio == 0)
     {
-
+      // Alternate quarks if enabled (with the same ratio)
       if (mQuarkPdgList.size() > 1)
       {
         int indexq = (mGeneratedEvents / mInverseTriggerRatio) % mQuarkPdgList.size();
@@ -103,7 +99,7 @@ protected:
         mQuarkPdg = mQuarkPdgList[0];
       }
 
-      // Alternate Omega and Xi if enabled (with the same ratio)
+      // Alternate hadrons if enabled (with the same ratio)
       if (mHadronPdgList.size())
       {
         int indexh = (mGeneratedEvents / mInverseTriggerRatio) % mHadronPdgList.size();
@@ -207,22 +203,21 @@ private:
   Pythia8::Event mOutputEvent;
 
   // Properties of selection
-  int mQuarkPdg = 0;
+  int mQuarkPdg;
   float mQuarkRapidityMin;
   float mQuarkRapidityMax;
-  int mHadronPdg = 0;
+  int mHadronPdg;
   float mHadRapidityMin;
   float mHadRapidityMax;
-  bool mDoNoQuarkTrigger;
 
   // Control gap-triggering
   unsigned long long mGeneratedEvents;
   int mInverseTriggerRatio;
 
-  // Control alternate injection of charm and beauty
+  // Control alternate trigger on charm and beauty quarks
   std::vector<int> mQuarkPdgList = {};
 
-  // Control alternate injection of Omega and Xi
+  // Control alternate trigger on different hadrons
   std::vector<int> mHadronPdgList = {};
 };
 
@@ -283,7 +278,6 @@ FairGenerator *GeneratorPythia8GapHF(int inputTriggerRatio, float yQuarkMin = -1
   myGen->readString("Random:setSeed on");
   myGen->readString("Random:seed " + std::to_string(seed));
   myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
-  myGen->setQuarkTrigger(quarkPdgList.size());
   myGen->setHadronRapidity(yHadronMin, yHadronMax);
 
   return myGen;
