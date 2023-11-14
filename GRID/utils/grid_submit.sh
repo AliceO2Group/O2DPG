@@ -287,7 +287,7 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
 
  
   # read preamble from job file which is used whenever command line not given
-  # a) OutputSpec
+  # -) OutputSpec
   [[ ! ${OUTPUTSPEC} ]] && OUTPUTSPEC=$(grep "^#JDL_OUTPUT=" ${SCRIPT} | sed 's/#JDL_OUTPUT=//')
   echo "Found OutputSpec to be ${OUTPUTSPEC}"
   if [ ! ${OUTPUTSPEC} ]; then
@@ -298,7 +298,17 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
     # check if this is a list and if all parts are properly quoted
     OUTPUTSPEC=$(sanitize_tokens_with_quotes ${OUTPUTSPEC})
   fi
-  # b) PackageSpec
+  # -) ErrorOutputSpec
+  [[ ! ${ERROROUTPUTSPEC} ]] && ERROROUTPUTSPEC=$(grep "^#JDL_ERROROUTPUT=" ${SCRIPT} | sed 's/#JDL_ERROROUTPUT=//')
+  echo "Found ErrorOutputSpec to be ${ERROROUTPUTSPEC}"
+  if [ ${ERROROUTPUTSPEC} ]; then
+    # check if this is a list and if all parts are properly quoted
+    ERROROUTPUTSPEC=$(sanitize_tokens_with_quotes ${ERROROUTPUTSPEC})
+  fi
+  # -) Special singularity / Apptainer image
+  [[ ! ${IMAGESPEC} ]] && IMAGESPEC=$(grep "^#JDL_IMAGE=" ${SCRIPT} | sed 's/#JDL_IMAGE=//')
+  echo "Found Container Image to be ${IMAGESPEC}"
+  # -) PackageSpec
   [[ ! ${PACKAGESPEC} ]] && PACKAGESPEC=$(grep "^#JDL_PACKAGE=" ${SCRIPT} | sed 's/#JDL_PACKAGE=//')
   echo "Found PackagesSpec to be ${PACKAGESPEC}"
   ## sanitize package spec
@@ -341,6 +351,8 @@ TTL=${JOBTTL};
 EOF
   echo "Output = {"${OUTPUTSPEC:-\"logs*.zip@disk=1\",\"AO2D.root@disk=1\"}"};" >> "${MY_JOBNAMEDATE}.jdl"  # add output spec
   echo "Packages = {"${PACKAGESPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add package spec
+  [ $ERROROUTPUTSPEC ] && echo "ErrorOutput = {"${ERROROUTPUTSPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add error output files
+  [ $IMAGESPEC ] && echo "DebugTag = {\"${IMAGESPEC}\"};" >> "${MY_JOBNAMEDATE}.jdl"   # use special singularity image to run job
 
 # "output_arch.zip:output/*@disk=2",
 # "checkpoint*.tar@disk=2"
