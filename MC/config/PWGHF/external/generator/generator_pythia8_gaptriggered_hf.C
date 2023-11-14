@@ -29,10 +29,6 @@ public:
     mHadronPdg = 0;
     mQuarkPdgList = quarkPdgList;
     mHadronPdgList = hadronPdgList;
-    if (mQuarkPdgList.size() > 1 && mHadronPdgList.size() > 1)
-    {
-      LOG(fatal)<<"GeneratorPythia8GapTriggeredHF: Only one between hadron list and quark list can have more than one element";
-    }
     Print();
   }
 
@@ -84,30 +80,25 @@ protected:
   //__________________________________________________________________
   bool generateEvent() override
   {
+    
 
     // Simple straightforward check to alternate generators
     if (mGeneratedEvents % mInverseTriggerRatio == 0)
     {
+      int nInjectedEvents = mGeneratedEvents / mInverseTriggerRatio;
       // Alternate quarks if enabled (with the same ratio)
-      if (mQuarkPdgList.size() > 1)
+      if (mQuarkPdgList.size() >= 1)
       {
-        int indexq = (mGeneratedEvents / mInverseTriggerRatio) % mQuarkPdgList.size();
-        mQuarkPdg = mQuarkPdgList[indexq];
+        int iQuark = nInjectedEvents % mQuarkPdgList.size();
+        mQuarkPdg = mQuarkPdgList[iQuark];
+        LOG(debug)<<"SELECTED quark: "<<mQuarkPdgList[iQuark];
       }
-      else if (mQuarkPdgList.size() == 1)
-      {
-        mQuarkPdg = mQuarkPdgList[0];
-      }
-
       // Alternate hadrons if enabled (with the same ratio)
-      if (mHadronPdgList.size())
+      if (mHadronPdgList.size() >= 1)
       {
-        int indexh = (mGeneratedEvents / mInverseTriggerRatio) % mHadronPdgList.size();
-        mHadronPdg = mHadronPdgList[indexh];
-      }
-      else if (mHadronPdgList.size() == 1)
-      {
-        mHadronPdg = mHadronPdgList[0];
+        int iHadron = (nInjectedEvents / std::max(mHadronPdgList.size(), 1ul)) % mHadronPdgList.size();
+        mHadronPdg = mHadronPdgList[iHadron];
+        LOG(debug)<<"SELECTED hadron: "<<mHadronPdgList[iHadron];
       }
 
       // Generate event of interest
