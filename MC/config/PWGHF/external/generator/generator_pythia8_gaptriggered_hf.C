@@ -96,7 +96,7 @@ protected:
       // Alternate hadrons if enabled (with the same ratio)
       if (mHadronPdgList.size() >= 1)
       {
-        int iHadron = (nInjectedEvents / std::max(mHadronPdgList.size(), 1ul)) % mHadronPdgList.size();
+        int iHadron = (nInjectedEvents / std::max(mQuarkPdgList.size(), 1ul)) % mHadronPdgList.size();
         mHadronPdg = mHadronPdgList[iHadron];
         LOG(debug)<<"SELECTED hadron: "<<mHadronPdgList[iHadron];
       }
