@@ -3,13 +3,11 @@ int External()
     int checkPdgSignal = 4132;
     int checkPdgDecayPi = 211;
     int checkPdgDecayXi = 3312;
-    int checkPdgDecayLambda = 3122;
-    int checkPdgDecayP = 2212;
     int checkPdgQuark = 4;
     float ratioTrigger = 1./3; // one event triggered out of 3
 
     std::string path{"o2sim_Kine.root"};
-    std::cout << "Check for\nsignal PDG " << checkPdgSignal << "\ndecay PDG " << checkPdgDecayPi << " and " << checkPdgDecayPi << "\n";
+    std::cout << "Check for\nsignal PDG " << checkPdgSignal << "\ndecay PDG " << checkPdgDecayXi << " and " << checkPdgDecayPi << "\n";
     TFile file(path.c_str(), "READ");
     if (file.IsZombie())
     {
@@ -34,8 +32,6 @@ int External()
     int nSignalAntiPart{};
 
     int nDecayXic{};
-    int nDecayXi{};
-    int nDecayLambda{};
     int nFullDecayChain{};
 
     auto nEvents = tree->GetEntries();
@@ -94,80 +90,14 @@ int External()
                         {
                             auto childCasc0 = o2::mcutils::MCTrackNavigator::getDaughter0(*child0, *tracks);
                             auto childCasc1 = o2::mcutils::MCTrackNavigator::getDaughter1(*child0, *tracks);
-                            if (childCasc0 != nullptr && childCasc1 != nullptr)
-                            {
-                                if ((std::abs(childCasc0->GetPdgCode()) == checkPdgDecayLambda && std::abs(childCasc1->GetPdgCode()) == checkPdgDecayPi) || (std::abs(childCasc1->GetPdgCode()) == checkPdgDecayLambda && std::abs(childCasc0->GetPdgCode()) == checkPdgDecayPi))
-                                {
-                                    nDecayXi++;
-                                    // lambda is childCasc0
-                                    if (std::abs(childCasc0->GetPdgCode()) == checkPdgDecayLambda)
-                                    {
-                                        auto childLam0 = o2::mcutils::MCTrackNavigator::getDaughter0(*childCasc0, *tracks);
-                                        auto childLam1 = o2::mcutils::MCTrackNavigator::getDaughter1(*childCasc0, *tracks);
-                                        if (childLam0 != nullptr && childLam1 != nullptr)
-                                        {
-                                            if ((std::abs(childLam0->GetPdgCode()) == checkPdgDecayP && std::abs(childLam1->GetPdgCode()) == checkPdgDecayPi) || (std::abs(childLam1->GetPdgCode()) == checkPdgDecayP && std::abs(childLam0->GetPdgCode()) == checkPdgDecayPi))
-                                            {
-                                                nDecayLambda++;
-                                                nFullDecayChain++;
-                                            }
-                                        }
-                                    }
-                                    else if (std::abs(childCasc1->GetPdgCode()) == checkPdgDecayLambda)
-                                    { // lambda is childCasc1
-                                        auto childLam0 = o2::mcutils::MCTrackNavigator::getDaughter0(*childCasc1, *tracks);
-                                        auto childLam1 = o2::mcutils::MCTrackNavigator::getDaughter1(*childCasc1, *tracks);
-                                        if (childLam0 != nullptr && childLam1 != nullptr)
-                                        {
-                                            if ((std::abs(childLam0->GetPdgCode()) == checkPdgDecayP && std::abs(childLam1->GetPdgCode()) == checkPdgDecayPi) || (std::abs(childLam1->GetPdgCode()) == checkPdgDecayP && std::abs(childLam0->GetPdgCode()) == checkPdgDecayPi))
-                                            {
-                                                nDecayLambda++;
-                                                nFullDecayChain++;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            nFullDecayChain++;
                         }
 
                         else if (std::abs(pdg1) == checkPdgDecayXi)
                         { // ------------- cascade is child1 -------------
                             auto childCasc0 = o2::mcutils::MCTrackNavigator::getDaughter0(*child1, *tracks);
                             auto childCasc1 = o2::mcutils::MCTrackNavigator::getDaughter1(*child1, *tracks);
-                            if (childCasc0 != nullptr && childCasc1 != nullptr)
-                            {
-                                if ((std::abs(childCasc0->GetPdgCode()) == checkPdgDecayLambda && std::abs(childCasc1->GetPdgCode()) == checkPdgDecayPi) || (std::abs(childCasc1->GetPdgCode()) == checkPdgDecayLambda && std::abs(childCasc0->GetPdgCode()) == checkPdgDecayPi))
-                                {
-                                    nDecayXi++;
-                                    // lambda is chilCasc0
-                                    if (std::abs(childCasc0->GetPdgCode()) == checkPdgDecayLambda)
-                                    {
-                                        auto childLam0 = o2::mcutils::MCTrackNavigator::getDaughter0(*childCasc0, *tracks);
-                                        auto childLam1 = o2::mcutils::MCTrackNavigator::getDaughter1(*childCasc0, *tracks);
-                                        if (childLam0 != nullptr && childLam1 != nullptr)
-                                        {
-                                            if ((std::abs(childLam0->GetPdgCode()) == checkPdgDecayP && std::abs(childLam1->GetPdgCode()) == checkPdgDecayPi) || (std::abs(childLam1->GetPdgCode()) == checkPdgDecayP && std::abs(childLam0->GetPdgCode()) == checkPdgDecayPi))
-                                            {
-                                                nDecayLambda++;
-                                                nFullDecayChain++;
-                                            }
-                                        }
-                                    }
-                                    else if (std::abs(childCasc1->GetPdgCode()) == checkPdgDecayLambda)
-                                    { // lambda is childCasc1
-                                        auto childLam0 = o2::mcutils::MCTrackNavigator::getDaughter0(*childCasc1, *tracks);
-                                        auto childLam1 = o2::mcutils::MCTrackNavigator::getDaughter1(*childCasc1, *tracks);
-                                        if (childLam0 != nullptr && childLam1 != nullptr)
-                                        {
-                                            if ((std::abs(childLam0->GetPdgCode()) == checkPdgDecayP && std::abs(childLam1->GetPdgCode()) == checkPdgDecayPi) || (std::abs(childLam1->GetPdgCode()) == checkPdgDecayP && std::abs(childLam0->GetPdgCode()) == checkPdgDecayPi))
-                                            {
-                                                nDecayLambda++;
-                                                nFullDecayChain++;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            nFullDecayChain++;
                         }
                     }
                 }
@@ -187,8 +117,6 @@ int External()
               << "#signal anti-particles: " << nSignalAntiPart << "\n"
               << "#Daughter pairs: " << nDauPairs << "\n"
               << "#Correct Xic decays: " << nDecayXic << "\n"
-              << "#Correct Xi decays: " << nDecayXi << "\n"
-              << "#Correct Lambda decays: " << nDecayLambda << "\n"
               << "#Correct full decay chain: " << nFullDecayChain << "\n";
 
     if (nDauPairs == 0)
@@ -211,20 +139,9 @@ int External()
         std::cerr << "At least one among number of pi and number of anti-pi should be greater than 1.\n";
         return 1;
     }
-    // check all the steps in the decay chain
-    if (nDecayXic != nDecayXi)
-    {
-        std::cerr << "The Xi decay chain is not the expected one (Xic -> Xi pi -> (Lambda pi) pi).\n";
-        return 1;
-    }
-    if (nDecayXic != nDecayLambda)
-    {
-        std::cerr << "The Lambda decay chain is not the expected one (Xic -> Xi pi -> (Lambda pi) pi -> ((p pi) pi) pi).\n";
-        return 1;
-    }
     if (nDecayXic != nFullDecayChain)
     {
-        std::cerr << "The full OmegaC decay chain is not the expected one (Xic -> Xi pi -> (Lambda pi) pi -> ((p pi) pi) pi).\n";
+        std::cerr << "The full OmegaC decay chain is not the expected one (Xic -> Xi pi).\n";
         return 1;
     }
     if (nQuark < 2 * nEvents * ratioTrigger) // we expect anyway more because the same quark is repeated several time, after each gluon radiation
