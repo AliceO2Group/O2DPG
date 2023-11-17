@@ -34,7 +34,6 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "rawstats:TRD/RAWSTATS"
@@ -56,7 +55,6 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "trdall"
@@ -82,7 +80,6 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "trdall"
@@ -109,7 +106,6 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "phValues:TRD/PULSEHEIGHT"
@@ -134,7 +130,6 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "trackITSTPCTRD:TRD/MATCH_ITSTPC;trigITSTPCTRD:TRD/TRGREC_ITSTPC"
@@ -164,12 +159,12 @@
       "id": "trdall",
       "active": "true",
       "machines": [],
-      "query": "digits:TRD/DIGITS/0;tracklets:TRD/TRACKLETS/0;triggers:TRD/TRKTRGRD/0",
+      "query": "digits:TRD/DIGITS/0;tracklets:TRD/TRACKLETS/0;triggers:TRD/TRKTRGRD/0;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC",
       "samplingConditions": [
         {
           "condition": "random",
           "fraction": "0.05",
-          "seed": "1234"
+          "seed": "0"
         }
       ],
       "blocking": "false"

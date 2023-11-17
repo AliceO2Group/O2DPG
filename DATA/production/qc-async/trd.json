@@ -29,10 +29,9 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "digits:TRD/DIGITS;triggers:TRD/TRKTRGRD"
+          "query": "digits:TRD/DIGITS;triggers:TRD/TRKTRGRD;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC"
         }
       },
       "Tracklets": {
@@ -41,7 +40,6 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
@@ -53,7 +51,6 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "phValues:TRD/PULSEHEIGHT"
@@ -65,7 +62,6 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "trackITSTPCTRD:TRD/MATCH_ITSTPC;trigITSTPCTRD:TRD/TRGREC_ITSTPC"
