@@ -97,7 +97,7 @@ if [[ -z "${IS_TRIGGERED_DATA:-}" ]]; then export IS_TRIGGERED_DATA=0; fi       
 if [[ -z "${CTF_DIR:-}" ]];           then CTF_DIR=$FILEWORKDIR; fi             # Directory where to store CTFs
 if [[ -z "${CALIB_DIR:-}" ]];         then CALIB_DIR="/dev/null"; fi            # Directory where to store output from calibration workflows, /dev/null : skip their writing
 if [[ -z "${EPN2EOS_METAFILES_DIR:-}" ]]; then EPN2EOS_METAFILES_DIR="/dev/null"; fi # Directory where to store epn2eos files metada, /dev/null : skip their writing
-if [[ -z "${TPC_CORR_SCALING:-}" ]]; then export TPC_CORR_SCALING=""; fi      # TPC corr.map lumi scaling options, any combination of --lumi-type 0 or 1 or 2, --corrmap-lumi-mean <float>, --corrmap-lumi-inst <float>, --ctp-lumi-factor <float=1>, --ctp-lumi-source <int=0>
+if [[ -z "${TPC_CORR_SCALING:-}" ]]; then export TPC_CORR_SCALING=""; fi      # TPC corr.map lumi scaling options, any combination of --lumi-type <0,1,2> --corrmap-lumi-mode <0,1>  and TPCCorrMap... configurable param
 if [[ $EPNSYNCMODE == 0 ]]; then
   if [[ -z "${SHMSIZE:-}" ]];       then export SHMSIZE=$(( 8 << 30 )); fi    # Size of shared memory for messages
   if [[ -z "${NGPUS:-}" ]];         then export NGPUS=1; fi                   # Number of GPUs to use, data distributed round-robin

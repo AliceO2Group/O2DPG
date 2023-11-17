@@ -303,17 +303,17 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   # now we set the options
   if [[ $INST_IR_FOR_TPC -gt 0 ]]; then # externally imposed IR for scaling
     echo "Applying externally provided IR for scaling, $INST_IR_FOR_TPC Hz"
-    export TPC_CORR_SCALING+=" --corrmap-lumi-inst $INST_IR_FOR_TPC "
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
   elif [[ $INST_IR_FOR_TPC == 0 ]]; then # when zero, only the TPC/Calib/CorrectionMaps is applied
     echo "Passed valued for scaling is zero, only TPC/Calib/CorrectionMaps will be applied"
-    export TPC_CORR_SCALING+=" --corrmap-lumi-inst $INST_IR_FOR_TPC "
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
   elif [[ $INST_IR_FOR_TPC -lt 0 ]]; then # do not apply any correction
     echo "Passed valued for scaling is smaller than zero, no scaling will be applied"
     echo "NOTA BENE: In the future, this value will signal to not apply any correction at all, which is not operational yet (but please check, as it depends on O2)"
-    export TPC_CORR_SCALING+=" --corrmap-lumi-inst $INST_IR_FOR_TPC "
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
   elif [[ $INST_IR_FOR_TPC == "CTPCCDB" ]]; then # using what we have in the CCDB CTP counters, extracted at the beginning of the script
     echo "Using CTP CCDB which gave the mean IR of the run at the beginning of the script ($RUN_IR Hz)"
-    export TPC_CORR_SCALING+=" --corrmap-lumi-inst $RUN_IR "
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$RUN_IR"
   elif [[ $INST_IR_FOR_TPC == "CTP" ]]; then
     if ! has_detector CTP ; then
       echo "TPC correction with CTP Lumi is requested but CTP is not in the WORKFLOW_DETECTORS=$WORKFLOW_DETECTORS"
@@ -330,16 +330,16 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   fi
 
   if [[ -n $ALIEN_JDL_MEANIRFORTPC && $ALIEN_JDL_MEANIRFORTPC > 0 ]]; then # externally imposed TPC map mean IR for scaling
-    export TPC_CORR_SCALING+=" --corrmap-lumi-mean $ALIEN_JDL_MEANIRFORTPC "
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiMean=$ALIEN_JDL_MEANIRFORTPC"
   fi
 
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]]; then
     unset TPC_CORR_SCALING
-    export TPC_CORR_SCALING=" --ctp-lumi-factor 2.414 --lumi-type 1"
+    export TPC_CORR_SCALING=";TPCCorrMap.lumiInstFactor=2.414 --lumi-type 1"
     if [[ $SCALE_WITH_ZDC == 0 ]]; then
       # scaling with FT0
       if [[ $SCALE_WITH_FT0 == 1 ]]; then
-	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --ctp-lumi-factor 135. --lumi-type 1 "
+	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --lumi-type 1 TPCCorrMap.lumiInstFactor=135."
       else
 	echo "Neither ZDC nor FT0 are in the run, and this is from 2023 PbPb: we cannot scale TPC ditortion corrections, aborting..."
 	return 1
