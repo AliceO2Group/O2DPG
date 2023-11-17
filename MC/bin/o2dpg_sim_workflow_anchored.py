@@ -206,7 +206,14 @@ def retrieve_GRP(ccdbreader, timestamp):
     ts, grp = ccdbreader.fetch(grp_path, "o2::parameters::GRPObject", timestamp = timestamp)
     return grp
 
-def retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, run_number, finaltime, ft0_eff):
+def retrieve_GRPLHCIF(ccdbreader, timestamp):
+    """
+    retrieves the GRPLHCIF object for a given time stamp
+    """
+    _, grplhcif = ccdbreader.fetch("GLO/Config/GRPLHCIF", "o2::parameters::GRPLHCIFData", timestamp = timestamp)
+    return grplhcif
+
+def retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, run_number, finaltime, ft0_eff, NBunches, ColSystem):
     """
     retrieves the CTP scalers object for a given timestamp and run_number
     and calculates the interation rate to be applied in Monte Carlo digitizers
@@ -215,16 +222,26 @@ def retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, run_number, finaltime
     ts, ctpscaler = ccdbreader.fetch(path, "o2::ctp::CTPRunScalers", timestamp = timestamp)
     if ctpscaler != None:
       ctpscaler.convertRawToO2()
-      rate = ctpscaler.getRateGivenT(finaltime,0,0)  # the simple FT0 rate from the counters
-      # print("Global rate " + str(rate.first) + " local rate " + str(rate.second))
+      # this is the default for pp
+      ctpclass = 0 # <---- we take the scaler for FT0
+      ctptype = 0
+      # this is the default for PbPb
+      if ColSystem == "PbPb":
+        ctpclass = 25  # <--- we take scalers for ZDC
+        ctptype = 7
+      print("Fetching rate with class " + str(ctpclass) + " type " + str(ctptype))
+      rate = ctpscaler.getRateGivenT(finaltime, ctpclass, ctptype)
+      #if ColSystem == "PbPb":
+      #  rate.first = rate.first / 28.
+      #  rate.second = rate.second / 28.
 
-      # now get the bunch filling object which is part of GRPLHCIF and calculate
-      # true rate (input from Chiara Zampolli)
-      ts, grplhcif = ccdbreader.fetch("GLO/Config/GRPLHCIF", "o2::parameters::GRPLHCIFData", timestamp = timestamp)
-      coll_bunches = grplhcif.getBunchFilling().getNBunches()
-      mu = - math.log(1. - rate.first / 11245 / coll_bunches) / ft0_eff
-      finalRate = coll_bunches * mu * 11245
-      return finalRate
+      print("Global rate " + str(rate.first) + " local rate " + str(rate.second))
+      if rate.first >= 0:
+        # calculate true rate (input from Chiara Zampolli) using number of bunches
+        coll_bunches = NBunches
+        mu = - math.log(1. - rate.second / 11245 / coll_bunches) / ft0_eff
+        finalRate = coll_bunches * mu * 11245
+        return finalRate
 
     print (f"[ERROR]: Could not determine interaction rate; Some (external) default used")
     return None
@@ -277,8 +294,6 @@ def main():
     parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
     parser.add_argument("--ft0-eff", type=float, dest="ft0_eff", help="FT0 eff needed for IR", default=-1.0)
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
-    parser.add_argument("-eCM", type=float, dest="eCM", help="Energy", default=13600)
-    parser.add_argument("-col", type=str, dest="col", help="Collision System", default="pp")
     args = parser.parse_args()
 
     # split id should not be larger than production id
@@ -306,6 +321,27 @@ def main():
     currenttime = GLOparams["SOR"] + prod_offset * GLOparams["OrbitsPerTF"] * LHCOrbitMUS // 1000 # timestamp in milliseconds
     print ("Production put at time : " + str(currenttime))
 
+    # retrieve the GRPHCIF object
+    grplhcif = retrieve_GRPLHCIF(ccdbreader, int(currenttime))
+    eCM = grplhcif.getSqrtS()
+    A1 = grplhcif.getAtomicNumberB1()
+    A2 = grplhcif.getAtomicNumberB2()
+
+    # determine collision system and energy
+    print ("Determined eMC ", eCM)
+    print ("Determined atomic number A1 ", A1)
+    print ("Determined atomic number A2 ", A2)
+    ColSystem = ""
+    if A1 == 82 and A2 == 82:
+      ColSystem = "PbPb"
+    elif A1 == 1 and A2 == 1:
+      ColSystem = "pp"
+    else:
+      print ("Unknown collision system ... exiting")
+      exit (1)
+
+    print ("Collision system ", ColSystem)
+
     forwardargs = " ".join([ a for a in args.forward if a != '--' ])
     # retrieve interaction rate
     rate = None
@@ -313,19 +349,19 @@ def main():
     if args.ccdb_IRate == True:
        effT0 = args.ft0_eff
        if effT0 < 0:
-         if args.col == "pp":
-           if args.eCM < 1000:
+         if ColSystem == "pp":
+           if eCM < 1000:
              effT0 = 0.68
-           elif args.eCM < 6000:
+           elif eCM < 6000:
              effT0 = 0.737
            else:
              effT0 = 0.759
-         elif args.col == "PbPb":
+         elif ColSystem == "PbPb":
            effT0 = 4.0
          else:
            effT0 = 0.759
 
-       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000., effT0)
+       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000., effT0, grplhcif.getBunchFilling().getNBunches(), ColSystem)
 
        if rate != None:
          # if the rate calculation was successful we will use it, otherwise we fall back to some rate given as part
@@ -338,7 +374,7 @@ def main():
    
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
-    forwardargs += " -tf " + str(args.tf) + " --sor " + str(GLOparams["SOR"]) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(args.col) + " -eCM " + str(args.eCM)
+    forwardargs += " -tf " + str(args.tf) + " --sor " + str(GLOparams["SOR"]) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + " -eCM " + str(eCM)
     print ("forward args ", forwardargs)
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
     print ("Creating time-anchored workflow...")
