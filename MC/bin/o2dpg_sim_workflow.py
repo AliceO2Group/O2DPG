@@ -570,9 +570,11 @@ for tf in range(1, NTIMEFRAMES + 1):
       exit(1)
 
    # Determine interation rate
-   # it should be taken from CDB, meanwhile some default values
    signalprefix='sgn_' + str(tf)
    INTRATE=int(args.interactionRate)
+   if INTRATE <= 0:
+      print('o2dpg_sim_workflow: Error! Interaction rate not >0 !!!')
+      exit(1)
    BCPATTERN=args.bcPatternFile
    includeQED = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb")) or (args.with_qed == True)
 
