@@ -130,16 +130,14 @@ struct MetricRunner
     }
   }
 
-  void evaluate(TH1* hA, TH1* hB, NCCodes::CODE code, std::vector<MetricResult>& metricResultsReturn)
+  void evaluate(TH1* hA, TH1* hB, NCCodes::CODE code)
   {
-    metricResultsReturn.clear();
     for (auto& metric : metricsEnabled) {
       if (!metric) {
         // here is a nullptr so it is not active
         continue;
       }
       metricResults.push_back(metric->evaluate(hA, hB, code));
-      metricResultsReturn.push_back(metricResults.back());
     }
   }
 
