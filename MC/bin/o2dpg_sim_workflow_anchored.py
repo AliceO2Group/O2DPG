@@ -213,7 +213,7 @@ def retrieve_GRPLHCIF(ccdbreader, timestamp):
     _, grplhcif = ccdbreader.fetch("GLO/Config/GRPLHCIF", "o2::parameters::GRPLHCIFData", timestamp = timestamp)
     return grplhcif
 
-def retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, run_number, finaltime, ft0_eff, NBunches, ColSystem):
+def retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, run_number, finaltime, trig_eff, NBunches, ColSystem):
     """
     retrieves the CTP scalers object for a given timestamp and run_number
     and calculates the interation rate to be applied in Monte Carlo digitizers
@@ -239,7 +239,7 @@ def retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, run_number, finaltime
       if rate.first >= 0:
         # calculate true rate (input from Chiara Zampolli) using number of bunches
         coll_bunches = NBunches
-        mu = - math.log(1. - rate.second / 11245 / coll_bunches) / ft0_eff
+        mu = - math.log(1. - rate.second / 11245 / coll_bunches) / trig_eff
         finalRate = coll_bunches * mu * 11245
         return finalRate
 
@@ -292,7 +292,7 @@ def main():
     parser.add_argument("--split-id", type=int, help="The split id of this job within the whole production --prod-split)", default=0)
     parser.add_argument("-tf", type=int, help="number of timeframes per job", default=1)
     parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
-    parser.add_argument("--ft0-eff", type=float, dest="ft0_eff", help="FT0 eff needed for IR", default=-1.0)
+    parser.add_argument("--trig-eff", type=float, dest="trig_eff", help="Trigger eff needed for IR", default=-1.0)
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
 
@@ -347,21 +347,21 @@ def main():
     rate = None
 
     if args.ccdb_IRate == True:
-       effT0 = args.ft0_eff
-       if effT0 < 0:
+       effTrigger = args.trig_eff
+       if effTrigger < 0:
          if ColSystem == "pp":
            if eCM < 1000:
-             effT0 = 0.68
+             effTrigger = 0.68
            elif eCM < 6000:
-             effT0 = 0.737
+             effTrigger = 0.737
            else:
-             effT0 = 0.759
+             effTrigger = 0.759
          elif ColSystem == "PbPb":
-           effT0 = 4.0
+           effTrigger = 28.0 # this is ZDC
          else:
-           effT0 = 0.759
+           effTrigger = 0.759
 
-       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000., effT0, grplhcif.getBunchFilling().getNBunches(), ColSystem)
+       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000., effTrigger, grplhcif.getBunchFilling().getNBunches(), ColSystem)
 
        if rate != None:
          # if the rate calculation was successful we will use it, otherwise we fall back to some rate given as part
