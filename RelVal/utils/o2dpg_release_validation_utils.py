@@ -496,6 +496,24 @@ class RelVal:
 
         return metric_names, object_names, np.reshape(results[idx], (len(object_names), len(metric_names)))
 
+    def yield_metrics_results_per_object(self):
+        results = None
+        if self.results is not None:
+            mask = self.result_filter_mask
+            idx = self.results_to_metrics_idx[mask]
+            object_names = np.take(self.object_names, idx)
+            metrics = np.take(self.metrics, idx)
+            results = self.results[mask]
+        else:
+            object_names = self.object_names
+            metrics = self.metrics
+
+        for object_name in np.unique(object_names):
+            mask = object_names == object_name
+            yield_metrics = metrics[mask]
+            yield_results = results[mask] if results is not None else np.array([None] * len(yield_metrics))
+            yield object_name, yield_metrics, yield_results
+
     def write(self, filepath, annotations=None):
 
         all_objects = []
@@ -525,7 +543,7 @@ class RelVal:
                       RelVal.KEY_ANNOTATIONS: annotations}
 
         with open(filepath, "w") as f:
-            json.dump(final_dict, f)
+            json.dump(final_dict, f, indent=2)
 
 
 def get_summaries_or_from_file(in_objects):

@@ -1,10 +1,10 @@
-void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& basedOnTree = "", std::string const& currentPrefix = "", std::vector<std::string>* includeDirs = nullptr);
-void ExtractTree(TTree* tree, TDirectory* outDir, std::string const& basedOnTree = "", std::string const& currentPrefix = "");
-void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix = "");
-void WriteHisto(TH1* obj, TDirectory* outDir, std::string const& currentPrefix = "");
-void WriteTEfficiency(TEfficiency* obj, TDirectory* outDir, std::string const& currentPrefix = "");
-void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix = "");
-bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefix = "");
+void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& basedOnTree = "", std::string const& currentPrefix = "", std::vector<std::string>* includeDirs = nullptr);
+void ExtractTree(TTree* tree, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& basedOnTree = "", std::string const& currentPrefix = "");
+void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& currentPrefix = "");
+void WriteHisto(TH1* obj, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& currentPrefix = "");
+void WriteTEfficiency(TEfficiency* obj, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& currentPrefix = "");
+void WriteToDirectory(TH1* histo, TDirectory* dir, std::vector<std::string>& collectNames, std::string const& prefix = "");
+bool WriteObject(TObject* o, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& currentPrefix = "");
 
 // use this potentially to write histograms from TTree::Draw to
 TDirectory* BUFFER_DIR = nullptr;
@@ -19,7 +19,7 @@ bool checkFileOpen(TFile* file)
 // outputFilename: Where to store histograms of flattened output
 // basedOnTree: This is in principle only needed for TTrees to determine the x-axis range and binning
 
-int ExtractAndFlatten(std::string const& filename, std::string const& outputFilename, std::string const& basedOnTree = "", std::string const& includeDirsString = "")
+int ExtractAndFlatten(std::string const& filename, std::string const& outputFilename, std::string const& basedOnTree = "", std::string const& includeDirsString = "", std::string const& outJson = "")
 {
   gROOT->SetBatch();
 
@@ -52,17 +52,36 @@ int ExtractAndFlatten(std::string const& filename, std::string const& outputFile
     return 1;
   }
   TFile extractedFile(outputFilename.c_str(), "UPDATE");
-  ExtractAndFlattenDirectory(&inFile, &extractedFile, basedOnTree, "", includeDirs);
+  // collect the names so that we can dump them to a JSON file afterwards
+  std::vector<std::string> collectNames;
+  ExtractAndFlattenDirectory(&inFile, &extractedFile, collectNames, basedOnTree, "", includeDirs);
   inFile.Close();
   extractedFile.Close();
 
+  if (!outJson.empty()) {
+    std::ofstream jsonout(outJson.c_str());
+    jsonout << "{\n" << "  \"path\": " << std::filesystem::absolute(outputFilename) << ",";
+    jsonout << "\n" << "  \"objects\": [\n";
+    int mapIndex = 0;
+    int mapSize = collectNames.size();
+    for (auto& name : collectNames) {
+      jsonout << "\"" << name << "\"";
+      if (++mapIndex < mapSize) {
+        // this puts a comma except for the very last entry
+        jsonout << ",\n";
+      }
+    }
+    jsonout << "\n  ]\n}";
+    jsonout.close();
+  }
   return 0;
 }
 
 // writing a TObject to a TDirectory
-void WriteToDirectory(TH1* histo, TDirectory* dir, std::string const& prefix)
+void WriteToDirectory(TH1* histo, TDirectory* dir, std::vector<std::string>& collectNames, std::string const& prefix)
 {
   std::string name = prefix + histo->GetName();
+  collectNames.push_back(name);
 
   histo->SetName(name.c_str());
   auto hasObject = (TH1*)dir->Get(name.c_str());
@@ -117,7 +136,7 @@ bool checkIncludePath(std::string thisPath, std::vector<std::string>*& includeDi
 }
 
 // Read from a given input directory and write everything found there (including sub directories) to a flat output directory
-void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::string const& basedOnTree, std::string const& currentPrefix, std::vector<std::string>* includeDirs)
+void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& basedOnTree, std::string const& currentPrefix, std::vector<std::string>* includeDirs)
 {
 
   if (!checkIncludePath(inDir->GetPath(), includeDirs)) {
@@ -129,25 +148,25 @@ void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::stri
     auto obj = key->ReadObj();
     if (auto nextInDir = dynamic_cast<TDirectory*>(obj)) {
       // recursively scan TDirectory
-      ExtractAndFlattenDirectory(nextInDir, outDir, basedOnTree, currentPrefix + nextInDir->GetName() + "_", includeDirs);
+      ExtractAndFlattenDirectory(nextInDir, outDir, collectNames, basedOnTree, currentPrefix + nextInDir->GetName() + "_", includeDirs);
     } else if (auto qcMonitorCollection = dynamic_cast<o2::quality_control::core::MonitorObjectCollection*>(obj)) {
       auto qcMonPath = std::string(inDir->GetPath()) + "/" + qcMonitorCollection->GetName();
       auto includeDirsCache = includeDirs;
       if (!checkIncludePath(qcMonPath, includeDirsCache)) {
         continue;
       }
-      ExtractFromMonitorObjectCollection(qcMonitorCollection, outDir, currentPrefix);
+      ExtractFromMonitorObjectCollection(qcMonitorCollection, outDir, collectNames, currentPrefix);
     } else if (auto tree = dynamic_cast<TTree*>(obj)) {
-      ExtractTree(tree, outDir, basedOnTree, currentPrefix);
+      ExtractTree(tree, outDir, collectNames, basedOnTree, currentPrefix);
     } else {
-      if (!WriteObject(obj, outDir, currentPrefix)) {
+      if (!WriteObject(obj, outDir, collectNames, currentPrefix)) {
         std::cerr << "Cannot handle object " << obj->GetName() << " which is of class " << key->GetClassName() << "\n";
       }
     }
   }
 }
 
-void ExtractTree(TTree* tree, TDirectory* outDir, std::string const& basedOnTree, std::string const& currentPrefix)
+void ExtractTree(TTree* tree, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& basedOnTree, std::string const& currentPrefix)
 {
   const std::vector<std::string> acceptedLeafTypes{"char", "int", "float", "double"};
   TIter next(tree->GetListOfLeaves());
@@ -211,18 +230,18 @@ void ExtractTree(TTree* tree, TDirectory* outDir, std::string const& basedOnTree
       std::cerr << "WARNING: Cannot draw TLeaf " << ln << "\n";
       continue;
     }
-    WriteObject(currentHist, outDir);
+    WriteObject(currentHist, outDir, collectNames);
   }
   BUFFER_DIR->Clear();
 }
 
 // extract everything from a o2::quality_control::core::MonitorObjectCollection object
-void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::string const& currentPrefix)
+void ExtractFromMonitorObjectCollection(o2::quality_control::core::MonitorObjectCollection* o2MonObjColl, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& currentPrefix)
 {
   std::cout << "--- Process o2 Monitor Object Collection " << o2MonObjColl->GetName() << " ---\n";
   int nProcessed{};
   for (int j = 0; j < o2MonObjColl->GetEntries(); j++) {
-    if (WriteObject(o2MonObjColl->At(j), outDir, currentPrefix + o2MonObjColl->GetName() + "_")) {
+    if (WriteObject(o2MonObjColl->At(j), outDir, collectNames, currentPrefix + o2MonObjColl->GetName() + "_")) {
       nProcessed++;
     }
   }
@@ -240,18 +259,18 @@ void adjustName(TObject* o)
 }
 
 // decide which concrete function to call to write the given object
-bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefix)
+bool WriteObject(TObject* o, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& currentPrefix)
 {
   if (auto monObj = dynamic_cast<o2::quality_control::core::MonitorObject*>(o)) {
-    return WriteObject(monObj->getObject(), outDir, currentPrefix);
+    return WriteObject(monObj->getObject(), outDir, collectNames, currentPrefix);
   }
   adjustName(o);
   if (auto eff = dynamic_cast<TEfficiency*>(o)) {
-    WriteTEfficiency(eff, outDir, currentPrefix);
+    WriteTEfficiency(eff, outDir, collectNames, currentPrefix);
     return true;
   }
   if (auto hist = dynamic_cast<TH1*>(o)) {
-    WriteHisto(hist, outDir, currentPrefix);
+    WriteHisto(hist, outDir, collectNames, currentPrefix);
     return true;
   }
   std::cerr << "WARNING: Cannot process object " << o->GetName() << "\n";
@@ -259,13 +278,13 @@ bool WriteObject(TObject* o, TDirectory* outDir, std::string const& currentPrefi
 }
 
 // Implementation to write a TH1
-void WriteHisto(TH1* hA, TDirectory* outDir, std::string const& currentPrefix)
+void WriteHisto(TH1* hA, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& currentPrefix)
 {
-  WriteToDirectory(hA, outDir, currentPrefix);
+  WriteToDirectory(hA, outDir, collectNames, currentPrefix);
 }
 
 // Implementation to extract TH1 from TEfficieny and write them
-void WriteTEfficiency(TEfficiency* hEff, TDirectory* outDir, std::string const& currentPrefix)
+void WriteTEfficiency(TEfficiency* hEff, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& currentPrefix)
 { // should I further develop that?
   // separate numerator and denominator of the efficiency.
   // NOTE These have no directory assigned -> GOOD
@@ -281,9 +300,9 @@ void WriteTEfficiency(TEfficiency* hEff, TDirectory* outDir, std::string const& 
   hEffWrite->SetTitle(Form("%s", hEff->GetTitle()));
   hEffWrite->Divide(hEffNumerator, hEffDenominator, 1., 1., "B");
 
-  WriteToDirectory(hEffNumerator, outDir, currentPrefix);
-  WriteToDirectory(hEffDenominator, outDir, currentPrefix);
-  WriteToDirectory(hEffWrite, outDir, currentPrefix);
+  WriteToDirectory(hEffNumerator, outDir, collectNames, currentPrefix);
+  WriteToDirectory(hEffDenominator, outDir, collectNames, currentPrefix);
+  WriteToDirectory(hEffWrite, outDir, collectNames, currentPrefix);
 
   delete hEffNumerator;
   delete hEffDenominator;

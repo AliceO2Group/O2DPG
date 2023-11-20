@@ -127,6 +127,8 @@ ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i ${MC_PRODUCTION}/QC/
 ## Run for QC
 This is a simple guide to run RelVal for QC.
 
+Here is also a [working example](run/run_data_rel_val.sh).
+
 ### If you are interested in all QC plots
 To have everything and to use this as a starting point for deeper inspections, first run
 ```bash
@@ -148,6 +150,12 @@ If you only want to study for instance the ITS and CPV and there is no interest 
 ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i QC_file_1.root -j QC_file_2.root -o rel_val_all --include-dirs ITS CPV [--labels meaningfulLabel1 meaningfulLabel2]
 ```
 From here on, you can use the `inspect` command as usual. But there will never be detectors other than ITS and CPV.
+
+### Troubleshooting
+
+If there are unexpected segmentation faults or similar, most likely the `QualityControl` software is not properly linked against `O2`. Most likely, the reason is that `QC` was not rebuild against the loaded `O2` version.
+The easiest solution would be to load either `QualityControl` or meta packages such as `O2sim`.
+Loading like `O2/latest,QualityControl/latest` can cause problems depending on how the single packages were build.
 
 ## Expert section
 
