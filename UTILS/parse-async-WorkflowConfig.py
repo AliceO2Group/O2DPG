@@ -193,8 +193,9 @@ def parse_important_DPL_args(cmds, flat_config):
          s2 = extract_args(tokens, '--corrmap-lumi-mean')
          if s2:
             corrstring += ' --corrmap-lumi-mean ' + s2
-         if '--require-ctp-lumi' in tokens:
-            corrstring += ' --require-ctp-lumi '
+         s3 = extract_args(tokens, '--lumi-type')
+         if s3:
+            corrstring += ' --lumi-type ' + s3
          # these are some options applied in multiple places (so save them flatly under tpc-corr-scaling)
          flat_config['tpc-corr-scaling'] = corrstring
 

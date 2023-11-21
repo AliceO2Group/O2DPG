@@ -19,7 +19,7 @@ CCDB_PATH="http://o2-ccdb.internal"
 
 HOST=localhost
 
-QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
+QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-pedestal-calib-qcmn"
 
 max_events=50
 publish_after=400
@@ -37,7 +37,7 @@ EXTRA_CONFIG=" --publish-after-tfs ${publish_after} --max-events ${max_events} -
 
 #################################################################################################################################
 
-o2-dpl-raw-proxy ${ARGS_ALL} \
+o2-dpl-raw-proxy ${ARGS_ALL} --inject-missing-data \
     --dataspec "${PROXY_INSPEC}" \
     --readout-proxy '--channel-config "name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1"' \
     | o2-tpc-calib-pad-raw ${ARGS_ALL} \

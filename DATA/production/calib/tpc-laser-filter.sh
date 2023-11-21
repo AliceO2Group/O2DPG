@@ -41,21 +41,21 @@ fi
 
 PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
-PROXY_OUTSPEC="A:TPC/LASERTRACKS;B:TPC/CEDIGITS;eos:***/INFORMATION;D:TPC/CLUSREFS"
+PROXY_OUTSPEC="A:TPC/LASERTRACKS;B:TPC/CEDIGITS;D:TPC/CLUSREFS"
 
 
 LASER_DECODER_ADD=''
 
 HOST=localhost
 
-QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
+QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-laser-calib-qcmn"
 
 if [[ ! -z ${TPC_LASER_ILBZS:-} ]]; then
     LASER_DECODER_ADD="--pedestal-url /home/wiechula/processData/inputFilesTracking/triggeredLaser/pedestals.openchannels.root -decode-type 0"
 fi
 
 o2-dpl-raw-proxy $ARGS_ALL \
-    --dataspec "$PROXY_INSPEC" \
+    --dataspec "$PROXY_INSPEC" --inject-missing-data \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL ${LASER_DECODER_ADD} \
     --input-spec "$CALIB_INSPEC"  \
@@ -64,14 +64,14 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --pipeline tpc-raw-to-digits-0:20 \
     --remove-duplicates \
     --send-ce-digits \
-    | o2-tpc-reco-workflow $ARGS_ALL \
+    | o2-tpc-reco-workflow $ARGS_ALL ${TPC_CORR_SCALING:-} \
     --input-type digitizer  \
-    --output-type "tracks,disable-writer" \
+    --output-type "tracks,disable-writer,clusters" \
     --disable-mc \
     --pipeline tpc-zsEncoder:20,tpc-tracker:8 \
     $GPU_CONFIG \
     --condition-remap "file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPMagField;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser=TPC/Calib/LaserTracks" \
-    --configKeyValues "${ARGS_ALL_CONFIG};align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1;GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;GPU_rec_tpc.clustersShiftTimebinsClusterizer=35" \
+    --configKeyValues "${ARGS_ALL_CONFIG};align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1;GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;GPU_rec_tpc.clustersShiftTimebinsClusterizer=35;GPU_proc.memoryScalingFactor=2" \
     | o2-tpc-laser-track-filter $ARGS_ALL \
     | o2-dpl-output-proxy ${ARGS_ALL} \
     --dataspec "$PROXY_OUTSPEC" \

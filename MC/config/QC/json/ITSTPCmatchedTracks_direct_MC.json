@@ -41,16 +41,23 @@
         "dataSource" : {
           "type" : "direct",
           "query_comment" : "checking every matched track",
-          "query" : "trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;trackTPC:TPC/TRACKS;trackTPCClRefs:TPC/CLUSREFS;trackTPCMCTR:TPC/TRACKSMCLBL;trackITSTPCMCTR:GLO/TPCITS_MC;trackITSTPCABMCTR:GLO/TPCITSAB_MC"
+          "query" : "trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;trackTPC:TPC/TRACKS;trackTPCClRefs:TPC/CLUSREFS;trackITS:ITS/TRACKS/0;trackITSROF:ITS/ITSTrackROF/0;trackITSClIdx:ITS/TRACKCLSID/0;alpparITS:ITS/ALPIDEPARAM/0?lifetime=condition&ccdb-path=ITS/Config/AlpideParam;trackTPCMCTR:TPC/TRACKSMCLBL;trackITSTPCMCTR:GLO/TPCITS_MC;trackITSTPCABMCTR:GLO/TPCITSAB_MC;trackITSMCTR:ITS/TRACKSMCTR"
         },
         "taskParameters" : {
           "GID" : "ITS-TPC,ITS",
           "verbose" : "false",
-          "minPtCut" : "0.1f",
-          "etaCut" : "1.4f",
-          "minNTPCClustersCut" : "60",
-          "minDCACut" : "100.f",
-          "minDCACutY" : "10.f",
+          "minPtITSCut": "0.f",
+          "etaITSCut": "1e10f",
+          "minNITSClustersCut": "0",
+          "maxChi2PerClusterITS": "1e10f",
+          "minPtTPCCut": "0.1f",
+          "etaTPCCut": "1.4f",
+          "minNTPCClustersCut": "60",
+          "minDCACut": "100.f",
+          "minDCACutY": "10.f",
+          "minPtCut": "0.f",
+          "maxPtCut": "1e10f",
+          "etaCut": "1e10f",
           "isMC" : "true"
         },
 	"grpGeomRequest" : {

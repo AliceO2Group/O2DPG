@@ -110,6 +110,13 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctof
       fi
     fi
+    if has_detectors_reco MFT MCH MID && has_matching_qc MFTMCH && has_matching_qc MCHMID; then
+        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=consul://o2/components/qc/ANY/any/glo-mftmchmid-mtch-qcmn-epn
+    elif has_detectors_reco MFT MCH && has_matching_qc MFTMCH; then
+        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=consul://o2/components/qc/ANY/any/glo-mftmch-mtch-qcmn-epn
+    elif has_detectors_reco MCH MID && has_matching_qc MCHMID; then
+        [[ -z "${QC_JSON_GLO_MCHMID:-}" ]] && QC_JSON_GLO_MCHMID=consul://o2/components/qc/ANY/any/glo-mchmid-mtch-qcmn-epn
+    fi
     if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
       [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn-staging.json # this must be last
     else
@@ -145,6 +152,13 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
       elif has_tof_matching_source ITS-TPC; then
         QC_JSON_TOF_MATCH=$O2DPG_ROOT/DATA/production/qc-sync/itstpctof.json
       fi
+    fi
+    if has_detectors_reco MFT MCH MID && has_matching_qc MFTMCH && has_matching_qc MCHMID; then
+        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=$O2DPG_ROOT/DATA/production/qc-sync/glo-mftmchmid-mtch-qcmn-epn.json
+    elif has_detectors_reco MFT MCH && has_matching_qc MFTMCH; then
+        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=$O2DPG_ROOT/DATA/production/qc-sync/glo-mftmch-mtch-qcmn-epn.json
+    elif has_detectors_reco MCH MID && has_matching_qc MCHMID; then
+        [[ -z "${QC_JSON_GLO_MCHMID:-}" ]] && QC_JSON_GLO_MCHMID=$O2DPG_ROOT/DATA/production/qc-sync/glo-mchmid-mtch-qcmn-epn.json
     fi
     [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global.json # this must be last
 

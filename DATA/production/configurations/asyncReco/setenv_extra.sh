@@ -303,40 +303,43 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   # now we set the options
   if [[ $INST_IR_FOR_TPC -gt 0 ]]; then # externally imposed IR for scaling
     echo "Applying externally provided IR for scaling, $INST_IR_FOR_TPC Hz"
-    export TPC_CORR_SCALING+=" --corrmap-lumi-inst $INST_IR_FOR_TPC "
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
   elif [[ $INST_IR_FOR_TPC == 0 ]]; then # when zero, only the TPC/Calib/CorrectionMaps is applied
     echo "Passed valued for scaling is zero, only TPC/Calib/CorrectionMaps will be applied"
-    export TPC_CORR_SCALING+=" --corrmap-lumi-inst $INST_IR_FOR_TPC "
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
   elif [[ $INST_IR_FOR_TPC -lt 0 ]]; then # do not apply any correction
     echo "Passed valued for scaling is smaller than zero, no scaling will be applied"
     echo "NOTA BENE: In the future, this value will signal to not apply any correction at all, which is not operational yet (but please check, as it depends on O2)"
-    export TPC_CORR_SCALING+=" --corrmap-lumi-inst $INST_IR_FOR_TPC "
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
   elif [[ $INST_IR_FOR_TPC == "CTPCCDB" ]]; then # using what we have in the CCDB CTP counters, extracted at the beginning of the script
     echo "Using CTP CCDB which gave the mean IR of the run at the beginning of the script ($RUN_IR Hz)"
-    export TPC_CORR_SCALING+=" --corrmap-lumi-inst $RUN_IR "
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$RUN_IR"
   elif [[ $INST_IR_FOR_TPC == "CTP" ]]; then
     if ! has_detector CTP ; then
       echo "TPC correction with CTP Lumi is requested but CTP is not in the WORKFLOW_DETECTORS=$WORKFLOW_DETECTORS"
       return 1
     fi
     echo "Using CTP inst lumi stored in data"
-    export TPC_CORR_SCALING+=" --require-ctp-lumi "
+    export TPC_CORR_SCALING+=" --lumi-type 1 "
+  elif [[ $INST_IR_FOR_TPC == "IDCCCDB" ]]; then
+    echo "TPC correction with IDC from CCDB will ne used"
+    export TPC_CORR_SCALING+=" --lumi-type 2 "
   else
     echo "Unknown setting for INST_IR_FOR_TPC = $INST_IR_FOR_TPC (with ALIEN_JDL_INST_IR_FOR_TPC = $ALIEN_JDL_INST_IR_FOR_TPC)"
     return 1
   fi
 
   if [[ -n $ALIEN_JDL_MEANIRFORTPC && $ALIEN_JDL_MEANIRFORTPC > 0 ]]; then # externally imposed TPC map mean IR for scaling
-    export TPC_CORR_SCALING+=" --corrmap-lumi-mean $ALIEN_JDL_MEANIRFORTPC "
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiMean=$ALIEN_JDL_MEANIRFORTPC"
   fi
 
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]]; then
     unset TPC_CORR_SCALING
-    export TPC_CORR_SCALING=" --ctp-lumi-factor 2.414 --require-ctp-lumi"
+    export TPC_CORR_SCALING=";TPCCorrMap.lumiInstFactor=2.414 --lumi-type 1"
     if [[ $SCALE_WITH_ZDC == 0 ]]; then
       # scaling with FT0
       if [[ $SCALE_WITH_FT0 == 1 ]]; then
-	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --ctp-lumi-factor 135. --require-ctp-lumi "
+	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --lumi-type 1 TPCCorrMap.lumiInstFactor=135."
       else
 	echo "Neither ZDC nor FT0 are in the run, and this is from 2023 PbPb: we cannot scale TPC ditortion corrections, aborting..."
 	return 1
@@ -493,7 +496,7 @@ if [[ $ADD_CALIB == "1" ]]; then
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
     export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="scdcalib.maxTracksPerCalibSlot=35000000;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=6;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=90"
-    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --process-seeds --enable-itsonly"
+    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --process-seeds"
     # ad-hoc settings for TPC residual extraction
     export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="$ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator --output-type trackParams,unbinnedResid"
     if [[ $ALIEN_JDL_DEBUGRESIDUALEXTRACTION == "1" ]]; then
@@ -539,6 +542,12 @@ fi
 if [[ $ALIEN_JDL_EXTRACTTIMESERIES == 1 ]]; then
   if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
   has_detector_reco TPC && has_detector_reco ITS && has_detector_reco FT0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-time-series-workflow"
+  if [[ ! -z "$ALIEN_JDL_ENABLEUNBINNEDTIMESERIES" ]]; then
+    export ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow --enable-unbinned-root-output --sample-unbinned-tsallis --threads 1"
+  fi
+  if [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]]; then
+    export ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow --sampling-factor ${ALIEN_JDL_SAMPLINGFACTORTIMESERIES}"
+  fi
 fi
 
 # Enabling AOD
