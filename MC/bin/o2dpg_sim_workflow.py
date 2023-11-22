@@ -578,9 +578,11 @@ for tf in range(1, NTIMEFRAMES + 1):
       exit(1)
 
    # Determine interation rate
-   # it should be taken from CDB, meanwhile some default values
    signalprefix='sgn_' + str(tf)
    INTRATE=int(args.interactionRate)
+   if INTRATE <= 0:
+      print('o2dpg_sim_workflow: Error! Interaction rate not >0 !!!')
+      exit(1)
    BCPATTERN=args.bcPatternFile
    includeQED = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb")) or (args.with_qed == True)
 
@@ -1309,10 +1311,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
    # strangeness tracking is now called from the secondary vertexer
    if not args.with_strangeness_tracking:
-      from subprocess import run
-      data = run(SVFINDERtask['cmd'].split(" ")[0] + " --help", capture_output=True, shell=True, text=True)
-      if "disable-strangeness-tracker" in data.stdout:
-         SVFINDERtask['cmd'] += ' --disable-strangeness-tracker'
+      SVFINDERtask['cmd'] += ' --disable-strangeness-tracker'
    # if enabled, it may require MC labels
    else:
       SVFINDERtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
