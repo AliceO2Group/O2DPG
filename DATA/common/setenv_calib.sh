@@ -293,11 +293,6 @@ fi
 
 # define spec for proxy for TF-based outputs from forward detectors
 if [[ -z ${CALIBDATASPEC_FORWARD_TF:-} ]]; then
-  # ZDC
-  if [[ $CALIB_ZDC_TDC == 1 ]]; then
-    add_semicolon_separated CALIBDATASPEC_FORWARD_TF "tdcZDC:ZDC/TDCCALIBDATA/0"
-    add_semicolon_separated CALIBDATASPEC_FORWARD_TF "histoZDC:ZDC/TDC_1DH"
-  fi
   # FT0
   if [[ $CALIB_FT0_TIMEOFFSET == 1 ]]; then
     add_semicolon_separated CALIBDATASPEC_FORWARD_TF "timeSpectraFT0:FT0/TIME_SPECTRA/0"
@@ -315,6 +310,11 @@ if [[ -z ${CALIBDATASPEC_FORWARD_SPORADIC:-} ]]; then
   fi
   if [[ $CALIB_FDD_INTEGRATEDCURR == 1 ]]; then
     add_semicolon_separated CALIBDATASPEC_FORWARD_SPORADIC "integrCurrFDD:FDD/IFDDC/0"
+  fi
+  # ZDC
+  if [[ $CALIB_ZDC_TDC == 1 ]]; then
+    add_semicolon_separated CALIBDATASPEC_FORWARD_SPORADIC "tdcZDC:ZDC/TDCCALIBDATA/0"
+    add_semicolon_separated CALIBDATASPEC_FORWARD_SPORADIC "histoZDC:ZDC/TDC_1DH"
   fi
 fi
 
