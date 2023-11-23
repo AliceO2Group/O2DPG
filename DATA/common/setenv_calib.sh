@@ -380,11 +380,14 @@ get_proxy_connection()
     if [[ $3 == "timeframe" ]]; then
       PROXY_CONN+=" --environment DPL_OUTPUT_PROXY_ORDERED=1"
     elif [[ $3 == "sporadic" ]]; then
-      PROXY_CONN+=" --environment \"DPL_OUTPUT_PROXY_WHENANY=1 DPL_DONT_DROP_OLD_TIMESLICE=1\""
+      PROXY_CONN+=" --environment \"DPL_OUTPUT_PROXY_WHENANY=1 DPL_DONT_DROP_OLD_TIMESLICE=1\" --sporadic-inputs"
     else
       echo "invalid option $3, must be (sporadic|timeframe)" 1>&2
       exit 1
     fi
+  fi
+  if [[ $2 == "input" && $3 == "sporadic" ]]; then
+    PROXY_CONN+=" --sporadic-outputs"
   fi
   if [[ "0${GEN_TOPO_VERBOSE:-}" == "01" ]]; then
     echo PROXY_CONN = $PROXY_CONN 1>&2
