@@ -23,31 +23,32 @@
          }
       },
     "tasks": {
-         "TaskClusters":{
+         "HMPClusters":{
             "active":"true",
+            "taskName" : "Clusters",
             "className":"o2::quality_control_modules::hmpid::HmpidTaskClusters",
             "moduleName":"QcHMPID",
             "detectorName":"HMP",
             "cycleDurationSeconds":"60",
             "maxNumberCycles":"-1",
-            "dataSource":{
-               "type":"direct",
-               "query":"intrecord:HMP/INTRECORDS1/0;clusters:HMP/CLUSTERS/0"
+            "dataSource": {
+              "type":"direct",
+              "query":"intrecord:HMP/INTRECORDS1/0;clusters:HMP/CLUSTERS/0"
             }
          },
-         "TaskMatches":{
+         "HMPMatches":{
             "active":"true",
+            "taskName" : "Matches",
             "className":"o2::quality_control_modules::hmpid::HmpidTaskMatches",
             "moduleName":"QcHMPID",
             "detectorName":"HMP",
             "cycleDurationSeconds":"60",
             "maxNumberCycles":"-1",
-            "dataSource":{
-               "type":"direct",
-               "query":"matchHMP:HMP/MATCHES/0;clsHMP_GLO_MCTR:HMP/MCLABELS/0;hmpidcluster:HMP/CLUSTERS/0;hmpidtriggers:HMP/INTRECORDS1/0"
-           }
-        }
-     }
-  },
-  "dataSamplingPolicies": []
+            "dataSource": {
+              "type":"direct",
+              "query":"matchHMP:HMP/MATCHES/0;clsHMP_GLO_MCTR:HMP/MCLABELS/0;hmpidcluster:HMP/CLUSTERS/0;hmpidtriggers:HMP/INTRECORDS1/0"
+            }
+         }
+      }
+   }
 }
