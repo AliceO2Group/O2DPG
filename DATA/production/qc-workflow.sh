@@ -168,8 +168,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     [[ -z "${QC_JSON_ITS:-}" ]] && QC_JSON_ITS=$O2DPG_ROOT/DATA/production/qc-async/its.json
     [[ -z "${QC_JSON_MFT:-}" ]] && QC_JSON_MFT=$O2DPG_ROOT/DATA/production/qc-async/mft.json
     [[ -z "${QC_JSON_TOF:-}" ]] && QC_JSON_TOF=$O2DPG_ROOT/DATA/production/qc-async/tof.json
-    [[ -z "${QC_JSON_HMP:-}" ]] && QC_JSON_HMP=$O2DPG_ROOT/DATA/production/qc-async/hmp_clusters.json
-    [[ -z "${QC_JSON_HMP:-}" ]] && QC_JSON_HMP=$O2DPG_ROOT/DATA/production/qc-async/hmp_matchinfos.json
+    [[ -z "${QC_JSON_HMP:-}" ]] && QC_JSON_HMP=$O2DPG_ROOT/DATA/production/qc-async/hmp.json
     [[ -z "${QC_JSON_FT0:-}" ]] && QC_JSON_FT0=$O2DPG_ROOT/DATA/production/qc-async/ft0.json
     [[ -z "${QC_JSON_FV0:-}" ]] && QC_JSON_FV0=$O2DPG_ROOT/DATA/production/qc-async/fv0.json
     [[ -z "${QC_JSON_FDD:-}" ]] && QC_JSON_FDD=$O2DPG_ROOT/DATA/production/qc-async/fdd.json
