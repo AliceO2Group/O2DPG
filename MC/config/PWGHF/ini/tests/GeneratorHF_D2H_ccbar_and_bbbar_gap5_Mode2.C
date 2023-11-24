@@ -3,7 +3,7 @@ int External() {
 
     int checkPdgQuarkOne{4};
     int checkPdgQuarkTwo{5};
-    float ratioTrigger = 1./3; // one event triggered out of 3
+    float ratioTrigger = 1./5; // one event triggered out of 5
 
     std::vector<int> checkPdgHadron{411, 421, 431, 4122, 4132, 4232, 4332};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters

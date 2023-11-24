@@ -1,9 +1,9 @@
-int External()
-{
+int External() {
     std::string path{"o2sim_Kine.root"};
 
-    int checkPdgQuark{5};
-    float ratioTrigger = 1./3; // one event triggered out of 3
+    int checkPdgQuarkOne{4};
+    int checkPdgQuarkTwo{5};
+    float ratioTrigger = 1./5; // one event triggered out of 5
 
     std::vector<int> checkPdgHadron{411, 421, 431, 4122, 4132, 4232, 4332};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
@@ -28,8 +28,8 @@ int External()
     o2::dataformats::MCEventHeader *eventHeader = nullptr;
     tree->SetBranchAddress("MCEventHeader.", &eventHeader);
 
-    int nEventsMB{}, nEventsInj{};
-    int nQuarks{}, nSignals{}, nSignalGoodDecay{};
+    int nEventsMB{}, nEventsInjOne{}, nEventsInjTwo{};
+    int nQuarksOne{}, nQuarksTwo{}, nSignals{}, nSignalGoodDecay{};
     auto nEvents = tree->GetEntries();
 
     for (int i = 0; i < nEvents; i++) {
@@ -41,15 +41,21 @@ int External()
             int subGeneratorId = eventHeader->getInfo<int>(o2::mcgenid::GeneratorProperty::SUBGENERATORID, isValid);
             if (subGeneratorId == 0) {
                 nEventsMB++;
-            } else if (subGeneratorId == checkPdgQuark) {
-                nEventsInj++;
+            } else if (subGeneratorId == checkPdgQuarkOne) {
+                nEventsInjOne++;
+            } else if (subGeneratorId == checkPdgQuarkTwo) {
+                nEventsInjTwo++;
             }
         }
 
         for (auto &track : *tracks) {
             auto pdg = track.GetPdgCode();
-            if (std::abs(pdg) == checkPdgQuark) {
-                nQuarks++;
+            if (std::abs(pdg) == checkPdgQuarkOne) {
+                nQuarksOne++;
+                continue;
+            }
+            if (std::abs(pdg) == checkPdgQuarkTwo) {
+                nQuarksTwo++;
                 continue;
             }
             if (std::find(checkPdgHadron.begin(), checkPdgHadron.end(), std::abs(pdg)) != checkPdgHadron.end()) { // found signal
@@ -83,8 +89,10 @@ int External()
     std::cout << "--------------------------------\n";
     std::cout << "# Events: " << nEvents << "\n";
     std::cout << "# MB events: " << nEventsMB << "\n";
-    std::cout << Form("# events injected with %d quark pair: ", checkPdgQuark) << nEventsInj << "\n";
-    std::cout << Form("# %d (anti)quarks: ", checkPdgQuark) << nQuarks << "\n";
+    std::cout << Form("# events injected with %d quark pair: ", checkPdgQuarkOne) << nEventsInjOne << "\n";
+    std::cout << Form("# events injected with %d quark pair: ", checkPdgQuarkTwo) << nEventsInjTwo << "\n";
+    std::cout << Form("# %d (anti)quarks: ", checkPdgQuarkOne) << nQuarksOne << "\n";
+    std::cout << Form("# %d (anti)quarks: ", checkPdgQuarkTwo) << nQuarksTwo << "\n";
     std::cout <<"# signal hadrons: " << nSignals << "\n";
     std::cout <<"# signal hadrons decaying in the correct channel: " << nSignalGoodDecay << "\n";
 
@@ -92,13 +100,21 @@ int External()
         std::cerr << "Number of generated MB events different than expected\n";
         return 1;
     }
-    if (nEventsInj < nEvents * ratioTrigger * 0.95 || nEventsInj > nEvents * ratioTrigger * 1.05) {
-        std::cerr << "Number of generated events injected with " << checkPdgQuark << " different than expected\n";
+    if (nEventsInjOne < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInjOne > nEvents * ratioTrigger * 0.5 * 1.05) {
+        std::cerr << "Number of generated events injected with " << checkPdgQuarkOne << " different than expected\n";
+        return 1;
+    }
+    if (nEventsInjTwo < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInjTwo > nEvents * ratioTrigger * 0.5 * 1.05) {
+        std::cerr << "Number of generated events injected with " << checkPdgQuarkTwo << " different than expected\n";
         return 1;
     }
 
-    if (nQuarks < 2 * nEvents * ratioTrigger) { // we expect anyway more because the same quark is repeated several time, after each gluon radiation
-        std::cerr << "Number of generated (anti)quarks " << checkPdgQuark << " lower than expected\n";
+    if (nQuarksOne < nEvents * ratioTrigger) { // we expect anyway more because the same quark is repeated several time, after each gluon radiation
+        std::cerr << "Number of generated (anti)quarks " << checkPdgQuarkOne << " lower than expected\n";
+        return 1;
+    }
+    if (nQuarksTwo < nEvents * ratioTrigger) { // we expect anyway more because the same quark is repeated several time, after each gluon radiation
+        std::cerr << "Number of generated (anti)quarks " << checkPdgQuarkTwo << " lower than expected\n";
         return 1;
     }
 
