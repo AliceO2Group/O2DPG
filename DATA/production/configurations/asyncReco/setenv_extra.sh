@@ -400,6 +400,12 @@ fi
 if [[ $ALIEN_JDL_DISABLECASCADES == 1 ]]; then
   export ARGS_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=" --disable-cascade-finder  "
 fi
+if [[ $ALIEN_JDL_EXCLUDETPCONLY == 1 ]]; then
+  export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=";svertexer.mExcludeTPCtracks=true"
+fi
+if [[ $ALIEN_JDL_SVERTEXER_ALL_SOURCES == 1 ]]; then
+  export SVERTEXING_SOURCES="ITS,TPC,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP"
+fi
 
 export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow+=";$PVERTEXER;$VDRIFTPARAMOPTION;"
 
