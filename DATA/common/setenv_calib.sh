@@ -293,11 +293,6 @@ fi
 
 # define spec for proxy for TF-based outputs from forward detectors
 if [[ -z ${CALIBDATASPEC_FORWARD_TF:-} ]]; then
-  # ZDC
-  if [[ $CALIB_ZDC_TDC == 1 ]]; then
-    add_semicolon_separated CALIBDATASPEC_FORWARD_TF "tdcZDC:ZDC/TDCCALIBDATA/0"
-    add_semicolon_separated CALIBDATASPEC_FORWARD_TF "histoZDC:ZDC/TDC_1DH"
-  fi
   # FT0
   if [[ $CALIB_FT0_TIMEOFFSET == 1 ]]; then
     add_semicolon_separated CALIBDATASPEC_FORWARD_TF "timeSpectraFT0:FT0/TIME_SPECTRA/0"
@@ -315,6 +310,11 @@ if [[ -z ${CALIBDATASPEC_FORWARD_SPORADIC:-} ]]; then
   fi
   if [[ $CALIB_FDD_INTEGRATEDCURR == 1 ]]; then
     add_semicolon_separated CALIBDATASPEC_FORWARD_SPORADIC "integrCurrFDD:FDD/IFDDC/0"
+  fi
+  # ZDC
+  if [[ $CALIB_ZDC_TDC == 1 ]]; then
+    add_semicolon_separated CALIBDATASPEC_FORWARD_SPORADIC "tdcZDC:ZDC/TDCCALIBDATA/0"
+    add_semicolon_separated CALIBDATASPEC_FORWARD_SPORADIC "histoZDC:ZDC/TDC_1DH"
   fi
 fi
 
@@ -380,11 +380,14 @@ get_proxy_connection()
     if [[ $3 == "timeframe" ]]; then
       PROXY_CONN+=" --environment DPL_OUTPUT_PROXY_ORDERED=1"
     elif [[ $3 == "sporadic" ]]; then
-      PROXY_CONN+=" --environment \"DPL_OUTPUT_PROXY_WHENANY=1 DPL_DONT_DROP_OLD_TIMESLICE=1\""
+      PROXY_CONN+=" --environment \"DPL_OUTPUT_PROXY_WHENANY=1 DPL_DONT_DROP_OLD_TIMESLICE=1\" --sporadic-inputs"
     else
       echo "invalid option $3, must be (sporadic|timeframe)" 1>&2
       exit 1
     fi
+  fi
+  if [[ $2 == "input" && $3 == "sporadic" ]]; then
+    PROXY_CONN+=" --sporadic-outputs"
   fi
   if [[ "0${GEN_TOPO_VERBOSE:-}" == "01" ]]; then
     echo PROXY_CONN = $PROXY_CONN 1>&2

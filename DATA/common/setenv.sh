@@ -199,7 +199,6 @@ done
 
 if [[ -z ${SVERTEXING_SOURCES:-} ]]; then
   SVERTEXING_SOURCES="$VERTEXING_SOURCES"
-  [[ -z ${TPC_TRACKS_SVERTEXING:-} ]] && SVERTEXING_SOURCES=$(echo $SVERTEXING_SOURCES | sed -E -e "s/(^|,)TPC(-TRD|-TOF)+//g" -e "s/,TPC,/,/")
 fi
 
 # this option requires well calibrated timing beween different detectors, at the moment suppress it
