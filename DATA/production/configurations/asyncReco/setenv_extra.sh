@@ -428,7 +428,7 @@ if [[ $ALIEN_JDL_DISABLECASCADES == 1 ]]; then
   export ARGS_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=" --disable-cascade-finder  "
 fi
 # allow usage of TPC-only in svertexer (default: do not)
-if [[ $ALIEN_JDL_USETPCONLY == 1 ]]; then
+if [[ $ALIEN_JDL_USETPCONLYFORV0S == 1 ]]; then
   export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=";svertexer.mExcludeTPCtracks=false"
 else 
   export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=";svertexer.mExcludeTPCtracks=true"
