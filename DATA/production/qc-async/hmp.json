@@ -46,7 +46,7 @@
             "maxNumberCycles":"-1",
             "dataSource": {
               "type":"direct",
-              "query":"matchHMP:HMP/MATCHES/0;clsHMP_GLO_MCTR:HMP/MCLABELS/0;hmpidcluster:HMP/CLUSTERS/0;hmpidtriggers:HMP/INTRECORDS1/0"
+              "query":"matchHMP:HMP/MATCHES/0;hmpidcluster:HMP/CLUSTERS/0;hmpidtriggers:HMP/INTRECORDS1/0"
             }
          }
       }
