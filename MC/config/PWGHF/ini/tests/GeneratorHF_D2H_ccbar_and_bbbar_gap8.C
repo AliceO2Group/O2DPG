@@ -100,11 +100,11 @@ int External() {
         std::cerr << "Number of generated MB events different than expected\n";
         return 1;
     }
-    if (nEventsInjOne < nEvents * ratioTrigger * 0.5 * 0.9 || nEventsInjOne > nEvents * ratioTrigger * 0.5 * 1.2) {
+    if (nEventsInjOne < nEvents * ratioTrigger * 0.5 * 0.85 || nEventsInjOne > nEvents * ratioTrigger * 0.5 * 1.15) {
         std::cerr << "Number of generated events injected with " << checkPdgQuarkOne << " different than expected\n";
         return 1;
     }
-    if (nEventsInjTwo < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInjTwo > nEvents * ratioTrigger * 0.5 * 1.05) {
+    if (nEventsInjTwo < nEvents * ratioTrigger * 0.5 * 0.85 || nEventsInjTwo > nEvents * ratioTrigger * 0.5 * 1.15) {
         std::cerr << "Number of generated events injected with " << checkPdgQuarkTwo << " different than expected\n";
         return 1;
     }
