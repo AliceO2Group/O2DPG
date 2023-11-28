@@ -211,12 +211,12 @@ def rel_val_root(files1, files2, include_root_dirs, add_to_previous, metrics_ena
     file_2 = abspath(join(output_dir, "extracted_objects_2.root"))
 
     if len(files1) == 1 and files1[0][0] == "@":
-        files1 = get_files_from_list(files1[0])
+        files1 = get_files_from_list(files1[0][1:])
         if not files1:
             print(f"ERROR: Apparently {files1[0][1:]} contains no files to be extracted.")
             return None
     if len(files2) == 1 and files2[0][0] == "@":
-        files2 = get_files_from_list(files2[0])
+        files2 = get_files_from_list(files2[0][1:])
         if not files2:
             print(f"ERROR: Apparently {files2[0][1:]} contains no files to be extracted.")
             return None
