@@ -189,17 +189,43 @@ def rel_val_root(files1, files2, include_root_dirs, add_to_previous, metrics_ena
             in case of success, return the path to the JSON with computed metrics
             None otherwise
     """
-    print("==> Process and compare 2 sets of files <==")
+    def get_files_from_list(list_filename):
+        """
+        Quick helper
 
-    # prepare the output directory
-    if not exists(output_dir):
-        makedirs(output_dir)
-    log_file_rel_val = join(abspath(output_dir), "rel_val.log")
+        Extract filenames from what is listed in a given file
+        """
+        collect_files = []
+        with open(list_filename, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                collect_files.append(line)
+        return collect_files
+
+    print("==> Process and compare 2 sets of files <==")
 
     # flat ROOT files to extract to and read from during RelVal; make absolute paths so we don't confuse ourselves when running e.g. ROOT macros in different directories
     file_1 = abspath(join(output_dir, "extracted_objects_1.root"))
     file_2 = abspath(join(output_dir, "extracted_objects_2.root"))
 
+    if len(files1) == 1 and files1[0][0] == "@":
+        files1 = get_files_from_list(files1[0])
+        if not files1:
+            print(f"ERROR: Apparently {files1[0][1:]} contains no files to be extracted.")
+            return None
+    if len(files2) == 1 and files2[0][0] == "@":
+        files2 = get_files_from_list(files2[0])
+        if not files2:
+            print(f"ERROR: Apparently {files2[0][1:]} contains no files to be extracted.")
+            return None
+
+    # prepare the output directory
+    if not exists(output_dir):
+        makedirs(output_dir)
+    log_file_rel_val = join(abspath(output_dir), "rel_val.log")
+    
     if no_extract:
         # in this case we expect the input files to be what we would otherwise extract first
         if len(files1) != 1 or len(files2) != 1:
