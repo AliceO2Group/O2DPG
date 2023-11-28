@@ -322,7 +322,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     echo "Using CTP inst lumi stored in data"
     export TPC_CORR_SCALING+=" --lumi-type 1 "
   elif [[ $INST_IR_FOR_TPC == "IDCCCDB" ]]; then
-    echo "TPC correction with IDC from CCDB will ne used"
+    echo "TPC correction with IDC from CCDB will be used"
     export TPC_CORR_SCALING+=" --lumi-type 2 "
   else
     echo "Unknown setting for INST_IR_FOR_TPC = $INST_IR_FOR_TPC (with ALIEN_JDL_INST_IR_FOR_TPC = $ALIEN_JDL_INST_IR_FOR_TPC)"
@@ -333,13 +333,14 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export TPC_CORR_SCALING+=";TPCCorrMap.lumiMean=$ALIEN_JDL_MEANIRFORTPC"
   fi
 
-  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]]; then
+  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] && ([[ -z $INST_IR_FOR_TPC ]] || [[ $INST_IR_FOR_TPC == "CTP" ]]); then
+    echo "We are in PbPb 2023, the default - for now - is to use CTP in the data"
     unset TPC_CORR_SCALING
-    export TPC_CORR_SCALING=";TPCCorrMap.lumiInstFactor=2.414 --lumi-type 1"
+    export TPC_CORR_SCALING=";TPCCorrMap.lumiInstFactor=2.414;TPCCorrMap.lumiMean=0 --lumi-type 1 "
     if [[ $SCALE_WITH_ZDC == 0 ]]; then
       # scaling with FT0
       if [[ $SCALE_WITH_FT0 == 1 ]]; then
-	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --lumi-type 1 TPCCorrMap.lumiInstFactor=135."
+	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --lumi-type 1 TPCCorrMap.lumiInstFactor=135.;TPCCorrMap.lumiMean=0"
       else
 	echo "Neither ZDC nor FT0 are in the run, and this is from 2023 PbPb: we cannot scale TPC ditortion corrections, aborting..."
 	return 1
@@ -347,6 +348,9 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     fi
   fi
 
+  echo "Final setting for TPC scaling is:"
+  echo $TPC_CORR_SCALING
+  
   if [[ $PERIOD != @(LHC22c|LHC22d|LHC22e|JUN|LHC22f) ]] ; then
     echo "Setting TPCCLUSTERTIMESHIFT to 0"
     TPCCLUSTERTIMESHIFT=0
@@ -422,6 +426,12 @@ if [[ $ALIEN_JDL_DISABLESTRTRACKING == 1 ]]; then
 fi
 if [[ $ALIEN_JDL_DISABLECASCADES == 1 ]]; then
   export ARGS_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=" --disable-cascade-finder  "
+fi
+# allow usage of TPC-only in svertexer (default: do not)
+if [[ $ALIEN_JDL_USETPCONLYFORV0S == 1 ]]; then
+  export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=";svertexer.mExcludeTPCtracks=false"
+else 
+  export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=";svertexer.mExcludeTPCtracks=true"
 fi
 
 export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow+=";$PVERTEXER;$VDRIFTPARAMOPTION;"
