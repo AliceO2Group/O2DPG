@@ -464,11 +464,11 @@ if doembedding:
         workflow['stages'].append(BKG_HEADER_task)
 
 # a list of smaller sensors (used to construct digitization tasks in a parametrized way)
-smallsensorlist = [ "ITS", "TOF", "FDD", "MCH", "MID", "MFT", "HMP", "EMC", "PHS", "CPV" ]
+smallsensorlist = [ "ITS", "TOF", "FDD", "MCH", "MID", "MFT", "HMP", "PHS", "CPV" ]
 if args.with_ZDC:
    smallsensorlist += [ "ZDC" ]
 # a list of detectors that serve as input for the trigger processor CTP --> these need to be processed together for now
-ctp_trigger_inputlist = [ "FT0", "FV0" ]
+ctp_trigger_inputlist = [ "FT0", "FV0", "EMC" ]
 
 BKG_HITDOWNLOADER_TASKS={}
 for det in [ 'TPC', 'TRD' ] + smallsensorlist + ctp_trigger_inputlist:
@@ -891,13 +891,15 @@ for tf in range(1, NTIMEFRAMES + 1):
    tneeds = [ContextTask['name']]
    if includeQED:
      tneeds += [QED_task['name']]
-   t = createTask(name="ft0fv0ctp_digi_" + str(tf), needs=tneeds,
+   t = createTask(name="ft0fv0emcctp_digi_" + str(tf), needs=tneeds,
                   tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
    t['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
-   t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew() + (' --combine-devices','')[args.no_combine_dpl_devices] + ('',' --disable-mc')[args.no_mc_labels] + QEDdigiargs
+   t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,EMC,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew() + (' --combine-devices','')[args.no_combine_dpl_devices] + ('',' --disable-mc')[args.no_mc_labels] + QEDdigiargs
    workflow['stages'].append(t)
    det_to_digitask["FT0"]=t
    det_to_digitask["FV0"]=t
+   det_to_digitask["EMC"]=t
+   det_to_digitask["CTP"]=t
 
    def getDigiTaskName(det):
       t = det_to_digitask.get(det)
