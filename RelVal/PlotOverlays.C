@@ -127,6 +127,7 @@ void overlay1D(std::vector<TH1*> hVec, std::vector<std::string> labelVec, TLegen
     if (i > 0) {
       // no ratio for the first histogram (which would simply be 1)
       TH1* hRatio = (TH1*)h->Clone();
+      hRatio->SetDirectory(0);
       hRatio->Divide(h, hVec[0], 1.0, 1.0, "B"); // error option?
       ratios.push_back(hRatio);
     }
@@ -194,6 +195,10 @@ void overlay1D(std::vector<TH1*> hVec, std::vector<std::string> labelVec, TLegen
   auto savePath = outputDir + "/" + hVec[0]->GetName() + ".png";
   c.SaveAs(savePath.c_str());
   c.Close();
+
+  for (auto& r : ratios) {
+    delete r;
+  }
 }
 
 // overlay 2D histograms
@@ -218,8 +223,12 @@ void overlay2D(std::vector<TH1*> hVec1, std::vector<std::string> labelVec, TLege
     t1->Draw();
   }
 
+  std::vector<TH1*> ratios;
+
   for (int i = 1; i < nHistos; i++){
     auto hDiv = (TH2*)hVec[i]->Clone(Form("%s_ratio", hVec[i]->GetName()));
+    hDiv->SetDirectory(0);
+    ratios.push_back(hDiv);
     hDiv->SetTitle(hVec[i]->GetTitle() + TString("(" + labelVec[i] + "/"+labelVec[0]+")"));
     hDiv->SetStats(0);
     hDiv->Divide(hVec[0]);
@@ -254,6 +263,10 @@ void overlay2D(std::vector<TH1*> hVec1, std::vector<std::string> labelVec, TLege
   auto savePath = outputDir + "/" + hVec[0]->GetName() + ".png";
   c.SaveAs(savePath.c_str());
   c.Close();
+
+  for (auto& r : ratios) {
+    delete r;
+  }
 }
 
 // entry point for overlay plots from ReleaseValidation.C
