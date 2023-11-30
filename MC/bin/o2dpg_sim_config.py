@@ -83,8 +83,6 @@ def create_sim_config(args):
 
     # deal with larger combinatorics
     if args.col == "PbPb" or (args.embedding and args.colBkg == "PbPb"):
-        add(config, {"ITSCATrackerParam.trackletsPerClusterLimit": 20,
-                     "ITSCATrackerParam.cellsPerClusterLimit": 20,
-                     "ITSVertexerParam.lowMultBeamDistCut": "0."})
+        add(config, {"ITSVertexerParam.lowMultBeamDistCut": "0."})
 
     return config
