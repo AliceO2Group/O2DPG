@@ -187,7 +187,7 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number, rct = None):
     print ("RunStart:", SOR)
 
     orbitFirst = int((1000*SOR - oreset[0])//LHCOrbitMUS)  # calc done in microseconds
-    orbitLast = int((1000*EOR - oreset[0])//LHCOrbitMUS) 
+    orbitLast = int((1000*EOR - oreset[0])//LHCOrbitMUS)
     print ("OrbitFirst", orbitFirst) # first orbit of this run
     print ("LastOrbit of run", orbitLast)
 
@@ -213,35 +213,43 @@ def retrieve_GRPLHCIF(ccdbreader, timestamp):
     _, grplhcif = ccdbreader.fetch("GLO/Config/GRPLHCIF", "o2::parameters::GRPLHCIFData", timestamp = timestamp)
     return grplhcif
 
-def retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, run_number, finaltime, trig_eff, NBunches, ColSystem):
+def retrieve_CTPScalers(ccdbreader, run_number, timestamp=None):
     """
     retrieves the CTP scalers object for a given timestamp and run_number
     and calculates the interation rate to be applied in Monte Carlo digitizers
     """
     path = "CTP/Calib/Scalers/runNumber=" + str(run_number)
-    ts, ctpscaler = ccdbreader.fetch(path, "o2::ctp::CTPRunScalers", timestamp = timestamp)
-    if ctpscaler != None:
+    _, ctpscaler = ccdbreader.fetch(path, "o2::ctp::CTPRunScalers", timestamp = timestamp)
+    if ctpscaler is not None:
       ctpscaler.convertRawToO2()
-      # this is the default for pp
-      ctpclass = 0 # <---- we take the scaler for FT0
-      ctptype = 0
-      # this is the default for PbPb
-      if ColSystem == "PbPb":
-        ctpclass = 25  # <--- we take scalers for ZDC
-        ctptype = 7
-      print("Fetching rate with class " + str(ctpclass) + " type " + str(ctptype))
-      rate = ctpscaler.getRateGivenT(finaltime, ctpclass, ctptype)
-      #if ColSystem == "PbPb":
-      #  rate.first = rate.first / 28.
-      #  rate.second = rate.second / 28.
+      return ctpscaler
+    return None
 
-      print("Global rate " + str(rate.first) + " local rate " + str(rate.second))
-      if rate.first >= 0:
-        # calculate true rate (input from Chiara Zampolli) using number of bunches
-        coll_bunches = NBunches
-        mu = - math.log(1. - rate.second / 11245 / coll_bunches) / trig_eff
-        finalRate = coll_bunches * mu * 11245
-        return finalRate
+def retrieve_MinBias_CTPScaler_Rate(ctpscaler, finaltime, trig_eff, NBunches, ColSystem):
+    """
+    retrieves the CTP scalers object for a given timestamp and run_number
+    and calculates the interation rate to be applied in Monte Carlo digitizers
+    """
+    # this is the default for pp
+    ctpclass = 0 # <---- we take the scaler for FT0
+    ctptype = 0
+    # this is the default for PbPb
+    if ColSystem == "PbPb":
+      ctpclass = 25  # <--- we take scalers for ZDC
+      ctptype = 7
+    print("Fetching rate with class " + str(ctpclass) + " type " + str(ctptype))
+    rate = ctpscaler.getRateGivenT(finaltime, ctpclass, ctptype)
+    #if ColSystem == "PbPb":
+    #  rate.first = rate.first / 28.
+    #  rate.second = rate.second / 28.
+
+    print("Global rate " + str(rate.first) + " local rate " + str(rate.second))
+    if rate.first >= 0:
+      # calculate true rate (input from Chiara Zampolli) using number of bunches
+      coll_bunches = NBunches
+      mu = - math.log(1. - rate.second / 11245 / coll_bunches) / trig_eff
+      finalRate = coll_bunches * mu * 11245
+      return finalRate
 
     print (f"[ERROR]: Could not determine interaction rate; Some (external) default used")
     return None
@@ -275,7 +283,7 @@ def determine_timestamp(sor, eor, splitinfo, cycle, ntf, HBF_per_timeframe = 256
 
     maxcycles = maxtimeframesperjob // ntf
     print (f"We can do this amount of cycle iterations to achieve 100%: ", maxcycles)
-    
+
     production_offset = int(thisjobID * maxcycles) + cycle
     timestamp_of_production = sor + production_offset * ntf * HBF_per_timeframe * LHCOrbitMUS / 1000
     assert (timestamp_of_production >= sor)
@@ -293,6 +301,7 @@ def main():
     parser.add_argument("-tf", type=int, help="number of timeframes per job", default=1)
     parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
     parser.add_argument("--trig-eff", type=float, dest="trig_eff", help="Trigger eff needed for IR", default=-1.0)
+    parser.add_argument("--use-rct-info", dest="use_rct_info", action="store_true", help=argparse.SUPPRESS) # Use SOR and EOR information from RCT instead of SOX and EOX from CTPScalers
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
 
@@ -308,17 +317,33 @@ def main():
        print ("No time info found")
        sys.exit(1)
 
+    ctp_scalers = retrieve_CTPScalers(ccdbreader, args.run_number)
+    if ctp_scalers is None:
+      print(f"ERROR: Cannot retrive scalers for run number {args.run_number}")
+      exit (1)
+
+    first_orbit = ctp_scalers.getOrbitLimit().first
+    sor = ctp_scalers.getTimeLimit().first
+    eor = ctp_scalers.getTimeLimit().second
+
+    if args.use_rct_info:
+      first_orbit = GLOparams["FirstOrbit"]
+      sor = GLOparams["SOR"]
+      eor = GLOparams["EOR"]
+
     # determine timestamp, and production offset for the final
     # MC job to run
-    timestamp, prod_offset = determine_timestamp(GLOparams["SOR"], GLOparams["EOR"], [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
+    timestamp, prod_offset = determine_timestamp(sor, eor, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
+
     # this is anchored to
-    print ("Determined start-of-run to be: ", GLOparams["SOR"])
+    print ("Determined start-of-run to be: ", sor)
+    print ("Determined end-of-run to be: ", eor)
     print ("Determined timestamp to be : ", timestamp)
     print ("Determined offset to be : ", prod_offset)
-    print ("Determined start of run to be : ", GLOparams["SOR"])
 
-    currentorbit = GLOparams["FirstOrbit"] + prod_offset * GLOparams["OrbitsPerTF"] # orbit number at production start
-    currenttime = GLOparams["SOR"] + prod_offset * GLOparams["OrbitsPerTF"] * LHCOrbitMUS // 1000 # timestamp in milliseconds
+    currentorbit = first_orbit + prod_offset * GLOparams["OrbitsPerTF"] # orbit number at production start
+    currenttime = sor + prod_offset * GLOparams["OrbitsPerTF"] * LHCOrbitMUS // 1000 # timestamp in milliseconds
+
     print ("Production put at time : " + str(currenttime))
 
     # retrieve the GRPHCIF object
@@ -361,7 +386,7 @@ def main():
          else:
            effTrigger = 0.759
 
-       rate = retrieve_MinBias_CTPScaler_Rate(ccdbreader, timestamp, args.run_number, currenttime/1000., effTrigger, grplhcif.getBunchFilling().getNBunches(), ColSystem)
+       rate = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, currenttime/1000., effTrigger, grplhcif.getBunchFilling().getNBunches(), ColSystem)
 
        if rate != None:
          # if the rate calculation was successful we will use it, otherwise we fall back to some rate given as part
@@ -371,10 +396,10 @@ def main():
          # Use re.sub() to replace the pattern with an empty string
          forwardargs = re.sub(pattern, " ", forwardargs)
          forwardargs += ' -interactionRate ' + str(int(rate))
-   
+
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
-    forwardargs += " -tf " + str(args.tf) + " --sor " + str(GLOparams["SOR"]) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + " -eCM " + str(eCM)
+    forwardargs += " -tf " + str(args.tf) + " --sor " + str(sor) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(first_orbit) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + " -eCM " + str(eCM)
     print ("forward args ", forwardargs)
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
     print ("Creating time-anchored workflow...")
