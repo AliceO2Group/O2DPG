@@ -75,6 +75,16 @@
           "mesonClusterMaxTime": "50.",
           "MultiplicityRange":"400",
           "mesonMinPt": "7."
+        },
+        "grpGeomRequest" : {
+          "geomRequest": "Ideal",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         }
       },
       "BCTaskEMCAL": {
