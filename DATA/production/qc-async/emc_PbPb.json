@@ -100,7 +100,7 @@
           "query": "emcal-triggers:EMC/CELLSTRGR/0;ctp-digits:CTP/DIGITS;ctp-config:CTP/CONFIG/0?lifetime=condition&ccdb-path=CTP/Config/Config&ccdb-run-dependent=true"
         },
         "taskParameters": {
-          "AliasMB" : "CMTVXTSC"
+          "AliasMB" : "CMTVXTSC,C0TVXTSC,C0TVXTCE"
         }
       }
     }

@@ -1241,6 +1241,11 @@ for tf in range(1, NTIMEFRAMES + 1):
                    needs=[EMCRECOtask['name']],
                    readerCommand='o2-emcal-cell-reader-workflow --infile emccells.root',
                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-reco-tasks.json')
+        if isActive('CTP'):
+           addQCPerTF(taskName='emcBCQC',
+                      needs=[EMCRECOtask['name'], getDigiTaskName("CTP")],
+                      readerCommand='o2-emcal-cell-reader-workflow --infile emccells.root | o2-ctp-digit-reader --inputfile ctpdigits.root --disable-mc',
+                      configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-bc-task.json')
      ### FT0
      addQCPerTF(taskName='RecPointsQC',
                    needs=[FT0RECOtask['name']],
