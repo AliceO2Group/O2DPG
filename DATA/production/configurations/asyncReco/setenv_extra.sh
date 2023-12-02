@@ -431,6 +431,9 @@ export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$TRACKTUNETPC
 
 # ad-hoc settings for FT0
 export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow="$ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow --ft0-reconstructor"
+if [[ $BEAMTYPE == "PbPb" ]]; then
+  export CONFIG_EXTRA_PROCESS_o2_ft0_reco_workflow=";FT0TimeFilterParam.mAmpLower=20;"
+fi
 
 # ad-hoc settings for FV0
 export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="$ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow --fv0-reconstructor"
