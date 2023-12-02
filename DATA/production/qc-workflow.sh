@@ -117,6 +117,9 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     elif has_detectors_reco MCH MID && has_matching_qc MCHMID; then
         [[ -z "${QC_JSON_GLO_MCHMID:-}" ]] && QC_JSON_GLO_MCHMID=consul://o2/components/qc/ANY/any/glo-mchmid-mtch-qcmn-epn
     fi
+    if has_detectors_qc ITS FT0 TPC && ; then
+        add_QC_JSON GLO_BIGSCREEN consul://o2/components/qc/ANY/any/glo-qc-big-screen
+    fi
     if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
       [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn-staging.json # this must be last
     else
