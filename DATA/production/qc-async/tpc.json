@@ -3,10 +3,7 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "aaa",
-        "username": "not_applicable",
-        "password": "not_applicable",
-        "name": "not_applicable"
+	"host": "ccdb-test.cern.ch:8080"
       },
       "Activity": {
         "number": "42",
@@ -23,7 +20,7 @@
         "url": ""
       },
       "conditionDB": {
-        "url": "alice-ccdb.cern.ch"
+        "url": "ccdb-test.cern.ch:8080"
       }
     },
     "tasks": {
@@ -34,8 +31,6 @@
         "moduleName": "QcTPC",
         "detectorName": "TPC",
         "cycleDurationSeconds": "60",
-        "resetAfterCycles": "1",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "tpc-clusters"
@@ -57,8 +52,6 @@
         "moduleName": "QcTPC",
         "detectorName": "TPC",
         "cycleDurationSeconds": "60",
-        "resetAfterCycles": "1",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query" : "inputTracks:TPC/TRACKS/0"
@@ -81,8 +74,6 @@
         "moduleName": "QcTPC",
         "detectorName": "TPC",
         "cycleDurationSeconds": "60",
-        "resetAfterCycles": "1",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "tpc-tracks"
@@ -109,7 +100,7 @@
     {
       "id": "tpc-clusters",
       "active": "true",
-      "machines": ["localhost"],
+      "machines": [],
       "query" : "inputClusters:TPC/CLUSTERNATIVE",
       "outputs": "sampled-clusters:DS/CLUSTERNATIVE",
       "samplingConditions": [
@@ -130,7 +121,7 @@
         {
           "condition": "random",
           "fraction": "0.1",
-          "seed": "1234"
+          "seed": "0"
         }
       ],
       "blocking": "false"
