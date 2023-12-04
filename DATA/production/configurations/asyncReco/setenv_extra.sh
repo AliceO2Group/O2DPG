@@ -77,8 +77,10 @@ echo RUN = $RUNNUMBER
 if [[ $RUNNUMBER -ge 521889 ]]; then
   export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --its-digits --mft-digits"
   export DISABLE_DIGIT_CLUSTER_INPUT="--digits-from-upstream"
-  MAXBCDIFFTOMASKBIAS_ITS="ITSClustererParam.maxBCDiffToMaskBias=10"
-  MAXBCDIFFTOMASKBIAS_MFT="MFTClustererParam.maxBCDiffToMaskBias=10"
+  MAXBCDIFFTOMASKBIAS_ITS="ITSClustererParam.maxBCDiffToMaskBias=-10"    # this explicitly disables ITS masking
+  MAXBCDIFFTOSQUASHBIAS_ITS="ITSClustererParam.maxBCDiffToSquashBias=10" # this explicitly enables ITS squashing
+  MAXBCDIFFTOMASKBIAS_MFT="MFTClustererParam.maxBCDiffToMaskBias=-10"    # this explicitly disables MFT masking
+  MAXBCDIFFTOSQUASHBIAS_MFT="MFTClustererParam.maxBCDiffToSquashBias=10" # this explicitly enables MFT squashing
 fi
 # shift by +1 BC TRD(2), PHS(4), CPV(5), EMC(6), HMP(7) and by (orbitShift-1)*3564+1 BCs the ZDC since it internally resets the orbit to 1 at SOR and BC is shifted by -1 like for triggered detectors.
 # run 520403: orbitShift = 59839744 --> final shift = 213268844053
@@ -322,7 +324,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     echo "Using CTP inst lumi stored in data"
     export TPC_CORR_SCALING+=" --lumi-type 1 "
   elif [[ $INST_IR_FOR_TPC == "IDCCCDB" ]]; then
-    echo "TPC correction with IDC from CCDB will ne used"
+    echo "TPC correction with IDC from CCDB will be used"
     export TPC_CORR_SCALING+=" --lumi-type 2 "
   else
     echo "Unknown setting for INST_IR_FOR_TPC = $INST_IR_FOR_TPC (with ALIEN_JDL_INST_IR_FOR_TPC = $ALIEN_JDL_INST_IR_FOR_TPC)"
@@ -333,13 +335,14 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export TPC_CORR_SCALING+=";TPCCorrMap.lumiMean=$ALIEN_JDL_MEANIRFORTPC"
   fi
 
-  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]]; then
+  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] && ([[ -z $INST_IR_FOR_TPC ]] || [[ $INST_IR_FOR_TPC == "CTP" ]]); then
+    echo "We are in PbPb 2023, the default - for now - is to use CTP in the data"
     unset TPC_CORR_SCALING
-    export TPC_CORR_SCALING=";TPCCorrMap.lumiInstFactor=2.414 --lumi-type 1"
+    export TPC_CORR_SCALING=";TPCCorrMap.lumiInstFactor=2.414;TPCCorrMap.lumiMean=0 --lumi-type 1 "
     if [[ $SCALE_WITH_ZDC == 0 ]]; then
       # scaling with FT0
       if [[ $SCALE_WITH_FT0 == 1 ]]; then
-	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --lumi-type 1 TPCCorrMap.lumiInstFactor=135."
+	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --lumi-type 1 TPCCorrMap.lumiInstFactor=135.;TPCCorrMap.lumiMean=0"
       else
 	echo "Neither ZDC nor FT0 are in the run, and this is from 2023 PbPb: we cannot scale TPC ditortion corrections, aborting..."
 	return 1
@@ -347,6 +350,9 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     fi
   fi
 
+  echo "Final setting for TPC scaling is:"
+  echo $TPC_CORR_SCALING
+  
   if [[ $PERIOD != @(LHC22c|LHC22d|LHC22e|JUN|LHC22f) ]] ; then
     echo "Setting TPCCLUSTERTIMESHIFT to 0"
     TPCCLUSTERTIMESHIFT=0
@@ -372,11 +378,11 @@ export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysEr
 # ad-hoc options for ITS reco workflow
 EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.trackletsPerClusterLimit=15.;ITSCATrackerParam.cellsPerClusterLimit=35.;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;"
+  EXTRA_ITSRECO_CONFIG="ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;"
 elif [[ $BEAMTYPE == "pp" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
 fi
-export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow+=";$MAXBCDIFFTOMASKBIAS_ITS;$EXTRA_ITSRECO_CONFIG;"
+export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow+=";$MAXBCDIFFTOMASKBIAS_ITS;$MAXBCDIFFTOSQUASHBIAS_ITS;$EXTRA_ITSRECO_CONFIG;"
 
 # in the ALIGNLEVEL there was inconsistency between the internal errors of sync_misaligned and ITSEXTRAERR
 if [[ $ALIGNLEVEL != 0 ]]; then
@@ -423,6 +429,10 @@ fi
 if [[ $ALIEN_JDL_DISABLECASCADES == 1 ]]; then
   export ARGS_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=" --disable-cascade-finder  "
 fi
+# allow usage of TPC-only in svertexer (default: do use them, as in default in O2 and CCDB)
+if [[ $ALIEN_JDL_DISABLETPCONLYFORV0S == 1 ]]; then
+  export CONFIG_EXTRA_PROCESS_o2_secondary_vertexing_workflow+=";svertexer.mExcludeTPCtracks=true"
+fi
 
 export CONFIG_EXTRA_PROCESS_o2_primary_vertexing_workflow+=";$PVERTEXER;$VDRIFTPARAMOPTION;"
 
@@ -446,6 +456,9 @@ export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$TRACKTUNETPC
 
 # ad-hoc settings for FT0
 export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow="$ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow --ft0-reconstructor"
+if [[ $BEAMTYPE == "PbPb" ]]; then
+  export CONFIG_EXTRA_PROCESS_o2_ft0_reco_workflow=";FT0TimeFilterParam.mAmpLower=20;"
+fi
 
 # ad-hoc settings for FV0
 export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="$ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow --fv0-reconstructor"
@@ -455,9 +468,9 @@ export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="$ARGS_EXTRA_PROCESS_o2_fv0_reco_
 
 # ad-hoc settings for MFT
 if [[ $BEAMTYPE == "pp" || $PERIOD == "LHC22s" ]]; then
-  export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow+=";MFTTracking.RBins=30;MFTTracking.PhiBins=120;MFTTracking.ZVtxMin=-13;MFTTracking.ZVtxMax=13;MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
+  export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow+=";MFTTracking.RBins=30;MFTTracking.PhiBins=120;MFTTracking.ZVtxMin=-13;MFTTracking.ZVtxMax=13;MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT;$MAXBCDIFFTOSQUASHBIAS_MFT"
 else
-  export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow+=";MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT"
+  export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow+=";MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT;$MAXBCDIFFTOSQUASHBIAS_MFT"
 fi
 
 # ad-hoc settings for MCH
