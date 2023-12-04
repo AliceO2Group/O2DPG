@@ -472,11 +472,11 @@ if doembedding:
         workflow['stages'].append(BKG_HEADER_task)
 
 # a list of smaller sensors (used to construct digitization tasks in a parametrized way)
-smallsensorlist = [ "ITS", "TOF", "FDD", "MCH", "MID", "MFT", "HMP", "EMC", "PHS", "CPV" ]
+smallsensorlist = [ "ITS", "TOF", "FDD", "MCH", "MID", "MFT", "HMP", "PHS", "CPV" ]
 if args.with_ZDC:
    smallsensorlist += [ "ZDC" ]
 # a list of detectors that serve as input for the trigger processor CTP --> these need to be processed together for now
-ctp_trigger_inputlist = [ "FT0", "FV0" ]
+ctp_trigger_inputlist = [ "FT0", "FV0", "EMC" ]
 
 BKG_HITDOWNLOADER_TASKS={}
 for det in [ 'TPC', 'TRD' ] + smallsensorlist + ctp_trigger_inputlist:
@@ -899,13 +899,15 @@ for tf in range(1, NTIMEFRAMES + 1):
    tneeds = [ContextTask['name']]
    if includeQED:
      tneeds += [QED_task['name']]
-   t = createTask(name="ft0fv0ctp_digi_" + str(tf), needs=tneeds,
+   t = createTask(name="ft0fv0emcctp_digi_" + str(tf), needs=tneeds,
                   tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
    t['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
-   t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew() + (' --combine-devices','')[args.no_combine_dpl_devices] + ('',' --disable-mc')[args.no_mc_labels] + QEDdigiargs
+   t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption + ' --onlyDet FT0,FV0,EMC,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' + putConfigValuesNew() + (' --combine-devices','')[args.no_combine_dpl_devices] + ('',' --disable-mc')[args.no_mc_labels] + QEDdigiargs
    workflow['stages'].append(t)
    det_to_digitask["FT0"]=t
    det_to_digitask["FV0"]=t
+   det_to_digitask["EMC"]=t
+   det_to_digitask["CTP"]=t
 
    def getDigiTaskName(det):
       t = det_to_digitask.get(det)
@@ -962,7 +964,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(ITSRECOtask)
 
    FT0RECOtask=createTask(name='ft0reco_'+str(tf), needs=[getDigiTaskName("FT0")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
-   FT0RECOtask['cmd'] = '${O2_ROOT}/bin/o2-ft0-reco-workflow --disable-time-offset-calib ' + getDPL_global_options() + putConfigValues()
+   FT0RECOtask['cmd'] = '${O2_ROOT}/bin/o2-ft0-reco-workflow --disable-time-offset-calib --disable-slewing-calib ' + getDPL_global_options() + putConfigValues()
    workflow['stages'].append(FT0RECOtask)
 
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
@@ -1235,10 +1237,15 @@ for tf in range(1, NTIMEFRAMES + 1):
 
      ### EMCAL
      if isActive('EMC'):
-        addQCPerTF(taskName='emcCellQC',
+        addQCPerTF(taskName='emcRecoQC',
                    needs=[EMCRECOtask['name']],
                    readerCommand='o2-emcal-cell-reader-workflow --infile emccells.root',
-                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-cell-task.json')
+                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-reco-tasks.json')
+        if isActive('CTP'):
+           addQCPerTF(taskName='emcBCQC',
+                      needs=[EMCRECOtask['name'], getDigiTaskName("CTP")],
+                      readerCommand='o2-emcal-cell-reader-workflow --infile emccells.root | o2-ctp-digit-reader --inputfile ctpdigits.root --disable-mc',
+                      configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-bc-task.json')
      ### FT0
      addQCPerTF(taskName='RecPointsQC',
                    needs=[FT0RECOtask['name']],
