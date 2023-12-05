@@ -232,7 +232,7 @@ def retrieve_MinBias_CTPScaler_Rate(ctpscaler, finaltime, trig_eff, NBunches, Co
     """
     # this is the default for pp
     ctpclass = 0 # <---- we take the scaler for FT0
-    ctptype = 0
+    ctptype = 1
     # this is the default for PbPb
     if ColSystem == "PbPb":
       ctpclass = 25  # <--- we take scalers for ZDC
