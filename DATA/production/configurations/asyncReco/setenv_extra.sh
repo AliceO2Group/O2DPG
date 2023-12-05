@@ -326,6 +326,9 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   elif [[ $INST_IR_FOR_TPC == "IDCCCDB" ]]; then
     echo "TPC correction with IDC from CCDB will be used"
     export TPC_CORR_SCALING+=" --lumi-type 2 "
+    if [[ $ALIEN_JDL_USEDERIVATIVESFORSCALING == "1" ]]; then
+      export TPC_CORR_SCALING+=" --corrmap-lumi-mode 1 "
+    fi
   else
     echo "Unknown setting for INST_IR_FOR_TPC = $INST_IR_FOR_TPC (with ALIEN_JDL_INST_IR_FOR_TPC = $ALIEN_JDL_INST_IR_FOR_TPC)"
     return 1
