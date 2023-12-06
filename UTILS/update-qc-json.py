@@ -2,11 +2,36 @@ import os
 import json
 import argparse
 
-def update_json_files(folder_path, template_file):
+# Embedded template qc configuration for MC
+template_data = {
+    "config": {
+        "database": {
+            "implementation": "CCDB",
+            "host": "ccdb-test.cern.ch:8080",
+            "username": "not_applicable",
+            "password": "not_applicable",
+            "name": "not_applicable"
+        },
+        "Activity": {
+            "number": "42",
+            "type": "2",
+            "provenance": "qc_mc",
+            "passName": "passMC",
+            "periodName": "SimChallenge"
+        },
+        "monitoring": {
+            "url": "no-op://"
+        },
+        "consul": {
+            "url": ""
+        },
+        "conditionDB": {
+            "url": "alice-ccdb.cern.ch"
+        }
+    }
+}
 
-    with open(template_file, 'r') as file:
-        template_data = json.load(file)
-
+def update_json_files(folder_path):
     # Iterate over files in the specified folder
     for filename in os.listdir(folder_path):
         if filename.endswith('.json'):
@@ -27,11 +52,10 @@ def update_json_files(folder_path, template_file):
 def main():
     parser = argparse.ArgumentParser(description="Update the 'config' section in the 'qc' part of JSON files in a folder.")
     parser.add_argument('folder_path', type=str, help='Path to the folder containing JSON files')
-    parser.add_argument('template_file', type=str, help='JSON template file')
 
     args = parser.parse_args()
 
-    update_json_files(args.folder_path, args.template_file)
+    update_json_files(args.folder_path)
 
 if __name__ == "__main__":
     main()
