@@ -23,6 +23,7 @@ pattern="-e \"\<[Ee]xception\"                         \
          -e \"terminate called without an active\"     \
          -e \"\]\[FATAL\]\"                            \
          -e \"\*\*\* Program crashed\"                 \
+         -e \"\*\*\* Fatal Exception\"                 \
          -e \"\*\*\* Error in\"" # <--- LIBC fatal error messages
 
 CMD="grep -m 1 -B2 -A10 ${pattern} $filetocheck"

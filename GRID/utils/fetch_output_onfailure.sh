@@ -8,27 +8,40 @@ if [ ! "${MY_JOBID}" ]; then
   exit 1
 fi
 
+# these are all subjobids
 SUBJOBIDS=($(alien.py ps --trace ${MY_JOBID} | awk '/Subjob submitted/' | sed 's/.*submitted: //' | tr '\n' ' '))
+
+# these are the one that failed
+FAILEDSUBJOBIDS=($(alien.py ps -a -m ${MY_JOBID} -f ERROR_ALL | awk '/EE/{print $2}' | tr '\n' ' '))
 
 CurrDir=${PWD}
 OutputDir=/tmp/AlienLogs_${MY_JOBID}
 
-# 
-job_number=${#SUBJOBIDS[@]}
-
-
-# We fetch the error files locally
+job_number=${#FAILEDSUBJOBIDS[@]}
+echo "Found ${job_number} failed job ids"
+echo "Registering output for retrieval"
+RecycleBase=""
+# First pass to do register output
 for ((i = 0; i < job_number; i++)); do
-  jobid=${SUBJOBIDS[i]}
-  STATUS=$(alien.py ps -j ${jobid} | awk '//{print $4}')
-  echo "Status of ${jobid} is $STATUS"
-  if [ ${STATUS} == "EE" ]; then
-    # nothing
+  jobid=${FAILEDSUBJOBIDS[i]}
+  if [ ! "${RecycleBase}" ]; then
     RecycleOutputDir=$(alien.py ps --trace ${jobid} | awk '/Going to uploadOutputFiles/' | sed 's/.*outputDir=//' | sed 's/)//')
-    alien.py registerOutput ${jobid}
-    echo "Recycle out is ${RecycleOutputDir}"
-    alien.py cp ${RecycleOutputDir}/'*' file:${OutputDir}/${jobid}
+    # /alice/cern.ch/user/a/aliprod/recycle/alien-job-2974093751
+    RecycleBase=${RecycleOutputDir%-${jobid}} # Removes the ${jobid} and yields the recycle base path
   fi
+  $(alien.py registerOutput ${jobid}) 2> /dev/null
+done
+
+# wait a bit to allow propagation of "registerOutput"
+sleep 1
+
+echo "Downloading output"
+# Second pass to copy files
+for ((i = 0; i < job_number; i++)); do
+  jobid=${FAILEDSUBJOBIDS[i]}
+  RecycleOutputDir="${RecycleBase}-${jobid}"
+  alien.py cp ${RecycleOutputDir}/'*archive*' file:${OutputDir}/${jobid}
+  [ -f ${OutputDir}/${jobid}/log_archive.zip ] && unzip -q -o ${OutputDir}/${jobid}/log_archive.zip -d ${OutputDir}/${jobid}
 done
 
 echo " ... Going to automatic extraction of log files ... "
