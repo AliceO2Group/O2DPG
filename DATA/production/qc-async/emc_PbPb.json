@@ -75,6 +75,16 @@
           "mesonClusterMaxTime": "50.",
           "MultiplicityRange":"400",
           "mesonMinPt": "7."
+        },
+        "grpGeomRequest" : {
+          "geomRequest": "Ideal",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
         }
       },
       "BCTaskEMCAL": {
@@ -87,10 +97,10 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "emcal-triggers:EMC/CELLSTRGR/0;ctp-digits:CTP/DIGITS"
+          "query": "emcal-triggers:EMC/CELLSTRGR/0;ctp-digits:CTP/DIGITS;ctp-config:CTP/CONFIG/0?lifetime=condition&ccdb-path=CTP/Config/Config&ccdb-run-dependent=true"
         },
         "taskParameters": {
-          "AliasMB" : "CMTVXTSC"
+          "AliasMB" : "CMTVXTSC,C0TVXTSC,C0TVXTCE"
         }
       }
     }
