@@ -31,7 +31,7 @@ def main():
 
     args = parser.parse_args()
 
-    update_json_files(args.folder_path, args.template_file_path)
+    update_json_files(args.folder_path, args.template_file)
 
 if __name__ == "__main__":
     main()
