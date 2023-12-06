@@ -81,7 +81,9 @@
         "taskParameters": {
           "cutAbsEta": "1.",
           "cutMinNCluster": "60",
-          "cutMindEdxTot": "20."
+          "cutMindEdxTot": "20.",
+          "samplingFractionDCAr": "0.1",
+          "cutPtForDCAr": "1.5"
         },
 	"grpGeomRequest" : {
           "geomRequest": "None",
