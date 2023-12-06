@@ -1,44 +1,43 @@
 {
-    "qc": {
-      "config": {
-        "database": {
-          "implementation": "CCDB",
-          "host": "ccdb-test.cern.ch:8080",
-          "username": "not_applicable",
-          "password": "not_applicable",
-          "name": "not_applicable"
-        },
-        "Activity": {
-          "number": "42",
-            "type": "2",
-            "provenance": "qc_mc",
-            "passName": "passMC",
-            "periodName": "SimChallenge"
-       },
-        "monitoring": {
-          "url": "no-op://"
-        },
-        "consul": {
-          "url": ""
-        },
-        "conditionDB": {
-          "url":  "ccdb-test.cern.ch:8080"
-        }
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "ccdb-test.cern.ch:8080",
+        "username": "not_applicable",
+        "password": "not_applicable",
+        "name": "not_applicable"
       },
-      "tasks": {
-        "RecPoints": {
-          "active": "true",
-          "className": "o2::quality_control_modules::ft0::RecPointsQcTask",
-          "moduleName": "QcFT0",
-          "detectorName": "FT0",
-          "cycleDurationSeconds": "600",
-          "maxNumberCycles": "-1",
-          "dataSource": {
-              "type": "direct",
-              "query": "recpoints:FT0/RECPOINTS/0;channels:FT0/RECCHDATA/0"
-            }
+      "Activity": {
+        "number": "42",
+        "type": "2",
+        "provenance": "qc_mc",
+        "passName": "passMC",
+        "periodName": "SimChallenge"
+      },
+      "monitoring": {
+        "url": "no-op://"
+      },
+      "consul": {
+        "url": ""
+      },
+      "conditionDB": {
+        "url": "alice-ccdb.cern.ch"
+      }
+    },
+    "tasks": {
+      "RecPoints": {
+        "active": "true",
+        "className": "o2::quality_control_modules::ft0::RecPointsQcTask",
+        "moduleName": "QcFT0",
+        "detectorName": "FT0",
+        "cycleDurationSeconds": "600",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "recpoints:FT0/RECPOINTS/0;channels:FT0/RECCHDATA/0"
         }
-      
       }
     }
+  }
 }
