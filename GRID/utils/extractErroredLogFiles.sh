@@ -1,6 +1,15 @@
 # We determine the O2DPG task that failed (as listed in stdout) and extract the relevant log automatically
 # Beware that errors might occur outside of O2DPG tasks such as in preprocessing etc or not visible in logs
 
+alias mytar=tar
+if [[ $(uname) == "Darwin" ]]; then
+    echo "Running on macOS. This needs gnu-tar"
+    alias mytar=gtar
+fi
+
+# show aliases
+alias
+
 errored_tasks=""
 find ./ -name "stdout*" -exec grep -H "failed.*retry" {} ';' | sed 's/ failed.*//' | tr ":" " " | while IFS= read -r line; do
   stdoutpath=$(echo "$line" | awk '{print $1}')  # Extracting the first column
@@ -17,12 +26,12 @@ find ./ -name "stdout*" -exec grep -H "failed.*retry" {} ';' | sed 's/ failed.*/
   # extract the general log archive
   unzip -n log_archive.zip
   # extract specific task log from debug archive
-  tar -xvzf debug_log_archive.tgz --wildcards "*${logfile}.log"
+  mytar -xvzf debug_log_archive.tgz --wildcards "*${logfile}.log"
   if [[ ${logfile} == *"qedsim"* || ${logfile} == *"sgnsim"* || ${logfile} == *"bkgsim"* ]]; then
     # simulation has few more files to inspect
-    tar -xvzf debug_log_archive.tgz --wildcards "*${tf}*serverlog*"
-    tar -xvzf debug_log_archive.tgz --wildcards "*${tf}*workerlog*"
-    tar -xvzf debug_log_archive.tgz --wildcards "*${tf}*mergerlog*"
+    mytar -xvzf debug_log_archive.tgz --wildcards "*${tf}*serverlog*"
+    mytar -xvzf debug_log_archive.tgz --wildcards "*${tf}*workerlog*"
+    mytar -xvzf debug_log_archive.tgz --wildcards "*${tf}*mergerlog*"
   fi
   cd $OLDPWD
 done
