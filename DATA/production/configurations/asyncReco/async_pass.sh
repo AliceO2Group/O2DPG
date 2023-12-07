@@ -363,6 +363,8 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]] ; then
         if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
           export OPTIMIZED_PARALLEL_ASYNC=pp_1gpu  # sets the multiplicities to optimized defaults for this configuration (1 job with 1 gpu on EPNs)
           export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
+          export TIMEFRAME_RATE_LIMIT=8 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
+          export SHMSIZE=30000000000 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
         else
           # forcing multiplicities to be 1
           export MULTIPLICITY_PROCESS_tof_matcher=1
@@ -382,9 +384,13 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]] ; then
       if [[ $BEAMTYPE == "pp" ]]; then
         export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, pp)
         export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
+        export TIMEFRAME_RATE_LIMIT=45 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
+        export SHMSIZE=100000000000 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
       else  # PbPb
         export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, PbPb)
         export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
+        export TIMEFRAME_RATE_LIMIT=30 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
+        export SHMSIZE=100000000000 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
       fi
     fi
   fi
@@ -414,6 +420,8 @@ else
     else
       export OPTIMIZED_PARALLEL_ASYNC=pp_64cpu # to use EPNs with full NUMA domain but without GPUs
       export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
+      export TIMEFRAME_RATE_LIMIT=32 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
+      export SHMSIZE=90000000000 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
     fi
   fi
 fi
