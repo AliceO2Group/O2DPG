@@ -4,7 +4,7 @@ source common/setenv.sh
 
 source common/getCommonArgs.sh
 
-source common/gen_topo_helper_functions.sh 
+source common/gen_topo_helper_functions.sh
 
 export SHMSIZE=$(( 128 << 30 )) #  GB for the global SHMEM # for kr cluster finder
 
@@ -18,13 +18,14 @@ CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
 NLANES=36
 SESSION="default"
 PIPEADD="0"
-ARGS_FILES="NameConf.mDirGRP=/home/epn/odc/files/;NameConf.mDirGeom=/home/epn/odc/files/;keyval.output_dir=/dev/null"
+ARGS_FILES="keyval.output_dir=/dev/null"
 
 HOST=localhost
 
 QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
 
-
+# TODO use add_W function from gen_topo_helper_functions.sh to assemble workflow
+# as done for example in https://github.com/AliceO2Group/O2DPG/blob/master/DATA/production/calib/its-threshold-processing.sh
 o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" --inject-missing-data \
     --readout-proxy '--channel-config "name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1"' \
