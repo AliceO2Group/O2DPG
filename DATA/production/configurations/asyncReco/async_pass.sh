@@ -122,7 +122,7 @@ export timeUsed=0
 ###if [[ $MODE == "remote" ]]; then
     # run specific archive
     if [[ ! -f runInput_$RUNNUMBER.tgz ]]; then
-	echo "No runInput_$RUNNUMBER.tgz, let's hope we don't need it"
+        echo "No runInput_$RUNNUMBER.tgz, let's hope we don't need it"
     else
       tar -xzvf runInput_$RUNNUMBER.tgz
     fi
@@ -324,8 +324,8 @@ if [[ -n $ALIEN_JDL_PACKAGES ]]; then # if we have this env variable, it means t
       break
     else
       if [[ "$((SUBJOBIDX%KEEPRATIO))" -eq "0" ]]; then
-	keep=1
-	break
+        keep=1
+        break
       fi
     fi
   done < tmp.tmp
@@ -360,32 +360,32 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]] ; then
   if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
     if [[ "ALIEN_JDL_USEFULLNUMADOMAIN" == 0 ]]; then
       if [[ $keep -eq 0 ]]; then
-	if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
-	  export OPTIMIZED_PARALLEL_ASYNC=pp_1gpu  # sets the multiplicities to optimized defaults for this configuration (1 job with 1 gpu on EPNs)
-	else
-	  # forcing multiplicities to be 1
-	  export MULTIPLICITY_PROCESS_tof_matcher=1
-	  export MULTIPLICITY_PROCESS_mch_cluster_finder=1
-	  export MULTIPLICITY_PROCESS_tpc_entropy_decoder=1
-	  export MULTIPLICITY_PROCESS_itstpc_track_matcher=1
-	  export MULTIPLICITY_PROCESS_its_tracker=1
-	  export OMP_NUM_THREADS=4
-	fi
-	export TIMEFRAME_RATE_LIMIT=8
+        if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
+          export OPTIMIZED_PARALLEL_ASYNC=pp_1gpu  # sets the multiplicities to optimized defaults for this configuration (1 job with 1 gpu on EPNs)
+        else
+          # forcing multiplicities to be 1
+          export MULTIPLICITY_PROCESS_tof_matcher=1
+          export MULTIPLICITY_PROCESS_mch_cluster_finder=1
+          export MULTIPLICITY_PROCESS_tpc_entropy_decoder=1
+          export MULTIPLICITY_PROCESS_itstpc_track_matcher=1
+          export MULTIPLICITY_PROCESS_its_tracker=1
+          export OMP_NUM_THREADS=4
+        fi
+        export TIMEFRAME_RATE_LIMIT=8
       else
-	export TIMEFRAME_RATE_LIMIT=4
+        export TIMEFRAME_RATE_LIMIT=4
       fi
       export SHMSIZE=30000000000
     else
       export DPL_SMOOTH_RATE_LIMITING=1
       if [[ $BEAMTYPE == "pp" ]]; then
-	export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, pp)
-	export TIMEFRAME_RATE_LIMIT=45
-	export SHMSIZE=100000000000
+        export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, pp)
+        export TIMEFRAME_RATE_LIMIT=45
+        export SHMSIZE=100000000000
       else  # PbPb
-	export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, PbPb)
-	export TIMEFRAME_RATE_LIMIT=20
-	export SHMSIZE=128000000000
+        export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, PbPb)
+        export TIMEFRAME_RATE_LIMIT=20
+        export SHMSIZE=128000000000
       fi
     fi
   fi
@@ -398,18 +398,18 @@ else
     if [[ "$ALIEN_JDL_EPNFULLNUMACPUONLY" != 1 ]]; then
       export TIMEFRAME_RATE_LIMIT=3
       if [[ $BEAMTYPE == "pp" ]]; then
-	if (( $(echo "$RUN_IR > 800000" | bc -l) )); then
-	  export TIMEFRAME_RATE_LIMIT=1
-	elif (( $(echo "$RUN_IR < 50000" | bc -l) )); then
-	  export TIMEFRAME_RATE_LIMIT=6
-	fi
-	export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu # sets the multiplicities to optimized defaults for this configuration (grid)
-	export SHMSIZE=16000000000
+        if (( $(echo "$RUN_IR > 800000" | bc -l) )); then
+          export TIMEFRAME_RATE_LIMIT=1
+        elif (( $(echo "$RUN_IR < 50000" | bc -l) )); then
+          export TIMEFRAME_RATE_LIMIT=6
+        fi
+        export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu # sets the multiplicities to optimized defaults for this configuration (grid)
+        export SHMSIZE=16000000000
       else # PbPb
-	export TIMEFRAME_RATE_LIMIT=2
-	export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu
-	export SHMSIZE=16000000000
-	export SVERTEX_THREADS=5
+        export TIMEFRAME_RATE_LIMIT=2
+        export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu
+        export SHMSIZE=16000000000
+        export SVERTEX_THREADS=5
       fi
     else
       export OPTIMIZED_PARALLEL_ASYNC=pp_64cpu # to use EPNs with full NUMA domain but without GPUs
@@ -488,20 +488,20 @@ else
       echo "Time spent in running the workflow, Step 1 = $delta s"
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from Step 1 of processing is " $exitcode > validation_error.message
-	echo "exit code from Step 1 of processing is " $exitcode
-	exit $exitcode
+        echo "exit code from Step 1 of processing is " $exitcode > validation_error.message
+        echo "exit code from Step 1 of processing is " $exitcode
+        exit $exitcode
       fi
       mv latest.log latest_reco_1.log
       if [[ -f performanceMetrics.json ]]; then
-	mv performanceMetrics.json performanceMetrics_1.json
+        mv performanceMetrics.json performanceMetrics_1.json
       fi
       $STATSCRIPT latest_reco_1.log reco_1
       exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from processing is " $exitcode > validation_error.message
-	echo "exit code from processing is " $exitcode
-	exit $exitcode
+        echo "exit code from processing is " $exitcode > validation_error.message
+        echo "exit code from processing is " $exitcode
+        exit $exitcode
       fi
     fi
   fi
@@ -526,43 +526,43 @@ else
       echo "Time spent in running the workflow, Step 2 = $delta s"
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from Step 2 of processing is " $exitcode > validation_error.message
-	echo "exit code from Step 2 of processing is " $exitcode
-	exit $exitcode
+        echo "exit code from Step 2 of processing is " $exitcode > validation_error.message
+        echo "exit code from Step 2 of processing is " $exitcode
+        exit $exitcode
       fi
       mv latest.log latest_reco_2.log
       if [[ -f performanceMetrics.json ]]; then
-	mv performanceMetrics.json performanceMetrics_2.json
+        mv performanceMetrics.json performanceMetrics_2.json
       fi
       $STATSCRIPT latest_reco_2.log reco_2
       exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from processing is " $exitcode > validation_error.message
-	echo "exit code from processing is " $exitcode
-	exit $exitcode
+        echo "exit code from processing is " $exitcode > validation_error.message
+        echo "exit code from processing is " $exitcode
+        exit $exitcode
       fi
       # let's compare to previous step
       if [[ -f latest_reco_1.log ]]; then
-	nCTFsFilesInspected_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
-	nCTFsFilesOK_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
-	nCTFsFilesFailed_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_[0-9]*_\([0-9]*\)_.*/\1/'`
-	nCTFsProcessed_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
-	nCTFsFilesInspected_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
-	nCTFsFilesOK_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
-	nCTFsFilesFailed_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/^[0-9]*_[0-9]*_\([0-9]*\)_.*/\1/'`
-	nCTFsProcessed_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/^[0-9]*_[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
-	if [[ $nCTFsFilesInspected_step1 != $nCTFsFilesInspected_step2 ]] || [[ $nCTFsFilesFailed_step1 != $nCTFsFilesFailed_step2 ]] || [[ $nCTFsFilesOK_step1 != $nCTFsFilesOK_step2 ]] || [[ $nCTFsProcessed_step1 != $nCTFsProcessed_step2 ]]; then
-	  echo "Inconsistency between step 1 and step 2 in terms of number of CTFs (files or single CTFs) found:"
-	  echo "nCTFsFilesInspected_step1 = $nCTFsFilesInspected_step1, nCTFsFilesInspected_step2 = $nCTFsFilesInspected_step2"
-	  echo "nCTFsFilesOK_step1 = $nCTFsFilesOK_step1, nCTFsFilesOK_step2 = $nCTFsFilesOK_step2"
-	  echo "nCTFsFilesFailed_step1 = $nCTFsFilesFailed_step1, nCTFsFilesFailed_step2 = $nCTFsFilesFailed_step2"
-	  echo "nCTFsProcessed_step1 = $nCTFsProcessed_step1, nCTFsProcessed_step2 = $nCTFsProcessed_step2"
-	  echo "Inconsistency between step 1 and step 2 in terms of number of CTFs (files or single CTFs) found:" > validation_error.message
-	  echo "nCTFsFilesInspected_step1 = $nCTFsFilesInspected_step1, nCTFsFilesInspected_step2 = $nCTFsFilesInspected_step2" > validation_error.message
-	  echo "nCTFsFilesOK_step1 = $nCTFsFilesOK_step1, nCTFsFilesOK_step2 = $nCTFsFilesOK_step2" > validation_error.message
-	  echo "nCTFsProcessed_step1 = $nCTFsProcessed_step1, nCTFsProcessed_step2 = $nCTFsProcessed_step2" > validation_error.message
-	  exit 1000
-	fi
+        nCTFsFilesInspected_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
+        nCTFsFilesOK_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
+        nCTFsFilesFailed_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_[0-9]*_\([0-9]*\)_.*/\1/'`
+        nCTFsProcessed_step1=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
+        nCTFsFilesInspected_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/\(^[0-9]*\)_.*/\1/'`
+        nCTFsFilesOK_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_1.stat | sed 's/^[0-9]*_\([0-9]*\)_.*/\1/'`
+        nCTFsFilesFailed_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/^[0-9]*_[0-9]*_\([0-9]*\)_.*/\1/'`
+        nCTFsProcessed_step2=`ls [0-9]*_[0-9]*_[0-9]*_[0-9]*_[0-9]*_reco_2.stat | sed 's/^[0-9]*_[0-9]*_[0-9]*_\([0-9]*\).*/\1/'`
+        if [[ $nCTFsFilesInspected_step1 != $nCTFsFilesInspected_step2 ]] || [[ $nCTFsFilesFailed_step1 != $nCTFsFilesFailed_step2 ]] || [[ $nCTFsFilesOK_step1 != $nCTFsFilesOK_step2 ]] || [[ $nCTFsProcessed_step1 != $nCTFsProcessed_step2 ]]; then
+          echo "Inconsistency between step 1 and step 2 in terms of number of CTFs (files or single CTFs) found:"
+          echo "nCTFsFilesInspected_step1 = $nCTFsFilesInspected_step1, nCTFsFilesInspected_step2 = $nCTFsFilesInspected_step2"
+          echo "nCTFsFilesOK_step1 = $nCTFsFilesOK_step1, nCTFsFilesOK_step2 = $nCTFsFilesOK_step2"
+          echo "nCTFsFilesFailed_step1 = $nCTFsFilesFailed_step1, nCTFsFilesFailed_step2 = $nCTFsFilesFailed_step2"
+          echo "nCTFsProcessed_step1 = $nCTFsProcessed_step1, nCTFsProcessed_step2 = $nCTFsProcessed_step2"
+          echo "Inconsistency between step 1 and step 2 in terms of number of CTFs (files or single CTFs) found:" > validation_error.message
+          echo "nCTFsFilesInspected_step1 = $nCTFsFilesInspected_step1, nCTFsFilesInspected_step2 = $nCTFsFilesInspected_step2" > validation_error.message
+          echo "nCTFsFilesOK_step1 = $nCTFsFilesOK_step1, nCTFsFilesOK_step2 = $nCTFsFilesOK_step2" > validation_error.message
+          echo "nCTFsProcessed_step1 = $nCTFsProcessed_step1, nCTFsProcessed_step2 = $nCTFsProcessed_step2" > validation_error.message
+          exit 1000
+        fi
       fi
     fi
   fi
@@ -589,13 +589,13 @@ else
       echo "Time spent in running the workflow, Step 3 = $delta s"
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from Step 3 of processing is " $exitcode > validation_error.message
-	echo "exit code from Step 3 of processing is " $exitcode
-	exit $exitcode
+        echo "exit code from Step 3 of processing is " $exitcode > validation_error.message
+        echo "exit code from Step 3 of processing is " $exitcode
+        exit $exitcode
       fi
       mv latest.log latest_reco_3.log
       if [[ -f performanceMetrics.json ]]; then
-	mv performanceMetrics.json performanceMetrics_3.json
+        mv performanceMetrics.json performanceMetrics_3.json
       fi
     fi
   fi
@@ -655,9 +655,9 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       echo "Time spent in merging last AOD files, to reach a good size for that too = $delta s"
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from aod-merger for latest file is " $exitcode > validation_error.message
-	echo "exit code from aod-merger for latest file is " $exitcode
-	exit $exitcode
+        echo "exit code from aod-merger for latest file is " $exitcode > validation_error.message
+        echo "exit code from aod-merger for latest file is " $exitcode
+        exit $exitcode
      fi
       MERGED_SIZE=`wc -c AO2D.root | awk '{print $1}'`
       echo "Size of merged file: $MERGED_SIZE"
@@ -702,8 +702,8 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       timeEndCheck=`date +%s`
       timeUsedCheck=$(( $timeUsedCheck+$timeEndCheck-$timeStartCheck ))
       if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from AO2D check is " $exitcode > validation_error.message
-	echo "exit code from AO2D check is " $exitcode
+        echo "exit code from AO2D check is " $exitcode > validation_error.message
+        echo "exit code from AO2D check is " $exitcode
       fi
     fi
     cd -
@@ -719,8 +719,8 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
     i=0
     while IFS= read -r line; do
       while [[ $CURRENT_POOL_SIZE -ge $MAX_POOL_SIZE ]]; do
-	CURRENT_POOL_SIZE=`jobs -r | wc -l`
-	sleep 1
+        CURRENT_POOL_SIZE=`jobs -r | wc -l`
+        sleep 1
       done
       run_AOD_merging $line &
       arr[$i]=$!
@@ -733,13 +733,13 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       wait ${arr[$i]}
       exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
-	echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode > validation_error.message
-	echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode
-	echo "As a consequence, we will keep the AO2Ds with unmerged DFs for ${aods[$i]}"
-	mergedok[$((10#${aods[$i]}))]=0
+        echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode > validation_error.message
+        echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode
+        echo "As a consequence, we will keep the AO2Ds with unmerged DFs for ${aods[$i]}"
+        mergedok[$((10#${aods[$i]}))]=0
       else
-	echo "Merging of DFs inside the AO2D in ${aods[$i]} worked correctly"
-	mergedok[$((10#${aods[$i]}))]=1
+        echo "Merging of DFs inside the AO2D in ${aods[$i]} worked correctly"
+        mergedok[$((10#${aods[$i]}))]=1
       fi
     done
     timeEndMerge=`date +%s`
@@ -751,10 +751,10 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
       echo "Inspecting $AOD_DIR:"
       if [[ ${mergedok[$((10#$AOD_DIR))]} == 0 ]]; then
-	echo "Merging for $AOD_DIR DID NOT work, we will do nothing for this file"
-	continue
+        echo "Merging for $AOD_DIR DID NOT work, we will do nothing for this file"
+        continue
       else
-	echo "Merging for $AOD_DIR DID work, let's continue"
+        echo "Merging for $AOD_DIR DID work, let's continue"
       fi
       cd $AOD_DIR
       # now checking them
@@ -765,12 +765,12 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       timeEndCheckMergedAOD=`date +%s`
       timeUsedCheckMergedAOD=$(( $timeUsedCheckMergedAOD+$timeEndCheckMergedAOD-$timeStartCheckMergedAOD ))
       if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from AO2D with merged DFs check is " $exitcode > validation_error.message
-	echo "exit code from AO2D with merged DFs check is " $exitcode
-	echo "We will keep the AO2Ds with unmerged DFs"
+        echo "exit code from AO2D with merged DFs check is " $exitcode > validation_error.message
+        echo "exit code from AO2D with merged DFs check is " $exitcode
+        echo "We will keep the AO2Ds with unmerged DFs"
       else
-	echo "All ok, replacing initial AO2D.root file with the one with merged DFs"
-	mv AO2D_merged.root AO2D.root
+        echo "All ok, replacing initial AO2D.root file with the one with merged DFs"
+        mv AO2D_merged.root AO2D.root
       fi
       cd ..
     done
@@ -791,17 +791,17 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       timeUsedAnalysisQC=$(( $timeUsedAnalysisQC+$timeEndAnalysisQC-$timeStartAnalysisQC ))
       echo "exitcode = $exitcode"
       if [[ $exitcode -ne 0 ]]; then
-	echo "exit code from Analysis QC is " $exitcode > validation_error.message
-	echo "exit code from Analysis QC is " $exitcode
-	exit $exitcode
+        echo "exit code from Analysis QC is " $exitcode > validation_error.message
+        echo "exit code from Analysis QC is " $exitcode
+        exit $exitcode
       fi
       if [[ -f "Analysis/MergedAnalyses/AnalysisResults.root" ]]; then
-	mv Analysis/MergedAnalyses/AnalysisResults.root .
+        mv Analysis/MergedAnalyses/AnalysisResults.root .
       else
-	echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
+        echo "No Analysis/MergedAnalyses/AnalysisResults.root found! check analysis QC"
       fi
       if ls Analysis/*/*.log 1> /dev/null 2>&1; then
-	mv Analysis/*/*.log .
+        mv Analysis/*/*.log .
       fi
       cd ..
     done
