@@ -40,6 +40,10 @@ N_F_CTF=$MULTIPLICITY_FACTOR_CTFENCODERS
 N_TPCTRK=$NGPUS
 if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
   # Tuned multiplicities for async processing
+  if [[ ${OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT:-} == 1 ]]; then
+    [[ ! -z ${TIMEFRAME_RATE_LIMIT:-} ]] && unset TIMEFRAME_RATE_LIMIT
+    [[ ! -z ${SHMSIZE:-} ]] && unset SHMSIZE
+  fi
   if [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_8cpu" ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=3
     NGPURECOTHREADS=5
@@ -66,7 +70,7 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_TPCENTDEC=3
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_1gpu" ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=8
-    [[ -z ${SHMSIZE:-} ]] && SHMSIZE=20000000000
+    [[ -z ${SHMSIZE:-} ]] && SHMSIZE=30000000000
     N_TOFMATCH=2
     N_MCHCL=3
     N_TPCENTDEC=2
