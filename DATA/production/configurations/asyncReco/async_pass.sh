@@ -379,7 +379,6 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]] ; then
         export SHMSIZE=30000000000
       fi
     else
-      export DPL_SMOOTH_RATE_LIMITING=1
       if [[ $BEAMTYPE == "pp" ]]; then
         export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, pp)
         export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
@@ -419,7 +418,7 @@ else
   fi
 fi
 
-echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS} TIMEFRAME_RATE_LIMIT ${TIMEFRAME_RATE_LIMIT}"
+echo "[INFO (async_pass.sh)] envvars were set to TFDELAYSECONDS ${TFDELAYSECONDS} TIMEFRAME_RATE_LIMIT ${TIMEFRAME_RATE_LIMIT} OPTIMIZED_PARALLEL_ASYNC ${OPTIMIZED_PARALLEL_ASYNC:-NONE}"
 
 [[ -z $NTIMEFRAMES ]] && export NTIMEFRAMES=-1
 

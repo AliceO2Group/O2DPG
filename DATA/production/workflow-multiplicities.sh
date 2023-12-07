@@ -46,6 +46,7 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
   fi
   if [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_8cpu" ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=3
+    [[ -z ${SHMSIZE:-} ]] && SHMSIZE=16000000000
     NGPURECOTHREADS=5
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_16cpu" ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=8
@@ -103,6 +104,7 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_TPCENTDEC=6
     N_TPCITS=12
     N_ITSTRK=12
+    export DPL_SMOOTH_RATE_LIMITING=1
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_4gpu" ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=30
     [[ -z ${SHMSIZE:-} ]] && SHMSIZE=100000000000 # SHM_LIMIT 3/4
@@ -130,6 +132,7 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_MCHTRK=7
     N_PRIMVTXMATCH=2
     N_PRIMVTX=3
+    export DPL_SMOOTH_RATE_LIMITING=1
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_64cpu" ]]; then
     NGPURECOTHREADS=6
     NTRDTRKTHREADS=2
