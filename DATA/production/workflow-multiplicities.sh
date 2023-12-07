@@ -106,7 +106,7 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_ITSTRK=12
     export DPL_SMOOTH_RATE_LIMITING=1
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_4gpu" ]]; then
-    [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=30
+    [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=35
     [[ -z ${SHMSIZE:-} ]] && SHMSIZE=100000000000 # SHM_LIMIT 3/4
     [[ -z ${TIMEFRAME_SHM_LIMIT:-} ]] && TIMEFRAME_SHM_LIMIT=$(($SHMSIZE / 3))
     NGPURECOTHREADS=8
@@ -119,16 +119,17 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     NGPUS=4
     N_TPCTRK=4
     # time in s: pvtx 16, tof 30, trd 82 itstpc 53 its 200 mfttr 30 tpcent 23 hmp-clus 40 (25.11.22)
-    N_TPCENTDEC=$(math_max $((5 * $NGPUS / 4)) 1)
+    N_TPCENTDEC=$(math_max $((4 * $NGPUS / 4)) 1)
     N_ITSTRK=$(math_max $((4 * $NGPUS / 4)) 1)
-    N_TPCITS=$(math_max $((5 * $NGPUS / 4)) 1)
+    N_TPCITS=$(math_max $((4 * $NGPUS / 4)) 1)
     N_MFTTRK=$(math_max $((3 * $NGPUS / 4)) 1)
-    N_TRDTRK=$(math_max $((9 * $NGPUS / 4)) 1)
-    N_TOFMATCH=$(math_max $((6 * $NGPUS / 4)) 1)
+    N_TRDTRK=$(math_max $((7 * $NGPUS / 4)) 1)
+    N_TOFMATCH=$(math_max $((5 * $NGPUS / 4)) 1)
     N_HMPCLUS=$(math_max $((3 * $NGPUS / 4)) 1)
+    N_ITSCL=3
     N_AODPROD=2
     N_MCHCL=9
-    N_HMPMATCH=14
+    N_HMPMATCH=1
     N_MCHTRK=7
     N_PRIMVTXMATCH=2
     N_PRIMVTX=3
@@ -150,7 +151,7 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
   if [[ ${OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT:-} == 1 && ${EPN_NODE_MI100:-} == 1 ]]; then
     TIMEFRAME_RATE_LIMIT=$(($TIMEFRAME_RATE_LIMIT * 2))
     SHMSIZE=$(($SHMSIZE * 2))
-    EPN_GLOBAL_SCALING=2
+    EPN_GLOBAL_SCALING="3 / 2"
   fi
 elif [[ $EPNPIPELINES != 0 ]]; then
   NTRDTRKTHREADS=2
