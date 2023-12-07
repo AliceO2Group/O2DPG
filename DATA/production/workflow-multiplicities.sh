@@ -144,6 +144,11 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     echo "Invalid optimized setting '$OPTIMIZED_PARALLEL_ASYNC'" 1>&2
     exit 1
   fi
+  if [[ ${OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT:-} == 1 && ${EPN_NODE_MI100:-} == 1 ]]; then
+    TIMEFRAME_RATE_LIMIT=$(($TIMEFRAME_RATE_LIMIT * 2))
+    SHMSIZE=$(($SHMSIZE * 2))
+    EPN_GLOBAL_SCALING=2
+  fi
 elif [[ $EPNPIPELINES != 0 ]]; then
   NTRDTRKTHREADS=2
   ITSTRK_THREADS=2
