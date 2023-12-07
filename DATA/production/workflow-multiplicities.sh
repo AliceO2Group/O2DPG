@@ -16,6 +16,8 @@ SOURCE_GUARD_MULTIPLICITIES=1
 : ${ITSTRK_THREADS:=1}
 : ${ITSTPC_THREADS:=1}
 
+: ${TOFMATCH_THREADS:=1}
+
 : ${HIGH_RATE_PP:=0}
 
 # FIXME: multithreading in the itsmft reconstruction does not work on macOS.
@@ -98,24 +100,25 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_TPCITS=12
     N_ITSTRK=12
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_4gpu" ]]; then
-    [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=20
-    [[ -z ${SHMSIZE:-} ]] && SHMSIZE=128000000000 # SHM_LIMIT 3/4
+    [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=30
+    [[ -z ${SHMSIZE:-} ]] && SHMSIZE=100000000000 # SHM_LIMIT 3/4
     [[ -z ${TIMEFRAME_SHM_LIMIT:-} ]] && TIMEFRAME_SHM_LIMIT=$(($SHMSIZE / 3))
     NGPURECOTHREADS=8
-    NTRDTRKTHREADS=4
-    ITSTRK_THREADS=6
+    NTRDTRKTHREADS=8
+    ITSTRK_THREADS=20
     ITSTPC_THREADS=3
-    SVERTEX_THREADS=40
+    SVERTEX_THREADS=20
+    TOFMATCH_THREADS=2
     N_SECVTX=1
     NGPUS=4
     N_TPCTRK=4
     # time in s: pvtx 16, tof 30, trd 82 itstpc 53 its 200 mfttr 30 tpcent 23 hmp-clus 40 (25.11.22)
     N_TPCENTDEC=$(math_max $((5 * $NGPUS / 4)) 1)
-    N_ITSTRK=$(math_max $((10 * $NGPUS / 4)) 1)
-    N_TPCITS=$(math_max $((7 * $NGPUS / 4)) 1)
+    N_ITSTRK=$(math_max $((4 * $NGPUS / 4)) 1)
+    N_TPCITS=$(math_max $((5 * $NGPUS / 4)) 1)
     N_MFTTRK=$(math_max $((3 * $NGPUS / 4)) 1)
     N_TRDTRK=$(math_max $((9 * $NGPUS / 4)) 1)
-    N_TOFMATCH=$(math_max $((11 * $NGPUS / 4)) 1)
+    N_TOFMATCH=$(math_max $((6 * $NGPUS / 4)) 1)
     N_HMPCLUS=$(math_max $((3 * $NGPUS / 4)) 1)
     N_AODPROD=2
     N_MCHCL=9
