@@ -362,6 +362,7 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]] ; then
       if [[ $keep -eq 0 ]]; then
         if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
           export OPTIMIZED_PARALLEL_ASYNC=pp_1gpu  # sets the multiplicities to optimized defaults for this configuration (1 job with 1 gpu on EPNs)
+          export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
         else
           # forcing multiplicities to be 1
           export MULTIPLICITY_PROCESS_tof_matcher=1
@@ -370,22 +371,21 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]] ; then
           export MULTIPLICITY_PROCESS_itstpc_track_matcher=1
           export MULTIPLICITY_PROCESS_its_tracker=1
           export OMP_NUM_THREADS=4
+          export TIMEFRAME_RATE_LIMIT=8
+          export SHMSIZE=30000000000
         fi
-        export TIMEFRAME_RATE_LIMIT=8
       else
         export TIMEFRAME_RATE_LIMIT=4
+        export SHMSIZE=30000000000
       fi
-      export SHMSIZE=30000000000
     else
       export DPL_SMOOTH_RATE_LIMITING=1
       if [[ $BEAMTYPE == "pp" ]]; then
         export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, pp)
-        export TIMEFRAME_RATE_LIMIT=45
-        export SHMSIZE=100000000000
+        export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
       else  # PbPb
         export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, PbPb)
-        export TIMEFRAME_RATE_LIMIT=20
-        export SHMSIZE=128000000000
+        export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
       fi
     fi
   fi
@@ -396,12 +396,13 @@ else
   #
   if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
     if [[ "$ALIEN_JDL_EPNFULLNUMACPUONLY" != 1 ]]; then
-      export TIMEFRAME_RATE_LIMIT=3
       if [[ $BEAMTYPE == "pp" ]]; then
         if (( $(echo "$RUN_IR > 800000" | bc -l) )); then
           export TIMEFRAME_RATE_LIMIT=1
         elif (( $(echo "$RUN_IR < 50000" | bc -l) )); then
           export TIMEFRAME_RATE_LIMIT=6
+        else
+          export TIMEFRAME_RATE_LIMIT=3
         fi
         export OPTIMIZED_PARALLEL_ASYNC=pp_8cpu # sets the multiplicities to optimized defaults for this configuration (grid)
         export SHMSIZE=16000000000
@@ -413,8 +414,7 @@ else
       fi
     else
       export OPTIMIZED_PARALLEL_ASYNC=pp_64cpu # to use EPNs with full NUMA domain but without GPUs
-      export TIMEFRAME_RATE_LIMIT=32
-      SHMSIZE=90000000000
+      export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
     fi
   fi
 fi
