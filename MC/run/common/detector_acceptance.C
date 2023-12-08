@@ -18,7 +18,8 @@ enum EDetectorAcceptance_t {
   kAcceptance_PHSDMC,
   kAcceptance_EMC,
   kAcceptance_DMC,
-  kAcceptance_PHS
+  kAcceptance_PHS,
+  kAcceptance_FOC
 };
 
 /// Open selection, minimum particle eta cut.
@@ -122,6 +123,12 @@ bool barrel_calorimeters(Float_t phi, Float_t eta)
     return false;
 }
 
+
+/// Check if particle is in FOCAL
+bool focal(Float_t phi, Float_t eta){
+  return (eta > 3.4 && eta < 5.8);
+}
+
 /// \return True if particle in desired acceptance.
 ///
 /// \param acceptance : Detector acceptance to be checked.
@@ -152,6 +159,8 @@ bool detector_acceptance(Int_t acceptance, Float_t phi, Float_t eta)
     case kAcceptance_EMCPHSDMC:
       return barrel_calorimeters(phi, eta);
       break;
+    case kAcceptance_FOC:
+      return focal(phi, eta);
   }
 
   return false;
