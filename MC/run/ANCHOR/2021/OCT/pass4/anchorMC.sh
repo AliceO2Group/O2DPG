@@ -105,7 +105,7 @@ baseargs="-tf ${NTIMEFRAMES} --split-id ${ALIEN_JDL_SPLITID:-1} --prod-split ${A
 remainingargs="-gen pythia8 -proc cdiff -ns ${NSIGEVENTS}                                                                                                                 \
                -interactionRate ${INTERACTIONRATE}                                                                                                                        \
                -confKey \"Diamond.width[2]=6.0;Diamond.width[0]=0.01;Diamond.width[1]=0.01;Diamond.position[0]=0.0;Diamond.position[1]=-0.035;Diamond.position[2]=0.41\"  \
-              --include-local-qc --include-analysis --mft-reco-full"
+              --include-local-qc --include-analysis"
 
 remainingargs="${remainingargs} -e ${SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
