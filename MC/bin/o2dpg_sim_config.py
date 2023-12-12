@@ -86,3 +86,41 @@ def create_sim_config(args):
         add(config, {"ITSVertexerParam.lowMultBeamDistCut": "0."})
 
     return config
+
+
+def create_geant_config(args, externalConfigString):
+    # creates generic transport simulation config key values
+    # based on arguments args (run number, energy, ...) originally passed
+    # to o2dpg_sim_workflow.py
+    config = {}
+    def add(cfg, flatconfig):
+       for entry in flatconfig:
+           mk = entry.split(".")[0]
+           sk = entry.split(".")[1]
+           d = cfg.get(mk,{})
+           d[sk] = flatconfig[entry]
+           cfg[mk] = d
+
+    # ----- add default settings -----
+
+    add(config, {"MFTBase.buildAlignment" : "true"})
+
+    # ----- apply external overwrites from command line -------
+    for keyval in externalConfigString.split(";"):
+        if len(keyval) > 0:
+          key, val = keyval.split("=")
+          add(config, {key : val})
+
+    return config
+
+def constructConfigKeyArg(config):
+    # flattens dictionary constructed in create_geant_config
+    # and constructs the --configKeyValues options for simulation
+    if len(config) == 0:
+        return ''
+    arg = '--configKeyValues "'
+    for mainkey in config:
+      for subkey in config[mainkey]:
+          arg = arg + mainkey + '.' + subkey + '=' + config[mainkey][subkey] + ';'
+    arg = arg + '"'
+    return arg
