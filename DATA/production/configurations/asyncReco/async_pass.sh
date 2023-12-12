@@ -242,7 +242,7 @@ if [[ ! -z "$ALIEN_JDL_DDSHMSIZE" ]]; then export DDSHMSIZE=$ALIEN_JDL_DDSHMSIZE
 
 SETTING_ROOT_OUTPUT="ENABLE_ROOT_OUTPUT_o2_mch_reco_workflow= ENABLE_ROOT_OUTPUT_o2_muon_tracks_matcher_workflow= ENABLE_ROOT_OUTPUT_o2_aod_producer_workflow= ENABLE_ROOT_OUTPUT_o2_qc= "
 
-if [[ -n $ALIEN_JDL_LPMCPASSMODE ]] && [[ $ALIEN_JDL_LPMCPASSMODE != "-1" ]]; then
+if ([[ -n $ALIEN_JDL_LPMCPASSMODE ]] && [[ $ALIEN_JDL_LPMCPASSMODE != "-1" ]]) || [[ $ALIEN_JDL_KEEPTOFMATCHOUTPUT == "1" ]]; then
   SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_tof_matcher_workflow= "
 fi
 if [[ $ALIEN_JDL_DOEMCCALIB == "1" ]]; then
