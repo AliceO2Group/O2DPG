@@ -36,7 +36,7 @@ sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
 from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
-from o2dpg_sim_config import create_sim_config
+from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg
 
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
 
@@ -405,10 +405,6 @@ if doembedding:
            print('o2dpg_sim_workflow: Error! bkg ECM or Beam Energy not set!!!')
            exit(1)
 
-        CONFKEYBKG=''
-        if args.confKeyBkg!= '':
-           CONFKEYBKG=' --configKeyValues "' + args.confKeyBkg + '"'
-
         # Background PYTHIA configuration
         BKG_CONFIG_task=createTask(name='genbkgconf')
         BKG_CONFIG_task['cmd'] = 'echo "placeholder / dummy task"'
@@ -425,7 +421,7 @@ if doembedding:
                                    --process='+str(PROCESSBKG)
             # if we configure pythia8 here --> we also need to adjust the configuration
             # TODO: we need a proper config container/manager so as to combine these local configs with external configs etc.
-            CONFKEYBKG='--configKeyValues "GeneratorPythia8.config=pythia8bkg.cfg;' + args.confKeyBkg + '"'
+            args.confKeyBkg = 'GeneratorPythia8.config=pythia8bkg.cfg;' + args.confKeyBkg
 
         workflow['stages'].append(BKG_CONFIG_task)
 
@@ -433,6 +429,9 @@ if doembedding:
         INIBKG=''
         if args.iniBkg!= '':
            INIBKG=' --configFile ' + args.iniBkg
+
+        # determine final configKey values for background transport
+        CONFKEYBKG = constructConfigKeyArg(create_geant_config(args, args.confKeyBkg))
 
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=[BKG_CONFIG_task['name'], GRP_TASK['name']], cpu=NWORKERS )
         BKGtask['cmd']='${O2_ROOT}/bin/o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
@@ -527,9 +526,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    INIFILE=''
    if args.ini!= '':
       INIFILE=' --configFile ' + args.ini
-   CONFKEY=''
-   if args.confKey!= '':
-      CONFKEY=' --configKeyValues "' + args.confKey + '"'
    PROCESS=args.proc
    TRIGGER=''
    if args.trigger != '':
@@ -645,15 +641,11 @@ for tf in range(1, NTIMEFRAMES + 1):
          SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
       # if we configure pythia8 here --> we also need to adjust the configuration
       # TODO: we need a proper config container/manager so as to combine these local configs with external configs etc.
-      CONFKEY='--configKeyValues "GeneratorPythia8.config=pythia8.cfg'+';'+args.confKey+'"'
+      args.confKey = args.confKey + ";GeneratorPythia8.config=pythia8.cfg"
 
    # elif GENERATOR == 'extgen': what do we do if generator is not pythia8?
        # NOTE: Generator setup might be handled in a different file or different files (one per
        # possible generator)
-
-   #if CONFKEY=='':
-   #   print('o2dpg_sim_workflow: Error! configuration file not provided')
-   #   exit(1)
 
    workflow['stages'].append(SGN_CONFIG_task)
 
@@ -663,6 +655,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    signalneeds=[ SGN_CONFIG_task['name'], GRP_TASK['name'] ]
    if (args.pregenCollContext == True):
       signalneeds.append(PreCollContextTask['name'])
+
+   # determine final configKey args for signal transport
+   CONFKEY = constructConfigKeyArg(create_geant_config(args, args.confKey))
 
    # add embedIntoFile only if embeddPattern does contain a '@'
    embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if (doembedding & ("@" in args.embeddPattern)) else ""
