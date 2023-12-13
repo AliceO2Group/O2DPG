@@ -14,6 +14,10 @@ The convention is, that only those objects that have the exact same path are com
 
 At the end of this README are some examples for QC RelVal.
 
+## Quick start
+
+To jump right in, please check out [this](#run-for-qc)
+
 ## Definitions
 
 ### Metric
@@ -127,7 +131,10 @@ ${O2DPG_ROOT}/RelVal/o2dpg_release_validation.py rel-val -i ${MC_PRODUCTION}/QC/
 ## Run for QC
 This is a simple guide to run RelVal for QC.
 
-Here is also a [working example](run/run_data_rel_val.sh).
+Here is also a [working example](run/run_data_rel_val.sh), run it with
+```bash
+${O2DPG_ROOT}/RelVal/run/run_data_rel_val.sh [--qc QC1.root QC2.root ] [--aod AOD1.root AOD2.root] [ --labels LABEL1 LABEL2]
+```
 
 ### If you are interested in all QC plots
 To have everything and to use this as a starting point for deeper inspections, first run
