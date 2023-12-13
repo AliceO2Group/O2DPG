@@ -76,7 +76,7 @@ test_single_wf()
         ret_this=${?}
         [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels QC >> ${LOG_FILE_WF} 2>&1 ; ret_this_qc=${?} ; }
         [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels Analysis >> ${LOG_FILE_WF} 2>&1 ; ret_this_analysis=${?} ; }
-        ret_this=$((ret_thi + ret_this_qc + ret_this_analysis))
+        ret_this=$((ret_this + ret_this_qc + ret_this_analysis))
         [[ "${ret_this}" != "0" ]] && echo "[FATAL]: O2DPG_TEST Workflow execution failed" >> ${LOG_FILE_WF}
     fi
     return ${ret_this}
@@ -188,7 +188,9 @@ source ${REPO_DIR}/test/common/utils/utils.sh
 pushd ${REPO_DIR} > /dev/null
 
 # flag if anything changed in the sim workflow bin dir
-changed_wf_bin=$(get_changed_files | grep MC/bin)
+changed_wf_bin=$(get_changed_files | grep "MC/bin")
+changed_wf_bin_related=$(get_changed_files | grep -E "MC/analysis_testing|MC/config/analysis_testing/json|MC/config/QC/json")
+
 
 # collect what has changed for PWGs
 collect_changed_pwg_wf_files
@@ -252,7 +254,7 @@ pushd ${TEST_PARENT_DIR_BIN} > /dev/null
 
 # global return code for PWGs
 ret_global_bin=0
-if [[ "${changed_wf_bin}" != "" ]] ; then
+if [[ "${changed_wf_bin}" != "" || "${changed_wf_bin_related}" != "" ]] ; then
     echo "### Test bin-related workflow creation ###"
     echo
     # Run all the bin test WF creations
