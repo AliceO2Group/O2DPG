@@ -67,11 +67,16 @@ test_single_wf()
     echo "Test ${wf_line} from ${wfs}" > ${LOG_FILE_WF}
     bash ${wf_script_local} >> ${LOG_FILE_WF} 2>&1
     local ret_this=${?}
+    local ret_this_qc=0
+    local ret_this_analysis=0
     if [[ "${ret_this}" != "0" ]] ; then
         echo "[FATAL]: O2DPG_TEST Workflow creation failed" >> ${LOG_FILE_WF}
     elif [[ "${execute}" != "" ]] ; then
         ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 -tt aod >> ${LOG_FILE_WF} 2>&1
         ret_this=${?}
+        [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels QC >> ${LOG_FILE_WF} 2>&1 ; ret_this_qc=${?} ; }
+        [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels Analysis >> ${LOG_FILE_WF} 2>&1 ; ret_this_analysis=${?} ; }
+        ret_this=$((ret_thi + ret_this_qc + ret_this_analysis))
         [[ "${ret_this}" != "0" ]] && echo "[FATAL]: O2DPG_TEST Workflow execution failed" >> ${LOG_FILE_WF}
     fi
     return ${ret_this}
