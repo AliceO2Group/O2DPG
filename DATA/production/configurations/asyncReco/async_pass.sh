@@ -444,7 +444,7 @@ fi
 
 # reco and matching
 # print workflow
-if [[ $ALIEN_JDL_SPLITWF != "1" ]]; then
+if [[ $ALIEN_JDL_SSPLITWF != "1" ]]; then
   env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list > workflowconfig.log
   # run it
   if [[ "0$RUN_WORKFLOW" != "00" ]]; then
@@ -476,7 +476,7 @@ else
   echo "We will run the workflow in SPLIT mode!"
   WORKFLOW_PARAMETERS_START=$WORKFLOW_PARAMETERS
 
-  if ([[ -z "$ALIEN_JDL_STARTSPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SPLITSTEP" ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq 1 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 1 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" == "all" ]]; then
+  if ([[ -z "$ALIEN_JDL_STARTSPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SSPLITSTEP" ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq 1 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 1 ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" == "all" ]]; then
     # 1. TPC decoding + reco
     echo "Step 1) Decoding and reconstructing TPC+CTP"
     echo "Step 1) Decoding and reconstructing TPC+CTP" > workflowconfig.log
@@ -513,7 +513,7 @@ else
     fi
   fi
 
-  if ([[ -z "$ALIEN_JDL_STARTSPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SPLITSTEP" ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq 2 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 2 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" == "all" ]]; then
+  if ([[ -z "$ALIEN_JDL_STARTSPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SSPLITSTEP" ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq 2 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 2 ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" == "all" ]]; then
     # 2. the other detectors decoding + reco
     WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS_START
     echo "Step 2) Decoding and reconstructing ALL-TPC"
@@ -574,7 +574,7 @@ else
     fi
   fi
 
-  if ([[ -z "$ALIEN_JDL_SPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SPLITSTEP" ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq 3 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 3 ]]) || [[ "$ALIEN_JDL_SPLITSTEP" -eq "all" ]]; then
+  if ([[ -z "$ALIEN_JDL_SSPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SSPLITSTEP" ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq 3 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 3 ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq "all" ]]; then
     # 3. matching, QC, calib, AOD
     WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS_START
     echo "Step 3) matching, QC, calib, AOD"
