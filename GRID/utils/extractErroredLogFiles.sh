@@ -1,14 +1,18 @@
+#!/usr/bin/env bash
+
 # We determine the O2DPG task that failed (as listed in stdout) and extract the relevant log automatically
 # Beware that errors might occur outside of O2DPG tasks such as in preprocessing etc or not visible in logs
 
-alias mytar=tar
+mytar () {
+  tar $@
+}
 if [[ $(uname) == "Darwin" ]]; then
     echo "Running on macOS. This needs gnu-tar"
-    alias mytar=gtar
+    $(which gtar)
+    mytar () {
+      gtar $@
+    }
 fi
-
-# show aliases
-alias
 
 errored_tasks=""
 find ./ -name "stdout*" -exec grep -H "failed.*retry" {} ';' | sed 's/ failed.*//' | tr ":" " " | while IFS= read -r line; do

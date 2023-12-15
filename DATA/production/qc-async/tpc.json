@@ -30,7 +30,7 @@
         "className": "o2::quality_control_modules::tpc::Clusters",
         "moduleName": "QcTPC",
         "detectorName": "TPC",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "tpc-clusters"
@@ -51,7 +51,8 @@
         "className": "o2::quality_control_modules::tpc::PID",
         "moduleName": "QcTPC",
         "detectorName": "TPC",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
+        "movingWindows" : [ "hdEdxTotMIP_TPC" ],
         "dataSource": {
           "type": "direct",
           "query" : "inputTracks:TPC/TRACKS/0"
@@ -73,7 +74,8 @@
         "className": "o2::quality_control_modules::tpc::Tracks",
         "moduleName": "QcTPC",
         "detectorName": "TPC",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
+        "movingWindows" : [ "h2DNClustersEta" ],
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "tpc-tracks"
@@ -81,7 +83,9 @@
         "taskParameters": {
           "cutAbsEta": "1.",
           "cutMinNCluster": "60",
-          "cutMindEdxTot": "20."
+          "cutMindEdxTot": "20.",
+          "samplingFractionDCAr": "0.1",
+          "cutPtForDCAr": "1.5"
         },
 	"grpGeomRequest" : {
           "geomRequest": "None",

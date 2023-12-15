@@ -14,6 +14,7 @@ import importlib.util
 from os import environ, makedirs, remove, rename
 from os.path import join, abspath, exists, dirname, basename, isfile
 from shutil import copy, rmtree
+import json
 
 # make sure O2DPG + O2 is loaded
 O2DPG_ROOT=environ.get('O2DPG_ROOT')
@@ -24,28 +25,28 @@ if O2DPG_ROOT is None:
 
 
 O2DPG_ROOT = environ.get("O2DPG_ROOT")
-spec = importlib.util.spec_from_file_location("o2dpg_release_validation_variables", join(O2DPG_ROOT, "RelVal", 'o2dpg_release_validation_variables.py'))
+spec = importlib.util.spec_from_file_location("o2dpg_release_validation_variables", join(O2DPG_ROOT, "RelVal", "utils", 'o2dpg_release_validation_variables.py'))
 o2dpg_release_validation_variables = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(o2dpg_release_validation_variables)
 sys.modules["o2dpg_release_validation_variables"] = o2dpg_release_validation_variables
 import o2dpg_release_validation_variables as variables
 
-spec = importlib.util.spec_from_file_location("o2dpg_release_validation_utils", join(O2DPG_ROOT, "RelVal", 'o2dpg_release_validation_utils.py'))
+spec = importlib.util.spec_from_file_location("o2dpg_release_validation_utils", join(O2DPG_ROOT, "RelVal", "utils", 'o2dpg_release_validation_utils.py'))
 o2dpg_release_validation_utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(o2dpg_release_validation_utils)
 sys.modules["o2dpg_release_validation_utils"] = o2dpg_release_validation_utils
 from o2dpg_release_validation_utils import *
 
-spec = importlib.util.spec_from_file_location("o2dpg_release_validation_plot", join(O2DPG_ROOT, "RelVal", 'o2dpg_release_validation_plot.py'))
+spec = importlib.util.spec_from_file_location("o2dpg_release_validation_plot", join(O2DPG_ROOT, "RelVal", "utils", 'o2dpg_release_validation_plot.py'))
 o2dpg_release_validation_plot = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(o2dpg_release_validation_plot)
 sys.modules["o2dpg_release_validation_plot"] = o2dpg_release_validation_plot
-from o2dpg_release_validation_plot import plot_pie_charts, plot_summary_grid, plot_compare_summaries
+from o2dpg_release_validation_plot import plot_pie_charts, plot_summary_grid, plot_compare_summaries, plot_overlays
 
 
-ROOT_MACRO_EXTRACT=join(O2DPG_ROOT, "RelVal", "ExtractAndFlatten.C")
-ROOT_MACRO_RELVAL=join(O2DPG_ROOT, "RelVal", "ReleaseValidation.C")
-ROOT_MACRO_METRICS=join(O2DPG_ROOT, "RelVal", "ReleaseValidationMetrics.C")
+ROOT_MACRO_EXTRACT=join(O2DPG_ROOT, "RelVal", "utils", "ExtractAndFlatten.C")
+ROOT_MACRO_RELVAL=join(O2DPG_ROOT, "RelVal", "utils", "ReleaseValidation.C")
+ROOT_MACRO_METRICS=join(O2DPG_ROOT, "RelVal", "utils", "ReleaseValidationMetrics.C")
 
 from ROOT import gROOT
 
@@ -114,7 +115,8 @@ def metrics_from_root():
                 current_metric = None
     return 0
 
-def extract(input_filenames, target_filename, include_file_directories="", add_if_exists=False, reference_extracted=""):
+
+def extract(input_filenames, target_filename, include_file_directories=None, add_if_exists=False, reference_extracted=None, json_extracted=None):
     """
     Wrap the extraction of objects to be compared
 
@@ -134,8 +136,30 @@ def extract(input_filenames, target_filename, include_file_directories="", add_i
         bool
             True in case of success, False otherwise
     """
+    def get_files_from_list(list_filename):
+        """
+        Quick helper
+
+        Extract filenames from what is listed in a given file
+        """
+        collect_files = []
+        with open(list_filename, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                collect_files.append(line)
+        return collect_files
 
     include_file_directories = ",".join(include_file_directories) if include_file_directories else ""
+
+    # flat ROOT files to extract to and read from during RelVal; make absolute paths so we don't confuse ourselves when running e.g. ROOT macros in different directories
+
+    if len(input_filenames) == 1 and input_filenames[0][0] == "@":
+        input_filenames = get_files_from_list(input_filenames[0][1:])
+        if not files1:
+            print(f"ERROR: Apparently {input_filenames[0][1:]} contains no files to be extracted.")
+            return None
 
     if exists(target_filename) and not add_if_exists:
         # this file will otherwise be updated if it exists
@@ -145,13 +169,17 @@ def extract(input_filenames, target_filename, include_file_directories="", add_i
     cwd = dirname(target_filename)
     target_filename = basename(target_filename)
     log_file_name = join(cwd, f"{target_filename}_extract_and_flatten.log")
+    if not reference_extracted:
+        reference_extracted = ""
+    if not json_extracted:
+        json_extracted = ""
 
     print("Extraction of files")
 
     for f in input_filenames:
         f = abspath(f)
         print(f"  {f}")
-        cmd = f"\\(\\\"{f}\\\",\\\"{target_filename}\\\",\\\"{reference_extracted}\\\",\\\"{include_file_directories}\\\"\\)"
+        cmd = f"\\(\\\"{f}\\\",\\\"{target_filename}\\\",\\\"{reference_extracted}\\\",\\\"{include_file_directories}\\\",\\\"{json_extracted}\\\"\\)"
         cmd = f"root -l -b -q {ROOT_MACRO_EXTRACT}{cmd}"
         ret = run_macro(cmd, log_file_name, cwd)
         if ret != 0:
@@ -160,8 +188,56 @@ def extract(input_filenames, target_filename, include_file_directories="", add_i
 
     return True
 
+def get_extract_json_info(json_path):
 
-def rel_val_root(files1, files2, include_root_dirs, add_to_previous, metrics_enabled, metrics_disabled, label1, label2, output_dir, no_extract=False):
+    if not exists(json_path):
+        return None
+
+    with open(json_path, "r") as f:
+        try:
+            return json.load(f)
+        except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+            pass
+    return None
+
+
+def only_extract_impl(files, output, label, include_directories=None, add_if_exists=False, prefix=None, reference_extracted=None):
+
+    if len(files) == 1:
+        d = get_extract_json_info(files[0])
+        if d is not None:
+            return files[0], d
+
+    if not exists(output):
+        makedirs(output)
+
+    json_out = f"{prefix}_extracted.json" if prefix else "extracted.json"
+    root_out = f"{prefix}_extracted.root" if prefix else "extracted.root"
+    json_out = abspath(join(output, json_out))
+    root_out = abspath(join(output, root_out))
+
+    if not extract(files, root_out, include_file_directories=include_directories, add_if_exists=add_if_exists, reference_extracted=reference_extracted, json_extracted=json_out):
+        return None, None
+
+    d = None
+    with open(json_out, "r") as f:
+        d = json.load(f)
+
+    d["label"] = label
+
+    with open(json_out, "w") as f:
+        json.dump(d, f, indent=2)
+
+    return json_out, d
+
+
+def only_extract(args):
+    if not only_extract_impl(args.input, args.output, None, args.label, args.reference):
+        return 1
+    return 0
+
+
+def rel_val_root(d1, d2, metrics_enabled, metrics_disabled, output_dir):
     """
     RelVal for 2 ROOT files, simply a wrapper around ReleaseValidation.C macro
 
@@ -189,59 +265,20 @@ def rel_val_root(files1, files2, include_root_dirs, add_to_previous, metrics_ena
             in case of success, return the path to the JSON with computed metrics
             None otherwise
     """
-    def get_files_from_list(list_filename):
-        """
-        Quick helper
-
-        Extract filenames from what is listed in a given file
-        """
-        collect_files = []
-        with open(list_filename, "r") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                collect_files.append(line)
-        return collect_files
 
     print("==> Process and compare 2 sets of files <==")
 
-    # flat ROOT files to extract to and read from during RelVal; make absolute paths so we don't confuse ourselves when running e.g. ROOT macros in different directories
-    file_1 = abspath(join(output_dir, "extracted_objects_1.root"))
-    file_2 = abspath(join(output_dir, "extracted_objects_2.root"))
-
-    if len(files1) == 1 and files1[0][0] == "@":
-        files1 = get_files_from_list(files1[0][1:])
-        if not files1:
-            print(f"ERROR: Apparently {files1[0][1:]} contains no files to be extracted.")
-            return None
-    if len(files2) == 1 and files2[0][0] == "@":
-        files2 = get_files_from_list(files2[0][1:])
-        if not files2:
-            print(f"ERROR: Apparently {files2[0][1:]} contains no files to be extracted.")
-            return None
-
-    # prepare the output directory
-    if not exists(output_dir):
-        makedirs(output_dir)
-    log_file_rel_val = join(abspath(output_dir), "rel_val.log")
-    
-    if no_extract:
-        # in this case we expect the input files to be what we would otherwise extract first
-        if len(files1) != 1 or len(files2) != 1:
-            print(f"ERROR: --no-extract option was passed and expecting list of files to be of length 1 each. However, received lengths of {len(files1)} and {len(files2)}")
-            return 1
-        file_1 = abspath(files1[0])
-        file_2 = abspath(files2[0])
-    elif not extract(files1, file_1, include_root_dirs, add_to_previous) or not extract(files2, file_2, include_root_dirs, add_to_previous, reference_extracted=file_1):
-        return None
+    file_1 = d1["path"]
+    file_2 = d2["path"]
 
     # RelVal on flattened files
     metrics_enabled = ";".join(metrics_enabled) if metrics_enabled else ""
     metrics_disabled = ";".join(metrics_disabled) if metrics_disabled else ""
 
-    cmd = f"\\(\\\"{file_1}\\\",\\\"{file_2}\\\",\\\"{metrics_enabled}\\\",\\\"{metrics_disabled}\\\",\\\"{label1}\\\",\\\"{label2}\\\"\\)"
+    cmd = f"\\(\\\"{file_1}\\\",\\\"{file_2}\\\",\\\"{metrics_enabled}\\\",\\\"{metrics_disabled}\\\"\\)"
     cmd = f"root -l -b -q {ROOT_MACRO_RELVAL}{cmd}"
+    output_dir = abspath(output_dir)
+    log_file_rel_val = join(output_dir, "rel_val.log")
     print("Running RelVal on extracted objects")
     ret = run_macro(cmd, log_file_rel_val, cwd=output_dir)
 
@@ -352,6 +389,8 @@ def rel_val(args):
 
     need_apply = False
     is_inspect = False
+    json1 = None
+    json2 = None
     if hasattr(args, "json_path"):
         # this comes from the inspect command
         is_inspect = True
@@ -364,18 +403,25 @@ def rel_val(args):
         include_patterns, exclude_patterns = (None, None)
         if args.add:
             print(f"NOTE: Extracted objects will be added to existing ones in case there was already a RelVal at {args.output}.\n")
-        json_path = rel_val_root(args.input1, args.input2, args.include_dirs, args.add, args.enable_metric, args.disable_metric, args.labels[0], args.labels[1], args.output, args.no_extract)
-        if json_path is None:
+
+        json1 = only_extract_impl(args.input1, args.output, args.labels[0], args.include_dirs, args.add, prefix="1", reference_extracted=None)
+        json2 = only_extract_impl(args.input2, args.output, args.labels[1], args.include_dirs, args.add, prefix="2", reference_extracted=json1[1]["path"])
+        if None in json1 or None in json2:
+            print("ERROR: Something went wrong during the extraction")
             return 1
-        annotations = {"batch_i": [abspath(p) for p in args.input1],
-                       "batch_j": [abspath(p) for p in args.input2]}
+        json_path = rel_val_root(json1[1], json2[1], args.enable_metric, args.disable_metric, args.output)
+        if json_path is None:
+            print("ERROR: Problem during RelVal")
+            return 1
+        annotations = {"json_path_1": json1[0],
+                       "json_path_2": json2[0]}
 
     rel_val = load_rel_val(json_path, include_patterns, exclude_patterns, args.enable_metric, args.disable_metric)
 
     if need_apply or args.use_values_as_thresholds or args.default_threshold or args.regions:
         evaluator = initialise_evaluator(rel_val, args.use_values_as_thresholds, args.default_threshold, args.margin_threshold, args.combine_thresholds, args.regions)
         rel_val.apply(evaluator)
-        # assign interpretations to the results we got
+    # assign interpretations to the results we got
     rel_val.interpret(interpret_results)
 
     def filter_on_interpretations(result):
@@ -389,15 +435,29 @@ def rel_val(args):
     # if this comes from inspecting, there will be the annotations from the rel-val before that ==> re-write it
     rel_val.write(join(args.output, "Summary.json"), annotations=annotations or rel_val.annotations[0])
 
-    if is_inspect:
-        copy_overlays(rel_val, join(dirname(json_path), "overlayPlots"), join(args.output, "overlayPlots"))
+    print_summary(rel_val, variables.REL_VAL_SEVERITIES, long=args.print_long)
 
     if not args.no_plot:
+        print("Now plotting...")
         # plot various different figures for user inspection
         plot_pie_charts(rel_val, variables.REL_VAL_SEVERITIES, variables.REL_VAL_SEVERITY_COLOR_MAP, args.output)
         plot_compare_summaries((rel_val,), args.output)
         plot_summary_grid(rel_val, variables.REL_VAL_SEVERITIES, variables.REL_VAL_SEVERITY_COLOR_MAP, args.output)
-    print_summary(rel_val, variables.REL_VAL_SEVERITIES, long=args.print_long)
+
+        if is_inspect:
+            if annotations_inspect := rel_val.annotations:
+                annotations_inspect = annotations_inspect[0]
+                d1 = get_extract_json_info(annotations_inspect["json_path_1"])
+                d2 = get_extract_json_info(annotations_inspect["json_path_2"])
+        else:
+            d1 = json1[1]
+            d2 = json2[1]
+
+        if d1 and d2:
+            overlay_plots_out = join(args.output, "overlayPlots")
+            if not exists(overlay_plots_out):
+                makedirs(overlay_plots_out)
+            plot_overlays(rel_val, d1, d2, overlay_plots_out)
 
     return 0
 
@@ -597,6 +657,15 @@ PRINT_PARSER.add_argument("--metric-names", dest="metric_names", action="store_t
 PRINT_PARSER.add_argument("--test-names", dest="test_names", action="store_true")
 PRINT_PARSER.add_argument("--object-names", dest="object_names", action="store_true")
 PRINT_PARSER.set_defaults(func=print_simple)
+
+EXTRACT_PARSER = SUB_PARSERS.add_parser("extract", parents=[COMMON_VERBOSITY_PARSER])
+EXTRACT_PARSER.add_argument("--input", nargs="*", help="Set of input files to be extracted", required=True)
+EXTRACT_PARSER.add_argument("--output", "-o", help="output directory", default="rel_val_extracted")
+EXTRACT_PARSER.add_argument("--prefix", "-p", help="prefix to prepend to output files")
+EXTRACT_PARSER.add_argument("--label", "-l", help="label to be assigned", required=True)
+EXTRACT_PARSER.add_argument("--reference", "-r", help="path to a reference extraction file (useful to have same binning when TTrees are extracted)")
+EXTRACT_PARSER.set_defaults(func=only_extract)
+
 
 def main():
     """entry point when run directly from command line"""

@@ -15,6 +15,6 @@ ALIEN_PROC_ID_OFFSET_INT16=${ALIEN_PROC_ID:$((ALIEN_PROC_ID_OFFSET_INT16))}
 # let's make them int32 or int16, but not with the max possible value (which would be 0x7fffffff and 0x7fff respectively)
 # but a bit less, to allow to add [0, 15] on top afterwards if needed (e.g. we usually add
 # the NUMAID), see https://github.com/AliceO2Group/O2DPG/pull/993#pullrequestreview-1393401475
-export O2JOBID=$((ALIEN_PROC_ID_OFFSET_INT32 & 0x7ffffff0))
-export O2JOBSHMID=$((ALIEN_PROC_ID_OFFSET_INT16 & 0x7ff0))
+export O2JOBID=$(((ALIEN_PROC_ID_OFFSET_INT32 & 0x7ffffff) * 16))
+export O2JOBSHMID=$(((ALIEN_PROC_ID_OFFSET_INT16 & 0x7ff) * 16))
 echo "ALIEN_PROC_ID = $ALIEN_PROC_ID, we will set O2JOBID = $O2JOBID, SHMEMID = $SHMEMID"

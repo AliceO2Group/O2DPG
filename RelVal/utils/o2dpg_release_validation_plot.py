@@ -7,6 +7,7 @@ from os.path import join
 from os import environ
 import importlib.util
 from itertools import product
+import re
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
@@ -14,12 +15,17 @@ import seaborn
 
 
 O2DPG_ROOT = environ.get("O2DPG_ROOT")
-spec = importlib.util.spec_from_file_location("o2dpg_release_validation_utils", join(O2DPG_ROOT, "RelVal", '.', 'o2dpg_release_validation_utils.py'))
+spec = importlib.util.spec_from_file_location("o2dpg_release_validation_utils", join(O2DPG_ROOT, "RelVal", "utils", '.', 'o2dpg_release_validation_utils.py'))
 o2dpg_release_validation_utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(o2dpg_release_validation_utils)
 sys.modules["o2dpg_release_validation_utils"] = o2dpg_release_validation_utils
 from o2dpg_release_validation_utils import count_interpretations
 
+spec = importlib.util.spec_from_file_location("o2dpg_release_validation_plot_root", join(O2DPG_ROOT, "RelVal", "utils", '.', 'o2dpg_release_validation_plot_root.py'))
+o2dpg_release_validation_plot_root = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(o2dpg_release_validation_plot_root)
+sys.modules["o2dpg_release_validation_plot_root"] = o2dpg_release_validation_plot_root
+from o2dpg_release_validation_plot_root import plot_overlays_root, plot_overlays_root_no_rel_val
 
 def plot_pie_charts(rel_val, interpretations, interpretation_colors, out_dir, title="", get_figure=False):
 
@@ -30,6 +36,9 @@ def plot_pie_charts(rel_val, interpretations, interpretation_colors, out_dir, ti
         counts = []
         labels = []
         object_names, results = rel_val.get_result_per_metric_and_test(metric_name, test_name)
+
+        if not len(object_names):
+            continue
 
         for interpretation in interpretations:
             n_objects = len(object_names[count_interpretations(results, interpretation)])
@@ -105,6 +114,8 @@ def plot_compare_summaries(rel_vals, out_dir, *, labels=None, get_figure=False):
     if labels is given, it needs to have the same length as summaries
     """
 
+    print("==> Plot metric values <==")
+
     figures = []
 
     if not labels:
@@ -118,14 +129,18 @@ def plot_compare_summaries(rel_vals, out_dir, *, labels=None, get_figure=False):
 
     for metric_name, test_name in product(metric_names, test_names):
         figure, ax = plt.subplots(figsize=(20, 20))
+        plot_this = False
         for rel_val, label in zip(rel_vals, labels):
             object_names, results = rel_val.get_result_per_metric_and_test(metric_name, test_name)
             values = [result.value for result in results]
             means = [result.mean for result in results]
             if not values:
                 continue
+            plot_this = True
             ax.plot(object_names, values, label=f"values_{label}")
             ax.plot(object_names, means, label=f"test_means_{label}")
+        if not plot_this:
+            continue
         ax.legend(loc="best", fontsize=20)
         ax.tick_params("both", labelsize=20)
         ax.tick_params("x", rotation=90)
@@ -138,3 +153,13 @@ def plot_compare_summaries(rel_vals, out_dir, *, labels=None, get_figure=False):
         plt.close(figure)
     if get_figure:
         return figures
+
+
+def plot_overlays(rel_val, file_config_map1, file_config_map2, out_dir, plot_regex=None):
+    print("==> Plot overlays <==")
+    plot_overlays_root(rel_val, file_config_map1, file_config_map2, out_dir, plot_regex)
+
+
+def plot_overlays_no_rel_val(file_configs, out_dir):
+    print("==> Plot overlays <==")
+    plot_overlays_root_no_rel_val(file_configs, out_dir)

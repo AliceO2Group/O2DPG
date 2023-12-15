@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include <filesystem>
-#include "PlotOverlays.C"
 #include "ReleaseValidationMetrics.C"
 
 // define a global epsilon
@@ -53,7 +52,7 @@ int isEmptyHisto(TH1* h)
 // 6) select if files have to be taken from the grid or not
 // 7) choose if specific critic plots have to be saved in a second .pdf file
 
-int ReleaseValidation(std::string const& filename1, std::string const& filename2, std::string const& withMetrics="", std::string const& withoutMetrics="", std::string const& labelA="batch_i", std::string const& labelB="batch_j")
+int ReleaseValidation(std::string const& filename1, std::string const& filename2, std::string const& withMetrics="", std::string const& withoutMetrics="")
 {
   gROOT->SetBatch();
 
@@ -125,23 +124,7 @@ int ReleaseValidation(std::string const& filename1, std::string const& filename2
     auto ncCode = CheckComparable(hA, hB);
     auto areComparable = NCCodes::isComparable(ncCode);
 
-    TLegend legendMetricsOverlayPlot(0.6, 0.6, 0.9, 0.8);
-    legendMetricsOverlayPlot.SetBorderSize(1);
-    legendMetricsOverlayPlot.SetFillStyle(0);
-
-    std::vector<MetricResult> metricResults;
-    metricRunner.evaluate(hA, hB, ncCode, metricResults);
-    for (auto& metricResult : metricResults) {
-      if (metricResult.comparable) {
-        legendMetricsOverlayPlot.AddEntry((TObject*)nullptr, Form("%s = %f", metricResult.name.c_str(), metricResult.value), "");
-      }
-    }
-
-    if (isEmptyHisto(hA) == 2 || isEmptyHisto(hB) == 2) {
-      std::cerr << "WARNING: Cannot draw objects due to the fact that all entries are in under- or overflow bins\n";
-      continue;
-    }
-    PlotOverlayAndRatio({hA, hB}, {labelA, labelB}, "overlayPlots", &legendMetricsOverlayPlot);
+    metricRunner.evaluate(hA, hB, ncCode);
 
     nComparisons++;
   }
@@ -154,6 +137,9 @@ int ReleaseValidation(std::string const& filename1, std::string const& filename2
   std::cout << "\nNumber of objects that could not be read from file: " << nCannotRead << "\n";
 
   WriteToJsonFromMap(metricRunner);
+
+  extractedFile1.Close();
+  extractedFile2.Close();
 
   return 0;
 }
