@@ -3,7 +3,10 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "ccdb-test.cern.ch:8080"
+        "host": "ccdb-test.cern.ch:8080",
+        "username": "not_applicable",
+        "password": "not_applicable",
+        "name": "not_applicable"
       },
       "Activity": {
         "number": "42",
@@ -94,7 +97,7 @@
           "samplingFractionDCAr": "0.1",
           "cutPtForDCAr": "1.5"
         },
-        "grpGeomRequest" : {
+        "grpGeomRequest": {
           "geomRequest": "None",
           "askGRPECS": "false",
           "askGRPLHCIF": "false",
@@ -102,7 +105,7 @@
           "askMatLUT": "true",
           "askTime": "false",
           "askOnceAllButField": "true",
-          "needPropagatorD":  "false"
+          "needPropagatorD": "false"
         }
       }
     }
