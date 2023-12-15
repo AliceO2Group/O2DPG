@@ -29,12 +29,13 @@
         "className": "o2::quality_control_modules::mft::QcMFTClusterTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "randomcluster:MFT/COMPCLUSTERS/0;clustersrof:MFT/CLUSTERSROF/0;patterns:MFT/PATTERNS/0;cldict:MFT/CLUSDICT/0?lifetime=condition&ccdb-path=MFT/Calib/ClusterDictionary"
         },
+        "movingWindows": [ "mClustersROFSize" ],
         "taskParameters": {
           "maxClusterROFSize" : "50000",
           "maxDuration" : "60000",
@@ -58,7 +59,7 @@
         "className": "o2::quality_control_modules::mft::QcMFTTrackTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
         "maxNumberCycles": "-1",
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
@@ -66,6 +67,7 @@
           "query_comment" : "100% sampling",
           "query": "tracks:MFT/TRACKS/0;tracksrofs:MFT/MFTTrackROF/0;clustersrofs:MFT/CLUSTERSROF/0"
         },
+        "movingWindows": [ "mMFTTrackROFSize", "mMFTTrackEta", "mMFTTrackPhi" ],
         "taskParameters": {
           "ROFLengthInBC": "594",
           "MaxTrackROFSize": "10000",
