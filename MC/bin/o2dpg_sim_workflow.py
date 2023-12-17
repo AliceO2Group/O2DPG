@@ -1309,7 +1309,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # Take None as default, we only add more if nothing from anchorConfig
    svfinder_sources = anchorConfig.get("o2-secondary-vertexing-workflow-options",{}).get("vertexing-sources", None)
    if not svfinder_sources:
-      svfinder_sources = "ITS,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
+      svfinder_sources = "ITS,TPC,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
       if isActive("MID"):
         svfinder_sources += ",MID"
    SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
