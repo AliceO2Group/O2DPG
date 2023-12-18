@@ -1,49 +1,49 @@
 {
-    "qc": {
-      "config": {
-        "database": {
-          "implementation": "CCDB",
-          "host": "ccdb-test.cern.ch:8080",
-          "username": "not_applicable",
-          "password": "not_applicable",
-          "name": "not_applicable"
-        },
-        "Activity": {
-          "number": "42",
-          "type": "2",
-          "provenance": "qc_mc",
-          "passName": "passMC",
-          "periodName": "SimChallenge"
-        },
-        "monitoring": {
-          "url": "no-op://"
-        },
-        "consul": {
-          "url": ""
-        },
-        "conditionDB": {
-          "url": "alice-ccdb.cern.ch"
-        }
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "ccdb-test.cern.ch:8080",
+        "username": "not_applicable",
+        "password": "not_applicable",
+        "name": "not_applicable"
       },
-      "tasks": {
-        "BCTaskEMCAL": {
-          "active": "true",
-          "taskName": "BCs",
-          "className": "o2::quality_control_modules::emcal::BCTask",
-          "moduleName": "QcEMCAL",
-          "detectorName": "EMC",
-          "cycleDurationSeconds": "60",
-          "maxNumberCycles": "-1",
-          "dataSource": {
-            "type": "direct",
-            "query": "emcal-triggers:EMC/CELLSTRGR/0;ctp-digits:CTP/DIGITS;ctp-config:CTP/CONFIG/0?lifetime=condition&ccdb-path=CTP/Config/Config&ccdb-run-dependent=true"
-          },
-          "taskParameters": {
-            "AliasMB":"MINBIAS_TVX_L0,C0TVX,CMTVXTSC,C0TVXTSC,C0TVXTCE"
-          }
-        } 
+      "Activity": {
+        "number": "42",
+        "type": "2",
+        "provenance": "qc_mc",
+        "passName": "passMC",
+        "periodName": "SimChallenge"
       },
-      "checks": {}
+      "monitoring": {
+        "url": "no-op://"
+      },
+      "consul": {
+        "url": ""
+      },
+      "conditionDB": {
+        "url": "alice-ccdb.cern.ch"
+      }
     },
-    "dataSamplingPolicies": []
-  }
+    "tasks": {
+      "BCTaskEMCAL": {
+        "active": "true",
+        "taskName": "BCs",
+        "className": "o2::quality_control_modules::emcal::BCTask",
+        "moduleName": "QcEMCAL",
+        "detectorName": "EMC",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "emcal-triggers:EMC/CELLSTRGR/0;ctp-digits:CTP/DIGITS;ctp-config:CTP/CONFIG/0?lifetime=condition&ccdb-path=CTP/Config/Config&ccdb-run-dependent=true"
+        },
+        "taskParameters": {
+          "AliasMB": "MINBIAS_TVX_L0,C0TVX,CMTVXTSC,C0TVXTSC,C0TVXTCE"
+        }
+      }
+    },
+    "checks": {}
+  },
+  "dataSamplingPolicies": []
+}

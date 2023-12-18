@@ -22,7 +22,7 @@
         "url": ""
       },
       "conditionDB": {
-        "url": "ccdb-test.cern.ch:8080"
+        "url": "alice-ccdb.cern.ch"
       }
     },
     "tasks": {
@@ -41,12 +41,12 @@
         "taskParameters": {
           "layer": "1111111",
           "nThreads": "1",
-	  "nBCbins" : "103",
-	  "dicttimestamp" : "0",
-	  "publishSummary1D": "0",
-	  "publishDetailedSummary": "1"
+          "nBCbins": "103",
+          "dicttimestamp": "0",
+          "publishSummary1D": "0",
+          "publishDetailedSummary": "1"
         },
-	"grpGeomRequest" : {
+        "grpGeomRequest": {
           "geomRequest": "Aligned",
           "askGRPECS": "false",
           "askGRPLHCIF": "false",
@@ -54,7 +54,7 @@
           "askMatLUT": "false",
           "askTime": "false",
           "askOnceAllButField": "true",
-          "needPropagatorD":  "false"
+          "needPropagatorD": "false"
         }
       },
       "Tracks": {
@@ -74,11 +74,11 @@
           "vertexXYsize": "0.5",
           "vertexZsize": "15",
           "vertexRsize": "0.8",
-          "NtracksMAX"  : "5000",
+          "NtracksMAX": "5000",
           "doTTree": "0",
-	  "nBCbins" : "103",
-	  "dicttimestamp" : "0",
-	  "doNorm": "1"
+          "nBCbins": "103",
+          "dicttimestamp": "0",
+          "doNorm": "1"
         }
       }
     },
@@ -90,15 +90,15 @@
         "policy": "OnEachSeparately",
         "detectorName": "ITS",
         "checkParameters": {
-          "maxcluoccL0" : "5",
-          "maxcluoccL1" : "4",
-          "maxcluoccL2" : "3",
-          "maxcluoccL3" : "2",
-          "maxcluoccL4" : "1",
-          "maxcluoccL5" : "1",
-          "maxcluoccL6" : "1",
-          "skipxbinsoccupancy" : "",
-          "skipybinsoccupancy" : ""
+          "maxcluoccL0": "5",
+          "maxcluoccL1": "4",
+          "maxcluoccL2": "3",
+          "maxcluoccL3": "2",
+          "maxcluoccL4": "1",
+          "maxcluoccL5": "1",
+          "maxcluoccL6": "1",
+          "skipxbinsoccupancy": "",
+          "skipybinsoccupancy": ""
         },
         "dataSource": [
           {
@@ -141,11 +141,11 @@
               "VertexCoordinates",
               "VertexRvsZ",
               "VertexZ",
-	      "BunchCrossingIDvsClusterRatio"
+              "BunchCrossingIDvsClusterRatio"
             ]
           }
         ]
       }
     }
-  } 
+  }
 }

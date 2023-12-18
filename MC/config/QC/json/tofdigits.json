@@ -11,7 +11,9 @@
       "Activity": {
         "number": "42",
         "type": "2",
-	"provenance" : "qc_mc"
+        "provenance": "qc_mc",
+        "passName": "passMC",
+        "periodName": "SimChallenge"
       },
       "monitoring": {
         "url": "no-op://"
@@ -20,7 +22,7 @@
         "url": ""
       },
       "conditionDB": {
-        "url": "ccdb-test.cern.ch:8080"
+        "url": "alice-ccdb.cern.ch"
       }
     },
     "tasks": {
@@ -43,7 +45,7 @@
           "NbinsMultiplicity": "15000",
           "applyCalib": "True"
         },
-	  "grpGeomRequest" : {
+        "grpGeomRequest": {
           "geomRequest": "Aligned",
           "askGRPECS": "false",
           "askGRPLHCIF": "false",
@@ -51,7 +53,7 @@
           "askMatLUT": "false",
           "askTime": "false",
           "askOnceAllButField": "true",
-          "needPropagatorD":  "false"
+          "needPropagatorD": "false"
         },
         "location": "remote"
       }

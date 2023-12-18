@@ -9,20 +9,17 @@
         "name": "not_applicable"
       },
       "Activity": {
-        "number": "43",
+        "number": "42",
         "type": "2",
         "provenance": "qc_mc",
         "passName": "passMC",
         "periodName": "SimChallenge"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "no-op://"
       },
       "consul": {
         "url": ""
-      },
-      "#conditionDB": {
-        "url": "ccdb-test.cern.ch:8080"
       },
       "conditionDB": {
         "url": "alice-ccdb.cern.ch"
