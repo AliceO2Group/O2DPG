@@ -13,8 +13,8 @@ if [ $NUMAGPUIDS != 0 ]; then
   ARGS_ALL+=" --child-driver 'numactl --membind $NUMAID --cpunodebind $NUMAID'"
 fi
 
-PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
-CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
+PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
+CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
 
 
 NLANES=1
@@ -26,7 +26,7 @@ QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/an
 
 WRITER_TYPE="--writer-type EPN --meta-output-dir $EPN2EOS_METAFILES_DIR --output-dir $CALIB_DIR"
 
-if [[ ${TPC_KRYPTON_NO_WRITEOUT:-} == 1 ]]; then
+if [[ ! -z ${TPC_KRYPTON_NO_WRITEOUT:-} ]]; then
 	WRITER_TYPE="--writer-type none"
 fi
 
@@ -36,6 +36,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --dataspec "$PROXY_INSPEC" --inject-missing-data \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
+    --ignore-grp \
     --input-spec "$CALIB_INSPEC"  \
     --configKeyValues "$ARGS_FILES" \
     --remove-duplicates \
