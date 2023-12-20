@@ -35,9 +35,9 @@ o2-dpl-raw-proxy $ARGS_ALL \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
     --input-spec "$CALIB_INSPEC"  \
     --ignore-grp \
-    --configKeyValues "$ARGS_FILES;TPCDigitDump.LastTimeBin=14256" \
+    --configKeyValues "$ARGS_FILES;TPCDigitDump.LastTimeBin=446" \
     --remove-duplicates \
-    --pedestal-url "http://ccdb-test.cern.ch:8080" \
+    --pedestal-url "http://o2-ccdb.internal" \
     --pipeline tpc-raw-to-digits-0:24 \
     | o2-tpc-krypton-raw-filter $ARGS_ALL \
     --configKeyValues "$ARGS_FILES" \
