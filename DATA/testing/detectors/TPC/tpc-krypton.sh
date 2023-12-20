@@ -38,7 +38,7 @@ o2-dpl-raw-proxy $ARGS_ALL \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
     --ignore-grp \
     --input-spec "$CALIB_INSPEC"  \
-    --configKeyValues "$ARGS_FILES" \
+    --configKeyValues "$ARGS_FILES;TPCDigitDump.LastTimeBin=14256" \
     --remove-duplicates \
     --pipeline tpc-raw-to-digits-0:20 \
     | o2-tpc-krypton-clusterer $ARGS_ALL \
