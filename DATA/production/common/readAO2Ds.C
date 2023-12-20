@@ -35,7 +35,7 @@ int readAO2Ds(const char* filename = "AO2D.root")
         std::cout << onameKeyInDir.Data() << std::endl;
       }
       TTree* t = (TTree*)d->Get(onameKeyInDir.Data());
-      if (onameKeyInDir.BeginsWith("O2track") && !onameKeyInDir.Contains("O2tracked")) {
+      if (onameKeyInDir.BeginsWith("O2track") && !onameKeyInDir.Contains("O2tracked") && !onameKeyInDir.Contains("O2trackqa")) {
         vectNEntriesPerTree.push_back({onameKeyInDir.Data(), t->GetEntries()});
       }
     }
