@@ -19,7 +19,7 @@ QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/an
 
 
 
-WRITER_TYPE="--writer-type EPN --meta-output-dir $EPN2EOS_METAFILES_DIR --output-dir $CALIB_DIR"
+WRITER_TYPE="--writer-type EPN --meta-output-dir $EPN2EOS_METAFILES_DIR --output-dir $CALIB_DIR --max-tf-per-file 8000"
 
 if [[ ! -z ${TPC_KRYPTON_NO_WRITEOUT:-} ]]; then
         WRITER_TYPE="--writer-type none"
@@ -44,7 +44,6 @@ o2-dpl-raw-proxy $ARGS_ALL \
     --lanes $NLANES \
     ${WRITER_TYPE} \
     --threshold-max 20 \
-    --max-tf-per-file 8000 \
     --time-bins-before 20 \
     | o2-qc $ARGS_ALL --config $QC_CONFIG --local --host $HOST \
     | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE} ${GLOBALDPLOPT}
