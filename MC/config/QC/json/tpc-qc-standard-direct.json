@@ -3,7 +3,10 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "ccdb-test.cern.ch:8080"
+        "host": "ccdb-test.cern.ch:8080",
+        "username": "not_applicable",
+        "password": "not_applicable",
+        "name": "not_applicable"
       },
       "Activity": {
         "number": "42",
@@ -11,10 +14,6 @@
         "provenance": "qc_mc",
         "passName": "passMC",
         "periodName": "SimChallenge"
-      },
-      "infologger": {
-        "filterDiscardDebug": "true",
-        "filterDiscardLevel": "1"
       },
       "monitoring": {
         "url": "no-op://"
@@ -39,12 +38,24 @@
         },
         "taskParameters": {
           "mergeableOutput": "true",
-          "NClustersNBins": "100",  "NClustersXMin": "0", "NClustersXMax": "100",
-          "QmaxNBins":      "200",  "QmaxXMin":      "0", "QmaxXMax":      "200",
-          "QtotNBins":      "600",  "QtotXMin":      "10", "QtotXMax":      "600",
-          "SigmaPadNBins":  "200",  "SigmaPadXMin":  "0", "SigmaPadXMax":  "2",
-          "SigmaTimeNBins": "200",  "SigmaTimeXMin": "0", "SigmaTimeXMax": "2",
-          "TimeBinNBins":   "1000", "TimeBinXMin":   "0", "TimeBinXMax":   "100000"
+          "NClustersNBins": "100",
+          "NClustersXMin": "0",
+          "NClustersXMax": "100",
+          "QmaxNBins": "200",
+          "QmaxXMin": "0",
+          "QmaxXMax": "200",
+          "QtotNBins": "600",
+          "QtotXMin": "10",
+          "QtotXMax": "600",
+          "SigmaPadNBins": "200",
+          "SigmaPadXMin": "0",
+          "SigmaPadXMax": "2",
+          "SigmaTimeNBins": "200",
+          "SigmaTimeXMin": "0",
+          "SigmaTimeXMax": "2",
+          "TimeBinNBins": "1000",
+          "TimeBinXMin": "0",
+          "TimeBinXMax": "100000"
         }
       },
       "PID": {
@@ -55,7 +66,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-          "query" : "inputTracks:TPC/TRACKS/0"
+          "query": "inputTracks:TPC/TRACKS/0"
         },
         "taskParameters": {
           "cutMinNCluster": "60",
@@ -66,7 +77,7 @@
           "cutMaxpTPC": "20.",
           "cutMinpTPCMIPs": "0.45",
           "cutMaxpTPCMIPs": "0.55"
-       }
+        }
       },
       "Tracks": {
         "active": "true",
@@ -77,7 +88,7 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query" : "inputTracks:TPC/TRACKS/0"
+          "query": "inputTracks:TPC/TRACKS/0"
         },
         "taskParameters": {
           "cutAbsEta": "1.",
@@ -86,7 +97,7 @@
           "samplingFractionDCAr": "0.1",
           "cutPtForDCAr": "1.5"
         },
-        "grpGeomRequest" : {
+        "grpGeomRequest": {
           "geomRequest": "None",
           "askGRPECS": "false",
           "askGRPLHCIF": "false",
@@ -94,11 +105,10 @@
           "askMatLUT": "true",
           "askTime": "false",
           "askOnceAllButField": "true",
-          "needPropagatorD":  "false"
+          "needPropagatorD": "false"
         }
       }
     }
   },
-  "dataSamplingPolicies": [
-  ]
+  "dataSamplingPolicies": []
 }

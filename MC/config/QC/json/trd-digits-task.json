@@ -22,11 +22,7 @@
         "url": ""
       },
       "conditionDB": {
-        "url": "ccdb-test.cern.ch:8080"
-      },
-      "infologger": { 
-        "filterDiscardDebug": "false",
-        "filterDiscardLevel": "2"
+        "url": "alice-ccdb.cern.ch"
       }
     },
     "tasks": {
@@ -49,7 +45,6 @@
         }
       }
     },
-  "dataSamplingPolicies": [
-  ]
-}
+    "dataSamplingPolicies": []
+  }
 }

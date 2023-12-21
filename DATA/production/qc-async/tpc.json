@@ -30,7 +30,7 @@
         "className": "o2::quality_control_modules::tpc::Clusters",
         "moduleName": "QcTPC",
         "detectorName": "TPC",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "tpc-clusters"
@@ -51,7 +51,8 @@
         "className": "o2::quality_control_modules::tpc::PID",
         "moduleName": "QcTPC",
         "detectorName": "TPC",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
+        "movingWindows" : [ "hdEdxTotMIP_TPC" ],
         "dataSource": {
           "type": "direct",
           "query" : "inputTracks:TPC/TRACKS/0"
@@ -73,7 +74,8 @@
         "className": "o2::quality_control_modules::tpc::Tracks",
         "moduleName": "QcTPC",
         "detectorName": "TPC",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
+        "movingWindows" : [ "h2DNClustersEta" ],
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "tpc-tracks"

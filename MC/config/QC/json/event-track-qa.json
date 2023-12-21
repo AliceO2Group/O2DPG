@@ -1,142 +1,142 @@
 {
-    "bc-selection-task": {
-        "processRun2": "false",
-        "processRun3": "true"
-    },
-    "qa-tracking-efficiency-data": {
-        "eta-min": "-0.8",
-        "eta-max": "0.8",
-        "pt-min": "0.1",
-        "pt-max": "10",
-        "track-sel": "true",
-        "pt-bins": "500",
-        "log-pt": "1",
-        "eta-bins": "500",
-        "phi-bins": "500",
-        "make-eff": "true"
-    },
-    "qa-tracking-efficiency-muon": {
-        "eta-min": "-0.8",
-        "eta-max": "0.8",
-        "pt-min": "0.1",
-        "pt-max": "10",
-        "track-sel": "true",
-        "pt-bins": "500",
-        "log-pt": "1",
-        "eta-bins": "500",
-        "phi-bins": "500",
-        "make-eff": "true",
-        "sel-prim": "true"
-    },
-    "qa-tracking-efficiency-pion": {
-        "eta-min": "-0.8",
-        "eta-max": "0.8",
-        "pt-min": "0.1",
-        "pt-max": "10",
-        "track-sel": "true",
-        "pt-bins": "500",
-        "log-pt": "1",
-        "eta-bins": "500",
-        "phi-bins": "500",
-        "make-eff": "true",
-        "sel-prim": "true"
-    },
-    "qa-tracking-efficiency-electron": {
-        "eta-min": "-0.8",
-        "eta-max": "0.8",
-        "pt-min": "0.1",
-        "pt-max": "10",
-        "track-sel": "true",
-        "pt-bins": "500",
-        "log-pt": "1",
-        "eta-bins": "500",
-        "phi-bins": "500",
-        "make-eff": "true",
-        "sel-prim": "true"
-    },
-    "qa-tracking-efficiency-kaon": {
-        "eta-min": "-0.8",
-        "eta-max": "0.8",
-        "pt-min": "0.1",
-        "pt-max": "10",
-        "track-sel": "true",
-        "pt-bins": "500",
-        "log-pt": "1",
-        "eta-bins": "500",
-        "phi-bins": "500",
-        "make-eff": "true",
-        "sel-prim": "true"
-    },
-    "qa-tracking-efficiency-proton": {
-        "eta-min": "-0.8",
-        "eta-max": "0.8",
-        "pt-min": "0.1",
-        "pt-max": "10",
-        "track-sel": "true",
-        "pt-bins": "500",
-        "log-pt": "1",
-        "eta-bins": "500",
-        "phi-bins": "500",
-        "make-eff": "true",
-        "sel-prim": "true"
-    },
-    "qa-tracking-efficiency-deuteron": {
-        "eta-min": "-0.8",
-        "eta-max": "0.8",
-        "pt-min": "0.1",
-        "pt-max": "10",
-        "track-sel": "true",
-        "pt-bins": "500",
-        "log-pt": "1",
-        "eta-bins": "500",
-        "phi-bins": "500",
-        "make-eff": "true",
-        "sel-prim": "true"
-    },
-    "qa-tracking-efficiency-triton": {
-        "eta-min": "-0.8",
-        "eta-max": "0.8",
-        "pt-min": "0.1",
-        "pt-max": "10",
-        "track-sel": "true",
-        "pt-bins": "500",
-        "log-pt": "1",
-        "eta-bins": "500",
-        "phi-bins": "500",
-        "make-eff": "true",
-        "sel-prim": "true"
-    },
-    "qa-tracking-efficiency-helium3": {
-        "eta-min": "-0.8",
-        "eta-max": "0.8",
-        "pt-min": "0.1",
-        "pt-max": "10",
-        "track-sel": "true",
-        "pt-bins": "500",
-        "log-pt": "1",
-        "eta-bins": "500",
-        "phi-bins": "500",
-        "make-eff": "true",
-        "sel-prim": "true"
-    },
-    "event-selection-task": {
-        "syst": "pp",
-        "muonSelection": "0",
-        "isMC": "true",
-        "processRun2": "false",
-        "processRun3": "true"
-    },
-    "track-extension": {
-        "processRun2": "false",
-        "processRun3": "true"
-    },
-    "track-selection": {
-        "isRun3": "true"
-    },
-    "qa-event-track": {
-        "isMC": "true",
-        "isRun3": "true",
-        "processData": "false",
-        "processMC": "true"
-    }
+  "bc-selection-task": {
+    "processRun2": "false",
+    "processRun3": "true"
+  },
+  "qa-tracking-efficiency-data": {
+    "eta-min": "-0.8",
+    "eta-max": "0.8",
+    "pt-min": "0.1",
+    "pt-max": "10",
+    "track-sel": "true",
+    "pt-bins": "500",
+    "log-pt": "1",
+    "eta-bins": "500",
+    "phi-bins": "500",
+    "make-eff": "true"
+  },
+  "qa-tracking-efficiency-muon": {
+    "eta-min": "-0.8",
+    "eta-max": "0.8",
+    "pt-min": "0.1",
+    "pt-max": "10",
+    "track-sel": "true",
+    "pt-bins": "500",
+    "log-pt": "1",
+    "eta-bins": "500",
+    "phi-bins": "500",
+    "make-eff": "true",
+    "sel-prim": "true"
+  },
+  "qa-tracking-efficiency-pion": {
+    "eta-min": "-0.8",
+    "eta-max": "0.8",
+    "pt-min": "0.1",
+    "pt-max": "10",
+    "track-sel": "true",
+    "pt-bins": "500",
+    "log-pt": "1",
+    "eta-bins": "500",
+    "phi-bins": "500",
+    "make-eff": "true",
+    "sel-prim": "true"
+  },
+  "qa-tracking-efficiency-electron": {
+    "eta-min": "-0.8",
+    "eta-max": "0.8",
+    "pt-min": "0.1",
+    "pt-max": "10",
+    "track-sel": "true",
+    "pt-bins": "500",
+    "log-pt": "1",
+    "eta-bins": "500",
+    "phi-bins": "500",
+    "make-eff": "true",
+    "sel-prim": "true"
+  },
+  "qa-tracking-efficiency-kaon": {
+    "eta-min": "-0.8",
+    "eta-max": "0.8",
+    "pt-min": "0.1",
+    "pt-max": "10",
+    "track-sel": "true",
+    "pt-bins": "500",
+    "log-pt": "1",
+    "eta-bins": "500",
+    "phi-bins": "500",
+    "make-eff": "true",
+    "sel-prim": "true"
+  },
+  "qa-tracking-efficiency-proton": {
+    "eta-min": "-0.8",
+    "eta-max": "0.8",
+    "pt-min": "0.1",
+    "pt-max": "10",
+    "track-sel": "true",
+    "pt-bins": "500",
+    "log-pt": "1",
+    "eta-bins": "500",
+    "phi-bins": "500",
+    "make-eff": "true",
+    "sel-prim": "true"
+  },
+  "qa-tracking-efficiency-deuteron": {
+    "eta-min": "-0.8",
+    "eta-max": "0.8",
+    "pt-min": "0.1",
+    "pt-max": "10",
+    "track-sel": "true",
+    "pt-bins": "500",
+    "log-pt": "1",
+    "eta-bins": "500",
+    "phi-bins": "500",
+    "make-eff": "true",
+    "sel-prim": "true"
+  },
+  "qa-tracking-efficiency-triton": {
+    "eta-min": "-0.8",
+    "eta-max": "0.8",
+    "pt-min": "0.1",
+    "pt-max": "10",
+    "track-sel": "true",
+    "pt-bins": "500",
+    "log-pt": "1",
+    "eta-bins": "500",
+    "phi-bins": "500",
+    "make-eff": "true",
+    "sel-prim": "true"
+  },
+  "qa-tracking-efficiency-helium3": {
+    "eta-min": "-0.8",
+    "eta-max": "0.8",
+    "pt-min": "0.1",
+    "pt-max": "10",
+    "track-sel": "true",
+    "pt-bins": "500",
+    "log-pt": "1",
+    "eta-bins": "500",
+    "phi-bins": "500",
+    "make-eff": "true",
+    "sel-prim": "true"
+  },
+  "event-selection-task": {
+    "syst": "pp",
+    "muonSelection": "0",
+    "isMC": "true",
+    "processRun2": "false",
+    "processRun3": "true"
+  },
+  "track-extension": {
+    "processRun2": "false",
+    "processRun3": "true"
+  },
+  "track-selection": {
+    "isRun3": "true"
+  },
+  "qa-event-track": {
+    "isMC": "true",
+    "isRun3": "true",
+    "processData": "false",
+    "processMC": "true"
+  }
 }

@@ -1,9 +1,15 @@
 #!/bin/bash
 
+# add distortion maps
+# https://alice.its.cern.ch/jira/browse/O2-3346?focusedCommentId=300982&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-300982
+#
+# export O2DPG_ENABLE_TPC_DISTORTIONS=ON
+# SCFile=$PWD/distortions_5kG_lowIR.root # file needs to be downloaded
+# export O2DPG_TPC_DIGIT_EXTRA=" --distortionType 2 --readSpaceCharge ${SCFile} "
+
 #
 # procedure setting up and executing an anchored MC 
 #
-
 
 # make sure O2DPG + O2 is loaded
 [ ! "${O2DPG_ROOT}" ] && echo "Error: This needs O2DPG loaded" && exit 1
@@ -14,14 +20,34 @@
 #   point to an existing config (O2DPG repo or local disc or whatever)
 export ALIEN_JDL_LPMANCHORYEAR=${ALIEN_JDL_LPMANCHORYEAR:-2022}
 RUNNUMBER=${ALIEN_JDL_LPMRUNNUMBER:-517616}
-INTERACTIONRATE=${INTERACTIONRATE:-2000}
+#INTERACTIONRATE=${INTERACTIONRATE:-2000}
 
 # get the async script (we need to modify it)
 # the script location can be configured with a JDL option
-#cp ${ALIEN_JDL_ASYNCRECOSCRIPT:-$O2DPG_ROOT/DATA/production/configurations/2021/OCT/apass4/async_pass.sh} async_pass.sh
-alien.py cp /alice/cern.ch/user/a/alidaq/LHC22c/apass1/async_pass.sh file:.
 
-cp $O2DPG_ROOT/DATA/production/configurations/2022/MayJunePilotBeam/apass1/setenv_extra.sh .
+ALIEN_JDL_LPMPRODUCTIONTAG_KEEP=$ALIEN_JDL_LPMPRODUCTIONTAG
+echo "Substituting ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG with ALIEN_JDL_LPMANCHORPRODUCTION=$ALIEN_JDL_LPMANCHORPRODUCTION for simulating reco pass..."
+ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMANCHORPRODUCTION
+
+# ZDC causes issues for sim
+#export ALIEN_JDL_WORKFLOWDETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
+export ALIEN_JDL_WORKFLOWDETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,CTP
+
+### async_pass.sh
+DPGRECO=$O2DPG_ROOT/DATA/production/configurations/asyncReco/async_pass.sh
+
+if [[ -f async_pass.sh ]]; then
+    chmod +x async_pass.sh
+    DPGRECO=./async_pass.sh
+else
+    cp -v $DPGRECO .
+fi
+
+if [[ ! -f setenv_extra.sh ]]; then
+    cp -v ${DPGRECO%/*}/setenv_extra.sh .
+fi
+
+echo "[INFO alien_async_pass.sh] Setting up DPGRECO to ${DPGRECO}"
 
 #settings that are MC-specific
 sed -i 's/GPU_global.dEdxUseFullGainMap=1;GPU_global.dEdxDisableResidualGainMap=1/GPU_global.dEdxSplineTopologyCorrFile=splines_for_dedx_V1_MC_iter0_PP.root;GPU_global.dEdxDisableTopologyPol=1;GPU_global.dEdxDisableGainMap=1;GPU_global.dEdxDisableResidualGainMap=1;GPU_global.dEdxDisableResidualGain=1/' setenv_extra.sh
@@ -32,33 +58,13 @@ chmod +x async_pass.sh
 # take out line running the workflow (if we don't have data input)
 [ ${CTF_TEST_FILE} ] || sed -i '/WORKFLOWMODE=run/d' async_pass.sh
 
-# remove comments in order to set ALIEN_JDL stuff
-# (if not set already)
-if [ ! ${ALIEN_JDL_LPMRUNNUMBER} ]; then
-  sed -i 's/# export ALIEN/export ALIEN/' async_pass.sh
-fi
-# fix typo
-sed -i 's/JDL_ANCHORYEAR/JDL_LPMANCHORYEAR/' async_pass.sh
-
-# set number of timeframes to xx if necessary
-sed -i 's/NTIMEFRAMES=-1/NTIMEFRAMES=1/' async_pass.sh
-
-[[ ! -f commonInput.tgz ]] && alien.py cp /alice/cern.ch/user/a/alidaq/LHC22c/apass1/commonInput.tgz file:.
-tar -xzf commonInput.tgz
-
-# hack to have o2sim_geometry.root file present if not part of download but -aligned was
-if [[ -f o2sim_geometry-aligned.root && ! -f o2sim_geometry.root ]]; then
-   ln -s o2sim_geometry-aligned.root o2sim_geometry.root
-fi
-
 # create workflow ---> creates the file that can be parsed
 export IGNORE_EXISTING_SHMFILES=1
 touch list.list
-ALIEN_JDL_LPMPRODUCTIONTAG_KEEP=$ALIEN_JDL_LPMPRODUCTIONTAG
-echo "Substituting ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG with ALIEN_JDL_LPMANCHORPRODUCTION=$ALIEN_JDL_LPMANCHORPRODUCTION for simulating reco pass..."
-ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMANCHORPRODUCTION
+
 ./async_pass.sh ${CTF_TEST_FILE:-""} 2&> async_pass_log.log
 RECO_RC=$?
+
 echo "RECO finished with ${RECO_RC}"
 if [ "${NO_MC}" ]; then
   return ${RECO_RC} 2>/dev/null || exit ${RECO_RC} # optionally quit here and don't do MC (useful for testing)
@@ -85,17 +91,21 @@ SIMENGINE=${ALIEN_JDL_SIMENGINE:-${SIMENGINE}}
 NTIMEFRAMES=${NTIMEFRAMES:-50}
 NSIGEVENTS=${NSIGEVENTS:-22}
 
+SPLITID=${SPLITID:-0}
+PRODSPLIT=${PRODSPLIT:-100}
+CYCLE=${CYCLE:-0}
+# let SEED=$SPLITID+$CYCLE*$PRODSPLIT
+SEED=${ALIEN_PROC_ID}
+
 # create workflow
 # THIS NEEDS TO COME FROM OUTSIDE
 # echo "$" | awk -F' -- ' '{print $1, $3}'
 
-baseargs="-tf ${NTIMEFRAMES} --split-id ${ALIEN_JDL_SPLITID:-1} --prod-split ${ALIEN_JDL_PRODSPLIT:-100} --run-number ${RUNNUMBER} -eCM 900 -col pp"
+# baseargs="-col pp -eCM 13600 -tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${RUNNUMBER}"
+baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${RUNNUMBER}"
 
 # THIS NEEDS TO COME FROM OUTSIDE
-remainingargs="-gen pythia8 -proc cdiff -ns ${NSIGEVENTS}                                                                                                                 \
-               -interactionRate ${INTERACTIONRATE}                                                                                                                        \
-               -confKey \"Diamond.width[2]=6.0;Diamond.width[0]=0.01;Diamond.width[1]=0.01;Diamond.position[0]=0.0;Diamond.position[1]=-0.035;Diamond.position[2]=0.41\"  \
-              --include-local-qc --include-analysis"
+remainingargs="-gen external -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHF_D2H_ccbar_and_bbbar_gap5.ini -seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc"
 
 remainingargs="${remainingargs} -e ${SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
@@ -117,7 +127,7 @@ echo "TIMESTAMP IS ${TIMESTAMP}"
 export ALICEO2_CCDB_LOCALCACHE=$PWD/.ccdb
 [ ! -d .ccdb ] && mkdir .ccdb
 
-CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /MFT/Calib/Align /FT0/Calibration/ChannelTimeOffset /FV0/Calibration/ChannelTimeOffset /GLO/GRP/BunchFilling"
+CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /FT0/Calibration/ChannelTimeOffset /FV0/Calibration/ChannelTimeOffset /GLO/GRP/BunchFilling"
 
 ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS} -d .ccdb --timestamp ${TIMESTAMP}
 if [ ! "$?" == "0" ]; then
@@ -125,8 +135,8 @@ if [ ! "$?" == "0" ]; then
   exit 1
 fi
 
-# -- Create aligned geometry using ITS ideal alignment to avoid overlaps in geant
-CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align"
+# -- Create aligned geometry using ITS and MFT ideal alignments to avoid overlaps in geant
+CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align MFT/Calib/Align"
 TIMESTAMP_IDEAL_MC=1
 ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d .ccdb --timestamp ${TIMESTAMP_IDEAL_MC}
 if [ ! "$?" == "0" ]; then
@@ -134,7 +144,8 @@ if [ ! "$?" == "0" ]; then
   exit 1
 fi
 
-${O2_ROOT}/bin/o2-create-aligned-geometry-workflow --configKeyValues "HBFUtils.startTime=TIMESTAM" --condition-remap=file://${ALICEO2_CCDB_LOCALCACHE}=ITS/Calib/Align,MFT/Calib/Align -b 
+# ${O2_ROOT}/bin/o2-create-aligned-geometry-workflow --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" --condition-remap=file://${ALICEO2_CCDB_LOCALCACHE}=ITS/Calib/Align,MFT/Calib/Align -b 
+echo "run with echo in pipe" | ${O2_ROOT}/bin/o2-create-aligned-geometry-workflow --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" --condition-remap=file://${ALICEO2_CCDB_LOCALCACHE}=ITS/Calib/Align,MFT/Calib/Align -b 
 mkdir -p $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned
 ln -s -f $PWD/o2sim_geometry-aligned.root $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned/snapshot.root
 
@@ -146,7 +157,7 @@ echo "Ready to start main workflow"
 
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
 MCRC=$?  # <--- we'll report back this code
-exit 0
+#exit 0
 
 if [[ "${MCRC}" = "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
   # do QC tasks
@@ -159,9 +170,11 @@ fi
 # full logs tar-ed for output, regardless the error code or validation - to catch also QC logs...
 #
 if [[ -n "$ALIEN_PROC_ID" ]]; then
-  find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" \) | tar -czvf debug_log_archive.tgz -T -
+  find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" -o -name "pythia8.cfg" \) | tar -czvf debug_log_archive.tgz -T -
+  find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" -o -name "*.root" \) | tar -czvf debug_full_archive.tgz -T -
 fi
 
 unset FAIRMQ_IPC_PREFIX
 
 return ${MCRC} 2>/dev/null || exit ${MCRC}
+                                                                                                                                                                                                            
