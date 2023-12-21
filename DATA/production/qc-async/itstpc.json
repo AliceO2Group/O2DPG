@@ -47,7 +47,7 @@
           "minPtITSCut": "0.f",
           "etaITSCut": "1e10f",
           "minNITSClustersCut": "0",
-          "maxChi2PerClusterITS": "1e10f",
+          "maxChi2PerClusterITS": "100000",
           "minPtTPCCut": "0.1f",
           "etaTPCCut": "1.4f",
           "minNTPCClustersCut": "60",
