@@ -186,10 +186,12 @@ def get_additional_workflows(input_aod):
             from ROOT import TGrid
             TGrid.Connect("alien")
         froot = TFile.Open(input_aod, "READ")
-        found_O2collision_001 = False
-        found_O2zdc_001 = False
-        found_O2bc_001 = False
-        found_O2trackextra_001 = False
+        # Link of tables and converters
+        o2_analysis_converters = {"O2collision_001": "o2-analysis-collision-converter --doNotSwap",
+                                  "O2zdc_001": "o2-analysis-zdc-converter",
+                                  "O2bc_001": "o2-analysis-bc-converter",
+                                  "O2v0_001": "o2-analysis-v0converter",
+                                  "O2trackextra_001": "o2-analysis-tracks-extra-converter"}
         for i in froot.GetListOfKeys():
             if "DF_" not in i.GetName():
                 continue
@@ -197,23 +199,10 @@ def get_additional_workflows(input_aod):
             # print(i)
             for j in df_dir.GetListOfKeys():
                 # print(j)
-                if "O2collision_001" in j.GetName():
-                    found_O2collision_001 = True
-                if "O2zdc_001" in j.GetName():
-                    found_O2zdc_001 = True
-                if "O2bc_001" in j.GetName():
-                    found_O2bc_001 = True
-                if "O2trackextra_001" in j.GetName():
-                    found_O2trackextra_001 = True 
-            if not found_O2collision_001:
-                additional_workflows.append("o2-analysis-collision-converter --doNotSwap")
-            if not found_O2zdc_001:
-                additional_workflows.append("o2-analysis-zdc-converter")
-            if not found_O2bc_001:
-                additional_workflows.append("o2-analysis-bc-converter")
-            if not found_O2trackextra_001:
-                additional_workflows.append("o2-analysis-tracks-extra-converter")
-            break
+                if j.GetName() in o2_analysis_converters:
+                    o2_analysis_converters.pop(j.GetName())
+        for i in o2_analysis_converters:
+            additional_workflows.append(o2_analysis_converters[i])
     return additional_workflows
 
 
@@ -242,7 +231,7 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         input_aod = f"@{input_aod}"
 
     additional_workflows = []
-    if autoset_converters: # This is needed to run with the latest TAG of the O2Physics with the older data
+    if autoset_converters:  # This is needed to run with the latest TAG of the O2Physics with the older data
         additional_workflows = get_additional_workflows(input_aod)
 
     data_or_mc = ANALYSIS_VALID_MC if is_mc else ANALYSIS_VALID_DATA

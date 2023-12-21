@@ -18,7 +18,7 @@ NBOXMUONS=${NBOXMUONS:-2}
 
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 5020 -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -e TGeant4 \
 	-confKey "GeneratorExternal.fileName=${O2DPG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorBoxFwd.C;GeneratorExternal.funcName=fwdMuBoxGen()"  \
-        -genBkg pythia8 -procBkg "heavy_ion" -colBkg PbPb --embedding -nb ${NBKGEVENTS} --mft-reco-full --mft-assessment-full --fwdmatching-assessment-full --fwdmatching-save-trainingdata
+        -genBkg pythia8 -procBkg "heavy_ion" -colBkg PbPb --embedding -nb ${NBKGEVENTS} --mft-assessment-full --fwdmatching-assessment-full --fwdmatching-save-trainingdata
 
 # run workflow (MFT-related tasks)
 NMUONS=$NBOXMUONS ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt "(mft.*)" 

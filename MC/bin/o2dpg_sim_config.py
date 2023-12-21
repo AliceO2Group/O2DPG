@@ -85,6 +85,11 @@ def create_sim_config(args):
     if args.col == "PbPb" or (args.embedding and args.colBkg == "PbPb"):
         add(config, {"ITSVertexerParam.lowMultBeamDistCut": "0."})
 
+    # FIT digitizer settings for 2023 PbPb
+    if 543437 <= int(args.run) and int(args.run) <= 545367:
+        add(config, {"FT0DigParam.mMip_in_V": "7", "FT0DigParam.mMV_2_Nchannels": "2", "FT0DigParam.mMV_2_NchannelsInverse": "0.5"})
+        add(config, {"FV0DigParam.adcChannelsPerMip": "4"})
+
     return config
 
 
