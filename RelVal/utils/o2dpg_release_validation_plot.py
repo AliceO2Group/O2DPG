@@ -7,11 +7,11 @@ from os.path import join
 from os import environ
 import importlib.util
 from itertools import product
-import re
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import seaborn
+from scipy.stats import iqr
 
 
 O2DPG_ROOT = environ.get("O2DPG_ROOT")
@@ -27,13 +27,19 @@ spec.loader.exec_module(o2dpg_release_validation_plot_root)
 sys.modules["o2dpg_release_validation_plot_root"] = o2dpg_release_validation_plot_root
 from o2dpg_release_validation_plot_root import plot_overlays_root, plot_overlays_root_no_rel_val
 
-def plot_pie_charts(rel_val, interpretations, interpretation_colors, out_dir, title="", get_figure=False):
 
+def plot_pie_charts(rel_val, interpretations, interpretation_colors, out_dir, title="", get_figure=False):
+    """
+    Plot pie charts per metric and test
+
+    Each pie chart shows the ratio of given interpretations
+    """
     print("==> Plot pie charts <==")
     for metric_name, test_name in product(rel_val.known_metrics, rel_val.known_test_names):
         figure, ax = plt.subplots(figsize=(20, 20))
-        colors = []
+        # collect counts of interpretations, their colours and labels
         counts = []
+        colors = []
         labels = []
         object_names, results = rel_val.get_result_per_metric_and_test(metric_name, test_name)
 
@@ -60,7 +66,47 @@ def plot_pie_charts(rel_val, interpretations, interpretation_colors, out_dir, ti
         plt.close(figure)
 
 
+def plot_value_histograms(rel_val, out_dir, title="values histogram", get_figure=False):
+    """
+    Plot a histogram of metric values
+    """
+
+    print("==> Plot value histograms <==")
+    for metric_name in rel_val.known_metrics:
+        figure, ax = plt.subplots(figsize=(20, 20))
+        values = []
+        for _, _, metric in zip(*rel_val.get_metrics(metric_name=metric_name)):
+            if not metric.comparable:
+                continue
+            values.append(metric.value)
+
+        if not values:
+            continue
+
+        ax.set_xlabel(metric_name, fontsize=20)
+        ax.set_ylabel("counts", fontsize=20)
+        ax.hist(values, bins=100)
+        ax.tick_params("both", labelsize=20)
+        figure.tight_layout()
+
+        figure.suptitle(f"{title} (metric: {metric_name})", fontsize=40)
+        save_path = join(out_dir, f"histogram_values_{metric_name}.png")
+        figure.savefig(save_path)
+        if get_figure:
+            return figure
+        plt.close(figure)
+
+
 def plot_summary_grid(rel_val, interpretations, interpretation_colors, output_dir, get_figure=False):
+    """
+    Plot a summary grid per test.
+
+    horizontal axis: metric names
+    vertical axis: object names
+
+    Each cell is coloured according to an interpretation.
+    In addition, the cells contain the computed metric values
+    """
 
     print("==> Plot summary grid <==")
 
@@ -74,12 +120,15 @@ def plot_summary_grid(rel_val, interpretations, interpretation_colors, output_di
 
     for nt in range(rel_val.number_of_tests):
         metric_names, object_names, results_matrix = rel_val.get_result_matrix_objects_metrics(nt)
-        arr = np.full(results_matrix.shape, 0, dtype=int)
+        # make an array where each interpretation is mapped to a numerical value
+        arr_interpretation = np.full(results_matrix.shape, 0, dtype=int)
+        # collect annotations for each cell
         arr_annot = np.full(results_matrix.shape, "", dtype=object)
+        # iterate over the cells and set values and annotations
         it = np.nditer(results_matrix, flags=['multi_index', "refs_ok"])
         for _ in it:
             result = results_matrix[it.multi_index]
-            arr[it.multi_index] = interpretation_name_to_number[result.interpretation]
+            arr_interpretation[it.multi_index] = interpretation_name_to_number[result.interpretation]
             if result.value is not None:
                 annot = f"{result.value:.3f} (mean: {result.mean:.3f})"
                 if result.n_sigmas is not None:
@@ -89,8 +138,9 @@ def plot_summary_grid(rel_val, interpretations, interpretation_colors, output_di
 
             arr_annot[it.multi_index] = annot
 
+        #now comes the plotting
         figure, ax = plt.subplots(figsize=(20, 20))
-        seaborn.heatmap(arr, ax=ax, cmap=cmap, vmin=-0.5, vmax=len(interpretations) - 0.5, yticklabels=object_names, xticklabels=metric_names, linewidths=0.5, annot=arr_annot, fmt="")
+        seaborn.heatmap(arr_interpretation, ax=ax, cmap=cmap, vmin=-0.5, vmax=len(interpretations) - 0.5, yticklabels=object_names, xticklabels=metric_names, linewidths=0.5, annot=arr_annot, fmt="")
         cbar = ax.collections[0].colorbar
         cbar.set_ticks(range(len(colors)))
         cbar.set_ticklabels(interpretations)
@@ -111,7 +161,7 @@ def plot_summary_grid(rel_val, interpretations, interpretation_colors, output_di
 
 def plot_compare_summaries(rel_vals, out_dir, *, labels=None, get_figure=False):
     """
-    if labels is given, it needs to have the same length as summaries
+    Plot the metric values for each object.
     """
 
     print("==> Plot metric values <==")
@@ -156,10 +206,16 @@ def plot_compare_summaries(rel_vals, out_dir, *, labels=None, get_figure=False):
 
 
 def plot_overlays(rel_val, file_config_map1, file_config_map2, out_dir, plot_regex=None):
+    """
+    Wrapper around ROOT overlay plotting
+    """
     print("==> Plot overlays <==")
     plot_overlays_root(rel_val, file_config_map1, file_config_map2, out_dir, plot_regex)
 
 
 def plot_overlays_no_rel_val(file_configs, out_dir):
+    """
+    Wrapper around ROOT plotting when no RelVal object is given
+    """
     print("==> Plot overlays <==")
     plot_overlays_root_no_rel_val(file_configs, out_dir)

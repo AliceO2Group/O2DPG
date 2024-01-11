@@ -11,10 +11,11 @@
 import sys
 import argparse
 import importlib.util
-from os import environ, makedirs, remove, rename
+from os import environ, makedirs, remove
 from os.path import join, abspath, exists, dirname, basename, isfile
-from shutil import copy, rmtree
 import json
+
+import numpy as np
 
 # make sure O2DPG + O2 is loaded
 O2DPG_ROOT=environ.get('O2DPG_ROOT')
@@ -35,13 +36,13 @@ spec = importlib.util.spec_from_file_location("o2dpg_release_validation_utils", 
 o2dpg_release_validation_utils = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(o2dpg_release_validation_utils)
 sys.modules["o2dpg_release_validation_utils"] = o2dpg_release_validation_utils
-from o2dpg_release_validation_utils import *
+import o2dpg_release_validation_utils as utils
 
 spec = importlib.util.spec_from_file_location("o2dpg_release_validation_plot", join(O2DPG_ROOT, "RelVal", "utils", 'o2dpg_release_validation_plot.py'))
 o2dpg_release_validation_plot = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(o2dpg_release_validation_plot)
 sys.modules["o2dpg_release_validation_plot"] = o2dpg_release_validation_plot
-from o2dpg_release_validation_plot import plot_pie_charts, plot_summary_grid, plot_compare_summaries, plot_overlays
+from o2dpg_release_validation_plot import plot_pie_charts, plot_summary_grid, plot_compare_summaries, plot_overlays, plot_value_histograms
 
 
 ROOT_MACRO_EXTRACT=join(O2DPG_ROOT, "RelVal", "utils", "ExtractAndFlatten.C")
@@ -52,45 +53,10 @@ from ROOT import gROOT
 
 gROOT.SetBatch()
 
-def copy_overlays(rel_val, input_dir, output_dir):
-    """
-    copy overlay plots in this summary from the input directory to the output directory
-    """
-    input_dir = abspath(input_dir)
-    output_dir = abspath(output_dir)
 
-    if not exists(input_dir):
-        print(f"ERROR: Input directory {input_dir} does not exist")
-        return 1
-
-    inOutSame = input_dir == output_dir
-
-    input_dir_new = input_dir + "_tmp"
-    if inOutSame:
-        # move input directory
-        rename(input_dir, input_dir_new)
-        input_dir = input_dir_new
-
-    if not exists(output_dir):
-        makedirs(output_dir)
-
-    object_names, _ = rel_val.get_result_per_metric_and_test()
-    object_names = list(set(object_names))
-
-    ret = 0
-    for object_name in object_names:
-        filename=join(input_dir, f"{object_name}.png")
-        if exists(filename):
-            copy(filename, output_dir)
-        else:
-            print(f"File {filename} not found.")
-            ret = 1
-
-    if inOutSame:
-        rmtree(input_dir)
-
-    return ret
-
+#############################################
+# Helper functions only used in this script #
+#############################################
 
 def metrics_from_root():
     """
@@ -100,7 +66,7 @@ def metrics_from_root():
     if exists(log_file_name):
         remove(log_file_name)
     cmd = f"root -l -b -q {ROOT_MACRO_METRICS}"
-    ret = run_macro(cmd, log_file_name)
+    ret = utils.run_macro(cmd, log_file_name)
     if ret > 0:
         return ret
 
@@ -116,13 +82,30 @@ def metrics_from_root():
     return 0
 
 
-def extract(input_filenames, target_filename, include_file_directories=None, add_if_exists=False, reference_extracted=None, json_extracted=None):
+def load_from_meta_json(json_path):
+    """
+    Load a meta JSON file and return dictionary
+    """
+    if not exists(json_path):
+        return None
+
+    with open(json_path, "r") as f:
+        try:
+            return json.load(f)
+        except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+            pass
+    return None
+
+
+def extract_and_flatten_impl(input_filenames, target_filename, include_file_directories=None, add_if_exists=False, reference_extracted="", json_extracted=""):
     """
     Wrap the extraction of objects to be compared
 
     Will be extracted (from TH1, QC objects, TTree etc.), converted to TH1 and put into a flat ROOT file structure.
 
     Args:
+        input_filenames: list
+            list of input filenames to extract objects from
         target_filename: str
             path to file where extracted objects should be saved
         include_file_directories: iterable or "" (default: "")
@@ -132,15 +115,15 @@ def extract(input_filenames, target_filename, include_file_directories=None, add
         reference_extracted: str
             is used in case of the extraction of TTrees in which case the x-axis binning will be set
             according to that reference to make objects comparable.
+        json_extracted: str
+            the path to where the JSON file with the info of "what has been extracted where" will be saved
+
     Returns:
-        bool
-            True in case of success, False otherwise
+        bool: True in case of success, False otherwise
     """
     def get_files_from_list(list_filename):
         """
-        Quick helper
-
-        Extract filenames from what is listed in a given file
+        Quick helper to extract filenames from what is listed in a given file
         """
         collect_files = []
         with open(list_filename, "r") as f:
@@ -153,13 +136,13 @@ def extract(input_filenames, target_filename, include_file_directories=None, add
 
     include_file_directories = ",".join(include_file_directories) if include_file_directories else ""
 
-    # flat ROOT files to extract to and read from during RelVal; make absolute paths so we don't confuse ourselves when running e.g. ROOT macros in different directories
-
     if len(input_filenames) == 1 and input_filenames[0][0] == "@":
-        input_filenames = get_files_from_list(input_filenames[0][1:])
-        if not files1:
-            print(f"ERROR: Apparently {input_filenames[0][1:]} contains no files to be extracted.")
-            return None
+        # if there is only one filename and it starts with "@", assume that it contains the paths of the actual files that should be extracted
+        read_files_from = input_filenames[0][1:]
+        input_filenames = get_files_from_list(read_files_from)
+        if not input_filenames:
+            print(f"ERROR: Apparently {read_files_from} contains no files to be extracted.")
+            return False
 
     if exists(target_filename) and not add_if_exists:
         # this file will otherwise be updated if it exists
@@ -169,10 +152,6 @@ def extract(input_filenames, target_filename, include_file_directories=None, add
     cwd = dirname(target_filename)
     target_filename = basename(target_filename)
     log_file_name = join(cwd, f"{target_filename}_extract_and_flatten.log")
-    if not reference_extracted:
-        reference_extracted = ""
-    if not json_extracted:
-        json_extracted = ""
 
     print("Extraction of files")
 
@@ -181,30 +160,23 @@ def extract(input_filenames, target_filename, include_file_directories=None, add
         print(f"  {f}")
         cmd = f"\\(\\\"{f}\\\",\\\"{target_filename}\\\",\\\"{reference_extracted}\\\",\\\"{include_file_directories}\\\",\\\"{json_extracted}\\\"\\)"
         cmd = f"root -l -b -q {ROOT_MACRO_EXTRACT}{cmd}"
-        ret = run_macro(cmd, log_file_name, cwd)
+        ret = utils.run_macro(cmd, log_file_name, cwd)
         if ret != 0:
             print(f"ERROR: Extracting from file {f} failed. Please check logfile {abspath(join(cwd, log_file_name))}")
             return False
 
     return True
 
-def get_extract_json_info(json_path):
 
-    if not exists(json_path):
-        return None
+def extract_and_flatten(files, output, label, include_directories=None, add_if_exists=False, prefix=None, reference_extracted=""):
+    """
+    Extract from input files to a flat ROOT file
 
-    with open(json_path, "r") as f:
-        try:
-            return json.load(f)
-        except (json.decoder.JSONDecodeError, UnicodeDecodeError):
-            pass
-    return None
-
-
-def only_extract_impl(files, output, label, include_directories=None, add_if_exists=False, prefix=None, reference_extracted=None):
+    Returns the path to a meta JSON and that JSON file loaded as dictionary
+    """
 
     if len(files) == 1:
-        d = get_extract_json_info(files[0])
+        d = load_from_meta_json(files[0])
         if d is not None:
             return files[0], d
 
@@ -216,7 +188,7 @@ def only_extract_impl(files, output, label, include_directories=None, add_if_exi
     json_out = abspath(join(output, json_out))
     root_out = abspath(join(output, root_out))
 
-    if not extract(files, root_out, include_file_directories=include_directories, add_if_exists=add_if_exists, reference_extracted=reference_extracted, json_extracted=json_out):
+    if not extract_and_flatten_impl(files, root_out, include_file_directories=include_directories, add_if_exists=add_if_exists, reference_extracted=reference_extracted, json_extracted=json_out):
         return None, None
 
     d = None
@@ -229,12 +201,6 @@ def only_extract_impl(files, output, label, include_directories=None, add_if_exi
         json.dump(d, f, indent=2)
 
     return json_out, d
-
-
-def only_extract(args):
-    if not only_extract_impl(args.input, args.output, None, args.label, args.reference):
-        return 1
-    return 0
 
 
 def rel_val_root(d1, d2, metrics_enabled, metrics_disabled, output_dir):
@@ -280,7 +246,7 @@ def rel_val_root(d1, d2, metrics_enabled, metrics_disabled, output_dir):
     output_dir = abspath(output_dir)
     log_file_rel_val = join(output_dir, "rel_val.log")
     print("Running RelVal on extracted objects")
-    ret = run_macro(cmd, log_file_rel_val, cwd=output_dir)
+    ret = utils.run_macro(cmd, log_file_rel_val, cwd=output_dir)
 
     # This comes from the ROOT macro
     json_path = join(output_dir, "RelVal.json")
@@ -309,7 +275,7 @@ def load_rel_val(json_path, include_patterns=None, exclude_patterns=None, enable
     Returns
         RelVal
     """
-    rel_val = RelVal()
+    rel_val = utils.RelVal()
     rel_val.set_object_name_patterns(include_patterns, exclude_patterns)
     rel_val.enable_metrics(enable_metrics)
     rel_val.disable_metrics(disable_metrics)
@@ -317,14 +283,14 @@ def load_rel_val(json_path, include_patterns=None, exclude_patterns=None, enable
     return rel_val
 
 
-def initialise_evaluator(rel_val, thresholds, thresholds_default, thresholds_margins, thresholds_combine, regions):
+def initialise_evaluator(rel_val, thresholds_paths, thresholds_default, thresholds_margins, thresholds_combine, regions_paths):
     """
     Wrapper to create an evaluator
 
     Args:
         rel_val: RelVal
             the RelVal object that should potentially be tested and is used to derive default threshold
-        thresholds: iterable or None
+        thresholds_paths: iterable or None
             if not None, iterable of string as the paths to RelVal JSONs
         thresholds_defaults: iterable of 2-tuples or None
             assign a default threshold value (tuple[1]) to a metric name (tuple[0])
@@ -332,28 +298,43 @@ def initialise_evaluator(rel_val, thresholds, thresholds_default, thresholds_mar
             add a margin given in percent (tuple[1]) to a threshold value of a metric name (tuple[0])
         thresholds_combine: str
             either "mean" or "extreme", how threshold values extracted from argument thresholds should be combined
-        regions: iterable or None
+        regions_paths: iterable or None
             if not None, iterable of string as the paths to RelVal JSONs
     Returns:
         Evaluator
     """
-    evaluator = Evaluator()
+    evaluator = utils.Evaluator()
 
     # initialise to run tests on proper mean +- std
-    if regions:
-        rel_val_regions = get_summaries_or_from_file(regions)
-        initialise_regions(evaluator, rel_val_regions)
+    if regions_paths:
+        regions = utils.get_paths_or_from_file(regions_paths)
+        rel_val_regions = utils.RelVal()
+        rel_val_regions.load(regions)
+        utils.initialise_regions(evaluator, rel_val_regions)
 
     # initialise to run tests on thresholds
     thresholds_default = {metric_name: float(value) for metric_name, value in thresholds_default} if thresholds_default else None
     rel_val_thresholds = None
-    if thresholds:
+    if thresholds_paths:
         thresholds_margins = {metric_name: float(value) for metric_name, value in thresholds_margins} if thresholds_margins else None
-        rel_val_thresholds = get_summaries_or_from_file(thresholds)
-    initialise_thresholds(evaluator, rel_val, rel_val_thresholds, thresholds_default, thresholds_margins, thresholds_combine)
+        thresholds_paths = utils.get_paths_or_from_file(thresholds_paths)
+        rel_val_thresholds = utils.RelVal()
+        rel_val_thresholds.load(thresholds_paths)
+    utils.initialise_thresholds(evaluator, rel_val, rel_val_thresholds, thresholds_default, thresholds_margins, thresholds_combine)
 
     evaluator.initialise()
     return evaluator
+
+###################################################################
+# Functions that are called after command line has been processed #
+###################################################################
+
+
+def only_extract(args):
+    if not extract_and_flatten(args.input, args.output, None, args.label, args.reference)[0]:
+        # checking one of the return values for None
+        return 1
+    return 0
 
 
 def rel_val(args):
@@ -364,7 +345,7 @@ def rel_val(args):
     """
     def interpret_results(result, metric):
         """
-        Taking in a result and the metric it was derived from, assign an interpretation
+        Taking in a result and the corresponding metric it was derived from and assign an interpretation
         """
         is_critical = args.is_critical is None or metric.name in args.is_critical
         if not metric.comparable and is_critical:
@@ -373,13 +354,13 @@ def rel_val(args):
         if not metric.comparable:
             result.interpretation = variables.REL_VAL_INTERPRETATION_NONCRIT_NC
             return
-        if result.result_flag == Result.FLAG_UNKNOWN:
+        if result.result_flag == utils.Result.FLAG_UNKNOWN:
             result.interpretation = variables.REL_VAL_INTERPRETATION_UNKNOWN
             return
-        if result.result_flag == Result.FLAG_PASSED:
+        if result.result_flag == utils.Result.FLAG_PASSED:
             result.interpretation = variables.REL_VAL_INTERPRETATION_GOOD
             return
-        if result.result_flag == Result.FLAG_FAILED and is_critical:
+        if result.result_flag == utils.Result.FLAG_FAILED and is_critical:
             result.interpretation = variables.REL_VAL_INTERPRETATION_BAD
             return
         result.interpretation = variables.REL_VAL_INTERPRETATION_WARNING
@@ -389,38 +370,42 @@ def rel_val(args):
 
     need_apply = False
     is_inspect = False
-    json1 = None
-    json2 = None
+    dict_1 = None
+    dict_2 = None
     if hasattr(args, "json_path"):
         # this comes from the inspect command
         is_inspect = True
-        json_path = get_summary_path(args.json_path)
+        json_path = utils.get_summary_path(args.json_path)
         annotations = None
         include_patterns, exclude_patterns = (args.include_patterns, args.exclude_patterns)
     else:
         # in this case, new input ROOT files were provided and we need to apply all our tests
         need_apply = True
+        # always take everything
         include_patterns, exclude_patterns = (None, None)
         if args.add:
             print(f"NOTE: Extracted objects will be added to existing ones in case there was already a RelVal at {args.output}.\n")
 
-        json1 = only_extract_impl(args.input1, args.output, args.labels[0], args.include_dirs, args.add, prefix="1", reference_extracted=None)
-        json2 = only_extract_impl(args.input2, args.output, args.labels[1], args.include_dirs, args.add, prefix="2", reference_extracted=json1[1]["path"])
-        if None in json1 or None in json2:
-            print("ERROR: Something went wrong during the extraction")
+        # each extraction will leave us with a JSON
+        json_path_1, dict_1 = extract_and_flatten(args.input1, args.output, args.labels[0], args.include_dirs, args.add, prefix="1", reference_extracted=None)
+        if not json_path_1:
             return 1
-        json_path = rel_val_root(json1[1], json2[1], args.enable_metric, args.disable_metric, args.output)
+        json_path_2, dict_2 = extract_and_flatten(args.input2, args.output, args.labels[1], args.include_dirs, args.add, prefix="2", reference_extracted=dict_1["path"])
+        if not json_path_2:
+            return 1
+        json_path = rel_val_root(dict_1, dict_2, args.enable_metric, args.disable_metric, args.output)
         if json_path is None:
             print("ERROR: Problem during RelVal")
             return 1
-        annotations = {"json_path_1": json1[0],
-                       "json_path_2": json2[0]}
+        annotations = {"json_path_1": json_path_1,
+                       "json_path_2": json_path_2}
 
+    # now loading and constructing a RelVal object
     rel_val = load_rel_val(json_path, include_patterns, exclude_patterns, args.enable_metric, args.disable_metric)
 
     if need_apply or args.use_values_as_thresholds or args.default_threshold or args.regions:
         evaluator = initialise_evaluator(rel_val, args.use_values_as_thresholds, args.default_threshold, args.margin_threshold, args.combine_thresholds, args.regions)
-        rel_val.apply(evaluator)
+        rel_val.apply_evaluator(evaluator)
     # assign interpretations to the results we got
     rel_val.interpret(interpret_results)
 
@@ -435,7 +420,7 @@ def rel_val(args):
     # if this comes from inspecting, there will be the annotations from the rel-val before that ==> re-write it
     rel_val.write(join(args.output, "Summary.json"), annotations=annotations or rel_val.annotations[0])
 
-    print_summary(rel_val, variables.REL_VAL_SEVERITIES, long=args.print_long)
+    utils.print_summary(rel_val, variables.REL_VAL_SEVERITIES, long=args.print_long)
 
     if not args.no_plot:
         print("Now plotting...")
@@ -443,21 +428,19 @@ def rel_val(args):
         plot_pie_charts(rel_val, variables.REL_VAL_SEVERITIES, variables.REL_VAL_SEVERITY_COLOR_MAP, args.output)
         plot_compare_summaries((rel_val,), args.output)
         plot_summary_grid(rel_val, variables.REL_VAL_SEVERITIES, variables.REL_VAL_SEVERITY_COLOR_MAP, args.output)
+        plot_value_histograms(rel_val, args.output)
 
         if is_inspect:
             if annotations_inspect := rel_val.annotations:
                 annotations_inspect = annotations_inspect[0]
-                d1 = get_extract_json_info(annotations_inspect["json_path_1"])
-                d2 = get_extract_json_info(annotations_inspect["json_path_2"])
-        else:
-            d1 = json1[1]
-            d2 = json2[1]
+                dict_1 = load_from_meta_json(annotations_inspect["json_path_1"])
+                dict_2 = load_from_meta_json(annotations_inspect["json_path_2"])
 
-        if d1 and d2:
+        if dict_1 and dict_2:
             overlay_plots_out = join(args.output, "overlayPlots")
             if not exists(overlay_plots_out):
                 makedirs(overlay_plots_out)
-            plot_overlays(rel_val, d1, d2, overlay_plots_out)
+            plot_overlays(rel_val, dict_1, dict_2, overlay_plots_out)
 
     return 0
 
@@ -473,8 +456,8 @@ def compare(args):
     output_dir = args.output
 
     # load
-    rel_val1 = load_rel_val(get_summary_path(args.input1[0]), args.include_patterns, args.exclude_patterns, args.enable_metric, args.disable_metric)
-    rel_val2 = load_rel_val(get_summary_path(args.input2[0]), args.include_patterns, args.exclude_patterns, args.enable_metric, args.disable_metric)
+    rel_val1 = load_rel_val(utils.get_summary_path(args.input1[0]), args.include_patterns, args.exclude_patterns, args.enable_metric, args.disable_metric)
+    rel_val2 = load_rel_val(utils.get_summary_path(args.input2[0]), args.include_patterns, args.exclude_patterns, args.enable_metric, args.disable_metric)
 
     # get the test and metric names they have in common
     test_names = np.intersect1d(rel_val1.known_test_names, rel_val2.known_test_names)
@@ -490,8 +473,8 @@ def compare(args):
                 if args.interpretations and interpretation not in args.interpretations:
                     continue
                 # object names of Results matching an interpretation
-                object_names_interpretation1 = object_names1[count_interpretations(results1, interpretation)]
-                object_names_interpretation2 = object_names2[count_interpretations(results2, interpretation)]
+                object_names_interpretation1 = object_names1[utils.count_interpretations(results1, interpretation)]
+                object_names_interpretation2 = object_names2[utils.count_interpretations(results2, interpretation)]
                 # elements in 1 that are not in 2...
                 only_in1 = np.setdiff1d(object_names_interpretation1, object_names_interpretation2)
                 # ...and the other way round
@@ -519,7 +502,7 @@ def influx(args):
     """
     Create an influxDB metrics file
     """
-    rel_val = load_rel_val(get_summary_path(args.path))
+    rel_val = load_rel_val(utils.get_summary_path(args.path))
 
     output_path = args.path if isfile(args.path) else join(args.path, "influxDB.dat")
     table_name = "O2DPG_MC_ReleaseValidation"
@@ -566,7 +549,7 @@ def print_simple(args):
             return 0
         return metrics_from_root()
 
-    rel_val = load_rel_val(get_summary_path(args.path), args.include_patterns, args.exclude_patterns, args.enable_metric, args.disable_metric)
+    rel_val = load_rel_val(utils.get_summary_path(args.path), args.include_patterns, args.exclude_patterns, args.enable_metric, args.disable_metric)
 
     def filter_on_interpretations(result):
         # only consider those results that match a flag requested by the user
@@ -594,14 +577,18 @@ def print_header():
     print(f"\n{'#' * 25}\n#{' ' * 23}#\n# RUN ReleaseValidation #\n#{' ' * 23}#\n{'#' * 25}\n")
 
 
-# we define the parser here
+################################################################
+# define the parser globally so that it could even be imported #
+################################################################
 
+# common parser for digesting input files
 COMMON_FILE_PARSER = argparse.ArgumentParser(add_help=False)
 COMMON_FILE_PARSER.add_argument("-i", "--input1", nargs="*", help="EITHER first set of input files for comparison OR first input directory from simulation for comparison", required=True)
 COMMON_FILE_PARSER.add_argument("-j", "--input2", nargs="*", help="EITHER second set of input files for comparison OR second input directory from simulation for comparison", required=True)
 COMMON_FILE_PARSER.add_argument("--labels", nargs=2, help="labels you want to appear in the plot legends in case of overlay plots from batches -i and -j", default=("batch_i", "batch_j"))
 COMMON_FILE_PARSER.add_argument("--no-extract", dest="no_extract", action="store_true", help="no extraction but immediately expect histograms present for comparison")
 
+# common parser digesting options related to thresholds
 COMMON_THRESHOLD_PARSER = argparse.ArgumentParser(add_help=False)
 COMMON_THRESHOLD_PARSER.add_argument("--regions", help="Use calculated regions to test status")
 COMMON_THRESHOLD_PARSER.add_argument("--default-threshold", dest="default_threshold", action="append", nargs=2)
@@ -609,41 +596,53 @@ COMMON_THRESHOLD_PARSER.add_argument("--use-values-as-thresholds", nargs="*", de
 COMMON_THRESHOLD_PARSER.add_argument("--combine-thresholds", dest="combine_thresholds",  choices=["mean", "extreme"], help="Arithmetic mean or extreme value is chosen as threshold", default="mean")
 COMMON_THRESHOLD_PARSER.add_argument("--margin-threshold", dest="margin_threshold", action="append", nargs=2)
 
+# common parser to digest metric options
 COMMON_METRIC_PARSER = argparse.ArgumentParser(add_help=False)
 COMMON_METRIC_PARSER.add_argument("--enable-metric", dest="enable_metric", nargs="*")
 COMMON_METRIC_PARSER.add_argument("--disable-metric", dest="disable_metric", nargs="*")
 
+# common parser to digest object name patterns
 COMMON_PATTERN_PARSER = argparse.ArgumentParser(add_help=False)
 COMMON_PATTERN_PARSER.add_argument("--include-patterns", dest="include_patterns", nargs="*", help="include objects whose name includes at least one of the given patterns (takes precedence)")
 COMMON_PATTERN_PARSER.add_argument("--exclude-patterns", dest="exclude_patterns", nargs="*", help="exclude objects whose name includes at least one of the given patterns")
 
+# common parser to digest options related to interpretations
 COMMON_FLAGS_PARSER = argparse.ArgumentParser(add_help=False)
 COMMON_FLAGS_PARSER.add_argument("--interpretations", nargs="*", help="extract all objects which have at least one test with this severity flag", choices=list(variables.REL_VAL_SEVERITY_MAP.keys()))
 COMMON_FLAGS_PARSER.add_argument("--is-critical", dest="is_critical", nargs="*", help="set names of metrics that are assumed to be critical")
 
+# common parser to handle verbosity
 COMMON_VERBOSITY_PARSER = argparse.ArgumentParser(add_help=False)
 COMMON_VERBOSITY_PARSER.add_argument("--print-long", dest="print_long", action="store_true", help="enhance verbosity")
 COMMON_VERBOSITY_PARSER.add_argument("--no-plot", dest="no_plot", action="store_true", help="suppress plotting")
 
+# The main parser
 PARSER = argparse.ArgumentParser(description='Wrapping ReleaseValidation macro')
+
+# Use various sub-parsers
 SUB_PARSERS = PARSER.add_subparsers(dest="command")
+
+# rel-val
 REL_VAL_PARSER = SUB_PARSERS.add_parser("rel-val", parents=[COMMON_FILE_PARSER, COMMON_METRIC_PARSER, COMMON_THRESHOLD_PARSER, COMMON_FLAGS_PARSER, COMMON_VERBOSITY_PARSER])
 REL_VAL_PARSER.add_argument("--include-dirs", dest="include_dirs", nargs="*", help="only include desired directories inside ROOT file; note that each pattern is assumed to start in the top-directory (at the moment no regex or *)")
 REL_VAL_PARSER.add_argument("--add", action="store_true", help="If given and there is already a RelVal in the output directory, extracted objects will be added to the existing ones")
 REL_VAL_PARSER.add_argument("--output", "-o", help="output directory", default="rel_val")
 REL_VAL_PARSER.set_defaults(func=rel_val)
 
+# inspect
 INSPECT_PARSER = SUB_PARSERS.add_parser("inspect", parents=[COMMON_THRESHOLD_PARSER, COMMON_METRIC_PARSER, COMMON_PATTERN_PARSER, COMMON_FLAGS_PARSER, COMMON_VERBOSITY_PARSER])
 INSPECT_PARSER.add_argument("--path", dest="json_path", help="either complete file path to a Summary.json or directory where one of the former is expected to be", required=True)
 INSPECT_PARSER.add_argument("--output", "-o", help="output directory", default="rel_val_inspect")
 INSPECT_PARSER.set_defaults(func=rel_val)
 
+# compare
 COMPARE_PARSER = SUB_PARSERS.add_parser("compare", parents=[COMMON_FILE_PARSER, COMMON_PATTERN_PARSER, COMMON_METRIC_PARSER, COMMON_VERBOSITY_PARSER, COMMON_FLAGS_PARSER])
 COMPARE_PARSER.add_argument("--output", "-o", help="output directory", default="rel_val_comparison")
 COMPARE_PARSER.add_argument("--difference", action="store_true", help="plot histograms with different severity")
 COMPARE_PARSER.add_argument("--plot", action="store_true", help="plot value and threshold comparisons of RelVals")
 COMPARE_PARSER.set_defaults(func=compare)
 
+# influx
 INFLUX_PARSER = SUB_PARSERS.add_parser("influx")
 INFLUX_PARSER.add_argument("--path", help="directory where ReleaseValidation was run", required=True)
 INFLUX_PARSER.add_argument("--tags", nargs="*", help="tags to be added for influx, list of key=value")
@@ -651,6 +650,7 @@ INFLUX_PARSER.add_argument("--table-suffix", dest="table_suffix", help="prefix f
 INFLUX_PARSER.add_argument("--output", "-o", help="output path; if not given, a file influxDB.dat is places inside the RelVal directory")
 INFLUX_PARSER.set_defaults(func=influx)
 
+# print
 PRINT_PARSER = SUB_PARSERS.add_parser("print", parents=[COMMON_METRIC_PARSER, COMMON_PATTERN_PARSER, COMMON_FLAGS_PARSER])
 PRINT_PARSER.add_argument("--path", help="either complete file path to a Summary.json or directory where one of the former is expected to be")
 PRINT_PARSER.add_argument("--metric-names", dest="metric_names", action="store_true")
@@ -658,6 +658,7 @@ PRINT_PARSER.add_argument("--test-names", dest="test_names", action="store_true"
 PRINT_PARSER.add_argument("--object-names", dest="object_names", action="store_true")
 PRINT_PARSER.set_defaults(func=print_simple)
 
+# extract
 EXTRACT_PARSER = SUB_PARSERS.add_parser("extract", parents=[COMMON_VERBOSITY_PARSER])
 EXTRACT_PARSER.add_argument("--input", nargs="*", help="Set of input files to be extracted", required=True)
 EXTRACT_PARSER.add_argument("--output", "-o", help="output directory", default="rel_val_extracted")
