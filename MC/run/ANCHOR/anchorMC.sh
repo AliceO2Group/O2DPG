@@ -35,6 +35,7 @@ export ALIEN_JDL_WORKFLOWDETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,P
 
 ### async_pass.sh
 DPGRECO=$O2DPG_ROOT/DATA/production/configurations/asyncReco/async_pass.sh
+DPGSETENV=$O2DPG_ROOT/DATA/production/configurations/asyncReco/setenv_extra.sh
 
 if [[ -f async_pass.sh ]]; then
     chmod +x async_pass.sh
@@ -44,8 +45,8 @@ else
 fi
 
 if [[ ! -f setenv_extra.sh ]]; then
-    # cp -v ${DPGRECO%/*}/setenv_extra.sh .
-    cp -v $O2DPG_ROOT/DATA/production/configurations/asyncReco/setenv_extra.sh .
+    DPGSETENV=${DPGRECO%/*}/setenv_extra.sh
+    [[ -f ${DPGSETENV} ]] && cp ${DPGSETENV} . || cp ${DPGSETENV} .
 fi
 
 echo "[INFO alien_async_pass.sh] Setting up DPGRECO to ${DPGRECO}"
@@ -102,8 +103,8 @@ SEED=${ALIEN_PROC_ID}
 # THIS NEEDS TO COME FROM OUTSIDE
 # echo "$" | awk -F' -- ' '{print $1, $3}'
 
-#baseargs="-col PbPb -eCM 5360 -tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${RUNNUMBER}"
-baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${RUNNUMBER}"
+baseargs="-col pp -eCM 13600 -tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${RUNNUMBER}"
+baseargs_alt="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${RUNNUMBER}"
 
 # THIS NEEDS TO COME FROM OUTSIDE
 remainingargs="-gen pythia8 -proc heavy_ion -seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
@@ -111,13 +112,17 @@ remainingargs="-gen pythia8 -proc heavy_ion -seed ${SEED} -ns ${NSIGEVENTS} --in
 remainingargs="${remainingargs} -e ${SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
 remainingargs="${remainingargs} --anchor-config config-json.json"
+remainingargs_alt="${remainingargs} --anchor-config config-json.json -col pp -eCM 13600"
 
 echo "baseargs: ${baseargs}"
 echo "remainingargs: ${remainingargs}"
               
 # query CCDB has changed, w/o "_"
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs} &> timestampsampling_${RUNNUMBER}.log
-[ "$?" != "0" ] && echo "Problem during anchor timestamp sampling " && exit 1
+if [ "$?" != "0" ] ; then
+    ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs_alt} -- ${remainingargs_alt} &> timestampsampling_${RUNNUMBER}.log
+    [ "$?" != "0" ] && echo "Problem during anchor timestamp sampling " && exit 1
+fi
 
 TIMESTAMP=`grep "Determined timestamp to be" timestampsampling_${RUNNUMBER}.log | awk '//{print $6}'`
 echo "TIMESTAMP IS ${TIMESTAMP}"
@@ -164,7 +169,7 @@ if [[ "${MCRC}" = "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
   # do QC tasks
   echo "Doing QC"
   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} -k
-  RC=$?
+  MCRC=$?
 fi
 
 #
