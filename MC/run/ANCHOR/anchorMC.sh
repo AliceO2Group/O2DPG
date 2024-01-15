@@ -103,8 +103,8 @@ SEED=${ALIEN_PROC_ID}
 # THIS NEEDS TO COME FROM OUTSIDE
 # echo "$" | awk -F' -- ' '{print $1, $3}'
 
-baseargs="-col pp -eCM 13600 -tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${RUNNUMBER}"
-baseargs_alt="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${RUNNUMBER}"
+baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${RUNNUMBER}"
+baseargs_alt="-col pp -eCM 13600 -tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${RUNNUMBER}"
 
 # THIS NEEDS TO COME FROM OUTSIDE
 remainingargs="-gen pythia8 -proc heavy_ion -seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
