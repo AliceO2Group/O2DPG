@@ -31,7 +31,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-          "query": "digits:TRD/DIGITS;triggers:TRD/TRKTRGRD;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC"
+          "query": "digits:TRD/DIGITS;triggers:TRD/TRKTRGRD;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC;fedChamberStatus:TRD/FCHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/DCSDPsFedChamberStatus"
         }
       },
       "Tracklets": {
@@ -42,7 +42,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-          "query": "tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC"
+          "query": "tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC;fedChamberStatus:TRD/FCHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/DCSDPsFedChamberStatus"
         }
       },
       "PHTrackMatch": {
