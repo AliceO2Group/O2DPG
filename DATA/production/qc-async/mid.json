@@ -3,23 +3,18 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "ali-qcdb.cern.ch:8083",
-        "username": "not_applicable",
-        "password": "not_applicable",
-        "name": "not_applicable"
+            "host": "ccdb-test.cern.ch:8080"
       },
       "Activity": {
-        "number": "42",
-        "type": "2"
       },
       "monitoring": {
-        "url": "influxdb-unix:///tmp/telegraf.sock"
+        "url": "infologger:///debug?qc"
       },
       "consul": {
-        "url": "null:8500"
+        "url": ""
       },
       "conditionDB": {
-        "url": "null:8083"
+        "url": "ccdb-test.cern.ch:8080"
       }
     },
     "tasks": {
@@ -30,11 +25,9 @@
         "moduleName": "QcMID",
         "detectorName": "MID",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "digits:MID/DATA;digits_rof:MID/DATAROF",
-          "query_comment": "100% sampling"
+              "query": "digits:MID/DATA;digits_rof:MID/DATAROF"
         }
       },
       "MIDClusters": {
@@ -44,11 +37,9 @@
         "moduleName": "QcMID",
         "detectorName": "MID",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS",
-          "query_comment": "100% sampling"
+              "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS"
         }
       },
       "MIDTracks": {
@@ -58,11 +49,9 @@
         "moduleName": "QcMID",
         "detectorName": "MID",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS",
-          "query_comment": "100% sampling"
+              "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS"
         }
       }
     },
