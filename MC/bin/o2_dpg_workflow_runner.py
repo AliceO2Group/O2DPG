@@ -528,7 +528,7 @@ class ResourceBoundaries:
         self.mem_limit = mem_limit
         self.dynamic_resources = dynamic_resources
         # if this is set, tasks that would normally go beyond the resource limits will tried to be run in any case
-        self.optimistic_resource = optimistic_resources
+        self.optimistic_resources = optimistic_resources
 
 
 class TaskResources:
@@ -685,6 +685,7 @@ class ResourceManager:
             actionlogger.warning(f"Resource estimates of id {len(self.resources)} overestimates limits, CPU limit: {self.resource_boundaries.cpu_limit}, MEM limit: {self.resource_boundaries.mem_limit}; might not run")
             if not self.resource_boundaries.optimistic_resources:
                 # exit if we don't dare to try
+                print(f"Resources of task {name} are exceeding the boundaries.\nCPU: {cpu} (estimate) vs. {self.resource_boundaries.cpu_limit} (boundary)\nMEM: {mem} (estimated) vs. {self.resource_boundaries.mem_limit} (boundary).")
                 exit(1)
             # or we do dare, let's see what happens...
             actionlogger.info("We will try to run this task anyway with maximum available resources")
