@@ -96,6 +96,8 @@ else
     echo "[INFO alien_setenv_extra.sh] setenv_extra.sh was found in the current working directory, use it."
 fi
 
+chmod u+x setenv_extra.sh
+
 echo "[INFO alien_async_pass.sh] Setting up DPGRECO to ${DPGRECO}"
 
 # settings that are MC-specific, modify setenv_extra.sh in-place
@@ -178,7 +180,7 @@ fi
 # -- Create aligned geometry using ITS and MFT ideal alignments to avoid overlaps in geant
 CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align MFT/Calib/Align"
 TIMESTAMP_IDEAL_MC=1
-${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d .ccdb --timestamp ${TIMESTAMP_IDEAL_MC}
+${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d ${ALICEO2_CCDB_LOCALCACHE} --timestamp ${TIMESTAMP_IDEAL_MC}
 if [ ! "$?" == "0" ]; then
   echo "Problem during CCDB prefetching of ${CCDBOBJECTS_IDEAL_MC}. Exiting."
   exit 1
