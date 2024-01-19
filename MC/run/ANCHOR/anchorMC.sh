@@ -11,16 +11,61 @@
 # procedure setting up and executing an anchored MC
 #
 
+########################
+# helper functionality #
+########################
+
+print_help()
+{
+  echo "Usage: ./anchorMC.sh"
+  echo
+  echo "Make sure the following env variables are set:"
+  echo "ALIEN_JDL_LPMANCHORPASSNAME or ANCHORPASSNAME,"
+  echo "ALIEN_JDL_MCANCHOR or MCANCHOR,"
+  echo "ALIEN_JDL_LPMPASSNAME or PASSNAME,"
+  echo "ALIEN_JDL_LPMRUNNUMBER or RUNNUMBER,"
+  echo "ALIEN_JDL_LPMPRODUCTIONTYPE or PRODUCTIONTYPE,"
+  echo "ALIEN_JDL_LPMINTERACTIONTYPE or INTERACTIONTYPE,"
+  echo "ALIEN_JDL_LPMPRODUCTIONTAG or PRODUCTIONTAG,"
+  echo "ALIEN_JDL_LPMANCHORRUN or ANCHORRUN,"
+  echo "ALIEN_JDL_LPMANCHORPRODUCTION or ANCHORPRODUCTION,"
+  echo "ALIEN_JDL_LPMANCHORYEAR or ANCHORYEAR,"
+  echo
+  echo "as well as:"
+  echo "NTIMEFRAMES,"
+  echo "NSIGEVENTS,"
+  echo "SPLITID,"
+  echo "CYCLE,"
+  echo "PRODSPLIT."
+  echo
+  echo "Optional are:"
+  echo "NWORKERS,"
+  echo "ALIEN_JDL_CPULIMIT or CPULIMIT,"
+  echo "ALIEN_JDL_SIMENGINE or SIMENGINE."
+}
+
 # Prevent the script from being soured to omit unexpected surprises when exit is used
 SCRIPT_NAME="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
 if [ "${SCRIPT_NAME}" != "$(basename ${BASH_SOURCE[0]})" ] ; then
-    echo_red "This script cannot not be sourced" >&2
+    echo "ERROR: This script cannot not be sourced" >&2
     return 1
 fi
 
 # make sure O2DPG + O2 is loaded
 [ ! "${O2DPG_ROOT}" ] && echo "Error: This needs O2DPG loaded" && exit 1
 [ ! "${O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
+
+while [ "$1" != "" ] ; do
+    case $1 in
+        --help|-h ) shift
+                    print_help
+                    exit 0
+                    ;;
+        * ) echo "Unknown argument ${1}"
+            exit 1
+            ;;
+    esac
+done
 
 #################################################################
 # Set all required variables to identify an anchored production #
@@ -171,7 +216,7 @@ echo "TIMESTAMP IS ${TIMESTAMP}"
 
 CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /FV0/Calibration/ChannelTimeOffset"
 
-${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS} -d .ccdb --timestamp ${TIMESTAMP}
+${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS} -d ${ALICEO2_CCDB_LOCALCACHE --timestamp ${TIMESTAMP}
 if [ ! "$?" == "0" ]; then
   echo "Problem during CCDB prefetching of ${CCDBOBJECTS}. Exiting."
   exit 1
