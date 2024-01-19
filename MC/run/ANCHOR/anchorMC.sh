@@ -22,20 +22,26 @@ fi
 [ ! "${O2DPG_ROOT}" ] && echo "Error: This needs O2DPG loaded" && exit 1
 [ ! "${O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
 
+#################################################################
+# Set all required variables to identify an anchored production #
+#################################################################
 
-# check variables that need to be set
-[ -z "${PASS}" ] && { echo "ERROR: PASS not set" ; exit 1 ; }
-[ -z "${PERIOD}" ] && { echo "ERROR: PERIOD not set" ; exit 1 ; }
-[ -z "${BEAMTYPE}" ] && { echo "ERROR: BEAMTYPE not set" ; exit 1 ; }
+# Allow for both "ALIEN_JDL_LPM<KEY>" as well as "KEY"
 
-# ------ CREATE AN MC CONFIG STARTING FROM RECO SCRIPT --------
-# - this part should not be done on the GRID, where we should rather
-#   point to an existing config (O2DPG repo or local disc or whatever)
-export ALIEN_JDL_LPMANCHORYEAR=${ALIEN_JDL_LPMANCHORYEAR:-2022}
-RUNNUMBER=${ALIEN_JDL_LPMRUNNUMBER:-517616}
-
-# get the async script (we need to modify it)
-# the script location can be configured with a JDL option
+# the only two where there is a real default for
+export ALIEN_JDL_CPULIMIT=${ALIEN_JDL_CPULIMIT:-${CPULIMIT:-8}}
+export ALIEN_JDL_SIMENGINE=${ALIEN_JDL_SIMENGINE:-${SIMENGINE:-Geant4}}
+# all others MUST be set by the user/on the outside
+export ALIEN_JDL_LPMANCHORPASSNAME=${ALIEN_JDL_LPMANCHORPASSNAME:-${ANCHORPASSNAME}}
+export ALIEN_JDL_MCANCHOR=${ALIEN_JDL_MCANCHOR:-${MCANCHOR}}
+export ALIEN_JDL_LPMPASSNAME=${ALIEN_JDL_LPMPASSNAME:-${PASSNAME}}
+export ALIEN_JDL_LPMRUNNUMBER=${ALIEN_JDL_LPMRUNNUMBER:-${RUNNUMBER}}
+export ALIEN_JDL_LPMPRODUCTIONTYPE=${ALIEN_JDL_LPMPRODUCTIONTYPE:-${PRODUCTIONTYPE}}
+export ALIEN_JDL_LPMINTERACTIONTYPE=${ALIEN_JDL_LPMINTERACTIONTYPE:-${INTERACTIONTYPE}}
+export ALIEN_JDL_LPMPRODUCTIONTAG=${ALIEN_JDL_LPMPRODUCTIONTAG:-${PRODUCTIONTAG}}
+export ALIEN_JDL_LPMANCHORRUN=${ALIEN_JDL_LPMANCHORRUN:-${ANCHORRUN}}
+export ALIEN_JDL_LPMANCHORPRODUCTION=${ALIEN_JDL_LPMANCHORPRODUCTION:-${ANCHORPRODUCTION}}
+export ALIEN_JDL_LPMANCHORYEAR=${ALIEN_JDL_LPMANCHORYEAR:-${ANCHORYEAR}}
 
 # cache the production tag, will be set to a special anchor tag; reset later in fact
 ALIEN_JDL_LPMPRODUCTIONTAG_KEEP=$ALIEN_JDL_LPMPRODUCTIONTAG
@@ -45,6 +51,28 @@ ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMANCHORPRODUCTION
 # ZDC causes issues for sim
 #export ALIEN_JDL_WORKFLOWDETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
 export ALIEN_JDL_WORKFLOWDETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,CTP
+
+# check variables that need to be set
+[ -z "${ALIEN_JDL_LPMANCHORPASSNAME}" ] && { echo "ERROR: Set ALIEN_JDL_LPMANCHORPASSNAME or ANCHORPASSNAME" ; exit 1 ; }
+[ -z "${ALIEN_JDL_MCANCHOR}" ] && { echo "ERROR: Set ALIEN_JDL_MCANCHOR or MCANCHOR" ; exit 1 ; }
+[ -z "${ALIEN_JDL_LPMPASSNAME}" ] && { echo "ERROR: Set ALIEN_JDL_LPMPASSNAME or PASSNAME" ; exit 1 ; }
+[ -z "${ALIEN_JDL_LPMRUNNUMBER}" ] && { echo "ERROR: Set ALIEN_JDL_LPMRUNNUMBER or RUNNUMBER" ; exit 1 ; }
+[ -z "${ALIEN_JDL_LPMPRODUCTIONTYPE}" ] && { echo "ERROR: Set ALIEN_JDL_LPMPRODUCTIONTYPE or PRODUCTIONTYPE" ; exit 1 ; }
+[ -z "${ALIEN_JDL_LPMINTERACTIONTYPE}" ] && { echo "ERROR: Set ALIEN_JDL_LPMINTERACTIONTYPE or INTERACTIONTYPE" ; exit 1 ; }
+[ -z "${ALIEN_JDL_LPMPRODUCTIONTAG}" ] && { echo "ERROR: Set ALIEN_JDL_LPMPRODUCTIONTAG or PRODUCTIONTAG" ; exit 1 ; }
+[ -z "${ALIEN_JDL_LPMANCHORRUN}" ] && { echo "ERROR: Set ALIEN_JDL_LPMANCHORRUN or ANCHORRUN" ; exit 1 ; }
+[ -z "${ALIEN_JDL_LPMANCHORPRODUCTION}" ] && { echo "ERROR: Set ALIEN_JDL_LPMANCHORPRODUCTION or ANCHORPRODUCTION" ; exit 1 ; }
+[ -z "${ALIEN_JDL_LPMANCHORYEAR}" ] && { echo "ERROR: Set ALIEN_JDL_LPMANCHORYEAR or ANCHORYEAR" ; exit 1 ; }
+
+[ -z "${NTIMEFRAMES}" ] && { echo "ERROR: Set NTIMEFRAMES" ; exit 1 ; }
+[ -z "${NSIGEVENTS}" ] && { echo "ERROR: Set NSIGEVENTS" ; exit 1 ; }
+[ -z "${SPLITID}" ] && { echo "ERROR: Set SPLITID" ; exit 1 ; }
+[ -z "${CYCLE}" ] && { echo "ERROR: Set CYCLE" ; exit 1 ; }
+[ -z "${PRODSPLIT}" ] && { echo "ERROR: Set PRODSPLIT" ; exit 1 ; }
+
+# also for this keep a real default
+NWORKERS=${NWORKERS:-8}
+
 
 # default async_pass.sh script
 DPGRECO=$O2DPG_ROOT/DATA/production/configurations/asyncReco/async_pass.sh
@@ -106,26 +134,18 @@ fi
 
 # -- CREATE THE MC JOB DESCRIPTION ANCHORED TO RUN --
 
-NWORKERS=${NWORKERS:-8}
 MODULES="--skipModules ZDC"
-SIMENGINE=${SIMENGINE:-TGeant4}
-SIMENGINE=${ALIEN_JDL_SIMENGINE:-${SIMENGINE}}
-NTIMEFRAMES=${NTIMEFRAMES:-50}
-NSIGEVENTS=${NSIGEVENTS:-22}
-
-SPLITID=${SPLITID:-0}
-PRODSPLIT=${PRODSPLIT:-100}
-CYCLE=${CYCLE:-0}
+# introduce variable to make usage clear
 SEED=${ALIEN_PROC_ID}
 # Since this is used, set it explicitly
 ALICEO2_CCDB_LOCALCACHE=${ALICEO2_CCDB_LOCALCACHE:-$(pwd)/ccdb}
 
 # these arguments will be digested by o2dpg_sim_workflow_anchored.py
-baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${RUNNUMBER}"
+baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${ALIEN_JDL_LPMRUNNUMBER}"
 
 # these arguments will be passed as well but only evetually be digested by o2dpg_sim_workflow.py which is called from o2dpg_sim_workflow_anchored.py
 remainingargs="-gen pythia8 -proc heavy_ion -seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
-remainingargs="${remainingargs} -e ${SIMENGINE} -j ${NWORKERS}"
+remainingargs="${remainingargs} -e ${ALIEN_JDL_SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
 remainingargs="${remainingargs} --anchor-config config-json.json"
 
@@ -133,13 +153,13 @@ echo "baseargs: ${baseargs}"
 echo "remainingargs: ${remainingargs}"
 
 # query CCDB has changed, w/o "_"
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs} &> timestampsampling_${RUNNUMBER}.log
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs} &> timestampsampling_${ALIEN_JDL_LPMRUNNUMBER}.log
 if [ "$?" != "0" ] ; then
     echo "Problem during anchor timestamp sampling and workflow creation. Exiting."
     exit 1
 fi
 
-TIMESTAMP=`grep "Determined timestamp to be" timestampsampling_${RUNNUMBER}.log | awk '//{print $6}'`
+TIMESTAMP=`grep "Determined timestamp to be" timestampsampling_${ALIEN_JDL_LPMRUNNUMBER}.log | awk '//{print $6}'`
 echo "TIMESTAMP IS ${TIMESTAMP}"
 
 # -- PREFETCH CCDB OBJECTS TO DISC      --
