@@ -566,8 +566,8 @@ if [[ $ALIEN_JDL_EXTRACTTIMESERIES == 1 ]]; then
   if [[ ! -z "$ALIEN_JDL_ENABLEUNBINNEDTIMESERIES" ]]; then
     export ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow --enable-unbinned-root-output --sample-unbinned-tsallis --threads 1"
   fi
-  if [[ $ON_SKIMMED_DATA == 1]] || [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]] ; then
-    if [[ $ON_SKIMMED_DATA == 1]] ; then
+  if [[ $ON_SKIMMED_DATA == 1 ]] || [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]] ; then
+    if [[ $ON_SKIMMED_DATA == 1 ]] ; then
       SAMPLINGFACTORTIMESERIES=0.1f
     fi
     if [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]]; then # this takes priority
