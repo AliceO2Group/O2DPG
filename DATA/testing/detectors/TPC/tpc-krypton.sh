@@ -17,7 +17,7 @@ PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
 CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
 
 
-NLANES=1
+NLANES=36
 SESSION="default"
 
 ARGS_FILES="keyval.output_dir=/dev/null"
@@ -31,6 +31,12 @@ WRITER_TYPE="--writer-type EPN --meta-output-dir $EPN2EOS_METAFILES_DIR --output
 if [[ ! -z ${TPC_KRYPTON_NO_WRITEOUT:-} ]]; then
 	WRITER_TYPE="--writer-type none"
 fi
+
+
+if [[ ! -z ${TPC_KRYPTON_LANES:-} ]]; then
+    NLANES=${TPC_KRYPTON_LANES}
+fi
+
 
 # TODO use add_W function from gen_topo_helper_functions.sh to assemble workflow
 # as done for example in https://github.com/AliceO2Group/O2DPG/blob/master/DATA/production/calib/its-threshold-processing.sh
