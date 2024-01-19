@@ -19,6 +19,8 @@ print_help()
 {
   echo "Usage: ./anchorMC.sh"
   echo
+  echo "This needs O2 and O2DPG loaded from alienv."
+  echo
   echo "Make sure the following env variables are set:"
   echo "ALIEN_JDL_LPMANCHORPASSNAME or ANCHORPASSNAME,"
   echo "ALIEN_JDL_MCANCHOR or MCANCHOR,"
@@ -51,10 +53,6 @@ if [ "${SCRIPT_NAME}" != "$(basename ${BASH_SOURCE[0]})" ] ; then
     return 1
 fi
 
-# make sure O2DPG + O2 is loaded
-[ ! "${O2DPG_ROOT}" ] && echo "Error: This needs O2DPG loaded" && exit 1
-[ ! "${O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
-
 while [ "$1" != "" ] ; do
     case $1 in
         --help|-h ) shift
@@ -66,6 +64,10 @@ while [ "$1" != "" ] ; do
             ;;
     esac
 done
+
+# make sure O2DPG + O2 is loaded
+[ ! "${O2DPG_ROOT}" ] && echo "Error: This needs O2DPG loaded" && exit 1
+[ ! "${O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
 
 #################################################################
 # Set all required variables to identify an anchored production #
@@ -216,7 +218,7 @@ echo "TIMESTAMP IS ${TIMESTAMP}"
 
 CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /FV0/Calibration/ChannelTimeOffset"
 
-${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS} -d ${ALICEO2_CCDB_LOCALCACHE --timestamp ${TIMESTAMP}
+${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS} -d ${ALICEO2_CCDB_LOCALCACHE} --timestamp ${TIMESTAMP}
 if [ ! "$?" == "0" ]; then
   echo "Problem during CCDB prefetching of ${CCDBOBJECTS}. Exiting."
   exit 1
