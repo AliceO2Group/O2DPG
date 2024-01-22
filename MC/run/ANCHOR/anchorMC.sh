@@ -44,6 +44,7 @@ print_help()
   echo "NWORKERS,"
   echo "ALIEN_JDL_CPULIMIT or CPULIMIT,"
   echo "ALIEN_JDL_SIMENGINE or SIMENGINE."
+  echo "DISABLE_QC (set this to disable QC, e.g. DISABLE_QC=1)"
 }
 
 # Prevent the script from being soured to omit unexpected surprises when exit is used
@@ -246,7 +247,9 @@ echo "Ready to start main workflow"
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
 MCRC=$?  # <--- we'll report back this code
 
-if [[ "${MCRC}" = "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
+[[ ! -z "${DISABLE_QC}" ]] && echo "INFO: QC is disabled, skip it."
+
+if [[ -z "${DISABLE_QC}" && "${MCRC}" = "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
   # do QC tasks
   echo "Doing QC"
   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} -k
