@@ -293,86 +293,10 @@
     "rapidity": "0.5",
     "v0cospa": "0.995"
   },
-  "tof-signal": "",
-  "tpc-pid-qa": {
-    "etaBins": {
-      "values": [
-        50,
-        -1,
-        1
-      ]
-    },
-    "dEdxBins": {
-      "values": [
-        3000,
-        0,
-        1000
-      ]
-    },
-    "applyRapidityCut": "0",
-    "processFullWithTOFDeuteron": "0",
-    "phiBins": {
-      "values": [
-        50,
-        0,
-        6.283185307179586
-      ]
-    },
-    "processProton": "0",
-    "processHelium3": "0",
-    "processFullElectron": "1",
-    "processKaon": "0",
-    "processAlpha": "0",
-    "processFullWithTOFPion": "0",
-    "processFullHelium3": "1",
-    "minP": "0.01",
-    "enableDeDxPlot": "1",
-    "processFullWithTOFElectron": "0",
-    "logAxis": "1",
-    "processFullWithTOFAlpha": "0",
-    "processFullKaon": "1",
-    "processMuon": "0",
-    "processFullDeuteron": "1",
-    "processFullWithTOFMuon": "0",
-    "processFullWithTOFProton": "0",
-    "maxP": "5",
-    "processFullAlpha": "0",
-    "processElectron": "0",
-    "processDeuteron": "0",
-    "trackLengthBins": {
-      "values": [
-        50,
-        0,
-        1000
-      ]
-    },
-    "processFullProton": "1",
-    "processFullWithTOFKaon": "0",
-    "minTPCNcls": "0",
-    "processFullMuon": "1",
-    "processFullWithTOFTriton": "0",
-    "nSigmaBins": {
-      "values": [
-        400,
-        -10,
-        10
-      ]
-    },
-    "trackSelection": "1",
-    "processFullWithTOFHelium3": "0",
-    "processFullTriton": "1",
-    "processTriton": "0",
-    "processPion": "0",
-    "splitSignalPerCharge": "1",
-    "expSigmaBins": {
-      "values": [
-        100,
-        0,
-        200
-      ]
-    },
+  "tof-pid-qa": {
     "applyEvSel": "2",
-    "nBinsP": "400",
+    "applyRapidityCut": "1",
+    "requireGoodMatchTracks": "true",
     "deltaBins": {
       "values": [
         100,
@@ -380,9 +304,8 @@
         1000
       ]
     },
-    "processFullPion": "1"
-  },
-  "tof-pid-qa": {
+    "enableEvTimeSplitting": "0",
+    "enableVsMomentumHistograms": "0",
     "etaBins": {
       "values": [
         50,
@@ -390,54 +313,6 @@
         1
       ]
     },
-    "applyRapidityCut": "1",
-    "phiBins": {
-      "values": [
-        25,
-        0,
-        6.283185307179586
-      ]
-    },
-    "processProton": "0",
-    "processHelium3": "0",
-    "processFullElectron": "0",
-    "processKaon": "0",
-    "processAlpha": "0",
-    "processFullHelium3": "1",
-    "minP": "0.1",
-    "logAxis": "0",
-    "processFullKaon": "1",
-    "produceDeltaTEtaPhiMap": "0",
-    "processMuon": "0",
-    "processFullDeuteron": "1",
-    "maxP": "5",
-    "processFullAlpha": "0",
-    "ptDeltaTEtaPhiMap": "3",
-    "processElectron": "0",
-    "processDeuteron": "0",
-    "trackLengthBins": {
-      "values": [
-        50,
-        0,
-        1000
-      ]
-    },
-    "processFullProton": "1",
-    "enableEvTimeSplitting": "0",
-    "enableVsMomentumHistograms": "0",
-    "processFullMuon": "0",
-    "nSigmaBins": {
-      "values": [
-        400,
-        -10,
-        10
-      ]
-    },
-    "trackSelection": "1",
-    "processFullTriton": "1",
-    "processTriton": "0",
-    "processPion": "0",
-    "splitSignalPerCharge": "1",
     "expSigmaBins": {
       "values": [
         200,
@@ -445,16 +320,63 @@
         200
       ]
     },
-    "applyEvSel": "2",
+    "logAxis": "0",
+    "maxP": "5",
+    "minP": "0.1",
     "nBinsP": "400",
-    "deltaBins": {
+    "nSigmaBins": {
       "values": [
-        100,
-        -1000,
+        400,
+        -10,
+        10
+      ]
+    },
+    "phiBins": {
+      "values": [
+        25,
+        0,
+        6.283185307179586
+      ]
+    },
+    "processAlpha": "0",
+    "processDeuteron": "0",
+    "processElectron": "0",
+    "processFullAlpha": "0",
+    "processFullDeuteron": "1",
+    "processFullElectron": "0",
+    "processFullHelium3": "1",
+    "processFullKaon": "1",
+    "processFullMuon": "0",
+    "processFullPion": "1",
+    "processFullProton": "1",
+    "processFullTriton": "1",
+    "processHelium3": "0",
+    "processKaon": "0",
+    "processMuon": "0",
+    "processPion": "0",
+    "processProton": "0",
+    "processTriton": "0",
+    "produceDeltaTEtaPhiMap": "0",
+    "ptDeltaTEtaPhiMap": "3",
+    "splitSignalPerCharge": "1",
+    "trackLengthBins": {
+      "values": [
+        50,
+        0,
         1000
       ]
     },
-    "processFullPion": "1"
+    "trackSelection": "1"
+  },
+  "tof-signal": {
+    "ccdb-timestamp": "-1",
+    "ccdb-url": "http://alice-ccdb.cern.ch",
+    "distanceForGoodMatch": "3",
+    "distanceForGoodMatchLowMult": "999",
+    "multThreshold": "50",
+    "processRun2": "false",
+    "processRun3": "true",
+    "timeShiftCCDBPath": ""
   },
   "tpc-pid-full": {
     "autofetchNetworks": "true",
@@ -478,6 +400,94 @@
     "recoPass": "",
     "skipTPCOnly": "false",
     "useNetworkCorrection": "false"
+  },
+  "tpc-pid-qa": {
+    "applyEvSel": "2",
+    "applyRapidityCut": "0",
+    "dEdxBins": {
+      "values": [
+        3000,
+        0,
+        1000
+      ]
+    },
+    "deltaBins": {
+      "values": [
+        100,
+        -1000,
+        1000
+      ]
+    },
+    "enableDeDxPlot": "1",
+    "etaBins": {
+      "values": [
+        50,
+        -1,
+        1
+      ]
+    },
+    "expSigmaBins": {
+      "values": [
+        100,
+        0,
+        200
+      ]
+    },
+    "logAxis": "1",
+    "maxP": "5",
+    "minP": "0.01",
+    "minTPCNcls": "0",
+    "nBinsP": "400",
+    "nSigmaBins": {
+      "values": [
+        400,
+        -10,
+        10
+      ]
+    },
+    "phiBins": {
+      "values": [
+        50,
+        0,
+        6.283185307179586
+      ]
+    },
+    "processAlpha": "0",
+    "processDeuteron": "0",
+    "processElectron": "0",
+    "processFullAlpha": "0",
+    "processFullDeuteron": "1",
+    "processFullElectron": "1",
+    "processFullHelium3": "1",
+    "processFullKaon": "1",
+    "processFullMuon": "1",
+    "processFullPion": "1",
+    "processFullProton": "1",
+    "processFullTriton": "1",
+    "processFullWithTOFAlpha": "0",
+    "processFullWithTOFDeuteron": "0",
+    "processFullWithTOFElectron": "0",
+    "processFullWithTOFHelium3": "0",
+    "processFullWithTOFKaon": "0",
+    "processFullWithTOFMuon": "0",
+    "processFullWithTOFPion": "0",
+    "processFullWithTOFProton": "0",
+    "processFullWithTOFTriton": "0",
+    "processHelium3": "0",
+    "processKaon": "0",
+    "processMuon": "0",
+    "processPion": "0",
+    "processProton": "0",
+    "processTriton": "0",
+    "splitSignalPerCharge": "1",
+    "trackLengthBins": {
+      "values": [
+        50,
+        0,
+        1000
+      ]
+    },
+    "trackSelection": "1"
   },
   "track-extension": {
     "processRun2": "false",

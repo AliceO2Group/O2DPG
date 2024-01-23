@@ -2,7 +2,7 @@
 
 # Script to format the json files
 
-for i in $(ls *.json); do
+for i in $(find . | grep "\.json"); do
     case "$i" in
     *analyses_config.json*)
         continue
