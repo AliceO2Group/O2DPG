@@ -225,19 +225,6 @@ if [ ! "$?" == "0" ]; then
   exit 1
 fi
 
-# # -- Create aligned geometry using ITS and MFT ideal alignments to avoid overlaps in geant
-# CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align MFT/Calib/Align"
-# TIMESTAMP_IDEAL_MC=1
-# ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d ${ALICEO2_CCDB_LOCALCACHE} --timestamp ${TIMESTAMP_IDEAL_MC}
-# if [ ! "$?" == "0" ]; then
-#   echo "Problem during CCDB prefetching of ${CCDBOBJECTS_IDEAL_MC}. Exiting."
-#   exit 1
-# fi
-
-# echo "run with echo in pipe" | ${O2_ROOT}/bin/o2-create-aligned-geometry-workflow --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" --condition-remap=file://${ALICEO2_CCDB_LOCALCACHE}=ITS/Calib/Align,MFT/Calib/Align -b
-# mkdir -p $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned
-# ln -s -f $PWD/o2sim_geometry-aligned.root $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned/snapshot.root
-
 # -- RUN THE MC WORKLOAD TO PRODUCE AOD --
 
 export FAIRMQ_IPC_PREFIX=./
