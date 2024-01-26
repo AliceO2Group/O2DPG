@@ -68,6 +68,25 @@
           "cutMaxpTPCMIPs": "0.55"
        }
       },
+      "TPCTrackClusters": {
+        "active": "true",
+        "taskName": "TrackClusters",
+        "className": "o2::quality_control_modules::tpc::TrackClusters",
+        "moduleName": "QcTPC",
+        "detectorName": "TPC",
+        "cycleDurationSeconds": "300",
+        "dataSource": {
+          "type": "direct",
+          "query": "inputTracks:TPC/TRACKS/0;inputClusters:TPC/CLUSTERNATIVE;inputClusRefs:TPC/CLUSREFS/0"
+        },
+        "taskParameters": {
+          "cutAbsEta": "1.",
+          "cutMinNCluster": "60",
+          "cutMindEdxTot": "20.",
+          "seed": "0",
+          "samplingFraction": "0.1"
+        }
+      },
       "TPCTracks": {
         "active": "true",
         "taskName": "Tracks",
