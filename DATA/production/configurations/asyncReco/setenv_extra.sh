@@ -12,6 +12,11 @@ if [[ $ALIEN_JDL_USEGPUS != 1 ]]; then
   export DPL_DEFAULT_PIPELINE_LENGTH=16
 fi
 
+# check if this is a production on skimmed data
+if grep -q /skimmed/ wn.xml ; then
+  export ON_SKIMMED_DATA=1;
+fi
+
 # detector list
 if [[ -n $ALIEN_JDL_WORKFLOWDETECTORS ]]; then
   export WORKFLOW_DETECTORS=$ALIEN_JDL_WORKFLOWDETECTORS
@@ -561,7 +566,13 @@ if [[ $ALIEN_JDL_EXTRACTTIMESERIES == 1 ]]; then
   if [[ ! -z "$ALIEN_JDL_ENABLEUNBINNEDTIMESERIES" ]]; then
     export ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow --enable-unbinned-root-output --sample-unbinned-tsallis --threads 1"
   fi
-  if [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]]; then
+  if [[ $ON_SKIMMED_DATA == 1 ]] || [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]] ; then
+    if [[ $ON_SKIMMED_DATA == 1 ]] ; then
+      SAMPLINGFACTORTIMESERIES=0.1f
+    fi
+    if [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]]; then # this takes priority
+      export SAMPLINGFACTORTIMESERIES=${ALIEN_JDL_SAMPLINGFACTORTIMESERIES}
+    fi
     export ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow --sampling-factor ${ALIEN_JDL_SAMPLINGFACTORTIMESERIES}"
   fi
 fi

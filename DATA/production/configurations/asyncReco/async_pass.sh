@@ -12,7 +12,7 @@
 
 # function to run AOD merging
 run_AOD_merging() {
-  o2-aod-merger --input list_$1.list --output $1/AO2D_merged.root > $1/merging.log
+  o2-aod-merger --input list_$1.list --verbosity 1 --output $1/AO2D_merged.root > $1/merging.log
   exitcode=$?
   return $exitcode
 }
@@ -742,7 +742,8 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       if [[ $exitcode -ne 0 ]]; then
         echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode > validation_error.message
         echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode
-        echo "As a consequence, we will keep the AO2Ds with unmerged DFs for ${aods[$i]}"
+        echo "This means that the merging of DFs for ${aods[$i]} FAILED, we make the whole processing FAIL"
+        exit $exitcode
         mergedok[$((10#${aods[$i]}))]=0
       else
         echo "Merging of DFs inside the AO2D in ${aods[$i]} worked correctly"
@@ -758,7 +759,8 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
       echo "Inspecting $AOD_DIR:"
       if [[ ${mergedok[$((10#$AOD_DIR))]} == 0 ]]; then
-        echo "Merging for $AOD_DIR DID NOT work, we will do nothing for this file"
+        echo "Merging for $AOD_DIR DID NOT work, we will do nothing for this file - BUT IT SHOULD HAVE NOT HAPPENED, PLEASE CHECK"
+        exit 8 
         continue
       else
         echo "Merging for $AOD_DIR DID work, let's continue"

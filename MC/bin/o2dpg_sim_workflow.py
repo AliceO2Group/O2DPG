@@ -55,7 +55,7 @@ parser.add_argument('--anchor-config',help="JSON file to contextualise workflow 
 parser.add_argument('--dump-config',help="Dump JSON file with all settings used in workflow", default='user_config.json')
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
-parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...', default='')
+parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...', default='none')
 parser.add_argument('-trigger',help='event selection: particle, external', default='')
 parser.add_argument('-ini',help='generator init parameters file (full paths required), for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
@@ -409,7 +409,7 @@ if doembedding:
         # Background PYTHIA configuration
         BKG_CONFIG_task=createTask(name='genbkgconf')
         BKG_CONFIG_task['cmd'] = 'echo "placeholder / dummy task"'
-        if  GENBKG == 'pythia8' and PROCESSBKG != "":
+        if  GENBKG == 'pythia8':
             print('Background generator seed: ', SIMSEED)
             BKG_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
                                    --output=pythia8bkg.cfg                                     \
@@ -626,7 +626,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # produce the signal configuration
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)
    SGN_CONFIG_task['cmd'] = 'echo "placeholder / dummy task"'
-   if GENERATOR == 'pythia8' and PROCESS!='':
+   if GENERATOR == 'pythia8':
       SGN_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
                                 --output=pythia8.cfg                                     \
                                 --seed='+str(TFSEED)+'                                   \
@@ -980,7 +980,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
    ITSTPCMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\" --use-ft0' \
-                          + putConfigValuesNew(['MFTClustererParam', 'ITSCATrackerParam', 'tpcitsMatch', 'TPCGasParam', 'TPCCorrMap', 'ITSClustererParam, GPU_rec_tpc, trackTuneParams'], {"NameConf.mDirMatLUT" : ".."}) \
+                          + putConfigValuesNew(['MFTClustererParam', 'ITSCATrackerParam', 'tpcitsMatch', 'TPCGasParam', 'TPCCorrMap', 'ITSClustererParam', 'GPU_rec_tpc', 'trackTuneParams', 'ft0tag'], {"NameConf.mDirMatLUT" : ".."}) \
                           + tpc_corr_scaling_options
    workflow['stages'].append(ITSTPCMATCHtask)
 
@@ -995,6 +995,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                                                    'ITSCATrackerParam',
                                                    'trackTuneParams',
                                                    'GPU_rec_tpc',
+                                                   'ft0tag',
                                                    'TPCGasParam',
                                                    'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."})                                    \
                              + " --track-sources " + anchorConfig.get("o2-trd-global-tracking-options",{}).get("track-sources","all")  \
@@ -1165,7 +1166,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
    PVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-primary-vertexing-workflow ' \
-                         + getDPL_global_options() + putConfigValuesNew(['ITSAlpideParam','MFTAlpideParam', 'pvertexer', 'TPCGasParam', 'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."})
+                         + getDPL_global_options() + putConfigValuesNew(['ITSAlpideParam','MFTAlpideParam', 'pvertexer', 'TPCGasParam', 'TPCCorrMap', 'ft0tag'], {"NameConf.mDirMatLUT" : ".."})
    PVFINDERtask['cmd'] += ' --vertexing-sources ' + pvfinder_sources + ' --vertex-track-matching-sources ' + pvfinder_matching_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
    PVFINDERtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    workflow['stages'].append(PVFINDERtask)

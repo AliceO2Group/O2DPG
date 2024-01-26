@@ -24,11 +24,11 @@ ALIEN_KEYFILE=$(ls -t /tmp/tokenkey_*.pem 2> /dev/null | head -n 1)
 [ "${ALIEN_CERTFILE}" == "" ] && echo "No certificate file found; Initialize a token with alien-init-token or similar" && exit 1
 [ "${ALIEN_KEYFILE}" == "" ] && echo "No certificate file found; Initialize a token with alien-init-token or similar" && exit 1
 
-JALIEN_TOKEN_CERT=$(awk '! /^-/{print $0}' ${ALIEN_CERTFILE} | tr -d '\n')
-JALIEN_TOKEN_KEY=$(awk '! /^-/{print $0}' ${ALIEN_KEYFILE} | tr -d '\n')
+cp ${ALIEN_CERTFILE} ${WORK_DIR}/usercert.pem
+cp ${ALIEN_KEYFILE} ${WORK_DIR}/userkey.pem
 
-echo "JALIEN_TOKEN_CERT=${JALIEN_TOKEN_CERT}" > ${WORK_DIR}/envfile
-echo "JALIEN_TOKEN_KEY=${JALIEN_TOKEN_KEY}" >> ${WORK_DIR}/envfile
+echo "JALIEN_TOKEN_CERT=/workdir/usercert.pem" > ${WORK_DIR}/envfile
+echo "JALIEN_TOKEN_KEY=/workdir/userkey.pem" >> ${WORK_DIR}/envfile
 
 # launch job = script inside the container in the workdir
 /cvmfs/alice.cern.ch/containers/bin/apptainer/current/bin/apptainer exec -C -B /cvmfs:/cvmfs,${WORK_DIR}:/workdir  \
