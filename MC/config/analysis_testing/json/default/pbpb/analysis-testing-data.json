@@ -54,8 +54,10 @@
     "processMFT": "true"
   },
   "bc-selection-task": {
+    "ITSROFrameBorderMargin": "30",
     "processRun2": "false",
-    "processRun3": "true"
+    "processRun3": "true",
+    "triggerBcShift": "999"
   },
   "cell-monitor": {
     "maxCellTimeMain": "100",
@@ -128,12 +130,14 @@
     "processRun3": "true"
   },
   "event-selection-task": {
+    "customDeltaBC": "-1",
     "isMC": "false",
     "muonSelection": "0",
     "processRun2": "false",
     "processRun3": "true",
-    "syst": "pp"
+    "syst": "PbPb"
   },
+  "ft0-corrected-table": "",
   "lambdakzero-builder": {
     "ccdb-url": "http://alice-ccdb.cern.ch",
     "createV0CovMats": "-1",
@@ -165,6 +169,59 @@
     "v0radius": "1"
   },
   "multiplicity-table": {
+    "ccdbpath": "Centrality/Calibration",
+    "ccdburl": "http://alice-ccdb.cern.ch",
+    "doVertexZeq": "1",
+    "enabledTables": {
+      "labels_cols": [
+        "Enable"
+      ],
+      "labels_rows": [
+        "FV0Mults",
+        "FT0Mults",
+        "FDDMults",
+        "ZDCMults",
+        "TrackletMults",
+        "TPCMults",
+        "PVMults",
+        "MultsExtra",
+        "MultZeqs",
+        "MultsExtraMC"
+      ],
+      "values": [
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ]
+      ]
+    },
+    "fractionOfEvents": "2",
     "processRun2": "false",
     "processRun3": "true"
   },
@@ -293,10 +350,125 @@
     "rapidity": "0.5",
     "v0cospa": "0.995"
   },
+  "timestamp-task": {},
+  "tof-event-time": {
+    "ccdb-timestamp": "-1",
+    "ccdb-url": "",
+    "enableTimeDependentResponse": "false",
+    "fatalOnPassNotAvailable": "true",
+    "inheritFromBaseTask": "true",
+    "loadResponseFromCCDB": "false",
+    "maxEvTimeTOF": "100000",
+    "maxMomentum": "2",
+    "maxNtracksInSet": "10",
+    "minMomentum": "0.5",
+    "paramFileName": "",
+    "parametrizationPath": "TOF/Calib/Params",
+    "passName": "",
+    "processFT0": "true",
+    "processNoFT0": "false",
+    "processOnlyFT0": "false",
+    "processRun2": "false",
+    "sel8TOFEvTime": "false"
+  },
+  "tof-pid": {
+    "ccdb-timestamp": "-1",
+    "ccdb-url": "",
+    "enableParticle": {
+      "labels_cols": [
+        "Enable"
+      ],
+      "labels_rows": [
+        "El",
+        "Mu",
+        "Pi",
+        "Ka",
+        "Pr",
+        "De",
+        "Tr",
+        "He",
+        "Al"
+      ],
+      "values": [
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-1"
+        ]
+      ]
+    },
+    "enableTimeDependentResponse": "false",
+    "fatalOnPassNotAvailable": "true",
+    "inheritFromBaseTask": "true",
+    "loadResponseFromCCDB": "false",
+    "paramFileName": "",
+    "parametrizationPath": "",
+    "passName": "",
+    "processWSlice": "true",
+    "processWoSlice": "false",
+    "timeShiftCCDBPath": ""
+  },
+  "tof-pid-beta": {},
+  "tof-pid-beta-qa": {
+    "applyEvSel": "2",
+    "lastTrdLayerForTrdMatch": "5",
+    "logAxis": "0",
+    "maxP": "5",
+    "minP": "0.100000001",
+    "nBinsP": "400",
+    "requireGoodMatchTracks": "true",
+    "splitSignalPerCharge": "true",
+    "splitSignalPerEvTime": "true",
+    "splitTrdTracks": "false",
+    "tofBetaBins": {
+      "values": [
+        "4000",
+        "0",
+        "2"
+      ]
+    },
+    "tofMassBins": {
+      "values": [
+        "1000",
+        "0",
+        "3"
+      ]
+    },
+    "trackLengthBins": {
+      "values": [
+        "100",
+        "0",
+        "1000"
+      ]
+    },
+    "trackSelection": "1"
+  },
+  "tof-pid-full": {},
   "tof-pid-qa": {
     "applyEvSel": "2",
-    "applyRapidityCut": "1",
-    "requireGoodMatchTracks": "true",
+    "applyRapidityCut": "true",
     "deltaBins": {
       "values": [
         100,
@@ -304,8 +476,8 @@
         1000
       ]
     },
-    "enableEvTimeSplitting": "0",
-    "enableVsMomentumHistograms": "0",
+    "enableEvTimeSplitting": "false",
+    "enableVsMomentumHistograms": "false",
     "etaBins": {
       "values": [
         50,
@@ -338,32 +510,33 @@
         6.283185307179586
       ]
     },
-    "processAlpha": "0",
-    "processDeuteron": "0",
-    "processElectron": "0",
-    "processFullAlpha": "0",
-    "processFullDeuteron": "1",
-    "processFullElectron": "0",
-    "processFullHelium3": "1",
-    "processFullKaon": "1",
-    "processFullMuon": "0",
-    "processFullPion": "1",
-    "processFullProton": "1",
-    "processFullTriton": "1",
-    "processHelium3": "0",
-    "processKaon": "0",
-    "processMuon": "0",
-    "processPion": "0",
-    "processProton": "0",
-    "processTriton": "0",
-    "produceDeltaTEtaPhiMap": "0",
+    "processAlpha": "false",
+    "processDeuteron": "false",
+    "processElectron": "false",
+    "processFullAlpha": "false",
+    "processFullDeuteron": "true",
+    "processFullElectron": "false",
+    "processFullHelium3": "true",
+    "processFullKaon": "true",
+    "processFullMuon": "false",
+    "processFullPion": "true",
+    "processFullProton": "true",
+    "processFullTriton": "false",
+    "processHelium3": "false",
+    "processKaon": "false",
+    "processMuon": "false",
+    "processPion": "false",
+    "processProton": "false",
+    "processTriton": "false",
+    "produceDeltaTEtaPhiMap": "false",
     "ptDeltaTEtaPhiMap": "3",
-    "splitSignalPerCharge": "1",
+    "requireGoodMatchTracks": "true",
+    "splitSignalPerCharge": "true",
     "trackLengthBins": {
       "values": [
-        50,
-        0,
-        1000
+        "50",
+        "0",
+        "1000"
       ]
     },
     "trackSelection": "1"
