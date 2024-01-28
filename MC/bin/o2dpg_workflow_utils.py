@@ -140,7 +140,7 @@ def dump_workflow(workflow, filename, meta=None):
     to_dump = deepcopy(workflow)
 
     for s in to_dump:
-        if s["cmd"] and taskwrapper_string not in s["cmd"]:
+        if s["cmd"] and s["name"] != '__global_init_task__' and taskwrapper_string not in s["cmd"]:
             # insert taskwrapper stuff if not there already, only do it if cmd string is not empty
             s['cmd'] = '. ' + taskwrapper_string + ' ' + s['name']+'.log \'' + s['cmd'] + '\''
         # remove unnecessary whitespaces for better readibility

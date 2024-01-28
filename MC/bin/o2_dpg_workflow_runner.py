@@ -864,11 +864,12 @@ class WorkflowExecutor:
       self.is_productionmode = args.production_mode == True # os.getenv("ALIEN_PROC_ID") != None
       self.workflowfile = workflowfile
       self.workflowspec = load_json(workflowfile)
-      self.globalenv = self.extract_global_environment(self.workflowspec) # initialize global environment settings
-      for e in self.globalenv:
+      self.globalinit = self.extract_global_environment(self.workflowspec) # initialize global environment settings
+      for e in self.globalinit['env']:
         if os.environ.get(e, None) == None:
-           actionlogger.info("Applying global environment from init section " + str(e) + " : " + str(self.globalenv[e]))
-           os.environ[e] = str(self.globalenv[e])
+           value = self.globalinit['env'][e]
+           actionlogger.info("Applying global environment from init section " + str(e) + " : " + str(value))
+           os.environ[e] = str(value)
 
       # only keep those tasks that are necessary to be executed based on user's filters
       self.workflowspec = filter_workflow(self.workflowspec, args.target_tasks, args.target_labels)
@@ -968,13 +969,33 @@ class WorkflowExecutor:
         """
         init_index = 0 # this has to be the first task in the workflow
         globalenv = {}
+        initcmd = None
         if workflowspec['stages'][init_index]['name'] == '__global_init_task__':
           env = workflowspec['stages'][init_index].get('env', None)
           if env != None:
             globalenv = { e : env[e] for e in env }
+          cmd = workflowspec['stages'][init_index].get('cmd', None)
+          if cmd != 'NO-COMMAND':
+            initcmd = cmd
+
           del workflowspec['stages'][init_index]
 
-        return globalenv
+        return {"env" : globalenv, "cmd" : initcmd }
+
+    def execute_globalinit_cmd(self, cmd):
+        actionlogger.info("Executing global setup cmd " + str(cmd))
+        # perform the global init command (think of cleanup/setup things to be done in any case)
+        p = subprocess.Popen(['/bin/bash','-c', cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+
+        # Check if the command was successful (return code 0)
+        if p.returncode == 0:
+          actionlogger.info(stdout.decode())
+        else:
+          # this should be an error
+          actionlogger.error("Error executing global init function")
+          return False
+        return True
 
     def get_global_task_name(self, name):
         """
@@ -1610,6 +1631,12 @@ Use the `--produce-script myscript.sh` option for this.
         if args.produce_script != None:
           self.produce_script(args.produce_script)
           exit (0)
+
+        # execute the user-given global init cmd for this workflow
+        globalinitcmd = self.globalinit.get("cmd", None)
+        if globalinitcmd != None:
+           if not self.execute_globalinit_cmd(globalinitcmd):
+              exit (1)
 
         if args.rerun_from:
           reruntaskfound=False

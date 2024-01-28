@@ -342,7 +342,9 @@ if args.condition_not_after:
        globalenv['ALICEO2_CCDB_LOCALCACHE'] = environ.get('ALICEO2_CCDB_LOCALCACHE')
    globalenv['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = '${ALICEO2_CCDB_LOCALCACHE:+"ON"}'
 
-workflow['stages'].append(createGlobalInitTask(globalenv))
+globalinittask = createGlobalInitTask(globalenv)
+globalinittask['cmd'] = 'o2-ccdb-cleansemaphores -p ${ALICEO2_CCDB_LOCALCACHE}'
+workflow['stages'].append(globalinittask)
 ####
 
 def getDPL_global_options(bigshm=False, ccdbbackend=True):
