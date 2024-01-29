@@ -673,6 +673,8 @@
     "lutPath": "GLO/Param/MatLUT",
     "mVtxPath": "GLO/Calib/MeanVertex",
     "processCovariance": "true",
+    "processStandardWithPID": "false",
+    "processCovarianceWithPID": "false"
     "processStandard": "false"
   },
   "track-selection": {
