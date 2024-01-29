@@ -212,19 +212,6 @@ fi
 TIMESTAMP=`grep "Determined timestamp to be" timestampsampling_${ALIEN_JDL_LPMRUNNUMBER}.log | awk '//{print $6}'`
 echo "TIMESTAMP IS ${TIMESTAMP}"
 
-# -- PREFETCH CCDB OBJECTS TO DISC      --
-# (make sure the right objects at the right timestamp are fetched
-#  until https://alice.its.cern.ch/jira/browse/O2-2852 is fixed)
-# NOTE: In fact, looking at the ticket, it should be fixed now. However, not changing at the moment as further tests would be needed to confirm here.
-
-CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /FV0/Calibration/ChannelTimeOffset"
-
-${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS} -d ${ALICEO2_CCDB_LOCALCACHE} --timestamp ${TIMESTAMP}
-if [ ! "$?" == "0" ]; then
-  echo "Problem during CCDB prefetching of ${CCDBOBJECTS}. Exiting."
-  exit 1
-fi
-
 # -- RUN THE MC WORKLOAD TO PRODUCE AOD --
 
 export FAIRMQ_IPC_PREFIX=./
