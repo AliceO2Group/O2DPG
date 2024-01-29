@@ -12,6 +12,18 @@ if [[ $ALIEN_JDL_USEGPUS != 1 ]]; then
   export DPL_DEFAULT_PIPELINE_LENGTH=16
 fi
 
+# check if this is a production on skimmed data
+if grep -q /skimmed/ wn.xml ; then
+  export ON_SKIMMED_DATA=1;
+fi
+
+if [[ $RUNNUMBER -lt 544772 ]]; then
+  # these runs were using external dictionaries
+  : ${RANS_OPT:="--ans-version compat"}
+  export RANS_OPT
+fi   
+echo "RSRUNNUMBER = $RUNNUMBER RANS_OPT = $RANS_OPT"
+
 # detector list
 if [[ -n $ALIEN_JDL_WORKFLOWDETECTORS ]]; then
   export WORKFLOW_DETECTORS=$ALIEN_JDL_WORKFLOWDETECTORS
@@ -381,7 +393,7 @@ export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysEr
 # ad-hoc options for ITS reco workflow
 EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;"
+  EXTRA_ITSRECO_CONFIG="ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;ITSCATrackerParam.nROFsPerIterations=12;ITSCATrackerParam.perPrimaryVertexProcessing=true"
 elif [[ $BEAMTYPE == "pp" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
 fi
@@ -447,7 +459,7 @@ export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";$ITSEXTRAERR;$ITSTPCMATC
 has_detector FT0 && export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="$ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow --use-ft0"
 
 # ad-hoc settings for TOF matching
-export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="$ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow --output-type matching-info,calib-info --enable-dia --use-fit"
+export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="$ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow --output-type matching-info,calib-info --enable-dia"
 export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$ITSEXTRAERR;$TRACKTUNETPC;$VDRIFTPARAMOPTION;"
 
 if [[ $ALIEN_JDL_LPMPASSNAME == "cpass0" ]]; then
@@ -561,7 +573,13 @@ if [[ $ALIEN_JDL_EXTRACTTIMESERIES == 1 ]]; then
   if [[ ! -z "$ALIEN_JDL_ENABLEUNBINNEDTIMESERIES" ]]; then
     export ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow --enable-unbinned-root-output --sample-unbinned-tsallis --threads 1"
   fi
-  if [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]]; then
+  if [[ $ON_SKIMMED_DATA == 1 ]] || [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]] ; then
+    if [[ $ON_SKIMMED_DATA == 1 ]] ; then
+      SAMPLINGFACTORTIMESERIES=0.1f
+    fi
+    if [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]]; then # this takes priority
+      export SAMPLINGFACTORTIMESERIES=${ALIEN_JDL_SAMPLINGFACTORTIMESERIES}
+    fi
     export ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow --sampling-factor ${ALIEN_JDL_SAMPLINGFACTORTIMESERIES}"
   fi
 fi

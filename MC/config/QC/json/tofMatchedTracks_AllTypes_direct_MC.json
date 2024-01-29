@@ -42,7 +42,7 @@
           "GID": "ITS-TPC,TPC,ITS-TPC-TOF,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TRD-TOF,TPC-TRD-TOF",
           "verbose": "false",
           "isMC": "true",
-          "minPtCut": "0.3f",
+          "minPtCut": "0.1f",
           "etaCut": "0.8f",
           "minNTPCClustersCut": "60",
           "minDCACut": "100.f",
