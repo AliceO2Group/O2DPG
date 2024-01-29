@@ -17,6 +17,13 @@ if grep -q /skimmed/ wn.xml ; then
   export ON_SKIMMED_DATA=1;
 fi
 
+if [[ $RUNNUMBER -lt 544772 ]]; then
+  # these runs were using external dictionaries
+  : ${RANS_OPT:="--ans-version compat"}
+  export RANS_OPT
+fi   
+echo "RSRUNNUMBER = $RUNNUMBER RANS_OPT = $RANS_OPT"
+
 # detector list
 if [[ -n $ALIEN_JDL_WORKFLOWDETECTORS ]]; then
   export WORKFLOW_DETECTORS=$ALIEN_JDL_WORKFLOWDETECTORS
