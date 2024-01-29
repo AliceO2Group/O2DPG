@@ -3,7 +3,7 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-            "host": "ccdb-test.cern.ch:8080"
+            "host": "ccdb-test.cern.ch:8080"
       },
       "Activity": {
       },
@@ -27,7 +27,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-              "query": "digits:MID/DATA;digits_rof:MID/DATAROF"
+              "query": "digits:MID/DATA;digits_rof:MID/DATAROF"
         }
       },
       "MIDClusters": {
@@ -39,7 +39,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-              "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS"
+              "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS"
         }
       },
       "MIDTracks": {
@@ -51,7 +51,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-              "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS"
+              "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS"
         }
       }
     },
