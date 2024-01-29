@@ -54,8 +54,10 @@
     "processMFT": "true"
   },
   "bc-selection-task": {
+    "ITSROFrameBorderMargin": "30",
     "processRun2": "false",
-    "processRun3": "true"
+    "processRun3": "true",
+    "triggerBcShift": "999"
   },
   "cell-monitor": {
     "maxCellTimeMain": "100",
@@ -128,6 +130,7 @@
     "processRun3": "true"
   },
   "event-selection-task": {
+    "customDeltaBC": "-1",
     "isMC": "false",
     "muonSelection": "0",
     "processRun2": "false",
@@ -489,6 +492,8 @@
     "lutPath": "GLO/Param/MatLUT",
     "mVtxPath": "GLO/Calib/MeanVertex",
     "processCovariance": "true",
+    "processStandardWithPID": "false",
+    "processCovarianceWithPID": "false",
     "processStandard": "false"
   },
   "track-selection": {

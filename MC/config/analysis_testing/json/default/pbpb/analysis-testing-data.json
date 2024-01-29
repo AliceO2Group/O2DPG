@@ -674,7 +674,7 @@
     "mVtxPath": "GLO/Calib/MeanVertex",
     "processCovariance": "true",
     "processStandardWithPID": "false",
-    "processCovarianceWithPID": "false"
+    "processCovarianceWithPID": "false",
     "processStandard": "false"
   },
   "track-selection": {
