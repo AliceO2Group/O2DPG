@@ -165,7 +165,7 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
         if (mGapBetweenInjection > 0) {
           if (mGapBetweenInjection == 1 && mEventCounter % 2 == 0) {
             doSignal = false;
-          } else if (mEventCounter % mGapBetweenInjection != 0) {
+          } else if (mEventCounter % mGapBetweenInjection + 1 != 0) {
             doSignal = false;
           }
         }
