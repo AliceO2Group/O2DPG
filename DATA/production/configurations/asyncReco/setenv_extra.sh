@@ -17,6 +17,13 @@ if grep -q /skimmed/ wn.xml ; then
   export ON_SKIMMED_DATA=1;
 fi
 
+if [[ $RUNNUMBER -lt 544772 ]]; then
+  # these runs were using external dictionaries
+  : ${RANS_OPT:="--ans-version compat"}
+  export RANS_OPT
+fi   
+echo "RSRUNNUMBER = $RUNNUMBER RANS_OPT = $RANS_OPT"
+
 # detector list
 if [[ -n $ALIEN_JDL_WORKFLOWDETECTORS ]]; then
   export WORKFLOW_DETECTORS=$ALIEN_JDL_WORKFLOWDETECTORS
@@ -452,7 +459,7 @@ export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";$ITSEXTRAERR;$ITSTPCMATC
 has_detector FT0 && export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="$ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow --use-ft0"
 
 # ad-hoc settings for TOF matching
-export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="$ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow --output-type matching-info,calib-info --enable-dia --use-fit"
+export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="$ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow --output-type matching-info,calib-info --enable-dia"
 export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$ITSEXTRAERR;$TRACKTUNETPC;$VDRIFTPARAMOPTION;"
 
 if [[ $ALIEN_JDL_LPMPASSNAME == "cpass0" ]]; then
