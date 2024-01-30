@@ -27,7 +27,7 @@ QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/an
 WRITER_TYPE="--writer-type EPN --meta-output-dir $EPN2EOS_METAFILES_DIR --output-dir $CALIB_DIR"
 
 
-if [[ ! -z ${TPC_KRYPTON_NO_WRITEOUT:-} ]]; then
+if [[ "${TPC_KRYPTON_NO_WRITEOUT:-}" == "1" ]]; then 
 	WRITER_TYPE="--writer-type none"
 fi
 
