@@ -97,6 +97,8 @@ def create_geant_config(args, externalConfigString):
     # creates generic transport simulation config key values
     # based on arguments args (run number, energy, ...) originally passed
     # to o2dpg_sim_workflow.py
+    #
+    # returns a dictionary of mainkey -> dictionary of subkey : values
     config = {}
     def add(cfg, flatconfig):
        for entry in flatconfig:
