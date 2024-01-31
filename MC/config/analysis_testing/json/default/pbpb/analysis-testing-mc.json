@@ -1378,5 +1378,8 @@
     "produceFBextendedTable": "-1",
     "ptMax": "1e+10",
     "ptMin": "0.1"
+  },
+  "ft0-qa": {
+    "isLowFlux": "false"
   }
 }
