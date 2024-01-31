@@ -21,7 +21,7 @@ import sys
 import importlib.util
 import argparse
 from os import environ, mkdir, getcwd
-from os.path import join, dirname, isdir
+from os.path import join, dirname, isdir, isabs
 import random
 import json
 import itertools
@@ -505,6 +505,9 @@ TPC_SPACECHARGE_DOWNLOADER_TASK['cmd'] = '[ "${O2DPG_ENABLE_TPC_DISTORTIONS}" ] 
 workflow['stages'].append(TPC_SPACECHARGE_DOWNLOADER_TASK)
 
 
+# query initial configKey args for signal transport; mainly used to setup generators
+simInitialConfigKeys = create_geant_config(args, args.confKey)
+
 # loop over timeframes
 for tf in range(1, NTIMEFRAMES + 1):
    TFSEED = SIMSEED + tf
@@ -627,19 +630,30 @@ for tf in range(1, NTIMEFRAMES + 1):
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)
    SGN_CONFIG_task['cmd'] = 'echo "placeholder / dummy task"'
    if GENERATOR == 'pythia8':
-      SGN_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
-                                --output=pythia8.cfg                                     \
-                                --seed='+str(TFSEED)+'                                   \
-                                --idA='+str(PDGA)+'                                      \
-                                --idB='+str(PDGB)+'                                      \
-                                --eCM='+str(ECMS)+'                                      \
-                                --eA='+str(EBEAMA)+'                                     \
-                                --eB='+str(EBEAMB)+'                                     \
-                                --process='+str(PROCESS)+'                               \
-                                --ptHatMin='+str(PTHATMIN)+'                             \
-                                --ptHatMax='+str(PTHATMAX)
-      if WEIGHTPOW   > 0:
-         SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
+      # see if config is given externally
+      externalPythia8Config = simInitialConfigKeys.get("GeneratorPythia8", {}).get("config", None)
+      if externalPythia8Config != None:
+         # check if this refers to a file with ABSOLUTE path
+         if not isabs(externalPythia8Config):
+            print ('Error: Argument to GeneratorPythia8.config must be absolute path')
+            exit (1)
+         # in this case, we copy the external config to the local dir (maybe not even necessary)
+         SGN_CONFIG_task['cmd'] = 'cp ' + externalPythia8Config + ' pythia8.cfg'
+      else:
+         SGN_CONFIG_task['cmd'] = '${O2DPG_ROOT}/MC/config/common/pythia8/utils/mkpy8cfg.py \
+                                  --output=pythia8.cfg                                      \
+                                  --seed='+str(TFSEED)+'                                    \
+                                  --idA='+str(PDGA)+'                                       \
+                                  --idB='+str(PDGB)+'                                       \
+                                  --eCM='+str(ECMS)+'                                       \
+                                  --eA='+str(EBEAMA)+'                                      \
+                                  --eB='+str(EBEAMB)+'                                      \
+                                  --process='+str(PROCESS)+'                                \
+                                  --ptHatMin='+str(PTHATMIN)+'                              \
+                                  --ptHatMax='+str(PTHATMAX)
+         if WEIGHTPOW   > 0:
+            SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
+
       # if we configure pythia8 here --> we also need to adjust the configuration
       # TODO: we need a proper config container/manager so as to combine these local configs with external configs etc.
       args.confKey = args.confKey + ";GeneratorPythia8.config=pythia8.cfg"
@@ -647,8 +661,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    # elif GENERATOR == 'extgen': what do we do if generator is not pythia8?
        # NOTE: Generator setup might be handled in a different file or different files (one per
        # possible generator)
-
    workflow['stages'].append(SGN_CONFIG_task)
+
+   # determine final conf key for signal simulation
+   CONFKEY = constructConfigKeyArg(create_geant_config(args, args.confKey))
 
    # -----------------
    # transport signals
@@ -657,8 +673,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    if (args.pregenCollContext == True):
       signalneeds.append(PreCollContextTask['name'])
 
-   # determine final configKey args for signal transport
-   CONFKEY = constructConfigKeyArg(create_geant_config(args, args.confKey))
 
    # add embedIntoFile only if embeddPattern does contain a '@'
    embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if (doembedding & ("@" in args.embeddPattern)) else ""
