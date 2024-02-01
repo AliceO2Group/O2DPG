@@ -110,6 +110,16 @@
           "cutMinNCluster": "60",
           "cutMindEdxTot": "20."
         },
+        "grpGeomRequest" : {
+          "geomRequest": "Aligned",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "true",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD":  "false"
+	      },
         "location": "local",
         "localMachines": [
           "localhost",
