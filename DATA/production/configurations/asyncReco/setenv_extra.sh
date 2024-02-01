@@ -315,6 +315,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   fi
 
   # now we set the options
+  [[ -n "$ALIEN_JDL_MSHAPE_CORRECTION" && $ALIEN_JDL_MSHAPE_CORRECTION == "0" ]] && ENABLE_MSHAPE=0 || ENABLE_MSHAPE=1
+  
   if [[ $INST_IR_FOR_TPC -gt 0 ]]; then # externally imposed IR for scaling
     echo "Applying externally provided IR for scaling, $INST_IR_FOR_TPC Hz"
     export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
@@ -324,6 +326,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   elif [[ $INST_IR_FOR_TPC -lt 0 ]]; then # do not apply any correction
     echo "Passed valued for scaling is smaller than zero, no scaling will be applied"
     echo "NOTA BENE: In the future, this value will signal to not apply any correction at all, which is not operational yet (but please check, as it depends on O2)"
+    ENABLE_MSHAPE=0
     export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
   elif [[ $INST_IR_FOR_TPC == "CTPCCDB" ]]; then # using what we have in the CCDB CTP counters, extracted at the beginning of the script
     echo "Using CTP CCDB which gave the mean IR of the run at the beginning of the script ($RUN_IR Hz)"
@@ -346,6 +349,10 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     return 1
   fi
 
+  if [[ $ENABLE_MSHAPE == "1" ]]; then
+    export TPC_CORR_SCALING+=" --enable-M-shape-correction "
+  fi
+  
   if [[ -n $ALIEN_JDL_MEANIRFORTPC && $ALIEN_JDL_MEANIRFORTPC > 0 ]]; then # externally imposed TPC map mean IR for scaling
     export TPC_CORR_SCALING+=";TPCCorrMap.lumiMean=$ALIEN_JDL_MEANIRFORTPC"
   fi
@@ -362,6 +369,9 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
 	echo "Neither ZDC nor FT0 are in the run, and this is from 2023 PbPb: we cannot scale TPC ditortion corrections, aborting..."
 	return 1
       fi
+    fi
+    if [[ $ENABLE_MSHAPE == "1" ]]; then
+      export TPC_CORR_SCALING+=" --enable-M-shape-correction "
     fi
   fi
 
