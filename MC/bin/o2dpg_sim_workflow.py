@@ -1381,8 +1381,22 @@ for tf in range(1, NTIMEFRAMES + 1):
    # Enable CTP readout replay for triggered detectors (EMCAL, HMPID, PHOS/CPV, TRD)
    # Needed untill triggers are supported in CTP simulation
    AODtask['cmd'] += ' --ctpreadout-create 1'
-
    workflow['stages'].append(AODtask)
+
+   # TPC - time-series objects
+   # initial implementation taken from comments in https://its.cern.ch/jira/browse/O2-4612
+   # TODO: this needs to be made configurable (as a function of which detectors are actually present)
+   tpctsneeds = [ TPCRECOtask['name'],
+                  ITSTPCMATCHtask['name'],
+                  TOFTPCMATCHERtask['name'],
+                  PVFINDERtask['name']
+                ]
+   TPCTStask = createTask(name='tpctimeseries_'+str(tf), needs=tpctsneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='2000', cpu='1')
+   TPCTStask['cmd'] = 'o2-global-track-cluster-reader --disable-mc --cluster-types "TOF" --track-types "ITS,TPC,ITS-TPC,ITS-TPC-TOF,ITS-TPC-TRD-TOF"'
+   TPCTStask['cmd'] += ' --primary-vertices '
+   TPCTStask['cmd'] += ' | o2-tpc-time-series-workflow --enable-unbinned-root-output --sample-unbinned-tsallis --sampling-factor 0.1 '
+   TPCTStask['cmd'] += putConfigValuesNew() + ' ' + getDPL_global_options(bigshm=True)
+   workflow['stages'].append(TPCTStask)
 
    # AOD merging / combination step (as individual stages) --> for the moment deactivated in favor or more stable global merging
    """
