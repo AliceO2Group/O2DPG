@@ -296,87 +296,110 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   CUT_MATCH_CHI2=160
   export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=2.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;;tpcitsMatch.crudeAbsDiffCut[0]=6;tpcitsMatch.crudeAbsDiffCut[1]=6;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=5;tpcitsMatch.crudeNSigma2Cut[0]=100;tpcitsMatch.crudeNSigma2Cut[1]=100;tpcitsMatch.crudeNSigma2Cut[2]=100;tpcitsMatch.crudeNSigma2Cut[3]=100;tpcitsMatch.crudeNSigma2Cut[4]=100;"
 
-  # enabling TPC calibration scaling
+  #-------------------------------------- TPC corrections -----------------------------------------------
+  # we need to provide to TPC
+  # 1) interaction rate info (lumi) used for scaling or errors and possible of the corrections : INST_IR_FOR_TPC
+  # 2) what to use for corrections scaling (lumi or IDC scalers or no scaling at all) : TPC_SCALING_SOURCE
   # the default is to use CTP, unless specified differently in the JDL...
   INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-CTP}
-  #...but for 2022 data, where we will rely on different settings depending on the period; note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
+  TPC_SCALING_SOURCE=${ALIEN_JDL_TPCSCALINGSOURCE-CTP}
+  # MEAN_IR_FOR_TPC allows (1) to alter the map mean IR if >0 or (2) disable  all corrections if <0
+  MEAN_IR_FOR_TPC=${ALIEN_JDL_MEANIRFORTPC-}
+
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2022" ]]; then
-    INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-CTPCCDB}
+    INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-CTPCCDB} # by default override inst.IR by the mean IR from CCDB and use it for scaling
   fi
   if [[ $PERIOD == "LHC22s" ]]; then
-    INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-0} # in this way, only TPC/Calib/CorrectionMaps is applied, and we know that for 22s it is the same as TPC/Calib/CorrectionMapsRef; note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
+    TPC_SCALING_SOURCE=${ALIEN_JDL_TPCSCALINGSOURCE-NO_SCALING}  # in this way, only TPC/Calib/CorrectionMaps is applied, and we know that for 22s it is the same as TPC/Calib/CorrectionMapsRef;
   elif [[ $PERIOD == @(LHC22c|LHC22d|LHC22e|JUN|LHC22f) ]]; then
     INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-1} # scaling with very small value for low IR
   fi
-  # in MC, we set it to a negative value to disable completely the corrections (not yet operational though, please check O2);
+  # in MC, we disable completely the corrections
   # note that if ALIEN_JDL_INSTIRFORTPC is set, it has precedence
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]] && [[ $O2DPG_ENABLE_TPC_DISTORTIONS != "ON" ]]; then
-    INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC--1}
+    MEAN_IR_FOR_TPC=${ALIEN_JDL_MEANIRFORTPC--1}
   fi
 
-  # now we set the options
+  DISABLE_CORRECTIONS=
   [[ -n "$ALIEN_JDL_MSHAPE_CORRECTION" && $ALIEN_JDL_MSHAPE_CORRECTION == "0" ]] && ENABLE_MSHAPE=0 || ENABLE_MSHAPE=1
   
-  if [[ $INST_IR_FOR_TPC -gt 0 ]]; then # externally imposed IR for scaling
-    echo "Applying externally provided IR for scaling, $INST_IR_FOR_TPC Hz"
+  if [[ -n $MEAN_IR_FOR_TPC ]] ; then  # firs check if corrections were not disabled via MEAN_IR_FOR_TPC
+    if [[ $MEAN_IR_FOR_TPC -gt 0 ]] ; then # positive value overrides map mean lumi
+      echo "Applying externally provided map mean IR for scaling, $MEAN_IR_FOR_TPC Hz"
+      export TPC_CORR_SCALING+=";TPCCorrMap.lumiMean=$MEAN_IR_FOR_TPC;" # take mean lumy at face value
+    elif [[ $MEAN_IR_FOR_TPC -lt 0 ]] ; then # negative mean lumi disables all corrections
+      echo "Negative MEAN_IR_FOR_TPC -> all TPC corrections will be ignored"
+      export TPC_CORR_SCALING+=" --lumi-type 0 "
+      export TPC_CORR_SCALING+=";TPCCorrMap.lumiMean=$MEAN_IR_FOR_TPC;"
+      ENABLE_MSHAPE=0
+      DISABLE_CORRECTIONS=1
+    else
+      echo "Did not recognize MEAN_IR_FOR_TPC = $MEAN_IR_FOR_TPC"
+      return 1	
+    fi
+  fi # MEAN_IR_FOR_TPC overridden
+
+  # set IR for TPC, even if it is not used for corrections scaling
+  if [[ $INST_IR_FOR_TPC -gt 0 ]]; then # externally imposed CTP IR
+    echo "Applying externally provided istantaneous IR $INST_IR_FOR_TPC Hz"
     export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
-  elif [[ $INST_IR_FOR_TPC == 0 ]]; then # when zero, only the TPC/Calib/CorrectionMaps is applied
-    echo "Passed valued for scaling is zero, only TPC/Calib/CorrectionMaps will be applied"
-    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
-  elif [[ $INST_IR_FOR_TPC -lt 0 ]]; then # do not apply any correction
-    echo "Passed valued for scaling is smaller than zero, no scaling will be applied"
-    echo "NOTA BENE: In the future, this value will signal to not apply any correction at all, which is not operational yet (but please check, as it depends on O2)"
-    ENABLE_MSHAPE=0
-    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
-  elif [[ $INST_IR_FOR_TPC == "CTPCCDB" ]]; then # using what we have in the CCDB CTP counters, extracted at the beginning of the script
-    echo "Using CTP CCDB which gave the mean IR of the run at the beginning of the script ($RUN_IR Hz)"
-    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$RUN_IR"
   elif [[ $INST_IR_FOR_TPC == "CTP" ]]; then
     if ! has_detector CTP ; then
-      echo "TPC correction with CTP Lumi is requested but CTP is not in the WORKFLOW_DETECTORS=$WORKFLOW_DETECTORS"
+      echo "CTP Lumi is for TPC corrections but CTP is not in the WORKFLOW_DETECTORS=$WORKFLOW_DETECTORS"
       return 1
     fi
     echo "Using CTP inst lumi stored in data"
-    export TPC_CORR_SCALING+=" --lumi-type 1 "
-  elif [[ $INST_IR_FOR_TPC == "IDCCCDB" ]]; then
-    echo "TPC correction with IDC from CCDB will be used"
-    export TPC_CORR_SCALING+=" --lumi-type 2 "
-    if [[ $ALIEN_JDL_USEDERIVATIVESFORSCALING == "1" ]]; then
-      export TPC_CORR_SCALING+=" --corrmap-lumi-mode 1 "
-    fi
-  else
-    echo "Unknown setting for INST_IR_FOR_TPC = $INST_IR_FOR_TPC (with ALIEN_JDL_INST_IR_FOR_TPC = $ALIEN_JDL_INST_IR_FOR_TPC)"
+  elif [[ $INST_IR_FOR_TPC == "CTPCCDB" ]]; then # using what we have in the CCDB CTP counters, extracted at the beginning of the script
+    echo "Using CTP CCDB which gave the mean IR of the run at the beginning of the script ($RUN_IR Hz)"
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$RUN_IR"
+  else echo "Unknown setting for INST_IR_FOR_TPC = $INST_IR_FOR_TPC (with ALIEN_JDL_INST_IR_FOR_TPC = $ALIEN_JDL_INST_IR_FOR_TPC)"
     return 1
   fi
 
+  # now set the source of the corrections
+  if [[ $DISABLE_CORRECTIONS != 1 ]] ; then
+    if [[ $TPC_SCALING_SOURCE == "NO_SCALING" ]]; then
+      echo "NO SCALING is requested: only TPC/Calib/CorrectionMapsV2... will be applied"
+      export TPC_CORR_SCALING+=" --lumi-type 0 "
+    elif [[ $TPC_SCALING_SOURCE == "CTP" ]]; then 
+      echo "CTP Lumi from data will be used for TPC scaling"
+      export TPC_CORR_SCALING+=" --lumi-type 1 "
+    elif [[ $TPC_SCALING_SOURCE == "IDCCCDB" ]]; then
+      echo "TPC correction with IDC from CCDB will be used"
+      export TPC_CORR_SCALING+=" --lumi-type 2 "
+      if [[ $ALIEN_JDL_USEDERIVATIVESFORSCALING == "1" ]]; then
+        export TPC_CORR_SCALING+=" --corrmap-lumi-mode 1 "
+      fi
+    else
+      echo "Unknown setting for TPC_SCALING_SOURCE = $TPC_SCALING_SOURCE (with ALIEN_JDL_TPCSCALINGSOURCE = $ALIEN_JDL_TPCSCALINGSOURCE)"
+    fi
+  fi
+
+  if ! has_detector CTP ; then
+    echo "CTP is not in the list of detectors, disabling CTP Lumi input request"
+    export TPC_CORR_SCALING+=" --disable-ctp-lumi-request "
+  fi
+  
   if [[ $ENABLE_MSHAPE == "1" ]]; then
     export TPC_CORR_SCALING+=" --enable-M-shape-correction "
   fi
-  
-  if [[ -n $ALIEN_JDL_MEANIRFORTPC && $ALIEN_JDL_MEANIRFORTPC > 0 ]]; then # externally imposed TPC map mean IR for scaling
-    export TPC_CORR_SCALING+=";TPCCorrMap.lumiMean=$ALIEN_JDL_MEANIRFORTPC"
-  fi
-
-  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] && ([[ -z $INST_IR_FOR_TPC ]] || [[ $INST_IR_FOR_TPC == "CTP" ]]); then
-    echo "We are in PbPb 2023, the default - for now - is to use CTP in the data"
-    unset TPC_CORR_SCALING
-    export TPC_CORR_SCALING=";TPCCorrMap.lumiInstFactor=2.414;TPCCorrMap.lumiMean=0 --lumi-type 1 "
-    if [[ $SCALE_WITH_ZDC == 0 ]]; then
-      # scaling with FT0
-      if [[ $SCALE_WITH_FT0 == 1 ]]; then
-	export TPC_CORR_SCALING=" --ctp-lumi-source 1 --lumi-type 1 TPCCorrMap.lumiInstFactor=135.;TPCCorrMap.lumiMean=0"
-      else
-	echo "Neither ZDC nor FT0 are in the run, and this is from 2023 PbPb: we cannot scale TPC ditortion corrections, aborting..."
-	return 1
-      fi
-    fi
-    if [[ $ENABLE_MSHAPE == "1" ]]; then
-      export TPC_CORR_SCALING+=" --enable-M-shape-correction "
+    
+   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] ; then
+    if [[ $SCALE_WITH_ZDC == 1 ]]; then
+      echo "For 2023 PbPb ZDC inst. lumi applying factor 2.414"
+      export TPC_CORR_SCALING+=";TPCCorrMap.lumiInstFactor=2.414;"
+    elif [[ $SCALE_WITH_FT0 == 1 ]]; then
+      echo "For 2023 PbPb FT0 inst. lumi applying factor 135."
+      export TPC_CORR_SCALING+="TPCCorrMap.lumiInstFactor=135.;"
+    else
+      echo "Neither ZDC nor FT0 are in the run, and this is from 2023 PbPb: we cannot scale TPC ditortion corrections, aborting..."
+      return 1
     fi
   fi
 
   echo "Final setting for TPC scaling is:"
   echo $TPC_CORR_SCALING
+  #-------------------------------------- TPC corrections (end)--------------------------------------------
 
   if [[ $PERIOD != @(LHC22c|LHC22d|LHC22e|JUN|LHC22f) ]] ; then
     echo "Setting TPCCLUSTERTIMESHIFT to 0"
@@ -385,8 +408,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     echo "We are in period $PERIOD, we need to keep the correction for the TPC cluster time, since no new vdrift was extracted"
   fi
 
-  TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.01;trackTuneParams.tpcCovInner[1]=1.;trackTuneParams.tpcCovInner[2]=4e-7;trackTuneParams.tpcCovInner[3]=4.e-5;trackTuneParams.tpcCovInner[4]=6.8e-6;"
-  TRACKTUNETPCOUTER="trackTuneParams.tpcCovOuterType=1;trackTuneParams.tpcCovOuter[0]=0.01;trackTuneParams.tpcCovOuter[1]=1.;trackTuneParams.tpcCovOuter[2]=4e-7;trackTuneParams.tpcCovOuter[3]=4.e-5;trackTuneParams.tpcCovOuter[4]=6.8e-6;"
+  TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.1;trackTuneParams.tpcCovInner[1]=1.;trackTuneParams.tpcCovInner[2]=6.3e-4;trackTuneParams.tpcCovInner[3]=6.3e-3;trackTuneParams.tpcCovInner[4]=2.6e-3;"
+  TRACKTUNETPCOUTER="trackTuneParams.tpcCovOuterType=1;trackTuneParams.tpcCovOuter[0]=0.1;trackTuneParams.tpcCovOuter[1]=1.;trackTuneParams.tpcCovOuter[2]=6.3e-4;trackTuneParams.tpcCovOuter[3]=6.3e-3;trackTuneParams.tpcCovOuter[4]=2.6e-3;"
 
 fi
 
