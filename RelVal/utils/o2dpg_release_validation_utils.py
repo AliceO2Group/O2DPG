@@ -3,26 +3,14 @@
 # Definition of common functionality
 
 import re
-from os.path import join, exists, isdir
+from os.path import join, exists, isdir, abspath
+from os import makedirs, rename
+from shutil import rmtree, copy
 from itertools import product
 from subprocess import Popen, PIPE, STDOUT
 from shlex import split
 import json
 import numpy as np
-
-
-def remove_outliers(data, m=6.):
-    """
-    Helper to remove outliers from a list of floats
-    """
-    if not data:
-        return None, None
-    data = np.array(data)
-    d = np.abs(data - np.median(data))
-    mdev = np.median(d)
-    s = d / (mdev if mdev else 1.)
-    print(s)
-    return data[s < m], data[s >= m]
 
 
 def default_evaluation(limits):
@@ -34,10 +22,10 @@ def default_evaluation(limits):
     if limits[0] is None and limits[1] is None:
         return lambda x: None
     if limits[0] is not None and limits[1] is None:
-        return lambda x: x > limits[0]
+        return lambda x: x >= limits[0]
     if limits[0] is None and limits[1] is not None:
-        return lambda x: x < limits[1]
-    return lambda x: limits[0] < x < limits[1]
+        return lambda x: x <= limits[1]
+    return lambda x: limits[0] <= x <= limits[1]
 
 
 def compute_limits(mean, std):
@@ -105,6 +93,9 @@ class Metric:
         self.non_comparable_note = non_comparable_note
         if in_dict is not None:
             self.from_dict(in_dict)
+
+    def __eq__(self, other):
+        return self.object_name == other.object_name and self.name == other.name
 
     def as_dict(self):
         return {"object_name": self.object_name,
@@ -190,36 +181,6 @@ class Evaluator:
         self.metric_names = np.array(self.metric_names, dtype=str)
         self.test_names = np.array(self.test_names, dtype=str)
         self.tests = np.array(self.tests, dtype=TestLimits)
-
-        # fill up tests
-        # The following guarantees that we have all metrics and all tests for the object names
-        # NOTE Probably there is a more elegant way?!
-        test_names_known = np.unique(self.test_names)
-        metric_names_known = np.unique(self.metric_names)
-        object_names_known = np.unique(self.object_names)
-
-        object_names_to_add = []
-        metric_names_to_add = []
-        test_names_to_add = []
-
-        for object_name, metric_name in product(object_names_known, metric_names_known):
-            mask = (self.object_names == object_name) & (self.metric_names == metric_name)
-            if not np.any(mask):
-                object_names_to_add.extend([object_name] * len(test_names_known))
-                metric_names_to_add.extend([metric_name] * len(test_names_known))
-                test_names_to_add.extend(test_names_known)
-                continue
-            present_test_names = self.test_names[mask]
-            test_names_not_present = test_names_known[~np.isin(present_test_names, test_names_known)]
-            test_names_to_add.extend(test_names_not_present)
-            metric_names_to_add.extend([metric_name] * len(test_names_not_present))
-            object_names_to_add.extend([object_name] * len(test_names_not_present))
-
-        self.object_names = np.array(np.append(self.object_names, object_names_to_add))
-        self.metric_names = np.array(np.append(self.metric_names, metric_names_to_add))
-        self.test_names = np.array(np.append(self.test_names, test_names_to_add))
-        self.tests = np.array(np.append(self.tests, [TestLimits(tnta) for tnta in test_names_to_add]))
-
         self.mask_any = np.full(self.test_names.shape, True)
 
     def test(self, metrics):
@@ -253,42 +214,51 @@ class RelVal:
     def __init__(self):
         # metric names that should be considered (if empty, all)
         self.include_metrics = []
+        # metric names that should be excluded, takes precedence over self.include_metrics
         self.exclude_metrics = []
-        # lists of regex to include/exclude objects by name
+        # lists of regex to include/exclude objects by their names
         self.include_patterns = None
         self.exclude_patterns = None
 
-        # collecting everything we have; all of the following will have the same length in the end
+        # collecting everything we have; the following three members will have the same length
         self.object_names = None
         self.metric_names = None
         # metric objects
         self.metrics = None
 
-        # object and metric names known to this RelVal
+        # unique object and metric names
         self.known_objects = None
         self.known_metrics = None
 
-        # collecting all results; all of the following will have the same length in the end
+        # collecting all results; the following three members will have the same length
         self.results = None
-        # indices to refer to self.object_names, self.metric_names and self.metrics
+        # each index refers to the corresponding object in self.object_names, self.metric_names and self.metrics
         self.results_to_metrics_idx = None
+
+        # unique list of test names
         self.known_test_names = None
 
         # to store some annotations
         self.annotations = None
 
-    def enable_metrics(self, metrics):
-        if not metrics:
+    def enable_metrics(self, metric_names):
+        """
+        Enable a list of metrics given their names
+        """
+        if not metric_names:
             return
-        for metric in metrics:
+        for metric in metric_names:
             if metric in self.include_metrics:
                 continue
             self.include_metrics.append(metric)
 
-    def disable_metrics(self, metrics):
-        if not metrics:
+    def disable_metrics(self, metric_names):
+        """
+        Disable a list of metrics given their names
+        """
+        if not metric_names:
             return
-        for metric in metrics:
+        for metric in metric_names:
             if metric in self.exclude_metrics:
                 continue
             self.exclude_metrics.append(metric)
@@ -367,29 +337,25 @@ class RelVal:
         self.results_to_metrics_idx.append(metric_idx)
         self.results.append(result)
 
-    def load(self, summaries_to_test):
+    def get_metric_checking_dict(self, in_dict):
+        """
+        Check if that metric is already known
+        """
+        if self.metrics is None:
+            return None, None
 
-        self.annotations = []
-        self.object_names = []
-        self.metric_names = []
-        self.metrics = []
-        self.results_to_metrics_idx = []
-        self.results = []
+        metric = Metric(in_dict=in_dict)
 
-        for summary_to_test in summaries_to_test:
-            summary_to_test = self.read(summary_to_test)
-            if annotations := summary_to_test.get(RelVal.KEY_ANNOTATIONS, None):
-                self.annotations.append(annotations)
-            for line in summary_to_test[RelVal.KEY_OBJECTS]:
-                metric = Metric(in_dict=line)
-                if not self.add_metric(metric):
-                    continue
+        for idx, search_metric in enumerate(self.metrics):
+            if metric == search_metric:
+                return idx, search_metric
 
-                if "result_name" in line:
-                    # NOTE We could think about not duplicating metrics.
-                    #      Because there is the same metric for each of the corresponding test results
-                    self.add_result(len(self.metrics) - 1, Result(in_dict=line))
+        return None, metric
 
+    def to_numpy(self):
+        """
+        Convert everything that is a list to numpy for faster querying later on
+        """
         self.known_objects = np.unique(self.object_names)
         self.known_metrics = np.unique(self.metric_names)
 
@@ -402,8 +368,42 @@ class RelVal:
         self.results_to_metrics_idx = np.array(self.results_to_metrics_idx, dtype=int) if self.results else None
         self.test_names_results = np.array([r.name for r in self.results]) if self.results else None
         self.known_test_names = np.unique(self.test_names_results) if self.results else None
-        self.result_filter_mask = np.full(self.known_test_names.shape, True)  if self.results else None
         self.results = np.array(self.results, dtype=Result) if self.results else None
+        self.result_filter_mask = np.full(self.results.shape, True) if self.results is not None else None
+
+    def load(self, summaries_to_test):
+        """
+        Loads and populates this object from a dictionary
+        """
+        self.annotations = []
+        self.object_names = []
+        self.metric_names = []
+        self.metrics = []
+        self.results_to_metrics_idx = []
+        self.results = []
+
+        for summary_to_test in summaries_to_test:
+            # loop over the list of dictionaries given
+            summary_to_test = self.read(summary_to_test)
+            if annotations := summary_to_test.get(RelVal.KEY_ANNOTATIONS, None):
+                self.annotations.append(annotations)
+            for line in summary_to_test[RelVal.KEY_OBJECTS]:
+                # each list object corresponds to and object with a certain test result
+                # first of all we check if that metric is already loaded
+                idx, metric = self.get_metric_checking_dict(line)
+                if idx is None:
+                    # in this case, this metric is new
+                    idx = len(self.metrics) - 1
+                    if not self.add_metric(metric):
+                        # only attempt to add if that metric is not yet there
+                        continue
+
+                if "result_name" in line:
+                    # add this result; the result will be mapped to the metric it is based on via the index
+                    self.add_result(idx, Result(in_dict=line))
+
+        # convert everything that was a list before to numpy objects
+        self.to_numpy()
 
     def get_metrics(self, object_name=None, metric_name=None):
         """
@@ -422,7 +422,7 @@ class RelVal:
         mask = mask & (self.any_mask if metric_name is None else np.isin(self.metric_names, metric_name))
         return self.object_names[mask], self.metric_names[mask], self.metrics[mask]
 
-    def apply(self, evaluator):
+    def apply_evaluator(self, evaluator):
         """
         Apply loaded tests
         """
@@ -438,20 +438,32 @@ class RelVal:
         self.results_to_metrics_idx, self.results = evaluator.test(self.metrics)
         self.test_names_results = np.array([r.name for r in self.results])
         self.known_test_names = np.unique(self.test_names_results)
-        self.result_filter_mask = np.full(self.known_test_names.shape, True)
+        self.result_filter_mask = np.full(self.results.shape, True)
 
     def interpret(self, interpret_func):
+        """
+        Add an interpretation to the Result objects based on a function given by the user
+        """
         for metric_idx, result in zip(self.results_to_metrics_idx, self.results):
             interpret_func(result, self.metrics[metric_idx])
 
     def filter_results(self, filter_func):
+        """
+        Construct a mask to filter results without losing any of them
+        """
         if self.results is None:
             return
         self.result_filter_mask = [filter_func(result) for result in self.results]
 
     def query_results(self, query_func=None):
+        """
+        Query Result objects based on a function given by the user
+
+        Return matching Result objects along with names
+        """
         mask = np.array([query_func is None or query_func(result) for result in enumerate(self.results)])
-        mask = mask & self.result_filter_mask
+        if self.result_filter_mask is not None:
+            mask = mask & self.result_filter_mask
         idx = self.results_to_metrics_idx[mask]
         return np.take(self.object_names, idx), np.take(self.metric_names, idx), self.test_names_results[idx], self.results[idx]
 
@@ -474,15 +486,28 @@ class RelVal:
         return self.known_metrics[idx]
 
     def get_result_per_metric_and_test(self, metric_index_or_name=None, test_index_or_name=None):
+        """
+        Return Result objects that belong to given metric or test
+        """
         test_name = test_index_or_name if (isinstance(test_index_or_name, str) or test_index_or_name is None) else self.known_test_names[test_index_or_name]
         metric_name = metric_index_or_name if (isinstance(metric_index_or_name, str) or metric_index_or_name is None) else self.known_metrics[metric_index_or_name]
         metric_idx = np.argwhere(self.metric_names == metric_name) if metric_name is not None else self.results_to_metrics_idx
-        mask = np.isin(self.results_to_metrics_idx, metric_idx) & self.result_filter_mask
+        mask = np.isin(self.results_to_metrics_idx, metric_idx)
+        if self.result_filter_mask is not None:
+            mask = mask & self.result_filter_mask
         if test_name is not None:
             mask = mask & (self.test_names_results == test_name)
         return np.take(self.object_names, self.results_to_metrics_idx[mask]), self.results[mask]
 
     def get_result_matrix_objects_metrics(self, test_index):
+        """
+        Return a matrix of Result objects
+
+        vertical axis: object names
+        horizontal axis: metric names
+
+        in addition return metric and object names so the user knows what she gets
+        """
         mask = self.test_names_results == (self.known_test_names[test_index])
         idx = self.results_to_metrics_idx[mask]
         results = self.results[mask]
@@ -497,9 +522,15 @@ class RelVal:
         return metric_names, object_names, np.reshape(results[idx], (len(object_names), len(metric_names)))
 
     def yield_metrics_results_per_object(self):
+        """
+        One-by-one return metrics and results of objects
+        """
         results = None
         if self.results is not None:
-            mask = self.result_filter_mask
+            if self.result_filter_mask is not None:
+                mask = self.result_filter_mask
+            else:
+                mask = np.full(self.results.shape, True)
             idx = self.results_to_metrics_idx[mask]
             object_names = np.take(self.object_names, idx)
             metrics = np.take(self.metrics, idx)
@@ -515,10 +546,13 @@ class RelVal:
             yield object_name, yield_metrics, yield_results
 
     def write(self, filepath, annotations=None):
+        """
+        Write everything to a JSON file
 
+        Structure corresponds to what ROOT's RelVal returns so in turn it can be used to construct a RelVal object again
+        """
         all_objects = []
 
-        # TODO return one flat dictionary not a nested one
         def make_dict_include_results(object_name, metric, result):
             return {RelVal.KEY_OBJECT_NAME: object_name} | metric.as_dict() | result.as_dict()
 
@@ -528,7 +562,7 @@ class RelVal:
         if self.results is None:
             object_names = self.object_names
             metrics = self.metrics
-            results = np.empty(metric.shape, dtype=bool)
+            results = np.empty(metrics.shape, dtype=bool)
             make_dict = make_dict_exclude_results
         else:
             object_names = np.take(self.object_names, self.results_to_metrics_idx)
@@ -546,20 +580,26 @@ class RelVal:
             json.dump(final_dict, f, indent=2)
 
 
-def get_summaries_or_from_file(in_objects):
-
-    if len(in_objects) == 1 and in_objects[0].startswith("@"):
-        with open(in_objects[0][1:], "r") as f:
+def get_paths_or_from_file(paths):
+    """
+    Either simply return the paths or extract them from a text file
+    """
+    if len(paths) == 1 and paths[0].startswith("@"):
+        with open(paths[0][1:], "r") as f:
             return f.read().splitlines()
-    return in_objects
+    return paths
 
 
 def initialise_thresholds(evaluator, rel_val, rel_val_thresholds, thresholds_default, thresholds_margin, thresholds_combine="mean"):
-
+    """
+    Add thresholds to the Evaluator as one test case
+    """
     # The default thresholds will be derived and set for all the objects and metrics that we find in the RelVal to test
     _, _, metrics = rel_val.get_metrics()
     for metric in metrics:
+        # get the default thresholds for each metric
         proposed_threshold = thresholds_default.get(metric.name, metric.proposed_threshold) if thresholds_default else metric.proposed_threshold
+        # depending on what's better (lower/greater), set the std boundaries
         std = (None, 0) if metric.lower_is_better else (0, None)
         evaluator.add_limits(metric.object_name, metric.name, TestLimits("threshold_default", proposed_threshold, std))
 
@@ -569,56 +609,74 @@ def initialise_thresholds(evaluator, rel_val, rel_val_thresholds, thresholds_def
 
     for object_name in rel_val_thresholds.known_objects:
         for metric_name in rel_val_thresholds.known_metrics:
+            # get metric for given objects by name
             _, _, metrics = rel_val_thresholds.get_metrics((object_name,), (metric_name,))
+
             if not np.any(metrics):
                 continue
 
+            # collect all values from all metrics for this object
             values = [m.value for m in metrics if m.comparable]
 
+            # check what is better, lower or greater
             lower_is_better = metrics[0].lower_is_better
             factor = 1 if lower_is_better else -1
 
             if not values:
+                evaluator.add_limits(object_name, metric_name, TestLimits("threshold_user"))
                 continue
             if thresholds_combine == "mean":
+                # combine the values, by default take the mean as the threshold
                 mean_central = np.mean(values)
             else:
+                # otherwise take the extremum
                 mean_central = factor * max([factor * v for v in values])
 
+            margin = thresholds_margin[metric_name] * mean_central if thresholds_margin and metric_name in thresholds_margin else 0
+            # put together the std limits and add the TestLimits to the Evaluator
             if factor > 0:
                 low = None
-                up = (1 + thresholds_margin[metric_name]) * mean_central
+                up = margin
             else:
                 up = None
-                low = (1 - thresholds_margin) * mean_central
+                low = margin
             evaluator.add_limits(object_name, metric_name, TestLimits("threshold_user", mean_central, (low, up)))
 
 
-def initialise_regions(evaluator, regions):
-    rel_val_regions = RelVal()
-    rel_val_regions.load(regions)
+def initialise_regions(evaluator, rel_val_regions):
+    """
+    Add regions to the Evaluator as test case
+    """
+    # Loop through everything
     for object_name in rel_val_regions.known_objects:
         for metric_name in rel_val_regions.known_metrics:
             _, _, metrics = rel_val_regions.get_metrics((object_name,), (metric_name,))
+            # get all the metric values for the given object and a particular metric
             values = [m.value for m in metrics if m.comparable]
+            # extract some properties of the metrics that need to be known
             proposed_threshold = metrics[0].proposed_threshold
             lower_is_better = metrics[0].lower_is_better
+            # a list of metric values where outliers are removed
             values_central = []
+            # a list of metric values with only outliers
             values_outlier = []
             for v in values:
                 diff = v - proposed_threshold
                 if (diff < 0 and lower_is_better) or (diff > 0 and not lower_is_better):
-                    # if the value is below and lower is better (or the other way round), then accept it
+                    # if the value is below and lower is better (or the other way round), then accept it because it is definitely better than even the proposed threshold
                     values_central.append(v)
                     continue
                 if diff != 0:
+                    # check how far off the calculated difference is from the proposed value
                     diff = abs(proposed_threshold / diff)
                     if diff < 0.1:
-                        # this means we accept up to an order of magnitude
+                        # this means we accept up to an order of magnitude, this is hence an outlier
                         values_outlier.append(v)
                         continue
+                # if this is reached, the value is worse than the proposed threshold but only by less than one order of magnitude
                 values_central.append(v)
 
+            # now get the means of this region with their std for both central and outliers
             mean_central = np.mean(values_central)
             std_central = np.std(values_central)
             if np.any(values_outlier):
@@ -627,16 +685,22 @@ def initialise_regions(evaluator, regions):
             else:
                 mean_outlier = None
                 std_outlier = None
+            # add these mean and std values as two different test limits
             evaluator.add_limits(object_name, metric_name, TestLimits("regions_tight", mean_central, (std_central, std_central)))
             evaluator.add_limits(object_name, metric_name, TestLimits("regions_loose", mean_outlier, (std_outlier, std_outlier)))
 
 
 def run_macro(cmd, log_file, cwd=None):
+    """
+    Wrapper to run a command line
+    """
     p = Popen(split(cmd), cwd=cwd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+    # open a logfile and write to it line by line
     log_file = open(log_file, 'a')
     for line in p.stdout:
         log_file.write(line)
     p.wait()
+    # when done, close the logfile and return the cmd's return code
     log_file.close()
     return p.returncode
 
@@ -669,9 +733,54 @@ def print_summary(rel_val, interpretations, long=False):
 
 
 def get_summary_path(path):
+    """
+    Get the full path to Summary.json
+
+    If a directory is given, look for the file inside
+    """
     if isdir(path):
         path = join(path, "Summary.json")
     if exists(path):
         return path
     print(f"ERROR: Cannot neither find {path}.")
     return None
+
+
+def copy_overlays(rel_val, input_dir, output_dir):
+    """
+    copy overlay plots in this summary from the input directory to the output directory
+    """
+    input_dir = abspath(input_dir)
+    output_dir = abspath(output_dir)
+
+    if not exists(input_dir):
+        print(f"ERROR: Input directory {input_dir} does not exist")
+        return 1
+
+    in_out_same = input_dir == output_dir
+
+    input_dir_new = input_dir + "_tmp"
+    if in_out_same:
+        # move input directory
+        rename(input_dir, input_dir_new)
+        input_dir = input_dir_new
+
+    if not exists(output_dir):
+        makedirs(output_dir)
+
+    object_names, _ = rel_val.get_result_per_metric_and_test()
+    object_names = list(set(object_names))
+
+    ret = 0
+    for object_name in object_names:
+        filename=join(input_dir, f"{object_name}.png")
+        if exists(filename):
+            copy(filename, output_dir)
+        else:
+            print(f"File {filename} not found.")
+            ret = 1
+
+    if in_out_same:
+        rmtree(input_dir)
+
+    return ret
