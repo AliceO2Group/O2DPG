@@ -37,7 +37,7 @@ parser = argparse.ArgumentParser(description='Parallel execution of a (O2-DPG) D
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument('-f','--workflowfile', help='Input workflow file name', required=True)
-parser.add_argument('-jmax','--maxjobs', help='Number of maximal parallel tasks.', default=100)
+parser.add_argument('-jmax','--maxjobs', type=int, help='Number of maximal parallel tasks.', default=100)
 parser.add_argument('-k','--keep-going', action='store_true', help='Keep executing the pipeline as far possibe (not stopping on first failure)')
 parser.add_argument('--dry-run', action='store_true', help='Show what you would do.')
 parser.add_argument('--visualize-workflow', action='store_true', help='Saves a graph visualization of workflow.')
@@ -1392,5 +1392,5 @@ if args.cgroup!=None:
     actionlogger.info("applying cgroups " + command)
     os.system(command)
 
-executor=WorkflowExecutor(args.workflowfile,jmax=args.maxjobs,args=args)
+executor=WorkflowExecutor(args.workflowfile,jmax=int(args.maxjobs),args=args)
 exit (executor.execute())
