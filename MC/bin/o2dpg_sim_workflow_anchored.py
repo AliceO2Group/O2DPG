@@ -259,33 +259,56 @@ def determine_timestamp(sor, eor, splitinfo, cycle, ntf, HBF_per_timeframe = 256
     Determines the timestamp and production offset variable based
     on the global properties of the production (MC split, etc) and the properties
     of the run. ntf is the number of timeframes per MC job
+
+    Args:
+        sor: int
+            start-of-run in milliseconds since epoch
+        eor: int
+            end-of-run in milliseconds since epoch
+        splitinfo: tuple (int, int)
+            splitinfo[0]: split ID of this job
+            splitinfo[1]: total number of jobs to split into
+        cycle: int
+            cycle of this productions. Typically a run is not entirely filled by and anchored simulation
+            but only a proportion of events is simulated.
+            With increasing number of cycles, the data run is covered more and more.
+        ntf: int
+            number of timeframes
+        HBF_per_timeframe: int
+            number of orbits per timeframe
+    Returns:
+        int: timestamp in milliseconds
+        int: production offset aka "which timeslot in this production to simulate"
     """
     totaljobs = splitinfo[1]
     thisjobID = splitinfo[0]
-    print (f"Start-of-run : {sor}")
-    print (f"End-of-run : {eor}")
-    time_length_inmus = 1000*(eor - sor) # time length in micro seconds
-    timestamp_delta = time_length_inmus / totaljobs
+    # length of this run in micro seconds, since we use the orbit duration in micro seconds
+    time_length_inmus = 1000 * (eor - sor)
 
+    # figure out how many timeframes fit into this run range
+    # take the number of orbits per timeframe and multiply by orbit duration to calculate how many timeframes fit into this run
     ntimeframes = time_length_inmus / (HBF_per_timeframe * LHCOrbitMUS)
-    norbits = time_length_inmus / LHCOrbitMUS
+    # also calculate how many orbits fit into the run range
     print (f"This run has space for {ntimeframes} timeframes")
-    print (f"This run has {norbits} orbits")
 
-    # ntimeframes is the total number of timeframes possible
-    # if we have totaljobs number of jobs
-    maxtimeframesperjob = ntimeframes // totaljobs
-    orbitsperjob = norbits // totaljobs
+    # figure out how many timeframes can maximally be covered by one job
+    maxtimeframesperjob = ntimeframes / totaljobs
     print (f"Each job can do {maxtimeframesperjob} maximally at a prod split of {totaljobs}")
-    print (f"With each job doing {ntf} timeframes, this corresponds to a filling rate of ", ntf/maxtimeframesperjob)
+    print (f"With each job doing {ntf} timeframes, this corresponds to a filling rate of {ntf / maxtimeframesperjob}")
     # filling rate should be smaller than 100%
     assert(ntf <= maxtimeframesperjob)
 
-    maxcycles = maxtimeframesperjob // ntf
-    print (f"We can do this amount of cycle iterations to achieve 100%: ", maxcycles)
+    # each cycle populates more and more run range. The maximum number of cycles to populate the run fully is:
+    maxcycles = maxtimeframesperjob / ntf
+    print (f"We can do this amount of cycle iterations to achieve 100%: {maxcycles}")
 
+    # overall, we have maxcycles * totaljobs slots to fill the run range with ntf timeframes per slot
+    # figure out in which slot to simulate
     production_offset = int(thisjobID * maxcycles) + cycle
+    # add the time difference of this slot to start-of-run to get the final timestamp
     timestamp_of_production = sor + production_offset * ntf * HBF_per_timeframe * LHCOrbitMUS / 1000
+    # this is a closure test. If we had prefect floating point precision everywhere, it wouldn't fail.
+    # But since we don't have that and there are some int casts as well, better check again.
     assert (timestamp_of_production >= sor)
     assert (timestamp_of_production <= eor)
     return int(timestamp_of_production), production_offset
@@ -323,16 +346,17 @@ def main():
       exit (1)
 
     first_orbit = ctp_scalers.getOrbitLimit().first
+    # SOR and EOR values in milliseconds
     sor = ctp_scalers.getTimeLimit().first
     eor = ctp_scalers.getTimeLimit().second
 
     if args.use_rct_info:
       first_orbit = GLOparams["FirstOrbit"]
+      # SOR and EOR values in milliseconds
       sor = GLOparams["SOR"]
       eor = GLOparams["EOR"]
 
-    # determine timestamp, and production offset for the final
-    # MC job to run
+    # determine timestamp, and production offset for the final MC job to run
     timestamp, prod_offset = determine_timestamp(sor, eor, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
 
     # this is anchored to
@@ -341,13 +365,8 @@ def main():
     print ("Determined timestamp to be : ", timestamp)
     print ("Determined offset to be : ", prod_offset)
 
-    currentorbit = first_orbit + prod_offset * GLOparams["OrbitsPerTF"] # orbit number at production start
-    currenttime = sor + prod_offset * GLOparams["OrbitsPerTF"] * LHCOrbitMUS // 1000 # timestamp in milliseconds
-
-    print ("Production put at time : " + str(currenttime))
-
     # retrieve the GRPHCIF object
-    grplhcif = retrieve_GRPLHCIF(ccdbreader, int(currenttime))
+    grplhcif = retrieve_GRPLHCIF(ccdbreader, int(timestamp))
     eCM = grplhcif.getSqrtS()
     A1 = grplhcif.getAtomicNumberB1()
     A2 = grplhcif.getAtomicNumberB2()
@@ -385,8 +404,9 @@ def main():
            effTrigger = 28.0 # this is ZDC
          else:
            effTrigger = 0.759
-
-       rate = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, currenttime/1000., effTrigger, grplhcif.getBunchFilling().getNBunches(), ColSystem)
+             
+       # time needs to be converted to seconds ==> timestamp / 1000
+       rate = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, timestamp/1000., effTrigger, grplhcif.getBunchFilling().getNBunches(), ColSystem)
 
        if rate != None:
          # if the rate calculation was successful we will use it, otherwise we fall back to some rate given as part
