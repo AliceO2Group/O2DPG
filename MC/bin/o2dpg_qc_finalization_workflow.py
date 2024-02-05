@@ -33,7 +33,7 @@ def QC_finalize_name(name):
   return name + "_finalize"
 
 qcdir = "QC"
-def include_all_QC_finalization(ntimeframes, standalone, run, productionTag, conditionDB):
+def include_all_QC_finalization(ntimeframes, standalone, run, productionTag, conditionDB, qcdbHost):
 
   stages = []
 
@@ -49,7 +49,7 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag, con
 
     task = createTask(name=QC_finalize_name(taskName), needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
     task['cmd'] = f'o2-qc --config {qcConfigPath} --remote-batch {taskName}.root' + \
-                  f' --override-values "qc.config.Activity.number={run};qc.config.Activity.periodName={productionTag};qc.config.conditionDB.url={conditionDB}"' + \
+                  f' --override-values "qc.config.database.host={qcdbHost};qc.config.Activity.number={run};qc.config.Activity.periodName={productionTag};qc.config.conditionDB.url={conditionDB}"' + \
                   ' ' + getDPL_global_options()
     stages.append(task)
 
@@ -67,7 +67,7 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag, con
     overrideValues = '--override-values "'
     overrideValues += f'qc.config.Activity.number={run};' if runSpecific else 'qc.config.Activity.number=0;'
     overrideValues += f'qc.config.Activity.periodName={productionTag};' if prodSpecific else 'qc.config.Activity.periodName=;'
-    overrideValues += f'qc.config.conditionDB.url={conditionDB}"'
+    overrideValues += f'qc.config.database.host={qcdbHost};qc.config.conditionDB.url={conditionDB}"'
     task['cmd'] = f'o2-qc --config {qcConfigPath} ' + \
                   overrideValues + ' ' + getDPL_global_options()
     stages.append(task)
@@ -119,6 +119,7 @@ def main() -> int:
   parser.add_argument('-run',help="Run number for this MC", default=300000)
   parser.add_argument('-productionTag',help="Production tag for this MC", default='unknown')
   parser.add_argument('-conditionDB',help="CCDB url for QC workflows", default='http://alice-ccdb.cern.ch')
+  parser.add_argument('-qcdbHost',help="QCDB url for QC object uploading", default='http://ali-qcdbmc-gpn.cern.ch:8083')
   args = parser.parse_args()
   print (args)
 
@@ -140,7 +141,7 @@ def main() -> int:
     mkdir(qcdir)
 
   workflow={}
-  workflow['stages'] = include_all_QC_finalization(ntimeframes=1, standalone=True, run=args.run, productionTag=args.productionTag, conditionDB=args.conditionDB)
+  workflow['stages'] = include_all_QC_finalization(ntimeframes=1, standalone=True, run=args.run, productionTag=args.productionTag, conditionDB=args.conditionDB, qcdbHost=args.qcdbHost)
   
   dump_workflow(workflow["stages"], args.o)
   
