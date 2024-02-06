@@ -279,6 +279,23 @@ def postadjust_ConfigValues(flat_config):
       if gpuglobal[key].count(".root") > 0:
          gpuglobal[key] = d + "/" + gpuglobal[key]
 
+
+def extract_readout_detectors(path, flat_config):
+   """
+   Get list of readout detectors
+
+   Expect the input file to contain exactly one line with readout detectors split by whitespaces
+
+   Returns a string of the form DET1,DET2,DET3,...,DETN
+   """
+   with open(path) as f:
+      for line in f:
+         line = line.strip().split()
+         detectors = ",".join([d.strip() for d in line])
+         flat_config["readout_detectors"] = detectors
+         break
+
+
 cmdlist = get_topology_cmd("workflowconfig.log")
 #print (cmdlist)
 cmds = extract_commands(cmdlist)
@@ -288,4 +305,5 @@ flat_config = flatten_config_values(cmds)
 #print (flat_config)
 postadjust_ConfigValues(flat_config)
 parse_important_DPL_args(cmds, flat_config)
+extract_readout_detectors("DetList.txt", flat_config)
 configValues_to_json(flat_config)

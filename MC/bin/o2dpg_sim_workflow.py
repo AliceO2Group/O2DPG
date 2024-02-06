@@ -195,7 +195,7 @@ with open(config_key_param_path, "w") as f:
 
 # with this we can tailor the workflow to the presence of
 # certain detectors
-activeDetectors = anchorConfig.get('o2-ctf-reader-workflow-options',{}).get('onlyDet','all')
+activeDetectors = anchorConfig.get('readout_detectors', 'all')
 # convert to set/hashmap
 activeDetectors = { det:1 for det in activeDetectors.split(",") }
 for det in activeDetectors:
