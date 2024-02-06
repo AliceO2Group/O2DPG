@@ -1366,15 +1366,19 @@
     "lutPath": "GLO/Param/MatLUT",
     "mVtxPath": "GLO/Calib/MeanVertex",
     "processCovariance": "true",
-    "processStandard": "false"
+    "processCovarianceWithPID": "false",
+    "processStandard": "false",
+    "processStandardWithPID": "false"
   },
   "track-selection": {
     "compatibilityIU": "false",
+    "dcaSetup": "0",
     "etaMax": "0.8",
     "etaMin": "-0.8",
     "isRun3": "true",
     "itsMatching": "1",
     "produceFBextendedTable": "-1",
+    "produceTable": "-1",
     "ptMax": "1e+10",
     "ptMin": "0.1"
   },
