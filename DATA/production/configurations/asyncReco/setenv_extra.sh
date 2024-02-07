@@ -293,8 +293,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   ERROB="100e-8"
   [[ -z $TPCITSTIMEERR ]] && TPCITSTIMEERR="0.2"
   [[ -z $ITS_CONFIG || "$ITS_CONFIG" != *"--tracking-mode"* ]] && export ITS_CONFIG+=" --tracking-mode async"
-  CUT_MATCH_CHI2=160
-  export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=2.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;;tpcitsMatch.crudeAbsDiffCut[0]=6;tpcitsMatch.crudeAbsDiffCut[1]=6;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=5;tpcitsMatch.crudeNSigma2Cut[0]=100;tpcitsMatch.crudeNSigma2Cut[1]=100;tpcitsMatch.crudeNSigma2Cut[2]=100;tpcitsMatch.crudeNSigma2Cut[3]=100;tpcitsMatch.crudeNSigma2Cut[4]=100;"
+  CUT_MATCH_CHI2=80
+  export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=2.;tpcitsMatch.XMatchingRef=60.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;;tpcitsMatch.crudeAbsDiffCut[0]=6;tpcitsMatch.crudeAbsDiffCut[1]=6;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=1.5;tpcitsMatch.crudeNSigma2Cut[0]=64;tpcitsMatch.crudeNSigma2Cut[1]=64;tpcitsMatch.crudeNSigma2Cut[2]=64;tpcitsMatch.crudeNSigma2Cut[3]=64;tpcitsMatch.crudeNSigma2Cut[4]=64;"
 
   #-------------------------------------- TPC corrections -----------------------------------------------
   # we need to provide to TPC
@@ -302,7 +302,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   # 2) what to use for corrections scaling (lumi or IDC scalers or no scaling at all) : TPC_SCALING_SOURCE
   # the default is to use CTP, unless specified differently in the JDL...
   INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-CTP}
-  TPC_SCALING_SOURCE=${ALIEN_JDL_TPCSCALINGSOURCE-CTP}
+  TPC_SCALING_SOURCE=${ALIEN_JDL_TPCSCALINGSOURCE-IDCCCDB}
   # MEAN_IR_FOR_TPC allows (1) to alter the map mean IR if >0 or (2) disable  all corrections if <0
   MEAN_IR_FOR_TPC=${ALIEN_JDL_MEANIRFORTPC-}
 
@@ -408,15 +408,15 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     echo "We are in period $PERIOD, we need to keep the correction for the TPC cluster time, since no new vdrift was extracted"
   fi
 
-  TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.1;trackTuneParams.tpcCovInner[1]=1.;trackTuneParams.tpcCovInner[2]=6.3e-4;trackTuneParams.tpcCovInner[3]=6.3e-3;trackTuneParams.tpcCovInner[4]=2.6e-3;"
-  TRACKTUNETPCOUTER="trackTuneParams.tpcCovOuterType=1;trackTuneParams.tpcCovOuter[0]=0.1;trackTuneParams.tpcCovOuter[1]=1.;trackTuneParams.tpcCovOuter[2]=6.3e-4;trackTuneParams.tpcCovOuter[3]=6.3e-3;trackTuneParams.tpcCovOuter[4]=2.6e-3;"
+  TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.1;trackTuneParams.tpcCovInner[1]=0.2;trackTuneParams.tpcCovInner[2]=6.e-4;trackTuneParams.tpcCovInner[3]=6.e-4;trackTuneParams.tpcCovInner[4]=2.6e-3;"
+  TRACKTUNETPCOUTER="trackTuneParams.tpcCovOuterType=1;trackTuneParams.tpcCovOuter[0]=0.1;trackTuneParams.tpcCovOuter[1]=0.2;trackTuneParams.tpcCovOuter[2]=6.e-4;trackTuneParams.tpcCovOuter[3]=6.e-4;trackTuneParams.tpcCovOuter[4]=2.6e-3;"
 
 fi
 
 # adding additional cluster errors
 # the values below should be squared, but the validation of those values (0.01 and 0.0225) is ongoing
-TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;"
-TRACKTUNETPC="$TPCEXTRAERR"
+#TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;"
+TRACKTUNETPC=${TPCEXTRAERR-}
 
 # combining parameters
 [[ ! -z ${TRACKTUNETPCINNER:-} || ! -z ${TRACKTUNETPCOUTER:-} ]] && TRACKTUNETPC="$TRACKTUNETPC;trackTuneParams.sourceLevelTPC=true;$TRACKTUNETPCINNER;$TRACKTUNETPCOUTER"
