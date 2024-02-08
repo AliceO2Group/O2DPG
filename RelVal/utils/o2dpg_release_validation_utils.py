@@ -280,8 +280,15 @@ class RelVal:
         def load_this_patterns(patterns):
             if not patterns or not patterns[0].startswith("@"):
                 return patterns
+
+            patterns_from_file = []
             with open(patterns[0][1:], "r") as f:
-                return f.read().splitlines()
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    patterns_from_file.append(line)
+            return patterns_from_file
 
         self.include_patterns = load_this_patterns(include_patterns)
         self.exclude_patterns = load_this_patterns(exclude_patterns)
