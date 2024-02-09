@@ -553,6 +553,10 @@ if [[ $ADD_CALIB == "1" ]]; then
   export CALIB_ZDC_TDC=0
   export CALIB_FT0_TIMEOFFSET=0
   export CALIB_TPC_SCDCALIB=0
+  export CALIB_FT0_INTEGRATEDCURR=0
+  export CALIB_FV0_INTEGRATEDCURR=0
+  export CALIB_FDD_INTEGRATEDCURR=0
+  export CALIB_TOF_INTEGRATEDCURR=0
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
@@ -582,38 +586,31 @@ if [[ $ADD_CALIB == "1" ]]; then
     export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow="$ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow --enable-root-output"
     export CALIB_TRD_GAIN=1
   fi
+  # extra workflows in case we want to process the currents for FT0, FV0, TOF, TPC
+  if [[ -n $ALIEN_JDL_EXTRACTCURRENTS ]] ; then
+    export CALIB_FT0_INTEGRATEDCURR=$ALIEN_JDL_EXTRACTCURRENTS
+    export CALIB_FV0_INTEGRATEDCURR=$ALIEN_JDL_EXTRACTCURRENTS
+    export CALIB_FDD_INTEGRATEDCURR=$ALIEN_JDL_EXTRACTCURRENTS
+    export CALIB_TOF_INTEGRATEDCURR=$ALIEN_JDL_EXTRACTCURRENTS
+    export CALIB_ASYNC_EXTRACTTPCCURRENTS=$ALIEN_JDL_EXTRACTCURRENTS
+  fi
+  if [[ -n $ALIEN_JDL_DISABLE3DCURRENTS ]]; then
+    export CALIB_ASYNC_DISABLE3DCURRENTS=$ALIEN_JDL_DISABLE3DCURRENTS
+  fi
+
+  # extra workflows in case we want to process the currents for time series
+  if [[ -n $ALIEN_JDL_EXTRACTTIMESERIES ]] ; then
+    echo "Adding timeseries in setenv_extra.sh"
+    export CALIB_ASYNC_EXTRACTTIMESERIES=$ALIEN_JDL_EXTRACTTIMESERIES
+    if [[ -n $ALIEN_JDL_ENABLEUNBINNEDTIMESERIES ]]; then
+      export CALIB_ASYNC_ENABLEUNBINNEDTIMESERIES=$ALIEN_JDL_ENABLEUNBINNEDTIMESERIES
+    fi
+    if [[ -n $ALIEN_JDL_SAMPLINGFACTORTIMESERIES ]]; then
+      export CALIB_ASYNC_SAMPLINGFACTORTIMESERIES=$ALIEN_JDL_SAMPLINGFACTORTIMESERIES
+    fi
+  fi
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
     export CCDB_POPULATOR_UPLOAD_PATH="file://$PWD"
-  fi
-fi
-
-# extra workflows in case we want to process the currents for FT0, FV0, TOF, TPC
-if [[ $ALIEN_JDL_EXTRACTCURRENTS == 1 ]]; then
-  if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
-  has_detector_reco FT0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-ft0-integrate-cluster-workflow"
-  has_detector_reco FV0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-fv0-integrate-cluster-workflow"
-  has_detector_reco TOF && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tof-integrate-cluster-workflow"
-  if [[ $ALIEN_JDL_DISABLE3DCURRENTS != 1 ]]; then
-    export ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow--process-3D-currents --nSlicesTF 1"
-  fi
-  has_detector_reco TPC && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-integrate-cluster-workflow"
-fi
-
-# extra workflows in case we want to process the currents for time series
-if [[ $ALIEN_JDL_EXTRACTTIMESERIES == 1 ]]; then
-  if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
-  has_detector_reco TPC && has_detector_reco ITS && has_detector_reco FT0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-time-series-workflow"
-  if [[ ! -z "$ALIEN_JDL_ENABLEUNBINNEDTIMESERIES" ]]; then
-    export ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow --enable-unbinned-root-output --sample-unbinned-tsallis --threads 1"
-  fi
-  if [[ $ON_SKIMMED_DATA == 1 ]] || [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]] ; then
-    if [[ $ON_SKIMMED_DATA == 1 ]] ; then
-      SAMPLINGFACTORTIMESERIES=0.1
-    fi
-    if [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]]; then # this takes priority
-      export SAMPLINGFACTORTIMESERIES=${ALIEN_JDL_SAMPLINGFACTORTIMESERIES}
-    fi
-    export ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow --sampling-factor ${SAMPLINGFACTORTIMESERIES}"
   fi
 fi
 

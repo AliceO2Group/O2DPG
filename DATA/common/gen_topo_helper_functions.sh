@@ -9,9 +9,19 @@ has_detector()
   [[ $WORKFLOW_DETECTORS =~ (^|,)"$1"(,|$) ]]
 }
 
+has_detector_from_global_reader_clusters()
+{
+  [[ $WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS =~ (^|,)"$1"(,|$) ]]
+}
+
+has_detector_from_global_reader_tracks()
+{
+  [[ $WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS =~ (^|,)"$1"(,|$) ]]
+}
+
 has_detector_from_global_reader()
 {
-  [[ $WORKFLOW_DETECTORS_USE_GLOBAL_READER =~ (^|,)"$1"(,|$) ]]
+  has_detector_from_global_reader_tracks $1 || has_detector_from_global_reader_clusters $1
 }
 
 has_detector_calib()
