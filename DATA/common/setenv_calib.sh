@@ -30,6 +30,8 @@ if has_detector_calib FDD && has_processing_step FDD_RECO; then CAN_DO_CALIB_FDD
 if has_detector_calib ZDC && has_processing_step ZDC_RECO; then CAN_DO_CALIB_ZDC_TDC=1; else CAN_DO_CALIB_ZDC_TDC=0; fi
 # for async recalibration
 if has_detector_calib EMC && has_detector_reco EMC && [[ $SYNCMODE != 1 ]]; then CAN_DO_CALIB_EMC_ASYNC_RECALIB=1; else CAN_DO_CALIB_EMC_ASYNC_RECALIB=0; fi
+if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC; then CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS=1; else CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS=0; fi
+if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC && has_detector_reco ITS && has_detector_reco FT0; then CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=1; else CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=0; fi
 
 # additional individual settings for calibration workflows
 if has_detector CTP; then export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"; else export CALIB_TPC_SCDCALIB_CTP_INPUT=""; fi
@@ -174,6 +176,11 @@ fi
 ( [[ -z ${CALIB_ZDC_TDC:-} ]] || [[ $CAN_DO_CALIB_ZDC_TDC == 0 ]] ) && CALIB_ZDC_TDC=0
 # for async:
 ( [[ -z ${CALIB_EMC_ASYNC_RECALIB:-} ]] || [[ $CAN_DO_CALIB_EMC_ASYNC_RECALIB == 0 ]] ) && CALIB_EMC_ASYNC_RECALIB=0
+( [[ -z ${CALIB_ASYNC_EXTRACTTPCCURRENTS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS == 0 ]] ) && CALIB_ASYNC_EXTRACTTPCCURRENTS=0 
+( [[ -z ${CALIB_ASYNC_DISABLE3DCURRENTS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_DISABLE3DCURRENTS == 0 ]] ) && CALIB_ASYNC_DISABLE3DCURRENTS=0 
+: ${ON_SKIMMED_DATA:=0}
+( [[ -z ${CALIB_ASYNC_EXTRACTTIMESERIES:-} ]] || [[ $CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES == 0 ]] ) && CALIB_ASYNC_EXTRACTTIMESERIES=0
+
 
 if [[ "0${GEN_TOPO_VERBOSE:-}" == "01" ]]; then
   echo "CALIB_PRIMVTX_MEANVTX = $CALIB_PRIMVTX_MEANVTX" 1>&2
