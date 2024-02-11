@@ -3,7 +3,7 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "ccdb-test.cern.ch:8080",
+        "host": "ccdb-test.cern.ch:8080"
       },
       "Activity": {
         "type": "2",
