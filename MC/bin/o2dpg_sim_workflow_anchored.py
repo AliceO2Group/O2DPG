@@ -121,7 +121,7 @@ def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp, objtype_external = N
     jsonTString = TBufferJSON.ConvertToJSON(obj, TClass.GetClass(objtype))
     return json.loads(jsonTString.Data())
 
-def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number, rct = None):
+def retrieve_params_fromGRPECS(ccdbreader, run_number, rct = None):
     """
     Retrieves start of run (sor), end of run (eor) and other global parameters from the GRPECS object,
     given a run number. We first need to find the right object
@@ -191,8 +191,13 @@ def retrieve_sor_eor_fromGRPECS(ccdbreader, run_number, rct = None):
     print ("OrbitFirst", orbitFirst) # first orbit of this run
     print ("LastOrbit of run", orbitLast)
 
+    # Now fetch the detector list
+    print ("DetsReadout-Mask: ", grp["mDetsReadout"]['v'])
+    detList = o2.detectors.DetID.getNames(grp["mDetsReadout"]['v'])
+    print ("Detector list is ", detList)
+
     # orbitReset.get(run_number)
-    return {"SOR": SOR, "EOR": EOR, "FirstOrbit" : orbitFirst, "LastOrbit" : orbitLast, "OrbitsPerTF" : int(grp["mNHBFPerTF"])}
+    return {"SOR": SOR, "EOR": EOR, "FirstOrbit" : orbitFirst, "LastOrbit" : orbitLast, "OrbitsPerTF" : int(grp["mNHBFPerTF"]), "detList" : detList}
 
 def retrieve_GRP(ccdbreader, timestamp):
     """
@@ -335,7 +340,7 @@ def main():
     ccdbreader = CCDBAccessor(args.ccdb_url)
     # fetch the EOR/SOR
     rct_sor_eor = retrieve_sor_eor(ccdbreader, args.run_number) # <-- from RCT/Info
-    GLOparams = retrieve_sor_eor_fromGRPECS(ccdbreader, args.run_number, rct=rct_sor_eor)
+    GLOparams = retrieve_params_fromGRPECS(ccdbreader, args.run_number, rct=rct_sor_eor)
     if not GLOparams:
        print ("No time info found")
        sys.exit(1)
@@ -419,7 +424,8 @@ def main():
 
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
-    forwardargs += " -tf " + str(args.tf) + " --sor " + str(sor) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit " + str(first_orbit) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + " -eCM " + str(eCM)
+    forwardargs += " -tf " + str(args.tf) + " --sor " + str(sor) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit "       \
+                   + str(first_orbit) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + " -eCM " + str(eCM) + ' --readoutDets ' + GLOparams['detList']
     print ("forward args ", forwardargs)
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
     print ("Creating time-anchored workflow...")
