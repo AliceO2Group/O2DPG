@@ -384,7 +384,10 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export TPC_CORR_SCALING+=" --enable-M-shape-correction "
   fi
     
-   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] ; then
+  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] ; then
+    # adding additional cluster errors
+    # the values below should be squared, but the validation of those values (0.01 and 0.0225) is ongoing
+    TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;"    
     if [[ $SCALE_WITH_ZDC == 1 ]]; then
       echo "For 2023 PbPb ZDC inst. lumi applying factor 2.414"
       export TPC_CORR_SCALING+=";TPCCorrMap.lumiInstFactor=2.414;"
@@ -413,9 +416,6 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
 
 fi
 
-# adding additional cluster errors
-# the values below should be squared, but the validation of those values (0.01 and 0.0225) is ongoing
-#TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;"
 TRACKTUNETPC=${TPCEXTRAERR-}
 
 # combining parameters
