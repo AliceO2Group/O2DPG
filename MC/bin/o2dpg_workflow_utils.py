@@ -6,6 +6,7 @@ import json
 
 # List of active detectors
 ACTIVE_DETECTORS = ["all"]
+INACTIVE_DETECTORS = []
 
 def activate_detector(det):
     try:
@@ -16,8 +17,11 @@ def activate_detector(det):
         pass
     ACTIVE_DETECTORS.append(det)
 
+def deactivate_detector(det):
+    INACTIVE_DETECTORS.append(det)
+
 def isActive(det):
-    return "all" in ACTIVE_DETECTORS or det in ACTIVE_DETECTORS
+    return det not in INACTIVE_DETECTORS and ("all" in ACTIVE_DETECTORS or det in ACTIVE_DETECTORS)
 
 def relativeCPU(n_rel, n_workers):
     # compute number of CPUs from a given number of workers

@@ -195,6 +195,13 @@ def parse_important_DPL_args(cmds, flat_config):
             corrstring += ' --corrma-lumi-mode ' + s2
          # these are some options applied in multiple places (so save them flatly under tpc-corr-scaling)
          flat_config['tpc-corr-scaling'] = corrstring
+      
+      # hmp matching
+      if cmd == 'o2-hmpid-matcher-workflow':
+         c = {}
+         c['track-sources'] = extract_args(tokens, '--track-sources')
+         flat_config['o2-hmpid-matcher-workflow'] = c
+
 
 def print_untreated_args(cmds):
    """
