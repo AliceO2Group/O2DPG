@@ -400,7 +400,7 @@ class RelVal:
                 idx, metric = self.get_metric_checking_dict(line)
                 if idx is None:
                     # in this case, this metric is new
-                    idx = len(self.metrics) - 1
+                    idx = len(self.metrics)
                     if not self.add_metric(metric):
                         # only attempt to add if that metric is not yet there
                         continue
