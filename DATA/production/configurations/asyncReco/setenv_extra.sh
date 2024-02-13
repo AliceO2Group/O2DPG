@@ -321,7 +321,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   fi
 
   DISABLE_CORRECTIONS=
-  [[ -n "$ALIEN_JDL_MSHAPE_CORRECTION" && $ALIEN_JDL_MSHAPE_CORRECTION == "0" ]] && ENABLE_MSHAPE=0 || ENABLE_MSHAPE=1
+  [[ -n "$ALIEN_JDL_MSHAPECORRECTION" && $ALIEN_JDL_MSHAPECORRECTION == "0" ]] && ENABLE_MSHAPE=0 || ENABLE_MSHAPE=1
   
   if [[ -n $MEAN_IR_FOR_TPC ]] ; then  # firs check if corrections were not disabled via MEAN_IR_FOR_TPC
     if [[ $MEAN_IR_FOR_TPC -gt 0 ]] ; then # positive value overrides map mean lumi
@@ -352,7 +352,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   elif [[ $INST_IR_FOR_TPC == "CTPCCDB" ]]; then # using what we have in the CCDB CTP counters, extracted at the beginning of the script
     echo "Using CTP CCDB which gave the mean IR of the run at the beginning of the script ($RUN_IR Hz)"
     export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$RUN_IR"
-  else echo "Unknown setting for INST_IR_FOR_TPC = $INST_IR_FOR_TPC (with ALIEN_JDL_INST_IR_FOR_TPC = $ALIEN_JDL_INST_IR_FOR_TPC)"
+  else echo "Unknown setting for INST_IR_FOR_TPC = $INST_IR_FOR_TPC (with ALIEN_JDL_INSTIRFORTPC = $ALIEN_JDL_INSTIRFORTPC)"
     return 1
   fi
 
