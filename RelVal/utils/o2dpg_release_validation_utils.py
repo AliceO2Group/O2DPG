@@ -282,9 +282,15 @@ class RelVal:
                 return patterns
 
             patterns_from_file = []
-            with open(patterns[0][1:], "r") as f:
+            filename = patterns[0][1:]
+            if not exists(filename):
+                print(f"WARNING: Pattern file {filename} does not exist, not extracting any patterns!")
+                return
+            with open(filename, "r") as f:
                 for line in f:
                     line = line.strip()
+                    # remove all comments; allows for inline comments or entire comment lines), then take the first token
+                    line = line.split("#")[0].strip()
                     if not line:
                         continue
                     patterns_from_file.append(line)
