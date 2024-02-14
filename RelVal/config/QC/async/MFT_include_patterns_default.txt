@@ -1,0 +1,9 @@
+# note that all "/" have to be replaced by "_"
+MFT_Tracks_mMFTTrackEta_5_MinClusters$
+MFT_Tracks_mMFTTrackPhi_5_MinClusters$
+MFT_Tracks_mMFTTrackEta_6_MinClusters$
+MFT_Tracks_mMFTTrackPhi_6_MinClusters$
+MFT_Tracks_mMFTTrackInvQPt$
+MFT_Tracks_mMFTTrackNumberOfClusters$
+MFT_Tracks_mMFTTrackROFSize$
+MFT_Clusters_mClustersROFSize$
