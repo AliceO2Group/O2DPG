@@ -78,7 +78,7 @@ make_wf_creation_script()
 print_error_logs()
 {
     local search_dir=${1}
-    local search_pattern="TASK-EXIT-CODE: ([1-9][0-9]*)|[Ss]egmentation violation|[Ee]xception caught|\[FATAL\]|uncaught exception|\(int\) ([1-9][0-9]*)|fair::FatalException"
+    local search_pattern="TASK-EXIT-CODE: ([1-9][0-9]*)|[Ss]egmentation violation|[Ss]egmentation fault|Program crashed|[Ee]xception caught|\[FATAL\]|uncaught exception|\(int\) ([1-9][0-9]*)|fair::FatalException"
     local error_files=$(find ${search_dir} -maxdepth 4 -type f \( -name "*.log" -or -name "*serverlog*" -or -name "*workerlog*" -or -name "*mergerlog*" \) | xargs grep -l -E "${search_pattern}" | sort)
     for ef in ${error_files} ; do
         echo_red "Error found in log $(realpath ${ef})"
