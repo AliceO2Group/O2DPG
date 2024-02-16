@@ -1192,6 +1192,10 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[MFTRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types MFT --cluster-types MFT',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks.json')
+     addQCPerTF(taskName='mftMCTracksQC',
+                needs=[MFTRECOtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types MFT --cluster-types MFT',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks-mc.json')
 
      ### TPC
      # addQCPerTF(taskName='tpcTrackingQC',
