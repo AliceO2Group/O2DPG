@@ -191,7 +191,7 @@ ALICEO2_CCDB_LOCALCACHE=${ALICEO2_CCDB_LOCALCACHE:-$(pwd)/ccdb}
 baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${ALIEN_JDL_LPMRUNNUMBER}"
 
 # these arguments will be passed as well but only evetually be digested by o2dpg_sim_workflow.py which is called from o2dpg_sim_workflow_anchored.py
-remainingargs="-gen pythia8 -proc inel -seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
+remainingargs="-gen pythia8 -seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
 remainingargs="${remainingargs} -e ${ALIEN_JDL_SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
 remainingargs="${remainingargs} --anchor-config config-json.json"
