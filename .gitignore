@@ -2,4 +2,3 @@
 .vscode
 *.pyc
 o2dpg_tests/**
-**/.DS_Store
