@@ -30,7 +30,7 @@ GeneratorBeautyToMu_EvtGenFwdY(double rapidityMin = -4.3, double rapidityMax = -
    gen->AddPdg(std::stoi(spdg),i);
    printf("PDG %d \n",std::stoi(spdg));
   }
-  if(forcedecay) gen->SetForceDecay(kEvtSemiElectronic);
+  if(forcedecay) gen->SetForceDecay(kEvtSemiMuonic);
   else gen->SetForceDecay(kEvtAll);
   // set random seed
   gen->readString("Random:setSeed on");
