@@ -43,7 +43,18 @@
           "pulseheightpeaklower": "1.0",
           "pulseheightpeakupper": "5.0"
         }
-      }
+      },
+    "Tracklets": {
+        "active": "true",
+        "className": "o2::quality_control_modules::trd::TrackletsTask",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+        "cycleDurationSeconds": "60",
+        "dataSource": {
+          "type": "direct",
+           "query": "digits:TRD/DIGITS;tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC;fedChamberStatus:TRD/FCHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/DCSDPsFedChamberStatus"
+        }
+      }	
     },
     "dataSamplingPolicies": []
   }
