@@ -14,7 +14,7 @@ SOURCE_GUARD_SETENV_CALIB=1
 # define the conditions for each calibration
 if has_detector_calib ITS && has_detectors_reco ITS && has_detector_matching PRIMVTX && [[ ! -z "$VERTEXING_SOURCES" ]]; then CAN_DO_CALIB_PRIMVTX_MEANVTX=1; else CAN_DO_CALIB_PRIMVTX_MEANVTX=0; fi
 if has_detector_calib TOF && has_detector_reco TOF; then CAN_DO_CALIB_TOF_DIAGNOSTICS=1; CAN_DO_CALIB_TOF_INTEGRATEDCURR=1; else CAN_DO_CALIB_TOF_DIAGNOSTICS=0; CAN_DO_CALIB_TOF_INTEGRATEDCURR=0; fi
-if has_detector_calib TOF && has_detector_reco TOF && (( has_detectors_reco ITS TPC && has_detector_matching ITSTPCTOF ) || ( has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRDTOF )); then CAN_DO_CALIB_TOF_LHCPHASE=1; CAN_DO_CALIB_TOF_CHANNELOFFSETS=1; else CAN_DO_CALIB_TOF_LHCPHASE=0; CAN_DO_CALIB_TOF_CHANNELOFFSETS=0; fi
+if has_detector_calib TOF && has_detector_reco TOF && ( ( has_detectors_reco ITS TPC && has_detector_matching ITSTPCTOF ) || ( has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRDTOF ) ); then CAN_DO_CALIB_TOF_LHCPHASE=1; CAN_DO_CALIB_TOF_CHANNELOFFSETS=1; else CAN_DO_CALIB_TOF_LHCPHASE=0; CAN_DO_CALIB_TOF_CHANNELOFFSETS=0; fi
 if has_detector_calib TPC && has_detectors ITS TPC TOF TRD && has_detector_matching ITSTPCTRDTOF; then CAN_DO_CALIB_TPC_SCDCALIB=1; else CAN_DO_CALIB_TPC_SCDCALIB=0; fi
 if has_detector_calib TPC && has_processing_step TPC_DEDX; then CAN_DO_CALIB_TPC_TIMEGAIN=1; CAN_DO_CALIB_TPC_RESPADGAIN=1; else CAN_DO_CALIB_TPC_TIMEGAIN=0; CAN_DO_CALIB_TPC_RESPADGAIN=0; fi
 if has_detector_calib TPC && has_detectors ITS TPC && has_detector_matching ITSTPC; then CAN_DO_CALIB_TPC_VDRIFTTGL=1; else CAN_DO_CALIB_TPC_VDRIFTTGL=0; fi

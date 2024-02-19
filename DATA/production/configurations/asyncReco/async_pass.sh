@@ -576,7 +576,7 @@ else
           echo "nCTFsFilesInspected_step1 = $nCTFsFilesInspected_step1, nCTFsFilesInspected_step2 = $nCTFsFilesInspected_step2" > validation_error.message
           echo "nCTFsFilesOK_step1 = $nCTFsFilesOK_step1, nCTFsFilesOK_step2 = $nCTFsFilesOK_step2" > validation_error.message
           echo "nCTFsProcessed_step1 = $nCTFsProcessed_step1, nCTFsProcessed_step2 = $nCTFsProcessed_step2" > validation_error.message
-          exit 1000
+          exit 255
         fi
       fi
     fi
@@ -745,7 +745,7 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       CURRENT_POOL_SIZE=`jobs -r | wc -l`
     done < $JOB_LIST
     # collecting return codes of the merging processes
-    for i in ${!arr[@]}; do
+    for i in "${!arr[@]}"; do
       wait ${arr[$i]}
       exitcode=$?
       if [[ $exitcode -ne 0 ]]; then
