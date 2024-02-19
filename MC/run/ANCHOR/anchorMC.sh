@@ -76,10 +76,12 @@ done
 
 # Allow for both "ALIEN_JDL_LPM<KEY>" as well as "KEY"
 
-# the only two where there is a real default for
+# the only four where there is a real default for
 export ALIEN_JDL_CPULIMIT=${ALIEN_JDL_CPULIMIT:-${CPULIMIT:-8}}
 export ALIEN_JDL_SIMENGINE=${ALIEN_JDL_SIMENGINE:-${SIMENGINE:-TGeant4}}
 export ALIEN_JDL_WORKFLOWDETECTORS=${ALIEN_JDL_WORKFLOWDETECTORS:-ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,CTP}
+# can be passed to contain additional options that will be passed to o2dpg_sim_workflow_anchored.py and eventually to o2dpg_sim_workflow.py
+export ALIEN_JDL_ANCHOR_SIM_OPTIONS=${ALIEN_JDL_ANCHOR_SIM_OPTIONS:--gen pythia8}
 # all others MUST be set by the user/on the outside
 export ALIEN_JDL_LPMANCHORPASSNAME=${ALIEN_JDL_LPMANCHORPASSNAME:-${ANCHORPASSNAME}}
 export ALIEN_JDL_MCANCHOR=${ALIEN_JDL_MCANCHOR:-${MCANCHOR}}
@@ -191,10 +193,12 @@ ALICEO2_CCDB_LOCALCACHE=${ALICEO2_CCDB_LOCALCACHE:-$(pwd)/ccdb}
 baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${ALIEN_JDL_LPMRUNNUMBER}"
 
 # these arguments will be passed as well but only evetually be digested by o2dpg_sim_workflow.py which is called from o2dpg_sim_workflow_anchored.py
-remainingargs="-gen pythia8 -seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
+remainingargs="-seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
 remainingargs="${remainingargs} -e ${ALIEN_JDL_SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
-remainingargs="${remainingargs} --anchor-config config-json.json"
+# prepend(!) ALIEN_JDL_ANCHOR_SIM_OPTIONS
+# since the last passed argument wins, e.g. -productionTag cannot be overwritten by the user
+remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config config-json.json"
 
 echo "baseargs: ${baseargs}"
 echo "remainingargs: ${remainingargs}"
