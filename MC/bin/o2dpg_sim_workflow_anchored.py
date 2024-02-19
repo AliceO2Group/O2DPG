@@ -409,7 +409,7 @@ def main():
            effTrigger = 28.0 # this is ZDC
          else:
            effTrigger = 0.759
-             
+
        # time needs to be converted to seconds ==> timestamp / 1000
        rate = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, timestamp/1000., effTrigger, grplhcif.getBunchFilling().getNBunches(), ColSystem)
 
@@ -424,6 +424,7 @@ def main():
 
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
+    # NOTE: forwardargs can - in principle - contain some of the arguments that are appended here. However, the last passed argument wins, so they would be overwritten.
     forwardargs += " -tf " + str(args.tf) + " --sor " + str(sor) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit "       \
                    + str(first_orbit) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + " -eCM " + str(eCM) + ' --readoutDets ' + GLOparams['detList']
     print ("forward args ", forwardargs)
