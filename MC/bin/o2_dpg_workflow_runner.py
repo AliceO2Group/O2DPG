@@ -1488,8 +1488,8 @@ class WorkflowExecutor:
         # we record the global environment setting
         # in particular to capture global workflow initialization
         lines.append('#-- GLOBAL INIT SECTION FROM WORKFLOW --\n')
-        for e in self.globalenv:
-            lines.append('export ' + str(e) + '=' + str(self.globalenv[e]) + '\n')
+        for e in self.globalinit['env']:
+            lines.append('export ' + str(e) + '=' + str(self.globalinit['env'][e]) + '\n')
         lines.append('#-- TASKS FROM WORKFLOW --\n')
         for tid in taskorder:
             print ('Doing task ' + self.idtotask[tid])
