@@ -378,7 +378,7 @@ pushd ${REPO_DIR} > /dev/null
 
 # First check, if testing itself has changed. In that case this will add INI files
 # for which a test can be found
-global_testing_changed=$(get_changed_files | grep -E ".C$|.sh$" | grep "^test/")
+global_testing_changed=$(get_changed_files | grep -E "common/kine_tests/test_generic_kine.C|run_generator_tests.sh" | grep "^test/")
 [[ "${global_testing_changed}" != "" ]] && add_ini_files_from_all_tests
 
 # Then add the ini files that have changed as well. We need to do that so we get information
