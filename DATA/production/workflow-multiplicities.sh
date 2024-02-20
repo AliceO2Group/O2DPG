@@ -222,7 +222,7 @@ if [[ -z ${EVE_NTH_EVENT:-} ]]; then
     EVE_NTH_EVENT=2
   elif [[ "$HIGH_RATE_PP" == "1" ]]; then
     EVE_NTH_EVENT=10
-  elif [[ $BEAMTYPE == "pp" && "${ED_VERTEX_MODE:-}" == "1" ]]; then
+  elif [[ $BEAMTYPE == "pp" ]]; then
     EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
   else # COSMICS / TECHNICALS / ...
     EVE_NTH_EVENT=1
