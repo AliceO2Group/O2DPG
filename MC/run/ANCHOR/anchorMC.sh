@@ -252,6 +252,8 @@ if [[ -z "${DISABLE_QC}" && "${MCRC}" = "0" && "${remainingargs}" == *"--include
   # do QC tasks
   echo "Doing QC"
   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} -k
+  # NOTE that with the -k|--keep-going option, the runner will try to keep on executing even if some tasks fail.
+  # That means, even if there is a failing QC task, the return code will be 0
   MCRC=$?
 fi
 
