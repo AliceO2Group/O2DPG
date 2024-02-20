@@ -104,6 +104,7 @@ if [[ -z "${RAWINPUTDIR:-}" ]];    then export RAWINPUTDIR=$FILEWORKDIR; fi    #
 if [[ -z "${EPNSYNCMODE:-}" ]];    then export EPNSYNCMODE=0; fi               # Is this workflow supposed to run on EPN for sync processing? Will enable InfoLogger / metrics / fetching QC JSONs from consul...
 if [[ -z "${BEAMTYPE:-}" ]];       then export BEAMTYPE=PbPb; fi               # Beam type, must be PbPb, pp, pPb, cosmic, technical
 if [[ -z "${RUNTYPE:-}" ]];        then export RUNTYPE=Standalone; fi          # Run Type, standalone for local tests, otherwise PHYSICS, COSMICS, TECHNICAL, SYNTHETIC
+if [[ $RUNTYPE == "SYNTHETIC" ]];  then export IS_SIMULATED_DATA=1; fi         # For SYNTHETIC runs we always process simulated data
 if [[ -z "${IS_SIMULATED_DATA:-}" ]]; then export IS_SIMULATED_DATA=1; fi       # processing simulated data
 if [[ -z "${IS_TRIGGERED_DATA:-}" ]]; then export IS_TRIGGERED_DATA=0; fi       # processing triggered data (TPC triggered instead of continuous)
 if [[ -z "${CTF_DIR:-}" ]];           then CTF_DIR=$FILEWORKDIR; fi             # Directory where to store CTFs
