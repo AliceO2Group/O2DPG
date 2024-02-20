@@ -4,13 +4,13 @@
 # Beware that errors might occur outside of O2DPG tasks such as in preprocessing etc or not visible in logs
 
 mytar () {
-  tar $@
+  tar "$@"
 }
 if [[ $(uname) == "Darwin" ]]; then
     echo "Running on macOS. This needs gnu-tar"
     $(which gtar)
     mytar () {
-      gtar $@
+      gtar "$@"
     }
 fi
 
