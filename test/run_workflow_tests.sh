@@ -3,12 +3,14 @@
 # The test parent dir to be cretaed in current directory
 TEST_PARENT_DIR_PWG="o2dpg_tests/workflows_pwgs"
 TEST_PARENT_DIR_BIN="o2dpg_tests/workflows_bin"
+TEST_PARENT_DIR_ANCHORED="o2dpg_tests/anchored"
 
 # a global counter for tests
 TEST_COUNTER=0
 
 # unified names of log files
 LOG_FILE_WF="o2dpg-test-wf.log"
+LOG_FILE_ANCHORED="o2dpg-test-anchored.log"
 
 # Prepare some colored output
 SRED="\033[0;31m"
@@ -123,6 +125,26 @@ run_workflow_creation()
     return ${RET}
 }
 
+test_anchored()
+{
+    local to_run="${1:-${O2DPG_ROOT}/MC/run/ANCHOR/tests/test_anchor_2023_apass2_pp.sh}"
+    local RET=0
+    for anchored_script in ${to_run} ; do
+        [[ ! -f ${anchored_script} ]] && { echo "Desired test script ${anchored_script} does not exist. Skip." ; continue ; }
+        ((TEST_COUNTER++))
+        local test_dir=${TEST_COUNTER}_$(basename ${anchored_script})_dir
+        rm -rf ${test_dir} 2> /dev/null
+        mkdir ${test_dir}
+        pushd ${test_dir} > /dev/null
+            echo -n "Test ${TEST_COUNTER}: ${anchored_script}"
+            ${anchored_script} >> ${LOG_FILE_ANCHORED} 2>&1
+            local ret_this=${?}
+            [[ "${ret_this}" != "0" ]] && RET=${ret_this}
+        popd > /dev/null
+    done
+    return ${RET}
+}
+
 collect_changed_pwg_wf_files()
 {
     # Collect all INI files which have changed
@@ -188,8 +210,9 @@ source ${REPO_DIR}/test/common/utils/utils.sh
 pushd ${REPO_DIR} > /dev/null
 
 # flag if anything changed in the sim workflow bin dir
-changed_wf_bin=$(get_changed_files | grep "MC/bin")
+changed_wf_bin=$(get_changed_files | grep -E "MC/bin")
 changed_wf_bin_related=$(get_changed_files | grep -E "MC/analysis_testing|MC/config/analysis_testing/json|MC/config/QC/json")
+changed_anchored_related=$(get_changed_files | grep -E "MC/run/ANCHOR/anchorMC.sh|MC/run/ANCHOR/tests|MC/bin|UTILS/parse-async-WorkflowConfig.py")
 
 
 # collect what has changed for PWGs
@@ -215,6 +238,27 @@ REPO_DIR=$(realpath ${REPO_DIR})
 export O2DPG_ROOT=${REPO_DIR}
 
 
+###############
+# ANCHORED MC #
+###############
+# prepare our local test directory for PWG tests
+rm -rf ${TEST_PARENT_DIR_ANCHORED} 2>/dev/null
+mkdir -p ${TEST_PARENT_DIR_ANCHORED} 2>/dev/null
+pushd ${TEST_PARENT_DIR_ANCHORED} > /dev/null
+
+# global return code for PWGs
+ret_global_anchored=0
+if [[ "${changed_anchored_related}" != "" ]] ; then
+    echo "### Test anchored ###"
+    # Run an anchored test
+    test_anchored
+    ret_global_anchored=${?}
+    echo
+fi
+
+# return to where we came from
+popd > /dev/null
+
 ########
 # PWGs #
 ########
@@ -226,7 +270,7 @@ pushd ${TEST_PARENT_DIR_PWG} > /dev/null
 # global return code for PWGs
 ret_global_pwg=0
 if [[ "${changed_wf_bin}" != "" ]] ; then
-    # Run all the PWG related WF creations, hence overwrite what was collected by collect_changed_pwg_wf_files eal=rlier
+    # Run all the PWG related WF creations, hence overwrite what was collected by collect_changed_pwg_wf_files earlier
     WF_FILES=$(get_all_workflows "MC/run/.*/")
     echo
 fi
@@ -239,7 +283,6 @@ if [[ "${WF_FILES}" != "" ]] ; then
     ret_global_pwg=${?}
     echo
 fi
-
 
 # return to where we came from
 popd > /dev/null
@@ -285,9 +328,21 @@ if [[ "${ret_global_bin}" != "0" ]] ; then
     echo "###################################"
     echo
     print_error_logs ${TEST_PARENT_DIR_BIN}
-    exit ${ret_global_bin}
 fi
 
+# However, if a central test fails, exit code will be !=0
+if [[ "${ret_global_anchored}" != "0" ]] ; then
+    echo
+    echo "##########################"
+    echo "# ERROR for anchored MCs #"
+    echo "##########################"
+    echo
+    print_error_logs ${TEST_PARENT_DIR_ANCHORED}
+fi
+
+RET=$(( ret_global_bin + ret_global_anchored ))
+
 echo
-echo_green "All required workflow tests successful"
-echo
+[[ "${RET}" != "0" ]] && echo "There were errors, please check!" || echo_green "All required workflow tests successful"
+
+exit ${RET}
