@@ -50,16 +50,6 @@ class CCDBAccessor:
         # we allow nullptr responsens and will treat it ourselves
         o2.ccdb.BasicCCDBManager.instance().setFatalWhenNull(False)
 
-    def list(self, path, dump_path=None):
-        ret = self.api.list(path, False, "application/json")
-        ret = json.loads(ret)
-        if ret and "objects" in ret:
-            ret = ret["objects"]
-        if ret and dump_path:
-            print(f"CCDB object information for path {path} stored in {dump_path}")
-            dump_json(ret, dump_path)
-        return ret
-
     def fetch(self, path, obj_type, timestamp=None, meta_info=None):
         """
         TODO We could use CcdbApi::snapshot at some point, needs revision
@@ -95,7 +85,7 @@ def retrieve_sor_eor(ccdbreader, run_number):
     path_run_info = "RCT/Info/RunInformation"
     header = ccdbreader.fetch_header(path_run_info, run_number)
     if not header:
-       print(f"WARNING: Cannot find run information for run number {r}")
+       print(f"WARNING: Cannot find run information for run number {run_number}")
        return None
     # return this a dictionary
     return {"SOR": int(header["SOR"]), "EOR": int(header["EOR"])}
