@@ -36,8 +36,9 @@ if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC && has_detector_reco ITS && has
 # additional individual settings for calibration workflows
 if has_detector CTP; then export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"; else export CALIB_TPC_SCDCALIB_CTP_INPUT=""; fi
 if [[ ${DISABLE_TRD_PH:-} == 1 ]]; then CAN_DO_CALIB_TRD_T0=0; fi
-# the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
-: ${CALIB_TPC_SCDCALIB_SLOTLENGTH:=600}
+
+: ${CALIB_TPC_SCDCALIB_SLOTLENGTH:=600} # the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
+: ${CALIB_TPC_SCDCALIB_SENDTRKDATA:=1}  # by default, we want to write the track information in addition to unbinned residuals to allow finer filtering offline
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
 
