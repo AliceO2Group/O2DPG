@@ -35,33 +35,15 @@
           "maxNumberCycles" : "-1",
           "dataSource_comment" : "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
           "dataSource" : {
-            "type" : "dataSamplingPolicy",
-            "name" : "tracks-mc"
+            "type" : "direct",
+            "query" : "tracks:MFT/TRACKS/0;mctruth:MFT/TRACKSMCTR/0"
           },
           "location" : "remote",
           "taskParameters" : {
-                       "collisionsContextPath": "./collisioncontext.root" 
-            }
+            "collisionsContextPath": "./collisioncontext.root" 
+          }
         }
       }
-   },
-  
-           "dataSamplingPolicies" : [
-             {
-               "id" : "tracks-mc",
-               "active" : "true",
-               "machines" : [],
-               "query" : "tracks:MFT/TRACKS/0;mctruth:MFT/TRACKSMCTR/0",
-               "samplingConditions" : [
-                 {
-                   "condition" : "random",
-                   "fraction" : "1",
-                   "seed" : "1234"
-                 }
-               ],
-  
-               "blocking" : "false"
-             }
-           ]
+    }
   }
   
