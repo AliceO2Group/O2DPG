@@ -94,6 +94,7 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
       else
         CALIB_TPC_SAC=0;
       fi
+    fi
   fi
 
   # calibrations for TRD
