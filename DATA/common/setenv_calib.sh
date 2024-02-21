@@ -76,15 +76,24 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
   if [[ $CAN_DO_CALIB_TPC_VDRIFTTGL == 1 ]]; then
     if [[ -z ${CALIB_TPC_VDRIFTTGL+x} ]]; then CALIB_TPC_VDRIFTTGL=1; fi
   fi
-  # IDCs
+  # IDCs (by default we enable it for running the synch. reco on the EPNs)
   if [[ $CAN_DO_CALIB_TPC_IDC == 1 ]]; then
-    if [[ -z ${CALIB_TPC_IDC+x} ]] || [[ $CALIB_TPC_IDC == 0 ]]; then
-      CALIB_TPC_IDC=0; # default is off
+    if [[ -z ${CALIB_TPC_IDC+x} ]]; then
+      if [[ $EPNSYNCMODE == 1 ]]; then
+        CALIB_TPC_IDC=1;
+      else
+        CALIB_TPC_IDC=0;
+      fi
     fi
   fi
-  # SAC
+  # SAC (by default we enable it for running the synch. reco on the EPNs)
   if [[ $CAN_DO_CALIB_TPC_SAC == 1 ]]; then
-    if [[ -z ${CALIB_TPC_SAC+x} ]]; then CALIB_TPC_SAC=0; fi # default is off
+    if [[ -z ${CALIB_TPC_SAC+x} ]]; then
+      if [[ $EPNSYNCMODE == 1 ]]; then
+        CALIB_TPC_SAC=1;
+      else
+        CALIB_TPC_SAC=0;
+      fi
   fi
 
   # calibrations for TRD
