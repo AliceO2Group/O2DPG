@@ -7,8 +7,7 @@ name: Apply requested async label
       - created
       - edited
 
-permissions:
-  pull-requests: write   # to update labels
+permissions: {}
 
 jobs:
   apply_async_labels:
