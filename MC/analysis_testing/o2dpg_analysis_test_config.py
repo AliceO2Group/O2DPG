@@ -6,6 +6,8 @@ from os import environ
 from os.path import join, exists
 import json
 
+### hello Benedikt!
+
 # make sure O2DPG + O2 is loaded
 O2DPG_ROOT=environ.get('O2DPG_ROOT')
 
