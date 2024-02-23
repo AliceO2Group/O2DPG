@@ -13,7 +13,7 @@ permissions:
   pull-requests: write   # to update labels
 
 jobs:
-  clean:
+  list_async_labels:
     name: Collect and print async labels
     uses: alisw/ali-bot/.github/workflows/async-list-label.yml@master
     permissions:

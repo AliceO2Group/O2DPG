@@ -11,7 +11,7 @@ permissions:
   pull-requests: write   # to update labels
 
 jobs:
-  clean:
+  apply_async_labels:
     name: Apply requested async label
     uses: alisw/ali-bot/.github/workflows/async-auto-label.yml@master
     permissions:
