@@ -76,10 +76,10 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
   if [[ $CAN_DO_CALIB_TPC_VDRIFTTGL == 1 ]]; then
     if [[ -z ${CALIB_TPC_VDRIFTTGL+x} ]]; then CALIB_TPC_VDRIFTTGL=1; fi
   fi
-  # IDCs (by default we enable it for running the synch. reco on the EPNs)
+  # IDCs (by default we enable it for running the synch. reco on the EPNs, but not on staging since we have only 1 calibration node available)
   if [[ $CAN_DO_CALIB_TPC_IDC == 1 ]]; then
     if [[ -z ${CALIB_TPC_IDC+x} ]]; then
-      if [[ $EPNSYNCMODE == 1 ]]; then
+      if [[ $EPNSYNCMODE == 1 ]] && [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" != "ALICE_STAGING" ]]; then
         CALIB_TPC_IDC=1;
       else
         CALIB_TPC_IDC=0;
