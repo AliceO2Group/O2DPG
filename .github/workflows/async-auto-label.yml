@@ -2,12 +2,10 @@
 name: Apply requested async label
 
 'on':
-  pull_request:
+  issue_comment:
     types:
-      - opened
-      - reopened
-    branches:
-      - master
+      - created
+      - edited
 
 permissions:
   pull-requests: write   # to update labels
