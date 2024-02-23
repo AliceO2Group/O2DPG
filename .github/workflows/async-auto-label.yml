@@ -1,0 +1,20 @@
+---
+name: Apply requested async label
+
+'on':
+  pull_request:
+    types:
+      - opened
+      - reopened
+    branches:
+      - master
+
+permissions:
+  pull-requests: write   # to update labels
+
+jobs:
+  clean:
+    name: Apply requested async label
+    uses: alisw/ali-bot/.github/workflows/async-auto-label.yml@master
+    permissions:
+      pull-requests: write   # to update labels
