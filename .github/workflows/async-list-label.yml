@@ -9,8 +9,7 @@ name: Collect and print async labels
     branches:
       - master
 
-permissions:
-  pull-requests: write   # to update labels
+permissions: {}
 
 jobs:
   list_async_labels:
