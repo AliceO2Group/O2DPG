@@ -180,6 +180,11 @@ def load_external_config(configfile):
     config=json.load(fp)
     return config
 
+
+
+
+
+
 anchorConfig = {}
 if args.anchor_config != '':
    print ("** Using external config **")
