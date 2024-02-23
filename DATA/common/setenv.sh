@@ -165,7 +165,7 @@ DISABLE_ROOT_INPUT="--disable-root-input"
 # Special detector related settings
 if [[ -z "${TPC_CORR_SCALING:-}" ]]; then # TPC corr.map lumi scaling options, any combination of --lumi-type <0,1,2> --corrmap-lumi-mode <0,1>  and TPCCorrMap... configurable param
  TPC_CORR_SCALING=
- if [[ $BEAMTYPE == "pp" ]] || [[ $BEAMTYPE == "PbPb" ]]; then TPC_CORR_SCALING+="--lumi-type 1 TPCCorrMap.lumiInstFactor=2.414"; fi
+ if ( [[ $BEAMTYPE == "pp" ]] || [[ $BEAMTYPE == "PbPb" ]] ) && has_detector CTP; then TPC_CORR_SCALING+="--lumi-type 1 TPCCorrMap.lumiInstFactor=2.414"; fi
  if [[ $BEAMTYPE == "cosmic" ]]; then TPC_CORR_SCALING=" TPCCorrMap.lumiMean=-1;"; fi # for COSMICS we disable all corrections
  export TPC_CORR_SCALING=$TPC_CORR_SCALING
 fi
