@@ -58,7 +58,7 @@
           "etaCut": "1e10f"
         },
 	"grpGeomRequest" : {
-          "geomRequest": "Aligned",
+          "geomRequest": "None",
           "askGRPECS": "false",
           "askGRPLHCIF": "false",
           "askGRPMagField": "true",

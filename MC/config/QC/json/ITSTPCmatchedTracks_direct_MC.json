@@ -56,7 +56,7 @@
           "isMC": "true"
         },
         "grpGeomRequest": {
-          "geomRequest": "Aligned",
+          "geomRequest": "None",
           "askGRPECS": "false",
           "askGRPLHCIF": "false",
           "askGRPMagField": "true",
