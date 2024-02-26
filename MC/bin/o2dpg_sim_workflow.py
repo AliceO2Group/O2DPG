@@ -1208,7 +1208,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      addQCPerTF(taskName='trdDigitsQC',
                 needs=[TRDDigitask['name']],
                 readerCommand='o2-trd-trap-sim',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json')
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-standalone-task.json')
 
      addQCPerTF(taskName='trdTrackingQC',
                 needs=[TRDTRACKINGtask2['name']],
