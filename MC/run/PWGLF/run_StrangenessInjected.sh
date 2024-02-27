@@ -35,7 +35,7 @@ O2_SIM_WORKFLOW=${O2_SIM_WORKFLOW:-"${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py"}
 $O2_SIM_WORKFLOW -eCM ${ENERGY} -col ${SYSTEM} -gen external \
         -j ${NWORKERS} \
         -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} \
-        -confKey "Diamond.width[2]=6." \
+        -confKey "Diamond.width[2]=6." --with-strangeness-tracking \
         ${SEED} \
         -procBkg "inel" -colBkg $SYSTEM --embedding -nb ${NBKGEVENTS} -genBkg pythia8 \
         -e ${SIMENGINE} \
