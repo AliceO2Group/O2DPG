@@ -74,10 +74,11 @@ test_single_wf()
     if [[ "${ret_this}" != "0" ]] ; then
         echo "[FATAL]: O2DPG_TEST Workflow creation failed" >> ${LOG_FILE_WF}
     elif [[ "${execute}" != "" ]] ; then
-        ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 -tt aod >> ${LOG_FILE_WF} 2>&1
+        local memlimit=${O2DPG_TEST_WORKFLOW_MEMLIMIT:+--mem-limit O2DPG_TEST_WORKFLOW_MEMLIMIT}
+        ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 -tt aod ${memlimit} >> ${LOG_FILE_WF} 2>&1
         ret_this=${?}
-        [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels QC >> ${LOG_FILE_WF} 2>&1 ; ret_this_qc=${?} ; }
-        [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels Analysis >> ${LOG_FILE_WF} 2>&1 ; ret_this_analysis=${?} ; }
+        [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels QC ${memlimit} >> ${LOG_FILE_WF} 2>&1 ; ret_this_qc=${?} ; }
+        [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels Analysis ${memlimit} >> ${LOG_FILE_WF} 2>&1 ; ret_this_analysis=${?} ; }
         ret_this=$((ret_this + ret_this_qc + ret_this_analysis))
         [[ "${ret_this}" != "0" ]] && echo "[FATAL]: O2DPG_TEST Workflow execution failed" >> ${LOG_FILE_WF}
     fi
@@ -172,6 +173,8 @@ print_usage()
     echo "  If O2DPG_TEST_HASH_HEAD is not set, it will be looked for ALIBUILD_HEAD_HASH."
     echo "  If also not set, this will be set to HEAD. However, if there are unstaged"
     echo "  changes, it will left blank."
+    echo
+    echo "  O2DPG_TEST_WORKFLOW_MEMLIMIT : The memory limit that is passed to the workflow runner in case a workflow is executed (optional)"
     echo
 }
 
