@@ -235,6 +235,11 @@ echo "Ready to start main workflow"
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
 MCRC=$?  # <--- we'll report back this code
 
+if [[ "${ALIEN_JDL_ADDTIMESERIESINMC}" != "0" ]]; then
+  echo "Running TPC time series"
+  ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt tpctimes
+fi
+
 [[ ! -z "${DISABLE_QC}" ]] && echo "INFO: QC is disabled, skip it."
 
 if [[ -z "${DISABLE_QC}" && "${MCRC}" = "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
