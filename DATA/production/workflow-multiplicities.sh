@@ -29,6 +29,7 @@ fi
 if [[ $SYNCMODE == 1 ]]; then NTRDTRKTHREADS=1; else NTRDTRKTHREADS=; fi
 
 : ${NGPURECOTHREADS:=-1} # -1 = auto-detect
+: ${RECO_NUM_NODES_WORKFLOW_CMP:=0}  # 0
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Process multiplicities
