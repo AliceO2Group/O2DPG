@@ -20,7 +20,7 @@ run_AOD_merging() {
 timeStartFullProcessing=`date +%s`
 
 # to skip positional arg parsing before the randomizing part.
-inputarg="${1}"
+export inputarg="${1}"
 
 if [[ "${1##*.}" == "root" ]]; then
     #echo ${1##*.}
