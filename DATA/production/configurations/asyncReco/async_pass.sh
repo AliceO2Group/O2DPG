@@ -618,21 +618,23 @@ else
 fi
 
 # now extract all performance metrics
-IFS=$'\n'
-timeStart=`date +%s`
-for perfMetricsFiles in performanceMetrics.json performanceMetrics_1.json performanceMetrics_2.json performanceMetrics_3.json ; do
-  suffix=`echo $perfMetricsFiles | sed 's/performanceMetrics\(.*\).json/\1/'`
-  if [[ -f "performanceMetrics.json" ]]; then
-    for workflow in `grep ': {' $perfMetricsFiles`; do
-      strippedWorkflow=`echo $workflow | cut -d\" -f2`
-      cat $perfMetricsFiles | jq '.'\"${strippedWorkflow}\"'' > ${strippedWorkflow}_metrics${suffix}.json
-    done
-  fi
-done
-timeEnd=`date +%s`
-timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-delta=$(( $timeEnd-$timeStart ))
-echo "Time spent in splitting the metrics files = $delta s"
+if [[ $ALIEN_JDL_EXTRACTMETRICS == "1" ]]; then
+  IFS=$'\n'
+  timeStart=`date +%s`
+  for perfMetricsFiles in performanceMetrics.json performanceMetrics_1.json performanceMetrics_2.json performanceMetrics_3.json ; do
+    suffix=`echo $perfMetricsFiles | sed 's/performanceMetrics\(.*\).json/\1/'`
+    if [[ -f "performanceMetrics.json" ]]; then
+      for workflow in `grep ': {' $perfMetricsFiles`; do
+        strippedWorkflow=`echo $workflow | cut -d\" -f2`
+        cat $perfMetricsFiles | jq '.'\"${strippedWorkflow}\"'' > ${strippedWorkflow}_metrics${suffix}.json
+      done
+    fi
+  done
+  timeEnd=`date +%s`
+  timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+  delta=$(( $timeEnd-$timeStart ))
+  echo "Time spent in splitting the metrics files = $delta s"
+fi
 
 if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   # flag to possibly enable Analysis QC
