@@ -575,11 +575,17 @@ else
   fi
 
   if ([[ -z "$ALIEN_JDL_SSPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SSPLITSTEP" ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq 3 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 3 ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq "all" ]]; then
-    # 3. matching, QC, calib, AOD
+    # 3. matching, calib, AOD, potentially QC
     WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS_START
+    if [[ "$ALIEN_JDL_KEEPQCSEPARATE" == "1" ]]; then
+      echo "QC will be run as last step, removing it from 3rd step"
+      for i in QC; do
+	export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
+      done
+    fi
     echo "WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS"
-    echo "Step 3) matching, QC, calib, AOD"
-    echo -e "\nStep 3) matching, QC, calib, AOD" >> workflowconfig.log
+    echo "Step 3) matching, calib, AOD, potentially QC"
+    echo -e "\nStep 3) matching, calib, AOD, potentially QC" >> workflowconfig.log
     export TIMEFRAME_RATE_LIMIT=0
     echo "Removing detectors $DETECTORS_EXCLUDE"
     READER_DELAY=${ALIEN_JDL_READERDELAY:-30}
@@ -607,13 +613,45 @@ else
       fi
     fi
   fi
+  if [[ "$ALIEN_JDL_KEEPQCSEPARATE" == "1" ]]; then
+    if ([[ -z "$ALIEN_JDL_SSPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SSPLITSTEP" ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq 4 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 4 ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq "all" ]]; then
+      # 4. QC
+      WORKFLOW_PARAMETERS="QC"
+      echo "WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS"
+      echo "Step 4) QC"
+      echo -e "\nStep 4) QC" >> workflowconfig.log
+      export TIMEFRAME_RATE_LIMIT=0
+      echo "Removing detectors $DETECTORS_EXCLUDE"
+      env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=ALL WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS=HMP WORKFLOW_DETECTORS_EXCLUDE_QC=CPV,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+      # run it
+      if [[ "0$RUN_WORKFLOW" != "00" ]]; then
+        timeStart=`date +%s`
+        time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=ALL WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS=HMP WORKFLOW_DETECTORS_EXCLUDE_QC=CPV,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+        exitcode=$?
+        timeEnd=`date +%s`
+        timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+        delta=$(( $timeEnd-$timeStart ))
+        echo "Time spent in running the workflow, Step 4 = $delta s"
+        echo "exitcode = $exitcode"
+        if [[ $exitcode -ne 0 ]]; then
+          echo "exit code from Step 4 of processing is " $exitcode > validation_error.message
+          echo "exit code from Step 4 of processing is " $exitcode
+          exit $exitcode
+        fi
+        mv latest.log latest_reco_4.log
+        if [[ -f performanceMetrics.json ]]; then
+          mv performanceMetrics.json performanceMetrics_4.json
+        fi
+      fi
+    fi
+  fi
 fi
 
 # now extract all performance metrics
 if [[ $ALIEN_JDL_EXTRACTMETRICS == "1" ]]; then
   IFS=$'\n'
   timeStart=`date +%s`
-  for perfMetricsFiles in performanceMetrics.json performanceMetrics_1.json performanceMetrics_2.json performanceMetrics_3.json ; do
+  for perfMetricsFiles in performanceMetrics.json performanceMetrics_1.json performanceMetrics_2.json performanceMetrics_3.json performanceMetrics_4.json ; do
     suffix=`echo $perfMetricsFiles | sed 's/performanceMetrics\(.*\).json/\1/'`
     if [[ -f "performanceMetrics.json" ]]; then
       for workflow in `grep ': {' $perfMetricsFiles`; do
