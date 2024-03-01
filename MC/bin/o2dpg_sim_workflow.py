@@ -20,7 +20,7 @@
 import sys
 import importlib.util
 import argparse
-from os import environ, mkdir, getcwd
+from os import environ, mkdir
 from os.path import join, dirname, isdir, isabs
 import random
 import json
@@ -326,20 +326,8 @@ workflow={}
 workflow['stages'] = []
 
 ### setup global environment variables which are valid for all tasks
-globalenv = {}
-if args.condition_not_after:
-   # this is for the time-machine CCDB mechanism
-   globalenv['ALICEO2_CCDB_CONDITION_NOT_AFTER'] = args.condition_not_after
-   # this is enforcing the use of local CCDB caching
-   if environ.get('ALICEO2_CCDB_LOCALCACHE') == None:
-       print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + getcwd() + '/ccdb')
-       globalenv['ALICEO2_CCDB_LOCALCACHE'] = getcwd() + "/ccdb"
-   else:
-       # fixes the workflow to use and remember externally provided path
-       globalenv['ALICEO2_CCDB_LOCALCACHE'] = environ.get('ALICEO2_CCDB_LOCALCACHE')
-   globalenv['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = '${ALICEO2_CCDB_LOCALCACHE:+"ON"}'
-
-globalinittask = createGlobalInitTask(globalenv)
+global_env = {'ALICEO2_CCDB_CONDITION_NOT_AFTER': args.condition_not_after} if args.condition_not_after else None
+globalinittask = createGlobalInitTask(global_env)
 globalinittask['cmd'] = 'o2-ccdb-cleansemaphores -p ${ALICEO2_CCDB_LOCALCACHE}'
 workflow['stages'].append(globalinittask)
 ####
