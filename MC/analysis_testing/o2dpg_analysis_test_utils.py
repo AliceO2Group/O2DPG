@@ -69,7 +69,7 @@ def full_ana_name(raw_ana_name):
     return f"{ANALYSIS_LABEL}_{raw_ana_name}"
 
 
-def get_common_args_as_string(analysis_name, all_common_args):
+def get_common_args_as_string(ana, all_common_args):
     """
     all_common_args is of the form
     [<ana_name1>-shm-segment-size <value>, <ana_name2>-readers <value>, ...]
@@ -88,6 +88,11 @@ def get_common_args_as_string(analysis_name, all_common_args):
                 "readers": 1,
                 "aod-memory-rate-limit": 500000000}
 
+    # get common args from analysis configuration and add to args_map
+    common_args_from_config = ana.get("common_args", {})
+    for key, value in common_args_from_config.items():
+        args_map[key] = value
+
     # arguments dedicated for this analysis
     args_map_overwrite = {}
 
@@ -97,6 +102,8 @@ def get_common_args_as_string(analysis_name, all_common_args):
     if len(all_common_args) % 2:
         print("ERROR: Cannot digest common args.")
         return None
+
+    analysis_name = ana["name"]
 
     for i in range(0, len(all_common_args), 2):
         tokens = all_common_args[i].split("-")

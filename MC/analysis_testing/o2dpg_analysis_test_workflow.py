@@ -251,7 +251,7 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
             continue
         print(f"INFO: Analysis {ana['name']} uses configuration {configuration}")
 
-        add_common_args_ana = get_common_args_as_string(ana["name"], add_common_args)
+        add_common_args_ana = get_common_args_as_string(ana, add_common_args)
         if not add_common_args_ana:
             print(f"ERROR: Cannot parse common args for analysis {ana['name']}")
             continue

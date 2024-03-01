@@ -233,6 +233,9 @@
             "expected_output": ["AnalysisResults.root"],
             "valid_mc": true,
             "valid_data": true,
+            "common_args": {
+                "shm-segment-size": 2500000000
+            },
             "tasks": ["o2-analysis-je-emc-eventselection-qa",
                       "o2-analysis-je-emc-cellmonitor",
                       "o2-analysis-je-emcal-correction-task",
