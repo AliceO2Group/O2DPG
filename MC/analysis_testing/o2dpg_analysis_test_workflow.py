@@ -192,7 +192,7 @@ def get_additional_workflows(input_aod):
                                   "O2bc_001": "o2-analysis-bc-converter",
                                   "O2v0_002": "o2-analysis-v0converter",
                                   "O2trackextra_001": "o2-analysis-tracks-extra-converter",
-                                  "O2ft0corrected": "o2-ft0-corrected-table"}
+                                  "O2ft0corrected": "o2-analysis-ft0-corrected-table"}
         for i in froot.GetListOfKeys():
             if "DF_" not in i.GetName():
                 continue
