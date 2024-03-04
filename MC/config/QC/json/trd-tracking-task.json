@@ -31,7 +31,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-          "query": "trackITSTPCTRD:TRD/MATCH_ITSTPC;trigITSTPCTRD:TRD/TRGREC_ITSTPC"
+          "query": "trackITSTPCTRD:TRD/MATCH_ITSTPC;trigITSTPCTRD:TRD/TRGREC_ITSTPC;trackTPCTRD:TRD/MATCH_TPC;trigTPCTRD:TRD/TRGREC_TPC"
         },
         "taskParameters": {
           "detailedQC": "false",
