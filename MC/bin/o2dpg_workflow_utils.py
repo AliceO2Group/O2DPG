@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from os import environ, getcwd
 from copy import deepcopy
 import json
 
@@ -84,17 +85,43 @@ def createTask(name='', needs=[], tf=-1, cwd='./', lab=[], cpu=1, relative_cpu=N
              'cwd' : cwd }
 
 
-def createGlobalInitTask(envdict):
+def createGlobalInitTask(keys_values=None, set_defaults=True):
     """Returns a special task that is recognized by the executor as
        a task whose environment section is to be globally applied to all tasks of
        a workflow.
 
-       envdict: dictionary of environment variables and values to be globally applied to all tasks
+    Args:
+        keys_values: dict or None
+            dictionary of environment variables and values to be globally applied to all tasks
+            if sharing keys with defaults, keys_values takes precedence
+        set_defaults: bool
+            whether or not some default values will be added
+
+    Returns:
+        dict: task dictionary
     """
+
+    # dictionary holding global environment to be passed to task
+    env_dict = {}
+
+    if set_defaults:
+        if environ.get('ALICEO2_CCDB_LOCALCACHE') is None:
+            print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + getcwd() + '/ccdb')
+            env_dict['ALICEO2_CCDB_LOCALCACHE'] = getcwd() + "/ccdb"
+        else:
+        # fixes the workflow to use and remember externally provided path
+            env_dict['ALICEO2_CCDB_LOCALCACHE'] = environ.get('ALICEO2_CCDB_LOCALCACHE')
+        env_dict['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = '${ALICEO2_CCDB_LOCALCACHE:+"ON"}'
+
+    if keys_values:
+        # keys_values takes priority in case of same keys
+        env_dict |= keys_values
+
     t = createTask(name = '__global_init_task__')
     t['cmd'] = 'NO-COMMAND'
-    t['env'] = envdict
+    t['env'] = env_dict
     return t
+
 
 def summary_workflow(workflow):
     print("=== WORKFLOW SUMMARY ===\n")
