@@ -18,7 +18,11 @@ if [[ -z "$EPN2EOS_METAFILES_DIR" ]] && [[ "0$WORKFLOWMODE" != "0print" ]]; then
   export EPN2EOS_METAFILES_DIR=/data/epn2eos_tool/epn2eos # Directory for epn2eos meta data files
 fi
 if [[ $USER == "epn" ]]; then
-  [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=/scratch/services/gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
+  if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
+    [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=/scratch/services/staging_gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
+  else
+    [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=/scratch/services/gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
+  fi
 else
   [[ -z "$GEN_TOPO_WORKDIR" ]] && export GEN_TOPO_WORKDIR=$HOME/gen_topo # Working directory for checkout of O2DPG repository and for XML cache. If this directory is wiped, gen_topo will recreate all necessary content the next time it runs. The folder should be persistent to cache workflows.
   mkdir -p $HOME/gen_topo

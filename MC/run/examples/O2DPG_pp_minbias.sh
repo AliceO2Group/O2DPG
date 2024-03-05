@@ -58,7 +58,7 @@ fi
 RETANA=0
 if [ "${DOANALYSIS}" != "" ] && [ "${RETMC}" = "0" ]; then
     # run test analyses if requested
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt "Analysis_" ${MEMLIMIT} ${CPULIMIT}
+    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels Analysis ${MEMLIMIT} ${CPULIMIT}
     RETANA=${?}
 fi
 

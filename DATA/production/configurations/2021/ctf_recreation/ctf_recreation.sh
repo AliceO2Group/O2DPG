@@ -72,7 +72,7 @@ fi
 # if "$DETCONFIG" is set explicitly, this has the second highest priority
 # last option is to have it from the JDL
 if [[ -z "$DETCONFIG" ]]; then
-    if [[ -z "ALIEN_JDL_DETCONFIG" ]]; then
+    if [[ -z "$ALIEN_JDL_DETCONFIG" ]]; then
 	echo "nothing set the detector configuration to use, exiting"
 	exit 4
     else

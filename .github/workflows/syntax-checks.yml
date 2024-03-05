@@ -1,0 +1,95 @@
+---
+name: Validate syntax
+
+'on':
+  - push
+  - pull_request
+
+permissions: {}
+
+jobs:
+  json-syntax:
+    name: JSON
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate syntax for JSON files
+        run: |
+          error=0
+          readarray -d '' json_files < \
+            <(find . \( -path ./.git -or -path ./DATA/testing/private \) -prune -false -or -type f -name '*.json' -print0)
+          for jsonf in "${json_files[@]}"; do
+            echo "::debug::Checking $jsonf..."
+            if ! errmsg=$(jq . "$jsonf" 2>&1 >/dev/null); then
+              error=1
+              echo "Invalid JSON syntax found in $jsonf:" >&2
+              printf '::error file=%s,title=%s::%s\n' "$jsonf" 'Invalid JSON syntax' "$errmsg"
+            fi
+          done
+          exit "$error"
+
+  bash-syntax:
+    name: Bash
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate syntax with bash -n
+        run: |
+          error=0
+          readarray -d '' files < \
+            <(find . -path ./.git -prune -false -or -type f -name '*.sh' -print0)
+          for bashf in "${files[@]}"; do
+            echo "::debug::Checking $bashf..."
+            if ! errmsg=$(bash -n "$bashf" 2>&1 >/dev/null); then
+              error=1
+              echo "Invalid Bash syntax found in $bashf:" >&2
+              printf '::error file=%s,title=%s::%s\n' "$bashf" 'Invalid syntax' "$errmsg"
+            fi
+          done
+          exit "$error"
+
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Shellcheck to find errors
+        run: |
+          error=0
+          find . -path ./.git -prune -false -or -type f -name '*.sh' -print0 |
+            xargs -0 shellcheck -xf json1 -S error -s bash > errors.json || error=$?
+          # Produce code annotations in GitHub's format.
+          jq -r '.comments[] | "Error found in \(.file) line \(.line):\n::error file=\(.file),line=\(.line),endLine=\(.endLine),col=\(.column),endColumn=\(.endColumn)::\(.message)"' errors.json
+          exit "$error"
+
+  pylint:
+    name: Pylint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install prerequisites
+        run: |
+          sudo apt update -y
+          sudo apt install -y pylint
+
+      - name: Run Pylint to find errors
+        run: |
+          error=0
+          find . -path ./.git -prune -false -or -type f -name '*.py' -print0 |
+            # "import-errors" are shown for valid modules like ROOT, so ignore them.
+            xargs -0 pylint -E -f json --disable import-error > errors.json || error=$?
+            # Produce code annotations in GitHub's format.
+          jq -r '.[] | "Error found in \(.path) line \(.line):\n::error file=\(.path),line=\(.line),endLine=\(.endLine),col=\(.column),endColumn=\(.endColumn),title=Pylint \(.type) \(.symbol)::\(.message)"' errors.json
+          exit "$error"

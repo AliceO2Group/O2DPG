@@ -80,7 +80,7 @@ spec = importlib.util.spec_from_file_location(module_name, join(O2DPG_ROOT, "MC"
 o2dpg_workflow_utils = importlib.util.module_from_spec(spec)
 sys.modules[module_name] = o2dpg_workflow_utils
 spec.loader.exec_module(o2dpg_workflow_utils)
-from o2dpg_workflow_utils import createTask, dump_workflow
+from o2dpg_workflow_utils import createTask, dump_workflow, createGlobalInitTask
 
 module_name = "o2dpg_analysis_test_utils"
 spec = importlib.util.spec_from_file_location(module_name, join(O2DPG_ROOT, "MC", "analysis_testing", "o2dpg_analysis_test_utils.py"))
@@ -190,8 +190,9 @@ def get_additional_workflows(input_aod):
         o2_analysis_converters = {"O2collision_001": "o2-analysis-collision-converter --doNotSwap",
                                   "O2zdc_001": "o2-analysis-zdc-converter",
                                   "O2bc_001": "o2-analysis-bc-converter",
-                                  "O2v0_001": "o2-analysis-v0converter",
-                                  "O2trackextra_001": "o2-analysis-tracks-extra-converter"}
+                                  "O2v0_002": "o2-analysis-v0converter",
+                                  "O2trackextra_001": "o2-analysis-tracks-extra-converter",
+                                  "O2ft0corrected": "o2-analysis-ft0-corrected-table"}
         for i in froot.GetListOfKeys():
             if "DF_" not in i.GetName():
                 continue
@@ -251,7 +252,7 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
             continue
         print(f"INFO: Analysis {ana['name']} uses configuration {configuration}")
 
-        add_common_args_ana = get_common_args_as_string(ana["name"], add_common_args)
+        add_common_args_ana = get_common_args_as_string(ana, add_common_args)
         if not add_common_args_ana:
             print(f"ERROR: Cannot parse common args for analysis {ana['name']}")
             continue
@@ -321,7 +322,9 @@ def run(args):
         print("ERROR: QC upload was requested, however in that case a --pass-name and --period-name are required")
         return 1
 
-    workflow = []
+    ### setup global environment variables which are valid for all tasks, set as first task
+    global_env = {"ALICEO2_CCDB_CONDITION_NOT_AFTER": args.condition_not_after} if args.condition_not_after else None
+    workflow = [createGlobalInitTask(global_env)]
     add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, autoset_converters=args.autoset_converters, include_disabled_analyses=args.include_disabled, timeout=args.timeout, collision_system=args.collision_system, add_common_args=args.add_common_args)
     if args.with_qc_upload:
         add_analysis_qc_upload_tasks(workflow, args.period_name, args.run_number, args.pass_name)
@@ -349,6 +352,8 @@ def main():
     parser.add_argument("--timeout", type=int, default=None, help="Timeout for analysis tasks in seconds.")
     parser.add_argument("--collision-system", dest="collision_system", help="Set the collision system. If not set, tried to be derived from ALIEN_JDL_LPMInterationType. Fallback to pp")
     parser.add_argument("--add-common-args", dest="add_common_args", nargs="*", help="Pass additional common arguments per analysis, for instance --add-common-args EMCAL-shm-segment-size 2500000000 will add --shm-segment-size 2500000000 to the EMCAL analysis")
+    parser.add_argument('--condition-not-after', dest="condition_not_after", type=int, help="only consider CCDB objects not created after this timestamp (for TimeMachine)", default=3385078236000)
+
     parser.set_defaults(func=run)
     args = parser.parse_args()
     return(args.func(args))
