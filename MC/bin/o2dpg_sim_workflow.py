@@ -1212,7 +1212,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
      addQCPerTF(taskName='trdTrackingQC',
                 needs=[TRDTRACKINGtask2['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TRD" --cluster-types none',
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TRD,TPC-TRD" --cluster-types none',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-tracking-task.json')
 
      ### TOF
