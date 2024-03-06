@@ -8,9 +8,9 @@
 /DATA/testing/detectors/FV0
 /DATA/testing/detectors/HMP
 /DATA/testing/detectors/ITS
-/DATA/testing/detectors/MCH @aphecethce
+/DATA/testing/detectors/MCH @aphecetche
 /DATA/testing/detectors/MFT
-/DATA/testing/detectors/MID @aphecethce
+/DATA/testing/detectors/MID @aphecetche
 /DATA/testing/detectors/PHS
 /DATA/testing/detectors/TOF @noferini @chiarazampolli
 /DATA/testing/detectors/TPC @wiechula
