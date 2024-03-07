@@ -1207,7 +1207,12 @@ for tf in range(1, NTIMEFRAMES + 1):
      addQCPerTF(taskName='trdDigitsQC',
                 needs=[TRDDigitask['name']],
                 readerCommand='o2-trd-trap-sim',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json')
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-standalone-task.json')
+
+     addQCPerTF(taskName='trdTrackingQC',
+                needs=[TRDTRACKINGtask2['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TRD,TPC-TRD" --cluster-types none',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-tracking-task.json')
 
      ### TOF
      addQCPerTF(taskName='tofDigitsQC',
