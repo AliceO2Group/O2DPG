@@ -11,7 +11,7 @@ R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGHF/external/generator)
 
 
 FairGenerator*
-GeneratorBeautyToMu_EvtGenFwdY(double rapidityMin = -4.3, double rapidityMax = -2.2, bool ispp = true, bool verbose = false, TString pdgs = "511;521;531;541;5112;5122;5232;5132;5332")
+GeneratorBeautyToMu_EvtGenFwdY(double rapidityMin = -4.3, double rapidityMax = -2.2, bool ispp = true, bool forcedecay = true, bool verbose = false, TString pdgs = "511;521;531;541;5112;5122;5232;5132;5332")
 {
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorHF>();
   gen->setRapidity(rapidityMin,rapidityMax);
@@ -30,7 +30,8 @@ GeneratorBeautyToMu_EvtGenFwdY(double rapidityMin = -4.3, double rapidityMax = -
    gen->AddPdg(std::stoi(spdg),i);
    printf("PDG %d \n",std::stoi(spdg));
   }
-  gen->SetForceDecay(kEvtSemiMuonic);
+  if(forcedecay) gen->SetForceDecay(kEvtSemiMuonic);
+  else gen->SetForceDecay(kEvtAll);
   // set random seed
   gen->readString("Random:setSeed on");
   uint random_seed;
