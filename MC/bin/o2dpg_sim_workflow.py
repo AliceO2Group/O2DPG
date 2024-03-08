@@ -20,7 +20,7 @@
 import sys
 import importlib.util
 import argparse
-from os import environ, mkdir, getcwd
+from os import environ, mkdir
 from os.path import join, dirname, isdir, isabs
 import random
 import json
@@ -326,20 +326,8 @@ workflow={}
 workflow['stages'] = []
 
 ### setup global environment variables which are valid for all tasks
-globalenv = {}
-if args.condition_not_after:
-   # this is for the time-machine CCDB mechanism
-   globalenv['ALICEO2_CCDB_CONDITION_NOT_AFTER'] = args.condition_not_after
-   # this is enforcing the use of local CCDB caching
-   if environ.get('ALICEO2_CCDB_LOCALCACHE') == None:
-       print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + getcwd() + '/ccdb')
-       globalenv['ALICEO2_CCDB_LOCALCACHE'] = getcwd() + "/ccdb"
-   else:
-       # fixes the workflow to use and remember externally provided path
-       globalenv['ALICEO2_CCDB_LOCALCACHE'] = environ.get('ALICEO2_CCDB_LOCALCACHE')
-   globalenv['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = '${ALICEO2_CCDB_LOCALCACHE:+"ON"}'
-
-globalinittask = createGlobalInitTask(globalenv)
+global_env = {'ALICEO2_CCDB_CONDITION_NOT_AFTER': args.condition_not_after} if args.condition_not_after else None
+globalinittask = createGlobalInitTask(global_env)
 globalinittask['cmd'] = 'o2-ccdb-cleansemaphores -p ${ALICEO2_CCDB_LOCALCACHE}'
 workflow['stages'].append(globalinittask)
 ####
@@ -1039,7 +1027,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TOFRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tof-reco-workflow --use-ccdb ' + getDPL_global_options() + putConfigValuesNew() + ('',' --disable-mc')[args.no_mc_labels]
    workflow['stages'].append(TOFRECOtask)
 
-   
+
    toftpcmatchneeds = [TOFRECOtask['name'], TPCRECOtask['name'], ITSTPCMATCHtask['name'], TRDTRACKINGtask2['name']]
    toftracksrcdefault = anchorConfig.get('o2-tof-matcher-workflow-options', {}).get('track-sources', 'TPC,ITS-TPC,TPC-TRD,ITS-TPC-TRD')
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=toftpcmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
@@ -1208,7 +1196,12 @@ for tf in range(1, NTIMEFRAMES + 1):
      addQCPerTF(taskName='trdDigitsQC',
                 needs=[TRDDigitask['name']],
                 readerCommand='o2-trd-trap-sim',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json')
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-standalone-task.json')
+
+     addQCPerTF(taskName='trdTrackingQC',
+                needs=[TRDTRACKINGtask2['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TRD,TPC-TRD" --cluster-types none',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-tracking-task.json')
 
      ### TOF
      addQCPerTF(taskName='tofDigitsQC',
@@ -1407,10 +1400,10 @@ for tf in range(1, NTIMEFRAMES + 1):
   # taking away digits, clusters and other stuff as soon as possible.
   # TODO: cleanup by labels or task names
    if args.early_tf_cleanup == True:
-     TFcleanup = createTask(name='tfcleanup_'+str(tf), needs= [ AOD_merge_task['name'] ], tf=tf, cwd=timeframeworkdir, lab=["CLEANUP"], mem='0', cpu='1')
+     TFcleanup = createTask(name='tfcleanup_'+str(tf), needs= [ AODtask['name'] ], tf=tf, cwd=timeframeworkdir, lab=["CLEANUP"], mem='0', cpu='1')
      TFcleanup['cmd'] = 'rm *digi*.root;'
      TFcleanup['cmd'] += 'rm *cluster*.root'
-     workflow['stages'].append(TFcleanup);
+     workflow['stages'].append(TFcleanup)
 
 # AOD merging as one global final step
 aodmergerneeds = ['aod_' + str(tf) for tf in range(1, NTIMEFRAMES + 1)]

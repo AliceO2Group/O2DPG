@@ -41,10 +41,13 @@ print_help()
   echo "PRODSPLIT."
   echo
   echo "Optional are:"
-  echo "NWORKERS,"
-  echo "ALIEN_JDL_CPULIMIT or CPULIMIT,"
-  echo "ALIEN_JDL_SIMENGINE or SIMENGINE."
-  echo "DISABLE_QC (set this to disable QC, e.g. DISABLE_QC=1)"
+  echo "ALIEN_JDL_CPULIMIT or CPULIMIT, set the CPU limit of the workflow runner, default: 8,"
+  echo "NWORKERS, set the number of workers during detector transport, default: 8,"
+  echo "ALIEN_JDL_SIMENGINE or SIMENGINE, choose the transport engine, default: TGeant4,"
+  echo "ALIEN_JDL_WORKFLOWDETECTORS, set detectors to be taken into account, default: ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,CTP,"
+  echo "ALIEN_JDL_ANCHOR_SIM_OPTIONS, additional options that are passed to the workflow creation, default: -gen pythia8,"
+  echo "ALIEN_JDL_ADDTIMESERIESINMC, run TPC time series. Default: 1, switch off by setting to 0,"
+  echo "DISABLE_QC, set this to disable QC, e.g. to 1"
 }
 
 # Prevent the script from being soured to omit unexpected surprises when exit is used
@@ -76,10 +79,12 @@ done
 
 # Allow for both "ALIEN_JDL_LPM<KEY>" as well as "KEY"
 
-# the only two where there is a real default for
+# the only four where there is a real default for
 export ALIEN_JDL_CPULIMIT=${ALIEN_JDL_CPULIMIT:-${CPULIMIT:-8}}
 export ALIEN_JDL_SIMENGINE=${ALIEN_JDL_SIMENGINE:-${SIMENGINE:-TGeant4}}
 export ALIEN_JDL_WORKFLOWDETECTORS=${ALIEN_JDL_WORKFLOWDETECTORS:-ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,CTP}
+# can be passed to contain additional options that will be passed to o2dpg_sim_workflow_anchored.py and eventually to o2dpg_sim_workflow.py
+export ALIEN_JDL_ANCHOR_SIM_OPTIONS=${ALIEN_JDL_ANCHOR_SIM_OPTIONS:--gen pythia8}
 # all others MUST be set by the user/on the outside
 export ALIEN_JDL_LPMANCHORPASSNAME=${ALIEN_JDL_LPMANCHORPASSNAME:-${ANCHORPASSNAME}}
 export ALIEN_JDL_MCANCHOR=${ALIEN_JDL_MCANCHOR:-${MCANCHOR}}
@@ -91,6 +96,8 @@ export ALIEN_JDL_LPMPRODUCTIONTAG=${ALIEN_JDL_LPMPRODUCTIONTAG:-${PRODUCTIONTAG}
 export ALIEN_JDL_LPMANCHORRUN=${ALIEN_JDL_LPMANCHORRUN:-${ANCHORRUN}}
 export ALIEN_JDL_LPMANCHORPRODUCTION=${ALIEN_JDL_LPMANCHORPRODUCTION:-${ANCHORPRODUCTION}}
 export ALIEN_JDL_LPMANCHORYEAR=${ALIEN_JDL_LPMANCHORYEAR:-${ANCHORYEAR}}
+# decide whether to run TPC time series; on by default, switched off by setting to 0
+export ALIEN_JDL_ADDTIMESERIESINMC=${ALIEN_JDL_ADDTIMESERIESINMC:-1}
 
 # cache the production tag, will be set to a special anchor tag; reset later in fact
 ALIEN_JDL_LPMPRODUCTIONTAG_KEEP=$ALIEN_JDL_LPMPRODUCTIONTAG
@@ -191,10 +198,12 @@ ALICEO2_CCDB_LOCALCACHE=${ALICEO2_CCDB_LOCALCACHE:-$(pwd)/ccdb}
 baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${ALIEN_JDL_LPMRUNNUMBER}"
 
 # these arguments will be passed as well but only evetually be digested by o2dpg_sim_workflow.py which is called from o2dpg_sim_workflow_anchored.py
-remainingargs="-gen pythia8 -seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
+remainingargs="-seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
 remainingargs="${remainingargs} -e ${ALIEN_JDL_SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
-remainingargs="${remainingargs} --anchor-config config-json.json"
+# prepend(!) ALIEN_JDL_ANCHOR_SIM_OPTIONS
+# since the last passed argument wins, e.g. -productionTag cannot be overwritten by the user
+remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config config-json.json"
 
 echo "baseargs: ${baseargs}"
 echo "remainingargs: ${remainingargs}"
@@ -231,12 +240,20 @@ echo "Ready to start main workflow"
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
 MCRC=$?  # <--- we'll report back this code
 
+if [[ "${ALIEN_JDL_ADDTIMESERIESINMC}" != "0" ]]; then
+  # Default value is 1 so this is run by default.
+  echo "Running TPC time series"
+  ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt tpctimes
+fi
+
 [[ ! -z "${DISABLE_QC}" ]] && echo "INFO: QC is disabled, skip it."
 
 if [[ -z "${DISABLE_QC}" && "${MCRC}" = "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
   # do QC tasks
   echo "Doing QC"
   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} -k
+  # NOTE that with the -k|--keep-going option, the runner will try to keep on executing even if some tasks fail.
+  # That means, even if there is a failing QC task, the return code will be 0
   MCRC=$?
 fi
 

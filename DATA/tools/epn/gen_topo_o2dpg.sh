@@ -22,6 +22,15 @@ if [[ -z "$MULTIPLICITY_FACTOR_REST" ]]; then echo \$MULTIPLICITY_FACTOR_REST mi
 if [[ -z "$RECOSHMSIZE" ]]; then echo \$RECOSHMSIZE missing; exit 1; fi # SHM Size for reconstruction collections
 if [[ -z "$DDSHMSIZE" ]]; then echo \$DDSHMSIZE missing; exit 1; fi # SHM Size for DD
 
+# In case of debug mode, overwrite some settings
+if [[ "${DEBUG_TOPOLOGY_GENERATION:=0}" == "1" ]]; then
+  echo "Debugging mode enabled. Setting options accordingly" 1>&2
+  RECO_NUM_NODES_OVERRIDE=1       # to avoid slurm query, specify number of nodes to fixed value
+  GEN_TOPO_MI100_NODES=1          # also for MI100 nodes
+  GEN_TOPO_OVERRIDE_TEMPDIR=$PWD  # keep temporary files like QC jsons in local directory
+  EPN2EOS_METAFILES_DIR=/tmp      # nothing is written here, just needs to be set to something
+fi
+
 # Check settings coming from the EPN
 if [[ -z "$FILEWORKDIR" ]]; then echo \$FILEWORKDIR missing; exit 1; fi
 if [[ -z "$INRAWCHANNAME" ]]; then echo \$INRAWCHANNAME missing; exit 1; fi
@@ -103,6 +112,7 @@ while true; do
   break
 done
 
+
 if [[ ! -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD" ]] && [[ "0$WORKFLOWMODE" != "0print" ]]; then
   TMP_POST_CACHING_CMD="$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD $GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS"
   TMP_POST_CACHING_NMIN=$(( $RECO_NUM_NODES_OVERRIDE > $RECO_MAX_FAIL_NODES_OVERRIDE ? $RECO_NUM_NODES_OVERRIDE - $RECO_MAX_FAIL_NODES_OVERRIDE : 0 ))
@@ -126,6 +136,9 @@ if [[ ! -z "$ECS_ENVIRONMENT_ID" && -d "/var/log/topology/" && $USER == "epn" ]]
 fi
 
 cat $GEN_TOPO_WORKDIR/output.xml
-echo Removing temporary output file $GEN_TOPO_WORKDIR/output.xml 1>&2
-rm $GEN_TOPO_WORKDIR/output.xml
+
+if [[ "$DEBUG_TOPOLOGY_GENERATION" == "0" ]]; then
+  echo Removing temporary output file $GEN_TOPO_WORKDIR/output.xml 1>&2
+  rm $GEN_TOPO_WORKDIR/output.xml
+fi
 rm -f $GEN_TOPO_LOCKFILE

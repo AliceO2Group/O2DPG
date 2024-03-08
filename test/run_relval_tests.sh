@@ -14,13 +14,13 @@ SEND="\033[0m"
 
 echo_green()
 {
-    echo -e "${SGREEN}$@${SEND}"
+    echo -e "${SGREEN}${*}${SEND}"
 }
 
 
 echo_red()
 {
-    echo -e "${SRED}$@${SEND}"
+    echo -e "${SRED}${*}${SEND}"
 }
 
 

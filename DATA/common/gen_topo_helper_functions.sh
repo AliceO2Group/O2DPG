@@ -104,37 +104,37 @@ _check_multiple()
 
 has_detectors()
 {
-  _check_multiple has_detector $@
+  _check_multiple has_detector "$@"
 }
 
 has_detectors_qc()
 {
-  _check_multiple has_detector_qc $@
+  _check_multiple has_detector_qc "$@"
 }
 
 has_detectors_calib()
 {
-  _check_multiple has_detector_calib $@
+  _check_multiple has_detector_calib "$@"
 }
 
 has_detectors_reco()
 {
-  _check_multiple has_detector_reco $@
+  _check_multiple has_detector_reco "$@"
 }
 
 has_detectors_ctf()
 {
-  _check_multiple has_detector_ctf $@
+  _check_multiple has_detector_ctf "$@"
 }
 
 has_detectors_flp_processing()
 {
-  _check_multiple has_detector_flp_processing $@
+  _check_multiple has_detector_flp_processing "$@"
 }
 
 workflow_has_parameters()
 {
-  _check_multiple workflow_has_parameter $@
+  _check_multiple workflow_has_parameter "$@"
 }
 
 add_comma_separated()

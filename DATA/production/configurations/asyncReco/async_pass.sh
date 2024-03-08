@@ -20,7 +20,7 @@ run_AOD_merging() {
 timeStartFullProcessing=`date +%s`
 
 # to skip positional arg parsing before the randomizing part.
-inputarg="${1}"
+export inputarg="${1}"
 
 if [[ "${1##*.}" == "root" ]]; then
     #echo ${1##*.}
@@ -371,8 +371,6 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]] ; then
         if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
           export OPTIMIZED_PARALLEL_ASYNC=pp_1gpu  # sets the multiplicities to optimized defaults for this configuration (1 job with 1 gpu on EPNs)
           export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
-          export TIMEFRAME_RATE_LIMIT=8 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
-          export SHMSIZE=30000000000 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
         else
           # forcing multiplicities to be 1
           export MULTIPLICITY_PROCESS_tof_matcher=1
@@ -392,13 +390,9 @@ if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]] ; then
       if [[ $BEAMTYPE == "pp" ]]; then
         export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, pp)
         export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
-        export TIMEFRAME_RATE_LIMIT=45 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
-        export SHMSIZE=100000000000 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
       else  # PbPb
         export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu # sets the multiplicities to optimized defaults for this configuration (1 Numa, PbPb)
         export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
-        export TIMEFRAME_RATE_LIMIT=30 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
-        export SHMSIZE=100000000000 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
       fi
     fi
   fi
@@ -428,8 +422,6 @@ else
     else
       export OPTIMIZED_PARALLEL_ASYNC=pp_64cpu # to use EPNs with full NUMA domain but without GPUs
       export OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT=1
-      export TIMEFRAME_RATE_LIMIT=32 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
-      export SHMSIZE=90000000000 # WORKAROUND: Needed until O2 PR 12412 is in all async tags
     fi
   fi
 fi
@@ -576,19 +568,25 @@ else
           echo "nCTFsFilesInspected_step1 = $nCTFsFilesInspected_step1, nCTFsFilesInspected_step2 = $nCTFsFilesInspected_step2" > validation_error.message
           echo "nCTFsFilesOK_step1 = $nCTFsFilesOK_step1, nCTFsFilesOK_step2 = $nCTFsFilesOK_step2" > validation_error.message
           echo "nCTFsProcessed_step1 = $nCTFsProcessed_step1, nCTFsProcessed_step2 = $nCTFsProcessed_step2" > validation_error.message
-          exit 1000
+          exit 255
         fi
       fi
     fi
   fi
 
   if ([[ -z "$ALIEN_JDL_SSPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SSPLITSTEP" ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq 3 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 3 ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq "all" ]]; then
-    # 3. matching, QC, calib, AOD
+    # 3. matching, calib, AOD, potentially QC
     WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS_START
+    if [[ "$ALIEN_JDL_KEEPQCSEPARATE" == "1" ]]; then
+      echo "QC will be run as last step, removing it from 3rd step"
+      for i in QC; do
+	export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
+      done
+    fi
     echo "WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS"
-    echo "Step 3) matching, QC, calib, AOD"
-    echo -e "\nStep 3) matching, QC, calib, AOD" >> workflowconfig.log
-    export TIMEFRAME_RATE_LIMIT=0
+    echo "Step 3) matching, calib, AOD, potentially QC"
+    echo -e "\nStep 3) matching, calib, AOD, potentially QC" >> workflowconfig.log
+    export TIMEFRAME_RATE_LIMIT=${ALIEN_JDL_TIMEFRAMERATELIMITSSPLITWF:-0}
     echo "Removing detectors $DETECTORS_EXCLUDE"
     READER_DELAY=${ALIEN_JDL_READERDELAY:-30}
     export ARGS_EXTRA_PROCESS_o2_global_track_cluster_reader+=" --reader-delay $READER_DELAY "
@@ -615,24 +613,58 @@ else
       fi
     fi
   fi
+  if [[ "$ALIEN_JDL_KEEPQCSEPARATE" == "1" ]]; then
+    if ([[ -z "$ALIEN_JDL_SSPLITSTEP" ]] && [[ -z "$ALIEN_JDL_SSPLITSTEP" ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq 4 ]] || ( [[ -n $ALIEN_JDL_STARTSPLITSTEP ]] && [[ "$ALIEN_JDL_STARTSPLITSTEP" -le 4 ]]) || [[ "$ALIEN_JDL_SSPLITSTEP" -eq "all" ]]; then
+      # 4. QC
+      WORKFLOW_PARAMETERS="QC"
+      echo "WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS"
+      echo "Step 4) QC"
+      echo -e "\nStep 4) QC" >> workflowconfig.log
+      export TIMEFRAME_RATE_LIMIT=${ALIEN_JDL_TIMEFRAMERATELIMITSSPLITWF:-0}
+      echo "Removing detectors $DETECTORS_EXCLUDE"
+      env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=ALL WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS=HMP WORKFLOW_DETECTORS_EXCLUDE_QC=CPV,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+      # run it
+      if [[ "0$RUN_WORKFLOW" != "00" ]]; then
+        timeStart=`date +%s`
+        time env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=run TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=ALL WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS=HMP WORKFLOW_DETECTORS_EXCLUDE_QC=CPV,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list
+        exitcode=$?
+        timeEnd=`date +%s`
+        timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+        delta=$(( $timeEnd-$timeStart ))
+        echo "Time spent in running the workflow, Step 4 = $delta s"
+        echo "exitcode = $exitcode"
+        if [[ $exitcode -ne 0 ]]; then
+          echo "exit code from Step 4 of processing is " $exitcode > validation_error.message
+          echo "exit code from Step 4 of processing is " $exitcode
+          exit $exitcode
+        fi
+        mv latest.log latest_reco_4.log
+        if [[ -f performanceMetrics.json ]]; then
+          mv performanceMetrics.json performanceMetrics_4.json
+        fi
+      fi
+    fi
+  fi
 fi
 
 # now extract all performance metrics
-IFS=$'\n'
-timeStart=`date +%s`
-for perfMetricsFiles in performanceMetrics.json performanceMetrics_1.json performanceMetrics_2.json performanceMetrics_3.json ; do
-  suffix=`echo $perfMetricsFiles | sed 's/performanceMetrics\(.*\).json/\1/'`
-  if [[ -f "performanceMetrics.json" ]]; then
-    for workflow in `grep ': {' $perfMetricsFiles`; do
-      strippedWorkflow=`echo $workflow | cut -d\" -f2`
-      cat $perfMetricsFiles | jq '.'\"${strippedWorkflow}\"'' > ${strippedWorkflow}_metrics${suffix}.json
-    done
-  fi
-done
-timeEnd=`date +%s`
-timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-delta=$(( $timeEnd-$timeStart ))
-echo "Time spent in splitting the metrics files = $delta s"
+if [[ $ALIEN_JDL_EXTRACTMETRICS == "1" ]]; then
+  IFS=$'\n'
+  timeStart=`date +%s`
+  for perfMetricsFiles in performanceMetrics.json performanceMetrics_1.json performanceMetrics_2.json performanceMetrics_3.json performanceMetrics_4.json ; do
+    suffix=`echo $perfMetricsFiles | sed 's/performanceMetrics\(.*\).json/\1/'`
+    if [[ -f "performanceMetrics.json" ]]; then
+      for workflow in `grep ': {' $perfMetricsFiles`; do
+        strippedWorkflow=`echo $workflow | cut -d\" -f2`
+        cat $perfMetricsFiles | jq '.'\"${strippedWorkflow}\"'' > ${strippedWorkflow}_metrics${suffix}.json
+      done
+    fi
+  done
+  timeEnd=`date +%s`
+  timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+  delta=$(( $timeEnd-$timeStart ))
+  echo "Time spent in splitting the metrics files = $delta s"
+fi
 
 if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   # flag to possibly enable Analysis QC
@@ -745,7 +777,7 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       CURRENT_POOL_SIZE=`jobs -r | wc -l`
     done < $JOB_LIST
     # collecting return codes of the merging processes
-    for i in ${!arr[@]}; do
+    for i in "${!arr[@]}"; do
       wait ${arr[$i]}
       exitcode=$?
       if [[ $exitcode -ne 0 ]]; then

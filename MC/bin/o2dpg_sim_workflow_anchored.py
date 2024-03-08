@@ -50,16 +50,6 @@ class CCDBAccessor:
         # we allow nullptr responsens and will treat it ourselves
         o2.ccdb.BasicCCDBManager.instance().setFatalWhenNull(False)
 
-    def list(self, path, dump_path=None):
-        ret = self.api.list(path, False, "application/json")
-        ret = json.loads(ret)
-        if ret and "objects" in ret:
-            ret = ret["objects"]
-        if ret and dump_path:
-            print(f"CCDB object information for path {path} stored in {dump_path}")
-            dump_json(ret, dump_path)
-        return ret
-
     def fetch(self, path, obj_type, timestamp=None, meta_info=None):
         """
         TODO We could use CcdbApi::snapshot at some point, needs revision
@@ -95,7 +85,7 @@ def retrieve_sor_eor(ccdbreader, run_number):
     path_run_info = "RCT/Info/RunInformation"
     header = ccdbreader.fetch_header(path_run_info, run_number)
     if not header:
-       print(f"WARNING: Cannot find run information for run number {r}")
+       print(f"WARNING: Cannot find run information for run number {run_number}")
        return None
     # return this a dictionary
     return {"SOR": int(header["SOR"]), "EOR": int(header["EOR"])}
@@ -409,7 +399,7 @@ def main():
            effTrigger = 28.0 # this is ZDC
          else:
            effTrigger = 0.759
-             
+
        # time needs to be converted to seconds ==> timestamp / 1000
        rate = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, timestamp/1000., effTrigger, grplhcif.getBunchFilling().getNBunches(), ColSystem)
 
@@ -424,6 +414,7 @@ def main():
 
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
+    # NOTE: forwardargs can - in principle - contain some of the arguments that are appended here. However, the last passed argument wins, so they would be overwritten.
     forwardargs += " -tf " + str(args.tf) + " --sor " + str(sor) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit "       \
                    + str(first_orbit) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + " -eCM " + str(eCM) + ' --readoutDets ' + GLOparams['detList']
     print ("forward args ", forwardargs)

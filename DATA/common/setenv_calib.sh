@@ -13,8 +13,10 @@ SOURCE_GUARD_SETENV_CALIB=1
 
 # define the conditions for each calibration
 if has_detector_calib ITS && has_detectors_reco ITS && has_detector_matching PRIMVTX && [[ ! -z "$VERTEXING_SOURCES" ]]; then CAN_DO_CALIB_PRIMVTX_MEANVTX=1; else CAN_DO_CALIB_PRIMVTX_MEANVTX=0; fi
+if has_detector_calib ITS ; then CAN_DO_CALIB_ITS_DEADMAP_TIME=1; else CAN_DO_CALIB_ITS_DEADMAP_TIME=0; fi
+if has_detector_calib MFT ; then CAN_DO_CALIB_MFT_DEADMAP_TIME=1; else CAN_DO_CALIB_MFT_DEADMAP_TIME=0; fi
 if has_detector_calib TOF && has_detector_reco TOF; then CAN_DO_CALIB_TOF_DIAGNOSTICS=1; CAN_DO_CALIB_TOF_INTEGRATEDCURR=1; else CAN_DO_CALIB_TOF_DIAGNOSTICS=0; CAN_DO_CALIB_TOF_INTEGRATEDCURR=0; fi
-if has_detector_calib TOF && has_detector_reco TOF && (( has_detectors_reco ITS TPC && has_detector_matching ITSTPCTOF ) || ( has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRDTOF )); then CAN_DO_CALIB_TOF_LHCPHASE=1; CAN_DO_CALIB_TOF_CHANNELOFFSETS=1; else CAN_DO_CALIB_TOF_LHCPHASE=0; CAN_DO_CALIB_TOF_CHANNELOFFSETS=0; fi
+if has_detector_calib TOF && has_detector_reco TOF && ( ( has_detectors_reco ITS TPC && has_detector_matching ITSTPCTOF ) || ( has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPCTRDTOF ) ); then CAN_DO_CALIB_TOF_LHCPHASE=1; CAN_DO_CALIB_TOF_CHANNELOFFSETS=1; else CAN_DO_CALIB_TOF_LHCPHASE=0; CAN_DO_CALIB_TOF_CHANNELOFFSETS=0; fi
 if has_detector_calib TPC && has_detectors ITS TPC TOF TRD && has_detector_matching ITSTPCTRDTOF; then CAN_DO_CALIB_TPC_SCDCALIB=1; else CAN_DO_CALIB_TPC_SCDCALIB=0; fi
 if has_detector_calib TPC && has_processing_step TPC_DEDX; then CAN_DO_CALIB_TPC_TIMEGAIN=1; CAN_DO_CALIB_TPC_RESPADGAIN=1; else CAN_DO_CALIB_TPC_TIMEGAIN=0; CAN_DO_CALIB_TPC_RESPADGAIN=0; fi
 if has_detector_calib TPC && has_detectors ITS TPC && has_detector_matching ITSTPC; then CAN_DO_CALIB_TPC_VDRIFTTGL=1; else CAN_DO_CALIB_TPC_VDRIFTTGL=0; fi
@@ -36,8 +38,9 @@ if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC && has_detector_reco ITS && has
 # additional individual settings for calibration workflows
 if has_detector CTP; then export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"; else export CALIB_TPC_SCDCALIB_CTP_INPUT=""; fi
 if [[ ${DISABLE_TRD_PH:-} == 1 ]]; then CAN_DO_CALIB_TRD_T0=0; fi
-# the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
-: ${CALIB_TPC_SCDCALIB_SLOTLENGTH:=600}
+
+: ${CALIB_TPC_SCDCALIB_SLOTLENGTH:=600} # the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
+: ${CALIB_TPC_SCDCALIB_SENDTRKDATA:=1}  # by default, we want to write the track information in addition to unbinned residuals to allow finer filtering offline
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
 
@@ -47,7 +50,17 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
   if [[ $CAN_DO_CALIB_PRIMVTX_MEANVTX == 1 ]]; then
     if [[ -z ${CALIB_PRIMVTX_MEANVTX+x} ]]; then CALIB_PRIMVTX_MEANVTX=1; fi
   fi
-
+  
+  # calibrations for ITS
+  if [[ $CAN_DO_CALIB_ITS_DEADMAP_TIME == 1 ]]; then
+    if [[ -z ${CALIB_ITS_DEADMAP_TIME+x} ]]; then CALIB_ITS_DEADMAP_TIME=1; fi
+  fi
+  
+  # calibrations for MFT
+  if [[ $CAN_DO_CALIB_MFT_DEADMAP_TIME == 1 ]]; then
+    if [[ -z ${CALIB_MFT_DEADMAP_TIME+x} ]]; then CALIB_MFT_DEADMAP_TIME=1; fi
+  fi
+  
   # calibrations for TOF
   if [[ $CAN_DO_CALIB_TOF_DIAGNOSTICS == 1 ]]; then
     if [[ -z ${CALIB_TOF_DIAGNOSTICS+x} ]]; then CALIB_TOF_DIAGNOSTICS=1; fi
@@ -75,15 +88,25 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
   if [[ $CAN_DO_CALIB_TPC_VDRIFTTGL == 1 ]]; then
     if [[ -z ${CALIB_TPC_VDRIFTTGL+x} ]]; then CALIB_TPC_VDRIFTTGL=1; fi
   fi
-  # IDCs
+  # IDCs (by default we enable it for running the synch. reco on the EPNs, but not on staging since we have only 1 calibration node available)
   if [[ $CAN_DO_CALIB_TPC_IDC == 1 ]]; then
-    if [[ -z ${CALIB_TPC_IDC+x} ]] || [[ $CALIB_TPC_IDC == 0 ]]; then
-      CALIB_TPC_IDC=0; # default is off
+    if [[ -z ${CALIB_TPC_IDC+x} ]]; then
+      if [[ $EPNSYNCMODE == 1 ]] && [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" != "ALICE_STAGING" ]]; then
+        CALIB_TPC_IDC=1;
+      else
+        CALIB_TPC_IDC=0;
+      fi
     fi
   fi
-  # SAC
+  # SAC (by default we enable it for running the synch. reco on the EPNs)
   if [[ $CAN_DO_CALIB_TPC_SAC == 1 ]]; then
-    if [[ -z ${CALIB_TPC_SAC+x} ]]; then CALIB_TPC_SAC=0; fi # default is off
+    if [[ -z ${CALIB_TPC_SAC+x} ]]; then
+      if [[ $EPNSYNCMODE == 1 ]]; then
+        CALIB_TPC_SAC=1;
+      else
+        CALIB_TPC_SAC=0;
+      fi
+    fi
   fi
 
   # calibrations for TRD
@@ -174,6 +197,8 @@ fi
 ( [[ -z ${CALIB_PHS_L1PHASE:-} ]] || [[ $CAN_DO_CALIB_PHS_L1PHASE == 0 ]] ) && CALIB_PHS_L1PHASE=0
 ( [[ -z ${CALIB_CPV_GAIN:-} ]] || [[ $CAN_DO_CALIB_CPV_GAIN == 0 ]] ) && CALIB_CPV_GAIN=0
 ( [[ -z ${CALIB_ZDC_TDC:-} ]] || [[ $CAN_DO_CALIB_ZDC_TDC == 0 ]] ) && CALIB_ZDC_TDC=0
+( [[ -z ${CALIB_ITS_DEADMAP_TIME:-} ]] || [[ $CAN_DO_CALIB_ITS_DEADMAP_TIME == 0 ]] ) && CALIB_ITS_DEADMAP_TIME=0
+( [[ -z ${CALIB_MFT_DEADMAP_TIME:-} ]] || [[ $CAN_DO_CALIB_MFT_DEADMAP_TIME == 0 ]] ) && CALIB_MFT_DEADMAP_TIME=0
 # for async:
 ( [[ -z ${CALIB_EMC_ASYNC_RECALIB:-} ]] || [[ $CAN_DO_CALIB_EMC_ASYNC_RECALIB == 0 ]] ) && CALIB_EMC_ASYNC_RECALIB=0
 ( [[ -z ${CALIB_ASYNC_EXTRACTTPCCURRENTS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS == 0 ]] ) && CALIB_ASYNC_EXTRACTTPCCURRENTS=0 
@@ -217,6 +242,12 @@ if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   # prim vtx
   if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "pvtx:GLO/PVTX/0"; fi
 
+  # ITS
+  if [[ $CALIB_ITS_DEADMAP_TIME == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "itsChipStatus:ITS/CHIPSSTATUS/0"; fi
+
+  # MFT
+  if [[ $CALIB_MFT_DEADMAP_TIME == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "mftChipStatus:MFT/CHIPSSTATUS/0"; fi
+  
   # TOF
   if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibTOF:TOF/CALIBDATA/0"; fi
   if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "diagWords:TOF/DIAFREQ/0"; fi
