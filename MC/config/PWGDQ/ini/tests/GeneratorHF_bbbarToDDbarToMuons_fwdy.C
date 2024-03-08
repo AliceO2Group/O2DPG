@@ -57,31 +57,31 @@ int External()
     if (nleptonseinacc > 1) nLeptonPairsInAcceptance++;
   }
   std::cout << "#events: " << nEvents << "\n"
-  << "#leptons in acceptance: " << nLeptonsInAcceptance << "\n"
-  << "#lepton pairs in acceptance: " << nLeptonPairsInAcceptance << "\n"
-  << "#leptons: " << nLeptons << "\n"
-  << "#leptons to be done: " << nLeptonsToBeDone << "\n"
+  << "#muons in acceptance: " << nLeptonsInAcceptance << "\n"
+  << "#muon pairs in acceptance: " << nLeptonPairsInAcceptance << "\n"
+  << "#muons: " << nLeptons << "\n"
+  << "#muons to be done: " << nLeptonsToBeDone << "\n"
   << "#signal pairs: " << nSignalPairs << "\n"
-  << "#lepton pairs: " << nLeptonPairs << "\n"
-  << "#lepton pairs to be done: " << nLeptonPairsToBeDone << "\n";
+  << "#muon pairs: " << nLeptonPairs << "\n"
+  << "#muon pairs to be done: " << nLeptonPairsToBeDone << "\n";
   if (nLeptons == 0) {
-    std::cerr << "Number of leptons should be greater than 1.\n";
+    std::cerr << "Number of muons should be greater than 1.\n";
     return 1;
   }
-  if (nLeptonPairs < nSignalPairs) {
-    std::cerr << "Number of lepton pairs should be at least equaled to the number of open charm hadron pairs\n";
+  if (nSignalPairs <= nLeptonPairs) {
+    std::cerr << "Number of muon pairs should be less than open charm hadron pairs\n";
     return 1;
   }
-  if (nLeptonPairsInAcceptance < nEvents) {
-    std::cerr << "Number of lepton pairs should be at least equaled to the number of events\n";
+  if (nSignalPairs < nEvents) {
+    std::cerr << "Number of signal pairs should be at least equaled to the number of oevents\n";
     return 1;
   }
   if (nLeptonPairs != nLeptonPairsToBeDone) {
-    std::cerr << "The number of lepton pairs should be the same as the number of lepton pairs which should be transported.\n";
+    std::cerr << "The number of muon pairs should be the same as the number of muon pairs which should be transported.\n";
     return 1;
   }
   if (nLeptons != nLeptonsToBeDone) {
-    std::cerr << "The number of leptons should be the same as the number of leptons which should be transported.\n";
+    std::cerr << "The number of muons should be the same as the number of muons which should be transported.\n";
     return 1;
   }
 
