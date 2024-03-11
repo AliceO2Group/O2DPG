@@ -20,8 +20,8 @@
 /MC @sawenzel @chiarazampolli @gconesab @benedikt-voelkel
 
 # PWG experts
-/MC/*/PWGHF @fgrosa @fcolamar @fcatalan92 @stefanopolitano @DelloStritto @benedikt-voelkel
-/MC/*/PWGLF @njacazio @benedikt-voelkel
-/MC/*/PWGEM @dsekihat @ivorobye @benedikt-voelkel
+/MC/*/PWGHF @fgrosa @fcolamar @fcatalan92 @stefanopolitano @DelloStritto @benedikt-voelkel @sawenzel @chiarazampolli @gconesab
+/MC/*/PWGLF @njacazio @benedikt-voelkel @sawenzel @chiarazampolli @gconesab
+/MC/*/PWGEM @dsekihat @ivorobye @benedikt-voelkel @sawenzel @chiarazampolli @gconesab
 
 /RelVal @sawenzel @chiarazampolli @gconesab @benedikt-voelkel
