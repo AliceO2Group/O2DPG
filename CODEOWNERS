@@ -18,4 +18,10 @@
 /DATA/testing/detectors/ZDC
 
 /MC @sawenzel @chiarazampolli @gconesab @benedikt-voelkel
+
+# PWG experts
+/MC/*/PWGHF @fgrosa @fcolamar @fcatalan92 @stefanopolitano @DelloStritto
+/MC/*/PWGLF @njacazio
+/MC/*/PWGEM @dsekihat @ivorobye
+
 /RelVal @sawenzel @chiarazampolli @gconesab @benedikt-voelkel
