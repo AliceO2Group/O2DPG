@@ -18,4 +18,10 @@
 /DATA/testing/detectors/ZDC
 
 /MC @sawenzel @chiarazampolli @gconesab @benedikt-voelkel
+
+# PWG experts
+/MC/*/PWGHF @AliceO2Group/reviewers-pwg-hf @sawenzel @chiarazampolli @benedikt-voelkel
+/MC/*/PWGLF @AliceO2Group/reviewers-pwg-lf @sawenzel @chiarazampolli @benedikt-voelkel
+/MC/*/PWGEM @AliceO2Group/reviewers-pwg-em @sawenzel @chiarazampolli @benedikt-voelkel
+
 /RelVal @sawenzel @chiarazampolli @gconesab @benedikt-voelkel
