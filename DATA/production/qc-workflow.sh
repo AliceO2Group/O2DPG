@@ -313,6 +313,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
 fi
 
 [[ $EPNSYNCMODE == 1 && $NUMAGPUIDS == 1 ]] && QC_CONFIG_OVERRIDE+="qc.config.infologger.filterDiscardFile=../../qc-_ID_-${NUMAID}.log;"
+[[ $EPNSYNCMODE == 0 ]] && QC_CONFIG+=" --no-infologger"
 
 [[ ! -z $QC_CONFIG_OVERRIDE ]] && QC_CONFIG+=" --override-values \"$QC_CONFIG_OVERRIDE\""
 
