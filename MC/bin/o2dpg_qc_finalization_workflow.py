@@ -91,6 +91,8 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag, con
   add_QC_finalization('TOFMatchWithTRDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_AllTypes_direct_MC.json')
   add_QC_finalization('ITSTrackSimTask', 'json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
   add_QC_finalization('ITSTracksClusters', 'json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json')
+  if isActive('MID'):
+     add_QC_finalization('MIDTaskQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mid-task.json')
   if isActive('FT0') and isActive('TRD'):
      add_QC_finalization('tofft0PIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tof.json')
   elif isActive('FT0'):
