@@ -1296,6 +1296,13 @@ for tf in range(1, NTIMEFRAMES + 1):
                    needs=[PHSRECOtask['name']],
                    readerCommand='o2-phos-reco-workflow --input-type cells --output-type clusters --disable-mc --disable-root-output',
                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/phs-cells-clusters-task.json')
+                   
+     ### MID
+     if isActive('MID'):
+        addQCPerTF(taskName='MIDTaskQC',
+                needs=[MIDRECOtask['name']],
+                readerCommand='o2-mid-digits-reader-workflow | o2-mid-tracks-reader-workflow',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mid-task.json')
 
    #secondary vertexer
    svfinder_threads = ' --threads 1 '
