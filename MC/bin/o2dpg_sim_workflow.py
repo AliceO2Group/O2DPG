@@ -972,7 +972,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------
    # reco
    # -----------
-   tpcreconeeds=[]
+   tpcreconeeds=[FT0FV0EMCCTPDIGItask['name']]
    if not args.combine_tpc_clusterization:
      # We treat TPC clusterization in multiple (sector) steps in order to
      # stay within the memory limit or to parallelize over sector from outside (not yet supported within cluster algo)
