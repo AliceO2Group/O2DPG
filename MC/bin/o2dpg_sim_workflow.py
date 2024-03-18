@@ -121,7 +121,8 @@ parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS
 parser.add_argument('--sor', default=-1, type=int, help=argparse.SUPPRESS) # may pass start of run with this (otherwise it is autodetermined from run number)
 parser.add_argument('--run-anchored', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--alternative-reco-software', default="", help=argparse.SUPPRESS) # power feature to set CVFMS alienv software version for reco steps (different from default)
-parser.add_argument('--dpl-child-driver', default="", help="Child driver to use in DPL processes (export mode)")
+parser.add_argument('--dpl-child-driver', default="", help="Child driver to use in DPL processes (expert mode)")
+parser.add_argument('--event-gen-mode', choices=['separated', 'integrated'], default='separated', help="Whether event generation is done before (separated) or within detector simulation (integrated).")
 
 # QC related arguments
 parser.add_argument('--include-qc', '--include-full-qc', action='store_true', help='includes QC in the workflow, both per-tf processing and finalization')
@@ -691,7 +692,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    if (args.pregenCollContext == True):
       signalneeds.append(PreCollContextTask['name'])
 
-
    # add embedIntoFile only if embeddPattern does contain a '@'
    embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if (doembedding & ("@" in args.embeddPattern)) else ""
    #embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if doembedding else ""
@@ -700,18 +700,37 @@ for tf in range(1, NTIMEFRAMES + 1):
             signalneeds = signalneeds + [ BKGtask['name'] ]
        else:
             signalneeds = signalneeds + [ BKG_HEADER_task['name'] ]
+
+   # (separate) event generation task
+   sep_event_mode = args.event_gen_mode == 'separated'
+   SGNGENtask=createTask(name='sgngen_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEN"],
+                         cpu=1, mem=1000)
+   SGNGENtask['cmd']='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode kCCDB'           \
+                     + ' --run ' + str(args.run) + ' ' + str(CONFKEY) + str(TRIGGER)                  \
+                     + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
+                     + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1]                \
+                     + ' --seed ' + str(TFSEED) + ' -n ' + str(NSIGEVENTS)
+   if args.pregenCollContext == True:
+      SGNGENtask['cmd'] += ' --fromCollContext collisioncontext.root:' + signalprefix
+   if sep_event_mode == True:
+      workflow['stages'].append(SGNGENtask)
+      signalneeds = signalneeds + [SGNGENtask['name']]
+
    sgnmem = 6000 if COLTYPE == 'PbPb' else 4000
-   SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"], relative_cpu=7/8, n_workers=NWORKERS_TF, mem=str(sgnmem))
-   SGNtask['cmd']='${O2_ROOT}/bin/o2-sim -e '  + str(SIMENGINE) + ' '    + str(MODULES)  + ' -n ' + str(NSIGEVENTS) + ' --seed ' + str(TFSEED) \
-                  + ' --field ccdb -j ' + str(NWORKERS_TF) + ' -g ' + str(GENERATOR)   \
-                  + ' '         + str(TRIGGER)   + ' '    + str(CONFKEY)  + ' '    + str(INIFILE)     \
-                  + ' -o '      + signalprefix   + ' '    + embeddinto                                \
-                  + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)   \
-                  + ' --vertexMode kCCDB'
+   SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"],
+                      relative_cpu=7/8, n_workers=NWORKERS_TF, mem=str(sgnmem))
+   sgncmdbase = '${O2_ROOT}/bin/o2-sim -e ' + str(SIMENGINE) + ' '  + str(MODULES) + ' -n ' + str(NSIGEVENTS) + ' --seed ' + str(TFSEED)       \
+              + ' --field ccdb -j ' + str(NWORKERS_TF) + ' ' + str(CONFKEY) + ' ' + str(INIFILE) + ' -o ' + signalprefix + ' ' + embeddinto       \
+              + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)
+   if sep_event_mode:
+      SGNtask['cmd'] = sgncmdbase + ' -g extkinO2 --extKinFile genevents_Kine.root ' + ' --vertexMode kNoVertex'
+   else:
+      SGNtask['cmd'] = sgncmdbase + ' -g ' + str(GENERATOR) + ' ' + str(TRIGGER) + ' --vertexMode kCCDB '
    if not isActive('all'):
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
    if args.pregenCollContext == True:
       SGNtask['cmd'] += ' --fromCollContext collisioncontext.root'
+
    workflow['stages'].append(SGNtask)
 
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
