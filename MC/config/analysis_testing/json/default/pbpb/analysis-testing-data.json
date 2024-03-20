@@ -185,10 +185,14 @@
         "TPCMults",
         "PVMults",
         "MultsExtra",
+        "MultSelections",
         "MultZeqs",
         "MultsExtraMC"
       ],
       "values": [
+        [
+          "-1"
+        ],
         [
           "-1"
         ],
