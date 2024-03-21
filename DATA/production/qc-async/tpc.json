@@ -65,7 +65,8 @@
           "cutMinpTPC": "0.05",
           "cutMaxpTPC": "20.",
           "cutMinpTPCMIPs": "0.45",
-          "cutMaxpTPCMIPs": "0.55"
+          "cutMaxpTPCMIPs": "0.55",
+          "turnOffHistosForAsync": "true"
        }
       },
       "TPCTrackClusters": {
@@ -104,7 +105,8 @@
           "cutMinNCluster": "60",
           "cutMindEdxTot": "20.",
           "samplingFractionDCAr": "0.1",
-          "cutPtForDCAr": "1.5"
+          "cutPtForDCAr": "1.5",
+          "turnOffHistosForAsync": "true"
         },
 	"grpGeomRequest" : {
           "geomRequest": "None",
