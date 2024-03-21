@@ -44,14 +44,14 @@
           "timeBinSize": "0.1",
           "ROFLengthInBC": "594"
         },
-        "grpGeomRequest": {
-          "geomRequest": "Aligned",
-          "askGRPECS": "false",
+        "grpGeomRequest" : {
+          "geomRequest": "None",
+          "askGRPECS": "true",
           "askGRPLHCIF": "false",
-          "askGRPMagField": "true",
+          "askGRPMagField": "false",
           "askMatLUT": "false",
           "askTime": "false",
-          "askOnceAllButField": "true",
+          "askOnceAllButField": "false",
           "needPropagatorD": "false"
         },
         "location": "remote"
