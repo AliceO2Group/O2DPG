@@ -33,7 +33,8 @@
         "cycleDurationSeconds": "300",
         "dataSource": {
           "type": "dataSamplingPolicy",
-          "name": "tpc-clusters"
+          "name": "tpc-clusters",
+          "query": "inputClusters:TPC/CLUSTERNATIVE"
         },
         "taskParameters": {
           "mergeableOutput": "true",
@@ -98,7 +99,8 @@
         "movingWindows" : [ "h2DNClustersEta" ],
         "dataSource": {
           "type": "dataSamplingPolicy",
-          "name": "tpc-tracks"
+          "name": "tpc-tracks",
+          "query": "inputTracks:TPC/TRACKS/0"
         },
         "taskParameters": {
           "cutAbsEta": "1.",
