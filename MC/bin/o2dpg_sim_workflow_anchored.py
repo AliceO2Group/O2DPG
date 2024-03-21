@@ -232,29 +232,31 @@ def retrieve_MinBias_CTPScaler_Rate(ctpscaler, finaltime, trig_eff, NBunches, Co
     if ColSystem == "PbPb":
       ctpclass = 25  # <--- we take scalers for ZDC
       ctptype = 7
-    print("Fetching rate with class " + str(ctpclass) + " type " + str(ctptype))
+    print("Fetching rate with time " + str(finaltime) + " class " + str(ctpclass) + " type " + str(ctptype))
     rate = ctpscaler.getRateGivenT(finaltime, ctpclass, ctptype)
     #if ColSystem == "PbPb":
     #  rate.first = rate.first / 28.
     #  rate.second = rate.second / 28.
 
     print("Global rate " + str(rate.first) + " local rate " + str(rate.second))
+    ctp_local_rate_raw = None
+    if rate.second >= 0:
+      ctp_local_rate_raw = rate.second
     if rate.first >= 0:
       # calculate true rate (input from Chiara Zampolli) using number of bunches
       coll_bunches = NBunches
       mu = - math.log(1. - rate.second / 11245 / coll_bunches) / trig_eff
       finalRate = coll_bunches * mu * 11245
-      return finalRate
+      return finalRate, ctp_local_rate_raw
 
     print (f"[ERROR]: Could not determine interaction rate; Some (external) default used")
-    return None
+    return None, None
 
 def determine_timestamp(sor, eor, splitinfo, cycle, ntf, HBF_per_timeframe = 256):
     """
     Determines the timestamp and production offset variable based
     on the global properties of the production (MC split, etc) and the properties
     of the run. ntf is the number of timeframes per MC job
-
     Args:
         sor: int
             start-of-run in milliseconds since epoch
@@ -322,6 +324,7 @@ def main():
     parser.add_argument("--use-rct-info", dest="use_rct_info", action="store_true", help=argparse.SUPPRESS) # Use SOR and EOR information from RCT instead of SOX and EOX from CTPScalers
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
+    print (args)
 
     # split id should not be larger than production id
     assert(args.split_id <= args.prod_split)
@@ -360,6 +363,7 @@ def main():
     print ("Determined timestamp to be : ", timestamp)
     print ("Determined offset to be : ", prod_offset)
 
+
     # retrieve the GRPHCIF object
     grplhcif = retrieve_GRPLHCIF(ccdbreader, int(timestamp))
     eCM = grplhcif.getSqrtS()
@@ -384,6 +388,7 @@ def main():
     forwardargs = " ".join([ a for a in args.forward if a != '--' ])
     # retrieve interaction rate
     rate = None
+    ctp_local_rate_raw = None
 
     if args.ccdb_IRate == True:
        effTrigger = args.trig_eff
@@ -401,7 +406,7 @@ def main():
            effTrigger = 0.759
 
        # time needs to be converted to seconds ==> timestamp / 1000
-       rate = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, timestamp/1000., effTrigger, grplhcif.getBunchFilling().getNBunches(), ColSystem)
+       rate, ctp_local_rate_raw = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, timestamp/1000., effTrigger, grplhcif.getBunchFilling().getNBunches(), ColSystem)
 
        if rate != None:
          # if the rate calculation was successful we will use it, otherwise we fall back to some rate given as part
@@ -411,6 +416,8 @@ def main():
          # Use re.sub() to replace the pattern with an empty string
          forwardargs = re.sub(pattern, " ", forwardargs)
          forwardargs += ' -interactionRate ' + str(int(rate))
+       if ctp_local_rate_raw != None:
+         forwardargs += ' --ctp-scaler ' + str(ctp_local_rate_raw)
 
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
