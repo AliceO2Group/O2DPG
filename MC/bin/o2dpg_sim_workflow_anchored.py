@@ -320,6 +320,10 @@ def main():
     parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
     parser.add_argument("--trig-eff", type=float, dest="trig_eff", help="Trigger eff needed for IR", default=-1.0)
     parser.add_argument("--use-rct-info", dest="use_rct_info", action="store_true", help=argparse.SUPPRESS) # Use SOR and EOR information from RCT instead of SOX and EOX from CTPScalers
+    # By default, the following are derived automatically according to the data taking. However, allow to force different setting
+    parser.add_argument('-col', help='collision system: pp, PbPb, pPb, Pbp, ...; if embedding, this is used for the signal')
+    parser.add_argument('-eCM', help='CMS energy', type=float)
+    # Additional remaining args are accepted and forwarded to the main workflow creator
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
 
@@ -368,16 +372,28 @@ def main():
 
     # determine collision system and energy
     print ("Determined eMC ", eCM)
+    if args.eCM:
+      print(f'NOTE: The determined centre-of-mass energy of this run was determined to be {eCM:.2f}. '
+            f'Now set to {args.eCM} which was provided explicitly.')
+      eCM = args.eCM
     print ("Determined atomic number A1 ", A1)
     print ("Determined atomic number A2 ", A2)
-    ColSystem = ""
-    if A1 == 82 and A2 == 82:
-      ColSystem = "PbPb"
-    elif A1 == 1 and A2 == 1:
-      ColSystem = "pp"
+    if args.col and (args.col == 'pp' or args.col == 'PbPb'):
+      print(f'NOTE: The determined beams were determined to be A1={A1} and A2={A2}. '
+            f'Now set to collision system {args.col} which was provided explicitly.')
+      ColSystem = args.col
+    elif args.col:
+       print(f"Unknown collision system {args.col} provided ... exiting")
+       exit(1)
     else:
-      print ("Unknown collision system ... exiting")
-      exit (1)
+      ColSystem = ""
+      if A1 == 82 and A2 == 82:
+        ColSystem = "PbPb"
+      elif A1 == 1 and A2 == 1:
+        ColSystem = "pp"
+      else:
+        print (f"Unknown beams for collision system, A1={A1} and A2={A2} ... exiting")
+        exit (1)
 
     print ("Collision system ", ColSystem)
 
