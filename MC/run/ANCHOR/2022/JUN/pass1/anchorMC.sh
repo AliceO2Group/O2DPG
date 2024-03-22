@@ -95,7 +95,7 @@ baseargs="-tf ${NTIMEFRAMES} --split-id ${ALIEN_JDL_SPLITID:-1} --prod-split ${A
 remainingargs="-gen pythia8 -proc cdiff -ns ${NSIGEVENTS}                                                                                                                 \
                -interactionRate ${INTERACTIONRATE}                                                                                                                        \
                -confKey \"Diamond.width[2]=6.0;Diamond.width[0]=0.01;Diamond.width[1]=0.01;Diamond.position[0]=0.0;Diamond.position[1]=-0.035;Diamond.position[2]=0.41\"  \
-              --include-local-qc --include-analysis --mft-reco-full"
+              --include-local-qc --include-analysis"
 
 remainingargs="${remainingargs} -e ${SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
@@ -117,7 +117,7 @@ echo "TIMESTAMP IS ${TIMESTAMP}"
 export ALICEO2_CCDB_LOCALCACHE=$PWD/.ccdb
 [ ! -d .ccdb ] && mkdir .ccdb
 
-CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /FT0/Calibration/ChannelTimeOffset /FV0/Calibration/ChannelTimeOffset /GLO/GRP/BunchFilling"
+CCDBOBJECTS="/CTP/Calib/OrbitReset /GLO/Config/GRPMagField/ /GLO/Config/GRPLHCIF /ITS/Calib/DeadMap /ITS/Calib/NoiseMap /ITS/Calib/ClusterDictionary /TPC/Calib/PadGainFull /TPC/Calib/TopologyGain /TPC/Calib/TimeGain /TPC/Calib/PadGainResidual /TPC/Config/FEEPad /TOF/Calib/Diagnostic /TOF/Calib/LHCphase /TOF/Calib/FEELIGHT /TOF/Calib/ChannelCalib /MFT/Calib/DeadMap /MFT/Calib/NoiseMap /MFT/Calib/ClusterDictionary /MFT/Calib/Align /FT0/Calibration/ChannelTimeOffset /FV0/Calibration/ChannelTimeOffset /GLO/GRP/BunchFilling"
 
 ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS} -d .ccdb --timestamp ${TIMESTAMP}
 if [ ! "$?" == "0" ]; then
@@ -125,8 +125,8 @@ if [ ! "$?" == "0" ]; then
   exit 1
 fi
 
-# -- Create aligned geometry using ITS and MFT ideal alignments to avoid overlaps in geant
-CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align MFT/Calib/Align"
+# -- Create aligned geometry using ITS ideal alignment to avoid overlaps in geant
+CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align"
 TIMESTAMP_IDEAL_MC=1
 ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d .ccdb --timestamp ${TIMESTAMP_IDEAL_MC}
 if [ ! "$?" == "0" ]; then

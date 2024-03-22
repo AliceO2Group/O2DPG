@@ -33,7 +33,7 @@ CTF_CONFIG+=" --require-free-disk 53687091200 --wait-for-free-disk $CTF_FREE_DIS
 
 # Start with an empty workflow
 WORKFLOW=
-add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --readout-proxy \"--channel-config \\\"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\\\"\"" "" 0
+add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --inject-missing-data --readout-proxy \"--channel-config \\\"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\\\"\"" "" 0
 add_W o2-trd-datareader "--disable-root-output --pipeline trd-datareader:$TRD_N_READERS"
 add_W o2-trd-kr-clusterer "--disable-root-input --meta-output-dir $EPN2EOS_METAFILES_DIR --output-dir $CALIB_DIR --autosave-interval 105000 --pipeline trd-kr-clusterer:8"
 if workflow_has_parameter QC && has_detector_qc TRD; then

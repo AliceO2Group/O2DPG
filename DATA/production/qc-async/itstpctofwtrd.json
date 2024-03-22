@@ -39,14 +39,14 @@
         "taskParameters" : {
           "GID" : "TPC,TPC-TOF,ITS-TPC,ITS-TPC-TOF,ITS-TPC-TRD,ITS-TPC-TRD-TOF,TPC-TRD,TPC-TRD-TOF",
           "verbose" : "false",
-          "minPtCut" : "0.3f",
+          "minPtCut" : "0.1f",
           "etaCut" : "0.8f",
           "minNTPCClustersCut" : "60",
           "minDCACut" : "100.f",
           "minDCACutY" : "10.f"
         },
 	"grpGeomRequest" : {
-          "geomRequest": "Aligned",
+          "geomRequest": "None",
           "askGRPECS": "false",
           "askGRPLHCIF": "false",
           "askGRPMagField": "true",
@@ -55,7 +55,7 @@
           "askOnceAllButField": "true",
           "needPropagatorD":  "false"
         },
-        "saveObjectsToFile" : "TOFmatchedITSTPCTOF_TPCTOF.root",
+        "saveObjectsToFile" : "TOFmatchedITSTPCTOF_TPCTOF_wTRD.root",
         "" : "For debugging, path to the file where to save. If empty or missing it won't save."
       }
     }

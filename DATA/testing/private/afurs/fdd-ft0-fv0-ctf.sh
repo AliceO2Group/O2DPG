@@ -24,7 +24,7 @@ MYDIR="$(dirname $(readlink -f $0))"
 PROXY_INSPEC="digfdd:FDD/DIGITSBC/0;chanfdd:FDD/DIGITSCH/0;digft0:FT0/DIGITSBC/0;chanft0:FT0/DIGITSCH/0;digfv0:FV0/DIGITSBC/0;chanfv0:FV0/DIGITSCH/0;eos:***/INFORMATION;dd:FLP/DISTSUBTIMEFRAME/0"
 IN_CHANNEL="--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=1'"
 
-o2-dpl-raw-proxy ${ARGS_ALL} --readout-proxy "${IN_CHANNEL}" --dataspec "${PROXY_INSPEC}" \
+o2-dpl-raw-proxy ${ARGS_ALL} --readout-proxy "${IN_CHANNEL}" --dataspec "${PROXY_INSPEC}" --inject-missing-data \
 | o2-fdd-entropy-encoder-workflow ${ARGS_ALL} --configKeyValues "$ARGS_ALL_CONFIG;" ${CTF_DICT} \
 | o2-ft0-entropy-encoder-workflow ${ARGS_ALL} --configKeyValues "$ARGS_ALL_CONFIG;" ${CTF_DICT} \
 | o2-fv0-entropy-encoder-workflow ${ARGS_ALL} --configKeyValues "$ARGS_ALL_CONFIG;" ${CTF_DICT} \

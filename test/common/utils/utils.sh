@@ -4,6 +4,33 @@
 # Test utility functionality
 #
 
+# a global counter for tests
+TEST_COUNTER=0
+
+# Prepare some colored output
+SRED="\033[0;31m"
+SGREEN="\033[0;32m"
+SYELLOW="\033[0;33m"
+SEND="\033[0m"
+
+echo_green()
+{
+    echo -e "${SGREEN}${*}${SEND}"
+}
+
+
+echo_red()
+{
+    echo -e "${SRED}${*}${SEND}"
+}
+
+
+echo_yellow()
+{
+    echo -e "${SYELLOW}${*}${SEND}"
+}
+
+
 remove_artifacts()
 {
     [[ "${KEEP_ONLY_LOGS}" == "1" ]] && find . -type f ! -name '*.log' -and ! -name "*serverlog*" -and ! -name "*mergerlog*" -and ! -name "*workerlog*" -delete
@@ -25,7 +52,12 @@ get_changed_files()
     [[ ! -z "$(git diff)" && -z ${ALIBUILD_HEAD_HASH+x} && -z ${O2DPG_TEST_HASH_HEAD+x} ]] && hash_head=""
     # if there are unstaged changes and no base from user, set to HEAD
     [[ ! -z "$(git diff)" && -z ${ALIBUILD_HEAD_HASH+x} && -z ${O2DPG_TEST_HASH_BASE+x} ]] && hash_base="HEAD"
-    git diff --diff-filter=AMR --name-only ${hash_base} ${hash_head}
+    local paths=$(git diff --diff-filter=AMR --name-only ${hash_base} ${hash_head})
+    local absolute_paths=
+    for p in ${paths} ; do
+        absolute_paths+="$(realpath ${p}) "
+    done
+    echo "${absolute_paths}"
 }
 
 
@@ -78,7 +110,7 @@ make_wf_creation_script()
 print_error_logs()
 {
     local search_dir=${1}
-    local search_pattern="TASK-EXIT-CODE: ([1-9][0-9]*)|[Ss]egmentation violation|[Ee]xception caught|\[FATAL\]|uncaught exception|\(int\) ([1-9][0-9]*)|fair::FatalException"
+    local search_pattern="TASK-EXIT-CODE: ([1-9][0-9]*)|[Ss]egmentation violation|[Ss]egmentation fault|Program crashed|[Ee]xception caught|\[FATAL\]|uncaught exception|\(int\) ([1-9][0-9]*)|fair::FatalException"
     local error_files=$(find ${search_dir} -maxdepth 4 -type f \( -name "*.log" -or -name "*serverlog*" -or -name "*workerlog*" -or -name "*mergerlog*" \) | xargs grep -l -E "${search_pattern}" | sort)
     for ef in ${error_files} ; do
         echo_red "Error found in log $(realpath ${ef})"

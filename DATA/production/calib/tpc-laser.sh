@@ -10,8 +10,6 @@ FILEWORKDIR="/home/wiechula/processData/inputFilesTracking/triggeredLaser"
 
 FILEWORKDIR2="/home/epn/odc/files/"
 
-ARGS_ALL_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR2;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR;keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null"
-
 if [ $NUMAGPUIDS != 0 ]; then
   ARGS_ALL+=" --child-driver 'numactl --membind $NUMAID --cpunodebind $NUMAID'"
 fi
@@ -39,8 +37,8 @@ if [ $HOSTMEMSIZE != "0" ]; then
   GPU_CONFIG_KEY+="GPU_proc.forceHostMemoryPoolSize=$HOSTMEMSIZE;"
 fi
 
-PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
-CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
+PROXY_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
+CALIB_INSPEC="A:TPC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
 
 CALIB_CONFIG="TPCCalibPulser.FirstTimeBin=450;TPCCalibPulser.LastTimeBin=550;TPCCalibPulser.NbinsQtot=250;TPCCalibPulser.XminQtot=2;TPCCalibPulser.XmaxQtot=502;TPCCalibPulser.MinimumQtot=8;TPCCalibPulser.MinimumQmax=6;TPCCalibPulser.XminT0=450;TPCCalibPulser.XmaxT0=550;TPCCalibPulser.NbinsT0=400;keyval.output_dir=/dev/null"
 
@@ -84,7 +82,7 @@ if [[ ${TPC_CALIB_TRACKS_PUBLISH_EOS:-} == 1 ]]; then
 fi
 
 
-o2-dpl-raw-proxy $ARGS_ALL \
+o2-dpl-raw-proxy $ARGS_ALL --inject-missing-data \
     --dataspec "$PROXY_INSPEC" \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
     | o2-tpc-raw-to-digits-workflow $ARGS_ALL  ${LASER_DECODER_ADD}\

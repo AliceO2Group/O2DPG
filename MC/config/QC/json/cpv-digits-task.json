@@ -16,13 +16,13 @@
         "periodName": "SimChallenge"
       },
       "monitoring": {
-        "url": "infologger:///debug?qc"
+        "url": "no-op://"
       },
       "consul": {
         "url": ""
       },
       "conditionDB": {
-        "url": "ccdb-test.cern.ch:8080"
+        "url": "alice-ccdb.cern.ch"
       }
     },
     "tasks": {

@@ -33,7 +33,7 @@ def QC_finalize_name(name):
   return name + "_finalize"
 
 qcdir = "QC"
-def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
+def include_all_QC_finalization(ntimeframes, standalone, run, productionTag, conditionDB, qcdbHost):
 
   stages = []
 
@@ -49,7 +49,7 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
 
     task = createTask(name=QC_finalize_name(taskName), needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
     task['cmd'] = f'o2-qc --config {qcConfigPath} --remote-batch {taskName}.root' + \
-                  f' --override-values "qc.config.Activity.number={run};qc.config.Activity.periodName={productionTag}"' + \
+                  f' --override-values "qc.config.database.host={qcdbHost};qc.config.Activity.number={run};qc.config.Activity.periodName={productionTag};qc.config.conditionDB.url={conditionDB}"' + \
                   ' ' + getDPL_global_options()
     stages.append(task)
 
@@ -66,7 +66,8 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
     task = createTask(name=taskName, needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
     overrideValues = '--override-values "'
     overrideValues += f'qc.config.Activity.number={run};' if runSpecific else 'qc.config.Activity.number=0;'
-    overrideValues += f'qc.config.Activity.periodName={productionTag}"' if prodSpecific else 'qc.config.Activity.periodName="'
+    overrideValues += f'qc.config.Activity.periodName={productionTag};' if prodSpecific else 'qc.config.Activity.periodName=;'
+    overrideValues += f'qc.config.database.host={qcdbHost};qc.config.conditionDB.url={conditionDB}"'
     task['cmd'] = f'o2-qc --config {qcConfigPath} ' + \
                   overrideValues + ' ' + getDPL_global_options()
     stages.append(task)
@@ -78,10 +79,13 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
   add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mft-digits-0.json', MFTDigitsQCneeds)
   add_QC_finalization('mftClustersQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mft-clusters.json')
   add_QC_finalization('mftTracksQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks.json')
-  add_QC_finalization('emcCellQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/emc-cell-task.json')
+  add_QC_finalization('mftMCTracksQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks-mc.json')
+  add_QC_finalization('emcRecoQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/emc-reco-tasks.json')
+  add_QC_finalization('emcBCQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/emc-reco-tasks.json')
   #add_QC_finalization('tpcTrackingQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-tracking-direct.json')
   add_QC_finalization('tpcStandardQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-standard-direct.json')
-  add_QC_finalization('trdDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json')
+  add_QC_finalization('trdDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/trd-standalone-task.json')
+  add_QC_finalization('trdTrackingQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/trd-tracking-task.json')
   add_QC_finalization('vertexQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/vertexing-qc-direct-mc.json')
   add_QC_finalization('ITSTPCmatchQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/ITSTPCmatchedTracks_direct_MC.json')
   add_QC_finalization('TOFMatchQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_ITSTPCTOF_TPCTOF_direct_MC.json')
@@ -89,6 +93,8 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag):
   add_QC_finalization('TOFMatchWithTRDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_AllTypes_direct_MC.json')
   add_QC_finalization('ITSTrackSimTask', 'json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
   add_QC_finalization('ITSTracksClusters', 'json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json')
+  if isActive('MID'):
+     add_QC_finalization('MIDTaskQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mid-task.json')
   if isActive('FT0') and isActive('TRD'):
      add_QC_finalization('tofft0PIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tof.json')
   elif isActive('FT0'):
@@ -116,7 +122,8 @@ def main() -> int:
   parser.add_argument('-o',help='output workflow file', default='workflow.json')
   parser.add_argument('-run',help="Run number for this MC", default=300000)
   parser.add_argument('-productionTag',help="Production tag for this MC", default='unknown')
-
+  parser.add_argument('-conditionDB',help="CCDB url for QC workflows", default='http://alice-ccdb.cern.ch')
+  parser.add_argument('-qcdbHost',help="QCDB url for QC object uploading", default='http://ali-qcdbmc-gpn.cern.ch:8083')
   args = parser.parse_args()
   print (args)
 
@@ -138,7 +145,7 @@ def main() -> int:
     mkdir(qcdir)
 
   workflow={}
-  workflow['stages'] = include_all_QC_finalization(ntimeframes=1, standalone=True, run=args.run, productionTag=args.productionTag)
+  workflow['stages'] = include_all_QC_finalization(ntimeframes=1, standalone=True, run=args.run, productionTag=args.productionTag, conditionDB=args.conditionDB, qcdbHost=args.qcdbHost)
   
   dump_workflow(workflow["stages"], args.o)
   

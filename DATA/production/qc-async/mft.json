@@ -29,27 +29,29 @@
         "className": "o2::quality_control_modules::mft::QcMFTClusterTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "randomcluster:MFT/COMPCLUSTERS/0;clustersrof:MFT/CLUSTERSROF/0;patterns:MFT/PATTERNS/0;cldict:MFT/CLUSDICT/0?lifetime=condition&ccdb-path=MFT/Calib/ClusterDictionary"
         },
+        "movingWindows": [ "mClustersROFSize" ],
         "taskParameters": {
+          "onlineQC" : "0",
           "maxClusterROFSize" : "50000",
           "maxDuration" : "60000",
           "timeBinSize" : "0.1",
           "ROFLengthInBC" : "594"
         },
-	"grpGeomRequest" : {
-          "geomRequest": "Aligned",
-          "askGRPECS": "false",
+        "grpGeomRequest" : {
+          "geomRequest": "None",
+          "askGRPECS": "true",
           "askGRPLHCIF": "false",
-          "askGRPMagField": "true",
+          "askGRPMagField": "false",
           "askMatLUT": "false",
           "askTime": "false",
-          "askOnceAllButField": "true",
-          "needPropagatorD":  "false"
+          "askOnceAllButField": "false",
+          "needPropagatorD": "false"
         }
       },
       "MFTTracks": {
@@ -58,7 +60,7 @@
         "className": "o2::quality_control_modules::mft::QcMFTTrackTask",
         "moduleName": "QcMFT",
         "detectorName": "MFT",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
         "maxNumberCycles": "-1",
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
@@ -66,12 +68,23 @@
           "query_comment" : "100% sampling",
           "query": "tracks:MFT/TRACKS/0;tracksrofs:MFT/MFTTrackROF/0;clustersrofs:MFT/CLUSTERSROF/0"
         },
+        "movingWindows": [ "mMFTTrackROFSize", "mMFTTrackEta", "mMFTTrackPhi" ],
         "taskParameters": {
           "ROFLengthInBC": "594",
           "MaxTrackROFSize": "10000",
           "MaxClusterROFSize": "50000",
           "MaxDuration": "60000",
           "TimeBinSize": "0.1"
+        },
+        "grpGeomRequest" : {
+          "geomRequest": "None",
+          "askGRPECS": "true",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "false",
+          "needPropagatorD": "false"
         }
       }
     },

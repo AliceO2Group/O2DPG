@@ -1,4 +1,50 @@
 {
+  "EMCClusterMonitorTask": {
+    "clusterDefinition": "10",
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "doEventSel": "0",
+    "numclusters-binning": {
+      "values": [
+        201,
+        -0.5,
+        200.5
+      ]
+    },
+    "processAmbiguous": "0",
+    "processCollisions": "1",
+    "selectBCID": "all",
+    "vertexCut": "-1",
+    "vetoBCID": ""
+  },
+  "EMCClusterMonitorTaskAmbiguous": {
+    "clusterDefinition": "10",
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "doEventSel": "0",
+    "numclusters-binning": {
+      "values": [
+        201,
+        -0.5,
+        200.5
+      ]
+    },
+    "processAmbiguous": "1",
+    "processCollisions": "0",
+    "selectBCID": "all",
+    "vertexCut": "-1",
+    "vetoBCID": ""
+  },
   "McCollisions": {},
   "McParticles": {},
   "McTrackLabels": {},
@@ -14,11 +60,76 @@
     "processRun2": "false",
     "processRun3": "true"
   },
+  "cell-monitor": {
+    "maxCellTimeMain": "100",
+    "minCellAmplitude": "0",
+    "minCellAmplitudeTimeHists": "0.3",
+    "minCellTimeMain": "-50",
+    "selectBCID": "all",
+    "vetoBCID": ""
+  },
   "check-mc-particles-indices": {
     "debugMode": "0"
   },
   "check-mc-particles-indices-grouped": {
     "debugMode": "1"
+  },
+  "emc-tmmonitor": {
+    "clusterDefinition": "10",
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "doEventSel": "0",
+    "hasPropagatedTracks": "1",
+    "maxTime": "20",
+    "minM02": "0.1",
+    "minTime": "-25",
+    "processCollisions": "1",
+    "selectBCID": "all",
+    "tpcNsigmaBack": {
+      "values": [
+        -10,
+        -4
+      ]
+    },
+    "tpcNsigmaElectron": {
+      "values": [
+        -1,
+        3
+      ]
+    },
+    "tpcNsigmaPion": {
+      "values": [
+        -3,
+        3
+      ]
+    },
+    "usePionRejection": "0",
+    "vertexCut": "-1",
+    "vetoBCID": ""
+  },
+  "emcal-correction-task": {
+    "clusterDefinition": "kV3Default",
+    "disableNonLin": "0",
+    "exoticCellDiffTime": "1e+06",
+    "exoticCellFraction": "0.97",
+    "exoticCellInCrossMinAmplitude": "0.1",
+    "exoticCellMinAmplitude": "4",
+    "hasPropagatedTracks": "0",
+    "hasShaperCorrection": "1",
+    "isMC": "1",
+    "logWeight": "4.5",
+    "maxMatchingDistance": "0.4",
+    "nonlinearityFunction": "MC_TestbeamFinal",
+    "processFull": "0",
+    "processMCFull": "1",
+    "processStandalone": "0",
+    "selectedCellType": "1",
+    "useWeightExotic": "0"
   },
   "event-selection-qa-task": {
     "isMC": "true",
@@ -952,6 +1063,10 @@
     "v0setting_dcav0dau": "1",
     "v0setting_radius": "0.9"
   },
+  "pid-multiplicity": {
+    "processIU": "0",
+    "processStandard": "1"
+  },
   "pseudorapidity-density": {
     "estimatorEta": "1",
     "exclusionPhi": {
@@ -1029,74 +1144,14 @@
     }
   },
   "qa-event-track": {
-    "binsPt": {
-      "values": [
-        "0",
-        "0",
-        "0.10000000000000001",
-        "0.20000000000000001",
-        "0.29999999999999999",
-        "0.40000000000000002",
-        "0.5",
-        "0.59999999999999998",
-        "0.69999999999999996",
-        "0.80000000000000004",
-        "0.90000000000000002",
-        "1",
-        "1.1000000000000001",
-        "1.2",
-        "1.3",
-        "1.3999999999999999",
-        "1.5",
-        "2",
-        "5",
-        "10",
-        "20",
-        "50"
-      ]
-    },
-    "binsTrackMultiplcity": {
-      "values": [
-        "200",
-        "0",
-        "200"
-      ]
-    },
-    "binsVertexPosXY": {
-      "values": [
-        "500",
-        "-1",
-        "1"
-      ]
-    },
-    "binsVertexPosZ": {
-      "values": [
-        "100",
-        "-20",
-        "20"
-      ]
-    },
-    "fractionOfSampledEvents": "1",
-    "isRun3": "true",
-    "maxEta": "2",
-    "maxPhi": "10",
-    "maxPt": "1e+10",
-    "minEta": "-2",
-    "minPhi": "-1",
-    "minPt": "-10",
-    "processData": "true",
+    "checkOnlyPVContributor": "true",
+    "overwriteAxisRangeForPbPb": "true",
+    "processData": "false",
     "processDataIU": "false",
     "processDataIUFiltered": "false",
     "processMC": "true",
     "processTableData": "false",
     "processTableMC": "false",
-    "selectCharge": "0",
-    "selectGoodEvents": "true",
-    "selectMaxVtxZ": "100",
-    "selectPID": "0",
-    "selectPrim": "false",
-    "selectSec": "false",
-    "targetNumberOfEvents": "10000000",
     "trackSelection": "1"
   },
   "table-maker-m-c": {
@@ -1117,86 +1172,9 @@
     "processMuonOnlyWithCov": "false",
     "processOnlyBCs": "true"
   },
-  "tof-signal": "",
-  "tpc-pid-qa": {
-    "etaBins": {
-      "values": [
-        50,
-        -1,
-        1
-      ]
-    },
-    "dEdxBins": {
-      "values": [
-        3000,
-        0,
-        1000
-      ]
-    },
-    "applyRapidityCut": "0",
-    "processFullWithTOFDeuteron": "0",
-    "phiBins": {
-      "values": [
-        50,
-        0,
-        6.283185307179586
-      ]
-    },
-    "processProton": "0",
-    "processHelium3": "0",
-    "processFullElectron": "1",
-    "processKaon": "0",
-    "processAlpha": "0",
-    "processFullWithTOFPion": "0",
-    "processFullHelium3": "1",
-    "minP": "0.01",
-    "enableDeDxPlot": "1",
-    "processFullWithTOFElectron": "0",
-    "logAxis": "1",
-    "processFullWithTOFAlpha": "0",
-    "processFullKaon": "1",
-    "processMuon": "0",
-    "processFullDeuteron": "1",
-    "processFullWithTOFMuon": "0",
-    "processFullWithTOFProton": "0",
-    "maxP": "5",
-    "processFullAlpha": "0",
-    "processElectron": "0",
-    "processDeuteron": "0",
-    "trackLengthBins": {
-      "values": [
-        50,
-        0,
-        1000
-      ]
-    },
-    "processFullProton": "1",
-    "processFullWithTOFKaon": "0",
-    "minTPCNcls": "0",
-    "processFullMuon": "1",
-    "processFullWithTOFTriton": "0",
-    "nSigmaBins": {
-      "values": [
-        400,
-        -10,
-        10
-      ]
-    },
-    "trackSelection": "1",
-    "processFullWithTOFHelium3": "0",
-    "processFullTriton": "1",
-    "processTriton": "0",
-    "processPion": "0",
-    "splitSignalPerCharge": "1",
-    "expSigmaBins": {
-      "values": [
-        100,
-        0,
-        200
-      ]
-    },
+  "tof-pid-qa": {
     "applyEvSel": "2",
-    "nBinsP": "400",
+    "applyRapidityCut": "1",
     "deltaBins": {
       "values": [
         100,
@@ -1204,9 +1182,8 @@
         1000
       ]
     },
-    "processFullPion": "1"
-  },
-  "tof-pid-qa": {
+    "enableEvTimeSplitting": "0",
+    "enableVsMomentumHistograms": "0",
     "etaBins": {
       "values": [
         50,
@@ -1214,54 +1191,6 @@
         1
       ]
     },
-    "applyRapidityCut": "1",
-    "phiBins": {
-      "values": [
-        25,
-        0,
-        6.283185307179586
-      ]
-    },
-    "processProton": "0",
-    "processHelium3": "0",
-    "processFullElectron": "0",
-    "processKaon": "0",
-    "processAlpha": "0",
-    "processFullHelium3": "1",
-    "minP": "0.1",
-    "logAxis": "0",
-    "processFullKaon": "1",
-    "produceDeltaTEtaPhiMap": "0",
-    "processMuon": "0",
-    "processFullDeuteron": "1",
-    "maxP": "5",
-    "processFullAlpha": "0",
-    "ptDeltaTEtaPhiMap": "3",
-    "processElectron": "0",
-    "processDeuteron": "0",
-    "trackLengthBins": {
-      "values": [
-        50,
-        0,
-        1000
-      ]
-    },
-    "processFullProton": "1",
-    "enableEvTimeSplitting": "0",
-    "enableVsMomentumHistograms": "0",
-    "processFullMuon": "0",
-    "nSigmaBins": {
-      "values": [
-        400,
-        -10,
-        10
-      ]
-    },
-    "trackSelection": "1",
-    "processFullTriton": "1",
-    "processTriton": "0",
-    "processPion": "0",
-    "splitSignalPerCharge": "1",
     "expSigmaBins": {
       "values": [
         200,
@@ -1269,17 +1198,55 @@
         200
       ]
     },
-    "applyEvSel": "2",
+    "logAxis": "0",
+    "maxP": "5",
+    "minP": "0.1",
     "nBinsP": "400",
-    "deltaBins": {
+    "nSigmaBins": {
       "values": [
-        100,
-        -1000,
+        400,
+        -10,
+        10
+      ]
+    },
+    "phiBins": {
+      "values": [
+        25,
+        0,
+        6.283185307179586
+      ]
+    },
+    "processAlpha": "0",
+    "processDeuteron": "0",
+    "processElectron": "0",
+    "processFullAlpha": "0",
+    "processFullDeuteron": "1",
+    "processFullElectron": "0",
+    "processFullHelium3": "1",
+    "processFullKaon": "1",
+    "processFullMuon": "0",
+    "processFullPion": "1",
+    "processFullProton": "1",
+    "processFullTriton": "1",
+    "processHelium3": "0",
+    "processKaon": "0",
+    "processMuon": "0",
+    "processPion": "0",
+    "processProton": "0",
+    "processTriton": "0",
+    "produceDeltaTEtaPhiMap": "0",
+    "ptDeltaTEtaPhiMap": "3",
+    "splitSignalPerCharge": "1",
+    "trackLengthBins": {
+      "values": [
+        50,
+        0,
         1000
       ]
     },
-    "processFullPion": "1"
+    "trackSelection": "1"
   },
+  "tof-signal": "",
   "tpc-pid-full": {
     "autofetchNetworks": "1",
     "ccdb-timestamp": "0",
@@ -1301,9 +1268,93 @@
     "pid-tr": "-1",
     "useNetworkCorrection": "0"
   },
-  "pid-multiplicity": {
-    "processIU": "0",
-    "processStandard": "1"
+  "tpc-pid-qa": {
+    "applyEvSel": "2",
+    "applyRapidityCut": "0",
+    "dEdxBins": {
+      "values": [
+        3000,
+        0,
+        1000
+      ]
+    },
+    "deltaBins": {
+      "values": [
+        100,
+        -1000,
+        1000
+      ]
+    },
+    "enableDeDxPlot": "1",
+    "etaBins": {
+      "values": [
+        50,
+        -1,
+        1
+      ]
+    },
+    "expSigmaBins": {
+      "values": [
+        100,
+        0,
+        200
+      ]
+    },
+    "logAxis": "1",
+    "maxP": "5",
+    "minP": "0.01",
+    "minTPCNcls": "0",
+    "nBinsP": "400",
+    "nSigmaBins": {
+      "values": [
+        400,
+        -10,
+        10
+      ]
+    },
+    "phiBins": {
+      "values": [
+        50,
+        0,
+        6.283185307179586
+      ]
+    },
+    "processAlpha": "0",
+    "processDeuteron": "0",
+    "processElectron": "0",
+    "processFullAlpha": "0",
+    "processFullDeuteron": "1",
+    "processFullElectron": "1",
+    "processFullHelium3": "1",
+    "processFullKaon": "1",
+    "processFullMuon": "1",
+    "processFullPion": "1",
+    "processFullProton": "1",
+    "processFullTriton": "1",
+    "processFullWithTOFAlpha": "0",
+    "processFullWithTOFDeuteron": "0",
+    "processFullWithTOFElectron": "0",
+    "processFullWithTOFHelium3": "0",
+    "processFullWithTOFKaon": "0",
+    "processFullWithTOFMuon": "0",
+    "processFullWithTOFPion": "0",
+    "processFullWithTOFProton": "0",
+    "processFullWithTOFTriton": "0",
+    "processHelium3": "0",
+    "processKaon": "0",
+    "processMuon": "0",
+    "processPion": "0",
+    "processProton": "0",
+    "processTriton": "0",
+    "splitSignalPerCharge": "1",
+    "trackLengthBins": {
+      "values": [
+        50,
+        0,
+        1000
+      ]
+    },
+    "trackSelection": "1"
   },
   "track-extension": {
     "processRun2": "false",
@@ -1328,115 +1379,7 @@
     "ptMax": "1e+10",
     "ptMin": "0.1"
   },
-  "emcal-correction-task": {
-    "nonlinearityFunction": "MC_TestbeamFinal",
-    "logWeight": "4.5",
-    "exoticCellMinAmplitude": "4",
-    "clusterDefinition": "kV3Default",
-    "useWeightExotic": "0",
-    "disableNonLin": "0",
-    "exoticCellDiffTime": "1e+06",
-    "exoticCellInCrossMinAmplitude": "0.1",
-    "maxMatchingDistance": "0.4",
-    "exoticCellFraction": "0.97",
-    "hasShaperCorrection": "1",
-    "isMC": "1",
-    "hasPropagatedTracks": "0",
-    "processFull": "0",
-    "selectedCellType": "1",
-    "processStandalone": "0",
-    "processMCFull": "1"
-  },
-  "cell-monitor": {
-    "minCellTimeMain": "-50",
-    "maxCellTimeMain": "100",
-    "minCellAmplitudeTimeHists": "0.3",
-    "vetoBCID": "",
-    "selectBCID": "all",
-    "minCellAmplitude": "0"
-  },
-  "EMCClusterMonitorTaskAmbiguous": {
-    "clustertime-binning": {
-      "values": [
-        1500,
-        -600,
-        900
-      ]
-    },
-    "processCollisions": "0",
-    "doEventSel": "0",
-    "processAmbiguous": "1",
-    "clusterDefinition": "10",
-    "numclusters-binning": {
-      "values": [
-        201,
-        -0.5,
-        200.5
-      ]
-    },
-    "vetoBCID": "",
-    "selectBCID": "all",
-    "vertexCut": "-1"
-  },
-  "EMCClusterMonitorTask": {
-    "clustertime-binning": {
-      "values": [
-        1500,
-        -600,
-        900
-      ]
-    },
-    "processCollisions": "1",
-    "doEventSel": "0",
-    "processAmbiguous": "0",
-    "clusterDefinition": "10",
-    "numclusters-binning": {
-      "values": [
-        201,
-        -0.5,
-        200.5
-      ]
-    },
-    "vetoBCID": "",
-    "selectBCID": "all",
-    "vertexCut": "-1"
-  },
-  "emc-tmmonitor": {
-    "clustertime-binning": {
-      "values": [
-        1500,
-        -600,
-        900
-      ]
-    },
-    "doEventSel": "0",
-    "maxTime": "20",
-    "clusterDefinition": "10",
-    "minM02": "0.1",
-    "vetoBCID": "",
-    "processCollisions": "1",
-    "hasPropagatedTracks": "1",
-    "usePionRejection": "0",
-    "minTime": "-25",
-    "tpcNsigmaPion": {
-      "values": [
-        -3,
-        3
-      ]
-    },
-    "selectBCID": "all",
-    "tpcNsigmaElectron": {
-      "values": [
-        -1,
-        3
-      ]
-    },
-    "vertexCut": "-1",
-    "tpcNsigmaBack": {
-      "values": [
-        -10,
-        -4
-      ]
-    }
+  "ft0-qa": {
+    "isLowFlux": "false"
   }
 }

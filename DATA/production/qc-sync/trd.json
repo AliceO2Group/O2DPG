@@ -22,7 +22,6 @@
         "url": "o2-ccdb.internal"
       },
       "infologger": {
-        "": "Message at this level or above are discarded (default: 21 - Trace)",
         "filterDiscardDebug": "false",
         "filterDiscardLevel": "11"
       }
@@ -33,12 +32,15 @@
         "className": "o2::quality_control_modules::trd::RawData",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
-        "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
+        "cycleDurations": [
+          {"cycleDurationSeconds": 30, "validitySeconds": 180},
+          {"cycleDurationSeconds": 180, "validitySeconds": 1}
+        ],
         "dataSource": {
           "type": "direct",
           "query": "rawstats:TRD/RAWSTATS"
         },
+        "disableLastCycle": "true",
         "location": "local",
         "localMachines": [
           "epn",
@@ -55,12 +57,12 @@
         "className": "o2::quality_control_modules::trd::DigitsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
-        "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
+        "cycleDurationSeconds": "180",
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "trdall"
         },
+        "disableLastCycle": "true",
         "location": "local",
         "localMachines": [
           "epn",
@@ -81,12 +83,12 @@
         "className": "o2::quality_control_modules::trd::TrackletsTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
-        "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
+        "cycleDurationSeconds": "120",
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "trdall"
         },
+        "disableLastCycle": "true",
         "location": "local",
         "localMachines": [
           "epn",
@@ -108,12 +110,12 @@
         "className": "o2::quality_control_modules::trd::PulseHeightTrackMatch",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
-        "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
+        "cycleDurationSeconds": "180",
         "dataSource": {
           "type": "direct",
           "query": "phValues:TRD/PULSEHEIGHT"
         },
+        "disableLastCycle": "true",
         "location": "local",
         "localMachines": [
           "epn",
@@ -133,12 +135,12 @@
         "className": "o2::quality_control_modules::trd::TrackingTask",
         "moduleName": "QcTRD",
         "detectorName": "TRD",
-        "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
+        "cycleDurationSeconds": "180",
         "dataSource": {
           "type": "direct",
           "query": "trackITSTPCTRD:TRD/MATCH_ITSTPC;trigITSTPCTRD:TRD/TRGREC_ITSTPC"
         },
+        "disableLastCycle": "true",
         "location": "local",
         "localMachines": [
           "epn",
@@ -164,12 +166,12 @@
       "id": "trdall",
       "active": "true",
       "machines": [],
-      "query": "digits:TRD/DIGITS/0;tracklets:TRD/TRACKLETS/0;triggers:TRD/TRKTRGRD/0",
+      "query": "digits:TRD/DIGITS/0;tracklets:TRD/TRACKLETS/0;triggers:TRD/TRKTRGRD/0;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC;fedChamberStatus:TRD/FCHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/DCSDPsFedChamberStatus",
       "samplingConditions": [
         {
           "condition": "random",
           "fraction": "0.05",
-          "seed": "1234"
+          "seed": "0"
         }
       ],
       "blocking": "false"

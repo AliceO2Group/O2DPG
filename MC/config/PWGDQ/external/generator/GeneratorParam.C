@@ -1,3 +1,5 @@
+R__LOAD_LIBRARY(libpythia6)
+
 namespace o2
 {
 namespace eventgen

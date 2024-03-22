@@ -1,0 +1,82 @@
+{
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "ccdb-test.cern.ch:8080",
+        "username": "not_applicable",
+        "password": "not_applicable",
+        "name": "not_applicable"
+      },
+      "Activity": {
+        "number": "42",
+        "type": "2",
+        "provenance": "qc_mc",
+        "passName": "passMC",
+        "periodName": "SimChallenge"
+      },
+      "monitoring": {
+        "url": "no-op://"
+      },
+      "consul": {
+        "url": ""
+      },
+      "conditionDB": {
+        "url": "alice-ccdb.cern.ch"
+      }
+    },
+    "tasks": {
+      "Cells": {
+        "active": "true",
+        "className": "o2::quality_control_modules::emcal::CellTask",
+        "moduleName": "QcEMCAL",
+        "detectorName": "EMC",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "emcal-cells:EMC/CELLS/0;emcal-triggerecords:EMC/CELLSTRGR/0"
+        }
+      },
+      "Clusters": {
+        "active": "true",
+        "taskName": "Clusters",
+        "className": "o2::quality_control_modules::emcal::ClusterTask",
+        "moduleName": "QcEMCAL",
+        "detectorName": "EMC",
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "emcal-cells:EMC/CELLS/0;emcal-triggerecords:EMC/CELLSTRGR/0"
+        },
+        "taskParameters": {
+          "useInternalClusterizer": "true",
+          "bindingCellTriggerRecords": "emcal-triggerecords",
+          "calibrateCells": "false",
+          "clusterizerSeedThreshold": "0.5",
+          "clusterizerCellTreshold": "0.1",
+          "clusterizerDoGradientCut": "true",
+          "clusterizerGradientCut": "0.03",
+          "clusterizerMinTime": "-300.",
+          "clusterizerMaxTime": "300.",
+          "clusterizerMaxTimeDelta": "1000.",
+          "hasInvMassMesons": "true",
+          "mesonClustersRejectExotics": 1
+        },
+        "grpGeomRequest": {
+          "geomRequest": "Ideal",
+          "askGRPECS": "false",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "true",
+          "needPropagatorD": "false"
+        }
+      }
+    },
+    "checks": {}
+  },
+  "dataSamplingPolicies": []
+}

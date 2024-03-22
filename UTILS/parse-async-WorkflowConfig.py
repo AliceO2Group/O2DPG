@@ -187,16 +187,21 @@ def parse_important_DPL_args(cmds, flat_config):
       # itstpc matching
       if cmd == 'o2-tpcits-match-workflow':
          corrstring = ''
-         s1 = extract_args(tokens, '--corrmap-lumi-inst')
+         s1 = extract_args(tokens, '--lumi-type')
          if s1:
-            corrstring += ' --corrmap-lumi-inst ' + s1
-         s2 = extract_args(tokens, '--corrmap-lumi-mean')
+            corrstring += ' --lumi-type ' + s1
+         s2 = extract_args(tokens, '--corrmap-lumi-mode')
          if s2:
-            corrstring += ' --corrmap-lumi-mean ' + s2
-         if '--require-ctp-lumi' in tokens:
-            corrstring += ' --require-ctp-lumi '
+            corrstring += ' --corrma-lumi-mode ' + s2
          # these are some options applied in multiple places (so save them flatly under tpc-corr-scaling)
          flat_config['tpc-corr-scaling'] = corrstring
+      
+      # hmp matching
+      if cmd == 'o2-hmpid-matcher-workflow':
+         c = {}
+         c['track-sources'] = extract_args(tokens, '--track-sources')
+         flat_config['o2-hmpid-matcher-workflow'] = c
+
 
 def print_untreated_args(cmds):
    """

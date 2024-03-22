@@ -20,7 +20,7 @@ NTIMEFRAMES=${NTIMEFRAMES:-1}
 
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -e TGeant4 -mod "MCH MFT MID ITS" \
      -trigger "external" -ini $O2DPG_ROOT/MC/config/PWGDQ/ini/GeneratorHF_ccbarToMuonsSemileptonic_fwdy.ini  \
-    -genBkg pythia8 -procBkg cdiff -colBkg pp --embedding -nb ${NBKGEVENTS} --mft-reco-full \
+    -genBkg pythia8 -procBkg cdiff -colBkg pp --embedding -nb ${NBKGEVENTS} \
     -confKeyBkg "Diamond.width[2]=6" -interactionRate 2000 --mft-assessment-full --fwdmatching-assessment-full
 
 # run workflow

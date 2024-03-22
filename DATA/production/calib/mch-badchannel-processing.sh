@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 source common/setenv.sh
@@ -10,7 +9,7 @@ source common/getCommonArgs.sh
 PROXY_INSPEC="A:MCH/RAWDATA;B:FLP/DISTSUBTIMEFRAME/0"
 PROXY_OUTSPEC="downstream:MCH/PDIGITS/0"
 
-WORKFLOW="o2-dpl-raw-proxy ${ARGS_ALL} --dataspec \"$PROXY_INSPEC\" --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=0\" | "
+WORKFLOW="o2-dpl-raw-proxy ${ARGS_ALL} --dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,transport=shmem,rateLogging=0\" | "
 WORKFLOW+="o2-mch-pedestal-decoding-workflow --pipeline mch-pedestal-decoder:${MULTIPLICITY_FACTOR_RAWDECODERS} --logging-interval 10 ${ARGS_ALL} --configKeyValues \"$ARGS_ALL_CONFIG\" | "
 WORKFLOW+="o2-dpl-output-proxy ${ARGS_ALL} --dataspec \"$PROXY_OUTSPEC\" --proxy-channel-name mch-badchannel-input-proxy --channel-config \"name=mch-badchannel-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0\" | "
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"

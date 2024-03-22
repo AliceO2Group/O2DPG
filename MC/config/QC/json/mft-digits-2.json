@@ -22,7 +22,7 @@
         "url": ""
       },
       "conditionDB": {
-        "url": "ccdb-test.cern.ch:8080"
+        "url": "alice-ccdb.cern.ch"
       }
     },
     "tasks": {
@@ -40,11 +40,21 @@
         },
         "taskParameters": {
           "FLP": "2",
-          "NoiseScan" : "0",
-          "maxDigitROFSize" : "5000",
-          "maxDuration" : "60000",
-          "timeBinSize" : "0.1",
-          "ROFLengthInBC" : "594"
+          "NoiseScan": "0",
+          "maxDigitROFSize": "5000",
+          "maxDuration": "60000",
+          "timeBinSize": "0.1",
+          "ROFLengthInBC": "594"
+        },
+        "grpGeomRequest" : {
+          "geomRequest": "None",
+          "askGRPECS": "true",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "false",
+          "needPropagatorD": "false"
         },
         "location": "remote"
       }
@@ -56,18 +66,23 @@
         "moduleName": "QcMFT",
         "detectorName": "MFT",
         "policy": "OnEachSeparately",
-        "checkParameters" : {
-          "ZoneThresholdMedium" : "2",
-          "ZoneThresholdBad" : "5"
+        "checkParameters": {
+          "ZoneThresholdMedium": "2",
+          "ZoneThresholdBad": "5"
         },
-        "dataSource": [{
-          "type": "Task",
-          "name": "Digits",
-          "MOs" : ["mDigitChipOccupancy","mDigitOccupancySummary","mDigitChipStdDev"]
-        }]
+        "dataSource": [
+          {
+            "type": "Task",
+            "name": "Digits",
+            "MOs": [
+              "mDigitChipOccupancy",
+              "mDigitOccupancySummary",
+              "mDigitChipStdDev"
+            ]
+          }
+        ]
       }
     }
   },
-  "dataSamplingPolicies": [
-  ]
+  "dataSamplingPolicies": []
 }

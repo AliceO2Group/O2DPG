@@ -3,23 +3,17 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "ccdb-test.cern.ch:8080",
-        "username": "not_applicable",
-        "password": "not_applicable",
-        "name": "not_applicable"
+        "host": "ccdb-test.cern.ch:8080"
       },
       "Activity": {
         "type": "2",
         "number": "42"
       },
       "monitoring": {
-        "url": "influxdb-unix:///tmp/telegraf.sock"
-      },
-      "consul": {
-        "url": "alio2-cr1-hv-aliecs:8500"
+        "url": "infologger:///debug?qc"
       },
       "conditionDB": {
-        "url": "alio2-cr1-hv-qcdb1.cern.ch:8083"
+        "url": "ccdb-test.cern.ch:8080"
       }
     },
     "tasks": {
@@ -29,10 +23,9 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "digits:TRD/DIGITS;triggers:TRD/TRKTRGRD"
+          "query": "digits:TRD/DIGITS;triggers:TRD/TRKTRGRD;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC;fedChamberStatus:TRD/FCHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/DCSDPsFedChamberStatus"
         }
       },
       "Tracklets": {
@@ -41,10 +34,9 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD"
+          "query": "tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC;fedChamberStatus:TRD/FCHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/DCSDPsFedChamberStatus"
         }
       },
       "PHTrackMatch": {
@@ -53,7 +45,6 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "phValues:TRD/PULSEHEIGHT"
@@ -65,7 +56,6 @@
         "moduleName": "QcTRD",
         "detectorName": "TRD",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "trackITSTPCTRD:TRD/MATCH_ITSTPC;trigITSTPCTRD:TRD/TRGREC_ITSTPC"

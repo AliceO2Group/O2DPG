@@ -16,6 +16,8 @@ SOURCE_GUARD_MULTIPLICITIES=1
 : ${ITSTRK_THREADS:=1}
 : ${ITSTPC_THREADS:=1}
 
+: ${TOFMATCH_THREADS:=1}
+
 : ${HIGH_RATE_PP:=0}
 
 # FIXME: multithreading in the itsmft reconstruction does not work on macOS.
@@ -28,6 +30,8 @@ if [[ $SYNCMODE == 1 ]]; then NTRDTRKTHREADS=1; else NTRDTRKTHREADS=; fi
 
 : ${NGPURECOTHREADS:=-1} # -1 = auto-detect
 
+RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? ($RECO_NUM_NODES_WORKFLOW < 230 ? $RECO_NUM_NODES_WORKFLOW : 230) : 15) * ($NUMAGPUIDS != 0 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Process multiplicities
 
@@ -38,19 +42,24 @@ N_F_CTF=$MULTIPLICITY_FACTOR_CTFENCODERS
 N_TPCTRK=$NGPUS
 if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
   # Tuned multiplicities for async processing
+  if [[ ${OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT:-} == 1 ]]; then
+    [[ ! -z ${TIMEFRAME_RATE_LIMIT:-} ]] && unset TIMEFRAME_RATE_LIMIT
+    [[ ! -z ${SHMSIZE:-} ]] && unset SHMSIZE
+  fi
   if [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_8cpu" ]]; then
-    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=3
+    [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=3
+    [[ -z ${SHMSIZE:-} ]] && SHMSIZE=16000000000
     NGPURECOTHREADS=5
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_16cpu" ]]; then
-    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=8
-    [[ -z $SHMSIZE ]] && SHMSIZE=22000000000
+    [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=8
+    [[ -z ${SHMSIZE:-} ]] && SHMSIZE=22000000000
     NGPURECOTHREADS=9
     NTRDTRKTHREADS=3
     ITSTRK_THREADS=3
     ITSTPC_THREADS=3
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_64cpu" ]]; then
-    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=32
-    [[ -z $SHMSIZE ]] && SHMSIZE=90000000000
+    [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=32
+    [[ -z ${SHMSIZE:-} ]] && SHMSIZE=90000000000
     NGPURECOTHREADS=12
     NTRDTRKTHREADS=3
     ITSTRK_THREADS=3
@@ -63,8 +72,8 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_TOFMATCH=2
     N_TPCENTDEC=3
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_1gpu" ]]; then
-    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=8
-    [[ -z $SHMSIZE ]] && SHMSIZE=20000000000
+    [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=8
+    [[ -z ${SHMSIZE:-} ]] && SHMSIZE=30000000000
     N_TOFMATCH=2
     N_MCHCL=3
     N_TPCENTDEC=2
@@ -76,8 +85,8 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     ITSTRK_THREADS=2
     ITSTPC_THREADS=2
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_4gpu" ]]; then
-    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=45
-    [[ -z $SHMSIZE ]] && SHMSIZE=100000000000
+    [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=45
+    [[ -z ${SHMSIZE:-} ]] && SHMSIZE=100000000000
     NGPURECOTHREADS=8
     NTRDTRKTHREADS=2
     ITSTRK_THREADS=2
@@ -97,32 +106,36 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_TPCENTDEC=6
     N_TPCITS=12
     N_ITSTRK=12
+    export DPL_SMOOTH_RATE_LIMITING=1
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_4gpu" ]]; then
-    [[ -z $TIMEFRAME_RATE_LIMIT ]] && TIMEFRAME_RATE_LIMIT=20
-    [[ -z $SHMSIZE ]] && SHMSIZE=128000000000 # SHM_LIMIT 3/4
-    [[ -z $TIMEFRAME_SHM_LIMIT ]] && TIMEFRAME_SHM_LIMIT=$(($SHMSIZE / 3))
+    [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=35
+    [[ -z ${SHMSIZE:-} ]] && SHMSIZE=100000000000 # SHM_LIMIT 3/4
+    [[ -z ${TIMEFRAME_SHM_LIMIT:-} ]] && TIMEFRAME_SHM_LIMIT=$(($SHMSIZE / 3))
     NGPURECOTHREADS=8
-    NTRDTRKTHREADS=4
-    ITSTRK_THREADS=6
+    NTRDTRKTHREADS=8
+    ITSTRK_THREADS=20
     ITSTPC_THREADS=3
-    SVERTEX_THREADS=40
+    SVERTEX_THREADS=20
+    TOFMATCH_THREADS=2
     N_SECVTX=1
     NGPUS=4
     N_TPCTRK=4
     # time in s: pvtx 16, tof 30, trd 82 itstpc 53 its 200 mfttr 30 tpcent 23 hmp-clus 40 (25.11.22)
-    N_TPCENTDEC=$(math_max $((5 * $NGPUS / 4)) 1)
-    N_ITSTRK=$(math_max $((10 * $NGPUS / 4)) 1)
-    N_TPCITS=$(math_max $((7 * $NGPUS / 4)) 1)
+    N_TPCENTDEC=$(math_max $((4 * $NGPUS / 4)) 1)
+    N_ITSTRK=$(math_max $((4 * $NGPUS / 4)) 1)
+    N_TPCITS=$(math_max $((4 * $NGPUS / 4)) 1)
     N_MFTTRK=$(math_max $((3 * $NGPUS / 4)) 1)
-    N_TRDTRK=$(math_max $((9 * $NGPUS / 4)) 1)
-    N_TOFMATCH=$(math_max $((11 * $NGPUS / 4)) 1)
+    N_TRDTRK=$(math_max $((7 * $NGPUS / 4)) 1)
+    N_TOFMATCH=$(math_max $((5 * $NGPUS / 4)) 1)
     N_HMPCLUS=$(math_max $((3 * $NGPUS / 4)) 1)
+    N_ITSCL=3
     N_AODPROD=2
     N_MCHCL=9
-    N_HMPMATCH=14
+    N_HMPMATCH=1
     N_MCHTRK=7
     N_PRIMVTXMATCH=2
     N_PRIMVTX=3
+    export DPL_SMOOTH_RATE_LIMITING=1
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_64cpu" ]]; then
     NGPURECOTHREADS=6
     NTRDTRKTHREADS=2
@@ -137,11 +150,15 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     echo "Invalid optimized setting '$OPTIMIZED_PARALLEL_ASYNC'" 1>&2
     exit 1
   fi
+  if [[ ${OPTIMIZED_PARALLEL_ASYNC_AUTO_SHM_LIMIT:-} == 1 && ${EPN_NODE_MI100:-} == 1 ]]; then
+    TIMEFRAME_RATE_LIMIT=$(($TIMEFRAME_RATE_LIMIT * 2))
+    SHMSIZE=$(($SHMSIZE * 2))
+    EPN_GLOBAL_SCALING="3 / 2"
+  fi
 elif [[ $EPNPIPELINES != 0 ]]; then
   NTRDTRKTHREADS=2
   ITSTRK_THREADS=2
   ITSTPC_THREADS=2
-  RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? ($RECO_NUM_NODES_WORKFLOW < 230 ? $RECO_NUM_NODES_WORKFLOW : 230) : 15) * ($NUMAGPUIDS != 0 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
   # Tuned multiplicities for sync pp / Pb-Pb processing
   if [[ $BEAMTYPE == "pp" ]]; then
     N_ITSRAWDEC=$(math_max $((6 * $EPNPIPELINES * $NGPUS / 4)) 1)
@@ -206,7 +223,7 @@ if [[ -z ${EVE_NTH_EVENT:-} ]]; then
     EVE_NTH_EVENT=2
   elif [[ "$HIGH_RATE_PP" == "1" ]]; then
     EVE_NTH_EVENT=10
-  elif [[ $BEAMTYPE == "pp" && "${ED_VERTEX_MODE:-}" == "1" ]]; then
+  elif [[ $BEAMTYPE == "pp" ]]; then
     EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
   else # COSMICS / TECHNICALS / ...
     EVE_NTH_EVENT=1

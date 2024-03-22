@@ -16,7 +16,7 @@ SEVERITY_RAWPROXY=warning
 INFOLOGGER_SEVERITY=warning
 SEVERITY=warning
 
-o2-dpl-raw-proxy $ARGS_ALL \
+o2-dpl-raw-proxy $ARGS_ALL --inject-missing-data \
     --dataspec "$PROXY_INSPEC" \
     --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
     --severity $SEVERITY_RAWPROXY \

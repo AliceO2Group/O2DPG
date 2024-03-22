@@ -90,7 +90,7 @@
         "genDecayed": true
     },
     "Lambda(1520)0" : {
-        "pdg": 3124,
+        "pdg": 102134,
         "n": 1,
         "ptMin": 0.0,
         "ptMax": 20,
@@ -99,7 +99,7 @@
         "genDecayed": true
     },
     "anti-Lambda(1520)0" : {
-        "pdg": -3124,
+        "pdg": -102134,
         "n": 1,
         "ptMin": 0.0,
         "ptMax": 20,
