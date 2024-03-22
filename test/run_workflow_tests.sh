@@ -52,8 +52,9 @@ test_single_wf()
         local memlimit=${O2DPG_TEST_WORKFLOW_MEMLIMIT:+--mem-limit ${O2DPG_TEST_WORKFLOW_MEMLIMIT}}
         ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 -tt aod ${memlimit} >> ${LOG_FILE_WF} 2>&1
         ret_this=${?}
-        [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels QC ${memlimit} >> ${LOG_FILE_WF} 2>&1 ; ret_this_qc=${?} ; }
-        [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels Analysis ${memlimit} >> ${LOG_FILE_WF} 2>&1 ; ret_this_analysis=${?} ; }
+        # use -k|--keep-going feature to not stop after the first failure but see, if there are more
+        [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels QC ${memlimit} -k >> ${LOG_FILE_WF} 2>&1 ; ret_this_qc=${?} ; }
+        [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels Analysis ${memlimit} -k >> ${LOG_FILE_WF} 2>&1 ; ret_this_analysis=${?} ; }
         ret_this=$((ret_this + ret_this_qc + ret_this_analysis))
         [[ "${ret_this}" != "0" ]] && echo "[FATAL]: O2DPG_TEST Workflow execution failed" >> ${LOG_FILE_WF} || echo_green " -> PASSED"
     else
