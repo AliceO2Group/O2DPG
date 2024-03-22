@@ -164,7 +164,7 @@ int External()
     }
 
 
-    if (nGammaJpsiPairs != nGammaJpsiPairsToBeDone) {
+    if (nGammaJpsiPairs < nGammaJpsiPairsToBeDone) {
         std::cerr << "The number of gamma J/psi pairs should be the same as the number of Gamma Jpsi pairs which should be transported.\n";
         return 1;
     }

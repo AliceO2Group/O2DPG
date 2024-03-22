@@ -14,6 +14,7 @@
 //
 
 R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/EvtGen)
+R__LOAD_LIBRARY(libpythia6)
 #include "GeneratorCocktail.C"
 #include "GeneratorEvtGen.C"
 
