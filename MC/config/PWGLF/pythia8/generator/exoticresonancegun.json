@@ -1,0 +1,56 @@
+{
+    "f_1(1285)" : {
+        "pdg": 20223,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "f_1(1420)" : {
+        "pdg": 20333,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "f_0(1500)" : {
+        "pdg": 9030221,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "f_0(1710)" : {
+        "pdg": 10331,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "f_2(1525)" : {
+        "pdg": 335,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "f_0(1370)" : {
+        "pdg": 10221,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    }
+}
