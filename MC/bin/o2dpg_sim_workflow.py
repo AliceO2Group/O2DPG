@@ -84,7 +84,7 @@ parser.add_argument('-iniBkg',help='embedding background generator init paramete
 parser.add_argument('-confKeyBkg',help='embedding background configuration key values, for example: "GeneratorPythia8.config=pythia8bkg.cfg"', default='')
 parser.add_argument('-colBkg',help='embedding background collision system', default='PbPb')
 
-parser.add_argument('-e',help='simengine', default='TGeant4')
+parser.add_argument('-e',help='simengine', default='TGeant4', choices=['TGeant4', 'TGeant3', 'TFluka'])
 parser.add_argument('-tf',help='number of timeframes', default=2)
 parser.add_argument('--production-offset',help='Offset determining bunch-crossing '
                      + ' range within a (GRID) production. This number sets first orbit to '
