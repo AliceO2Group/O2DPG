@@ -208,6 +208,7 @@ fi
 
 
 if [[ "0${GEN_TOPO_VERBOSE:-}" == "01" ]]; then
+  echo "CALIB_RCT_UPDATER = ${CALIB_RCT_UPDATER:-}" 1>&2
   echo "CALIB_PRIMVTX_MEANVTX = $CALIB_PRIMVTX_MEANVTX" 1>&2
   echo "CALIB_TOF_LHCPHASE = $CALIB_TOF_LHCPHASE" 1>&2
   echo "CALIB_TOF_CHANNELOFFSETS = $CALIB_TOF_CHANNELOFFSETS" 1>&2
@@ -239,6 +240,8 @@ fi
 
 # define spec for proxy for TF-based outputs from BARREL
 if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
+  # RCT updater
+  if [[ ${CALIB_RCT_UPDATER:-} == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibRCT:CTD/DONE/0"; fi
   # prim vtx
   if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "pvtx:GLO/PVTX/0"; fi
 
