@@ -1,0 +1,44 @@
+{
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "ccdb-test.cern.ch:8080"
+        },
+      "Activity": {
+        "number": "42",
+        "type": "2",
+        "provenance": "qc_mc",
+        "passName": "passMC",
+        "periodName": "SimChallenge"
+      },
+      "monitoring": {
+        "url": "no-op://"
+      },
+      "consul": {
+        "url": ""
+      },
+      "conditionDB": {
+        "url": "alice-ccdb.cern.ch"
+      }
+    },
+    "tasks": {
+      "Tracking": {
+        "active": "true",
+        "className": "o2::quality_control_modules::trd::TrackingTask",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+        "cycleDurationSeconds": "60",
+        "dataSource": {
+          "type": "direct",
+          "query": "trackITSTPCTRD:TRD/MATCH_ITSTPC;trigITSTPCTRD:TRD/TRGREC_ITSTPC;trackTPCTRD:TRD/MATCH_TPC;trigTPCTRD:TRD/TRGREC_TPC"
+        },
+        "taskParameters": {
+          "detailedQC": "false",
+          "trackSources": "ITS-TPC-TRD,TPC-TRD"
+        }
+      }
+    },
+    "dataSamplingPolicies": []
+  }
+}

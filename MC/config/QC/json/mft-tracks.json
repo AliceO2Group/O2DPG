@@ -44,7 +44,7 @@
           "MaxDuration": "60000",
           "TimeBinSize": "0.1"
         },
-	"grpGeomRequest": {
+        "grpGeomRequest" : {
           "geomRequest": "None",
           "askGRPECS": "true",
           "askGRPLHCIF": "false",

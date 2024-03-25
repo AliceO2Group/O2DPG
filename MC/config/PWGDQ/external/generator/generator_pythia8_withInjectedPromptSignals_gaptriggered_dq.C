@@ -3,7 +3,6 @@
 #include "Pythia8/Pythia.h"
 #include "TRandom.h"
 #include "GeneratorPromptCharmonia.C"
-
 #include <string>
 
 using namespace o2::eventgen;
@@ -40,6 +39,10 @@ public:
       case 5: // generate prompt psi2S at forward rapidity
         mGeneratorParam = (Generator*)GeneratorParamPromptPsiToMuonEvtGen_pp13TeV("100443");
         break;
+      case 6: // generate prompt ChiC1 + ChiC2 cocktail at midrapidity
+        mGeneratorParam = (Generator*)GeneratorCocktailChiCToElectronEvtGen_pp13TeV(); 
+        break;
+
       }
     mGeneratorParam->Init();  
   }

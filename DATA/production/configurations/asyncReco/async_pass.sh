@@ -586,10 +586,15 @@ else
     echo "WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS"
     echo "Step 3) matching, calib, AOD, potentially QC"
     echo -e "\nStep 3) matching, calib, AOD, potentially QC" >> workflowconfig.log
-    export TIMEFRAME_RATE_LIMIT=0
+    # This uses the same time frame rate limiting as in full wf, unless differently specified in the JDL
+    export TIMEFRAME_RATE_LIMIT=${ALIEN_JDL_TIMEFRAMERATELIMITSSPLITWF:-${TIMEFRAME_RATE_LIMIT}}
     echo "Removing detectors $DETECTORS_EXCLUDE"
-    READER_DELAY=${ALIEN_JDL_READERDELAY:-30}
-    export ARGS_EXTRA_PROCESS_o2_global_track_cluster_reader+=" --reader-delay $READER_DELAY "
+    if [[ $ALIEN_JDL_USEREADERDELAY == 1 ]]; then
+      # if we add a delay, the rate limiting should be disabled
+      TIMEFRAME_RATE_LIMIT=0
+      READER_DELAY=${ALIEN_JDL_READERDELAY:-30}
+      export ARGS_EXTRA_PROCESS_o2_global_track_cluster_reader+=" --reader-delay $READER_DELAY "
+    fi
     echo "extra args are $ARGS_EXTRA_PROCESS_o2_global_track_cluster_reader"
     env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=ALL WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS=HMP WORKFLOW_DETECTORS_EXCLUDE_QC=CPV,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
     # run it
@@ -620,8 +625,8 @@ else
       echo "WORKFLOW_PARAMETERS=$WORKFLOW_PARAMETERS"
       echo "Step 4) QC"
       echo -e "\nStep 4) QC" >> workflowconfig.log
-      export TIMEFRAME_RATE_LIMIT=0
       echo "Removing detectors $DETECTORS_EXCLUDE"
+      echo "The rate limiting will be the same as in step 3: TIMEFRAME_RATE_LIMIT = ${TIMEFRAME_RATE_LIMIT}"
       env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=ALL WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=ALL WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS=HMP WORKFLOW_DETECTORS_EXCLUDE_QC=CPV,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
       # run it
       if [[ "0$RUN_WORKFLOW" != "00" ]]; then

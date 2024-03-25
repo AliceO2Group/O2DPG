@@ -70,7 +70,8 @@
 	  "nBCbins" : "103",
 	  "dicttimestamp" : 0,
 	  "doNorm": "1",
-          "InvMasses" : "1"
+          "InvMasses" : "1",
+	  "publishMore": "0"
         }
       }
     },
