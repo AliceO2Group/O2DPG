@@ -401,7 +401,7 @@ EOF
   spin[1]="|"
   spin[0]="\\"
   JOBSTATUS="I"
-  if [ "{WAITFORALIEN}" ]; then
+  if [ "${WAITFORALIEN}" ]; then
     echo -n "Waiting for jobs to return ... Last status : ${spin[0]} ${JOBSTATUS}"
   fi
   counter=0

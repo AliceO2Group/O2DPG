@@ -37,13 +37,13 @@ SEND="\033[0m"
 
 echo_green()
 {
-    echo -e "${SGREEN}$@${SEND}"
+    echo -e "${SGREEN}${*}${SEND}"
 }
 
 
 echo_red()
 {
-    echo -e "${SRED}$@${SEND}"
+    echo -e "${SRED}${*}${SEND}"
 }
 
 
@@ -250,35 +250,26 @@ add_ini_files_from_tests()
     done
 }
 
-add_ini_files_from_all_tests()
-{
-    # Collect also those INI files for which the test has been changed
-    local all_tests=$(find ${REPO_DIR} -name "*.C" | grep "MC/.*/ini/tests")
-    local repo_dir_head=${REPO_DIR}
-    for t in ${all_tests} ; do
-        local this_test=$(realpath ${t})
-        this_test=${this_test##${repo_dir_head}/}
-        local tc=$(basename ${this_test})
-        this_test=${this_test%%/tests/*}
-        tc=${tc%.C}.ini
-        tc=${this_test}/${tc}
-        [[ "${INI_FILES}" == *"${tc}"* ]] && continue
-        INI_FILES+=" ${tc} "
-    done
-}
-
 
 collect_ini_files()
 {
     # Collect all INI files which have changed
-    local ini_files=$(get_changed_files | grep ".ini$" | grep "MC/config")
-    for ini in ${ini_files} ; do
+    local changed_files=$(get_changed_files)
+    for ini in ${changed_files} ; do
+        [[ "${ini}" != *"MC/config"*".ini" ]] && continue
         [[ "${INI_FILES}" == *"${ini}"* ]] && continue || INI_FILES+=" ${ini} "
     done
 
     # this relies on INI_FILES and MACRO_FILES_POTENTIALLY_INCLUDED
     # collect all INI files that might include some changed macros
-    add_ini_files_from_macros $(get_changed_files | grep ".C$" | grep "MC/config")
+    changed_files=$(get_changed_files)
+    local macros=
+    for m in ${changed_files} ; do
+        [[ "${m}" != *"MC/config"*".C" ]] && continue
+        macros+=" ${m} "
+    done
+
+    add_ini_files_from_macros ${macros}
 
     # this relies on MACRO_FILES_POTENTIALLY_INCLUDED
     # collect all INI files that might contain macros which in turn include changed macros
@@ -286,7 +277,13 @@ collect_ini_files()
     add_ini_files_from_macros $(find_including_macros)
 
     # also tests might have changed in which case we run them
-    add_ini_files_from_tests $(get_changed_files | grep ".C$" | grep "MC/.*/ini/tests")
+    changed_files=$(get_changed_files)
+    local macros=
+    for m in ${changed_files} ; do
+        [[ "${m}" != *"MC/"*"ini/tests"*".C" ]] && continue
+        macros+=" ${m} "
+    done
+    add_ini_files_from_tests ${macros}
 }
 
 
@@ -361,12 +358,12 @@ echo
 
 REPO_DIR=${O2DPG_TEST_REPO_DIR:-$(get_git_repo_directory)}
 if [[ ! -d ${REPO_DIR}/.git ]] ; then
-    echo_red "Directory \"${REPO_DIR}\" is not a git repository."
+    echo "ERROR: Directory \"${REPO_DIR}\" is not a git repository."
     exit 1
 fi
 
 if [[ -z ${O2DPG_ROOT+x} ]] ; then
-    echo_red "O2DPG is not loaded, probably other packages are missing as well in this environment."
+    echo "ERROR: O2DPG is not loaded, probably other packages are missing as well in this environment."
     exit 1
 fi
 
@@ -375,11 +372,6 @@ source ${REPO_DIR}/test/common/utils/utils.sh
 
 # Do the initial steps in the source dir where we have the full git repo
 pushd ${REPO_DIR} > /dev/null
-
-# First check, if testing itself has changed. In that case this will add INI files
-# for which a test can be found
-global_testing_changed=$(get_changed_files | grep -E "common/kine_tests/test_generic_kine.C|run_generator_tests.sh" | grep "^test/")
-[[ "${global_testing_changed}" != "" ]] && add_ini_files_from_all_tests
 
 # Then add the ini files that have changed as well. We need to do that so we get information
 # about missing tests etc.

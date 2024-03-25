@@ -104,12 +104,14 @@ if [[ -z "${RAWINPUTDIR:-}" ]];    then export RAWINPUTDIR=$FILEWORKDIR; fi    #
 if [[ -z "${EPNSYNCMODE:-}" ]];    then export EPNSYNCMODE=0; fi               # Is this workflow supposed to run on EPN for sync processing? Will enable InfoLogger / metrics / fetching QC JSONs from consul...
 if [[ -z "${BEAMTYPE:-}" ]];       then export BEAMTYPE=PbPb; fi               # Beam type, must be PbPb, pp, pPb, cosmic, technical
 if [[ -z "${RUNTYPE:-}" ]];        then export RUNTYPE=Standalone; fi          # Run Type, standalone for local tests, otherwise PHYSICS, COSMICS, TECHNICAL, SYNTHETIC
+if [[ $RUNTYPE == "SYNTHETIC" ]];  then export IS_SIMULATED_DATA=1; fi         # For SYNTHETIC runs we always process simulated data
 if [[ -z "${IS_SIMULATED_DATA:-}" ]]; then export IS_SIMULATED_DATA=1; fi       # processing simulated data
 if [[ -z "${IS_TRIGGERED_DATA:-}" ]]; then export IS_TRIGGERED_DATA=0; fi       # processing triggered data (TPC triggered instead of continuous)
 if [[ -z "${CTF_DIR:-}" ]];           then CTF_DIR=$FILEWORKDIR; fi             # Directory where to store CTFs
 if [[ -z "${CALIB_DIR:-}" ]];         then CALIB_DIR="/dev/null"; fi            # Directory where to store output from calibration workflows, /dev/null : skip their writing
 if [[ -z "${EPN2EOS_METAFILES_DIR:-}" ]]; then EPN2EOS_METAFILES_DIR="/dev/null"; fi # Directory where to store epn2eos files metada, /dev/null : skip their writing
-if [[ -z "${TPC_CORR_SCALING:-}" ]]; then export TPC_CORR_SCALING=""; fi      # TPC corr.map lumi scaling options, any combination of --lumi-type <0,1,2> --corrmap-lumi-mode <0,1>  and TPCCorrMap... configurable param
+if [[ -z "${DCSCCDBSERVER:-}" ]];  then export DCSCCDBSERVER="http://alio2-cr1-flp199-ib:8083"; fi # server for transvering calibration data to DCS
+
 if [[ $EPNSYNCMODE == 0 ]]; then
   if [[ -z "${SHMSIZE:-}" ]];       then export SHMSIZE=$(( 8 << 30 )); fi    # Size of shared memory for messages
   if [[ -z "${NGPUS:-}" ]];         then export NGPUS=1; fi                   # Number of GPUs to use, data distributed round-robin
@@ -134,7 +136,7 @@ else # Defaults when running on the EPN
   if [[ -z "${SHMTHROW:-}" ]];             then export SHMTHROW=0; fi
   if [[ -z "${TIMEFRAME_SHM_LIMIT:-}" ]];  then export TIMEFRAME_SHM_LIMIT=$(( $SHMSIZE / 2 )); fi
   if [[ -z "${EDJSONS_DIR:-}" ]];          then export EDJSONS_DIR="/scratch/services/ed/jsons_${RUNTYPE}"; fi
-  if [[ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="TOF,CTP"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
+  if [[ -z "${WORKFLOW_DETECTORS_FLP_PROCESSING+x}" ]]; then export WORKFLOW_DETECTORS_FLP_PROCESSING="CTP"; fi # Current default in sync processing is that FLP processing is only enabled for TOF
   if [[ -z "${GEN_TOPO_AUTOSCALE_PROCESSES:-}" ]];      then export GEN_TOPO_AUTOSCALE_PROCESSES=1; fi # On the EPN we should make sure to always use the node to the full extent
 fi
 # Some more options for running on the EPN
@@ -163,6 +165,13 @@ DISABLE_ROOT_INPUT="--disable-root-input"
 : ${DISABLE_DIGIT_CLUSTER_INPUT="--clusters-from-upstream"}
 
 # Special detector related settings
+if [[ -z "${TPC_CORR_SCALING:-}" ]]; then # TPC corr.map lumi scaling options, any combination of --lumi-type <0,1,2> --corrmap-lumi-mode <0,1>  and TPCCorrMap... configurable param
+ TPC_CORR_SCALING=
+ if ( [[ $BEAMTYPE == "pp" ]] || [[ $BEAMTYPE == "PbPb" ]] ) && has_detector CTP; then TPC_CORR_SCALING+="--lumi-type 1 TPCCorrMap.lumiInstFactor=2.414"; fi
+ if [[ $BEAMTYPE == "cosmic" ]]; then TPC_CORR_SCALING=" TPCCorrMap.lumiMean=-1;"; fi # for COSMICS we disable all corrections
+ export TPC_CORR_SCALING=$TPC_CORR_SCALING
+fi
+
 MID_FEEID_MAP="$FILEWORKDIR/mid-feeId_mapper.txt"
 
 ITSMFT_STROBES=""

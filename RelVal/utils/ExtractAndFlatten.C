@@ -160,7 +160,7 @@ void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vect
       ExtractTree(tree, outDir, collectNames, basedOnTree, currentPrefix);
     } else {
       if (!WriteObject(obj, outDir, collectNames, currentPrefix)) {
-        std::cerr << "Cannot handle object " << obj->GetName() << " which is of class " << key->GetClassName() << "\n";
+        std::cerr << "Cannot handle object of class " << key->GetClassName() << "\n";
       }
     }
   }
@@ -261,6 +261,10 @@ void adjustName(TObject* o)
 // decide which concrete function to call to write the given object
 bool WriteObject(TObject* o, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& currentPrefix)
 {
+  if (!o) {
+    std::cerr << "WARNING: Cannot process object, nullptr received.\n";
+    return false;
+  }
   if (auto monObj = dynamic_cast<o2::quality_control::core::MonitorObject*>(o)) {
     return WriteObject(monObj->getObject(), outDir, collectNames, currentPrefix);
   }
