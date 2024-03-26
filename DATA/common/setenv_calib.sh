@@ -42,7 +42,7 @@ if [[ ${DISABLE_TRD_PH:-} == 1 ]]; then CAN_DO_CALIB_TRD_T0=0; fi
 : ${CALIB_TPC_SCDCALIB_SLOTLENGTH:=600} # the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
 : ${CALIB_TPC_SCDCALIB_SENDTRKDATA:=1}  # by default, we want to write the track information in addition to unbinned residuals to allow finer filtering offline
 
-if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
+if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then # Calibrations enabled in non-COSMIC runs
 
   # here we won't deal with calibrations only for async! e.g. EMC_ASYNC_RECALIB; we want that they are always explicitly enabled
 
@@ -87,26 +87,6 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
   fi
   if [[ $CAN_DO_CALIB_TPC_VDRIFTTGL == 1 ]]; then
     if [[ -z ${CALIB_TPC_VDRIFTTGL+x} ]]; then CALIB_TPC_VDRIFTTGL=1; fi
-  fi
-  # IDCs (by default we enable it for running the synch. reco on the EPNs, but not on staging since we have only 1 calibration node available)
-  if [[ $CAN_DO_CALIB_TPC_IDC == 1 ]]; then
-    if [[ -z ${CALIB_TPC_IDC+x} ]]; then
-      if [[ $EPNSYNCMODE == 1 ]] && [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" != "ALICE_STAGING" ]]; then
-        CALIB_TPC_IDC=1;
-      else
-        CALIB_TPC_IDC=0;
-      fi
-    fi
-  fi
-  # SAC (by default we enable it for running the synch. reco on the EPNs)
-  if [[ $CAN_DO_CALIB_TPC_SAC == 1 ]]; then
-    if [[ -z ${CALIB_TPC_SAC+x} ]]; then
-      if [[ $EPNSYNCMODE == 1 ]]; then
-        CALIB_TPC_SAC=1;
-      else
-        CALIB_TPC_SAC=0;
-      fi
-    fi
   fi
 
   # calibrations for TRD
@@ -170,6 +150,28 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then
   fi
 fi
 
+# Calibrations irrespective of COSMIC or non-COSMIC run:
+# IDCs (by default we enable it for running the synch. reco on the EPNs, but not on staging since we have only 1 calibration node available)
+if [[ $CAN_DO_CALIB_TPC_IDC == 1 ]]; then
+  if [[ -z ${CALIB_TPC_IDC+x} ]]; then
+    if [[ $EPNSYNCMODE == 1 ]] && [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" != "ALICE_STAGING" ]]; then
+      CALIB_TPC_IDC=1;
+    else
+      CALIB_TPC_IDC=0;
+    fi
+  fi
+fi
+# SAC (by default we enable it for running the synch. reco on the EPNs)
+if [[ $CAN_DO_CALIB_TPC_SAC == 1 ]]; then
+  if [[ -z ${CALIB_TPC_SAC+x} ]]; then
+    if [[ $EPNSYNCMODE == 1 ]]; then
+      CALIB_TPC_SAC=1;
+    else
+      CALIB_TPC_SAC=0;
+    fi
+  fi
+fi
+
 ( [[ -z ${CALIB_FT0_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_FT0_INTEGRATEDCURR == 0 ]] ) && CALIB_FT0_INTEGRATEDCURR=0
 ( [[ -z ${CALIB_FV0_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_FV0_INTEGRATEDCURR == 0 ]] ) && CALIB_FV0_INTEGRATEDCURR=0
 ( [[ -z ${CALIB_FDD_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_FDD_INTEGRATEDCURR == 0 ]] ) && CALIB_FDD_INTEGRATEDCURR=0
@@ -201,8 +203,8 @@ fi
 ( [[ -z ${CALIB_MFT_DEADMAP_TIME:-} ]] || [[ $CAN_DO_CALIB_MFT_DEADMAP_TIME == 0 ]] ) && CALIB_MFT_DEADMAP_TIME=0
 # for async:
 ( [[ -z ${CALIB_EMC_ASYNC_RECALIB:-} ]] || [[ $CAN_DO_CALIB_EMC_ASYNC_RECALIB == 0 ]] ) && CALIB_EMC_ASYNC_RECALIB=0
-( [[ -z ${CALIB_ASYNC_EXTRACTTPCCURRENTS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS == 0 ]] ) && CALIB_ASYNC_EXTRACTTPCCURRENTS=0 
-( [[ -z ${CALIB_ASYNC_DISABLE3DCURRENTS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_DISABLE3DCURRENTS == 0 ]] ) && CALIB_ASYNC_DISABLE3DCURRENTS=0 
+( [[ -z ${CALIB_ASYNC_EXTRACTTPCCURRENTS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS == 0 ]] ) && CALIB_ASYNC_EXTRACTTPCCURRENTS=0
+( [[ -z ${CALIB_ASYNC_DISABLE3DCURRENTS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_DISABLE3DCURRENTS == 0 ]] ) && CALIB_ASYNC_DISABLE3DCURRENTS=0
 : ${ON_SKIMMED_DATA:=0}
 ( [[ -z ${CALIB_ASYNC_EXTRACTTIMESERIES:-} ]] || [[ $CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES == 0 ]] ) && CALIB_ASYNC_EXTRACTTIMESERIES=0
 
