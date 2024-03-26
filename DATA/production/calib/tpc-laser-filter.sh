@@ -67,11 +67,12 @@ o2-dpl-raw-proxy ${ARGS_ALL} \
     | o2-tpc-reco-workflow ${ARGS_ALL}  ${TPC_CORR_SCALING:-} \
     --input-type digitizer  \
     --output-type "tracks,disable-writer,clusters" \
+    --disable-ctp-lumi-request \
     --disable-mc \
     --pipeline tpc-zsEncoder:20,tpc-tracker:8 \
     ${GPU_CONFIG} \
     --condition-remap "file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPMagField;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser=TPC/Calib/LaserTracks" \
-    --configKeyValues "${ARGS_ALL_CONFIG};align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1;GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;GPU_rec_tpc.clustersShiftTimebinsClusterizer=35;GPU_proc.memoryScalingFactor=2" \
+    --configKeyValues "${ARGS_ALL_CONFIG};align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1;GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;GPU_rec_tpc.clustersShiftTimebinsClusterizer=35;GPU_proc.memoryScalingFactor=2;GPU_proc_param.tpcTriggerHandling=0" \
     | o2-tpc-laser-track-filter ${ARGS_ALL}  \
     | o2-dpl-output-proxy ${ARGS_ALL} \
     --dataspec "$PROXY_OUTSPEC" \

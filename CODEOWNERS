@@ -17,11 +17,15 @@
 /DATA/testing/detectors/TRD @martenole
 /DATA/testing/detectors/ZDC
 
-/MC @sawenzel @chiarazampolli @gconesab @benedikt-voelkel
+/MC @sawenzel @chiarazampolli @benedikt-voelkel
 
 # PWG experts
 /MC/*/PWGHF @AliceO2Group/reviewers-pwg-hf @sawenzel @chiarazampolli @benedikt-voelkel
 /MC/*/PWGLF @AliceO2Group/reviewers-pwg-lf @sawenzel @chiarazampolli @benedikt-voelkel
 /MC/*/PWGEM @AliceO2Group/reviewers-pwg-em @sawenzel @chiarazampolli @benedikt-voelkel
+/MC/*/PWGGAJE @AliceO2Group/reviewers-pwg-je @sawenzel @chiarazampolli @benedikt-voelkel
+/MC/*/PWGCF @AliceO2Group/reviewers-pwg-cf @sawenzel @chiarazampolli @benedikt-voelkel
+/MC/*/PWGDQ @AliceO2Group/reviewers-pwg-dq @sawenzel @chiarazampolli @benedikt-voelkel
+/MC/*/PWGUD @AliceO2Group/reviewers-pwg-ud @sawenzel @chiarazampolli @benedikt-voelkel
 
-/RelVal @sawenzel @chiarazampolli @gconesab @benedikt-voelkel
+/RelVal @sawenzel @chiarazampolli @benedikt-voelkel
