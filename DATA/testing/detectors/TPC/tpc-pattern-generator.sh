@@ -44,17 +44,3 @@ else
 fi
 
 
-
-
-
-#o2-dpl-raw-proxy $ARGS_ALL \
-#    --dataspec "$PROXY_INSPEC" --inject-missing-data \
-#    --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
-#    | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
-#    --input-spec "$CALIB_INSPEC"  \
-#    --configKeyValues "TPCDigitDump.NoiseThreshold=3;TPCDigitDump.LastTimeBin=600;$ARGS_ALL_CONFIG" \
-#    --pipeline tpc-raw-to-digits-0:20 \
-#    --remove-duplicates \
-#    | o2-qc $ARGS_ALL --config $QC_CONFIG --local --host $HOST \
-#    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE}
-
