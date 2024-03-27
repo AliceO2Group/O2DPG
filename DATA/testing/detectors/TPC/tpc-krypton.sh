@@ -58,20 +58,3 @@ else
   WORKFLOW+=" --$WORKFLOWMODE ${WORKFLOWMODE_FILE}"
   eval $WORKFLOW
 fi
-
-#o2-dpl-raw-proxy $ARGS_ALL \
-#    --dataspec "$PROXY_INSPEC" --inject-missing-data \
-#    --readout-proxy "--channel-config 'name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1'" \
-#    | o2-tpc-raw-to-digits-workflow $ARGS_ALL \
-#    --ignore-grp \
-#    --input-spec "$CALIB_INSPEC"  \
-#    --configKeyValues "$ARGS_FILES;TPCDigitDump.LastTimeBin=14256" \
-#    --remove-duplicates \
-#    --pipeline tpc-raw-to-digits-0:20 \
-#    | o2-tpc-krypton-clusterer $ARGS_ALL \
-#    ${WRITER_TYPE} \
-#    --lanes $NLANES \
-#    --configKeyValues "$ARGS_FILES" \
-#    --configFile="/home/wiechula/processData/inputFilesTracking/krypton/krBoxCluster.largeBox.cuts.krMap.ini" \
-#    | o2-qc $ARGS_ALL --config $QC_CONFIG --local --host localhost \
-#    | o2-dpl-run $ARGS_ALL --dds ${WORKFLOWMODE_FILE} ${GLOBALDPLOPT}
