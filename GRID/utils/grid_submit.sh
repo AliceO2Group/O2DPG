@@ -230,6 +230,12 @@ export CONTROLSERVER
 export PRODSPLIT
 [[ $PRODSPLIT -gt 100 ]] && echo "Production split needs to be smaller than 100 for the moment" && exit 1
 
+# check for presence of jq (needed in code path to fetch output files)
+[[ "$FETCHOUTPUT" ]] && { which jq &> /dev/null || { echo "Could not find jq command. Please load or install" && exit 1; }; }
+
+# check if script is actually a valid file and fail early if not
+[[ "${SCRIPT}" ]] && [[ ! -f "${SCRIPT}" ]] && echo "Script file ${SCRIPT} does not exist .. aborting" && exit 1
+
 # analyse options:
 # we should either run with --script or with -c
 [ "${SCRIPT}" ] && [ "$CONTINUE_WORKDIR" ] && echo "Script and continue mode not possible at same time" && exit 1
