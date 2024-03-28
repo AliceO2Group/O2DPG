@@ -33,7 +33,7 @@
                 "maxNumberCycles": "-1",
                 "dataSource": {
                     "type": "direct",
-                    "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/TRACKDIGITS"
+                    "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS"
                 },
                 "taskParameters": {
                     "maxTracksPerTF": "600",
