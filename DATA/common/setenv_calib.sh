@@ -30,6 +30,7 @@ if has_detector_calib FT0 && has_detector_reco FT0; then CAN_DO_CALIB_FT0_TIMEOF
 if has_detector_calib FV0 && has_processing_step FV0_RECO; then CAN_DO_CALIB_FV0_INTEGRATEDCURR=1; else CAN_DO_CALIB_FV0_INTEGRATEDCURR=0; fi
 if has_detector_calib FDD && has_processing_step FDD_RECO; then CAN_DO_CALIB_FDD_INTEGRATEDCURR=1; else CAN_DO_CALIB_FDD_INTEGRATEDCURR=0; fi
 if has_detector_calib ZDC && has_processing_step ZDC_RECO; then CAN_DO_CALIB_ZDC_TDC=1; else CAN_DO_CALIB_ZDC_TDC=0; fi
+if [[ $SYNCMODE == 1 ]] && has_processing_step ENTROPY_ENCODER && [[ ! -z "$WORKFLOW_DETECTORS_CTF" ]] && [[ $WORKFLOW_DETECTORS_CTF != "NONE" ]]; then CAN_DO_CALIB_RCT_UPDATER=1; else CAN_DO_CALIB_RCT_UPDATER=0; fi
 # for async recalibration
 if has_detector_calib EMC && has_detector_reco EMC && [[ $SYNCMODE != 1 ]]; then CAN_DO_CALIB_EMC_ASYNC_RECALIB=1; else CAN_DO_CALIB_EMC_ASYNC_RECALIB=0; fi
 if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC; then CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS=1; else CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS=0; fi
@@ -151,6 +152,12 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then # Cal
 fi
 
 # Calibrations irrespective of COSMIC or non-COSMIC run:
+
+# when possible, run RCT updater
+if [[ $CAN_DO_CALIB_RCT_UPDATER == 1 ]]; then
+  if [[ -z ${CALIB_RCT_UPDATER+x} ]]; then CALIB_RCT_UPDATER=1; fi
+fi
+
 # IDCs (by default we enable it for running the synch. reco on the EPNs, but not on staging since we have only 1 calibration node available)
 if [[ $CAN_DO_CALIB_TPC_IDC == 1 ]]; then
   if [[ -z ${CALIB_TPC_IDC+x} ]]; then
@@ -243,7 +250,7 @@ fi
 # define spec for proxy for TF-based outputs from BARREL
 if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   # RCT updater
-  if [[ ${CALIB_RCT_UPDATER:-} == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibRCT:CTD/DONE/0"; fi
+  if [[ ${CALIB_RCT_UPDATER:-} == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibRCT:CTF/DONE/0"; fi
   # prim vtx
   if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "pvtx:GLO/PVTX/0"; fi
 
