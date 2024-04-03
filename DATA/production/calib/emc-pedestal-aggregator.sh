@@ -23,7 +23,7 @@ add_W o2-dpl-raw-proxy "--proxy-name emc-pedestal-input-proxy --dataspec \"$PROX
 add_W o2-calibration-emcal-pedestal-calib-workflow
 add_W o2-calibration-ccdb-populator-workflow "--ccdb-path=\"$CCDBPATH1\" --sspec-min 0 --sspec-max 0"
 add_W o2-calibration-ccdb-populator-workflow "--ccdb-path=\"$CCDBPATH2\" --sspec-min 1 --sspec-max 1 --name-extention dcs"
-add_QC_from_consul "${QC_CONFIG}"
+add_QC_from_consul "${QC_CONFIG}" "--local --host localhost"
 WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
 
 if [ $WORKFLOWMODE == "print" ]; then
