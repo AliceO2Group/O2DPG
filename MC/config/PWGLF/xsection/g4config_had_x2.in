@@ -64,10 +64,10 @@
 
 
 # Scale hadronic cross section
-/mcPhysics/setCrossSectionFactor deuteron hadInElastic 2.
-/mcPhysics/setCrossSectionFactor anti_deuteron hadInElastic 2.
-/mcPhysics/setCrossSectionFactor triton hadInElastic 2.
-/mcPhysics/setCrossSectionFactor anti_triton hadInElastic 2.
-/mcPhysics/setCrossSectionFactor he3 hadInElastic 2.
-/mcPhysics/setCrossSectionFactor anti_he3 hadInElastic 2.
+/mcPhysics/setCrossSectionFactor deuteron dInelastic 2.
+/mcPhysics/setCrossSectionFactor anti_deuteron anti_deuteronInelastic 2.
+/mcPhysics/setCrossSectionFactor triton tInelastic 2.
+/mcPhysics/setCrossSectionFactor anti_triton anti_tritonInelastic 2.
+/mcPhysics/setCrossSectionFactor He3 He3Inelastic 2.
+/mcPhysics/setCrossSectionFactor anti_He3 anti_He3Inelastic 2.
 
