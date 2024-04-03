@@ -230,6 +230,12 @@ export CONTROLSERVER
 export PRODSPLIT
 [[ $PRODSPLIT -gt 100 ]] && echo "Production split needs to be smaller than 100 for the moment" && exit 1
 
+# check for presence of jq (needed in code path to fetch output files)
+[[ "$FETCHOUTPUT" ]] && { which jq &> /dev/null || { echo "Could not find jq command. Please load or install" && exit 1; }; }
+
+# check if script is actually a valid file and fail early if not
+[[ "${SCRIPT}" ]] && [[ ! -f "${SCRIPT}" ]] && echo "Script file ${SCRIPT} does not exist .. aborting" && exit 1
+
 # analyse options:
 # we should either run with --script or with -c
 [ "${SCRIPT}" ] && [ "$CONTINUE_WORKDIR" ] && echo "Script and continue mode not possible at same time" && exit 1
@@ -411,37 +417,46 @@ EOF
     echo -ne "\b\b\b${spin[$((counter%4))]} ${JOBSTATUS}"
     let counter=counter+1
     if [ ! "${counter}" == "100" ]; then
+      # ensures that we see spinner ... but only check for new job
+      # status every 100 * 0.5 = 50s?
       continue
     fi
-    let counter=0
+    let counter=0 # reset counter
     JOBSTATUS=$(alien.py ps -j ${MY_JOBID} | awk '//{print $4}')
     # echo -ne "Waiting for jobs to return; Last status ${JOBSTATUS}"
-    if [ "$JOBSTATUS" == "D" ]; then
+
+    if [ "${JOBSTATUS}" == "D" ]; then
       echo "Job done"
-      WAITFORALIEN=""
+      WAITFORALIEN=""  # guarantees to go out of outer while loop
 
       if [ "${FETCHOUTPUT}" ]; then
-        SUBJOBIDS=""
-        while [ ! ${SUBJOBIDS} ]; do
-          SUBJOBIDS=($(alien.py ps --trace ${MY_JOBID} | awk '/Subjob submitted/' | sed 's/.*submitted: //' | tr '\n' ' '))
-          sleep 1
-        done
-        # TODO: make this happen in a single alien.py session and with parallel copying
-        echo "Fetching results"
-        for splitcounter in `seq 1 ${PRODSPLIT}`; do
-          # we still need to check if this particular subjob was successful
-          SUBJOBSTATUS=$(alien.py ps -j ${SUBJOBIDS[splitcounter-1]} | awk '//{print $4}')
-          if [ "$SUBJOBSTATUS" == "D" ]; then
-             SPLITOUTDIR=$(printf "%03d" ${splitcounter})
-             [ ! -f ${SPLITOUTDIR} ] && mkdir ${SPLITOUTDIR}
-             echo "Fetching result files for subjob ${splitcounter} into ${PWD}"
-	     CPCMD="alien.py cp ${MY_JOBWORKDIR}/${SPLITOUTDIR}/* file:./${SPLITOUTDIR}"
-	     eval "${CPCMD}" 2> /dev/null
-          else
-	     echo "Not fetching files for subjob ${splitcounter} since job code is ${SUBJOBSTATUS}"
-	  fi
-        done
-        wait
+          SUBJOBIDS=()
+          SUBJOBSTATUSES=()
+          echo "Fetching subjob info"
+          while [ "${#SUBJOBIDS[@]}" == "0" ]; do
+            QUERYRESULT=$(ALIENPY_JSON=true alien.py ps -a -m ${MY_JOBID})
+            SUBJOBIDS=($(echo ${QUERYRESULT} | jq -r '.results[].id' | tr '\n' ' '))
+            SUBJOBSTATUSES=($(echo ${QUERYRESULT} | jq -r '.results[].status' | tr '\n' ' '))
+            # echo "LENGTH SUBJOBS ${#SUBJOBIDS[@]}"
+            sleep 1
+          done
+          # TODO: make this happen with parallel copying
+          echo "Fetching results for ${PRODSPLIT} sub-jobs"
+          for splitcounter in `seq 1 ${PRODSPLIT}`; do
+            let jobindex=splitcounter-1
+            THIS_STATUS=${SUBJOBSTATUSES[jobindex]}
+            THIS_JOB=${SUBJOBIDS[jobindex]}
+            echo "Fetching for job ${THIS_JOB}"
+            if [ "${THIS_STATUS}" == "DONE" ]; then
+               SPLITOUTDIR=$(printf "%03d" ${splitcounter})
+               [ ! -f ${SPLITOUTDIR} ] && mkdir ${SPLITOUTDIR}
+               echo "Fetching result files for subjob ${splitcounter} into ${PWD}"
+	             CPCMD="alien.py cp ${MY_JOBWORKDIR}/${SPLITOUTDIR}/* file:./${SPLITOUTDIR}"
+	             eval "${CPCMD}" 2> /dev/null
+            else
+	            echo "Not fetching files for subjob ${splitcounter} since job code is ${THIS_STATUS}"
+	          fi
+          done
       fi
     fi
     if [[ "${FOO:0:1}" == [EK] ]]; then
@@ -541,13 +556,13 @@ if [ "${ONGRID}" = "1" ]; then
 fi
 
 # ----------- DOWNLOAD ADDITIONAL HELPERS ----------------------------
-curl -o analyse_CPU.py https://raw.githubusercontent.com/sawenzel/AliceO2/swenzel/cpuana/Utilities/Tools/analyse_CPU.py &> /dev/null
-chmod +x analyse_CPU.py
+# curl -o analyse_CPU.py https://raw.githubusercontent.com/sawenzel/AliceO2/swenzel/cpuana/Utilities/Tools/analyse_CPU.py &> /dev/null
+# chmod +x analyse_CPU.py
 export PATH=$PATH:$PWD
-export JOBUTILS_MONITORCPU=ON
-export JOBUTILS_WRAPPER_SLEEP=5
-#export JOBUTILS_JOB_KILLINACTIVE=180 # kill inactive jobs after 3 minutes --> will be the task of pipeline runner? (or make it optional)
-export JOBUTILS_MONITORMEM=ON 
+# export JOBUTILS_MONITORCPU=ON
+# export JOBUTILS_WRAPPER_SLEEP=5
+# export JOBUTILS_JOB_KILLINACTIVE=180 # kill inactive jobs after 3 minutes --> will be the task of pipeline runner? (or make it optional)
+# export JOBUTILS_MONITORMEM=ON 
 
 # ----------- EXECUTE ACTUAL JOB  ------------------------------------ 
 # source the actual job script from the work dir
@@ -558,13 +573,7 @@ chmod +x ./alien_jobscript.sh
 cp alien_log_${ALIEN_PROC_ID:-0}.txt logtmp_${ALIEN_PROC_ID:-0}.txt
 [ "${ALIEN_JOB_OUTPUTDIR}" ] && upload_to_Alien logtmp_${ALIEN_PROC_ID:-0}.txt ${ALIEN_JOB_OUTPUTDIR}/
 
-# MOMENTARILY WE ZIP ALL LOG FILES
-ziparchive=logs_PROCID${ALIEN_PROC_ID:-0}.zip
-find ./ -name "*.log*" -exec zip ${ziparchive} {} ';'
-find ./ -name "*mergerlog*" -exec zip ${ziparchive} {} ';'
-find ./ -name "*serverlog*" -exec zip ${ziparchive} {} ';'
-find ./ -name "*workerlog*" -exec zip ${ziparchive} {} ';'
-find ./ -name "alien_log*.txt" -exec zip ${ziparchive} {} ';'
+echo "Job done"
 
 # We need to exit for the ALIEN JOB HANDLER!
 exit 0

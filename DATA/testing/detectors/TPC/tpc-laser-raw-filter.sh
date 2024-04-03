@@ -27,7 +27,7 @@ WORKFLOW=
 add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\"" "" 0
 add_W o2-tpc-raw-to-digits-workflow "--ignore-grp --input-spec \"$CALIB_INSPEC\" --remove-duplicates --pipeline tpc-raw-to-digits-0:20"
 add_W o2-tpc-krypton-raw-filter "tpc-raw-to-digits-0:24  --lanes $NLANES --writer-type EPN --meta-output-dir $EPN2EOS_METAFILES_DIR --output-dir $CALIB_DIR --threshold-max 20 --max-tf-per-file 8000 --time-bins-before 20 --max-time-bins 650"
-add_QC_from_consul "${QC_CONFIG_CONSUL}" "--local --host lcoalhost"
+add_QC_from_consul "${QC_CONFIG_CONSUL}" "--local --host localhost"
 
 
 
