@@ -569,9 +569,9 @@ export PATH=$PATH:$PWD
 chmod +x ./alien_jobscript.sh
 ./alien_jobscript.sh
 
-# just to be sure that we get the logs
-cp alien_log_${ALIEN_PROC_ID:-0}.txt logtmp_${ALIEN_PROC_ID:-0}.txt
-[ "${ALIEN_JOB_OUTPUTDIR}" ] && upload_to_Alien logtmp_${ALIEN_PROC_ID:-0}.txt ${ALIEN_JOB_OUTPUTDIR}/
+# just to be sure that we get the logs (temporarily disabled since the copy seems to hang sometimes)
+#cp alien_log_${ALIEN_PROC_ID:-0}.txt logtmp_${ALIEN_PROC_ID:-0}.txt
+#[ "${ALIEN_JOB_OUTPUTDIR}" ] && upload_to_Alien logtmp_${ALIEN_PROC_ID:-0}.txt ${ALIEN_JOB_OUTPUTDIR}/
 
 echo "Job done"
 
