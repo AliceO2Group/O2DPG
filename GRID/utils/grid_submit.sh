@@ -227,7 +227,6 @@ export JOBTTL
 export JOBLABEL
 export MATTERMOSTHOOK
 export CONTROLSERVER
-export PRODSPLIT
 [[ $PRODSPLIT -gt 100 ]] && echo "Production split needs to be smaller than 100 for the moment" && exit 1
 
 # check for presence of jq (needed in code path to fetch output files)
@@ -346,7 +345,7 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
   # TODO: Make this configurable or read from a preamble section in the jobfile
   cat > "${MY_JOBNAMEDATE}.jdl" <<EOF
 Executable = "${MY_BINDIR}/${MY_JOBNAMEDATE}.sh";
-Arguments = "${CONTINUE_WORKDIR:+"-c ${CONTINUE_WORKDIR}"} --local ${O2TAG:+--o2tag ${O2TAG}} --ttl ${JOBTTL} --label ${JOBLABEL:-label} ${MATTERMOSTHOOK:+--mattermost ${MATTERMOSTHOOK}} ${CONTROLSERVER:+--controlserver ${CONTROLSERVER}}";
+Arguments = "${CONTINUE_WORKDIR:+"-c ${CONTINUE_WORKDIR}"} --local ${O2TAG:+--o2tag ${O2TAG}} --ttl ${JOBTTL} --label ${JOBLABEL:-label} --prodsplit ${PRODSPLIT} ${MATTERMOSTHOOK:+--mattermost ${MATTERMOSTHOOK}} ${CONTROLSERVER:+--controlserver ${CONTROLSERVER}}";
 InputFile = "LF:${MY_JOBWORKDIR}/alien_jobscript.sh";
 ${PRODSPLIT:+Split = ${QUOT}production:1-${PRODSPLIT}${QUOT};}
 OutputDir = "${MY_JOBWORKDIR}/${PRODSPLIT:+#alien_counter_03i#}";
@@ -536,6 +535,15 @@ if [ "${ONGRID}" = "1" ]; then
   ALIEN_JOB_OUTPUTDIR=$(grep "OutputDir" this_jdl.jdl | awk '//{print $3}' | sed 's/"//g' | sed 's/;//')
   ALIEN_DRIVER_SCRIPT=$0
 
+  # determine subjob id from the structure of the outputfolder
+  # can use basename tool since this is like a path
+  SUBJOBID=$(echo $(basename "${ALIEN_JOB_OUTPUTDIR}") | sed 's/^0*//')  # Remove leading zeros if present
+
+  # we expose some information about prodsplit and subjob id to the jobs
+  # so that they can adjust/contextualise the payload
+  export ALIEN_O2DPG_GRIDSUBMIT_PRODSPLIT=${PRODSPLIT}
+  export ALIEN_O2DPG_GRIDSUBMIT_SUBJOBID=${SUBJOBID}
+
   #notify_mattermost "ALIEN JOB OUTDIR IS ${ALIEN_JOB_OUTPUTDIR}" 
 
   export ALIEN_JOB_OUTPUTDIR
@@ -569,9 +577,9 @@ export PATH=$PATH:$PWD
 chmod +x ./alien_jobscript.sh
 ./alien_jobscript.sh
 
-# just to be sure that we get the logs
-cp alien_log_${ALIEN_PROC_ID:-0}.txt logtmp_${ALIEN_PROC_ID:-0}.txt
-[ "${ALIEN_JOB_OUTPUTDIR}" ] && upload_to_Alien logtmp_${ALIEN_PROC_ID:-0}.txt ${ALIEN_JOB_OUTPUTDIR}/
+# just to be sure that we get the logs (temporarily disabled since the copy seems to hang sometimes)
+#cp alien_log_${ALIEN_PROC_ID:-0}.txt logtmp_${ALIEN_PROC_ID:-0}.txt
+#[ "${ALIEN_JOB_OUTPUTDIR}" ] && upload_to_Alien logtmp_${ALIEN_PROC_ID:-0}.txt ${ALIEN_JOB_OUTPUTDIR}/
 
 echo "Job done"
 

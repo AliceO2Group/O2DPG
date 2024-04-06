@@ -49,8 +49,6 @@ if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == 
 if [[ -z "${WORKFLOW_DETECTORS_CTF+x}" ]] || [[ "0$WORKFLOW_DETECTORS_CTF" == "0ALL" ]]; then export WORKFLOW_DETECTORS_CTF=$WORKFLOW_DETECTORS; fi
 if [[ "0${WORKFLOW_DETECTORS_FLP_PROCESSING:-}" == "0ALL" ]]; then export WORKFLOW_DETECTORS_FLP_PROCESSING=$WORKFLOW_DETECTORS; fi
 if [[ "0${WORKFLOW_DETECTORS_USE_GLOBAL_READER:-}" == "0ALL" ]]; then export WORKFLOW_DETECTORS_USE_GLOBAL_READER=$WORKFLOW_DETECTORS; else export WORKFLOW_DETECTORS_USE_GLOBAL_READER=${WORKFLOW_DETECTORS_USE_GLOBAL_READER:-}; fi
-if [[ "0${WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS:-}" == "0ALL" ]]; then export WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=$WORKFLOW_DETECTORS; else export WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=${WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS:-}; fi
-if [[ "0${WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS:-}" == "0ALL" ]]; then export WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=$WORKFLOW_DETECTORS; else export WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=${WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS:-}; fi
 if [[ -z "${WORKFLOW_PARAMETERS:-}" ]]; then export WORKFLOW_PARAMETERS=; fi
 
 if [[ ! -z ${WORKFLOW_DETECTORS_EXCLUDE_QC:-} ]]; then
@@ -61,16 +59,6 @@ fi
 if [[ ! -z ${WORKFLOW_DETECTORS_EXCLUDE_CALIB:-} ]]; then
   for i in ${WORKFLOW_DETECTORS_EXCLUDE_CALIB//,/ }; do
     export WORKFLOW_DETECTORS_CALIB=$(echo $WORKFLOW_DETECTORS_CALIB | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
-  done
-fi
-if [[ ! -z ${WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS:-} ]]; then
-  for i in ${WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS//,/ }; do
-    export WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=$(echo $WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
-  done
-fi
-if [[ ! -z ${WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_CLUSTERS:-} ]]; then
-  for i in ${WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_CLUSTERS//,/ }; do
-    export WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=$(echo $WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
   done
 fi
 
@@ -167,7 +155,8 @@ DISABLE_ROOT_INPUT="--disable-root-input"
 # Special detector related settings
 if [[ -z "${TPC_CORR_SCALING:-}" ]]; then # TPC corr.map lumi scaling options, any combination of --lumi-type <0,1,2> --corrmap-lumi-mode <0,1>  and TPCCorrMap... configurable param
  TPC_CORR_SCALING=
- if ( [[ $BEAMTYPE == "pp" ]] || [[ $BEAMTYPE == "PbPb" ]] ) && has_detector CTP; then TPC_CORR_SCALING+="--lumi-type 1 TPCCorrMap.lumiInstFactor=2.414"; fi
+ if [[ $BEAMTYPE == "pp" ]] && has_detector CTP; then TPC_CORR_SCALING+="--lumi-type 1"; fi
+ if [[ $BEAMTYPE == "PbPb" ]] && has_detector CTP; then TPC_CORR_SCALING+="--lumi-type 1 TPCCorrMap.lumiInstFactor=2.414"; fi
  if [[ $BEAMTYPE == "cosmic" ]]; then TPC_CORR_SCALING=" TPCCorrMap.lumiMean=-1;"; fi # for COSMICS we disable all corrections
  export TPC_CORR_SCALING=$TPC_CORR_SCALING
 fi
@@ -221,6 +210,23 @@ for det in `echo $LIST_OF_DETECTORS | sed "s/,/ /g"`; do
   fi
 done
 
+if [[ "0${WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS:-}" == "0ALL" ]]; then export WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=$TRACK_SOURCES;
+elif [[ "0${WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS:-}" == "0ALLSINGLE" ]]; then export WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=$WORKFLOW_DETECTORS;
+else export WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=${WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS:-}; fi
+if [[ "0${WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS:-}" == "0ALL" ]]; then export WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=$TRACK_SOURCES;
+elif [[ "0${WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS:-}" == "0ALLSINGLE" ]]; then export WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=$WORKFLOW_DETECTORS;
+else export WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=${WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS:-}; fi
+if [[ ! -z ${WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS:-} ]]; then
+  for i in ${WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS//,/ }; do
+    export WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=$(echo $WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
+  done
+fi
+if [[ ! -z ${WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_CLUSTERS:-} ]]; then
+  for i in ${WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_CLUSTERS//,/ }; do
+    export WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=$(echo $WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
+  done
+fi
+
 : ${VERTEXING_SOURCES:="$TRACK_SOURCES"}
 : ${VERTEX_TRACK_MATCHING_SOURCES:="$TRACK_SOURCES"}
 [[ ! -z $VERTEXING_SOURCES ]] && PVERTEX_CONFIG+=" --vertexing-sources $VERTEXING_SOURCES"
@@ -228,6 +234,8 @@ done
 
 if [[ -z ${SVERTEXING_SOURCES:-} ]]; then
   SVERTEXING_SOURCES="$VERTEXING_SOURCES"
+elif [[ "${SVERTEXING_SOURCES^^}" == "NONE" ]]; then
+  SVERTEXING_SOURCES=
 fi
 
 # this option requires well calibrated timing beween different detectors, at the moment suppress it
