@@ -29,6 +29,7 @@ public:
     mHadronPdg = 0;
     mQuarkPdgList = quarkPdgList;
     mHadronPdgList = hadronPdgList;
+    mUseAltGenForBkg = false;
     Print();
   }
 
@@ -62,8 +63,26 @@ public:
     addSubGenerator(0, "Minimum bias");
     addSubGenerator(4, "Charm injected");
     addSubGenerator(5, "Beauty injected");
-    return o2::eventgen::GeneratorPythia8::Init();
+    bool initAltOk{true};
+    bool initMainOk = o2::eventgen::GeneratorPythia8::Init();
+    // we also initialise alternative PYTHIA generator, if needed
+    if (mUseAltGenForBkg)
+    {
+      initAltOk = mBkgGen.init();
+    }
+    return (initMainOk && initAltOk);
   }
+
+  void setAlternativeConfigForBkgEvents(std::string bkgGenConfig, unsigned int seed)
+  {
+    // define minimum bias event generator
+    std::string pathBkgGenConfig = gSystem->ExpandPathName(bkgGenConfig.data());
+    mBkgGen.readFile(pathBkgGenConfig.data());
+    mBkgGen.readString("Random:setSeed on");
+    mBkgGen.readString("Random:seed " + std::to_string(seed));
+    mUseAltGenForBkg = true;
+  }
+
 
   void setQuarkRapidity(float yMin, float yMax)
   {
@@ -116,9 +135,20 @@ protected:
     {
       // Generate minimum-bias event
       bool genOk = false;
-      while (!genOk)
+      if (!mUseAltGenForBkg)
       {
-        genOk = GeneratorPythia8::generateEvent();
+        while (!genOk)
+        {
+          genOk = GeneratorPythia8::generateEvent();
+        }
+      }
+      else
+      {
+        mBkgGen.event.reset();
+        while (!genOk) {
+          genOk = mBkgGen.next();
+        }
+        mPythia.event = mBkgGen.event;
       }
       notifySubGenerator(0);
     }
@@ -192,6 +222,10 @@ protected:
 private:
   // Interface to override import particles
   Pythia8::Event mOutputEvent;
+
+  // alternative pythia generator for background (in case a different one is needed)
+  Pythia8::Pythia mBkgGen;
+  bool mUseAltGenForBkg;
 
   // Properties of selection
   int mQuarkPdg;
@@ -271,5 +305,21 @@ FairGenerator *GeneratorPythia8GapHF(int inputTriggerRatio, float yQuarkMin = -1
   myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
   myGen->setHadronRapidity(yHadronMin, yHadronMax);
 
+  return myGen;
+}
+
+// Charm and beauty enriched (with same ratio)
+FairGenerator *GeneratorPythia8GapTriggeredCharmAndBeautyWithAltBkgEvents(int inputTriggerRatio, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
+{
+  auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, std::vector<int>{4, 5}, hadronPdgList);
+  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
+  myGen->readString("Random:setSeed on");
+  myGen->readString("Random:seed " + std::to_string(seed));
+  myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
+  if (hadronPdgList.size() != 0)
+  {
+    myGen->setHadronRapidity(yHadronMin, yHadronMax);
+  }
+  myGen->setAlternativeConfigForBkgEvents("$O2DPG_ROOT/MC/config/PWGHF/pythia8/generator/pythia8_inel_forbkg.cfg", seed);
   return myGen;
 }
