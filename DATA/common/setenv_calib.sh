@@ -250,7 +250,7 @@ fi
 # define spec for proxy for TF-based outputs from BARREL
 if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   # RCT updater
-  if [[ ${CALIB_RCT_UPDATER:-} == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibRCT:CTF/DONE/0"; fi
+  if [[ $CALIB_RCT_UPDATER == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibRCT:CTF/DONE/0"; fi
   # prim vtx
   if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "pvtx:GLO/PVTX/0"; fi
 
