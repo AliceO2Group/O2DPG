@@ -1,0 +1,24 @@
+{
+  "qa-efficiency": {
+    "applyEvSel": "2",
+    "do-al": "true",
+    "do-de": "true",
+    "do-el": "true",
+    "do-he": "true",
+    "do-ka": "true",
+    "do-mu": "true",
+    "do-pi": "true",
+    "do-pr": "true",
+    "do-tr": "true",
+    "doNegativePDG": "true",
+    "doPositivePDG": "true",
+    "doPtEta": "false",
+    "etaBins": {
+      "values": [
+        "200",
+        "-0.8",
+        "0.8"
+      ]
+    }
+  }
+}
