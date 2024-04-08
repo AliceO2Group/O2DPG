@@ -9,7 +9,7 @@ int External() {
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
         {4132, {{211, 3312}}}, // Xic0
         {4332, {{211, 3334}, {211, 3312}}}, // Omegac0
-        {4232, {{2212, 313}, {2212, 321, 211}, {3324, 211}, {3312, 211, 211}}} // Xic+
+        {4232, {{313, 2212}, {211, 321, 2212}, {211, 3324}, {211, 211, 3312}}} // Xic+
     };
 
     TFile file(path.c_str(), "READ");
