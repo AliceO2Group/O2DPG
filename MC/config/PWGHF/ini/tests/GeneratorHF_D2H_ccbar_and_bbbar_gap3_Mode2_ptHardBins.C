@@ -129,7 +129,7 @@ int External() {
         return 1;
     }
 
-    if (averagePt < 8.) { // by testing locally it should be around 8.5 GeV/c with pthard bin 20-200 (contrary to 2-2.5 GeV/c of SoftQCD)
+    if (averagePt < 5.) { // by testing locally it should be around 8.5 GeV/c with pthard bin 20-200 (contrary to 2-2.5 GeV/c of SoftQCD), but it can be a bit lower in case of contaminations from MB events
         std::cerr << "Average pT of charmed hadrons " << averagePt << " lower than expected\n";
         return 1;
     }
