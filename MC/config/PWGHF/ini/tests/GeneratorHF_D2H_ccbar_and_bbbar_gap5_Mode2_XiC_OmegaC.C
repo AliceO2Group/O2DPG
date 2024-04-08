@@ -5,10 +5,11 @@ int External() {
     int checkPdgQuarkTwo{5};
     float ratioTrigger = 1./5; // one event triggered out of 5
 
-    std::vector<int> checkPdgHadron{4132, 4332};
+    std::vector<int> checkPdgHadron{4132, 4332, 4232};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
         {4132, {{211, 3312}}}, // Xic0
-        {4332, {{211, 3334}, {211, 3312}}} // Omegac+
+        {4332, {{211, 3334}, {211, 3312}}}, // Omegac0
+        {4232, {{2212, 313}, {2212, 321, 211}, {3324, 211}, {3312, 211, 211}}} // Xic+
     };
 
     TFile file(path.c_str(), "READ");
