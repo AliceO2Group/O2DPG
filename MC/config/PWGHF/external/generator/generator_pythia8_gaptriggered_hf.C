@@ -64,8 +64,8 @@ public:
     addSubGenerator(4, "Charm injected");
     addSubGenerator(5, "Beauty injected");
     bool initAltOk{true};
-    bool initMainOk = o2::eventgen::GeneratorPythia8::Init();
     // we also initialise alternative PYTHIA generator, if needed
+    bool initMainOk = o2::eventgen::GeneratorPythia8::Init();
     if (mUseAltGenForBkg)
     {
       initAltOk = mBkgGen.init();
@@ -99,7 +99,6 @@ protected:
   //__________________________________________________________________
   bool generateEvent() override
   {
-    
 
     // Simple straightforward check to alternate generators
     if (mGeneratedEvents % mInverseTriggerRatio == 0)
@@ -144,6 +143,7 @@ protected:
       }
       else
       {
+        mPythia.event.reset();
         mBkgGen.event.reset();
         while (!genOk) {
           genOk = mBkgGen.next();
@@ -309,7 +309,7 @@ FairGenerator *GeneratorPythia8GapHF(int inputTriggerRatio, float yQuarkMin = -1
 }
 
 // Charm and beauty enriched (with same ratio)
-FairGenerator *GeneratorPythia8GapTriggeredCharmAndBeautyWithAltBkgEvents(int inputTriggerRatio, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
+FairGenerator *GeneratorPythia8GapTriggeredCharmAndBeautyWithAltBkgEvents(int inputTriggerRatio, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {}, std::string bkgConfig = "")
 {
   auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, std::vector<int>{4, 5}, hadronPdgList);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
@@ -320,6 +320,6 @@ FairGenerator *GeneratorPythia8GapTriggeredCharmAndBeautyWithAltBkgEvents(int in
   {
     myGen->setHadronRapidity(yHadronMin, yHadronMax);
   }
-  myGen->setAlternativeConfigForBkgEvents("$O2DPG_ROOT/MC/config/PWGHF/pythia8/generator/pythia8_inel_forbkg.cfg", seed);
+  myGen->setAlternativeConfigForBkgEvents(bkgConfig, seed);
   return myGen;
 }
