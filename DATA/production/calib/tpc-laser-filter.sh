@@ -71,9 +71,9 @@ RECO_CONFIG+="GPU_proc_param.tpcTriggerHandling=0"
 WORKFLOW=
 add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\"" "" 0
 add_W o2-tpc-raw-to-digits-workflow "--ignore-grp --input-spec \"$CALIB_INSPEC\" --remove-duplicates --pipeline tpc-raw-to-digits-0:20 --send-ce-digits " "${RAWDIGIT_CONFIG}"
-add_W o2-tpc-reco-workflow " --disable-ctp-lumi-request --input-type digitizer --output-type \"tracks,disable-writer,clusters\" --disable-mc --pipeline tpc-zsEncoder:20,tpc-tracker:8 ${GPU_CONFIG} ${REMAP}" "${RECO_CONFIG}"
+add_W o2-tpc-reco-workflow " ${TPC_CORR_SCALING:-} --disable-ctp-lumi-request --input-type digitizer --output-type \"tracks,disable-writer,clusters\" --disable-mc --pipeline tpc-zsEncoder:20,tpc-tracker:8 ${GPU_CONFIG} ${REMAP} " "${RECO_CONFIG}"
 add_W o2-tpc-laser-track-filter "" "" 0
-add_W o2-dpl-output-proxy " --proxy-name tpc-laser-input-proxy --proxy-channel-name tpc-laser-input-proxy --dataspec \"$PROXY_INSPEC\" --channel-config \"name=tpc-laser-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0\" " "" 0
+add_W o2-dpl-output-proxy " --proxy-name tpc-laser-input-proxy --proxy-channel-name tpc-laser-input-proxy --dataspec \"$PROXY_OUTSPEC\" --channel-config \"name=tpc-laser-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0\" " "" 0
 add_QC_from_consul "${QC_CONFIG_CONSUL}" "--local --host lcoalhost"
 
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
