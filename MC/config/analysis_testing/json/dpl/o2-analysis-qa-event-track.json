@@ -1,0 +1,13 @@
+{
+  "qa-event-track": {
+    "checkOnlyPVContributor": "true",
+    "overwriteAxisRangeForPbPb": "true",
+    "processData": "!ANALYSIS_QC_is_data!",
+    "processDataIU": "false",
+    "processDataIUFiltered": "false",
+    "processMC": "!ANALYSIS_QC_is_mc!",
+    "processTableData": "false",
+    "processTableMC": "false",
+    "trackSelection": "1"
+  }
+}

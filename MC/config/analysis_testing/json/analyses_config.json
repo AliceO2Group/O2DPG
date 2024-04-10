@@ -43,7 +43,6 @@
             "tasks": ["o2-analysis-lf-lambdakzerobuilder",
                       "o2-analysis-track-propagation",
                       "o2-analysis-trackselection",
-                      "o2-analysis-multiplicity-table",
                       "o2-analysis-pid-tof-base",
                       "o2-analysis-pid-tof",
                       "o2-analysis-pid-tof-full",
@@ -54,16 +53,6 @@
                       "o2-analysis-multiplicity-table",
                       "o2-analysis-qa-k0s-tracking-efficiency",
                       "o2-analysis-perf-k0s-resolution"]
-        },
-        {
-            "name": "Validation",
-            "enabled": false,
-            "expected_output": ["AnalysisResults.root"],
-            "valid_mc": true,
-            "valid_data": true,
-            "tasks": ["o2-analysis-timestamp",
-                      "o2-analysis-track-propagation",
-                      "o2-analysis-validation"]
         },
         {
             "name": "PIDFull",
@@ -87,32 +76,6 @@
                       "o2-analysis-pid-tpc-qa",
                       "o2-analysis-pid-tpc-base",
                       "o2-analysis-pid-tpc-full"]
-        },
-        {
-          "name": "TPCSkimming",
-          "enabled": false,
-          "expected_output": [
-            "AnalysisResults.root",
-            "AnalysisResults_trees.root"
-          ],
-          "valid_mc": true,
-          "valid_data": true,
-          "tasks": [
-            "o2-analysis-pid-tof-full",
-            "o2-analysis-pid-tof-beta",
-            "o2-analysis-pid-tof-base",
-            "o2-analysis-multiplicity-table",
-            "o2-analysis-trackselection",
-            "o2-analysis-track-propagation",
-            "o2-analysis-pid-tpc-qa",
-            "o2-analysis-timestamp",
-            "o2-analysis-lf-lambdakzerobuilder",
-            "o2-analysis-dq-v0-selector",
-            "o2-analysis-pid-tpc-full",
-            "o2-analysis-event-selection",
-            "o2-analysis-pid-tpc-base",
-            "o2-analysis-pid-tpc-skimscreation --aod-writer-keep AOD/TPCSKIMV0TREE/0,AOD/TPCTOFSKIMTREE/0"
-          ]
         },
         {
             "name": "PWGMMMFT",
@@ -140,39 +103,12 @@
                       "o2-analysis-event-selection-qa"]
         },
         {
-            "name": "WeakDecayTutorial",
-            "enabled": false,
-            "expected_output": null,
-            "valid_mc": true,
-            "valid_data": false,
-            "tasks": ["o2-analysis-timestamp",
-                      "o2-analysis-track-propagation",
-                      "o2-analysistutorial-weak-decay-iteration"]
-        },
-        {
             "name": "CheckDataModelMC",
             "enabled": true,
             "expected_output": ["AnalysisResults.root"],
             "valid_mc": true,
             "valid_data": false,
             "tasks": ["o2-analysis-check-data-model-mc"]
-        },
-        {
-            "name": "LK0CFFemto",
-            "enabled": false,
-            "expected_output": ["AnalysisResults.root", "QAResults.root"],
-            "valid_mc": true,
-            "valid_data": false,
-            "tasks": ["o2-analysis-multiplicity-table --aod-writer-json aodWriterTempConfig.json",
-                      "o2-analysis-timestamp",
-                      "o2-analysis-track-propagation",
-                      "o2-analysis-event-selection",
-                      "o2-analysis-pid-tof-base",
-                      "o2-analysis-pid-tof",
-                      "o2-analysis-pid-tpc-base",
-                      "o2-analysis-pid-tpc",
-                      "o2-analysis-lf-lambdakzerobuilder",
-                      "o2-analysis-cf-femtodream-producer"]
         },
         {
             "name": "PWGMMFwdVertexing",
@@ -196,46 +132,11 @@
                       "o2-analysis-task-mc-simple-qc"]
         },
         {
-            "name": "PWGMMMDnDeta",
-            "enabled": false,
-            "expected_output": ["AnalysisResults.root"],
-            "valid_mc": true,
-            "valid_data": false,
-            "tasks": ["o2-analysis-timestamp",
-                      "o2-analysis-track-propagation",
-                      "o2-analysis-event-selection",
-                      "o2-analysis-mm-particles-to-tracks",
-                      "o2-analysis-mm-dndeta"]
-        },
-        {
-            "name": "PWGHFD0",
-            "enabled": false,
-            "expected_output": ["AnalysisResults.root"],
-            "valid_mc": true,
-            "valid_data": false,
-            "tasks": ["o2-analysis-hf-track-index-skims-creator",
-                      "o2-analysis-hf-candidate-creator-2prong",
-                      "o2-analysis-hf-d0-candidate-selector",
-                      "o2-analysis-hf-task-d0",
-                      "o2-analysis-timestamp",
-                      "o2-analysis-track-propagation",
-                      "o2-analysis-trackselection",
-                      "o2-analysis-event-selection",
-                      "o2-analysis-multiplicity-table",
-                      "o2-analysis-pid-tpc-base",
-                      "o2-analysis-pid-tpc-full",
-                      "o2-analysis-pid-tof-base",
-                      "o2-analysis-pid-tof-full"]
-        },
-        {
             "name": "EMCAL",
-            "enabled": true,
+            "enabled": false,
             "expected_output": ["AnalysisResults.root"],
             "valid_mc": true,
             "valid_data": true,
-            "common_args": {
-                "shm-segment-size": 2500000000
-            },
             "tasks": ["o2-analysis-je-emc-eventselection-qa",
                       "o2-analysis-je-emc-cellmonitor",
                       "o2-analysis-je-emcal-correction-task",

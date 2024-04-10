@@ -1,0 +1,41 @@
+{
+  "perf-k0s-resolution": {
+    "etaBins": {
+      "values": [
+        10,
+        -1,
+        1
+      ]
+    },
+    "eventSelection": "1",
+    "mBins": {
+      "values": [
+        300,
+        0.35,
+        0.65
+      ]
+    },
+    "nSigTPC": "10",
+    "pTBins": {
+      "values": [
+        200,
+        0,
+        10
+      ]
+    },
+    "phiBins": {
+      "values": [
+        18,
+        0,
+        6.2831853
+      ]
+    },
+    "rapidity": "0.5",
+    "v0lifetime": "3",
+    "v0setting_cospa": "0.995",
+    "v0setting_dcanegtopv": "0.1",
+    "v0setting_dcapostopv": "0.1",
+    "v0setting_dcav0dau": "1",
+    "v0setting_radius": "0.9"
+  }
+}

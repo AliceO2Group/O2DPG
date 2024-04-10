@@ -1,0 +1,11 @@
+{
+  "multiplicity-table": {
+    "processRun2": "false",
+    "processRun3": "true",
+    "processMC": "!ANALYSIS_QC_is_mc!"
+  },
+  "pid-multiplicity": {
+    "processIU": "0",
+    "processStandard": "1"
+  }
+}
