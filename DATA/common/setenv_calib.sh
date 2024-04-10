@@ -208,6 +208,7 @@ fi
 ( [[ -z ${CALIB_ZDC_TDC:-} ]] || [[ $CAN_DO_CALIB_ZDC_TDC == 0 ]] ) && CALIB_ZDC_TDC=0
 ( [[ -z ${CALIB_ITS_DEADMAP_TIME:-} ]] || [[ $CAN_DO_CALIB_ITS_DEADMAP_TIME == 0 ]] ) && CALIB_ITS_DEADMAP_TIME=0
 ( [[ -z ${CALIB_MFT_DEADMAP_TIME:-} ]] || [[ $CAN_DO_CALIB_MFT_DEADMAP_TIME == 0 ]] ) && CALIB_MFT_DEADMAP_TIME=0
+( [[ -z ${CALIB_RCT_UPDATER:-} ]] || [[ $CAN_DO_CALIB_RCT_UPDATER == 0 ]] ) && CALIB_RCT_UPDATER=0
 # for async:
 ( [[ -z ${CALIB_EMC_ASYNC_RECALIB:-} ]] || [[ $CAN_DO_CALIB_EMC_ASYNC_RECALIB == 0 ]] ) && CALIB_EMC_ASYNC_RECALIB=0
 ( [[ -z ${CALIB_ASYNC_EXTRACTTPCCURRENTS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS == 0 ]] ) && CALIB_ASYNC_EXTRACTTPCCURRENTS=0
@@ -250,7 +251,7 @@ fi
 # define spec for proxy for TF-based outputs from BARREL
 if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   # RCT updater
-  if [[ ${CALIB_RCT_UPDATER:-} == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibRCT:CTF/DONE/0"; fi
+  if [[ $CALIB_RCT_UPDATER == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibRCT:CTF/DONE/0"; fi
   # prim vtx
   if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "pvtx:GLO/PVTX/0"; fi
 
