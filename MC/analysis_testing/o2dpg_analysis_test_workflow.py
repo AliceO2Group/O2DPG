@@ -63,7 +63,7 @@
 import sys
 import importlib.util
 import argparse
-from os import environ
+from os import environ, makedirs
 from os.path import join, exists, abspath, expanduser
 import json
 
@@ -90,7 +90,7 @@ spec.loader.exec_module(o2dpg_analysis_test_utils)
 from o2dpg_analysis_test_utils import *
 
 
-def create_ana_task(name, cmd, output_dir, *, needs=None, extraarguments="-b", is_mc=False):
+def create_ana_task(name, cmd, output_dir, *, cpu=1, mem='2000', needs=None, extraarguments="-b", is_mc=False):
     """Quick helper to create analysis task
 
     This creates an analysis task from various arguments
@@ -114,7 +114,7 @@ def create_ana_task(name, cmd, output_dir, *, needs=None, extraarguments="-b", i
     if needs is None:
         # set to empty list
         needs = []
-    task = createTask(name=full_ana_name(name), cwd=join(output_dir, name), lab=[ANALYSIS_LABEL, name], cpu=1, mem='2000', needs=needs)
+    task = createTask(name=full_ana_name(name), cwd=join(output_dir, name), lab=[ANALYSIS_LABEL, name], cpu=cpu, mem=mem, needs=needs)
     if is_mc:
         task["labels"].append(ANALYSIS_LABEL_ON_MC)
     task['cmd'] = f"{cmd} {extraarguments}"
@@ -137,38 +137,6 @@ def load_analyses(analyses_only=None, include_disabled_analyses=False):
 
     return collect_analyses
 
-
-def add_analysis_post_processing_tasks(workflow):
-    """add post-processing step to analysis tasks if possible
-
-    Args:
-        workflow: list
-            current list of tasks
-    """
-    analyses_to_add_for = {}
-    # collect analyses in current workflow
-    for task in workflow:
-        if ANALYSIS_LABEL in task["labels"]:
-            analyses_to_add_for[task["name"]] = task
-
-    for ana in load_analyses(include_disabled_analyses=True):
-        if not ana["expected_output"]:
-            continue
-        ana_name_raw = ana["name"]
-        post_processing_macro = join(O2DPG_ROOT, "MC", "analysis_testing", "post_processing", f"{ana_name_raw}.C")
-        if not exists(post_processing_macro):
-            continue
-        ana_name = full_ana_name(ana_name_raw)
-        if ana_name not in analyses_to_add_for:
-            continue
-        pot_ana = analyses_to_add_for[ana_name]
-        cwd = pot_ana["cwd"]
-        needs = [ana_name]
-        task = createTask(name=f"{ANALYSIS_LABEL}_post_processing_{ana_name_raw}", cwd=join(cwd, "post_processing"), lab=[ANALYSIS_LABEL, f"{ANALYSIS_LABEL}PostProcessing", ana_name_raw], cpu=1, mem='2000', needs=needs)
-        input_files = ",".join([f"../{eo}" for eo in ana["expected_output"]])
-        cmd = f"\\(\\\"{input_files}\\\",\\\"./\\\"\\)"
-        task["cmd"] = f"root -l -b -q {post_processing_macro}{cmd}"
-        workflow.append(task)
 
 def get_additional_workflows(input_aod):
     additional_workflows = []
@@ -217,7 +185,7 @@ def get_additional_workflows(input_aod):
     return additional_workflows
 
 
-def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, collision_system=None, needs=None, autoset_converters=False, include_disabled_analyses=False, timeout=None, add_common_args=None):
+def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis", *, analyses_only=None, is_mc=True, collision_system=None, needs=None, autoset_converters=False, include_disabled_analyses=False, timeout=None, split_analyses=False):
     """Add default analyses to user workflow
 
     Args:
@@ -248,6 +216,17 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
     data_or_mc = ANALYSIS_VALID_MC if is_mc else ANALYSIS_VALID_DATA
     collision_system = get_collision_system(collision_system)
 
+    # list of lists, each sub-list corresponds to one analysis pipe to be executed
+    analysis_pipes = []
+    # collect the names corresponding to analysis pipes
+    analysis_names = []
+    # cpu and mem of each task
+    analysis_cpu_mem = []
+    # a list of all tasks to be put together
+    merged_analysis_pipe = additional_workflows.copy()
+    # cpu and mem of merged analyses
+    merged_analysis_cpu_mem = [0, 0]
+
     for ana in load_analyses(analyses_only, include_disabled_analyses=include_disabled_analyses):
         if is_mc and not ana.get("valid_mc", False):
             print(f"INFO: Analysis {ana['name']} not added since not valid in MC")
@@ -255,31 +234,53 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         if not is_mc and not ana.get("valid_data", False):
             print(f"INFO: Analysis {ana['name']} not added since not valid in data")
             continue
-
-        configuration = get_configuration(ana["name"], data_or_mc, collision_system)
-        if not configuration:
-            print(f"INFO: Analysis {ana['name']} excluded due to no valid configuration")
-            continue
-        print(f"INFO: Analysis {ana['name']} uses configuration {configuration}")
-
-        add_common_args_ana = get_common_args_as_string(ana, add_common_args)
-        if not add_common_args_ana:
-            print(f"ERROR: Cannot parse common args for analysis {ana['name']}")
+        if analyses_only and ana['name'] not in analyses_only:
+            # filter on analyses if requested
             continue
 
-        for i in additional_workflows:
-            if i not in ana["tasks"]:
-                # print("Appending extra task", i, "to analysis", ana["name"], "as it is not there yet and needed for conversion")
-                ana["tasks"].append(i)
-        piped_analysis = f" --configuration {configuration} | ".join(ana["tasks"])
-        piped_analysis += f" --configuration {configuration} --aod-file {input_aod}"
-        piped_analysis += add_common_args_ana
+        if split_analyses:
+            # only the individual analyses, no merged
+            analysis_pipes.append(ana['tasks'])
+            analysis_names.append(ana['name'])
+            analysis_cpu_mem.append((1, 2000))
+            continue
+
+        merged_analysis_pipe.extend(ana['tasks'])
+        # underestimate what a single analysis would take in the merged case.
+        # Putting everything into one big pipe does not mean that the resources scale the same!
+        merged_analysis_cpu_mem[0] += 0.5
+        merged_analysis_cpu_mem[1] += 700
+
+    if not split_analyses:
+        # add the merged analysis
+        analysis_pipes.append(merged_analysis_pipe)
+        analysis_names.append('MergedAnalyses')
+        # take at least the resources estimated for a single analysis
+        analysis_cpu_mem.append((max(1, merged_analysis_cpu_mem[0]), max(2000, merged_analysis_cpu_mem[1])))
+
+    # now we need to create the output directory where we want the final configurations to go
+    output_dir_config = join(output_dir, 'config')
+    if not exists(output_dir_config):
+        makedirs(output_dir_config)
+
+    configuration = adjust_and_get_configuration_path(data_or_mc, collision_system, output_dir_config)
+
+    for analysis_name, analysis_pipe, analysis_res in zip(analysis_names, analysis_pipes, analysis_cpu_mem):
+        # remove duplicates if they are there for nay reason (especially in the merged case)
+        analysis_pipe = list(set(analysis_pipe))
+        analysis_pipe_assembled = []
+        for executable_string in analysis_pipe:
+            # the input executable might come already with some configurations, the very first token is the actual executable
+            executable_string += f' --configuration json://{configuration}'
+            analysis_pipe_assembled.append(executable_string)
+
+        # put together, add AOD and timeout if requested
+        analysis_pipe_assembled = ' | '.join(analysis_pipe_assembled)
+        analysis_pipe_assembled += f' --aod-file {input_aod} --shm-segment-size 3000000000 --readers 1 --aod-memory-rate-limit 500000000'
         if timeout is not None:
-            piped_analysis += f" --time-limit {timeout}"
-        workflow.append(create_ana_task(ana["name"], piped_analysis, output_dir, needs=needs, is_mc=is_mc))
+            analysis_pipe_assembled += f' --time-limit {timeout}'
 
-    # append potential post-processing
-    add_analysis_post_processing_tasks(workflow)
+        workflow.append(create_ana_task(analysis_name, analysis_pipe_assembled, output_dir, cpu=analysis_res[0], mem=analysis_res[1], needs=needs, is_mc=is_mc))
 
 
 def add_analysis_qc_upload_tasks(workflow, period_name, run_number, pass_name):
@@ -310,7 +311,6 @@ def add_analysis_qc_upload_tasks(workflow, period_name, run_number, pass_name):
         # search through workflow stages if we can find the requested analysis
         pot_ana = analyses_to_add_for[ana_name]
         cwd = pot_ana["cwd"]
-        qc_tag = f"Analysis{ana_name_raw}"
         needs = [ana_name]
         provenance = "qc_mc" if ANALYSIS_LABEL_ON_MC in pot_ana["labels"] else "qc"
         for eo in ana["expected_output"]:
@@ -335,7 +335,7 @@ def run(args):
     ### setup global environment variables which are valid for all tasks, set as first task
     global_env = {"ALICEO2_CCDB_CONDITION_NOT_AFTER": args.condition_not_after} if args.condition_not_after else None
     workflow = [createGlobalInitTask(global_env)]
-    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, autoset_converters=args.autoset_converters, include_disabled_analyses=args.include_disabled, timeout=args.timeout, collision_system=args.collision_system, add_common_args=args.add_common_args)
+    add_analysis_tasks(workflow, args.input_file, expanduser(args.analysis_dir), is_mc=args.is_mc, analyses_only=args.only_analyses, autoset_converters=args.autoset_converters, include_disabled_analyses=args.include_disabled, timeout=args.timeout, collision_system=args.collision_system, split_analyses=args.split_analyses)
     if args.with_qc_upload:
         add_analysis_qc_upload_tasks(workflow, args.period_name, args.run_number, args.pass_name)
     if not workflow:
@@ -361,8 +361,8 @@ def main():
     parser.add_argument("--autoset-converters", dest="autoset_converters", action="store_true", help="Compatibility mode to automatically set the converters for the analysis")
     parser.add_argument("--timeout", type=int, default=None, help="Timeout for analysis tasks in seconds.")
     parser.add_argument("--collision-system", dest="collision_system", help="Set the collision system. If not set, tried to be derived from ALIEN_JDL_LPMInterationType. Fallback to pp")
-    parser.add_argument("--add-common-args", dest="add_common_args", nargs="*", help="Pass additional common arguments per analysis, for instance --add-common-args EMCAL-shm-segment-size 2500000000 will add --shm-segment-size 2500000000 to the EMCAL analysis")
     parser.add_argument('--condition-not-after', dest="condition_not_after", type=int, help="only consider CCDB objects not created after this timestamp (for TimeMachine)", default=3385078236000)
+    parser.add_argument('--split-analyses', dest='split_analyses', action='store_true', help='Split into single analyses pipes to be executed.')
 
     parser.set_defaults(func=run)
     args = parser.parse_args()

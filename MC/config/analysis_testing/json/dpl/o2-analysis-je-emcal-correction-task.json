@@ -1,0 +1,21 @@
+{
+  "emcal-correction-task": {
+    "clusterDefinition": "kV3Default",
+    "disableNonLin": "0",
+    "exoticCellDiffTime": "1e+06",
+    "exoticCellFraction": "0.97",
+    "exoticCellInCrossMinAmplitude": "0.1",
+    "exoticCellMinAmplitude": "4",
+    "hasPropagatedTracks": "0",
+    "hasShaperCorrection": "1",
+    "isMC": "!ANALYSIS_QC_is_mc!",
+    "logWeight": "4.5",
+    "maxMatchingDistance": "0.4",
+    "nonlinearityFunction": "MC_TestbeamFinal",
+    "processFull": "0",
+    "processMCFull": "!ANALYSIS_QC_is_mc!",
+    "processStandalone": "0",
+    "selectedCellType": "1",
+    "useWeightExotic": "0"
+  }
+}

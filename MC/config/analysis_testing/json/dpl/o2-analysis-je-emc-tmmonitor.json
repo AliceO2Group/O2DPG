@@ -1,0 +1,40 @@
+{
+  "emc-tmmonitor": {
+    "clusterDefinition": "10",
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "doEventSel": "0",
+    "hasPropagatedTracks": "1",
+    "maxTime": "20",
+    "minM02": "0.1",
+    "minTime": "-25",
+    "processCollisions": "1",
+    "selectBCID": "all",
+    "tpcNsigmaBack": {
+      "values": [
+        -10,
+        -4
+      ]
+    },
+    "tpcNsigmaElectron": {
+      "values": [
+        -1,
+        3
+      ]
+    },
+    "tpcNsigmaPion": {
+      "values": [
+        -3,
+        3
+      ]
+    },
+    "usePionRejection": "0",
+    "vertexCut": "-1",
+    "vetoBCID": ""
+  }
+}
