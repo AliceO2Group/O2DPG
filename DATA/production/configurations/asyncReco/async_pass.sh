@@ -239,6 +239,9 @@ if [[ -n "$ALIEN_JDL_TFDELAYSECONDS" ]]; then
 # ...otherwise, it depends on whether we have throttling
 elif [[ -n "$ALIEN_JDL_USETHROTTLING" ]]; then
   TFDELAYSECONDS=1
+  if [[ -n "$ALIEN_JDL_NOTFDELAY" ]]; then
+    TFDELAYSECONDS=0
+  fi
   export TIMEFRAME_RATE_LIMIT=1
 fi
 
