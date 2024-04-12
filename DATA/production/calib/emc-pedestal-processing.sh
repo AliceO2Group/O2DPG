@@ -6,7 +6,7 @@ source common/setenv.sh
 # Set general arguments
 source common/getCommonArgs.sh
 
-PROXY_INSPEC="A:EMC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0;eos:***/INFORMATION"
+PROXY_INSPEC="A:EMC/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
 
 PROXY_OUTSPEC="downstream:EMC/PEDDATA/0"
 
