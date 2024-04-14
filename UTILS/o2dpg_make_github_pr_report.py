@@ -17,25 +17,38 @@ def organise_prs(prs):
     prs_merged = []
     # collect the time of merged PRs
     merged_at = []
-    # other PRs, open, closed and not merged
-    prs_other = []
+    # simply closed
+    prs_closed = []
+    closed_updated_at = []
+    # open PRs
+    prs_open = []
+    open_updated_at = []
 
     for pr in prs:
         if not pr['merged_at']:
-            # that has not been merged
-            prs_other.append(pr)
-            continue
+            if pr['state'] == 'open':
+                prs_open.append(pr)
+                open_updated_at.append(pr['updated_at'])
+                continue
+            if pr['state'] == 'closed':
+                prs_closed.append(pr)
+                closed_updated_at.append(pr['updated_at'])
+                continue
         # get the PR itself and the merged timestamp
         prs_merged.append(pr)
         merged_at.append(pr['merged_at'])
 
     # sort the merged PRs by their merged timestamp
     prs_merged = [pr for _, pr in sorted(zip(merged_at, prs_merged))]
+    prs_closed = [pr for _, pr in sorted(zip(closed_updated_at, prs_closed))]
+    prs_open = [pr for _, pr in sorted(zip(open_updated_at, prs_open))]
 
-    return prs_merged, prs_other
+    return {'merged': prs_merged,
+            'closed': prs_closed,
+            'open': prs_open}
 
 
-def get_prs(owner, repo, request_labels, pr_state, per_page=50, start_page=1, pages=1):
+def get_prs(owner, repo, request_labels, pr_state=None, per_page=50, start_page=1, pages=1):
     """
     Get PRs according to some selection
     """
@@ -44,7 +57,8 @@ def get_prs(owner, repo, request_labels, pr_state, per_page=50, start_page=1, pa
 
     has_error = False
     for page in range(start_page, pages + 1):
-        url = f'https://api.github.com/repos/{owner}/{repo}/pulls?state={pr_state}&page={page}&per_page={per_page}'
+        pr_state = f'state={pr_state}&' if pr_state else 'state=all&'
+        url = f'https://api.github.com/repos/{owner}/{repo}/pulls?{pr_state}page={page}&per_page={per_page}'
 
         # Send GET request to GitHub API
         response = requests.get(url)
@@ -73,7 +87,7 @@ def get_prs(owner, repo, request_labels, pr_state, per_page=50, start_page=1, pa
             break
 
     if has_error:
-        return None, None
+        return None
 
     # organise PRs into different lists (merged and others)
     return organise_prs(prs_return)
@@ -115,59 +129,61 @@ def separate_labels_request_accept(labels, accept_suffix=None):
     return labels_request, labels_accept
 
 
-def make_report(prs_merged, prs_other, repo, labels_request, label_accept_suffix, outfile):
+def make_report(all_prs, repo, labels_request, label_accept_suffix, outfile=None):
     """
     Make a report
 
     The report consists of one table per label which will be written to a text file.
     """
     # common header for each single table
-    common_header = '| Requestor | Package | PR | PR title | Merged at | Data or MC |\n| --- | --- | --- | --- | --- | --- |\n'
-    rows_per_label = {label: [] for label in labels_request}
+    common_header = '| Requestor | Package | PR | PR title | State | Merged at | Data or MC |\n| --- | --- | --- | --- | --- | --- | --- |\n'
+
+    if not outfile:
+        outfile = f'o2dpg_pr_report_{repo}.md'
 
     with open(outfile, 'w') as f:
 
-        f.write(f'Merged PRs: {len(prs_merged)}\nOther closed PRs: {len(prs_other)}\nLabels: {", ".join(labels_request)}\n\n')
-        f.write('# List PRs from oldest to recent (merged)\n')
+        f.write(f'# List PRs for {repo} (from oldest to recent)\n')
 
         # first put the merged PRs
-        for pr in prs_merged:
-            mc_data = []
-            # collect the labels for which table this PR should be taken into account
-            labels_take = []
+        for key, prs in all_prs.items():
 
-            for label in pr['labels']:
-                label_name = label['name']
-                if label_name.lower() in ('mc', 'data'):
-                    # get assigned MC or DATA label if this PR has it
-                    mc_data.append(label['name'])
-                if label_name in labels_request and (not label_accept_suffix or f'{label_name}-{label_accept_suffix}' not in pr['labels']):
-                    # check if that label is one that flags a request. If at the same time there is also the corresponding accepted label, don't take this PR into account for the report.
-                    labels_take.append(label_name)
+            rows_per_label = {label: [] for label in labels_request}
 
-            if not labels_take:
-                # no labels of interest
-                continue
+            f.write(f'\n\n## PRs in state {key}')
+            for pr in prs:
+                mc_data = []
+                # collect the labels for which table this PR should be taken into account
+                labels_take = []
 
-            # if no specific MC or DATA label, assume valid for both
-            mc_data = ','.join(mc_data) if mc_data else 'MC,DATA'
-            for label in labels_take:
-                rows_per_label[label].append(f'| {pr["user"]["login"]} | {repo} | [PR]({pr["html_url"]}) | {pr["title"]} | {pr["merged_at"]} | {mc_data} |\n')
+                for label in pr['labels']:
+                    label_name = label['name']
+                    if label_name.lower() in ('mc', 'data'):
+                        # get assigned MC or DATA label if this PR has it
+                        mc_data.append(label['name'])
+                    if label_name in labels_request and (not label_accept_suffix or f'{label_name}-{label_accept_suffix}' not in pr['labels']):
+                        # check if that label is one that flags a request. If at the same time there is also the corresponding accepted label, don't take this PR into account for the report.
+                        labels_take.append(label_name)
 
-        for label, rows in rows_per_label.items():
-            if not rows:
-                # nothing to add here
-                continue
-            f.write(f'\n==> START label {label} <==\n')
-            f.write(common_header)
-            for row in rows:
-                f.write(row)
-            f.write(f'==> END label {label} <==\n')
+                if not labels_take:
+                    # no labels of interest
+                    continue
 
-        # add all the other commits
-        f.write('\n# Other PRs (not merged)\n')
-        for pr in prs_other:
-            f.write(f'| {pr["user"]["login"]} | {repo} | [PR]({pr["html_url"]}) | {pr["title"]} | not merged | {", ".join(labels_take)} | {mc_data} |\n')
+                # if no specific MC or DATA label, assume valid for both
+                mc_data = ','.join(mc_data) if mc_data else 'MC,DATA'
+                merged_at = pr['merged_at'] or 'not merged'
+                state = pr['state']
+                for label in labels_take:
+                    rows_per_label[label].append(f'| {pr["user"]["login"]} | {repo} | [PR]({pr["html_url"]}) | {pr["title"]} | {state} | {merged_at} | {mc_data} |\n')
+
+            for label, rows in rows_per_label.items():
+                if not rows:
+                    # nothing to add here
+                    continue
+                f.write(f'\n\n### For label {label}\n\n')
+                f.write(common_header)
+                for row in rows:
+                    f.write(row)
 
     print(f"==> Report written to {outfile}")
 
@@ -177,11 +193,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Retrieve closed pull requests with a specific label from a GitHub repository')
     parser.add_argument('--owner', help='GitHub repository owner', default='AliceO2Group')
     parser.add_argument('--repo', required=True, help='GitHub repository name, e.g. O2DPG or AliceO2')
-    parser.add_argument('--pr-state', dest='pr_state', default='closed', help='The state of the PR')
-    parser.add_argument('--output', default='o2dpg_pr_report.txt')
-    parser.add_argument('--per-page', dest='per_page', default=50, help='How many results per page')
+    parser.add_argument('--pr-state', dest='pr_state', help='The state of the PR')
+    parser.add_argument('--output', help='name of the output file where the report will be written')
+    parser.add_argument('--per-page', dest='per_page', default=100, help='How many results per page')
     parser.add_argument('--start-page', dest='start_page', type=int, default=1, help='Start on this page')
-    parser.add_argument('--pages', type=int, default=1, help='Number of pages')
+    parser.add_argument('--pages', type=int, default=5, help='Number of pages')
     parser.add_argument('--label-regex', dest='label_regex', help='Provide a regular expression to decide which labels to fetch.', default='^async-\w+')
     parser.add_argument('--label-accepted-suffix', dest='label_accepted_suffix', help='Provide a regular expression to decide which labels to fetch.', default='accept')
     parser.add_argument('--include-accepted', action='store_true', help='By default, only PRs are fetched where at least one label has no "<label>-accepted" label')
@@ -193,11 +209,11 @@ if __name__ == '__main__':
     labels_request, _ = separate_labels_request_accept(labels, args.label_accepted_suffix)
 
     # Retrieve closed pull requests with the specified label, split into merged and other (closed) PRs
-    prs_merged, prs_other = get_prs(args.owner, args.repo, labels_request, args.pr_state, args.per_page, args.start_page, args.pages)
-    if prs_merged is None:
-        print('ERROR: There was a problem fetching the info.')
-        sys.exit(1)
+    prs = get_prs(args.owner, args.repo, labels_request, args.pr_state, args.per_page, args.start_page, args.pages)
+    if not prs:
+        print('==> There are no PRs to report.')
+        sys.exit(0)
 
-    make_report(prs_merged, prs_other, args.repo, labels_request, args.label_accepted_suffix, args.output)
+    make_report(prs, args.repo, labels_request, args.label_accepted_suffix, args.output)
 
     sys.exit(0)
