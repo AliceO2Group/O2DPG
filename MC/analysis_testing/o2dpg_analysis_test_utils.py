@@ -24,6 +24,7 @@ ANALYSIS_VALID_MC = "mc"
 ANALYSIS_VALID_DATA = "data"
 ANALYSIS_COLLISION_SYSTEM_PP = "pp"
 ANALYSIS_COLLISION_SYSTEM_PBPB = "pbpb"
+ANALYSIS_MERGED_ANALYSIS_NAME = "MergedAnalyses"
 
 
 def adjust_configuration_line(line, data_or_mc, collision_system):

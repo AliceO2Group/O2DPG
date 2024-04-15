@@ -49,12 +49,6 @@ else
                 shift
                 shift
                 ;;
-            --add-common-args)
-                add_common_args=" ${2} ${3} "
-                shift
-                shift
-                shift
-                ;;
             *)
                 echo "ERROR: Unknown argument ${1}"
                 exit 1
@@ -66,7 +60,6 @@ fi
 # basic checks
 [[ "${testanalysis}" == "" ]] && { echo "ERROR: No analysis specified to be run" ; exit 1 ; }
 [[ "${aod}" == "" ]] && { echo "ERROR: No AOD found to be analysed" ; exit 1 ; }
-[[ "${add_common_args}" != "" ]] && add_common_args="--add-common-args ${add_common_args}"
 
 # check if enabled
 enabled=$($O2DPG_ROOT/MC/analysis_testing/o2dpg_analysis_test_config.py check -t ${testanalysis} --status)
@@ -77,7 +70,7 @@ mkdir Analysis 2>/dev/null
 include_disabled=${include_disabled:+--include-disabled}
 workflow_path="Analysis/workflow_analysis_test_${testanalysis}.json"
 rm ${workflow_path} 2>/dev/null
-$O2DPG_ROOT/MC/analysis_testing/o2dpg_analysis_test_workflow.py --is-mc -f ${aod} -o ${workflow_path} --only-analyses ${testanalysis} ${include_disabled} ${add_common_args}
+$O2DPG_ROOT/MC/analysis_testing/o2dpg_analysis_test_workflow.py --is-mc --split-analyses -f ${aod} -o ${workflow_path} --only-analyses ${testanalysis} ${include_disabled}
 [[ ! -f "${workflow_path}" ]] && { echo "Could not construct workflow for analysis ${testanalysis}" ; exit 1 ; }
 $O2DPG_ROOT/MC/bin/o2_dpg_workflow_runner.py -f ${workflow_path} -tt Analysis_${testanalysis}$ --rerun-from Analysis_${testanalysis}$
 
