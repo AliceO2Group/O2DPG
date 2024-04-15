@@ -2,4 +2,7 @@ int External() {
     return 0;
 }
 
-void pythia8_OO() { External(); }
+int Pythia8()  
+{  
+  return External();  
+} 
