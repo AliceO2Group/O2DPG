@@ -67,28 +67,15 @@ class CCDBAccessor:
 
         return timestamp, obj
 
+    def get_run_duration(self, run_number):
+       return o2.ccdb.BasicCCDBManager.instance().getRunDuration(run_number)
+
     def fetch_header(self, path, timestamp=None):
         meta_info = std.map["std::string", "std::string"]()
         if timestamp is None:
             timestamp = -1
         header = self.api.retrieveHeaders(path, meta_info, timestamp)
         return header
-
-
-
-def retrieve_sor_eor(ccdbreader, run_number):
-    """
-    retrieves start of run (sor) and end of run (eor) given a run number
-    from the RCT/Info/RunInformation table
-    """
-
-    path_run_info = "RCT/Info/RunInformation"
-    header = ccdbreader.fetch_header(path_run_info, run_number)
-    if not header:
-       print(f"WARNING: Cannot find run information for run number {run_number}")
-       return None
-    # return this a dictionary
-    return {"SOR": int(header["SOR"]), "EOR": int(header["EOR"])}
 
 
 def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp, objtype_external = None):
@@ -111,7 +98,7 @@ def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp, objtype_external = N
     jsonTString = TBufferJSON.ConvertToJSON(obj, TClass.GetClass(objtype))
     return json.loads(jsonTString.Data())
 
-def retrieve_params_fromGRPECS(ccdbreader, run_number, rct = None):
+def retrieve_params_fromGRPECS(ccdbreader, run_number, run_start=None, run_end=None):
     """
     Retrieves start of run (sor), end of run (eor) and other global parameters from the GRPECS object,
     given a run number. We first need to find the right object
@@ -150,22 +137,18 @@ def retrieve_params_fromGRPECS(ccdbreader, run_number, rct = None):
     # object, with which we can query the end time as well
     grp=retrieve_CCDBObject_asJSON(ccdbreader, "/GLO/Config/GRPECS" + "/runNumber=" + str(run_number) + "/", int(SOV))
 
-
     # check that this object is really the one we wanted based on run-number
     assert(int(grp["mRun"]) == int(run_number))
 
     SOR=int(grp["mTimeStart"]) # in milliseconds
     EOR=int(grp["mTimeEnd"])
     # cross check with RCT if available
-    if rct != None:
-       # verify that the variaous sor_eor information are the same
-       if SOR != rct["SOR"]:
-         print ("WARNING: Inconsistent SOR information on CCDB (divergence between GRPECS and RCT) ... will take RCT one")
-         SOR=rct["SOR"]
-
-       if EOR != rct["EOR"]:
-         print ("WARNING: Inconsistent EOR information on CCDB (divergence between GRPECS and RCT) ... will take RCT one")
-         EOR=rct["EOR"]
+    if run_start is not None:
+       print (f"INFO: GRPECS SOR ({SOR}) will be superseded by externally provided run start ({run_start})")
+       SOR = run_start
+    if run_end is not None:
+       print (f"INFO: GRPECS EOR ({EOR}) will be superseded by externally provided run end ({run_end})")
+       EOR = run_end
 
     # fetch orbit reset to calculate orbitFirst
     ts, oreset = ccdbreader.fetch("CTP/Calib/OrbitReset", "vector<Long64_t>", timestamp = SOR)
@@ -319,7 +302,6 @@ def main():
     parser.add_argument("-tf", type=int, help="number of timeframes per job", default=1)
     parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
     parser.add_argument("--trig-eff", type=float, dest="trig_eff", help="Trigger eff needed for IR", default=-1.0)
-    parser.add_argument("--use-rct-info", dest="use_rct_info", action="store_true", help=argparse.SUPPRESS) # Use SOR and EOR information from RCT instead of SOX and EOX from CTPScalers
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
 
@@ -329,34 +311,21 @@ def main():
     # make a CCDB accessor object
     ccdbreader = CCDBAccessor(args.ccdb_url)
     # fetch the EOR/SOR
-    rct_sor_eor = retrieve_sor_eor(ccdbreader, args.run_number) # <-- from RCT/Info
-    GLOparams = retrieve_params_fromGRPECS(ccdbreader, args.run_number, rct=rct_sor_eor)
+    run_duration = ccdbreader.get_run_duration(args.run_number)
+    run_start = run_duration.first
+    run_end = run_duration.second
+
+    GLOparams = retrieve_params_fromGRPECS(ccdbreader, args.run_number, run_start=run_start, run_end=run_end)
     if not GLOparams:
-       print ("No time info found")
+       print ("ERROR: Could not retrieve information from GRPECS")
        sys.exit(1)
 
-    ctp_scalers = retrieve_CTPScalers(ccdbreader, args.run_number)
-    if ctp_scalers is None:
-      print(f"ERROR: Cannot retrive scalers for run number {args.run_number}")
-      exit (1)
-
-    first_orbit = ctp_scalers.getOrbitLimit().first
-    # SOR and EOR values in milliseconds
-    sor = ctp_scalers.getTimeLimit().first
-    eor = ctp_scalers.getTimeLimit().second
-
-    if args.use_rct_info:
-      first_orbit = GLOparams["FirstOrbit"]
-      # SOR and EOR values in milliseconds
-      sor = GLOparams["SOR"]
-      eor = GLOparams["EOR"]
-
     # determine timestamp, and production offset for the final MC job to run
-    timestamp, prod_offset = determine_timestamp(sor, eor, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
+    timestamp, prod_offset = determine_timestamp(run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
 
     # this is anchored to
-    print ("Determined start-of-run to be: ", sor)
-    print ("Determined end-of-run to be: ", eor)
+    print ("Determined start-of-run to be: ", run_start)
+    print ("Determined end-of-run to be: ", run_end)
     print ("Determined timestamp to be : ", timestamp)
     print ("Determined offset to be : ", prod_offset)
 
@@ -399,7 +368,10 @@ def main():
            effTrigger = 28.0 # this is ZDC
          else:
            effTrigger = 0.759
-
+       ctp_scalers = retrieve_CTPScalers(ccdbreader, args.run_number)
+       if ctp_scalers is None:
+         print(f"ERROR: Cannot retrive scalers for run number {args.run_number}")
+         exit (1)
        # time needs to be converted to seconds ==> timestamp / 1000
        rate = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, timestamp/1000., effTrigger, grplhcif.getBunchFilling().getNBunches(), ColSystem)
 
@@ -415,8 +387,8 @@ def main():
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
     # NOTE: forwardargs can - in principle - contain some of the arguments that are appended here. However, the last passed argument wins, so they would be overwritten.
-    forwardargs += " -tf " + str(args.tf) + " --sor " + str(sor) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit "       \
-                   + str(first_orbit) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + " -eCM " + str(eCM) + ' --readoutDets ' + GLOparams['detList']
+    forwardargs += " -tf " + str(args.tf) + " --sor " + str(run_start) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit "       \
+                   + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + " -eCM " + str(eCM) + ' --readoutDets ' + GLOparams['detList']
     print ("forward args ", forwardargs)
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
     print ("Creating time-anchored workflow...")
