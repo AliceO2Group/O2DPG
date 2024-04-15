@@ -226,6 +226,10 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
     merged_analysis_pipe = additional_workflows.copy()
     # cpu and mem of merged analyses
     merged_analysis_cpu_mem = [0, 0]
+    # expected output of merged analysis
+    merged_analysis_expected_output = []
+    # analyses config to write
+    analyses_config = []
 
     for ana in load_analyses(analyses_only, include_disabled_analyses=include_disabled_analyses):
         if is_mc and not ana.get("valid_mc", False):
@@ -243,6 +247,7 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
             analysis_pipes.append(ana['tasks'])
             analysis_names.append(ana['name'])
             analysis_cpu_mem.append((1, 2000))
+            analyses_config.append(ana)
             continue
 
         merged_analysis_pipe.extend(ana['tasks'])
@@ -250,18 +255,32 @@ def add_analysis_tasks(workflow, input_aod="./AO2D.root", output_dir="./Analysis
         # Putting everything into one big pipe does not mean that the resources scale the same!
         merged_analysis_cpu_mem[0] += 0.5
         merged_analysis_cpu_mem[1] += 700
+        merged_analysis_expected_output.extend(ana['expected_output'])
 
     if not split_analyses:
         # add the merged analysis
         analysis_pipes.append(merged_analysis_pipe)
-        analysis_names.append('MergedAnalyses')
+        analysis_names.append(ANALYSIS_MERGED_ANALYSIS_NAME)
         # take at least the resources estimated for a single analysis
         analysis_cpu_mem.append((max(1, merged_analysis_cpu_mem[0]), max(2000, merged_analysis_cpu_mem[1])))
+        merged_analysis_expected_output = list(set(merged_analysis_expected_output))
+        # config of the merged analysis. Since it doesn't exist in the previous config, but we would like to have it defined, do it here
+        analyses_config.append({'name': ANALYSIS_MERGED_ANALYSIS_NAME,
+                                'valid_mc': is_mc,
+                                'valid_data': not is_mc,
+                                'enabled': True,
+                                'tasks': merged_analysis_pipe,
+                                'expected_output': merged_analysis_expected_output})
+
 
     # now we need to create the output directory where we want the final configurations to go
     output_dir_config = join(output_dir, 'config')
     if not exists(output_dir_config):
         makedirs(output_dir_config)
+
+    # write the analysis config of this
+    with open(join(output_dir, 'analyses_config.json'), 'w') as f:
+        json.dump({'analyses': analyses_config}, f, indent=2)
 
     configuration = adjust_and_get_configuration_path(data_or_mc, collision_system, output_dir_config)
 
