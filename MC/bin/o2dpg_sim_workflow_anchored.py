@@ -98,7 +98,8 @@ def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp, objtype_external = N
     jsonTString = TBufferJSON.ConvertToJSON(obj, TClass.GetClass(objtype))
     return json.loads(jsonTString.Data())
 
-def retrieve_params_fromGRPECS(ccdbreader, run_number, run_start=None, run_end=None):
+
+def retrieve_params_fromGRPECS_and_OrbitReset(ccdbreader, run_number, run_start, run_end):
     """
     Retrieves start of run (sor), end of run (eor) and other global parameters from the GRPECS object,
     given a run number. We first need to find the right object
@@ -128,10 +129,8 @@ def retrieve_params_fromGRPECS(ccdbreader, run_number, run_start=None, run_end=N
 
     match_object=re.match("\s*([0-9]*)\s*-\s*([0-9]*)\s*.*", VALIDITY)
     SOV = -1  # start of object validity (not necessarily the same as actual run-start)
-    EOV = -1  # end of object validity (not the same as actual run-end)
     if match_object != None:
       SOV=match_object[1]
-      EOV=match_object[2]
 
     # we make a suitable request (at the start time) --> this gives the actual
     # object, with which we can query the end time as well
@@ -140,27 +139,15 @@ def retrieve_params_fromGRPECS(ccdbreader, run_number, run_start=None, run_end=N
     # check that this object is really the one we wanted based on run-number
     assert(int(grp["mRun"]) == int(run_number))
 
-    SOR=int(grp["mTimeStart"]) # in milliseconds
-    EOR=int(grp["mTimeEnd"])
-    # cross check with RCT if available
-    if run_start is not None:
-       print (f"INFO: GRPECS SOR ({SOR}) will be superseded by externally provided run start ({run_start})")
-       SOR = run_start
-    if run_end is not None:
-       print (f"INFO: GRPECS EOR ({EOR}) will be superseded by externally provided run end ({run_end})")
-       EOR = run_end
-
     # fetch orbit reset to calculate orbitFirst
-    ts, oreset = ccdbreader.fetch("CTP/Calib/OrbitReset", "vector<Long64_t>", timestamp = SOR)
+    _, oreset = ccdbreader.fetch("CTP/Calib/OrbitReset", "vector<Long64_t>", timestamp = run_start)
     print ("All orbit resets")
     for i in range(len(oreset)):
         print (" oreset " + str(i) + " " + str(oreset[i]))
 
     print ("OrbitReset:", int(oreset[0]))
-    print ("RunStart:", SOR)
-
-    orbitFirst = int((1000*SOR - oreset[0])//LHCOrbitMUS)  # calc done in microseconds
-    orbitLast = int((1000*EOR - oreset[0])//LHCOrbitMUS)
+    orbitFirst = int((1000*run_start - oreset[0])//LHCOrbitMUS)  # calc done in microseconds
+    orbitLast = int((1000*run_end - oreset[0])//LHCOrbitMUS)
     print ("OrbitFirst", orbitFirst) # first orbit of this run
     print ("LastOrbit of run", orbitLast)
 
@@ -170,7 +157,7 @@ def retrieve_params_fromGRPECS(ccdbreader, run_number, run_start=None, run_end=N
     print ("Detector list is ", detList)
 
     # orbitReset.get(run_number)
-    return {"SOR": SOR, "EOR": EOR, "FirstOrbit" : orbitFirst, "LastOrbit" : orbitLast, "OrbitsPerTF" : int(grp["mNHBFPerTF"]), "detList" : detList}
+    return {"FirstOrbit" : orbitFirst, "LastOrbit" : orbitLast, "OrbitsPerTF" : int(grp["mNHBFPerTF"]), "detList" : detList}
 
 def retrieve_GRP(ccdbreader, timestamp):
     """
@@ -315,7 +302,7 @@ def main():
     run_start = run_duration.first
     run_end = run_duration.second
 
-    GLOparams = retrieve_params_fromGRPECS(ccdbreader, args.run_number, run_start=run_start, run_end=run_end)
+    GLOparams = retrieve_params_fromGRPECS_and_OrbitReset(ccdbreader, args.run_number, run_start, run_end)
     if not GLOparams:
        print ("ERROR: Could not retrieve information from GRPECS")
        sys.exit(1)
