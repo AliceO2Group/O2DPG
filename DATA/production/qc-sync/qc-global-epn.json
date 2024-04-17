@@ -29,7 +29,7 @@
         "filterRotateMaxFiles": "1"
       },
       "bookkeeping": {
-        "url": "alio2-cr1-hv-web01.cern.ch:4001"
+        "url": "alio2-cr1-hv-web02.cern.ch:4001"
       }
     }
   }
