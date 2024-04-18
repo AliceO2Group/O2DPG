@@ -17,15 +17,15 @@ if O2DPG_ROOT is None:
 def get_config(path=None):
     default_path = join(O2DPG_ROOT, "MC", "config", "analysis_testing", "json", "analyses_config.json")
     if not path:
-        return default_path
+        path = default_path
+    else:
+        if isdir(path):
+            # assume to look for analyses_config.json in this directory
+            path = join(path, "analyses_config.json")
 
-    if isdir(path):
-        # assume to look for analyses_config.json in this directory
-        path = join(path, "analyses_config.json")
-
-    if not exists(path):
-        print(f"WARNING: Cannot locate config for AnalysisQC at custom path {path}. USe default at {default_path}")
-        return default_path
+        if not exists(path):
+            print(f"WARNING: Cannot locate config for AnalysisQC at custom path {path}. Use default at {default_path}")
+            path = default_path
 
     with open(path, "r") as f:
         return json.load(f)["analyses"]
