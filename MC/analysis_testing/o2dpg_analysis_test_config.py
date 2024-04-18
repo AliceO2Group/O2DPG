@@ -3,7 +3,7 @@
 import sys
 import argparse
 from os import environ
-from os.path import join, exists
+from os.path import join, exists, isdir
 import json
 
 # make sure O2DPG + O2 is loaded
@@ -14,14 +14,29 @@ if O2DPG_ROOT is None:
     sys.exit(1)
 
 
+def get_config(path=None):
+    default_path = join(O2DPG_ROOT, "MC", "config", "analysis_testing", "json", "analyses_config.json")
+    if not path:
+        return default_path
+
+    if isdir(path):
+        # assume to look for analyses_config.json in this directory
+        path = join(path, "analyses_config.json")
+
+    if not exists(path):
+        print(f"WARNING: Cannot locate config for AnalysisQC at custom path {path}. USe default at {default_path}")
+        return default_path
+
+    with open(path, "r") as f:
+        return json.load(f)["analyses"]
+
+
 def modify(args):
     """
     modify and create a new config
     """
 
-    analyses = None
-    with open (args.config, "r") as f:
-        analyses = json.load(f)["analyses"]
+    analyses = get_config(args.config)
 
     for ana in analyses:
         if args.disable_tasks and ana["name"] in args.disable_tasks:
@@ -51,9 +66,7 @@ def check(args):
             return
          print("DISABLED")
 
-    analyses = None
-    with open (args.config, "r") as f:
-        analyses = json.load(f)["analyses"]
+    analyses = get_config(args.config)
 
     for ana in analyses:
         if ana["name"] == args.task:
@@ -80,9 +93,7 @@ def show_tasks(args):
         args.enabled = True
         args.disabled = True
 
-    analyses = None
-    with open (args.config, "r") as f:
-        analyses = json.load(f)["analyses"]
+    analyses = get_config(args.config)
 
     for ana in analyses:
         if (args.enabled and ana["enabled"]) or (args.disabled and not ana["enabled"]):
@@ -92,9 +103,12 @@ def show_tasks(args):
 
 
 def validate_output(args):
-    analyses = None
-    with open (args.config, "r") as f:
-        analyses = json.load(f)["analyses"]
+
+    if not args.config:
+        # first see if config is not explicitly given, then use the directory where the analyses to check are located
+        args.config = args.directory
+
+    analyses = get_config(args.config)
 
     # global return code
     ret = 0
@@ -105,11 +119,10 @@ def validate_output(args):
         analysis_name = ana["name"]
 
         if args.tasks:
-            if analysis_name in args.tasks:
-                # tasks were specified explicitly, make sure to take them into account at all costs
-                include_disabled = True
-            else:
+            if analysis_name not in args.tasks:
                 continue
+            # tasks were specified explicitly, make sure to take them into account at all costs
+            include_disabled = True
 
         if not ana["enabled"] and not include_disabled:
             # continue if disabled and not including those
@@ -160,7 +173,7 @@ def main():
     sub_parsers = parser.add_subparsers(dest="command")
 
     config_parser = argparse.ArgumentParser(add_help=False)
-    config_parser.add_argument("-c", "--config", help="input configuration to modify", default=join(O2DPG_ROOT, "MC", "config", "analysis_testing", "json", "analyses_config.json"))
+    config_parser.add_argument("-c", "--config", help="input configuration to modify")
 
     # modify config
     modify_parser = sub_parsers.add_parser("modify", parents=[config_parser])

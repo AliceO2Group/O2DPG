@@ -3,23 +3,14 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "ali-qcdb.cern.ch:8083",
-        "username": "not_applicable",
-        "password": "not_applicable",
-        "name": "not_applicable"
+        "host": "ccdb-test.cern.ch:8080"
       },
-      "Activity": {
-        "number": "42",
-        "type": "2"
-      },
+      "Activity": {},
       "monitoring": {
-        "url": "influxdb-unix:///tmp/telegraf.sock"
-      },
-      "consul": {
-        "url": ""
+        "url": "infologger:///debug?qc"
       },
       "conditionDB": {
-        "url": "http://localhost:8084"
+        "url": "ccdb-test.cern.ch:8080"
       }
     },
     "tasks": {
@@ -30,18 +21,13 @@
         "moduleName": "QcPHOS",
         "detectorName": "PHS",
         "cycleDurationSeconds": "100",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "clusters:PHS/CLUSTERS/0;clustertr:PHS/CLUSTERTRIGREC/0"
         },
-        "taskParameters": {
-          "": ""
-        }
+        "taskParameters": {}
       }
-    },
-    "dataSamplingPolicies": [
-      
-    ]
-  }
+    }
+  },
+  "dataSamplingPolicies": []
 }

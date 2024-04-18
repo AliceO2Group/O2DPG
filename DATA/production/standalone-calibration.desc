@@ -1,3 +1,5 @@
+EMC-pedestal-calibration: "O2PDPSuite" reco,1,1,"production/calib/emc-pedestal-processing.sh" calib,1,"production/calib/emc-pedestal-aggregator.sh"
+
 FT0-time-offset-calibration: "O2PDPSuite" reco,5,5,"production/calib/ft0-timeoffset-processing.sh" calib,1,"production/calib/ft0-timeoffset-aggregator.sh"
 
 ITS-noise-calibration: "O2PDPSuite" reco,20,20,"NITSDECTHREADS=4 NITSDECTPIPELINES=6 production/calib/its-noise-processing.sh" calib,20,"NTHREADSACC=4 NTHREADSNORM=16 NITSACCPIPELINES=16 production/calib/its-noise-aggregator.sh"

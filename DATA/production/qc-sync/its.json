@@ -46,17 +46,7 @@
           "publishSummary1D": "0",
 	  "publishDetailedSummary": "0"
         },
-	"grpGeomRequest" : {
-          "geomRequest": "Aligned",
-          "askGRPECS": "false",
-          "askGRPLHCIF": "false",
-          "askGRPMagField": "false",
-          "askMatLUT": "false",
-          "askTime": "false",
-          "askOnceAllButField": "true",
-          "needPropagatorD":  "false"
-         },
-          "localMachines": [
+        "localMachines": [
           "localhost", "epn"
         ],
         "localControl": "odc",
