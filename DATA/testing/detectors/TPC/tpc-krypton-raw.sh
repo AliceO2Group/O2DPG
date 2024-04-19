@@ -21,8 +21,8 @@ if [[ ! -z ${TPC_KRYPTON_LANES:-} ]]; then
     NLANES=${TPC_KRYPTON_LANES}
 fi
 
-QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-krypton-raw-qcmn"
-#QC_CONFIG="/o2/components/qc/ANY/any/tpc-krypton-raw-qcmn"
+#QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-krypton-raw-qcmn"
+QC_CONFIG="/o2/components/qc/ANY/any/tpc-krypton-raw-qcmn"
 
 
 

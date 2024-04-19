@@ -1,4 +1,4 @@
 TPC-krypton: "O2PDPSuite" reco,60,60,"SHMSIZE=128000000000 testing/detectors/TPC/tpc-krypton.sh"
 TPC-krypton-raw: "O2PDPSuite" reco,60,60,"SHMSIZE=128000000000 testing/detectors/TPC/tpc-krypton-raw.sh"
-TPC-laser-raw-filter: "O2PDPSuite" reco,80,80,"SHMSIZE=128000000000 testing/detectors/TPC/tpc-laser-raw-filter.sh"
-TPC-pattern-generator:  "O2PDPSuite" reco,1,1,"SHMSIZE=$((112 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) HOSTMEMSIZE=$(( 5 << 30 ))   testing/detectors/TPC/tpc-pattern-generator.sh"
+TPC-laser-raw-filter: "O2PDPSuite" reco,80,80,"SHMSIZE=$((128 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) HOSTMEMSIZE=$(( 5 << 30 )) testing/detectors/TPC/tpc-laser-raw-filter.sh"
+TPC-pattern-generator:  "O2PDPSuite" reco,1,1,"SHMSIZE=$((112 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) HOSTMEMSIZE=$(( 5 << 30 )) testing/detectors/TPC/tpc-pattern-generator.sh"

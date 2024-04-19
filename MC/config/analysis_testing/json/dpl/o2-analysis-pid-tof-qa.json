@@ -1,0 +1,76 @@
+{
+  "tof-pid-qa": {
+    "applyEvSel": "2",
+    "applyRapidityCut": "1",
+    "deltaBins": {
+      "values": [
+        100,
+        -1000,
+        1000
+      ]
+    },
+    "enableEvTimeSplitting": "0",
+    "enableVsMomentumHistograms": "0",
+    "etaBins": {
+      "values": [
+        50,
+        -1,
+        1
+      ]
+    },
+    "expSigmaBins": {
+      "values": [
+        200,
+        0,
+        200
+      ]
+    },
+    "logAxis": "0",
+    "maxP": "5",
+    "minP": "0.1",
+    "nBinsP": "400",
+    "nSigmaBins": {
+      "values": [
+        400,
+        -10,
+        10
+      ]
+    },
+    "phiBins": {
+      "values": [
+        25,
+        0,
+        6.283185307179586
+      ]
+    },
+    "processAlpha": "0",
+    "processDeuteron": "0",
+    "processElectron": "0",
+    "processFullAlpha": "0",
+    "processFullDeuteron": "1",
+    "processFullElectron": "0",
+    "processFullHelium3": "1",
+    "processFullKaon": "1",
+    "processFullMuon": "0",
+    "processFullPion": "1",
+    "processFullProton": "1",
+    "processFullTriton": "1",
+    "processHelium3": "0",
+    "processKaon": "0",
+    "processMuon": "0",
+    "processPion": "0",
+    "processProton": "0",
+    "processTriton": "0",
+    "produceDeltaTEtaPhiMap": "0",
+    "ptDeltaTEtaPhiMap": "3",
+    "splitSignalPerCharge": "1",
+    "trackLengthBins": {
+      "values": [
+        50,
+        0,
+        1000
+      ]
+    },
+    "trackSelection": "1"
+  }
+}

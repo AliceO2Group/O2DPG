@@ -46,6 +46,16 @@
           "timeBinSize": "0.1",
           "ROFLengthInBC": "594"
         },
+        "grpGeomRequest" : {
+          "geomRequest": "None",
+          "askGRPECS": "true",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "false",
+          "needPropagatorD": "false"
+        },
         "location": "remote"
       }
     },

@@ -19,7 +19,6 @@ CCDB_PATH="http://o2-ccdb.internal"
 
 HOST=localhost
 
-#QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-pulser-calib-qcmn"
 QC_CONFIG="/o2/components/qc/ANY/any/tpc-pulser-calib-qcmn"
 
 max_events=200
@@ -33,8 +32,6 @@ if [[ ! -z ${TPC_CALIB_PUBLISH_AFTER:-} ]]; then
     publish_after=${TPC_CALIB_PUBLISH_AFTER}
 fi
 
-EXTRA_CONFIG="--calib-type pulser --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes 36 --check-calib-infos" 
-
 
 #################################################################################################################################
 
@@ -43,7 +40,7 @@ WORKFLOW=
 add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\"" "" 0
 add_W o2-tpc-calib-pad-raw "--input-spec \"$CALIB_INSPEC\" --calib-type pulser --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes 36 --check-calib-infos" "${CALIB_CONFIG}" 
 add_W o2-calibration-ccdb-populator-workflow "--ccdb-path \"http://o2-ccdb.internal\" " "" 0
-add_QC_from_consul "${QC_CONFIG}" "--local --host lcoalhost"
+add_QC_from_consul "${QC_CONFIG}" "--local --host localhost"
 
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
 
@@ -55,15 +52,3 @@ else
   WORKFLOW+=" --$WORKFLOWMODE ${WORKFLOWMODE_FILE}"
   eval $WORKFLOW
 fi
-
-#o2-dpl-raw-proxy ${ARGS_ALL} --inject-missing-data \
-#    --dataspec "${PROXY_INSPEC}" \
-#    --readout-proxy '--channel-config "name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1"' \
-#    | o2-tpc-calib-pad-raw ${ARGS_ALL} \
-#    --input-spec "${CALIB_INSPEC}" \
-#    --configKeyValues "${CALIB_CONFIG}" \
-#    ${EXTRA_CONFIG} \
-#    | o2-calibration-ccdb-populator-workflow ${ARGS_ALL} \
-#    --ccdb-path ${CCDB_PATH} \
-#    | o2-qc ${ARGS_ALL} --config ${QC_CONFIG} --local --host ${HOST} \
-#    | o2-dpl-run ${ARGS_ALL} --dds ${WORKFLOWMODE_FILE} ${GLOBALDPLOPT}

@@ -3,23 +3,14 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "alio2-cr1-hv-qcdb1.cern.ch:8083",
-        "username": "not_applicable",
-        "password": "not_applicable",
-        "name": "not_applicable"
+        "host": "ccdb-test.cern.ch:8080"
       },
-      "Activity": {
-        "number": "42",
-        "type": "2"
-      },
+      "Activity": {},
       "monitoring": {
-        "url": "influxdb-unix:///tmp/telegraf.sock"
-      },
-      "consul": {
-          "url": "alio2-cr1-hv-aliecs:8500"
+        "url": "infologger:///debug?qc"
       },
       "conditionDB": {
-        "url": "http://localhost:8084/"
+        "url": "ccdb-test.cern.ch:8080"
       }
     },
     "tasks": {
@@ -30,7 +21,6 @@
         "moduleName": "QcCPV",
         "detectorName": "CPV",
         "cycleDurationSeconds": "120",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "clusters:CPV/CLUSTERS/0;ctrigrec:CPV/CLUSTERTRIGRECS/0"
@@ -40,9 +30,7 @@
           "ccdbCheckInterval": "1000"
         }
       }
-    },
-    "dataSamplingPolicies": [
-        
-    ]
-  }
+    }
+  },
+  "dataSamplingPolicies": []
 }

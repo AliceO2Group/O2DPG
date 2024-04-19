@@ -79,6 +79,7 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag, con
   add_QC_finalization('mftDigitsQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mft-digits-0.json', MFTDigitsQCneeds)
   add_QC_finalization('mftClustersQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mft-clusters.json')
   add_QC_finalization('mftTracksQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks.json')
+  add_QC_finalization('mftMCTracksQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks-mc.json')
   add_QC_finalization('emcRecoQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/emc-reco-tasks.json')
   add_QC_finalization('emcBCQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/emc-reco-tasks.json')
   #add_QC_finalization('tpcTrackingQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tpc-qc-tracking-direct.json')
@@ -92,6 +93,8 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag, con
   add_QC_finalization('TOFMatchWithTRDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/tofMatchedTracks_AllTypes_direct_MC.json')
   add_QC_finalization('ITSTrackSimTask', 'json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
   add_QC_finalization('ITSTracksClusters', 'json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json')
+  if isActive('MID'):
+     add_QC_finalization('MIDTaskQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mid-task.json')
   if isActive('FT0') and isActive('TRD'):
      add_QC_finalization('tofft0PIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tof.json')
   elif isActive('FT0'):

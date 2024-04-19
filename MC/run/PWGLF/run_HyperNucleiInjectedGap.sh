@@ -26,7 +26,7 @@ ENERGY=${ENERGY:-13600}
 
 # create workflow
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${ENERGY} -col ${SYSTEM} -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} -confKey "Diamond.width[0]=0.1;Diamond.width[1]=0.1;Diamond.width[2]=6." -e ${SIMENGINE} ${SEED} -mod "--skipModules ZDC" \
-        -ini ${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFHyperNuclei${SYSTEM}Gap.ini --with-strangeness-tracking
+        -ini ${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorLFHyperNuclei${SYSTEM}Gap.ini
 
 # run workflow
 # allow increased timeframe parallelism with --cpu-limit 32

@@ -3,7 +3,7 @@
 import sys
 import argparse
 from os import environ
-from os.path import join, exists
+from os.path import join, exists, isdir
 import json
 
 # make sure O2DPG + O2 is loaded
@@ -14,14 +14,29 @@ if O2DPG_ROOT is None:
     sys.exit(1)
 
 
+def get_config(path=None):
+    default_path = join(O2DPG_ROOT, "MC", "config", "analysis_testing", "json", "analyses_config.json")
+    if not path:
+        path = default_path
+    else:
+        if isdir(path):
+            # assume to look for analyses_config.json in this directory
+            path = join(path, "analyses_config.json")
+
+        if not exists(path):
+            print(f"WARNING: Cannot locate config for AnalysisQC at custom path {path}. Use default at {default_path}")
+            path = default_path
+
+    with open(path, "r") as f:
+        return json.load(f)["analyses"]
+
+
 def modify(args):
     """
     modify and create a new config
     """
 
-    analyses = None
-    with open (args.config, "r") as f:
-        analyses = json.load(f)["analyses"]
+    analyses = get_config(args.config)
 
     for ana in analyses:
         if args.disable_tasks and ana["name"] in args.disable_tasks:
@@ -51,38 +66,35 @@ def check(args):
             return
          print("DISABLED")
 
-    analyses = None
-    with open (args.config, "r") as f:
-        analyses = json.load(f)["analyses"]
+    analyses = get_config(args.config)
 
     for ana in analyses:
-        if ana["name"] == args.task:
-            if args.status:
-                print_status(ana["enabled"])
-            if args.applicable_to:
-                if ana.get("valid_mc", False):
-                    print("mc")
-                if ana.get("valid_data", False):
-                    print("data")
+        if ana["name"] != args.task:
+            continue
+        if args.status:
+            print_status(ana["enabled"])
+        if args.applicable_to:
+            if ana.get("valid_mc", False):
+                print("mc")
+            if ana.get("valid_data", False):
+                print("data")
 
-            return 0
+        return 0
 
     # analysis not found
-    print(f"UNKNOWN")
+    print(f"WARNING: Unknown task {args.task}")
     return 1
 
 
 def show_tasks(args):
     """
-    Browse through analyses and see what is en-/disabled
+    Browse through analyses and print what is en-/disabled
     """
     if not args.enabled and not args.disabled:
         args.enabled = True
         args.disabled = True
 
-    analyses = None
-    with open (args.config, "r") as f:
-        analyses = json.load(f)["analyses"]
+    analyses = get_config(args.config)
 
     for ana in analyses:
         if (args.enabled and ana["enabled"]) or (args.disabled and not ana["enabled"]):
@@ -92,9 +104,19 @@ def show_tasks(args):
 
 
 def validate_output(args):
-    analyses = None
-    with open (args.config, "r") as f:
-        analyses = json.load(f)["analyses"]
+    """
+    Validation after running tasks
+
+    * check for corresponding *.log_done files from WF runner
+    * check for exit code in *.log
+    * check if expected output files are there
+    """
+
+    if not args.config:
+        # first see if config is not explicitly given, then use the directory where the analyses to check are located
+        args.config = args.directory
+
+    analyses = get_config(args.config)
 
     # global return code
     ret = 0
@@ -105,11 +127,10 @@ def validate_output(args):
         analysis_name = ana["name"]
 
         if args.tasks:
-            if analysis_name in args.tasks:
-                # tasks were specified explicitly, make sure to take them into account at all costs
-                include_disabled = True
-            else:
+            if analysis_name not in args.tasks:
                 continue
+            # tasks were specified explicitly, make sure to take them into account at all costs
+            include_disabled = True
 
         if not ana["enabled"] and not include_disabled:
             # continue if disabled and not including those
@@ -126,6 +147,7 @@ def validate_output(args):
             # expected to have no output
             continue
 
+        # check if the expected outputs are there
         for expected_output in ana["expected_output"]:
             expected_output = join(analysis_dir, expected_output)
             if not exists(expected_output):
@@ -135,6 +157,7 @@ def validate_output(args):
         logfile = join(analysis_dir, f"Analysis_{analysis_name}.log")
 
         if exists(logfile):
+            # check the exit code in the *.log file
             exit_code = "0"
             with open(logfile, "r") as f:
                 for line in f:
@@ -146,6 +169,8 @@ def validate_output(args):
                             break
             if exit_code != "0":
                 continue
+
+            # check if the *.log_done file is there
             logfile_done = join(analysis_dir, f"Analysis_{analysis_name}.log_done")
             if not exists(logfile_done):
                 print(f"Apparently, analysis {analysis_name} did not run successfully, {logfile_done} does not exist.")
@@ -155,12 +180,14 @@ def validate_output(args):
 
 
 def main():
-    """entry point when run directly from command line"""
-    parser = argparse.ArgumentParser(description='Modify analysis configuration and write new config')
+    """
+    entry point when run directly from command line
+    """
+    parser = argparse.ArgumentParser(description='Check, validate or modify analysis configuration')
     sub_parsers = parser.add_subparsers(dest="command")
 
     config_parser = argparse.ArgumentParser(add_help=False)
-    config_parser.add_argument("-c", "--config", help="input configuration to modify", default=join(O2DPG_ROOT, "MC", "config", "analysis_testing", "json", "analyses_config.json"))
+    config_parser.add_argument("-c", "--config", help="input configuration to use")
 
     # modify config
     modify_parser = sub_parsers.add_parser("modify", parents=[config_parser])
