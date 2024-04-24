@@ -136,6 +136,9 @@ parser.add_argument('--include-analysis', '--include-an', '--analysis',
 parser.add_argument('--mft-reco-full', action='store_true', help='enables complete mft reco instead of simplified misaligned version')
 parser.add_argument('--mft-assessment-full', action='store_true', help='enables complete assessment of mft reco')
 
+# TPC options
+parser.add_argument('--tpc-distortion-type', default=0, type=int, help='Simulate distortions in the TPC (0=no distortions, 1=distortions without scaling, 2=distortions with CTP scaling)')
+parser.add_argument('--ctp-scaler', default=0, type=float, help='CTP raw scaler value used for distortion simulation')
 # Global Forward reconstruction configuration
 parser.add_argument('--fwdmatching-assessment-full', action='store_true', help='enables complete assessment of global forward reco')
 parser.add_argument('--fwdmatching-4-param', action='store_true', help='excludes q/pt from matching parameters')
@@ -520,7 +523,6 @@ TPC_SPACECHARGE_DOWNLOADER_TASK['cmd'] = '[ "${O2DPG_ENABLE_TPC_DISTORTIONS}" ] 
    '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p TPC/Calib/CorrectionMap --timestamp 1 --created-not-after ' + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE} ; }'
 workflow['stages'].append(TPC_SPACECHARGE_DOWNLOADER_TASK)
 
-
 # query initial configKey args for signal transport; mainly used to setup generators
 simInitialConfigKeys = create_geant_config(args, args.confKey)
 
@@ -672,7 +674,6 @@ for tf in range(1, NTIMEFRAMES + 1):
                                   --ptHatMax='+str(PTHATMAX)
          if WEIGHTPOW   > 0:
             SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
-
       # if we configure pythia8 here --> we also need to adjust the configuration
       # TODO: we need a proper config container/manager so as to combine these local configs with external configs etc.
       args.confKey = args.confKey + ";GeneratorPythia8.config=pythia8.cfg"
@@ -680,11 +681,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    # elif GENERATOR == 'extgen': what do we do if generator is not pythia8?
        # NOTE: Generator setup might be handled in a different file or different files (one per
        # possible generator)
+
    workflow['stages'].append(SGN_CONFIG_task)
 
    # determine final conf key for signal simulation
    CONFKEY = constructConfigKeyArg(create_geant_config(args, args.confKey))
-
    # -----------------
    # transport signals
    # -----------------
@@ -865,10 +866,29 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    workflow['stages'].append(ContextTask)
 
+   # ===| TPC digi part |===
+   CTPSCALER = args.ctp_scaler
+   tpcDistortionType=args.tpc_distortion_type
+   print(f"TPC distortion simulation: type = {tpcDistortionType}, CTP scaler value {CTPSCALER}");
    tpcdigineeds=[ContextTask['name'], LinkGRPFileTask['name'], TPC_SPACECHARGE_DOWNLOADER_TASK['name']]
    if usebkgcache:
       tpcdigineeds += [ BKG_HITDOWNLOADER_TASKS['TPC']['name'] ]
 
+   tpcLocalCF={"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF), "DigiParams.seed" : str(TFSEED)}
+
+   # handle distortions and scaling using MC maps
+   # this assumes the lumi inside the maps is stored in FT0 (pp) scalers
+   # in case of PbPb the conversion factor ZDC ->FT0 (pp) must be taken into account in the scalers
+   if tpcDistortionType == 2 and CTPSCALER <= 0:
+       print('Warning: lumi scaling requested, but no ctp scaler value set. Full map will be applied at face value.')
+       tpcDistortionType=1
+
+   lumiInstFactor=1
+   if COLTYPE == 'PbPb':
+      lumiInstFactor=2.414
+
+   if tpcDistortionType == 2:
+      tpcLocalCF['TPCCorrMap.lumiInst'] = str(CTPSCALER * lumiInstFactor)
    tpcdigimem = 12000 if havePbPb else 9000
    TPCDigitask=createTask(name='tpcdigi_'+str(tf), needs=tpcdigineeds,
                           tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu=NWORKERS_TF, mem=str(tpcdigimem))
@@ -876,14 +896,16 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCDigitask['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption       \
                          + ' --onlyDet TPC --TPCuseCCDB --interactionRate ' + str(INTRATE) + '  --tpc-lanes ' + str(NWORKERS_TF)             \
                          + ' --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini --early-forward-policy always --forceSelectedDets ' \
+                         + ' --tpc-distortion-type ' + str(tpcDistortionType)                                                             \
                          + putConfigValuesNew(["TPCGasParam","TPCGEMParam","TPCEleParam","TPCITCorr","TPCDetParam"],
-                                              localCF={"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF), "DigiParams.seed" : str(TFSEED)})
+                                              localCF=tpcLocalCF)
    TPCDigitask['cmd'] += (' --tpc-chunked-writer','')[args.no_tpc_digitchunking]
    TPCDigitask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    # we add any other extra command line options (power user customization) with an environment variable
    if environ.get('O2DPG_TPC_DIGIT_EXTRA') != None:
       TPCDigitask['cmd'] += ' ' + environ['O2DPG_TPC_DIGIT_EXTRA']
    workflow['stages'].append(TPCDigitask)
+   # END TPC digi part
 
    trddigineeds = [ContextTask['name']]
    if usebkgcache:
@@ -1001,13 +1023,36 @@ for tf in range(1, NTIMEFRAMES + 1):
      workflow['stages'].append(tpcclus)
      tpcreconeeds.append(tpcclus['name'])
 
+   # ===| TPC reco |===
+   tpcLocalCFreco=dict()
+
+   # handle distortion corrections and scaling using MC maps
+   # this assumes the lumi inside the maps is stored in FT0 (pp) scalers
+   # in case of PbPb the conversion factor ZDC ->FT0 (pp) must be set
+   tpc_corr_options_mc=''
+
+   if tpcDistortionType == 0: # disable distortion corrections
+      tpc_corr_options_mc=' --corrmap-lumi-mode 0 '
+      tpcLocalCFreco['TPCCorrMap.lumiMean'] = '-1';
+   elif tpcDistortionType == 1: # disable scaling
+      tpc_corr_options_mc=' --corrmap-lumi-mode 2 '
+      tpcLocalCFreco['TPCCorrMap.lumiInst'] = str(CTPSCALER)
+      tpcLocalCFreco['TPCCorrMap.lumiMean'] = str(CTPSCALER)
+   elif tpcDistortionType == 2: # full scaling with CTP values
+      if COLTYPE == 'PbPb':
+         tpcLocalCFreco['TPCCorrMap.lumiInstFactor'] = str(lumiInstFactor)
+      tpc_corr_options_mc=' --corrmap-lumi-mode 2 '
+      tpcLocalCFreco['TPCCorrMap.lumiInst'] = str(CTPSCALER)
+
+   # TODO: Is this still used?
    tpc_corr_scaling_options = anchorConfig.get('tpc-corr-scaling','')
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
    TPCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' \
-                        + putConfigValuesNew(["GPU_global","TPCGasParam", "TPCCorrMap", "GPU_rec_tpc", "trackTuneParams"], {"GPU_proc.ompThreads":NWORKERS_TF}) + ('',' --disable-mc')[args.no_mc_labels] \
-                        + tpc_corr_scaling_options
+                        + putConfigValuesNew(["GPU_global","TPCGasParam", "TPCCorrMap", "GPU_rec_tpc", "trackTuneParams"], {"GPU_proc.ompThreads":NWORKERS_TF} | tpcLocalCFreco) + ('',' --disable-mc')[args.no_mc_labels] \
+                        + tpc_corr_scaling_options + tpc_corr_options_mc
    workflow['stages'].append(TPCRECOtask)
 
+   # END TPC reco
 
    ITSMemEstimate = 12000 if havePbPb else 2000 # PbPb has much large mem requirement for now (in worst case)
    ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS")],
@@ -1025,8 +1070,8 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
    ITSTPCMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\" --use-ft0' \
-                          + putConfigValuesNew(['MFTClustererParam', 'ITSCATrackerParam', 'tpcitsMatch', 'TPCGasParam', 'TPCCorrMap', 'ITSClustererParam', 'GPU_rec_tpc', 'trackTuneParams', 'ft0tag'], {"NameConf.mDirMatLUT" : ".."}) \
-                          + tpc_corr_scaling_options
+                          + putConfigValuesNew(['MFTClustererParam', 'ITSCATrackerParam', 'tpcitsMatch', 'TPCGasParam', 'TPCCorrMap', 'ITSClustererParam', 'GPU_rec_tpc', 'trackTuneParams', 'ft0tag'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco) \
+                          + tpc_corr_scaling_options + tpc_corr_options_mc
    workflow['stages'].append(ITSTPCMATCHtask)
 
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
@@ -1041,11 +1086,10 @@ for tf in range(1, NTIMEFRAMES + 1):
                                                    'ITSCATrackerParam',
                                                    'trackTuneParams',
                                                    'GPU_rec_tpc',
-                                                   'ft0tag',
                                                    'TPCGasParam',
-                                                   'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."})                                    \
+                                                   'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco)                     \
                              + " --track-sources " + trd_track_sources  \
-                             + tpc_corr_scaling_options
+                             + tpc_corr_scaling_options + tpc_corr_options_mc
    workflow['stages'].append(TRDTRACKINGtask2)
 
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], getDigiTaskName("TOF")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1063,9 +1107,9 @@ for tf in range(1, NTIMEFRAMES + 1):
                                                     'ITSCATrackerParam',
                                                     'MFTClustererParam',
                                                     'GPU_rec_tpc',
-                                                    'trackTuneParams'])                         \
+                                                    'trackTuneParams'], tpcLocalCFreco)                         \
                               + " --track-sources " + toftracksrcdefault + (' --combine-devices','')[args.no_combine_dpl_devices] \
-                              + tpc_corr_scaling_options
+                              + tpc_corr_scaling_options + tpc_corr_options_mc
    workflow['stages'].append(TOFTPCMATCHERtask)
 
    # MFT reco: needing access to kinematics (when assessment enabled)
@@ -1342,7 +1386,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name'], FT0FV0EMCCTPDIGItask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
    SVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-secondary-vertexing-workflow '
-   SVFINDERtask['cmd'] += getDPL_global_options(bigshm=True) + svfinder_threads + putConfigValuesNew(['svertexer', 'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."})
+   SVFINDERtask['cmd'] += getDPL_global_options(bigshm=True) + svfinder_threads + putConfigValuesNew(['svertexer', 'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco) \
+                       + tpc_corr_scaling_options + tpc_corr_options_mc
    # Take None as default, we only add more if nothing from anchorConfig
    svfinder_sources = anchorConfig.get('o2-secondary-vertexing-workflow-options', {}). get('vertexing-sources', 'ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP')
    SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
