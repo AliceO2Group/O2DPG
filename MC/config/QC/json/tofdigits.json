@@ -43,7 +43,7 @@
           "PerChannel": "True",
           "RangeMaxMultiplicity": "15000",
           "NbinsMultiplicity": "15000",
-          "applyCalib": "True"
+          "applyCalib": "False"
         },
         "grpGeomRequest": {
           "geomRequest": "Aligned",
