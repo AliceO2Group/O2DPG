@@ -130,7 +130,7 @@
       "id": "tof-digits",
       "active": "true",
       "machines": [],
-      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS;diafreq:TOF/DIAFREQ/0",
+      "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS;diafreq:TOF/DIAFREQ/0;channelCalib:TOF/CHCALIB/0?lifetime=condition&ccdb-path=TOF/Calib/ChannelCalib;lhcPhase:TOF/LHCP/0?lifetime=condition&ccdb-path=TOF/Calib/LHCphase",
       "samplingConditions": [
         {
           "condition": "random",
