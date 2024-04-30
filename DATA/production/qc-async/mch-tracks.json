@@ -43,7 +43,7 @@
                     "geomRequest": "Aligned",
                     "askGRPECS": "false",
                     "askGRPLHCIF": "false",
-                    "askGRPMagField": "false",
+                    "askGRPMagField": "true",
                     "askMatLUT": "false",
                     "askTime": "false",
                     "askOnceAllButField": "true",
