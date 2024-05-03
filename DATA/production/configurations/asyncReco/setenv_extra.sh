@@ -497,7 +497,7 @@ export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$ITSEXTRAERR;$TRACKTUNETP
 
 if [[ $ALIEN_JDL_LPMPASSNAME == "cpass0" ]]; then
    CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";MatchTOF.nsigmaTimeCut=6;"
-   ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow+=" --for-calib"
+   ARGS_EXTRA_PROCESS_o2_tof_reco_workflow+=" --for-calib"
 fi
 
 # ad-hoc settings for TRD matching
