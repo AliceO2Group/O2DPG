@@ -20,9 +20,9 @@ public:
     char* alien_proc_id = getenv("ALIEN_PROC_ID");
     int seed;
 
-    if (job_id != NULL) {
+    if (alien_proc_id != NULL) {
       LOG(info) << "Seed set to ALIEN_PROC_ID: " << seed;
-      seed = atoi(job_id);
+      seed = atoi(alien_proc_id);
     } else {
       LOG(info) << "Unable to retrieve ALIEN_PROC_ID";
       LOG(info) << "Setting seed to 0 (random)";
