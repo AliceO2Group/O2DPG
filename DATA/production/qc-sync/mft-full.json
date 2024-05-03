@@ -91,6 +91,16 @@
           "timeBinSize" : "0.1",
           "ROFLengthInBC" : "594"
         },
+        "grpGeomRequest" : {
+          "geomRequest": "None",
+          "askGRPECS": "true",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "false",
+          "needPropagatorD": "false"
+        },
         "location": "local",
         "localMachines": [
           "epn", "localhost"
@@ -130,16 +140,6 @@
           "MaxClusterROFSize": "50000",
           "MaxDuration": "60000",
           "TimeBinSize": "0.1"
-        },
-	"grpGeomRequest": {
-          "geomRequest": "None",
-          "askGRPECS": "true",
-          "askGRPLHCIF": "false",
-          "askGRPMagField": "false",
-          "askMatLUT": "false",
-          "askTime": "false",
-          "askOnceAllButField": "false",
-          "needPropagatorD": "false"
         },
         "remoteMachine": "alio2-cr1-qme05.cern.ch",
         "remotePort": "47796",
