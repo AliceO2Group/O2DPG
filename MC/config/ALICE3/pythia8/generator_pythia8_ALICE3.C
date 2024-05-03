@@ -17,14 +17,14 @@ public:
   /// Constructor
   GeneratorPythia8ALICE3() {
 
-    char* job_id = getenv("JOB_ID");
+    char* alien_proc_id = getenv("ALIEN_PROC_ID");
     int seed;
 
     if (job_id != NULL) {
-      LOG(info) << "Seed set to JOB_ID: " << seed;
+      LOG(info) << "Seed set to ALIEN_PROC_ID: " << seed;
       seed = atoi(job_id);
     } else {
-      LOG(info) << "Unable to retrieve JOB_ID";
+      LOG(info) << "Unable to retrieve ALIEN_PROC_ID";
       LOG(info) << "Setting seed to 0 (random)";
       seed = 0;
     }
