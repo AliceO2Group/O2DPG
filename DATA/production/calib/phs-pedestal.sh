@@ -16,16 +16,23 @@ PROXY_INSPEC="A:PHS/RAWDATA;dd:FLP/DISTSUBTIMEFRAME/0"
 
 push_ccdb_path="http://o2-ccdb.internal"
 pull_ccdb_path="http://o2-ccdb.internal"
-if [[ ! -z ${PUHS_CCDB_PATH:-} ]]; then
-  push_ccdb_path=$PUHS_CCDB_PATH
+dcs_ccdb_path="http://alio2-cr1-flp199-ib:8083"
+
+if [[ ! -z ${PUSH_CCDB_PATH:-} ]]; then
+  push_ccdb_path=$PUSH_CCDB_PATH
 fi
 
 if [[ ! -z ${PULL_CCDB_PATH:-} ]]; then
   pull_ccdb_path=$PULL_CCDB_PATH
 fi
 
+if [[ ! -z ${DCS_CCDB_PATH:-} ]]; then
+  dcs_ccdb_path=$DCS_CCDB_PATH
+fi
+
 if [[ $RUNTYPE == "SYNTHETIC" || "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
   push_ccdb_path="http://ccdb-test.cern.ch:8080"
+  dcs_ccdb_path="http://ccdb-test.cern.ch:8080"
 fi
 
 QC_CONFIG="/o2/components/qc/ANY/any/phs-pedestal-qc"
@@ -34,9 +41,9 @@ WORKFLOW=
 add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\"" "" 0
 add_W o2-phos-reco-workflow "--input-type raw --output-type cells --pedestal on --disable-root-input --disable-root-output --condition-backend ${pull_ccdb_path}" 
 add_W o2-phos-calib-workflow "--pedestals --statistics ${max_statistics} --forceupdate"
-#add_W o2-calibration-ccdb-populator-workflow "--ccdb-path ${push_ccdb_path}"
 workflow_has_parameter QC && add_QC_from_consul "${QC_CONFIG}"
-add_W o2-calibration-ccdb-populator-workflow "--ccdb-path ${push_ccdb_path}"
+add_W o2-calibration-ccdb-populator-workflow "--ccdb-path ${push_ccdb_path}  --sspec-min 0 --sspec-max 0"
+add_W o2-calibration-ccdb-populator-workflow "--name-extention -dcs --ccdb-path ${dcs_ccdb_path} --sspec-min 1 --sspec-max 1"
 
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
 
