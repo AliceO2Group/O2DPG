@@ -117,6 +117,9 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     elif has_detectors_reco MCH MID && has_matching_qc MCHMID; then
         [[ -z "${QC_JSON_GLO_MCHMID:-}" ]] && QC_JSON_GLO_MCHMID=consul://o2/components/qc/ANY/any/glo-mchmid-mtch-qcmn-epn
     fi
+    if has_processing_step ENTROPY_ENCODER && [[ ! -z "$WORKFLOW_DETECTORS_CTF" ]] && [[ $WORKFLOW_DETECTORS_CTF != "NONE" ]]; then
+      [[ -z "${QC_JSON_CTF_SIZE:-}" ]] && QC_JSON_CTF_SIZE=consul://o2/components/qc/ANY/any/glo-qc-data-size
+    fi
     if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
       [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn-staging.json # this must be last
     else
@@ -258,6 +261,12 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
       add_QC_JSON pid$i ${!PID_JSON_FILE}
     fi
   done
+
+  # CTF QC
+  if [[ ! -z "${QC_JSON_CTF_SIZE:-}" ]]; then
+    add_QC_JSON GLO_CTF ${QC_JSON_CTF_SIZE}
+    add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.CTFSize.taskParameters.detectors=${WORKFLOW_DETECTORS}'
+  fi
 
   # arbitrary extra QC
   if [[ ! -z "${QC_JSON_EXTRA:-}" ]]; then
