@@ -33,7 +33,7 @@
                 "maxNumberCycles": "-1",
                 "dataSource": {
                     "type": "direct",
-                    "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS"
+                    "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS"
                 },
                 "taskParameters": {
                     "maxTracksPerTF": "600",
@@ -41,9 +41,9 @@
                 },
                 "grpGeomRequest": {
                     "geomRequest": "Aligned",
-                    "askGRPECS": "false",
+                    "askGRPECS": "true",
                     "askGRPLHCIF": "false",
-                    "askGRPMagField": "false",
+                    "askGRPMagField": "true",
                     "askMatLUT": "false",
                     "askTime": "false",
                     "askOnceAllButField": "true",

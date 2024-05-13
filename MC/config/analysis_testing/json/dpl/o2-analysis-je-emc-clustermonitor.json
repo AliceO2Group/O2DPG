@@ -1,0 +1,48 @@
+{
+  "EMCClusterMonitorTask": {
+    "clusterDefinition": "10",
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "doEventSel": "0",
+    "numclusters-binning": {
+      "values": [
+        201,
+        -0.5,
+        200.5
+      ]
+    },
+    "processAmbiguous": "0",
+    "processCollisions": "1",
+    "selectBCID": "all",
+    "vertexCut": "-1",
+    "vetoBCID": ""
+  },
+  "EMCClusterMonitorTaskAmbiguous": {
+    "clusterDefinition": "10",
+    "clustertime-binning": {
+      "values": [
+        1500,
+        -600,
+        900
+      ]
+    },
+    "doEventSel": "0",
+    "numclusters-binning": {
+      "values": [
+        201,
+        -0.5,
+        200.5
+      ]
+    },
+    "processAmbiguous": "1",
+    "processCollisions": "0",
+    "selectBCID": "all",
+    "vertexCut": "-1",
+    "vetoBCID": ""
+  }
+}

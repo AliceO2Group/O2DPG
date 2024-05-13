@@ -1,0 +1,23 @@
+{
+  "tpc-pid-full": {
+    "autofetchNetworks": "1",
+    "ccdb-timestamp": "0",
+    "ccdb-url": "http://alice-ccdb.cern.ch",
+    "ccdbPath": "Analysis/PID/TPC/Response",
+    "enableNetworkOptimizations": "1",
+    "networkPathCCDB": "Analysis/PID/TPC/ML",
+    "networkPathLocally": "network.onnx",
+    "networkSetNumThreads": "0",
+    "param-file": "",
+    "pid-al": "-1",
+    "pid-de": "-1",
+    "pid-el": "-1",
+    "pid-he": "-1",
+    "pid-ka": "-1",
+    "pid-mu": "-1",
+    "pid-pi": "-1",
+    "pid-pr": "-1",
+    "pid-tr": "-1",
+    "useNetworkCorrection": "0"
+  }
+}

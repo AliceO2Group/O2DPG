@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
+from os import environ, getcwd
 from copy import deepcopy
 import json
 
 
 # List of active detectors
 ACTIVE_DETECTORS = ["all"]
+INACTIVE_DETECTORS = []
 
 def activate_detector(det):
     try:
@@ -16,8 +18,33 @@ def activate_detector(det):
         pass
     ACTIVE_DETECTORS.append(det)
 
+def deactivate_detector(det):
+    INACTIVE_DETECTORS.append(det)
+
 def isActive(det):
-    return "all" in ACTIVE_DETECTORS or det in ACTIVE_DETECTORS
+    return det not in INACTIVE_DETECTORS and ("all" in ACTIVE_DETECTORS or det in ACTIVE_DETECTORS)
+
+def compute_n_workers(interaction_rate, collision_system, n_workers_user=8, n_workers_min=1, interaction_rate_linear_below=300000):
+    """
+    Compute number of workers
+
+    n_workers = m * IR + b
+
+    based on
+    https://indico.cern.ch/event/1395900/contributions/5868567/attachments/2823967/4932440/20240320_slides_cpu_eff.pdf, slide 3
+
+    Assume n_workers_in=8 to be ideal for pp IR > interaction_rate_linear_below
+
+    Start with 1 worker at IR=0
+    Go linearly until interaction_rate_linear_below
+    """
+    if collision_system == "PbPb" or interaction_rate >= interaction_rate_linear_below:
+        return n_workers_user
+
+    n_workers_min = max(1, n_workers_min)
+    m = (n_workers_user - n_workers_min) / interaction_rate_linear_below
+    # at least 1 worker
+    return max(1, round(m * interaction_rate + n_workers_min))
 
 def relativeCPU(n_rel, n_workers):
     # compute number of CPUs from a given number of workers
@@ -80,17 +107,43 @@ def createTask(name='', needs=[], tf=-1, cwd='./', lab=[], cpu=1, relative_cpu=N
              'cwd' : cwd }
 
 
-def createGlobalInitTask(envdict):
+def createGlobalInitTask(keys_values=None, set_defaults=True):
     """Returns a special task that is recognized by the executor as
        a task whose environment section is to be globally applied to all tasks of
        a workflow.
 
-       envdict: dictionary of environment variables and values to be globally applied to all tasks
+    Args:
+        keys_values: dict or None
+            dictionary of environment variables and values to be globally applied to all tasks
+            if sharing keys with defaults, keys_values takes precedence
+        set_defaults: bool
+            whether or not some default values will be added
+
+    Returns:
+        dict: task dictionary
     """
+
+    # dictionary holding global environment to be passed to task
+    env_dict = {}
+
+    if set_defaults:
+        if environ.get('ALICEO2_CCDB_LOCALCACHE') is None:
+            print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + getcwd() + '/ccdb')
+            env_dict['ALICEO2_CCDB_LOCALCACHE'] = getcwd() + "/ccdb"
+        else:
+        # fixes the workflow to use and remember externally provided path
+            env_dict['ALICEO2_CCDB_LOCALCACHE'] = environ.get('ALICEO2_CCDB_LOCALCACHE')
+        env_dict['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = '${ALICEO2_CCDB_LOCALCACHE:+"ON"}'
+
+    if keys_values:
+        # keys_values takes priority in case of same keys
+        env_dict |= keys_values
+
     t = createTask(name = '__global_init_task__')
     t['cmd'] = 'NO-COMMAND'
-    t['env'] = envdict
+    t['env'] = env_dict
     return t
+
 
 def summary_workflow(workflow):
     print("=== WORKFLOW SUMMARY ===\n")

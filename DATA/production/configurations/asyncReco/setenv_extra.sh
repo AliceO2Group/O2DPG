@@ -293,8 +293,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   ERROB="100e-8"
   [[ -z $TPCITSTIMEERR ]] && TPCITSTIMEERR="0.2"
   [[ -z $ITS_CONFIG || "$ITS_CONFIG" != *"--tracking-mode"* ]] && export ITS_CONFIG+=" --tracking-mode async"
-  CUT_MATCH_CHI2=160
-  export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=2.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;;tpcitsMatch.crudeAbsDiffCut[0]=6;tpcitsMatch.crudeAbsDiffCut[1]=6;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=5;tpcitsMatch.crudeNSigma2Cut[0]=100;tpcitsMatch.crudeNSigma2Cut[1]=100;tpcitsMatch.crudeNSigma2Cut[2]=100;tpcitsMatch.crudeNSigma2Cut[3]=100;tpcitsMatch.crudeNSigma2Cut[4]=100;"
+  [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] && CUT_MATCH_CHI2=80 || CUT_MATCH_CHI2=100
+  export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=2.;tpcitsMatch.XMatchingRef=60.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;;tpcitsMatch.crudeAbsDiffCut[0]=6;tpcitsMatch.crudeAbsDiffCut[1]=6;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=2.5;tpcitsMatch.crudeNSigma2Cut[0]=64;tpcitsMatch.crudeNSigma2Cut[1]=64;tpcitsMatch.crudeNSigma2Cut[2]=64;tpcitsMatch.crudeNSigma2Cut[3]=64;tpcitsMatch.crudeNSigma2Cut[4]=64;"
 
   #-------------------------------------- TPC corrections -----------------------------------------------
   # we need to provide to TPC
@@ -302,7 +302,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   # 2) what to use for corrections scaling (lumi or IDC scalers or no scaling at all) : TPC_SCALING_SOURCE
   # the default is to use CTP, unless specified differently in the JDL...
   INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-CTP}
-  TPC_SCALING_SOURCE=${ALIEN_JDL_TPCSCALINGSOURCE-CTP}
+  TPC_SCALING_SOURCE=${ALIEN_JDL_TPCSCALINGSOURCE-IDCCCDB}
   # MEAN_IR_FOR_TPC allows (1) to alter the map mean IR if >0 or (2) disable  all corrections if <0
   MEAN_IR_FOR_TPC=${ALIEN_JDL_MEANIRFORTPC-}
 
@@ -321,7 +321,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   fi
 
   DISABLE_CORRECTIONS=
-  [[ -n "$ALIEN_JDL_MSHAPE_CORRECTION" && $ALIEN_JDL_MSHAPE_CORRECTION == "0" ]] && ENABLE_MSHAPE=0 || ENABLE_MSHAPE=1
+  [[ -n "$ALIEN_JDL_MSHAPECORRECTION" && $ALIEN_JDL_MSHAPECORRECTION == "0" ]] && ENABLE_MSHAPE=0 || ENABLE_MSHAPE=1
   
   if [[ -n $MEAN_IR_FOR_TPC ]] ; then  # firs check if corrections were not disabled via MEAN_IR_FOR_TPC
     if [[ $MEAN_IR_FOR_TPC -gt 0 ]] ; then # positive value overrides map mean lumi
@@ -352,7 +352,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   elif [[ $INST_IR_FOR_TPC == "CTPCCDB" ]]; then # using what we have in the CCDB CTP counters, extracted at the beginning of the script
     echo "Using CTP CCDB which gave the mean IR of the run at the beginning of the script ($RUN_IR Hz)"
     export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$RUN_IR"
-  else echo "Unknown setting for INST_IR_FOR_TPC = $INST_IR_FOR_TPC (with ALIEN_JDL_INST_IR_FOR_TPC = $ALIEN_JDL_INST_IR_FOR_TPC)"
+  else echo "Unknown setting for INST_IR_FOR_TPC = $INST_IR_FOR_TPC (with ALIEN_JDL_INSTIRFORTPC = $ALIEN_JDL_INSTIRFORTPC)"
     return 1
   fi
 
@@ -384,7 +384,10 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export TPC_CORR_SCALING+=" --enable-M-shape-correction "
   fi
     
-   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] ; then
+  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] ; then
+    # adding additional cluster errors
+    # the values below should be squared, but the validation of those values (0.01 and 0.0225) is ongoing
+    TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;"    
     if [[ $SCALE_WITH_ZDC == 1 ]]; then
       echo "For 2023 PbPb ZDC inst. lumi applying factor 2.414"
       export TPC_CORR_SCALING+=";TPCCorrMap.lumiInstFactor=2.414;"
@@ -408,15 +411,12 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     echo "We are in period $PERIOD, we need to keep the correction for the TPC cluster time, since no new vdrift was extracted"
   fi
 
-  TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.1;trackTuneParams.tpcCovInner[1]=1.;trackTuneParams.tpcCovInner[2]=6.3e-4;trackTuneParams.tpcCovInner[3]=6.3e-3;trackTuneParams.tpcCovInner[4]=2.6e-3;"
-  TRACKTUNETPCOUTER="trackTuneParams.tpcCovOuterType=1;trackTuneParams.tpcCovOuter[0]=0.1;trackTuneParams.tpcCovOuter[1]=1.;trackTuneParams.tpcCovOuter[2]=6.3e-4;trackTuneParams.tpcCovOuter[3]=6.3e-3;trackTuneParams.tpcCovOuter[4]=2.6e-3;"
+  TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.1;trackTuneParams.tpcCovInner[1]=0.2;trackTuneParams.tpcCovInner[2]=6.e-4;trackTuneParams.tpcCovInner[3]=6.e-4;trackTuneParams.tpcCovInner[4]=2.6e-3;"
+  TRACKTUNETPCOUTER="trackTuneParams.tpcCovOuterType=1;trackTuneParams.tpcCovOuter[0]=0.1;trackTuneParams.tpcCovOuter[1]=0.2;trackTuneParams.tpcCovOuter[2]=6.e-4;trackTuneParams.tpcCovOuter[3]=6.e-4;trackTuneParams.tpcCovOuter[4]=2.6e-3;"
 
 fi
 
-# adding additional cluster errors
-# the values below should be squared, but the validation of those values (0.01 and 0.0225) is ongoing
-TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;"
-TRACKTUNETPC="$TPCEXTRAERR"
+TRACKTUNETPC=${TPCEXTRAERR-}
 
 # combining parameters
 [[ ! -z ${TRACKTUNETPCINNER:-} || ! -z ${TRACKTUNETPCOUTER:-} ]] && TRACKTUNETPC="$TRACKTUNETPC;trackTuneParams.sourceLevelTPC=true;$TRACKTUNETPCINNER;$TRACKTUNETPCOUTER"
@@ -497,6 +497,7 @@ export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$ITSEXTRAERR;$TRACKTUNETP
 
 if [[ $ALIEN_JDL_LPMPASSNAME == "cpass0" ]]; then
    CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";MatchTOF.nsigmaTimeCut=6;"
+   ARGS_EXTRA_PROCESS_o2_tof_reco_workflow+=" --for-calib"
 fi
 
 # ad-hoc settings for TRD matching
@@ -553,6 +554,12 @@ if [[ $ADD_CALIB == "1" ]]; then
   export CALIB_ZDC_TDC=0
   export CALIB_FT0_TIMEOFFSET=0
   export CALIB_TPC_SCDCALIB=0
+  export CALIB_FT0_INTEGRATEDCURR=0
+  export CALIB_FV0_INTEGRATEDCURR=0
+  export CALIB_FDD_INTEGRATEDCURR=0
+  export CALIB_TOF_INTEGRATEDCURR=0
+  export CALIB_ITS_DEADMAP_TIME=0
+  export CALIB_MFT_DEADMAP_TIME=0
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
@@ -582,38 +589,31 @@ if [[ $ADD_CALIB == "1" ]]; then
     export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow="$ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow --enable-root-output"
     export CALIB_TRD_GAIN=1
   fi
+  # extra workflows in case we want to process the currents for FT0, FV0, TOF, TPC
+  if [[ -n $ALIEN_JDL_EXTRACTCURRENTS ]] ; then
+    export CALIB_FT0_INTEGRATEDCURR=$ALIEN_JDL_EXTRACTCURRENTS
+    export CALIB_FV0_INTEGRATEDCURR=$ALIEN_JDL_EXTRACTCURRENTS
+    export CALIB_FDD_INTEGRATEDCURR=$ALIEN_JDL_EXTRACTCURRENTS
+    export CALIB_TOF_INTEGRATEDCURR=$ALIEN_JDL_EXTRACTCURRENTS
+    export CALIB_ASYNC_EXTRACTTPCCURRENTS=$ALIEN_JDL_EXTRACTCURRENTS
+  fi
+  if [[ -n $ALIEN_JDL_DISABLE3DCURRENTS ]]; then
+    export CALIB_ASYNC_DISABLE3DCURRENTS=$ALIEN_JDL_DISABLE3DCURRENTS
+  fi
+
+  # extra workflows in case we want to process the currents for time series
+  if [[ -n $ALIEN_JDL_EXTRACTTIMESERIES ]] ; then
+    echo "Adding timeseries in setenv_extra.sh"
+    export CALIB_ASYNC_EXTRACTTIMESERIES=$ALIEN_JDL_EXTRACTTIMESERIES
+    if [[ -n $ALIEN_JDL_ENABLEUNBINNEDTIMESERIES ]]; then
+      export CALIB_ASYNC_ENABLEUNBINNEDTIMESERIES=$ALIEN_JDL_ENABLEUNBINNEDTIMESERIES
+    fi
+    if [[ -n $ALIEN_JDL_SAMPLINGFACTORTIMESERIES ]]; then
+      export CALIB_ASYNC_SAMPLINGFACTORTIMESERIES=$ALIEN_JDL_SAMPLINGFACTORTIMESERIES
+    fi
+  fi
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
     export CCDB_POPULATOR_UPLOAD_PATH="file://$PWD"
-  fi
-fi
-
-# extra workflows in case we want to process the currents for FT0, FV0, TOF, TPC
-if [[ $ALIEN_JDL_EXTRACTCURRENTS == 1 ]]; then
-  if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
-  has_detector_reco FT0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-ft0-integrate-cluster-workflow"
-  has_detector_reco FV0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-fv0-integrate-cluster-workflow"
-  has_detector_reco TOF && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tof-integrate-cluster-workflow"
-  if [[ $ALIEN_JDL_DISABLE3DCURRENTS != 1 ]]; then
-    export ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_integrate_cluster_workflow--process-3D-currents --nSlicesTF 1"
-  fi
-  has_detector_reco TPC && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-integrate-cluster-workflow"
-fi
-
-# extra workflows in case we want to process the currents for time series
-if [[ $ALIEN_JDL_EXTRACTTIMESERIES == 1 ]]; then
-  if [[ -z "${WORKFLOW_DETECTORS_RECO+x}" ]] || [[ "0$WORKFLOW_DETECTORS_RECO" == "0ALL" ]]; then export WORKFLOW_DETECTORS_RECO=$WORKFLOW_DETECTORS; fi
-  has_detector_reco TPC && has_detector_reco ITS && has_detector_reco FT0 && add_comma_separated ADD_EXTRA_WORKFLOW "o2-tpc-time-series-workflow"
-  if [[ ! -z "$ALIEN_JDL_ENABLEUNBINNEDTIMESERIES" ]]; then
-    export ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow --enable-unbinned-root-output --sample-unbinned-tsallis --threads 1"
-  fi
-  if [[ $ON_SKIMMED_DATA == 1 ]] || [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]] ; then
-    if [[ $ON_SKIMMED_DATA == 1 ]] ; then
-      SAMPLINGFACTORTIMESERIES=0.1f
-    fi
-    if [[ ! -z "$ALIEN_JDL_SAMPLINGFACTORTIMESERIES" ]]; then # this takes priority
-      export SAMPLINGFACTORTIMESERIES=${ALIEN_JDL_SAMPLINGFACTORTIMESERIES}
-    fi
-    export ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_time_series_workflow --sampling-factor ${ALIEN_JDL_SAMPLINGFACTORTIMESERIES}"
   fi
 fi
 
@@ -625,7 +625,29 @@ fi
 # ad-hoc settings for AOD
 echo ALIEN_JDL_LPMPRODUCTIONTAG = $ALIEN_JDL_LPMPRODUCTIONTAG
 echo ALIEN_JDL_LPMPASSNAME = $ALIEN_JDL_LPMPASSNAME
-export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="$ARGS_EXTRA_PROCESS_o2_aod_producer_workflow --aod-writer-maxfilesize $AOD_FILE_SIZE --lpmp-prod-tag $ALIEN_JDL_LPMPRODUCTIONTAG --reco-pass $ALIEN_JDL_LPMPASSNAME"
+# Track QC table sampling
+if [[ -n $ALIEN_JDL_TRACKQCFRACTION ]]; then
+  TRACKQC_FRACTION=$ALIEN_JDL_TRACKQCFRACTION
+else
+  if [[ $ALIEN_JDL_ENABLEPERMILFULLTRACKQC == "1" ]]; then
+    PERMIL_FULLTRACKQC=${ALIEN_JDL_PERMILFULLTRACKQC:-100}
+    INVERSE_PERMIL_FULLTRACKQC=$((1000/PERMIL_FULLTRACKQC))
+    if [[ -f wn.xml ]]; then
+      HASHCODE=`grep alien:// wn.xml | tr ' ' '\n' | grep ^lfn | cut -d\" -f2 | head -1 | cksum | cut -d ' ' -f 1`
+    else
+      HASHCODE=`echo "${inputarg}" | cksum | cut -d ' ' -f 1`
+    fi
+    if [[ "$((HASHCODE%INVERSE_PERMIL_FULLTRACKQC))" -eq "0" ]]; then
+      TRACKQC_FRACTION=1
+    else
+      TRACKQC_FRACTION=0.1
+    fi
+  else
+    TRACKQC_FRACTION=0.1
+  fi
+fi
+echo TRACKQC_FRACTION = $TRACKQC_FRACTION
+export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="$ARGS_EXTRA_PROCESS_o2_aod_producer_workflow --aod-writer-maxfilesize $AOD_FILE_SIZE --lpmp-prod-tag $ALIEN_JDL_LPMPRODUCTIONTAG --reco-pass $ALIEN_JDL_LPMPASSNAME --trackqc-fraction $TRACKQC_FRACTION"
 if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC22e" ]] || [[ $PERIOD == "JUN" ]] || [[ $PERIOD == "LHC22f" ]] || [[ $PERIOD == "LHC22m" ]] || [[ "$RUNNUMBER" == @(526463|526465|526466|526467|526468|526486|526505|526508|526510|526512|526525|526526|526528|526534|526559|526596|526606|526612|526638|526639|526641|526643|526647|526649|526689|526712|526713|526714|526715|526716|526719|526720|526776|526886|526926|526927|526928|526929|526934|526935|526937|526938|526963|526964|526966|526967|526968|527015|527016|527028|527031|527033|527034|527038|527039|527041|527057|527076|527108|527109|527228|527237|527259|527260|527261|527262|527345|527347|527349|527446|527518|527523|527734) ]] ; then
   export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="$ARGS_EXTRA_PROCESS_o2_aod_producer_workflow --ctpreadout-create 1"
 fi

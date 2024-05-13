@@ -9,7 +9,7 @@ echo "Trying to run script ${SCRIPT} in a container environment"
 
 # detect architecture (ARM or X86)
 ARCH=$(uname -i)
-if [ "$ARCH" == "aarch64" ] || [ "$arch" == "x86" ]; then
+if [ "$ARCH" == "aarch64" ] || [ "$ARCH" == "x86_64" ]; then
     echo "Detected hardware architecture : $ARCH"
 else
     echo "Invalid architecture ${ARCH} detected. Exiting"
@@ -35,9 +35,9 @@ fi
 # copy script to WORK_DIR
 cp ${SCRIPT} ${WORK_DIR}/job.sh
 
-# export certificates (need to be created before)
-ALIEN_CERTFILE=$(ls -t /tmp/tokencert_*.pem 2> /dev/null | head -n 1)
-ALIEN_KEYFILE=$(ls -t /tmp/tokenkey_*.pem 2> /dev/null | head -n 1)
+# export certificates - belonging to current user (need to be created before)
+ALIEN_CERTFILE=$(find /tmp -type f -name 'tokencert*pem' -user `whoami` 2> /dev/null)
+ALIEN_KEYFILE=$(find /tmp -type f -name 'tokenkey*pem' -user `whoami` 2> /dev/null)
 
 [ "${ALIEN_CERTFILE}" == "" ] && echo "No certificate file found; Initialize a token with alien-init-token or similar" && exit 1
 [ "${ALIEN_KEYFILE}" == "" ] && echo "No certificate file found; Initialize a token with alien-init-token or similar" && exit 1

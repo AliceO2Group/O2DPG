@@ -1,0 +1,124 @@
+{
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+            "host": "ccdb-test.cern.ch:8080",
+            "username": "not_applicable",
+            "password": "not_applicable",
+            "name": "not_applicable"
+      },
+      "Activity": {
+          "number": "42",
+          "type": "2",
+          "provenance": "qc_mc",
+          "passName": "passMC",
+          "periodName": "SimChallenge"
+      },
+      "monitoring": {
+          "url": "no-op://"
+      },
+      "consul": {
+        "url": ""
+      },
+      "conditionDB": {
+        "url": "alice-ccdb.cern.ch"
+      }
+    },
+    "tasks": {
+      "MIDDigits": {
+        "active": "true",
+        "taskName": "Digits",
+        "className": "o2::quality_control_modules::mid::DigitsQcTask",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "cycleDurationSeconds": "60",
+        "dataSource": {
+          "type": "direct",
+              "query": "digits:MID/DATA;digits_rof:MID/DATAROF"
+        }
+      },
+      "MIDClusters": {
+        "active": "true",
+        "taskName": "Clusters",
+        "className": "o2::quality_control_modules::mid::ClustQcTask",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "cycleDurationSeconds": "60",
+        "dataSource": {
+          "type": "direct",
+              "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS"
+        }
+      },
+      "MIDTracks": {
+        "active": "true",
+        "taskName": "Tracks",
+        "className": "o2::quality_control_modules::mid::TracksQcTask",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "cycleDurationSeconds": "60",
+        "dataSource": {
+          "type": "direct",
+              "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS"
+        }
+      }
+    },
+    "checks": {
+      "MIDDigits": {
+        "active": "true",
+        "checkName": "Digits",
+        "className": "o2::quality_control_modules::mid::DigitsQcCheck",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "policy": "OnAny",
+        "checkParameters": {
+          "MeanMultThreshold": "100.",
+          "MinMultThreshold": "0.0",
+          "NbOrbitPerTF": "32.",
+          "LocalBoardScale": "200.0",
+          "LocalBoardThreshold": "800.0",
+          "NbBadLocalBoard": "10.",
+          "NbEmptyLocalBoard": "117."
+        },
+        "dataSource": [
+          {
+            "type": "Task",
+            "name": "MIDDigits"
+          }
+        ]
+      },
+      "MIDClusters": {
+        "active": "true",
+        "checkName": "Clusters",
+        "className": "o2::quality_control_modules::mid::ClustQcCheck",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "policy": "OnAny",
+        "dataSource": [
+          {
+            "type": "Task",
+            "name": "MIDClusters"
+          }
+        ]
+      },
+      "MIDTracks": {
+        "active": "true",
+        "checkName": "Tracks",
+        "className": "o2::quality_control_modules::mid::TracksQcCheck",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "policy": "OnAny",
+        "checkParameters": {
+          "Ratio44Threshold": "0.1"
+        },
+        "dataSource": [
+          {
+            "type": "Task",
+            "name": "MIDTracks"
+          }
+        ]
+      }
+    }
+  },
+  "dataSamplingPolicies": []
+}

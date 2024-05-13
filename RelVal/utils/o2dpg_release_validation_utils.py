@@ -280,8 +280,21 @@ class RelVal:
         def load_this_patterns(patterns):
             if not patterns or not patterns[0].startswith("@"):
                 return patterns
-            with open(patterns[0][1:], "r") as f:
-                return f.read().splitlines()
+
+            patterns_from_file = []
+            filename = patterns[0][1:]
+            if not exists(filename):
+                print(f"WARNING: Pattern file {filename} does not exist, not extracting any patterns!")
+                return
+            with open(filename, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    # remove all comments; allows for inline comments or entire comment lines), then take the first token
+                    line = line.split("#")[0].strip()
+                    if not line:
+                        continue
+                    patterns_from_file.append(line)
+            return patterns_from_file
 
         self.include_patterns = load_this_patterns(include_patterns)
         self.exclude_patterns = load_this_patterns(exclude_patterns)
@@ -393,7 +406,7 @@ class RelVal:
                 idx, metric = self.get_metric_checking_dict(line)
                 if idx is None:
                     # in this case, this metric is new
-                    idx = len(self.metrics) - 1
+                    idx = len(self.metrics)
                     if not self.add_metric(metric):
                         # only attempt to add if that metric is not yet there
                         continue

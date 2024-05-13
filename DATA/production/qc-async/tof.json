@@ -33,7 +33,7 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS;diafreq:TOF/DIAFREQ/0",
+          "query": "tofdigits:TOF/DIGITS/0;readoutwin:TOF/READOUTWINDOW/0;patterns:TOF/PATTERNS;diafreq:TOF/DIAFREQ/0;channelCalib:TOF/CHCALIB/0?lifetime=condition&ccdb-path=TOF/Calib/ChannelCalib;lhcPhase:TOF/LHCP/0?lifetime=condition&ccdb-path=TOF/Calib/LHCphase",
           "query_comment" : "100% sampling"
         },
         "taskParameters": {
@@ -41,7 +41,7 @@
           "PerChannel": "True",
           "RangeMaxMultiplicity": "15000",
           "NbinsMultiplicity": "15000",
-          "applyCalib": "True",
+          "applyCalib": "False",
           "NoiseClassSelection": "1"
         },
 	  "grpGeomRequest" : {

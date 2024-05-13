@@ -58,6 +58,16 @@
           "timeBinSize" : "0.1",
           "ROFLengthInBC" : "594"
         },
+        "grpGeomRequest" : {
+          "geomRequest": "None",
+          "askGRPECS": "true",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "false",
+          "needPropagatorD": "false"
+        },
         "location": "local",
         "localMachines" : [ "flp" ], 
         "remoteMachine": "any",
@@ -75,21 +85,22 @@
           "name": "mft-clusters"
         },
         "taskParameters" : {
+          "onlineQC" : "1",
           "maxClusterROFSize" : "50000",
           "maxDuration" : "60000",
           "timeBinSize" : "0.1",
           "ROFLengthInBC" : "594"
         },
-	"grpGeomRequest" : {
-          "geomRequest": "Aligned",
-          "askGRPECS": "false",
+        "grpGeomRequest" : {
+          "geomRequest": "None",
+          "askGRPECS": "true",
           "askGRPLHCIF": "false",
-          "askGRPMagField": "true",
+          "askGRPMagField": "false",
           "askMatLUT": "false",
           "askTime": "false",
-          "askOnceAllButField": "true",
-            "needPropagatorD":  "false"
-	},
+          "askOnceAllButField": "false",
+          "needPropagatorD": "false"
+        },
         "location": "local",
         "localMachines": [
           "epn", "localhost"
@@ -108,6 +119,16 @@
         "dataSource" : {
           "type" : "direct",
           "query" : "tracks:MFT/TRACKS/0;tracksrofs:MFT/MFTTrackROF/0;clustersrofs:MFT/CLUSTERSROF/0"
+        },
+        "grpGeomRequest" : {
+          "geomRequest": "None",
+          "askGRPECS": "true",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "false",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "false",
+          "needPropagatorD": "false"
         },
         "location": "local",
         "localMachines": [

@@ -20,7 +20,7 @@
 import sys
 import importlib.util
 import argparse
-from os import environ, mkdir, getcwd
+from os import environ, mkdir
 from os.path import join, dirname, isdir, isabs
 import random
 import json
@@ -34,7 +34,7 @@ except (ImportError, ValueError):  # ARM architecture has problems with pandas +
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
-from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector
+from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
 from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg
 
@@ -49,6 +49,7 @@ parser.add_argument('-productionTag',help="Production tag for this MC", default=
 # - we can also sample it ourselfs here
 parser.add_argument('--timestamp', type=int, help="Anchoring timestamp (defaults to now)", default=-1)
 parser.add_argument('--conditionDB',help="CCDB url for QC workflows", default='http://alice-ccdb.cern.ch')
+parser.add_argument('--qcdbHost',help="QCDB url for QC object uploading", default='http://ali-qcdbmc-gpn.cern.ch:8083')
 parser.add_argument('--condition-not-after', type=int, help="only consider CCDB objects not created after this timestamp (for TimeMachine)", default=3385078236000)
 parser.add_argument('--orbitsPerTF', type=int, help="Timeframe size in number of LHC orbits", default=128)
 parser.add_argument('--anchor-config',help="JSON file to contextualise workflow with external configs (config values etc.) for instance comping from data reco workflows.", default='')
@@ -59,6 +60,7 @@ parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...
 parser.add_argument('-trigger',help='event selection: particle, external', default='')
 parser.add_argument('-ini',help='generator init parameters file (full paths required), for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
+parser.add_argument('--readoutDets',help='comma separated string of detectors readout (does not modify material budget - only hit creation)', default='all')
 
 parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
 parser.add_argument('-bcPatternFile',help='Bunch crossing pattern file, used in digitization (a file name or "ccdb")', default='')
@@ -83,12 +85,15 @@ parser.add_argument('-iniBkg',help='embedding background generator init paramete
 parser.add_argument('-confKeyBkg',help='embedding background configuration key values, for example: "GeneratorPythia8.config=pythia8bkg.cfg"', default='')
 parser.add_argument('-colBkg',help='embedding background collision system', default='PbPb')
 
-parser.add_argument('-e',help='simengine', default='TGeant4')
+parser.add_argument('-e',help='simengine', default='TGeant4', choices=['TGeant4', 'TGeant3', 'TFluka'])
 parser.add_argument('-tf',help='number of timeframes', default=2)
 parser.add_argument('--production-offset',help='Offset determining bunch-crossing '
                      + ' range within a (GRID) production. This number sets first orbit to '
                      + 'Offset x Number of TimeFrames x OrbitsPerTimeframe (up for further sophistication)', default=0)
-parser.add_argument('-j',help='number of workers (if applicable)', default=8, type=int)
+parser.add_argument('-j', '--n-workers', dest='n_workers', help='number of workers (if applicable)', default=8, type=int)
+parser.add_argument('--force-n-workers', dest='force_n_workers', action='store_true', help='by default, number of workers is re-computed '
+                                                                                           'for given interaction rate if --pregenCollContext is set; '
+                                                                                           'pass this to avoid that')
 parser.add_argument('-mod',help='Active modules (deprecated)', default='--skipModules ZDC')
 parser.add_argument('--with-ZDC', action='store_true', help='Enable ZDC in workflow')
 parser.add_argument('-seed',help='random seed number', default=None)
@@ -109,14 +114,15 @@ parser.add_argument('--no-combine-smaller-digi', action='store_true', help=argpa
 parser.add_argument('--no-combine-dpl-devices', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--no-mc-labels', action='store_true', default=False, help=argparse.SUPPRESS)
 parser.add_argument('--no-tpc-digitchunking', action='store_true', help=argparse.SUPPRESS)
-parser.add_argument('--with-strangeness-tracking', action='store_true', default=False, help="Enable strangeness tracking")
+parser.add_argument('--no-strangeness-tracking', action='store_true', default=False, help="Disable strangeness tracking")
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring)
                                                             # (consider doing this rather in O2 digitization code directly)
 parser.add_argument('--sor', default=-1, type=int, help=argparse.SUPPRESS) # may pass start of run with this (otherwise it is autodetermined from run number)
 parser.add_argument('--run-anchored', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--alternative-reco-software', default="", help=argparse.SUPPRESS) # power feature to set CVFMS alienv software version for reco steps (different from default)
-parser.add_argument('--dpl-child-driver', default="", help="Child driver to use in DPL processes (export mode)")
+parser.add_argument('--dpl-child-driver', default="", help="Child driver to use in DPL processes (expert mode)")
+parser.add_argument('--event-gen-mode', choices=['separated', 'integrated'], default='separated', help="Whether event generation is done before (separated) or within detector simulation (integrated).")
 
 # QC related arguments
 parser.add_argument('--include-qc', '--include-full-qc', action='store_true', help='includes QC in the workflow, both per-tf processing and finalization')
@@ -130,6 +136,9 @@ parser.add_argument('--include-analysis', '--include-an', '--analysis',
 parser.add_argument('--mft-reco-full', action='store_true', help='enables complete mft reco instead of simplified misaligned version')
 parser.add_argument('--mft-assessment-full', action='store_true', help='enables complete assessment of mft reco')
 
+# TPC options
+parser.add_argument('--tpc-distortion-type', default=0, type=int, help='Simulate distortions in the TPC (0=no distortions, 1=distortions without scaling, 2=distortions with CTP scaling)')
+parser.add_argument('--ctp-scaler', default=0, type=float, help='CTP raw scaler value used for distortion simulation')
 # Global Forward reconstruction configuration
 parser.add_argument('--fwdmatching-assessment-full', action='store_true', help='enables complete assessment of global forward reco')
 parser.add_argument('--fwdmatching-4-param', action='store_true', help='excludes q/pt from matching parameters')
@@ -193,13 +202,35 @@ with open(config_key_param_path, "w") as f:
    print(f"INFO: Written additional config key parameters to JSON {config_key_param_path}")
    json.dump(anchorConfig, f, indent=2)
 
+def get_anchor_env_var(key, default):
+   return anchorConfig.get('env_vars',{}).get(key, default)
+
 # with this we can tailor the workflow to the presence of
 # certain detectors
+# these are all detectors that should be assumed active
+readout_detectors = args.readoutDets
+# here are all detectors that have been set in an anchored script
 activeDetectors = anchorConfig.get('o2-ctf-reader-workflow-options',{}).get('onlyDet','all')
+if activeDetectors == 'all':
+    # if "all" here, there was in fact nothing in the anchored script, set to what is passed to this script (which it either also "all" or a subset)
+    activeDetectors = readout_detectors
+elif readout_detectors != 'all' and activeDetectors != 'all':
+    # in this case both are comma-seperated lists. Take intersection
+    r = set(readout_detectors.split(','))
+    a = set(activeDetectors.split(','))
+    activeDetectors = ','.join(r & a)
+# the last case: simply take what comes from the anchored config
+
 # convert to set/hashmap
-activeDetectors = { det:1 for det in activeDetectors.split(",") }
+activeDetectors = { det:1 for det in activeDetectors.split(',') }
 for det in activeDetectors:
     activate_detector(det)
+
+if not args.with_ZDC:
+   # deactivate to be able to use isActive consistently for ZDC
+   deactivate_detector('ZDC')
+   if 'ZDC' in activeDetectors:
+       del activeDetectors['ZDC']
 
 def addWhenActive(detID, needslist, appendstring):
    if isActive(detID):
@@ -289,8 +320,8 @@ if args.timestamp==-1:
    args.timestamp = args.sor
 
 NTIMEFRAMES=int(args.tf)
-NWORKERS=args.j
-MODULES = "--skipModules ZDC" if not args.with_ZDC else ""
+NWORKERS=args.n_workers
+MODULES = "--skipModules ZDC" if not isActive("ZDC") else ""
 SIMENGINE=args.e
 BFIELD=args.field
 RNDSEED=args.seed # typically the argument should be the jobid, but if we get None the current time is used for the initialisation
@@ -302,20 +333,8 @@ workflow={}
 workflow['stages'] = []
 
 ### setup global environment variables which are valid for all tasks
-globalenv = {}
-if args.condition_not_after:
-   # this is for the time-machine CCDB mechanism
-   globalenv['ALICEO2_CCDB_CONDITION_NOT_AFTER'] = args.condition_not_after
-   # this is enforcing the use of local CCDB caching
-   if environ.get('ALICEO2_CCDB_LOCALCACHE') == None:
-       print ("ALICEO2_CCDB_LOCALCACHE not set; setting to default " + getcwd() + '/ccdb')
-       globalenv['ALICEO2_CCDB_LOCALCACHE'] = getcwd() + "/ccdb"
-   else:
-       # fixes the workflow to use and remember externally provided path
-       globalenv['ALICEO2_CCDB_LOCALCACHE'] = environ.get('ALICEO2_CCDB_LOCALCACHE')
-   globalenv['IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE'] = '${ALICEO2_CCDB_LOCALCACHE:+"ON"}'
-
-globalinittask = createGlobalInitTask(globalenv)
+global_env = {'ALICEO2_CCDB_CONDITION_NOT_AFTER': args.condition_not_after} if args.condition_not_after else None
+globalinittask = createGlobalInitTask(global_env)
 globalinittask['cmd'] = 'o2-ccdb-cleansemaphores -p ${ALICEO2_CCDB_LOCALCACHE}'
 workflow['stages'].append(globalinittask)
 ####
@@ -443,7 +462,7 @@ if doembedding:
                      + ('',' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)        \
                      + ' --vertexMode kCCDB'
 
-        if not "all" in activeDetectors:
+        if not isActive('all'):
            BKGtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
 
         workflow['stages'].append(BKGtask)
@@ -474,9 +493,7 @@ if doembedding:
         workflow['stages'].append(BKG_HEADER_task)
 
 # a list of smaller sensors (used to construct digitization tasks in a parametrized way)
-smallsensorlist = [ "ITS", "TOF", "FDD", "MCH", "MID", "MFT", "HMP", "PHS", "CPV" ]
-if args.with_ZDC:
-   smallsensorlist += [ "ZDC" ]
+smallsensorlist = [ "ITS", "TOF", "FDD", "MCH", "MID", "MFT", "HMP", "PHS", "CPV", "ZDC" ]
 # a list of detectors that serve as input for the trigger processor CTP --> these need to be processed together for now
 ctp_trigger_inputlist = [ "FT0", "FV0", "EMC" ]
 
@@ -638,6 +655,9 @@ for tf in range(1, NTIMEFRAMES + 1):
      QEDdigiargs=' --simPrefixQED qed_' + str(tf) +  ' --qed-x-section-ratio ' + str(QEDXSecExpected/PbPbXSec)
      workflow['stages'].append(QED_task)
 
+   # recompute the number of workers to increase CPU efficiency
+   NWORKERS_TF = compute_n_workers(INTRATE, COLTYPE) if (args.pregenCollContext and not args.force_n_workers) else NWORKERS
+
    # produce the signal configuration
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)
    SGN_CONFIG_task['cmd'] = 'echo "placeholder / dummy task"'
@@ -665,7 +685,6 @@ for tf in range(1, NTIMEFRAMES + 1):
                                   --ptHatMax='+str(PTHATMAX)
          if WEIGHTPOW   > 0:
             SGN_CONFIG_task['cmd'] = SGN_CONFIG_task['cmd'] + ' --weightPow=' + str(WEIGHTPOW)
-
       # if we configure pythia8 here --> we also need to adjust the configuration
       # TODO: we need a proper config container/manager so as to combine these local configs with external configs etc.
       args.confKey = args.confKey + ";GeneratorPythia8.config=pythia8.cfg"
@@ -673,18 +692,17 @@ for tf in range(1, NTIMEFRAMES + 1):
    # elif GENERATOR == 'extgen': what do we do if generator is not pythia8?
        # NOTE: Generator setup might be handled in a different file or different files (one per
        # possible generator)
+
    workflow['stages'].append(SGN_CONFIG_task)
 
    # determine final conf key for signal simulation
    CONFKEY = constructConfigKeyArg(create_geant_config(args, args.confKey))
-
    # -----------------
    # transport signals
    # -----------------
    signalneeds=[ SGN_CONFIG_task['name'], GRP_TASK['name'] ]
    if (args.pregenCollContext == True):
       signalneeds.append(PreCollContextTask['name'])
-
 
    # add embedIntoFile only if embeddPattern does contain a '@'
    embeddinto= "--embedIntoFile ../bkg_MCHeader.root" if (doembedding & ("@" in args.embeddPattern)) else ""
@@ -694,18 +712,37 @@ for tf in range(1, NTIMEFRAMES + 1):
             signalneeds = signalneeds + [ BKGtask['name'] ]
        else:
             signalneeds = signalneeds + [ BKG_HEADER_task['name'] ]
+
+   # (separate) event generation task
+   sep_event_mode = args.event_gen_mode == 'separated'
+   SGNGENtask=createTask(name='sgngen_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEN"],
+                         cpu=1, mem=1000)
+   SGNGENtask['cmd']='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode kCCDB'           \
+                     + ' --run ' + str(args.run) + ' ' + str(CONFKEY) + str(TRIGGER)                  \
+                     + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
+                     + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1]                \
+                     + ' --seed ' + str(TFSEED) + ' -n ' + str(NSIGEVENTS)
+   if args.pregenCollContext == True:
+      SGNGENtask['cmd'] += ' --fromCollContext collisioncontext.root:' + signalprefix
+   if sep_event_mode == True:
+      workflow['stages'].append(SGNGENtask)
+      signalneeds = signalneeds + [SGNGENtask['name']]
+
    sgnmem = 6000 if COLTYPE == 'PbPb' else 4000
-   SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"], relative_cpu=7/8, n_workers=NWORKERS, mem=str(sgnmem))
-   SGNtask['cmd']='${O2_ROOT}/bin/o2-sim -e '  + str(SIMENGINE) + ' '    + str(MODULES)  + ' -n ' + str(NSIGEVENTS) + ' --seed ' + str(TFSEED) \
-                  + ' --field ccdb -j ' + str(NWORKERS) + ' -g ' + str(GENERATOR)   \
-                  + ' '         + str(TRIGGER)   + ' '    + str(CONFKEY)  + ' '    + str(INIFILE)     \
-                  + ' -o '      + signalprefix   + ' '    + embeddinto                                \
-                  + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)   \
-                  + ' --vertexMode kCCDB'
-   if not "all" in activeDetectors:
+   SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"],
+                      relative_cpu=7/8, n_workers=NWORKERS_TF, mem=str(sgnmem))
+   sgncmdbase = '${O2_ROOT}/bin/o2-sim -e ' + str(SIMENGINE) + ' '  + str(MODULES) + ' -n ' + str(NSIGEVENTS) + ' --seed ' + str(TFSEED)       \
+              + ' --field ccdb -j ' + str(NWORKERS_TF) + ' ' + str(CONFKEY) + ' ' + str(INIFILE) + ' -o ' + signalprefix + ' ' + embeddinto       \
+              + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)
+   if sep_event_mode:
+      SGNtask['cmd'] = sgncmdbase + ' -g extkinO2 --extKinFile genevents_Kine.root ' + ' --vertexMode kNoVertex'
+   else:
+      SGNtask['cmd'] = sgncmdbase + ' -g ' + str(GENERATOR) + ' ' + str(TRIGGER) + ' --vertexMode kCCDB '
+   if not isActive('all'):
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
    if args.pregenCollContext == True:
       SGNtask['cmd'] += ' --fromCollContext collisioncontext.root'
+
    workflow['stages'].append(SGNtask)
 
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
@@ -836,42 +873,62 @@ for tf in range(1, NTIMEFRAMES + 1):
    # The :r flag means to shuffle the background events randomly
    if doembedding:
       ContextTask['cmd'] += ';ln -nfs ../bkg_Kine.root .;${O2_ROOT}/bin/o2-steer-colcontexttool -i bkg,' + str(INTRATE) + ',' + str(args.ns) + ':' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF) + ' --use-existing-kine'
-      ContextTask['cmd'] += ' --bcPatternFile ccdb --seed ' + str(TFSEED)
+      ContextTask['cmd'] += ' --bcPatternFile ccdb --seed ' + str(TFSEED) + ' --orbits ' + str(orbitsPerTF) + ' --noEmptyTF --first-orbit ' + str(args.first_orbit)
 
    workflow['stages'].append(ContextTask)
 
+   # ===| TPC digi part |===
+   CTPSCALER = args.ctp_scaler
+   tpcDistortionType=args.tpc_distortion_type
+   print(f"TPC distortion simulation: type = {tpcDistortionType}, CTP scaler value {CTPSCALER}");
    tpcdigineeds=[ContextTask['name'], LinkGRPFileTask['name'], TPC_SPACECHARGE_DOWNLOADER_TASK['name']]
    if usebkgcache:
       tpcdigineeds += [ BKG_HITDOWNLOADER_TASKS['TPC']['name'] ]
 
+   tpcLocalCF={"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF), "DigiParams.seed" : str(TFSEED)}
+
+   # handle distortions and scaling using MC maps
+   # this assumes the lumi inside the maps is stored in FT0 (pp) scalers
+   # in case of PbPb the conversion factor ZDC ->FT0 (pp) must be taken into account in the scalers
+   if tpcDistortionType == 2 and CTPSCALER <= 0:
+       print('Warning: lumi scaling requested, but no ctp scaler value set. Full map will be applied at face value.')
+       tpcDistortionType=1
+
+   lumiInstFactor=1
+   if COLTYPE == 'PbPb':
+      lumiInstFactor=2.414
+
+   if tpcDistortionType == 2:
+      tpcLocalCF['TPCCorrMap.lumiInst'] = str(CTPSCALER * lumiInstFactor)
    tpcdigimem = 12000 if havePbPb else 9000
    TPCDigitask=createTask(name='tpcdigi_'+str(tf), needs=tpcdigineeds,
-                          tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu=NWORKERS, mem=str(tpcdigimem))
+                          tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu=NWORKERS_TF, mem=str(tpcdigimem))
    TPCDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTPC.root . ;')[doembedding]
-   TPCDigitask['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption \
-                         + ' --onlyDet TPC --TPCuseCCDB --interactionRate ' + str(INTRATE) + '  --tpc-lanes ' + str(NWORKERS)       \
-                         + ' --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini --early-forward-policy always '               \
+   TPCDigitask['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption       \
+                         + ' --onlyDet TPC --TPCuseCCDB --interactionRate ' + str(INTRATE) + '  --tpc-lanes ' + str(NWORKERS_TF)             \
+                         + ' --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini --early-forward-policy always --forceSelectedDets ' \
+                         + ' --tpc-distortion-type ' + str(tpcDistortionType)                                                             \
                          + putConfigValuesNew(["TPCGasParam","TPCGEMParam","TPCEleParam","TPCITCorr","TPCDetParam"],
-                                              localCF={"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF), "DigiParams.seed" : str(TFSEED)})
+                                              localCF=tpcLocalCF)
    TPCDigitask['cmd'] += (' --tpc-chunked-writer','')[args.no_tpc_digitchunking]
    TPCDigitask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    # we add any other extra command line options (power user customization) with an environment variable
    if environ.get('O2DPG_TPC_DIGIT_EXTRA') != None:
       TPCDigitask['cmd'] += ' ' + environ['O2DPG_TPC_DIGIT_EXTRA']
    workflow['stages'].append(TPCDigitask)
+   # END TPC digi part
 
    trddigineeds = [ContextTask['name']]
    if usebkgcache:
       trddigineeds += [ BKG_HITDOWNLOADER_TASKS['TRD']['name'] ]
    TRDDigitask=createTask(name='trddigi_'+str(tf), needs=trddigineeds,
-                          tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu=NWORKERS, mem='8000')
+                          tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu=NWORKERS_TF, mem='8000')
    TRDDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTRD.root . ;')[doembedding]
    TRDDigitask['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption         \
                          + ' --onlyDet TRD --interactionRate ' + str(INTRATE) + ' --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' \
-                         + putConfigValuesNew(localCF={"TRDSimParams.digithreads" : NWORKERS, "DigiParams.seed" : str(TFSEED)})
+                         + putConfigValuesNew(localCF={"TRDSimParams.digithreads" : NWORKERS_TF, "DigiParams.seed" : str(TFSEED)}) + " --forceSelectedDets"
    TRDDigitask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
-   if isActive("TRD"):
-      workflow['stages'].append(TRDDigitask)
+   workflow['stages'].append(TRDDigitask)
 
    # these are digitizers which are single threaded
    def createRestDigiTask(name, det='ALLSMALLER'):
@@ -891,31 +948,25 @@ for tf in range(1, NTIMEFRAMES + 1):
                         tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
          t['cmd'] = ('','ln -nfs ../bkg_Hits*.root . ;')[doembedding]
          detlist = ''
-         for d in smallsensorlist:
-             if isActive(d):
-                if len(detlist) > 0:
-                   detlist += ','
-                detlist += d
+         detlist = ','.join(smallsensorlist)
          t['cmd'] += commondigicmd + ' --onlyDet ' + detlist
-         t['cmd'] += ' --ccdb-tof-sa '
+         t['cmd'] += ' --ccdb-tof-sa --forceSelectedDets '
          t['cmd'] += (' --combine-devices ','')[args.no_combine_dpl_devices]
          t['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
          workflow['stages'].append(t)
          return t
 
       else: # here we create individual digitizers
-         if isActive(det):
-            if usebkgcache:
-              tneeds += [ BKG_HITDOWNLOADER_TASKS[det]['name'] ]
-            t = createTask(name=name, needs=tneeds,
-                     tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
-            t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
-            t['cmd'] += commondigicmd + ' --onlyDet ' + str(det)
-            t['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
-            if det == 'TOF':
-               t['cmd'] += ' --ccdb-tof-sa'
-            workflow['stages'].append(t)
-            return t
+         if usebkgcache:
+           tneeds += [ BKG_HITDOWNLOADER_TASKS[det]['name'] ]
+         t = createTask(name=name, needs=tneeds, tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
+         t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
+         t['cmd'] += commondigicmd + ' --onlyDet ' + str(det)
+         t['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
+         if det == 'TOF':
+            t['cmd'] += ' --ccdb-tof-sa'
+         workflow['stages'].append(t)
+         return t
 
    det_to_digitask={}
 
@@ -932,18 +983,19 @@ for tf in range(1, NTIMEFRAMES + 1):
    tneeds = [ContextTask['name']]
    if includeQED:
      tneeds += [QED_task['name']]
-   t = createTask(name="ft0fv0emcctp_digi_" + str(tf), needs=tneeds,
+   FT0FV0EMCCTPDIGItask = createTask(name="ft0fv0emcctp_digi_" + str(tf), needs=tneeds,
                   tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
-   t['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
-   t['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption \
+   FT0FV0EMCCTPDIGItask['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
+   FT0FV0EMCCTPDIGItask['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption \
                + ' --onlyDet FT0,FV0,EMC,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE)    \
                + ' --disable-write-ini' + putConfigValuesNew(localCF={"DigiParams.seed" : str(TFSEED)})                   \
-               + (' --combine-devices','')[args.no_combine_dpl_devices] + ('',' --disable-mc')[args.no_mc_labels] + QEDdigiargs
-   workflow['stages'].append(t)
-   det_to_digitask["FT0"]=t
-   det_to_digitask["FV0"]=t
-   det_to_digitask["EMC"]=t
-   det_to_digitask["CTP"]=t
+               + (' --combine-devices','')[args.no_combine_dpl_devices] + ('',' --disable-mc')[args.no_mc_labels] + QEDdigiargs \
+               + ' --forceSelectedDets'
+   workflow['stages'].append(FT0FV0EMCCTPDIGItask)
+   det_to_digitask["FT0"]=FT0FV0EMCCTPDIGItask
+   det_to_digitask["FV0"]=FT0FV0EMCCTPDIGItask
+   det_to_digitask["EMC"]=FT0FV0EMCCTPDIGItask
+   det_to_digitask["CTP"]=FT0FV0EMCCTPDIGItask
 
    def getDigiTaskName(det):
       t = det_to_digitask.get(det)
@@ -954,7 +1006,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------
    # reco
    # -----------
-   tpcreconeeds=[]
+   tpcreconeeds=[FT0FV0EMCCTPDIGItask['name']]
    if not args.combine_tpc_clusterization:
      # We treat TPC clusterization in multiple (sector) steps in order to
      # stay within the memory limit or to parallelize over sector from outside (not yet supported within cluster algo)
@@ -964,7 +1016,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        taskname = 'tpcclusterpart' + str((int)(s/sectorpertask)) + '_' + str(tf)
        tpcclustertasks.append(taskname)
        tpcclussect = createTask(name=taskname, needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='2', mem='8000')
-       digitmergerstr = '${O2_ROOT}/bin/o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' --tpc-lanes ' + str(NWORKERS) + ' | '
+       digitmergerstr = '${O2_ROOT}/bin/o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' --tpc-lanes ' + str(NWORKERS_TF) + ' | '
        tpcclussect['cmd'] = (digitmergerstr,'')[args.no_tpc_digitchunking] + ' ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type ' + ('digitizer','digits')[args.no_tpc_digitchunking] + ' --output-type clusters,send-clusters-per-sector --tpc-native-cluster-writer \" --outfile tpc-native-clusters-part'+ str((int)(s/sectorpertask)) + '.root\" --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' ' + putConfigValuesNew(["GPU_global"], {"GPU_proc.ompThreads" : 4}) + ('',' --disable-mc')[args.no_mc_labels]
        tpcclussect['env'] = { "OMP_NUM_THREADS" : "4", "SHMSIZE" : "16000000000" }
        tpcclussect['semaphore'] = "tpctriggers.root"
@@ -976,19 +1028,42 @@ for tf in range(1, NTIMEFRAMES + 1):
      workflow['stages'].append(TPCCLUSMERGEtask)
      tpcreconeeds.append(TPCCLUSMERGEtask['name'])
    else:
-     tpcclus = createTask(name='tpccluster_' + str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='2000')
-     tpcclus['cmd'] = '${O2_ROOT}/bin/o2-tpc-chunkeddigit-merger --tpc-lanes ' + str(NWORKERS)
+     tpcclus = createTask(name='tpccluster_' + str(tf), needs=[TPCDigitask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS_TF, mem='2000')
+     tpcclus['cmd'] = '${O2_ROOT}/bin/o2-tpc-chunkeddigit-merger --tpc-lanes ' + str(NWORKERS_TF)
      tpcclus['cmd'] += ' | ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector ' + putConfigValuesNew(["GPU_global","TPCGasParam","TPCCorrMap"],{"GPU_proc.ompThreads" : 1}) + ('',' --disable-mc')[args.no_mc_labels]
      workflow['stages'].append(tpcclus)
      tpcreconeeds.append(tpcclus['name'])
 
+   # ===| TPC reco |===
+   tpcLocalCFreco=dict()
+
+   # handle distortion corrections and scaling using MC maps
+   # this assumes the lumi inside the maps is stored in FT0 (pp) scalers
+   # in case of PbPb the conversion factor ZDC ->FT0 (pp) must be set
+   tpc_corr_options_mc=''
+
+   if tpcDistortionType == 0: # disable distortion corrections
+      tpc_corr_options_mc=' --corrmap-lumi-mode 0 '
+      tpcLocalCFreco['TPCCorrMap.lumiMean'] = '-1';
+   elif tpcDistortionType == 1: # disable scaling
+      tpc_corr_options_mc=' --corrmap-lumi-mode 2 '
+      tpcLocalCFreco['TPCCorrMap.lumiInst'] = str(CTPSCALER)
+      tpcLocalCFreco['TPCCorrMap.lumiMean'] = str(CTPSCALER)
+   elif tpcDistortionType == 2: # full scaling with CTP values
+      if COLTYPE == 'PbPb':
+         tpcLocalCFreco['TPCCorrMap.lumiInstFactor'] = str(lumiInstFactor)
+      tpc_corr_options_mc=' --corrmap-lumi-mode 2 '
+      tpcLocalCFreco['TPCCorrMap.lumiInst'] = str(CTPSCALER)
+
+   # TODO: Is this still used?
    tpc_corr_scaling_options = anchorConfig.get('tpc-corr-scaling','')
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
    TPCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' \
-                        + putConfigValuesNew(["GPU_global","TPCGasParam", "TPCCorrMap", "GPU_rec_tpc", "trackTuneParams"], {"GPU_proc.ompThreads":NWORKERS}) + ('',' --disable-mc')[args.no_mc_labels] \
-                        + tpc_corr_scaling_options
+                        + putConfigValuesNew(["GPU_global","TPCGasParam", "TPCCorrMap", "GPU_rec_tpc", "trackTuneParams"], {"GPU_proc.ompThreads":NWORKERS_TF} | tpcLocalCFreco) + ('',' --disable-mc')[args.no_mc_labels] \
+                        + tpc_corr_scaling_options + tpc_corr_options_mc
    workflow['stages'].append(TPCRECOtask)
 
+   # END TPC reco
 
    ITSMemEstimate = 12000 if havePbPb else 2000 # PbPb has much large mem requirement for now (in worst case)
    ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS")],
@@ -1006,8 +1081,8 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
    ITSTPCMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-tpcits-match-workflow ' + getDPL_global_options(bigshm=True) + ' --tpc-track-reader \"tpctracks.root\" --tpc-native-cluster-reader \"--infile tpc-native-clusters.root\" --use-ft0' \
-                          + putConfigValuesNew(['MFTClustererParam', 'ITSCATrackerParam', 'tpcitsMatch', 'TPCGasParam', 'TPCCorrMap', 'ITSClustererParam', 'GPU_rec_tpc', 'trackTuneParams', 'ft0tag'], {"NameConf.mDirMatLUT" : ".."}) \
-                          + tpc_corr_scaling_options
+                          + putConfigValuesNew(['MFTClustererParam', 'ITSCATrackerParam', 'tpcitsMatch', 'TPCGasParam', 'TPCCorrMap', 'ITSClustererParam', 'GPU_rec_tpc', 'trackTuneParams', 'ft0tag'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco) \
+                          + tpc_corr_scaling_options + tpc_corr_options_mc
    workflow['stages'].append(ITSTPCMATCHtask)
 
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
@@ -1016,27 +1091,25 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # FIXME This is so far a workaround to avoud a race condition for trdcalibratedtracklets.root
    TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
+   trd_track_sources = anchorConfig.get('o2-trd-global-tracking-options', {}).get('track-sources', 'TPC,ITS-TPC')
    TRDTRACKINGtask2['cmd'] = '${O2_ROOT}/bin/o2-trd-global-tracking ' + getDPL_global_options(bigshm=True) + ('',' --disable-mc')[args.no_mc_labels] \
                               + putConfigValuesNew(['ITSClustererParam',
                                                    'ITSCATrackerParam',
                                                    'trackTuneParams',
                                                    'GPU_rec_tpc',
-                                                   'ft0tag',
                                                    'TPCGasParam',
-                                                   'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."})                                    \
-                             + " --track-sources " + anchorConfig.get("o2-trd-global-tracking-options",{}).get("track-sources","all")  \
-                             + tpc_corr_scaling_options
+                                                   'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco)                     \
+                             + " --track-sources " + trd_track_sources  \
+                             + tpc_corr_scaling_options + tpc_corr_options_mc
    workflow['stages'].append(TRDTRACKINGtask2)
 
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], getDigiTaskName("TOF")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    TOFRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tof-reco-workflow --use-ccdb ' + getDPL_global_options() + putConfigValuesNew() + ('',' --disable-mc')[args.no_mc_labels]
    workflow['stages'].append(TOFRECOtask)
 
-   toftpcmatchneeds = [TOFRECOtask['name'], TPCRECOtask['name']]
-   toftracksrcdefault = "TPC,ITS-TPC"
-   if isActive('TRD'):
-      toftpcmatchneeds.append(TRDTRACKINGtask2['name'])
-      toftracksrcdefault+=",TPC-TRD,ITS-TPC-TRD"
+
+   toftpcmatchneeds = [TOFRECOtask['name'], TPCRECOtask['name'], ITSTPCMATCHtask['name'], TRDTRACKINGtask2['name']]
+   toftracksrcdefault = anchorConfig.get('o2-tof-matcher-workflow-options', {}).get('track-sources', 'TPC,ITS-TPC,TPC-TRD,ITS-TPC-TRD')
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=toftpcmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    TOFTPCMATCHERtask['cmd'] = '${O2_ROOT}/bin/o2-tof-matcher-workflow ' + getDPL_global_options() \
                               + putConfigValuesNew(["ITSClustererParam",
@@ -1045,9 +1118,9 @@ for tf in range(1, NTIMEFRAMES + 1):
                                                     'ITSCATrackerParam',
                                                     'MFTClustererParam',
                                                     'GPU_rec_tpc',
-                                                    'trackTuneParams'])                         \
-                              + " --track-sources " + anchorConfig.get("o2-tof-matcher-workflow-options",{}).get("track-sources",toftracksrcdefault) + (' --combine-devices','')[args.no_combine_dpl_devices] \
-                              + tpc_corr_scaling_options
+                                                    'trackTuneParams'], tpcLocalCFreco)                         \
+                              + " --track-sources " + toftracksrcdefault + (' --combine-devices','')[args.no_combine_dpl_devices] \
+                              + tpc_corr_scaling_options + tpc_corr_options_mc
    workflow['stages'].append(TOFTPCMATCHERtask)
 
    # MFT reco: needing access to kinematics (when assessment enabled)
@@ -1109,11 +1182,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    CPVRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    workflow['stages'].append(CPVRECOtask)
 
-   if args.with_ZDC:
-      ZDCRECOtask = createTask(name='zdcreco_'+str(tf), needs=[getDigiTaskName("ZDC")], tf=tf, cwd=timeframeworkdir, lab=["RECO", "ZDC"])
-      ZDCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-zdc-digits-reco ' + getDPL_global_options() + putConfigValues()
-      ZDCRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
-      workflow['stages'].append(ZDCRECOtask)
+   ZDCRECOtask = createTask(name='zdcreco_'+str(tf), needs=[getDigiTaskName("ZDC")], tf=tf, cwd=timeframeworkdir, lab=["RECO", "ZDC"])
+   ZDCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-zdc-digits-reco ' + getDPL_global_options() + putConfigValues()
+   ZDCRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
+   workflow['stages'].append(ZDCRECOtask)
 
    ## forward matching
    MCHMIDMATCHtask = createTask(name='mchmidMatch_'+str(tf), needs=[MCHRECOtask['name'], MIDRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1139,58 +1211,18 @@ for tf in range(1, NTIMEFRAMES + 1):
    HMPRECOtask['cmd'] = '${O2_ROOT}/bin/o2-hmpid-digits-to-clusters-workflow ' + getDPL_global_options(ccdbbackend=False) + putConfigValuesNew()
    workflow['stages'].append(HMPRECOtask)
 
-   HMPMATCHtask = createTask(name='hmpmatch_'+str(tf), needs=[HMPRECOtask['name'],ITSTPCMATCHtask['name'],TOFTPCMATCHERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
-   HMPMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-hmpid-matcher-workflow ' + getDPL_global_options() + putConfigValuesNew()
+   hmpmatchneeds = [HMPRECOtask['name'], ITSTPCMATCHtask['name'], TOFTPCMATCHERtask['name'], TRDTRACKINGtask2['name']]
+   hmp_match_sources = anchorConfig.get('o2-hmpid-matcher-workflow', {}).get('track-sources', 'ITS-TPC,ITS-TPC-TRD,TPC-TRD')
+   HMPMATCHtask = createTask(name='hmpmatch_'+str(tf), needs=hmpmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
+   HMPMATCHtask['cmd'] = '${O2_ROOT}/bin/o2-hmpid-matcher-workflow --track-sources ' + hmp_match_sources + getDPL_global_options() + putConfigValuesNew()
    workflow['stages'].append(HMPMATCHtask)
 
    # Take None as default, we only add more if nothing from anchorConfig
-   pvfinder_sources = anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertexing-sources", None)
-   pvfinder_matching_sources = anchorConfig.get("o2-primary-vertexing-workflow-options",{}).get("vertex-track-matching-sources", None)
-   pvfinderneeds = [ITSTPCMATCHtask['name']]
-   if not pvfinder_sources:
-      pvfinder_sources = "ITS,ITS-TPC,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
-   if not pvfinder_matching_sources:
-      pvfinder_matching_sources = "ITS,MFT,TPC,ITS-TPC,MCH,MFT-MCH,TPC-TOF,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
-      if isActive("MID"):
-         pvfinder_matching_sources += ",MID"
-         pvfinderneeds += [MIDRECOtask['name']]
-      if isActive('MCH') and isActive('MID'):
-         pvfinder_matching_sources += ",MCH-MID"
-         pvfinderneeds += [MCHMIDMATCHtask['name']]
+   pvfinder_sources = anchorConfig.get('o2-primary-vertexing-workflow-options', {}).get('vertexing-sources', 'ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP')
+   pvfinder_matching_sources = anchorConfig.get('', {}).get('vertex-track-matching-sources', 'ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP')
+   pvfinderneeds = [TRDTRACKINGtask2['name'], FT0RECOtask['name'], FV0RECOtask['name'], EMCRECOtask['name'], PHSRECOtask['name'], CPVRECOtask['name'], FDDRECOtask['name'], ZDCRECOtask['name'], HMPMATCHtask['name'], HMPMATCHtask['name'], ITSTPCMATCHtask['name'], TOFTPCMATCHERtask['name'], MFTMCHMATCHtask['name'], MCHMIDMATCHtask['name']]
 
-   if isActive('FT0'):
-      pvfinderneeds += [FT0RECOtask['name']]
-      pvfinder_matching_sources += ",FT0"
-   if isActive('FV0'):
-      pvfinderneeds += [FV0RECOtask['name']]
-      pvfinder_matching_sources += ",FV0"
-   if isActive('FDD'):
-      pvfinderneeds += [FT0RECOtask['name']]
-      pvfinder_matching_sources += ",FDD"
-   if isActive('EMC'):
-      pvfinderneeds += [EMCRECOtask['name']]
-      pvfinder_matching_sources += ",EMC"
-   if isActive('PHS'):
-      pvfinderneeds += [PHSRECOtask['name']]
-      pvfinder_matching_sources += ",PHS"
-   if isActive('CPV'):
-      pvfinderneeds += [CPVRECOtask['name']]
-      pvfinder_matching_sources += ",CPV"
-   if isActive('TOF'):
-      pvfinderneeds += [TOFTPCMATCHERtask['name']]
-   if isActive('MFT'):
-      pvfinderneeds += [MFTRECOtask['name']]
-   if isActive('MCH'):
-      pvfinderneeds += [MCHRECOtask['name']]
-   if isActive('TRD'):
-      pvfinderneeds += [TRDTRACKINGtask2['name']]
-   if isActive('FDD'):
-      pvfinderneeds += [FDDRECOtask['name']]
-   if isActive('MFT') and isActive('MCH'):
-      pvfinderneeds += [MFTMCHMATCHtask['name']]
-
-
-   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS, mem='4000')
+   PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS_TF, mem='4000')
    PVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-primary-vertexing-workflow ' \
                          + getDPL_global_options() + putConfigValuesNew(['ITSAlpideParam','MFTAlpideParam', 'pvertexer', 'TPCGasParam', 'TPCCorrMap', 'ft0tag'], {"NameConf.mDirMatLUT" : ".."})
    PVFINDERtask['cmd'] += ' --vertexing-sources ' + pvfinder_sources + ' --vertex-track-matching-sources ' + pvfinder_matching_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
@@ -1205,7 +1237,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        # the --local-batch argument will make QC Tasks store their results in a file and merge with any existing objects
        task['cmd'] = f'{readerCommand} | o2-qc --config {configFilePath}' + \
                      f' --local-batch ../{qcdir}/{objectsFile}' + \
-                     f' --override-values "qc.config.Activity.number={args.run};qc.config.Activity.periodName={args.productionTag};qc.config.Activity.start={args.timestamp};qc.config.conditionDB.url={args.conditionDB}"' + \
+                     f' --override-values "qc.config.database.host={args.qcdbHost};qc.config.Activity.number={args.run};qc.config.Activity.periodName={args.productionTag};qc.config.Activity.start={args.timestamp};qc.config.conditionDB.url={args.conditionDB}"' + \
                      ' ' + getDPL_global_options(ccdbbackend=False)
        # Prevents this task from being run for multiple TimeFrames at the same time, thus trying to modify the same file.
        task['semaphore'] = objectsFile
@@ -1228,6 +1260,10 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[MFTRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types MFT --cluster-types MFT',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks.json')
+     addQCPerTF(taskName='mftMCTracksQC',
+                needs=[MFTRECOtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types MFT --cluster-types MFT',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks-mc.json')
 
      ### TPC
      # addQCPerTF(taskName='tpcTrackingQC',
@@ -1244,7 +1280,12 @@ for tf in range(1, NTIMEFRAMES + 1):
      addQCPerTF(taskName='trdDigitsQC',
                 needs=[TRDDigitask['name']],
                 readerCommand='o2-trd-trap-sim',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-digits-task.json')
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-standalone-task.json')
+
+     addQCPerTF(taskName='trdTrackingQC',
+                needs=[TRDTRACKINGtask2['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TRD,TPC-TRD" --cluster-types none',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-tracking-task.json')
 
      ### TOF
      addQCPerTF(taskName='tofDigitsQC',
@@ -1340,24 +1381,29 @@ for tf in range(1, NTIMEFRAMES + 1):
                    readerCommand='o2-phos-reco-workflow --input-type cells --output-type clusters --disable-mc --disable-root-output',
                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/phs-cells-clusters-task.json')
 
+     ### MID
+     if isActive('MID'):
+        addQCPerTF(taskName='MIDTaskQC',
+                needs=[MIDRECOtask['name']],
+                readerCommand='o2-mid-digits-reader-workflow | o2-mid-tracks-reader-workflow',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mid-task.json')
+
    #secondary vertexer
    svfinder_threads = ' --threads 1 '
    svfinder_cpu = 1
    if COLTYPE == "PbPb" or (doembedding and COLTYPEBKG == "PbPb"):
      svfinder_threads = ' --threads 8 '
      svfinder_cpu = 8
+   SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name'], FT0FV0EMCCTPDIGItask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
    SVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-secondary-vertexing-workflow '
-   SVFINDERtask['cmd'] += getDPL_global_options(bigshm=True) + svfinder_threads + putConfigValuesNew(['svertexer', 'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."})
+   SVFINDERtask['cmd'] += getDPL_global_options(bigshm=True) + svfinder_threads + putConfigValuesNew(['svertexer', 'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco) \
+                       + tpc_corr_scaling_options + tpc_corr_options_mc
    # Take None as default, we only add more if nothing from anchorConfig
-   svfinder_sources = anchorConfig.get("o2-secondary-vertexing-workflow-options",{}).get("vertexing-sources", None)
-   if not svfinder_sources:
-      svfinder_sources = "ITS,TPC,ITS-TPC,TPC-TRD,TPC-TOF,ITS-TPC-TRD,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
-      if isActive("MID"):
-        svfinder_sources += ",MID"
+   svfinder_sources = anchorConfig.get('o2-secondary-vertexing-workflow-options', {}). get('vertexing-sources', 'ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP')
    SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
    # strangeness tracking is now called from the secondary vertexer
-   if not args.with_strangeness_tracking:
+   if args.no_strangeness_tracking:
       SVFINDERtask['cmd'] += ' --disable-strangeness-tracker'
    # if enabled, it may require MC labels
    else:
@@ -1368,39 +1414,9 @@ for tf in range(1, NTIMEFRAMES + 1):
   # produce AOD
   # -----------
    # TODO This needs further refinement, sources and dependencies should be constructed dynamically
-   aodinfosources = 'ITS,MFT,MCH,TPC,ITS-TPC,MFT-MCH,ITS-TPC-TOF,TPC-TOF,FT0,FDD,TPC-TRD,ITS-TPC-TRD,ITS-TPC-TRD-TOF'
+   aodinfosources = anchorConfig.get('o2-aod-producer-workflow-options', {}).get('info-sources', 'ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP')
    aodneeds = [PVFINDERtask['name'], SVFINDERtask['name']]
 
-   if isActive('CTP'):
-     aodinfosources += ',CTP'
-   if isActive('FV0'):
-     aodneeds += [ FV0RECOtask['name'] ]
-     aodinfosources += ',FV0'
-   if isActive('TOF'):
-     aodneeds += [ TOFRECOtask['name'] ]
-   if isActive('TRD'):
-     aodneeds += [ TRDTRACKINGtask2['name'] ]
-   if isActive('EMC'):
-     aodneeds += [ EMCRECOtask['name'] ]
-     aodinfosources += ',EMC'
-   if isActive('CPV'):
-     aodneeds += [ CPVRECOtask['name'] ]
-     aodinfosources += ',CPV'
-   if isActive('PHS'):
-     aodneeds += [ PHSRECOtask['name'] ]
-     aodinfosources += ',PHS'
-   if isActive('MID'):
-      aodneeds += [ MIDRECOtask['name'] ]
-      aodinfosources += ',MID'
-   if isActive('MID') and isActive('MCH'):
-      aodneeds += [ MCHMIDMATCHtask['name'] ]
-      aodinfosources += ',MCH-MID'
-   if isActive('HMP'):
-      aodneeds += [ HMPMATCHtask['name'] ]
-      aodinfosources += ',HMP'
-   if args.with_ZDC and isActive('ZDC'):
-     aodneeds += [ ZDCRECOtask['name'] ]
-     aodinfosources += ',ZDC'
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
 
@@ -1416,23 +1432,37 @@ for tf in range(1, NTIMEFRAMES + 1):
    if args.run_anchored == False:
       AODtask['cmd'] += ' --aod-timeframe-id ${ALIEN_PROC_ID}' + aod_df_id
    AODtask['cmd'] += ' ' + getDPL_global_options(bigshm=True)
-   AODtask['cmd'] += ' --info-sources ' + anchorConfig.get("o2-aod-producer-workflow-options",{}).get("info-sources",str(aodinfosources))
+   AODtask['cmd'] += ' --info-sources ' + aodinfosources
    AODtask['cmd'] += ' --lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}'
    AODtask['cmd'] += ' --anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}'
-   AODtask['cmd'] += ' --anchor-prod ${ALIEN_JDL_MCANCHOR:-unknown}'
+   AODtask['cmd'] += ' --anchor-prod ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}'
    AODtask['cmd'] += (' --combine-source-devices ','')[args.no_combine_dpl_devices]
    AODtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    if environ.get('O2DPG_AOD_NOTRUNCATE') != None or environ.get('ALIEN_JDL_O2DPG_AOD_NOTRUNCATE') != None:
       AODtask['cmd'] += ' --enable-truncation 0'  # developer option to suppress precision truncation
 
-   if not args.with_strangeness_tracking:
+   if args.no_strangeness_tracking:
       AODtask['cmd'] += ' --disable-strangeness-tracker'
 
    # Enable CTP readout replay for triggered detectors (EMCAL, HMPID, PHOS/CPV, TRD)
    # Needed untill triggers are supported in CTP simulation
    AODtask['cmd'] += ' --ctpreadout-create 1'
-
    workflow['stages'].append(AODtask)
+
+   # TPC - time-series objects
+   # initial implementation taken from comments in https://its.cern.ch/jira/browse/O2-4612
+   # TODO: this needs to be made configurable (as a function of which detectors are actually present)
+   tpctsneeds = [ TPCRECOtask['name'],
+                  ITSTPCMATCHtask['name'],
+                  TOFTPCMATCHERtask['name'],
+                  PVFINDERtask['name']
+                ]
+   TPCTStask = createTask(name='tpctimeseries_'+str(tf), needs=tpctsneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='2000', cpu='1')
+   TPCTStask['cmd'] = 'o2-global-track-cluster-reader --disable-mc --cluster-types "TOF" --track-types "ITS,TPC,ITS-TPC,ITS-TPC-TOF,ITS-TPC-TRD-TOF"'
+   TPCTStask['cmd'] += ' --primary-vertices '
+   TPCTStask['cmd'] += ' | o2-tpc-time-series-workflow --enable-unbinned-root-output --sample-unbinned-tsallis --sampling-factor 0.1 '
+   TPCTStask['cmd'] += putConfigValuesNew() + ' ' + getDPL_global_options(bigshm=True)
+   workflow['stages'].append(TPCTStask)
 
    # AOD merging / combination step (as individual stages) --> for the moment deactivated in favor or more stable global merging
    """
@@ -1462,10 +1492,10 @@ for tf in range(1, NTIMEFRAMES + 1):
   # taking away digits, clusters and other stuff as soon as possible.
   # TODO: cleanup by labels or task names
    if args.early_tf_cleanup == True:
-     TFcleanup = createTask(name='tfcleanup_'+str(tf), needs= [ AOD_merge_task['name'] ], tf=tf, cwd=timeframeworkdir, lab=["CLEANUP"], mem='0', cpu='1')
+     TFcleanup = createTask(name='tfcleanup_'+str(tf), needs= [ AODtask['name'] ], tf=tf, cwd=timeframeworkdir, lab=["CLEANUP"], mem='0', cpu='1')
      TFcleanup['cmd'] = 'rm *digi*.root;'
      TFcleanup['cmd'] += 'rm *cluster*.root'
-     workflow['stages'].append(TFcleanup);
+     workflow['stages'].append(TFcleanup)
 
 # AOD merging as one global final step
 aodmergerneeds = ['aod_' + str(tf) for tf in range(1, NTIMEFRAMES + 1)]
@@ -1479,7 +1509,7 @@ workflow['stages'].append(AOD_merge_task)
 
 job_merging = False
 if includeFullQC:
-  workflow['stages'].extend(include_all_QC_finalization(ntimeframes=NTIMEFRAMES, standalone=False, run=args.run, productionTag=args.productionTag, conditionDB=args.conditionDB))
+  workflow['stages'].extend(include_all_QC_finalization(ntimeframes=NTIMEFRAMES, standalone=False, run=args.run, productionTag=args.productionTag, conditionDB=args.conditionDB, qcdbHost=args.qcdbHost))
 
 
 if includeAnalysis:

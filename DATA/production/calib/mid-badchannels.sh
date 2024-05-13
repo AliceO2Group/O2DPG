@@ -26,7 +26,7 @@ if [[ -z ${CCDB_POPULATOR_UPLOAD_PATH} ]]; then
         CCDB_POPULATOR_UPLOAD_PATH_DCS="$CCDB_POPULATOR_UPLOAD_PATH"
     else
         CCDB_POPULATOR_UPLOAD_PATH="http://o2-ccdb.internal"
-        CCDB_POPULATOR_UPLOAD_PATH_DCS="http://alio2-cr1-flp199.cern.ch:8083"
+        CCDB_POPULATOR_UPLOAD_PATH_DCS="$DCSCCDBSERVER"
     fi
 fi
 if [[ "${GEN_TOPO_VERBOSE:-}" == "1" ]]; then

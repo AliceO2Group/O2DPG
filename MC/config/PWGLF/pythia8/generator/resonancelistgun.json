@@ -90,7 +90,7 @@
         "genDecayed": true
     },
     "Lambda(1520)0" : {
-        "pdg": 3124,
+        "pdg": 102134,
         "n": 1,
         "ptMin": 0.0,
         "ptMax": 20,
@@ -99,7 +99,7 @@
         "genDecayed": true
     },
     "anti-Lambda(1520)0" : {
-        "pdg": -3124,
+        "pdg": -102134,
         "n": 1,
         "ptMin": 0.0,
         "ptMax": 20,
@@ -172,6 +172,42 @@
     },
     "anti-Delta0" : {
         "pdg": -2114,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "Xi(1820)0" : {
+        "pdg": 123314,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "Anti-Xi(1820)0" : {
+        "pdg": -123314,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "Xi(1820)-" : {
+        "pdg": 123324,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "Xi(1820)+" : {
+        "pdg": -123324,
         "n": 1,
         "ptMin": 0.0,
         "ptMax": 20,

@@ -1,0 +1,57 @@
+{
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "ccdb-test.cern.ch:8080"
+       },
+      "Activity": {
+        "number": "42",
+        "type": "2",
+        "provenance": "qc_mc",
+        "passName": "passMC",
+        "periodName": "SimChallenge"
+      },
+      "monitoring": {
+        "url": "no-op://"
+      },
+      "consul": {
+        "url": ""
+      },
+      "conditionDB": {
+        "url": "alice-ccdb.cern.ch"
+      }
+    },
+    "tasks": {
+      "Digits": {
+        "active": "true",
+        "className": "o2::quality_control_modules::trd::DigitsTask",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+          "cycleDurationSeconds": "60",
+        "dataSource": {
+          "type": "direct",
+          "query": "digits:TRD/DIGITS;tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC;fedChamberStatus:TRD/FCHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/DCSDPsFedChamberStatus"
+        },
+        "taskParameters": {
+          "peakregionstart": "7.0",
+          "peakregionend": "20.0",
+          "pulseheightpeaklower": "1.0",
+          "pulseheightpeakupper": "5.0"
+        }
+      },
+    "Tracklets": {
+        "active": "true",
+        "className": "o2::quality_control_modules::trd::TrackletsTask",
+        "moduleName": "QcTRD",
+        "detectorName": "TRD",
+        "cycleDurationSeconds": "60",
+        "dataSource": {
+          "type": "direct",
+           "query": "tracklets:TRD/TRACKLETS;triggers:TRD/TRKTRGRD;noiseMap:TRD/NOISEMAP/0?lifetime=condition&ccdb-path=TRD/Calib/NoiseMapMCM;chamberStatus:TRD/CHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/HalfChamberStatusQC;fedChamberStatus:TRD/FCHSTATUS/0?lifetime=condition&ccdb-path=TRD/Calib/DCSDPsFedChamberStatus"
+        }
+      }	
+    },
+    "dataSamplingPolicies": []
+  }
+}

@@ -15,15 +15,16 @@ def extend(args):
     is kept
     """
     # load workflows
-    workflow_orig = read_workflow(args.orig_wf)
-    workflow_extend = read_workflow(args.extend_wf)
+    workflow_orig, meta = read_workflow(args.orig_wf)
+    workflow_extend, _ = read_workflow(args.extend_wf)
 
     # extend
     workflow_orig.extend(workflow_extend)
 
     # dump in new file
     filename = args.output if args.output else args.orig_wf
-    dump_workflow(workflow_orig, filename)
+    # propagate meta information from original workflow that is extended
+    dump_workflow(workflow_orig, filename, meta)
 
 
 def create(args):

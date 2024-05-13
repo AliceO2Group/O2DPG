@@ -17,7 +17,7 @@ spec = importlib.util.spec_from_file_location("o2dpg_release_validation", join(O
 o2dpg_release_validation = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(o2dpg_release_validation)
 sys.modules["o2dpg_release_validation"] = o2dpg_release_validation
-from o2dpg_release_validation import only_extract_impl
+from o2dpg_release_validation import extract_and_flatten
 
 spec = importlib.util.spec_from_file_location("o2dpg_release_validation_plot", join(O2DPG_ROOT, "RelVal", "utils", 'o2dpg_release_validation_plot.py'))
 o2dpg_release_validation_plot = importlib.util.module_from_spec(spec)
@@ -39,7 +39,7 @@ def run(args):
     ref_file = None
     for i, (input_file, label) in enumerate(zip(args.inputs, args.labels)):
 
-        _, config = only_extract_impl(input_file, args.output, label, prefix=i, reference_extracted=ref_file)
+        _, config = extract_and_flatten(input_file, args.output, label, prefix=i, reference_extracted=ref_file)
         if not config:
             print(f"ERROR: Problem with input file {input_file}, cannot extract")
             return 1
