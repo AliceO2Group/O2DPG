@@ -30,19 +30,19 @@ public:
   }
 
   void forceDecays(std::vector<TParticle> &mParticles, int mother_pos) {
-    TParticle p = mParticles[mother_pos];
-    int pdg = p.GetPdgCode();
-    TLorentzVector mom = TLorentzVector(p.Px(), p.Py(), p.Pz(), p.Energy());
+    TParticle *p = &mParticles[mother_pos];
+    int pdg = p->GetPdgCode();
+    TLorentzVector mom = TLorentzVector(p->Px(), p->Py(), p->Pz(), p->Energy());
     Decay(pdg, &mom);
     TClonesArray daughters = TClonesArray("TParticle");
     int nParticles = ImportParticles(&daughters);
-    p.SetStatusCode(o2::mcgenstatus::MCGenStatusEncoding(2, -11).fullEncoding);
-    p.SetBit(ParticleStatus::kToBeDone, false);
-    double mother_weight = p.GetWeight();
+    p->SetStatusCode(o2::mcgenstatus::MCGenStatusEncoding(2, -11).fullEncoding);
+    p->SetBit(ParticleStatus::kToBeDone, false);
+    double mother_weight = p->GetWeight();
     TParticle *mother = static_cast<TParticle *>(daughters[0]);
     int mParticles_size = mParticles.size();
-    p.SetFirstDaughter(mother->GetFirstDaughter() + mParticles_size - 1);
-    p.SetLastDaughter(mother->GetLastDaughter() + mParticles_size - 1);
+    p->SetFirstDaughter(mother->GetFirstDaughter() + mParticles_size - 1);
+    p->SetLastDaughter(mother->GetLastDaughter() + mParticles_size - 1);
     for (int j = 1; j < nParticles;
          j++) { // start loop at 1 to not include mother
       TParticle *d = static_cast<TParticle *>(daughters[j]);
@@ -126,8 +126,7 @@ protected:
   bool makeForcedDecays() {
     int mParticles_size = mParticles.size();
     for (int i = 0; i < mParticles_size; i++) {
-      auto p = mParticles[i];
-      int pdg = p.GetPdgCode();
+      int pdg = mParticles[i].GetPdgCode();
       if (std::find(mPdgCodes.begin(), mPdgCodes.end(), abs(pdg)) !=
           mPdgCodes.end()) {
         mDecayer->forceDecays(mParticles, i);
