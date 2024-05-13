@@ -25,9 +25,7 @@ public:
                 << ": sum of branching ratios of active decay channels = "
                 << weight;
       mWeights[pdg] = weight;
-      mPythia.particleData.mayDecay(
-          pdg, false); // make sure it is not decayed in any other way (should
-                       // already be switched off in the decayer config file)
+      mPythia.particleData.mayDecay(pdg, false);
     }
   }
 
@@ -119,6 +117,9 @@ protected:
     mDecayer = new DecayerPythia8ForceDecays();
     mDecayer->Init();
     mDecayer->calculateWeights(mPdgCodes);
+    for (int pdg : mPdgCodes) {
+      mPythia.particleData.mayDecay(pdg, false);
+    }
     return true;
   }
 
