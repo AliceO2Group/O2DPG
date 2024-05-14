@@ -523,6 +523,17 @@ TPC_SPACECHARGE_DOWNLOADER_TASK['cmd'] = '[ "${O2DPG_ENABLE_TPC_DISTORTIONS}" ] 
    '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p TPC/Calib/CorrectionMap --timestamp 1 --created-not-after ' + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE} ; }'
 workflow['stages'].append(TPC_SPACECHARGE_DOWNLOADER_TASK)
 
+# Fix (residual) geometry alignment for simulation stage
+# Detectors that prefer to apply special alignments (for example residual effects) should be listed here and download these files.
+# These object will take precedence over ordinary align objects **and** will only be applied in transport simulation
+# and digitization (Det/Calib/Align is only read in simulation since reconstruction tasks use GLO/Config/AlignedGeometry automatically).
+SIM_ALIGNMENT_PREFETCH_TASK = createTask(name='sim_alignment', cpu='0')
+SIM_ALIGNMENT_PREFETCH_TASK['cmd'] = '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p MID/MisCalib/Align --timestamp ' + str(args.timestamp) + ' --created-not-after '  \
+                                      + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE}/MID/Calib/Align --no-preserve-path ; '
+SIM_ALIGNMENT_PREFETCH_TASK['cmd'] += '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p MCH/MisCalib/Align --timestamp ' + str(args.timestamp) + ' --created-not-after ' \
+                                      + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE}/MCH/Calib/Align --no-preserve-path '
+workflow['stages'].append(SIM_ALIGNMENT_PREFETCH_TASK)
+
 # query initial configKey args for signal transport; mainly used to setup generators
 simInitialConfigKeys = create_geant_config(args, args.confKey)
 
