@@ -20,7 +20,7 @@ publish_after=440
 min_tracks=0
 num_lanes=36
 
-REMAP="--condition-remap \"file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS;GLO/Config/GRPMagField;TPC/Calib/LaserTracks\" "
+REMAP="--condition-remap \"file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS,GLO/Config/GRPMagField,TPC/Calib/LaserTracks\" "
 if [[ ! -z ${TPC_CALIB_MAX_EVENTS:-} ]]; then
     max_events=${TPC_CALIB_MAX_EVENTS}
 fi
