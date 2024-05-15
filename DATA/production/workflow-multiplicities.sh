@@ -30,7 +30,7 @@ if [[ $SYNCMODE == 1 ]]; then NTRDTRKTHREADS=1; else NTRDTRKTHREADS=; fi
 
 : ${NGPURECOTHREADS:=-1} # -1 = auto-detect
 
-RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? ($RECO_NUM_NODES_WORKFLOW < 230 ? $RECO_NUM_NODES_WORKFLOW : 230) : 15) * ($NUMAGPUIDS != 0 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
+[[ ! -z $RECO_NUM_NODES_WORKFLOW ]] && RECO_NUM_NODES_WORKFLOW_CMP=$((($RECO_NUM_NODES_WORKFLOW > 15 ? ($RECO_NUM_NODES_WORKFLOW < 230 ? $RECO_NUM_NODES_WORKFLOW : 230) : 15) * ($NUMAGPUIDS != 0 ? 2 : 1))) # Limit the lower scaling factor, multiply by 2 if we have 2 NUMA domains
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Process multiplicities
