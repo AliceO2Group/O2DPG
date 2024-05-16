@@ -249,7 +249,7 @@ def retrieve_sor(run_number):
     SOR=0
     # extract SOR by pattern matching
     for t in tokens:
-      match_object=re.match("\s*(SOR\s*=\s*)([0-9]*)\s*", t)
+      match_object=re.match(r"\s*(SOR\s*=\s*)([0-9]*)\s*", t)
       if match_object != None:
          SOR=match_object[2]
          break
