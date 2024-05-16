@@ -11,7 +11,7 @@ PROXY_INSPEC="tunestring:ITS/TSTR;runtype:ITS/RUNT;fittype:ITS/FITT;scantype:ITS
 CCDBPATH1=""
 CCDBPATH2=""
 if [ $RUNTYPE_ITS == "tuning" ] || [ $RUNTYPE_ITS == "digital" ] || [ $RUNTYPE_ITS == "tuningbb" ]; then
-  CCDBPATH1="$DCSCCDBSERVER"
+  CCDBPATH1="$DCSCCDBSERVER_PERS"
   CCDBPATH2="http://o2-ccdb.internal"
 else 
   CCDBPATH1="http://o2-ccdb.internal"
