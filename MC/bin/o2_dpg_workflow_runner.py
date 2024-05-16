@@ -1601,12 +1601,13 @@ Use the `--produce-script myscript.sh` option for this.
                   os.environ['ROOT_LDSYSPATH'] = libpath.decode()
 
                # b) the PATH for compiler includes needed by Cling
-               cmd='LC_ALL=C c++ -xc++ -E -v /dev/null 2>&1 | sed -n \'/^.include/,${/^ \/.*++/{p}}\'' # | sed \'s/ //\''
+               cmd = "LC_ALL=C c++ -xc++ -E -v /dev/null 2>&1 | sed -n '/^#include/,${/^ \\/.*++/{p}}'"
                proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                incpath, err = proc.communicate()
                incpaths = [ line.lstrip() for line in incpath.decode().splitlines() ]
                joined = ':'.join(incpaths)
                if not (args.no_rootinit_speedup == True):
+                  actionlogger.info("Determined ROOT_CPPSYSINCL=" + joined)
                   os.environ['ROOT_CPPSYSINCL'] = joined
 
         speedup_ROOT_Init()
