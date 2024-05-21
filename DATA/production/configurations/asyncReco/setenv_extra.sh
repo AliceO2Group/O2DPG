@@ -387,7 +387,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] ; then
     # adding additional cluster errors
     # the values below should be squared, but the validation of those values (0.01 and 0.0225) is ongoing
-    TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;"    
+    TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalYSeeding=0.1;GPU_rec_tpc.clusterError2AdditionalZSeeding=0.15;"
     if [[ $SCALE_WITH_ZDC == 1 ]]; then
       echo "For 2023 PbPb ZDC inst. lumi applying factor 2.414"
       export TPC_CORR_SCALING+=";TPCCorrMap.lumiInstFactor=2.414;"
@@ -411,8 +411,9 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     echo "We are in period $PERIOD, we need to keep the correction for the TPC cluster time, since no new vdrift was extracted"
   fi
 
-  TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=1;trackTuneParams.tpcCovInner[0]=0.1;trackTuneParams.tpcCovInner[1]=0.2;trackTuneParams.tpcCovInner[2]=6.e-4;trackTuneParams.tpcCovInner[3]=6.e-4;trackTuneParams.tpcCovInner[4]=2.6e-3;"
-  TRACKTUNETPCOUTER="trackTuneParams.tpcCovOuterType=1;trackTuneParams.tpcCovOuter[0]=0.1;trackTuneParams.tpcCovOuter[1]=0.2;trackTuneParams.tpcCovOuter[2]=6.e-4;trackTuneParams.tpcCovOuter[3]=6.e-4;trackTuneParams.tpcCovOuter[4]=2.6e-3;"
+  TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=2;trackTuneParams.tpcCovInner[0]=0.05;trackTuneParams.tpcCovInner[1]=0.2;trackTuneParams.tpcCovInner[2]=0.0003;trackTuneParams.tpcCovInner[3]=0.0013;trackTuneParams.tpcCovInner[4]=0.0059300284;trackTuneParams.tpcCovInnerSlope[0]=1.4794650254467986e-08;trackTuneParams.tpcCovInnerSlope[1]=5.9178601017871944e-08;trackTuneParams.tpcCovInnerSlope[2]=8.87679015268079e-11;trackTuneParams.tpcCovInnerSlope[3]=3.846609066161676e-10;trackTuneParams.tpcCovInnerSlope[4]=1.7546539235412473e-09;"
+  TRACKTUNETPCOUTER="trackTuneParams.tpcCovOuterType=2;trackTuneParams.tpcCovOuter[0]=0.05;trackTuneParams.tpcCovOuter[1]=0.2;trackTuneParams.tpcCovOuter[2]=0.0003;trackTuneParams.tpcCovOuter[3]=0.0013;trackTuneParams.tpcCovOuter[4]=0.0059300284;trackTuneParams.tpcCovOuterSlope[0]=1.4794650254467986e-08;trackTuneParams.tpcCovOuterSlope[1]=5.9178601017871944e-08;trackTuneParams.tpcCovOuterSlope[2]=8.87679015268079e-11;trackTuneParams.tpcCovOuterSlope[3]=3.846609066161676e-10;trackTuneParams.tpcCovOuterSlope[4]=1.7546539235412473e-09;"
+
 
 fi
 
