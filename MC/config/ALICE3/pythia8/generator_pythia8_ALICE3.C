@@ -21,8 +21,8 @@ public:
     int seed;
 
     if (alien_proc_id != NULL) {
-      LOG(info) << "Seed set to ALIEN_PROC_ID: " << seed;
       seed = atoi(alien_proc_id);
+      LOG(info) << "Seed set to ALIEN_PROC_ID: " << seed;
     } else {
       LOG(info) << "Unable to retrieve ALIEN_PROC_ID";
       LOG(info) << "Setting seed to 0 (random)";
