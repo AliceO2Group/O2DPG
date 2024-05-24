@@ -36,7 +36,8 @@ public:
     Decay(pdg, &mom);
     TClonesArray daughters = TClonesArray("TParticle");
     int nParticles = ImportParticles(&daughters);
-    p->SetStatusCode(o2::mcgenstatus::MCGenStatusEncoding(2, -11).fullEncoding);
+    int mcGenStatus = o2::mcgenstatus::getGenStatusCode(p->GetStatusCode());
+    p->SetStatusCode(o2::mcgenstatus::MCGenStatusEncoding(2, -mcGenStatus).fullEncoding);
     p->SetBit(ParticleStatus::kToBeDone, false);
     double mother_weight = p->GetWeight();
     TParticle *mother = static_cast<TParticle *>(daughters[0]);
