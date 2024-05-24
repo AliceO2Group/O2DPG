@@ -9,8 +9,22 @@ namespace eventgen {
 
 class DecayerPythia8ForceDecays : public DecayerPythia8 {
 public:
-  DecayerPythia8ForceDecays() : DecayerPythia8(){};
+  DecayerPythia8ForceDecays(){
+    mPythia.readString("Random:setSeed = on");
+    char* alien_proc_id = getenv("ALIEN_PROC_ID");
+    int seed;
+    if (alien_proc_id != NULL) {
+      seed = atoi(alien_proc_id);
+      LOG(info) << "Seed for DecayerPythia8 set to ALIEN_PROC_ID: " << seed;
+    } else {
+      LOG(info) << "Unable to retrieve ALIEN_PROC_ID";
+      LOG(info) << "Setting seed for DecayerPyhtia8 to 0 (random)";
+      seed = 0;
+    }
+    mPythia.readString("Random:seed = "+std::to_string(seed));
+  }
   ~DecayerPythia8ForceDecays() = default;
+
 
   void calculateWeights(std::vector<int> &pdgs) {
     TLorentzVector mom = TLorentzVector(0., 0., 0., 9999999.);
@@ -94,7 +108,20 @@ private:
 class GeneratorPythia8ForcedDecays : public GeneratorPythia8 {
 
 public:
-  GeneratorPythia8ForcedDecays() : GeneratorPythia8(){};
+  GeneratorPythia8ForcedDecays(){
+    mPythia.readString("Random:setSeed = on");
+    char* alien_proc_id = getenv("ALIEN_PROC_ID");
+    int seed;
+    if (alien_proc_id != NULL) {
+      seed = atoi(alien_proc_id);
+      LOG(info) << "Seed for GeneratorPythia8 set to ALIEN_PROC_ID: " << seed;
+    } else {
+      LOG(info) << "Unable to retrieve ALIEN_PROC_ID";
+      LOG(info) << "Setting seed for GeneratorPyhtia8 to 0 (random)";
+      seed = 0;
+    }
+    mPythia.readString("Random:seed = "+std::to_string(seed));
+  }
   ~GeneratorPythia8ForcedDecays() = default;
 
   // overriden methods
