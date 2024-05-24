@@ -57,7 +57,7 @@ fi
 SPEC_PARAM=""
 if [ $HMP_NODCSCCDB_REC == 'false' ];
 then
-  SPEC_PARAM+="--use-dcsccdb --dcsccdb-uri $DCSCCDBSERVER --dcsccdb-alivehours 3 "
+  SPEC_PARAM+="--use-dcsccdb --dcsccdb-uri $DCSCCDBSERVER_PERS --dcsccdb-alivehours 3 "
 fi
 if [ $HMP_CCDB_REC == 'true' ];
 then
