@@ -3,20 +3,12 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "qcdb.cern.ch:8083",
-        "username": "not_applicable",
-        "password": "not_applicable",
-        "name": "not_applicable"
+        "host": "ccdb-test.cern.ch:8080"
       },
       "Activity": {
-        "number": "42",
-        "type": "2"
       },
       "monitoring": {
-        "url": "influxdb-unix:///tmp/telegraf.sock"
-      },
-      "consul": {
-        "url": "alio2-cr1-hv-con01.cern.ch:8500"
+        "url": "infologger:///debug?qc"
       },
       "conditionDB": {
         "url": "qcdb.cern.ch:8083"
@@ -30,7 +22,6 @@
         "moduleName": "QcEMCAL",
         "detectorName": "EMC",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "emcal-cells:EMC/CELLS/0;emcal-triggerecords:EMC/CELLSTRGR/0"
@@ -43,7 +34,6 @@
         "moduleName": "QcEMCAL",
         "detectorName": "EMC",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "emcal-cells:EMC/CELLS/0;emcal-triggerecords:EMC/CELLSTRGR/0"
@@ -80,7 +70,6 @@
         "moduleName": "QcEMCAL",
         "detectorName": "EMC",
         "cycleDurationSeconds": "60",
-        "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
           "query": "emcal-triggers:EMC/CELLSTRGR/0;ctp-digits:CTP/DIGITS;ctp-config:CTP/CONFIG/0?lifetime=condition&ccdb-path=CTP/Config/Config&ccdb-run-dependent=true"
