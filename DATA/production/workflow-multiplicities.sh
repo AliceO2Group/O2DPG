@@ -113,29 +113,29 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     [[ -z ${TIMEFRAME_SHM_LIMIT:-} ]] && TIMEFRAME_SHM_LIMIT=$(($SHMSIZE / 3))
     NGPURECOTHREADS=8
     NTRDTRKTHREADS=8
-    ITSTRK_THREADS=20
+    ITSTRK_THREADS=5
     ITSTPC_THREADS=3
     SVERTEX_THREADS=20
     TOFMATCH_THREADS=2
-    N_SECVTX=1
+    N_SECVTX=2
     NGPUS=4
     N_TPCTRK=4
     # time in s: pvtx 16, tof 30, trd 82 itstpc 53 its 200 mfttr 30 tpcent 23 hmp-clus 40 (25.11.22)
     N_TPCENTDEC=$(math_max $((4 * $NGPUS / 4)) 1)
-    N_ITSTRK=$(math_max $((4 * $NGPUS / 4)) 1)
-    N_TPCITS=$(math_max $((4 * $NGPUS / 4)) 1)
+    N_ITSTRK=$(math_max $((12 * $NGPUS / 4)) 1)
+    N_TPCITS=$(math_max $((5 * $NGPUS / 4)) 1)
     N_MFTTRK=$(math_max $((3 * $NGPUS / 4)) 1)
-    N_TRDTRK=$(math_max $((7 * $NGPUS / 4)) 1)
+    N_TRDTRK=$(math_max $((5 * $NGPUS / 4)) 1)
     N_TOFMATCH=$(math_max $((5 * $NGPUS / 4)) 1)
     N_HMPCLUS=$(math_max $((3 * $NGPUS / 4)) 1)
-    N_ITSCL=3
+    N_ITSCL=4
     N_AODPROD=2
     N_MCHCL=9
     N_HMPMATCH=1
     N_MCHTRK=7
     N_PRIMVTXMATCH=2
     N_PRIMVTX=3
-    export DPL_SMOOTH_RATE_LIMITING=1
+    # export DPL_SMOOTH_RATE_LIMITING=1
   elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_64cpu" ]]; then
     NGPURECOTHREADS=6
     NTRDTRKTHREADS=2
