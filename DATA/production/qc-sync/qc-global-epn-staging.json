@@ -23,7 +23,7 @@
       },
       "infologger": {
         "filterDiscardDebug": "true",
-        "filterDiscardLevel": "1",
+        "filterDiscardLevel": "3",
         "filterDiscardFile": "../../qc-_ID_.log",
         "filterRotateMaxBytes": "100000000",
         "filterRotateMaxFiles": "1"
