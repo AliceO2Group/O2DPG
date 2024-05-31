@@ -26,6 +26,13 @@ add_QC_JSON() {
       echo "Error fetching QC JSON $2"
       exit 1
     fi
+  elif [[ ${2} =~ ^apricot://.* ]]; then
+    TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
+    curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}?process=true"
+    if [[ $? != 0 ]]; then
+      echo "Error fetching QC JSON $2"
+      exit 1
+    fi
   else
     TMP_FILENAME=$2
   fi
