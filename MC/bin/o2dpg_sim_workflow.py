@@ -715,15 +715,29 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # (separate) event generation task
    sep_event_mode = args.event_gen_mode == 'separated'
-   SGNGENtask=createTask(name='sgngen_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEN"],
+   sgngenneeds=signalneeds
+   # for HepMC we need some special treatment since we need
+   # to ensure that different timeframes read different events from this file
+   if GENERATOR=="hepmc" and tf > 1:
+      sgngenneeds=signalneeds + ['sgngen_' + str(tf-1)] # we serialize event generation
+   SGNGENtask=createTask(name='sgngen_'+str(tf), needs=sgngenneeds, tf=tf, cwd='tf'+str(tf), lab=["GEN"],
                          cpu=1, mem=1000)
-   SGNGENtask['cmd']='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode kCCDB'           \
+
+   SGNGENtask['cmd']=''
+   if GENERATOR=="hepmc" and tf > 1:
+     # determine the skip number
+     cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
+     SGNGENtask['cmd'] = cmd
+   SGNGENtask['cmd'] +='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode kCCDB'         \
                      + ' --run ' + str(args.run) + ' ' + str(CONFKEY) + str(TRIGGER)                  \
                      + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
                      + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1]                \
                      + ' --seed ' + str(TFSEED) + ' -n ' + str(NSIGEVENTS)
+
    if args.pregenCollContext == True:
       SGNGENtask['cmd'] += ' --fromCollContext collisioncontext.root:' + signalprefix
+   if GENERATOR=="hepmc":
+      SGNGENtask['cmd'] += "; RC=$?; ${O2DPG_ROOT}/UTILS/UpdateHepMCEventSkip.sh ../HepMCEventSkip.json " + str(tf) + '; [[ ${RC} == 0 ]]'
    if sep_event_mode == True:
       workflow['stages'].append(SGNGENtask)
       signalneeds = signalneeds + [SGNGENtask['name']]
@@ -742,7 +756,6 @@ for tf in range(1, NTIMEFRAMES + 1):
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
    if args.pregenCollContext == True:
       SGNtask['cmd'] += ' --fromCollContext collisioncontext.root'
-
    workflow['stages'].append(SGNtask)
 
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
