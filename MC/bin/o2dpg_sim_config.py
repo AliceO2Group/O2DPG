@@ -108,6 +108,13 @@ def create_geant_config(args, externalConfigString):
            d[sk] = flatconfig[entry]
            cfg[mk] = d
 
+    # ----- special setting for hepmc generator -----
+    if args.gen == "hepmc":
+      eventSkipPresent = config.get("HepMC",{}).get("eventsToSkip")
+      if eventSkipPresent == None:
+          # add it
+          add(config, {"HepMC.eventsToSkip" : '${HEPMCEVENTSKIP:-0}'})
+
     # ----- add default settings -----
 
     add(config, {"MFTBase.buildAlignment" : "true"})
