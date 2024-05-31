@@ -252,6 +252,7 @@ if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
 else
   GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-con01.cern.ch
 fi
+GEN_TOPO_QC_APRICOT_SERVER=`curl -s "http://${GEN_TOPO_QC_CONSUL_SERVER}:8500/v1/kv/o2/runtime/aliecs/vars/apricot_endpoint?raw"`
 
 add_QC_from_consul()
 {
@@ -264,6 +265,21 @@ add_QC_from_consul()
     QC_CONFIG_ARG="json://${GEN_TOPO_QC_JSON_FILE}"
   else
     QC_CONFIG_ARG="consul-json://alio2-cr1-hv-con01.cern.ch:8500$1"
+  fi
+  add_W o2-qc "--config $QC_CONFIG_ARG $2"
+}
+
+add_QC_from_apricot()
+{
+  if [[ ! -z ${GEN_TOPO_QC_JSON_FILE:-} ]]; then
+    curl -s -o $GEN_TOPO_QC_JSON_FILE "${GEN_TOPO_QC_APRICOT_SERVER}/${1}?process=true"
+    if [[ $? != 0 ]]; then
+      echo "Error fetching QC JSON $1"
+      exit 1
+    fi
+    QC_CONFIG_ARG="json://${GEN_TOPO_QC_JSON_FILE}"
+  else
+    QC_CONFIG_ARG="apricot://${GEN_TOPO_QC_APRICOT_SERVER}$1"
   fi
   add_W o2-qc "--config $QC_CONFIG_ARG $2"
 }
