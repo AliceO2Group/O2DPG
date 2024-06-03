@@ -19,10 +19,11 @@ public:
   GeneratorPythia8GapTriggeredHFLepton() = default;
 
   /// constructor
-  GeneratorPythia8GapTriggeredHFLepton( TString configsignal, int quarkPdg = 4, int lInputTriggerRatio = 5){
+  GeneratorPythia8GapTriggeredHFLepton( TString configsignal, int quarkPdg = 4, int lInputTriggerRatio = 5, int lInputExternalID = 0){
 
     lGeneratedEvents=0;
     lInverseTriggerRatio=lInputTriggerRatio;
+    lExternalID = lInputExternalID;
     mQuarkPdg=quarkPdg;
 
     auto seed = (gRandom->TRandom::GetSeed() % 900000000);
@@ -44,7 +45,7 @@ public:
     // flag the generators using type
     // addCocktailConstituent(type, "interesting");
     // addCocktailConstitent(0, "minbias");
- 
+
   }
 
   ///  Destructor
@@ -78,6 +79,7 @@ protected:
         }
       }
       mPythia.event = pythiaObjectSignal.event;
+      notifySubGenerator(lExternalID);
     }else{
       // Generate minimum-bias event
       Bool_t lGenerationOK = kFALSE;
@@ -85,6 +87,7 @@ protected:
         lGenerationOK = pythiaObjectMinimumBias.next();
       }
       mPythia.event = pythiaObjectMinimumBias.event;
+      notifySubGenerator(0);
     }
 
     lGeneratedEvents++;
@@ -157,6 +160,8 @@ private:
   // Control gap-triggering
   Long64_t lGeneratedEvents;
   int lInverseTriggerRatio;
+  // ID for different generators
+  int lExternalID;
 
   // Base event generators
   Pythia pythiaObjectMinimumBias; ///Minimum bias collision generator
