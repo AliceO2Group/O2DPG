@@ -237,7 +237,7 @@ export FAIRMQ_IPC_PREFIX=./
 
 echo "Ready to start main workflow"
 
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8}
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} --dynamic-resources
 MCRC=$?  # <--- we'll report back this code
 
 if [[ "${ALIEN_JDL_ADDTIMESERIESINMC}" != "0" ]]; then
