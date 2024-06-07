@@ -6,7 +6,12 @@
 # let's get the last 9 (for int) and 8 (for int16) digits of ALIEN_PROC_ID, to be passed to define NUMAID and shm-segment-id via O2JOBID, which are int and int16 respectively. Then we make them an int or int16
 ALIEN_PROC_ID_MAX_NDIGITS_INT32=9
 ALIEN_PROC_ID_MAX_NDIGITS_INT16=8
-echo "ALIEN_PROC_ID for current job = ${ALIEN_PROC_ID}"
+if [[ -n $ALIEN_PROC_ID ]]; then
+  echo "ALIEN_PROC_ID for current job = ${ALIEN_PROC_ID}"
+else
+  ALIEN_PROC_ID=123456789
+  echo "ALIEN_PROC_ID was not defined for current job, setting to ${ALIEN_PROC_ID}"
+fi
 
 if [[ -n ${ALIEN_JDL_PACKAGES} ]] && [[ ${#ALIEN_PROC_ID} -lt ${ALIEN_PROC_ID_MAX_NDIGITS_INT32} ]]; then # we are on the grid, and we expect to have the PROC_ID
   echo "We cannot determine O2JOBID, the job id is too short (${ALIEN_PROC_ID}), we need at least ${ALIEN_PROC_ID_MAX_NDIGITS_INT32} digits, returning error"

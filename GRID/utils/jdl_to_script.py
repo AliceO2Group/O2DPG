@@ -26,7 +26,7 @@ def toList(token):
     inner=token[1:-1]
     # attention, this might not work if comma inside a string
     return [l.lstrip().rstrip() for l in inner.split(",")]
-  return token
+  return [token]
 
 def cleanFileName(filename):
   # remove " and 'LF:' from alien file names

@@ -249,7 +249,7 @@ def retrieve_sor(run_number):
     SOR=0
     # extract SOR by pattern matching
     for t in tokens:
-      match_object=re.match("\s*(SOR\s*=\s*)([0-9]*)\s*", t)
+      match_object=re.match(r"\s*(SOR\s*=\s*)([0-9]*)\s*", t)
       if match_object != None:
          SOR=match_object[2]
          break
@@ -523,6 +523,17 @@ TPC_SPACECHARGE_DOWNLOADER_TASK['cmd'] = '[ "${O2DPG_ENABLE_TPC_DISTORTIONS}" ] 
    '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p TPC/Calib/CorrectionMap --timestamp 1 --created-not-after ' + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE} ; }'
 workflow['stages'].append(TPC_SPACECHARGE_DOWNLOADER_TASK)
 
+# Fix (residual) geometry alignment for simulation stage
+# Detectors that prefer to apply special alignments (for example residual effects) should be listed here and download these files.
+# These object will take precedence over ordinary align objects **and** will only be applied in transport simulation
+# and digitization (Det/Calib/Align is only read in simulation since reconstruction tasks use GLO/Config/AlignedGeometry automatically).
+SIM_ALIGNMENT_PREFETCH_TASK = createTask(name='sim_alignment', cpu='0')
+SIM_ALIGNMENT_PREFETCH_TASK['cmd'] = '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p MID/MisCalib/Align --timestamp ' + str(args.timestamp) + ' --created-not-after '  \
+                                      + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE}/MID/Calib/Align --no-preserve-path ; '
+SIM_ALIGNMENT_PREFETCH_TASK['cmd'] += '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p MCH/MisCalib/Align --timestamp ' + str(args.timestamp) + ' --created-not-after ' \
+                                      + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE}/MCH/Calib/Align --no-preserve-path '
+workflow['stages'].append(SIM_ALIGNMENT_PREFETCH_TASK)
+
 # query initial configKey args for signal transport; mainly used to setup generators
 simInitialConfigKeys = create_geant_config(args, args.confKey)
 
@@ -704,15 +715,29 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # (separate) event generation task
    sep_event_mode = args.event_gen_mode == 'separated'
-   SGNGENtask=createTask(name='sgngen_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEN"],
+   sgngenneeds=signalneeds
+   # for HepMC we need some special treatment since we need
+   # to ensure that different timeframes read different events from this file
+   if GENERATOR=="hepmc" and tf > 1:
+      sgngenneeds=signalneeds + ['sgngen_' + str(tf-1)] # we serialize event generation
+   SGNGENtask=createTask(name='sgngen_'+str(tf), needs=sgngenneeds, tf=tf, cwd='tf'+str(tf), lab=["GEN"],
                          cpu=1, mem=1000)
-   SGNGENtask['cmd']='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode kCCDB'           \
+
+   SGNGENtask['cmd']=''
+   if GENERATOR=="hepmc" and tf > 1:
+     # determine the skip number
+     cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
+     SGNGENtask['cmd'] = cmd
+   SGNGENtask['cmd'] +='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode kCCDB'         \
                      + ' --run ' + str(args.run) + ' ' + str(CONFKEY) + str(TRIGGER)                  \
                      + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
                      + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1]                \
                      + ' --seed ' + str(TFSEED) + ' -n ' + str(NSIGEVENTS)
+
    if args.pregenCollContext == True:
       SGNGENtask['cmd'] += ' --fromCollContext collisioncontext.root:' + signalprefix
+   if GENERATOR=="hepmc":
+      SGNGENtask['cmd'] += "; RC=$?; ${O2DPG_ROOT}/UTILS/UpdateHepMCEventSkip.sh ../HepMCEventSkip.json " + str(tf) + '; [[ ${RC} == 0 ]]'
    if sep_event_mode == True:
       workflow['stages'].append(SGNGENtask)
       signalneeds = signalneeds + [SGNGENtask['name']]
@@ -731,7 +756,6 @@ for tf in range(1, NTIMEFRAMES + 1):
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
    if args.pregenCollContext == True:
       SGNtask['cmd'] += ' --fromCollContext collisioncontext.root'
-
    workflow['stages'].append(SGNtask)
 
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
@@ -1433,9 +1457,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    if args.no_strangeness_tracking:
       AODtask['cmd'] += ' --disable-strangeness-tracker'
 
-   # Enable CTP readout replay for triggered detectors (EMCAL, HMPID, PHOS/CPV, TRD)
-   # Needed untill triggers are supported in CTP simulation
-   AODtask['cmd'] += ' --ctpreadout-create 1'
    workflow['stages'].append(AODtask)
 
    # TPC - time-series objects
@@ -1449,7 +1470,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCTStask = createTask(name='tpctimeseries_'+str(tf), needs=tpctsneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='2000', cpu='1')
    TPCTStask['cmd'] = 'o2-global-track-cluster-reader --disable-mc --cluster-types "TOF" --track-types "ITS,TPC,ITS-TPC,ITS-TPC-TOF,ITS-TPC-TRD-TOF"'
    TPCTStask['cmd'] += ' --primary-vertices '
-   TPCTStask['cmd'] += ' | o2-tpc-time-series-workflow --enable-unbinned-root-output --sample-unbinned-tsallis --sampling-factor 0.1 '
+   TPCTStask['cmd'] += ' | o2-tpc-time-series-workflow --enable-unbinned-root-output --sample-unbinned-tsallis --sampling-factor 0.01 '
    TPCTStask['cmd'] += putConfigValuesNew() + ' ' + getDPL_global_options(bigshm=True)
    workflow['stages'].append(TPCTStask)
 

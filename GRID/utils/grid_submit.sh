@@ -356,7 +356,7 @@ TTL=${JOBTTL};
 EOF
   echo "Output = {"${OUTPUTSPEC:-\"logs*.zip@disk=1\",\"AO2D.root@disk=1\"}"};" >> "${MY_JOBNAMEDATE}.jdl"  # add output spec
   echo "Packages = {"${PACKAGESPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add package spec
-  [ $ERROROUTPUTSPEC ] && echo "ErrorOutput = {"${ERROROUTPUTSPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add error output files
+  [ $ERROROUTPUTSPEC ] && echo "OutputErrorE = {"${ERROROUTPUTSPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add error output files
   [ $IMAGESPEC ] && echo "DebugTag = {\"${IMAGESPEC}\"};" >> "${MY_JOBNAMEDATE}.jdl"   # use special singularity image to run job
 
 # "output_arch.zip:output/*@disk=2",

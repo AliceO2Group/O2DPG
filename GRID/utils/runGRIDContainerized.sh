@@ -18,8 +18,8 @@ fi
 if [ "$ARCH" == "aarch64" ]; then
   ISAARCH64="1"
 fi
-# we just use the default singularity container
-APPTAINER_CONTAINER=/cvmfs/alice.cern.ch/containers/fs/singularity/default${ISAARCH64+"-aarch64"}
+# we just use the default singularity container (if not already set)
+APPTAINER_CONTAINER=${APPTAINER_CONTAINER:-/cvmfs/alice.cern.ch/containers/fs/singularity/default${ISAARCH64+"-aarch64"}}
 
 # create workdir if not specified externally
 if [ ! "${WORK_DIR}" ]; then

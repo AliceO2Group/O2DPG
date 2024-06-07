@@ -16,6 +16,7 @@ NSIGEVENTS=${NSIGEVENTS:-1}
 NWORKERS=${NWORKERS:-8}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
 INTRATE=${INTRATE:-500000}
+GAPRATIO=${GAPRATIO:-3} 
 [[ ${SPLITID} != "" ]] && SEED="-seed ${SPLITID}" || SEED=""
 
 #generate random number
@@ -24,13 +25,13 @@ echo $RNDSIG
 
 if [[ $RNDSIG -ge 0 && $RNDSIG -lt 20 ]];
 then
-        CONFIGNAME="GeneratorHFGapTriggered_Charm.ini"
+        CONFIGNAME="GeneratorHFGapTriggered_Charm_Gap$GAPRATIO.ini"
 elif [[ $RNDSIG -ge 20 && $RNDSIG -lt 40 ]];
 then
-        CONFIGNAME="GeneratorHFGapTriggered_BeautyForcedDecay.ini"
+        CONFIGNAME="GeneratorHFGapTriggered_BeautyForcedDecay_Gap$GAPRATIO.ini"
 elif [[ $RNDSIG -ge 40 && $RNDSIG -lt 100 ]];
 then
-        CONFIGNAME="GeneratorHFGapTriggered_BeautyNoForcedDecay.ini"
+        CONFIGNAME="GeneratorHFGapTriggered_BeautyNoForcedDecay_Gap$GAPRATIO.ini"
 fi
 
 

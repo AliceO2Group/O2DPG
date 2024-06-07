@@ -20,7 +20,7 @@ publish_after=440
 min_tracks=0
 num_lanes=36
 
-
+REMAP="--condition-remap \"file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS,GLO/Config/GRPMagField,TPC/Calib/LaserTracks\" "
 if [[ ! -z ${TPC_CALIB_MAX_EVENTS:-} ]]; then
     max_events=${TPC_CALIB_MAX_EVENTS}
 fi
@@ -47,7 +47,7 @@ fi
 
 WORKFLOW=
 add_W o2-dpl-raw-proxy " --proxy-name tpc-laser-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=tpc-laser-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\"" "" 0
-add_W o2-tpc-calib-laser-tracks "--use-filtered-tracks ${EXTRA_CONFIG_TRACKS} --min-tfs=${min_tracks}"
+add_W o2-tpc-calib-laser-tracks "${REMAP} --use-filtered-tracks ${EXTRA_CONFIG_TRACKS} --min-tfs=${min_tracks} "
 add_W o2-tpc-calib-pad-raw " ${EXTRA_CONFIG}" "${CALIB_CONFIG}"
 add_W o2-calibration-ccdb-populator-workflow "--ccdb-path ${CCDB_PATH}" "" 0
 #add_QC_from_consul "${QC_CONFIG_CONSUL}" "--local --host lcoalhost"
