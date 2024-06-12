@@ -86,7 +86,7 @@ Bool_t importParticles() override
 
       /// copy the particles from the HF event in the particle stack
       auto particlesHfEvent = mGeneratorEvHF->getParticles();
-      for(int iPart=0; iPart<=particlesHfEvent.size(); iPart++) {
+      for(int iPart=0; iPart<particlesHfEvent.size(); iPart++) {
         mParticles.push_back(TParticle(particlesHfEvent.at(iPart)));
       }
 
