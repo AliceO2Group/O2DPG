@@ -21,7 +21,7 @@
         "className": "o2::quality_control_modules::emcal::CellTask",
         "moduleName": "QcEMCAL",
         "detectorName": "EMC",
-        "cycleDurationSeconds": "60",
+        "cycleDurationSeconds": "300",
         "dataSource": {
           "type": "direct",
           "query": "emcal-cells:EMC/CELLS/0;emcal-triggerecords:EMC/CELLSTRGR/0"
@@ -35,7 +35,14 @@
           "TotalEnergyRangeSM": "200",
           "TotalEnergyRange": "2000",
           "TotalEnergyMaxCellTime": "25"
-        }
+        },
+        "movingWindows": [
+          "averageCellTime_PHYS",
+          "cellAmplitudeSupermodule_PHYS",
+          "averageCellEnergy_PHYS",
+          "averageCellTime_PHYS",
+          "cellOccupancyEMCwThr_PHYS"
+        ]
       },
       "ClusterTaskEMCAL": {
         "active": "true",
