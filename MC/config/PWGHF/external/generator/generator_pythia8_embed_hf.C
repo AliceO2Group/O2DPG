@@ -81,13 +81,22 @@ Bool_t importParticles() override
       /// generate the HF event
       bool genOk = false;
       while(!genOk) {
-          genOk = (mGeneratorEvHF->generateEvent());
+          genOk = (mGeneratorEvHF->generateEvent() && mGeneratorEvHF->importParticles() /*copy particles from mGeneratorEvHF.mPythia.event to mGeneratorEvHF.mParticles*/ );
       }
 
       /// copy the particles from the HF event in the particle stack
       auto particlesHfEvent = mGeneratorEvHF->getParticles();
+      int originalSize = mParticles.size(); // stack of this event generator
       for(int iPart=0; iPart<particlesHfEvent.size(); iPart++) {
-        mParticles.push_back(TParticle(particlesHfEvent.at(iPart)));
+        auto particle = particlesHfEvent.at(iPart);
+
+        /// adjust the particle mother and daughter indices
+        if(particle.GetFirstMother() >= 0)   particle.SetFirstMother(particle.GetFirstMother() + originalSize);
+	    if(particle.GetFirstDaughter() >= 0) particle.SetFirstDaughter(particle.GetFirstDaughter() + originalSize);
+	    if(particle.GetLastDaughter() >= 0)  particle.SetLastDaughter(particle.GetLastDaughter() + originalSize);
+
+        /// copy inside this.mParticles from mGeneratorEvHF.mParticles, i.e. the particles generated in mGeneratorEvHF
+        mParticles.push_back(particle);
       }
 
       /// one more event generated, let's update the counter and clear it, to allow the next generation
