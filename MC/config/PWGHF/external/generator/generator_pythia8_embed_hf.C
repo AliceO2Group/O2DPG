@@ -21,10 +21,10 @@ public:
     GeneratorPythia8EmbedHF() = default;
 
     /// constructor
-    GeneratorPythia8EmbedHF(int numSigEvs = 1) {
-        mNumSigEvs = numSigEvs;
-        //mGeneratedEvents = 0;
-    }
+    //GeneratorPythia8EmbedHF(int numSigEvs = 1) {
+    //    mNumSigEvs = numSigEvs;
+    //    //mGeneratedEvents = 0;
+    //}
 
     ///  Destructor
     ~GeneratorPythia8EmbedHF() = default;
@@ -66,6 +66,23 @@ public:
         }
         mGeneratorEvHF->Init();
     }
+
+    // This function is called by the primary generator
+    // for each event in case we are in embedding mode.
+    // We use it to setup the number of signal events
+    // to be generated and to be embedded on the background.
+    void notifyEmbedding(const o2::dataformats::MCEventHeader* bkgHeader) override
+    {
+        LOG(info) << "[notifyEmbedding] ----- Function called";
+        
+        /// Impact parameter between the two nuclei
+        const float x = bkgHeader->GetB();
+        LOG(info) << "[notifyEmbedding] ----- Collision impact parameter: " << x;
+
+        /// number of events to be embedded in a background event
+        mNumSigEvs = std::max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.));
+        LOG(info) << "[notifyEmbedding] ----- generating " << mNumSigEvs << " signal events " << std::endl;
+    };
 
 protected:
 
@@ -118,9 +135,9 @@ private:
 };
 
 // Charm enriched
-FairGenerator * GeneratorPythia8EmbedHFCharm(int numSigEvs = 1, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
+FairGenerator * GeneratorPythia8EmbedHFCharm(float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
 {
-    auto myGen = new GeneratorPythia8EmbedHF(numSigEvs);
+    auto myGen = new GeneratorPythia8EmbedHF();
 
     /// setup the internal generator for HF events
     myGen->setupGeneratorEvHF(hf_generators::GapTriggeredCharm, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
@@ -129,9 +146,9 @@ FairGenerator * GeneratorPythia8EmbedHFCharm(int numSigEvs = 1, float yQuarkMin 
 }
 
 // Beauty enriched
-FairGenerator * GeneratorPythia8EmbedHFBeauty(int numSigEvs = 1, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
+FairGenerator * GeneratorPythia8EmbedHFBeauty(float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
 {
-    auto myGen = new GeneratorPythia8EmbedHF(numSigEvs);
+    auto myGen = new GeneratorPythia8EmbedHF();
 
     /// setup the internal generator for HF events
     myGen->setupGeneratorEvHF(hf_generators::GapTriggeredBeauty, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
@@ -140,9 +157,9 @@ FairGenerator * GeneratorPythia8EmbedHFBeauty(int numSigEvs = 1, float yQuarkMin
 }
 
 // Charm and beauty enriched (with same ratio)
-FairGenerator * GeneratorPythia8EmbedHFCharmAndBeauty(int numSigEvs = 1, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
+FairGenerator * GeneratorPythia8EmbedHFCharmAndBeauty(float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
 {
-    auto myGen = new GeneratorPythia8EmbedHF(numSigEvs);
+    auto myGen = new GeneratorPythia8EmbedHF();
 
     /// setup the internal generator for HF events
     myGen->setupGeneratorEvHF(hf_generators::GapTriggeredCharmAndBeauty, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
