@@ -1,3 +1,11 @@
+///////////////////////////////////////////////////////////////////////////////
+///                                                                         ///
+///  HF MC generator for Pb-Pb                                              ///
+///  Option 1: generate N PYTHIA events triggered on ccbar and/or bbbar     ///
+///            to be embedded with a underlying Pb-Pb event                 ///
+///                                                                         ///
+///////////////////////////////////////////////////////////////////////////////
+
 #include "generator_pythia8_gaptriggered_hf.C"
 
 using namespace Pythia8;
