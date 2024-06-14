@@ -47,7 +47,7 @@ PROXY_OUTSPEC="A:TPC/LASERTRACKS;B:TPC/CEDIGITS;D:TPC/CLUSREFS"
 HOST=localhost
 
 QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-laser-calib-qcmn"
-QC_CONFIG=components/qc/ANY/any/tpc-laser-calib-qcmn
+QC_CONFIG="components/qc/ANY/any/tpc-laser-calib-qcmn"
 
 
 RAWDIGIT_CONFIG="TPCDigitDump.NoiseThreshold=3;TPCDigitDump.LastTimeBin=600;NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR2;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR"
