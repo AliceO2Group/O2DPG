@@ -137,7 +137,7 @@ private:
 
     Generator* mGeneratorEvHF; // to generate HF signal events
     
-    int mNumSigEvs; // number of HF signal events to be merged in one Pythia event
+    int mNumSigEvs{1}; // number of HF signal events to be merged in one Pythia event
     //unsigned long long mGeneratedEvents;
 
 };

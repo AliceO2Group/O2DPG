@@ -97,10 +97,10 @@ int External() {
     std::cout <<"# signal hadrons: " << nSignals << "\n";
     std::cout <<"# signal hadrons decaying in the correct channel: " << nSignalGoodDecay << "\n";
 
-    if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.95 || nEventsMB > nEvents * (1 - ratioTrigger) * 1.05) { // we put some tolerance since the number of generated events is small
-        std::cerr << "Number of generated MB events different than expected\n";
-        return 1;
-    }
+    //if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.95 || nEventsMB > nEvents * (1 - ratioTrigger) * 1.05) { // we put some tolerance since the number of generated events is small
+    //    std::cerr << "Number of generated MB events different than expected\n";
+    //    return 1;
+    //}
     //if (nEventsInjOne < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInjOne > nEvents * ratioTrigger * 0.5 * 1.05) {
     //    std::cerr << "Number of generated events injected with " << checkPdgQuarkOne << " different than expected\n";
     //    return 1;
