@@ -56,22 +56,22 @@ public:
         {
         case hf_generators::GapTriggeredCharm:
             LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GeneratorPythia8GapTriggeredCharm **********";
-            LOG(info) << "**********                           number of HF signal events to be merged: " << mNumSigEvs;
+            LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
             mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapTriggeredCharm(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList));
             break;
         case hf_generators::GapTriggeredBeauty:
             LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GeneratorPythia8GapTriggeredBeauty **********";
-            LOG(info) << "**********                           number of HF signal events to be merged: " << mNumSigEvs;
+            LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
             mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapTriggeredBeauty(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList));
             break;
         case hf_generators::GapTriggeredCharmAndBeauty:
             LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GeneratorPythia8GapTriggeredCharmAndBeauty **********";
-            LOG(info) << "**********                           number of HF signal events to be merged: " << mNumSigEvs;
+            LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
             mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapTriggeredCharmAndBeauty(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList));
             break;
         case hf_generators::GapHF:
             LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GeneratorPythia8GapHF **********";
-            LOG(info) << "**********                           number of HF signal events to be merged: " << mNumSigEvs;
+            LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
             mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapHF(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList));
             break;
         default:
@@ -100,9 +100,18 @@ public:
 
 protected:
 
+/// @brief Main function for event generation
+bool generateEvent() override
+{
+    /// Overriding that from GeneratorPythia8, to avoid the simulation of an untriggered event as first
+    return true;
+}
+
+/// @brief Main function to copy the generated particles in mPythia.event into the stack (this.mParticles)
 Bool_t importParticles() override
 {
-  /// import particles from underlying event
+  /// Import particles from generated event
+  /// This should not do anything now, since we override generateEvent
   GeneratorPythia8::importParticles();
   
   /// Generate mNumSigEvs HF events to be merged in one
