@@ -43,7 +43,13 @@ public:
       return o2::eventgen::GeneratorPythia8::Init();
     }
 
-    /// setters
+    /// @brief setup the event generator for HF signals
+    /// \param gentype generator type (only ccbar, only bbbar, both)
+    /// \param yQuarkMin minimum quark rapidity
+    /// \param yQuarkMax maximum quark rapidity
+    /// \param yHadronMin minimum hadron rapidity
+    /// \param yHadronMax maximum hadron rapidity
+    /// \param hadronPdgList list of PDG codes for hadrons to be used in trigger
     void setupGeneratorEvHF(int genType, float yQuarkMin, float yQuarkMax, float yHadronMin, float yHadronMax, std::vector<int> hadronPdgList = {}) {
         mGeneratorEvHF = nullptr;
         switch (genType)
