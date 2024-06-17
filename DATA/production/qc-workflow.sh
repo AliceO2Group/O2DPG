@@ -52,7 +52,7 @@ if [[ -z ${QC_JSON_FROM_OUTSIDE:-} && ! -z ${GEN_TOPO_QC_JSON_FILE:-} && -f $GEN
   QC_JSON_FROM_OUTSIDE=$GEN_TOPO_QC_JSON_FILE
 elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
   if [[ $EPNSYNCMODE == 1 || "${GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL:-}" == "1" ]]; then # Sync processing running on the EPN
-    [[ -z "${QC_JSON_TPC:-}" ]] && QC_JSON_TPC=consul://o2/components/qc/ANY/any/tpc-full-qcmn
+    [[ -z "${QC_JSON_TPC:-}" ]] && QC_JSON_TPC=apricot://o2/components/qc/ANY/any/tpc-full-qcmn
     [[ -z "${QC_JSON_ITS:-}" ]] && QC_JSON_ITS=consul://o2/components/qc/ANY/any/its-qcmn-epn-full
     if [[ -z "${QC_JSON_MFT:-}" ]]; then
       if has_detector MFT && has_processing_step MFT_RECO; then
