@@ -47,6 +47,11 @@ public:
     // flag the generators using type
     // addCocktailConstituent(type, "interesting");
     // addCocktailConstitent(0, "minbias");
+    // Add Sub generators
+    addSubGenerator(0, "default generator");
+    addSubGenerator(1, "charm lepton");
+    addSubGenerator(2, "beauty forced decay");
+    addSubGenerator(3, "beauty no foced decay");
   }
 
   ///  Destructor
