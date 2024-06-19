@@ -209,7 +209,7 @@ class GeneratorStarlight_class : public Generator
 				   -1,
 				   -1,
 				   1,
-				   npart+1,
+				   npart,
 				   lmoth.Px(),
 				   lmoth.Py(),
 				   lmoth.Pz(),
