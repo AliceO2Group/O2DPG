@@ -1,5 +1,5 @@
-R__LOAD_LIBRARY(libStarlib)
-R__ADD_INCLUDE_PATH($STARLIGHT_ROOT/include)
+R__LOAD_LIBRARY($STARlight_ROOT/lib64/libStarlib.so)
+R__ADD_INCLUDE_PATH($STARlight_ROOT/include)
 
 #include "randomgenerator.h"
 #include "upcXevent.h"
