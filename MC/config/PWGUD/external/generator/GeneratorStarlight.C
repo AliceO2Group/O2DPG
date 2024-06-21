@@ -1,4 +1,4 @@
-R__LOAD_LIBRARY($STARlight_ROOT/lib64/libStarlib.so)
+R__LOAD_LIBRARY(libStarlib.so)
 R__ADD_INCLUDE_PATH($STARlight_ROOT/include)
 
 #include "randomgenerator.h"
