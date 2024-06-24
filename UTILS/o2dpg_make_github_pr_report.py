@@ -156,12 +156,14 @@ def make_report(all_prs, repo, labels_request, label_accept_suffix, outfile=None
                 # collect the labels for which table this PR should be taken into account
                 labels_take = []
 
-                for label in pr['labels']:
-                    label_name = label['name']
+                pr_labels = [label['name'] for label in pr['labels']]
+                for label_name in pr_labels:
+                    if label_name not in labels_request:
+                        continue
                     if label_name.lower() in ('mc', 'data'):
                         # get assigned MC or DATA label if this PR has it
-                        mc_data.append(label['name'])
-                    if label_name in labels_request and (not label_accept_suffix or f'{label_name}-{label_accept_suffix}' not in pr['labels']):
+                        mc_data.append(label_name)
+                    if not label_accept_suffix or f'{label_name}-{label_accept_suffix}' not in pr_labels:
                         # check if that label is one that flags a request. If at the same time there is also the corresponding accepted label, don't take this PR into account for the report.
                         labels_take.append(label_name)
 
@@ -199,14 +201,14 @@ if __name__ == '__main__':
     parser.add_argument('--start-page', dest='start_page', type=int, default=1, help='Start on this page')
     parser.add_argument('--pages', type=int, default=5, help='Number of pages')
     parser.add_argument('--label-regex', dest='label_regex', help='Provide a regular expression to decide which labels to fetch.', default='^async-\w+')
-    parser.add_argument('--label-accepted-suffix', dest='label_accepted_suffix', help='Provide a regular expression to decide which labels to fetch.', default='accept')
+    parser.add_argument('--label-accepted-suffix', dest='label_accepted_suffix', help='Provide the suffix of labels that indicate acceptance (a dash will be added automatically, so the a corresponding accepted label is expected to have the form <request-label>-<accepted-suffix>).', default='accepted')
     parser.add_argument('--include-accepted', action='store_true', help='By default, only PRs are fetched where at least one label has no "<label>-accepted" label')
     args = parser.parse_args()
 
     # get all labels of interest
     labels = get_labels(args.owner, args.repo, args.label_regex)
     # split into request and accept labels, here we currently only need the request labels
-    labels_request, _ = separate_labels_request_accept(labels, args.label_accepted_suffix)
+    labels_request, l = separate_labels_request_accept(labels, args.label_accepted_suffix)
 
     # Retrieve closed pull requests with the specified label, split into merged and other (closed) PRs
     prs = get_prs(args.owner, args.repo, labels_request, args.pr_state, args.per_page, args.start_page, args.pages)

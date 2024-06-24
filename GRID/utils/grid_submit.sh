@@ -356,7 +356,7 @@ TTL=${JOBTTL};
 EOF
   echo "Output = {"${OUTPUTSPEC:-\"logs*.zip@disk=1\",\"AO2D.root@disk=1\"}"};" >> "${MY_JOBNAMEDATE}.jdl"  # add output spec
   echo "Packages = {"${PACKAGESPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add package spec
-  [ $ERROROUTPUTSPEC ] && echo "ErrorOutput = {"${ERROROUTPUTSPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add error output files
+  [ $ERROROUTPUTSPEC ] && echo "OutputErrorE = {"${ERROROUTPUTSPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add error output files
   [ $IMAGESPEC ] && echo "DebugTag = {\"${IMAGESPEC}\"};" >> "${MY_JOBNAMEDATE}.jdl"   # use special singularity image to run job
 
 # "output_arch.zip:output/*@disk=2",
@@ -576,12 +576,14 @@ export PATH=$PATH:$PWD
 # source the actual job script from the work dir
 chmod +x ./alien_jobscript.sh
 ./alien_jobscript.sh
+# fetch the return code
+RC=$?
 
 # just to be sure that we get the logs (temporarily disabled since the copy seems to hang sometimes)
 #cp alien_log_${ALIEN_PROC_ID:-0}.txt logtmp_${ALIEN_PROC_ID:-0}.txt
 #[ "${ALIEN_JOB_OUTPUTDIR}" ] && upload_to_Alien logtmp_${ALIEN_PROC_ID:-0}.txt ${ALIEN_JOB_OUTPUTDIR}/
 
-echo "Job done"
+echo "Job done ... exiting with ${RC}"
 
 # We need to exit for the ALIEN JOB HANDLER!
-exit 0
+exit ${RC}

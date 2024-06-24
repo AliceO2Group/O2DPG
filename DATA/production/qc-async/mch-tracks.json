@@ -41,9 +41,9 @@
                 },
                 "grpGeomRequest": {
                     "geomRequest": "Aligned",
-                    "askGRPECS": "false",
+                    "askGRPECS": "true",
                     "askGRPLHCIF": "false",
-                    "askGRPMagField": "false",
+                    "askGRPMagField": "true",
                     "askMatLUT": "false",
                     "askTime": "false",
                     "askOnceAllButField": "true",

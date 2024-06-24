@@ -27,7 +27,7 @@
       },
       "infologger": {
         "filterDiscardDebug": "true",
-        "filterDiscardLevel": "1"
+        "filterDiscardLevel": "3"
       }
     }
   }

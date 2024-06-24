@@ -26,6 +26,13 @@ add_QC_JSON() {
       echo "Error fetching QC JSON $2"
       exit 1
     fi
+  elif [[ ${2} =~ ^apricot://.* ]]; then
+    TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
+    curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}?process=true"
+    if [[ $? != 0 ]]; then
+      echo "Error fetching QC JSON $2"
+      exit 1
+    fi
   else
     TMP_FILENAME=$2
   fi
@@ -45,7 +52,7 @@ if [[ -z ${QC_JSON_FROM_OUTSIDE:-} && ! -z ${GEN_TOPO_QC_JSON_FILE:-} && -f $GEN
   QC_JSON_FROM_OUTSIDE=$GEN_TOPO_QC_JSON_FILE
 elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
   if [[ $EPNSYNCMODE == 1 || "${GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL:-}" == "1" ]]; then # Sync processing running on the EPN
-    [[ -z "${QC_JSON_TPC:-}" ]] && QC_JSON_TPC=consul://o2/components/qc/ANY/any/tpc-full-qcmn
+    [[ -z "${QC_JSON_TPC:-}" ]] && QC_JSON_TPC=apricot://o2/components/qc/ANY/any/tpc-full-qcmn
     [[ -z "${QC_JSON_ITS:-}" ]] && QC_JSON_ITS=consul://o2/components/qc/ANY/any/its-qcmn-epn-full
     if [[ -z "${QC_JSON_MFT:-}" ]]; then
       if has_detector MFT && has_processing_step MFT_RECO; then
@@ -116,6 +123,9 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=consul://o2/components/qc/ANY/any/glo-mftmch-mtch-qcmn-epn
     elif has_detectors_reco MCH MID && has_matching_qc MCHMID; then
         [[ -z "${QC_JSON_GLO_MCHMID:-}" ]] && QC_JSON_GLO_MCHMID=consul://o2/components/qc/ANY/any/glo-mchmid-mtch-qcmn-epn
+    fi
+    if has_processing_step ENTROPY_ENCODER && [[ ! -z "$WORKFLOW_DETECTORS_CTF" ]] && [[ $WORKFLOW_DETECTORS_CTF != "NONE" ]]; then
+      [[ -z "${QC_JSON_CTF_SIZE:-}" ]] && QC_JSON_CTF_SIZE=consul://o2/components/qc/ANY/any/glo-qc-data-size
     fi
     if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
       [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn-staging.json # this must be last
@@ -258,6 +268,12 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
       add_QC_JSON pid$i ${!PID_JSON_FILE}
     fi
   done
+
+  # CTF QC
+  if [[ ! -z "${QC_JSON_CTF_SIZE:-}" ]]; then
+    add_QC_JSON GLO_CTF ${QC_JSON_CTF_SIZE}
+    add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.CTFSize.taskParameters.detectors=\"${WORKFLOW_DETECTORS}\"'
+  fi
 
   # arbitrary extra QC
   if [[ ! -z "${QC_JSON_EXTRA:-}" ]]; then
