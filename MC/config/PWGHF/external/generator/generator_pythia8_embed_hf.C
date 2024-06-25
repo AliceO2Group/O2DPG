@@ -80,7 +80,7 @@ public:
         }
 
         // we set pT hard bins
-        auto seed = mGeneratorEvHF->getUsedSeed();
+        auto seed = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF->getUsedSeed());
         float ptHardBins[4] = {2.76, 20., 50., 1000.};
         int iPt{0};
         if (seed % 10 < 7) {
