@@ -18,10 +18,10 @@ public:
   GeneratorPythia8ALICE3() {
 
     char* alien_proc_id = getenv("ALIEN_PROC_ID");
-    int seed;
+    long seed;
 
     if (alien_proc_id != NULL) {
-      seed = atoi(alien_proc_id);
+      seed = atol(alien_proc_id);
       LOG(info) << "Seed set to ALIEN_PROC_ID: " << seed;
     } else {
       LOG(info) << "Unable to retrieve ALIEN_PROC_ID";
