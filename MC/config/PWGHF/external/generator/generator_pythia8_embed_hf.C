@@ -78,6 +78,20 @@ public:
             LOG(fatal) << "********** [GeneratorPythia8EmbedHF] bad configuration, fix it! **********";
             break;
         }
+
+        // we set pT hard bins
+        auto seed = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF)->getUsedSeed();
+        float ptHardBins[4] = {2.76, 20., 50., 1000.};
+        int iPt{0};
+        if (seed % 10 < 7) {
+            iPt = 0;
+        } else if (seed % 10 < 9) {
+            iPt = 1;
+        } else {
+            iPt = 2;
+        }
+        dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF)->readString(Form("PhaseSpace:pTHatMin = %f", ptHardBins[iPt]));
+        dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF)->readString(Form("PhaseSpace:pTHatMax = %f", ptHardBins[iPt+1]));
         mGeneratorEvHF->Init();
     }
 
@@ -394,3 +408,4 @@ FairGenerator * GeneratorPythia8EmbedHFCharmAndBeauty(float yQuarkMin = -1.5, fl
 
     return myGen;
 }
+
