@@ -90,8 +90,8 @@ public:
         } else {
             iPt = 2;
         }
-        mGeneratorEvHF->readString(Form("PhaseSpace:pTHatMin = %f", ptHardBins[iPt]));
-        mGeneratorEvHF->readString(Form("PhaseSpace:pTHatMax = %f", ptHardBins[iPt+1]));
+        dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF)->readString(Form("PhaseSpace:pTHatMin = %f", ptHardBins[iPt]));
+        dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF)->readString(Form("PhaseSpace:pTHatMax = %f", ptHardBins[iPt+1]));
         mGeneratorEvHF->Init();
     }
 
@@ -203,3 +203,4 @@ FairGenerator * GeneratorPythia8EmbedHFCharmAndBeauty(float yQuarkMin = -1.5, fl
 
     return myGen;
 }
+
