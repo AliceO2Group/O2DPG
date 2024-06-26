@@ -717,15 +717,15 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
     if (( $(echo "$PERCENT < $MIN_ALLOWED_AOD_PERCENT_SIZE" | bc -l) )); then
       AOD_LAST_BUT_ONE=`find . -name AO2D.root | sort | tail -2 | head -1`
       echo "Too small, merging $AOD_LAST with previous file $AOD_LAST_BUT_ONE"
-      ls $PWD/$AOD_LAST > list.list
-      ls $PWD/$AOD_LAST_BUT_ONE >> list.list
+      ls $PWD/$AOD_LAST > listAOD.list
+      ls $PWD/$AOD_LAST_BUT_ONE >> listAOD.list
       echo "List of files for merging:"
-      cat list.list
+      cat listAOD.list
       mkdir tmpAOD
       cd tmpAOD
-      ln -s ../list.list .
+      ln -s ../listAOD.list .
       timeStart=`date +%s`
-      time o2-aod-merger --input list.list
+      time o2-aod-merger --input listAOD.list
       exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))

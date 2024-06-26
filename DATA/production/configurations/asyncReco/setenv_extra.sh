@@ -24,40 +24,83 @@ if [[ $RUNNUMBER -lt 544772 ]]; then
 fi   
 echo "RSRUNNUMBER = $RUNNUMBER RANS_OPT = $RANS_OPT"
 
+# IR, duration, B field, detector list
+if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]] || [[ -z $RUN_BFIELD ]]; then
+  echo "In setenv_extra: time used so far = $timeUsed"
+  timeStart=`date +%s`
+  time o2-calibration-get-run-parameters -r $RUNNUMBER
+  timeEnd=`date +%s`
+  timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
+  delta=$(( $timeEnd-$timeStart ))
+  echo "Time spent in getting run parameters = $delta s"
+  export RUN_IR=`cat IR.txt`
+  export RUN_DURATION=`cat Duration.txt`
+  export RUN_BFIELD=`cat BField.txt`
+  export RUN_DETECTOR_LIST=`cat DetList.txt`
+fi
+echo -e "\n"
+echo "Printing run features"
+echo "DETECTOR LIST for current run ($RUNNUMBER) = $RUN_DETECTOR_LIST"
+echo "DURATION for current run ($RUNNUMBER) = $RUN_DURATION"
+echo "B FIELD for current run ($RUNNUMBER) = $RUN_BFIELD"
+echo "IR for current run ($RUNNUMBER) = $RUN_IR"
+if (( $(echo "$RUN_IR <= 0" | bc -l) )); then
+  echo "Changing run IR to 1 Hz, because $RUN_IR makes no sense"
+  RUN_IR=1
+fi
+echo "BeamType = $BEAMTYPE"
+echo "PERIOD = $PERIOD"
+
 # detector list
+echo -e "\n"
+echo "Printing detector list for reconstruction"
 if [[ -n $ALIEN_JDL_WORKFLOWDETECTORS ]]; then
+  echo "WORKFLOW_DETECTORS taken from JDL, ALIEN_JDL_WORKFLOWDETECTORS = $ALIEN_JDL_WORKFLOWDETECTORS"
   export WORKFLOW_DETECTORS=$ALIEN_JDL_WORKFLOWDETECTORS
 else
-  export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
+  export WORKFLOW_DETECTORS=`echo $RUN_DETECTOR_LIST | sed 's/ /,/g'`
   if [[ $RUNNUMBER == 528529 ]] || [[ $RUNNUMBER == 528530 ]]; then
     # removing MID for these runs: it was noisy and therefore declared bad, and makes the reco crash
-    export WORKFLOW_DETECTORS=ITS,TPC,TOF,FV0,FT0,FDD,MFT,MCH,TRD,EMC,PHS,CPV,HMP,ZDC,CTP
+    echo "Excluding MID since RUNNUMBER = $RUNNUMBER"
+    export WORKFLOW_DETECTORS_EXCLUDE="MID"
   fi
   # list of detectors to possibly exclude
   if [[ -n $ALIEN_JDL_DETECTORSEXCLUDE ]]; then
-    echo "ALIEN_JDL_DETECTORSEXCLUDE = $ALIEN_JDL_DETECTORSEXCLUDE"
+    echo "DETECTORS_EXCLUDE taken from JDL, ALIEN_JDL_DETECTORSEXCLUDE = $ALIEN_JDL_DETECTORSEXCLUDE"
     export DETECTORS_EXCLUDE=$ALIEN_JDL_DETECTORSEXCLUDE  # will be used in the async_pass.sh if we run in split mode
-    export WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE
+    if [[ -z ${WORKFLOW_DETECTORS_EXCLUDE:+x} ]]; then # there is no WORKFLOW_DETECTORS_EXCLUDE, or it is NULL
+      export WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE
+    else
+      export WORKFLOW_DETECTORS_EXCLUDE+=",$DETECTORS_EXCLUDE"
+    fi
   fi
 fi
 
+echo "Final settings for detectors to be processed:"
+echo "WORKFLOW_DETECTORS = $WORKFLOW_DETECTORS"
+echo "WORKFLOW_DETECTORS_EXCLUDE = $WORKFLOW_DETECTORS_EXCLUDE"
+
 # ad-hoc settings for CTF reader: we are on the grid, we read the files remotely
-echo "*********************** mode = ${MODE}"
+echo -e "\nProcessing mode = ${MODE}"
 unset ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow
 
 if [[ $MODE == "remote" ]]; then
   if [[ $ALIEN_JDL_REMOTEREADING != 1 ]]; then
+    echo "Files will be copied locally: we expect that the JDL has the \"nodownload\" option"
     export INPUT_FILE_COPY_CMD="\"alien_cp ?src file://?dst\""
-    export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --remote-regex \"^alien:///alice/data/.+\""
+    export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --remote-regex \"^alien:///alice/data/.+\""
   else
+    echo "Files will NOT be copied locally: we expect that the job agent takes care"
     export INPUT_FILE_COPY_CMD="no-copy"
   fi
 fi
 
+echo -e "\nSetting up workflow options"
+
 # adjusting for trigger LM_L0 correction, which was not there before July 2022
 if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC22e" ]] || [[ $PERIOD == "JUN" ]] || [[ $PERIOD == "LHC22f" ]] ; then
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]]; then
-    export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --correct-trd-trigger-offset"
+    export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --correct-trd-trigger-offset"
   fi
 fi
 
@@ -76,18 +119,16 @@ if [[ $remappingITS == 1 ]] || [[ $remappingMFT == 1 ]]; then
   REMAPPING=$REMAPPING\"
 fi
 
-echo remapping = $REMAPPING
-echo "BeamType = $BEAMTYPE"
-echo "PERIOD = $PERIOD"
+echo "Remapping = $REMAPPING"
 
 # needed if we need more wf
 export ADD_EXTRA_WORKFLOW=
 
 # other ad-hoc settings for CTF reader
-export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --allow-missing-detectors $REMAPPING"
+export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --allow-missing-detectors $REMAPPING"
 echo RUN = $RUNNUMBER
 if [[ $RUNNUMBER -ge 521889 ]]; then
-  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --its-digits --mft-digits"
+  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --its-digits --mft-digits"
   export DISABLE_DIGIT_CLUSTER_INPUT="--digits-from-upstream"
   MAXBCDIFFTOMASKBIAS_ITS="ITSClustererParam.maxBCDiffToMaskBias=-10"    # this explicitly disables ITS masking
   MAXBCDIFFTOSQUASHBIAS_ITS="ITSClustererParam.maxBCDiffToSquashBias=10" # this explicitly enables ITS squashing
@@ -195,6 +236,7 @@ else
     echo "************************************************************"
 fi
 
+echo -e "\nTPC vdrift:"
 # TPC vdrift
 PERIODLETTER=${PERIOD: -1}
 VDRIFTPARAMOPTION=
@@ -213,30 +255,7 @@ else
   echo "TPC vdrift will be taken from CCDB"
 fi
 
-# IR
-if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]] || [[ -z $RUN_BFIELD ]]; then
-  cp $O2DPG_ROOT/DATA/production/common/getIRandDuration.C ./
-  echo "In setenv_extra: time used so far = $timeUsed"
-  timeStart=`date +%s`
-  time o2-calibration-get-run-parameters -r $RUNNUMBER
-  timeEnd=`date +%s`
-  timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
-  delta=$(( $timeEnd-$timeStart ))
-  echo "Time spent in getting IR and duration of the run = $delta s"
-  export RUN_IR=`cat IR.txt`
-  export RUN_DURATION=`cat Duration.txt`
-  export RUN_BFIELD=`cat BField.txt`
-  export RUN_DETECTOR_LIST=`cat DetList.txt`
-fi
-echo "DETECTOR LIST for current run ($RUNNUMBER) = $RUN_DETECTOR_LIST"
-echo "DURATION for current run ($RUNNUMBER) = $RUN_DURATION"
-echo "B FIELD for current run ($RUNNUMBER) = $RUN_BFIELD"
-echo "IR for current run ($RUNNUMBER) = $RUN_IR"
-if (( $(echo "$RUN_IR <= 0" | bc -l) )); then
-  echo "Changing run IR to 1 Hz, because $RUN_IR makes no sense"
-  RUN_IR=1
-fi
-
+echo -e "\nTPC calib configuration:"
 # Let's check if ZDC is in the detector list; this is needed for TPC dist correction scaling in PbPb 2023
 SCALE_WITH_ZDC=1
 SCALE_WITH_FT0=1
@@ -252,12 +271,10 @@ if (( RUN_DURATION < 600 )); then
   export CALIB_TPC_SCDCALIB_SLOTLENGTH=$RUN_DURATION
 fi
 
-echo "BeamType = $BEAMTYPE"
-
 if [[ $ALIEN_JDL_ENABLEMONITORING != "0" ]]; then
   # add the performance metrics
   export ENABLE_METRICS=1
-  export ARGS_ALL_EXTRA="$ARGS_ALL_EXTRA --resources-monitoring 50 --resources-monitoring-dump-interval 50"
+  export ARGS_ALL_EXTRA+=" --resources-monitoring 50 --resources-monitoring-dump-interval 50"
 else
   # remove monitoring-backend
   export ENABLE_METRICS=0
@@ -448,7 +465,7 @@ fi
 # ad-hoc settings for TOF reco
 # export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow+="--use-ccdb --ccdb-url-tof \"http://alice-ccdb.cern.ch\""
 # since commit on Dec, 4
-export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow="$ARGS_EXTRA_PROCESS_o2_tof_reco_workflow --use-ccdb"
+export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow+=" --use-ccdb"
 
 # ad-hoc options for primary vtx workflow
 #export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2.;pvertexer.nSigmaTimeTrack=4.;pvertexer.timeMarginTrackTime=0.5;pvertexer.timeMarginVertexTime=7.;pvertexer.nSigmaTimeCut=10;pvertexer.dbscanMaxDist2=30;pvertexer.dcaTolerance=3.;pvertexer.pullIniCut=100;pvertexer.addZSigma2=0.1;pvertexer.tukey=20.;pvertexer.addZSigma2Debris=0.01;pvertexer.addTimeSigma2Debris=1.;pvertexer.maxChi2Mean=30;pvertexer.timeMarginReattach=3.;pvertexer.addTimeSigma2Debris=1.;"
@@ -490,10 +507,10 @@ export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";$ITSEXTRAERR;$ITSTPCMATC
 [[ ! -z "${TPCITSTIMEERR}" ]] && export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";tpcitsMatch.globalTimeExtraErrorMUS=$TPCITSTIMEERR;"
 
 # enabling AfterBurner
-has_detector FT0 && export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow="$ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow --use-ft0"
+has_detector FT0 && export ARGS_EXTRA_PROCESS_o2_tpcits_match_workflow+=" --use-ft0"
 
 # ad-hoc settings for TOF matching
-export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow="$ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow --output-type matching-info,calib-info --enable-dia"
+export ARGS_EXTRA_PROCESS_o2_tof_matcher_workflow+=" --output-type matching-info,calib-info --enable-dia"
 export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$ITSEXTRAERR;$TRACKTUNETPC;$VDRIFTPARAMOPTION;"
 
 if [[ $ALIEN_JDL_LPMPASSNAME == "cpass0" ]]; then
@@ -505,13 +522,13 @@ fi
 export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$TRACKTUNETPC;$VDRIFTPARAMOPTION;GPU_rec_trd.minTrackPt=0.3;"
 
 # ad-hoc settings for FT0
-export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow="$ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow --ft0-reconstructor"
+export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow+=" --ft0-reconstructor"
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  export CONFIG_EXTRA_PROCESS_o2_ft0_reco_workflow=";FT0TimeFilterParam.mAmpLower=10;"
+  export CONFIG_EXTRA_PROCESS_o2_ft0_reco_workflow+=";FT0TimeFilterParam.mAmpLower=10;"
 fi
 
 # ad-hoc settings for FV0
-export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow="$ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow --fv0-reconstructor"
+export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow+=" --fv0-reconstructor"
 
 # ad-hoc settings for FDD
 #...
@@ -564,20 +581,20 @@ if [[ $ADD_CALIB == "1" ]]; then
   if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
-    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="scdcalib.additionalTracksMap=35000000;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=6;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=90;scdcalib.minTOFTRDPVContributors=2"
-    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow="$ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow --tracking-sources-map-extraction ITS-TPC"
+    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=";scdcalib.additionalTracksMap=35000000;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=6;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=90;scdcalib.minTOFTRDPVContributors=2"
+    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=" --tracking-sources-map-extraction ITS-TPC"
     # ad-hoc settings for TPC residual extraction
-    export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator="$ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator --output-type trackParams,unbinnedResid"
+    export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator+=" --output-type trackParams,unbinnedResid"
     if [[ $ALIEN_JDL_DEBUGRESIDUALEXTRACTION == "1" ]]; then
       export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=";scdcalib.maxTracksPerCalibSlot=-1;scdcalib.minPtNoOuterPoint=0.8;scdcalib.minTPCNClsNoOuterPoint=120"
-      export ARGS_EXTRA_PROCESS_o2_trd_global_tracking+="$ARGS_EXTRA_PROCESS_o2_trd_global_tracking --enable-qc"
+      export ARGS_EXTRA_PROCESS_o2_trd_global_tracking+=" --enable-qc"
     fi
   fi
   export CALIB_EMC_ASYNC_RECALIB="$ALIEN_JDL_DOEMCCALIB"
   if [[ $ALIEN_JDL_DOTRDVDRIFTEXBCALIB == "1" ]]; then
     export CALIB_TRD_VDRIFTEXB="$ALIEN_JDL_DOTRDVDRIFTEXBCALIB"
-    export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow="$ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow --enable-root-output"
-    export ARGS_EXTRA_PROCESS_o2_trd_global_tracking="$ARGS_EXTRA_PROCESS_o2_trd_global_tracking --enable-qc"
+    export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow+=" --enable-root-output"
+    export ARGS_EXTRA_PROCESS_o2_trd_global_tracking+=" --enable-qc"
   fi
   if [[ $ALIEN_JDL_DOMEANVTXCALIB == 1 ]]; then
     export CALIB_PRIMVTX_MEANVTX="$ALIEN_JDL_DOMEANVTXCALIB"
@@ -586,8 +603,8 @@ if [[ $ADD_CALIB == "1" ]]; then
     export SVERTEXING_SOURCES=none # disable secondary vertexing
   fi
   if [[ $ALIEN_JDL_DOTRDGAINCALIB == 1 ]]; then
-    export CONFIG_EXTRA_PROCESS_o2_calibration_trd_workflow="TRDCalibParams.minEntriesChamberGainCalib=999999999;TRDCalibParams.minEntriesTotalGainCalib=10000;TRDCalibParams.nTrackletsMinGainCalib=4"
-    export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow="$ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow --enable-root-output"
+    export CONFIG_EXTRA_PROCESS_o2_calibration_trd_workflow+=";TRDCalibParams.minEntriesChamberGainCalib=999999999;TRDCalibParams.minEntriesTotalGainCalib=10000;TRDCalibParams.nTrackletsMinGainCalib=4"
+    export ARGS_EXTRA_PROCESS_o2_calibration_trd_workflow+=" --enable-root-output"
     export CALIB_TRD_GAIN=1
   fi
   # extra workflows in case we want to process the currents for FT0, FV0, TOF, TPC
@@ -624,6 +641,7 @@ if [[ $ALIEN_JDL_AODOFF != "1" ]]; then
 fi
 
 # ad-hoc settings for AOD
+echo -e "\nNeeded for AODs:"
 echo ALIEN_JDL_LPMPRODUCTIONTAG = $ALIEN_JDL_LPMPRODUCTIONTAG
 echo ALIEN_JDL_LPMPASSNAME = $ALIEN_JDL_LPMPASSNAME
 # Track QC table sampling
@@ -648,9 +666,9 @@ else
   fi
 fi
 echo TRACKQC_FRACTION = $TRACKQC_FRACTION
-export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="$ARGS_EXTRA_PROCESS_o2_aod_producer_workflow --aod-writer-maxfilesize $AOD_FILE_SIZE --lpmp-prod-tag $ALIEN_JDL_LPMPRODUCTIONTAG --reco-pass $ALIEN_JDL_LPMPASSNAME --trackqc-fraction $TRACKQC_FRACTION"
+export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --aod-writer-maxfilesize $AOD_FILE_SIZE --lpmp-prod-tag $ALIEN_JDL_LPMPRODUCTIONTAG --reco-pass $ALIEN_JDL_LPMPASSNAME --trackqc-fraction $TRACKQC_FRACTION"
 if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC22e" ]] || [[ $PERIOD == "JUN" ]] || [[ $PERIOD == "LHC22f" ]] || [[ $PERIOD == "LHC22m" ]] || [[ "$RUNNUMBER" == @(526463|526465|526466|526467|526468|526486|526505|526508|526510|526512|526525|526526|526528|526534|526559|526596|526606|526612|526638|526639|526641|526643|526647|526649|526689|526712|526713|526714|526715|526716|526719|526720|526776|526886|526926|526927|526928|526929|526934|526935|526937|526938|526963|526964|526966|526967|526968|527015|527016|527028|527031|527033|527034|527038|527039|527041|527057|527076|527108|527109|527228|527237|527259|527260|527261|527262|527345|527347|527349|527446|527518|527523|527734) ]] ; then
-  export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="$ARGS_EXTRA_PROCESS_o2_aod_producer_workflow --ctpreadout-create 1"
+  export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --ctpreadout-create 1"
 fi
 
 # Enabling QC
