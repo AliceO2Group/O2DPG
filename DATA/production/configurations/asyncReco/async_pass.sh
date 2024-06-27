@@ -23,23 +23,28 @@ timeStartFullProcessing=`date +%s`
 export inputarg="${1}"
 
 if [[ "${1##*.}" == "root" ]]; then
-    #echo ${1##*.}
-    #echo "alien://${1}" > list.list
-    #export MODE="remote"
-    echo "${1}" > list.list
-    if [[ ! -z $ASYNC_BENCHMARK_ITERATIONS ]]; then
-      for i in `seq 1 $ASYNC_BENCHMARK_ITERATIONS`; do echo "${1}" >> list.list; done
-    fi
-    export MODE="LOCAL"
-    shift
+  #echo ${1##*.}
+  #echo "alien://${1}" > list.list
+  #export MODE="remote"
+  echo "${1}" > list.list
+  if [[ ! -z $ASYNC_BENCHMARK_ITERATIONS ]]; then
+    for i in `seq 1 $ASYNC_BENCHMARK_ITERATIONS`; do echo "${1}" >> list.list; done
+  fi
+  export MODE="LOCAL"
+  shift
 elif [[ "${1##*.}" == "xml" ]]; then
+  if [[ $ALIEN_JDL_DOWNLOADINPUTFILES == "1" ]]; then
+    echo "Downloading input files done by the job agent"
+    sed -rn 's/.*file\ name="(o2_ctf[^"]*)".*/\1/p' $1 > list.list
+  else
     sed -rn 's/.*turl="([^"]*)".*/\1/p' $1 > list.list
-    export MODE="remote"
-    shift
+  fi
+  export MODE="remote"
+  shift
 elif [[ $1 != "list.list" && "${1##*.}" == "list" ]]; then
-    cp $1 list.list
-    export MODE="remote"
-    shift
+  cp $1 list.list
+  export MODE="remote"
+  shift
 fi
 
 # Could need sometimes to iterate just a subset of the input files

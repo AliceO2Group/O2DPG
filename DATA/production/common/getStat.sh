@@ -12,7 +12,7 @@ nCTFsFilesFailed=`grep "FileFetcher: non-zero exit code [0-9]*" $1 | wc -l`
 nCTFsProcessed=`grep "Read CTF" $1 | tail -1 | sed 's/^.*Read CTF \([0-9]*\).*$/\1/'`
 nCTFsProcessed=$((nCTFsProcessed + 1))
 
-if [[ $nCTFsFilesInspected != $((nCTFsFilesFailed + nCTFsFilesOK)) ]]; then
+if [[ $nCTFsFilesInspected -gt 0 && $nCTFsFilesInspected != $((nCTFsFilesFailed + nCTFsFilesOK)) ]]; then
   echo "Something went wrong with parsing the log file: CTF files inspected ($nCTFsFilesInspected) is not the sum of those successfully processed ($nCTFsFilesOK) and those that failed ($nCTFsFilesFailed)"
   exit 8
 fi
