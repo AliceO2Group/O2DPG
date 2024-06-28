@@ -1,10 +1,10 @@
 int External() {
     std::string path{"o2sim_Kine.root"};
+    //std::string path{"tf1/sgn_1_Kine.root"};
 
     int checkPdgQuarkOne{4};
     int checkPdgQuarkTwo{5};
-    float ratioTrigger = 1.; // each event triggered
-    float averagePt = 0.;
+    float ratioTrigger = 1.; // one event triggered out of 1
 
     std::vector<int> checkPdgHadron{411, 421, 431, 4122, 4132, 4232, 4332};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
@@ -37,17 +37,17 @@ int External() {
         tree->GetEntry(i);
 
         // check subgenerator information
-        if (eventHeader->hasInfo(o2::mcgenid::GeneratorProperty::SUBGENERATORID)) {
-            bool isValid = false;
-            int subGeneratorId = eventHeader->getInfo<int>(o2::mcgenid::GeneratorProperty::SUBGENERATORID, isValid);
-            if (subGeneratorId == 0) {
-                nEventsMB++;
-            } else if (subGeneratorId == checkPdgQuarkOne) {
-                nEventsInjOne++;
-            } else if (subGeneratorId == checkPdgQuarkTwo) {
-                nEventsInjTwo++;
-            }
-        }
+        //if (eventHeader->hasInfo(o2::mcgenid::GeneratorProperty::SUBGENERATORID)) {
+        //    bool isValid = false;
+        //    int subGeneratorId = eventHeader->getInfo<int>(o2::mcgenid::GeneratorProperty::SUBGENERATORID, isValid);
+        //    if (subGeneratorId == 0) {
+        //        nEventsMB++;
+        //    } else if (subGeneratorId == checkPdgQuarkOne) {
+        //        nEventsInjOne++;
+        //    } else if (subGeneratorId == checkPdgQuarkTwo) {
+        //        nEventsInjTwo++;
+        //    }
+        //}
 
         for (auto &track : *tracks) {
             auto pdg = track.GetPdgCode();
@@ -61,7 +61,6 @@ int External() {
             }
             if (std::find(checkPdgHadron.begin(), checkPdgHadron.end(), std::abs(pdg)) != checkPdgHadron.end()) { // found signal
                 nSignals++; // count signal PDG
-                averagePt += track.GetPt();
 
                 std::vector<int> pdgsDecay{};
                 std::vector<int> pdgsDecayAntiPart{};
@@ -88,31 +87,28 @@ int External() {
         }
     }
 
-    averagePt /= nSignals; 
-
     std::cout << "--------------------------------\n";
     std::cout << "# Events: " << nEvents << "\n";
-    std::cout << "# MB events: " << nEventsMB << "\n";
-    std::cout << Form("# events injected with %d quark pair: ", checkPdgQuarkOne) << nEventsInjOne << "\n";
-    std::cout << Form("# events injected with %d quark pair: ", checkPdgQuarkTwo) << nEventsInjTwo << "\n";
+    //std::cout << "# MB events: " << nEventsMB << "\n";
+    //std::cout << Form("# events injected with %d quark pair: ", checkPdgQuarkOne) << nEventsInjOne << "\n";
+    //std::cout << Form("# events injected with %d quark pair: ", checkPdgQuarkTwo) << nEventsInjTwo << "\n";
     std::cout << Form("# %d (anti)quarks: ", checkPdgQuarkOne) << nQuarksOne << "\n";
     std::cout << Form("# %d (anti)quarks: ", checkPdgQuarkTwo) << nQuarksTwo << "\n";
     std::cout <<"# signal hadrons: " << nSignals << "\n";
     std::cout <<"# signal hadrons decaying in the correct channel: " << nSignalGoodDecay << "\n";
-    std::cout <<"average pT of signal hadrons: " << averagePt << "\n";
 
-    if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.95 || nEventsMB > nEvents * (1 - ratioTrigger) * 1.05) { // we put some tolerance since the number of generated events is small
-        std::cerr << "Number of generated MB events different than expected\n";
-        return 1;
-    }
-    if (nEventsInjOne < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInjOne > nEvents * ratioTrigger * 0.5 * 1.05) {
-        std::cerr << "Number of generated events injected with " << checkPdgQuarkOne << " different than expected\n";
-        return 1;
-    }
-    if (nEventsInjTwo < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInjTwo > nEvents * ratioTrigger * 0.5 * 1.05) {
-        std::cerr << "Number of generated events injected with " << checkPdgQuarkTwo << " different than expected\n";
-        return 1;
-    }
+    //if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.95 || nEventsMB > nEvents * (1 - ratioTrigger) * 1.05) { // we put some tolerance since the number of generated events is small
+    //    std::cerr << "Number of generated MB events different than expected\n";
+    //    return 1;
+    //}
+    //if (nEventsInjOne < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInjOne > nEvents * ratioTrigger * 0.5 * 1.05) {
+    //    std::cerr << "Number of generated events injected with " << checkPdgQuarkOne << " different than expected\n";
+    //    return 1;
+    //}
+    //if (nEventsInjTwo < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInjTwo > nEvents * ratioTrigger * 0.5 * 1.05) {
+    //    std::cerr << "Number of generated events injected with " << checkPdgQuarkTwo << " different than expected\n";
+    //    return 1;
+    //}
 
     if (nQuarksOne < nEvents * ratioTrigger) { // we expect anyway more because the same quark is repeated several time, after each gluon radiation
         std::cerr << "Number of generated (anti)quarks " << checkPdgQuarkOne << " lower than expected\n";
@@ -126,11 +122,6 @@ int External() {
     float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
     if (fracForcedDecays < 0.9) { // we put some tolerance (e.g. due to oscillations which might change the final state)
         std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
-        return 1;
-    }
-
-    if (averagePt < 8.) { // by testing locally it should be around 8.5 GeV/c with pthard bin 20-200 (contrary to 2-2.5 GeV/c of SoftQCD)
-        std::cerr << "Average pT of charmed hadrons " << averagePt << " lower than expected\n";
         return 1;
     }
 

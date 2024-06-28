@@ -168,7 +168,7 @@ void ExtractAndFlattenDirectory(TDirectory* inDir, TDirectory* outDir, std::vect
 
 void ExtractTree(TTree* tree, TDirectory* outDir, std::vector<std::string>& collectNames, std::string const& basedOnTree, std::string const& currentPrefix)
 {
-  const std::vector<std::string> acceptedLeafTypes{"char", "int", "float", "double"};
+  const std::vector<std::string> acceptedLeafTypes{"char", "int", "float", "double", "short", "long"};
   TIter next(tree->GetListOfLeaves());
   std::vector<std::string> leafNames;
   TLeaf* obj = nullptr;

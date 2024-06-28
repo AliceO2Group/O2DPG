@@ -48,7 +48,7 @@ HOST=localhost
 
 
 QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn"
-QC_CONFIG_CONSUL="/o2/components/qc/ANY/any/tpc-raw-qcmn"
+QC_CONFIG="components/qc/ANY/any/tpc-raw-qcmn"
 
 max_events=300
 publish_after=440
@@ -95,7 +95,7 @@ add_W o2-tpc-laser-track-filter "" "" 0
 add_W o2-tpc-calib-laser-tracks "--use-filtered-tracks ${EXTRA_CONFIG_TRACKS} --min-tfs=${min_tracks}"
 add_W o2-tpc-calib-pad-raw " ${EXTRA_CONFIG}" "${CALIB_CONFIG}"
 add_W o2-calibration-ccdb-populator-workflow "--ccdb-path ${CCDB_PATH}" "" 0
-add_QC_from_consul "${QC_CONFIG_CONSUL}" "--local --host lcoalhost"
+add_QC_from_apricot "${QC_CONFIG_CONSUL}" "--local --host lcoalhost"
 
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
 if [ $WORKFLOWMODE == "print" ]; then
