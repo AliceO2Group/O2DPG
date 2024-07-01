@@ -36,7 +36,7 @@ export NWORKERS=4
 # generate random number
 RNDSIG=$(($RANDOM % 100))
 
-CONFIGNAME="Generator_GapTriggered_LFgamma_np1_gap5.ini"
+CONFIGNAME="Generator_GapTriggered_LFee_all_np1_gap8.ini"
 
 export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen external -ini $O2DPG_ROOT/MC/config/PWGEM/ini/$CONFIGNAME"
 
