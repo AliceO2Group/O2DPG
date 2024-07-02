@@ -8,18 +8,9 @@ import argparse
 parser = argparse.ArgumentParser(description='Make Starlight configuration',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument('--pZ', type=int, default='82',
-                   help='Projectile charge')
+parser.add_argument('--collType',default='PbPb', choices=['PbPb', 'pPb', 'Pbp', 'pp', 'OO', 'pO', 'Op'],
+                   help='Colission system')
                    
-parser.add_argument('--pA', type=int, default='208',
-                   help='Projectile atomic number')                
-
-parser.add_argument('--tZ', type=int, default='82',
-                   help='Target charge')
-                   
-parser.add_argument('--tA', type=int, default='208',
-                   help='Target atomic number') 
-
 parser.add_argument('--eCM', type=float, default='5360',
                     help='Centre-of-mass energy')
 
@@ -36,6 +27,42 @@ parser.add_argument('--output', default='GenStarlight.ini',
 
 args = parser.parse_args()
 
+if 'PbPb' in args.collType:
+    pZ = 82
+    pA = 208
+    tZ = 82
+    tA = 208
+if 'pPb' in args.collType:
+    pZ = 1
+    pA = 1
+    tZ = 82
+    tA = 208
+if 'Pbp' in args.collType:
+    pZ = 82
+    pA = 208
+    tZ = 1
+    tA = 1
+if 'pp' in args.collType:
+    pZ = 1
+    pA = 1
+    tZ = 1
+    tA = 1
+if 'OO' in args.collType:
+    pZ = 8
+    pA = 16
+    tZ = 8
+    tA = 16    
+if 'pO' in args.collType:
+    pZ = 1
+    pA = 1
+    tZ = 8
+    tA = 16 
+if 'Op' in args.collType:
+    pZ = 8
+    pA = 16
+    tZ = 1
+    tA = 1 
+
 ### open output file
 fout = open(args.output, 'w')
 
@@ -43,10 +70,10 @@ fout = open(args.output, 'w')
 fout.write('[GeneratorExternal] \n')
 if  'Psi2sToMuPi' in args.process or 'Psi2sToElPi' in args.process or 'RhoPrime' in args.process or 'OmegaTo3Pi' in args.process or 'JpsiToElRad' in args.process :
     fout.write('fileName = ${O2DPG_ROOT}/MC/config/PWGUD/external/generator/GeneratorStarlightToEvtGen.C \n')
-    fout.write('funcName = GeneratorStarlightToEvtGen("%s", %f, %d, %d, %d, %d)  \n' % (args.process,args.eCM ,args.pZ ,args.pA,args.tZ,args.tA))
+    fout.write('funcName = GeneratorStarlightToEvtGen("%s", %f, %d, %d, %d, %d)  \n' % (args.process,args.eCM ,pZ,pA,tZ,tA))
 else:
     fout.write('fileName = ${O2DPG_ROOT}/MC/config/PWGUD/external/generator/GeneratorStarlight.C \n')
-    fout.write('funcName = GeneratorStarlight("%s", %f, %d, %d, %d, %d)  \n' % (args.process,args.eCM ,args.pZ ,args.pA,args.tZ,args.tA))
+    fout.write('funcName = GeneratorStarlight("%s", %f, %d, %d, %d, %d)  \n' % (args.process,args.eCM ,pZ,pA,tZ,tA))
     
 ###Trigger
 fout.write('[TriggerExternal] \n')
