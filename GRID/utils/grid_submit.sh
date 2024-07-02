@@ -201,7 +201,6 @@ while [ $# -gt 0 ] ; do
 	      -c) CONTINUE_WORKDIR=$2;  shift 2 ;;   # this should be the workdir of a job to continue (without HOME and ALIEN_TOPWORKDIR)
         --local) LOCAL_MODE="ON"; shift 1 ;;   # if we want emulate execution in the local workdir (no GRID interaction)
         --script) SCRIPT=$2; shift 2 ;;  # the job script to submit
-		--scriptArgs) SCRIPTARGS=$2; shift 2 ;;  # arguments for the job script
         --jobname) JOBNAME=$2; shift 2 ;; # the job name associated to the job --> determined directory name on GRID
         --topworkdir) ALIEN_TOPWORKDIR=$2; shift 2 ;; # the top workdir relative to GRID home
         --ttl) JOBTTL=$2; shift 2 ;; # allows to specifiy ttl for job
@@ -576,7 +575,7 @@ export PATH=$PATH:$PWD
 # ----------- EXECUTE ACTUAL JOB  ------------------------------------ 
 # source the actual job script from the work dir
 chmod +x ./alien_jobscript.sh
-./alien_jobscript.sh ${SCRIPTARGS}
+./alien_jobscript.sh
 # fetch the return code
 RC=$?
 
