@@ -429,7 +429,7 @@ EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.deltaRof=1;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;ITSCATrackerParam.nROFsPerIterations=12;ITSCATrackerParam.perPrimaryVertexProcessing=true"
 elif [[ $BEAMTYPE == "pp" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.deltaRof=1;ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
+  EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
 fi
 export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow+=";$MAXBCDIFFTOMASKBIAS_ITS;$MAXBCDIFFTOSQUASHBIAS_ITS;$EXTRA_ITSRECO_CONFIG;"
 
