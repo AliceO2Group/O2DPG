@@ -1,0 +1,61 @@
+! WithMPI_MPIBased.cmnd.
+! This file contains the More QCD scheme colour reconnection settings scenario
+! to be read in for a Pythia8 run.
+! Lines beginning with a "!" are comments.
+! Author: Renan Acconcia
+
+!pythia default
+!Last update: 01/08/2018
+!Only Inelastic events: INEL
+
+! 1) Settings related to output in init(), next() and stat().
+Init:showChangedSettings = on                 ! list changed settings
+!Init:showChangedParticleData = off            ! list changed particle data
+!Next:numberCount = 0                          ! print message every n events
+!Next:numberShowInfo = 0                       ! print event information n times
+!Next:numberShowProcess = 1                    ! print process record n times
+!Next:numberShowEvent = 1                      ! print event record n times
+
+! 2) Seed settings
+! Seed is set inside the generator
+! If run on the grid, seed is set to job id
+! If run locally, seed is set to 0
+Random:setSeed = on                           ! Random seed on
+
+! 3) Tunes settings
+! Tune:preferLHAPDF = 2                         ! Using LHAPDF 6
+StringPT:sigma = 0.335
+StringZ:aLund = 0.36
+StringZ:bLund = 0.56
+StringFlav:probQQtoQ = 0.078
+StringFlav:ProbStoUD = 0.2
+StringFlav:probQQ1toQQ0join = 0.0275,0.0275,0.0275,0.0275
+
+MultiPartonInteractions:pT0Ref = 2.12
+
+BeamRemnants:remnantMode = 1
+BeamRemnants:saturation = 5
+
+ColourReconnection:mode = 1
+ColourReconnection:allowDoubleJunRem = off
+ColourReconnection:m0 = 2.9
+ColourReconnection:allowJunctions = on
+ColourReconnection:junctionCorrection = 1.43
+ColourReconnection:timeDilationMode = 0
+
+! 5) Settings for the softQCD-process generation. NSD scenario.
+SoftQCD:nonDiffractive = on                   ! Non Diffractive on
+SoftQCD:singleDiffractive = on                ! Single Diffractive on
+SoftQCD:doubleDiffractive = on                ! Double Diffractive on
+SoftQCD:centralDiffractive = on               ! Central Diffractive on
+SoftQCD:elastic = off                         ! Elastic off
+
+! 6) Decay Supression
+ParticleDecays:limitTau0 = on          ! Only particles with tau0 < tau0Max are decayed.
+ParticleDecays:tau0Max = 0.001            ! Tau0Max = 3. mm/c
+
+! 7) Beam parameter settings. Values below agree with default ones.
+!this is default do not need to be specified
+Beams:idA = 2212                             ! first beam,  p = 2212, pbar = -2212
+Beams:idB = 2212                             ! second beam, p = 2212, pbar = -2212
+Beams:eCM = 14000.0                //energy
