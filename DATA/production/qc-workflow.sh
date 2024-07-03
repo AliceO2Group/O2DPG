@@ -272,7 +272,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
   # CTF QC
   if [[ ! -z "${QC_JSON_CTF_SIZE:-}" ]]; then
     add_QC_JSON GLO_CTF ${QC_JSON_CTF_SIZE}
-    add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.CTFSize.taskParameters.detectors=\"${WORKFLOW_DETECTORS}\"'
+#  add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.CTFSize.taskParameters.detectors=\"${WORKFLOW_DETECTORS}\"'
   fi
 
   # arbitrary extra QC
