@@ -272,7 +272,7 @@ add_QC_from_consul()
 add_QC_from_apricot()
 {
   if [[ ! -z ${GEN_TOPO_QC_JSON_FILE:-} ]]; then
-    curl -s -o $GEN_TOPO_QC_JSON_FILE "${GEN_TOPO_QC_APRICOT_SERVER}/${1}?process=true"
+    curl -s -o $GEN_TOPO_QC_JSON_FILE "${GEN_TOPO_QC_APRICOT_SERVER}/${1}?process=true&${3}"
     if [[ $? != 0 ]]; then
       echo "Error fetching QC JSON $1"
       exit 1
