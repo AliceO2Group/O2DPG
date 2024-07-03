@@ -84,8 +84,10 @@ if [[ ${TPC_CALIB_TRACKS_PUBLISH_EOS:-} == 1 ]]; then
 fi
 
 RAWDIGIT_CONFIG="TPCDigitDump.NoiseThreshold=3;TPCDigitDump.LastTimeBin=600"
-REMAP="--condition-remap \"file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPMagField;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser=TPC/Calib/LaserTracks\" "
-RECO_CONFIG="align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1;GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;GPU_rec_tpc.clustersShiftTimebinsClusterizer=35"   
+REMAP="--condition-remap \"file://${FILEWORKDIR}=GLO/Config/GRPECS,GLO/Config/GRPMagField,TPC/Calib/LaserTracks\" "
+RECO_CONFIG="align-geom.mDetectors=none;GPU_global.deviceType=$GPUTYPE;GPU_proc.tpcIncreasedMinClustersPerRow=500000;GPU_proc.ignoreNonFatalGPUErrors=1;$GPU_CONFIG_KEY;GPU_global.tpcTriggeredMode=1;GPU_rec_tpc.clusterError2AdditionalY=0.1;GPU_rec_tpc.clusterError2AdditionalZ=0.15;GPU_rec_tpc.clustersShiftTimebinsClusterizer=35;"
+# relax tolerances on tracking and selection cut to deal with very low laser intensities
+RECO_CONFIG+="GPU_rec_tpc.trackFollowingMaxRowGap=15;GPU_rec_tpc.trackFollowingMaxRowGapSeed=15;GPU_rec_tpc.minTrackdEdxMax=8;GPU_rec_tpc.adddEdxSubThresholdClusters=0;"
 
 WORKFLOW=
 add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\"" "" 0
