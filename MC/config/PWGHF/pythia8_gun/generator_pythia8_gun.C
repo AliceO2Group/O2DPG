@@ -135,6 +135,8 @@ class GeneratorPythia8Gun : public o2::eventgen::GeneratorPythia8
   /// generate uniform eta and uniform momentum
   void genUniformMomentumEta(double minP, double maxP, double minEta, double maxEta)
   {
+    // Warning: this generator samples randomly in p and not in pT. Care is advised
+
     // random generator
     std::unique_ptr<TRandom3> ranGenerator{new TRandom3()};
     ranGenerator->SetSeed(0);
@@ -146,15 +148,11 @@ class GeneratorPythia8Gun : public o2::eventgen::GeneratorPythia8
     // z-component momentum from eta
     const double cosTheta = (exp(2 * gen_eta) - 1) / (exp(2 * gen_eta) + 1); // starting from eta = -ln(tan(theta/2)) = 1/2*ln( (1+cos(theta))/(1-cos(theta)) ) ---> NB: valid for cos(theta)!=1
     const double gen_pz = gen_p * cosTheta;
-    // y-component: random uniform
-    const double maxVal = sqrt(gen_p * gen_p - gen_pz * gen_pz);
-    double sign_py = ranGenerator->Uniform(0, 1);
-    sign_py = (sign_py > 0.5) ? 1. : -1.;
-    const double gen_py = ranGenerator->Uniform(0., maxVal) * sign_py;
-    // x-component momentum
-    double sign_px = ranGenerator->Uniform(0, 1);
-    sign_px = (sign_px > 0.5) ? 1. : -1.;
-    const double gen_px = sqrt(gen_p * gen_p - gen_pz * gen_pz - gen_py * gen_py) * sign_px;
+    // phi: random uniform, X, Y conform
+    const double pT = sqrt(gen_p * gen_p - gen_pz * gen_pz);
+    double phi = ranGenerator->Uniform(0., 2.0f*TMath::Pi());
+    const double gen_px = pT*TMath::Cos(phi);
+    const double gen_py = pT*TMath::Sin(phi);
 
     set4momentum(gen_px, gen_py, gen_pz);
   }

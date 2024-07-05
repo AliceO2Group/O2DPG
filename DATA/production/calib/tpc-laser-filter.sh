@@ -51,7 +51,7 @@ QC_CONFIG="components/qc/ANY/any/tpc-laser-calib-qcmn"
 
 
 RAWDIGIT_CONFIG="TPCDigitDump.NoiseThreshold=3;TPCDigitDump.LastTimeBin=600;NameConf.mDirGRP=$FILEWORKDIR;NameConf.mDirGeom=$FILEWORKDIR2;NameConf.mDirCollContext=$FILEWORKDIR;NameConf.mDirMatLUT=$FILEWORKDIR"
-REMAP="--condition-remap \"file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPECS;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser/=GLO/Config/GRPMagField;file:///home/wiechula/processData/inputFilesTracking/triggeredLaser=TPC/Calib/LaserTracks\" "
+REMAP="--condition-remap \"file://${FILEWORKDIR}=GLO/Config/GRPECS,GLO/Config/GRPMagField,TPC/Calib/LaserTracks\" "
 RECO_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;"
 RECO_CONFIG+="NameConf.mDirGeom=$FILEWORKDIR2;"
 RECO_CONFIG+="NameConf.mDirCollContext=$FILEWORKDIR;"
@@ -65,7 +65,9 @@ RECO_CONFIG+="GPU_rec_tpc.clusterError2AdditionalY=0.1;"
 RECO_CONFIG+="GPU_rec_tpc.clusterError2AdditionalZ=0.15;"
 RECO_CONFIG+="GPU_rec_tpc.clustersShiftTimebinsClusterizer=35;"
 RECO_CONFIG+="GPU_proc.memoryScalingFactor=2;"
-RECO_CONFIG+="GPU_proc_param.tpcTriggerHandling=0"
+RECO_CONFIG+="GPU_proc_param.tpcTriggerHandling=0;"
+# relax tolerances on tracking and selection cut to deal with very low laser intensities
+RECO_CONFIG+="GPU_rec_tpc.trackFollowingMaxRowGap=15;GPU_rec_tpc.trackFollowingMaxRowGapSeed=15;GPU_rec_tpc.minTrackdEdxMax=8;GPU_rec_tpc.adddEdxSubThresholdClusters=0;"
 
 
 WORKFLOW=
