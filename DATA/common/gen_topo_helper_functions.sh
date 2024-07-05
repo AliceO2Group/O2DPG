@@ -285,7 +285,6 @@ add_QC_from_apricot()
   else
     QC_CONFIG_ARG="apricot://${GEN_TOPO_QC_APRICOT_SERVER}$1"
   fi
-  echo $GEN_TOPO_QC_JSON_FILE
   add_W o2-qc "--config $QC_CONFIG_ARG $2"
 }
 

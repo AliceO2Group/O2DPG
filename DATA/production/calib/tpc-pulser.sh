@@ -35,7 +35,6 @@ fi
 
 #################################################################################################################################
 
-echo "QC_command:" $QC_CONFIG 
 WORKFLOW=
 add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\"" "" 0
 add_W o2-tpc-calib-pad-raw "--input-spec \"$CALIB_INSPEC\" --calib-type pulser --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes 36 --check-calib-infos" "${CALIB_CONFIG}" 
