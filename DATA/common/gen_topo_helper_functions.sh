@@ -273,7 +273,7 @@ add_QC_from_apricot()
 {
   if [[ ! -z ${GEN_TOPO_QC_JSON_FILE:-} ]]; then
 	if [[ ${1} =~ "?" ]]; then
-		echo curl -s -o $GEN_TOPO_QC_JSON_FILE "${GEN_TOPO_QC_APRICOT_SERVER}/${1}&process=true"
+		echo curl -s -o $GEN_TOPO_QC_JSON_FILE "${GEN_TOPO_QC_APRICOT_SERVER}/${1}\&process=true"
 	else
 		echo curl -s -o $GEN_TOPO_QC_JSON_FILE "${GEN_TOPO_QC_APRICOT_SERVER}/${1}?process=true"
 	fi
