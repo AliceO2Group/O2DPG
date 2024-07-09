@@ -4,7 +4,7 @@ int External() {
     int checkPdgQuark{5};
     float ratioTrigger = 1./5; // one event triggered out of 5
 
-    std::vector<int> checkPdgHadron{411, 421, 431, 4122, 4132, 4232, 4332};
+    std::vector<int> checkPdgHadron{411, 421, 431, 4122, 4132, 4232, 4332, 511, 521, 531, 5122};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
         {411, {{-321, 211, 211}, {-313, 211}, {211, 311}, {211, 333}}}, // D+
         {421, {{-321, 211}, {-321, 111, 211}}}, // D0
