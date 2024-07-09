@@ -95,7 +95,7 @@ int External() {
         std::cerr << "Number of generated MB events different than expected\n";
         return 1;
     }
-    if (nEventsInj < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInj > nEvents * ratioTrigger * 0.5 * 1.05) {
+    if (nEventsInj < nEvents * ratioTrigger * 0.95 || nEventsInj > nEvents * ratioTrigger * 1.05) {
         std::cerr << "Number of generated events injected with " << checkPdgQuark << " different than expected\n";
         return 1;
     }
