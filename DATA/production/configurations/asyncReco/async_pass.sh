@@ -23,23 +23,28 @@ timeStartFullProcessing=`date +%s`
 export inputarg="${1}"
 
 if [[ "${1##*.}" == "root" ]]; then
-    #echo ${1##*.}
-    #echo "alien://${1}" > list.list
-    #export MODE="remote"
-    echo "${1}" > list.list
-    if [[ ! -z $ASYNC_BENCHMARK_ITERATIONS ]]; then
-      for i in `seq 1 $ASYNC_BENCHMARK_ITERATIONS`; do echo "${1}" >> list.list; done
-    fi
-    export MODE="LOCAL"
-    shift
+  #echo ${1##*.}
+  #echo "alien://${1}" > list.list
+  #export MODE="remote"
+  echo "${1}" > list.list
+  if [[ ! -z $ASYNC_BENCHMARK_ITERATIONS ]]; then
+    for i in `seq 1 $ASYNC_BENCHMARK_ITERATIONS`; do echo "${1}" >> list.list; done
+  fi
+  export MODE="LOCAL"
+  shift
 elif [[ "${1##*.}" == "xml" ]]; then
+  if [[ $ALIEN_JDL_DOWNLOADINPUTFILES == "1" ]]; then
+    echo "Downloading input files done by the job agent"
+    sed -rn 's/.*file\ name="(o2_ctf[^"]*)".*/\1/p' $1 > list.list
+  else
     sed -rn 's/.*turl="([^"]*)".*/\1/p' $1 > list.list
-    export MODE="remote"
-    shift
+  fi
+  export MODE="remote"
+  shift
 elif [[ $1 != "list.list" && "${1##*.}" == "list" ]]; then
-    cp $1 list.list
-    export MODE="remote"
-    shift
+  cp $1 list.list
+  export MODE="remote"
+  shift
 fi
 
 # Could need sometimes to iterate just a subset of the input files
@@ -717,15 +722,15 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
     if (( $(echo "$PERCENT < $MIN_ALLOWED_AOD_PERCENT_SIZE" | bc -l) )); then
       AOD_LAST_BUT_ONE=`find . -name AO2D.root | sort | tail -2 | head -1`
       echo "Too small, merging $AOD_LAST with previous file $AOD_LAST_BUT_ONE"
-      ls $PWD/$AOD_LAST > list.list
-      ls $PWD/$AOD_LAST_BUT_ONE >> list.list
+      ls $PWD/$AOD_LAST > listAOD.list
+      ls $PWD/$AOD_LAST_BUT_ONE >> listAOD.list
       echo "List of files for merging:"
-      cat list.list
+      cat listAOD.list
       mkdir tmpAOD
       cd tmpAOD
-      ln -s ../list.list .
+      ln -s ../listAOD.list .
       timeStart=`date +%s`
-      time o2-aod-merger --input list.list
+      time o2-aod-merger --input listAOD.list
       exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))

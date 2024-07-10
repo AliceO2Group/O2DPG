@@ -81,17 +81,32 @@ class GeneratorPythia8GapTriggeredLFgamma : public GeneratorPythia8 {
       geneta->Init();
       CocktailParam *newgeneta = new CocktailParam(geneta);
 
+      // eta
+      auto genk0s = new GeneratorParam(nPart,emlib,GeneratorParamEMlib::kK0s,"k0s"); // 310 for feed down
+      genk0s->SetName("k0s");
+      genk0s->SetMomentumRange(0., 25.);
+      genk0s->SetPtRange(minPt, maxPt);
+      genk0s->SetYRange(yMin, yMax);
+      genk0s->SetPhiRange(phiMin, phiMax);
+      genk0s->SetWeighting(weightMode); // flat pt, y and v2 zero 
+      genk0s->SetSelectAll(kTRUE);
+      genk0s->SetDecayer(decayer);
+      genk0s->Init();
+      CocktailParam *newgenk0s = new CocktailParam(genk0s);
+
       cout << "add pi0 for signal" << endl;
       fGeneratorCocktail->AddGenerator(newgenpizero, 1);
       cout << "add eta for signal" << endl;
       fGeneratorCocktail->AddGenerator(newgeneta, 1);
+      cout << "add k0s for signal" << endl;
+      fGeneratorCocktail->AddGenerator(newgenk0s, 1);
 
       // print debug
       fGeneratorCocktail->PrintDebug();
       fGeneratorCocktail->Init();
 
       addSubGenerator(0, "gap mb pythia");
-      addSubGenerator(1, "injected cocktail");
+      addSubGenerator(1, "event with injected signals");
 
     };
 

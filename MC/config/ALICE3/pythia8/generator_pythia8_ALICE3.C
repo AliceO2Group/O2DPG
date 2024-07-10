@@ -18,18 +18,20 @@ public:
   GeneratorPythia8ALICE3() {
 
     char* alien_proc_id = getenv("ALIEN_PROC_ID");
-    int seed;
+    uint64_t seedFull;
+    uint64_t seed = 0;
 
     if (alien_proc_id != NULL) {
-      seed = atoi(alien_proc_id);
-      LOG(info) << "Seed set to ALIEN_PROC_ID: " << seed;
+      seedFull = static_cast<uint64_t>(atol(alien_proc_id));
+      for(int ii=0; ii<29; ii++) // there might be a cleaner way but this will work
+        seed |= ((seedFull) & (static_cast<uint64_t>(1) << static_cast<uint64_t>(ii)));
+      LOG(info) << "Value of ALIEN_PROC_ID: " << seedFull <<" truncated to 0-28 bits: "<<seed<<endl;
     } else {
       LOG(info) << "Unable to retrieve ALIEN_PROC_ID";
       LOG(info) << "Setting seed to 0 (random)";
       seed = 0;
     }
-
-    mPythia.readString("Random:seed = "+std::to_string(seed));
+    mPythia.readString("Random:seed = "+std::to_string(static_cast<int>(seed)));
   }
 
   ///  Destructor

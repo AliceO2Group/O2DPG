@@ -105,6 +105,22 @@
         "moduleName": "QcMFT",
         "detectorName": "MFT",
         "policy": "OnEachSeparately"
+      },
+      "MFTTracks": {
+        "active": "true",
+        "checkName": "Tracks",
+        "dataSource": [{
+          "type": "Task",
+          "name": "MFTTracks",
+          "MOs" : ["mClusterRatioVsBunchCrossing"]
+        }],
+        "checkParameters" : {
+            "onlineQC" : "0"
+        },
+        "className": "o2::quality_control_modules::mft::QcMFTTrackCheck",
+        "moduleName": "QcMFT",
+        "detectorName": "MFT",
+        "policy": "OnEachSeparately"
       }
     }
   },

@@ -263,29 +263,29 @@ class GeneratorPythia8GapTriggeredLFee : public GeneratorPythia8 {
       genphi->Init();
       CocktailParam *newgenphi = new CocktailParam(genphi);
 
-      // J/psi and psi(2S) need to be slightly different since no EXODUS but EvtGen decayer
-      auto genJpsi = new o2::eventgen::O2_GeneratorParamJpsi;
-      genJpsi->SetNSignalPerEvent(nPart); // signal per event for J/Psi
+//      // J/psi and psi(2S) need to be slightly different since no EXODUS but EvtGen decayer
+//      auto genJpsi = new o2::eventgen::O2_GeneratorParamJpsi;
+//      genJpsi->SetNSignalPerEvent(nPart); // signal per event for J/Psi
+//
+//      auto genPsi = new o2::eventgen::O2_GeneratorParamPsi;
+//      genPsi->SetNSignalPerEvent(nPart); // signal per event for Psi(2s)
+//
+//      TString pdgs = "443;100443";
+//      std::string spdg;
+//      TObjArray* obj = pdgs.Tokenize(";");
+//      fGeneratorCocktail->SetSizePdg(obj->GetEntriesFast());
+//      for (int i = 0; i < obj->GetEntriesFast(); i++) {
+//        spdg = obj->At(i)->GetName();
+//        fGeneratorCocktail->AddPdg(std::stoi(spdg), i);
+//        printf("PDG %d \n", std::stoi(spdg));
+//      }
+//      fGeneratorCocktail->SetForceDecay(kEvtDiElectron);
 
-      auto genPsi = new o2::eventgen::O2_GeneratorParamPsi;
-      genPsi->SetNSignalPerEvent(nPart); // signal per event for Psi(2s)
-
-      TString pdgs = "443;100443";
-      std::string spdg;
-      TObjArray* obj = pdgs.Tokenize(";");
-      fGeneratorCocktail->SetSizePdg(obj->GetEntriesFast());
-      for (int i = 0; i < obj->GetEntriesFast(); i++) {
-        spdg = obj->At(i)->GetName();
-        fGeneratorCocktail->AddPdg(std::stoi(spdg), i);
-        printf("PDG %d \n", std::stoi(spdg));
-      }
-      fGeneratorCocktail->SetForceDecay(kEvtDiElectron);
-
-      int target_pdg = 0;
+      int target_pdg = 1;
 
       if (mMode < 0) {
-        target_pdg = 0;
-        cout << "all-particle mode is selected. all 8 mesons are injected in each event" << endl;
+        target_pdg = 1;
+        cout << "all-particle mode is selected. all 6 mesons are injected in each event" << endl;
         cout << "add pi0 for signal" << endl;
         fGeneratorCocktail->AddGenerator(newgenpizero, 1);
         cout << "add eta for signal" << endl;
@@ -298,49 +298,50 @@ class GeneratorPythia8GapTriggeredLFee : public GeneratorPythia8 {
         fGeneratorCocktail->AddGenerator(newgenomega, 1);
         cout << "add phi for signal" << endl;
         fGeneratorCocktail->AddGenerator(newgenphi, 1);
-        cout << "add j/psi for signal" << endl;
-        fGeneratorCocktail->AddGenerator(genJpsi, 1); // add cocktail --> J/Psi
-        cout << "add psi(2S) for signal" << endl;
-        fGeneratorCocktail->AddGenerator(genPsi, 1);  // add cocktail --> Psi(2s)
+        //cout << "add j/psi for signal" << endl;
+        //fGeneratorCocktail->AddGenerator(genJpsi, 1); // add cocktail --> J/Psi
+        //cout << "add psi(2S) for signal" << endl;
+        //fGeneratorCocktail->AddGenerator(genPsi, 1);  // add cocktail --> Psi(2s)
       } else if (mMode < 100) {
         cout << "1-particle Mode is selected. 1 meson selected randomly per job is injected in each event" << endl;
         TRandom3 *r3 = new TRandom3(0);
         double rndm = r3->Rndm();
         printf("rndm = %f\n", rndm);
 
-        if(rndm < 1/8.) {
+        if(rndm < 1/6.) {
           cout << "add pi0 for signal" << endl;
           fGeneratorCocktail->AddGenerator(newgenpizero, 1);
           target_pdg = 111;
-        } else if (rndm < 2/8.) {
+        } else if (rndm < 2/6.) {
           cout << "add eta for signal" << endl;
           fGeneratorCocktail->AddGenerator(newgeneta, 1);
           target_pdg = 221;
-        } else if (rndm < 3/8.) {
+        } else if (rndm < 3/6.) {
           cout << "add etaprime for signal" << endl;
           fGeneratorCocktail->AddGenerator(newgenetaprime, 1);
           target_pdg = 331;
-        } else if (rndm < 4/8.) {
+        } else if (rndm < 4/6.) {
           cout << "add rho for signal" << endl;
           fGeneratorCocktail->AddGenerator(newgenrho, 1);
           target_pdg = 113;
-        } else if (rndm < 5/8.) {
+        } else if (rndm < 5/6.) {
           cout << "add omega for signal" << endl;
           fGeneratorCocktail->AddGenerator(newgenomega, 1);
           target_pdg = 223;
-        } else if (rndm < 6/8.) {
+        } else if (rndm < 6/6.) {
           cout << "add phi for signal" << endl;
           fGeneratorCocktail->AddGenerator(newgenphi, 1);
           target_pdg = 333;
-        } else if (rndm < 7/8.) {
-          cout << "add j/psi for signal" << endl;
-          fGeneratorCocktail->AddGenerator(genJpsi, 1); // add cocktail --> J/Psi
-          target_pdg = 443;
-        } else {
-          cout << "add psi(2S) for signal" << endl;
-          fGeneratorCocktail->AddGenerator(genPsi, 1);  // add cocktail --> Psi(2s)
-          target_pdg = 100443;
         }
+        //else if (rndm < 7/8.) {
+        //  cout << "add j/psi for signal" << endl;
+        //  fGeneratorCocktail->AddGenerator(genJpsi, 1); // add cocktail --> J/Psi
+        //  target_pdg = 443;
+        //} else {
+        //  cout << "add psi(2S) for signal" << endl;
+        //  fGeneratorCocktail->AddGenerator(genPsi, 1);  // add cocktail --> Psi(2s)
+        //  target_pdg = 100443;
+        //}
         delete r3;
       } else { //directly select meson pdg
         target_pdg = mMode;
@@ -369,14 +370,14 @@ class GeneratorPythia8GapTriggeredLFee : public GeneratorPythia8 {
             cout << "add phi for signal" << endl;
             fGeneratorCocktail->AddGenerator(newgenphi, 1);
             break;
-          case 443 : 
-            cout << "add j/psi for signal" << endl;
-            fGeneratorCocktail->AddGenerator(genJpsi, 1); // add cocktail --> J/Psi
-            break;
-          case 100443 : 
-            cout << "add psi(2S) for signal" << endl;
-            fGeneratorCocktail->AddGenerator(genPsi, 1);  // add cocktail --> Psi(2s)
-            break;
+//          case 443 : 
+//            cout << "add j/psi for signal" << endl;
+//            fGeneratorCocktail->AddGenerator(genJpsi, 1); // add cocktail --> J/Psi
+//            break;
+//          case 100443 : 
+//            cout << "add psi(2S) for signal" << endl;
+//            fGeneratorCocktail->AddGenerator(genPsi, 1);  // add cocktail --> Psi(2s)
+//            break;
           default:
             cout << "!WARNING! default : nothing is added to cocktail generator" << endl;
             target_pdg = 1;

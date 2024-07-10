@@ -3,6 +3,22 @@
 # Non-zero exit code already if one command in a pipe fails
 set -o pipefail
 
+if [[ -z "$NHBPERTF" ]]; then  # try to extract from JDL variables
+  NHBPERTF=32
+  if [[ ! -z "$ALIEN_JDL_NHBPERTF" ]] && [[ "$ALIEN_JDL_NHBPERTF" != 0 ]]; then
+    NHBPERTF=$ALIEN_JDL_NHBPERTF
+    echo "Set NHBF per TF to $NHBPERTF from ALIEN_JDL_NHBPERTF"
+  elif [[ ! -z "$ALIEN_JDL_LPMRUNNUMBER" ]]; then
+    [[ "$ALIEN_JDL_LPMRUNNUMBER" -lt 534125 ]] && NHBPERTF=128 || NHBPERTF=32
+    echo "Set NHBF per TF to $NHBPERTF from ALIEN_JDL_LPMRUNNUMBER=$ALIEN_JDL_LPMRUNNUMBER"
+  else
+    echo "Set NHBF per TF to $NHBPERTF as default"
+  fi
+else
+  echo "Set NHBF per TF to $NHBPERTF as requested explicitly"
+fi
+export NHBPERTF
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Get this script's directory and load common settings (use zsh first (e.g. on Mac) and fallback on `readlink -f` if zsh is not there)
 : ${GEN_TOPO_MYDIR:="$O2DPG_ROOT/DATA/production"}
@@ -25,6 +41,7 @@ fi
 if [[ ! -z "$ALIEN_JDL_SHMSIZE" ]]; then export SHMSIZE=$ALIEN_JDL_SHMSIZE; fi
 if [[ ! -z "$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYDECODER" ]]; then export MULTIPLICITY_PROCESS_tpc_entropy_decoder=$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYDECODER; fi
 if [[ ! -z "$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYENCODER" ]]; then export MULTIPLICITY_PROCESS_tpc_entropy_encoder=$ALIEN_JDL_MULTIPLICITYPROCESSTPCENTROPYENCODER; fi
+
 
 # Set general arguments
 source $GEN_TOPO_MYDIR/getCommonArgs.sh || { echo "getCommonArgs.sh failed" 1>&2 && exit 1; }
@@ -86,7 +103,7 @@ if [[ -z ${NO_ITSMFT_MASKING:-} ]] ; then
   has_detector_ctf MFT && export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow="$ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow --mft-digits"
 fi
 
-add_W o2-ctf-reader-workflow "--ctf-data-subspec 1 --ir-frames-files $IRFRAMES $SKIP_SKIMMED_OUT_TF --ctf-input $CTFLIST ${INPUT_FILE_COPY_CMD+--copy-cmd} ${INPUT_FILE_COPY_CMD} --onlyDet $WORKFLOW_DETECTORS $ALLOW_MISSING_DET --pipeline $(get_N tpc-entropy-decoder TPC REST 1 TPCENTDEC)"
+add_W o2-ctf-reader-workflow "--ctf-data-subspec 1 --ir-frames-files $IRFRAMES $SKIP_SKIMMED_OUT_TF --ctf-input $CTFLIST ${INPUT_FILE_COPY_CMD+--copy-cmd} ${INPUT_FILE_COPY_CMD} --onlyDet $WORKFLOW_DETECTORS $ALLOW_MISSING_DET --pipeline $(get_N tpc-entropy-decoder TPC REST 1 TPCENTDEC)" "HBFUtils.nHBFPerTF=$NHBPERTF"
 
 if [[ -z ${NO_ITSMFT_MASKING:-} ]] ; then
   has_detector_ctf ITS && add_W o2-its-reco-workflow "--digits-from-upstream --disable-mc --disable-tracking --disable-root-output --pipeline $(get_N its-tracker ITS REST 1 ITSTRK)" "ITSClustererParam.maxBCDiffToMaskBias=10;"
