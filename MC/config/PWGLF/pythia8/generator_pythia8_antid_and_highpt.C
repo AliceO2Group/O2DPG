@@ -160,8 +160,5 @@ FairGenerator *generateAntidAndHighPt(double p0 = 0.3,
                                       double pt_leading = 5.0) {
 
   auto myGenerator = new GeneratorPythia8AntidAndHighPt(p0, pt_leading);
-  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
-  myGenerator->readString("Random:setSeed on");
-  myGenerator->readString("Random:seed " + std::to_string(seed));
   return myGenerator;
 }

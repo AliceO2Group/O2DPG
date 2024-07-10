@@ -10,9 +10,8 @@ namespace eventgen {
 class DecayerPythia8ForceDecays : public DecayerPythia8 {
 public:
   DecayerPythia8ForceDecays(){
-    mPythia.readString("Random:setSeed = on");
     char* alien_proc_id = getenv("ALIEN_PROC_ID");
-    int seed;
+    long seed;
     if (alien_proc_id != NULL) {
       seed = atoi(alien_proc_id);
       LOG(info) << "Seed for DecayerPythia8 set to ALIEN_PROC_ID: " << seed;
@@ -21,7 +20,7 @@ public:
       LOG(info) << "Setting seed for DecayerPyhtia8 to 0 (random)";
       seed = 0;
     }
-    mPythia.readString("Random:seed = "+std::to_string(seed));
+    setInitialSeed(seed);
   }
   ~DecayerPythia8ForceDecays() = default;
 
@@ -109,18 +108,17 @@ class GeneratorPythia8ForcedDecays : public GeneratorPythia8 {
 
 public:
   GeneratorPythia8ForcedDecays(){
-    mPythia.readString("Random:setSeed = on");
     char* alien_proc_id = getenv("ALIEN_PROC_ID");
-    int seed;
+    long seed;
     if (alien_proc_id != NULL) {
       seed = atoi(alien_proc_id);
-      LOG(info) << "Seed for GeneratorPythia8 set to ALIEN_PROC_ID: " << seed;
+      LOG(info) << "Seed for DecayerPythia8 set to ALIEN_PROC_ID: " << seed;
     } else {
       LOG(info) << "Unable to retrieve ALIEN_PROC_ID";
-      LOG(info) << "Setting seed for GeneratorPyhtia8 to 0 (random)";
+      LOG(info) << "Setting seed for DecayerPyhtia8 to 0 (random)";
       seed = 0;
     }
-    mPythia.readString("Random:seed = "+std::to_string(seed));
+    setInitialSeed(seed);
   }
   ~GeneratorPythia8ForcedDecays() = default;
 
