@@ -295,7 +295,14 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   [[ -z $ITS_CONFIG || "$ITS_CONFIG" != *"--tracking-mode"* ]] && export ITS_CONFIG+=" --tracking-mode async"
   [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] && CUT_MATCH_CHI2=80 || CUT_MATCH_CHI2=100
   export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=2.;tpcitsMatch.XMatchingRef=60.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;;tpcitsMatch.crudeAbsDiffCut[0]=6;tpcitsMatch.crudeAbsDiffCut[1]=6;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=2.5;tpcitsMatch.crudeNSigma2Cut[0]=64;tpcitsMatch.crudeNSigma2Cut[1]=64;tpcitsMatch.crudeNSigma2Cut[2]=64;tpcitsMatch.crudeNSigma2Cut[3]=64;tpcitsMatch.crudeNSigma2Cut[4]=64;"
+  export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[0]=20;tpcitsMatch.askMinTPCRow[1]=20;tpcitsMatch.askMinTPCRow[2]=20;tpcitsMatch.askMinTPCRow[3]=20;tpcitsMatch.askMinTPCRow[4]=20;tpcitsMatch.askMinTPCRow[5]=20;tpcitsMatch.askMinTPCRow[6]=20;tpcitsMatch.askMinTPCRow[7]=20;tpcitsMatch.askMinTPCRow[8]=20;tpcitsMatch.askMinTPCRow[9]=20;tpcitsMatch.askMinTPCRow[10]=20;tpcitsMatch.askMinTPCRow[11]=20;tpcitsMatch.askMinTPCRow[12]=20;tpcitsMatch.askMinTPCRow[13]=20;tpcitsMatch.askMinTPCRow[14]=20;"
+  export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[15]=20;tpcitsMatch.askMinTPCRow[16]=20;tpcitsMatch.askMinTPCRow[17]=20;tpcitsMatch.askMinTPCRow[18]=20;tpcitsMatch.askMinTPCRow[19]=20;tpcitsMatch.askMinTPCRow[20]=20;tpcitsMatch.askMinTPCRow[21]=20;tpcitsMatch.askMinTPCRow[22]=20;tpcitsMatch.askMinTPCRow[23]=20;tpcitsMatch.askMinTPCRow[24]=20;tpcitsMatch.askMinTPCRow[25]=20;tpcitsMatch.askMinTPCRow[26]=20;tpcitsMatch.askMinTPCRow[27]=20;tpcitsMatch.askMinTPCRow[28]=20;tpcitsMatch.askMinTPCRow[29]=20;"
+  export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[30]=20;tpcitsMatch.askMinTPCRow[31]=20;tpcitsMatch.askMinTPCRow[32]=20;tpcitsMatch.askMinTPCRow[33]=20;tpcitsMatch.askMinTPCRow[34]=20;tpcitsMatch.askMinTPCRow[35]=20;"
+  [[ $RUNNUMBER -ge 544511 ]] && [[ $RUNNUMBER -le 544886 ]] && export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=78;"
 
+  # settings to improve inner pad-rows contribution
+  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.globalTrackingRowRange=100;"
+  
   #-------------------------------------- TPC corrections -----------------------------------------------
   # we need to provide to TPC
   # 1) interaction rate info (lumi) used for scaling or errors and possible of the corrections : INST_IR_FOR_TPC
@@ -651,6 +658,10 @@ echo TRACKQC_FRACTION = $TRACKQC_FRACTION
 export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="$ARGS_EXTRA_PROCESS_o2_aod_producer_workflow --aod-writer-maxfilesize $AOD_FILE_SIZE --lpmp-prod-tag $ALIEN_JDL_LPMPRODUCTIONTAG --reco-pass $ALIEN_JDL_LPMPASSNAME --trackqc-fraction $TRACKQC_FRACTION"
 if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC22e" ]] || [[ $PERIOD == "JUN" ]] || [[ $PERIOD == "LHC22f" ]] || [[ $PERIOD == "LHC22m" ]] || [[ "$RUNNUMBER" == @(526463|526465|526466|526467|526468|526486|526505|526508|526510|526512|526525|526526|526528|526534|526559|526596|526606|526612|526638|526639|526641|526643|526647|526649|526689|526712|526713|526714|526715|526716|526719|526720|526776|526886|526926|526927|526928|526929|526934|526935|526937|526938|526963|526964|526966|526967|526968|527015|527016|527028|527031|527033|527034|527038|527039|527041|527057|527076|527108|527109|527228|527237|527259|527260|527261|527262|527345|527347|527349|527446|527518|527523|527734) ]] ; then
   export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow="$ARGS_EXTRA_PROCESS_o2_aod_producer_workflow --ctpreadout-create 1"
+fi
+
+if [[ $ALIEN_JDL_THINAODS == "1" ]] ; then
+  export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --thin-tracks"
 fi
 
 # Enabling QC
