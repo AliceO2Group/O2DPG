@@ -30,6 +30,10 @@ ANALYSIS_MERGED_ANALYSIS_NAME = "MergedAnalyses"
 def adjust_configuration_line(line, data_or_mc, collision_system):
     line = line.replace('!ANALYSIS_QC_is_mc!', str(data_or_mc == ANALYSIS_VALID_MC).lower())
     line = line.replace('!ANALYSIS_QC_is_data!', str(data_or_mc == ANALYSIS_VALID_DATA).lower())
+    if collision_system == "pp":
+        line = line.replace('!OVERWRITEAXISRANGEFORPBPBVALUE!', "false")
+    else:
+        line = line.replace('!OVERWRITEAXISRANGEFORPBPBVALUE!', "true")
     return line
 
 
