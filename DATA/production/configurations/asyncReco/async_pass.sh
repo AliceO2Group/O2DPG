@@ -12,8 +12,51 @@
 
 # function to run AOD merging
 run_AOD_merging() {
-  o2-aod-merger --input list_$1.list --verbosity 1 --output $1/AO2D_merged.root > $1/merging.log
-  exitcode=$?
+  cd $1
+  if [[ -f "AO2D.root" ]]; then
+    ls "AO2D.root" > list_$1.list
+    echo "Checking AO2Ds with un-merged DFs in $1"
+    timeStartCheck=`date +%s`
+    time root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
+    exitcode=$?
+    timeEndCheck=`date +%s`
+    timeUsedCheck=$(( $timeEndCheck-$timeStartCheck ))
+    echo "Time spent to check unmerged AODs in dir $1 = $timeUsedCheck s"
+    if [[ $exitcode -ne 0 ]]; then
+      echo "exit code from AO2D check is " $exitcode > validation_error.message
+      echo "exit code from AO2D check is " $exitcode
+      echo "This means that the check for unmerged AODs in $1 FAILED, we'll make the whole processing FAIL"
+      return $exitcode
+    fi
+    if [[ -z $ALIEN_JDL_DONOTMERGEAODS ]] || [[ $ALIEN_JDL_DONOTMERGEAODS == 0 ]]; then
+      echo "Merging AOD from the list list_$1.list"
+      o2-aod-merger --input list_$1.list --verbosity 1 --output AO2D_merged.root > merging.log
+      exitcode=$?
+      if [[ $exitcode -ne 0 ]]; then
+	echo "Exit code from the process merging DFs inside AO2D for $1 is " $exitcode > validation_error.message
+	echo "Exit code from the process merging DFs inside AO2D for $1 is " $exitcode
+	echo "This means that the merging of DFs for $1 FAILED, we'll make the whole processing FAIL"
+	return $exitcode
+      fi
+      # now checking merged AODs
+      echo "Checking AO2Ds with merged DFs in $AOD_DIR"
+      timeStartCheckMergedAOD=`date +%s`
+      time root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
+      exitcode=$?
+      timeEndCheckMergedAOD=`date +%s`
+      timeUsedCheckMergedAOD=$(( $timeEndCheckMergedAOD-$timeStartCheckMergedAOD ))
+      echo "Time spent to check unmerged AODs in dir $1 = $timeUsedCheckMergedAOD s"
+      if [[ $exitcode -ne 0 ]]; then
+	echo "exit code from AO2D in $1 with merged DFs check is " $exitcode > validation_error.message
+	echo "exit code from AO2D in $1 with merged DFs check is " $exitcode
+	echo "This means that the check for merged AODs in $1 FAILED, we'll make the whole processing FAIL"
+      else
+	echo "All ok, replacing initial AO2D.root file in $1 with the one with merged DFs"
+	mv AO2D_merged.root AO2D.root
+      fi
+      cd ..
+    fi
+  fi
   return $exitcode
 }
 
@@ -713,12 +756,12 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   if [[ $AOD_LIST_COUNT -ge 2 ]]; then
     AOD_LAST=`find . -name AO2D.root | sort | tail -1`
     CURRENT_SIZE=`wc -c $AOD_LAST | awk '{print $1}'`
-    echo current size = $CURRENT_SIZE
+    echo "current size of last AOD file = $CURRENT_SIZE"
     PERCENT=`echo "scale=2; $CURRENT_SIZE/($AOD_FILE_SIZE*10^6)*100" | bc -l`
-    echo percent = $PERCENT
+    echo "percentage compared to AOD_FILE_SIZE (= $AOD_FILE_SIZE) = $PERCENT"
     if (( $(echo "$PERCENT < $MIN_ALLOWED_AOD_PERCENT_SIZE" | bc -l) )); then
       AOD_LAST_BUT_ONE=`find . -name AO2D.root | sort | tail -2 | head -1`
-      echo "Too small, merging $AOD_LAST with previous file $AOD_LAST_BUT_ONE"
+      echo "Last AOD file too small, merging $AOD_LAST with previous file $AOD_LAST_BUT_ONE"
       ls $PWD/$AOD_LAST > listAOD.list
       ls $PWD/$AOD_LAST_BUT_ONE >> listAOD.list
       echo "List of files for merging:"
@@ -727,7 +770,7 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       cd tmpAOD
       ln -s ../listAOD.list .
       timeStart=`date +%s`
-      time o2-aod-merger --input listAOD.list
+      time o2-aod-merger --input listAOD.list > merging_lastAOD.log
       exitcode=$?
       timeEnd=`date +%s`
       timeUsed=$(( $timeUsed+$timeEnd-$timeStart ))
@@ -773,90 +816,44 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
   for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
     AOD_FILE=`echo $AOD_LIST | cut -d' ' -f$i`
     AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
-    cd $AOD_DIR
-    if [[ -f "AO2D.root" ]]; then
-      echo "Checking AO2Ds with un-merged DFs in $AOD_DIR"
-      timeStartCheck=`date +%s`
-      time root -l -b -q $O2DPG_ROOT/DATA/production/common/readAO2Ds.C > checkAO2D.log
-      exitcode=$?
-      timeEndCheck=`date +%s`
-      timeUsedCheck=$(( $timeUsedCheck+$timeEndCheck-$timeStartCheck ))
-      if [[ $exitcode -ne 0 ]]; then
-        echo "exit code from AO2D check is " $exitcode > validation_error.message
-        echo "exit code from AO2D check is " $exitcode
-      fi
-    fi
-    cd -
-    ls $AOD_FILE > list_$AOD_DIR.list
     echo "$AOD_DIR" >> $JOB_LIST
   done
-  if [[ -z $ALIEN_JDL_DONOTMERGEAODS ]] || [[ $ALIEN_JDL_DONOTMERGEAODS == 0 ]]; then
-    # spawning the parallel merging
-    timeStartMerge=`date +%s`
-    arr=()
-    aods=()
-    mergedok=()
-    i=0
-    while IFS= read -r line; do
-      while [[ $CURRENT_POOL_SIZE -ge $MAX_POOL_SIZE ]]; do
-        CURRENT_POOL_SIZE=`jobs -r | wc -l`
-        sleep 1
-      done
-      run_AOD_merging $line &
-      arr[$i]=$!
-      aods[$i]=$line
-      i=$((i+1))
+  # spawning the parallel merging
+  timeStartMerge=`date +%s`
+  arr=()
+  aods=()
+  mergedok=()
+  i=0
+  while IFS= read -r line; do
+    while [[ $CURRENT_POOL_SIZE -ge $MAX_POOL_SIZE ]]; do
       CURRENT_POOL_SIZE=`jobs -r | wc -l`
-    done < $JOB_LIST
-    # collecting return codes of the merging processes
-    for i in "${!arr[@]}"; do
-      wait ${arr[$i]}
-      exitcode=$?
-      if [[ $exitcode -ne 0 ]]; then
-        echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode > validation_error.message
-        echo "Exit code from the process merging DFs inside AO2D for ${aods[$i]} is " $exitcode
-        echo "This means that the merging of DFs for ${aods[$i]} FAILED, we make the whole processing FAIL"
-        exit $exitcode
-        mergedok[$((10#${aods[$i]}))]=0
-      else
-        echo "Merging of DFs inside the AO2D in ${aods[$i]} worked correctly"
-        mergedok[$((10#${aods[$i]}))]=1
-      fi
+      sleep 1
     done
-    timeEndMerge=`date +%s`
-    timeUsedMerge=$(( $timeUsedMerge+$timeEndMerge-$timeStartMerge ))
-    # Checking the merged AODs, and replacing the original ones with the merged ones if all is ok
-    # This loop could be merged with the above, but for now we keep them separate
-    for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
-      AOD_FILE=`echo $AOD_LIST | cut -d' ' -f$i`
-      AOD_DIR=`dirname $AOD_FILE | sed -e 's|./||'`
-      echo "Inspecting $AOD_DIR:"
-      if [[ ${mergedok[$((10#$AOD_DIR))]} == 0 ]]; then
-        echo "Merging for $AOD_DIR DID NOT work, we will do nothing for this file - BUT IT SHOULD HAVE NOT HAPPENED, PLEASE CHECK"
-        exit 8 
-        continue
-      else
-        echo "Merging for $AOD_DIR DID work, let's continue"
-      fi
-      cd $AOD_DIR
-      # now checking them
-      echo "Checking AO2Ds with merged DFs in $AOD_DIR"
-      timeStartCheckMergedAOD=`date +%s`
-      time root -l -b -q '$O2DPG_ROOT/DATA/production/common/readAO2Ds.C("AO2D_merged.root")' > checkAO2D_merged.log
-      exitcode=$?
-      timeEndCheckMergedAOD=`date +%s`
-      timeUsedCheckMergedAOD=$(( $timeUsedCheckMergedAOD+$timeEndCheckMergedAOD-$timeStartCheckMergedAOD ))
-      if [[ $exitcode -ne 0 ]]; then
-        echo "exit code from AO2D with merged DFs check is " $exitcode > validation_error.message
-        echo "exit code from AO2D with merged DFs check is " $exitcode
-        echo "We will keep the AO2Ds with unmerged DFs"
-      else
-        echo "All ok, replacing initial AO2D.root file with the one with merged DFs"
-        mv AO2D_merged.root AO2D.root
-      fi
-      cd ..
-    done
-  fi
+    run_AOD_merging $line &
+    arr[$i]=$!
+    aods[$i]=$line
+    i=$((i+1))
+    CURRENT_POOL_SIZE=`jobs -r | wc -l`
+  done < $JOB_LIST
+  # collecting return codes of the merging processes
+  for i in "${!arr[@]}"; do
+    wait ${arr[$i]}
+    exitcode=$?
+    if [[ $exitcode -ne 0 ]]; then
+      echo "Exit code from the process check+merging+check_mergedAODs for ${aods[$i]} is " $exitcode > validation_error.message
+      echo "Exit code from the process check+merging+check_mergedAODs for ${aods[$i]} is " $exitcode
+      echo "This means that the process check+merging+check_mergedAODs for ${aods[$i]} FAILED, we make the whole processing FAIL"
+      exit $exitcode
+      mergedok[$((10#${aods[$i]}))]=0
+    else
+      echo "Merging of DFs inside the AO2D in ${aods[$i]} worked correctly"
+      mergedok[$((10#${aods[$i]}))]=1
+    fi
+  done
+  timeEndMerge=`date +%s`
+  timeUsedMerge=$(( $timeUsedMerge+$timeEndMerge-$timeStartMerge ))
+  echo "--> Total Time spent in checking and merging AODs = $timeUsedMerge s"
+
   # running analysis QC if requested
   if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
     for (( i = 1; i <=$AOD_LIST_COUNT; i++)); do
@@ -887,26 +884,18 @@ if [[ $ALIEN_JDL_AODOFF != 1 ]]; then
       fi
       cd ..
     done
-  else
-    echo "Analysis QC will not be run, ALIEN_JDL_RUNANALYSISQC = $ALIEN_JDL_RUNANALYSISQC"
-  fi
-  echo "Time spent in checking initial AODs = $timeUsedCheck s"
-  if [[ -z $ALIEN_JDL_DONOTMERGEAODS ]] || [[ $ALIEN_JDL_DONOTMERGEAODS == 0 ]]; then
-    echo "Time spent in merging AODs = $timeUsedMerge s"
-    echo "Time spent in checking final AODs = $timeUsedCheckMergedAOD s"
-  fi
-  if [[ $ALIEN_JDL_RUNANALYSISQC == 1 ]]; then
     echo "Time spent in AnalysisQC = $timeUsedAnalysisQC s"
   else
+    echo "Analysis QC will not be run, ALIEN_JDL_RUNANALYSISQC = $ALIEN_JDL_RUNANALYSISQC"
     echo "No timing reported for Analysis QC, since it was not run"
   fi
 fi
 
 
 timeEndFullProcessing=`date +%s`
-timeUsedFullProcessing=$(( $timeEndFullProcessing+$timeStartFullProcessing ))
+timeUsedFullProcessing=$(( $timeEndFullProcessing-$timeStartFullProcessing ))
 
-echo "Time used for processing = $timeUsedFullProcessing s"
+echo "Total time used for processing = $timeUsedFullProcessing s"
 
 if [[ $ALIEN_JDL_QCOFF != 1 ]]; then
   # copying the QC json file here
