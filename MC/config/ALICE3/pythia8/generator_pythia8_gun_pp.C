@@ -436,43 +436,35 @@ private:
 
 //The Omega Family
 FairGenerator* generateNativeOmegaCCC(){
-  auto myGen = new GeneratorPythia8Gunpp(4444);
-  return myGen;
+  return new GeneratorPythia8Gunpp(4444);
 }
 
 FairGenerator* generateNativeOmegaCC(){
-  auto myGen = new GeneratorPythia8Gunpp(4432);
-  return myGen;
+  return new GeneratorPythia8Gunpp(4432);
 }
 
 FairGenerator* generateNativeOmegaC(){
-  auto myGen = new GeneratorPythia8Gunpp(4332);
-  return myGen;
+  return new GeneratorPythia8Gunpp(4332);
 }
 
 FairGenerator* generateNativeOmega(){
-  auto myGen = new GeneratorPythia8Gunpp(3334);
-  return myGen;
+  return new GeneratorPythia8Gunpp(3334);
 }
 
 //The Xi Family
 FairGenerator* generateNativeXiCC(){
-  auto myGen = new GeneratorPythia8Gunpp(4422);
-  return myGen;
+  return new GeneratorPythia8Gunpp(4422);
 }
 
 FairGenerator* generateNativeXiC(){
-  auto myGen = new GeneratorPythia8Gunpp(4232);
-  return myGen;
+  return new GeneratorPythia8Gunpp(4232);
 }
 
 FairGenerator* generateNativeXi(){
-  auto myGen = new GeneratorPythia8Gunpp(3312);
-  return myGen;
+  return new GeneratorPythia8Gunpp(3312);
 }
 
 //Use this for minimum-bias
 FairGenerator* generatePYTHIA(){
-  auto myGen = new GeneratorPythia8Gunpp(211);
-  return myGen;
+  return new GeneratorPythia8Gunpp(211);
 }
