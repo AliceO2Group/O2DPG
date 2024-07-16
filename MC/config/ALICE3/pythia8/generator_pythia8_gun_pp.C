@@ -13,13 +13,13 @@
 
 using namespace Pythia8;
 
-class GeneratorPythia8GunPbPb : public o2::eventgen::GeneratorPythia8{
+class GeneratorPythia8Gunpp : public o2::eventgen::GeneratorPythia8{
 public:
   /// default constructor
-  GeneratorPythia8GunPbPb() = default;
+  GeneratorPythia8Gunpp() = default;
   
   /// constructor
-  GeneratorPythia8GunPbPb(int input_pdg){
+  GeneratorPythia8Gunpp(int input_pdg){
     genMinPt=0.0;
     genMaxPt=20.0;
     genminY=-1.5;
@@ -52,7 +52,7 @@ public:
     if( input_pdg==0 ) m = 1.0;
     
     //fSpectra = new TF1("fPtDist",myLevyPt,0.0,10,3);
-    fSpectra = new TF1("fSpectra",this ,&GeneratorPythia8GunPbPb::myLevyPt, 0.0,20,4, "GeneratorPythia8GunPbPb","myLevyPt");
+    fSpectra = new TF1("fSpectra",this ,&GeneratorPythia8Gunpp::myLevyPt, 0.0,20,4, "GeneratorPythia8Gunpp","myLevyPt");
     fSpectra ->SetNpx( 1000 );
     
     fSpectra->SetParameter(3, m);
@@ -139,7 +139,7 @@ public:
   }
   
   ///  Destructor
-  ~GeneratorPythia8GunPbPb() = default;
+  ~GeneratorPythia8Gunpp() = default;
   
   /// set PDG code
   void setPDG(int input_pdg){pdg=input_pdg;}
@@ -436,43 +436,43 @@ private:
 
 //The Omega Family
 FairGenerator* generateNativeOmegaCCC(){
-  auto myGen = new GeneratorPythia8GunPbPb(4444);
+  auto myGen = new GeneratorPythia8Gunpp(4444);
   return myGen;
 }
 
 FairGenerator* generateNativeOmegaCC(){
-  auto myGen = new GeneratorPythia8GunPbPb(4432);
+  auto myGen = new GeneratorPythia8Gunpp(4432);
   return myGen;
 }
 
 FairGenerator* generateNativeOmegaC(){
-  auto myGen = new GeneratorPythia8GunPbPb(4332);
+  auto myGen = new GeneratorPythia8Gunpp(4332);
   return myGen;
 }
 
 FairGenerator* generateNativeOmega(){
-  auto myGen = new GeneratorPythia8GunPbPb(3334);
+  auto myGen = new GeneratorPythia8Gunpp(3334);
   return myGen;
 }
 
 //The Xi Family
 FairGenerator* generateNativeXiCC(){
-  auto myGen = new GeneratorPythia8GunPbPb(4422);
+  auto myGen = new GeneratorPythia8Gunpp(4422);
   return myGen;
 }
 
 FairGenerator* generateNativeXiC(){
-  auto myGen = new GeneratorPythia8GunPbPb(4232);
+  auto myGen = new GeneratorPythia8Gunpp(4232);
   return myGen;
 }
 
 FairGenerator* generateNativeXi(){
-  auto myGen = new GeneratorPythia8GunPbPb(3312);
+  auto myGen = new GeneratorPythia8Gunpp(3312);
   return myGen;
 }
 
 //Use this for minimum-bias
 FairGenerator* generatePYTHIA(){
-  auto myGen = new GeneratorPythia8GunPbPb(211);
+  auto myGen = new GeneratorPythia8Gunpp(211);
   return myGen;
 }

@@ -1,4 +1,4 @@
-#include "Pythia8/HeavyIons.h"
+#include "Pythia8/Pythia.h"
 #include "FairGenerator.h"
 #include "FairPrimaryGenerator.h"
 #include "Generators/GeneratorPythia8.h"
