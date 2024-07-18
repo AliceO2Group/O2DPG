@@ -17,7 +17,7 @@ LOG_FILE_GENERIC_KINE="o2dpg-test-generic-kine.log"
 # collect any macro files that are not directly used in INI files but that might be included in other macros
 MACRO_FILES_POTENTIALLY_INCLUDED=""
 
-# collect all INI files to be tested
+# global var to collect all INI files to be tested
 INI_FILES=""
 
 # collect test macros that do not have a corresponding INI file
@@ -192,7 +192,7 @@ find_including_macros()
     # figure out the macros that INCLUDE macros that have changed, so that in turn we can check
     # if these including macros are contained in some INI files
     local repo_dir_head=${REPO_DIR}
-    local changed_files=$(get_changed_files)
+    local changed_files=$(git_get_changed_files)
     local potentially_included=${MACRO_FILES_POTENTIALLY_INCLUDED}
     # we reset it here but we could fill it again to be able to do it fully recursively
     MACRO_FILES_POTENTIALLY_INCLUDED=""
@@ -256,7 +256,7 @@ add_ini_files_from_tests()
 collect_ini_files()
 {
     # Collect all INI files which have changed
-    local changed_files=$(get_changed_files)
+    local changed_files=$(git_get_changed_files)
     for ini in ${changed_files} ; do
         [[ "${ini}" != *"MC/config"*".ini" ]] && continue
         [[ "${INI_FILES}" == *"${ini}"* ]] && continue || INI_FILES+=" ${ini} "
@@ -264,7 +264,6 @@ collect_ini_files()
 
     # this relies on INI_FILES and MACRO_FILES_POTENTIALLY_INCLUDED
     # collect all INI files that might include some changed macros
-    changed_files=$(get_changed_files)
     local macros=
     for m in ${changed_files} ; do
         [[ "${m}" != *"MC/config"*".C" ]] && continue
@@ -279,7 +278,6 @@ collect_ini_files()
     add_ini_files_from_macros $(find_including_macros)
 
     # also tests might have changed in which case we run them
-    changed_files=$(get_changed_files)
     local macros=
     for m in ${changed_files} ; do
         [[ "${m}" != *"MC/"*"ini/tests"*".C" ]] && continue
@@ -387,7 +385,7 @@ if [[ -z "${INI_FILES}" ]] ; then
 fi
 
 if [[ ! -z "${TEST_WITHOUT_INI}" ]] ; then
-    echo_red "There are test macros that do not correspond to any INI file:"
+    echo_red "Warning: There are test macros that do not correspond to any INI file:"
     for twi in ${TEST_WITHOUT_INI} ; do
         echo "  - ${twi}"
     done
@@ -422,6 +420,23 @@ ret_global=0
 
 # check each of the INI files
 for ini in ${ini_files_full_paths} ; do
+
+    # we can apply some matching if it is asked
+    check_this="1"
+    echo "Checking ${ini}"
+    if [[ "${O2DPG_CHECK_FILTER}" ]]; then
+      echo "Checking with filter ${O2DPG_CHECK_FILTER}"
+      if [[ "${ini}" == *"${O2DPG_CHECK_FILTER}"* ]]; then
+        check_this="1"
+      else
+        check_this="0"
+      fi
+    fi
+
+    if [[ "${check_this}" == "0" ]]; then
+      continue
+    fi
+
     check_generators ${ini}
     RET=${?}
     if [[ "${RET}" != "0" ]] ; then

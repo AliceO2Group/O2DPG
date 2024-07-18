@@ -37,7 +37,7 @@ remove_artifacts()
 }
 
 
-get_changed_files()
+git_get_changed_files()
 {
     # in the Github CIs, there are env variables that give us the base and head hashes,
     # so use them if they are there

@@ -133,7 +133,7 @@ source ${REPO_DIR}/test/common/utils/utils.sh
 pushd ${REPO_DIR} > /dev/null
 
 # flag if anything changed for RelVal
-need_testing=$(get_changed_files | grep "RelVal/")
+need_testing=$(git_get_changed_files | grep "RelVal/")
 
 # go back to where we came from
 popd > /dev/null

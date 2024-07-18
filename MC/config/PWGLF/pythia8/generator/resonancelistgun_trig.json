@@ -17,15 +17,6 @@
         "etaMax": 1.2,
         "genDecayed": true
     },
-    "f_0(980)" : {
-        "pdg": 9010221,
-        "n": 1,
-        "ptMin": 0.0,
-        "ptMax": 20,
-        "etaMin": -1.2,
-        "etaMax": 1.2,
-        "genDecayed": true
-    },
     "rho(770)0" : {
         "pdg": 113,
         "n": 1,

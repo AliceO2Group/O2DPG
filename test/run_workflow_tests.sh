@@ -211,11 +211,11 @@ echo "##############################"
 pushd ${REPO_DIR} > /dev/null
 
 # flag if anything changed in the sim workflow bin dir
-changed_sim_bin=$(get_changed_files | grep -E "MC/bin")
+changed_sim_bin=$(git_get_changed_files | grep -E "MC/bin")
 # collect if anything has changed related to AnalysisQC
-changed_analysis_qc=$(get_changed_files | grep -E "MC/analysis_testing|MC/config/analysis_testing/json|MC/config/QC/json")
+changed_analysis_qc=$(git_get_changed_files | grep -E "MC/analysis_testing|MC/config/analysis_testing/json|MC/config/QC/json")
 # check if anything has changed concerning anchoring
-changed_anchored=$(get_changed_files | grep -E "MC/bin|MC/run/ANCHOR/anchorMC.sh|MC/run/ANCHOR/tests|MC/bin|UTILS/parse-async-WorkflowConfig.py|DATA/production/configurations/asyncReco/setenv_extra.sh|DATA/production/configurations/asyncReco/async_pass.sh|DATA/common/setenv.sh|DATA/production/workflow-multiplicities.sh")
+changed_anchored=$(git_get_changed_files | grep -E "MC/bin|MC/run/ANCHOR/anchorMC.sh|MC/run/ANCHOR/tests|MC/bin|UTILS/parse-async-WorkflowConfig.py|DATA/production/configurations/asyncReco/setenv_extra.sh|DATA/production/configurations/asyncReco/async_pass.sh|DATA/common/setenv.sh|DATA/production/workflow-multiplicities.sh")
 # collect changed workflow scripts
 changed_workflows=
 # workflows to be executed
@@ -233,7 +233,7 @@ if [[ "${changed_sim_bin}" != "" ]] ; then
 else
     # otherwise, only take the changed shell scripts
     changed_workflows=
-    changed_files=$(get_changed_files)
+    changed_files=$(git_get_changed_files)
     for cf in ${changed_files} ; do
         [[ "${cf}" != *"MC/run"*".sh" ]] && continue
         changed_workflows+="${cf} "
