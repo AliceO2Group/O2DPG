@@ -76,7 +76,7 @@ add_W o2-tpc-raw-to-digits-workflow "--ignore-grp --input-spec \"$CALIB_INSPEC\"
 add_W o2-tpc-reco-workflow " ${TPC_CORR_SCALING:-} --disable-ctp-lumi-request --input-type digitizer --output-type \"tracks,disable-writer,clusters\" --disable-mc --pipeline tpc-zsEncoder:20,tpc-tracker:8 ${GPU_CONFIG} ${REMAP} " "${RECO_CONFIG}"
 add_W o2-tpc-laser-track-filter "" "" 0
 add_W o2-dpl-output-proxy " --proxy-name tpc-laser-input-proxy --proxy-channel-name tpc-laser-input-proxy --dataspec \"$PROXY_OUTSPEC\" --channel-config \"name=tpc-laser-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0\" " "" 0
-add_QC_from_apricot "${QC_CONFIG}" "--local --host lcoalhost"
+add_QC_from_apricot "${QC_CONFIG}" "--local --host localhost"
 
 WORKFLOW+="o2-dpl-run ${ARGS_ALL} ${GLOBALDPLOPT}"
 if [ $WORKFLOWMODE == "print" ]; then
