@@ -19,7 +19,7 @@ CCDB_PATH="http://o2-ccdb.internal"
 
 HOST=localhost
 
-QC_CONFIG="components/qc/ANY/any/tpc-pulser-calib-qcmn"
+QC_CONFIG="components/qc/ANY/any/tpc-pulser-calib-qcmn?run_type=${RUNTYPE:-}"
 
 max_events=200
 publish_after=230
@@ -34,7 +34,6 @@ fi
 
 
 #################################################################################################################################
-
 
 WORKFLOW=
 add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\"" "" 0
