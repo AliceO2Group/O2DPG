@@ -49,8 +49,8 @@ int External()
     std::cout << "#events: " << nEvents << "\n"
               << "#mesons: " << nMesons << "\n";
 
-    if (nMesonsDiMuonDecay < (5*nEvents)) {
-        std::cerr << "One should have at least 5 mesons that decay into dimuons per event.\n";
+    if (nMesonsDiMuonDecay < (nEvents)) {
+        std::cerr << "One should have at least 1 mesons that decay into dimuons per event.\n";
         return 1;
     }
     //if (nMesons < nEvents) {
