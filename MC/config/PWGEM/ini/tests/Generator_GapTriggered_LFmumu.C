@@ -47,7 +47,7 @@ int External()
     }	
     
     std::cout << "#events: " << nEvents << "\n"
-              << "#mesons: " << nMesons << "\n"
+              << "#mesons: " << nMesons << "\n";
 
     if (nMesons < (nEvents)) {
         std::cerr << "One should have at least one mesons in forward region per event.\n";
