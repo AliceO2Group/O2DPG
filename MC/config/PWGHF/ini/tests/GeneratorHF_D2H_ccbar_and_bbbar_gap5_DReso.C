@@ -1,5 +1,5 @@
 int External() {
-    std::string path{"/home/luca/alice/Ds_reso/MCReso/07_22_16-59-12/tf1/genevents_Kine.root"};
+    std::string path{"o2sim_Kine.root"};
 
     int checkPdgQuarkOne{4};
     int checkPdgQuarkTwo{5};
