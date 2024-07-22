@@ -175,8 +175,8 @@ private:
   int lExternalID;
 
   // Base event generators
-  Pythia pythiaObjectMinimumBias; ///Minimum bias collision generator
-  Pythia pythiaObjectSignal;      ///Signal collision generator
+  Pythia8::Pythia pythiaObjectMinimumBias; ///Minimum bias collision generator
+  Pythia8::Pythia pythiaObjectSignal;      ///Signal collision generator
 };
 
 // Predefined generators:
