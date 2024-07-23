@@ -30,6 +30,9 @@ public:
 
     auto seed = (gRandom->TRandom::GetSeed() % 900000000);
 
+    int offset = (int)(gRandom->Uniform(lInverseTriggerRatio)); // create offset to mitigate edge effects due to small number of events per job
+    lGeneratedEvents += offset;
+    
     cout << "Initalizing extra PYTHIA object used to generate min-bias events..." << endl;
     TString pathconfigMB = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGEM/pythia8/generator/pythia8_MB_gapevent.cfg");
     pythiaObjectMinimumBias.readFile(pathconfigMB.Data());
