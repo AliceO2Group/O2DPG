@@ -49,7 +49,7 @@ public:
     
     if( input_pdg!=0 ) m = getMass(input_pdg);
     if( input_pdg==0 ) m = 1.0;
-    
+    static_cast<FairGenerator*>(
     //fSpectra = new TF1("fPtDist",myLevyPt,0.0,10,3);
     fSpectra = new TF1("fSpectra",this ,&GeneratorPythia8GunPbPb::myLevyPt, 0.0,20,4, "GeneratorPythia8GunPbPb","myLevyPt");
     fSpectra ->SetNpx( 1000 );
@@ -435,36 +435,36 @@ private:
 
 //The Omega Family
 FairGenerator* generateNativeOmegaCCC(){
-  return new GeneratorPythia8GunPbPb(4444);
+  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4444));
 }
 
 FairGenerator* generateNativeOmegaCC(){
-  return new GeneratorPythia8GunPbPb(4432);
+  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4432));
 }
 
 FairGenerator* generateNativeOmegaC(){
-  return new GeneratorPythia8GunPbPb(4332);
+  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4332));
 }
 
 FairGenerator* generateNativeOmega(){
-  return new GeneratorPythia8GunPbPb(3334);
+  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(3334));
 }
 
 //The Xi Family
 FairGenerator* generateNativeXiCC(){
-  return new GeneratorPythia8GunPbPb(4422);
+  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4422));
 }
 
 FairGenerator* generateNativeXiC(){
-  return new GeneratorPythia8GunPbPb(4232);
+  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4232));
 }
 
 FairGenerator* generateNativeXi(){
-  return new GeneratorPythia8GunPbPb(3312);
+  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(3312));
 }
 
 //Use this for minimum-bias
 FairGenerator* generatePYTHIA(){
-  return new GeneratorPythia8GunPbPb(211);
+  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(211));
 }
 

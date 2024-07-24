@@ -436,35 +436,35 @@ private:
 
 //The Omega Family
 FairGenerator* generateNativeOmegaCCC(){
-  return new GeneratorPythia8Gunpp(4444);
+  return static_cast<FairGenerator*>(new GeneratorPythia8Gunpp(4444));
 }
 
 FairGenerator* generateNativeOmegaCC(){
-  return new GeneratorPythia8Gunpp(4432);
+  return static_cast<FairGenerator*>(new GeneratorPythia8Gunpp(4432));
 }
 
 FairGenerator* generateNativeOmegaC(){
-  return new GeneratorPythia8Gunpp(4332);
+  return static_cast<FairGenerator*>(new GeneratorPythia8Gunpp(4332));
 }
 
 FairGenerator* generateNativeOmega(){
-  return new GeneratorPythia8Gunpp(3334);
+  return static_cast<FairGenerator*>(new GeneratorPythia8Gunpp(3334));
 }
 
 //The Xi Family
 FairGenerator* generateNativeXiCC(){
-  return new GeneratorPythia8Gunpp(4422);
+  return static_cast<FairGenerator*>(new GeneratorPythia8Gunpp(4422));
 }
 
 FairGenerator* generateNativeXiC(){
-  return new GeneratorPythia8Gunpp(4232);
+  return static_cast<FairGenerator*>(new GeneratorPythia8Gunpp(4232));
 }
 
 FairGenerator* generateNativeXi(){
-  return new GeneratorPythia8Gunpp(3312);
+  return static_cast<FairGenerator*>(new GeneratorPythia8Gunpp(3312));
 }
 
 //Use this for minimum-bias
 FairGenerator* generatePYTHIA(){
-  return new GeneratorPythia8Gunpp(211);
+  return static_cast<FairGenerator*>(new GeneratorPythia8Gunpp(211));
 }
