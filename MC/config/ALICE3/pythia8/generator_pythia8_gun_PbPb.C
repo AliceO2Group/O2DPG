@@ -435,36 +435,36 @@ private:
 
 //The Omega Family
 FairGenerator* generateNativeOmegaCCC(){
-  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4444));
+  return reinterpret_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4444));
 }
 
 FairGenerator* generateNativeOmegaCC(){
-  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4432));
+  return reinterpret_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4432));
 }
 
 FairGenerator* generateNativeOmegaC(){
-  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4332));
+  return reinterpret_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4332));
 }
 
 FairGenerator* generateNativeOmega(){
-  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(3334));
+  return reinterpret_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(3334));
 }
 
 //The Xi Family
 FairGenerator* generateNativeXiCC(){
-  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4422));
+  return reinterpret_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4422));
 }
 
 FairGenerator* generateNativeXiC(){
-  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4232));
+  return reinterpret_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(4232));
 }
 
 FairGenerator* generateNativeXi(){
-  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(3312));
+  return reinterpret_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(3312));
 }
 
 //Use this for minimum-bias
 FairGenerator* generatePYTHIA(){
-  return static_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(211));
+  return reinterpret_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(211));
 }
 
