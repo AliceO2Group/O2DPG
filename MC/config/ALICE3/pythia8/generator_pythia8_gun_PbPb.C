@@ -427,7 +427,7 @@ private:
   
   TLorentzVector *fLVHelper;
   
-  Pythia pythiaObject; ///Generate a full event if requested to do  so
+  Pythia8::Pythia pythiaObject; ///Generate a full event if requested to do  so
   
   //bool   addFurtherPion;	/// bool to attach an additional primary pion
   std::map<int,int> furtherPrim;				/// key: PDG code; value: how many further primaries of this species to be added
@@ -468,4 +468,3 @@ FairGenerator* generateNativeXi(){
 FairGenerator* generatePYTHIA(){
   return reinterpret_cast<FairGenerator*>(new GeneratorPythia8GunPbPb(211));
 }
-
