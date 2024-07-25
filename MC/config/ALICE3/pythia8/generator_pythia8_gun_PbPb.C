@@ -49,7 +49,6 @@ public:
     
     if( input_pdg!=0 ) m = getMass(input_pdg);
     if( input_pdg==0 ) m = 1.0;
-    static_cast<FairGenerator*>(
     //fSpectra = new TF1("fPtDist",myLevyPt,0.0,10,3);
     fSpectra = new TF1("fSpectra",this ,&GeneratorPythia8GunPbPb::myLevyPt, 0.0,20,4, "GeneratorPythia8GunPbPb","myLevyPt");
     fSpectra ->SetNpx( 1000 );
