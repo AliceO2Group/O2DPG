@@ -1,3 +1,4 @@
+#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include "Pythia8/Pythia.h"
 #include "FairGenerator.h"
 #include "FairPrimaryGenerator.h"
@@ -11,6 +12,7 @@
 //#include <utility>	// for std::pair
 
 using namespace Pythia8;
+#endif
 
 class GeneratorPythia8GunPbPb : public o2::eventgen::GeneratorPythia8{
 public:
@@ -288,9 +290,9 @@ public:
 protected:
   
   //__________________________________________________________________
-  Particle createParticle(){
+  Pythia8::Particle createParticle(){
     //std::cout << "createParticle() mass " << m << " pdgCode " << pdg << std::endl;
-    Particle myparticle;
+    Pythia8::Particle myparticle;
     myparticle.id(pdg);
     myparticle.status(11);
     myparticle.px(px);
@@ -329,7 +331,7 @@ protected:
         yProd=0.0;
         zProd=0.0;
         genSpectraMomentumEta(genMinPt,genMaxPt,genminY,genmaxY);
-        Particle lAddedParticle = createParticle();
+        Pythia8::Particle lAddedParticle = createParticle();
         mPythia.event.append(lAddedParticle);
         lAddedParticles++;
       }
@@ -375,7 +377,7 @@ protected:
       yProd = pythiaObject.event[j].yProd();
       zProd = pythiaObject.event[j].zProd();
       
-      Particle lAddedParticle = createParticle();
+      Pythia8::Particle lAddedParticle = createParticle();
       mPythia.event.append(lAddedParticle);
       lAddedParticles++;
     }
@@ -402,7 +404,7 @@ private:
   int UEOverSampling; //number of times to repeat underlying event
   int genEventCountUse;
   
-  Vec4   fourMomentum;	/// four-momentum (px,py,pz,E)
+  Pythia8::Vec4   fourMomentum;	/// four-momentum (px,py,pz,E)
   double E;				/// energy: sqrt( m*m+px*px+py*py+pz*pz ) [GeV/c]
   double m;				/// particle mass [GeV/c^2]
   int    pdg;				/// particle pdg code
