@@ -1,0 +1,21 @@
+### beams
+Beams:idA 1000822080		# Pb
+Beams:idB 1000822080		# Pb
+Beams:eCM 5520. 		# GeV
+
+### heavy-ion settings (valid for Pb-Pb 5520 only)
+HeavyIon:SigFitNGen = 0
+HeavyIon:SigFitDefPar = 13.88,1.84,0.22,0.0,0.0,0.0,0.0,0.0
+HeavyIon:bWidth = 14.48
+
+### processes (apparently not to be defined)
+
+### decays
+ParticleDecays:limitTau0 on	
+ParticleDecays:tau0Max 0.001
+
+! 2) Seed settings
+! Seed is set inside the generator
+! If run on the grid, seed is set to job id
+! If run locally, seed is set to 0
+Random:setSeed = on                           ! Random seed on
