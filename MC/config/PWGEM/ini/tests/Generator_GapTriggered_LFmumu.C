@@ -49,8 +49,8 @@ int External()
     std::cout << "#events: " << nEvents << "\n"
               << "#mesons: " << nMesons << "\n";
 
-    if (nMesons < (nEvents)) {
-        std::cerr << "One should have at least one mesons in forward region per event.\n";
+    if (nMesons < (nEvents*5)) {
+        std::cerr << "One should have at least one mesons in forward region per 5 events.\n";
         return 1;
     }
     //if (nMesonsDiMuonDecay < nEvents) {
