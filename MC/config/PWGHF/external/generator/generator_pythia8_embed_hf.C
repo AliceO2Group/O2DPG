@@ -146,6 +146,7 @@ Bool_t importParticles() override
 
         /// adjust the particle mother and daughter indices
         if(particle.GetFirstMother() >= 0)   particle.SetFirstMother(particle.GetFirstMother() + originalSize);
+        if(particle.GetSecondMother() >= 0)  particle.SetLastMother(particle.GetSecondMother() + originalSize);
 	    if(particle.GetFirstDaughter() >= 0) particle.SetFirstDaughter(particle.GetFirstDaughter() + originalSize);
 	    if(particle.GetLastDaughter() >= 0)  particle.SetLastDaughter(particle.GetLastDaughter() + originalSize);
 
