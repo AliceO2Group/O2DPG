@@ -328,15 +328,13 @@ protected:
     mPythia.event.reset();
     
     if(original_pdg!=211){
-      for(Int_t ii=0; ii<15; ii++){
-        xProd=0.0;
-        yProd=0.0;
-        zProd=0.0;
-        genSpectraMomentumEta(genMinPt,genMaxPt,genminY,genmaxY);
-        Pythia8::Particle lAddedParticle = createParticle();
-        mPythia.event.append(lAddedParticle);
-        lAddedParticles++;
-      }
+      xProd=0.0;
+      yProd=0.0;
+      zProd=0.0;
+      genSpectraMomentumEta(genMinPt,genMaxPt,genminY,genmaxY);
+      Pythia8::Particle lAddedParticle = createParticle();
+      mPythia.event.append(lAddedParticle);
+      lAddedParticles++;
     }
     
     //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
