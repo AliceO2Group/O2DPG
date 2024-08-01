@@ -122,6 +122,7 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=35
     [[ -z ${SHMSIZE:-} ]] && SHMSIZE=100000000000 # SHM_LIMIT 3/4
     [[ -z ${TIMEFRAME_SHM_LIMIT:-} ]] && TIMEFRAME_SHM_LIMIT=$(($SHMSIZE / 3))
+    [[ -z ${NGPUS:-} ]] && NGPUS=4
     NGPURECOTHREADS=8
     NTRDTRKTHREADS=8
     ITSTRK_THREADS=5
@@ -129,8 +130,7 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     SVERTEX_THREADS=20
     TOFMATCH_THREADS=2
     N_SECVTX=2
-    NGPUS=4
-    N_TPCTRK=4
+    N_TPCTRK=$NGPUS
     # time in s: pvtx 16, tof 30, trd 82 itstpc 53 its 200 mfttr 30 tpcent 23 hmp-clus 40 (25.11.22)
     N_TPCENTDEC=$(math_max $((4 * $NGPUS / 4)) 1)
     N_ITSTRK=$(math_max $((12 * $NGPUS / 4)) 1)
