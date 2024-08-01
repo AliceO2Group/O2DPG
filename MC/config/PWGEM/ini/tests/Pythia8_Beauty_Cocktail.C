@@ -1,6 +1,6 @@
 int External()
 {
-    	
+    
     std::string path{"o2sim_Kine.root"};
     TFile file(path.c_str(), "READ");
     if (file.IsZombie()) {
@@ -24,11 +24,11 @@ int External()
             if (pdg == -5){
                 found_bbar = true;
             }
-            if ( abs(pdg) == 511 || abs(pdg) == 521 || abs(pdg) == 531 || abs(pdg) == 5122 || abs(pdg) == 5132 || abs(pdg) == 5232 || abs(pdg) == 5332){
+            if ( abs(pdg) == 411 || abs(pdg) == 421 || abs(pdg) == 431 || abs(pdg) == 4122 || abs(pdg) == 4232 || abs(pdg) == 4132 || abs(pdg) == 4332){
                 int ifirstdaughter = track.getFirstDaughterTrackId();
                 int ilastdaughter = track.getLastDaughterTrackId();
                 if (ifirstdaughter == -1 || ilastdaughter == -1){
-                    std::cerr << "Found beauty hadron that does not have daughters" << "\n";
+                    std::cerr << "Found charm hadron that does not have daughters" << "\n";
                     return 1;
                 }
                 bool found_electron = false;
@@ -47,7 +47,7 @@ int External()
                     }
                 }
                 if (!found_electron){
-                    std::cerr << "Found beauty hadron that does not decay to electron" << "\n";
+                    std::cerr << "Found charm hadron that does not decay to electron" << "\n";
                     return 1;
                 }
             }
@@ -56,6 +56,6 @@ int External()
             std::cerr << "Found event without b-bbar pair" << "\n";
             return 1;
         }
-	}
+    }
     return 0;
 }
