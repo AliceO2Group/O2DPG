@@ -32,13 +32,6 @@ FairGenerator*
     printf("PDG %d \n", std::stoi(spdg));
   }
   gen->SetForceDecay(kEvtBPsiDiElectron);
-  // set random seed
-  gen->readString("Random:setSeed on");
-  uint random_seed;
-  unsigned long long int random_value = 0; 
-  ifstream urandom("/dev/urandom", ios::in|ios::binary);
-  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
-  gen->readString(Form("Random:seed = %d", random_value % 900000001));
   // print debug
   // gen->PrintDebug();
 
@@ -68,13 +61,6 @@ FairGenerator*
     printf("PDG %d \n", std::stoi(spdg));
   }
   gen->SetForceDecay(kEvtBPsiDiMuon);
-  // set random seed
-  gen->readString("Random:setSeed on");
-  uint random_seed;
-  unsigned long long int random_value = 0; 
-  ifstream urandom("/dev/urandom", ios::in|ios::binary);
-  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
-  gen->readString(Form("Random:seed = %d", random_value % 900000001));
   // print debug
   // gen->PrintDebug();
 

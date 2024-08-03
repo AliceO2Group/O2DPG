@@ -449,8 +449,5 @@ class GeneratorPythia8GapTriggeredLFee : public GeneratorPythia8 {
 // Predefined generators: // this function should be called in ini file.
 FairGenerator *GeneratorPythia8GapTriggeredLFee_ForEM(int inputTriggerRatio = 5, float yMin=-1.2, float yMax=1.2, int nPart = 1, int mode = -1) {
   auto myGen = new GeneratorPythia8GapTriggeredLFee(inputTriggerRatio, yMin, yMax, nPart, mode);
-  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
-  myGen->readString("Random:setSeed on");
-  myGen->readString("Random:seed " + std::to_string(seed));
   return myGen;
 }

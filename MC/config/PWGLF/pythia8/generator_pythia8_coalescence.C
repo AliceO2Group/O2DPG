@@ -155,8 +155,5 @@ private:
 FairGenerator *generateCoalescence(int input_trigger_ratio, double coal_momentum = 0.4)
 {
   auto myGen = new GeneratorPythia8Coalescence(input_trigger_ratio, coal_momentum);
-  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
-  myGen->readString("Random:setSeed on");
-  myGen->readString("Random:seed " + std::to_string(seed));
   return myGen;
 }

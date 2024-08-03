@@ -182,9 +182,6 @@ FairGenerator *generateLongLivedGapTriggered(std::vector<int> mPdg, int input_tr
 {
   auto myGen = new GeneratorPythia8LongLivedGapTriggered(mPdg, input_trigger_ratio, n_injected, pt_min, pt_max, y_min, y_max);
   myGen->setAlternatingPDGsign(alternate_sign);
-  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
-  myGen->readString("Random:setSeed on");
-  myGen->readString("Random:seed " + std::to_string(seed));
   return myGen;
 }
 
@@ -193,8 +190,5 @@ FairGenerator *generateLongLivedGapTriggered(std::string config_file_name, int i
 {
   auto myGen = new GeneratorPythia8LongLivedGapTriggered(config_file_name, input_trigger_ratio);
   myGen->setAlternatingPDGsign(alternate_sign);
-  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
-  myGen->readString("Random:setSeed on");
-  myGen->readString("Random:seed " + std::to_string(seed));
   return myGen;
 }

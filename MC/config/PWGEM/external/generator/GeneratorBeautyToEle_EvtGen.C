@@ -34,13 +34,6 @@ GeneratorBeautyToEle_EvtGen(double rapidityMin = -2., double rapidityMax = 2., b
   if(forcedecay) gen->SetForceDecay(kEvtSemiElectronic);
   else gen->SetForceDecay(kEvtAll);
    //}
-  // set random seed
-  gen->readString("Random:setSeed on");
-  uint random_seed;
-  unsigned long long int random_value = 0; 
-  ifstream urandom("/dev/urandom", ios::in|ios::binary);
-  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
-  gen->readString(Form("Random:seed = %d", random_value % 900000001));
   // print debug
   // gen->PrintDebug();
 
