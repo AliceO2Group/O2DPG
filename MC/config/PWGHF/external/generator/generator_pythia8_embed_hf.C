@@ -124,7 +124,7 @@ bool generateEvent() override
 /// @brief Main function to find out whether the particle comes charm or beauty quark
 /// @param partId is the index of the particle under study 
 /// @param particles are the particles of the full event 
-Bool_t isFromCharmOrBeauty(const int partId, std::vector<TParticle> const& particles) {
+bool isFromCharmOrBeauty(const int partId, std::vector<TParticle> const& particles) {
 
     // Let's check wheter this is already a c or b quark?
     const TParticle& part = particles.at(partId);
@@ -141,7 +141,7 @@ Bool_t isFromCharmOrBeauty(const int partId, std::vector<TParticle> const& parti
     int stage = 0;
     while(arrayIds[-stage].size() > 0) {
 
-        LOG(info) << "### stage " << stage << ", arrayIds[-stage].size() = " << arrayIds[-stage].size();
+        //LOG(info) << "### stage " << stage << ", arrayIds[-stage].size() = " << arrayIds[-stage].size();
 
         std::vector<int64_t> arrayIdsStage{};
 
@@ -180,7 +180,7 @@ Bool_t isFromCharmOrBeauty(const int partId, std::vector<TParticle> const& parti
            All light-flavour mothers are not considered with this approach
            eg: D+ coming from c and uBar --> uBar lost
            --> TODO: check if the current particle has a charm or beauty hadron as daughter. If yes, keep it
-           >>> we can ignore it! This might be useful only for jet analyses, however this approach of embedding N pp events into a Pb-Pb one might be not ideal
+           >>> we can ignore it! This might be useful only for jet analyses, however this approach of embedding N pp events into a Pb-Pb one might be not ideal for them
         */
 
         // none of the particle mothers is a charm or beauty quark, let's consider their indices for the next stage
@@ -198,7 +198,9 @@ void printParticleVector(std::vector<TParticle> v) {
         const int pdgCode = v.at(id).GetPdgCode();
         const int idFirstMother = v.at(id).GetFirstMother();
         const int idLastMother = v.at(id).GetSecondMother();
-        LOG(info) << "   id = " << id << ", pdgCode = " << pdgCode << " --> idFirstMother=" << idFirstMother << ", idLastMother=" << idLastMother;
+        const int idFirstDaughter = v.at(id).GetFirstDaughter();
+        const int idLastDaughter = v.at(id).GetLastDaughter();
+        LOG(info) << "   id = " << id << ", pdgCode = " << pdgCode << " --> idFirstMother=" << idFirstMother << ", idLastMother=" << idLastMother << ", idFirstDaughter=" << idFirstDaughter << ", idLastDaughter=" << idLastDaughter;
     }
 }
 
@@ -261,15 +263,15 @@ Bool_t importParticles() override
 
         /// Establish if this particle comes from charm or beauty
         /// If not, ignore this particle and increase the number of discarded particles from the pp event
-        LOG(info) << "starting isFromCharmOrBeauty";
+        //LOG(info) << "starting isFromCharmOrBeauty";
         if(!isFromCharmOrBeauty(iPart, particlesHfEvent)) {
-            LOG(info) << "isFromCharmOrBeauty is over, not interesting particle found";
+        //    LOG(info) << "isFromCharmOrBeauty is over, not interesting particle found";
             //discarded++;
             continue;
         }
         /*kept++;*/
         /// if we arrive here, then the current particle is from charm or beauty, keep it!
-        mapHfParticles[counterHfParticles++/*fill and update the counter*/] =iPart;
+        mapHfParticles[counterHfParticles++/*fill and update the counter*/] = iPart;
 
 /*
         LOG(info) << "applying offset";
@@ -286,6 +288,14 @@ Bool_t importParticles() override
 */
       }
 
+      /// print the map (debug)
+      LOG(info) << "   >>>";
+      LOG(info) << "   >>> printing mapHfParticles:";
+      for(auto& p : mapHfParticles) {
+          const int pdgCodeFromMap = particlesHfEvent.at(p.second).GetPdgCode();
+          LOG(info) << "   >>>        entry " << p.first << ", original id = " << p.second << ", pdgCode=" << pdgCodeFromMap << " --> firstMotherId=" << particlesHfEvent.at(p.second).GetFirstMother() << ", lastMotherId=" << particlesHfEvent.at(p.second).GetSecondMother() << ", firstDaughterId=" << particlesHfEvent.at(p.second).GetFirstDaughter() << ", lastDaughterId=" << particlesHfEvent.at(p.second).GetLastDaughter();
+      }
+
     
       // In the map we have only the particles from charm or beauty
       // Let's readapt the mother/daughter indices accordingly
@@ -300,49 +310,90 @@ Bool_t importParticles() override
 
         /// charm or beauty quark
         /// reset the mothers, and readapt daughter indices
-        if(std::abs(pdgCode) == 4 || std::abs(pdgCode) == 5) {
-            idFirstMother = -1;
-            idLastMother = -1;
-            idFirstDaughter = findKey(mapHfParticles, idFirstDaughter);
-            idLastDaughter = findKey(mapHfParticles, idLastDaughter);
-        }
+    //    if(std::abs(pdgCode) == 4 || std::abs(pdgCode) == 5) {
+    //        idFirstMother = -1;
+    //        idLastMother = -1;
+    //        idFirstDaughter = findKey(mapHfParticles, idFirstDaughter);
+    //        idLastDaughter = findKey(mapHfParticles, idLastDaughter);
+    //    }
         /// diquark, or charm or beauty hadron, or their decay products
         /// make first and last mother equal (--> possible other partonic mothers ignored in mapHfParticles), and readapt daughter indices
-        else {
+    //    else {
             /// fix mother indices
-            /// the case with idFirstMother < 0 should never happen at this stage
+
+            bool isFirstMotherOk = false;
+            const int idFirstMotherOrig = idFirstMother; /// useful only if the 1st mother is not charm or beauty
             if(idFirstMother >= 0) {
                 idFirstMother = findKey(mapHfParticles, idFirstMother);
-                if(idLastMother != idFirstMother) {
 
-                    if(idLastMother == -1) {
-                        /// this particle has just one mother
-                        /// let's put idLastMother equal to idFirstMother
-                        idLastMother = idFirstMother;
+                /// If idFirstMother>=0, the 1st mother is from charm or beauty, i.e. is not a light-flavoured parton
+                /// Instead, if idFirstMother==-1 from findKey this means that the first mother was a light-flavoured parton --> not stored in the map
+                if(idFirstMother >=0) {
+                    /// the 1st mother is from charm or beauty, i.e. is not a light-flavoured parton
+                    if(idLastMother != idFirstMotherOrig) {
+                        
+                        //if(idLastMother == -1) {
+                        //    /// this particle has just one mother
+                        //    /// let's put idLastMother equal to idFirstMother
+                        //    idLastMother = idFirstMother;
+                        //} else {
+                        if(idLastMother != -1) {
+                            /// idLastMother is >= 0
+                            /// ASSUMPTION: idLastMother > idFirstMother
+                            ///             In principle, the opposite can be true only in partonic processes
+                            idLastMother = findKey(mapHfParticles, idLastMother);
+                        }
+
                     } else {
-                        /// idLastMother is >= 0
-                        /// ASSUMPTION: idLastMother > idFirstMother
-                        ///             In principle, the opposite can be true only in partonic processes
-                        idLastMother = findKey(mapHfParticles, idLastMother);
+                        /// idLastMother is equal to idFirstMother
+                        idLastMother = idFirstMother;
                     }
-
-                } else {
-                    /// idLastMother is equal to idFirstMother
-                    idLastMother = idFirstMother;
+                    isFirstMotherOk = true;
                 }
+            }
 
+            if(!isFirstMotherOk) {
+                /// - If we are here, it means that the 1st mother was not from charm or beauty
+                /// - No need to check whether idLastMother>=0,
+                ///   because this would mean that none of the mother is from charm or beauty and this was checked already in isFromCharmOrBeauty
+                /// - Need to loop between 1st and last mother, to treat cases like these
+                /// [11:52:13][INFO]    id = 565, pdgCode = -2 --> idFirstMother=519, idLastMother=519
+                /// [11:52:13][INFO]    id = 566, pdgCode = -4 --> idFirstMother=520, idLastMother=520
+                /// [11:52:13][INFO]    id = 567, pdgCode = -1 --> idFirstMother=518, idLastMother=518
+                /// [11:52:13][INFO]    id = 568, pdgCode = -311 --> idFirstMother=565, idLastMother=567
+                /// [11:52:13][INFO]    id = 569, pdgCode = -4212 --> idFirstMother=565, idLastMother=567
+                /// --> w/o loop between 1st and last mother, the mother Ids assigned to this Sc+ (4212) by findKey are -1, both first and last   
+                //
+                // THIS SHOULD BE WRONG
+                //idLastMother = findKey(mapHfParticles, idLastMother);
+                //
+                bool foundAnyMother = false;
+                for(int idMotherOrig=(idFirstMotherOrig+1); idMotherOrig<=idLastMother; idMotherOrig++) {
+                    const int idMother = findKey(mapHfParticles, idMotherOrig);
+                    if(idMother >= 0) {
+                        /// this should mean that the mother is from HF, i.e. that we found the correct one
+                        idFirstMother = idMother;
+                        idLastMother = idFirstMother;
+                        foundAnyMother = true;
+                        break;
+                    }
+                }
+                // set last mother to -1 if no mother has been found so far
+                if (!foundAnyMother) {
+                    idLastMother = -1;
+                }
             }
 
             /// fix daughter indices
             idFirstDaughter = findKey(mapHfParticles, idFirstDaughter);
             idLastDaughter = findKey(mapHfParticles, idLastDaughter);
-        }
+    //    }
 
         /// adjust the particle mother and daughter indices
-        particle.SetFirstMother(idFirstMother + offset);
-        particle.SetLastMother(idLastMother + offset);
-	    particle.SetFirstDaughter(idFirstDaughter + offset);
-	    particle.SetLastDaughter(idLastDaughter + offset);
+        particle.SetFirstMother((idFirstMother >= 0) ? idFirstMother + offset : idFirstMother);
+        particle.SetLastMother((idLastMother >= 0) ? idLastMother + offset : idLastMother);
+	    particle.SetFirstDaughter((idFirstDaughter >= 0) ? idFirstDaughter + offset : idFirstDaughter);
+	    particle.SetLastDaughter((idLastDaughter >= 0) ? idLastDaughter + offset : idLastDaughter);
 
         /// copy inside this.mParticles from mGeneratorEvHF.mParticles, i.e. the particles generated in mGeneratorEvHF
         mParticles.push_back(particle);
