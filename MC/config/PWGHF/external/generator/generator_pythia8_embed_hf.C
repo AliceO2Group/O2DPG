@@ -301,9 +301,6 @@ Bool_t importParticles() override
                 if(idLastMother != idFirstMotherOrig) {
                     if(idLastMother != -1) {
                         /// idLastMother is >= 0
-                        /// ASSUMPTION: idLastMother > idFirstMother
-                        ///             In principle, the opposite can be true only in partonic processes
-                        idLastMother = findKey(mapHfParticles, idLastMother);
                     }
                 } else {
                     /// idLastMother is equal to idFirstMother
