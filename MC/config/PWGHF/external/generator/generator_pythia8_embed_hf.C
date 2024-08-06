@@ -299,12 +299,6 @@ Bool_t importParticles() override
             if(idFirstMother >=0) {
                 /// the 1st mother is from charm or beauty, i.e. is not a light-flavoured parton
                 if(idLastMother != idFirstMotherOrig) {
-                    
-                    //if(idLastMother == -1) {
-                    //    /// this particle has just one mother
-                    //    /// let's put idLastMother equal to idFirstMother
-                    //    idLastMother = idFirstMother;
-                    //} else {
                     if(idLastMother != -1) {
                         /// idLastMother is >= 0
                         /// ASSUMPTION: idLastMother > idFirstMother
