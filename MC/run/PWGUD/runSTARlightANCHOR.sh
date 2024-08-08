@@ -21,7 +21,7 @@ export PRODSPLIT=100
 export CYCLE=0
 export ALIEN_PROC_ID=2963436952
 
-export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen external -ini ${PWD}/GenStarlight.ini -nb ${NBKGEVENTS} -colBkg PbPb -genBkg pythia8 -procBkg heavy_ion"
+export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen external -ini ${PWD}/GenStarlight.ini --embedding -nb ${NBKGEVENTS} -colBkg PbPb -genBkg pythia8 -procBkg heavy_ion"
 
-${O2DPG_ROOT}/MC/config/PWGUD/ini/makeStarlightConfig.py --process kCohPsi2sToMuPi --collType PbPb --eCM 5360 --rapidity cent
+${O2DPG_ROOT}/MC/config/PWGUD/ini/makeStarlightConfig.py --process kCohPsi2sToMuPi --collType PbPb --eCM 5360 --rapidity cent_eta
 ${O2DPG_ROOT}/MC/run/ANCHOR/anchorMC.sh
