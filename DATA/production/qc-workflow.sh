@@ -53,79 +53,79 @@ if [[ -z ${QC_JSON_FROM_OUTSIDE:-} && ! -z ${GEN_TOPO_QC_JSON_FILE:-} && -f $GEN
 elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
   if [[ $EPNSYNCMODE == 1 || "${GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL:-}" == "1" ]]; then # Sync processing running on the EPN
     [[ -z "${QC_JSON_TPC:-}" ]] && QC_JSON_TPC=apricot://o2/components/qc/ANY/any/tpc-full-qcmn
-    [[ -z "${QC_JSON_ITS:-}" ]] && QC_JSON_ITS=consul://o2/components/qc/ANY/any/its-qcmn-epn-full
+    [[ -z "${QC_JSON_ITS:-}" ]] && QC_JSON_ITS=apricot://o2/components/qc/ANY/any/its-qcmn-epn-full
     if [[ -z "${QC_JSON_MFT:-}" ]]; then
       if has_detector MFT && has_processing_step MFT_RECO; then
-        QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-qcmn
+        QC_JSON_MFT=apricot://o2/components/qc/ANY/any/mft-full-qcmn
       else
-        QC_JSON_MFT=consul://o2/components/qc/ANY/any/mft-full-no-tracks-qcmn
+        QC_JSON_MFT=apricot://o2/components/qc/ANY/any/mft-full-no-tracks-qcmn
       fi
     fi
     if [[ -z "${QC_JSON_TOF:-}" ]]; then
       if has_detector_flp_processing TOF; then
-        QC_JSON_TOF=consul://o2/components/qc/ANY/any/tof-full-qcmn-on-epn
+        QC_JSON_TOF=apricot://o2/components/qc/ANY/any/tof-full-qcmn-on-epn
       else
-        QC_JSON_TOF=consul://o2/components/qc/ANY/any/tof-full-epn-qcmn-on-epn
+        QC_JSON_TOF=apricot://o2/components/qc/ANY/any/tof-full-epn-qcmn-on-epn
       fi
     fi
-    [[ -z "${QC_JSON_FDD:-}" ]] && QC_JSON_FDD=consul://o2/components/qc/ANY/any/fdd-digits-qc-epn
-    [[ -z "${QC_JSON_FT0:-}" ]] && QC_JSON_FT0=consul://o2/components/qc/ANY/any/ft0-digits-qc-epn
-    [[ -z "${QC_JSON_FV0:-}" ]] && QC_JSON_FV0=consul://o2/components/qc/ANY/any/fv0-digits-qc-epn
+    [[ -z "${QC_JSON_FDD:-}" ]] && QC_JSON_FDD=apricot://o2/components/qc/ANY/any/fdd-digits-qc-epn
+    [[ -z "${QC_JSON_FT0:-}" ]] && QC_JSON_FT0=apricot://o2/components/qc/ANY/any/ft0-digits-qc-epn
+    [[ -z "${QC_JSON_FV0:-}" ]] && QC_JSON_FV0=apricot://o2/components/qc/ANY/any/fv0-digits-qc-epn
     if [[ -z "${QC_JSON_EMC:-}" ]]; then
       if [[ "$BEAMTYPE" == "PbPb" ]]; then
         if has_detector CTP; then
-          QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall-withCTP-PbPb
+          QC_JSON_EMC=apricot://o2/components/qc/ANY/any/emc-qcmn-epnall-withCTP-PbPb
         else
-          QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall-PbPb
+          QC_JSON_EMC=apricot://o2/components/qc/ANY/any/emc-qcmn-epnall-PbPb
         fi
       else
         if has_detector CTP; then
-          QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall-withCTP
+          QC_JSON_EMC=apricot://o2/components/qc/ANY/any/emc-qcmn-epnall-withCTP
         else
-          QC_JSON_EMC=consul://o2/components/qc/ANY/any/emc-qcmn-epnall
+          QC_JSON_EMC=apricot://o2/components/qc/ANY/any/emc-qcmn-epnall
         fi
       fi
     fi
-    [[ -z "${QC_JSON_ZDC:-}" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=consul://o2/components/qc/ANY/any/zdc-rec-epn
+    [[ -z "${QC_JSON_ZDC:-}" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=apricot://o2/components/qc/ANY/any/zdc-rec-epn
     if [[ -z "${QC_JSON_MCH:-}" ]]; then
       if has_detector MCH && has_processing_step MCH_RECO; then
         if has_track_source "MCH-MID"; then
-          QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full-track-matching
+          QC_JSON_MCH=apricot://o2/components/qc/ANY/any/mch-qcmn-epn-full-track-matching
         else
-          QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-full
+          QC_JSON_MCH=apricot://o2/components/qc/ANY/any/mch-qcmn-epn-full
         fi
       else
-        QC_JSON_MCH=consul://o2/components/qc/ANY/any/mch-qcmn-epn-digits
+        QC_JSON_MCH=apricot://o2/components/qc/ANY/any/mch-qcmn-epn-digits
       fi
     fi
     if [[ -z "${QC_JSON_MID:-}" ]]; then
       if has_detector MID && has_processing_step MID_RECO; then
-        QC_JSON_MID=consul://o2/components/qc/ANY/any/mid-full-qcmn
+        QC_JSON_MID=apricot://o2/components/qc/ANY/any/mid-full-qcmn
       else
-        QC_JSON_MID=consul://o2/components/qc/ANY/any/mid-flp_raw-epn_digits-qcmn
+        QC_JSON_MID=apricot://o2/components/qc/ANY/any/mid-flp_raw-epn_digits-qcmn
       fi
     fi
-    [[ -z "${QC_JSON_CPV:-}" ]] && QC_JSON_CPV=consul://o2/components/qc/ANY/any/cpv-physics-qcmn-epn
-    [[ -z "${QC_JSON_TRD:-}" ]] && QC_JSON_TRD=consul://o2/components/qc/ANY/any/trd-full-qcmn
-    [[ -z "${QC_JSON_PHS:-}" ]] && QC_JSON_PHS=consul://o2/components/qc/ANY/any/phos-raw-clusters-epn
-    [[ -z "${QC_JSON_GLO_PRIMVTX:-}" ]] && QC_JSON_GLO_PRIMVTX=consul://o2/components/qc/ANY/any/glo-vtx-qcmn-epn
-    [[ -z "${QC_JSON_GLO_ITSTPC:-}" ]] && QC_JSON_GLO_ITSTPC=consul://o2/components/qc/ANY/any/glo-itstpc-mtch-qcmn-epn
+    [[ -z "${QC_JSON_CPV:-}" ]] && QC_JSON_CPV=apricot://o2/components/qc/ANY/any/cpv-physics-qcmn-epn
+    [[ -z "${QC_JSON_TRD:-}" ]] && QC_JSON_TRD=apricot://o2/components/qc/ANY/any/trd-full-qcmn
+    [[ -z "${QC_JSON_PHS:-}" ]] && QC_JSON_PHS=apricot://o2/components/qc/ANY/any/phos-raw-clusters-epn
+    [[ -z "${QC_JSON_GLO_PRIMVTX:-}" ]] && QC_JSON_GLO_PRIMVTX=apricot://o2/components/qc/ANY/any/glo-vtx-qcmn-epn
+    [[ -z "${QC_JSON_GLO_ITSTPC:-}" ]] && QC_JSON_GLO_ITSTPC=apricot://o2/components/qc/ANY/any/glo-itstpc-mtch-qcmn-epn
     if [[ -z "${QC_JSON_TOF_MATCH:-}" ]]; then
       if has_tof_matching_source ITS-TPC && has_tof_matching_source ITS-TPC-TRD; then
-        QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctrdtof
+        QC_JSON_TOF_MATCH=apricot://o2/components/qc/ANY/any/tof-qcmn-match-itstpctrdtof
       elif has_tof_matching_source ITS-TPC; then
-        QC_JSON_TOF_MATCH=consul://o2/components/qc/ANY/any/tof-qcmn-match-itstpctof
+        QC_JSON_TOF_MATCH=apricot://o2/components/qc/ANY/any/tof-qcmn-match-itstpctof
       fi
     fi
     if has_detectors_reco MFT MCH MID && has_matching_qc MFTMCH && has_matching_qc MCHMID; then
-        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=consul://o2/components/qc/ANY/any/glo-mftmchmid-mtch-qcmn-epn
+        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=apricot://o2/components/qc/ANY/any/glo-mftmchmid-mtch-qcmn-epn
     elif has_detectors_reco MFT MCH && has_matching_qc MFTMCH; then
-        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=consul://o2/components/qc/ANY/any/glo-mftmch-mtch-qcmn-epn
+        [[ -z "${QC_JSON_GLO_MFTMCH:-}" ]] && QC_JSON_GLO_MFTMCH=apricot://o2/components/qc/ANY/any/glo-mftmch-mtch-qcmn-epn
     elif has_detectors_reco MCH MID && has_matching_qc MCHMID; then
-        [[ -z "${QC_JSON_GLO_MCHMID:-}" ]] && QC_JSON_GLO_MCHMID=consul://o2/components/qc/ANY/any/glo-mchmid-mtch-qcmn-epn
+        [[ -z "${QC_JSON_GLO_MCHMID:-}" ]] && QC_JSON_GLO_MCHMID=apricot://o2/components/qc/ANY/any/glo-mchmid-mtch-qcmn-epn
     fi
     if has_processing_step ENTROPY_ENCODER && [[ ! -z "$WORKFLOW_DETECTORS_CTF" ]] && [[ $WORKFLOW_DETECTORS_CTF != "NONE" ]] && has_detector CTP; then
-      [[ -z "${QC_JSON_CTF_SIZE:-}" ]] && QC_JSON_CTF_SIZE=consul://o2/components/qc/ANY/any/glo-qc-data-size
+      [[ -z "${QC_JSON_CTF_SIZE:-}" ]] && QC_JSON_CTF_SIZE=apricot://o2/components/qc/ANY/any/glo-qc-data-size
     fi
     if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
       [[ -z "${QC_JSON_GLOBAL:-}" ]] && QC_JSON_GLOBAL=$O2DPG_ROOT/DATA/production/qc-sync/qc-global-epn-staging.json # this must be last
