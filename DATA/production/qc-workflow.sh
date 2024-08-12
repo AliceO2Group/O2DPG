@@ -59,6 +59,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
   if [[ $EPNSYNCMODE == 1 || "${GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL:-}" == "1" ]]; then # Sync processing running on the EPN
     [[ -z "${QC_JSON_TPC:-}" ]] && QC_JSON_TPC=apricot://o2/components/qc/ANY/any/tpc-full-qcmn?run_type=${RUNTYPE:-}
     [[ -z "${QC_JSON_ITS:-}" ]] && QC_JSON_ITS=apricot://o2/components/qc/ANY/any/its-qcmn-epn-full
+>>>>>>> 0788c97c... Add beam_type option for tpc qc
     if [[ -z "${QC_JSON_MFT:-}" ]]; then
       if has_detector MFT && has_processing_step MFT_RECO; then
         QC_JSON_MFT=apricot://o2/components/qc/ANY/any/mft-full-qcmn

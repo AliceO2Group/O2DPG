@@ -47,7 +47,7 @@ CCDB_PATH="http://o2-ccdb.internal"
 HOST=localhost
 
 
-QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn?run_type=${RUNTYPE:-}"
+QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-raw-qcmn?run_type=${RUNTYPE:-}&beam_type=${BEAMTYPE:-}"
 QC_CONFIG="components/qc/ANY/any/tpc-raw-qcmn"
 
 max_events=300
