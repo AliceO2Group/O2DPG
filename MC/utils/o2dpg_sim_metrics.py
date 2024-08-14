@@ -13,7 +13,6 @@ import matplotlib
 import json
 import numpy as np
 import pandas as pd
-import seaborn as sns
 
 ############################################################################
 #                                                                          #
@@ -152,6 +151,7 @@ class Resources:
 
     if pipeline_path:
       self.extract_from_pipeline(pipeline_path)
+      self.pipeline_file = pipeline_path
 
   def __add__(self, other):
     """
@@ -745,6 +745,46 @@ def extract_resources(pipelines):
     return [Resources(p) for p in pipelines]
 
 
+def print_statistics(resource_object):
+  """
+  prints resource statistics for one dataframe of pipeline resources
+  """
+  print ("<--- Extracted resource summary from file ", resource_object.pipeline_file)
+  dframe = resource_object.df
+  meta = resource_object.meta
+
+  # estimate runtime from iteration count
+  max_iter = dframe['iter'].max()
+  print ("Iterations: ", max_iter)
+  # each iteration takes 5 seconds in the pipeline runner --> should be made dynamic and adaptive
+  print ("Estimated runtime (s): ", max_iter * 5)
+
+  #(a) PSS memory
+  summed_pss_per_iter=dframe.groupby("iter")['pss'].sum()
+  mean_pss = summed_pss_per_iter.mean()
+  max_pss = summed_pss_per_iter.max()
+  print ("Mean-PSS (MB): ", mean_pss)
+  print ("Max-PSS (MB): ", max_pss)
+
+  #(b) CPU consumption
+  summed_cpu_per_iter=dframe.groupby("iter")['cpu'].sum()
+  mean_cpu = summed_cpu_per_iter.mean()
+  max_cpu = summed_cpu_per_iter.max()
+  print ("Mean-CPU (cores): ", mean_cpu)
+  print ("Max-CPU (cores): ", max_cpu)
+  print ("CPU-efficiency: ", mean_cpu / meta["cpu_limit"])
+  print ("---> ")
+
+def stat(args):
+  """
+  providing simple global statistics of resources
+  """
+  resources = extract_resources(args.pipelines)
+  # iterate over all resource objects and make individual statistics
+  for res in resources:
+    print_statistics(res)
+
+
 def history(args):
   """
   Entrypoint for history
@@ -987,6 +1027,10 @@ def main():
 
   parser = argparse.ArgumentParser(description="Metrics evaluation of O2 simulation workflow")
   sub_parsers = parser.add_subparsers(dest="command")
+
+  stat_parser = sub_parsers.add_parser("stat", help="Print simple summary of resource usage")
+  stat_parser.set_defaults(func=stat)
+  stat_parser.add_argument("-p", "--pipelines", nargs="*", help="pipeline_metric files from o2_dpg_workflow_runner", required=True)
 
   plot_parser = sub_parsers.add_parser("history", help="Plot (multiple) metrcis from extracted metrics JSON file(s)")
   plot_parser.set_defaults(func=history)
