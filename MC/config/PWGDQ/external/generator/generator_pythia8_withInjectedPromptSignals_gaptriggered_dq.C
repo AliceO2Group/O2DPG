@@ -42,6 +42,9 @@ public:
       case 6: // generate prompt ChiC1 + ChiC2 cocktail at midrapidity
         mGeneratorParam = (Generator*)GeneratorCocktailChiCToElectronEvtGen_pp13TeV(); 
         break;
+      case 7: // generate prompt charmonia cocktail at forward rapidity at 5TeV
+        mGeneratorParam = (Generator*)GeneratorCocktailPromptCharmoniaToMuonEvtGen_PbPb5TeV(); 
+        break;
 
       }
     mGeneratorParam->Init();  

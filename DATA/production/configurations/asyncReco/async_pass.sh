@@ -414,8 +414,8 @@ echo "SETTING_ROOT_OUTPUT = $SETTING_ROOT_OUTPUT"
 # Enabling GPUs
 if [[ -n "$ALIEN_JDL_USEGPUS" && $ALIEN_JDL_USEGPUS != 0 ]] ; then
   echo "Enabling GPUS"
-  export GPUTYPE="HIP"
-  export GPUMEMSIZE=$((25 << 30))
+  [[ -z ${GPUTYPE:-} ]] && export GPUTYPE="HIP"
+  [[ -z ${GPUMEMSIZE:-} ]] && export GPUMEMSIZE=$((25 << 30))
   if [[ "0$ASYNC_PASS_NO_OPTIMIZED_DEFAULTS" != "01" ]]; then
     if [[ "ALIEN_JDL_USEFULLNUMADOMAIN" == 0 ]]; then
       if [[ $keep -eq 0 ]]; then
