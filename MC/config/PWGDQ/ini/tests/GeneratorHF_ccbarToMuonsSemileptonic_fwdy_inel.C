@@ -37,7 +37,7 @@ int External()
           if ( int(std::abs(gmpdg)/100.) == 4 || int(std::abs(gmpdg)/1000.) == 4 || int(std::abs(gmpdg)/100.) == 5 || int(std::abs(gmpdg)/1000.) == 5 ) {
             nLeptons++;
             nleptonse++;
-            if (-4.3 < y && y < -2.3) {
+            if (-4.3 < y && y < -2.2) {
               nleptonseinacc++;
               nLeptonsInAcceptance++;
             }
