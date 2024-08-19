@@ -46,7 +46,7 @@ PROXY_OUTSPEC="A:TPC/LASERTRACKS;B:TPC/CEDIGITS;D:TPC/CLUSREFS"
 
 HOST=localhost
 
-QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-laser-calib-qcmn?run_type=${RUNTYPE:-}&beam_type=${BEAMTYPE:-}"
+QC_CONFIG="consul-json://alio2-cr1-hv-con01.cern.ch:8500/o2/components/qc/ANY/any/tpc-laser-calib-qcmn?run_type=${RUNTYPE:-}"
 QC_CONFIG="components/qc/ANY/any/tpc-laser-calib-qcmn"
 
 
