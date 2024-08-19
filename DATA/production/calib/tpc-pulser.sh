@@ -19,7 +19,7 @@ CCDB_PATH="http://o2-ccdb.internal"
 
 HOST=localhost
 
-QC_CONFIG="components/qc/ANY/any/tpc-pulser-calib-qcmn?run_type=${RUNTYPE:-}&beam_type=${BEAMTYPE:-}"
+QC_CONFIG="components/qc/ANY/any/tpc-pulser-calib-qcmn?run_type=${RUNTYPE:-}"
 
 max_events=200
 publish_after=230
