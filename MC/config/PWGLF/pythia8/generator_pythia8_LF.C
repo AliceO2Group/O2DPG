@@ -23,8 +23,8 @@
 #include <fstream>
 #include "Generators/GeneratorPythia8Param.h"
 #include "Generators/DecayerPythia8Param.h"
-#include <nlohmann/json.hpp>
 #endif
+#include <nlohmann/json.hpp>
 #include "generator_pythia8_longlived.C"
 
 using namespace Pythia8;
@@ -445,8 +445,8 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
 
   std::vector<ConfigContainer> mGunConfigs;           // List of gun configurations to use
   std::vector<ConfigContainer> mGunConfigsGenDecayed; // List of gun configurations to use that will be decayed by the generator
-  Pythia pythiaObjectSignal;                          // Signal collision generator
-  Pythia pythiaObjectMinimumBias;                     // Minimum bias collision generator
+  Pythia8::Pythia pythiaObjectSignal;                          // Signal collision generator
+  Pythia8::Pythia pythiaObjectMinimumBias;                     // Minimum bias collision generator
 };
 
 ///___________________________________________________________
