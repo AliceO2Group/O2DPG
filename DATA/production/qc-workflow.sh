@@ -31,7 +31,6 @@ add_QC_JSON() {
 	if [[ ${2} =~ "?" ]]; then
 		curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}\&process=true"
 	else
-		echo curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}?process=true"
 		curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}?process=true"
 	fi
     
