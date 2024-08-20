@@ -28,7 +28,12 @@ add_QC_JSON() {
     fi
   elif [[ ${2} =~ ^apricot://.* ]]; then
     TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
-    curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}?process=true"
+	if [[ ${2} =~ "?" ]]; then
+		curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}\&process=true"
+	else
+		curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}?process=true"
+	fi
+    
     if [[ $? != 0 ]]; then
       echo "Error fetching QC JSON $2"
       exit 1
@@ -52,7 +57,7 @@ if [[ -z ${QC_JSON_FROM_OUTSIDE:-} && ! -z ${GEN_TOPO_QC_JSON_FILE:-} && -f $GEN
   QC_JSON_FROM_OUTSIDE=$GEN_TOPO_QC_JSON_FILE
 elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
   if [[ $EPNSYNCMODE == 1 || "${GEN_TOPO_LOAD_QC_JSON_FROM_CONSUL:-}" == "1" ]]; then # Sync processing running on the EPN
-    [[ -z "${QC_JSON_TPC:-}" ]] && QC_JSON_TPC=apricot://o2/components/qc/ANY/any/tpc-full-qcmn
+    [[ -z "${QC_JSON_TPC:-}" ]] && QC_JSON_TPC=apricot://o2/components/qc/ANY/any/tpc-full-qcmn?run_type=${RUNTYPE:-}
     [[ -z "${QC_JSON_ITS:-}" ]] && QC_JSON_ITS=apricot://o2/components/qc/ANY/any/its-qcmn-epn-full
     if [[ -z "${QC_JSON_MFT:-}" ]]; then
       if has_detector MFT && has_processing_step MFT_RECO; then
