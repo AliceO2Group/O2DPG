@@ -29,10 +29,8 @@ add_QC_JSON() {
   elif [[ ${2} =~ ^apricot://.* ]]; then
     TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
 	if [[ ${2} =~ "?" ]]; then
-		echo curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}\&process=true"
 		curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}\&process=true"
 	else
-		echo curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}?process=true"
 		curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}?process=true"
 	fi
     
