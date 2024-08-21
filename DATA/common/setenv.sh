@@ -92,14 +92,15 @@ if [[ -z "${RAWINPUTDIR:-}" ]];    then export RAWINPUTDIR=$FILEWORKDIR; fi    #
 if [[ -z "${EPNSYNCMODE:-}" ]];    then export EPNSYNCMODE=0; fi               # Is this workflow supposed to run on EPN for sync processing? Will enable InfoLogger / metrics / fetching QC JSONs from consul...
 if [[ -z "${BEAMTYPE:-}" ]];       then export BEAMTYPE=PbPb; fi               # Beam type, must be PbPb, pp, pPb, cosmic, technical
 if [[ -z "${RUNTYPE:-}" ]];        then export RUNTYPE=Standalone; fi          # Run Type, standalone for local tests, otherwise PHYSICS, COSMICS, TECHNICAL, SYNTHETIC
-if [[ $RUNTYPE == "SYNTHETIC" ]];  then export IS_SIMULATED_DATA=1; fi         # For SYNTHETIC runs we always process simulated data
-if [[ -z "${IS_SIMULATED_DATA:-}" ]]; then export IS_SIMULATED_DATA=1; fi       # processing simulated data
-if [[ -z "${IS_TRIGGERED_DATA:-}" ]]; then export IS_TRIGGERED_DATA=0; fi       # processing triggered data (TPC triggered instead of continuous)
-if [[ -z "${CTF_DIR:-}" ]];           then CTF_DIR=$FILEWORKDIR; fi             # Directory where to store CTFs
-if [[ -z "${CALIB_DIR:-}" ]];         then CALIB_DIR="/dev/null"; fi            # Directory where to store output from calibration workflows, /dev/null : skip their writing
+if [[ -z "${IS_SIMULATED_DATA:-}" && $RUNTYPE == "SYNTHETIC" ]]; then export IS_SIMULATED_DATA=1; fi # For SYNTHETIC runs we always process simulated data
+if [[ -z "${IS_SIMULATED_DATA:-}" && ( $RUNTYPE == "PHYSICS" || $RUNTYPE == "COSMICS" ) ]]; then export IS_SIMULATED_DATA=0; fi # For PHYSICS runs we always process simulated data
+if [[ -z "${IS_SIMULATED_DATA:-}" ]]; then export IS_SIMULATED_DATA=1; fi      # processing simulated data
+if [[ -z "${IS_TRIGGERED_DATA:-}" ]]; then export IS_TRIGGERED_DATA=0; fi      # processing triggered data (TPC triggered instead of continuous)
+if [[ -z "${CTF_DIR:-}" ]];           then CTF_DIR=$FILEWORKDIR; fi            # Directory where to store CTFs
+if [[ -z "${CALIB_DIR:-}" ]];         then CALIB_DIR="/dev/null"; fi           # Directory where to store output from calibration workflows, /dev/null : skip their writing
 if [[ -z "${EPN2EOS_METAFILES_DIR:-}" ]]; then EPN2EOS_METAFILES_DIR="/dev/null"; fi # Directory where to store epn2eos files metada, /dev/null : skip their writing
 if [[ -z "${DCSCCDBSERVER:-}" ]];  then export DCSCCDBSERVER="http://alio2-cr1-flp199-ib:8083"; fi # server for transvering calibration data to DCS
-if [[ -z "${DCSCCDBSERVER_PERS:-}" ]];  then export DCSCCDBSERVER_PERS="http://alio2-cr1-flp199-ib:8084"; fi # persistent server for transvering calibration data to DCS
+if [[ -z "${DCSCCDBSERVER_PERS:-}" ]]; then export DCSCCDBSERVER_PERS="http://alio2-cr1-flp199-ib:8084"; fi # persistent server for transvering calibration data to DCS
 
 if [[ $EPNSYNCMODE == 0 ]]; then
   if [[ -z "${SHMSIZE:-}" ]];       then export SHMSIZE=$(( 8 << 30 )); fi    # Size of shared memory for messages
@@ -112,12 +113,12 @@ if [[ $EPNSYNCMODE == 0 ]]; then
 else # Defaults when running on the EPN
   if [[ "0${GEN_TOPO_CALIB_WORKFLOW:-}" != "01" ]]; then
     if [[ -z "${GEN_TOPO_CALIB_NCORES:-}" ]]; then
-      if [[ -z "${SHMSIZE:-}" ]];              then export SHMSIZE=$(( 32 << 30 )); fi
+      if [[ -z "${SHMSIZE:-}" ]];          then export SHMSIZE=$(( 32 << 30 )); fi
     else
-      if [[ -z "${SHMSIZE:-}" ]];              then export SHMSIZE=$(( ($GEN_TOPO_CALIB_NCORES * 2) << 30 )); fi
+      if [[ -z "${SHMSIZE:-}" ]];          then export SHMSIZE=$(( ($GEN_TOPO_CALIB_NCORES * 2) << 30 )); fi
     fi
   else
-    if [[ -z "${SHMSIZE:-}" ]];              then export SHMSIZE=$(( 112 << 30 )); fi
+    if [[ -z "${SHMSIZE:-}" ]];            then export SHMSIZE=$(( 112 << 30 )); fi
   fi
   if [[ -z "${NGPUS:-}" ]];                then export NGPUS=4; fi
   if [[ -z "${EXTINPUT:-}" ]];             then export EXTINPUT=1; fi
