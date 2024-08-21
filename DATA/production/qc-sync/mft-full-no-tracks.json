@@ -138,8 +138,8 @@
         "detectorName": "MFT",
         "policy": "OnEachSeparately",
         "checkParameters" : {
-          "ZoneThresholdMedium" : "2",
-          "ZoneThresholdBad" : "5"
+          "LadderThresholdMedium" : "1",
+          "LadderThresholdBad" : "2"
         },
         "dataSource": [{
           "type": "Task",
@@ -155,8 +155,8 @@
             "MOs" : ["mClusterOccupancy","mClusterPatternIndex","mClusterSizeSummary", "mGroupedClusterSizeSummary","mClusterOccupancySummary"]
         }],
         "checkParameters" : {
-          "ZoneThresholdMedium" : "2",
-          "ZoneThresholdBad" : "5"
+          "LadderThresholdMedium" : "1",
+          "LadderThresholdBad" : "2"
         },
         "className": "o2::quality_control_modules::mft::QcMFTClusterCheck",
         "moduleName": "QcMFT",
