@@ -26,9 +26,7 @@ enum EDetectorAcceptance_t {
 //
 bool full(Float_t phi, Float_t eta)
 {
-  if (phi > 0. &&
-      phi < 360. * TMath::DegToRad() &&
-      TMath::Abs(eta) < 1.5)
+  if (TMath::Abs(eta) < 1.5)
     return true;
   else
     return false;
