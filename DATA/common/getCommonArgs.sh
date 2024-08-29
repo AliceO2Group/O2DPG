@@ -24,4 +24,8 @@ fi
 [[ ! -z ${SHM_MANAGER_SHMID:-} && ${GEN_TOPO_CALIB_WORKFLOW:-} != 1 ]] && ARGS_ALL+=" --no-cleanup --shm-no-cleanup on --shmid $SHM_MANAGER_SHMID"
 [[ $NORATELOG == 1 ]] && ARGS_ALL+=" --fairmq-rate-logging 0"
 
+[[ ! -z ${O2_DPL_EXIT_TRANSITION_TIMEOUT_DEFAULT:-} ]] && ARGS_ALL+=" --exit-transition-timeout $O2_DPL_EXIT_TRANSITION_TIMEOUT_DEFAULT"
+
+true
+
 fi # getCommonArgs.sh sourced
