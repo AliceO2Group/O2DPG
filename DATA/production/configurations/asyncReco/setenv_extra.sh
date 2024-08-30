@@ -316,11 +316,11 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[0]=20;tpcitsMatch.askMinTPCRow[1]=20;tpcitsMatch.askMinTPCRow[2]=20;tpcitsMatch.askMinTPCRow[3]=20;tpcitsMatch.askMinTPCRow[4]=20;tpcitsMatch.askMinTPCRow[5]=20;tpcitsMatch.askMinTPCRow[6]=20;tpcitsMatch.askMinTPCRow[7]=20;tpcitsMatch.askMinTPCRow[8]=20;tpcitsMatch.askMinTPCRow[9]=20;tpcitsMatch.askMinTPCRow[10]=20;tpcitsMatch.askMinTPCRow[12]=20;tpcitsMatch.askMinTPCRow[13]=20;tpcitsMatch.askMinTPCRow[14]=20;"
     export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[15]=20;tpcitsMatch.askMinTPCRow[16]=20;tpcitsMatch.askMinTPCRow[17]=20;tpcitsMatch.askMinTPCRow[18]=20;tpcitsMatch.askMinTPCRow[19]=20;tpcitsMatch.askMinTPCRow[20]=20;tpcitsMatch.askMinTPCRow[21]=20;tpcitsMatch.askMinTPCRow[22]=20;tpcitsMatch.askMinTPCRow[23]=20;tpcitsMatch.askMinTPCRow[24]=20;tpcitsMatch.askMinTPCRow[25]=20;tpcitsMatch.askMinTPCRow[26]=20;tpcitsMatch.askMinTPCRow[27]=20;tpcitsMatch.askMinTPCRow[28]=20;tpcitsMatch.askMinTPCRow[29]=20;"
     export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[30]=20;tpcitsMatch.askMinTPCRow[31]=20;tpcitsMatch.askMinTPCRow[32]=20;tpcitsMatch.askMinTPCRow[33]=20;tpcitsMatch.askMinTPCRow[34]=20;tpcitsMatch.askMinTPCRow[35]=20;"
-    if [[ $RUNNUMBER -ge 544511 ]] ; then
-      # runs below as well as LHC24al suffer from TPC S11 missing IROC but were not reprocessed with tpcitsMatch.askMinTPCRow[11]=78
-      RUNSS11BAD=(544947 545289 545004 545060 544931 545184 545345 544963 544991 544911 545103 545086)
+    if [[ $RUNNUMBER -ge 544512 ]] ; then
+      # runs below as well as LHC24al suffer from TPC IROC11 missing but should not reprocessed with tpcitsMatch.askMinTPCRow[11]=78
+      RUNSI11BAD=(544947 545289 545004 545060 544931 545184 545345 544963 544991 544911 545103 545086)
       [[ $PERIOD != "LHC24al" ]] && APPLYS11=1 || APPLYS11=0
-      for irs11 in "${RUNSS11BAD[@]}" ; do
+      for irs11 in "${RUNSI11BAD[@]}" ; do
         if [[ $RUNNUMBER == $irs11 ]] ; then
           APPLYS11=0;
           break;
