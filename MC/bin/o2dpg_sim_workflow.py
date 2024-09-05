@@ -1432,9 +1432,21 @@ for tf in range(1, NTIMEFRAMES + 1):
                       configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/emc-bc-task.json')
      ### FT0
      addQCPerTF(taskName='RecPointsQC',
-                   needs=[FT0RECOtask['name']],
-                   readerCommand='o2-ft0-recpoints-reader-workflow  --infile o2reco_ft0.root',
-                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/ft0-reconstruction-config.json')
+                needs=[FT0RECOtask['name']],
+                readerCommand='o2-ft0-recpoints-reader-workflow --infile o2reco_ft0.root',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/ft0-reconstruction-config.json')
+
+     ### FV0
+     addQCPerTF(taskName='FV0DigitsQC',
+                needs=[getDigiTaskName("FV0")],
+                readerCommand='o2-fv0-digit-reader-workflow --fv0-digit-infile fv0digits.root',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/fv0-digits.json')
+
+     ### FDD
+     addQCPerTF(taskName='FDDRecPointsQC',
+                needs=[FDDRECOtask['name']],
+                readerCommand='o2-fdd-recpoints-reader-workflow --fdd-recpoints-infile o2reco_fdd.root',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/fdd-recpoints.json')
 
      ### GLO + RECO
      addQCPerTF(taskName='vertexQC',
