@@ -62,7 +62,7 @@
                  "matchChi2MaxMFT": "45",
                  "diMuonTimeCut": "100",
                  "fullHistos": "0",
-                 "GID" : "MFT-MCH,MCH-MID,MFT-MCH-MID"
+                 "GID" : "MCH,MFT-MCH,MCH-MID,MFT-MCH-MID"
                },
         "grpGeomRequest": {
           "geomRequest": "Aligned",
