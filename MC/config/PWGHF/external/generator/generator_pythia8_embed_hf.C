@@ -45,12 +45,13 @@ public:
 
     /// @brief setup the event generator for HF signals
     /// \param gentype generator type (only ccbar, only bbbar, both)
+    /// \param usePtHardBins flag to enable/disable pt-hard bins
     /// \param yQuarkMin minimum quark rapidity
     /// \param yQuarkMax maximum quark rapidity
     /// \param yHadronMin minimum hadron rapidity
     /// \param yHadronMax maximum hadron rapidity
     /// \param hadronPdgList list of PDG codes for hadrons to be used in trigger
-    void setupGeneratorEvHF(int genType, float yQuarkMin, float yQuarkMax, float yHadronMin, float yHadronMax, std::vector<int> hadronPdgList = {}) {
+    void setupGeneratorEvHF(int genType, bool usePtHardBins, float yQuarkMin, float yQuarkMax, float yHadronMin, float yHadronMax, std::vector<int> hadronPdgList = {}) {
         mGeneratorEvHF = nullptr;
         switch (genType)
         {
@@ -80,18 +81,20 @@ public:
         }
 
         // we set pT hard bins
-        auto seed = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF)->getUsedSeed();
-        float ptHardBins[4] = {2.76, 20., 50., 1000.};
-        int iPt{0};
-        if (seed % 10 < 7) {
-            iPt = 0;
-        } else if (seed % 10 < 9) {
-            iPt = 1;
-        } else {
-            iPt = 2;
+        if (usePtHardBins) {
+            auto seed = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF)->getUsedSeed();
+            float ptHardBins[4] = {2.76, 20., 50., 1000.};
+            int iPt{0};
+            if (seed % 10 < 7) {
+                iPt = 0;
+            } else if (seed % 10 < 9) {
+                iPt = 1;
+            } else {
+                iPt = 2;
+            }
+            dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF)->readString(Form("PhaseSpace:pTHatMin = %f", ptHardBins[iPt]));
+            dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF)->readString(Form("PhaseSpace:pTHatMax = %f", ptHardBins[iPt+1]));
         }
-        dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF)->readString(Form("PhaseSpace:pTHatMin = %f", ptHardBins[iPt]));
-        dynamic_cast<GeneratorPythia8GapTriggeredHF*>(mGeneratorEvHF)->readString(Form("PhaseSpace:pTHatMax = %f", ptHardBins[iPt+1]));
         mGeneratorEvHF->Init();
     }
 
@@ -172,34 +175,34 @@ private:
 };
 
 // Charm enriched
-FairGenerator * GeneratorPythia8EmbedHFCharm(float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
+FairGenerator * GeneratorPythia8EmbedHFCharm(bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
 {
     auto myGen = new GeneratorPythia8EmbedHF();
 
     /// setup the internal generator for HF events
-    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredCharm, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
+    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredCharm, usePtHardBins, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
 
     return myGen;
 }
 
 // Beauty enriched
-FairGenerator * GeneratorPythia8EmbedHFBeauty(float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
+FairGenerator * GeneratorPythia8EmbedHFBeauty(bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
 {
     auto myGen = new GeneratorPythia8EmbedHF();
 
     /// setup the internal generator for HF events
-    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredBeauty, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
+    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredBeauty, usePtHardBins, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
 
     return myGen;
 }
 
 // Charm and beauty enriched (with same ratio)
-FairGenerator * GeneratorPythia8EmbedHFCharmAndBeauty(float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
+FairGenerator * GeneratorPythia8EmbedHFCharmAndBeauty(bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
 {
     auto myGen = new GeneratorPythia8EmbedHF();
 
     /// setup the internal generator for HF events
-    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredCharmAndBeauty, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
+    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredCharmAndBeauty, usePtHardBins, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
 
     return myGen;
 }
