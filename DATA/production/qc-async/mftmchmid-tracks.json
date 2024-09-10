@@ -14,9 +14,56 @@
           "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;matchMCHMID:GLO/MTC_MCHMID"
         },
         "taskParameters": {
-          "maxTracksPerTF": "600",
-          "GID" : "MFT,MCH,MID,MFT-MCH,MCH-MID,MFT-MCH-MID"
+                 "maxTracksPerTF": "600",
+                 "cutRAbsMin": "17.6",
+                 "cutRAbsMax": "89.5",
+                 "cutEtaMin": "-4.0",
+                 "cutEtaMax": "-2.5",
+                 "cutPtMin": "0.5",
+                 "nSigmaPDCA": "6",
+                 "cutChi2Max": "1000",
+                 "diMuonTimeCut": "100",
+                 "fullHistos": "0",
+                 "GID" : "MCH,MCH-MID"
+               },
+        "grpGeomRequest": {
+          "geomRequest": "Aligned",
+          "askGRPECS": "true",
+          "askGRPLHCIF": "false",
+          "askGRPMagField": "true",
+          "askMatLUT": "false",
+          "askTime": "false",
+          "askOnceAllButField": "false",
+          "needPropagatorD": "false"
         },
+        "location": "remote"
+      },
+      "TaskMUONTracksMFT": {
+        "active": "true",
+        "className": "o2::quality_control_modules::muon::TracksTask",
+        "moduleName": "QcMUONCommon",
+        "detectorName": "GLO",
+        "taskName": "MUONTracksMFT",
+        "cycleDurationSeconds": "300",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;matchMCHMID:GLO/MTC_MCHMID"
+        },
+        "taskParameters": {
+                 "maxTracksPerTF": "600",
+                 "cutRAbsMin": "26.5",
+                 "cutRAbsMax": "89.5",
+                 "cutEtaMin": "-3.3",
+                 "cutEtaMax": "-2.5",
+                 "cutPtMin": "0.5",
+                 "nSigmaPDCA": "6",
+                 "cutChi2Max": "1000",
+                 "matchChi2MaxMFT": "45",
+                 "diMuonTimeCut": "100",
+                 "fullHistos": "0",
+                 "GID" : "MCH,MFT-MCH,MCH-MID,MFT-MCH-MID"
+               },
         "grpGeomRequest": {
           "geomRequest": "Aligned",
           "askGRPECS": "true",
