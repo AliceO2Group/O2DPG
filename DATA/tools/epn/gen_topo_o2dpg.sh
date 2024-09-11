@@ -29,6 +29,8 @@ if [[ "${DEBUG_TOPOLOGY_GENERATION:=0}" == "1" ]]; then
   GEN_TOPO_MI100_NODES=1          # also for MI100 nodes
   GEN_TOPO_OVERRIDE_TEMPDIR=$PWD  # keep temporary files like QC jsons in local directory
   EPN2EOS_METAFILES_DIR=/tmp      # nothing is written here, just needs to be set to something
+  unset ECS_ENVIRONMENT_ID
+  unset GEN_TOPO_CACHE_HASH
 fi
 
 # Check settings coming from the EPN
