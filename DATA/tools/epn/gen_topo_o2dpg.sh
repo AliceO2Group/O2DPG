@@ -2,7 +2,6 @@
 
 # Some defaults
 [[ -z "$GEN_TOPO_STDERR_LOGGING" ]] && export GEN_TOPO_STDERR_LOGGING=1 # Enable logging of stderr messages
-[[ -z "$IS_SIMULATED_DATA" ]] && export IS_SIMULATED_DATA=0 # by default we are processing raw data
 
 # Check settings coming from AliECS via env variables
 if [[ -z "$GEN_TOPO_HASH" ]]; then echo \$GEN_TOPO_HASH missing; exit 1; fi # Flag whether source is a hash or a folder
