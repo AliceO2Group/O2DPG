@@ -89,6 +89,8 @@ while true; do
       git fetch --tags origin 1>&2 || { echo Repository update failed 1>&2; exit 1; }
       git checkout $GEN_TOPO_SOURCE &> /dev/null || { echo commit does not exist 1>&2; exit 1; }
     fi
+    git reset --hard $GEN_TOPO_SOURCE &> /dev/null  || { echo git reset error 1>&2; exit 1; }
+    rm -f DATA/core_dump_*
     # At a tag, or a detached non-dirty commit, but not on a branch
     if ! git describe --exact-match --tags HEAD &> /dev/null && ( git symbolic-ref -q HEAD &> /dev/null || ! git diff-index --quiet HEAD &> /dev/null ); then
       unset GEN_TOPO_CACHEABLE
