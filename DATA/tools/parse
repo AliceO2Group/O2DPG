@@ -152,7 +152,7 @@ for line in f:
                     command += ' > ' + filename
                 print('Running DPL command', command)
                 starttime = time.time()
-                retVal = subprocess.run(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                retVal = subprocess.run(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE, input="")
                 print('Execution time: ', time.time() - starttime)
                 tmpchk = retVal.stderr.decode() + retVal.stdout.decode()
                 haserror = 0
