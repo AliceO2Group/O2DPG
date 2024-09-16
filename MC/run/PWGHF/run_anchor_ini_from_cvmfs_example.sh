@@ -36,7 +36,7 @@ GENFROMCVMFS="/cvmfs/alice.cern.ch/el9-x86_64/Packages/O2DPG/daily-20240912-0200
 if [ ! -f $MODIFIEDINI ]; then
     sed -e "s|$CFGTOREPLACE|$CFGFROMCVMFS|g" -e "s|$GENTOREPLACE|$GENFROMCVMFS|g" $ORIGINALINI > $MODIFIEDINI
 fi
-
+MODIFIEDINI_ABSPATH=$(readlink -f $MODIFIEDINI)
 export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen external -ini $MODIFIEDINI"
 
 ${O2DPG_ROOT}/MC/run/ANCHOR/anchorMC.sh
