@@ -724,9 +724,17 @@ for tf in range(1, NTIMEFRAMES + 1):
                          cpu=1, mem=1000)
 
    SGNGENtask['cmd']=''
-   if GENERATOR=="hepmc" and tf > 1:
-     # determine the skip number
-     cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
+   if GENERATOR=="hepmc":
+     if tf == 1:
+      # determine the offset number
+       eventOffset = environ.get('HEPMCOFFSET')
+       print("HEPMCOFFSET: ", eventOffset)
+       if eventOffset == None:
+        eventOffset = 0
+       cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/InitHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(eventOffset) + ');'
+     elif tf > 1:
+       # determine the skip number
+       cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
      SGNGENtask['cmd'] = cmd
    SGNGENtask['cmd'] +='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode kCCDB'         \
                      + ' --run ' + str(args.run) + ' ' + str(CONFKEY) + str(TRIGGER)                  \
