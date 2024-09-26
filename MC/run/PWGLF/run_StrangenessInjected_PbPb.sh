@@ -20,7 +20,6 @@ export IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE=1
 NWORKERS=${NWORKERS:-8}
 SIMENGINE=${SIMENGINE:-TGeant4}
 NSIGEVENTS=${NSIGEVENTS:-1}
-NBKGEVENTS=${NBKGEVENTS:-1}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
 INTRATE=${INTRATE:-50000}
 SYSTEM=${SYSTEM:-PbPb}
@@ -37,7 +36,6 @@ $O2_SIM_WORKFLOW -eCM ${ENERGY} -col ${SYSTEM} -gen external \
         -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} \
         -confKey "Diamond.width[2]=6." \
         ${SEED} \
-        -procBkg "inel" -colBkg $SYSTEM --embedding -nb ${NBKGEVENTS} -genBkg pythia8 \
         -e ${SIMENGINE} \
         -ini $CFGINIFILE
 
