@@ -409,6 +409,7 @@ popd > /dev/null
 #         [[ -z {ALIBUILD_HEAD_HASH+x} ]] && export O2DPG_ROOT=${REPO_DIR}
 # but let's do the same for both local and CI consistently
 export O2DPG_ROOT=${REPO_DIR}
+export O2DPG_MC_CONFIG_ROOT=${O2DPG_ROOT}
 
 # prepare our local test directory
 rm -rf ${TEST_PARENT_DIR} 2>/dev/null
