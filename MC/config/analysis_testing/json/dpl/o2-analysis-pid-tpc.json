@@ -1,5 +1,5 @@
 {
-  "pid-tpc": {
+  "tpc-pid": {
     "autofetchNetworks": "1",
     "ccdb-timestamp": "0",
     "ccdb-url": "http://alice-ccdb.cern.ch",
