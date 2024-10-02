@@ -1,6 +1,6 @@
 {
   "event-selection-task": {
-    "isMC": "!ANALYSIS_QC_is_mc!",
+    "isMC": "-1",
     "muonSelection": "0",
     "processRun2": "false",
     "processRun3": "true",
