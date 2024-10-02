@@ -79,7 +79,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run .ini configurations check
+      - name: Run .ini configs check
         run: |
           error=0
           readarray -d '' files < \
