@@ -61,6 +61,7 @@ parser.add_argument('-trigger',help='event selection: particle, external', defau
 parser.add_argument('-ini',help='generator init parameters file (full paths required), for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
 parser.add_argument('--readoutDets',help='comma separated string of detectors readout (does not modify material budget - only hit creation)', default='all')
+parser.add_argument('--material-params-ccdb', dest='material_params_ccdb', action='store_true', help='to fetch the material parameters used during transport from CCDB')
 
 parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
 parser.add_argument('-bcPatternFile',help='Bunch crossing pattern file, used in digitization (a file name or "ccdb")', default='')
@@ -362,6 +363,24 @@ qcdir = "QC"
 if (includeLocalQC or includeFullQC) and not isdir(qcdir):
     mkdir(qcdir)
 
+# prepare fetching and configuration for MaterialManagerParam
+transport_needs = []
+if args.material_params_ccdb:
+   # the target file name
+   mat_mgr_file_name = 'material_manager_params.json'
+   # the path on CCDB
+   ccdb_path = 'SIM_TEST/ALIBI/SIM_CUTS'
+   # this is the full local path of where the parameter file will be copied to
+   mat_mgr_file_path = f'${{ALICEO2_CCDB_LOCALCACHE}}/{ccdb_path}/{mat_mgr_file_name}'
+   # simply append, the last one takes precedence
+   args.confKey += f';MaterialManagerParam.inputFile={mat_mgr_file_path}'
+   args.confKeyBkg += f';MaterialManagerParam.inputFile={mat_mgr_file_path}'
+
+   MAT_PARAMS_DOWNLOADER_TASK = createTask(name='download_mat_mgr_params', cpu=0)
+   MAT_PARAMS_DOWNLOADER_TASK['cmd'] = f'${{O2_ROOT}}/bin/o2-ccdb-downloadccdbfile --host http://ccdb-test.cern.ch:8080 -p {ccdb_path} --timestamp -1 -d ${{ALICEO2_CCDB_LOCALCACHE}} -o {mat_mgr_file_name}'
+   workflow['stages'].append(MAT_PARAMS_DOWNLOADER_TASK)
+   transport_needs.append(MAT_PARAMS_DOWNLOADER_TASK['name'])
+
 # create/publish the GRPs and other GLO objects for consistent use further down the pipeline
 orbitsPerTF=int(args.orbitsPerTF)
 GRP_TASK = createTask(name='grpcreate', cpu='0')
@@ -455,7 +474,7 @@ if doembedding:
         # determine final configKey values for background transport
         CONFKEYBKG = constructConfigKeyArg(create_geant_config(args, args.confKeyBkg))
 
-        BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=[BKG_CONFIG_task['name'], GRP_TASK['name']], cpu=NWORKERS )
+        BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=[BKG_CONFIG_task['name'], GRP_TASK['name']] + transport_needs, cpu=NWORKERS )
         BKGtask['cmd']='${O2_ROOT}/bin/o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
                      + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)                    \
                      + ' --field ccdb ' + str(CONFKEYBKG)                                                                \
@@ -700,7 +719,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # -----------------
    # transport signals
    # -----------------
-   signalneeds=[ SGN_CONFIG_task['name'], GRP_TASK['name'] ]
+   signalneeds=[ SGN_CONFIG_task['name'], GRP_TASK['name'] ] + transport_needs
    if (args.pregenCollContext == True):
       signalneeds.append(PreCollContextTask['name'])
 
