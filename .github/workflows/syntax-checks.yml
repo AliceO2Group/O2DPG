@@ -71,6 +71,27 @@ jobs:
           jq -r '.comments[] | "Error found in \(.file) line \(.line):\n::error file=\(.file),line=\(.line),endLine=\(.endLine),col=\(.column),endColumn=\(.endColumn)::\(.message)"' errors.json
           exit "$error"
 
+  config-check:
+    name: Config-check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run .ini configs check
+        run: |
+          error=0
+          readarray -d '' files < \
+            <(find . -path ./.git -prune -false -or -type f -name '*.ini' -print0)
+          for cfg in "${files[@]}"; do
+            if grep -q "O2DPG_ROOT" "$cfg"; then
+              error=1
+              echo "Deprecated O2DPG_ROOT detected in $cfg, replace with O2DPG_MC_CONFIG_ROOT" >&2
+            fi
+          done
+          exit "$error"
+
   pylint:
     name: Pylint
     runs-on: ubuntu-latest
