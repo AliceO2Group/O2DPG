@@ -281,7 +281,9 @@ fi
 #
 if [[ -n "$ALIEN_PROC_ID" ]]; then
   find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" -o -name "pythia8.cfg" \) | tar -czvf debug_log_archive.tgz -T -
-  find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" -o -name "*.root" \) | tar -czvf debug_full_archive.tgz -T -
+  if [[ "$ALIEN_JDL_CREATE_TAR_IN_MC" == "1" ]]; then
+    find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" -o -name "*.root" \) | tar -czvf debug_full_archive.tgz -T -
+  fi
 fi
 
 unset FAIRMQ_IPC_PREFIX
