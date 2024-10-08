@@ -29,14 +29,15 @@
         "className" : "o2::quality_control_modules::tof::TOFMatchedTracks",
         "moduleName" : "QcTOF",
         "detectorName" : "TOF",
-        "cycleDurationSeconds" : "60",
+        "cycleDurationSeconds" : "300",
         "maxNumberCycles" : "-1",
         "dataSource" : {
           "type" : "direct",
           "query_comment" : "checking every matched track",
           "query" : "tofcluster:TOF/CLUSTERS/0;trackTPC:TPC/TRACKS/0;trackTPCClRefs:TPC/CLUSREFS/0;matchTPCTOF:TOF/MTC_TPC/0;trackTPCTOF:TOF/TOFTRACKS_TPC/0;trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;matchITSTPCTOF:TOF/MTC_ITSTPC/0;trackITSTPCTRD:TRD/MATCH_ITSTPC/0;trigITSTPCTRD:TRD/TRGREC_ITSTPC/0;matchITSTPCTRDTOF:TOF/MTC_ITSTPCTRD/0;trackTPCTRD:TRD/MATCH_TPC/0;trigTPCTRD:TRD/TRGREC_TPC/0;matchTPCTRDTOF:TOF/MTC_TPCTRD/0"
         },
-        "taskParameters" : {
+       	"movingWindows" : [ "mEffPt_ITSTPC-ITSTPCTRD" ],
+	"taskParameters" : {
           "GID" : "TPC,TPC-TOF,ITS-TPC,ITS-TPC-TOF,ITS-TPC-TRD,ITS-TPC-TRD-TOF,TPC-TRD,TPC-TRD-TOF",
           "verbose" : "false",
           "minPtCut" : "0.1f",
