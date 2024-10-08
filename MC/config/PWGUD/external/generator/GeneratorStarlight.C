@@ -1,8 +1,11 @@
+R__LOAD_LIBRARY(libDPMJET.so)
+R__LOAD_LIBRARY(libDpmJetLib.so)
 R__LOAD_LIBRARY(libStarlib.so)
 R__ADD_INCLUDE_PATH($STARlight_ROOT/include)
 
 #include "randomgenerator.h"
 #include "upcXevent.h"
+#include "upcevent.h"
 #include "starlight.h"
 #include "inputParameters.h"
 
@@ -96,7 +99,14 @@ class GeneratorStarlight_class : public Generator
     {"kIncohPsi2sToMuPi",    4,  444013,   20, -1.0, -1.0, 0.01, 100443, 1 }, //
     {"kIncohPsi2sToElPi",    4,  444011,   20, -1.0, -1.0, 0.01, 100443, 1 }, //
     {"kIncohUpsilonToMu",    4,  553013,   20, -1.0, -1.0, 0.01, 553, 0 }, //
-    {"kIncohUpsilonToEl",    4,  553011,   20, -1.0, -1.0, 0.01, 553, 0 }, //	
+    {"kIncohUpsilonToEl",    4,  553011,   20, -1.0, -1.0, 0.01, 553, 0 }, //
+    {"kDpmjetSingle",        5,  113,   20, -1.0, -1.0, 0.01, -1, 0 }, //
+    {"kTauLowToEl3Pi",       1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowToPo3Pi",       1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauMediumToEl3Pi",    1,      15,  264,  1.8, 15.0, 0.01, -1, 1 }, // from 1.8 to 15 GeV
+    {"kTauMediumToPo3Pi",    1,      15,  264,  1.8, 15.0, 0.01, -1, 1 }, // from 1.8 to 15 GeV
+    {"kTauHighToEl3Pi",      1,      15,  220,  4.0, 15.0, 0.01, -1, 1 }, // from 4.0 to 15 GeV
+    {"kTauHighToPo3Pi",      1,      15,  220,  4.0, 15.0, 0.01, -1, 1 }, // from 4.0 to 15 GeV
 	};
 
   const int nProcess = sizeof(slConfig)/sizeof(SLConfig);
@@ -146,10 +156,16 @@ class GeneratorStarlight_class : public Generator
   setParameter("IF_STRENGTH   =   1.   #% of interfernce (0.0 - 0.1)");
   setParameter("INT_PT_MAX    =   0.24 #Maximum pt considered, when interference is turned on");
   setParameter("INT_PT_N_BINS = 120    #Number of pt bins when interference is turned on");
-  setParameter("XSEC_METHOD   = 1      # Set to 0 to use old method for calculating gamma-gamma luminosity"); //CM
-  setParameter("BSLOPE_DEFINITION = 0");   // using default slope
+  setParameter("XSEC_METHOD   = 0      # Set to 0 to use old method for calculating gamma-gamma luminosity"); //CM
+  setParameter("BSLOPE_DEFINITION = 1");   // using default slope
   setParameter("BSLOPE_VALUE      = 4.0"); // default slope value
   setParameter("PRINT_VM = 0"); // print cross sections and fluxes vs rapidity in stdout for VM photoproduction processes
+
+  // Photonuclear specific options, energies in Lab frame. These values should be within the range of the values specified in the DPMJet input file (when DPMJet is used)
+  if(slConfig[idx].prod_mode == 5 || slConfig[idx].prod_mode == 6 || slConfig[idx].prod_mode == 7){
+    setParameter("MIN_GAMMA_ENERGY = 1000.0");
+    setParameter("MAX_GAMMA_ENERGY = 600000.0");
+  }
   
   if (not mInputParameters.init()) {
       std::cout << "InitStarLight parameter initialization has failed" << std::endl;
@@ -171,6 +187,11 @@ class GeneratorStarlight_class : public Generator
     return false;
   }
 
+  if (mInputParameters.interactionType() >= 5) {
+    mUpcEvent = mStarLight->produceUpcEvent();
+    mUpcEvent.boost(0.5*(TMath::ACosH(mInputParameters.beam1LorentzGamma()) - TMath::ACosH(mInputParameters.beam2LorentzGamma())));
+  }
+
   mEvent = mStarLight->produceEvent();
   // boost event to the experiment CM frame
   mEvent.boost(0.5*(TMath::ACosH(mInputParameters.beam1LorentzGamma()) - TMath::ACosH(mInputParameters.beam2LorentzGamma())));
@@ -185,17 +206,28 @@ class GeneratorStarlight_class : public Generator
   {    
   int nVtx(0);
   float vtx(0), vty(0), vtz(0), vtt(0);
-  const std::vector<vector3>* slVtx(mEvent.getVertices());
+  const std::vector<vector3>* slVtx;
+  const std::vector<starlightParticle>* slPartArr;
+  int npart = 0;
+
+  if (mInputParameters.interactionType() >= 5) {
+    slVtx = mUpcEvent.getVertices();
+    slPartArr = mUpcEvent.getParticles();
+    npart = mUpcEvent.getParticles()->size();
+  }
+  else{
+    slVtx = mEvent.getVertices();
+    slPartArr = mEvent.getParticles();
+    npart = mEvent.getParticles()->size();
+  }
+
   if (slVtx == 0) { // not vertex assume 0,0,0,0;
     vtx = vty = vtz = vtt = 0.0;
-  } else { // a vertex exits
-    slVtx = mEvent.getVertices();
-    nVtx = slVtx->size();
-  } // end if
-  
-  const std::vector<starlightParticle>* slPartArr(mEvent.getParticles());
-  const int npart(mEvent.getParticles()->size());
-  
+    }
+  else { // a vertex exits
+      nVtx = slVtx->size();
+    } // end if
+
   if(mPdgMother != -1){ //Reconstruct mother particle for VM processes
   TLorentzVector lmoth;
   TLorentzVector ldaug;
@@ -219,7 +251,7 @@ class GeneratorStarlight_class : public Generator
 	  mParticles.push_back(particle);
 	  o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back(), 11);
   }
-  if(!mDecayEvtGen){ // Don't import daughters in case of external decayer
+  if(!mDecayEvtGen || mPdgMother == -1){ // Don't import daughters in case of external decayer
   for(int ipart=0;ipart<npart;ipart++) {
     const starlightParticle* slPart(&(slPartArr->at(ipart)));
       if (nVtx < 1) { // No verticies
@@ -232,7 +264,7 @@ class GeneratorStarlight_class : public Generator
       } // end if
       TParticle particle(slPart->getPdgCode(),
 				   1,
-				   0,
+				   (mPdgMother != -1 ? 0 :-1),
 				   -1,
 				   slPart->getFirstDaughter(),
 				   slPart->getLastDaughter(),
@@ -245,7 +277,7 @@ class GeneratorStarlight_class : public Generator
 	  mParticles.push_back(particle);
       o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back(), 1);
     }  
-    }
+  }
   return true; 
   }
  
@@ -254,6 +286,7 @@ class GeneratorStarlight_class : public Generator
    inputParameters  mInputParameters;  //   simulation input information.
    randomGenerator  mRandomGenerator;  //   STARLIGHT's own random generator
    upcXEvent        mEvent;            //  object holding STARlight simulated event.
+   upcEvent         mUpcEvent;
    std::string mSelectedConfiguration = "";
    int mPdgMother = -1;
    bool mDecayEvtGen = 0;
