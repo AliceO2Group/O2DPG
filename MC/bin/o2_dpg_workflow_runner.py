@@ -884,13 +884,22 @@ class WorkflowExecutor:
       
       # Gets the .root kinematic file path and passes it to the event simulation step
       # the string appended to the filename is to take account of the current timeframe
-      # and to skip events accordingly
+      # and to skip events accordingly. extKinO2 functionality is reused in this variant
+      # no modifications are needed in o2-sim to make this work
       if args.kine_input:
           kine_fn = args.kine_input
           if os.path.isfile(kine_fn):
               for stage in self.workflowspec['stages']:
                   if "sgngen" in stage['name']:
-                    stage['cmd'] = stage['cmd'][:-1] + " --kine-input " + kine_fn + ':' + stage['name'][-1] + stage['cmd'][-1]
+                    # Extract the number of events from the cmd variable
+                    match = re.search(r'-n\s+(\d+)', stage['cmd'])
+                    if match:
+                        nevents = match.group(1)
+                        stage['cmd'] = re.sub(r'-g\s+\S+', '-g extkinO2', stage['cmd'])
+                        stage['cmd'] = stage['cmd'][:-1] + " --extKinFile " + kine_fn + ' --startEvent ' + str((stage['timeframe']-1)*int(nevents)) + stage['cmd'][-1]
+                    else:
+                        print("Number of events (-n flag) not found in the event generation command.")
+                        exit(2)
           else:
               print("Input kinematic file does not exist.")
               exit(2)
