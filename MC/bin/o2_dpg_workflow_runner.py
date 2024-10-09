@@ -890,7 +890,7 @@ class WorkflowExecutor:
           if os.path.isfile(kine_fn):
               for stage in self.workflowspec['stages']:
                   if "sgngen" in stage['name']:
-                    stage['cmd'] = stage['cmd'][:-1] + " --kine-input " + kine_fn + ':' + stage['name'][-1] + stage['cmd'][-1]
+                    stage['cmd'] = stage['cmd'][:-1] + " --kine-input " + kine_fn + ':' + str(stage['timeframe']) + stage['cmd'][-1]
           else:
               print("Input kinematic file does not exist.")
               exit(2)
