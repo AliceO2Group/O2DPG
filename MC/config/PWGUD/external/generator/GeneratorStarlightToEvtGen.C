@@ -16,13 +16,11 @@ FairGenerator*
   gen->selectConfiguration(configuration);
   gen->setCollisionSystem(energyCM, beam1Z, beam1A, beam2Z, beam2A);
   
-  gen->SetSizePdg(5);
+  gen->SetSizePdg(3);
   gen->AddPdg(443,0);
   gen->AddPdg(100443,1);
   gen->AddPdg(223,2);
-  gen->AddPdg(15,3);
-  gen->AddPdg(-15,4);
-  if (configuration.find("kTau") == std::string::npos) gen->SetPolarization(1); //Transversal
+  gen->SetPolarization(1); //Transversal
   
   TString pathO2 = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGUD/external/generator/DecayTablesEvtGen");
   if      (configuration.find("Psi2sToMuPi") != std::string::npos) gen->SetDecayTable(Form("%s/PSI2S.MUMUPIPI.DEC",pathO2.Data()));
@@ -30,8 +28,6 @@ FairGenerator*
   else if (configuration.find("RhoPrime") != std::string::npos)    gen->SetDecayTable(Form("%s/RHOPRIME.RHOPIPI.DEC",pathO2.Data()));
   else if (configuration.find("OmegaTo3Pi") != std::string::npos)  gen->SetDecayTable(Form("%s/OMEGA.3PI.DEC",pathO2.Data()));
   else if (configuration.find("JpsiToElRad") != std::string::npos) gen->SetDecayTable(Form("%s/JPSI.EE.DEC",pathO2.Data()));
-  else if (configuration.find("ToEl3Pi") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.EL3PI.DEC",pathO2.Data()));
-  else if (configuration.find("ToPo3Pi") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.PO3PI.DEC",pathO2.Data()));
  
   return gen;
 }
