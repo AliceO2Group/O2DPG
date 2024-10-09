@@ -249,7 +249,7 @@ class GeneratorStarlight_class : public Generator
 				   0,0,0,0);
 	  //particle.Print();
 	  mParticles.push_back(particle);
-	  o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back(), 11);
+	  o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back(), false);
   }
   if(!mDecayEvtGen || mPdgMother == -1){ // Don't import daughters in case of external decayer
   for(int ipart=0;ipart<npart;ipart++) {
@@ -275,7 +275,7 @@ class GeneratorStarlight_class : public Generator
 				   vtx,vty,vtz,vtt);
 	  //particle.Print();
 	  mParticles.push_back(particle);
-      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back(), 1);
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back(), true);
     }  
   }
   return true; 
