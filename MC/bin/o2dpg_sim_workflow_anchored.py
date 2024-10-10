@@ -99,6 +99,25 @@ def retrieve_CCDBObject_asJSON(ccdbreader, path, timestamp, objtype_external = N
     return json.loads(jsonTString.Data())
 
 
+def retrieve_Aggregated_RunInfos(run_number):
+    """
+    Retrieves start of run (sor), end of run (eor) and other global parameters by using the
+    AggregatedRunInfo object in O2 which takes care of building the information consistently.
+    This is the prefered way over older function "retrieve_params_fromGRPECS_and_OrbitReset".
+    """
+
+    runInfo = o2.parameters.AggregatedRunInfo.buildAggregatedRunInfo(o2.ccdb.BasicCCDBManager.instance(), run_number)
+    detList = o2.detectors.DetID.getNames(runInfo.grpECS.getDetsReadOut())
+    assert (run_number == runInfo.runNumber)
+    assert (run_number == runInfo.grpECS.getRun())
+    return {"SOR" : runInfo.sor,
+            "EOR" : runInfo.eor,
+            "FirstOrbit" : runInfo.orbitSOR,
+            "LastOrbit" : runInfo.orbitEOR,
+            "OrbitsPerTF" : int(runInfo.orbitsPerTF),
+            "detList" : detList}
+
+
 def retrieve_params_fromGRPECS_and_OrbitReset(ccdbreader, run_number, run_start, run_end):
     """
     Retrieves start of run (sor), end of run (eor) and other global parameters from the GRPECS object,
@@ -106,6 +125,8 @@ def retrieve_params_fromGRPECS_and_OrbitReset(ccdbreader, run_number, run_start,
     ... but this is possible with a browsing request and meta_data filtering.
     Optionally, we can pass an existing result from RCT/Info/RunInformation to check for consistency.
     In this case and when information is inconsistent we will take time from RCT and issue a warning message.
+
+    NOTE: This function is deprecated; It should no longer be used and might be removed soon.
     """
 
     # make a simple HTTP request on the "browsing" endpoint
@@ -300,15 +321,11 @@ def main():
 
     # make a CCDB accessor object
     ccdbreader = CCDBAccessor(args.ccdb_url)
-    # fetch the EOR/SOR
-    run_duration = ccdbreader.get_run_duration(args.run_number)
-    run_start = run_duration.first
-    run_end = run_duration.second
 
-    GLOparams = retrieve_params_fromGRPECS_and_OrbitReset(ccdbreader, args.run_number, run_start, run_end)
-    if not GLOparams:
-       print ("ERROR: Could not retrieve information from GRPECS")
-       sys.exit(1)
+    # fetch the EOR/SOR/FirstOrbit and other important run parameters
+    GLOparams = retrieve_Aggregated_RunInfos(args.run_number)
+    run_start = GLOparams["SOR"]
+    run_end = GLOparams["EOR"]
 
     # determine timestamp, and production offset for the final MC job to run
     timestamp, prod_offset = determine_timestamp(run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
