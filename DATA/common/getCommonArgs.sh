@@ -13,7 +13,7 @@ ARGS_ALL="--session ${OVERRIDE_SESSION:-default} --severity $SEVERITY --shm-segm
 ARGS_ALL_CONFIG="keyval.input_dir=$FILEWORKDIR;keyval.output_dir=/dev/null;${ALL_EXTRA_CONFIG:-}"
 if [[ $EPNSYNCMODE == 1 ]]; then
   ARGS_ALL+=" --infologger-severity $INFOLOGGER_SEVERITY"
-  ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring ${GEN_TOPO_RESOURCE_MONITORING:-15}"
+  ARGS_ALL+=" --monitoring-backend influxdb-unix:///tmp/telegraf.sock --resources-monitoring ${GEN_TOPO_RESOURCE_MONITORING:-15} ${GEN_TOPO_RESOURCE_MONITORING:+--dpl-stats-min-online-publishing-interval $GEN_TOPO_RESOURCE_MONITORING}"
   ARGS_ALL_CONFIG+="NameConf.mCCDBServer=$GEN_TOPO_EPN_CCDB_SERVER;"
   export DPL_CONDITION_BACKEND=$GEN_TOPO_EPN_CCDB_SERVER
   [[ -z ${O2_DPL_DEPLOYMENT_MODE:-} ]] && O2_DPL_DEPLOYMENT_MODE=OnlineECS
