@@ -228,8 +228,7 @@ FairGenerator *GeneratorPythia8GapTriggeredCharm(int inputTriggerRatio, float yQ
   auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, std::vector<int>{4}, hadronPdgList);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->setUsedSeed(seed);
-  myGen->readString("Random:setSeed on");
-  myGen->readString("Random:seed " + std::to_string(seed));
+  myGen->setInitialSeed(seed);
   myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
   if (hadronPdgList.size() != 0)
   {
@@ -244,8 +243,7 @@ FairGenerator *GeneratorPythia8GapTriggeredBeauty(int inputTriggerRatio, float y
   auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, std::vector<int>{5}, hadronPdgList);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->setUsedSeed(seed);
-  myGen->readString("Random:setSeed on");
-  myGen->readString("Random:seed " + std::to_string(seed));
+  myGen->setInitialSeed(seed);
   myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
   if (hadronPdgList.size() != 0)
   {
@@ -260,8 +258,7 @@ FairGenerator *GeneratorPythia8GapTriggeredCharmAndBeauty(int inputTriggerRatio,
   auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, std::vector<int>{4, 5}, hadronPdgList);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->setUsedSeed(seed);
-  myGen->readString("Random:setSeed on");
-  myGen->readString("Random:seed " + std::to_string(seed));
+  myGen->setInitialSeed(seed);
   myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
   if (hadronPdgList.size() != 0)
   {
@@ -279,8 +276,7 @@ FairGenerator *GeneratorPythia8GapHF(int inputTriggerRatio, float yQuarkMin = -1
   auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, quarkPdgList, hadronPdgList);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->setUsedSeed(seed);
-  myGen->readString("Random:setSeed on");
-  myGen->readString("Random:seed " + std::to_string(seed));
+  myGen->setInitialSeed(seed);
   myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
   myGen->setHadronRapidity(yHadronMin, yHadronMax);
 
