@@ -194,7 +194,7 @@ ONGRID=0
 
 JOBTTL=82000
 CPUCORES=8
-PRODSPLIT=1
+PRODSPLIT=${PRODSPLIT:-1}
 # this tells us to continue an existing job --> in this case we don't create a new workdir
 while [ $# -gt 0 ] ; do
     case $1 in
