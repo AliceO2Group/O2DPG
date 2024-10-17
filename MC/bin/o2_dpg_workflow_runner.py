@@ -56,7 +56,6 @@ parser.add_argument('--mem-limit', help='Set memory limit as scheduling constrai
 parser.add_argument('--cpu-limit', help='Set CPU limit (core count)', default=8, type=float)
 parser.add_argument('--cgroup', help='Execute pipeline under a given cgroup (e.g., 8coregrid) emulating resource constraints. This m\
 ust exist and the tasks file must be writable to with the current user.')
-parser.add_argument('--kine-input', help='Use pre-existent event generation.', default="", type=str)
 
 # run control, webhooks
 parser.add_argument('--stdout-on-failure', action='store_true', help='Print log files of failing tasks to stdout,')
@@ -881,28 +880,6 @@ class WorkflowExecutor:
               exit (0)
           print ('Workflow is empty. Nothing to do')
           exit (0)
-      
-      # Gets the .root kinematic file path and passes it to the event simulation step
-      # the string appended to the filename is to take account of the current timeframe
-      # and to skip events accordingly. extKinO2 functionality is reused in this variant
-      # no modifications are needed in o2-sim to make this work
-      if args.kine_input:
-          kine_fn = args.kine_input
-          if os.path.isfile(kine_fn):
-              for stage in self.workflowspec['stages']:
-                  if "sgngen" in stage['name']:
-                    # Extract the number of events from the cmd variable
-                    match = re.search(r'-n\s+(\d+)', stage['cmd'])
-                    if match:
-                        nevents = match.group(1)
-                        stage['cmd'] = re.sub(r'-g\s+\S+', '-g extkinO2', stage['cmd'])
-                        stage['cmd'] = stage['cmd'][:-1] + " --extKinFile " + kine_fn + ' --startEvent ' + str((stage['timeframe']-1)*int(nevents)) + stage['cmd'][-1]
-                    else:
-                        print("Number of events (-n flag) not found in the event generation command.")
-                        exit(2)
-          else:
-              print("Input kinematic file does not exist.")
-              exit(2)
 
       # construct the DAG, compute task weights
       workflow = build_dag_properties(self.workflowspec)

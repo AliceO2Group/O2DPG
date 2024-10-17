@@ -21,7 +21,7 @@ import sys
 import importlib.util
 import argparse
 from os import environ, mkdir
-from os.path import join, dirname, isdir, isabs
+from os.path import join, dirname, isdir, isabs, isfile
 import random
 import json
 import itertools
@@ -61,6 +61,7 @@ parser.add_argument('-trigger',help='event selection: particle, external', defau
 parser.add_argument('-ini',help='generator init parameters file (full paths required), for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
 parser.add_argument('--readoutDets',help='comma separated string of detectors readout (does not modify material budget - only hit creation)', default='all')
+parser.add_argument('--kine-input', help='Use pre-existent event generation.', default="", type=str)
 
 parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
 parser.add_argument('-bcPatternFile',help='Bunch crossing pattern file, used in digitization (a file name or "ccdb")', default='')
@@ -556,6 +557,16 @@ for tf in range(1, NTIMEFRAMES + 1):
       print('o2dpg_sim_workflow: Error! generator name not provided')
       exit(1)
 
+   # Gets the .root kinematic file path and passes it to the event simulation step
+   # extKinO2 generator is used and the pool of events is randomised
+   if args.kine_input:
+      kine_fn = args.kine_input
+      if isfile(kine_fn):
+         GENERATOR = 'extkinO2 --extKinFile ' + kine_fn
+      else:
+         print("Input kinematic file does not exist.")
+         exit(2)
+
    INIFILE=''
    if args.ini!= '':
       INIFILE=' --configFile ' + args.ini
@@ -736,8 +747,10 @@ for tf in range(1, NTIMEFRAMES + 1):
        # determine the skip number
        cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
      SGNGENtask['cmd'] = cmd
+
+   CONFKEYGEN = constructConfigKeyArg(create_geant_config(args, args.confKey + ';GeneratorFromO2Kine.randomize=' + str(TFSEED))) if args.kine_input else str(CONFKEY)
    SGNGENtask['cmd'] +='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode kCCDB'         \
-                     + ' --run ' + str(args.run) + ' ' + str(CONFKEY) + str(TRIGGER)                  \
+                     + ' --run ' + str(args.run) + ' ' + str(CONFKEYGEN) + str(TRIGGER)                  \
                      + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
                      + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1]                \
                      + ' --seed ' + str(TFSEED) + ' -n ' + str(NSIGEVENTS)
