@@ -62,6 +62,7 @@ parser.add_argument('-ini',help='generator init parameters file (full paths requ
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
 parser.add_argument('--readoutDets',help='comma separated string of detectors readout (does not modify material budget - only hit creation)', default='all')
 parser.add_argument('--kine-input', help='Use pre-existent event generation.', default="", type=str)
+parser.add_argument('--randomPhi', help='Apply Phi rotation to kinematic input file to reuse events', action='store_true')
 
 parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
 parser.add_argument('-bcPatternFile',help='Bunch crossing pattern file, used in digitization (a file name or "ccdb")', default='')
@@ -753,7 +754,10 @@ for tf in range(1, NTIMEFRAMES + 1):
        cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
      SGNGENtask['cmd'] = cmd
 
-   CONFKEYGEN = constructConfigKeyArg(create_geant_config(args, args.confKey + ';GeneratorFromO2Kine.randomize=true;GeneratorFromO2Kine.rngseed=' + str(TFSEED))) if args.kine_input else str(CONFKEY)
+   rngkeyval=';GeneratorFromO2Kine.randomize=true;GeneratorFromO2Kine.rngseed=' + str(TFSEED)
+   if args.randomPhi:
+      rngkeyval += ';GeneratorFromO2Kine.randomphi=true'
+   CONFKEYGEN = constructConfigKeyArg(create_geant_config(args, args.confKey + rngkeyval)) if args.kine_input else str(CONFKEY)
    SGNGENtask['cmd'] +='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode kCCDB'         \
                      + ' --run ' + str(args.run) + ' ' + str(CONFKEYGEN) + str(TRIGGER)                  \
                      + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
