@@ -748,7 +748,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
      SGNGENtask['cmd'] = cmd
 
-   CONFKEYGEN = constructConfigKeyArg(create_geant_config(args, args.confKey + ';GeneratorFromO2Kine.randomize=' + str(TFSEED))) if args.kine_input else str(CONFKEY)
+   CONFKEYGEN = constructConfigKeyArg(create_geant_config(args, args.confKey + ';GeneratorFromO2Kine.randomize=true;GeneratorFromO2Kine.rngseed=' + str(TFSEED))) if args.kine_input else str(CONFKEY)
    SGNGENtask['cmd'] +='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode kCCDB'         \
                      + ' --run ' + str(args.run) + ' ' + str(CONFKEYGEN) + str(TRIGGER)                  \
                      + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
