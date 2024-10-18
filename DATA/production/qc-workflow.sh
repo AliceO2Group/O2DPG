@@ -91,7 +91,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         fi
       fi
     fi
-    [[ -z "${QC_JSON_ZDC:-}" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=apricot://o2/components/qc/ANY/any/zdc-rec-epn
+    [[ -z "${QC_JSON_ZDC:-}" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=apricot://o2/components/qc/ANY/any/zdc-full-qcmn
     if [[ -z "${QC_JSON_MCH:-}" ]]; then
       if has_detector MCH && has_processing_step MCH_RECO; then
         if has_track_source "MCH-MID"; then
