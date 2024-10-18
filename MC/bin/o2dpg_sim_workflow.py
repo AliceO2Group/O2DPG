@@ -119,6 +119,8 @@ parser.add_argument('--no-strangeness-tracking', action='store_true', default=Fa
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring)
                                                             # (consider doing this rather in O2 digitization code directly)
+parser.add_argument('--orbits-early', default=0, type=int, help=argparse.SUPPRESS) # number of orbits to start simulating earlier
+                                                                                   # to reduce start of timeframe effects in MC --> affects collision context
 parser.add_argument('--sor', default=-1, type=int, help=argparse.SUPPRESS) # may pass start of run with this (otherwise it is autodetermined from run number)
 parser.add_argument('--run-anchored', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--alternative-reco-software', default="", help=argparse.SUPPRESS) # power feature to set CVFMS alienv software version for reco steps (different from default)
@@ -618,7 +620,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       print('o2dpg_sim_workflow: Error! CM or Beam Energy not set!!!')
       exit(1)
 
-   # Determine interation rate
+   # Determine interaction rate
    signalprefix='sgn_' + str(tf)
    INTRATE=int(args.interactionRate)
    if INTRATE <= 0:
@@ -633,7 +635,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    PbPbXSec=8. # expected PbPb cross section
    QEDXSecExpected=35237.5  # expected magnitude of QED cross section
    PreCollContextTask=createTask(name='precollcontext_' + str(tf), needs=precollneeds, tf=tf, cwd=timeframeworkdir, cpu='1')
-   PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + signalprefix + ',' + str(INTRATE) + ',' + str(args.ns) + ':' + str(args.ns) + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES) + ' --orbitsPerTF ' + str(orbitsPerTF) + ' --orbits ' + str(orbitsPerTF) + ' --seed ' + str(TFSEED) + ' --noEmptyTF --first-orbit ' + str(args.first_orbit)
+   PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + signalprefix + ',' + str(INTRATE) + ',' + str(args.ns) + ':' + str(args.ns) \
+                              + ' --show-context ' + ' --timeframeID ' + str(tf-1 + int(args.production_offset)*NTIMEFRAMES)                            \
+                              + ' --orbitsPerTF ' + str(orbitsPerTF) + ' --orbits ' + str(orbitsPerTF + args.orbits_early)                                                  \
+                              + ' --seed ' + str(TFSEED) + ' --noEmptyTF --first-orbit ' + str(args.first_orbit - args.orbits_early)
    PreCollContextTask['cmd'] += ' --bcPatternFile ccdb'  # <--- the object should have been set in (local) CCDB
    if includeQED:
       qedrate = INTRATE * QEDXSecExpected / PbPbXSec   # hadronic interaction rate * cross_section_ratio
