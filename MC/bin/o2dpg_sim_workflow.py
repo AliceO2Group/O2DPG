@@ -564,7 +564,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # extKinO2 generator is used and the pool of events is randomised
    if args.kine_input:
       kine_fn = args.kine_input
-      if isfile(kine_fn):
+      if isfile(kine_fn) or "alien://" in kine_fn:
          GENERATOR = 'extkinO2 --extKinFile ' + kine_fn
       else:
          print("Input kinematic file does not exist.")
