@@ -190,7 +190,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     [[ -z "${QC_JSON_MID:-}" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-async/mid.json
     if [[ -z "${QC_JSON_ZDC:-}" ]] && has_processing_step ZDC_RECO; then
       if [[ "$BEAMTYPE" == "PbPb" ]]; then
-        QQC_JSON_ZDC=$O2DPG_ROOT/DATA/production/qc-async/zdcPbPb.json
+        QC_JSON_ZDC=$O2DPG_ROOT/DATA/production/qc-async/zdcPbPb.json
       else
         QC_JSON_ZDC=$O2DPG_ROOT/DATA/production/qc-async/zdc.json
       fi
