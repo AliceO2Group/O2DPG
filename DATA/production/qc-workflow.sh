@@ -91,7 +91,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         fi
       fi
     fi
-    [[ -z "${QC_JSON_ZDC:-}" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=apricot://o2/components/qc/ANY/any/zdc-rec-epn
+    [[ -z "${QC_JSON_ZDC:-}" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=apricot://o2/components/qc/ANY/any/zdc-full-qcmn
     if [[ -z "${QC_JSON_MCH:-}" ]]; then
       if has_detector MCH && has_processing_step MCH_RECO; then
         if has_track_source "MCH-MID"; then
@@ -188,7 +188,13 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     [[ -z "${QC_JSON_FV0:-}" ]] && QC_JSON_FV0=$O2DPG_ROOT/DATA/production/qc-async/fv0.json
     [[ -z "${QC_JSON_FDD:-}" ]] && QC_JSON_FDD=$O2DPG_ROOT/DATA/production/qc-async/fdd.json
     [[ -z "${QC_JSON_MID:-}" ]] && QC_JSON_MID=$O2DPG_ROOT/DATA/production/qc-async/mid.json
-    [[ -z "${QC_JSON_ZDC:-}" ]] && has_processing_step ZDC_RECO && QC_JSON_ZDC=$O2DPG_ROOT/DATA/production/qc-async/zdc.json
+    if [[ -z "${QC_JSON_ZDC:-}" ]] && has_processing_step ZDC_RECO; then
+      if [[ "$BEAMTYPE" == "PbPb" ]]; then
+        QC_JSON_ZDC=$O2DPG_ROOT/DATA/production/qc-async/zdcPbPb.json
+      else
+        QC_JSON_ZDC=$O2DPG_ROOT/DATA/production/qc-async/zdc.json
+      fi
+    fi  
     if [[ -z "${QC_JSON_EMC:-}" ]]; then
       if [[ "$BEAMTYPE" == "PbPb" ]]; then
         QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-async/emc_PbPb.json
