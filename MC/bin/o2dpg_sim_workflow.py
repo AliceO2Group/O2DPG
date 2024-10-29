@@ -704,7 +704,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # default flags for extkinO2 signal simulation (no transport)
    extkinO2Config = ''
    if GENERATOR == 'extkinO2':
-      extkinO2Config = ';GeneratorFromO2Kine.randomize=true;GeneratorFromO2Kine.randomphi=false;GeneratorFromO2Kine.rngseed=' + str(TFSEED)
+      extkinO2Config = ';GeneratorFromO2Kine.randomize=true;GeneratorFromO2Kine.rngseed=' + str(TFSEED)
 
    # determine final conf key for signal simulation
    CONFKEY = constructConfigKeyArg(create_geant_config(args, args.confKey + extkinO2Config))
