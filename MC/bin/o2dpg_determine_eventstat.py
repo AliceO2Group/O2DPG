@@ -106,15 +106,15 @@ def read_AO2D_eventcount(file):
           # the O2mccollision_ tree contains the simulated collisions
           # but the version number might change so better to loop over keys and do matching
           tabname = tab.GetName()
-          if tabname.startswith("O2mccollision_"):
+          if re.match("^O2mccollision(_[0-9]*)?$", tabname):
             coltreekey = obj.GetKey(tabname)
             coltree = coltreekey.ReadObj()
             if coltree and isinstance(coltree, ROOT.TTree):
               eventcount = eventcount + coltree.GetEntries()
               colfound = colfound + 1
 
-    if colfound != 1:
-      print ("ERROR in extracting the expected amount of MC collision tables")
+    if colfound == 0:
+      print ("ERROR: No MC collision table found")
 
     # Close the files
     tfile.Close()
@@ -125,4 +125,5 @@ GEANT_eventcount = read_accumulated_GEANT_eventcount()
 if AO2D_eventcount != GEANT_eventcount:
     print ("WARN: AO2D MC event count and GEANT event count differ")
 
+print ("Found " + str(AO2D_eventcount) + " events in AO2D file")
 write_stat_file(AO2D_eventcount)
