@@ -40,7 +40,7 @@ if $MAKE; then
     ${O2DPG_ROOT}/MC/bin/o2dpg_workflow_runner.py -f evtpool.json -tt pool
 elif [[ -n "$INPUT" ]]; then
     echo "Input file provided: $INPUT"
-    if [[ -f "$INPUT" && -s "$INPUT" ]]; then
+    if [[ -f "$INPUT" && -s "$INPUT" ]] || [[ "$INPUT" == alien://* ]]; then
         # Workflow creation. Phi Rotation is set manually, while the event randomisation of the pool is set by default
         ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 14000 -confKey "GeneratorFromO2Kine.randomphi=true;GeneratorFromO2Kine.fileName=$INPUT" -gen extkinO2 -tf 2 -ns 10 -e TGeant4 -j 4 -interactionRate 500000 -seed 546 -productionTag "evtpooltest"
         # Workflow runner. The rerun option is set in case you will run directly the script in the same folder (no need to manually delete files)
