@@ -21,7 +21,7 @@ import sys
 import importlib.util
 import argparse
 from os import environ, mkdir
-from os.path import join, dirname, isdir, isabs
+from os.path import join, dirname, isdir, isabs, isfile
 import random
 import json
 import itertools
@@ -61,6 +61,7 @@ parser.add_argument('-trigger',help='event selection: particle, external', defau
 parser.add_argument('-ini',help='generator init parameters file (full paths required), for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
 parser.add_argument('-confKey',help='generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
 parser.add_argument('--readoutDets',help='comma separated string of detectors readout (does not modify material budget - only hit creation)', default='all')
+parser.add_argument('--make-evtpool', help='Generate workflow for event pool creation.', action='store_true')
 
 parser.add_argument('-interactionRate',help='Interaction rate, used in digitization', default=-1)
 parser.add_argument('-bcPatternFile',help='Bunch crossing pattern file, used in digitization (a file name or "ccdb")', default='')
@@ -699,9 +700,14 @@ for tf in range(1, NTIMEFRAMES + 1):
        # possible generator)
 
    workflow['stages'].append(SGN_CONFIG_task)
+   
+   # default flags for extkinO2 signal simulation (no transport)
+   extkinO2Config = ''
+   if GENERATOR == 'extkinO2':
+      extkinO2Config = ';GeneratorFromO2Kine.randomize=true;GeneratorFromO2Kine.rngseed=' + str(TFSEED)
 
    # determine final conf key for signal simulation
-   CONFKEY = constructConfigKeyArg(create_geant_config(args, args.confKey))
+   CONFKEY = constructConfigKeyArg(create_geant_config(args, args.confKey + extkinO2Config))
    # -----------------
    # transport signals
    # -----------------
@@ -741,7 +747,11 @@ for tf in range(1, NTIMEFRAMES + 1):
        # determine the skip number
        cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
      SGNGENtask['cmd'] = cmd
-   SGNGENtask['cmd'] +='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode kCCDB'         \
+
+   # No vertexing for event pool generation
+   vtxmode = 'kNoVertex' if args.make_evtpool else 'kCCDB'
+
+   SGNGENtask['cmd'] +='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode ' + vtxmode    \
                      + ' --run ' + str(args.run) + ' ' + str(CONFKEY) + str(TRIGGER)                  \
                      + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
                      + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1]                \
@@ -754,6 +764,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    if sep_event_mode == True:
       workflow['stages'].append(SGNGENtask)
       signalneeds = signalneeds + [SGNGENtask['name']]
+   if args.make_evtpool:
+      continue
+
+   # GeneratorFromO2Kine parameters are needed only before the transport
+   CONFKEY = re.sub(r'GeneratorFromO2Kine.*?;', '', CONFKEY)
 
    sgnmem = 6000 if COLTYPE == 'PbPb' else 4000
    SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"],
@@ -1520,26 +1535,32 @@ for tf in range(1, NTIMEFRAMES + 1):
      TFcleanup['cmd'] += 'rm *cluster*.root'
      workflow['stages'].append(TFcleanup)
 
-# AOD merging as one global final step
-aodmergerneeds = ['aod_' + str(tf) for tf in range(1, NTIMEFRAMES + 1)]
-AOD_merge_task = createTask(name='aodmerge', needs = aodmergerneeds, lab=["AOD"], mem='2000', cpu='1')
-AOD_merge_task['cmd'] = ' set -e ; [ -f aodmerge_input.txt ] && rm aodmerge_input.txt; '
-AOD_merge_task['cmd'] += ' for i in `seq 1 ' + str(NTIMEFRAMES) + '`; do echo "tf${i}/AO2D.root" >> aodmerge_input.txt; done; '
-AOD_merge_task['cmd'] += ' o2-aod-merger --input aodmerge_input.txt --output AO2D.root'
-# produce MonaLisa event stat file
-AOD_merge_task['cmd'] += ' ; ${O2DPG_ROOT}/MC/bin/o2dpg_determine_eventstat.py'
-workflow['stages'].append(AOD_merge_task)
+if not args.make_evtpool:
+   # AOD merging as one global final step
+   aodmergerneeds = ['aod_' + str(tf) for tf in range(1, NTIMEFRAMES + 1)]
+   AOD_merge_task = createTask(name='aodmerge', needs = aodmergerneeds, lab=["AOD"], mem='2000', cpu='1')
+   AOD_merge_task['cmd'] = ' set -e ; [ -f aodmerge_input.txt ] && rm aodmerge_input.txt; '
+   AOD_merge_task['cmd'] += ' for i in `seq 1 ' + str(NTIMEFRAMES) + '`; do echo "tf${i}/AO2D.root" >> aodmerge_input.txt; done; '
+   AOD_merge_task['cmd'] += ' o2-aod-merger --input aodmerge_input.txt --output AO2D.root'
+   # produce MonaLisa event stat file
+   AOD_merge_task['cmd'] += ' ; ${O2DPG_ROOT}/MC/bin/o2dpg_determine_eventstat.py'
+   workflow['stages'].append(AOD_merge_task)
 
-job_merging = False
-if includeFullQC:
-  workflow['stages'].extend(include_all_QC_finalization(ntimeframes=NTIMEFRAMES, standalone=False, run=args.run, productionTag=args.productionTag, conditionDB=args.conditionDB, qcdbHost=args.qcdbHost))
+   job_merging = False
+   if includeFullQC:
+      workflow['stages'].extend(include_all_QC_finalization(ntimeframes=NTIMEFRAMES, standalone=False, run=args.run, productionTag=args.productionTag, conditionDB=args.conditionDB, qcdbHost=args.qcdbHost))
 
-
-if includeAnalysis:
-   # include analyses and potentially final QC upload tasks
-    add_analysis_tasks(workflow["stages"], needs=[AOD_merge_task["name"]], is_mc=True, collision_system=COLTYPE)
-    if QUALITYCONTROL_ROOT:
-        add_analysis_qc_upload_tasks(workflow["stages"], args.productionTag, args.run, "passMC")
+   if includeAnalysis:
+      # include analyses and potentially final QC upload tasks
+      add_analysis_tasks(workflow["stages"], needs=[AOD_merge_task["name"]], is_mc=True, collision_system=COLTYPE)
+      if QUALITYCONTROL_ROOT:
+         add_analysis_qc_upload_tasks(workflow["stages"], args.productionTag, args.run, "passMC")
+else:
+   wfneeds=['sgngen_' + str(tf) for tf in range(1, NTIMEFRAMES + 1)]
+   tfpool=['tf' + str(tf) + '/genevents_Kine.root' for tf in range(1, NTIMEFRAMES + 1)]
+   POOL_merge_task = createTask(name='poolmerge', needs=wfneeds, lab=["POOL"], mem='2000', cpu='1')
+   POOL_merge_task['cmd'] = '${O2DPG_ROOT}/MC/bin/o2dpg_root_merger.py -o evtpool.root -i ' + ','.join(tfpool)
+   workflow['stages'].append(POOL_merge_task)
 
 # adjust for alternate (RECO) software environments
 adjust_RECO_environment(workflow, args.alternative_reco_software)
