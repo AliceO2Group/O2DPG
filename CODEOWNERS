@@ -1,5 +1,5 @@
-* @davidrohr @martenole @shahor02 @chiarazampolli @sawenzel @benedikt-voelkel
-/DATA/production @davidrohr @martenole @shahor02 @chiarazampolli
+* @davidrohr @shahor02 @chiarazampolli @sawenzel @benedikt-voelkel
+/DATA/production @davidrohr @shahor02 @chiarazampolli
 
 /DATA/testing/detectors/CPV
 /DATA/testing/detectors/EMC
@@ -14,7 +14,7 @@
 /DATA/testing/detectors/PHS
 /DATA/testing/detectors/TOF @noferini @chiarazampolli
 /DATA/testing/detectors/TPC @wiechula
-/DATA/testing/detectors/TRD @martenole
+/DATA/testing/detectors/TRD
 /DATA/testing/detectors/ZDC
 
 /MC @sawenzel @chiarazampolli @benedikt-voelkel
