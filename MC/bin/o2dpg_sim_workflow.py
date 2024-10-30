@@ -1559,7 +1559,7 @@ else:
    wfneeds=['sgngen_' + str(tf) for tf in range(1, NTIMEFRAMES + 1)]
    tfpool=['tf' + str(tf) + '/genevents_Kine.root' for tf in range(1, NTIMEFRAMES + 1)]
    POOL_merge_task = createTask(name='poolmerge', needs=wfneeds, lab=["POOL"], mem='2000', cpu='1')
-   POOL_merge_task['cmd'] = '${O2DPG_ROOT}/MC/bin/o2dpg_root_merger.py -o evtpool.root -i ' + ','.join(tfpool)
+   POOL_merge_task['cmd'] = '${O2DPG_ROOT}/UTILS/root_merger.py -o evtpool.root -i ' + ','.join(tfpool)
    workflow['stages'].append(POOL_merge_task)
 
 # adjust for alternate (RECO) software environments
