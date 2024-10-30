@@ -82,15 +82,21 @@ while true; do
         break
       fi
     fi
-    if [[ ! -d O2DPG ]]; then git clone https://github.com/AliceO2Group/O2DPG.git 1>&2 || { echo O2DPG checkout failed 1>&2; exit 1; }; fi
-    cd O2DPG
+    for CHECKOUTATTEMPT in 1 2; do
+      if [[ ! -d O2DPG ]]; then git clone https://github.com/AliceO2Group/O2DPG.git 1>&2 || { echo O2DPG checkout failed 1>&2; exit 1; }; fi
+      cd O2DPG
+      rm -f DATA/core_dump_*
+      git reset --hard HEAD &> /dev/null && git clean -d -f &> /dev/null && break
+      [[ $CHECKOUTATTEMPT -eq 2 ]] && { echo git reset error 1>&2; exit 1; }
+      echo "Clean-up of O2DPG repository failed. Removing repository and cloning it from scratch" 1>&2
+      cd $GEN_TOPO_WORKDIR || { echo Cannot enter work dir 1>&2; exit 1; }
+      rm -rf O2DPG
+    done
     git checkout $GEN_TOPO_SOURCE &> /dev/null
     if [[ $? != 0 ]]; then
       git fetch --tags origin 1>&2 || { echo Repository update failed 1>&2; exit 1; }
       git checkout $GEN_TOPO_SOURCE &> /dev/null || { echo commit does not exist 1>&2; exit 1; }
     fi
-    git reset --hard $GEN_TOPO_SOURCE &> /dev/null  || { echo git reset error 1>&2; exit 1; }
-    rm -f DATA/core_dump_*
     # At a tag, or a detached non-dirty commit, but not on a branch
     if ! git describe --exact-match --tags HEAD &> /dev/null && ( git symbolic-ref -q HEAD &> /dev/null || ! git diff-index --quiet HEAD &> /dev/null ); then
       unset GEN_TOPO_CACHEABLE
