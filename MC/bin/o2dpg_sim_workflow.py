@@ -244,21 +244,44 @@ def retrieve_sor(run_number):
     """
     retrieves start of run (sor)
     from the RCT/Info/RunInformation table with a simple http request
-    in case of problems, 0 will be returned
+    in case of problems, 0 will be returned. Simple http request has advantage
+    of not needing to initialize a Ccdb object.
     """
+
     url="http://alice-ccdb.cern.ch/browse/RCT/Info/RunInformation/"+str(run_number)
     ansobject=requests.get(url)
     tokens=ansobject.text.split("\n")
+
+    # determine start of run, earlier values take precedence (see also implementation in BasicCCDBManager::getRunDuration)
+    STF=0
+    # extract SOR by pattern matching
+    for t in tokens:
+      match_object=re.match(r"\s*(STF\s*=\s*)([0-9]*)\s*", t)
+      if match_object != None:
+         STF=int(match_object[2])
+         break
+    if STF > 0:
+      return STF
+
+    SOX=0
+    # extract SOX by pattern matching
+    for t in tokens:
+      match_object=re.match(r"\s*(STF\s*=\s*)([0-9]*)\s*", t)
+      if match_object != None:
+         SOX=int(match_object[2])
+         break
+    if SOX > 0:
+      return SOX
 
     SOR=0
     # extract SOR by pattern matching
     for t in tokens:
       match_object=re.match(r"\s*(SOR\s*=\s*)([0-9]*)\s*", t)
       if match_object != None:
-         SOR=match_object[2]
+         SOR=int(match_object[2])
          break
-
-    return int(SOR)
+    
+    return SOR
 
 
 # check and sanitize config-key values (extract and remove diamond vertex arguments into finalDiamondDict)
