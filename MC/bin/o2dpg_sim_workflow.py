@@ -118,7 +118,7 @@ parser.add_argument('--no-mc-labels', action='store_true', default=False, help=a
 parser.add_argument('--no-tpc-digitchunking', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--no-strangeness-tracking', action='store_true', default=False, help="Disable strangeness tracking")
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
-parser.add_argument('--first-orbit', default=0, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring)
+parser.add_argument('--first-orbit', default=256, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring); default 256 for convenience to allow for some orbits-early
                                                             # (consider doing this rather in O2 digitization code directly)
 parser.add_argument('--orbits-early', default=0, type=float, help=argparse.SUPPRESS) # number of orbits to start simulating earlier
                                                                                    # to reduce start of timeframe effects in MC --> affects collision context
