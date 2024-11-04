@@ -5,6 +5,7 @@
 #include "FairPrimaryGenerator.h"
 #include "Generators/GeneratorPythia8.h"
 #include "TRandom3.h"
+#include "TF1.h"
 #include "TParticlePDG.h"
 #include "TDatabasePDG.h"
 
@@ -48,11 +49,11 @@ public:
 
     fSpectrumOm = std::make_unique<TF1>("fSpectrumOm", this, &GeneratorPythia8ExtraStrangeness::boltzPlusPower, 0., genMaxPt, 5, "GeneratorPythia8ExtraStrangeness", "boltzPlusPower");
 
-    fSpectrumXi->FixParameter(0, 1.67245e+00);
-    fSpectrumXi->FixParameter(1, 5.18174e-01);
-    fSpectrumXi->FixParameter(2, 1.73747e+01);
-    fSpectrumXi->FixParameter(3, -2.56681e+00);
-    fSpectrumXi->FixParameter(4, 1.87513e-04);
+    fSpectrumOm->FixParameter(0, 1.67245e+00);
+    fSpectrumOm->FixParameter(1, 5.18174e-01);
+    fSpectrumOm->FixParameter(2, 1.73747e+01);
+    fSpectrumOm->FixParameter(3, -2.56681e+00);
+    fSpectrumOm->FixParameter(4, 1.87513e-04);
   }
   
   Double_t y2eta(Double_t pt, Double_t mass, Double_t y){
@@ -101,7 +102,7 @@ public:
     ranGenerator->SetSeed(0);
     
     // generate transverse momentum
-    const double gen_pT = fSpectraXi->GetRandom(genMinPt,genMaxPt);
+    const double gen_pT = fSpectrumXi->GetRandom(genMinPt,genMaxPt);
     
     //Actually could be something else without loss of generality but okay
     const double gen_phi = ranGenerator->Uniform(0,2*TMath::Pi());
@@ -127,7 +128,7 @@ public:
     ranGenerator->SetSeed(0);
     
     // generate transverse momentum
-    const double gen_pT = fSpectraOm->GetRandom(genMinPt,genMaxPt);
+    const double gen_pT = fSpectrumOm->GetRandom(genMinPt,genMaxPt);
     
     //Actually could be something else without loss of generality but okay
     const double gen_phi = ranGenerator->Uniform(0,2*TMath::Pi());
