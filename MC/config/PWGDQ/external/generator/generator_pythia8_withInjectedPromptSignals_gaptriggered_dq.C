@@ -3,6 +3,7 @@
 #include "Pythia8/Pythia.h"
 #include "TRandom.h"
 #include "GeneratorPromptCharmonia.C"
+#include "GeneratorBottomonia.C"
 #include <string>
 
 using namespace o2::eventgen;
@@ -45,7 +46,9 @@ public:
       case 7: // generate prompt charmonia cocktail at forward rapidity at 5TeV
         mGeneratorParam = (Generator*)GeneratorCocktailPromptCharmoniaToMuonEvtGen_PbPb5TeV(); 
         break;
-
+      case 8: // generate bottomonia cocktail at forward rapidity
+        mGeneratorParam = (Generator*)GeneratorCocktailBottomoniaToMuonEvtGen_pp13TeV(); 
+        break;
       }
     mGeneratorParam->Init();  
   }
