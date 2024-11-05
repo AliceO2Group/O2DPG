@@ -63,7 +63,7 @@ class O2_GeneratorParamUpsilon1SFwdY : public GeneratorTGenerator
   static Double_t YUpsilon1Spp13TeV(const Double_t* py, const Double_t* /*dummy*/)
   {
     // Upsilon1S y shape from LHCb pp@13TeV arXiv:1804.09214
-    Double_t y = *py;
+    Double_t x = *py;
     Float_t p0, p1;
 
     p0 =  3.07931e+03;
