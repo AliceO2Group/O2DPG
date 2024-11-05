@@ -5,6 +5,7 @@
 #include "FairPrimaryGenerator.h"
 #include "Generators/GeneratorPythia8.h"
 #include "TRandom3.h"
+#include "TF1.h"
 #include "TParticlePDG.h"
 #include "TDatabasePDG.h"
 
@@ -37,6 +38,22 @@ public:
     xProd=0.; yProd=0.; zProd=0.;
     
     fLVHelper = std::make_unique<TLorentzVector>();
+
+    fSpectrumXi = std::make_unique<TF1>("fSpectrumXi", this, &GeneratorPythia8ExtraStrangeness::boltzPlusPower, 0., genMaxPt, 5, "GeneratorPythia8ExtraStrangeness", "boltzPlusPower");
+
+    fSpectrumXi->FixParameter(0, 1.32171);
+    fSpectrumXi->FixParameter(1, 4.84e-1);
+    fSpectrumXi->FixParameter(2, 111.9);
+    fSpectrumXi->FixParameter(3, -2.56511e+00);
+    fSpectrumXi->FixParameter(4, 1.14011e-04);
+
+    fSpectrumOm = std::make_unique<TF1>("fSpectrumOm", this, &GeneratorPythia8ExtraStrangeness::boltzPlusPower, 0., genMaxPt, 5, "GeneratorPythia8ExtraStrangeness", "boltzPlusPower");
+
+    fSpectrumOm->FixParameter(0, 1.67245e+00);
+    fSpectrumOm->FixParameter(1, 5.18174e-01);
+    fSpectrumOm->FixParameter(2, 1.73747e+01);
+    fSpectrumOm->FixParameter(3, -2.56681e+00);
+    fSpectrumOm->FixParameter(4, 1.87513e-04);
   }
   
   Double_t y2eta(Double_t pt, Double_t mass, Double_t y){
@@ -85,7 +102,7 @@ public:
     ranGenerator->SetSeed(0);
     
     // generate transverse momentum
-    const double gen_pT = ranGenerator->Uniform(0,5);
+    const double gen_pT = fSpectrumXi->GetRandom(genMinPt,genMaxPt);
     
     //Actually could be something else without loss of generality but okay
     const double gen_phi = ranGenerator->Uniform(0,2*TMath::Pi());
@@ -111,7 +128,7 @@ public:
     ranGenerator->SetSeed(0);
     
     // generate transverse momentum
-    const double gen_pT = ranGenerator->Uniform(0,5);
+    const double gen_pT = fSpectrumOm->GetRandom(genMinPt,genMaxPt);
     
     //Actually could be something else without loss of generality but okay
     const double gen_phi = ranGenerator->Uniform(0,2*TMath::Pi());
@@ -129,6 +146,26 @@ public:
     set4momentum(fLVHelper->Px(),fLVHelper->Py(),fLVHelper->Pz());
   }
   
+Double_t boltzPlusPower(const Double_t *x, const Double_t *p)
+{
+  // a plain parametrization. not meant to be physics worthy. 
+  // adjusted to match preliminary 5 TeV shape. 
+
+  Double_t pt = x[0];
+  Double_t mass = p[0];
+  Double_t mt = TMath::Sqrt(pt * pt + mass * mass);
+  Double_t T = p[1];
+  Double_t norm = p[2];
+  
+  Double_t lowptpart = mt * TMath::Exp(-mt / T);
+  Double_t highptpart = p[4]*TMath::Power(x[0], p[3]);
+  
+  Double_t mixup = 1./(1.+TMath::Exp((x[0]-4.5)/.1));
+  
+  //return pt * norm * (mixup * mt * TMath::Exp(-mt / T) + (1.-mixup)*highptpart) ;
+  return pt * norm * (mt * TMath::Exp(-mt / T) + (1.-mixup)*highptpart) ;
+}
+
   //__________________________________________________________________
   Bool_t generateEvent() override {
     
@@ -235,6 +272,8 @@ private:
   double zProd;      /// z-coordinate position production vertex [cm]
   
   std::unique_ptr<TLorentzVector> fLVHelper;
+  std::unique_ptr<TF1> fSpectrumXi;
+  std::unique_ptr<TF1> fSpectrumOm;
 };
 
  FairGenerator *generator_extraStrangeness()
