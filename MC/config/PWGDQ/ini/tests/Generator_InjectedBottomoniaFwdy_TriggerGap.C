@@ -21,8 +21,10 @@ int External()
     int nLeptonPairsToBeDone{};
     int nSignalUpsilon1S{};
     int nSignalUpsilon2S{};
+    int nSignalUpsilon3S{};
     int nSignalUpsilon1SWithinAcc{};
     int nSignalUpsilon2SWithinAcc{};
+    int nSignalUpsilon3SWithinAcc{};
     auto nEvents = tree->GetEntries();
     o2::steer::MCKinematicsReader mcreader("o2sim", o2::steer::MCKinematicsReader::Mode::kMCKine);
     Bool_t isInjected = kFALSE;
