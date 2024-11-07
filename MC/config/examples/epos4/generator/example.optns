@@ -11,7 +11,7 @@ set laproj 1 !projectile atomic number
 set maproj 1 !projectile mass number
 set latarg 1 !target atomic number
 set matarg 1 !target mass number
-set ecms 7000 !sqrt(s)_pp
+set ecms 13600 !sqrt(s)_pp
 set istmax 25 !max status considered for storage
 
 ftime on     !string formation time non-zero
