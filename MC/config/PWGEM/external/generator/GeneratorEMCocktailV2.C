@@ -435,11 +435,11 @@ GenerateEMCocktail(Int_t collisionsSystem = GeneratorParamEMlibV2::kpp7TeV,
                    Double_t yGenRange = 0.1, TString useLMeeDecaytable = "",
                    Int_t weightingMode = 1) {
 
-  TString O2DPG_ROOT = TString(getenv("O2DPG_ROOT"));
-  paramFile=paramFile.ReplaceAll("$O2DPG_ROOT",O2DPG_ROOT);
-  paramFile=paramFile.ReplaceAll("${O2DPG_ROOT}",O2DPG_ROOT);
-  useLMeeDecaytable=useLMeeDecaytable.ReplaceAll("$O2DPG_ROOT",O2DPG_ROOT);
-  useLMeeDecaytable=useLMeeDecaytable.ReplaceAll("${O2DPG_ROOT}",O2DPG_ROOT);
+  TString O2DPG_MC_CONFIG_ROOT = TString(getenv("O2DPG_MC_CONFIG_ROOT"));
+  paramFile=paramFile.ReplaceAll("$O2DPG_MC_CONFIG_ROOT",O2DPG_MC_CONFIG_ROOT);
+  paramFile=paramFile.ReplaceAll("${O2DPG_MC_CONFIG_ROOT}",O2DPG_MC_CONFIG_ROOT);
+  useLMeeDecaytable=useLMeeDecaytable.ReplaceAll("$O2DPG_MC_CONFIG_ROOT",O2DPG_MC_CONFIG_ROOT);
+  useLMeeDecaytable=useLMeeDecaytable.ReplaceAll("${O2DPG_MC_CONFIG_ROOT}",O2DPG_MC_CONFIG_ROOT);
   if (paramFile.BeginsWith("alien://")){
     TGrid::Connect("alien://");
   }
