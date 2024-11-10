@@ -66,7 +66,7 @@ public:
     
     fLVHelper = std::make_unique<TLorentzVector>();
 
-    fSpectrumXi = std::make_unique<TF1>("fSpectrumXi", this, &GeneratorPythia8ExtraStrangeness::boltzPlusPower, 0., genMaxPt, 5, "GeneratorPythia8ExtraStrangeness", "boltzPlusPower");
+    fSpectrumXi = std::make_unique<TF1>("fSpectrumXi", this, &GeneratorPythia8SyntheFlowXi::boltzPlusPower, 0., genMaxPt, 5, "GeneratorPythia8ExtraStrangeness", "boltzPlusPower");
 
     fSpectrumXi->FixParameter(0, 1.32171);
     fSpectrumXi->FixParameter(1, 4.84e-1);
@@ -74,7 +74,7 @@ public:
     fSpectrumXi->FixParameter(3, -2.56511e+00);
     fSpectrumXi->FixParameter(4, 1.14011e-04);
 
-    fSpectrumOm = std::make_unique<TF1>("fSpectrumOm", this, &GeneratorPythia8ExtraStrangeness::boltzPlusPower, 0., genMaxPt, 5, "GeneratorPythia8ExtraStrangeness", "boltzPlusPower");
+    fSpectrumOm = std::make_unique<TF1>("fSpectrumOm", this, &GeneratorPythia8SyntheFlowXi::boltzPlusPower, 0., genMaxPt, 5, "GeneratorPythia8ExtraStrangeness", "boltzPlusPower");
 
     fSpectrumOm->FixParameter(0, 1.67245e+00);
     fSpectrumOm->FixParameter(1, 5.18174e-01);
