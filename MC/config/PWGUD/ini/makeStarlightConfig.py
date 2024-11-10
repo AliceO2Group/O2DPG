@@ -69,15 +69,15 @@ fout = open(args.output, 'w')
 ### Generator
 fout.write('[GeneratorExternal] \n')
 if  'Psi2sToMuPi' in args.process or 'Psi2sToElPi' in args.process or 'RhoPrime' in args.process or 'OmegaTo3Pi' in args.process or 'JpsiToElRad' in args.process or 'kTau' in args.process:
-    fout.write('fileName = ${O2DPG_ROOT}/MC/config/PWGUD/external/generator/GeneratorStarlightToEvtGen.C \n')
+    fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/external/generator/GeneratorStarlightToEvtGen.C \n')
     fout.write('funcName = GeneratorStarlightToEvtGen("%s", %f, %d, %d, %d, %d)  \n' % (args.process,args.eCM ,pZ,pA,tZ,tA))
 else:
-    fout.write('fileName = ${O2DPG_ROOT}/MC/config/PWGUD/external/generator/GeneratorStarlight.C \n')
+    fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/external/generator/GeneratorStarlight.C \n')
     fout.write('funcName = GeneratorStarlight("%s", %f, %d, %d, %d, %d)  \n' % (args.process,args.eCM ,pZ,pA,tZ,tA))
     
 ###Trigger
 fout.write('[TriggerExternal] \n')
-fout.write('fileName = ${O2DPG_ROOT}/MC/config/PWGUD/trigger/selectParticlesInAcceptance.C \n')
+fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/trigger/selectParticlesInAcceptance.C \n')
 if 'kTwoGamma' in args.process or 'kTau' in args.process:
     if args.rapidity == 'cent_eta':
         fout.write('funcName = selectDirectPartInAcc(-0.9,0.9) \n')

@@ -4,8 +4,8 @@
 // o2-sim -j 4 -n 10 -g external -t external -m "PIPE ITS TPC" -o sgn --configFile GeneratorHF_bbbar_midy.ini
 //
 //
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/EvtGen)
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGUD/external/generator)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGUD/external/generator)
 #include "GeneratorEvtGen.C"
 #include "GeneratorStarlight.C"
 
@@ -24,7 +24,7 @@ FairGenerator*
   gen->AddPdg(-15,4);
   if (configuration.find("kTau") == std::string::npos) gen->SetPolarization(1); //Transversal
   
-  TString pathO2 = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGUD/external/generator/DecayTablesEvtGen");
+  TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGUD/external/generator/DecayTablesEvtGen");
   if      (configuration.find("Psi2sToMuPi") != std::string::npos) gen->SetDecayTable(Form("%s/PSI2S.MUMUPIPI.DEC",pathO2.Data()));
   else if (configuration.find("Psi2sToElPi") != std::string::npos) gen->SetDecayTable(Form("%s/PSI2S.EEPIPI.DEC",pathO2.Data()));
   else if (configuration.find("RhoPrime") != std::string::npos)    gen->SetDecayTable(Form("%s/RHOPRIME.RHOPIPI.DEC",pathO2.Data()));
