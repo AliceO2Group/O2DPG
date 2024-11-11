@@ -1,0 +1,9 @@
+Decay tau-
+0.5 e-      anti-nu_e nu_tau                        PHOTOS TAULNUNU; #[Reconstructed PDG2011]
+0.5 mu-     anti-nu_mu nu_tau                       PHOTOS  TAULNUNU; #[Reconstructed PDG2011]
+Enddecay
+Decay tau+
+0.5 e+      anti-nu_tau nu_e                        PHOTOS TAULNUNU; #[Reconstructed PDG2011]
+0.5 mu+     anti-nu_tau nu_mu                       PHOTOS  TAULNUNU; #[Reconstructed PDG2011]
+Enddecay
+End

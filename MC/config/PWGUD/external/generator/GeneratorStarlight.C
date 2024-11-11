@@ -1,5 +1,5 @@
-R__LOAD_LIBRARY(libDPMJET.so)
-R__LOAD_LIBRARY(libDpmJetLib.so)
+//R__LOAD_LIBRARY(libDPMJET.so)
+//R__LOAD_LIBRARY(libDpmJetLib.so)
 R__LOAD_LIBRARY(libStarlib.so)
 R__ADD_INCLUDE_PATH($STARlight_ROOT/include)
 
@@ -63,12 +63,13 @@ class GeneratorStarlight_class : public Generator
     {"kCohRhoToPi",          3,     113, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
     {"kCohRhoToElEl",        3,  113011, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
     {"kCohRhoToMuMu",        3,  113013, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
-    {"kCohRhoToPiWithCont",  3,     913, 1200, -1.0, -1.0, 0.02, -1, 0 }, //
+    {"kCohRhoToPiWithCont",  3,     913, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
     {"kCohRhoToPiFlat",      3,     113,    1, -1.0,  2.5, 0.02, 113, 0 }, //
     {"kCohPhiToKa",          2,     333,   20, -1.0, -1.0, 0.01, 333, 0 }, //
+    {"kCohPhiToEl",          2,  333011,   20, -1.0, -1.0, 0.01, 333, 0 }, //
     {"kDirectPhiToKaKa",     3,     933,   20, -1.0, -1.0, 0.01, 333, 0 }, // 
     {"kCohOmegaTo2Pi",       2,     223,   20, -1.0, -1.0, 0.01, 223, 0 }, //
-    {"kCohOmegaTo3Pi",       2,     223,   20, -1.0, -1.0, 0.01, 223, 0 }, //
+    {"kCohOmegaTo3Pi",       2,     223,   20, -1.0, -1.0, 0.01, 223, 1 }, //
     {"kCohOmegaToPiPiPi",    2, 223211111, 20, -1.0, -1.0, 0.01, 333, 0 }, // 
     {"kCohJpsiToMu",         2,  443013,   20, -1.0, -1.0, 0.01, 443, 0 }, //
     {"kCohJpsiToEl",         2,  443011,   20, -1.0, -1.0, 0.01, 443, 0 }, //
@@ -83,11 +84,11 @@ class GeneratorStarlight_class : public Generator
     {"kIncohRhoToPi",        4,     113, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
     {"kIncohRhoToElEl",      4,  113011, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
     {"kIncohRhoToMuMu",      4,  113013, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
-    {"kIncohRhoToPiWithCont",4,     913, 1200, -1.0, -1.0, 0.02, -1, 0 }, //
+    {"kIncohRhoToPiWithCont",4,     913, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
     {"kIncohRhoToPiFlat",    4,     113,    1, -1.0,  2.5, 0.02, 113, 0 }, //
     {"kIncohPhiToKa",        4,     333,   20, -1.0, -1.0, 0.01, 333, 0 }, //
     {"kIncohOmegaTo2Pi",     4,     223,   20, -1.0, -1.0, 0.01, 223, 0 }, //
-    {"kIncohOmegaTo3Pi",     4,     223,   20, -1.0, -1.0, 0.01, 223, 0 }, //
+    {"kIncohOmegaTo3Pi",     4,     223,   20, -1.0, -1.0, 0.01, 223, 1 }, //
     {"kIncohOmegaToPiPiPi",  4, 223211111, 20, -1.0, -1.0, 0.01, 223, 0 }, //
     {"kIncohJpsiToMu",       4,  443013,   20, -1.0, -1.0, 0.01, 443, 0 }, //
     {"kIncohJpsiToEl",       4,  443011,   20, -1.0, -1.0, 0.01, 443, 0 }, //
@@ -100,13 +101,16 @@ class GeneratorStarlight_class : public Generator
     {"kIncohPsi2sToElPi",    4,  444011,   20, -1.0, -1.0, 0.01, 100443, 1 }, //
     {"kIncohUpsilonToMu",    4,  553013,   20, -1.0, -1.0, 0.01, 553, 0 }, //
     {"kIncohUpsilonToEl",    4,  553011,   20, -1.0, -1.0, 0.01, 553, 0 }, //
-    {"kDpmjetSingle",        5,  113,   20, -1.0, -1.0, 0.01, -1, 0 }, //
+//    {"kDpmjetSingle",        5,  113,   20, -1.0, -1.0, 0.01, -1, 0 }, //
     {"kTauLowToEl3Pi",       1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
     {"kTauLowToPo3Pi",       1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
     {"kTauMediumToEl3Pi",    1,      15,  264,  1.8, 15.0, 0.01, -1, 1 }, // from 1.8 to 15 GeV
     {"kTauMediumToPo3Pi",    1,      15,  264,  1.8, 15.0, 0.01, -1, 1 }, // from 1.8 to 15 GeV
     {"kTauHighToEl3Pi",      1,      15,  220,  4.0, 15.0, 0.01, -1, 1 }, // from 4.0 to 15 GeV
     {"kTauHighToPo3Pi",      1,      15,  220,  4.0, 15.0, 0.01, -1, 1 }, // from 4.0 to 15 GeV
+    {"kTauLowToElMu",        1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowToElPiPi0",     1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowToPoPiPi0",     1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
 	};
 
   const int nProcess = sizeof(slConfig)/sizeof(SLConfig);
@@ -266,8 +270,8 @@ class GeneratorStarlight_class : public Generator
 				   1,
 				   (mPdgMother != -1 ? 0 :-1),
 				   -1,
-				   slPart->getFirstDaughter(),
-				   slPart->getLastDaughter(),
+				   -1,
+				   -1,
 				   slPart->GetPx(),
 				   slPart->GetPy(),
 				   slPart->GetPz(),
