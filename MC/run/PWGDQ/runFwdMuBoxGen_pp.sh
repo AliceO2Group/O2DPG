@@ -17,7 +17,7 @@ NTIMEFRAMES=${NTIMEFRAMES:-1}
 NBOXMUONS=${NBOXMUONS:-2}
 
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -e TGeant4 -mod "--skipModules ZDC" \
-	-confKey "GeneratorExternal.fileName=${O2DPG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorBoxFwd.C;GeneratorExternal.funcName=fwdMuBoxGen()"  \
+	-confKey "GeneratorExternal.fileName=${O2DPG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorBoxFwd.C;GeneratorExternal.funcName=fwdMuBoxGen()" -interactionRate 500000  \
 	-genBkg pythia8 -procBkg inel -colBkg pp --embedding -nb ${NBKGEVENTS} --mft-assessment-full --fwdmatching-assessment-full --fwdmatching-save-trainingdata
 
 # run workflow (MFT-related tasks)
