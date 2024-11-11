@@ -420,7 +420,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export TPC_CORR_SCALING+=" --enable-M-shape-correction "
   fi
     
-  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] ; then
+  if [[ $ALIEN_JDL_LPMANCHORYEAR -ge 2023 ]] && [[ $BEAMTYPE == "PbPb" ]] ; then
     # adding additional cluster errors
     # the values below should be squared, but the validation of those values (0.01 and 0.0225) is ongoing
     TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalYSeeding=0.1;GPU_rec_tpc.clusterError2AdditionalZSeeding=0.15;"
