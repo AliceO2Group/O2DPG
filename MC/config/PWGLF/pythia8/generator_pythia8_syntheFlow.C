@@ -99,5 +99,9 @@ private:
 
  FairGenerator *generator_syntheFlow()
  {
-   return new GeneratorPythia8SyntheFlow();
+  auto generator = new GeneratorPythia8SyntheFlow();
+  gRandom->SetSeed(0);
+  generator.readString("Random:setSeed = on");
+  generator.readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
+  return generator;
  }
