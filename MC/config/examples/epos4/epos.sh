@@ -27,4 +27,4 @@ if [ $seed -eq 0 ]; then
 fi
 
 # Or filters the stdout with only HepMC2 useful data
-$EPO4/scripts/epos -hepstd -s $seed $optns | sed -n 's/^\(HepMC::\|[EAUWVP] \)/\1/p'
+$EPOS4_ROOT/epos4/scripts/epos -hepstd -s $seed $optns | sed -n 's/^\(HepMC::\|[EAUWVP] \)/\1/p'
