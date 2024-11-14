@@ -26,5 +26,10 @@ if [ $seed -eq 0 ]; then
     seed=$RANDOM
 fi
 
+# Check if the environment variable LIBDIR is set (important with o2dpg-sim-tests on CI machines)
+if [ -z "${LIBDIR}" ]; then
+    export LIBDIR=$EPOS4_ROOT/epos4/bin
+fi
+
 # Or filters the stdout with only HepMC2 useful data
 $EPOS4_ROOT/epos4/scripts/epos -hepstd -s $seed $optns | sed -n 's/^\(HepMC::\|[EAUWVP] \)/\1/p'
