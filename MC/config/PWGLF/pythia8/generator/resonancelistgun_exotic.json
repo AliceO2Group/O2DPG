@@ -62,6 +62,15 @@
         "etaMax": 1.2,
         "genDecayed": true
     },
+    "a_2(1230)" : {
+        "pdg": 115,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
     "K1(1270)+": {
         "pdg": 10323,
         "n": 1,
