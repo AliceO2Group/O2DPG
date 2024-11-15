@@ -14,7 +14,6 @@ def main():
     noConfGen = ["pythia8pp", "pythia8hf", "pythia8hi", "pythia8powheg"]
     gens = []
     for gen in args.gen:
-        # if gen is equal to pythia8, then get the Pythia8GenConfig struct from GeneratorPythia8Param.h
         if gen == "pythia8":
             gens.append({
                 'name': 'pythia8',
