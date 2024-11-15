@@ -32,8 +32,10 @@ if [ -z "${LIBDIR}" ]; then
 fi
 
 # Check if the environment variable EPO4 is set (important with o2dpg-sim-tests on CI machines)
+# If not, set all the EPOS4 related variables, most likely they are set wrongly as well.
 if [ -z "${EPO4}" ]; then
     export EPO4=$EPOS4_ROOT/epos4/
+    export EPO4VSN=4.0.0
 fi
 
 # Or filters the stdout with only HepMC2 useful data
