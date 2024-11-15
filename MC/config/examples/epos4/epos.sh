@@ -26,16 +26,15 @@ if [ $seed -eq 0 ]; then
     seed=$RANDOM
 fi
 
-# Check if the environment variable LIBDIR is set (important with o2dpg-sim-tests on CI machines)
-if [ -z "${LIBDIR}" ]; then
-    export LIBDIR=$EPOS4_ROOT/epos4/bin
-fi
-
-# Check if the environment variable EPO4 is set (important with o2dpg-sim-tests on CI machines)
-# If not, set all the EPOS4 related variables, most likely they are set wrongly as well.
+# Check if the environment variable EPO4 is set (mandatory with o2dpg-sim-tests on CI machines)
+# If not, set all the EPOS4 related variables, most likely they are unset as well.
 if [ -z "${EPO4}" ]; then
     export EPO4=$EPOS4_ROOT/epos4/
+    export LIBDIR=$EPOS4_ROOT/epos4/bin
     export EPO4VSN=4.0.0
+    export OPT=./
+    export HTO=./
+    export CHK=./
 fi
 
 # Or filters the stdout with only HepMC2 useful data
