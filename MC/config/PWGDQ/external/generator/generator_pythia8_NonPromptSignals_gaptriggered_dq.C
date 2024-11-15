@@ -9,7 +9,6 @@ R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/EvtGen)
 #include <string>
 
 using namespace o2::eventgen;
-using namespace Pythia8;
 
 namespace o2
 {
@@ -140,7 +139,7 @@ Pythia8::Event mOutputEvent;
   // Control gap-triggering
   unsigned long long mGeneratedEvents;
   int mInverseTriggerRatio;
-  Pythia pythiaMBgen; // minimum bias event  
+  Pythia8::Pythia pythiaMBgen; // minimum bias event  
   TString mConfigMBdecays;		
   int mPDG;
   std::vector<int> mHadronsPDGs;
