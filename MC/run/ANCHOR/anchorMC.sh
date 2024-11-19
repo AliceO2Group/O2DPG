@@ -210,12 +210,13 @@ MODULES="--skipModules ZDC"
 ALICEO2_CCDB_LOCALCACHE=${ALICEO2_CCDB_LOCALCACHE:-$(pwd)/ccdb}
 
 # these arguments will be digested by o2dpg_sim_workflow_anchored.py
-baseargs="-enable-parallel-world ${ENABLE_PARALLEL_WORLD} -tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${ALIEN_JDL_LPMRUNNUMBER}"
+baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${ALIEN_JDL_LPMRUNNUMBER}"
 
 # these arguments will be passed as well but only evetually be digested by o2dpg_sim_workflow.py which is called from o2dpg_sim_workflow_anchored.py
 remainingargs="-seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
 remainingargs="${remainingargs} -e ${ALIEN_JDL_SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
+remainingargs="${remainingargs} -confKey \"GeometryManagerParam.useParallelWorld=${ENABLE_PARALLEL_WORLD};GeometryManagerParam.usePwGeoBVH=${ENABLE_PARALLEL_WORLD};GeometryManagerParam.usePwCaching=${ENABLE_PARALLEL_WORLD}\""
 # prepend(!) ALIEN_JDL_ANCHOR_SIM_OPTIONS
 # since the last passed argument wins, e.g. -productionTag cannot be overwritten by the user
 remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config config-json.json"
