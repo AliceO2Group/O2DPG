@@ -21,6 +21,7 @@ class GeneratorStarlight_class : public Generator
    GeneratorStarlight_class(){};
   ~GeneratorStarlight_class() = default;
   void selectConfiguration(std::string val) { mSelectedConfiguration = val; };
+  void setExtraParams(std::string val) { mExtraParams = val; };
   void setCollisionSystem(float energyCM, int beam1Z, int beam1A, int beam2Z, int beam2A) {eCM = energyCM; projZ=beam1Z; projA=beam1A; targZ=beam2Z; targA=beam2A;};
   bool setParameter(std::string line) {
   if (not mInputParameters.setParameter(line)){
@@ -40,6 +41,7 @@ class GeneratorStarlight_class : public Generator
   float gamma1  = beam1energy/0.938272;
   float gamma2  = beam2energy/0.938272;
   float rapMax = 4.1 + 0.5*(TMath::ACosH(gamma2)-TMath::ACosH(gamma1));
+  float dy = 0.01;
 	  
   const struct SLConfig {
     const char* name;
@@ -48,69 +50,64 @@ class GeneratorStarlight_class : public Generator
     int       nwbins;
     float     wmin;
     float     wmax;
-    float     dy;
 	int		  pdg_mother;
 	bool	  decay_EvtGen;
   } slConfig[] = {
-    {"kTwoGammaToMuLow",     1,      13,  292,  0.4, 15.0, 0.01, -1, 0 }, // from 0.4 to 15 GeV
-    {"kTwoGammaToElLow",     1,      11,  292,  0.4, 15.0, 0.01, -1, 0 }, // from 0.4 to 15 GeV
-    {"kTwoGammaToMuMedium",  1,      13,  264,  1.8, 15.0, 0.01, -1, 0 }, // from 1.8 to 15 GeV
-    {"kTwoGammaToElMedium",  1,      11,  264,  1.8, 15.0, 0.01, -1, 0 }, // from 1.8 to 15 GeV
-    {"kTwoGammaToMuHigh",    1,      13,  220,  4.0, 15.0, 0.01, -1, 0 }, // from 4.0 to 15 GeV
-    {"kTwoGammaToElHigh",    1,      11,  220,  4.0, 15.0, 0.01, -1, 0 }, // from 4.0 to 15 GeV
-    {"kTwoGammaToRhoRho",    1,      33,   20, -1.0, -1.0, 0.01, -1, 0 }, //
-    {"kTwoGammaToF2",        1,     225,   20, -1.0, -1.0, 0.01, -1, 0 }, //
-    {"kCohRhoToPi",          3,     113, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
-    {"kCohRhoToElEl",        3,  113011, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
-    {"kCohRhoToMuMu",        3,  113013, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
-    {"kCohRhoToPiWithCont",  3,     913, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
-    {"kCohRhoToPiFlat",      3,     113,    1, -1.0,  2.5, 0.02, 113, 0 }, //
-    {"kCohPhiToKa",          2,     333,   20, -1.0, -1.0, 0.01, 333, 0 }, //
-    {"kCohPhiToEl",          2,  333011,   20, -1.0, -1.0, 0.01, 333, 0 }, //
-    {"kDirectPhiToKaKa",     3,     933,   20, -1.0, -1.0, 0.01, 333, 0 }, // 
-    {"kCohOmegaTo2Pi",       2,     223,   20, -1.0, -1.0, 0.01, 223, 0 }, //
-    {"kCohOmegaTo3Pi",       2,     223,   20, -1.0, -1.0, 0.01, 223, 1 }, //
-    {"kCohOmegaToPiPiPi",    2, 223211111, 20, -1.0, -1.0, 0.01, 333, 0 }, // 
-    {"kCohJpsiToMu",         2,  443013,   20, -1.0, -1.0, 0.01, 443, 0 }, //
-    {"kCohJpsiToEl",         2,  443011,   20, -1.0, -1.0, 0.01, 443, 0 }, //
-    {"kCohJpsiToElRad",      2,  443011,   20, -1.0, -1.0, 0.01, 443, 1 }, //
-    {"kCohJpsiToProton",     2, 4432212,   20, -1.0, -1.0, 0.01, 443, 0 }, //
-    {"kCohPsi2sToMu",        2,  444013,   20, -1.0, -1.0, 0.01, 100443, 0 }, //
-    {"kCohPsi2sToEl",        2,  444011,   20, -1.0, -1.0, 0.01, 100443, 0 }, //
-    {"kCohPsi2sToMuPi",      2,  444013,   20, -1.0, -1.0, 0.01, 100443, 1 }, //
-    {"kCohPsi2sToElPi",      2,  444011,   20, -1.0, -1.0, 0.01, 100443, 1 }, //
-    {"kCohUpsilonToMu",      2,  553013,   20, -1.0, -1.0, 0.01, 553, 0 }, //
-    {"kCohUpsilonToEl",      2,  553011,   20, -1.0, -1.0, 0.01, 553, 0 }, //
-    {"kIncohRhoToPi",        4,     113, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
-    {"kIncohRhoToElEl",      4,  113011, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
-    {"kIncohRhoToMuMu",      4,  113013, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
-    {"kIncohRhoToPiWithCont",4,     913, 1200, -1.0, -1.0, 0.02, 113, 0 }, //
-    {"kIncohRhoToPiFlat",    4,     113,    1, -1.0,  2.5, 0.02, 113, 0 }, //
-    {"kIncohPhiToKa",        4,     333,   20, -1.0, -1.0, 0.01, 333, 0 }, //
-    {"kIncohOmegaTo2Pi",     4,     223,   20, -1.0, -1.0, 0.01, 223, 0 }, //
-    {"kIncohOmegaTo3Pi",     4,     223,   20, -1.0, -1.0, 0.01, 223, 1 }, //
-    {"kIncohOmegaToPiPiPi",  4, 223211111, 20, -1.0, -1.0, 0.01, 223, 0 }, //
-    {"kIncohJpsiToMu",       4,  443013,   20, -1.0, -1.0, 0.01, 443, 0 }, //
-    {"kIncohJpsiToEl",       4,  443011,   20, -1.0, -1.0, 0.01, 443, 0 }, //
-    {"kIncohJpsiToElRad",    4,  443011,   20, -1.0, -1.0, 0.01, 443, 1 }, //
-    {"kIncohJpsiToProton",   4, 4432212,   20, -1.0, -1.0, 0.01, 443, 0 }, //
-    {"kIncohJpsiToLLbar",    4, 4433122,   20, -1.0, -1.0, 0.01, 443, 0 }, //
-    {"kIncohPsi2sToMu",      4,  444013,   20, -1.0, -1.0, 0.01, 100443, 0 }, //
-    {"kIncohPsi2sToEl",      4,  444011,   20, -1.0, -1.0, 0.01, 100443, 0 }, //
-    {"kIncohPsi2sToMuPi",    4,  444013,   20, -1.0, -1.0, 0.01, 100443, 1 }, //
-    {"kIncohPsi2sToElPi",    4,  444011,   20, -1.0, -1.0, 0.01, 100443, 1 }, //
-    {"kIncohUpsilonToMu",    4,  553013,   20, -1.0, -1.0, 0.01, 553, 0 }, //
-    {"kIncohUpsilonToEl",    4,  553011,   20, -1.0, -1.0, 0.01, 553, 0 }, //
-//    {"kDpmjetSingle",        5,  113,   20, -1.0, -1.0, 0.01, -1, 0 }, //
-    {"kTauLowToEl3Pi",       1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
-    {"kTauLowToPo3Pi",       1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
-    {"kTauMediumToEl3Pi",    1,      15,  264,  1.8, 15.0, 0.01, -1, 1 }, // from 1.8 to 15 GeV
-    {"kTauMediumToPo3Pi",    1,      15,  264,  1.8, 15.0, 0.01, -1, 1 }, // from 1.8 to 15 GeV
-    {"kTauHighToEl3Pi",      1,      15,  220,  4.0, 15.0, 0.01, -1, 1 }, // from 4.0 to 15 GeV
-    {"kTauHighToPo3Pi",      1,      15,  220,  4.0, 15.0, 0.01, -1, 1 }, // from 4.0 to 15 GeV
-    {"kTauLowToElMu",        1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
-    {"kTauLowToElPiPi0",     1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
-    {"kTauLowToPoPiPi0",     1,      15,  292,  0.4, 15.0, 0.01, -1, 1 }, // from 0.4 to 15 GeV
+    {"kTwoGammaToMuLow",     1,      13,  876,  0.4, 15.0,  -1, 0 }, // from 0.4 to 15 GeV
+    {"kTwoGammaToElLow",     1,      11,  876,  0.4, 15.0,  -1, 0 }, // from 0.4 to 15 GeV
+    {"kTwoGammaToMuMedium",  1,      13,  792,  1.8, 15.0,  -1, 0 }, // from 1.8 to 15 GeV
+    {"kTwoGammaToElMedium",  1,      11,  792,  1.8, 15.0,  -1, 0 }, // from 1.8 to 15 GeV
+    {"kTwoGammaToMuHigh",    1,      13,  660,  4.0, 15.0,  -1, 0 }, // from 4.0 to 15 GeV
+    {"kTwoGammaToElHigh",    1,      11,  660,  4.0, 15.0,  -1, 0 }, // from 4.0 to 15 GeV
+    {"kTwoGammaToRhoRho",    1,      33,   20, -1.0, -1.0,  -1, 0 }, //
+    {"kTwoGammaToF2",        1,     225,   20, -1.0, -1.0,  -1, 0 }, //
+    {"kCohRhoToPi",          3,     113, 1200, -1.0, -1.0,  113, 0 }, //
+    {"kCohRhoToElEl",        3,  113011, 1200, -1.0, -1.0,  113, 0 }, //
+    {"kCohRhoToMuMu",        3,  113013, 1200, -1.0, -1.0,  113, 0 }, //
+    {"kCohRhoToPiWithCont",  3,     913, 1200, -1.0, -1.0,  113, 0 }, //
+    {"kCohRhoToPiFlat",      3,     113,    1, -1.0,  2.5,  113, 0 }, //
+    {"kCohPhiToKa",          2,     333,   20, -1.0, -1.0,  333, 0 }, //
+    {"kCohPhiToEl",          2,  333011,   20, -1.0, -1.0,  333, 0 }, //
+    {"kDirectPhiToKaKa",     3,     933,   20, -1.0, -1.0,  333, 0 }, //
+    {"kCohOmegaTo2Pi",       2,     223,   20, -1.0, -1.0,  223, 0 }, //
+    {"kCohOmegaTo3Pi",       2,     223,   20, -1.0, -1.0,  223, 1 }, //
+    {"kCohOmegaToPiPiPi",    2, 223211111, 20, -1.0, -1.0,  233, 0 }, //
+    {"kCohJpsiToMu",         2,  443013,   20, -1.0, -1.0,  443, 0 }, //
+    {"kCohJpsiToEl",         2,  443011,   20, -1.0, -1.0,  443, 0 }, //
+    {"kCohJpsiToElRad",      2,  443011,   20, -1.0, -1.0,  443, 1 }, //
+    {"kCohJpsiToProton",     2, 4432212,   20, -1.0, -1.0,  443, 0 }, //
+    {"kCohPsi2sToMu",        2,  444013,   20, -1.0, -1.0,  100443, 0 }, //
+    {"kCohPsi2sToEl",        2,  444011,   20, -1.0, -1.0,  100443, 0 }, //
+    {"kCohPsi2sToMuPi",      2,  444013,   20, -1.0, -1.0,  100443, 1 }, //
+    {"kCohPsi2sToElPi",      2,  444011,   20, -1.0, -1.0,  100443, 1 }, //
+    {"kCohUpsilonToMu",      2,  553013,   20, -1.0, -1.0,  553, 0 }, //
+    {"kCohUpsilonToEl",      2,  553011,   20, -1.0, -1.0,  553, 0 }, //
+    {"kIncohRhoToPi",        4,     113, 1200, -1.0, -1.0,  113, 0 }, //
+    {"kIncohRhoToElEl",      4,  113011, 1200, -1.0, -1.0,  113, 0 }, //
+    {"kIncohRhoToMuMu",      4,  113013, 1200, -1.0, -1.0,  113, 0 }, //
+    {"kIncohRhoToPiWithCont",4,     913, 1200, -1.0, -1.0,  113, 0 }, //
+    {"kIncohRhoToPiFlat",    4,     113,    1, -1.0,  2.5,  113, 0 }, //
+    {"kIncohPhiToKa",        4,     333,   20, -1.0, -1.0,  333, 0 }, //
+    {"kIncohOmegaTo2Pi",     4,     223,   20, -1.0, -1.0,  223, 0 }, //
+    {"kIncohOmegaTo3Pi",     4,     223,   20, -1.0, -1.0,  223, 1 }, //
+    {"kIncohOmegaToPiPiPi",  4, 223211111, 20, -1.0, -1.0,  223, 0 }, //
+    {"kIncohJpsiToMu",       4,  443013,   20, -1.0, -1.0,  443, 0 }, //
+    {"kIncohJpsiToEl",       4,  443011,   20, -1.0, -1.0,  443, 0 }, //
+    {"kIncohJpsiToElRad",    4,  443011,   20, -1.0, -1.0,  443, 1 }, //
+    {"kIncohJpsiToProton",   4, 4432212,   20, -1.0, -1.0,  443, 0 }, //
+    {"kIncohJpsiToLLbar",    4, 4433122,   20, -1.0, -1.0,  443, 0 }, //
+    {"kIncohPsi2sToMu",      4,  444013,   20, -1.0, -1.0,  100443, 0 }, //
+    {"kIncohPsi2sToEl",      4,  444011,   20, -1.0, -1.0,  100443, 0 }, //
+    {"kIncohPsi2sToMuPi",    4,  444013,   20, -1.0, -1.0,  100443, 1 }, //
+    {"kIncohPsi2sToElPi",    4,  444011,   20, -1.0, -1.0,  100443, 1 }, //
+    {"kIncohUpsilonToMu",    4,  553013,   20, -1.0, -1.0,  553, 0 }, //
+    {"kIncohUpsilonToEl",    4,  553011,   20, -1.0, -1.0,  553, 0 }, //
+//    {"kDpmjetSingle",        5,  113,   20, -1.0, -1.0,  -1, 0 }, //
+    {"kTauLowToEl3Pi",       1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowToPo3Pi",       1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowToElMu",        1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowToElPiPi0",     1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowToPoPiPi0",     1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
 	};
 
   const int nProcess = sizeof(slConfig)/sizeof(SLConfig);
@@ -145,7 +142,7 @@ class GeneratorStarlight_class : public Generator
   setParameter(Form("W_MIN        =   %.1f    #Min value of w",slConfig[idx].wmin));
   setParameter(Form("W_N_BINS     =    %3i    #Bins i w",slConfig[idx].nwbins));
   setParameter(Form("RAP_MAX      =   %.2f    #max y",rapMax));
-  setParameter(Form("RAP_N_BINS   =   %.0f    #Bins i y",rapMax*2./slConfig[idx].dy));
+  setParameter(Form("RAP_N_BINS   =   %.0f    #Bins i y",rapMax*2./dy));
   setParameter("CUT_PT       =    0    #Cut in pT? 0 = (no, 1 = yes)");
   setParameter("PT_MIN       =    0    #Minimum pT in GeV");
   setParameter("PT_MAX       =   10    #Maximum pT in GeV");
@@ -161,7 +158,7 @@ class GeneratorStarlight_class : public Generator
   setParameter("INT_PT_MAX    =   0.24 #Maximum pt considered, when interference is turned on");
   setParameter("INT_PT_N_BINS = 120    #Number of pt bins when interference is turned on");
   setParameter("XSEC_METHOD   = 0      # Set to 0 to use old method for calculating gamma-gamma luminosity"); //CM
-  setParameter("BSLOPE_DEFINITION = 1");   // using default slope
+  setParameter("BSLOPE_DEFINITION = 2");   // using default slope
   setParameter("BSLOPE_VALUE      = 4.0"); // default slope value
   setParameter("PRINT_VM = 0"); // print cross sections and fluxes vs rapidity in stdout for VM photoproduction processes
 
@@ -170,7 +167,12 @@ class GeneratorStarlight_class : public Generator
     setParameter("MIN_GAMMA_ENERGY = 1000.0");
     setParameter("MAX_GAMMA_ENERGY = 600000.0");
   }
-  
+
+  TString extraPars(mExtraParams);
+  TString token;
+  Ssiz_t from = 0;
+  while(extraPars.Tokenize(token, from, ";"))setParameter(token.Data());
+
   if (not mInputParameters.init()) {
       std::cout << "InitStarLight parameter initialization has failed" << std::endl;
       return false;
@@ -292,6 +294,7 @@ class GeneratorStarlight_class : public Generator
    upcXEvent        mEvent;            //  object holding STARlight simulated event.
    upcEvent         mUpcEvent;
    std::string mSelectedConfiguration = "";
+   std::string mExtraParams = "";
    int mPdgMother = -1;
    bool mDecayEvtGen = 0;
    float eCM = 5020; //CMS energy
@@ -307,11 +310,12 @@ class GeneratorStarlight_class : public Generator
  
 
 FairGenerator*
-  GeneratorStarlight(std::string configuration = "empty",float energyCM = 5020, int beam1Z = 82, int beam1A = 208, int beam2Z = 82, int beam2A = 208)
+  GeneratorStarlight(std::string configuration = "empty",float energyCM = 5020, int beam1Z = 82, int beam1A = 208, int beam2Z = 82, int beam2A = 208, std::string extrapars = "")
 {
   auto gen = new o2::eventgen::GeneratorStarlight_class();
   gen->selectConfiguration(configuration);
   gen->setCollisionSystem(energyCM, beam1Z, beam1A, beam2Z, beam2A);
+  gen->setExtraParams(extrapars);
   return gen;
 }
 
