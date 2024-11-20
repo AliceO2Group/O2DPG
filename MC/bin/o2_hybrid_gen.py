@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+# This script creates a template JSON file for the configuration of the hybrid generator
+# The generators to be used are passed as a list of strings via the --gen flag, while the
+# output filename is set using --output. All the generators available in O2sim are supported.
+# Example:
+# $O2DPG_ROOT/MC/bin/o2_hybrid_gen.py --gen pythia8 boxgen external extkinO2 hepmc pythia8hf \
+#                                     --output config.json
+
 import argparse
 import json
 
