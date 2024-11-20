@@ -11,7 +11,7 @@ set laproj 1 !projectile atomic number
 set maproj 1 !projectile mass number
 set latarg 1 !target atomic number
 set matarg 1 !target mass number
-set ecms 13600 !sqrt(s)_pp
+set ecms 13000 !sqrt(s)_pp
 set istmax 25 !max status considered for storage
 
 ftime on     !string formation time non-zero
@@ -21,10 +21,10 @@ nodecays
 end
 
 set ninicon 1            !number of initial conditions used for hydro evolution
-core off                 !core/corona not activated
-hydro off                !hydro not activated
-eos off                  !eos not activated
-hacas off                !hadronic cascade not activated
+core full                !core/corona activated
+hydro hlle               !hydro activated
+eos x3ff                 !eos activated (epos standard EoS)
+hacas full               !hadronic cascade activated (UrQMD)
 set nfreeze 1            !number of freeze out events per hydro event
 set modsho 1             !printout every modsho events
 set centrality 0         !0=min bias
