@@ -50,8 +50,10 @@ add_QC_JSON() {
   OUTPUT_SUFFIX+="-$1"
 }
 
+JSON_TEMP_FILES="()"
+
 QC_CONFIG=
-QC_CONFIG_OVERRIDE=
+: ${QC_CONFIG_OVERRIDE:=} # set to empty string only if not already set externally
 : ${QC_DETECTOR_CONFIG_OVERRIDE:=} # set to empty string only if not already set externally
 if [[ -z ${QC_JSON_FROM_OUTSIDE:-} && ! -z ${GEN_TOPO_QC_JSON_FILE:-} && -f $GEN_TOPO_QC_JSON_FILE ]]; then
   QC_JSON_FROM_OUTSIDE=$GEN_TOPO_QC_JSON_FILE
@@ -266,7 +268,61 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     DET_JSON_FILE="QC_JSON_GLO_$i"
     if has_matching_qc $i && [ ! -z "${!DET_JSON_FILE:-}" ]; then
       if [[ $i == "PRIMVTX" ]] && ! has_detector_reco ITS; then continue; fi
-      if [[ $i == "ITSTPC" ]] && ! has_detectors_reco ITS TPC; then continue; fi
+      if [[ $i == "ITSTPC" ]] ; then
+        if ! has_detectors_reco ITS TPC; then continue
+        else
+          # replace the input sources depending on the detector compostition and matching detectors
+          ITSTPCMatchQuery="trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;trackTPC:TPC/TRACKS;trackTPCClRefs:TPC/CLUSREFS/0;trackITS:ITS/TRACKS/0;trackITSROF:ITS/ITSTrackROF/0;trackITSClIdx:ITS/TRACKCLSID/0;alpparITS:ITS/ALPIDEPARAM/0?lifetime=condition&ccdb-path=ITS/Config/AlpideParam;SVParam:GLO/SVPARAM/0?lifetime=condition&ccdb-path=GLO/Config/SVertexerParam"
+	  if [[ $SYNCMODE == 1 ]] || [[ $EPNSYNCMODE == 1 ]] ; then
+            HAS_K0_ENABLED=$(jq -r .qc.tasks.MTCITSTPC.taskParameters.doK0QC "${!DET_JSON_FILE}")
+	  else
+            HAS_K0_ENABLED=$(jq -r .qc.tasks.GLOMatchTrITSTPC.taskParameters.doK0QC "${!DET_JSON_FILE}")
+          fi
+          TRACKSOURCESK0="ITS,TPC,ITS-TPC"
+          if [[ $HAS_K0_ENABLED == "true" ]]; then
+            ITSTPCMatchQuery+=";p2decay3body:GLO/PVTX_3BODYREFS/0;decay3body:GLO/DECAYS3BODY/0;decay3bodyIdx:GLO/DECAYS3BODY_IDX/0;p2cascs:GLO/PVTX_CASCREFS/0;cascs:GLO/CASCS/0;cascsIdx:GLO/CASCS_IDX/0;p2v0s:GLO/PVTX_V0REFS/0;v0s:GLO/V0S/0;v0sIdx:GLO/V0S_IDX/0;pvtx_tref:GLO/PVTX_TRMTCREFS/0;pvtx_trmtc:GLO/PVTX_TRMTC/0;pvtx:GLO/PVTX/0;clusTPCoccmap:TPC/TPCOCCUPANCYMAP/0;clusTPC:TPC/CLUSTERNATIVE;clusTPCshmap:TPC/CLSHAREDMAP/0;trigTPC:TPC/TRIGGERWORDS/0"
+            if has_secvtx_source ITS-TPC-TRD ; then
+              ITSTPCMatchQuery+=";trigITSTPCTRD:TRD/TRGREC_ITSTPC/0;trackITSTPCTRD:TRD/MATCH_ITSTPC/0"
+              TRACKSOURCESK0+=",ITS-TPC-TRD"
+            fi
+            if has_secvtx_source ITS-TPC-TOF ; then
+              ITSTPCMatchQuery+=";matchITSTPCTOF:TOF/MTC_ITSTPC/0"
+              TRACKSOURCESK0+=",ITS-TPC-TOF"
+            fi
+            if has_secvtx_source ITS-TPC-TRD-TOF ; then
+              ITSTPCMatchQuery+=";matchITSTPCTRDTOF:TOF/MTC_ITSTPCTRD/0"
+              TRACKSOURCESK0+=",ITS-TPC-TRD-TOF"
+            fi
+            if has_secvtx_source TPC-TRD ; then
+              ITSTPCMatchQuery+=";trigTPCTRD:TRD/TRGREC_TPC/0;trackTPCTRD:TRD/MATCH_TPC/0"
+              TRACKSOURCESK0+=",TPC-TRD"
+            fi
+            if has_secvtx_source TPC-TOF ; then
+              ITSTPCMatchQuery+=";matchTPCTOF:TOF/MTC_TPC/0;trackTPCTOF:TOF/TOFTRACKS_TPC/0"
+              TRACKSOURCESK0+=",TPC-TOF"
+            fi
+            if has_secvtx_source TPC-TRD-TOF ; then
+              ITSTPCMatchQuery+=";matchTPCTRDTOF/TOF/MTC_TPCTRD/0"
+              TRACKSOURCESK0+=",TPC-TRD-TOF"
+            fi
+            if has_secvtx_source TOF ; then
+              ITSTPCMatchQuery+=";tofcluster:TOF/CLUSTERS/0"
+              TRACKSOURCESK0+=",TOF"
+            fi
+            if has_secvtx_source TRD ; then
+              TRACKSOURCESK0+=",TRD"
+            fi
+          fi
+          TEMP_FILE=$(mktemp "${i}"_XXXXXXX)
+          if [[ $SYNCMODE == 1 ]] || [[ $EPNSYNCMODE == 1 ]] ; then
+            cat "${!DET_JSON_FILE}" | jq "(.dataSamplingPolicies[] | select(.id == \"ITSTPCmSampK0\") | .query) = \"$ITSTPCMatchQuery\" | .qc.tasks.MTCITSTPC.taskParameters.trackSourcesK0 = \"$TRACKSOURCESK0\"" > "$TEMP_FILE"
+          else
+            cat "${!DET_JSON_FILE}" | jq ".qc.tasks.GLOMatchTrITSTPC.dataSource.query = \"$ITSTPCMatchQuery\" | .qc.tasks.GLOMatchTrITSTPC.taskParameters.trackSourcesK0 = \"$TRACKSOURCESK0\"" > "$TEMP_FILE"
+          fi
+          DET_JSON_FILE=TEMP_FILE
+          JSON_TEMP_FILES+=("$TEMP_FILE")
+        fi
+      fi
       add_QC_JSON GLO_$i ${!DET_JSON_FILE}
     fi
   done
@@ -324,6 +380,11 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     fi
     MERGED_JSON_FILENAME=$(realpath $MERGED_JSON_FILENAME)
 
+    # Clean up: delete the temporary files after use
+    for tf in "${JSON_TEMP_FILES[@]}"; do
+      rm -f "$tf"
+    done
+
     if [[ "${QC_REDIRECT_MERGER_TO_LOCALHOST:-}" == "1" ]]; then
       sed -i.bak -E 's/( *)"remoteMachine" *: *".*"(,?) *$/\1"remoteMachine": "127.0.0.1"\2/' $MERGED_JSON_FILENAME
       unlink $MERGED_JSON_FILENAME.bak
@@ -362,7 +423,9 @@ if [[ ! -z "${QC_JSON_FROM_OUTSIDE:-}" ]]; then
       QC_CONFIG_PARAM="--local-batch=QC.root"
     fi
   fi
+
   add_W o2-qc "--config json://$QC_JSON_FROM_OUTSIDE ${QC_CONFIG_PARAM} ${QC_CONFIG}"
+
 fi
 
 if [[ ! -z ${GEN_TOPO_QC_JSON_FILE:-} ]]; then
