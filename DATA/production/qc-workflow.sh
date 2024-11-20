@@ -266,7 +266,44 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     DET_JSON_FILE="QC_JSON_GLO_$i"
     if has_matching_qc $i && [ ! -z "${!DET_JSON_FILE:-}" ]; then
       if [[ $i == "PRIMVTX" ]] && ! has_detector_reco ITS; then continue; fi
-      if [[ $i == "ITSTPC" ]] && ! has_detectors_reco ITS TPC; then continue; fi
+      if [[ $i == "ITSTPC" ]] ; then
+	if ! has_detectors_reco ITS TPC; then continue
+	else
+	  # replace the input sources depending on the detector compostition and matching detectors
+	  ITSTPCMatchQuery="trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;trackTPC:TPC/TRACKS;trackTPCClRefs:TPC/CLUSREFS;trackITS:ITS/TRACKS/0;trackITSROF:ITS/ITSTrackROF/0;trackITSClIdx:ITS/TRACKCLSID/0;alpparITS:ITS/ALPIDEPARAM/0?lifetime=condition&ccdb-path=ITS/Config/AlpideParam;SVParam:GLO/SVPARAM/0?lifetime=condition&ccdb-path=GLO/Config/SVertexerParam"
+	  HAS_K0_ENABLED=`jq -r .qc.tasks.MTCITSTPC.taskParameters.doK0QC ${!DET_JSON_FILE}`
+	  if [[ $HAS_K0_ENABLED == "true" ]]; then
+	    ITSTPCMatchQuery+=";p2decay3body:GLO/PVTX_3BODYREFS/0;decay3body:GLO/DECAYS3BODY/0;decay3bodyIdx:GLO/DECAYS3BODY_IDX/0;p2cascs:GLO/PVTX_CASCREFS/0;cascs:GLO/CASCS/0;cascsIdx:GLO/CASCS_IDX/0;p2v0s:GLO/PVTX_V0REFS/0;v0s:GLO/V0S/0;v0sIdx:GLO/V0S_IDX/0;pvtx_tref:GLO/PVTX_TRMTCREFS/0;pvtx_trmtc:GLO/PVTX_TRMTC/0;pvtx:GLO/PVTX/0;SVParam:GLO/SVPARAM/0?lifetime=condition&ccdb-path=GLO/Config/SVertexerParam;clusTPCoccmap:TPC/TPCOCCUPANCYMAP/0;clusTPC:TPC/CLUSTERNATIVE;clusTPCshmap:TPC/CLSHAREDMAP/0;trigTPC:TPC/TRIGGERWORDS/0"
+	    if has_secvtx_source ITS-TPC-TRD ; then
+	      ITSTPCMatchQuery+=";trigITSTPCTRD:TRD/TRGREC_ITSTPC/0;trackITSTPCTRD:TRD/MATCH_ITSTPC/0"
+	    fi
+	    if has_secvtx_source ITS-TPC-TOF ; then
+	      ITSTPCMatchQuery+=";matchITSTPCTOF:TOF/MTC_ITSTPC/0"
+	    fi
+	    if has_secvtx_source ITS-TPC-TRD-TOF ; then
+	      ITSTPCMatchQuery+=";matchITSTPCTRDTOF:TOF/MTC_ITSTPCTRD/0"
+	    fi
+	    if has_secvtx_source TPC-TRD ; then
+	      ITSTPCMatchQuery+=";trigTPCTRD:TRD/TRGREC_TPC/0;trackTPCTRD:TRD/MATCH_TPC/0"
+	    fi
+	    if has_secvtx_source TPC-TOF ; then
+	      ITSTPCMatchQuery+=";matchTPCTOF:TOF/MTC_TPC/0;trackTPCTOF:TOF/TOFTRACKS_TPC/0"
+	    fi
+	    if has_secvtx_source TPC-TRD-TOF ; then
+	      ITSTPCMatchQuery+=";matchTPCTRDTOF/TOF/MTC_TPCTRD/0"
+	    fi
+	    if has_secvtx_source TOF ; then
+	      ITSTPCMatchQuery+=";tofcluster:TOF/CLUSTERS/0"
+	    fi
+	  fi
+	  echo "We are looking at $i"
+	  if [[ $SYNCMODE == 1 ]] || [[ $EPNSYNCMODE == 1 ]] ; then
+	    add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.dataSamplingPolicies.ITSTPCmSampK0.query=\"$ITSTPCMatchQuery\"'
+	  else 
+	    add_pipe_separated QC_DETECTOR_CONFIG_OVERRIDE '.qc.tasks.MTCITSTPC.dataSource.query=\"$ITSTPCMatchQuery\"'
+	  fi
+	fi
+      fi
       add_QC_JSON GLO_$i ${!DET_JSON_FILE}
     fi
   done
