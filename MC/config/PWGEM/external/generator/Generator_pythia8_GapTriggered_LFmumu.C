@@ -63,6 +63,7 @@ class GeneratorPythia8GapTriggeredLFmumu : public GeneratorPythia8 {
       useLMeeDecaytable=useLMeeDecaytable.ReplaceAll("${O2DPG_ROOT}",O2DPG_ROOT);
       decayer->SetDecayTableFile(useLMeeDecaytable.Data());
       decayer->ReadDecayTable();
+      decayer->DecayToDimuons();
 
       //Param
       GeneratorParamEMlib *emlib = new GeneratorParamEMlib();
