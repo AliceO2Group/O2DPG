@@ -10,11 +10,12 @@ R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGUD/external/generator)
 #include "GeneratorStarlight.C"
 
 FairGenerator*
-  GeneratorStarlightToEvtGen(std::string configuration = "empty",float energyCM = 5020, int beam1Z = 82, int beam1A = 208, int beam2Z = 82, int beam2A = 208)
+  GeneratorStarlightToEvtGen(std::string configuration = "empty",float energyCM = 5020, int beam1Z = 82, int beam1A = 208, int beam2Z = 82, int beam2A = 208, std::string extrapars = "")
 {
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorStarlight_class>();
   gen->selectConfiguration(configuration);
   gen->setCollisionSystem(energyCM, beam1Z, beam1A, beam2Z, beam2A);
+  gen->setExtraParams(extrapars);
   
   gen->SetSizePdg(5);
   gen->AddPdg(443,0);
