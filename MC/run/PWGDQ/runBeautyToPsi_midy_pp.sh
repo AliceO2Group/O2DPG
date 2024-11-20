@@ -16,7 +16,7 @@ NTIMEFRAMES=${NTIMEFRAMES:-1}
 
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 900 -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -e TGeant4 -mod "--skipModules ZDC" \
 	-trigger "external" -ini $O2DPG_ROOT/MC/config/PWGDQ/ini/GeneratorHF_bbbar_Psi2S_midy.ini  \
-	-genBkg pythia8 -procBkg inel -colBkg pp --embedding -nb ${NBKGEVENTS}
+	-genBkg pythia8 -procBkg inel -colBkg pp --embedding -nb ${NBKGEVENTS} -interactionRate 500000
 
 # run workflow
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
