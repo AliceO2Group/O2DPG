@@ -25,16 +25,13 @@ PYPROCESS=${PYPROCESS:-ccbar} #ccbar, bbar, ...
 
 # create simulation workflow
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 5020 -col pp -gen pythia8 -proc ${PYPROCESS} -tf ${NTIMEFRAMES} -nb ${NBKGEVENTS} \
-                                                        -ns ${NSIGEVENTS} -e ${SIMENGINE}    \
-                                                        -j ${NWORKERS} --embedding -interactionRate 50000
+                                                        -ns ${NSIGEVENTS} -e ${SIMENGINE} -interactionRate 500000   \
+                                                        -j ${NWORKERS} -genBkg pythia8 --embedding
 
 # Simulating a user who extends this workflow by an analysis task
-${O2DPG_ROOT}/MC/bin/o2dpg-workflow-tools.py create workflow_ana --workflow --add-task mchist
-needs=""
-for i in $(seq 1 $NTIMEFRAMES)
-do
-  needs+="aodmerge_$i "
-done
+${O2DPG_ROOT}/MC/bin/o2dpg-workflow-tools.py create workflow_ana --add-task mchist
+needs="aodmerge"
+
 # Comments:
 #   1. The output AOD name is the one created by the simulation workflow
 #   2. base name of AOD merge tasks is known as well to be aodmerge
