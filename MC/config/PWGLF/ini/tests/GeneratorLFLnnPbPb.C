@@ -1,10 +1,9 @@
 int External()
 {
   std::string path{"o2sim_Kine.root"};
-  int numberOfInjectedSignalsPerEvent{10};
-  std::vector<int> injectedPDGs = {1010000030, -1010000030};
+  std::vector<int> possiblePDGs = {1010000030, -1010000030};
 
-  auto nInjection = injectedPDGs.size();
+  int nPossiblePDGs = possiblePDGs.size();
 
   TFile file(path.c_str(), "READ");
   if (file.IsZombie())
@@ -22,11 +21,7 @@ int External()
   std::vector<o2::MCTrack> *tracks{};
   tree->SetBranchAddress("MCTrack", &tracks);
 
-  std::vector<int> nSignal;
-  for (int i = 0; i < nInjection; i++)
-  {
-    nSignal.push_back(0);
-  }
+  std::vector<int> injectedPDGs;
 
   auto nEvents = tree->GetEntries();
   for (int i = 0; i < nEvents; i++)
@@ -36,26 +31,23 @@ int External()
     {
       auto track = tracks->at(idxMCTrack);
       auto pdg = track.GetPdgCode();
-      auto it = std::find(injectedPDGs.begin(), injectedPDGs.end(), pdg);
-      int index = std::distance(injectedPDGs.begin(), it); // index of injected PDG
-      if (it != injectedPDGs.end())                        // found
+      auto it = std::find(possiblePDGs.begin(), possiblePDGs.end(), pdg);
+      if (it != possiblePDGs.end() && track.isPrimary())  // found
       {
-        // count signal PDG
-        nSignal[index]++;
+        injectedPDGs.push_back(pdg);
       }
     }
   }
   std::cout << "--------------------------------\n";
   std::cout << "# Events: " << nEvents << "\n";
-  for (int i = 0; i < nInjection; i++)
+  if(injectedPDGs.empty()){
+    std::cerr << "No injected particles\n";
+    return 1; // At least one of the injected particles should be generated
+  }
+  for (int i = 0; i < nPossiblePDGs; i++)
   {
     std::cout << "# Injected nuclei \n";
-    std::cout << injectedPDGs[i] << ": " << nSignal[i] << "\n";
-    if (nSignal[i] == 0)
-    {
-      std::cerr << "No generated: " << injectedPDGs[i] << "\n";
-      return 1; // At least one of the injected particles should be generated
-    }
+    std::cout << possiblePDGs[i] << ": " << std::count(injectedPDGs.begin(), injectedPDGs.end(), possiblePDGs[i]) << "\n";
   }
   return 0;
 }
