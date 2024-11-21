@@ -49,12 +49,12 @@
           "minPtCut": "0.f",
           "maxPtCut": "1e10f",
           "etaCut": "1e10f",
-	  "cutK0Mass": "0.05f",
-	  "maxEtaK0": "0.8f",
-	  "doK0QC": "false",
-	  "trackSourcesK0": "ITS,TPC,ITS-TPC,ITS-TPC-TOF,TPC-TOF,TPC-TRD,ITS-TPC-TRD,TPC-TRD-TOF,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
+          "cutK0Mass": "0.05f",
+          "maxEtaK0": "0.8f",
+          "doK0QC": "false",
+          "trackSourcesK0": ""
         },
-	"grpGeomRequest" : {
+        "grpGeomRequest" : {
           "geomRequest": "None",
           "askGRPECS": "false",
           "askGRPLHCIF": "false",
@@ -65,13 +65,13 @@
           "needPropagatorD":  "false"
         },
         "location" : "local",
-	  "localMachines": [
+          "localMachines": [
             "epn",
-	    "localhost"
+            "localhost"
           ],
         "remoteMachine": "alio2-cr1-qc07.cern.ch",
-	"remotePort": "47761",
-	"localControl": "odc"
+        "remotePort": "47761",
+        "localControl": "odc"
       }
     }
   },
