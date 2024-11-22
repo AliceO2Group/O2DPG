@@ -638,6 +638,75 @@ class O2_GeneratorParamPsiPbPb5TeV : public GeneratorTGenerator
   GeneratorParam* paramPsi = nullptr;
 };
 
+
+class O2_GeneratorParamX3872MidY : public GeneratorTGenerator
+{
+
+ public:
+  O2_GeneratorParamX3872MidY() : GeneratorTGenerator("ParamX3872MidY")
+  {
+    paramX3872 = new GeneratorParam(1, -1, PtX3872pp13TeV, YX3872pp13TeV, V2X3872pp13TeV, IpX3872pp13TeV);
+    paramX3872->SetMomentumRange(0., 1.e6);
+    paramX3872->SetPtRange(0., 1000.);
+    paramX3872->SetYRange(-1.0, 1.0);
+    paramX3872->SetPhiRange(0., 360.);
+    paramX3872->SetDecayer(new TPythia6Decayer()); // Pythia
+    paramX3872->SetForceDecay(kNoDecay);           // particle left undecayed
+    setTGenerator(paramX3872);
+  };
+
+  ~O2_GeneratorParamX3872MidY()
+  {
+    delete paramX3872;
+  };
+
+  Bool_t Init() override
+  {
+    GeneratorTGenerator::Init();
+    paramX3872->Init();
+    return true;
+  }
+
+  void SetNSignalPerEvent(Int_t nsig) { paramX3872->SetNumberParticles(nsig); }
+
+  //-------------------------------------------------------------------------//
+  static Double_t PtX3872pp13TeV(const Double_t* px, const Double_t* /*dummy*/)
+  {
+    // prompt X3872 pT
+    // pp, 13TeV (tuned LHCb pp 13 TeV)
+    //
+    const Double_t kC = 7.64519e+00 ;
+    const Double_t kpt0 = 5.30628e+00;
+    const Double_t kn = 3.30887e+00;
+    Double_t pt = px[0];
+    return kC * pt / TMath::Power((1. + (pt / kpt0) * (pt / kpt0)), kn);
+  }
+
+  //-------------------------------------------------------------------------//
+  static Double_t YX3872pp13TeV(const Double_t* py, const Double_t* /*dummy*/)
+  {
+    // flat rapidity distribution assumed at midrapidity
+    return 1.;
+  }
+
+  //-------------------------------------------------------------------------//
+  static Double_t V2X3872pp13TeV(const Double_t* /*dummy*/, const Double_t* /*dummy*/)
+  {
+    // X3872 v2
+    return 0.;
+  }
+
+  //-------------------------------------------------------------------------//
+  static Int_t IpX3872pp13TeV(TRandom*)
+  {
+    return 9920443;
+  }
+
+ private:
+  GeneratorParam* paramX3872 = nullptr;
+};
+
+
 } // namespace eventgen
 } // namespace o2
 
@@ -741,6 +810,31 @@ FairGenerator* GeneratorCocktailPromptCharmoniaToMuonEvtGen_pp13TeV()
   return genCocktailEvtGen;
 }
 
+
+FairGenerator*
+  GeneratorParamPromptPsiToJpsiPiPiEvtGen_pp13TeV(TString pdgs = "100443")
+{
+  auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::O2_GeneratorParamPsiMidY>();
+  gen->SetNSignalPerEvent(1); // number of jpsis per event
+
+  std::string spdg;
+  TObjArray* obj = pdgs.Tokenize(";");
+  gen->SetSizePdg(obj->GetEntriesFast());
+  for (int i = 0; i < obj->GetEntriesFast(); i++) {
+    spdg = obj->At(i)->GetName();
+    gen->AddPdg(std::stoi(spdg), i);
+    printf("PDG %d \n", std::stoi(spdg));
+  }
+  TString pathO2 = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
+  gen->SetDecayTable(Form("%s/PSITOJPSIPIPI.DEC", pathO2.Data()));
+
+  // print debug
+  gen->PrintDebug();
+
+  return gen;
+}
+
+
 FairGenerator*
   GeneratorParamPromptJpsiToMuonEvtGen_pp13TeV(TString pdgs = "443")
 {
@@ -843,6 +937,29 @@ FairGenerator*
   return genCocktailEvtGen;
 }
 
+
+FairGenerator*
+  GeneratorParamX3872ToJpsiEvtGen_pp13TeV(TString pdgs = "9920443")
+{
+  auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::O2_GeneratorParamX3872MidY>();
+  gen->SetNSignalPerEvent(1); // number of jpsis per event
+
+  std::string spdg;
+  TObjArray* obj = pdgs.Tokenize(";");
+  gen->SetSizePdg(obj->GetEntriesFast());
+  for (int i = 0; i < obj->GetEntriesFast(); i++) {
+    spdg = obj->At(i)->GetName();
+    gen->AddPdg(std::stoi(spdg), i);
+    printf("PDG %d \n", std::stoi(spdg));
+  }
+  TString pathO2 = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
+  gen->SetDecayTable(Form("%s/X3872TOJPSIPIPI.DEC", pathO2.Data()));
+
+  // print debug
+  gen->PrintDebug();
+
+  return gen;
+}
 
 
 
