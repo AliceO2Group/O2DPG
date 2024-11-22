@@ -46,10 +46,10 @@ public:
 
     genMinPt=0.0;
     genMaxPt=20.0;
-    genminY=-1.5;
-    genmaxY=1.5;
-    genminEta=-1.5;
-    genmaxEta=1.5;
+    genminY=-1.0;
+    genmaxY=1.0;
+    genminEta=-1.0;
+    genmaxEta=1.0;
     
     pdg=0;
     E=0;
