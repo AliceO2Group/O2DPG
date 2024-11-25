@@ -36,7 +36,7 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
-          "query": "emcal-triggers:EMC/CELLSTRGR/0;ctp-digits:CTP/DIGITS;ctp-config:CTP/CONFIG/0?lifetime=condition&ccdb-path=CTP/Config/Config&ccdb-run-dependent=true"
+          "query": "emcal-triggers:EMC/CELLSTRGR/0;ctp-digits:CTP/DIGITS;ctp-config:CTP/CONFIG/0?lifetime=condition&ccdb-path=CTP/Config/Config&ccdb-run-dependent=1"
         },
         "taskParameters": {
           "AliasMB": "MINBIAS_TVX_L0,C0TVX,CMTVXTSC,C0TVXTSC,C0TVXTCE"
