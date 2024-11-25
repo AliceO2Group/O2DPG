@@ -72,6 +72,7 @@ class GeneratorStarlight_class : public Generator
     {"kCohOmegaTo2Pi",       2,     223,   20, -1.0, -1.0,  223, 0 }, //
     {"kCohOmegaTo3Pi",       2,     223,   20, -1.0, -1.0,  223, 1 }, //
     {"kCohOmegaToPiPiPi",    2, 223211111, 20, -1.0, -1.0,  233, 0 }, //
+    {"kCohRhoPrimeTo4Pi",    3,     999, 1200, -1.0,  5.0,  30113, 0 }, //
     {"kCohJpsiToMu",         2,  443013,   20, -1.0, -1.0,  443, 0 }, //
     {"kCohJpsiToEl",         2,  443011,   20, -1.0, -1.0,  443, 0 }, //
     {"kCohJpsiToElRad",      2,  443011,   20, -1.0, -1.0,  443, 1 }, //
@@ -91,6 +92,7 @@ class GeneratorStarlight_class : public Generator
     {"kIncohOmegaTo2Pi",     4,     223,   20, -1.0, -1.0,  223, 0 }, //
     {"kIncohOmegaTo3Pi",     4,     223,   20, -1.0, -1.0,  223, 1 }, //
     {"kIncohOmegaToPiPiPi",  4, 223211111, 20, -1.0, -1.0,  223, 0 }, //
+    {"kIncohRhoPrimeTo4Pi",  4,     999, 1200, -1.0,  5.0,  30113, 0 }, //
     {"kIncohJpsiToMu",       4,  443013,   20, -1.0, -1.0,  443, 0 }, //
     {"kIncohJpsiToEl",       4,  443011,   20, -1.0, -1.0,  443, 0 }, //
     {"kIncohJpsiToElRad",    4,  443011,   20, -1.0, -1.0,  443, 1 }, //
