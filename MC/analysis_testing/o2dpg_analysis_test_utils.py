@@ -34,6 +34,10 @@ def adjust_configuration_line(line, data_or_mc, collision_system):
         line = line.replace('!OVERWRITEAXISRANGEFORPBPBVALUE!', "false")
     else:
         line = line.replace('!OVERWRITEAXISRANGEFORPBPBVALUE!', "true")
+    if collision_system == "pbpb":
+        line = line.replace('!ISLOWFLUX!', "false")
+    else:
+        line = line.replace('!ISLOWFLUX!', "true")
     return line
 
 
