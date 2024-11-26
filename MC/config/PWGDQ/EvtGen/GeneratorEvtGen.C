@@ -264,7 +264,7 @@ class GeneratorEvtGen : public T
     // different decay table. case kAll read the default decay table only
     //
     DecayModeEvt decay = mDecayMode;
-    TString pathO2 = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
+    TString pathO2 = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
     switch (decay) {
       case kEvtAll: // particles decayed "naturally" according to $ALICE_ROOT/TEvtGen/EvtGen/DECAY.DEC
         break;

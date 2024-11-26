@@ -1,6 +1,6 @@
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/EvtGen)
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/external/generator)
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGEM/external/generator)
+R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/external/generator)
+R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGEM/external/generator)
 R__LOAD_LIBRARY(libpythia6)
 R__LOAD_LIBRARY(libEGPythia6)
 #include "GeneratorEvtGen.C"
@@ -55,12 +55,12 @@ class GeneratorPythia8GapTriggeredLFmumu : public GeneratorPythia8 {
       fGeneratorCocktail = new o2::eventgen::GeneratorEvtGen<GeneratorCocktail>();
 
       // EXODUS decayer
-      TString O2DPG_ROOT = TString(getenv("O2DPG_ROOT"));
+      TString O2DPG_ROOT = TString(getenv("O2DPG_MC_CONFIG_ROOT"));
       auto decayer = new PythiaDecayerConfig();
       decayer->SetDecayerExodus();
-      TString useLMeeDecaytable = "$O2DPG_ROOT/MC/config/PWGEM/decaytables/decaytable_LMee.dat";
-      useLMeeDecaytable=useLMeeDecaytable.ReplaceAll("$O2DPG_ROOT",O2DPG_ROOT);
-      useLMeeDecaytable=useLMeeDecaytable.ReplaceAll("${O2DPG_ROOT}",O2DPG_ROOT);
+      TString useLMeeDecaytable = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGEM/decaytables/decaytable_LMee.dat";
+      useLMeeDecaytable=useLMeeDecaytable.ReplaceAll("$O2DPG_MC_CONFIG_ROOT",O2DPG_ROOT);
+      useLMeeDecaytable=useLMeeDecaytable.ReplaceAll("${O2DPG_MC_CONFIG_ROOT}",O2DPG_ROOT);
       decayer->SetDecayTableFile(useLMeeDecaytable.Data());
       decayer->ReadDecayTable();
 

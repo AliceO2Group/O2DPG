@@ -4,8 +4,8 @@
 // o2-sim -j 4 -n 10 -g external -t external -m "PIPE ITS TPC" -o sgn --configFile GeneratorHF_bbbar_Psi2S_midy.ini
 //
 //
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/EvtGen)
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGHF/external/generator)
+R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGHF/external/generator)
 #include "GeneratorEvtGen.C"
 #include "GeneratorHF.C"
 
@@ -15,7 +15,7 @@ FairGenerator*
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorHF>();
   gen->setRapidity(rapidityMin, rapidityMax);
   gen->setPDG(5);
-  TString pathO2table = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffBhadrons.cfg");
+  TString pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffBhadrons.cfg");
   gen->readFile(pathO2table.Data());
 
   gen->setVerbose(verbose);
@@ -51,7 +51,7 @@ FairGenerator*
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorHF>();
   gen->setRapidity(rapidityMin, rapidityMax);
   gen->setPDG(5);
-  TString pathO2table = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffBhadrons.cfg");
+  TString pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffBhadrons.cfg");
   gen->readFile(pathO2table.Data());
 
   gen->setVerbose(verbose);

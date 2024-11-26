@@ -2,18 +2,18 @@
 // generators for prompt charmonia considering different cases (prompt jpsi, prompt psi2S, prompt jpsi+psi2S) at midrapidity and forward rapidity
 //
 // usage:
-// Jpsi+Psi2S midy: o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=$O2DPG_ROOT/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorCocktailPromptCharmoniaToElectronEvtGen_pp13TeV()"
-// Jpsi midy:       o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=$O2DPG_ROOT/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV()"
-// Psi2S midy:      o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=$O2DPG_ROOT/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorParamPromptPSiToElectronEvtGen_pp13TeV()"
-// Jpsi+Psi2S fwdy: o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=$O2DPG_ROOT/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorCocktailPromptCharmoniaToMuonEvtGen_pp13TeV()"
-// Jpsi fwdy:       o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=$O2DPG_ROOT/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorParamPromptJpsiToMuonEvtGen_pp13TeV()"
-// Psi2S fwdy:      o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=$O2DPG_ROOT/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorParamPromptPSiToMuonEvtGen_pp13TeV()"
-// ChiC1+ChiC2 midy:o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=$O2DPG_ROOT/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorCocktailChiCToElectronEvtGen_pp13TeV()"
+// Jpsi+Psi2S midy: o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorCocktailPromptCharmoniaToElectronEvtGen_pp13TeV()"
+// Jpsi midy:       o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV()"
+// Psi2S midy:      o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorParamPromptPSiToElectronEvtGen_pp13TeV()"
+// Jpsi+Psi2S fwdy: o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorCocktailPromptCharmoniaToMuonEvtGen_pp13TeV()"
+// Jpsi fwdy:       o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorParamPromptJpsiToMuonEvtGen_pp13TeV()"
+// Psi2S fwdy:      o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorParamPromptPSiToMuonEvtGen_pp13TeV()"
+// ChiC1+ChiC2 midy:o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorPromptCharmonia.C;GeneratorExternal.funcName=GeneratorCocktailChiCToElectronEvtGen_pp13TeV()"
 //
 
 //
 
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen)
 R__LOAD_LIBRARY(libpythia6)
 #include "GeneratorCocktail.C"
 #include "GeneratorEvtGen.C"
@@ -825,7 +825,7 @@ FairGenerator*
     gen->AddPdg(std::stoi(spdg), i);
     printf("PDG %d \n", std::stoi(spdg));
   }
-  TString pathO2 = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
+  TString pathO2 = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
   gen->SetDecayTable(Form("%s/PSITOJPSIPIPI.DEC", pathO2.Data()));
 
   // print debug
@@ -952,7 +952,7 @@ FairGenerator*
     gen->AddPdg(std::stoi(spdg), i);
     printf("PDG %d \n", std::stoi(spdg));
   }
-  TString pathO2 = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
+  TString pathO2 = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
   gen->SetDecayTable(Form("%s/X3872TOJPSIPIPI.DEC", pathO2.Data()));
 
   // print debug

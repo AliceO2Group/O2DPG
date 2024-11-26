@@ -1,6 +1,6 @@
 //
 //
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen)
 #include "GeneratorEvtGen.C"
 
 
@@ -17,9 +17,9 @@ GeneratorHFToEleFull_EvtGen(bool forcedecay = true, bool allHF = true)
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8>();
   TString pathO2table;
   if (allHF) {
-     pathO2table  = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffCBhadrons.cfg");
+     pathO2table  = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffCBhadrons.cfg");
   } else {
-     pathO2table  = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffChadrons.cfg");
+     pathO2table  = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffChadrons.cfg");
   }
   gen->readFile(pathO2table.Data());
 
