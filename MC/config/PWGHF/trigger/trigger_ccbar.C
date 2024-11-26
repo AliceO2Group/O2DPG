@@ -1,4 +1,4 @@
-R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT})
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT)
 #include "Generators/Trigger.h"
 #include "TParticle.h"
 #include "TParticlePDG.h"

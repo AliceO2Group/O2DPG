@@ -1,6 +1,6 @@
 //
 //
-R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen)
 #include "GeneratorEvtGen.C"
 
 

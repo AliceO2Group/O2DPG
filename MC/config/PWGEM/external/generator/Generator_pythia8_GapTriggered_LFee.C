@@ -1,6 +1,6 @@
-R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen)
-R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/external/generator)
-R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGEM/external/generator)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/external/generator)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGEM/external/generator)
 R__LOAD_LIBRARY(libpythia6)
 R__LOAD_LIBRARY(libEGPythia6)
 #include "GeneratorEvtGen.C"

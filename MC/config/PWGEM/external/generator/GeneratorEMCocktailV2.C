@@ -1,4 +1,4 @@
-R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/external/generator)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/external/generator)
 R__LOAD_LIBRARY(libpythia6)
 #include "GeneratorCocktail.C"
 

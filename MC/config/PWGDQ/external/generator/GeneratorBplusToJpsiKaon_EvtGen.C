@@ -1,8 +1,8 @@
 // o2-sim -j 1 -n 10 -g external -t external -m "PIPE ITS TPC" -o sgn --configKeyValues "GeneratorExternal.fileName=GeneratorBplusToJpsiKaon_EvtGen.C;GeneratorExternal.funcName=GeneratorBplusToJpsiKaon_EvtGen()" --configFile GeneratorHF_bbbarToBplus_midy.ini
 //
 //
-R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen)
-R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGHF/external/generator)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGHF/external/generator)
 #include "GeneratorEvtGen.C"
 #include "GeneratorHF.C"
 

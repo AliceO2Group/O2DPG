@@ -2,7 +2,7 @@
 // generators for bottomonia considering at midrapidity and forward rapidity
 //
 
-R__ADD_INCLUDE_PATH(${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen)
 R__LOAD_LIBRARY(libpythia6)
 #include "GeneratorCocktail.C"
 #include "GeneratorEvtGen.C"
