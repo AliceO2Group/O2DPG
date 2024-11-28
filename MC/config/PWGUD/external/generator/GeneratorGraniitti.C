@@ -1,5 +1,3 @@
-// usage: o2-sim -n 100 -g external --configKeyValues 'GeneratorExternal.fileName=GeneratorGraniitti.C;GeneratorExternal.funcName=GeneratorGraniitti("kDiTau")'
-
 namespace o2 {
 namespace eventgen {
 class GeneratorGraniitti_class : public Generator {
