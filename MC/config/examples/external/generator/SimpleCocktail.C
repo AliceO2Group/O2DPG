@@ -3,7 +3,7 @@
 // to construct any meta-generator (such as cocktails) consisting
 // or using a pool of underlying o2::eventgen::Generators.
 
-// Test is using #o2-sim-dpl-eventgen --nEvents 10 --generator external --configKeyValues "GeneratorExternal.fileName=${O2DPG_ROOT}/MC/config/examples/external/generator/SimpleCocktail.C;GeneratorExternal.funcName=getSimpleGap()"
+// Test is using #o2-sim-dpl-eventgen --nEvents 10 --generator external --configKeyValues "GeneratorExternal.fileName=${O2DPG_MC_CONFIG_ROOT}/MC/config/examples/external/generator/SimpleCocktail.C;GeneratorExternal.funcName=getSimpleGap()"
 
 namespace o2
 {

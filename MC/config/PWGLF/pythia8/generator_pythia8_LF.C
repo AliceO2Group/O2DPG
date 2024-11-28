@@ -11,7 +11,7 @@
 ///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF.C;GeneratorExternal.funcName=generateLF({{1000010020, 10, 0.5, 10}, {1000010030, 10, 0.5, 10}})'`
 ///               Here PDG, Number injected, pT limits are separated are divided per particle
 ///         or:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF.C;GeneratorExternal.funcName=generateLF("${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei.gun")'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF.C;GeneratorExternal.funcName=generateLF("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei.gun")'`
 ///               Here PDG, Number injected, pT limits are provided via an intermediate configuration file
 ///
 
@@ -37,8 +37,8 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
   GeneratorPythia8LF(bool injOnePerEvent /*= true*/,
                      int gapBetweenInjection /*= 0*/,
                      bool useTrigger /*= false*/,
-                     std::string pythiaCfgMb /*= "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg"*/,
-                     std::string pythiaCfgSignal /*= "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_signal.cfg"*/) : GeneratorPythia8{},
+                     std::string pythiaCfgMb /*= "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg"*/,
+                     std::string pythiaCfgSignal /*= "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_signal.cfg"*/) : GeneratorPythia8{},
                                                                                                                           mOneInjectionPerEvent{injOnePerEvent},
                                                                                                                           mGapBetweenInjection{gapBetweenInjection},
                                                                                                                           mUseTriggering{useTrigger}
@@ -492,7 +492,7 @@ FairGenerator* generateLF(std::vector<GeneratorPythia8LF::ConfigContainer> cfg,
 
 ///___________________________________________________________
 /// Create generator via input file
-FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei.gun",
+FairGenerator* generateLF(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei.gun",
                           bool injectOnePDGPerEvent = true,
                           int gapBetweenInjection = 0,
                           bool useTrigger = false,
@@ -546,7 +546,7 @@ FairGenerator* generateLF(std::string configuration = "${O2DPG_ROOT}/MC/config/P
 
 ///___________________________________________________________
 /// Create generator via input file for the triggered mode
-FairGenerator* generateLFTriggered(std::string configuration = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei.gun",
+FairGenerator* generateLFTriggered(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei.gun",
                                    int gapBetweenInjection = 0,
                                    std::string pythiaCfgMb = "",
                                    std::string pythiaCfgSignal = "")

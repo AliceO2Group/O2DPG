@@ -113,7 +113,7 @@ public:
     cout << "Initalizing extra PYTHIA object " << endl;
 
     // Read settings from external file.
-    std::string O2DPG_ROOT(getenv("O2DPG_ROOT"));
+    std::string O2DPG_ROOT(getenv("O2DPG_MC_CONFIG_ROOT"));
     std::string infile = O2DPG_ROOT + "/MC/config/ALICE3/pythia8/generator/pythia8_hi.cmnd";
     pythiaObject.readFile(infile);
 

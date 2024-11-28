@@ -1,4 +1,4 @@
-R__ADD_INCLUDE_PATH($O2DPG_ROOT)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT)
 #include "MC/run/common/detector_acceptance.C"
 #include "Pythia8/Pythia.h"
 

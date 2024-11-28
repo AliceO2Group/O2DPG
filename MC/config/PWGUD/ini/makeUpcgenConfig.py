@@ -40,12 +40,12 @@ fout = open(args.output, 'w')
 
 ### Generator
 fout.write('[GeneratorExternal] \n')
-fout.write('fileName = ${O2DPG_ROOT}/MC/config/PWGUD/external/generator/GeneratorUpcgen.C \n')
+fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/external/generator/GeneratorUpcgen.C \n')
 fout.write('funcName = GeneratorUpcgen("%s", "%s", %f, %d, %d)  \n' % (args.process,"../.",args.eCM,pZ,pA))
     
 ###Trigger
 fout.write('[TriggerExternal] \n')
-fout.write('fileName = ${O2DPG_ROOT}/MC/config/PWGUD/trigger/selectParticlesInAcceptance.C \n')
+fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/trigger/selectParticlesInAcceptance.C \n')
 if args.rapidity == 'cent_rap':
     fout.write('funcName = selectMotherPartInAcc(-0.9,0.9) \n')
 if args.rapidity == 'muon_rap':
