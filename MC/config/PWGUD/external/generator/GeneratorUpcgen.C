@@ -1,5 +1,5 @@
 R__LOAD_LIBRARY(libUpcgenlib.so)
-R__ADD_INCLUDE_PATH($upcgen_ROOT/include)
+R__ADD_INCLUDE_PATH($Upcgen_ROOT/include)
 
 #include "UpcGenerator.h"
 
