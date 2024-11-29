@@ -92,6 +92,19 @@ jobs:
           done
           exit "$error"
 
+      - name: Run .C configs check
+        run: |
+          error=0
+          readarray -d '' files < \
+            <(find . -path ./.git -prune -false -or -type f -name '*.C' -print0)
+          for cfg in "${files[@]}"; do
+            if grep -q "\$O2DPG_ROOT" "$cfg" || grep -q "\${O2DPG_ROOT}" "$cfg"; then
+              error=1
+              echo "Deprecated O2DPG_ROOT detected in $cfg, replace with O2DPG_MC_CONFIG_ROOT" >&2
+            fi
+          done
+          exit "$error"   
+
   pylint:
     name: Pylint
     runs-on: ubuntu-latest
