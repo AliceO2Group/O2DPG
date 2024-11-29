@@ -64,10 +64,6 @@ int External()
   << "#signal pairs: " << nSignalPairs << "\n"
   << "#muon pairs: " << nLeptonPairs << "\n"
   << "#muon pairs to be done: " << nLeptonPairsToBeDone << "\n";
-  if (nSignalPairs < nEvents) {
-    std::cerr << "Number of signal pairs should be at least equaled to the number of events\n";
-    return 1;
-  }
   if (nLeptonPairs != nLeptonPairsToBeDone) {
     std::cerr << "The number of muon pairs should be the same as the number of muon pairs which should be transported.\n";
     return 1;
