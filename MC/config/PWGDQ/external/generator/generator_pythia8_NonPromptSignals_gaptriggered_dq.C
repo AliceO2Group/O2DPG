@@ -63,7 +63,7 @@ public:
 
 protected:
 
-Bool_t generateEvent() override
+  Bool_t generateEvent() override
   {
      // reset  event
      bool genOk = false;
@@ -89,13 +89,15 @@ Bool_t generateEvent() override
     return true;
   }
 
-Bool_t Init() override
+  Bool_t Init() override
   {
-        if(mConfigMBdecays.Contains("cfg")) pythiaMBgen.readFile(mConfigMBdecays.Data());	
-	GeneratorPythia8::Init();
-       	pythiaMBgen.init();
-        return true;
-  } 
+    if(mConfigMBdecays.Contains("cfg")) {
+       pythiaMBgen.readFile(mConfigMBdecays.Data());
+    }
+	  GeneratorPythia8::Init();
+    pythiaMBgen.init();
+    return true;
+  }
 
   // search for q-qbar mother with at least one q in a selected rapidity window
   bool findHeavyQuarkPair(Pythia8::Event& event)
@@ -180,14 +182,6 @@ FairGenerator*
   }
   gen->SetForceDecay(kEvtBJpsiDiElectron);
 
-  // set random seed
-  gen->readString("Random:setSeed on");
-  uint random_seed;
-  unsigned long long int random_value = 0;
-  ifstream urandom("/dev/urandom", ios::in|ios::binary);
-  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
-  gen->readString(Form("Random:seed = %d", random_value % 900000001));
-
   // print debug
   // gen->PrintDebug();
 
@@ -217,14 +211,6 @@ FairGenerator*
     gen->addHadronPDGs(std::stoi(spdg));
   }
   gen->SetForceDecay(kEvtBPsiAndJpsiDiElectron);
-
-  // set random seed
-  gen->readString("Random:setSeed on");
-  uint random_seed;
-  unsigned long long int random_value = 0;
-  ifstream urandom("/dev/urandom", ios::in|ios::binary);
-  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
-  gen->readString(Form("Random:seed = %d", random_value % 900000001));
 
   // print debug
   // gen->PrintDebug();
@@ -260,15 +246,7 @@ FairGenerator*
   //gen->SetDecayTable(Form("%s/BPLUSTOKAONJPSITOELE.DEC", pathO2.Data()));
   gen->SetDecayTable(Form("%s/BPLUSTOKAONJPSITOELEALLMODES.DEC", pathO2.Data())); // decay table including decay modes for correlated background
   // print debug
-  // gen->PrintDebug();
-  // set random seed
-  gen->readString("Random:setSeed on");
-  uint random_seed;
-  unsigned long long int random_value = 0;
-  ifstream urandom("/dev/urandom", ios::in|ios::binary);
-  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
-  gen->readString(Form("Random:seed = %d", random_value % 900000001));
-   
+  // gen->PrintDebug();   
   return gen;
 }
 
@@ -296,14 +274,6 @@ FairGenerator*
     printf("PDG %d \n", std::stoi(spdg));
   }
   gen->SetForceDecay(kEvtBJpsiDiMuon);
-
-  // set random seed
-  gen->readString("Random:setSeed on");
-  uint random_seed;
-  unsigned long long int random_value = 0;
-  ifstream urandom("/dev/urandom", ios::in|ios::binary);
-  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
-  gen->readString(Form("Random:seed = %d", random_value % 900000001));
 
   // print debug
   // gen->PrintDebug();
@@ -336,17 +306,8 @@ FairGenerator*
   }
   gen->SetForceDecay(kEvtBPsiAndJpsiDiMuon);
 
-  // set random seed
-  gen->readString("Random:setSeed on");
-  uint random_seed;
-  unsigned long long int random_value = 0;
-  ifstream urandom("/dev/urandom", ios::in|ios::binary);
-  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
-  gen->readString(Form("Random:seed = %d", random_value % 900000001));
-
   // print debug
   // gen->PrintDebug();
-
   return gen;
 }
 
