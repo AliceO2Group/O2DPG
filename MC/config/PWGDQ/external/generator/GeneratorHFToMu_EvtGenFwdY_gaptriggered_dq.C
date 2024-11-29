@@ -3,7 +3,7 @@
 #include "Pythia8/Pythia.h"
 #include "TRandom.h"
 
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen)
 #include "GeneratorEvtGen.C"
 
 #include <string>
@@ -25,7 +25,7 @@ public:
     mInverseTriggerRatio = inputTriggerRatio; 
     // define minimum bias event generator
     auto seed = (gRandom->TRandom::GetSeed() % 900000000);
-    TString pathconfigMB = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/pythia8/generator/pythia8_inel_triggerGap.cfg");
+    TString pathconfigMB = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/pythia8/generator/pythia8_inel_triggerGap.cfg");
     pythiaMBgen.readFile(pathconfigMB.Data());
     pythiaMBgen.readString("Random:setSeed on");
     pythiaMBgen.readString("Random:seed " + std::to_string(seed));
@@ -171,7 +171,7 @@ FairGenerator*
   
   gen->setRapidityHadron(rapidityMin,rapidityMax);
   gen->setHadronMultiplicity(1);
-  TString pathO2table = gSystem->ExpandPathName("$O2DPG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffChadrons.cfg");
+  TString pathO2table = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffChadrons.cfg");
   gen->readFile(pathO2table.Data());
   gen->setConfigMBdecays(pathO2table);
   gen->setVerbose(verbose);
