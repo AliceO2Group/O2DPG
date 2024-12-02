@@ -13,6 +13,18 @@
           "type": "direct",
           "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD"
         },
+        "movingWindows": [
+            "WithCuts/TracksPerTF",
+            "WithCuts/TrackPt",
+            "WithCuts/TrackEta",
+            "WithCuts/TrackPhi",
+            "WithCuts/Minv",
+            "MFT-MCH/WithCuts/TracksPerTF",
+            "MFT-MCH/WithCuts/TrackPt",
+            "MFT-MCH/WithCuts/TrackEta",
+            "MFT-MCH/WithCuts/TrackPhi",
+            "MFT-MCH/WithCuts/Minv"
+        ],
         "taskParameters": {
           "maxTracksPerTF": "600",
           "GID" : "MCH,MFT,MFT-MCH"
