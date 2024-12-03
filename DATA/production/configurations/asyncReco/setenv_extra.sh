@@ -473,7 +473,7 @@ export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysEr
 # ad-hoc options for ITS reco workflow
 EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.deltaRof=1;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;ITSCATrackerParam.nROFsPerIterations=12;ITSCATrackerParam.perPrimaryVertexProcessing=true;"
+  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.deltaRof=0;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;ITSCATrackerParam.nROFsPerIterations=12;ITSCATrackerParam.perPrimaryVertexProcessing=false;"
   if [[ -z "$ALIEN_JDL_DISABLE_UPC" || $ALIEN_JDL_DISABLE_UPC != 1 ]]; then
     EXTRA_ITSRECO_CONFIG+=";ITSVertexerParam.nIterations=2;ITSCATrackerParam.doUPCIteration=true;"
   fi
