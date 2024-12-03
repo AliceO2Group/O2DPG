@@ -75,7 +75,7 @@ def createJson(args):
   stat = stat + subprocess.call(cmd, shell=True)
   # RES
   if procdefs["RES"] == "":
-    nl = '    "//RES"   :'
+    nl = '    "RES"     : [],'
   else:
     nl = '    "RES"     : ' + procdefs["RES"] + ','
   cmd = "sed -i '/\"RES\"/c\\" + nl + "' " + jsonFile
