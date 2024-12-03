@@ -31,7 +31,7 @@ public:
     }
 
     auto fname = ((TObjString*)parts->At(1))->GetString();
-    hepmcFile = std::string(gSystem->Getenv("PWD"))+"/"+(std::string)fname.ReplaceAll("\"", "").ReplaceAll(",", "")+".hepmc3";
+    hepmcFile = std::string(gSystem->Getenv("PWD"))+"/"+(std::string)fname.ReplaceAll("\"", "").ReplaceAll(",", "").ReplaceAll(" ", "")+".hepmc3";
     return true;
   }
   
