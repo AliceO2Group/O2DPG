@@ -128,11 +128,12 @@ export ADD_EXTRA_WORKFLOW=
 export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --allow-missing-detectors $REMAPPING"
 
 # possibility to only process some TFs
-if [[ -z ${ALIEN_JDL_RUN_TIME_SPAN_FILE+x} ]]; then
+if [[ ! -z ${ALIEN_JDL_RUN_TIME_SPAN_FILE} ]]; then
   export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --run-time-span-file $ALIEN_JDL_RUN_TIME_SPAN_FILE "
-fi
-if [[ ${ALIEN_JDL_INVERT_IRFRAME_SELECTION} == 1 ]]; then
-  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --invert-irframe-selection "
+  # the following option makes sense only if we have the previous
+  if [[ ${ALIEN_JDL_INVERT_IRFRAME_SELECTION} == 1 ]]; then
+    export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --invert-irframe-selection "
+  fi
 fi
 
 # other settings
