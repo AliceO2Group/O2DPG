@@ -35,6 +35,17 @@
                     "type": "direct",
                     "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS"
                 },
+                "movingWindows": [
+                    "TracksPerTF",
+                    "TrackPt",
+                    "TrackEta",
+                    "TrackPhi",
+                    "WithCuts/TracksPerTF",
+                    "WithCuts/TrackPt",
+                    "WithCuts/TrackEta",
+                    "WithCuts/TrackPhi",
+                    "WithCuts/Minv"
+                ],
                 "taskParameters": {
                     "maxTracksPerTF": "600",
                     "GID": "MCH"

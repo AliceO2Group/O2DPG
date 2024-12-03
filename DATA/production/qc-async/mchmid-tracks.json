@@ -13,6 +13,18 @@
           "type": "direct",
           "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;matchMCHMID:GLO/MTC_MCHMID"
         },
+        "movingWindows": [
+            "WithCuts/TracksPerTF",
+            "WithCuts/TrackPt",
+            "WithCuts/TrackEta",
+            "WithCuts/TrackPhi",
+            "WithCuts/Minv",
+            "MCH-MID/WithCuts/TracksPerTF",
+            "MCH-MID/WithCuts/TrackPt",
+            "MCH-MID/WithCuts/TrackEta",
+            "MCH-MID/WithCuts/TrackPhi",
+            "MCH-MID/WithCuts/Minv"
+        ],
         "taskParameters": {
           "maxTracksPerTF": "600",
           "GID" : "MCH,MID,MCH-MID"
