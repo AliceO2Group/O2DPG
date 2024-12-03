@@ -126,6 +126,16 @@ export ADD_EXTRA_WORKFLOW=
 
 # other ad-hoc settings for CTF reader
 export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --allow-missing-detectors $REMAPPING"
+
+# possibility to only process some TFs
+if [[ -z ${ALIEN_JDL_RUN_TIME_SPAN_FILE+x} ]]; then
+  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --run-time-span-file $ALIEN_JDL_RUN_TIME_SPAN_FILE "
+fi
+if [[ ${ALIEN_JDL_INVERT_IRFRAME_SELECTION} == 1 ]]; then
+  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --invert-irframe-selection "
+fi
+
+# other settings
 echo RUN = $RUNNUMBER
 if [[ $RUNNUMBER -ge 521889 ]]; then
   export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --its-digits --mft-digits"
