@@ -1,5 +1,5 @@
-//R__LOAD_LIBRARY(libDPMJET.so)
-//R__LOAD_LIBRARY(libDpmJetLib.so)
+R__LOAD_LIBRARY(libDPMJET.so)
+R__LOAD_LIBRARY(libDpmJetLib.so)
 R__LOAD_LIBRARY(libStarlib.so)
 R__ADD_INCLUDE_PATH($STARlight_ROOT/include)
 
@@ -104,7 +104,7 @@ class GeneratorStarlight_class : public Generator
     {"kIncohPsi2sToElPi",    4,  444011,   20, -1.0, -1.0,  100443, 1 }, //
     {"kIncohUpsilonToMu",    4,  553013,   20, -1.0, -1.0,  553, 0 }, //
     {"kIncohUpsilonToEl",    4,  553011,   20, -1.0, -1.0,  553, 0 }, //
-//    {"kDpmjetSingle",        5,  113,   20, -1.0, -1.0,  -1, 0 }, //
+    {"kDpmjetSingle",        5,  113,   20, -1.0, -1.0,  -1, 0 }, //
     {"kTauLowToEl3Pi",       1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
     {"kTauLowToPo3Pi",       1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
     {"kTauLowToElMu",        1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
@@ -312,8 +312,28 @@ class GeneratorStarlight_class : public Generator
  
 
 FairGenerator*
-  GeneratorStarlight(std::string configuration = "empty",float energyCM = 5020, int beam1Z = 82, int beam1A = 208, int beam2Z = 82, int beam2A = 208, std::string extrapars = "")
+  GeneratorStarlight(std::string configuration = "empty",float energyCM = 5020, int beam1Z = 82, int beam1A = 208, int beam2Z = 82, int beam2A = 208, std::string extrapars = "",std::string dpmjetconf = "")
 {
+  if(dpmjetconf.size() != 0){
+    //Copy necesary files to the working directory
+    TString pathDPMJET = gSystem->ExpandPathName("$DPMJET_ROOT/dpmdata");
+    system(TString::Format("cp -r %s .",pathDPMJET.Data()));
+    system(TString::Format("cp %s ./my.input",dpmjetconf.c_str()));
+
+    //Reset four seeds of the DPMJET random generator in the config
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(1, 168);
+
+    std::string command = "awk -i inplace -v nums=\"";
+    for (int i = 0; i < 4; ++i)command += TString::Format("%d.0 ", dist(gen));
+    command +=" \" \' ";
+    command += "BEGIN {split(nums, newvals);}";
+    command += "{if ($1 == \"RNDMINIT\") {printf \"%-16s%-9s%-9s%-9s%-9s\\n\", $1, newvals[1], newvals[2], newvals[3], newvals[4];}";
+    command += " else {print $0;}}\' \"my.input\" ";
+    system(command.c_str());
+  }
+
   auto gen = new o2::eventgen::GeneratorStarlight_class();
   gen->selectConfiguration(configuration);
   gen->setCollisionSystem(energyCM, beam1Z, beam1A, beam2Z, beam2A);
