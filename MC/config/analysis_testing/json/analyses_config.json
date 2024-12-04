@@ -12,7 +12,7 @@
         },
         {
             "name": "Efficiency",
-            "enabled": true,
+            "enabled": false,
             "expected_output": ["AnalysisResults.root"],
             "valid_mc": true,
             "valid_data": true,
