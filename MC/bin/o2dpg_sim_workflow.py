@@ -1210,6 +1210,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    MCHRECOtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
    MCHRECOtask['cmd'] += '${O2_ROOT}/bin/o2-mch-reco-workflow ' + getDPL_global_options() + putConfigValues()
    MCHRECOtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
+   MCHRECOtask['cmd'] += ' --enable-clusters-root-output'
    workflow['stages'].append(MCHRECOtask)
 
    MIDRECOtask = createTask(name='midreco_'+str(tf), needs=[getDigiTaskName("MID")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1452,6 +1453,32 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[MIDRECOtask['name']],
                 readerCommand='o2-mid-digits-reader-workflow | o2-mid-tracks-reader-workflow',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mid-task.json')
+                
+     ### MCH
+     if isActive('MCH'):
+        addQCPerTF(taskName='MCHDigitsTaskQC',
+                needs=[MCHRECOtask['name']],
+                readerCommand='o2-mch-digits-reader-workflow',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mch-digits-task.json')
+        addQCPerTF(taskName='MCHErrorsTaskQC',
+                needs=[MCHRECOtask['name']],
+                readerCommand='o2-mch-errors-reader-workflow',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mch-errors-task.json')
+        addQCPerTF(taskName='MCHRecoTaskQC',
+                needs=[MCHRECOtask['name']],
+                readerCommand='o2-mch-reco-workflow',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mch-reco-task.json')
+        addQCPerTF(taskName='MCHTracksTaskQC',
+                needs=[MCHRECOtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types MCH --cluster-types MCH',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mch-tracks-task.json')
+       
+     ### MCH + MID
+     if isActive('MCH') and isActive('MID'):
+        addQCPerTF(taskName='MCHMIDTracksTaskQC',
+                needs=[MCHMIDMATCHtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "MCH,MID,MCH-MID" --cluster-types "MCH,MID"',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mchmid-tracks-task.json')
 
    #secondary vertexer
    svfinder_threads = ' --threads 1 '
