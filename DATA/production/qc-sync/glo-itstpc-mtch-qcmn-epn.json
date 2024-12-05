@@ -32,18 +32,29 @@
         "maxNumberCycles" : "-1",
         "dataSource" : {
           "type" : "dataSamplingPolicy",
-          "name" : "ITSTPCmSamp"
+          "name" : "ITSTPCmSampK0"
         },
         "taskParameters" : {
-          "GID" : "ITS-TPC,ITS",
-          "verbose" : "false",
-          "minPtCut" : "0.1f",
-          "etaCut" : "1.4f",
-          "minNTPCClustersCut" : "60",
-          "minDCACut" : "100.f",
-          "minDCACutY" : "10.f"
+          "GID": "ITS-TPC,ITS",
+          "verbose": "false",
+          "minPtITSCut": "0.f",
+          "etaITSCut": "1e10f",
+          "minNITSClustersCut": "0",
+          "maxChi2PerClusterITS": "100000",
+          "minPtTPCCut": "0.1f",
+          "etaTPCCut": "0.9f",
+          "minNTPCClustersCut": "60",
+          "minDCACut": "100.f",
+          "minDCACutY": "10.f",
+          "minPtCut": "0.f",
+          "maxPtCut": "1e10f",
+          "etaCut": "1e10f",
+          "cutK0Mass": "0.05f",
+          "maxEtaK0": "0.8f",
+          "doK0QC": "true",
+          "trackSourcesK0": ""
         },
-	"grpGeomRequest" : {
+        "grpGeomRequest" : {
           "geomRequest": "None",
           "askGRPECS": "false",
           "askGRPLHCIF": "false",
@@ -54,23 +65,23 @@
           "needPropagatorD":  "false"
         },
         "location" : "local",
-	  "localMachines": [
+          "localMachines": [
             "epn",
-	    "localhost"
+            "localhost"
           ],
         "remoteMachine": "alio2-cr1-qc07.cern.ch",
-	"remotePort": "47761",
-	"localControl": "odc"
+        "remotePort": "47761",
+        "localControl": "odc"
       }
     }
   },
   "dataSamplingPolicies" : [
     {
-      "id" : "ITSTPCmSamp",
+      "id" : "ITSTPCmSampK0",
       "active" : "true",
       "machines" : [],
       "query_comment" : "checking every 10% matched track",
-      "query" : "trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;trackTPC:TPC/TRACKS;trackTPCClRefs:TPC/CLUSREFS;trackITS:ITS/TRACKS/0;trackITSROF:ITS/ITSTrackROF/0;trackITSClIdx:ITS/TRACKCLSID/0;alpparITS:ITS/ALPIDEPARAM/0?lifetime=condition&ccdb-path=ITS/Config/AlpideParam",
+      "query" : "",
       "samplingConditions" : [
          {
            "condition" : "random",
