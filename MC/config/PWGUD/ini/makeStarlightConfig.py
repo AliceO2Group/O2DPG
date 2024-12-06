@@ -27,6 +27,9 @@ parser.add_argument('--output', default='GenStarlight.ini',
 parser.add_argument('--extraPars', default='',
                     help='Extra parameters for SL config')
 
+parser.add_argument('--dpmjetConf', default='',
+                    help='DPMJET config file')
+
 
 args = parser.parse_args()
 
@@ -76,25 +79,26 @@ if  'Psi2sToMuPi' in args.process or 'Psi2sToElPi' in args.process or 'OmegaTo3P
     fout.write('funcName = GeneratorStarlightToEvtGen("%s", %f, %d, %d, %d, %d, "%s")  \n' % (args.process,args.eCM ,pZ,pA,tZ,tA,args.extraPars))
 else:
     fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/external/generator/GeneratorStarlight.C \n')
-    fout.write('funcName = GeneratorStarlight("%s", %f, %d, %d, %d, %d, "%s")  \n' % (args.process,args.eCM ,pZ,pA,tZ,tA,args.extraPars))
+    fout.write('funcName = GeneratorStarlight("%s", %f, %d, %d, %d, %d, "%s", "%s")  \n' % (args.process,args.eCM ,pZ,pA,tZ,tA,args.extraPars,args.dpmjetConf))
     
 ###Trigger
-fout.write('[TriggerExternal] \n')
-fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/trigger/selectParticlesInAcceptance.C \n')
-if 'kTwoGamma' in args.process or 'kTau' in args.process:
-    if args.rapidity == 'cent_eta':
-        fout.write('funcName = selectDirectPartInAcc(-0.9,0.9) \n')
-    if args.rapidity == 'muon_eta':
-        fout.write('funcName = selectDirectPartInAcc(-4.0,-2.5) \n')
-else:
-    if args.rapidity == 'cent_rap':
-        fout.write('funcName = selectMotherPartInAcc(-0.9,0.9) \n')
-    if args.rapidity == 'muon_rap':
-        fout.write('funcName = selectMotherPartInAcc(-4.0,-2.5) \n')
-    if args.rapidity == 'cent_eta':
-        fout.write('funcName = selectDaughterPartInAcc(-0.9,0.9) \n')
-    if args.rapidity == 'muon_eta':
-        fout.write('funcName = selectDaughterPartInAcc(-4.0,-2.5) \n')
+if not 'kDpmjet' in args.process:
+    fout.write('[TriggerExternal] \n')
+    fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/trigger/selectParticlesInAcceptance.C \n')
+    if 'kTwoGamma' in args.process or 'kTau' in args.process:
+        if args.rapidity == 'cent_eta':
+            fout.write('funcName = selectDirectPartInAcc(-0.9,0.9) \n')
+        if args.rapidity == 'muon_eta':
+            fout.write('funcName = selectDirectPartInAcc(-4.0,-2.5) \n')
+    else:
+        if args.rapidity == 'cent_rap':
+            fout.write('funcName = selectMotherPartInAcc(-0.9,0.9) \n')
+        if args.rapidity == 'muon_rap':
+            fout.write('funcName = selectMotherPartInAcc(-4.0,-2.5) \n')
+        if args.rapidity == 'cent_eta':
+            fout.write('funcName = selectDaughterPartInAcc(-0.9,0.9) \n')
+        if args.rapidity == 'muon_eta':
+            fout.write('funcName = selectDaughterPartInAcc(-4.0,-2.5) \n')
 
 ### close outout file
 fout.close()
