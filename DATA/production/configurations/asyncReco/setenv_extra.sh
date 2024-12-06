@@ -711,6 +711,9 @@ fi
 THIN_AODS=0
 if [[ $ALIEN_JDL_THINAODS == "1" ]] ; then
   if [[ ! -z $ALIEN_JDL_PERCENTTHINAODS ]]; then
+    # for the moment, this option SHOULD NOT be used; the two following lines should be removed once this is possible
+    echo "We cannot for now thin only some percentage of the data, so we will return and the job will (hopefully) crash"
+    return 2
     PERCENT_THINAODS=${ALIEN_JDL_PERCENTTHINAODS}
     if [[ $PERCENT_THINAODS -gt 100 ]]; then
       # we assume we want to thin everything
