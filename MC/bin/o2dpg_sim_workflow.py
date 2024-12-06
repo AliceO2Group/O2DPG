@@ -1302,7 +1302,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        # the --local-batch argument will make QC Tasks store their results in a file and merge with any existing objects
        task['cmd'] = f'{readerCommand} | o2-qc --config {configFilePath}' + \
                      f' --local-batch ../{qcdir}/{objectsFile}' + \
-                     f' --override-values "qc.config.database.host={args.qcdbHost};qc.config.Activity.number={args.run};qc.config.Activity.periodName={args.productionTag};qc.config.Activity.start={args.timestamp};qc.config.conditionDB.url={args.conditionDB}"' + \
+                     f' --override-values "qc.config.database.host={args.qcdbHost};qc.config.Activity.number={args.run};qc.config.Activity.type=PHYSICS;qc.config.Activity.periodName={args.productionTag};qc.config.Activity.beamType={args.col};qc.config.Activity.start={args.timestamp};qc.config.conditionDB.url={args.conditionDB}"' + \
                      ' ' + getDPL_global_options(ccdbbackend=False)
        # Prevents this task from being run for multiple TimeFrames at the same time, thus trying to modify the same file.
        task['semaphore'] = objectsFile
@@ -1572,7 +1572,7 @@ if not args.make_evtpool:
 
    job_merging = False
    if includeFullQC:
-      workflow['stages'].extend(include_all_QC_finalization(ntimeframes=NTIMEFRAMES, standalone=False, run=args.run, productionTag=args.productionTag, conditionDB=args.conditionDB, qcdbHost=args.qcdbHost))
+      workflow['stages'].extend(include_all_QC_finalization(ntimeframes=NTIMEFRAMES, standalone=False, run=args.run, productionTag=args.productionTag, conditionDB=args.conditionDB, qcdbHost=args.qcdbHost, beamType=args.col))
 
    if includeAnalysis:
       # include analyses and potentially final QC upload tasks
