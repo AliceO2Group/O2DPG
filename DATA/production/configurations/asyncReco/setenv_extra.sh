@@ -681,7 +681,7 @@ if [[ $ALIEN_JDL_QCOFF != "1" ]]; then
   export WORKFLOW_PARAMETERS="QC,${WORKFLOW_PARAMETERS}"
 fi
 
-export QC_CONFIG_OVERRIDE+=";qc.config.Activity.number=$RUNNUMBER;qc.config.Activity.passName=$PASS;qc.config.Activity.periodName=$PERIOD;"
+export QC_CONFIG_OVERRIDE+=";qc.config.Activity.number=$RUNNUMBER;qc.config.Activity.type=PHYSICS;qc.config.Activity.passName=$PASS;qc.config.Activity.periodName=$PERIOD;qc.config.Activity.beamType=$BEAMTYPE;"
 
 export QC_CONFIG_PARAM+=" --local-batch=QC.root "
 export GEN_TOPO_WORKDIR="./"
