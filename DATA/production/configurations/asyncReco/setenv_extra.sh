@@ -341,7 +341,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     [[ $APPLYS11 == 1 ]] && export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=78;" || export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=20;"
   fi
   # settings to improve inner pad-rows contribution
-  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.globalTrackingRowRange=100;"
+  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.globalTrackingRowRange=100;GPU_rec_tpc.rejectIFCLowRadiusCluster=1;"
   
   #-------------------------------------- TPC corrections -----------------------------------------------
   # we need to provide to TPC
