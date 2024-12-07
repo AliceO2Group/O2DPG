@@ -69,6 +69,7 @@ def QC_postprocessing_workflow(runNumber, periodName, passName, qcdbUrl):
     task = createTask(name=taskName, needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
     overrideValues = '--override-values "'
     overrideValues += f'qc.config.database.host={qcdbUrl};'
+    overrideValues += f'qc.config.Activity.type=PHYSICS;'
     overrideValues += f'qc.config.Activity.number={runNumber};' if runSpecific else 'qc.config.Activity.number=0;'
     overrideValues += f'qc.config.Activity.periodName={periodName};' if periodSpecific else 'qc.config.Activity.periodName=;'
     overrideValues += f'qc.config.Activity.passName={passName};' if passSpecific else 'qc.config.Activity.passName=;'
