@@ -11,6 +11,23 @@ R__ADD_INCLUDE_PATH($STARlight_ROOT/include)
 
 //   usage: o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=GeneratorStarlight.C;GeneratorExternal.funcName=GeneratorStarlight("kCohJpsiToMu")'
 
+unsigned int generateRandomSeed() {
+    // Use high-resolution clock for time-based seed
+    auto timeNow = std::chrono::high_resolution_clock::now();
+    auto timeSeed = static_cast<unsigned int>(timeNow.time_since_epoch().count());
+
+    // Random device for system entropy
+    std::random_device rd;
+
+    // Add process ID and thread ID for additional entropy
+    unsigned int pid = static_cast<unsigned int>(getpid());
+    unsigned int tid = static_cast<unsigned int>(std::hash<std::thread::id>()(std::this_thread::get_id()));
+
+    // Combine all entropy sources
+    unsigned int seed = timeSeed ^ (rd() << 1) ^ (pid << 2) ^ (tid << 3);
+    return seed;
+}
+
 namespace o2
 {
 namespace eventgen
@@ -128,12 +145,9 @@ class GeneratorStarlight_class : public Generator
   
   mPdgMother = slConfig[idx].pdg_mother;
   mDecayEvtGen = slConfig[idx].decay_EvtGen;  
-  
-  uint random_seed;
-  unsigned long long int random_value = 0; 
-  ifstream urandom("/dev/urandom", ios::in|ios::binary);
-  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
-  
+
+  unsigned int random_seed = generateRandomSeed();
+
   setParameter(Form("BEAM_1_Z     =    %3i    #Z of target",targZ));
   setParameter(Form("BEAM_1_A     =    %3i    #A of target",targA));
   setParameter(Form("BEAM_2_Z     =    %3i    #Z of projectile",projZ));
@@ -321,8 +335,7 @@ FairGenerator*
     system(TString::Format("cp %s ./my.input",dpmjetconf.c_str()));
 
     //Reset four seeds of the DPMJET random generator in the config
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    std::mt19937 gen(generateRandomSeed());
     std::uniform_int_distribution<> dist(1, 168);
 
     std::string command = "awk -i inplace -v nums=\"";
