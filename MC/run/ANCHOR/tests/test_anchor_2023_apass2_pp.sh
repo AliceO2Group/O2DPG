@@ -30,6 +30,8 @@ export SEED=5
 # for pp and 50 events per TF, we launch only 4 workers.
 export NWORKERS=2
 
+export ENABLE_PARALLEL_WORLD=1
+
 # run the central anchor steering script; this includes
 # * derive timestamp
 # * derive interaction rate
