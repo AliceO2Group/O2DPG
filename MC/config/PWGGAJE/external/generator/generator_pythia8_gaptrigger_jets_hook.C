@@ -1,4 +1,4 @@
-R__ADD_INCLUDE_PATH($O2DPG_ROOT)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT)
 ///#include "FairGenerator.h"
 //#include "Generators/GeneratorPythia8.h"
 #include "Pythia8/Pythia.h"
