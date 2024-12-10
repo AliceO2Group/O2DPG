@@ -121,7 +121,8 @@ class GeneratorStarlight_class : public Generator
     {"kIncohPsi2sToElPi",    4,  444011,   20, -1.0, -1.0,  100443, 1 }, //
     {"kIncohUpsilonToMu",    4,  553013,   20, -1.0, -1.0,  553, 0 }, //
     {"kIncohUpsilonToEl",    4,  553011,   20, -1.0, -1.0,  553, 0 }, //
-    {"kDpmjetSingle",        5,  113,   20, -1.0, -1.0,  -1, 0 }, //
+    {"kDpmjetSingleA",        5,  113,   20, -1.0, -1.0,  -1, 0 }, //
+    {"kDpmjetSingleC",        5,  113,   20, -1.0, -1.0,  -1, 0 }, //
     {"kTauLowToEl3Pi",       1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
     {"kTauLowToPo3Pi",       1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
     {"kTauLowToElMu",        1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
@@ -292,7 +293,7 @@ class GeneratorStarlight_class : public Generator
 				   -1,
 				   slPart->GetPx(),
 				   slPart->GetPy(),
-				   slPart->GetPz(),
+				   (mSelectedConfiguration.compare("kDpmjetSingleC") == 0 ? -1.0*slPart->GetPz() : slPart->GetPz()),
 				   slPart->GetE(),
 				   vtx,vty,vtz,vtt);
 	  //particle.Print();
