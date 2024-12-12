@@ -5,6 +5,6 @@ Decay tau+
 0.25 pi+     anti-nu_tau                                  TAUSCALARNU; #[Reconstructed PDG2011]
 0.25 pi+     pi0     anti-nu_tau                          TAUHADNU -0.108 0.775 0.149 1.364 0.400; #[Reconstructed PDG2011]
 0.25 pi0     pi0     pi+     anti-nu_tau                  TAUHADNU -0.108 0.775 0.149 1.364 0.400 1.23 0.4; #[Reconstructed PDG2011]
-0.25 anti-nu_tau  pi+     pi0     pi0     pi0             PYTHIA    41; #[Reconstructed PDG2011]
+0.25 anti-nu_tau  pi+     pi0     pi0     pi0             PHSP; #[Reconstructed PDG2011]
 Enddecay
 End
