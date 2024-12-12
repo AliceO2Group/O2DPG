@@ -37,6 +37,7 @@
 		},
                 "movingWindows": [
                     "ClusterSizePerChamber",
+                    "ClustersPerDualSampa",
                     "ClustersPerChamber",
                     "ClustersPerTrack"
                 ],
