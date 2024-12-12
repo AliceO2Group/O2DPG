@@ -1,0 +1,74 @@
+{
+    "qc": {
+        "config": {
+            "database": {
+                "implementation": "CCDB",
+                "host": "localhost:6464",
+                "username": "not_applicable",
+                "password": "not_applicable",
+                "name": "not_applicable"
+            },
+            "Activity": {
+                "number": "42",
+                "type": "2",
+                "provenance": "qc_mc",
+                "passName": "passMC",
+                "periodName": "SimChallenge"
+            },
+            "monitoring": {
+                "url": "infologger:///debug?qc"
+            },
+            "consul": {
+                "url": ""
+            },
+            "conditionDB": {
+                "url": ""
+            }
+        },
+        "tasks": {
+            "Rofs": {
+                "active": "true",
+                "className": "o2::quality_control_modules::muonchambers::RofsTask",
+                "moduleName": "QcMuonChambers",
+                "detectorName": "MCH",
+                "cycleDurationSeconds": "300",
+                "maxNumberCycles": "-1",
+                "dataSource": {
+                    "type": "direct",
+                    "query": "digits:MCH/DIGITS;rofs:MCH/DIGITROFS"
+                },
+                "taskParameters": {
+                    "Diagnostic": "false"
+                }
+            },
+            "MCHPreclusters": {
+                "active": "true",
+                "taskName": "Preclusters",
+                "className": "o2::quality_control_modules::muonchambers::PreclustersTask",
+                "moduleName": "QcMuonChambers",
+                "detectorName": "MCH",
+                "cycleDurationSeconds": "300",
+                "maxNumberCycles": "-1",
+                "dataSource": {
+                    "type": "direct",
+                    "query": "preclusters:MCH/PRECLUSTERS/0;preclusterdigits:MCH/PRECLUSTERDIGITS/0"
+                }
+            },
+            "FRofs": {
+                "active": "true",
+                "className": "o2::quality_control_modules::muonchambers::RofsTask",
+                "moduleName": "QcMuonChambers",
+                "detectorName": "MCH",
+                "cycleDurationSeconds": "300",
+                "maxNumberCycles": "-1",
+                "dataSource": {
+                    "type": "direct",
+                    "query": "digits:MCH/F-DIGITS;rofs:MCH/TC-F-DIGITROFS"
+                },
+                "taskParameters": {
+                    "Diagnostic": "false"
+                }
+            }
+        }
+    }
+}
