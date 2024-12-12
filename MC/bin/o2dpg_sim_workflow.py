@@ -477,6 +477,9 @@ workflow['stages'].append(GRP_TASK)
 includeQED = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb")) or (args.with_qed == True)
 signalprefix='sgn'
 
+# No vertexing for event pool generation
+vtxmode = 'kNoVertex' if args.make_evtpool else 'kCCDB'
+
 # preproduce the collision context / timeframe structure for all timeframes at once
 precollneeds=[GRP_TASK['name']]
 NEventsQED=10000  # max number of QED events to simulate per timeframe
@@ -499,7 +502,7 @@ PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + interac
                            + ' --seed ' + str(RNDSEED)                                                                    \
                            + ' --noEmptyTF --first-orbit ' + str(args.first_orbit - args.orbits_early)                    \
                            + ' --extract-per-timeframe tf:sgn'                                                            \
-                           + ' --with-vertices kCCDB'                                                                     \
+                           + ' --with-vertices ' + vtxmode                                                                \
                            + ' --maxCollsPerTF ' + str(args.ns)
 
 PreCollContextTask['cmd'] += ' --bcPatternFile ccdb'  # <--- the object should have been set in (local) CCDB
@@ -788,8 +791,6 @@ for tf in range(1, NTIMEFRAMES + 1):
        cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
      SGNGENtask['cmd'] = cmd
 
-   # No vertexing for event pool generation
-   vtxmode = 'kNoVertex' if args.make_evtpool else 'kCCDB'
 
    SGNGENtask['cmd'] +='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode ' + vtxmode    \
                      + ' --run ' + str(args.run) + ' ' + str(CONFKEY) + str(TRIGGER)                  \
