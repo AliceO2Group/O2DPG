@@ -1,23 +1,5 @@
 #!/usr/bin/env python3
 
-# TODO:
-# - enforce pregencollcontext (DONE)
-# - move pregencollcontext outside of timeframeloop (DONE)
-# - remove old way of generating collision context (DONE)
-# - make sure vertexing is picked up from the collision context (DONE)
-# - background events read from global coll context (DONE)
-# - change name of signal sim from sgn_tf to just sgn (DONE)
-# - QED handling? (DONE)
-# - make several examples needing this:
-# -----> (a) ordinary sgn only sim for pp **and** PbPb
-# -----> (b) embedding simulation for pp **and** PbPb
-# - check than non-trivial embeddings work (ratio 1:3 or the like) (DONE)
-# - verify that the right vertex is applied and the right number of events extracted with non-trivial embedding patterns
-# - fix getNCollisions in digitization context to be automatic (is N hadronic collisiosn --> neglect QED)
-# - fix orbit early functionality with new global pregencollcontext
-# - offer option to just have a global transport before any digitization
-# - check that the anchoring script works
-
 #
 # A script producing a consistent MC->RECO->AOD workflow
 # It aims to handle the different MC possible configurations
