@@ -765,7 +765,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if GENERATOR=="hepmc" and tf > 1:
       sgngenneeds=signalneeds + ['sgngen_' + str(tf-1)] # we serialize event generation
    SGNGENtask=createTask(name='sgngen_'+str(tf), needs=sgngenneeds, tf=tf, cwd='tf'+str(tf), lab=["GEN"],
-                         cpu=1, mem=1000)
+                         cpu=8 if args.make_evtpool else 1, mem=1000)
 
    SGNGENtask['cmd']=''
    if GENERATOR=="hepmc":
