@@ -1,0 +1,123 @@
+// JSON(5) + single line/multiline comments allowed, trailing comma allowed
+//
+// The format is strictly upper/lower case sensitive.
+//
+// mikael.mieskolainen@cern.ch, 2021
+{
+  
+  // ----------------------------------------------------------------------
+  // GENERAL setup
+    
+  "GENERALPARAM" : {
+
+    "OUTPUT"     :
+    "FORMAT"     : "hepmc3",       // hepmc3, hepmc2, hepevt
+    "CORES"      : 0,              // Number of CPU threads (0 for automatic)
+    "NEVENTS"    :
+    "INTEGRATOR" : "VEGAS",        // Integrator (VEGAS, FLAT)
+    "WEIGHTED"   : false,          // Weighted events (default false)
+    "MODELPARAM" : "TUNE0"         // General model tune
+  },
+  
+  // ----------------------------------------------------------------------
+  // Process setup
+  
+  "PROCESSPARAM" : {
+
+    "BEAM"    : ["p+","p+"],     // Beam PDG-ID / Name
+    "ENERGY"  :
+    "PROCESS" :
+    "RES"     :
+    "POMLOOP" : false,           // Eikonal Pomeron loop screening
+    "NSTARS"  : 0,               // N* excitation (0 = elastic, 1 = single, 2 = double)
+    "LHAPDF"  : "CT10nlo",       // LHAPDF parton distribution set
+    "HIST"    : 0,               // On-the-flight histograms (0 = off,1,2)
+    "RNDSEED" : 0,               // Random seed (uint)
+  },
+  
+  // ----------------------------------------------------------------------
+  // Monte Carlo integrator setup
+
+  "INTEGRALPARAM" : {
+    
+    // Loop integration
+    "POMLOOP" : {
+      "ND" : 0,               // Integral discretization [larger -> more discrete] (0 gives default discretization) (int)
+    },
+
+    // VEGAS integrator
+    "VEGAS" : {
+      
+      "BINS" : 512,         // Maximum number of bins per dimension (NOTE: EVEN NUMBER)
+      "LAMBDA" : 1.25,      // Regularization parameter
+      "NCALL" : 40000,      // Number of function calls per iteration (5000 .. 50000 or more)
+      "ITER"  : 50,         // Number of initialization iteration (10 or more)
+      "CHI2MAX" : 10.0,     // Maximum Chi^2 in initialization
+      "PRECISION"  : 0.05,  // Integral relative precision target
+
+      "DEBUG" : -1          // Debug output (default -1)
+    },
+
+    // FLAT integrator
+    "FLAT" : {
+
+      "PRECISION"  : 0.01,      // Integral relative precision
+      "MIN_EVENTS" : 1000000    // Minimum number of events to be sampled
+    }
+  },
+
+
+  // ----------------------------------------------------------------------
+  // Generation cuts
+
+  "GENCUTS" : {
+
+    "<C>" : {
+      "Rap" : [-1.0, 1.0] // Rapidity boundaries of the final states (<C> class)
+    },
+    "<F>" : {
+      "Rap" : [-2.0, 2.0], // Rapidity boundaries of the system (<F> class)
+      "M"   : [ 0.0, 5.0]
+    },
+    "<Q>" : {
+      "Xi"  : [0.0, 0.05] // Invariant scale M^2/s (forward excitation)
+    }
+  },
+
+
+  // ----------------------------------------------------------------------
+  // Central system fiducial cuts
+  // All central system particles need to fullfill the conditions
+
+  "FIDCUTS" : {
+    
+    "active" : false,
+    
+     // Central system final states
+    "PARTICLE" : {
+
+      "Eta"  : [-1.0, 1.0],       // Pseudorapidity
+      "Rap"  : [-10.0, 10.0],     // Rapidity
+      "Pt"   : [0.1, 100000.0],   // Transverse momentum
+      "Et"   : [0.0, 100000.0]    // Transverse energy
+    },
+    
+    // Central system
+    "SYSTEM" : {
+
+      "M"    : [0.0, 100000.0], // Mass
+      "Rap"  : [-10.0, 10.0],   // Rapidity
+      "Pt"   : [0.0, 100000.0]  // Transverse momentum
+    },
+
+    // Forward system
+    "FORWARD" : {
+      "M"    : [0.0, 100000.0], // Mass
+      "t"    : [0.0, 100000.0], // Forward protons/N* Mandelstam t (absolute value) (GeV^2)
+    },
+    
+    // Custom user cuts (default false, otherwise identifier ID)
+    "USERCUTS" : false
+  }
+
+}

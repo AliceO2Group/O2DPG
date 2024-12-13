@@ -4,7 +4,7 @@ int External()
   // std::string path{"bkg_Kine.root"};
   std::vector<int> numberOfInjectedSignalsPerEvent = {};
   std::vector<int> injectedPDGs = {};
-  std::string particleList = "${O2DPG_ROOT}/MC/config/PWGLF/pythia8/generator/strangeparticlelist.gun";
+  std::string particleList = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/strangeparticlelist.gun";
   particleList = gSystem->ExpandPathName(particleList.c_str());
 
   std::ifstream inputFile(particleList.c_str(), ios::in);

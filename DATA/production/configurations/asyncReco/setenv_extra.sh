@@ -126,6 +126,17 @@ export ADD_EXTRA_WORKFLOW=
 
 # other ad-hoc settings for CTF reader
 export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --allow-missing-detectors $REMAPPING"
+
+# possibility to only process some TFs
+if [[ ! -z ${ALIEN_JDL_RUN_TIME_SPAN_FILE} ]]; then
+  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --run-time-span-file $ALIEN_JDL_RUN_TIME_SPAN_FILE "
+  # the following option makes sense only if we have the previous
+  if [[ ${ALIEN_JDL_INVERT_IRFRAME_SELECTION} == 1 ]]; then
+    export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --invert-irframe-selection "
+  fi
+fi
+
+# other settings
 echo RUN = $RUNNUMBER
 if [[ $RUNNUMBER -ge 521889 ]]; then
   export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --its-digits --mft-digits"
@@ -330,7 +341,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     [[ $APPLYS11 == 1 ]] && export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=78;" || export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=20;"
   fi
   # settings to improve inner pad-rows contribution
-  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.globalTrackingRowRange=100;"
+  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.globalTrackingRowRange=100;GPU_rec_tpc.rejectIFCLowRadiusCluster=1;"
   
   #-------------------------------------- TPC corrections -----------------------------------------------
   # we need to provide to TPC
@@ -420,7 +431,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export TPC_CORR_SCALING+=" --enable-M-shape-correction "
   fi
     
-  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] ; then
+  if [[ $ALIEN_JDL_LPMANCHORYEAR -ge 2023 ]] && [[ $BEAMTYPE == "PbPb" ]] ; then
     # adding additional cluster errors
     # the values below should be squared, but the validation of those values (0.01 and 0.0225) is ongoing
     TPCEXTRAERR=";GPU_rec_tpc.clusterError2AdditionalYSeeding=0.1;GPU_rec_tpc.clusterError2AdditionalZSeeding=0.15;"
@@ -463,7 +474,7 @@ export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysEr
 # ad-hoc options for ITS reco workflow
 EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.deltaRof=1;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;ITSCATrackerParam.nROFsPerIterations=12;ITSCATrackerParam.perPrimaryVertexProcessing=true;"
+  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.deltaRof=0;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;ITSCATrackerParam.nROFsPerIterations=12;ITSCATrackerParam.perPrimaryVertexProcessing=false;"
   if [[ -z "$ALIEN_JDL_DISABLE_UPC" || $ALIEN_JDL_DISABLE_UPC != 1 ]]; then
     EXTRA_ITSRECO_CONFIG+=";ITSVertexerParam.nIterations=2;ITSCATrackerParam.doUPCIteration=true;"
   fi
@@ -701,7 +712,10 @@ fi
 if [[ $ALIEN_JDL_QCOFF != "1" ]]; then
   export WORKFLOW_PARAMETERS="QC,${WORKFLOW_PARAMETERS}"
 fi
-export QC_CONFIG_PARAM="--local-batch=QC.root --override-values \"qc.config.Activity.number=$RUNNUMBER;qc.config.Activity.passName=$PASS;qc.config.Activity.periodName=$PERIOD\""
+
+export QC_CONFIG_OVERRIDE+=";qc.config.Activity.number=$RUNNUMBER;qc.config.Activity.type=PHYSICS;qc.config.Activity.passName=$PASS;qc.config.Activity.periodName=$PERIOD;qc.config.Activity.beamType=$BEAMTYPE;"
+
+export QC_CONFIG_PARAM+=" --local-batch=QC.root "
 export GEN_TOPO_WORKDIR="./"
 #export QC_JSON_FROM_OUTSIDE="QC-20211214.json"
 

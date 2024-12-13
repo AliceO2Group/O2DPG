@@ -2,6 +2,7 @@
   "event-selection-qa-task": {
     "isMC": "!ANALYSIS_QC_is_mc!",
     "processMCRun3": "!ANALYSIS_QC_is_mc!",
+    "isLowFlux": "!ISLOWFLUX!",
     "processRun2": "false",
     "processRun3": "true"
   }

@@ -25,6 +25,7 @@ fi
 [[ $NORATELOG == 1 ]] && ARGS_ALL+=" --fairmq-rate-logging 0"
 
 [[ ! -z ${O2_DPL_EXIT_TRANSITION_TIMEOUT_DEFAULT:-} ]] && ARGS_ALL+=" --exit-transition-timeout $O2_DPL_EXIT_TRANSITION_TIMEOUT_DEFAULT"
+[[ ! -z ${O2_DPL_PROCESSING_TRANSITION_TIMEOUT_DEFAULT:-} ]] && ARGS_ALL+=" --data-processing-timeout $O2_DPL_PROCESSING_TRANSITION_TIMEOUT_DEFAULT"
 
 true
 

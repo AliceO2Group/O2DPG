@@ -1,7 +1,7 @@
 // usage
 // o2-sim -j 4 -n 10 -g external  -o sgn  --configKeyValues "GeneratorExternal.fileName=GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV.C;GeneratorExternal.funcName=GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV()"
 //
-R__ADD_INCLUDE_PATH($O2DPG_ROOT/MC/config/PWGDQ/EvtGen)
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen)
 R__LOAD_LIBRARY(libpythia6)
 #include "GeneratorEvtGen.C"
 

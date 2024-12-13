@@ -87,20 +87,34 @@ def read_AO2D_eventcount(file):
 
     # Open the ROOT file
     tfile = ROOT.TFile.Open(file)
- 
+
     # Get the list of keys (TKeys) in the ROOT files
     keys = tfile.GetListOfKeys()
 
     # Iterate through the keys "DF_" keys and accumulate
     # stored MC collisions
+    colfound = 0
+
     for key in keys:
       key_name = key.GetName()
       if key_name.startswith("DF_"):
         obj = key.ReadObj()
-        # the O2mccollision tree contains the simulated collisions
-        coltree = obj.Get("O2mccollision")
-        if coltree and isinstance(coltree, ROOT.TTree):
-          eventcount = eventcount + coltree.GetEntries()
+
+        # get the list of keys of available tables
+        tablelist = obj.GetListOfKeys()
+        for tab in tablelist:
+          # the O2mccollision_ tree contains the simulated collisions
+          # but the version number might change so better to loop over keys and do matching
+          tabname = tab.GetName()
+          if re.match("^O2mccollision(_[0-9]*)?$", tabname):
+            coltreekey = obj.GetKey(tabname)
+            coltree = coltreekey.ReadObj()
+            if coltree and isinstance(coltree, ROOT.TTree):
+              eventcount = eventcount + coltree.GetEntries()
+              colfound = colfound + 1
+
+    if colfound == 0:
+      print ("ERROR: No MC collision table found")
 
     # Close the files
     tfile.Close()
@@ -111,4 +125,5 @@ GEANT_eventcount = read_accumulated_GEANT_eventcount()
 if AO2D_eventcount != GEANT_eventcount:
     print ("WARN: AO2D MC event count and GEANT event count differ")
 
+print ("Found " + str(AO2D_eventcount) + " events in AO2D file")
 write_stat_file(AO2D_eventcount)

@@ -1,0 +1,128 @@
+{
+    "f_0(980)" : {
+        "pdg": 9010221,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "f_0(1370)" : {
+        "pdg": 10221,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "f_0(1500)" : {
+        "pdg": 9030221,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "f_0(1710)" : {
+        "pdg": 10331,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "f_1(1285)" : {
+        "pdg": 20223,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "f_1(1420)" : {
+        "pdg": 20333,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "f_2(1525)" : {
+        "pdg": 335,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "a_2(1230)" : {
+        "pdg": 115,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "K1(1270)+": {
+        "pdg": 10323,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "K1(1270)-": {
+        "pdg": -10323,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "Xi(1820)0" : {
+        "pdg": 123314,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "Anti-Xi(1820)0" : {
+        "pdg": -123314,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "Xi(1820)-" : {
+        "pdg": 123324,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "Xi(1820)+" : {
+        "pdg": -123324,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    }
+}

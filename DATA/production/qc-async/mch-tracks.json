@@ -23,18 +23,58 @@
             }
         },
         "tasks": {
+	    "MCHClusters": {
+		"active": "true",
+		"taskName": "Clusters",
+		"className": "o2::quality_control_modules::muonchambers::ClustersTask",
+		"moduleName": "QcMuonChambers",
+		"detectorName": "MCH",
+		"cycleDurationSeconds": "300",
+                "maxNumberCycles": "-1",
+		"dataSource": {
+		    "type": "direct",
+		    "query": "tracks:MCH/TRACKS;trackrofs:MCH/TRACKROFS;trackclusters:MCH/TRACKCLUSTERS"
+		},
+                "movingWindows": [
+                    "ClusterSizePerChamber",
+                    "ClustersPerChamber",
+                    "ClustersPerTrack"
+                ],
+		"taskParameters": {},
+		"grpGeomRequest": {
+		    "geomRequest": "Aligned",
+		    "askGRPECS": "false",
+		    "askGRPLHCIF": "false",
+		    "askGRPMagField": "false",
+		    "askMatLUT": "false",
+		    "askTime": "false",
+		    "askOnceAllButField": "true",
+		    "needPropagatorD": "false"
+		}
+	    },
             "MCHTracks": {
                 "active": "true",
                 "taskName": "Tracks",
                 "className": "o2::quality_control_modules::muon::TracksTask",
                 "moduleName": "QcMUONCommon",
                 "detectorName": "MCH",
-                "cycleDurationSeconds": "180",
+                "cycleDurationSeconds": "300",
                 "maxNumberCycles": "-1",
                 "dataSource": {
                     "type": "direct",
                     "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS"
                 },
+                "movingWindows": [
+                    "TracksPerTF",
+                    "TrackPt",
+                    "TrackEta",
+                    "TrackPhi",
+                    "WithCuts/TracksPerTF",
+                    "WithCuts/TrackPt",
+                    "WithCuts/TrackEta",
+                    "WithCuts/TrackPhi",
+                    "WithCuts/Minv"
+                ],
                 "taskParameters": {
                     "maxTracksPerTF": "600",
                     "GID": "MCH"

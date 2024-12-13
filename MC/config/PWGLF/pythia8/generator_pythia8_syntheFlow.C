@@ -7,6 +7,9 @@
 #include "TRandom3.h"
 #include "TParticlePDG.h"
 #include "TDatabasePDG.h"
+#include "CCDB/BasicCCDBManager.h"
+#include "TH1F.h"
+#include "TH1D.h"
 
 #include <map>
 #include <unordered_set>
@@ -19,15 +22,25 @@ public:
     lutGen = new o2::eventgen::FlowMapper();
     
     // -------- CONFIGURE SYNTHETIC FLOW ------------
-    // specify a v2 vs pT here
-    TFile *filehep = new TFile("/Users/daviddc/Downloads/HEPData-ins1116150-v1-Table_1.root", "READ");
-    TH1D *hv = (TH1D*) filehep->Get("Table 1/Hist1D_y6");
-    
-    TFile *fileEcc = new TFile("/Users/daviddc/Downloads/eccentricityvsb.root", "READ");
-    TH1D *hEccentricities = (TH1D*) fileEcc->Get("hEccentricities");
+    // establish connection to ccdb
+    o2::ccdb::CcdbApi ccdb_api;
+    ccdb_api.init("https://alice-ccdb.cern.ch");
+
+    // config was placed at midpoint of run 544122, retrieve that
+    std::map<string, string> metadataRCT, headers;
+    headers = ccdb_api.retrieveHeaders("RCT/Info/RunInformation/544122", metadataRCT, -1);
+    int64_t tsSOR = atol(headers["SOR"].c_str());
+    int64_t tsEOR = atol(headers["EOR"].c_str());    
+    int64_t midRun = 0.5*tsSOR+0.5*tsEOR;
+
+    map<string, string> metadata; // can be empty
+    auto list = ccdb_api.retrieveFromTFileAny<TList>("Users/d/ddobrigk/syntheflow", metadata, midRun);
+  
+    TH1D *hv2vspT = (TH1D*) list->FindObject("hFlowVsPt_ins1116150_v1_Table_1");
+    TH1D *heccvsb = (TH1D*) list->FindObject("hEccentricityVsB");
     
     cout<<"Generating LUT for flow test"<<endl;
-    lutGen->CreateLUT(hv, hEccentricities);
+    lutGen->CreateLUT(hv2vspT, heccvsb);
     cout<<"Finished creating LUT!"<<endl;
     // -------- END CONFIGURE SYNTHETIC FLOW ------------
   }
@@ -86,5 +99,9 @@ private:
 
  FairGenerator *generator_syntheFlow()
  {
-   return new GeneratorPythia8SyntheFlow();
+  auto generator = new GeneratorPythia8SyntheFlow();
+  gRandom->SetSeed(0);
+  generator->readString("Random:setSeed = on");
+  generator->readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
+  return generator;
  }

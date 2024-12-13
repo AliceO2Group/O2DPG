@@ -31,6 +31,15 @@
         "detectorName": "ITS",
         "cycleDurationSeconds": "180",
         "maxNumberCycles": "-1",
+	"movingWindows": [
+              "Layer0/ClusterOccupation",
+              "Layer1/ClusterOccupation",
+              "Layer2/ClusterOccupation",
+              "Layer3/ClusterOccupation",
+              "Layer4/ClusterOccupation",
+              "Layer5/ClusterOccupation",
+              "Layer6/ClusterOccupation"
+        ],
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
           "type": "direct",
@@ -52,8 +61,13 @@
         "className": "o2::quality_control_modules::its::ITSTrackTask",
         "moduleName": "QcITS",
         "detectorName": "ITS",
-        "cycleDurationSeconds": "30",
+        "cycleDurationSeconds": "180",
         "maxNumberCycles": "-1",
+	"movingWindows": [
+          "Ntracks",
+          "NClusters",
+          "AngularDistribution"
+        ],
         "dataSource_comment": "The other type of dataSource is \"direct\", see basic-no-sampling.json.",
         "dataSource": {
           "type": "direct",
