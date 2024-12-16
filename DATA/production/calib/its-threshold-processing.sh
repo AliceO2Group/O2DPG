@@ -27,17 +27,15 @@ if [ $RUNTYPE_ITS == "tuningbb" ]; then
   ADDITIONAL_OPTIONS_CAL="--min-vcasn 30 --max-vcasn 130"
 fi
 if [[ $RUNTYPE_ITS == "tot1row" || $RUNTYPE_ITS == "vresetd" ]]; then
-  ADDITIONAL_OPTIONS_DEC="--allow-empty-rofs"
   ADDITIONAL_OPTIONS_CAL="--ninj 10"
 fi
 if [ $RUNTYPE_ITS == "totfullfast" ]; then
-  ADDITIONAL_OPTIONS_DEC="--allow-empty-rofs"
   ADDITIONAL_OPTIONS_CAL="--calculate-slope --charge-a 30 --charge-b 60 --ninj 10"
 fi
 
 WORKFLOW=
 add_W o2-dpl-raw-proxy "--exit-transition-timeout 20 --dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@$INRAWCHANNAME,rateLogging=0,transport=shmem\"" "" 0
-add_W o2-itsmft-stf-decoder-workflow "${ADDITIONAL_OPTIONS_DEC} --always-parse-trigger --condition-tf-per-query -1 --condition-backend \"http://localhost:8084\" --ignore-dist-stf --nthreads 1  --no-clusters --no-cluster-patterns --pipeline its-stf-decoder:${NDECODERS} --enable-calib-data --digits"
+add_W o2-itsmft-stf-decoder-workflow "${ADDITIONAL_OPTIONS_DEC} --allow-empty-rofs --always-parse-trigger --condition-tf-per-query -1 --condition-backend \"http://localhost:8084\" --ignore-dist-stf --nthreads 1  --no-clusters --no-cluster-patterns --pipeline its-stf-decoder:${NDECODERS} --enable-calib-data --digits"
 for i in $(seq 0 $((CHIPMODBASE-1)))
 do
   add_W o2-its-threshold-calib-workflow "-b ${ADDITIONAL_OPTIONS_CAL} --enable-single-pix-tag --ccdb-mgr-url=\"http://localhost:8084\" --nthreads 1 --chip-mod-selector $i --chip-mod-base $CHIPMODBASE --fittype derivative --output-dir \"/data/calibration\" --meta-output-dir \"/data/epn2eos_tool/epn2eos\" --meta-type \"calibration\"" "" 0
