@@ -780,8 +780,13 @@ for tf in range(1, NTIMEFRAMES + 1):
        cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
      SGNGENtask['cmd'] = cmd
 
-
-   SGNGENtask['cmd'] +='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode ' + vtxmode    \
+   generationtimeout = -1 # possible timeout for event pool generation
+   if args.make_evtpool:
+     JOBTTL=environ.get('JOBTTL', None)
+     if JOBTTL != None:
+       generationtimeout = 0.95*int(JOBTTL) # for GRID jobs, determine timeout automatically
+   SGNGENtask['cmd'] +=('','timeout ' + str(generationtimeout) + ' ')[args.make_evtpool and generationtimeout>0] \
+                     + '${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode ' + vtxmode    \
                      + ' --run ' + str(args.run) + ' ' + str(CONFKEY) + str(TRIGGER)                  \
                      + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
                      + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1]                \
@@ -793,6 +798,10 @@ for tf in range(1, NTIMEFRAMES + 1):
       workflow['stages'].append(SGNGENtask)
       signalneeds = signalneeds + [SGNGENtask['name']]
    if args.make_evtpool:
+      if generationtimeout > 0:
+         # final adjustment of command for event pools and timeout --> we need to analyse the return code
+         # if we have a timeout then we finish what we can and are also happy with return code 124
+         SGNGENtask['cmd'] += ' ; RC=$? ; [[ ${RC} == 0 || ${RC} == 124 ]]'
       continue
 
    # GeneratorFromO2Kine parameters are needed only before the transport
@@ -1583,6 +1592,8 @@ else:
    tfpool=['tf' + str(tf) + '/genevents_Kine.root' for tf in range(1, NTIMEFRAMES + 1)]
    POOL_merge_task = createTask(name='poolmerge', needs=wfneeds, lab=["POOL"], mem='2000', cpu='1')
    POOL_merge_task['cmd'] = '${O2DPG_ROOT}/UTILS/root_merger.py -o evtpool.root -i ' + ','.join(tfpool)
+   # also create the stat file with the event count
+   POOL_merge_task['cmd'] += '; RC=$?; root -l -q -b -e "auto f=TFile::Open(\\\"evtpool.root\\\"); auto t=(TTree*)f->Get(\\\"o2sim\\\"); int n=t->GetEntries(); std::ofstream((\\\"0_0_0_\\\"+std::to_string(n)+\\\".stat\\\").c_str()).close();" ; [[ ${RC} == 0 ]]'
    workflow['stages'].append(POOL_merge_task)
 
 # adjust for alternate (RECO) software environments
