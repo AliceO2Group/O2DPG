@@ -210,7 +210,8 @@ MODULES="--skipModules ZDC"
 ALICEO2_CCDB_LOCALCACHE=${ALICEO2_CCDB_LOCALCACHE:-$(pwd)/ccdb}
 
 # these arguments will be digested by o2dpg_sim_workflow_anchored.py
-baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${ALIEN_JDL_LPMRUNNUMBER}"
+baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${ALIEN_JDL_LPMRUNNUMBER} \
+          ${ALIEN_JDL_RUN_TIME_SPAN_FILE:+--run-time-span-file ${ALIEN_JDL_RUN_TIME_SPAN_FILE}}"
 
 # these arguments will be passed as well but only evetually be digested by o2dpg_sim_workflow.py which is called from o2dpg_sim_workflow_anchored.py
 remainingargs="-seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
@@ -223,16 +224,26 @@ remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config 
 echo_info "baseargs passed to o2dpg_sim_workflow_anchored.py: ${baseargs}"
 echo_info "remainingargs forwarded to o2dpg_sim_workflow.py: ${remainingargs}"
 
+anchoringLogFile=timestampsampling_${ALIEN_JDL_LPMRUNNUMBER}.log
 # query CCDB has changed, w/o "_"
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs} &> timestampsampling_${ALIEN_JDL_LPMRUNNUMBER}.log
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs} &> ${anchoringLogFile}
 WF_RC="${?}"
 if [ "${WF_RC}" != "0" ] ; then
     echo_error "Problem during anchor timestamp sampling and workflow creation. Exiting."
     exit ${WF_RC}
 fi
 
-TIMESTAMP=`grep "Determined timestamp to be" timestampsampling_${ALIEN_JDL_LPMRUNNUMBER}.log | awk '//{print $6}'`
+TIMESTAMP=`grep "Determined timestamp to be" ${anchoringLogFile} | awk '//{print $6}'`
 echo_info "TIMESTAMP IS ${TIMESTAMP}"
+
+# check if this job is exluded because it falls inside a bad data-taking period
+ISEXCLUDED=$(grep "TIMESTAMP IS EXCLUDED IN RUN" ${anchoringLogFile})
+if [ "${ISEXCLUDED}" ]; then
+  # we can quit here; there is nothing to do
+  # (apart from maybe creating a fake empty AO2D.root file or the like)
+  echo "Timestamp is excluded from run. Nothing to do here"
+  exit 0
+fi
 
 # -- Create aligned geometry using ITS ideal alignment to avoid overlaps in geant
 CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align"
