@@ -13,6 +13,7 @@ import requests
 import re
 import json
 import math
+import pandas as pd
 
 # Creates a time anchored MC workflow; positioned within a given run-number (as function of production size etc)
 
@@ -295,11 +296,51 @@ def determine_timestamp(sor, eor, splitinfo, cycle, ntf, HBF_per_timeframe = 256
     production_offset = int(thisjobID * maxcycles) + cycle
     # add the time difference of this slot to start-of-run to get the final timestamp
     timestamp_of_production = sor + production_offset * ntf * HBF_per_timeframe * LHCOrbitMUS / 1000
-    # this is a closure test. If we had prefect floating point precision everywhere, it wouldn't fail.
+    # this is a closure test. If we had perfect floating point precision everywhere, it wouldn't fail.
     # But since we don't have that and there are some int casts as well, better check again.
     assert (timestamp_of_production >= sor)
     assert (timestamp_of_production <= eor)
     return int(timestamp_of_production), production_offset
+
+
+def exclude_timestamp(ts, orbit, run, filename):
+    """
+    Checks if timestamp ts (or orbit) falls within a bad data period.
+    Returns true if this timestamp should be excluded; false otherwise
+    
+    ts is supposed to be in milliseconds
+    orbit is some orbit after the orbitreset of the run
+    """
+    if len(filename) == 0:
+       return False
+
+    if not os.path.isfile(filename):
+       return False
+
+    # read txt file into a pandas dataframe ---> if this fails catch exception and return
+    df = pd.read_csv(filename, header=None, names=["Run", "From", "To", "Message"])
+
+    # extract data for this run number
+    filtered = df[df['Run'] == run]
+
+    # now extract from and to lists
+    exclude_list =  list(zip(filtered["From"].to_list() , filtered["To"].to_list()))
+
+    if len(exclude_list) == 0:
+       return False
+
+    data_is_in_orbits = exclude_list[0][0] < 1514761200000
+
+    if data_is_in_orbits:
+       for orbitspan in exclude_list:
+          if orbitspan[0] <= orbit and orbit <= orbitspan[1]:
+             return True
+    else:
+       for timespan in exclude_list:
+          if timespan[0] <= ts and ts <= timespan[1]:
+             return True
+
+    return False
 
 def main():
     parser = argparse.ArgumentParser(description='Creates an O2DPG simulation workflow, anchored to a given LHC run. The workflows are time anchored at regular positions within a run as a function of production size, split-id and cycle.')
@@ -312,6 +353,7 @@ def main():
     parser.add_argument("-tf", type=int, help="number of timeframes per job", default=1)
     parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
     parser.add_argument("--trig-eff", type=float, dest="trig_eff", help="Trigger eff needed for IR", default=-1.0)
+    parser.add_argument("--run-time-span-file", type=str, dest="run_span_file", help="Run-time-span-file for exclusions of timestamps (bad data periods etc.)", default="")
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
     print (args)
@@ -329,6 +371,12 @@ def main():
 
     # determine timestamp, and production offset for the final MC job to run
     timestamp, prod_offset = determine_timestamp(run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
+    # determine orbit corresponding to timestamp
+    orbit = GLOparams["FirstOrbit"] + (timestamp - GLOparams["SOR"]) / LHCOrbitMUS
+
+    # check if timestamp is to be excluded
+    # what to do in case of
+    job_is_exluded = exclude_timestamp(timestamp, orbit, args.run_number, args.run_span_file)
 
     # this is anchored to
     print ("Determined start-of-run to be: ", run_start)
@@ -402,8 +450,12 @@ def main():
                    + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + " -eCM " + str(eCM) + ' --readoutDets ' + GLOparams['detList']
     print ("forward args ", forwardargs)
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
-    print ("Creating time-anchored workflow...")
-    os.system(cmd)
+
+    if job_is_exluded:
+      print ("TIMESTAMP IS EXCLUDED IN RUN")
+    else:
+      print ("Creating time-anchored workflow...")
+      os.system(cmd)
 
 if __name__ == "__main__":
   sys.exit(main())
