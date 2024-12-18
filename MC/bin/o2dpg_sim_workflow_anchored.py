@@ -14,6 +14,7 @@ import re
 import json
 import math
 import pandas as pd
+import csv
 
 # Creates a time anchored MC workflow; positioned within a given run-number (as function of production size etc)
 
@@ -317,14 +318,26 @@ def exclude_timestamp(ts, orbit, run, filename):
     if not os.path.isfile(filename):
        return False
 
+    # Function to detect the delimiter automatically
+    def detect_delimiter(file_path):
+      with open(file_path, 'r') as csvfile:
+        sample = csvfile.read(1024)  # Read a small sample of the file
+        sniffer = csv.Sniffer()
+        delimiter = sniffer.sniff(sample).delimiter
+        return delimiter
+      return ',' # a reasonable default
+
     # read txt file into a pandas dataframe ---> if this fails catch exception and return
-    df = pd.read_csv(filename, header=None, names=["Run", "From", "To", "Message"])
+    df = pd.read_csv(filename, header=None, names=["Run", "From", "To", "Message"], sep=detect_delimiter(filename))
 
     # extract data for this run number
     filtered = df[df['Run'] == run]
 
     # now extract from and to lists
     exclude_list =  list(zip(filtered["From"].to_list() , filtered["To"].to_list()))
+
+    print("Exclusion list has " + str(len(exclude_list)) + " entries")
+    print(exclude_list)
 
     if len(exclude_list) == 0:
        return False
@@ -354,6 +367,7 @@ def main():
     parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
     parser.add_argument("--trig-eff", type=float, dest="trig_eff", help="Trigger eff needed for IR", default=-1.0)
     parser.add_argument("--run-time-span-file", type=str, dest="run_span_file", help="Run-time-span-file for exclusions of timestamps (bad data periods etc.)", default="")
+    parser.add_argument("--invert-irframe-selection", action='store_true', help="Inverts the logic of --run-time-span-file")
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
     print (args)
@@ -375,8 +389,10 @@ def main():
     orbit = GLOparams["FirstOrbit"] + (timestamp - GLOparams["SOR"]) / LHCOrbitMUS
 
     # check if timestamp is to be excluded
-    # what to do in case of
     job_is_exluded = exclude_timestamp(timestamp, orbit, args.run_number, args.run_span_file)
+    # possibly invert the selection
+    if args.invert_irframe_selection:
+       job_is_exluded = not job_is_exluded
 
     # this is anchored to
     print ("Determined start-of-run to be: ", run_start)
