@@ -120,7 +120,7 @@ parser.add_argument('--no-strangeness-tracking', action='store_true', default=Fa
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 parser.add_argument('--first-orbit', default=256, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring); default 256 for convenience to allow for some orbits-early
                                                             # (consider doing this rather in O2 digitization code directly)
-parser.add_argument('--orbits-early', default=0, type=float, help=argparse.SUPPRESS) # number of orbits to start simulating earlier
+parser.add_argument('--orbits-early', default=1, type=float, help=argparse.SUPPRESS) # number of orbits to start simulating earlier
                                                                                    # to reduce start of timeframe effects in MC --> affects collision context
 parser.add_argument('--sor', default=-1, type=int, help=argparse.SUPPRESS) # may pass start of run with this (otherwise it is autodetermined from run number)
 parser.add_argument('--run-anchored', action='store_true', help=argparse.SUPPRESS)
@@ -494,16 +494,17 @@ interactionspecification = signalprefix + ',' + str(INTRATE) + ',' + str(1000000
 if doembedding:
    interactionspecification = 'bkg,' + str(INTRATE) + ',' + str(NTIMEFRAMES*args.ns) + ':' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern
 
-PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + interactionspecification                         \
-                           + ' --show-context '                                                                           \
-                           + ' --timeframeID ' + str(int(args.production_offset)*NTIMEFRAMES)                             \
-                           + ' --orbitsPerTF ' + str(orbitsPerTF)                                                         \
-                           + ' --orbits ' + str(NTIMEFRAMES * (orbitsPerTF + math.ceil(args.orbits_early)))               \
-                           + ' --seed ' + str(RNDSEED)                                                                    \
-                           + ' --noEmptyTF --first-orbit ' + str(args.first_orbit - args.orbits_early)                    \
-                           + ' --extract-per-timeframe tf:sgn'                                                            \
-                           + ' --with-vertices ' + vtxmode                                                                \
-                           + ' --maxCollsPerTF ' + str(args.ns)
+PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + interactionspecification                          \
+                            + ' --show-context '                                                                           \
+                            + ' --timeframeID ' + str(int(args.production_offset)*NTIMEFRAMES)                             \
+                            + ' --orbitsPerTF ' + str(orbitsPerTF)                                                         \
+                            + ' --orbits ' + str(NTIMEFRAMES * (orbitsPerTF))                                              \
+                            + ' --seed ' + str(RNDSEED)                                                                    \
+                            + ' --noEmptyTF --first-orbit ' + str(args.first_orbit)                                        \
+                            + ' --extract-per-timeframe tf:sgn'                                                            \
+                            + ' --with-vertices ' + vtxmode                                                                \
+                            + ' --maxCollsPerTF ' + str(args.ns)                                                           \
+                            + ' --orbitsEarly ' + str(args.orbits_early)
 
 PreCollContextTask['cmd'] += ' --bcPatternFile ccdb'  # <--- the object should have been set in (local) CCDB
 if includeQED:
