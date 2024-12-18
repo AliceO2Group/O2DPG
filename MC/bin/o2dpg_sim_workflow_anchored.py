@@ -368,6 +368,7 @@ def main():
     parser.add_argument("--trig-eff", type=float, dest="trig_eff", help="Trigger eff needed for IR", default=-1.0)
     parser.add_argument("--run-time-span-file", type=str, dest="run_span_file", help="Run-time-span-file for exclusions of timestamps (bad data periods etc.)", default="")
     parser.add_argument("--invert-irframe-selection", action='store_true', help="Inverts the logic of --run-time-span-file")
+    parser.add_argument("--orbitsPerTF", type=int, help="Force a certain orbits-per-timeframe number; Automatically taken from CCDB if not given.", default=-1)
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
     print (args)
@@ -382,6 +383,11 @@ def main():
     GLOparams = retrieve_Aggregated_RunInfos(args.run_number)
     run_start = GLOparams["SOR"]
     run_end = GLOparams["EOR"]
+
+    # overwrite with some external choices
+    if args.orbitsPerTF!=-1:
+       print("Adjusting orbitsPerTF from " + str(GLOparams["OrbitsPerTF"]) + " to " + str(args.orbitsPerTF))
+       GLOparams["OrbitsPerTF"] = args.orbitsPerTF
 
     # determine timestamp, and production offset for the final MC job to run
     timestamp, prod_offset = determine_timestamp(run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
