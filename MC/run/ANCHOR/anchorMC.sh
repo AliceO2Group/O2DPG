@@ -57,6 +57,9 @@ print_help()
   echo "ALIEN_JDL_WORKFLOWDETECTORS, set detectors to be taken into account, default: ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,CTP,"
   echo "ALIEN_JDL_ANCHOR_SIM_OPTIONS, additional options that are passed to the workflow creation, default: -gen pythia8,"
   echo "ALIEN_JDL_ADDTIMESERIESINMC, run TPC time series. Default: 1, switch off by setting to 0,"
+  echo "ALIEN_JDL_MC_ORBITS_PER_TF=N, enforce some orbits per timeframe, instead of determining from CCDB"
+  echo "ALIEN_JDL_RUN_TIME_SPAN_FILE=FILE, use a run-time-span file to exclude bad data-taking periods"
+  echo "ALIEN_JDL_INVERT_IRFRAME_SELECTION, invertes the choice of ALIEN_JDL_RUN_TIME_SPAN_FILE"
   echo "DISABLE_QC, set this to disable QC, e.g. to 1"
 }
 
