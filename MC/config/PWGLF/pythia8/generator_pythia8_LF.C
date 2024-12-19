@@ -161,14 +161,7 @@ class GeneratorPythia8LF : public o2::eventgen::GeneratorPythia8
       LOG(info) << "Using config container ";
       cfg.print();
       if (mUseTriggering) {   // Do the triggering
-        bool doSignal = true; // Do signal or gap
-        if (mGapBetweenInjection > 0) {
-          if (mGapBetweenInjection == 1 && mEventCounter % 2 == 0) {
-            doSignal = false;
-          } else if (mEventCounter % (mGapBetweenInjection + 1) != 0) {
-            doSignal = false;
-          }
-        }
+        bool doSignal{mEventCounter % (mGapBetweenInjection + 1) == 0}; // Do signal or gap
 
         if (doSignal) {
           LOG(info) << "Generating triggered signal event for particle";
