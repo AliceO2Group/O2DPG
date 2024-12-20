@@ -48,33 +48,31 @@ public:
       {GeneratorParamEMlibV2::kEtaprime, "Etaprime", 331, 0x00010},
       {GeneratorParamEMlibV2::kPhi, "Phi", 333, 0x00020},
       {GeneratorParamEMlibV2::kJpsi, "Jpsi", 443, 0x00040},
-      {GeneratorParamEMlibV2::kSigma0, "Sigma0", 3212, 0x00080},
-      {GeneratorParamEMlibV2::kK0s, "K0short", 310, 0x00100},
-      {GeneratorParamEMlibV2::kDeltaPlPl, "DeltaPlPl", 2224, 0x00200},
-      {GeneratorParamEMlibV2::kDeltaPl, "DeltaPl", 2214, 0x00400},
-      {GeneratorParamEMlibV2::kDeltaMi, "DeltaMi", 1114, 0x00800},
-      {GeneratorParamEMlibV2::kDeltaZero, "DeltaZero", 2114, 0x01000},
-      {GeneratorParamEMlibV2::kRhoPl, "RhoPl", 213, 0x02000},
-      {GeneratorParamEMlibV2::kRhoMi, "RhoMi", 213, 0x04000},
-      {GeneratorParamEMlibV2::kK0star, "K0star", 313, 0x08000},
-      {GeneratorParamEMlibV2::kK0l, "K0long", 130, 0x10000},
-      {GeneratorParamEMlibV2::kLambda, "Lambda", 3122, 0x20000},
-      {GeneratorParamEMlibV2::kKPl, "KPl", 321, 0x40000},
-      {GeneratorParamEMlibV2::kKMi, "KMi", 321, 0x80000},
-      {GeneratorParamEMlibV2::kOmegaPl, "OmegaPl", -3334, 0x100000},
-      {GeneratorParamEMlibV2::kOmegaMi, "OmegaMi", 3334, 0x200000},
-      {GeneratorParamEMlibV2::kXiPl, "XiPl", -3312, 0x400000},
-      {GeneratorParamEMlibV2::kXiMi, "XiMi", 3312, 0x800000},
-      {GeneratorParamEMlibV2::kSigmaPl, "SigamPl", 3224, 0x1000000},
-      {GeneratorParamEMlibV2::kSigmaMi, "SigmaMi", 3114, 0x2000000},
+      {GeneratorParamEMlibV2::kPsi2S, "Psi2S", 100443, 0x00080},
+      {GeneratorParamEMlibV2::kUpsilon, "Upsilon", 553, 0x00100},
+      {GeneratorParamEMlibV2::kSigma0, "Sigma0", 3212, 0x00200},
+      {GeneratorParamEMlibV2::kK0s, "K0short", 310, 0x00400},
+      {GeneratorParamEMlibV2::kDeltaPlPl, "DeltaPlPl", 2224, 0x00800},
+      {GeneratorParamEMlibV2::kDeltaPl, "DeltaPl", 2214, 0x01000},
+      {GeneratorParamEMlibV2::kDeltaMi, "DeltaMi", 1114, 0x02000},
+      {GeneratorParamEMlibV2::kDeltaZero, "DeltaZero", 2114, 0x04000},
+      {GeneratorParamEMlibV2::kRhoPl, "RhoPl", 213, 0x08000},
+      {GeneratorParamEMlibV2::kRhoMi, "RhoMi", 213, 0x10000},
+      {GeneratorParamEMlibV2::kK0star, "K0star", 313, 0x20000},
+      {GeneratorParamEMlibV2::kK0l, "K0long", 130, 0x40000},
+      {GeneratorParamEMlibV2::kLambda, "Lambda", 3122, 0x80000},
+      {GeneratorParamEMlibV2::kKPl, "KPl", 321, 0x100000},
+      {GeneratorParamEMlibV2::kKMi, "KMi", 321, 0x200000},
+      {GeneratorParamEMlibV2::kOmegaPl, "OmegaPl", -3334, 0x400000},
+      {GeneratorParamEMlibV2::kOmegaMi, "OmegaMi", 3334, 0x800000},
+      {GeneratorParamEMlibV2::kXiPl, "XiPl", -3312, 0x1000000},
+      {GeneratorParamEMlibV2::kXiMi, "XiMi", 3312, 0x2000000},
+      {GeneratorParamEMlibV2::kSigmaPl, "SigamPl", 3224, 0x4000000},
+      {GeneratorParamEMlibV2::kSigmaMi, "SigmaMi", 3114, 0x8000000},
       {GeneratorParamEMlibV2::kDirectRealGamma, "DirectRealGamma", 22,
-       0x4000000},
+       0x10000000},
       {GeneratorParamEMlibV2::kDirectVirtGamma, "DirectVirtGamma", 22,
-       0x8000000}};
-
-  static const int nHadrons =
-      GeneratorParamEMlibV2::kNParticles -
-      2; // total number of particles minus DirectRealGamma and DirectVirtGamma
+       0x20000000}};
 
   void SetUseYWeighting(Bool_t useYWeighting) {
     fUseYWeighting = useYWeighting;
@@ -122,11 +120,11 @@ public:
 
   Bool_t SetPtParametrizations() {
     TF1 *tempFct = NULL;
-    for (Int_t i = 0; i < nHadrons + 1; i++) {
+    for (Int_t i = 0; i < GeneratorParamEMlibV2::kNHadrons + 1; i++) {
       tempFct = GeneratorParamEMlibV2::GetPtParametrization(i);
       if (!tempFct)
         return kFALSE;
-      if (i < nHadrons)
+      if (i < GeneratorParamEMlibV2::kNHadrons)
         fPtParametrization[i] = new TF1(*tempFct);
       else
         fParametrizationProton = new TF1(*tempFct);
@@ -143,7 +141,7 @@ public:
   //_________________________________________________________________________
   Bool_t SetPtYDistributions() {
     TH2F *tempPtY = NULL;
-    for (Int_t i = 0; i < nHadrons; i++) {
+    for (Int_t i = 0; i < GeneratorParamEMlibV2::kNHadrons; i++) {
       tempPtY = GeneratorParamEMlibV2::GetPtYDistribution(i);
       if (tempPtY)
         fPtYDistribution[i] = new TH2F(*tempPtY);
@@ -165,9 +163,9 @@ public:
     }*/
 
   TF1 *GetPtParametrization(Int_t np) {
-    if (np < nHadrons)
+    if (np < GeneratorParamEMlibV2::kNHadrons)
       return fPtParametrization[np];
-    else if (np == nHadrons)
+    else if (np == GeneratorParamEMlibV2::kNHadrons)
       return fParametrizationProton;
     else
       return NULL;
@@ -176,7 +174,7 @@ public:
   TH1D *GetMtScalingFactors() { return fMtScalingFactorHisto; }
 
   TH2F *GetPtYDistribution(Int_t np) {
-    if (np < nHadrons)
+    if (np < GeneratorParamEMlibV2::kNHadrons)
       return fPtYDistribution[np];
     else
       return NULL;
@@ -387,10 +385,10 @@ private:
   Int_t fNPart;                  // multiplicity of each source per event
   Double_t fYieldArray[GeneratorParamEMlibV2::kNParticles]; // array of dN/dy
                                                             // for each source
-  TF1 *fPtParametrization[nHadrons]; // pt paramtrizations
+  TF1 *fPtParametrization[GeneratorParamEMlibV2::kNHadrons]; // pt paramtrizations
   TF1 *fParametrizationProton;       //
   TH1D *fMtScalingFactorHisto;       // mt scaling factors
-  TH2F *fPtYDistribution[nHadrons];  // pt-y distribution
+  TH2F *fPtYDistribution[GeneratorParamEMlibV2::kNHadrons];  // pt-y distribution
   Double_t fPtMin;
   Double_t fPtMax;
   Double_t fYMin;
