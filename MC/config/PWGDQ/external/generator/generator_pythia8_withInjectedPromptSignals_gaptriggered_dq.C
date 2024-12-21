@@ -51,6 +51,9 @@ public:
       case 9: // generate prompt psi2S to Jpsi pi pi at midrapidity
         mGeneratorParam = (Generator*)GeneratorParamPromptPsiToJpsiPiPiEvtGen_pp13TeV("100443");
         break;
+      case 10: // generate cocktail of prompt X_1(3872) and psi2S to Jpsi pi pi at midrapidity
+        mGeneratorParam = (Generator*)GeneratorCocktailX3872AndPsi2StoJpsi_pp13TeV();
+        break; 
       }
     mGeneratorParam->Init();  
   }
