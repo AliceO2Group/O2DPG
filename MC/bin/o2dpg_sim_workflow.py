@@ -151,6 +151,9 @@ parser.add_argument('--fwdmatching-cut-4-param', action='store_true', help='appl
 # Matching training for machine learning
 parser.add_argument('--fwdmatching-save-trainingdata', action='store_true', help='enables saving parameters at plane for matching training with machine learning')
 
+# EMC options
+parser.add_argument('--emc-remove-busy', action='store_true', help='disables EMC busy time')
+
 args = parser.parse_args()
 print (args)
 
@@ -894,6 +897,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    if (args.sor != -1):
       globalTFConfigValues["HBFUtils.startTime"] = args.sor
 
+   # set the EMC busy time as zero if option enabled for EMC digitizer
+   emcBusyCF=dict()
+   if(args.emc_remove_busy == True):
+      emcBusyCF['EMCSimParam.mBusyTime'] = '0'
+
    def putConfigValues(localCF = {}):
      """
      Creates the final --configValues string to be passed to the workflows.
@@ -1073,7 +1081,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    FT0FV0EMCCTPDIGItask['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
    FT0FV0EMCCTPDIGItask['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption \
                + ' --onlyDet FT0,FV0,EMC,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE)    \
-               + ' --disable-write-ini' + putConfigValuesNew(localCF={"DigiParams.seed" : str(TFSEED)})                   \
+               + ' --disable-write-ini' + putConfigValuesNew(localCF={"DigiParams.seed" : str(TFSEED)} | emcBusyCF)       \
                + (' --combine-devices','')[args.no_combine_dpl_devices] + ('',' --disable-mc')[args.no_mc_labels] + QEDdigiargs \
                + ' --forceSelectedDets'
    workflow['stages'].append(FT0FV0EMCCTPDIGItask)
