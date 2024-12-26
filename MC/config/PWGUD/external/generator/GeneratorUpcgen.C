@@ -118,7 +118,6 @@ public:
     std::cout << "\n";
     auto upcgenParticles = mUPCgen->getParticles();
     for (auto part : upcgenParticles) {
-      part.Print();
       TParticle particle(part.GetPdgCode(), 1, part.GetFirstMother(), -1,
                          part.GetFirstDaughter(), part.GetLastDaughter(),
                          part.Px(), part.Py(), part.Pz(), part.Energy(), 0., 0.,

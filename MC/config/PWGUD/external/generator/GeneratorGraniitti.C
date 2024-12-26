@@ -1,7 +1,10 @@
-namespace o2 {
-namespace eventgen {
-class GeneratorGraniitti_class : public Generator {
-public:
+namespace o2
+{
+namespace eventgen
+{
+class GeneratorGraniitti_class : public Generator
+{
+ public:
   GeneratorGraniitti_class() { };
   ~GeneratorGraniitti_class() = default;
   bool setJsonFile(std::string fname) {
@@ -59,7 +62,15 @@ public:
   };
 
   bool generateEvent() override {
-    return reader->generateEvent();
+    if (reader->generateEvent()) {
+      return true;
+    } else {
+      std::cout << "New file needs to be generated.";
+      delete reader;
+      createHepMCFile();
+      openHepMCFile();
+      return reader->generateEvent();
+    }
   };
 
   bool importParticles() override {
@@ -67,18 +78,28 @@ public:
     if (!reader->importParticles()) {
       return false;
     }
-    printParticles();
-    
+    for (auto part : reader->getParticles()) {
+      TParticle particle(part.GetPdgCode(),
+                         1,
+                         part.GetFirstMother(),
+                         -1,
+                         part.GetFirstDaughter(),
+                         part.GetLastDaughter(),
+                         part.Px(),
+                         part.Py(),
+                         part.Pz(),
+                         part.Energy(),
+                         0.,
+                         0.,
+                         0.,
+                         0.);
+      mParticles.push_back(particle);
+      o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(
+        mParticles.back(), true);
+    }
     return true;
   };
 
-  void printParticles()
-  {
-    std::cout << "\n\n";
-    for (auto& particle : reader->getParticles())
-      particle.Print();
-  }
-  
  private:
   o2::eventgen::GeneratorHepMC *reader = 0x0;
   std::string jsonFile;
