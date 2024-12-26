@@ -84,7 +84,6 @@ def createJson(args):
   return jsonFile
   
 # main
-  
 parser = argparse.ArgumentParser(description='Make Graniitti configuration',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -118,7 +117,7 @@ fout.write('funcName = GeneratorGraniitti("%s")  \n' % ("../"+jsonFile))
     
 ###Trigger
 fout.write('[TriggerExternal] \n')
-fout.write('fileName = ${O2DPG_ROOT}/MC/config/PWGUD/trigger/selectParticlesInAcceptance.C \n')
+fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/trigger/selectParticlesInAcceptance.C \n')
 if args.rapidity == 'cent_rap':
     fout.write('funcName = selectMotherPartInAcc(-0.9,0.9) \n')
 if args.rapidity == 'muon_rap':
