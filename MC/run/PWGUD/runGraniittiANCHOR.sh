@@ -21,10 +21,12 @@ export PRODSPLIT=100
 export CYCLE=30
 export ALIEN_PROC_ID=2963436952
 
+# create generator config file
+${O2DPG_ROOT}/MC/config/PWGUD/ini/makeGraniittiConfig.py --process kConRes_pipi --eCM 13600 --nEvents 300 --rapidity cent_eta
 
+# set sim options
+export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen external -ini ${PWD}/GenGraniitti.ini"
 #export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen external -ini ${PWD}/GenGraniitti.ini --embedding -nb ${NBKGEVENTS} -colBkg PbPb -genBkg pythia8 -procBkg heavy_ion"
 
-${O2DPG_ROOT}/MC/config/PWGUD/ini/makeGraniittiConfig.py --process kConRes_pipi --eCM 13600 --nEvents 300 --rapidity cent_eta
-export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen external -ini ${PWD}/GenGraniitti.ini"
-
+# run anchored simulations
 ${O2DPG_ROOT}/MC/run/ANCHOR/anchorMC.sh
