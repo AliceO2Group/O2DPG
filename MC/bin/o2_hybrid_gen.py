@@ -25,13 +25,13 @@ def main():
     args = parser.parse_args()
 
     # Check if the mode is valid
-    mode = "sequential"
-    if args.mode not in ["sequential", "parallel"]:
-        print(f"Mode {args.mode} not valid. Please use 'seq' or 'par'")
+    valid_modes = ["sequential", "parallel"]
+    mode = args.mode if args.mode in valid_modes else "sequential"
+    if args.mode and args.mode not in valid_modes:
+        print(f"Mode {args.mode} not valid. Please use 'sequential' or 'parallel'")
         print("Setting sequential mode as default")
     else:
-        print(f"Running in {args.mode} mode")
-        mode = args.mode
+        print(f"Running in {mode} mode")
 
     # put in a list all the elementes in the gen flag
     noConfGen = ["pythia8pp", "pythia8hf", "pythia8hi", "pythia8powheg"]
@@ -61,6 +61,18 @@ def main():
                         "fileName": "${O2DPG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV.C",
                         "funcName": "GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV()",
                         "iniFile": ""
+                    }
+                })
+            elif gen == "evtpool":
+                gens.append({
+                    'name': 'evtpool',
+                    'config': {
+                        "eventPoolPath": "/path/to/filename.root",
+                        "skipNonTrackable": True,
+                        "roundRobin": False,
+                        "randomize": True,
+                        "rngseed": 0,
+                        "randomphi": False,
                     }
                 })
             elif gen == "extkinO2":
