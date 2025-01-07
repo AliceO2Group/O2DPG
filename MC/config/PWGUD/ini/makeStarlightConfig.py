@@ -17,7 +17,7 @@ parser.add_argument('--eCM', type=float, default='5360',
 parser.add_argument('--rapidity', default='cent', choices=['cent_rap', 'muon_rap', 'cent_eta', 'muon_eta'],
                     help='Rapidity to select')
 
-parser.add_argument('--process',default=None, choices=['kTwoGammaToMuLow', 'kTwoGammaToElLow', 'kTwoGammaToMuMedium', 'kTwoGammaToElMedium', 'kTwoGammaToMuHigh', 'kTwoGammaToElHigh', 'kTwoGammaToRhoRho', 'kTwoGammaToF2', 'kCohRhoToPi', 'kCohRhoToElEl', 'kCohRhoToMuMu', 'kCohRhoToPiWithCont', 'kCohRhoToPiFlat', 'kCohPhiToKa', 'kDirectPhiToKaKa', 'kCohPhiToEl', 'kCohOmegaTo2Pi', 'kCohOmegaTo3Pi', 'kCohOmegaToPiPiPi', 'kCohRhoPrimeTo4Pi', 'kCohJpsiToMu', 'kCohJpsiToEl', 'kCohJpsiToElRad', 'kCohJpsiToProton', 'kCohPsi2sToMu','kCohPsi2sToEl', 'kCohPsi2sToMuPi', 'kCohPsi2sToElPi', 'kCohUpsilonToMu', 'kCohUpsilonToEl', 'kIncohRhoToPi', 'kIncohRhoToElEl', 'kIncohRhoToMuMu', 'kIncohRhoToPiWithCont', 'kIncohRhoToPiFlat', 'kIncohPhiToKa', 'kIncohOmegaTo2Pi', 'kIncohOmegaTo3Pi', 'kIncohOmegaToPiPiPi', 'kIncohRhoPrimeTo4Pi', 'kIncohJpsiToMu', 'kIncohJpsiToEl', 'kIncohJpsiToElRad', 'kIncohJpsiToProton', 'kIncohJpsiToLLbar', 'kIncohPsi2sToMu', 'kIncohPsi2sToEl', 'kIncohPsi2sToMuPi', 'kIncohPsi2sToElPi', 'kIncohUpsilonToMu', 'kIncohUpsilonToEl', 'kDpmjetSingleA', 'kDpmjetSingleC',  'kTauLowToEl3Pi', 'kTauLowToPo3Pi', 'kTauMediumToEl3Pi', 'kTauMediumToPo3Pi', 'kTauHighToEl3Pi', 'kTauHighToPo3Pi', 'kTauLowToElMu', 'kTauLowToElPiPi0', 'kTauLowToPoPiPi0'],
+parser.add_argument('--process',default=None, choices=['kTwoGammaToMuLow', 'kTwoGammaToElLow', 'kTwoGammaToMuMedium', 'kTwoGammaToElMedium', 'kTwoGammaToMuHigh', 'kTwoGammaToElHigh', 'kTwoGammaToRhoRho', 'kTwoGammaToF2', 'kCohRhoToPi', 'kCohRhoToElEl', 'kCohRhoToMuMu', 'kCohRhoToPiWithCont', 'kCohRhoToPiFlat', 'kCohPhiToKa', 'kDirectPhiToKaKa', 'kCohPhiToEl', 'kCohOmegaTo2Pi', 'kCohOmegaTo3Pi', 'kCohOmegaToPiPiPi', 'kCohRhoPrimeTo4Pi', 'kCohJpsiToMu', 'kCohJpsiToEl', 'kCohJpsiToElRad', 'kCohJpsiToProton', 'kCohJpsi4Prong', 'kCohJpsi6Prong',  'kCohPsi2sToMu','kCohPsi2sToEl', 'kCohPsi2sToMuPi', 'kCohPsi2sToElPi', 'kCohUpsilonToMu', 'kCohUpsilonToEl', 'kIncohRhoToPi', 'kIncohRhoToElEl', 'kIncohRhoToMuMu', 'kIncohRhoToPiWithCont', 'kIncohRhoToPiFlat', 'kIncohPhiToKa', 'kIncohOmegaTo2Pi', 'kIncohOmegaTo3Pi', 'kIncohOmegaToPiPiPi', 'kIncohRhoPrimeTo4Pi', 'kIncohJpsiToMu', 'kIncohJpsiToEl', 'kIncohJpsiToElRad', 'kIncohJpsiToProton', 'kIncohJpsiToLLbar', 'kIncohPsi2sToMu', 'kIncohPsi2sToEl', 'kIncohPsi2sToMuPi', 'kIncohPsi2sToElPi', 'kIncohUpsilonToMu', 'kIncohUpsilonToEl', 'kDpmjetSingleA', 'kDpmjetSingleA_Dzero', 'kDpmjetSingleA_Dcharged', 'kDpmjetSingleA_Dstar', 'kDpmjetSingleA_Phi', 'kDpmjetSingleA_Kstar', 'kDpmjetSingleC', 'kDpmjetSingleC_Dzero', 'kDpmjetSingleC_Dcharged', 'kDpmjetSingleC_Dstar', 'kDpmjetSingleC_Phi', 'kDpmjetSingleC_Kstar', 'kTauLowToEl3Pi', 'kTauLowToPo3Pi', 'kTauMediumToEl3Pi', 'kTauMediumToPo3Pi', 'kTauHighToEl3Pi', 'kTauHighToPo3Pi', 'kTauLowToElMu', 'kTauLowToElPiPi0', 'kTauLowToPoPiPi0'],
                     help='Process to switch on')
                     
                     
@@ -74,12 +74,12 @@ fout = open(args.output, 'w')
 
 ### Generator
 fout.write('[GeneratorExternal] \n')
-if  'Psi2sToMuPi' in args.process or 'Psi2sToElPi' in args.process or 'OmegaTo3Pi' in args.process or 'JpsiToElRad' in args.process or 'kTau' in args.process:
+if  'Psi2sToMuPi' in args.process or 'Psi2sToElPi' in args.process or 'OmegaTo3Pi' in args.process or 'JpsiToElRad' in args.process or 'Jpsi4Prong' in args.process or 'Jpsi6Prong' in args.process or 'kTau' in args.process:
     fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/external/generator/GeneratorStarlightToEvtGen.C \n')
     fout.write('funcName = GeneratorStarlightToEvtGen("%s", %f, %d, %d, %d, %d, "%s")  \n' % (args.process,args.eCM ,pZ,pA,tZ,tA,args.extraPars))
 else:
     fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/external/generator/GeneratorStarlight.C \n')
-    fout.write('funcName = GeneratorStarlight("%s", %f, %d, %d, %d, %d, "%s", "%s")  \n' % (args.process,args.eCM ,pZ,pA,tZ,tA,args.extraPars,args.dpmjetConf))
+    fout.write('funcName = GeneratorStarlight("%s", %f, %d, %d, %d, %d, "%s", "%s")  \n' % (args.process.split('_')[0],args.eCM ,pZ,pA,tZ,tA,args.extraPars,args.dpmjetConf))
     
 ###Trigger
 if not 'kDpmjet' in args.process:
@@ -99,6 +99,19 @@ if not 'kDpmjet' in args.process:
             fout.write('funcName = selectDaughterPartInAcc(-0.9,0.9) \n')
         if args.rapidity == 'muon_eta':
             fout.write('funcName = selectDaughterPartInAcc(-4.0,-2.5) \n')
+elif '_' in args.process:
+    fout.write('[TriggerExternal] \n')
+    fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/trigger/triggerDpmjetParticle.C \n')
+    if 'Dzero' in args.process:
+        fout.write('funcName = triggerDzero(-0.9,0.9) \n')
+    if 'Dcharged' in args.process:
+        fout.write('funcName = triggerDcharged(-0.9,0.9) \n')
+    if 'Dstar' in args.process:
+        fout.write('funcName = triggerDstar(-0.9,0.9) \n')
+    if 'Phi' in args.process:
+        fout.write('funcName = triggerPhi(-0.9,0.9) \n')
+    if 'Kstar' in args.process:
+        fout.write('funcName = triggerKstar(-0.9,0.9) \n')
 
 ### close outout file
 fout.close()
