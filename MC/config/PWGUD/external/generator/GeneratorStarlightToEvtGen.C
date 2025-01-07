@@ -36,6 +36,8 @@ FairGenerator*
   else if (configuration.find("ToElMu") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.ELMU.DEC",pathO2.Data()));
   else if (configuration.find("ToElPiPi0") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.ELPI.DEC",pathO2.Data()));
   else if (configuration.find("ToPoPiPi0") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.POPI.DEC",pathO2.Data()));
+  else if (configuration.find("Jpsi4Prong") != std::string::npos) gen->SetDecayTable(Form("%s/JPSI.4PRONG.DEC",pathO2.Data()));
+  else if (configuration.find("Jpsi6Prong") != std::string::npos) gen->SetDecayTable(Form("%s/JPSI.6PRONG.DEC",pathO2.Data()));
  
   return gen;
 }
