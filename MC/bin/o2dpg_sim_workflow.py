@@ -1134,7 +1134,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
    TPCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' \
                         + putConfigValuesNew(["GPU_global","TPCGasParam", "TPCCorrMap", "GPU_rec_tpc", "trackTuneParams"], {"GPU_proc.ompThreads":NWORKERS_TF} | tpcLocalCFreco) + ('',' --disable-mc')[args.no_mc_labels] \
-                        + tpc_corr_scaling_options + tpc_corr_options_mc
+                        + tpc_corr_scaling_options + tpc_corr_options_mc \
+                        + ' --tpc-mc-time-gain'
    workflow['stages'].append(TPCRECOtask)
 
    # END TPC reco
