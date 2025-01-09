@@ -1,7 +1,7 @@
 int External()
 {
   std::string path{"o2sim_Kine.root"};
-  std::vector<int> possiblePDGs = {1010000030, -1010000030};
+  std::vector<int> possiblePDGs = {1010000030, -1010000030, 1000030040, -1000030040};
 
   int nPossiblePDGs = possiblePDGs.size();
 
