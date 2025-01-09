@@ -53,7 +53,7 @@
       "NCALL" : 40000,      // Number of function calls per iteration (5000 .. 50000 or more)
       "ITER"  : 50,         // Number of initialization iteration (10 or more)
       "CHI2MAX" : 10.0,     // Maximum Chi^2 in initialization
-      "PRECISION"  : 0.05,  // Integral relative precision target
+      "PRECISION"  : 0.01,  // Integral relative precision target
 
       "DEBUG" : -1          // Debug output (default -1)
     },
@@ -91,14 +91,14 @@
 
   "FIDCUTS" : {
     
-    "active" : false,
+    "active" : true,
     
      // Central system final states
     "PARTICLE" : {
 
-      "Eta"  : [-1.0, 1.0],       // Pseudorapidity
+      "Eta"  : [-0.95, 0.95],     // Pseudorapidity
       "Rap"  : [-10.0, 10.0],     // Rapidity
-      "Pt"   : [0.1, 100000.0],   // Transverse momentum
+      "Pt"   : [0.08, 100000.0],  // Transverse momentum
       "Et"   : [0.0, 100000.0]    // Transverse energy
     },
     
