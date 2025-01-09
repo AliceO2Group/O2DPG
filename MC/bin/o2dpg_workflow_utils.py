@@ -308,3 +308,15 @@ def adjust_RECO_environment(workflowspec, package = ""):
         if (matches_or_inherits_label(taskid, "RECO", matches_label)):
            # now we do the final adjust (as annotation) in the workflow itself
            workflowspec['stages'][taskid]["alternative_alienv_package"] = package
+
+def merge_dicts(dict1, dict2):
+    """
+    merges dict2 into dict1 (potentially overwriting values)
+    """
+    for key, value in dict2.items():
+        if key in dict1 and isinstance(dict1[key], dict) and isinstance(value, dict):
+            # If both are dictionaries, merge them recursively
+            merge_dicts(dict1[key], value)
+        else:
+            # Otherwise, overwrite dict1's value with dict2's value
+            dict1[key] = value

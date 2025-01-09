@@ -34,7 +34,7 @@ except (ImportError, ValueError):  # ARM architecture has problems with pandas +
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
-from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers
+from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers, merge_dicts
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
 from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg
 
@@ -51,8 +51,9 @@ parser.add_argument('--timestamp', type=int, help="Anchoring timestamp (defaults
 parser.add_argument('--conditionDB',help="CCDB url for QC workflows", default='http://alice-ccdb.cern.ch')
 parser.add_argument('--qcdbHost',help="QCDB url for QC object uploading", default='http://ali-qcdbmc-gpn.cern.ch:8083')
 parser.add_argument('--condition-not-after', type=int, help="only consider CCDB objects not created after this timestamp (for TimeMachine)", default=3385078236000)
-parser.add_argument('--orbitsPerTF', type=int, help="Timeframe size in number of LHC orbits", default=128)
-parser.add_argument('--anchor-config',help="JSON file to contextualise workflow with external configs (config values etc.) for instance comping from data reco workflows.", default='')
+parser.add_argument('--orbitsPerTF', type=int, help="Timeframe size in number of LHC orbits", default=32)
+parser.add_argument('--anchor-config',help="JSON file to contextualise workflow with external configs (config values etc.) for instance coming from data reco workflows.", default='')
+parser.add_argument('--overwrite-config',help="extra JSON file with configs (config values etc.) overwriting defaults or the config coming from --anchor-config", default='')
 parser.add_argument('--dump-config',help="Dump JSON file with all settings used in workflow", default='user_config.json')
 parser.add_argument('-ns',help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
@@ -195,6 +196,13 @@ else:
    # we load a generic config
    print ("** Using generic config **")
    anchorConfig = create_sim_config(args)
+# we apply additional external user choices for the configuration
+# this will overwrite config from earlier stages
+if args.overwrite_config != '':
+   # apply final JSON overwrite
+   config_overwrite = load_external_config(args.overwrite_config)
+   # merge the dictionaries into anchorConfig, the latter takes precedence
+   merge_dicts(anchorConfig, config_overwrite)
 
 # write this config
 config_key_param_path = args.dump_config
@@ -977,7 +985,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    FT0FV0EMCCTPDIGItask['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
    FT0FV0EMCCTPDIGItask['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption \
                + ' --onlyDet FT0,FV0,EMC,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE)    \
-               + ' --disable-write-ini' + putConfigValuesNew(localCF={"DigiParams.seed" : str(TFSEED)})                   \
+               + ' --disable-write-ini' + putConfigValuesNew(listOfMainKeys=['EMCSimParam'], localCF={"DigiParams.seed" : str(TFSEED)})                   \
                + (' --combine-devices','')[args.no_combine_dpl_devices] + ('',' --disable-mc')[args.no_mc_labels] + QEDdigiargs \
                + ' --forceSelectedDets'
    workflow['stages'].append(FT0FV0EMCCTPDIGItask)
