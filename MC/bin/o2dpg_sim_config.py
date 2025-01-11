@@ -80,6 +80,9 @@ def create_sim_config(args):
         add(config, {"FwdMatching.matchFcn" : "matchsXYPhiTanl"})
     if args.fwdmatching_cut_4_param == True:
         add(config, {"FwdMatching.cutFcn" : "cut3SigmaXYAngles"})
+    if int(args.fwdmatchingNcandidates) > 0:
+        add(config, {"FwdMatching.saveMode" : 3})
+        add(config, {"FwdMatching.nCandidates" : int(args.fwdmatchingNcandidates)})
 
     # deal with larger combinatorics
     if args.col == "PbPb" or (args.embedding and args.colBkg == "PbPb"):

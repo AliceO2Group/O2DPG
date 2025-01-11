@@ -151,6 +151,7 @@ parser.add_argument('--fwdmatching-cut-4-param', action='store_true', help='appl
 
 # Matching training for machine learning
 parser.add_argument('--fwdmatching-save-trainingdata', action='store_true', help='enables saving parameters at plane for matching training with machine learning')
+parser.add_argument('--fwdmatchingNcandidates', type=int, help='enables saving provided number of matching candidates', default=0)
 
 args = parser.parse_args()
 print (args)
