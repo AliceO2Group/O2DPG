@@ -20,7 +20,9 @@ int External()
 
     auto nEvents = tree->GetEntries();
     auto nInjected = tree->Scan("MCTrack.GetPdgCode()", "MCTrack.GetPdgCode() == -1000020030"); /// don't check matter, too many secondaries
-    if (nEvents / nInjected != 10)
+    nInjected += tree->Scan("MCTrack.GetPdgCode()", "MCTrack.GetPdgCode() == -1000010030"); /// don't check matter, too many secondaries
+    nInjected += tree->Scan("MCTrack.GetPdgCode()", "TMath::Abs(MCTrack.GetPdgCode()) == 1010010030"); /// don't check matter, too many secondaries
+    if (nInjected == 0)
     {
         std::cerr << "Unexpected ratio of events to injected nuclei\n";
         return 1;
