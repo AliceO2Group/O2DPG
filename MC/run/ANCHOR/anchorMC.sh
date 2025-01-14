@@ -145,6 +145,14 @@ NWORKERS=${NWORKERS:-8}
 # set a default seed if not given
 SEED=${ALIEN_PROC_ID:-${SEED:-1}}
 
+#<----- START OF part that should run under a clean alternative software environment if this was given ------
+(
+
+if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
+  echo_info "Using tag ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG} to setup anchored MC"
+  /cvmfs/alice.cern.ch/bin/alienv printenv "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" &> async_environment.env
+  source async_environment.env
+fi
 
 # default async_pass.sh script
 DPGRECO=$O2DPG_ROOT/DATA/production/configurations/asyncReco/async_pass.sh
@@ -193,6 +201,9 @@ if [[ "${RECO_RC}" != "0" ]] ; then
     exit ${RECO_RC}
 fi
 
+)
+#<----- END OF part that should run under a clean alternative software environment if this was given ------
+
 ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG_KEEP
 echo_info "Setting back ALIEN_JDL_LPMPRODUCTIONTAG to $ALIEN_JDL_LPMPRODUCTIONTAG"
 
@@ -213,17 +224,19 @@ MODULES="--skipModules ZDC"
 ALICEO2_CCDB_LOCALCACHE=${ALICEO2_CCDB_LOCALCACHE:-$(pwd)/ccdb}
 
 # these arguments will be digested by o2dpg_sim_workflow_anchored.py
-baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${ALIEN_JDL_LPMRUNNUMBER}                               \
-          ${ALIEN_JDL_RUN_TIME_SPAN_FILE:+--run-time-span-file ${ALIEN_JDL_RUN_TIME_SPAN_FILE} ${ALIEN_JDL_INVERT_IRFRAME_SELECTION:+--invert-irframe-selection}}" \
-          ${ALIEN_JDL_MC_ORBITS_PER_TF:+--orbitsPerTF ${ALIEN_JDL_MC_ORBITS_PER_TF}}
+baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${ALIEN_JDL_LPMRUNNUMBER}                                \
+          ${ALIEN_JDL_RUN_TIME_SPAN_FILE:+--run-time-span-file ${ALIEN_JDL_RUN_TIME_SPAN_FILE} ${ALIEN_JDL_INVERT_IRFRAME_SELECTION:+--invert-irframe-selection}}   \
+          ${ALIEN_JDL_MC_ORBITS_PER_TF:+--orbitsPerTF ${ALIEN_JDL_MC_ORBITS_PER_TF}}"
 
-# these arguments will be passed as well but only evetually be digested by o2dpg_sim_workflow.py which is called from o2dpg_sim_workflow_anchored.py
+# these arguments will be passed as well but only eventually be digested by o2dpg_sim_workflow.py which is called from o2dpg_sim_workflow_anchored.py
 remainingargs="-seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
 remainingargs="${remainingargs} -e ${ALIEN_JDL_SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
 # prepend(!) ALIEN_JDL_ANCHOR_SIM_OPTIONS
 # since the last passed argument wins, e.g. -productionTag cannot be overwritten by the user
 remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config config-json.json"
+# apply software tagging choice
+remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}}"
 
 echo_info "baseargs passed to o2dpg_sim_workflow_anchored.py: ${baseargs}"
 echo_info "remainingargs forwarded to o2dpg_sim_workflow.py: ${remainingargs}"
@@ -239,6 +252,7 @@ fi
 
 TIMESTAMP=`grep "Determined timestamp to be" ${anchoringLogFile} | awk '//{print $6}'`
 echo_info "TIMESTAMP IS ${TIMESTAMP}"
+
 
 # check if this job is exluded because it falls inside a bad data-taking period
 ISEXCLUDED=$(grep "TIMESTAMP IS EXCLUDED IN RUN" ${anchoringLogFile})
