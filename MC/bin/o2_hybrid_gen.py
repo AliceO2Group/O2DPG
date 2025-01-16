@@ -69,6 +69,19 @@ def main():
     else:
         print(f"Running in {mode} mode")
 
+    # Available options for trigger are "off", "or", "and"
+    # in all the other cases the trigger is forced "off"
+
+    trgbase = {
+        "mode": "off",
+        "specs": [
+            {
+                "macro": "",
+                "function": ""
+            }
+        ]
+    }
+
     # put in a list all the elementes in the gen flag
     noConfGen = ["pythia8pp", "pythia8hf", "pythia8hi", "pythia8powheg"]
     gens = []
@@ -83,6 +96,7 @@ def main():
                     configs = [get_params(cmd_instance, cmd_params), get_params(gens_instances[gen], gens_params[gen])]
                     gens.append({
                         'name': gen,
+                        'triggers': trgbase,
                         'config': {
                             "configcmd": configs[0],
                             "confighepmc": configs[1]
@@ -92,11 +106,13 @@ def main():
                     configs = get_params(gens_instances[gen],gens_params[gen])
                     gens.append({
                         'name': gen,
+                        'triggers': trgbase,
                         'config': configs
                     })
             elif gen in noConfGen:
                 gens.append({
                     "name": gen,
+                    'triggers': trgbase,
                     "config": ""
                 })
             else:
@@ -113,6 +129,7 @@ def main():
             configs["iniFile"] = ini
             gens.append({
                 'name': 'external',
+                'triggers': trgbase,
                 'config': configs
             })
 
