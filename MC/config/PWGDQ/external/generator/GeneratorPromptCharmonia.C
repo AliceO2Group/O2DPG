@@ -739,11 +739,11 @@ FairGenerator*
   return genCocktailEvtGen;
 }
 
-FairGenerator*
-  GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV(TString pdgs = "443")
+FairGenerator *
+GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV(TString pdgs = "443", int nSignalPerEvent = 1)
 {
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::O2_GeneratorParamJpsiMidY>();
-  gen->SetNSignalPerEvent(1); // number of jpsis per event
+  gen->SetNSignalPerEvent(nSignalPerEvent); // number of jpsis per event
 
   std::string spdg;
   TObjArray* obj = pdgs.Tokenize(";");
