@@ -37,6 +37,27 @@ class GeneratorStarlight_class : public Generator
  public:
    GeneratorStarlight_class(){};
   ~GeneratorStarlight_class() = default;
+
+  void setupDpmjet(std::string dpmjetconf){
+    if(dpmjetconf.size() == 0)return;
+    //Copy necesary files to the working directory
+    TString pathDPMJET = gSystem->ExpandPathName("$DPMJET_ROOT/dpmdata");
+    system(TString::Format("cp -r %s .",pathDPMJET.Data()));
+    system(TString::Format("cp %s ./my.input",dpmjetconf.c_str()));
+
+    //Reset four seeds of the DPMJET random generator in the config
+    std::mt19937 gen(generateRandomSeed());
+    std::uniform_int_distribution<> dist(1, 168);
+
+    std::string command = "awk -i inplace -v nums=\"";
+    for (int i = 0; i < 4; ++i)command += TString::Format("%d.0 ", dist(gen));
+    command +=" \" \' ";
+    command += "BEGIN {split(nums, newvals);}";
+    command += "{if ($1 == \"RNDMINIT\") {printf \"%-16s%-9s%-9s%-9s%-9s\\n\", $1, newvals[1], newvals[2], newvals[3], newvals[4];}";
+    command += " else {print $0;}}\' \"my.input\" ";
+    system(command.c_str());
+  }
+
   void selectConfiguration(std::string val) { mSelectedConfiguration = val; };
   void setExtraParams(std::string val) { mExtraParams = val; };
   void setCollisionSystem(float energyCM, int beam1Z, int beam1A, int beam2Z, int beam2A) {eCM = energyCM; projZ=beam1Z; projA=beam1A; targZ=beam2Z; targA=beam2A;};
@@ -48,6 +69,10 @@ class GeneratorStarlight_class : public Generator
 	return true;
   }
   int getPdgMother(){return mPdgMother;}
+  double getPhotonEnergy(){
+    //std::cout << mEvent.getGamma().gamma.GetE() << std::endl;
+    return mEvent.getGamma().gamma.GetE();
+  }
 
   bool Init() override
   {
@@ -305,7 +330,14 @@ class GeneratorStarlight_class : public Generator
   }
   return true; 
   }
- 
+
+   protected:
+   float eCM = 5020; //CMS energy
+   int projA=208;	//Beam
+   int targA=208;
+   int projZ=82;
+   int targZ=82;
+
    private:
    starlight        *mStarLight = 0x0;     
    inputParameters  mInputParameters;  //   simulation input information.
@@ -316,11 +348,7 @@ class GeneratorStarlight_class : public Generator
    std::string mExtraParams = "";
    int mPdgMother = -1;
    bool mDecayEvtGen = 0;
-   float eCM = 5020; //CMS energy
-   int projA=208;	//Beam 
-   int targA=208;
-   int projZ=82;
-   int targZ=82;
+
    
  };
  
@@ -331,29 +359,12 @@ class GeneratorStarlight_class : public Generator
 FairGenerator*
   GeneratorStarlight(std::string configuration = "empty",float energyCM = 5020, int beam1Z = 82, int beam1A = 208, int beam2Z = 82, int beam2A = 208, std::string extrapars = "",std::string dpmjetconf = "")
 {
-  if(dpmjetconf.size() != 0){
-    //Copy necesary files to the working directory
-    TString pathDPMJET = gSystem->ExpandPathName("$DPMJET_ROOT/dpmdata");
-    system(TString::Format("cp -r %s .",pathDPMJET.Data()));
-    system(TString::Format("cp %s ./my.input",dpmjetconf.c_str()));
-
-    //Reset four seeds of the DPMJET random generator in the config
-    std::mt19937 gen(generateRandomSeed());
-    std::uniform_int_distribution<> dist(1, 168);
-
-    std::string command = "awk -i inplace -v nums=\"";
-    for (int i = 0; i < 4; ++i)command += TString::Format("%d.0 ", dist(gen));
-    command +=" \" \' ";
-    command += "BEGIN {split(nums, newvals);}";
-    command += "{if ($1 == \"RNDMINIT\") {printf \"%-16s%-9s%-9s%-9s%-9s\\n\", $1, newvals[1], newvals[2], newvals[3], newvals[4];}";
-    command += " else {print $0;}}\' \"my.input\" ";
-    system(command.c_str());
-  }
 
   auto gen = new o2::eventgen::GeneratorStarlight_class();
   gen->selectConfiguration(configuration);
   gen->setCollisionSystem(energyCM, beam1Z, beam1A, beam2Z, beam2A);
   gen->setExtraParams(extrapars);
+  gen->setupDpmjet(dpmjetconf);
   return gen;
 }
 
