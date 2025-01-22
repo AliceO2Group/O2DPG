@@ -34,7 +34,7 @@ o2::eventgen::Trigger triggerDstar(double rapidityMin = -1., double rapidityMax 
 {
   return [rapidityMin, rapidityMax](const std::vector<TParticle>& particles) -> bool {
     for (const auto& particle : particles) {
-      if ((TMath::Abs(particle.GetPdgCode()) == 413) || (TMath::Abs(particle.GetPdgCode()) == 423))
+      if (TMath::Abs(particle.GetPdgCode()) == 413)
         if ((particle.Y() > rapidityMin) && (particle.Y() < rapidityMax))
 	  return kTRUE;
     }

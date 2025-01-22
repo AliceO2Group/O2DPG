@@ -1,0 +1,45 @@
+Decay D*+
+1.0    D0  pi+                        VSS;
+Enddecay
+
+Decay D*-
+1.0    anti-D0 pi-                        VSS;
+Enddecay
+
+Decay D+
+1.0 K-      pi+     pi+                             D_DALITZ; #[Reconstructed PDG2011]
+Enddecay
+
+Decay D-
+1.0 K+      pi-     pi-                             D_DALITZ; #[Reconstructed PDG2011]
+Enddecay
+
+Decay D0
+1.0 K-     pi+                                      PHSP; #[Reconstructed PDG2011]
+Enddecay
+
+Decay anti-D0
+1.0 K+      pi-                                     PHSP; #[Reconstructed PDG2011]
+Enddecay
+
+Decay Lambda_c+
+1.0 p+      K-      pi+                             PHSP;  #[New mode added] #[Reconstructed PDG2011]
+Enddecay
+
+Decay anti-Lambda_c-
+1.0 anti-p-   K+      pi-                           PHSP;  #[New mode added] #[Reconstructed PDG2011]
+Enddecay
+
+Decay D_s+
+1.0 phi     pi+                                     SVS; #[Reconstructed PDG2011]
+Enddecay
+
+Decay D_s-
+1.0 phi     pi-                                     SVS; #[Reconstructed PDG2011]
+Enddecay
+
+Decay phi
+1.0 K+      K-                                      VSS; #[Reconstructed PDG2011]
+Enddecay
+
+End
