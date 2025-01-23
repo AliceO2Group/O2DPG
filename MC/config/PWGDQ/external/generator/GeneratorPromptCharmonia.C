@@ -739,11 +739,11 @@ FairGenerator*
   return genCocktailEvtGen;
 }
 
-FairGenerator*
-  GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV(TString pdgs = "443")
+FairGenerator *
+GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV(TString pdgs = "443", int nSignalPerEvent = 1)
 {
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::O2_GeneratorParamJpsiMidY>();
-  gen->SetNSignalPerEvent(1); // number of jpsis per event
+  gen->SetNSignalPerEvent(nSignalPerEvent); // number of jpsis per event
 
   std::string spdg;
   TObjArray* obj = pdgs.Tokenize(";");
@@ -962,5 +962,30 @@ FairGenerator*
 }
 
 
+FairGenerator* GeneratorCocktailX3872AndPsi2StoJpsi_pp13TeV()
+{
+  auto genCocktailEvtGen = new o2::eventgen::GeneratorEvtGen<GeneratorCocktail>();
+
+  auto genX3872 = new o2::eventgen::O2_GeneratorParamX3872MidY;
+  genX3872->SetNSignalPerEvent(1); // number of jpsis per event
+  auto genPsi2S = new o2::eventgen::O2_GeneratorParamPsiMidY;
+  genPsi2S->SetNSignalPerEvent(1); // number of jpsis per event
+  genCocktailEvtGen->AddGenerator(genX3872, 1); // add J/psi generator
+  genCocktailEvtGen->AddGenerator(genPsi2S, 1);  // add Psi(2S) generator
+
+  TString pdgs = "9920443;100443";
+  std::string spdg;
+  TObjArray* obj = pdgs.Tokenize(";");
+  genCocktailEvtGen->SetSizePdg(obj->GetEntriesFast());
+  for (int i = 0; i < obj->GetEntriesFast(); i++) {
+    spdg = obj->At(i)->GetName();
+    genCocktailEvtGen->AddPdg(std::stoi(spdg), i);
+    printf("PDG %d \n", std::stoi(spdg));
+  }
+  TString pathO2 = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
+  genCocktailEvtGen->SetDecayTable(Form("%s/X3872ANDPSI2STOJPSIPIPI.DEC", pathO2.Data()));
+
+  return genCocktailEvtGen;
+}
 
 

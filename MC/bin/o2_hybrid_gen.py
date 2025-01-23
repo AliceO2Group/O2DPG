@@ -7,12 +7,48 @@
 # with ini files. The --clone flag allows the user to create multiple instances of the generator list,
 # which is a useful feature when running multi-threaded event pool. This can be enabled via setting
 # the --mode flag to 'parallel', which is set "sequential" by default.
+# Since the script uses the ROOT dictionary to import the parameters names, O2 must be loaded, otherwise
+# the template generation will not work.
 # Example:
 # $O2DPG_ROOT/MC/bin/o2_hybrid_gen.py --gen pythia8 boxgen external extkinO2 hepmc pythia8hf --clone 2 \
 #                                     --output config.json --mode parallel --iniFile /path/to/file0.ini /path/to/file1.ini
 
 import argparse
 import json
+import ROOT
+import cppyy
+import numpy as np
+
+# Get the TClass object for the struct
+tclass = ROOT.TClass.GetClass("o2::eventgen::Pythia8GenConfig")
+tclass1 = ROOT.TClass.GetClass("o2::eventgen::BoxGenConfig")
+
+gens_params = {"pythia8": "o2::eventgen::Pythia8GenConfig", "external": "o2::eventgen::ExternalGenConfig",
+        "evtpool": "o2::eventgen::EventPoolGenConfig", "extkinO2": "o2::eventgen::O2KineGenConfig",
+        "hepmc": "o2::eventgen::HepMCGenConfig", "boxgen": "o2::eventgen::BoxGenConfig"}
+cmd_params = "o2::eventgen::FileOrCmdGenConfig"
+gens_instances = {"pythia8": ROOT.o2.eventgen.Pythia8GenConfig(), "external": ROOT.o2.eventgen.ExternalGenConfig(),
+        "evtpool": ROOT.o2.eventgen.EventPoolGenConfig(), "extkinO2": ROOT.o2.eventgen.O2KineGenConfig(),
+        "hepmc": ROOT.o2.eventgen.HepMCGenConfig(), "boxgen": ROOT.o2.eventgen.BoxGenConfig()}
+cmd_instance = ROOT.o2.eventgen.FileOrCmdGenConfig()
+
+def get_params(instance, class_name):
+    tclass = ROOT.TClass.GetClass(class_name)
+    members = tclass.GetListOfDataMembers()
+    params = {}
+    for member in members:
+        if isinstance(member, ROOT.TDataMember):
+            member_value = getattr(instance, member.GetName())
+            params[member.GetName()] = member_value
+    # replace C++ strings and arrays
+    for key, value in params.items():
+        if isinstance(value, cppyy.gbl.std.string):
+            # convert to a JSON serialisable python string
+            params[key] = str(value)
+        elif hasattr(value, '__len__') and hasattr(value, '__getitem__'):
+            # convert C++ numerical array to python array, no string arrays are declared as parameters, so far
+            params[key] = np.array(value).tolist()
+    return params
 
 def main():
     parser = argparse.ArgumentParser(description='Create a JSON file from command line flags.')
@@ -25,13 +61,13 @@ def main():
     args = parser.parse_args()
 
     # Check if the mode is valid
-    mode = "sequential"
-    if args.mode not in ["sequential", "parallel"]:
-        print(f"Mode {args.mode} not valid. Please use 'seq' or 'par'")
+    valid_modes = ["sequential", "parallel"]
+    mode = args.mode if args.mode in valid_modes else "sequential"
+    if args.mode and args.mode not in valid_modes:
+        print(f"Mode {args.mode} not valid. Please use 'sequential' or 'parallel'")
         print("Setting sequential mode as default")
     else:
-        print(f"Running in {args.mode} mode")
-        mode = args.mode
+        print(f"Running in {mode} mode")
 
     # put in a list all the elementes in the gen flag
     noConfGen = ["pythia8pp", "pythia8hf", "pythia8hi", "pythia8powheg"]
@@ -42,76 +78,22 @@ def main():
     if args.gen:
         print(f"Generators to be used: {args.gen}")
         for gen in args.gen:
-            if gen == "pythia8":
-                gens.append({
-                    'name': 'pythia8',
-                    'config': {
-                        "config": "$O2_ROOT/share/Generators/egconfig/pythia8_inel.cfg",
-                        "hooksFileName": "",
-                        "hooksFuncName": "",
-                        "includePartonEvent": False,
-                        "particleFilter": "",
-                        "verbose": 0
-                    }
-                })
-            elif gen == "external":
-                gens.append({
-                    'name': 'external',
-                    'config': {
-                        "fileName": "${O2DPG_ROOT}/MC/config/PWGDQ/external/generator/GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV.C",
-                        "funcName": "GeneratorParamPromptJpsiToElectronEvtGen_pp13TeV()",
-                        "iniFile": ""
-                    }
-                })
-            elif gen == "extkinO2":
-                gens.append({
-                    'name': 'extkinO2',
-                    'config': {
-                        "skipNonTrackable": True,
-                        "continueMode": False,
-                        "roundRobin": False, 
-                        "randomize": False, 
-                        "rngseed": 0, 
-                        "randomphi": False, 
-                        "fileName": "/path/to/filename.root"
-                    }
-                })
-            elif gen == "hepmc":
-                gens.append({
-                    "name": "hepmc",
-                    "config": {
-                        "configcmd": {
-                        "fileNames": "",
-                        "cmd": ""
-                        },
-                        "confighepmc": {
-                        "version": 2,
-                        "eventsToSkip": 0,
-                        "fileName": "/path/to/filename.hepmc",
-                        "prune": False
+            if gen in gens_params:
+                if gen == "hepmc":
+                    configs = [get_params(cmd_instance, cmd_params), get_params(gens_instances[gen], gens_params[gen])]
+                    gens.append({
+                        'name': gen,
+                        'config': {
+                            "configcmd": configs[0],
+                            "confighepmc": configs[1]
                         }
-                    }
-                })
-            elif gen == "boxgen":
-                gens.append({
-                    "name": "boxgen",
-                    "config": {
-                        "pdg": 13,
-                        "number": 1,
-                        "eta": [
-                        -4,
-                        -2.5
-                        ],
-                        "prange": [
-                        0.1,
-                        5
-                        ],
-                        "phirange": [
-                        0,
-                        360
-                        ]
-                    }
-                })
+                    })
+                else:
+                    configs = get_params(gens_instances[gen],gens_params[gen])
+                    gens.append({
+                        'name': gen,
+                        'config': configs
+                    })
             elif gen in noConfGen:
                 gens.append({
                     "name": gen,
@@ -127,13 +109,11 @@ def main():
             if ".ini" != ini[-4:]:
                 print(f"File {ini} is not an ini file")
                 exit(1)
+            configs = get_params(gens_instances["external"],gens_params["external"])
+            configs["iniFile"] = ini
             gens.append({
                 'name': 'external',
-                'config': {
-                    "fileName": "",
-                    "funcName": "",
-                    "iniFile": ini
-                }
+                'config': configs
             })
 
     if args.clone:

@@ -35,7 +35,7 @@ except (ImportError, ValueError):  # ARM architecture has problems with pandas +
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
-from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers
+from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers, merge_dicts
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
 from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg
 
@@ -52,8 +52,9 @@ parser.add_argument('--timestamp', type=int, help="Anchoring timestamp (defaults
 parser.add_argument('--conditionDB',help="CCDB url for QC workflows", default='http://alice-ccdb.cern.ch')
 parser.add_argument('--qcdbHost',help="QCDB url for QC object uploading", default='http://ali-qcdbmc-gpn.cern.ch:8083')
 parser.add_argument('--condition-not-after', type=int, help="only consider CCDB objects not created after this timestamp (for TimeMachine)", default=3385078236000)
-parser.add_argument('--orbitsPerTF', type=int, help="Timeframe size in number of LHC orbits", default=128)
-parser.add_argument('--anchor-config',help="JSON file to contextualise workflow with external configs (config values etc.) for instance comping from data reco workflows.", default='')
+parser.add_argument('--orbitsPerTF', type=int, help="Timeframe size in number of LHC orbits", default=32)
+parser.add_argument('--anchor-config',help="JSON file to contextualise workflow with external configs (config values etc.) for instance coming from data reco workflows.", default='')
+parser.add_argument('--overwrite-config',help="extra JSON file with configs (config values etc.) overwriting defaults or the config coming from --anchor-config", default='')
 parser.add_argument('--dump-config',help="Dump JSON file with all settings used in workflow", default='user_config.json')
 parser.add_argument('-ns',type=int,help='number of signal events / timeframe', default=20)
 parser.add_argument('-gen',help='generator: pythia8, extgen', default='')
@@ -120,7 +121,7 @@ parser.add_argument('--no-strangeness-tracking', action='store_true', default=Fa
 parser.add_argument('--combine-tpc-clusterization', action='store_true', help=argparse.SUPPRESS) #<--- useful for small productions (pp, low interaction rate, small number of events)
 parser.add_argument('--first-orbit', default=256, type=int, help=argparse.SUPPRESS)  # to set the first orbit number of the run for HBFUtils (only used when anchoring); default 256 for convenience to allow for some orbits-early
                                                             # (consider doing this rather in O2 digitization code directly)
-parser.add_argument('--orbits-early', default=0, type=float, help=argparse.SUPPRESS) # number of orbits to start simulating earlier
+parser.add_argument('--orbits-early', default=1, type=float, help=argparse.SUPPRESS) # number of orbits to start simulating earlier
                                                                                    # to reduce start of timeframe effects in MC --> affects collision context
 parser.add_argument('--sor', default=-1, type=int, help=argparse.SUPPRESS) # may pass start of run with this (otherwise it is autodetermined from run number)
 parser.add_argument('--run-anchored', action='store_true', help=argparse.SUPPRESS)
@@ -199,6 +200,13 @@ else:
    # we load a generic config
    print ("** Using generic config **")
    anchorConfig = create_sim_config(args)
+# we apply additional external user choices for the configuration
+# this will overwrite config from earlier stages
+if args.overwrite_config != '':
+   # apply final JSON overwrite
+   config_overwrite = load_external_config(args.overwrite_config)
+   # merge the dictionaries into anchorConfig, the latter takes precedence
+   merge_dicts(anchorConfig, config_overwrite)
 
 # write this config
 config_key_param_path = args.dump_config
@@ -494,16 +502,17 @@ interactionspecification = signalprefix + ',' + str(INTRATE) + ',' + str(1000000
 if doembedding:
    interactionspecification = 'bkg,' + str(INTRATE) + ',' + str(NTIMEFRAMES*args.ns) + ':' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern
 
-PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + interactionspecification                         \
-                           + ' --show-context '                                                                           \
-                           + ' --timeframeID ' + str(int(args.production_offset)*NTIMEFRAMES)                             \
-                           + ' --orbitsPerTF ' + str(orbitsPerTF)                                                         \
-                           + ' --orbits ' + str(NTIMEFRAMES * (orbitsPerTF + math.ceil(args.orbits_early)))               \
-                           + ' --seed ' + str(RNDSEED)                                                                    \
-                           + ' --noEmptyTF --first-orbit ' + str(args.first_orbit - args.orbits_early)                    \
-                           + ' --extract-per-timeframe tf:sgn'                                                            \
-                           + ' --with-vertices ' + vtxmode                                                                \
-                           + ' --maxCollsPerTF ' + str(args.ns)
+PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + interactionspecification                          \
+                            + ' --show-context '                                                                           \
+                            + ' --timeframeID ' + str(int(args.production_offset)*NTIMEFRAMES)                             \
+                            + ' --orbitsPerTF ' + str(orbitsPerTF)                                                         \
+                            + ' --orbits ' + str(NTIMEFRAMES * (orbitsPerTF))                                              \
+                            + ' --seed ' + str(RNDSEED)                                                                    \
+                            + ' --noEmptyTF --first-orbit ' + str(args.first_orbit)                                        \
+                            + ' --extract-per-timeframe tf:sgn'                                                            \
+                            + ' --with-vertices ' + vtxmode                                                                \
+                            + ' --maxCollsPerTF ' + str(args.ns)                                                           \
+                            + ' --orbitsEarly ' + str(args.orbits_early)
 
 PreCollContextTask['cmd'] += ' --bcPatternFile ccdb'  # <--- the object should have been set in (local) CCDB
 if includeQED:
@@ -775,7 +784,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if GENERATOR=="hepmc" and tf > 1:
       sgngenneeds=signalneeds + ['sgngen_' + str(tf-1)] # we serialize event generation
    SGNGENtask=createTask(name='sgngen_'+str(tf), needs=sgngenneeds, tf=tf, cwd='tf'+str(tf), lab=["GEN"],
-                         cpu=1, mem=1000)
+                         cpu=8 if args.make_evtpool else 1, mem=1000)
 
    SGNGENtask['cmd']=''
    if GENERATOR=="hepmc":
@@ -791,8 +800,13 @@ for tf in range(1, NTIMEFRAMES + 1):
        cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
      SGNGENtask['cmd'] = cmd
 
-
-   SGNGENtask['cmd'] +='${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode ' + vtxmode    \
+   generationtimeout = -1 # possible timeout for event pool generation
+   if args.make_evtpool:
+     JOBTTL=environ.get('JOBTTL', None)
+     if JOBTTL != None:
+       generationtimeout = 0.95*int(JOBTTL) # for GRID jobs, determine timeout automatically
+   SGNGENtask['cmd'] +=('','timeout ' + str(generationtimeout) + ' ')[args.make_evtpool and generationtimeout>0] \
+                     + '${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode ' + vtxmode    \
                      + ' --run ' + str(args.run) + ' ' + str(CONFKEY) + str(TRIGGER)                  \
                      + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
                      + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1]                \
@@ -804,6 +818,10 @@ for tf in range(1, NTIMEFRAMES + 1):
       workflow['stages'].append(SGNGENtask)
       signalneeds = signalneeds + [SGNGENtask['name']]
    if args.make_evtpool:
+      if generationtimeout > 0:
+         # final adjustment of command for event pools and timeout --> we need to analyse the return code
+         # if we have a timeout then we finish what we can and are also happy with return code 124
+         SGNGENtask['cmd'] += ' ; RC=$? ; [[ ${RC} == 0 || ${RC} == 124 ]]'
       continue
 
    # GeneratorFromO2Kine parameters are needed only before the transport
@@ -1060,10 +1078,10 @@ for tf in range(1, NTIMEFRAMES + 1):
      tneeds += [QED_task['name']]
    FT0FV0EMCCTPDIGItask = createTask(name="ft0fv0emcctp_digi_" + str(tf), needs=tneeds,
                   tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
-   FT0FV0EMCCTPDIGItask['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ;')[doembedding]
+   FT0FV0EMCCTPDIGItask['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ; ln -nfs ../bkg_HitsEMC.root; ln -nfs ../bkg_Kine.root; ')[doembedding]
    FT0FV0EMCCTPDIGItask['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption \
                + ' --onlyDet FT0,FV0,EMC,CTP  --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE)    \
-               + ' --disable-write-ini' + putConfigValuesNew(localCF={"DigiParams.seed" : str(TFSEED)})                   \
+               + ' --disable-write-ini' + putConfigValuesNew(listOfMainKeys=['EMCSimParam'], localCF={"DigiParams.seed" : str(TFSEED)})                   \
                + (' --combine-devices','')[args.no_combine_dpl_devices] + ('',' --disable-mc')[args.no_mc_labels] + QEDdigiargs \
                + ' --forceSelectedDets'
    workflow['stages'].append(FT0FV0EMCCTPDIGItask)
@@ -1135,7 +1153,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
    TPCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' \
                         + putConfigValuesNew(["GPU_global","TPCGasParam", "TPCCorrMap", "GPU_rec_tpc", "trackTuneParams"], {"GPU_proc.ompThreads":NWORKERS_TF} | tpcLocalCFreco) + ('',' --disable-mc')[args.no_mc_labels] \
-                        + tpc_corr_scaling_options + tpc_corr_options_mc
+                        + tpc_corr_scaling_options + tpc_corr_options_mc \
+                        + ' --tpc-mc-time-gain'
    workflow['stages'].append(TPCRECOtask)
 
    # END TPC reco
@@ -1594,6 +1613,8 @@ else:
    tfpool=['tf' + str(tf) + '/genevents_Kine.root' for tf in range(1, NTIMEFRAMES + 1)]
    POOL_merge_task = createTask(name='poolmerge', needs=wfneeds, lab=["POOL"], mem='2000', cpu='1')
    POOL_merge_task['cmd'] = '${O2DPG_ROOT}/UTILS/root_merger.py -o evtpool.root -i ' + ','.join(tfpool)
+   # also create the stat file with the event count
+   POOL_merge_task['cmd'] += '; RC=$?; root -l -q -b -e "auto f=TFile::Open(\\\"evtpool.root\\\"); auto t=(TTree*)f->Get(\\\"o2sim\\\"); int n=t->GetEntries(); std::ofstream((\\\"0_0_0_\\\"+std::to_string(n)+\\\".stat\\\").c_str()) << \\\"# MonaLisa stat file for event pools\\\";" ; [[ ${RC} == 0 ]]'
    workflow['stages'].append(POOL_merge_task)
 
 # adjust for alternate (RECO) software environments
