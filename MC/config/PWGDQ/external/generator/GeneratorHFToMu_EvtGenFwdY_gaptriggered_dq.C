@@ -162,7 +162,7 @@ FairGenerator*
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorHFToMu_EvtGenFwdY_gaptriggered>();
   if (isbb == false) {
     gen->setPDG(4);
-    pdgs = "411;421;431;4122;4232;4332";
+    pdgs = "411;421;431;4122;4132;4232;4332";
   } else {
     gen->setPDG(5);
     pdgs = "511;521;531;541;5112;5122;5232;5132;5332";
@@ -171,7 +171,7 @@ FairGenerator*
   
   gen->setRapidityHadron(rapidityMin,rapidityMax);
   gen->setHadronMultiplicity(1);
-  TString pathO2table = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffChadrons.cfg");
+  TString pathO2table = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/pythia8/decayer/switchOffCBhadrons.cfg");
   gen->readFile(pathO2table.Data());
   gen->setConfigMBdecays(pathO2table);
   gen->setVerbose(verbose);
