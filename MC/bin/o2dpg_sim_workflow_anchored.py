@@ -14,7 +14,6 @@ import re
 import json
 import math
 import pandas as pd
-import csv
 
 # Creates a time anchored MC workflow; positioned within a given run-number (as function of production size etc)
 
@@ -318,17 +317,28 @@ def exclude_timestamp(ts, orbit, run, filename):
     if not os.path.isfile(filename):
        return False
 
-    # Function to detect the delimiter automatically
-    def detect_delimiter(file_path):
-      with open(file_path, 'r') as csvfile:
-        sample = csvfile.read(1024)  # Read a small sample of the file
-        sniffer = csv.Sniffer()
-        delimiter = sniffer.sniff(sample).delimiter
-        return delimiter
-      return ',' # a reasonable default
+    def parse_file(filename):
+      parsed_data = []
+      with open(filename, 'r') as file:
+        for line in file:
+            # Split the line into exactly 4 parts (first three numbers + comment)
+            columns = re.split(r'[,\s;\t]+', line.strip(), maxsplit=3)
 
-    # read txt file into a pandas dataframe ---> if this fails catch exception and return
-    df = pd.read_csv(filename, header=None, names=["Run", "From", "To", "Message"], sep=detect_delimiter(filename))
+            if len(columns) < 3:
+                continue  # Skip lines with insufficient columns
+
+            try:
+                # Extract the first three columns as numbers
+                num1, num2, num3 = map(int, columns[:3])  # Assuming integers in the data
+                comment = columns[3] if len(columns) > 3 else ""
+                parsed_data.append({"Run" : num1, "From" : num2, "To" : num3, "Message" : comment})
+            except ValueError:
+                continue  # Skip lines where first three columns are not numeric
+      return parsed_data
+
+    data = parse_file(filename)
+    # print (data)
+    df = pd.DataFrame(data) # convert to data frame for easy handling
 
     # extract data for this run number
     filtered = df[df['Run'] == run]
