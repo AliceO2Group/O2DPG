@@ -1,0 +1,37 @@
+! Random number generator initializing parameters
+iseed 0         ! initialize random number sequence
+
+! Heavy flavour production parameters
+numevts 100000  ! number of events to be generated
+ih1 1           ! hadron 1 type (1: proton; -1: antiproton)
+ih2 1           ! hadron 2 type (1: proton; -1: antiproton)
+!ndns1 131      ! pdf for hadron 1 (when using the hvqpdf package, hvqpdf numbering)
+!ndns2 131      ! pdf for hadron 2 (when using the hvqpdf package, hvqpdf numbering)
+lhans1 11000    ! pdf set for hadron 1 (LHAGLUE number) (11000 = CT10NLO, 10550 = CTEQ66)
+lhans2 11000    ! pdf set for hadron 2 (LHAGLUE number) (11000 = CT10NLO, 10550 = CTEQ66)
+ebeam1 6800     ! energy of beam 1 in GeV
+ebeam2 6800     ! energy of beam 2 in GeV
+qmass 1.5       ! mass of heavy quark in GeV
+facscfact 2     ! factorization scale factor: mufact=muref*facscfact
+renscfact 2     ! renormalization scale factor: muren=muref*renscfact
+!fixedscale 1   ! use ref. scale=qmass (default 0, use running scale)
+
+! Parameters to allow or not the use of stored data
+use-old-grid 1    ! if 1 use old grid if file pwggrids.dat is present (# 1: regenerate)
+use-old-ubound 1  ! if 1 use norm of upper bounding function stored in pwgubound.dat, if present; # 1: regenerate
+
+! Parameters that control the grid for Born variables generation
+ncall1 50000    ! number of calls for initializing the integration grid
+itmx1 5         ! number of iterations for initializing the integration grid
+ncall2 100000   ! number of calls for computing the integral and finding upper bound
+itmx2 5         ! number of iterations for computing the integral and finding upper bound
+foldcsi 5       ! number of folds on x integration
+foldy 5         ! number of folds on y integration
+foldphi 1       ! number of folds on phi integration
+nubound 500000  ! number of bbarra calls to setup norm of upper bounding function
+iymax 1         ! <= 10, normalization of upper bounding function in iunorm X iunorm square in y, log(m2qq)
+ixmax 1         ! <= 10, normalization of upper bounding function in iunorm X iunorm square in y, log(m2qq)
+xupbound 2      ! increase upper bound for radiation generation
+bornktmin 0     ! (default 0d0) Generation cut: minimum kt in underlying Born
+bornsuppfact 0  ! (default 0d0) Mass parameter for Born suppression factor. If < 0 suppfact = 1
+storemintupb 0  ! store function calls in binary file for more precise generation
