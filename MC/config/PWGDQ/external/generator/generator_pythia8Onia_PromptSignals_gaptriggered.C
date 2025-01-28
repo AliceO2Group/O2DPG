@@ -66,6 +66,7 @@ bool generateEvent() override {
       // find the q-qbar or single hadron ancestor
       found = findHadrons(mPythia.event);
     }
+    notifySubGenerator(1);
   } else {
     /// reset event
     pythiaMBgen.event.reset();
@@ -73,6 +74,7 @@ bool generateEvent() override {
       genOk = pythiaMBgen.next();
     }
     mPythia.event = pythiaMBgen.event;
+    notifySubGenerator(0);
   }
   mGeneratedEvents++; 
   if (mVerbose) { 
@@ -86,6 +88,8 @@ bool Init() override {
   if(mConfigMBdecays.Contains("cfg")) {
     pythiaMBgen.readFile(mConfigMBdecays.Data());	
   }
+  addSubGenerator(0, "Minimum bias");
+  addSubGenerator(1, "Onia injected");
 	GeneratorPythia8::Init();
   pythiaMBgen.init();
   return true;
