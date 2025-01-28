@@ -46,6 +46,8 @@ public:
     mRapidityMax = valMax;
   };
 
+  void setTriggerGap(int triggerGap) {mInverseTriggerRatio = triggerGap;}
+
   void setConfigMBdecays(TString val){mConfigMBdecays = val;}
 
   void setVerbose(bool val) { mVerbose = val; };
@@ -137,9 +139,10 @@ private:
 
 // Predefined generators:
 FairGenerator*
-  GeneratorPromptJpsi_EvtGenMidY(double rapidityMin = -1.5, double rapidityMax = 1.5, bool verbose = false)
+  GeneratorPromptJpsi_EvtGenMidY(int triggerGap, double rapidityMin = -1.5, double rapidityMax = 1.5, bool verbose = false)
 {
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8OniaPromptSignalsGapTriggered>();
+  gen->setTriggerGap(triggerGap);
   gen->setRapidityRange(rapidityMin, rapidityMax);
   gen->addHadronPDGs(443);
   gen->setVerbose(verbose);
