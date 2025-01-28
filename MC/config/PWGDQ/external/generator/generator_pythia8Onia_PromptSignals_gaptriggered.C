@@ -144,12 +144,14 @@ FairGenerator*
   gen->addHadronPDGs(443);
   gen->setVerbose(verbose);
 
-  TString pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffBhadrons.cfg");
+  TString pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffJpsi.cfg");
   gen->readFile(pathO2table.Data());
   gen->setConfigMBdecays(pathO2table);
+  gen->PrintDebug(true);
 
   gen->SetSizePdg(1);
   gen->AddPdg(443, 0);
+
   gen->SetForceDecay(kEvtDiElectron);
 
   // set random seed
