@@ -1,4 +1,4 @@
-* @davidrohr @shahor02 @chiarazampolli @sawenzel @benedikt-voelkel
+* @davidrohr @shahor02 @chiarazampolli @sawenzel
 /DATA/production @davidrohr @shahor02 @chiarazampolli
 
 /DATA/testing/detectors/CPV
@@ -8,24 +8,23 @@
 /DATA/testing/detectors/FV0
 /DATA/testing/detectors/HMP
 /DATA/testing/detectors/ITS
-/DATA/testing/detectors/MCH @aphecetche
+/DATA/testing/detectors/MCH
 /DATA/testing/detectors/MFT
-/DATA/testing/detectors/MID @aphecetche
+/DATA/testing/detectors/MID
 /DATA/testing/detectors/PHS
 /DATA/testing/detectors/TOF @noferini @chiarazampolli
 /DATA/testing/detectors/TPC @wiechula
 /DATA/testing/detectors/TRD
 /DATA/testing/detectors/ZDC
 
-/MC @sawenzel @chiarazampolli @benedikt-voelkel
+/MC @sawenzel @chiarazampolli @jackal1-66
 
 # PWG experts
-/MC/*/PWGHF @AliceO2Group/reviewers-pwg-hf @sawenzel @chiarazampolli @benedikt-voelkel
-/MC/*/PWGLF @AliceO2Group/reviewers-pwg-lf @sawenzel @chiarazampolli @benedikt-voelkel
-/MC/*/PWGEM @AliceO2Group/reviewers-pwg-em @sawenzel @chiarazampolli @benedikt-voelkel
-/MC/*/PWGGAJE @AliceO2Group/reviewers-pwg-je @sawenzel @chiarazampolli @benedikt-voelkel
-/MC/*/PWGCF @AliceO2Group/reviewers-pwg-cf @sawenzel @chiarazampolli @benedikt-voelkel
-/MC/*/PWGDQ @AliceO2Group/reviewers-pwg-dq @sawenzel @chiarazampolli @benedikt-voelkel
-/MC/*/PWGUD @AliceO2Group/reviewers-pwg-ud @sawenzel @chiarazampolli @benedikt-voelkel
-
-/RelVal @sawenzel @chiarazampolli @benedikt-voelkel
+/MC/*/PWGHF @AliceO2Group/reviewers-pwg-hf
+/MC/*/PWGLF @AliceO2Group/reviewers-pwg-lf
+/MC/*/PWGEM @AliceO2Group/reviewers-pwg-em
+/MC/*/PWGGAJE @AliceO2Group/reviewers-pwg-je
+/MC/*/PWGCF @AliceO2Group/reviewers-pwg-cf
+/MC/*/PWGDQ @AliceO2Group/reviewers-pwg-dq
+/MC/*/PWGUD @AliceO2Group/reviewers-pwg-ud
+/RelVal @sawenzel @chiarazampolli
