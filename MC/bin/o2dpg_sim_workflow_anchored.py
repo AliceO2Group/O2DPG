@@ -119,6 +119,35 @@ def retrieve_Aggregated_RunInfos(run_number):
             "detList" : detList}
 
 
+def parse_orbits_per_tf(orbitsPerTF, intRate):
+    """
+    Function to determine the number of orbits per TF to be used as
+    a function of interaction rate.
+    """
+    if intRate == None or intRate < 0:
+       return -1
+
+    # Check if the argument is a single integer, in which case we just use it
+    if orbitsPerTF.isdigit():
+        return int(orbitsPerTF)
+
+    # Otherwise we assume that the argument is a string of the form
+    # a1:b1:o1,a2:b2:o2,...
+    # where we apply orbit o2 if the intRate falls between a2 <= intRate < b2.
+    ranges = orbitsPerTF.split(',')
+    for entry in ranges:
+        try:
+            a, b, x = map(int, entry.split(':'))
+            if a <= intRate < b:
+                return x
+        except ValueError:
+            raise ValueError(f"Invalid format in entry: {entry}")
+
+    # if we didn't find a valid range we return -1 which means
+    # that the orbit number will be determined from GRPECS
+    return -1
+
+
 def retrieve_params_fromGRPECS_and_OrbitReset(ccdbreader, run_number, run_start, run_end):
     """
     Retrieves start of run (sor), end of run (eor) and other global parameters from the GRPECS object,
@@ -212,11 +241,28 @@ def retrieve_CTPScalers(ccdbreader, run_number, timestamp=None):
       return ctpscaler
     return None
 
-def retrieve_MinBias_CTPScaler_Rate(ctpscaler, finaltime, trig_eff, NBunches, ColSystem):
+def retrieve_MinBias_CTPScaler_Rate(ctpscaler, finaltime, trig_eff_arg, NBunches, ColSystem, eCM):
     """
-    retrieves the CTP scalers object for a given timestamp and run_number
-    and calculates the interation rate to be applied in Monte Carlo digitizers
+    retrieves the CTP scalers object for a given timestamp
+    and calculates the interation rate to be applied in Monte Carlo digitizers.
+    Uses trig_eff_arg when positive, otherwise calculates the effTrigger.
     """
+
+    # determine first of all the trigger efficiency
+    effTrigger = trig_eff_arg
+    if effTrigger < 0:
+      if ColSystem == "pp":
+        if eCM < 1000:
+          effTrigger = 0.68
+        elif eCM < 6000:
+          effTrigger = 0.737
+        else:
+          effTrigger = 0.759
+      elif ColSystem == "PbPb":
+        effTrigger = 28.0 # this is ZDC
+      else:
+        effTrigger = 0.759
+
     # this is the default for pp
     ctpclass = 0 # <---- we take the scaler for FT0
     ctptype = 1
@@ -226,9 +272,6 @@ def retrieve_MinBias_CTPScaler_Rate(ctpscaler, finaltime, trig_eff, NBunches, Co
       ctptype = 7
     print("Fetching rate with time " + str(finaltime) + " class " + str(ctpclass) + " type " + str(ctptype))
     rate = ctpscaler.getRateGivenT(finaltime, ctpclass, ctptype)
-    #if ColSystem == "PbPb":
-    #  rate.first = rate.first / 28.
-    #  rate.second = rate.second / 28.
 
     print("Global rate " + str(rate.first) + " local rate " + str(rate.second))
     ctp_local_rate_raw = None
@@ -237,7 +280,7 @@ def retrieve_MinBias_CTPScaler_Rate(ctpscaler, finaltime, trig_eff, NBunches, Co
     if rate.first >= 0:
       # calculate true rate (input from Chiara Zampolli) using number of bunches
       coll_bunches = NBunches
-      mu = - math.log(1. - rate.second / 11245 / coll_bunches) / trig_eff
+      mu = - math.log(1. - rate.second / 11245 / coll_bunches) / effTrigger
       finalRate = coll_bunches * mu * 11245
       return finalRate, ctp_local_rate_raw
 
@@ -303,7 +346,7 @@ def determine_timestamp(sor, eor, splitinfo, cycle, ntf, HBF_per_timeframe = 256
     return int(timestamp_of_production), production_offset
 
 
-def exclude_timestamp(ts, orbit, run, filename):
+def exclude_timestamp(ts, orbit, run, filename, global_run_params):
     """
     Checks if timestamp ts (or orbit) falls within a bad data period.
     Returns true if this timestamp should be excluded; false otherwise
@@ -352,18 +395,25 @@ def exclude_timestamp(ts, orbit, run, filename):
     if len(exclude_list) == 0:
        return False
 
-    data_is_in_orbits = exclude_list[0][0] < 1514761200000
+    timeframelength_intime = global_run_params["EOR"] - global_run_params["SOR"]
+    timeframelength_inorbits = global_run_params["LastOrbit"] - global_run_params["FirstOrbit"]
+    total_excluded_fraction = 0
+    excluded = False
+    for exclusion_entry in exclude_list:
+       #
+       data_is_in_orbits = exclusion_entry[0] < 1514761200000
+       print ("Checking data", exclusion_entry)
+       if data_is_in_orbits:
+          total_excluded_fraction = total_excluded_fraction + (exclusion_entry[1] - exclusion_entry[0]) / (1.*timeframelength_inorbits)
+          if exclusion_entry[0] <= orbit and orbit <= exclusion_entry[1]:
+             excluded = True
+       else:
+          total_excluded_fraction = total_excluded_fraction + (exclusion_entry[1] - exclusion_entry[0]) / (1.*timeframelength_intime)
+          if exclusion_entry[0] <= ts and ts <= exclusion_entry[1]:
+             excluded = True
 
-    if data_is_in_orbits:
-       for orbitspan in exclude_list:
-          if orbitspan[0] <= orbit and orbit <= orbitspan[1]:
-             return True
-    else:
-       for timespan in exclude_list:
-          if timespan[0] <= ts and ts <= timespan[1]:
-             return True
-
-    return False
+    print(f"This run as globally {total_excluded_fraction} of it's data marked to be exluded")
+    return excluded
 
 def main():
     parser = argparse.ArgumentParser(description='Creates an O2DPG simulation workflow, anchored to a given LHC run. The workflows are time anchored at regular positions within a run as a function of production size, split-id and cycle.')
@@ -375,10 +425,10 @@ def main():
     parser.add_argument("--split-id", type=int, help="The split id of this job within the whole production --prod-split)", default=0)
     parser.add_argument("-tf", type=int, help="number of timeframes per job", default=1)
     parser.add_argument("--ccdb-IRate", type=bool, help="whether to try fetching IRate from CCDB/CTP", default=True)
-    parser.add_argument("--trig-eff", type=float, dest="trig_eff", help="Trigger eff needed for IR", default=-1.0)
+    parser.add_argument("--trig-eff", type=float, dest="trig_eff", help="Trigger eff needed for IR (default is automatic mode)", default=-1.0)
     parser.add_argument("--run-time-span-file", type=str, dest="run_span_file", help="Run-time-span-file for exclusions of timestamps (bad data periods etc.)", default="")
     parser.add_argument("--invert-irframe-selection", action='store_true', help="Inverts the logic of --run-time-span-file")
-    parser.add_argument("--orbitsPerTF", type=int, help="Force a certain orbits-per-timeframe number; Automatically taken from CCDB if not given.", default=-1)
+    parser.add_argument("--orbitsPerTF", type=str, help="Force a certain orbits-per-timeframe number; Automatically taken from CCDB if not given.", default="")
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
     print (args)
@@ -394,31 +444,20 @@ def main():
     run_start = GLOparams["SOR"]
     run_end = GLOparams["EOR"]
 
-    # overwrite with some external choices
-    if args.orbitsPerTF!=-1:
-       print("Adjusting orbitsPerTF from " + str(GLOparams["OrbitsPerTF"]) + " to " + str(args.orbitsPerTF))
-       GLOparams["OrbitsPerTF"] = args.orbitsPerTF
+    mid_run_timestamp = (run_start + run_end) // 2
 
-    # determine timestamp, and production offset for the final MC job to run
-    timestamp, prod_offset = determine_timestamp(run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
-    # determine orbit corresponding to timestamp
-    orbit = GLOparams["FirstOrbit"] + (timestamp - GLOparams["SOR"]) / LHCOrbitMUS
+    # --------
+    # fetch other important global properties needed further below
+    # --------
+    ctp_scalers = retrieve_CTPScalers(ccdbreader, args.run_number, timestamp=mid_run_timestamp)
+    if ctp_scalers is None:
+       print(f"ERROR: Cannot retrive scalers for run number {args.run_number}")
+       exit (1)
 
-    # check if timestamp is to be excluded
-    job_is_exluded = exclude_timestamp(timestamp, orbit, args.run_number, args.run_span_file)
-    # possibly invert the selection
-    if args.invert_irframe_selection:
-       job_is_exluded = not job_is_exluded
+    # retrieve the GRPHCIF object (using mid-run timestamp)
+    grplhcif = retrieve_GRPLHCIF(ccdbreader, int(mid_run_timestamp))
 
-    # this is anchored to
-    print ("Determined start-of-run to be: ", run_start)
-    print ("Determined end-of-run to be: ", run_end)
-    print ("Determined timestamp to be : ", timestamp)
-    print ("Determined offset to be : ", prod_offset)
-
-
-    # retrieve the GRPHCIF object
-    grplhcif = retrieve_GRPLHCIF(ccdbreader, int(timestamp))
+    # determine some fundamental physics quantities
     eCM = grplhcif.getSqrtS()
     A1 = grplhcif.getAtomicNumberB1()
     A2 = grplhcif.getAtomicNumberB2()
@@ -438,31 +477,40 @@ def main():
 
     print ("Collision system ", ColSystem)
 
+    # possibly overwrite the orbitsPerTF with some external choices
+    if args.orbitsPerTF!="":
+       # we actually need the interaction rate for this calculation
+       # let's use the one provided from IR.txt (async reco) as quick way to make the decision
+       run_rate, _ = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, mid_run_timestamp/1000., args.trig_eff, grplhcif.getBunchFilling().getNBunches(), ColSystem, eCM)
+       determined_orbits = parse_orbits_per_tf(args.orbitsPerTF, run_rate)
+       if determined_orbits != -1:
+         print("Adjusting orbitsPerTF from " + str(GLOparams["OrbitsPerTF"]) + " to " + str(determined_orbits))
+         GLOparams["OrbitsPerTF"] = determined_orbits
+
+    # determine timestamp, and production offset for the final MC job to run
+    timestamp, prod_offset = determine_timestamp(run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
+    # determine orbit corresponding to timestamp
+    orbit = GLOparams["FirstOrbit"] + (timestamp - GLOparams["SOR"]) / LHCOrbitMUS
+
+    # check if timestamp is to be excluded
+    job_is_exluded = exclude_timestamp(timestamp, orbit, args.run_number, args.run_span_file, GLOparams)
+    # possibly invert the selection
+    if args.invert_irframe_selection:
+       job_is_exluded = not job_is_exluded
+
+    # this is anchored to
+    print ("Determined start-of-run to be: ", run_start)
+    print ("Determined end-of-run to be: ", run_end)
+    print ("Determined timestamp to be : ", timestamp)
+    print ("Determined offset to be : ", prod_offset)
+
     forwardargs = " ".join([ a for a in args.forward if a != '--' ])
     # retrieve interaction rate
     rate = None
     ctp_local_rate_raw = None
 
     if args.ccdb_IRate == True:
-       effTrigger = args.trig_eff
-       if effTrigger < 0:
-         if ColSystem == "pp":
-           if eCM < 1000:
-             effTrigger = 0.68
-           elif eCM < 6000:
-             effTrigger = 0.737
-           else:
-             effTrigger = 0.759
-         elif ColSystem == "PbPb":
-           effTrigger = 28.0 # this is ZDC
-         else:
-           effTrigger = 0.759
-       ctp_scalers = retrieve_CTPScalers(ccdbreader, args.run_number)
-       if ctp_scalers is None:
-         print(f"ERROR: Cannot retrive scalers for run number {args.run_number}")
-         exit (1)
-       # time needs to be converted to seconds ==> timestamp / 1000
-       rate, ctp_local_rate_raw = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, timestamp/1000., effTrigger, grplhcif.getBunchFilling().getNBunches(), ColSystem)
+       rate, ctp_local_rate_raw = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, timestamp/1000., args.trig_eff, grplhcif.getBunchFilling().getNBunches(), ColSystem, eCM)
 
        if rate != None:
          # if the rate calculation was successful we will use it, otherwise we fall back to some rate given as part
