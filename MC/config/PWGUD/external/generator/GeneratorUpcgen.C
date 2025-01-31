@@ -3,7 +3,7 @@ R__ADD_INCLUDE_PATH($Upcgen_ROOT/include)
 
 #include "UpcGenerator.h"
 
-// usage: o2-sim -n 100 -g external --configKeyValues 'GeneratorExternal.fileName=GeneratorUpcgen.C;GeneratorExternal.funcName=GeneratorUpcgen("kDiTau")'
+// usage: o2-sim -n 100 -g external --configKeyValues 'GeneratorExternal.fileName=GeneratorUpcgen.C;GeneratorExternal.funcName=GeneratorUpcgen("kDiTau", ".", 5360.)'
 
 namespace o2 {
 namespace eventgen {
@@ -65,11 +65,13 @@ public:
     mUPCgen->setNumThreads(1);
 
     // update generator parameters - configure
-    mUPCgen->setParameterValue("DO_PT_CUT", "1");
-    mUPCgen->setParameterValue("DO_ETA_CUT", "1");
+    // independent of process
+    mUPCgen->setParameterValue("DO_PT_CUT", "0");
+    mUPCgen->setParameterValue("DO_ETA_CUT", "0");
     mUPCgen->setParameterValue("USE_ROOT_OUTPUT", "0");
     mUPCgen->setParameterValue("USE_HEPMC_OUTPUT", "0");
 
+    // process specific
     for (int i = 0; i < nElements; ++i) {
       mUPCgen->setParameterValue(upcgenConfig.pnames[i],
                                  upcgenConfig.sets[idx].elements[i]);
