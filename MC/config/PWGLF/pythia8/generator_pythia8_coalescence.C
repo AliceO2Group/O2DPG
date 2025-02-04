@@ -104,6 +104,10 @@ protected:
     const double coalescenceRadius{0.5 * 1.122462 * mCoalMomentum}; /// 1.122462 [2^(1/6)] from PRL 126, 101101 (2021), only for 3 body coalescence
 
     auto coalescence = [&](int iC, int pdgCode, float mass, int iD1, int iD2, int iD3) {
+      if (event[iD1].status() < 0 || event[iD2].status() < 0 || event[iD3].status() < 0)
+      {
+        return false;
+      }
       auto p1 = event[iD1].p();
       auto p2 = event[iD2].p();
       auto p3 = event[iD3].p();
@@ -131,32 +135,27 @@ protected:
       return false;
     };
 
+    bool coalHappened = false;
     for (int iC{0}; iC < 2; ++iC)
     {
       for (int iP{0}; iP < protons[iC].size(); ++iP) {
         for (int iN{0}; iN < neutrons[iC].size(); ++iN) {
           /// H3L loop
           for (int iL{0}; iL < lambdas[iC].size(); ++iL) {
-            if (coalescence(iC, 1010010030, 2.991134, protons[iC][iP], neutrons[iC][iN], lambdas[iC][iL])) {
-              return true;
-            }
+            coalHappened |= coalescence(iC, 1010010030, 2.991134, protons[iC][iP], neutrons[iC][iN], lambdas[iC][iL]);
           }
           /// H3 loop
           for (int iN2{iN + 1}; iN2 < neutrons[iC].size(); ++iN2) {
-            if (coalescence(iC, 1000010030, 2.80892113298, protons[iC][iP], neutrons[iC][iN], neutrons[iC][iN2])) {
-              return true;
-            }
+            coalHappened |= coalescence(iC, 1000010030, 2.80892113298, protons[iC][iP], neutrons[iC][iN], neutrons[iC][iN2]);
           }
           /// He3 loop
           for (int iP2{iP + 1}; iP2 < protons[iC].size(); ++iP2) {
-            if (coalescence(iC, 1000020030, 2.808391, protons[iC][iP], protons[iC][iP2], neutrons[iC][iN])) {
-              return true;
-            }
+            coalHappened |= coalescence(iC, 1000020030, 2.808391, protons[iC][iP], protons[iC][iP2], neutrons[iC][iN]);
           }
         }
       }
     }
-    return false;
+    return coalHappened;
   }
 
 private:
