@@ -578,6 +578,15 @@ if [[ $BEAMTYPE == "pp" ]]; then
   export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow+=";MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6"
 fi
 
+# hascode will be used later for downsampling a few things
+if [[ -f wn.xml ]]; then
+  HASHCODE=`grep alien:// wn.xml | tr ' ' '\n' | grep ^lfn | cut -d\" -f2 | head -1 | cksum | cut -d ' ' -f 1`
+else
+  HASHCODE=`echo "${inputarg}" | cksum | cut -d ' ' -f 1`
+fi
+
+echo "HASHCODE for current job: $HASHCODE"
+
 # possibly adding calib steps as done online
 # could be done better, so that more could be enabled in one go
 if [[ $ADD_CALIB == "1" ]]; then
@@ -684,11 +693,6 @@ else
   if [[ $ALIEN_JDL_ENABLEPERMILFULLTRACKQC == "1" ]]; then
     PERMIL_FULLTRACKQC=${ALIEN_JDL_PERMILFULLTRACKQC:-100}
     INVERSE_PERMIL_FULLTRACKQC=$((1000/PERMIL_FULLTRACKQC))
-    if [[ -f wn.xml ]]; then
-      HASHCODE=`grep alien:// wn.xml | tr ' ' '\n' | grep ^lfn | cut -d\" -f2 | head -1 | cksum | cut -d ' ' -f 1`
-    else
-      HASHCODE=`echo "${inputarg}" | cksum | cut -d ' ' -f 1`
-    fi
     if [[ "$((HASHCODE%INVERSE_PERMIL_FULLTRACKQC))" -eq "0" ]]; then
       TRACKQC_FRACTION=1
     else
@@ -704,7 +708,38 @@ if [[ $PERIOD == "LHC22c" ]] || [[ $PERIOD == "LHC22d" ]] || [[ $PERIOD == "LHC2
   export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --ctpreadout-create 1"
 fi
 
+THIN_AODS=0
 if [[ $ALIEN_JDL_THINAODS == "1" ]] ; then
+  if [[ ! -z $ALIEN_JDL_PERCENTTHINAODS ]]; then
+    # for the moment, this option SHOULD NOT be used; the two following lines should be removed once this is possible
+    echo "We cannot for now thin only some percentage of the data, so we will return and the job will (hopefully) crash"
+    return 2
+    PERCENT_THINAODS=${ALIEN_JDL_PERCENTTHINAODS}
+    if [[ $PERCENT_THINAODS -gt 100 ]]; then
+      # we assume we want to thin everything
+      echo "The percentage to thin was set to a number > 100 (PERCENT_THINAODS = $PERCENT_THINAODS), we assume we need to thin everything and override this to 100"
+      PERCENT_THINAODS=100
+    fi
+    INVERSE_PERCENT_THINAODS=$((100/PERCENT_THINAODS))
+    if [[ $INVERSE_PERCENT_THINAODS -ne "0" ]]; then
+      if [[ "$((HASHCODE%INVERSE_PERCENT_THINAODS))" -eq "0" ]]; then
+	echo "AODs WILL BE THINNED: JDL var to thin AODs was set to true, and the selection HASHCODE%INVERSE_PERCENT_THINAODS returns successfully 0 (ALIEN_JDL_THINAODS = $ALIEN_JDL_THINAODS, PERCENT_THINAODS = $PERCENT_THINAODS, INVERSE_PERCENT_THINAODS = $INVERSE_PERCENT_THINAODS, HASHCODE%INVERSE_PERCENT_THINAODS = $((HASHCODE%INVERSE_PERCENT_THINAODS)))"
+	THIN_AODS=1
+      else
+	echo "AODs WILL NOT BE THINNED: JDL var to thin AODs was set to true, but the selection HASHCODE%INVERSE_PERCENT_THINAODS returns a number different from 0 (ALIEN_JDL_THINAODS = $ALIEN_JDL_THINAODS, PERCENT_THINAODS = $PERCENT_THINAODS, INVERSE_PERCENT_THINAODS = $INVERSE_PERCENT_THINAODS, HASHCODE%INVERSE_PERCENT_THINAODS = $((HASHCODE%INVERSE_PERCENT_THINAODS)))"
+	THIN_AODS=0
+      fi
+    else
+      echo "AODs WILL NOT BE THINNED: JDL var to thin AODs was set to true, but the inverse of the percentage returns 0, ALIEN_JDL_THINAODS = $ALIEN_JDL_THINAODS, PERCENT_THINAODS = $PERCENT_THINAODS, INVERSE_PERCENT_THINAODS = $INVERSE_PERCENT_THINAODS"
+      THIN_AODS=0
+    fi
+  else
+    echo "AODs WILL BE THINNED: JDL var to thin AODs was set to true without any percentage"
+    THIN_AODS=1
+  fi
+fi
+
+if [[ $THIN_AODS == "1" ]]; then
   export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --thin-tracks"
 fi
 
