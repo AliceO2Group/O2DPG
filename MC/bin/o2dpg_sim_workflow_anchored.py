@@ -390,8 +390,6 @@ def exclude_timestamp(ts, orbit, run, filename, global_run_params):
     exclude_list =  list(zip(filtered["From"].to_list() , filtered["To"].to_list()))
 
     print("Exclusion list has " + str(len(exclude_list)) + " entries")
-    print(exclude_list)
-
     if len(exclude_list) == 0:
        return False
 
@@ -406,11 +404,13 @@ def exclude_timestamp(ts, orbit, run, filename, global_run_params):
        if data_is_in_orbits:
           total_excluded_fraction = total_excluded_fraction + (exclusion_entry[1] - exclusion_entry[0]) / (1.*timeframelength_inorbits)
           if exclusion_entry[0] <= orbit and orbit <= exclusion_entry[1]:
-             excluded = True
+            print ("Excluding orbit ", str(orbit))
+            excluded = True
        else:
           total_excluded_fraction = total_excluded_fraction + (exclusion_entry[1] - exclusion_entry[0]) / (1.*timeframelength_intime)
           if exclusion_entry[0] <= ts and ts <= exclusion_entry[1]:
-             excluded = True
+            print ("Excluding timestamp ", str(ts))
+            excluded = True
 
     print(f"This run as globally {total_excluded_fraction} of it's data marked to be exluded")
     return excluded
@@ -489,20 +489,27 @@ def main():
 
     # determine timestamp, and production offset for the final MC job to run
     timestamp, prod_offset = determine_timestamp(run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
-    # determine orbit corresponding to timestamp
-    orbit = GLOparams["FirstOrbit"] + (timestamp - GLOparams["SOR"]) / LHCOrbitMUS
 
-    # check if timestamp is to be excluded
-    job_is_exluded = exclude_timestamp(timestamp, orbit, args.run_number, args.run_span_file, GLOparams)
-    # possibly invert the selection
-    if args.invert_irframe_selection:
-       job_is_exluded = not job_is_exluded
+    # determine orbit corresponding to timestamp (mainly used in exclude_timestamp function)
+    orbit = GLOparams["FirstOrbit"] + int((timestamp - GLOparams["SOR"]) / ( LHCOrbitMUS / 1000))
 
     # this is anchored to
     print ("Determined start-of-run to be: ", run_start)
     print ("Determined end-of-run to be: ", run_end)
     print ("Determined timestamp to be : ", timestamp)
     print ("Determined offset to be : ", prod_offset)
+    print ("SOR ", GLOparams["SOR"])
+    print ("EOR ", GLOparams["EOR"])
+    print ("TIM ", timestamp) # this timestamp
+    print ("OS ", GLOparams["FirstOrbit"])
+    print ("OE ", GLOparams["LastOrbit"])
+    print ("TO ", orbit) # this orbit
+
+    # check if timestamp is to be excluded
+    job_is_exluded = exclude_timestamp(timestamp, orbit, args.run_number, args.run_span_file, GLOparams)
+    # possibly invert the selection
+    if args.invert_irframe_selection:
+       job_is_exluded = not job_is_exluded
 
     forwardargs = " ".join([ a for a in args.forward if a != '--' ])
     # retrieve interaction rate
