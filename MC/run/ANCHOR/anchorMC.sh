@@ -145,10 +145,23 @@ NWORKERS=${NWORKERS:-8}
 # set a default seed if not given
 SEED=${ALIEN_PROC_ID:-${SEED:-1}}
 
-#<----- START OF part that should run under a clean alternative software environment if this was given ------
-(
+ONCVMFS=0
+[[ "${BASEDIR}" == /cvmfs/* ]] && ONCVMFS=1
+if [ ! "${MODULEPATH}" ]; then
+  export MODULEPATH=${BASEDIR}/../Modules/modulefiles
+  if [ "${ONCVMFS}" == "1" ]; then
+    PLATFORM=$(echo "${BASEDIR}" | sed -E 's|.*/([^/]+)/Packages|\1|')
+    export MODULEPATH=${MODULEPATH}:${BASEDIR}/../../etc/toolchain/modulefiles/${PLATFORM}
+  fi
+  echo "Determined Modulepath to be ${MODULEPATH}"
+fi
 
+#<----- START OF part that should run under a clean alternative software environment if this was given ------
 if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
+  if [ "${LOADEDMODULES}" ]; then
+    module save initial_modules.list # we stash the current modules environment
+    module purge
+  fi
   echo_info "Using tag ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG} to setup anchored MC"
   /cvmfs/alice.cern.ch/bin/alienv printenv "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" &> async_environment.env
   source async_environment.env
@@ -201,8 +214,6 @@ if [[ "${RECO_RC}" != "0" ]] ; then
     exit ${RECO_RC}
 fi
 
-)
-#<----- END OF part that should run under a clean alternative software environment if this was given ------
 
 ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG_KEEP
 echo_info "Setting back ALIEN_JDL_LPMPRODUCTIONTAG to $ALIEN_JDL_LPMPRODUCTIONTAG"
@@ -216,6 +227,16 @@ if [[ "${ASYNC_WF_RC}" != "0" || `grep "o2-ctf-reader-workflow-options" config-j
   echo_error "Problem in anchor config creation. Exiting."
   exit 1
 fi
+
+# get rid of the temporary software environment
+if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
+  module purge
+  # restore the initial software environment
+  echo "Restoring initial environment"
+  module --no-pager restore initial_modules.list
+  module saverm initial_modules.list
+fi
+#<----- END OF part that should run under a clean alternative software environment if this was given ------
 
 # -- CREATE THE MC JOB DESCRIPTION ANCHORED TO RUN --
 

@@ -1,3 +1,7 @@
+from functools import lru_cache
+import subprocess
+import re
+
 def create_sim_config(args):
     # creates a generic simulation config
     # based on arguments args (run number, energy, ...) originally passed
@@ -138,3 +142,41 @@ def constructConfigKeyArg(config):
           arg = arg + mainkey + '.' + subkey + '=' + config[mainkey][subkey] + ';'
     arg = arg + '"'
     return arg
+
+# some functions to determine dpl option availability on the fly
+def parse_dpl_help_output(executable):
+    """Parses the --help full output of an executable to extract available options."""
+    try:
+        output = subprocess.check_output([executable, "--help", "full"], text=True)
+    except subprocess.CalledProcessError:
+        return {}, {}
+    
+    option_pattern = re.compile(r"(\-\-[\w\-]+)")
+    sections = {}
+    inverse_lookup = {}
+    current_section = "global"
+    
+    for line in output.split("\n"):
+        section_match = re.match(r"^([A-Za-z\s]+):$", line.strip())
+        if section_match:
+            current_section = section_match.group(1).strip()
+            sections[current_section] = []
+            continue
+        
+        option_match = option_pattern.findall(line)
+        if option_match:
+            for option in option_match:
+                sections.setdefault(current_section, []).append(option)
+                inverse_lookup.setdefault(option, []).append(current_section)
+    
+    return sections, inverse_lookup
+
+@lru_cache(maxsize=10)
+def get_dpl_options_for_executable(executable):
+    """Returns available options and inverse lookup for a given executable, caching the result."""
+    return parse_dpl_help_output(executable)
+
+def option_if_available(executable, option):
+    """Checks if an option is available for a given executable and returns it as a string. Otherwise empty string"""
+    _, inverse_lookup = get_dpl_options_for_executable(executable)
+    return ' ' + option if option in inverse_lookup else ''

@@ -27,6 +27,8 @@ import json
 import itertools
 import math
 import requests, re
+from functools import lru_cache
+
 pandas_available = True
 try:
     import pandas as pd
@@ -37,7 +39,7 @@ sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
 from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers, merge_dicts
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
-from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg
+from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg, option_if_available
 
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
 
@@ -1154,7 +1156,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' \
                         + putConfigValuesNew(["GPU_global","TPCGasParam", "TPCCorrMap", "GPU_rec_tpc", "trackTuneParams"], {"GPU_proc.ompThreads":NWORKERS_TF} | tpcLocalCFreco) + ('',' --disable-mc')[args.no_mc_labels] \
                         + tpc_corr_scaling_options + tpc_corr_options_mc \
-                        + ' --tpc-mc-time-gain'
+                        + option_if_available('o2-tpc-reco-workflow', '--tpc-mc-time-gain')
+   
    workflow['stages'].append(TPCRECOtask)
 
    # END TPC reco
