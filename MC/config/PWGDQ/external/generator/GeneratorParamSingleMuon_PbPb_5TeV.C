@@ -120,14 +120,13 @@ FairGenerator* paramMuGen(Double_t ptP0 = 797.446, Double_t ptP1 = 0.830278,
                           Double_t ptP4 = -0.000614809, Double_t ptP5 = -1.70993,
                           Double_t yP0 = 1.87732, Double_t yP1 = 0.00658212,
                           Double_t yP2 = -0.0988071, Double_t yP3 = -0.000452746,
-                          Double_t yP4 = 0.00269782, Int_t nMuons = 2)
+                          Double_t yP4 = 0.00269782, Int_t nMuons = 2, TString pdgs = "13")
 {
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::O2_GeneratorParamMuon>();
   o2::eventgen::O2_GeneratorParamMuon::SetPtPars(ptP0, ptP1, ptP2, ptP3, ptP4, ptP5);
   o2::eventgen::O2_GeneratorParamMuon::SetYPars(yP0, yP1, yP2, yP3, yP4);
   gen->SetNSignalPerEvent(nMuons); // number of muons per event
 
-  TString pdgs = "13";
   std::string spdg;
   TObjArray* obj = pdgs.Tokenize(";");
   gen->SetSizePdg(obj->GetEntriesFast());
