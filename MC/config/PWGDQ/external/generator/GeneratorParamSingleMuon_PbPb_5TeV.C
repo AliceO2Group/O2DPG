@@ -139,8 +139,6 @@ class O2_GeneratorParamMuon : public FairGenerator
   double fYMax{-2.3};
   double fPtMin{0.1};
   double fPtMax{999.};
-  const double fPhiMin{0.};
-  const double fPhiMax{2. * M_PI};
   bool fRandomizeCharge{true};
   double fMass{0.10566};
   double fMass2{0};
