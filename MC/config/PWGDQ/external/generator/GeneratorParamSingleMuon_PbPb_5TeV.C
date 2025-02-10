@@ -85,7 +85,6 @@ class O2_GeneratorParamMuon : public FairGenerator
 
   bool ReadEvent(FairPrimaryGenerator* primGen) override
   {
-    int iPart = fNParticles;
     // no kinematic cuts -> accepting all
     for (int i = 0; i < fNParticles; ++i) {
       double pt = fPtPara->GetRandom();
