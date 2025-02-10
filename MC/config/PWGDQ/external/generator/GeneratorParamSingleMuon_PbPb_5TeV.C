@@ -130,8 +130,6 @@ class O2_GeneratorParamMuon : public FairGenerator
   double fYP3{-0.000452746};
   double fYP4{0.00269782};
 
-  const double fDeltaPt{0.01};
-
   // configuration
   int fPDGCode{13};
   int fNParticles{2};
