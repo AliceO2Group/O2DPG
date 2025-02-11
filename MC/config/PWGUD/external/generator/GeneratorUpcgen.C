@@ -68,6 +68,7 @@ public:
     // independent of process
     mUPCgen->setParameterValue("DO_PT_CUT", "0");
     mUPCgen->setParameterValue("DO_ETA_CUT", "0");
+    mUPCgen->setParameterValue("FLUX_POINT", "0");
     mUPCgen->setParameterValue("USE_ROOT_OUTPUT", "0");
     mUPCgen->setParameterValue("USE_HEPMC_OUTPUT", "0");
 
