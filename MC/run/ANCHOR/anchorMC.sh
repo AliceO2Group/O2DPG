@@ -146,6 +146,14 @@ NWORKERS=${NWORKERS:-8}
 SEED=${ALIEN_PROC_ID:-${SEED:-1}}
 
 ONCVMFS=0
+
+if ! declare -F module > /dev/null; then
+  module() {
+    eval "$(/usr/bin/modulecmd bash "$@")";
+  }
+  export -f module
+fi
+
 [[ "${BASEDIR}" == /cvmfs/* ]] && ONCVMFS=1
 if [ ! "${MODULEPATH}" ]; then
   export MODULEPATH=${BASEDIR}/../Modules/modulefiles
@@ -159,12 +167,18 @@ fi
 #<----- START OF part that should run under a clean alternative software environment if this was given ------
 if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
   if [ "${LOADEDMODULES}" ]; then
+    echo "Stashing initial modules"
     module save initial_modules.list # we stash the current modules environment
-    module purge
+    module list --no-pager
+    module purge --no-pager
+    export > env_after_stashing.env
+    echo "Modules after purge"
+    module list --no-pager
   fi
   echo_info "Using tag ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG} to setup anchored MC"
   /cvmfs/alice.cern.ch/bin/alienv printenv "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" &> async_environment.env
   source async_environment.env
+  export > env_async.env
 fi
 
 # default async_pass.sh script
@@ -230,7 +244,7 @@ fi
 
 # get rid of the temporary software environment
 if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
-  module purge
+  module purge --no-pager
   # restore the initial software environment
   echo "Restoring initial environment"
   module --no-pager restore initial_modules.list
