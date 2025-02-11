@@ -487,8 +487,10 @@ workflow['stages'].append(GRP_TASK)
 includeQED = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb")) or (args.with_qed == True)
 signalprefix='sgn'
 
-# No vertexing for event pool generation
-vtxmode = 'kNoVertex' if args.make_evtpool else 'kCCDB'
+# No vertexing for event pool generation; otherwise the vertex comes from CCDB and later from CollContext
+# (Note that the CCDB case covers the kDiamond case, since this is picked up in GRP_TASK)
+vtxmode_precoll = 'kNoVertex' if args.make_evtpool else 'kCCDB'
+vtxmode_sgngen = 'kCollContext'
 
 # preproduce the collision context / timeframe structure for all timeframes at once
 precollneeds=[GRP_TASK['name']]
@@ -512,7 +514,7 @@ PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + interac
                             + ' --seed ' + str(RNDSEED)                                                                    \
                             + ' --noEmptyTF --first-orbit ' + str(args.first_orbit)                                        \
                             + ' --extract-per-timeframe tf:sgn'                                                            \
-                            + ' --with-vertices ' + vtxmode                                                                \
+                            + ' --with-vertices ' + vtxmode_precoll                                                              \
                             + ' --maxCollsPerTF ' + str(args.ns)                                                           \
                             + ' --orbitsEarly ' + str(args.orbits_early)
 
@@ -808,7 +810,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      if JOBTTL != None:
        generationtimeout = 0.95*int(JOBTTL) # for GRID jobs, determine timeout automatically
    SGNGENtask['cmd'] +=('','timeout ' + str(generationtimeout) + ' ')[args.make_evtpool and generationtimeout>0] \
-                     + '${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode ' + vtxmode    \
+                     + '${O2_ROOT}/bin/o2-sim --noGeant -j 1 --field ccdb --vertexMode ' + vtxmode_sgngen  \
                      + ' --run ' + str(args.run) + ' ' + str(CONFKEY) + str(TRIGGER)                  \
                      + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
                      + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1]                \
