@@ -15,16 +15,17 @@ namespace o2
 namespace eventgen
 {
 
-class GeneratorPythia8OniaPromptSignalsGapTriggered : public o2::eventgen::GeneratorPythia8 {
+class GeneratorPythia8HadronTriggeredWithGap : public o2::eventgen::GeneratorPythia8 {
 public:
   
   /// constructor
-  GeneratorPythia8OniaPromptSignalsGapTriggered(int inputTriggerRatio = 5)  {
+  GeneratorPythia8HadronTriggeredWithGap(int inputTriggerRatio = 5)  {
 
     mGeneratedEvents = 0;
     mInverseTriggerRatio = inputTriggerRatio;
     // define minimum bias event generator
     auto seed = (gRandom->TRandom::GetSeed() % 900000000);
+    // main physics option for the min bias pythia events: SoftQCD:Inelastic
     TString pathconfigMB = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/generator/pythia8_inel_triggerGap.cfg");
     pythiaMBgen.readFile(pathconfigMB.Data());
     pythiaMBgen.readString("Random:setSeed on");
@@ -36,7 +37,7 @@ public:
   }
 
   ///  Destructor
-  ~GeneratorPythia8OniaPromptSignalsGapTriggered() = default;
+  ~GeneratorPythia8HadronTriggeredWithGap() = default;
 
   void addHadronPDGs(int pdg) { mHadronsPDGs.push_back(pdg); };
 
@@ -89,7 +90,7 @@ bool Init() override {
     pythiaMBgen.readFile(mConfigMBdecays.Data());	
   }
   addSubGenerator(0, "Minimum bias");
-  addSubGenerator(1, "Onia injected");
+  addSubGenerator(1, "Hadron triggered");
 	GeneratorPythia8::Init();
   pythiaMBgen.init();
   return true;
@@ -143,9 +144,9 @@ private:
 
 // Predefined generators:
 FairGenerator*
-  GeneratorPromptJpsi_EvtGenMidY(int triggerGap, double rapidityMin = -1.5, double rapidityMax = 1.5, bool verbose = false)
+  GeneratorInclusiveJpsi_EvtGenMidY(int triggerGap, double rapidityMin = -1.5, double rapidityMax = 1.5, bool verbose = false)
 {
-  auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8OniaPromptSignalsGapTriggered>();
+  auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8HadronTriggeredWithGap>();
   gen->setTriggerGap(triggerGap);
   gen->setRapidityRange(rapidityMin, rapidityMax);
   gen->addHadronPDGs(443);
