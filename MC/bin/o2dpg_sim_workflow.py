@@ -1154,11 +1154,12 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    # TODO: Is this still used?
    tpc_corr_scaling_options = anchorConfig.get('tpc-corr-scaling','')
+   tpc_envfile = 'env_async.env' if environ.get('ALIEN_JDL_O2DPG_ASYNC_RECO_TAG') is not None else None
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
    TPCRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type clusters --output-type tracks,send-clusters-per-sector ' \
                         + putConfigValuesNew(["GPU_global","TPCGasParam", "TPCCorrMap", "GPU_rec_tpc", "trackTuneParams"], {"GPU_proc.ompThreads":NWORKERS_TF} | tpcLocalCFreco) + ('',' --disable-mc')[args.no_mc_labels] \
                         + tpc_corr_scaling_options + tpc_corr_options_mc \
-                        + option_if_available('o2-tpc-reco-workflow', '--tpc-mc-time-gain')
+                        + option_if_available('o2-tpc-reco-workflow', '--tpc-mc-time-gain', envfile=tpc_envfile)
    
    workflow['stages'].append(TPCRECOtask)
 
