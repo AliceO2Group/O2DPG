@@ -216,7 +216,6 @@ baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --c
 remainingargs="-seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
 remainingargs="${remainingargs} -e ${ALIEN_JDL_SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
-remainingargs="${remainingargs} -confKey \"GeometryManagerParam.useParallelWorld=${ENABLE_PARALLEL_WORLD};GeometryManagerParam.usePwGeoBVH=${ENABLE_PARALLEL_WORLD};GeometryManagerParam.usePwCaching=${ENABLE_PARALLEL_WORLD}\""
 # prepend(!) ALIEN_JDL_ANCHOR_SIM_OPTIONS
 # since the last passed argument wins, e.g. -productionTag cannot be overwritten by the user
 remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config config-json.json"

@@ -31,6 +31,7 @@ export SEED=5
 export NWORKERS=2
 
 export ENABLE_PARALLEL_WORLD=1
+export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen pythia8 -confKey \"GeometryManagerParam.useParallelWorld=1;GeometryManagerParam.usePwGeoBVH=1;GeometryManagerParam.usePwCaching=1\""
 
 # run the central anchor steering script; this includes
 # * derive timestamp
