@@ -299,20 +299,28 @@ if [ "${ISEXCLUDED}" ]; then
 fi
 
 # -- Create aligned geometry using ITS ideal alignment to avoid overlaps in geant
-CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align"
-TIMESTAMP_IDEAL_MC=1
-${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d ${ALICEO2_CCDB_LOCALCACHE} --timestamp ${TIMESTAMP_IDEAL_MC}
-CCDB_RC="${?}"
-if [ ! "${CCDB_RC}" == "0" ]; then
-  echo_error "Problem during CCDB prefetching of ${CCDBOBJECTS_IDEAL_MC}. Exiting."
-  exit ${CCDB_RC}
+if [ "${ENABLE_PARALLEL_WORLD}" == "0" ]; then
+  CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align"
+  TIMESTAMP_IDEAL_MC=1
+  ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d ${ALICEO2_CCDB_LOCALCACHE} --timestamp ${TIMESTAMP_IDEAL_MC}
+  CCDB_RC="${?}"
+  if [ ! "${CCDB_RC}" == "0" ]; then
+    echo_error "Problem during CCDB prefetching of ${CCDBOBJECTS_IDEAL_MC}. Exiting."
+    exit ${CCDB_RC}
+  fi
 fi
 
 # TODO This can potentially be removed or if needed, should be taken over by o2dpg_sim_workflow_anchored.py and O2_dpg_workflow_runner.py
-echo "run with echo in pipe" | ${O2_ROOT}/bin/o2-create-aligned-geometry-workflow --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" --condition-remap=file://${ALICEO2_CCDB_LOCALCACHE}=ITS/Calib/Align -b --run
+if [ "${ENABLE_PARALLEL_WORLD}" == "0" ]; then
+  echo "run with echo in pipe" | ${O2_ROOT}/bin/o2-create-aligned-geometry-workflow --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" --condition-remap=file://${ALICEO2_CCDB_LOCALCACHE}=ITS/Calib/Align -b --run
+else
+  echo "run with echo in pipe" | ${O2_ROOT}/bin/o2-create-aligned-geometry-workflow --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" -b --run
+fi
 mkdir -p $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned
 ln -s -f $PWD/o2sim_geometry-aligned.root $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned/snapshot.root
-[[ -f $PWD/its_GeometryTGeo.root ]] && mkdir -p $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry && ln -s -f $PWD/its_GeometryTGeo.root $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry/snapshot.root
+if [ "${ENABLE_PARALLEL_WORLD}" == "0" ]; then
+  [[ -f $PWD/its_GeometryTGeo.root ]] && mkdir -p $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry && ln -s -f $PWD/its_GeometryTGeo.root $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry/snapshot.root
+fi
 [[ -f $PWD/mft_GeometryTGeo.root ]] && mkdir -p $ALICEO2_CCDB_LOCALCACHE/MFT/Config/Geometry && ln -s -f $PWD/mft_GeometryTGeo.root $ALICEO2_CCDB_LOCALCACHE/MFT/Config/Geometry/snapshot.root
 
 # -- RUN THE MC WORKLOAD TO PRODUCE AOD --
