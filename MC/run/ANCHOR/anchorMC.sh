@@ -299,7 +299,7 @@ if [ "${ISEXCLUDED}" ]; then
 fi
 
 # -- Create aligned geometry using ITS ideal alignment to avoid overlaps in geant
-ENABLEPW = 0
+ENABLEPW=0
 if [ ${remainingargs} == *"GeometryManagerParam.useParallelWorld=1"* ]; then
   ENABLEPW=1
 fi
