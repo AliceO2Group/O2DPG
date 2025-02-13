@@ -313,6 +313,17 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
   # -) Special singularity / Apptainer image
   [[ ! ${IMAGESPEC} ]] && IMAGESPEC=$(grep "^#JDL_IMAGE=" ${SCRIPT} | sed 's/#JDL_IMAGE=//')
   echo "Found Container Image to be ${IMAGESPEC}"
+
+  # -) Requirements-Spec
+  REQUIRESPEC=$(grep "^#JDL_REQUIRE=" ${SCRIPT} | sed 's/#JDL_REQUIRE=//')
+  if [ ! "${REQUIRESPEC}" ]; then
+    echo "No Requirement setting found; Setting to default"
+    REQUIRESPEC="{member(other.GridPartitions,"${GRIDPARTITION:-multicore_8}")};"
+    echo "Requirement is ${REQUIRESPEC}"
+  fi
+
+  echo "Requirements JDL entry is ${REQUIRESPEC}"
+
   # -) PackageSpec
   [[ ! ${PACKAGESPEC} ]] && PACKAGESPEC=$(grep "^#JDL_PACKAGE=" ${SCRIPT} | sed 's/#JDL_PACKAGE=//')
   echo "Found PackagesSpec to be ${PACKAGESPEC}"
@@ -358,6 +369,8 @@ EOF
   echo "Packages = {"${PACKAGESPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add package spec
   [ $ERROROUTPUTSPEC ] && echo "OutputErrorE = {"${ERROROUTPUTSPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add error output files
   [ $IMAGESPEC ] && echo "DebugTag = {\"${IMAGESPEC}\"};" >> "${MY_JOBNAMEDATE}.jdl"   # use special singularity image to run job
+  # echo "Requirements = {"${REQUIREMENTSSPEC}"} >> "${MY_JOBNAMEDATE}.jdl"
+  [ $REQUIRESPEC ] && echo "Requirements = ${REQUIRESPEC}" >> "${MY_JOBNAMEDATE}.jdl"
 
 # "output_arch.zip:output/*@disk=2",
 # "checkpoint*.tar@disk=2"
