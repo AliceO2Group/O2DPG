@@ -147,11 +147,6 @@ SEED=${ALIEN_PROC_ID:-${SEED:-1}}
 
 ONCVMFS=0
 
-# TODO:
-# (a) detect if there was an O2DPG_OVERLOAD; because we need to handle this correctly during
-#     purging, reloading
-# (b) apply "tpc-mc-time-gain" optionally to tpc reco --- but this is done; so we really need a replacement method
-      and a 2-stage workflow production
 if [ "${ALIEN_JDL_O2DPG_OVERWRITE}" ]; then
   echo "Setting O2DPG_ROOT to overwritten path"
   export O2DPG_ROOT=${ALIEN_JDL_O2DPG_OVERWRITE}
