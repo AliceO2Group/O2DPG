@@ -211,6 +211,6 @@ def get_dpl_options_for_executable(executable, envfile):
 
 def option_if_available(executable, option, envfile = None):
     """Checks if an option is available for a given executable and returns it as a string. Otherwise empty string"""
-    _, inverse_lookup = get_dpl_options_for_executable(executable, envfile)
+    # _, inverse_lookup = get_dpl_options_for_executable(executable, envfile)
     # return ' ' + option if option in inverse_lookup else ''
     return option
