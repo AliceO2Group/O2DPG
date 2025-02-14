@@ -174,3 +174,36 @@ FairGenerator*
 
   return gen;
 }
+
+FairGenerator*
+  GeneratorPromptJpsi_EvtGenFwdy(int triggerGap, double rapidityMin = -4.3, double rapidityMax = -2.3, bool verbose = false)
+{
+  auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8OniaPromptSignalsGapTriggered>();
+  gen->setTriggerGap(triggerGap);
+  gen->setRapidityRange(rapidityMin, rapidityMax);
+  gen->addHadronPDGs(443);
+  gen->setVerbose(verbose);
+
+  TString pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffJpsi.cfg");
+  gen->readFile(pathO2table.Data());
+  gen->setConfigMBdecays(pathO2table);
+  gen->PrintDebug(true);
+
+  gen->SetSizePdg(1);
+  gen->AddPdg(443, 0);
+
+  gen->SetForceDecay(kEvtDiMuon);
+
+  // set random seed
+  gen->readString("Random:setSeed on");
+  uint random_seed;
+  unsigned long long int random_value = 0;
+  ifstream urandom("/dev/urandom", ios::in|ios::binary);
+  urandom.read(reinterpret_cast<char*>(&random_value), sizeof(random_seed));
+  gen->readString(Form("Random:seed = %llu", random_value % 900000001));
+
+  // print debug
+  // gen->PrintDebug();
+
+  return gen;
+}
