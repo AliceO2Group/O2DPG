@@ -3,10 +3,9 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-            "host": "ccdb-test.cern.ch:8080"
+        "host": "ccdb-test.cern.ch:8080"
       },
-      "Activity": {
-      },
+      "Activity": {},
       "monitoring": {
         "url": "infologger:///debug?qc"
       },
@@ -27,7 +26,19 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-              "query": "digits:MID/DATA;digits_rof:MID/DATAROF"
+          "query": "digits:MID/DATA;digits_rof:MID/DATAROF"
+        }
+      },
+      "MIDFilteredDigits": {
+        "active": "true",
+        "taskName": "FilteredDigits",
+        "className": "o2::quality_control_modules::mid::DigitsQcTask",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "cycleDurationSeconds": "60",
+        "dataSource": {
+          "type": "direct",
+          "query": "digits:MID/FDATA;digits_rof:MID/FDATAROF"
         }
       },
       "MIDClusters": {
@@ -39,7 +50,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-              "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS"
+          "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS"
         }
       },
       "MIDTracks": {
@@ -51,7 +62,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-              "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS"
+          "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS"
         }
       }
     },
@@ -76,6 +87,29 @@
           {
             "type": "Task",
             "name": "MIDDigits"
+          }
+        ]
+      },
+      "MIDFilteredDigits": {
+        "active": "true",
+        "checkName": "FilteredDigits",
+        "className": "o2::quality_control_modules::mid::DigitsQcCheck",
+        "moduleName": "QcMID",
+        "detectorName": "MID",
+        "policy": "OnAny",
+        "checkParameters": {
+          "MeanMultThreshold": "100.",
+          "MinMultThreshold": "0.0",
+          "NbOrbitPerTF": "32.",
+          "LocalBoardScale": "200.0",
+          "LocalBoardThreshold": "800.0",
+          "NbBadLocalBoard": "10.",
+          "NbEmptyLocalBoard": "117."
+        },
+        "dataSource": [
+          {
+            "type": "Task",
+            "name": "MIDFilteredDigits"
           }
         ]
       },
