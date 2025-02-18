@@ -130,10 +130,13 @@ public:
     LOG(info) << "Info sigmaGen = " << pythiaObject.info.sigmaGen();
     LOG(info) << "Info sigmaErr = " << pythiaObject.info.sigmaErr();
 
-
     // Set event scale and nMPI
     LOG(info) << "Info QRen = " << pythiaObject.info.QRen();
     LOG(info) << "Info nMPI = " << pythiaObject.info.nMPI();
+
+    // Set accepted and attempted values
+    LOG(info) << "Info accepted = " << pythiaObject.info.nAccepted();
+    LOG(info) << "Info attempted = " << pythiaObject.info.nTried();
 
     // Set weights (overrides cross-section for each weight)
     size_t iw = 0;
@@ -176,6 +179,11 @@ public:
     // Set event scale and nMPI
     eventHeader->putInfo<float>(Key::eventScale, QRen);
     eventHeader->putInfo<int>(Key::mpi, nMPI);
+
+    // Set accepted and attempted events
+    eventHeader->putInfo<int>(Key::acceptedEvents, accepted);
+    eventHeader->putInfo<int>(Key::attemptedEvents, attempted);
+
     LOG(info) << "--- updated header weight = " << weight;
 
     // The following is also set in the base class updateHeader function
@@ -214,6 +222,9 @@ public:
     // Set event scale and nMPI
     QRen = info.QRen();
     nMPI = info.nMPI();
+    // Set accepted and attempted events
+    accepted = info.nAccepted();
+    attempted = info.nTried();
   }
 
 private:
@@ -249,7 +260,9 @@ private:
   // event scale and nMPI
   float  QRen;
   int  nMPI;
-
+  // accepted and attempted events
+  int  accepted;
+  int  attempted;
 };
 
 } // namespace eventgen
