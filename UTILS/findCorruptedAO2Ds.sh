@@ -33,9 +33,12 @@ parallel -j $NJOBS process_file ::: "${FILESTOCHECK[@]}"
 # create list of corrupted files
 touch $OUTPUTFILE
 ERRORSTR="Found corrupted file!"
+REPAIRSTR="Found file in need of repair!"
 for FILE in "${FILESTOCHECK[@]}"; do
   IFS='/' read -a num <<< "$FILE"
   if grep -q "$ERRORSTR" log_${num[5]}_${num[7]}; then
+    echo $FILE >> $OUTPUTFILE
+  else grep -q "$REPAIRSTR" log_${num[5]}_${num[7]}; then
     echo $FILE >> $OUTPUTFILE
   fi
 done

@@ -4,6 +4,17 @@
 #include <TTreeReader.h>
 #include <TGrid.h>
 #include <iostream>
+#include <TError.h>
+#include <cstring>
+
+bool gWarningDetected = false; // Global flag to track the warning
+
+void MyErrorHandler(int level, Bool_t abort, const char *location, const char *msg) {
+    if (strstr(msg, "repair") != nullptr) {
+        gWarningDetected = true;
+    }
+    DefaultErrorHandler(level, abort, location, msg); // Call ROOT’s default handler
+}
 
 int checkCorruptedAO2Ds(TString infileName = "/alice/sim/2024/LHC24h2/535545/AOD/005/AO2D.root", bool fromAlien = true) {
 
@@ -41,6 +52,10 @@ int checkCorruptedAO2Ds(TString infileName = "/alice/sim/2024/LHC24h2/535545/AOD
                         if (tree->GetEntry(iEntry) < 0) {
                             std::cout << "Found corrupted file! DF: " << dirKey->GetName() << " Tree:" << pair.first.data() << " Branch:" << branchName.data() << std::endl;
                             return -1;
+                        }
+                        if (gWarningDetected) {
+                            std::cout << "Found file in need of repair! DF: " << dirKey->GetName() << " Tree:" << pair.first.data() << " Branch:" << branchName.data() << std::endl;
+                            return -2;
                         }
                     }
                 }
