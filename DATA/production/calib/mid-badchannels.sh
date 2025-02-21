@@ -44,7 +44,7 @@ workflow_has_parameter CTF && {
 add_W o2-mid-calibration-workflow "" "" 0
 add_W o2-calibration-ccdb-populator-workflow "--ccdb-path=\"$CCDB_POPULATOR_UPLOAD_PATH\" --sspec-min 0 --sspec-max 0"
 add_W o2-calibration-ccdb-populator-workflow "--ccdb-path=\"$CCDB_POPULATOR_UPLOAD_PATH_DCS\" --sspec-min 1 --sspec-max 1 --name-extention dcs"
-workflow_has_parameter QC && add_QC_from_consul "/o2/components/qc/ANY/any/mid-calib-qcmn" "--local --host localhost"
+workflow_has_parameter QC && add_QC_from_apricot "/o2/components/qc/ANY/any/mid-calib-qcmn" "--local --host localhost"
 WORKFLOW+="o2-dpl-run $ARGS_ALL $GLOBALDPLOPT"
 
 if [ "$WORKFLOWMODE" == "print" ]; then
