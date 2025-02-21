@@ -21,7 +21,7 @@ if [[ $RUNNUMBER -lt 544772 ]]; then
   # these runs were using external dictionaries
   : ${RANS_OPT:="--ans-version compat"}
   export RANS_OPT
-fi   
+fi
 echo "RSRUNNUMBER = $RUNNUMBER RANS_OPT = $RANS_OPT"
 
 # IR, duration, B field, detector list
@@ -341,8 +341,13 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     [[ $APPLYS11 == 1 ]] && export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=78;" || export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=20;"
   fi
   # settings to improve inner pad-rows contribution
-  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.extrapolationTrackingRowRange=100;GPU_rec_tpc.rejectIFCLowRadiusCluster=1;"
-  
+  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.rejectIFCLowRadiusCluster=1;"
+  if grep extrapolationTrackingRowRange $O2_ROOT/include/GPU/GPUSettingsList.h &> /dev/null ; then
+    export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.extrapolationTrackingRowRange=100;"
+  else
+    export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.globalTrackingRowRange=100;"
+  fi
+
   #-------------------------------------- TPC corrections -----------------------------------------------
   # we need to provide to TPC
   # 1) interaction rate info (lumi) used for scaling or errors and possible of the corrections : INST_IR_FOR_TPC
@@ -369,7 +374,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
 
   DISABLE_CORRECTIONS=
   [[ -n "$ALIEN_JDL_MSHAPECORRECTION" && $ALIEN_JDL_MSHAPECORRECTION == "0" ]] && ENABLE_MSHAPE=0 || ENABLE_MSHAPE=1
-  
+
   if [[ -n $MEAN_IR_FOR_TPC ]] ; then  # firs check if corrections were not disabled via MEAN_IR_FOR_TPC
     if [[ $MEAN_IR_FOR_TPC -gt 0 ]] ; then # positive value overrides map mean lumi
       echo "Applying externally provided map mean IR for scaling, $MEAN_IR_FOR_TPC Hz"
@@ -382,7 +387,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
       DISABLE_CORRECTIONS=1
     else
       echo "Did not recognize MEAN_IR_FOR_TPC = $MEAN_IR_FOR_TPC"
-      return 1	
+      return 1
     fi
   fi # MEAN_IR_FOR_TPC overridden
 
@@ -408,7 +413,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     if [[ $TPC_SCALING_SOURCE == "NO_SCALING" ]]; then
       echo "NO SCALING is requested: only TPC/Calib/CorrectionMapsV2... will be applied"
       export TPC_CORR_SCALING+=" --lumi-type 0 "
-    elif [[ $TPC_SCALING_SOURCE == "CTP" ]]; then 
+    elif [[ $TPC_SCALING_SOURCE == "CTP" ]]; then
       echo "CTP Lumi from data will be used for TPC scaling"
       export TPC_CORR_SCALING+=" --lumi-type 1 "
     elif [[ $TPC_SCALING_SOURCE == "IDCCCDB" ]]; then
@@ -426,11 +431,11 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     echo "CTP is not in the list of detectors, disabling CTP Lumi input request"
     export TPC_CORR_SCALING+=" --disable-ctp-lumi-request "
   fi
-  
+
   if [[ $ENABLE_MSHAPE == "1" ]]; then
     export TPC_CORR_SCALING+=" --enable-M-shape-correction "
   fi
-    
+
   if [[ $ALIEN_JDL_LPMANCHORYEAR -ge 2023 ]] && [[ $BEAMTYPE == "PbPb" ]] ; then
     # adding additional cluster errors
     # the values below should be squared, but the validation of those values (0.01 and 0.0225) is ongoing
