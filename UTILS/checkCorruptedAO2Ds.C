@@ -16,7 +16,7 @@ void MyErrorHandler(int level, Bool_t abort, const char *location, const char *m
     DefaultErrorHandler(level, abort, location, msg); // Call ROOT’s default handler
 }
 
-int checkCorruptedAO2Ds(TString infileName = "AO2D_FZK.root", bool fromAlien = false) {
+int checkCorruptedAO2Ds(TString infileName = "/alice/sim/2024/LHC24h2/535545/AOD/005/AO2D.root", bool fromAlien = true) {
     
     SetErrorHandler(MyErrorHandler);
 
