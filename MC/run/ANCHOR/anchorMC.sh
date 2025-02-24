@@ -282,7 +282,9 @@ remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-ali
 # since the last passed argument wins, e.g. -productionTag cannot be overwritten by the user
 remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config config-json.json"
 # apply software tagging choice
-remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}}"
+# remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}}"
+remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${PWD}/env_async.env}"
+
 
 echo_info "baseargs passed to o2dpg_sim_workflow_anchored.py: ${baseargs}"
 echo_info "remainingargs forwarded to o2dpg_sim_workflow.py: ${remainingargs}"

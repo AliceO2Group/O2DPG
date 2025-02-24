@@ -1603,6 +1603,7 @@ if not args.make_evtpool:
    AOD_merge_task['cmd'] += ' o2-aod-merger --input aodmerge_input.txt --output AO2D.root'
    # produce MonaLisa event stat file
    AOD_merge_task['cmd'] += ' ; ${O2DPG_ROOT}/MC/bin/o2dpg_determine_eventstat.py'
+   AOD_merge_task['alternative_alienv_package'] = "None" # we want latest software for this step
    workflow['stages'].append(AOD_merge_task)
 
    job_merging = False

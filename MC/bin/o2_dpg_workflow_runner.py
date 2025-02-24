@@ -470,8 +470,44 @@ def update_resource_estimates(workflow, resource_json):
 # a python dictionary
 def get_alienv_software_environment(packagestring):
     """
-    packagestring is something like O2::v202298081-1,O2Physics::xxx
+    packagestring is something like O2::v202298081-1,O2Physics::xxx representing packages
+    published on CVMFS ... or ... a file containing directly the software environment to apply
     """
+
+    # the trivial cases do nothing
+    if packagestring == None or packagestring == "" or packagestring == "None":
+        return {}
+
+    def load_env_file(env_file):
+        """Transform an environment file generated with 'export > env.txt' into a python dictionary."""
+        env_vars = {}
+        with open(env_file, "r") as f:
+          for line in f:
+            line = line.strip()
+
+            # Ignore empty lines or comments
+            if not line or line.startswith("#"):
+                continue
+
+            # Remove 'declare -x ' if present
+            if line.startswith("declare -x "):
+                line = line.replace("declare -x ", "", 1)
+
+            # Handle case: "FOO" without "=" (assign empty string)
+            if "=" not in line:
+                key, value = line.strip(), ""
+            else:
+                key, value = line.split("=", 1)
+                value = value.strip('"')  # Remove surrounding quotes if present
+
+            env_vars[key.strip()] = value
+        return env_vars
+
+    # see if this is a file
+    if os.path.exists(packagestring) and os.path.isfile(packagestring):
+       actionlogger.info("Taking software environment from file " + packagestring)
+       return load_env_file(packagestring)
+
     # alienv printenv packagestring --> dictionary
     # for the moment this works with CVMFS only
     cmd="/cvmfs/alice.cern.ch/bin/alienv printenv " + packagestring
@@ -1089,18 +1125,27 @@ class WorkflowExecutor:
           return subprocess.Popen(['/bin/bash','-c',drycommand], cwd=workdir)
 
       taskenv = os.environ.copy()
+      # apply specific (non-default) software version, if any
+      # (this was setup earlier)
+      alternative_env = self.alternative_envs.get(tid, None)
+      if alternative_env != None and len(alternative_env) > 0:
+          actionlogger.info('Applying alternative software environment to task ' + self.idtotask[tid])
+          if alternative_env.get('TERM') != None:
+              # the environment is a complete environment
+              taskenv = {}
+              taskenv = alternative_env
+          else:
+            for entry in alternative_env:
+              # overwrite what is present in default
+              taskenv[entry] = alternative_env[entry]
+
       # add task specific environment
       if self.workflowspec['stages'][tid].get('env')!=None:
           taskenv.update(self.workflowspec['stages'][tid]['env'])
 
-      # apply specific (non-default) software version, if any
-      # (this was setup earlier)
-      alternative_env = self.alternative_envs.get(tid, None)
-      if alternative_env != None:
-          actionlogger.info('Applying alternative software environment to task ' + self.idtotask[tid])
-          for entry in alternative_env:
-              # overwrite what is present in default
-              taskenv[entry] = alternative_env[entry]
+      # envfilename = "taskenv_" + str(tid) + ".json"
+      # with open(envfilename, "w") as file:
+      #    json.dump(taskenv, file, indent=2)
 
       p = psutil.Popen(['/bin/bash','-c',c], cwd=workdir, env=taskenv)
       try:
@@ -1406,7 +1451,7 @@ class WorkflowExecutor:
 
     def init_alternative_software_environments(self):
         """
-        Initiatialises alternative software environments for specific tasks, if there
+        Initialises alternative software environments for specific tasks, if there
         is an annotation in the workflow specificiation.
         """
 
