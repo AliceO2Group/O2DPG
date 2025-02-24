@@ -16,7 +16,9 @@ void MyErrorHandler(int level, Bool_t abort, const char *location, const char *m
     DefaultErrorHandler(level, abort, location, msg); // Call ROOT’s default handler
 }
 
-int checkCorruptedAO2Ds(TString infileName = "/alice/sim/2024/LHC24h2/535545/AOD/005/AO2D.root", bool fromAlien = true) {
+int checkCorruptedAO2Ds(TString infileName = "AO2D_FZK.root", bool fromAlien = false) {
+    
+    SetErrorHandler(MyErrorHandler);
 
     if (fromAlien) {
         TGrid::Connect("alien://");
@@ -32,7 +34,7 @@ int checkCorruptedAO2Ds(TString infileName = "/alice/sim/2024/LHC24h2/535545/AOD
 
     // all VLA branches in the AO2Ds.root
     std::map<std::string, std::vector<std::string>> branchesToCheck = {
-        {"O2mcparticle_001", std::vector<std::string>{"fIndexArray_Mothers"}},
+        {"O2mcparticle_001", std::vector<std::string>{"fIndexArray_Mothers", "fVx", "fIndexMcCollisions"}},
         {"O2ft0", std::vector<std::string>{"fAmplitudeA", "fChannelA", "fAmplitudeC", "fChannelC"}},
         {"O2fv0a", std::vector<std::string>{"fAmplitude", "fChannel"}},
         {"O2mccalolabel_001", std::vector<std::string>{"fIndexArrayMcParticles", "fAmplitudeA"}},
