@@ -20,7 +20,7 @@ else
 fi
 mapfile -t FILESTOCHECK < files_to_check.txt
 
-process AO2Ds
+# process AO2Ds
 process_file() {
   IFS='/' read -a num <<< "$1"
   INPUT=$1
