@@ -62,8 +62,8 @@ int External() {
         int igmother = track.getMotherTrackId();
         auto gmTrack = (*tracks)[igmother];
         int gmpdg = gmTrack.GetPdgCode();
-        if (int(std::abs(gmpdg) / 100.) == 5 ||
-            int(std::abs(gmpdg) / 1000.) == 5) {
+        if (int(std::abs(gmpdg) / 100.) == 4 ||
+            int(std::abs(gmpdg) / 1000.) == 4) {
           nMuons++;
           nmuonsev++;
           if (-4.3 < y && y < -2.2) {
