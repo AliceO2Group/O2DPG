@@ -64,7 +64,16 @@ get_test_script_path_for_ini()
 {
     local ini_path=${1}
     local test_script=$(basename ${ini_path})
-    echo $(dirname ${ini_path})/tests/${test_script%.ini}.C
+    local path_to_test_script=$(dirname ${ini_path})/tests/${test_script%.ini}.C
+    if [[ ! -f ${path_to_test_script} ]] ; then
+        # Check if test redirection is applied inside the ini_path file using the #---> syntax
+        local redirection=$(grep "#--->" ${ini_path})
+        if [[ "${redirection}" != "" ]] ; then
+            test_script=$(echo ${redirection} | awk '{print $2}')
+            path_to_test_script=$(dirname ${ini_path})/tests/${test_script}.C
+        fi
+    fi
+    echo ${path_to_test_script}
 }
 
 
