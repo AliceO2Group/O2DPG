@@ -1,9 +1,9 @@
 int External() {
 
   int checkPdgDecayMuon = 13;
-  int checkPdgQuark = 4;
+  int checkPdgQuark = 5;
 
-  float ratioTrigger = 1. / 5; // one event triggered out of 5
+  float ratioTrigger = 1./3; // one event triggered out of 5
 
   std::string path{"o2sim_Kine.root"};
 
@@ -62,8 +62,8 @@ int External() {
         int igmother = track.getMotherTrackId();
         auto gmTrack = (*tracks)[igmother];
         int gmpdg = gmTrack.GetPdgCode();
-        if (int(std::abs(gmpdg) / 100.) == 4 ||
-            int(std::abs(gmpdg) / 1000.) == 4) {
+        if (int(std::abs(gmpdg) / 100.) == 5 ||
+            int(std::abs(gmpdg) / 1000.) == 5) {
           nMuons++;
           nmuonsev++;
           if (-4.3 < y && y < -2.2) {

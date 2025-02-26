@@ -3,7 +3,7 @@ int External() {
   int checkPdgDecayMuon = 13;
   int checkPdgQuark = 4;
 
-  float ratioTrigger = 1. / 5; // one event triggered out of 5
+  float ratioTrigger = 1./3; // one event triggered out of 5
 
   std::string path{"o2sim_Kine.root"};
 
