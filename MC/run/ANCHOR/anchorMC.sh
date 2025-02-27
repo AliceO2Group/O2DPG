@@ -218,10 +218,6 @@ chmod u+x setenv_extra.sh
 
 echo_info "Setting up DPGRECO to ${DPGRECO}"
 
-# settings that are MC-specific, modify setenv_extra.sh in-place
-sed -i 's/GPU_global.dEdxUseFullGainMap=1;GPU_global.dEdxDisableResidualGainMap=1/GPU_global.dEdxSplineTopologyCorrFile=splines_for_dedx_V1_MC_iter0_PP.root;GPU_global.dEdxDisableTopologyPol=1;GPU_global.dEdxDisableGainMap=1;GPU_global.dEdxDisableResidualGainMap=1;GPU_global.dEdxDisableResidualGain=1/' setenv_extra.sh
-### ???
-
 # take out line running the workflow (if we don't have data input)
 [ ${CTF_TEST_FILE} ] || sed -i '/WORKFLOWMODE=run/d' async_pass.sh
 
