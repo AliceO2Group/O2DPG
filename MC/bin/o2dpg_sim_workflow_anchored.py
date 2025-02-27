@@ -14,6 +14,8 @@ import re
 import json
 import math
 import pandas as pd
+import subprocess
+import shlex
 
 # Creates a time anchored MC workflow; positioned within a given run-number (as function of production size etc)
 
@@ -542,7 +544,14 @@ def main():
       print ("TIMESTAMP IS EXCLUDED IN RUN")
     else:
       print ("Creating time-anchored workflow...")
-      os.system(cmd)
+      print ("Executing: " + cmd)
+      # os.system(cmd)
+      try:
+        cmd_list = shlex.split(os.path.expandvars(cmd))
+        output = subprocess.check_output(cmd_list, text=True, stdin=subprocess.DEVNULL, timeout = 120)
+      except subprocess.CalledProcessError:
+        return {}, {}
+
 
 if __name__ == "__main__":
   sys.exit(main())
