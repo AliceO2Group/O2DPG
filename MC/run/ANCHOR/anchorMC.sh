@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bashMore actions
 
 # add distortion maps
 # https://alice.its.cern.ch/jira/browse/O2-3346?focusedCommentId=300982&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-300982
@@ -244,13 +244,15 @@ TIMESTAMP=`grep "Determined timestamp to be" timestampsampling_${ALIEN_JDL_LPMRU
 echo_info "TIMESTAMP IS ${TIMESTAMP}"
 
 # -- Create aligned geometry using ITS ideal alignment to avoid overlaps in geant
-CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align"
-TIMESTAMP_IDEAL_MC=1
-${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d ${ALICEO2_CCDB_LOCALCACHE} --timestamp ${TIMESTAMP_IDEAL_MC}
-CCDB_RC="${?}"
-if [ ! "${CCDB_RC}" == "0" ]; then
-  echo_error "Problem during CCDB prefetching of ${CCDBOBJECTS_IDEAL_MC}. Exiting."
-  exit ${CCDB_RC}
+if [ "${ENABLEPW}" == "0" ]; then
+  CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align"
+  TIMESTAMP_IDEAL_MC=1
+  ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d ${ALICEO2_CCDB_LOCALCACHE} --timestamp ${TIMESTAMP_IDEAL_MC}
+  CCDB_RC="${?}"
+  if [ ! "${CCDB_RC}" == "0" ]; then
+    echo_error "Problem during CCDB prefetching of ${CCDBOBJECTS_IDEAL_MC}. Exiting."
+    exit ${CCDB_RC}
+  fi
 fi
 
 # TODO This can potentially be removed or if needed, should be taken over by o2dpg_sim_workflow_anchored.py and O2_dpg_workflow_runner.py
