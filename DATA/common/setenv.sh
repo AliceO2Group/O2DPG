@@ -169,8 +169,15 @@ ITSMFT_STROBES=""
 [[ ! -z ${ITS_STROBE:-} ]] && ITSMFT_STROBES+="ITSAlpideParam.roFrameLengthInBC=$ITS_STROBE;"
 [[ ! -z ${MFT_STROBE:-} ]] && ITSMFT_STROBES+="MFTAlpideParam.roFrameLengthInBC=$MFT_STROBE;"
 
-MFTMCH_NCANDIDATES_OPT=
-[[ ! -z ${MUON_MATCHING_NCANDIDATES:-} ]] && MFTMCH_NCANDIDATES_OPT+="FwdMatching.saveMode=3;FwdMatching.nCandidates=${MUON_MATCHING_NCANDIDATES};"
+# Number of MFT-MCH matching candidates to be stored in AO2Ds
+# Setting MUON_MATCHING_NCANDIDATES=0 disables the feature
+if [[ -z "${MUON_MATCHING_NCANDIDATES:-}" ]]; then
+  MUON_MATCHING_NCANDIDATES=0 # disable the saving of nCandidated by default
+  if [[ $BEAMTYPE == "pp" ]]; then MUON_MATCHING_NCANDIDATES=5; fi
+  if [[ $BEAMTYPE == "PbPb" ]]; then MUON_MATCHING_NCANDIDATES=20; fi
+fi
+MFTMCH_NCANDIDATES_OPT=""
+[[ "x${MUON_MATCHING_NCANDIDATES}" != "x0" ]] && MFTMCH_NCANDIDATES_OPT+="FwdMatching.saveMode=3;FwdMatching.nCandidates=${MUON_MATCHING_NCANDIDATES};"
 
 
 # Set active reconstruction steps (defaults added according to SYNCMODE)
