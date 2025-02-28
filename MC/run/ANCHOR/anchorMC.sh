@@ -1,4 +1,4 @@
-#!/bin/bashMore actions
+#!/bin/bash
 
 # add distortion maps
 # https://alice.its.cern.ch/jira/browse/O2-3346?focusedCommentId=300982&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-300982
