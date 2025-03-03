@@ -348,6 +348,10 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.globalTrackingRowRange=100;"
   fi
 
+  if [[ -n "$ALIEN_JDL_TPCDEDXCLMASK" ]]; then
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.dEdxClusterRejectionFlagMask=$ALIEN_JDL_TPCDEDXCLMASK;"
+  fi
+
   #-------------------------------------- TPC corrections -----------------------------------------------
   # we need to provide to TPC
   # 1) interaction rate info (lumi) used for scaling or errors and possible of the corrections : INST_IR_FOR_TPC
