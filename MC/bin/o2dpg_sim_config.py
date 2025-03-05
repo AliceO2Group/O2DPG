@@ -90,10 +90,21 @@ def create_sim_config(args):
     if args.col == "PbPb" or (args.embedding and args.colBkg == "PbPb"):
         add(config, {"ITSVertexerParam.lowMultBeamDistCut": "0."})
 
-    # FIT digitizer settings for 2023 PbPb
+    # FIT digitizer settings
+    # 2023 PbPb
     if 543437 <= int(args.run) and int(args.run) <= 545367:
         add(config, {"FT0DigParam.mMip_in_V": "7", "FT0DigParam.mMV_2_Nchannels": "2", "FT0DigParam.mMV_2_NchannelsInverse": "0.5"})
         add(config, {"FV0DigParam.adcChannelsPerMip": "4"})
+    # 2024
+    # first and last run of 2024
+    if 546088 <= int(args.run) and int(args.run) <= 560623:
+        # 14 ADC channels / MIP for FT0
+        add(config, {"FT0DigParam.mMip_in_V": "7", "FT0DigParam.mMV_2_Nchannels": "2", "FT0DigParam.mMV_2_NchannelsInverse": "0.5"})
+        # 15 ADC channels / MIP for FV0
+        add(config, {"FV0DigParam.adcChannelsPerMip": "15"})
+        if COLTYPEIR == "PbPb":
+            # 4 ADC channels / MIP
+            add(config, {"FV0DigParam.adcChannelsPerMip": "4"})
 
     return config
 
