@@ -119,6 +119,15 @@ if [[ $remappingITS == 1 ]] || [[ $remappingMFT == 1 ]]; then
   REMAPPING=$REMAPPING\"
 fi
 
+# generic remapping string
+if [[ -n "$ALIEN_JDL_REMAPPINGS" ]]; then
+  if [[ -n "$REMAPPING" ]]; then
+    REMAPPING="${REMAPPING::-1};$ALIEN_JDL_REMAPPINGS\""
+  else
+    REMAPPING="--condition-remap \"$ALIEN_JDL_REMAPPINGS\""
+  fi
+fi
+
 echo "Remapping = $REMAPPING"
 
 # needed if we need more wf
@@ -350,6 +359,10 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
 
   if [[ -n "$ALIEN_JDL_TPCDEDXCLMASK" ]]; then
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.dEdxClusterRejectionFlagMask=$ALIEN_JDL_TPCDEDXCLMASK;"
+  fi
+
+  if [[ -n "$ALIEN_JDL_TPCCLUSTERFILTER" ]]; then
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.tpcUseOldCPUDecoding=1;GPU_proc.tpcApplyClusterFilterOnCPU=$ALIEN_JDL_TPCCLUSTERFILTER;"
   fi
 
   #-------------------------------------- TPC corrections -----------------------------------------------
