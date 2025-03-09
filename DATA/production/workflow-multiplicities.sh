@@ -252,7 +252,21 @@ elif [[ $BEAMTYPE == "PbPb" ]]; then
 else
   : ${CUT_RANDOM_FRACTION_ITS:=0.95}
 fi
-[[ $RUNTYPE != "COSMICS" ]] && : ${CUT_RANDOM_FRACTION_MCH:=0.7}
+
+# Random data sampling fraction for MCH
+if [[ $BEAMTYPE == "pp" ]]; then
+    : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.5}
+    : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.995}
+elif [[ "$HIGH_RATE_PP" == "1" ]]; then
+    : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.7}
+    : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.995}
+elif [[ $BEAMTYPE == "PbPb" ]]; then
+    : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.9}
+    : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.995}
+else
+    : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.99}
+    : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.99}
+fi
 
 #if [[ "$HIGH_RATE_PP" == "1" ]]; then
   # Extra settings for HIGH_RATE_PP
