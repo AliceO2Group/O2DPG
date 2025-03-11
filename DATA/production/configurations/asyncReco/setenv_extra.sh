@@ -583,6 +583,19 @@ if [[ $BEAMTYPE == "pp" ]]; then
   export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow+=";MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6"
 fi
 
+# ad-hoc settings for MFT-MCH matching
+# Number of MFT-MCH matching candidates to be stored in AO2Ds
+# Setting MUON_MATCHING_NCANDIDATES=0 disables the storage of multiple candidates
+if [[ -z "${MUON_MATCHING_NCANDIDATES:-}" ]]; then
+  MUON_MATCHING_NCANDIDATES=0 # disable the saving of nCandidated by default
+  if [[ $BEAMTYPE == "pp" ]]; then MUON_MATCHING_NCANDIDATES=5; fi
+  if [[ $BEAMTYPE == "PbPb" ]]; then MUON_MATCHING_NCANDIDATES=20; fi
+fi
+if [[ "x${MUON_MATCHING_NCANDIDATES}" != "x0" ]]; then
+    export CONFIG_EXTRA_PROCESS_o2_globalfwd_matcher_workflow+=";FwdMatching.saveMode=3;FwdMatching.nCandidates=${MUON_MATCHING_NCANDIDATES};"
+fi
+
+
 # possibly adding calib steps as done online
 # could be done better, so that more could be enabled in one go
 if [[ $ADD_CALIB == "1" ]]; then
