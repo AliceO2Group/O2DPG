@@ -330,8 +330,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   ERROB="100e-8"
   [[ -z $TPCITSTIMEERR ]] && TPCITSTIMEERR="0.2"
   [[ -z $ITS_CONFIG || "$ITS_CONFIG" != *"--tracking-mode"* ]] && export ITS_CONFIG+=" --tracking-mode async"
-  [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] && CUT_MATCH_CHI2=80 || CUT_MATCH_CHI2=100
-  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" && $BEAMTYPE == "PbPb" ]] || [[ $PERIOD == "LHC24al" ]] ; then
+  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" && $BEAMTYPE == "PbPb" && $ANCHORED_PASS_NUMBER -lt 5 ]] || [[ $PERIOD == "LHC24al" ]] ; then
+    [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] && CUT_MATCH_CHI2=80 || CUT_MATCH_CHI2=100
     export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=2.;tpcitsMatch.XMatchingRef=60.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;;tpcitsMatch.crudeAbsDiffCut[0]=6;tpcitsMatch.crudeAbsDiffCut[1]=6;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=2.5;tpcitsMatch.crudeNSigma2Cut[0]=64;tpcitsMatch.crudeNSigma2Cut[1]=64;tpcitsMatch.crudeNSigma2Cut[2]=64;tpcitsMatch.crudeNSigma2Cut[3]=64;tpcitsMatch.crudeNSigma2Cut[4]=64;"
     export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[0]=20;tpcitsMatch.askMinTPCRow[1]=20;tpcitsMatch.askMinTPCRow[2]=20;tpcitsMatch.askMinTPCRow[3]=20;tpcitsMatch.askMinTPCRow[4]=20;tpcitsMatch.askMinTPCRow[5]=20;tpcitsMatch.askMinTPCRow[6]=20;tpcitsMatch.askMinTPCRow[7]=20;tpcitsMatch.askMinTPCRow[8]=20;tpcitsMatch.askMinTPCRow[9]=20;tpcitsMatch.askMinTPCRow[10]=20;tpcitsMatch.askMinTPCRow[12]=20;tpcitsMatch.askMinTPCRow[13]=20;tpcitsMatch.askMinTPCRow[14]=20;"
     export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[15]=20;tpcitsMatch.askMinTPCRow[16]=20;tpcitsMatch.askMinTPCRow[17]=20;tpcitsMatch.askMinTPCRow[18]=20;tpcitsMatch.askMinTPCRow[19]=20;tpcitsMatch.askMinTPCRow[20]=20;tpcitsMatch.askMinTPCRow[21]=20;tpcitsMatch.askMinTPCRow[22]=20;tpcitsMatch.askMinTPCRow[23]=20;tpcitsMatch.askMinTPCRow[24]=20;tpcitsMatch.askMinTPCRow[25]=20;tpcitsMatch.askMinTPCRow[26]=20;tpcitsMatch.askMinTPCRow[27]=20;tpcitsMatch.askMinTPCRow[28]=20;tpcitsMatch.askMinTPCRow[29]=20;"
@@ -348,6 +348,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
       done
     fi
     [[ $APPLYS11 == 1 ]] && export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=78;" || export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=20;"
+  elif [[ $BEAMTYPE == "PbPb" ]]; then
+    export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[0]=78;tpcitsMatch.askMinTPCRow[1]=78;tpcitsMatch.askMinTPCRow[2]=78;tpcitsMatch.askMinTPCRow[3]=78;tpcitsMatch.askMinTPCRow[4]=78;tpcitsMatch.askMinTPCRow[5]=78;tpcitsMatch.askMinTPCRow[6]=78;tpcitsMatch.askMinTPCRow[7]=78;tpcitsMatch.askMinTPCRow[8]=78;tpcitsMatch.askMinTPCRow[9]=78;tpcitsMatch.askMinTPCRow[10]=78;tpcitsMatch.askMinTPCRow[11]=78;tpcitsMatch.askMinTPCRow[12]=78;tpcitsMatch.askMinTPCRow[13]=78;tpcitsMatch.askMinTPCRow[14]=78;tpcitsMatch.askMinTPCRow[15]=78;tpcitsMatch.askMinTPCRow[16]=78;tpcitsMatch.askMinTPCRow[17]=78;tpcitsMatch.askMinTPCRow[18]=78;tpcitsMatch.askMinTPCRow[19]=78;tpcitsMatch.askMinTPCRow[20]=78;tpcitsMatch.askMinTPCRow[21]=78;tpcitsMatch.askMinTPCRow[22]=78;tpcitsMatch.askMinTPCRow[23]=78;tpcitsMatch.askMinTPCRow[24]=78;tpcitsMatch.askMinTPCRow[25]=78;tpcitsMatch.askMinTPCRow[26]=78;tpcitsMatch.askMinTPCRow[27]=78;tpcitsMatch.askMinTPCRow[28]=78;tpcitsMatch.askMinTPCRow[29]=78;tpcitsMatch.askMinTPCRow[30]=78;tpcitsMatch.askMinTPCRow[31]=78;tpcitsMatch.askMinTPCRow[32]=78;tpcitsMatch.askMinTPCRow[33]=78;tpcitsMatch.askMinTPCRow[34]=78;tpcitsMatch.askMinTPCRow[35]=78;"
   fi
   # settings to improve inner pad-rows contribution
   export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.rejectIFCLowRadiusCluster=1;"
