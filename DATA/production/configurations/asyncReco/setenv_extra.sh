@@ -348,7 +348,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
       done
     fi
     [[ $APPLYS11 == 1 ]] && export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=78;" || export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=20;"
-  elif [[ $BEAMTYPE == "PbPb" ]]; then
+  elif [[ $BEAMTYPE == "PbPb" && ( ( $ALIEN_JDL_LPMANCHORYEAR == "2023" && $ANCHORED_PASS_NUMBER -gt 4 ) || ( $ALIEN_JDL_LPMANCHORYEAR == "2024" && $ANCHORED_PASS_NUMBER -gt 1 )  ) ]] ; then
     export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[0]=78;tpcitsMatch.askMinTPCRow[1]=78;tpcitsMatch.askMinTPCRow[2]=78;tpcitsMatch.askMinTPCRow[3]=78;tpcitsMatch.askMinTPCRow[4]=78;tpcitsMatch.askMinTPCRow[5]=78;tpcitsMatch.askMinTPCRow[6]=78;tpcitsMatch.askMinTPCRow[7]=78;tpcitsMatch.askMinTPCRow[8]=78;tpcitsMatch.askMinTPCRow[9]=78;tpcitsMatch.askMinTPCRow[10]=78;tpcitsMatch.askMinTPCRow[11]=78;tpcitsMatch.askMinTPCRow[12]=78;tpcitsMatch.askMinTPCRow[13]=78;tpcitsMatch.askMinTPCRow[14]=78;tpcitsMatch.askMinTPCRow[15]=78;tpcitsMatch.askMinTPCRow[16]=78;tpcitsMatch.askMinTPCRow[17]=78;tpcitsMatch.askMinTPCRow[18]=78;tpcitsMatch.askMinTPCRow[19]=78;tpcitsMatch.askMinTPCRow[20]=78;tpcitsMatch.askMinTPCRow[21]=78;tpcitsMatch.askMinTPCRow[22]=78;tpcitsMatch.askMinTPCRow[23]=78;tpcitsMatch.askMinTPCRow[24]=78;tpcitsMatch.askMinTPCRow[25]=78;tpcitsMatch.askMinTPCRow[26]=78;tpcitsMatch.askMinTPCRow[27]=78;tpcitsMatch.askMinTPCRow[28]=78;tpcitsMatch.askMinTPCRow[29]=78;tpcitsMatch.askMinTPCRow[30]=78;tpcitsMatch.askMinTPCRow[31]=78;tpcitsMatch.askMinTPCRow[32]=78;tpcitsMatch.askMinTPCRow[33]=78;tpcitsMatch.askMinTPCRow[34]=78;tpcitsMatch.askMinTPCRow[35]=78;"
   fi
   # settings to improve inner pad-rows contribution
