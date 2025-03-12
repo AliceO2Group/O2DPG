@@ -169,6 +169,9 @@ ITSMFT_STROBES=""
 [[ ! -z ${ITS_STROBE:-} ]] && ITSMFT_STROBES+="ITSAlpideParam.roFrameLengthInBC=$ITS_STROBE;"
 [[ ! -z ${MFT_STROBE:-} ]] && ITSMFT_STROBES+="MFTAlpideParam.roFrameLengthInBC=$MFT_STROBE;"
 
+MFTMCH_NCANDIDATES_OPT=
+[[ ! -z ${MUON_MATCHING_NCANDIDATES:-} ]] && MFTMCH_NCANDIDATES_OPT+="FwdMatching.saveMode=3;FwdMatching.nCandidates=${MUON_MATCHING_NCANDIDATES};"
+
 
 # Set active reconstruction steps (defaults added according to SYNCMODE)
 for i in `echo $LIST_OF_GLORECO | sed "s/,/ /g"`; do
