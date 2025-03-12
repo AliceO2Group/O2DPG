@@ -119,6 +119,15 @@ if [[ $remappingITS == 1 ]] || [[ $remappingMFT == 1 ]]; then
   REMAPPING=$REMAPPING\"
 fi
 
+# generic remapping string
+if [[ -n "$ALIEN_JDL_REMAPPINGS" ]]; then
+  if [[ -n "$REMAPPING" ]]; then
+    REMAPPING="${REMAPPING::-1};$ALIEN_JDL_REMAPPINGS\""
+  else
+    REMAPPING="--condition-remap \"$ALIEN_JDL_REMAPPINGS\""
+  fi
+fi
+
 echo "Remapping = $REMAPPING"
 
 # needed if we need more wf
@@ -346,6 +355,14 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.extrapolationTrackingRowRange=100;"
   else
     export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.globalTrackingRowRange=100;"
+  fi
+
+  if [[ -n "$ALIEN_JDL_TPCDEDXCLMASK" ]]; then
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.dEdxClusterRejectionFlagMask=$ALIEN_JDL_TPCDEDXCLMASK;"
+  fi
+
+  if [[ -n "$ALIEN_JDL_TPCCLUSTERFILTER" ]]; then
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.tpcUseOldCPUDecoding=1;GPU_proc.tpcApplyClusterFilterOnCPU=$ALIEN_JDL_TPCCLUSTERFILTER;"
   fi
 
   #-------------------------------------- TPC corrections -----------------------------------------------
@@ -581,6 +598,15 @@ fi
 # ad-hoc settings for MCH
 if [[ $BEAMTYPE == "pp" ]]; then
   export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow+=";MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6"
+fi
+
+# ad-hoc settings for MFT-MCH matching
+# Number of MFT-MCH matching candidates to be stored in AO2Ds
+# Setting MUON_MATCHING_NCANDIDATES=0 disables the storage of multiple candidates
+if [[ -z "${MUON_MATCHING_NCANDIDATES:-}" ]]; then
+  MUON_MATCHING_NCANDIDATES=0 # disable the saving of nCandidated by default
+  if [[ $BEAMTYPE == "pp" ]]; then MUON_MATCHING_NCANDIDATES=5; fi
+  if [[ $BEAMTYPE == "PbPb" ]]; then MUON_MATCHING_NCANDIDATES=20; fi
 fi
 
 # possibly adding calib steps as done online
