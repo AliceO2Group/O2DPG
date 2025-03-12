@@ -608,6 +608,10 @@ if [[ -z "${MUON_MATCHING_NCANDIDATES:-}" ]]; then
   if [[ $BEAMTYPE == "pp" ]]; then MUON_MATCHING_NCANDIDATES=5; fi
   if [[ $BEAMTYPE == "PbPb" ]]; then MUON_MATCHING_NCANDIDATES=20; fi
 fi
+if [[ "x${MUON_MATCHING_NCANDIDATES}" != "x0" ]]; then
+    export CONFIG_EXTRA_PROCESS_o2_globalfwd_matcher_workflow+=";FwdMatching.saveMode=3;FwdMatching.nCandidates=${MUON_MATCHING_NCANDIDATES};"
+fi
+
 
 # possibly adding calib steps as done online
 # could be done better, so that more could be enabled in one go
