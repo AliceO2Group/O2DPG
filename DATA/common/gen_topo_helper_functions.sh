@@ -252,15 +252,18 @@ add_W() # Add binarry to workflow command USAGE: add_W [BINARY] [COMMAND_LINE_OP
   WORKFLOW+=$WFADD
 }
 
-if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
-  GEN_TOPO_QC_CONSUL_SERVER=ali-staging.cern.ch
-else
-  GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-con01.cern.ch
+if [[ ${EPNSYNCMODE:-0} == 1 && "${WORKFLOW_PARAMETERS:-}" =~ (^|,)"QC"(,|$) ]]; then
+  if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
+    GEN_TOPO_QC_CONSUL_SERVER=ali-staging.cern.ch
+  else
+    GEN_TOPO_QC_CONSUL_SERVER=alio2-cr1-hv-con01.cern.ch
+  fi
+  GEN_TOPO_QC_APRICOT_SERVER=`curl -s "http://${GEN_TOPO_QC_CONSUL_SERVER}:8500/v1/kv/o2/runtime/aliecs/vars/apricot_endpoint?raw"`
 fi
-GEN_TOPO_QC_APRICOT_SERVER=`curl -s "http://${GEN_TOPO_QC_CONSUL_SERVER}:8500/v1/kv/o2/runtime/aliecs/vars/apricot_endpoint?raw"`
 
 add_QC_from_consul()
 {
+  [[ ${EPNSYNCMODE:-0} == 1 ]] || { echo "Error fetching QC JSON $1: consul server only set for EPNSYNCMODE == 1 " 1>&2 && exit 1; }
   if [[ ! -z ${GEN_TOPO_QC_JSON_FILE:-} ]]; then
     curl -s -o $GEN_TOPO_QC_JSON_FILE "http://${GEN_TOPO_QC_CONSUL_SERVER}:8500/v1/kv${1}?raw"
     if [[ $? != 0 ]]; then
@@ -276,12 +279,13 @@ add_QC_from_consul()
 
 add_QC_from_apricot()
 {
+  [[ ${EPNSYNCMODE:-0} == 1 ]] || { echo "Error fetching QC JSON $1: apricot server only set for EPNSYNCMODE == 1 " 1>&2 && exit 1; }
   if [[ ! -z ${GEN_TOPO_QC_JSON_FILE:-} ]]; then
-	if [[ ${1} =~ "?" ]]; then
-		curl -s -o $GEN_TOPO_QC_JSON_FILE "${GEN_TOPO_QC_APRICOT_SERVER}/${1}\&process=true"
-	else
-		curl -s -o $GEN_TOPO_QC_JSON_FILE "${GEN_TOPO_QC_APRICOT_SERVER}/${1}?process=true"
-	fi
+    if [[ ${1} =~ "?" ]]; then
+      curl -s -o $GEN_TOPO_QC_JSON_FILE "${GEN_TOPO_QC_APRICOT_SERVER}/${1}\&process=true"
+    else
+      curl -s -o $GEN_TOPO_QC_JSON_FILE "${GEN_TOPO_QC_APRICOT_SERVER}/${1}?process=true"
+    fi
     if [[ $? != 0 ]]; then
       echo "Error fetching QC JSON $1"
       exit 1
