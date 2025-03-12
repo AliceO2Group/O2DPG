@@ -20,22 +20,24 @@ OUTPUT_SUFFIX=
 
 add_QC_JSON() {
   if [[ ${2} =~ ^consul://.* ]]; then
+    [[ $EPNSYNCMODE == 1 ]] ||  { echo "Error fetching QC JSON $2: consul server is used for EPNSYNCMODE == 1 only" 1>&2 && exit 1; }
     TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
     curl -s -o $TMP_FILENAME "http://${GEN_TOPO_QC_CONSUL_SERVER}:8500/v1/kv/${2/consul:\/\//}?raw"
     if [[ $? != 0 ]]; then
-      echo "Error fetching QC JSON $2"
+      echo "Error fetching QC JSON $2" 1>&2
       exit 1
     fi
   elif [[ ${2} =~ ^apricot://.* ]]; then
+    [[ $EPNSYNCMODE == 1 ]] || { echo "Error fetching QC JSON $2: apricot server is used for EPNSYNCMODE == 1 only" 1>&2 && exit 1; }
     TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
-	if [[ ${2} =~ "?" ]]; then
-		curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}\&run_type=${RUNTYPE:-}\&beam_type=${BEAMTYPE:-}\&process=true"
-	else
-		curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}?run_type=${RUNTYPE:-}\&beam_type=${BEAMTYPE:-}\&process=true"
-	fi
+	  if [[ ${2} =~ "?" ]]; then
+		  curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}\&run_type=${RUNTYPE:-}\&beam_type=${BEAMTYPE:-}\&process=true"
+	  else
+		  curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}?run_type=${RUNTYPE:-}\&beam_type=${BEAMTYPE:-}\&process=true"
+	  fi
     
     if [[ $? != 0 ]]; then
-      echo "Error fetching QC JSON $2"
+      echo "Error fetching QC JSON $2" 1>&2
       exit 1
     fi
   else
