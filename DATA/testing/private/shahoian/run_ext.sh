@@ -33,5 +33,5 @@ jq -n 'reduce inputs as $s (input; .qc.tasks += ($s.qc.tasks) | .qc.checks += ($
 for wf in "$@"
 do
  export GEN_TOPO_WORKFLOW_NAME=$wf
- /opt/alisw/el8/GenTopo/bin/gen_topo.sh > $HOME/gen_topo/test/${GEN_TOPO_WORKFLOW_NAME}.xml
+ /opt/alisw/el9/GenTopo/bin/gen_topo.sh > $HOME/gen_topo/test/${GEN_TOPO_WORKFLOW_NAME}.xml
 done

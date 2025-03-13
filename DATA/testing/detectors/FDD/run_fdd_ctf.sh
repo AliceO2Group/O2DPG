@@ -25,7 +25,7 @@ export MULTIPLICITY_FACTOR_REST=1                                    # Factor to
 
 export OUTPUT_FILE_NAME=$HOME/topologies/fdd-ctf.xml
 
-/opt/alisw/el8/GenTopo/bin/gen_topo.sh > $OUTPUT_FILE_NAME
+/opt/alisw/el9/GenTopo/bin/gen_topo.sh > $OUTPUT_FILE_NAME
 if [ $? == 0 ]; then
   echo Generated XML topology $OUTPUT_FILE_NAME
 fi
