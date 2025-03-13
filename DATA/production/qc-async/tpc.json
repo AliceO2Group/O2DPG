@@ -97,7 +97,7 @@
         "moduleName": "QcTPC",
         "detectorName": "TPC",
         "cycleDurationSeconds": "300",
-        "movingWindows" : [ "h2DNClustersEta" ],
+        "movingWindows" : [ "h2DNClustersEta","hDCArVsEtaPos", "hDCArVsEtaNeg","hDCArVsEtaPos_pTmin","hDCArVsEtaNeg_pTmin" ],
         "dataSource": {
           "type": "dataSamplingPolicy",
           "name": "tpc-tracks",
