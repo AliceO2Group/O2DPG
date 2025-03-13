@@ -60,9 +60,9 @@ else:
 
 modulecmd = " module purge ; "
 if 'GEN_TOPO_OVERRIDE_MODULE_DIR' in os.environ:
-    mod.module('unuse', '/opt/alisw/el8/modulefiles')
+    mod.module('unuse', '/opt/alisw/el9/modulefiles')
     mod.module('use', os.environ['GEN_TOPO_OVERRIDE_MODULE_DIR'])
-    modulecmd += ' module unuse /opt/alisw/el8/modulefiles 2>&1 ; module use ' + os.environ['GEN_TOPO_OVERRIDE_MODULE_DIR'] + ' 2>&1 ; '
+    modulecmd += ' module unuse /opt/alisw/el9/modulefiles 2>&1 ; module use ' + os.environ['GEN_TOPO_OVERRIDE_MODULE_DIR'] + ' 2>&1 ; '
 
 f = open(sys.argv[1], 'r')
 for line in f:

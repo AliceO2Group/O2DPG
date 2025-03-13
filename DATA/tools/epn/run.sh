@@ -35,8 +35,8 @@ if [[ "0$GEN_TOPO_RUN_HOME" == "01" ]]; then
   [[ -z $O2DPG_ROOT || -z $O2_ROOT ]] && { echo "ERROR: O2 and O2DPG must be in the environment!"; exit 1; }
   $O2DPG_ROOT/DATA/tools/epn/gen_topo.sh > $OUTPUT_FILE_NAME
 else
-  [[ ! -f /opt/alisw/el8/GenTopo/bin/gen_topo.sh ]] && { echo "ERROR: EPN installation of gen_topo.sh missing. Are you trying to run at home? Then please set GEN_TOPO_RUN_HOME=1!"; exit 1; }
-  /opt/alisw/el8/GenTopo/bin/gen_topo.sh > $OUTPUT_FILE_NAME
+  [[ ! -f /opt/alisw/el9/GenTopo/bin/gen_topo.sh ]] && { echo "ERROR: EPN installation of gen_topo.sh missing. Are you trying to run at home? Then please set GEN_TOPO_RUN_HOME=1!"; exit 1; }
+  /opt/alisw/el9/GenTopo/bin/gen_topo.sh > $OUTPUT_FILE_NAME
 fi
 if [[ $? == 0 ]]; then
   echo Generated XML topology $OUTPUT_FILE_NAME

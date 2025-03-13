@@ -227,7 +227,7 @@ export WORKFLOW_PARAMETERS=                                          # Additiona
 export RECO_NUM_NODES_OVERRIDE=0                                     # Override the number of EPN compute nodes to use (default is specified in description library file)
 export NHBPERTF=256                                                  # Number of HBF per TF
 
-/opt/alisw/el8/GenTopo/bin/gen_topo.sh > $HOME/gen_topo_output.xml
+/opt/alisw/el9/GenTopo/bin/gen_topo.sh > $HOME/gen_topo_output.xml
 [drohr@epn245 test]$ ./run.sh
 Loading ODC/0.36-1
   Loading requirement: BASE/1.0 GCC-Toolchain/v10.2.0-alice2-3 fmt/7.1.0-10 FairLogger/v1.9.1-7 zlib/v1.2.8-8 OpenSSL/v1.0.2o-9 libpng/v1.6.34-9 sqlite/v3.15.0-2 libffi/v3.2.1-2 FreeType/v2.10.1-8 Python/v3.6.10-12 Python-modules/1.0-16 boost/v1.75.0-13 ZeroMQ/v4.3.3-6 ofi/v1.7.1-8 asio/v1.19.1-2 asiofi/v0.5.1-2 DDS/3.5.16-5 FairMQ/v1.4.40-4
@@ -277,7 +277,7 @@ export WORKFLOW_PARAMETERS=EVENT_DISPLAY,CTF,GPU                     # Additiona
 export RECO_NUM_NODES_OVERRIDE=0                                     # Override the number of EPN compute nodes to use (default is specified in description library file)
 export NHBPERTF=256                                                  # Number of HBF per TF
 
-/opt/alisw/el8/GenTopo/bin/gen_topo.sh > $HOME/gen_topo_output.xml
+/opt/alisw/el9/GenTopo/bin/gen_topo.sh > $HOME/gen_topo_output.xml
 [drohr@epn245 test]$ ./run.sh
 Loading ODC/0.36-1
   Loading requirement: BASE/1.0 GCC-Toolchain/v10.2.0-alice2-3 fmt/7.1.0-10 FairLogger/v1.9.1-7 zlib/v1.2.8-8 OpenSSL/v1.0.2o-9 libpng/v1.6.34-9 sqlite/v3.15.0-2 libffi/v3.2.1-2 FreeType/v2.10.1-8 Python/v3.6.10-12 Python-modules/1.0-16 boost/v1.75.0-13 ZeroMQ/v4.3.3-6 ofi/v1.7.1-8 asio/v1.19.1-2 asiofi/v0.5.1-2 DDS/3.5.16-5 FairMQ/v1.4.40-4
