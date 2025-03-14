@@ -5,7 +5,7 @@ int External()
 
   TFile file(path.c_str(), "read");
   if (file.IsZombie()) {
-    std::err << "Cannot open ROOT file " << path << std::endl;
+    std::cerr << "Cannot open ROOT file " << path << std::endl;
     return 1;
   }
 
@@ -13,7 +13,7 @@ int External()
   TTree* tree = (TTree*)file.Get("o2sim");
   
   if (!tree) {
-    std::cerr << "Cannot find tree o2sim in file " << path << "\n";
+    std::cerr << "Cannot find tree o2sim in file " << path << std::endl;
     return 1;
   }
 
@@ -23,7 +23,7 @@ int External()
   int nEvents = tree->GetEntries();
   for (int i = 0; i < nEvents; i++) {
     tree->GetEntry(i);
-    for (const auto& track : tracks) {
+    for (auto& track : *tracks) {
       auto pdgCode = track.GetPdgCode();
       if (pdgCode == pdgToCheck) {
         // not injecting anti-particle
