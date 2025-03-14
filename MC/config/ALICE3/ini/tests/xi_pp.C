@@ -18,7 +18,7 @@ int External()
   for (int i = 0; i < nEvents; i++) {
     tree->GetEntry(i);
     for (const auto& track : tracks) {
-      auto pdgCode = track.getPdgCode();
+      auto pdgCode = track.GetPdgCode();
       if (pdgCode == pdgToCheck) {
         // not injecting anti-particle
         nInjectedParticles++;

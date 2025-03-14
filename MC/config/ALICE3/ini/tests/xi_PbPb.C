@@ -11,14 +11,14 @@ int External()
 
   int nInjectedParticles = 0;
   TTree* tree = (TTree*)file.Get("o2sim");
-  std::vector<o2::MCTrack>* tracks;
+  std::vector<o2::MCTrack>* tracks{};
   tree->SetBranchAdress("MCTrack", &tracks)
 
   int nEvents = tree->GetEntries();
   for (int i = 0; i < nEvents; i++) {
     tree->GetEntry(i);
     for (const auto& track : tracks) {
-      auto pdgCode = track.getPdgCode();
+      auto pdgCode = track.GetPdgCode();
       if (pdgCode == pdgToCheck) {
         // not injecting anti-particle
         nInjectedParticles++;
