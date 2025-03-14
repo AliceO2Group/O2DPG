@@ -43,5 +43,5 @@ do
  export GEN_TOPO_WORKFLOW_NAME=$wf
  EXT="xml"
  [ ! -z $WORKFLOWMODE ] && [ $WORKFLOWMODE == "print" ] && EXT="sh"
- /opt/alisw/el8/GenTopo/bin/gen_topo.sh > "$HOME/gen_topo/dpl/${GEN_TOPO_WORKFLOW_NAME}.${EXT}"
+ /opt/alisw/el9/GenTopo/bin/gen_topo.sh > "$HOME/gen_topo/dpl/${GEN_TOPO_WORKFLOW_NAME}.${EXT}"
 done

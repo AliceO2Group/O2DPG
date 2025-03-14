@@ -17,7 +17,7 @@ if [[ ! -z $GEN_TOPO_LOGDATE ]]; then
 fi
 
 STDERRFILE=$(mktemp)
-/opt/alisw/el8/GenTopo/bin/gen_topo.sh 2> $STDERRFILE
+/opt/alisw/el9/GenTopo/bin/gen_topo.sh 2> $STDERRFILE
 RETVAL=$?
 
 if [[ ! -z $GEN_TOPO_LOGDATE ]]; then

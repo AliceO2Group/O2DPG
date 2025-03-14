@@ -43,5 +43,5 @@ do
     echo
     echo Processing workflow $wf
     export GEN_TOPO_WORKFLOW_NAME=$wf
- /opt/alisw/el8/GenTopo/bin/gen_topo.sh > $HOME/gen_topo/dpl/${GEN_TOPO_WORKFLOW_NAME}.xml
+ /opt/alisw/el9/GenTopo/bin/gen_topo.sh > $HOME/gen_topo/dpl/${GEN_TOPO_WORKFLOW_NAME}.xml
 done
