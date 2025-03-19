@@ -306,7 +306,7 @@ if [[ "0$OLDVERSION" == "01" ]] && [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" ||
   ALIGNLEVEL=0
   if [[ $ALIEN_JDL_LPMPRODUCTIONTYPE == "MC" ]]; then
     # extract pass number
-    ANCHORED_PASS=$ALIEN_JDL_LPMANCHOREPASSNAME
+    ANCHORED_PASS=$ALIEN_JDL_LPMANCHOREDPASSNAME
     ANCHORED_PASS_NUMBER=`echo $ANCHORED_PASS | sed 's/^apass//'`
     echo "ANCHORED_PASS_NUMER = $ANCHORED_PASS_NUMBER"
     if [[ $PERIOD == "MAY" || $PERIOD == "JUN" ]] && [[ $ANCHORED_PASS_NUMBER -gt 1 ]]; then
