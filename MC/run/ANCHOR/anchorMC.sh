@@ -144,6 +144,13 @@ fi
 [ -z "${CYCLE}" ] && { echo_error "Set CYCLE" ; exit 1 ; }
 [ -z "${PRODSPLIT}" ] && { echo_error "Set PRODSPLIT" ; exit 1 ; }
 
+
+# this generates an exact reproducer script for this job
+# that can be used locally for debugging etc.
+if [[ -n "${ALIEN_PROC_ID}" && -n "${JALIEN_WSPORT}" ]]; then
+  ${O2DPG_ROOT}/GRID/utils/getReproducerScript.sh ${ALIEN_PROC_ID}
+fi
+
 # also for this keep a real default
 NWORKERS=${NWORKERS:-8}
 # set a default seed if not given
@@ -370,7 +377,7 @@ fi
 # full logs tar-ed for output, regardless the error code or validation - to catch also QC logs...
 #
 if [[ -n "$ALIEN_PROC_ID" ]]; then
-  find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" -o -name "pythia8.cfg" \) | tar -czvf debug_log_archive.tgz -T -
+  find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" -o -name "pythia8.cfg" -o -name "reproducer*.sh" \) | tar -czvf debug_log_archive.tgz -T -
   if [[ "$ALIEN_JDL_CREATE_TAR_IN_MC" == "1" ]]; then
     find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" -o -name "*.root" \) | tar -czvf debug_full_archive.tgz -T -
   fi
