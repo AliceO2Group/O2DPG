@@ -1,0 +1,5 @@
+#comment
+%{SOFTWARETAG_SIM},%{SOFTWARETAG_ASYNC},%{PASSNAME},%{COL_SYSTEM},%{RUN_NUMBER},%{INTERACTIONTYPE},%{PRODUCTION_TAG},%{ANCHOR_PRODUCTION},%{ANCHORYEAR},%{SIM_OPTIONS}
+O2sim::v20250306-1,O2PDPSuite::async-async-v1-01-08-slc9-alidist-async-v1-01-01-1,apass7,p-p,526641,pp,LHC25a9_Plus10,LHC22o,2022,-gen pythia8
+#O2sim::v20250305-1,O2PDPSuite::async-async-v1-01-12-slc9-alidist-async-v1-01-01-1,apass1,p-p,551398,pp,LHC25a7_Plus10,LHC24ag,2024,-gen pythia8
+#O2sim::v20250305-1,O2PDPSuite::async-async-v1-02-10-slc9-alidist-async-v1-02-01-1,apass1,Pb-Pb,559544,PbPb,LHC25c5b,LHC24ar,2024,-gen pythia8 -confKey 'SimCutParams.globalDensityFactor=0.9f'
