@@ -1,0 +1,22 @@
+# comment (no empty lines allowed)
+%{SOFTWARETAG_SIM},%{SOFTWARETAG_ASYNC},%{PASSNAME},%{COL_SYSTEM},%{RUN_NUMBER},%{INTERACTIONTYPE},%{ANCHOR_PRODUCTION},%{ANCHORYEAR},%{SIM_OPTIONS},%{PRODUCTION_TAG}
+#O2sim::v20250306-1,O2PDPSuite::async-async-v1-01-08-slc9-alidist-async-v1-01-01-1,apass7,p-p,526641,pp,LHC25a9_Plus10,LHC22o,2022,-gen pythia8
+#O2sim::v20250305-1,O2PDPSuite::async-async-v1-01-12-slc9-alidist-async-v1-01-01-1,apass1,p-p,551398,pp,LHC25a7_Plus10,LHC24ag,2024,-gen pythia8
+#O2sim::v20250305-1,O2PDPSuite::async-async-v1-02-10-slc9-alidist-async-v1-02-01-1,apass1,Pb-Pb,559544,PbPb,LHC25c5b,LHC24ar,2024,-gen pythia8 -confKey 'SimCutParams.globalDensityFactor=0.9f'
+#O2sim::v20250806-1,O2PDPSuite::async-async-2024-PbPb-apass1-v2-slc9-alidist-async-2024-PbPb-apass1-v2-1,apass1,Pb-Pb,559544,PbPb,LHC25c5b,LHC24ar,2024,-gen pythia8
+# 2022
+# O2PDPSuite::async-async-2022-pp-apass7-v1,apass7,    | 526641
+# 2023
+O2sim::v20250806-1,O2PDPSuite::async-async-2023-PbPb-apass5-v5-slc9-alidist-async-2023-PbPb-apass5-v5-1,apass5,Pb-Pb,544091,PbPb,LHC23zzh,2023,-gen pythia8
+# 2024
+O2sim::v20250806-1,O2PDPSuite::async-async-2024-pp-apass1-v7-slc9-alidist-async-2024-pp-apass1-v7-1,apass1,p-p,553185,pp,LHC24al,2024,-gen pythia8
+O2sim::v20250806-1,O2PDPSuite::async-async-2024-ppRef-apass1-v1-slc9-alidist-async-2024-ppRef-apass1-v1-1,apass1,p-p,559348,pp,LHC24ap,2024,-gen pythia8
+O2sim::v20250806-1,O2PDPSuite::async-async-2024-pbpb-apass2-v3-slc9-alidist-async-2024-pbpb-apass2-v3-1,apass2,Pb-Pb,559545,PbPb,LHC24ar,2024,-gen pythia8
+# 2025
+O2sim::v20250806-1,O2PDPSuite::async-async-2025-pO-apass1-v2-slc9-alidist-async-2025-pO-apass1-v2-1,apass1,p-O,564251,pO,LHC25ad,2025,-gen pythia8
+O2sim::v20250806-1,O2PDPSuite::async-async-2025-OO-apass1-v2-slc9-alidist-async-2025-OO-apass1-v2-1,apass1,O-O,564356,OO,LHC25ae,2025,-gen pythia8
+O2sim::v20250806-1,O2PDPSuite::async-async-2025-NeNe-apass1-v2-slc9-alidist-async-2025-NeNe-apass1-v2-1,apass1,Ne-Ne,564468,NeNe,LHC25af,2025,-gen pythia8
+# apass2
+O2sim::v20250806-1,O2PDPSuite::async-async-2025-pO-apass2-v1-slc9-alidist-async-2025-pO-apass2-v1-1,apass2,p-O,564251,pO,LHC25ad,2025,-gen pythia8
+O2sim::v20250806-1,O2PDPSuite::async-async-2025-OO-apass2-v1-slc9-alidist-async-2025-OO-apass2-v1-1,apass2,O-O,564356,OO,LHC25ae,2025,-gen pythia8
+O2sim::v20250806-1,O2PDPSuite::async-async-2025-NeNe-apass2-v1-slc9-alidist-async-2025-NeNe-apass2-v1-1,apass2,Ne-Ne,564468,NeNe,LHC25af,2025,-gen pythia8
