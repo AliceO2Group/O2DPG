@@ -126,6 +126,8 @@ ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMANCHORPRODUCTION
 
 if [[ $ALIEN_JDL_ANCHOR_SIM_OPTIONS == *"--tpc-distortion-type 2"* ]]; then
   export O2DPG_ENABLE_TPC_DISTORTIONS=ON
+  # set the SCALING SOURCE to CTP for MC unless explicitely given from outside
+  export ALIEN_JDL_TPCSCALINGSOURCE=${ALIEN_JDL_TPCSCALINGSOURCE:-"CTP"}
 fi
 
 # check variables that need to be set
