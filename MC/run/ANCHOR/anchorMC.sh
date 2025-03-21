@@ -57,6 +57,10 @@ print_help()
   echo "ALIEN_JDL_WORKFLOWDETECTORS, set detectors to be taken into account, default: ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,CTP,"
   echo "ALIEN_JDL_ANCHOR_SIM_OPTIONS, additional options that are passed to the workflow creation, default: -gen pythia8,"
   echo "ALIEN_JDL_ADDTIMESERIESINMC, run TPC time series. Default: 1, switch off by setting to 0,"
+  echo "ALIEN_JDL_MC_ORBITS_PER_TF=N, enforce some orbits per timeframe, instead of determining from CCDB"
+  echo "ALIEN_JDL_RUN_TIME_SPAN_FILE=FILE, use a run-time-span file to exclude bad data-taking periods"
+  echo "ALIEN_JDL_INVERT_IRFRAME_SELECTION, invertes the choice of ALIEN_JDL_RUN_TIME_SPAN_FILE"
+  echo "ALIEN_JDL_CCDB_CONDITION_NOT_AFTER, sets the condition_not_after timestamp for CCDB queries"
   echo "DISABLE_QC, set this to disable QC, e.g. to 1"
 }
 
@@ -219,6 +223,11 @@ remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-ali
 # prepend(!) ALIEN_JDL_ANCHOR_SIM_OPTIONS
 # since the last passed argument wins, e.g. -productionTag cannot be overwritten by the user
 remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config config-json.json"
+# apply software tagging choice
+# remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}}"
+remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${PWD}/env_async.env}"
+# potentially add CCDB timemachine timestamp
+remainingargs="${remainingargs} ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}}"
 
 echo_info "baseargs passed to o2dpg_sim_workflow_anchored.py: ${baseargs}"
 echo_info "remainingargs forwarded to o2dpg_sim_workflow.py: ${remainingargs}"
@@ -245,7 +254,11 @@ if [ ! "${CCDB_RC}" == "0" ]; then
 fi
 
 # TODO This can potentially be removed or if needed, should be taken over by o2dpg_sim_workflow_anchored.py and O2_dpg_workflow_runner.py
-echo "run with echo in pipe" | ${O2_ROOT}/bin/o2-create-aligned-geometry-workflow --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" --condition-remap=file://${ALICEO2_CCDB_LOCALCACHE}=ITS/Calib/Align -b
+if [ "${ENABLEPW}" == "0" ]; then
+  echo "run with echo in pipe" | ${O2_ROOT}/bin/o2-create-aligned-geometry-workflow ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}} --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" --condition-remap=file://${ALICEO2_CCDB_LOCALCACHE}=ITS/Calib/Align -b --run
+else
+  echo "run with echo in pipe" | ${O2_ROOT}/bin/o2-create-aligned-geometry-workflow ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}} --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" -b --run
+fi
 mkdir -p $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned
 ln -s -f $PWD/o2sim_geometry-aligned.root $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned/snapshot.root
 [[ -f $PWD/its_GeometryTGeo.root ]] && mkdir -p $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry && ln -s -f $PWD/its_GeometryTGeo.root $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry/snapshot.root
