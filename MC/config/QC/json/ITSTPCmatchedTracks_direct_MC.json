@@ -41,7 +41,7 @@
         "taskParameters": {
           "GID": "ITS-TPC,ITS",
           "verbose": "false",
-          "minPtITSCut": "0.f",
+          "minPtITSCut": "0.1f",
           "etaITSCut": "1e10f",
           "minNITSClustersCut": "0",
           "maxChi2PerClusterITS": "100000",
@@ -50,8 +50,8 @@
           "minNTPCClustersCut": "60",
           "minDCACut": "100.f",
           "minDCACutY": "10.f",
-          "minPtCut": "0.f",
-          "maxPtCut": "1e10f",
+          "minPtCut": "0.1f",
+          "maxPtCut": "20.f",
           "etaCut": "1e10f",
           "isMC": "true"
         },
