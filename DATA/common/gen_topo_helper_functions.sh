@@ -49,6 +49,11 @@ has_detector_matching()
   [[ $WORKFLOW_DETECTORS_MATCHING =~ (^|,)"ALL"(,|$) ]] || [[ $WORKFLOW_DETECTORS_MATCHING =~ (^|,)"$1"(,|$) ]]
 }
 
+has_detector_gpu()
+{
+  has_detector $1 && [[ $WORKFLOW_DETECTORS_GPU =~ (^|,)"$1"(,|$) ]]
+}
+
 has_secvtx_source()
 {
   [[ $SVERTEXING_SOURCES =~ (^|,)"ALL"(,|$) ]] || [[ $SVERTEXING_SOURCES =~ (^|,)"$1"(,|$) ]]
@@ -135,6 +140,11 @@ has_detectors_ctf()
 has_detectors_flp_processing()
 {
   _check_multiple has_detector_flp_processing "$@"
+}
+
+has_detectors_gpu()
+{
+  _check_multiple has_detector_gpu "$@"
 }
 
 workflow_has_parameters()
