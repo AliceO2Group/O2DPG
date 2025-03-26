@@ -1519,11 +1519,12 @@ for tf in range(1, NTIMEFRAMES + 1):
   
                 
      ### MCH && MFT
-     if isActive('MCH') and isActive('MFT') :
-        addQCPerTF(taskName='MCHMFTTaskQC',
-                needs=[MFTMCHMATCHtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "MCH,MFT,MFT-MCH" --cluster-types "MCH,MFT"',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mftmch-tracks-task.json')
+     # commented out due to failure; reativate when fixed
+     # if isActive('MCH') and isActive('MFT') :
+     #   addQCPerTF(taskName='MCHMFTTaskQC',
+     #           needs=[MFTMCHMATCHtask['name']],
+     #           readerCommand='o2-global-track-cluster-reader --track-types "MCH,MFT,MFT-MCH" --cluster-types "MCH,MFT"',
+     #           configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mftmch-tracks-task.json')
                 
      ### MCH && MID && MFT
      if isActive('MCH') and isActive('MID') and isActive('MFT') :
