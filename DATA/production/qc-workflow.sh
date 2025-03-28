@@ -24,7 +24,7 @@ add_QC_JSON() {
     TMP_FILENAME=$FETCHTMPDIR/$1.$RANDOM.$RANDOM.json
     curl -s -o $TMP_FILENAME "http://${GEN_TOPO_QC_CONSUL_SERVER}:8500/v1/kv/${2/consul:\/\//}?raw"
     if [[ $? != 0 ]]; then
-      echo "Error fetching QC JSON $2" 1>&2
+      echo "Error fetching QC JSON $2 (3)" 1>&2
       exit 1
     fi
   elif [[ ${2} =~ ^apricot://.* ]]; then
@@ -35,9 +35,9 @@ add_QC_JSON() {
 	  else
 		  curl -s -o $TMP_FILENAME "${GEN_TOPO_QC_APRICOT_SERVER}/${2/apricot:\/\/o2\//}?run_type=${RUNTYPE:-}\&beam_type=${BEAMTYPE:-}\&process=true"
 	  fi
-    
+
     if [[ $? != 0 ]]; then
-      echo "Error fetching QC JSON $2" 1>&2
+      echo "Error fetching QC JSON $2 (4)" 1>&2
       exit 1
     fi
   else
@@ -198,7 +198,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
       else
         QC_JSON_ZDC=$O2DPG_ROOT/DATA/production/qc-async/zdc.json
       fi
-    fi  
+    fi
     if [[ -z "${QC_JSON_EMC:-}" ]]; then
       if [[ "$BEAMTYPE" == "PbPb" ]]; then
         QC_JSON_EMC=$O2DPG_ROOT/DATA/production/qc-async/emc_PbPb.json
@@ -272,7 +272,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
       if [[ $i == "PRIMVTX" ]] && ! has_detector_reco ITS; then continue; fi
       if [[ $i == "ITSTPC" ]] && ! has_detectors_reco ITS TPC; then continue; fi
       add_QC_JSON GLO_$i ${!DET_JSON_FILE}
-   
+
       if [[ $i == "ITSTPC" ]]; then
         LOCAL_FILENAME=${JSON_FILES//*\ /}
         # replace the input sources depending on the detector compostition and matching detectors

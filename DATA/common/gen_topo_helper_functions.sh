@@ -262,7 +262,7 @@ add_W() # Add binarry to workflow command USAGE: add_W [BINARY] [COMMAND_LINE_OP
   WORKFLOW+=$WFADD
 }
 
-if [[ ${EPNSYNCMODE:-0} == 1 && "${WORKFLOW_PARAMETERS:-}" =~ (^|,)"QC"(,|$) ]]; then
+if [[ ${EPNSYNCMODE:-0} == 1 ]]; then
   if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
     GEN_TOPO_QC_CONSUL_SERVER=ali-staging.cern.ch
   else
@@ -277,7 +277,7 @@ add_QC_from_consul()
   if [[ ! -z ${GEN_TOPO_QC_JSON_FILE:-} ]]; then
     curl -s -o $GEN_TOPO_QC_JSON_FILE "http://${GEN_TOPO_QC_CONSUL_SERVER}:8500/v1/kv${1}?raw"
     if [[ $? != 0 ]]; then
-      echo "Error fetching QC JSON $1"
+      echo "Error fetching QC JSON $1 (1)" 1>&2
       exit 1
     fi
     QC_CONFIG_ARG="json://${GEN_TOPO_QC_JSON_FILE}"
@@ -297,7 +297,7 @@ add_QC_from_apricot()
       curl -s -o $GEN_TOPO_QC_JSON_FILE "${GEN_TOPO_QC_APRICOT_SERVER}/${1}?process=true"
     fi
     if [[ $? != 0 ]]; then
-      echo "Error fetching QC JSON $1"
+      echo "Error fetching QC JSON $1 (2)" 1>&2
       exit 1
     fi
     QC_CONFIG_ARG="json://${GEN_TOPO_QC_JSON_FILE}"
