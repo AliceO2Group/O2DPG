@@ -300,6 +300,23 @@ else
   export ENABLE_METRICS=0
 fi
 
+if [ -z ${ALIEN_JDL_LPMANCHOREDPASSNUMBER+x} ]; then
+  export ANCHORED_PASS_NUMBER=$(echo $ALIEN_JDL_LPMPASSNAME | sed 's/^apass//' | cut -c1-1)
+  echo "using ANCHORED_PASS_NUMBER from pass name $ALIEN_JDL_LPMPASSNAME, ANCHORED_PASS_NUMBER=$ANCHORED_PASS_NUMBER"
+else
+  # variable exported, takes precedence over anything else
+  export ANCHORED_PASS_NUMBER=$ALIEN_JDL_LPMANCHOREDPASSNUMBER
+  echo "using ANCHORED_PASS_NUMBER from $ALIEN_JDL_LPMANCHOREDPASSNUMBER defined by JDL, ANCHORED_PASS_NUMBER=$ANCHORED_PASS_NUMBER"
+fi
+
+echo "Checking ANCHORED_PASS_NUMBER"
+if [ -n "$ANCHORED_PASS_NUMBER" ] && [ "$ANCHORED_PASS_NUMBER" -eq "$ANCHORED_PASS_NUMBER" ] 2>/dev/null; then
+  echo "ANCHORED_PASS_NUMBER set to $ANCHORED_PASS_NUMBER"
+else
+  echo "[Warning] undetermined ANCHORED_PASS_NUMBER"
+fi
+
+
 #ALIGNLEVEL=0: before December 2022 alignment, 1: after December 2022 alignment
 ALIGNLEVEL=1
 if [[ "0$OLDVERSION" == "01" ]] && [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == "LHC22c" || $PERIOD == "LHC22d" || $PERIOD == "LHC22e" || $PERIOD == "LHC22f" ]]; then
