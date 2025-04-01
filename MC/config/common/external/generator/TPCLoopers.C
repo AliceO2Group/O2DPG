@@ -9,10 +9,10 @@
 // and applying the inverse transformation to the generated data.
 struct Scaler
 {
-    TVectorD normal_min;
-    TVectorD normal_max;
-    TVectorD outlier_center;
-    TVectorD outlier_scale;
+    std::vector<double> normal_min;
+    std::vector<double> normal_max;
+    std::vector<double> outlier_center;
+    std::vector<double> outlier_scale;
 
     void load(const std::string &filename)
     {
@@ -33,49 +33,35 @@ struct Scaler
             throw std::runtime_error("Error: JSON parsing failed!");
         }
 
-        // Convert JSON arrays to TVectorD
-        normal_min.ResizeTo(8);
-        normal_max.ResizeTo(8);
-        outlier_center.ResizeTo(2);
-        outlier_scale.ResizeTo(2);
-
-        jsonArrayToVector(doc["normal"]["min"], normal_min);
-        jsonArrayToVector(doc["normal"]["max"], normal_max);
-        jsonArrayToVector(doc["outlier"]["center"], outlier_center);
-        jsonArrayToVector(doc["outlier"]["scale"], outlier_scale);
+        normal_min = jsonArrayToVector(doc["normal"]["min"]);
+        normal_max = jsonArrayToVector(doc["normal"]["max"]);
+        outlier_center = jsonArrayToVector(doc["outlier"]["center"]);
+        outlier_scale = jsonArrayToVector(doc["outlier"]["scale"]);
     }
 
-    TVectorD inverse_transform(const TVectorD &input)
+    std::vector<double> inverse_transform(const std::vector<double> &input)
     {
-        TVectorD normal_part(8);
-        TVectorD outlier_part(2);
-
-        for (int i = 0; i < 8; ++i)
+        std::vector<double> output;
+        for (int i = 0; i < 10; ++i)
         {
-            normal_part[i] = normal_min[i] + input[i] * (normal_max[i] - normal_min[i]);
+            if (i < 8)
+                output.push_back(input[i] * (normal_max[i] - normal_min[i]) + normal_min[i]);
+            else
+                output.push_back(input[i] * outlier_scale[i - 8] + outlier_center[i - 8]);
         }
-
-        for (int i = 0; i < 2; ++i)
-        {
-            outlier_part[i] = input[8 + i] * outlier_scale[i] + outlier_center[i];
-        }
-
-        TVectorD output(10);
-        for (int i = 0; i < 8; ++i)
-            output[i] = normal_part[i];
-        for (int i = 0; i < 2; ++i)
-            output[8 + i] = outlier_part[i];
 
         return output;
     }
 
 private:
-    void jsonArrayToVector(const rapidjson::Value &jsonArray, TVectorD &vec)
+    std::vector<double> jsonArrayToVector(const rapidjson::Value &jsonArray)
     {
+        std::vector<double> vec;
         for (int i = 0; i < jsonArray.Size(); ++i)
         {
-            vec[i] = jsonArray[i].GetDouble();
+            vec.push_back(jsonArray[i].GetDouble());
         }
+        return vec;
     }
 };
 
@@ -91,7 +77,7 @@ public:
         session = Ort::Session(env, model_path.c_str(), session_options);
     }
 
-    TVectorD generate_sample()
+    std::vector<double> generate_sample()
     {
         Ort::AllocatorWithDefaultOptions allocator;
 
@@ -115,10 +101,10 @@ public:
 
         // Extract output
         float *output_data = output_tensors.front().GetTensorMutableData<float>();
-        TVectorD output(10);
+        std::vector<double> output;
         for (int i = 0; i < 10; ++i)
         {
-            output[i] = output_data[i];
+            output.push_back(output_data[i]);
         }
 
         return output;
@@ -186,9 +172,9 @@ class GenTPCLoopers : public Generator
         // Generate pairs of loopers
         for (int i = 0; i < mNLoopers; ++i)
         {
-            TVectorD pair = mONNX->generate_sample();
+            std::vector<double> pair = mONNX->generate_sample();
             // Apply the inverse transformation using the scaler
-            TVectorD transformed_pair = mScaler->inverse_transform(pair);
+            std::vector<double> transformed_pair = mScaler->inverse_transform(pair);
             mGenPairs.push_back(transformed_pair);
         }
         return true;
@@ -255,7 +241,7 @@ class GenTPCLoopers : public Generator
         std::unique_ptr<ONNXGenerator> mONNX = nullptr;
         std::unique_ptr<Scaler> mScaler = nullptr;
         double mPoisson[3] = {0.0, 0.0, 0.0}; // Mu, Min and Max of Poissonian
-        std::vector<TVectorD> mGenPairs;
+        std::vector<std::vector<double>> mGenPairs;
         short int mNLoopers = -1;
         bool mPoissonSet = false;
         // Poissonian random number generator
