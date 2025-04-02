@@ -1,0 +1,38 @@
+{
+  "qc": {
+    "config": {
+      "database": {
+        "implementation": "CCDB",
+        "host": "ccdb-test.cern.ch:8080",
+        "username": "not_applicable",
+        "password": "not_applicable",
+        "name": "not_applicable"
+      },
+      "Activity": {
+        "provenance": "qc_mc",
+        "passName": "passMC",
+        "periodName": "SimChallenge"
+      },
+      "monitoring": {
+        "url": "no-op://"
+      },
+      "conditionDB": {
+        "url": "alice-ccdb.cern.ch"
+      }
+    },
+    "tasks": {
+      "RecPoints": {
+        "active": "true",
+        "className": "o2::quality_control_modules::fdd::RecPointsQcTask",
+        "moduleName": "QcFDD",
+        "detectorName": "FDD",
+        "cycleDurationSeconds": "600",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "recpoints:FDD/RECPOINTS/0;channels:FDD/RECCHDATA/0"
+        }
+      }
+    }
+  }
+}
