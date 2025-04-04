@@ -384,6 +384,14 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.dEdxClusterRejectionFlagMask=$ALIEN_JDL_TPCDEDXCLMASK;"
   fi
 
+  if [[ -n "$ALIEN_JDL_TPCDEDXCLMASKALT" ]]; then
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.dEdxClusterRejectionFlagMaskAlt=$ALIEN_JDL_TPCDEDXCLMASKALT;"
+  fi
+
+  if [[ -n "$ALIEN_JDL_TPCEDGETWOPADS" ]]; then
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.cfEdgeTwoPads=$ALIEN_JDL_TPCEDGETWOPADS"
+  fi
+
   if [[ -n "$ALIEN_JDL_TPCCLUSTERFILTER" ]]; then
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.tpcUseOldCPUDecoding=1;GPU_proc.tpcApplyClusterFilterOnCPU=$ALIEN_JDL_TPCCLUSTERFILTER;"
   fi
