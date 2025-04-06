@@ -103,6 +103,20 @@
                       "o2-analysis-event-selection-qa"]
         },
         {
+            "name": "TimeDependentQA",
+            "enabled": true,
+            "expected_output": ["AnalysisResults.root"],
+            "valid_mc": true,
+            "valid_data": true,
+            "tasks": ["o2-analysis-timestamp",
+                      "o2-analysis-track-propagation",
+                      "o2-analysis-trackselection",
+                      "o2-analysis-event-selection",
+                      "o2-analysis-multiplicity-table",
+                      "o2-analysis-ft0-corrected-table",
+                      "o2-analysis-time-dependent-qa"]
+        },
+        {
             "name": "CheckDataModelMC",
             "enabled": true,
             "expected_output": ["AnalysisResults.root"],
