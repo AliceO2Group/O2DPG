@@ -1,0 +1,6 @@
+{
+  "time-dependent-qa-task": {
+    "FlagCheckQoverPtHist": "0",
+    "FlagFillPhiVsTimeHist": "0"
+  }
+}
