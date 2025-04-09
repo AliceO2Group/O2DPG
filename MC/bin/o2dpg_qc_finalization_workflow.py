@@ -14,6 +14,7 @@ import sys
 import argparse
 from os import environ, mkdir
 from os.path import join, dirname, isdir
+import re
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
@@ -48,9 +49,17 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag, con
       needs = [taskName + '_local' + str(tf) for tf in range(1, ntimeframes + 1)]
 
     task = createTask(name=QC_finalize_name(taskName), needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
-    task['cmd'] = f'o2-qc --config {qcConfigPath} --remote-batch {taskName}.root' + \
+    def remove_json_prefix(path):
+           return re.sub(r'^json://', '', path)
+
+    configFilePathOnDisk = remove_json_prefix(qcConfigPath)
+    # we check if the configFilePath actually exists in the currently loaded software. Otherwise we exit immediately and gracefully
+    task['cmd'] = ' if [ -f ' + configFilePathOnDisk + ' ]; then { '
+    task['cmd'] += f'o2-qc --config {qcConfigPath} --remote-batch {taskName}.root' + \
                   f' --override-values "qc.config.database.host={qcdbHost};qc.config.Activity.number={run};qc.config.Activity.type=PHYSICS;qc.config.Activity.periodName={productionTag};qc.config.Activity.beamType={beamType};qc.config.conditionDB.url={conditionDB}"' + \
                   ' ' + getDPL_global_options()
+    task['cmd'] += ' ;} else { echo "Task ' + taskName + ' not performed due to config file not found "; } fi'
+
     stages.append(task)
 
   ## Adds a postprocessing QC workflow

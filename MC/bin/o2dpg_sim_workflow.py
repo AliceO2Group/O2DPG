@@ -1337,11 +1337,21 @@ for tf in range(1, NTIMEFRAMES + 1):
      def addQCPerTF(taskName, needs, readerCommand, configFilePath, objectsFile=''):
        task = createTask(name=taskName + '_local' + str(tf), needs=needs, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
        objectsFile = objectsFile if len(objectsFile) > 0 else taskName + '.root'
-       # the --local-batch argument will make QC Tasks store their results in a file and merge with any existing objects
-       task['cmd'] = f'{readerCommand} | o2-qc --config {configFilePath}' + \
+
+       def remove_json_prefix(path):
+           return re.sub(r'^json://', '', path)
+
+       configFilePathOnDisk = remove_json_prefix(configFilePath)
+       # we check if the configFilePath actually exists in the currently loaded software. Otherwise we exit immediately and gracefully
+       task['cmd'] = ' if [ -f ' + configFilePathOnDisk + ' ]; then { '
+        # The actual QC command
+        # the --local-batch argument will make QC Tasks store their results in a file and merge with any existing objects
+       task['cmd'] += f'{readerCommand} | o2-qc --config {configFilePath}' + \
                      f' --local-batch ../{qcdir}/{objectsFile}' + \
                      f' --override-values "qc.config.database.host={args.qcdbHost};qc.config.Activity.number={args.run};qc.config.Activity.type=PHYSICS;qc.config.Activity.periodName={args.productionTag};qc.config.Activity.beamType={args.col};qc.config.Activity.start={args.timestamp};qc.config.conditionDB.url={args.conditionDB}"' + \
                      ' ' + getDPL_global_options(ccdbbackend=False)
+       task['cmd'] += ' ;} else { echo "Task ' + taskName + ' not performed due to config file not found "; } fi'
+
        # Prevents this task from being run for multiple TimeFrames at the same time, thus trying to modify the same file.
        task['semaphore'] = objectsFile
        workflow['stages'].append(task)
