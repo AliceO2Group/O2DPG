@@ -56,8 +56,8 @@
         },
         "grpGeomRequest" : {
           "geomRequest": "None",
-          "askGRPECS": "false",
-          "askGRPLHCIF": "false",
+          "askGRPECS": "true",
+          "askGRPLHCIF": "true",
           "askGRPMagField": "true",
           "askMatLUT": "false",
           "askTime": "false",

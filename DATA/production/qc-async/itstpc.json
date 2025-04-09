@@ -39,7 +39,7 @@
         "dataSource" : {
           "type" : "direct",
           "query_comment" : "checking every matched track",
-          "query" : "trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;trackTPC:TPC/TRACKS;trackTPCClRefs:TPC/CLUSREFS;trackITS:ITS/TRACKS/0;trackITSROF:ITS/ITSTrackROF/0;trackITSClIdx:ITS/TRACKCLSID/0;alpparITS:ITS/ALPIDEPARAM/0?lifetime=condition&ccdb-path=ITS/Config/AlpideParam;SVParam:GLO/SVPARAM/0?lifetime=condition&ccdb-path=GLO/Config/SVertexerParam;p2decay3body:GLO/PVTX_3BODYREFS/0;decay3body:GLO/DECAYS3BODY/0;decay3bodyIdx:GLO/DECAYS3BODY_IDX/0;p2cascs:GLO/PVTX_CASCREFS/0;cascs:GLO/CASCS/0;cascsIdx:GLO/CASCS_IDX/0;p2v0s:GLO/PVTX_V0REFS/0;v0s:GLO/V0S/0;v0sIdx:GLO/V0S_IDX/0;pvtx_tref:GLO/PVTX_TRMTCREFS/0;pvtx_trmtc:GLO/PVTX_TRMTC/0;pvtx:GLO/PVTX/0;SVParam:GLO/SVPARAM/0?lifetime=condition&ccdb-path=GLO/Config/SVertexerParam;clusTPCoccmap:TPC/TPCOCCUPANCYMAP/0;clusTPC:TPC/CLUSTERNATIVE;clusTPCshmap:TPC/CLSHAREDMAP/0;trigTPC:TPC/TRIGGERWORDS/0;trigITSTPCTRD:TRD/TRGREC_ITSTPC/0;trackITSTPCTRD:TRD/MATCH_ITSTPC/0;matchITSTPCTOF:TOF/MTC_ITSTPC/0;matchITSTPCTRDTOF:TOF/MTC_ITSTPCTRD/0;trigTPCTRD:TRD/TRGREC_TPC/0;trackTPCTRD:TRD/MATCH_TPC/0;matchTPCTOF:TOF/MTC_TPC/0;trackTPCTOF:TOF/TOFTRACKS_TPC/0;matchTPCTRDTOF/TOF/MTC_TPCTRD/0;tofcluster:TOF/CLUSTERS/0"
+          "query" : ""
         },
         "taskParameters" : {
           "GID" : "ITS-TPC,ITS",
@@ -59,7 +59,7 @@
 	  "cutK0Mass": "0.05f",
 	  "maxEtaK0": "0.8f",
 	  "doK0QC": "true",
-	  "trackSourcesK0": "ITS,TPC,ITS-TPC,ITS-TPC-TOF,TPC-TOF,TPC-TRD,ITS-TPC-TRD,TPC-TRD-TOF,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
+	  "trackSourcesK0": ""
         },
 	"grpGeomRequest" : {
           "geomRequest": "None",
