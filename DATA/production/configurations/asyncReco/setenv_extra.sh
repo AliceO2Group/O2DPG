@@ -373,7 +373,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   
   
   # settings to improve inner pad-rows contribution
-  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.rejectIFCLowRadiusCluster=1;"
+  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.rejectIFCLowRadiusCluster=1;GPU_rec_tpc.cfEdgeTwoPads=0;"
   if grep extrapolationTrackingRowRange $O2_ROOT/include/GPU/GPUSettingsList.h &> /dev/null ; then
     export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.extrapolationTrackingRowRange=100;"
   else
