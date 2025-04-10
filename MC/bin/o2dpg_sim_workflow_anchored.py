@@ -549,9 +549,12 @@ def main():
       try:
         cmd_list = shlex.split(os.path.expandvars(cmd))
         output = subprocess.check_output(cmd_list, text=True, stdin=subprocess.DEVNULL, timeout = 120)
-      except subprocess.CalledProcessError:
+        print (output)
+      except subprocess.CalledProcessError as e:
+        print(f"Command failed with return code {e.returncode}")
+        print("Output:")
+        print(e.output)
         return {}, {}
-
 
 if __name__ == "__main__":
   sys.exit(main())

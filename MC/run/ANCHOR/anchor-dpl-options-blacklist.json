@@ -1,0 +1,46 @@
+{
+  "__comment__" : "Options (per dpl workflow) *not* to be transfered from async-reco to MC workflows.",
+  "global": [
+    "--pipeline",
+    "--disable-mc",
+    "--loop"
+  ],
+  "o2-aod-producer-workflow": [
+    "--reco-pass",
+    "--aod-writer-maxfilesize"
+  ],
+  "o2-its-reco-workflow": [
+    "--digits-from-upstream"
+  ],
+  "o2-tof-reco-workflow": [
+    "--input-type",
+    "--output-type",
+    "--local-cmp"
+  ],
+  "o2-tof-matcher-workflow": [
+    "--use-fit",
+    "--tof-lanes",
+    "--output-type",
+    "--enable-dia"
+  ],
+  "o2-mft-reco-workflow": [
+    "--digits-from-upstream",
+    "--nThreads"
+  ],
+  "o2-emcal-cell-recalibrator-workflow": [
+    "--redirect-led"
+  ],
+  "o2-phos-reco-workflow": [
+    "--input-type",
+    "--output-type"
+  ],
+  "o2-trd-global-tracking" : [
+    "--enable-ph"
+  ],
+  "o2-trd-tracklet-transformer" : [
+    "--disable-irframe-reader"
+  ],
+  "o2-tpcits-match-workflow" : [
+    "--nthreads"
+  ]
+}
