@@ -30,7 +30,7 @@ export SEED=5
 # for pp and 50 events per TF, we launch only 4 workers.
 export NWORKERS=2
 
-export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen pythia8 -confKey \"GeometryManagerParam.useParallelWorld=1;GeometryManagerParam.usePwGeoBVH=1;GeometryManagerParam.usePwCaching=1\""
+export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen pythia8 -confKey \"GeometryManagerParam.useParallelWorld=1;GeometryManagerParam.usePwGeoBVH=1;GeometryManagerParam.usePwCaching=1\" ${LOCAL_CONFIG:+--overwrite-config ${LOCAL_CONFIG}}"
 
 # run the central anchor steering script; this includes
 # * derive timestamp
