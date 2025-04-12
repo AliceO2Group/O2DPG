@@ -677,14 +677,6 @@ if usebkgcache:
 # We download some binary files, necessary for processing
 # Eventually, these files/objects should be queried directly from within these tasks?
 
-# We download trivial TPC space charge corrections to be applied during
-# reco. This is necessary to have consistency (decalibration and calibration) between digitization and reconstruction ... until digitization can
-# also apply this effect via CCDB.
-TPC_SPACECHARGE_DOWNLOADER_TASK = createTask(name='tpc_spacecharge_downloader', cpu='0')
-TPC_SPACECHARGE_DOWNLOADER_TASK['cmd'] = '[ "${O2DPG_ENABLE_TPC_DISTORTIONS}" ] || { ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p TPC/Calib/CorrectionMapRef --timestamp 1 --created-not-after ' + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE} ; ' \
-   '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p TPC/Calib/CorrectionMap --timestamp 1 --created-not-after ' + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE} ; }'
-workflow['stages'].append(TPC_SPACECHARGE_DOWNLOADER_TASK)
-
 # Fix (residual) geometry alignment for simulation stage
 # Detectors that prefer to apply special alignments (for example residual effects) should be listed here and download these files.
 # These object will take precedence over ordinary align objects **and** will only be applied in transport simulation
@@ -972,7 +964,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    CTPSCALER = args.ctp_scaler
    tpcDistortionType=args.tpc_distortion_type
    print(f"TPC distortion simulation: type = {tpcDistortionType}, CTP scaler value {CTPSCALER}");
-   tpcdigineeds=[ContextTask['name'], LinkGRPFileTask['name'], TPC_SPACECHARGE_DOWNLOADER_TASK['name']]
+   tpcdigineeds=[ContextTask['name'], LinkGRPFileTask['name']]
    if usebkgcache:
       tpcdigineeds += [ BKG_HITDOWNLOADER_TASKS['TPC']['name'] ]
 
@@ -1581,7 +1573,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       "--disable-mc" if args.no_mc_labels else "",
       "--enable-truncation 0" if environ.get("O2DPG_AOD_NOTRUNCATE") or environ.get("ALIEN_JDL_O2DPG_AOD_NOTRUNCATE") else "",
       "--disable-strangeness-tracker" if args.no_strangeness_tracking else "",
-      f"--aod-timeframe-id ${ALIEN_PROC_ID}{aod_df_id}" if not args.run_anchored else "",
+      f"--aod-timeframe-id ${{ALIEN_PROC_ID}}{aod_df_id}" if not args.run_anchored else "",
    ])
    workflow['stages'].append(AODtask)
 
