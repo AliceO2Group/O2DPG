@@ -35,7 +35,17 @@
               "type": "direct",
               "query": "recpoints:FT0/RECPOINTS/0;channels:FT0/RECCHDATA/0"
             },
-            "saveObjectsToFile":"QC_FT0.root"
+            "saveObjectsToFile":"QC_FT0.root",
+          "grpGeomRequest" : {
+            "geomRequest": "None",
+            "askGRPECS": "false",
+            "askGRPLHCIF": "true",
+            "askGRPMagField": "false",
+            "askMatLUT": "false",
+            "askTime": "false",
+            "askOnceAllButField": "false",
+            "needPropagatorD":  "false"
+          }
         }
       }
     }
