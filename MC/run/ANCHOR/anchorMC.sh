@@ -242,15 +242,24 @@ RECO_RC=$?
 echo_info "async_pass.sh finished with ${RECO_RC}"
 
 if [[ "${RECO_RC}" != "0" ]] ; then
-    exit ${RECO_RC}
+  exit ${RECO_RC}
 fi
 
+# check that workflowconfig.log was created correctly
+if [[ ! -f workflowconfig.log ]]; then
+  echo "Workflowconfig.log file not found"
+  exit 1
+fi
 
 ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG_KEEP
 echo_info "Setting back ALIEN_JDL_LPMPRODUCTIONTAG to $ALIEN_JDL_LPMPRODUCTIONTAG"
 
 # now create the local MC config file --> config-config.json
 ${O2DPG_ROOT}/UTILS/parse-async-WorkflowConfig.py
+
+# we create the new config output with blacklist functionality
+ASYNC_CONFIG_BLACKLIST=${ASYNC_CONFIG_BLACKLIST:-${O2DPG_ROOT}/MC/run/ANCHOR/anchor-dpl-options-blacklist.json}
+${O2DPG_ROOT}/MC/bin/o2dpg_dpl_config_tools.py workflowconfig.log ${ASYNC_CONFIG_BLACKLIST} config-json-new.json
 ASYNC_WF_RC=${?}
 
 # check if config reasonably created
@@ -258,6 +267,7 @@ if [[ "${ASYNC_WF_RC}" != "0" || `grep "o2-ctf-reader-workflow-options" config-j
   echo_error "Problem in anchor config creation. Exiting."
   exit 1
 fi
+
 
 # get rid of the temporary software environment
 if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
@@ -290,7 +300,7 @@ remainingargs="${remainingargs} -e ${ALIEN_JDL_SIMENGINE} -j ${NWORKERS}"
 remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-alibi_anchorTest_tmp}"
 # prepend(!) ALIEN_JDL_ANCHOR_SIM_OPTIONS
 # since the last passed argument wins, e.g. -productionTag cannot be overwritten by the user
-remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config config-json.json"
+remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config config-json-new.json"
 # apply software tagging choice
 # remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}}"
 remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${PWD}/env_async.env}"
@@ -312,6 +322,7 @@ fi
 TIMESTAMP=`grep "Determined timestamp to be" ${anchoringLogFile} | awk '//{print $6}'`
 echo_info "TIMESTAMP IS ${TIMESTAMP}"
 
+exit 0
 
 # check if this job is exluded because it falls inside a bad data-taking period
 ISEXCLUDED=$(grep "TIMESTAMP IS EXCLUDED IN RUN" ${anchoringLogFile})
