@@ -163,7 +163,7 @@ void setNearestNDAlias(TTree* tree, const std::string& aliasName, const std::str
   tree->SetAlias(aliasName.c_str(), expr.c_str());
 }
 
-/// Example usage for ND map creation
+/// Example usage for ND map creation - for very High voltage queries for distertion calibration
 void exampleND() {
   TTree* tree = new TTree("tree", "demo");
   int mapID = registerMapND("test_map", tree, {"CRU", "iTF"}, "time", "val", "subentry==127");
