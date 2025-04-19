@@ -68,6 +68,10 @@ int registerMapND(const std::string& name,
   std::string expr = valueVar + ":" + nearestDim;
   for (const auto& dim : exactDims) expr += ":" + dim;
   int entries = tree->Draw(expr.c_str(), selection.c_str(), "goff");
+  if (entries>=tree->GetEstimate()){
+    tree->SetEstimate(entries*2);
+    entries = tree->Draw(expr.c_str(), selection.c_str(), "goff");
+  }
   if (entries <= 0) {
     std::cerr << "[registerMapND] No entries selected." << std::endl;
     return mapID;
@@ -179,3 +183,39 @@ void exampleTimeSeries() {
   setNearestNDAlias(tree, "mDCAr_A_NTracks_median_interp", "dcar_vs_time", "time", {"subentry"});
   tree->Draw("mTSITSTPC.mDCAr_A_NTracks_median:mDCAr_A_NTracks_median_interp", "indexType==1", "", 10000);
 }
+
+/// Example usage for time series ND lookup
+void test_exampleTimeSeries() {
+  TFile *f5 = TFile::Open("timeSeries10000_LHC23zzx_apass5.root");
+  TTree *tree5 = (TTree*)f5->Get("timeSeries");
+  TFile *f4 = TFile::Open("timeSeries10000_LHC23zz_combo_apass4.root");
+  TTree *tree4 = (TTree*)f4->Get("timeSeries");
+  int mapID5A = registerMapND("mDCAr_A_Median_median5", tree5, {"subentry"}, "time", "mTSITSTPC.mDCAr_A_Median_median", "1");
+  int mapID5C = registerMapND("mDCAr_C_Median_median5", tree5, {"subentry"}, "time", "mTSITSTPC.mDCAr_C_Median_median", "1");
+  int mapID4A = registerMapND("mDCAr_A_Median_median4", tree4, {"subentry"}, "time", "mTSITSTPC.mDCAr_A_Median_median", "1");
+  int mapID4C = registerMapND("mDCAr_C_Median_median4", tree4, {"subentry"}, "time", "mTSITSTPC.mDCAr_C_Median_median", "1");
+  //
+  setNearestNDAlias(tree5, "mDCAr_A_Median_median_interp5", "mDCAr_A_Median_median5", "time", {"subentry"});
+  setNearestNDAlias(tree5, "mDCAr_C_Median_median_interp5", "mDCAr_C_Median_median5", "time", {"subentry"});
+  setNearestNDAlias(tree4, "mDCAr_C_Median_median_interp5", "mDCAr_A_Median_median5", "time", {"subentry"});
+  //
+  setNearestNDAlias(tree5, "mDCAr_A_Median_median_interp4", "mDCAr_A_Median_median4", "time", {"subentry"});
+  setNearestNDAlias(tree4, "mDCAr_A_Median_median_interp4", "mDCAr_A_Median_median4", "time", {"subentry"});
+
+  tree5->Draw("mTSITSTPC.mDCAr_A_Median_median:mDCAr_A_Median_median_interp4", "indexType==1", "", 10000);
+  // make unit test -RMS should be 0
+  int val5=tree5->Draw("mTSITSTPC.mDCAr_A_Median_median==mDCAr_A_Median_median_interp5", "indexType==1", "");
+  float rms5=tree5->GetHistogram()->GetRMS();
+  float mean5=tree5->GetHistogram()->GetMean();
+  //make unit test like output  rms5==0, mean5==1
+  int va4l=tree4->Draw("mTSITSTPC.mDCAr_A_Median_median==mDCAr_A_Median_median_interp4", "indexType==1", "");
+  float rms4=tree4->GetHistogram()->GetRMS();
+  float mean4=tree4->GetHistogram()->GetMean();
+  //make unit test like output  rms5==0, mean5==1
+  if ( std::abs(rms4) < 1e-5 && std::abs(mean4 - 1.0) < 1e-5) {
+    std::cout << "[UnitTest] OK - Interpolation match for apass4 is exact." << std::endl;
+  } else {
+    std::cerr << "[UnitTest] ERROR - Interpolation mismatch for apass4. RMS=" << rms4 << ", Mean=" << mean4 << std::endl;
+  }
+}
+
