@@ -1,10 +1,13 @@
 
-#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include "Pythia8/Pythia.h"
+#include "Pythia8/HeavyIons.h" // for event plane angle
+
+#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include "FairGenerator.h"
 #include "FairPrimaryGenerator.h"
 #include "Generators/GeneratorPythia8.h"
 #include "fairlogger/Logger.h"
+#include "CCDB/BasicCCDBManager.h"
 #include "TRandom3.h"
 #include "TParticlePDG.h"
 #include "TDatabasePDG.h"
@@ -21,7 +24,7 @@ class GeneratorPythia8LongLivedGapTriggered : public o2::eventgen::GeneratorPyth
 {
 public:
   /// Constructor
-  GeneratorPythia8LongLivedGapTriggered(std::vector<int> input_pdg, int input_trigger_ratio = 1, int n_injected = 1, float pt_min = 1, float pt_max = 10, float y_min = -1, float y_max = 1)
+  GeneratorPythia8LongLivedGapTriggered(std::vector<int> input_pdg, int input_trigger_ratio = 1, int n_injected = 1, float pt_min = 1, float pt_max = 10, float y_min = -1, float y_max = 1, bool addSyntheticFlow = false)
   {
     mPdg = input_pdg;
     setNinjected(n_injected);
@@ -31,10 +34,38 @@ public:
     mMass = getMass(input_pdg);
     mGeneratedEvents = 0;
     mAlternatingPDGsign = true;
+    mAddSyntheticFlow = addSyntheticFlow;
+
+    if(mAddSyntheticFlow){ 
+      lutGen = new o2::eventgen::FlowMapper();
+    
+      // -------- CONFIGURE SYNTHETIC FLOW ------------
+      // establish connection to ccdb
+      o2::ccdb::CcdbApi ccdb_api;
+      ccdb_api.init("https://alice-ccdb.cern.ch");
+
+      // config was placed at midpoint of run 544122, retrieve that
+      std::map<string, string> metadataRCT, headers;
+      headers = ccdb_api.retrieveHeaders("RCT/Info/RunInformation/544122", metadataRCT, -1);
+      int64_t tsSOR = atol(headers["SOR"].c_str());
+      int64_t tsEOR = atol(headers["EOR"].c_str());    
+      int64_t midRun = 0.5*tsSOR+0.5*tsEOR;
+
+      map<string, string> metadata; // can be empty
+      auto list = ccdb_api.retrieveFromTFileAny<TList>("Users/d/ddobrigk/syntheflow", metadata, midRun);
+    
+      TH1D *hv2vspT = (TH1D*) list->FindObject("hFlowVsPt_ins1116150_v1_Table_1");
+      TH1D *heccvsb = (TH1D*) list->FindObject("hEccentricityVsB");
+      
+      cout<<"Generating LUT for flow test"<<endl;
+      lutGen->CreateLUT(hv2vspT, heccvsb);
+      cout<<"Finished creating LUT!"<<endl;
+      // -------- END CONFIGURE SYNTHETIC FLOW ------------
+    }
   }
 
   /// Constructor from config file
-  GeneratorPythia8LongLivedGapTriggered(std::string file_name, int input_trigger_ratio = 1)
+  GeneratorPythia8LongLivedGapTriggered(std::string file_name, int input_trigger_ratio = 1, bool addSyntheticFlow = false)
   {
     auto expanded_file_name = gSystem->ExpandPathName(file_name.c_str());
     std::ifstream config_file(expanded_file_name);
@@ -65,6 +96,34 @@ public:
     mMass = getMass(mPdg);
     mGeneratedEvents = 0;
     mAlternatingPDGsign = true;
+    mAddSyntheticFlow = addSyntheticFlow;
+
+    if(mAddSyntheticFlow){ 
+      lutGen = new o2::eventgen::FlowMapper();
+    
+      // -------- CONFIGURE SYNTHETIC FLOW ------------
+      // establish connection to ccdb
+      o2::ccdb::CcdbApi ccdb_api;
+      ccdb_api.init("https://alice-ccdb.cern.ch");
+
+      // config was placed at midpoint of run 544122, retrieve that
+      std::map<string, string> metadataRCT, headers;
+      headers = ccdb_api.retrieveHeaders("RCT/Info/RunInformation/544122", metadataRCT, -1);
+      int64_t tsSOR = atol(headers["SOR"].c_str());
+      int64_t tsEOR = atol(headers["EOR"].c_str());    
+      int64_t midRun = 0.5*tsSOR+0.5*tsEOR;
+
+      map<string, string> metadata; // can be empty
+      auto list = ccdb_api.retrieveFromTFileAny<TList>("Users/d/ddobrigk/syntheflow", metadata, midRun);
+    
+      TH1D *hv2vspT = (TH1D*) list->FindObject("hFlowVsPt_ins1116150_v1_Table_1");
+      TH1D *heccvsb = (TH1D*) list->FindObject("hEccentricityVsB");
+      
+      cout<<"Generating LUT for flow test"<<endl;
+      lutGen->CreateLUT(hv2vspT, heccvsb);
+      cout<<"Finished creating LUT!"<<endl;
+      // -------- END CONFIGURE SYNTHETIC FLOW ------------
+    }
   }
 
   /// Destructor
@@ -155,6 +214,42 @@ public:
         o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
       }
     }
+
+    if(mAddSyntheticFlow){
+      //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      // loop over the entire event record and rotate all particles
+      // synthetic flow exercise
+      // first: get event plane
+      float eventPlaneAngle = mPythia.info.hiInfo->phi();
+      float impactParameter = mPythia.info.hiInfo->b();
+
+      for ( Long_t j=0; j < mPythia.event.size(); j++ ) {
+        float pyphi = mPythia.event[j].phi();
+        float pypT = mPythia.event[j].pT();
+
+        // calculate delta with EP
+        float deltaPhiEP = pyphi - eventPlaneAngle;
+        float shift = 0.0;
+        while(deltaPhiEP<0.0){
+          deltaPhiEP += 2*TMath::Pi();
+          shift += 2*TMath::Pi();
+        }
+        while(deltaPhiEP>2*TMath::Pi()){
+          deltaPhiEP -= 2*TMath::Pi();
+          shift -= 2*TMath::Pi();
+        }
+        float newDeltaPhiEP = lutGen->MapPhi(deltaPhiEP, impactParameter, pypT);
+        float pyphiNew = newDeltaPhiEP - shift + eventPlaneAngle;
+
+        if(pyphiNew>TMath::Pi())
+          pyphiNew -= 2.0*TMath::Pi();
+        if(pyphiNew<-TMath::Pi())
+          pyphiNew += 2.0*TMath::Pi();
+        mPythia.event[j].rot(0.0, pyphiNew-pyphi);
+      }
+    }
+    //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
     mGeneratedEvents++;
     return true;
   }
@@ -169,18 +264,21 @@ private:
   std::vector<double> mYmax; /// maximum rapidity for generated particles
 
   bool mAlternatingPDGsign = true; /// bool to randomize the PDG code of the core particle
+  bool mAddSyntheticFlow = false; /// switch to add synthetic flow (requires EP angle from PYTHIA)
 
   std::vector<int> mNinjected; /// Number of injected particles
 
   // Control gap-triggering
   unsigned long long mGeneratedEvents; /// number of events generated so far
   int mInverseTriggerRatio;            /// injection gap
+
+  o2::eventgen::FlowMapper *lutGen; // for mapping phi angles
 };
 
 ///___________________________________________________________
-FairGenerator *generateLongLivedGapTriggered(std::vector<int> mPdg, int input_trigger_ratio, int n_injected = 1, float pt_min = 1, float pt_max = 10, float y_min = -1, float y_max = 1, bool alternate_sign = true)
+FairGenerator *generateLongLivedGapTriggered(std::vector<int> mPdg, int input_trigger_ratio, int n_injected = 1, float pt_min = 1, float pt_max = 10, float y_min = -1, float y_max = 1, bool alternate_sign = true, bool addSyntheticFlow = false)
 {
-  auto myGen = new GeneratorPythia8LongLivedGapTriggered(mPdg, input_trigger_ratio, n_injected, pt_min, pt_max, y_min, y_max);
+  auto myGen = new GeneratorPythia8LongLivedGapTriggered(mPdg, input_trigger_ratio, n_injected, pt_min, pt_max, y_min, y_max, addSyntheticFlow);
   myGen->setAlternatingPDGsign(alternate_sign);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
@@ -189,9 +287,9 @@ FairGenerator *generateLongLivedGapTriggered(std::vector<int> mPdg, int input_tr
 }
 
 ///___________________________________________________________
-FairGenerator *generateLongLivedGapTriggered(std::string config_file_name, int input_trigger_ratio, bool alternate_sign = true)
+FairGenerator *generateLongLivedGapTriggered(std::string config_file_name, int input_trigger_ratio, bool alternate_sign = true, bool addSyntheticFlow = false)
 {
-  auto myGen = new GeneratorPythia8LongLivedGapTriggered(config_file_name, input_trigger_ratio);
+  auto myGen = new GeneratorPythia8LongLivedGapTriggered(config_file_name, input_trigger_ratio, addSyntheticFlow);
   myGen->setAlternatingPDGsign(alternate_sign);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
