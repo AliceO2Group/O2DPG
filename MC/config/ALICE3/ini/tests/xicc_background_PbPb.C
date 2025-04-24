@@ -13,14 +13,26 @@ int External()
     std::cerr << "Cannot find tree o2sim in file " << path << "\n";
     return 1;
   }
+
   std::vector<o2::MCTrack> *tracks{};
   tree->SetBranchAddress("MCTrack", &tracks);
-
   auto nEvents = tree->GetEntries();
-  auto nSelected = tree->Scan("MCTrack.GetPdgCode()", "MCTrack.GetPdgCode() == 3312");
-  if (nSelected == 0) {
-    std::cerr << "No event of interest\n";
+  int nInjected = 0;
+  for (int i = 0; i < nEvents; i++) {
+    tree->GetEntry(i);
+    for (auto& track : *tracks) {
+      auto pdgCode = std::fabs(track.GetPdgCode());
+      if (pdgCode == 3312) {
+        nInjected++;
+      }
+    }
+  }
+
+  // Check if we are above typical Angantyr numbers
+  if (nInjected < 5 * nEvents) {
+    std::cerr << "Too few particles injected\n";
     return 1;
   }
+
   return 0;
 }
