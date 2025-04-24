@@ -102,6 +102,9 @@ fout.write('Beams:idB = %d \n' % (args.idB))
 if args.eCM > 0:
    fout.write('Beams:eCM = %f \n' % (args.eCM))
 elif args.eA > 0 and args.eB > 0:
+   # Reference frame to be set to 2 if the two back-to-back beams have different energies
+   if args.eA != args.eB:
+       fout.write('Beams:frameType = 2 \n')
    fout.write('Beams:eA = %f \n' % (args.eA))
    fout.write('Beams:eB = %f \n' % (args.eB))
 else:
@@ -136,7 +139,7 @@ if args.process == 'cdiff':
 fout.write('\n')
 
 ### heavy ion  settings (valid for Pb-Pb 5520 only)
-if args.process == 'heavy_ion':
+if args.process == 'heavy_ion' and (args.idA == 1000822080 and args.idB == 1000822080 and args.eCM == 5520.):
     fout.write('### heavy-ion settings (valid for Pb-Pb 5520 only) \n')
     fout.write('HeavyIon:SigFitNGen = 0 \n')
     fout.write('HeavyIon:SigFitDefPar = 13.88,1.84,0.22,0.0,0.0,0.0,0.0,0.0 \n')
