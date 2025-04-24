@@ -1,4 +1,5 @@
 # Source path for the script
+# source $O2DPG/UTILS/Parsers/workflowToJSON.sh
 # source  $NOTES/JIRA/ATO-648/workflowToJSON.sh
 
 # Description:
@@ -109,6 +110,73 @@ jq -Rn '
     }
   ]' "$log_file"
 }
+
+
+# makeDiffWorkflow alien:///alice/data/2023/LHC23zzk/544515/apass5/1140/o2_ctf_run00544515_orbit0221337280_tf0000047516_epn242/workflowconfig.log alien:///alice/data/2023/LHC23zzk/544515/apass4/1140/o2_ctf_run00544515_orbit0221337280_tf0000047516_epn242/workflowconfig.log 1 gpu
+makeDiffWorkflow() {
+    # Make diff of workflowConfig.log JSONs.
+    # Usage:
+    #   makeDiffWorkflow <file0> <file1> <diffType> <filter>
+    #   file0: path or alien:// to first workflowconfig.log
+    #   file1: path or alien:// to second workflowconfig.log
+    #   diffType: 0 = unified diff, 1 = side-by-side (default: 1)
+    #   filter: string to match command, e.g. gpu (default: gpu)
+    # Notes:
+    #   Creates workflow0.json and workflow1.json from parsed input.
+    #   Uses makeParse and jq for filtering and diffing.
+    #   Supports Alien paths via alien.py cat.
+
+    if [[ -z "$1" || -z "$2" ]]; then
+        cat <<'HELP_USAGE' | helpCat0 bash
+makeDiffWorkflow: Compare two O2 workflowconfig logs (local or Alien).
+Usage:
+    makeDiffWorkflow <file0> <file1> <diffType> <filter>
+Parameters:
+    file0      – path to first workflowconfig.log or alien:// path
+    file1      – path to second workflowconfig.log or alien:// path
+    diffType   – (optional) 0 = unified diff, 1 = side-by-side diff (default: 1)
+    filter     – (optional) command string filter, e.g. "gpu", "hlt" (default: gpu)
+Example:
+    makeDiffWorkflow alien:///path/to/file0.log ./file1.log 1 gpu
+    makeDiffWorkflow alien:///alice/data/2023/LHC23zzk/544515/apass5/1140/o2_ctf_run00544515_orbit0221337280_tf0000047516_epn242/workflowconfig.log alien:///alice/data/2023/LHC23zzk/544515/apass4/1140/o2_ctf_run00544515_orbit0221337280_tf0000047516_epn242/workflowconfig.log 1 gpu
+
+HELP_USAGE
+        return
+    fi
+    file0="$1"
+    file1="$2"
+    diffType="${3:-1}"
+    filter="${4:-o2-gpu}"
+    # Download from alien if needed
+    if [[ "$file0" == alien://* ]]; then
+        echo "Fetching $file0 from Alien..."
+        alien.py cat "$file0" > "${TMPDIR:-/tmp}/workflow0.log"
+        file0="${TMPDIR:-/tmp}/workflow0.log"
+    fi
+    if [[ "$file1" == alien://* ]]; then
+        echo "Fetching $file1 from Alien..."
+        alien.py cat "$file1" > "${TMPDIR:-/tmp}/workflow1.log"
+        file1="${TMPDIR:-/tmp}/workflow1.log"
+    fi
+
+    makeParse "$file0" > workflow0.json
+    makeParse "$file1" > workflow1.json
+
+    # Apply filter to both JSON files
+    jq ".[] | select(.command | test(\"^${filter}\"))" workflow0.json | jq --sort-keys . > workflow0.filtered.json
+    jq ".[] | select(.command | test(\"^${filter}\"))" workflow1.json | jq --sort-keys . > workflow1.filtered.json
+
+    echo "Comparing workflow commands filtered by '^o2-${filter}'..."
+
+    if [[ "$diffType" -eq 1 ]]; then
+        diff --side-by-side --left-column --color=always workflow0.filtered.json workflow1.filtered.json | less -R
+    else
+        diff --color=always workflow0.filtered.json workflow1.filtered.json | less -R
+    fi
+}
+
+
+
 
 makeDiffExample(){
   cat <<HELP_USAGE | helpCat
