@@ -389,13 +389,21 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   fi
 
   if [[ -n "$ALIEN_JDL_TPCEDGETWOPADS" ]]; then
-    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.cfEdgeTwoPads=$ALIEN_JDL_TPCEDGETWOPADS"
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.cfEdgeTwoPads=$ALIEN_JDL_TPCEDGETWOPADS;"
   fi
 
   if [[ -n "$ALIEN_JDL_TPCCLUSTERFILTER" ]]; then
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.tpcUseOldCPUDecoding=1;GPU_proc.tpcApplyClusterFilterOnCPU=$ALIEN_JDL_TPCCLUSTERFILTER;"
   fi
 
+  if [[ -n "$ALIEN_JDL_TPCCHICUTOPT" ]]; then # 0 or 1 to disable or enable (default) the chi2 cut both on one-side and smoothed Kalman chi2 
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.mergerInterpolateRejectAlsoOnCurrentPosition==$ALIEN_JDL_TPCCHICUTOPT;"
+  fi
+
+  if [[ -n "$ALIEN_JDL_TPCCLUSEDGEREDEF" ]]; then # if >0 (float) undo the edge cluster bit for TPC clusters with distance to the edge exceeding this value
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.clustersEdgeFixDistance==$ALIEN_JDL_TPCCLUSEDGEREDEF;"
+  fi
+  
   #-------------------------------------- TPC corrections -----------------------------------------------
   # we need to provide to TPC
   # 1) interaction rate info (lumi) used for scaling or errors and possible of the corrections : INST_IR_FOR_TPC
