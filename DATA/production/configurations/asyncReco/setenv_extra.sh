@@ -397,11 +397,11 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   fi
 
   if [[ -n "$ALIEN_JDL_TPCCHICUTOPT" ]]; then # 0 or 1 to disable or enable (default) the chi2 cut both on one-side and smoothed Kalman chi2 
-    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.mergerInterpolateRejectAlsoOnCurrentPosition=$ALIEN_JDL_TPCCHICUTOPT;"
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.mergerInterpolateRejectAlsoOnCurrentPosition==$ALIEN_JDL_TPCCHICUTOPT;"
   fi
 
   if [[ -n "$ALIEN_JDL_TPCCLUSEDGEREDEF" ]]; then # if >0 (float) undo the edge cluster bit for TPC clusters with distance to the edge exceeding this value
-    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.clustersEdgeFixDistance=$ALIEN_JDL_TPCCLUSEDGEREDEF;"
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.clustersEdgeFixDistance==$ALIEN_JDL_TPCCLUSEDGEREDEF;"
   fi
   
   #-------------------------------------- TPC corrections -----------------------------------------------
