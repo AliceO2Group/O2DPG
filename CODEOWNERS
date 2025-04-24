@@ -20,6 +20,7 @@
 /MC @sawenzel @chiarazampolli @jackal1-66
 
 # PWG experts
+/MC/*/ALICE3 @njacazio
 /MC/*/PWGHF @AliceO2Group/reviewers-pwg-hf
 /MC/*/PWGLF @AliceO2Group/reviewers-pwg-lf
 /MC/*/PWGEM @AliceO2Group/reviewers-pwg-em
