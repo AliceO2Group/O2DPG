@@ -56,7 +56,7 @@ protected:
       {
         if (GeneratorPythia8::generateEvent())
         {
-          genOk = o2::CoalAfterburner(mPythia.event, mPdgList, mCoalMomentum);
+          genOk = CoalescencePythia8(mPythia.event, mPdgList, mCoalMomentum);
         }
         localCounter++;
       }
