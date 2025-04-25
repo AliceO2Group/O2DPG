@@ -11,6 +11,8 @@
         "maxNumberCycles": "-1",
         "dataSource": {
           "type": "direct",
+          "_type": "dataSamplingPolicy",
+          "name": "muon-tracks",
           "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;matchMCHMID:GLO/MTC_MCHMID"
         },
         "movingWindows": [
@@ -59,15 +61,12 @@
         "cycleDurationSeconds": "300",
         "maxNumberCycles": "-1",
         "dataSource": {
-          "type": "direct",
+          "_type": "direct",
+          "type": "dataSamplingPolicy",
+          "name": "glo-mu-tracks",
           "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;matchMCHMID:GLO/MTC_MCHMID"
         },
         "movingWindows": [
-            "MFT-MCH/WithCuts/TracksPerTF",
-            "MFT-MCH/WithCuts/TrackPt",
-            "MFT-MCH/WithCuts/TrackEta",
-            "MFT-MCH/WithCuts/TrackPhi",
-            "MFT-MCH/WithCuts/Minv",
             "MCH-MID/WithCuts/TracksPerTF",
             "MCH-MID/WithCuts/TrackPt",
             "MCH-MID/WithCuts/TrackEta",
@@ -91,7 +90,7 @@
                  "matchChi2MaxMFT": "45",
                  "diMuonTimeCut": "100",
                  "fullHistos": "0",
-                 "GID" : "MCH,MFT-MCH,MCH-MID,MFT-MCH-MID"
+                 "GID" : "MCH-MID,MFT-MCH-MID"
                },
         "grpGeomRequest": {
           "geomRequest": "Aligned",
@@ -106,5 +105,35 @@
         "location": "remote"
       }
     }
-  }
+  },
+  "dataSamplingPolicies": [
+    {
+      "id": "muon-tracks",
+      "active": "true",
+      "machines": [],
+      "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;matchMCHMID:GLO/MTC_MCHMID",
+      "samplingConditions": [
+        {
+          "condition": "random",
+          "fraction": "0.1",
+          "seed": "0"
+        }
+      ],
+      "blocking": "false"
+    },
+    {
+      "id": "glo-mu-tracks",
+      "active": "true",
+      "machines": [],
+      "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;matchMCHMID:GLO/MTC_MCHMID",
+      "samplingConditions": [
+        {
+          "condition": "random",
+          "fraction": "0.1",
+          "seed": "0"
+        }
+      ],
+      "blocking": "false"
+    }
+  ]
 }
