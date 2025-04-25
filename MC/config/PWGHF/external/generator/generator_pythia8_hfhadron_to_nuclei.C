@@ -119,19 +119,19 @@ class GeneratorPythia8HFHadToNuclei : public o2::eventgen::GeneratorPythia8
       int id = std::abs(event[iPart].id());
       float rap = event[iPart].y();
       if (id == mHadronPdg && rap > mHadRapidityMin && rap < mHadRapidityMax) {
-        LOG(info) << "-----------------------------------------------------";
-        LOG(info) << "Found hadron " << event[iPart].id() << " with rapidity " << rap << " and daughters " << event[iPart].daughter1() << " " << event[iPart].daughter2();
+        LOG(debug) << "-----------------------------------------------------";
+        LOG(debug) << "Found hadron " << event[iPart].id() << " with rapidity " << rap << " and daughters " << event[iPart].daughter1() << " " << event[iPart].daughter2();
         // print pdg code of daughters
-        LOG(info) << "Daughters: ";
+        LOG(debug) << "Daughters: ";
         for (int iDau = event[iPart].daughter1(); iDau <= event[iPart].daughter2(); ++iDau) {
-          LOG(info) << "Daughter " << iDau << ": " << event[iDau].id();
+          LOG(debug) << "Daughter " << iDau << ": " << event[iDau].id();
         }
         bool isCoalDone = CoalescencePythia8(event, mNucleiPdgList, mTrivialCoal, mCoalMomentum, event[iPart].daughter1(), event[iPart].daughter2());
         if (isCoalDone) {
-          LOG(info) << "Coalescence process found for hadron " << event[iPart].id() << " with daughters " << event[iPart].daughter1() << " " << event[iPart].daughter2();
-          LOG(info) << "Check updated daughters: ";
+          LOG(debug) << "Coalescence process found for hadron " << event[iPart].id() << " with daughters " << event[iPart].daughter1() << " " << event[iPart].daughter2();
+          LOG(debug) << "Check updated daughters: ";
           for (int iDau = event[iPart].daughter1(); iDau <= event[iPart].daughter2(); ++iDau) {
-            LOG(info) << "Daughter " << iDau << ": " << event[iDau].id();
+            LOG(debug) << "Daughter " << iDau << ": " << event[iDau].id();
           }
           return true;
         }
