@@ -82,7 +82,7 @@ echo "WORKFLOW_DETECTORS_EXCLUDE = $WORKFLOW_DETECTORS_EXCLUDE"
 
 # ad-hoc settings for CTF reader: we are on the grid, we read the files remotely
 echo -e "\nProcessing mode = ${MODE}"
-unset ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow
+#unset ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow
 
 if [[ $MODE == "remote" ]]; then
   if [[ $ALIEN_JDL_REMOTEREADING != 1 ]]; then
