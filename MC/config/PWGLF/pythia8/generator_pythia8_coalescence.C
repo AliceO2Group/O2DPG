@@ -14,10 +14,10 @@
 #include <fstream>
 #include <string>
 using namespace Pythia8;
-R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT)
-#include "MC/config/common/external/generator/CoalescencePythia8.h"
 #endif
 
+R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT)
+#include "MC/config/common/external/generator/CoalescencePythia8.h"
 /// First version of the simple coalescence generator based PYTHIA8
 
 class GeneratorPythia8Coalescence : public o2::eventgen::GeneratorPythia8
