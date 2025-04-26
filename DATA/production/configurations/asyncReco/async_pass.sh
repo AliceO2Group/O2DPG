@@ -396,13 +396,13 @@ if [[ -n $ALIEN_JDL_PACKAGES ]]; then # if we have this env variable, it means t
 else
   # in LOCAL mode, by default we keep all intermediate files
   echo -e "\n\n**** RUNNING IN LOCAL MODE ****"
-  keep=1
   if [[ "$DO_NOT_KEEP_OUTPUT_IN_LOCAL" -eq 1 ]]; then
-    echo -e "**** ONLY SOME WORKFLOWS WILL HAVE THE ROOT OUTPUT SAVED ****\n\n"
+    echo -e "**** DO_NOT_KEEP_OUTPUT_IN_LOCAL ENABLED, NOT SETTING keep=0, NOT ENFORCING FULL ROOT OUTPUT ****\n\n"
     keep=0;
   else
     echo -e "**** WE KEEP ALL ROOT OUTPUT ****";
     echo -e "**** IF YOU WANT TO REMOVE ROOT OUTPUT FILES FOR PERFORMANCE STUDIES OR SIMILAR, PLEASE SET THE ENV VAR DO_NOT_KEEP_OUTPUT_IN_LOCAL ****\n\n"
+    keep=1
   fi
 fi
 
