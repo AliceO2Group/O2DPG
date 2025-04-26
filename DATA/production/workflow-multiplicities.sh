@@ -140,7 +140,7 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_TOFMATCH=$(math_max $((5 * $NGPUS / 4)) 1)
     N_HMPCLUS=$(math_max $((3 * $NGPUS / 4)) 1)
     N_ITSCL=4
-    N_AODPROD=2
+    N_AODPROD=3
     N_MCHCL=9
     N_HMPMATCH=1
     N_MCHTRK=7
