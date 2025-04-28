@@ -399,40 +399,28 @@ WEIGHTPOW=float(args.weightPow)
 PTHATMIN=float(args.ptHatMin)
 PTHATMAX=float(args.ptHatMax)
 
-# translate here collision type to PDG
+colsys = {'pp':[2212,2212], 'pPb':[2212,1000822080], 'Pbp':[1000822080,2212], 'PbPb':[1000822080,1000822080], 'pO':[2212,1000080160], 'Op':[1000080160,2212], 'OO':[1000080160,1000080160], 'NeNe':[1000100200,1000100200]}
+# translate here collision type to PDG of allowed particles
 COLTYPE=args.col
+if COLTYPE in colsys.keys():
+   PDGA=colsys[COLTYPE][0]
+   PDGB=colsys[COLTYPE][1]
+else:
+   print('o2dpg_sim_workflow: Error! Unknown collision system %s' % COLTYPE)
+   exit(1)
 
 doembedding=True if args.embedding=='True' or args.embedding==True else False
-
-if COLTYPE == 'pp':
-   PDGA=2212 # proton
-   PDGB=2212 # proton
-
-if COLTYPE == 'PbPb':
-   PDGA=1000822080 # Pb
-   PDGB=1000822080 # Pb
-   if ECMS < 0:    # assign 5.02 TeV to Pb-Pb
-      print('o2dpg_sim_workflow: Set CM Energy to PbPb case 5.02 TeV')
-      ECMS=5020.0
-
-if COLTYPE == 'pPb':
-   PDGA=2212       # proton
-   PDGB=1000822080 # Pb
-
-if COLTYPE == 'Pbp':
-   PDGA=1000822080 # Pb
-   PDGB=2212       # proton
 
 # If not set previously, set beam energy B equal to A
 if EBEAMB < 0 and ECMS < 0:
    EBEAMB=EBEAMA
    print('o2dpg_sim_workflow: Set beam energy same in A and B beams')
-   if COLTYPE=="pPb" or COLTYPE=="Pbp":
-      print('o2dpg_sim_workflow: Careful! both beam energies are the same')
+   if PDGA != PDGB:
+      print('o2dpg_sim_workflow: Careful! Set same energies for different particle beams!')
 
 if ECMS > 0:
-   if COLTYPE=="pPb" or COLTYPE=="Pbp":
-      print('o2dpg_sim_workflow: Careful! ECM set for pPb/Pbp collisions!')
+   if PDGA != PDGB:
+      print('o2dpg_sim_workflow: Careful! ECM set for for different particle beams!')
 
 if ECMS < 0 and EBEAMA < 0 and EBEAMB < 0:
    print('o2dpg_sim_workflow: Error! CM or Beam Energy not set!!!')
@@ -545,18 +533,20 @@ if doembedding:
            print('o2dpg_sim_workflow: Error! embedding background generator name not provided')
            exit(1)
 
+        # PDG translation for background
+        if COLTYPEBKG in colsys.keys():
+           PDGABKG=colsys[COLTYPEBKG][0]
+           PDGBBKG=colsys[COLTYPEBKG][1]
+        else:
+           print('o2dpg_sim_workflow: Error! Unknown background collision system %s' % COLTYPEBKG)
+           exit(1)
+
         PROCESSBKG=args.procBkg
         ECMSBKG=float(args.eCM)
         EBEAMABKG=float(args.eA)
         EBEAMBBKG=float(args.eB)
 
-        if COLTYPEBKG == 'pp':
-           PDGABKG=2212 # proton
-           PDGBBKG=2212 # proton
-
         if COLTYPEBKG == 'PbPb':
-           PDGABKG=1000822080 # Pb
-           PDGBBKG=1000822080 # Pb
            if ECMSBKG < 0:    # assign 5.02 TeV to Pb-Pb
               print('o2dpg_sim_workflow: Set BKG CM Energy to PbPb case 5.02 TeV')
               ECMSBKG=5020.0
@@ -564,24 +554,16 @@ if doembedding:
               PROCESSBKG = 'heavy_ion'
               print('o2dpg_sim_workflow: Process type not considered for Pythia8 PbPb')
 
-        if COLTYPEBKG == 'pPb':
-           PDGABKG=2212       # proton
-           PDGBBKG=1000822080 # Pb
-
-        if COLTYPEBKG == 'Pbp':
-           PDGABKG=1000822080 # Pb
-           PDGBBKG=2212       # proton
-
         # If not set previously, set beam energy B equal to A
         if EBEAMBBKG < 0 and ECMSBKG < 0:
            EBEAMBBKG=EBEAMABKG
            print('o2dpg_sim_workflow: Set beam energy same in A and B beams')
-           if COLTYPEBKG=="pPb" or COLTYPEBKG=="Pbp":
-              print('o2dpg_sim_workflow: Careful! both beam energies in bkg are the same')
+           if PDGABKG != PDGBBKG:
+              print('o2dpg_sim_workflow: Careful! Set same energies for different background beams!')
 
         if ECMSBKG > 0:
-           if COLTYPEBKG=="pPb" or COLTYPEBKG=="Pbp":
-              print('o2dpg_sim_workflow: Careful! bkg ECM set for pPb/Pbp collisions!')
+           if PDGABKG != PDGBBKG:
+              print('o2dpg_sim_workflow: Careful! ECM set for different background beams!')
 
         if ECMSBKG < 0 and EBEAMABKG < 0 and EBEAMBBKG < 0:
            print('o2dpg_sim_workflow: Error! bkg ECM or Beam Energy not set!!!')
