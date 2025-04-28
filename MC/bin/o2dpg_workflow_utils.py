@@ -274,6 +274,14 @@ def adjust_RECO_environment(workflowspec, package = ""):
     if len(package) == 0:
        return
 
+    # we try to extract the stage from the path (can be given via '@' separation)
+    # example O2sim::daily-xxx@DIGI ---> apply this environment from the DIGI phase
+    # example O2sim::daily-xxx@RECO ---> apply this environment from the RECO phase
+    # example O2sim::daily-xxx ---> apply this environment from the RECO phase == default case
+    from_stage = "RECO"
+    if package.count('@') == 1:
+        package, from_stage = package.split('@')
+
     # We essentially need to go through the graph and apply the mapping
     # so take the workflow spec and see if the task itself or any child
     # is labeled RECO ---> typical graph traversal with caching
@@ -305,7 +313,7 @@ def adjust_RECO_environment(workflowspec, package = ""):
 
     # fills the matches_label dictionary
     for taskid in range(len(workflowspec['stages'])):
-        if (matches_or_inherits_label(taskid, "RECO", matches_label)):
+        if (matches_or_inherits_label(taskid, from_stage, matches_label)):
            # now we do the final adjust (as annotation) in the workflow itself
            if workflowspec['stages'][taskid].get("alternative_alienv_package") == None:
               workflowspec['stages'][taskid]["alternative_alienv_package"] = package

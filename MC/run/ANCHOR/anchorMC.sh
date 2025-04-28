@@ -187,6 +187,7 @@ fi
 #<----- START OF part that should run under a clean alternative software environment if this was given ------
 if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
   if [ "${LOADEDMODULES}" ]; then
+    export > env_before_stashing.env
     echo "Stashing initial modules"
     module save initial_modules.list # we stash the current modules environment
     module list --no-pager
@@ -253,19 +254,6 @@ fi
 ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG_KEEP
 echo_info "Setting back ALIEN_JDL_LPMPRODUCTIONTAG to $ALIEN_JDL_LPMPRODUCTIONTAG"
 
-# now create the local MC config file --> config-json.json
-# we create the new config output with blacklist functionality
-ASYNC_CONFIG_BLACKLIST=${ASYNC_CONFIG_BLACKLIST:-${O2DPG_ROOT}/MC/run/ANCHOR/anchor-dpl-options-blacklist.json}
-${O2DPG_ROOT}/MC/bin/o2dpg_dpl_config_tools.py workflowconfig.log ${ASYNC_CONFIG_BLACKLIST} config-json.json
-ASYNC_WF_RC=${?}
-
-# check if config reasonably created
-if [[ "${ASYNC_WF_RC}" != "0" || `grep "ConfigParams" config-json.json 2> /dev/null | wc -l` == "0" ]]; then
-  echo_error "Problem in anchor config creation. Exiting."
-  exit 1
-fi
-
-
 # get rid of the temporary software environment
 if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
   module purge --no-pager
@@ -279,6 +267,18 @@ if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
   fi
 fi
 #<----- END OF part that should run under a clean alternative software environment if this was given ------
+
+# now create the local MC config file --> config-json.json
+# we create the new config output with blacklist functionality
+ASYNC_CONFIG_BLACKLIST=${ASYNC_CONFIG_BLACKLIST:-${O2DPG_ROOT}/MC/run/ANCHOR/anchor-dpl-options-blacklist.json}
+${O2DPG_ROOT}/MC/bin/o2dpg_dpl_config_tools.py workflowconfig.log ${ASYNC_CONFIG_BLACKLIST} config-json.json
+ASYNC_WF_RC=${?}
+
+# check if config reasonably created
+if [[ "${ASYNC_WF_RC}" != "0" || `grep "ConfigParams" config-json.json 2> /dev/null | wc -l` == "0" ]]; then
+  echo_error "Problem in anchor config creation. Exiting."
+  exit 1
+fi
 
 # -- CREATE THE MC JOB DESCRIPTION ANCHORED TO RUN --
 
@@ -300,7 +300,8 @@ remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-ali
 remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config config-json.json"
 # apply software tagging choice
 # remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}}"
-remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${PWD}/env_async.env}"
+ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE=${ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE:-RECO}
+remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${PWD}/env_async.env@${ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE}}"
 # potentially add CCDB timemachine timestamp
 remainingargs="${remainingargs} ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}}"
 
