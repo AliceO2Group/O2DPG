@@ -23,9 +23,9 @@ public:
     mGeneratedEvents = 0;
     mInverseTriggerRatio = inputTriggerRatio;
     mQuarkRapidityMin = -1.5;
-    mQuarkRapidityMax = -1.5;
+    mQuarkRapidityMax = 1.5;
     mHadRapidityMin = -1.5;
-    mHadRapidityMax = -1.5;
+    mHadRapidityMax = 1.5;
     mQuarkPdg = 0;
     mHadronPdg = 0;
     mQuarkPdgList = quarkPdgList;
@@ -266,7 +266,6 @@ protected:
     }
 
     int charge = mPythia.event[iPartToReplace].id() / std::abs(mPythia.event[iPartToReplace].id());
-    int status = mPythia.event[iPartToReplace].status();
     float px = mPythia.event[iPartToReplace].px();
     float py = mPythia.event[iPartToReplace].py();
     float pz = mPythia.event[iPartToReplace].pz();
@@ -293,12 +292,15 @@ protected:
     mPythia.event[iPartToReplace].undoDecay();
     mPythia.event.remove(iPartToReplace, iPartToReplace, true); // we remove the original particle
 
+    int status = std::abs(mPythia.event[iPartToReplace].status());
+    if (status < 81) {
+      status = 81;
+    }
     mPythia.event.append(charge * pdgCodeNew, status, mothers[0], mothers[1], 0, 0, 0, 0, px, py, pz, energy, mass);
     mPythia.moreDecays(); // we need to decay the new particle
+
     return true;
   }
-
-  // id:all = name antiName spinType chargeType colType m0 mWidth mMin mMax tau0
 
   private:
   // Interface to override import particles

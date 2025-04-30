@@ -1,14 +1,14 @@
 int External() {
-    std::string path{"o2sim_Kine.root"};
+    std::string path{"tf1/sgn_Kine.root"};
 
     int checkPdgQuarkOne{4};
     int checkPdgQuarkTwo{5};
     float ratioTrigger = 1./5.; // one event triggered out of 5
-    std::array<std::array<int, 2>, 6> pdgReplParticles = {{10433, 30433}, {10433, 437}, {435, 4325}, {435, 4326}, {425, 4315}, {425, 4316}};
-    std::array<std::array<int, 2>, 6> pdgReplPartCounters = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
-    std::array<float, 4> freqRepl = {0.1, 0.1, 0.1, 0.1, 0.5, 0.5}; // one event triggered out of 5
+    std::array<std::array<int, 2>, 6> pdgReplParticles = {std::array{10433, 30433}, std::array{10433, 437}, std::array{435, 4325}, std::array{435, 4326}, std::array{425, 4315}, std::array{425, 4316}};
+    std::array<std::array<int, 2>, 6> pdgReplPartCounters = {std::array{0, 0}, std::array{0, 0}, std::array{0, 0}, std::array{0, 0}, std::array{0, 0}, std::array{0, 0}};
+    std::array<float, 6> freqRepl = {0.1, 0.1, 0.1, 0.1, 0.5, 0.5};
 
-    std::vector<int> checkPdgHadron{10433, 30433, 435, 437, 4325, 4326, 4315, 4316};
+    std::array<int, 11> checkPdgHadron{411, 421, 10433, 30433, 435, 437, 4325, 4326, 4315, 4316, 531};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
         {411, {{-321, 211, 211}, {-313, 211}, {211, 311}, {211, 333}}}, // D+
         {421, {{-321, 211}, {-321, 211, 111}}}, // D0
@@ -43,9 +43,10 @@ int External() {
         tree->GetEntry(i);
 
         // check subgenerator information
+        int subGeneratorId{-1};
         if (eventHeader->hasInfo(o2::mcgenid::GeneratorProperty::SUBGENERATORID)) {
             bool isValid = false;
-            int subGeneratorId = eventHeader->getInfo<int>(o2::mcgenid::GeneratorProperty::SUBGENERATORID, isValid);
+            subGeneratorId = eventHeader->getInfo<int>(o2::mcgenid::GeneratorProperty::SUBGENERATORID, isValid);
             if (subGeneratorId == 0) {
                 nEventsMB++;
             } else if (subGeneratorId == checkPdgQuarkOne) {
@@ -66,11 +67,11 @@ int External() {
                 nQuarksTwo++;
                 continue;
             }
-            if (std::find(checkPdgHadron.begin(), checkPdgHadron.end(), std::abs(pdg)) != checkPdgHadron.end()) { // found signal
+            if (std::find(checkPdgHadron.begin(), checkPdgHadron.end(), absPdg) != checkPdgHadron.end()) { // found signal
                 nSignals++; // count signal PDG
 
                 if (subGeneratorId == checkPdgQuarkOne) { // replacement only for prompt
-                    for (int iRepl{0}; iRepl<4; ++iRepl) {
+                    for (int iRepl{0}; iRepl<6; ++iRepl) {
                         if (absPdg == pdgReplParticles[iRepl][0]) {
                             pdgReplPartCounters[iRepl][0]++;
                         } else if (absPdg == pdgReplParticles[iRepl][1]) {
@@ -142,7 +143,7 @@ int External() {
         return 1;
     }
 
-    for (int iRepl{0}; iRepl<4; ++iRepl) {
+    for (int iRepl{0}; iRepl<6; ++iRepl) {
         if (std::abs(pdgReplPartCounters[iRepl][1] - freqRepl[iRepl] * pdgReplPartCounters[iRepl][0]) > 2 * std::sqrt(freqRepl[iRepl] * pdgReplPartCounters[iRepl][0])) { // 2 sigma compatibility
             std::cerr << "Fraction of replaced " << pdgReplParticles[iRepl][0] << " into " << pdgReplParticles[iRepl][1] << " is " << pdgReplPartCounters[iRepl][1] / pdgReplPartCounters[iRepl][0] <<" (expected "<< freqRepl[iRepl] << ")\n";
             return 1;    
