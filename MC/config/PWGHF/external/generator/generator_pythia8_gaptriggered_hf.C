@@ -293,7 +293,7 @@ protected:
     mPythia.event.remove(iPartToReplace, iPartToReplace, true); // we remove the original particle
 
     int status = std::abs(mPythia.event[iPartToReplace].status());
-    if (status < 81) {
+    if (status < 81 || status > 89) {
       status = 81;
     }
     mPythia.event.append(charge * pdgCodeNew, status, mothers[0], mothers[1], 0, 0, 0, 0, px, py, pz, energy, mass);
