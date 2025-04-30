@@ -147,7 +147,7 @@ int External() {
 
     for (int iRepl{0}; iRepl<6; ++iRepl) {
         if (std::abs(pdgReplPartCounters[iRepl][1] - freqRepl[iRepl] * pdgReplPartCounters[iRepl][0]) > 2 * std::sqrt(freqRepl[iRepl] * pdgReplPartCounters[iRepl][0])) { // 2 sigma compatibility
-            std::cerr << "Fraction of replaced " << pdgReplParticles[iRepl][0] << " into " << pdgReplParticles[iRepl][1] << " is " << pdgReplPartCounters[iRepl][1] / pdgReplPartCounters[iRepl][0] <<" (expected "<< freqRepl[iRepl] << ")\n";
+            std::cerr << "Fraction of replaced " << pdgReplParticles[iRepl][0] << " into " << pdgReplParticles[iRepl][1] << " is " << float(pdgReplPartCounters[iRepl][1]) / pdgReplPartCounters[iRepl][0] <<" (expected "<< freqRepl[iRepl] << ")\n";
             return 1;    
         }
     }
