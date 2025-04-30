@@ -286,9 +286,7 @@ protected:
     float energy = std::sqrt(px*px + py*py + pz*pz + mass*mass);
 
     mPythia.event.remove(iPartToReplace, iPartToReplace, true); // we remove the original particle
-    mPythia.event.append(charge * pdgCodeNew, status, 0, 0, 0, 0, 0, 0, px, py, pz, energy, mass);
-    mPythia.event[mPythia.event.size()-1].mother1(mothers[0]);
-    mPythia.event[mPythia.event.size()-1].mother2(mothers[1]);
+    mPythia.event.append(charge * pdgCodeNew, status, mothers[0], mothers[1], 0, 0, 0, 0, px, py, pz, energy, mass);
     mPythia.moreDecays(); // we need to decay the new particle
 
     return true;
