@@ -7,6 +7,7 @@ int External() {
     std::array<std::array<int, 2>, 6> pdgReplParticles = {std::array{10433, 30433}, std::array{10433, 437}, std::array{435, 4325}, std::array{435, 4326}, std::array{425, 4315}, std::array{425, 4316}};
     std::array<std::array<int, 2>, 6> pdgReplPartCounters = {std::array{0, 0}, std::array{0, 0}, std::array{0, 0}, std::array{0, 0}, std::array{0, 0}, std::array{0, 0}};
     std::array<float, 6> freqRepl = {0.1, 0.1, 0.1, 0.1, 0.5, 0.5};
+    std::map<int, int> sumOrigReplacedParticles = {{10433, 0}, {435, 0}, {425, 0}};
 
     std::array<int, 11> checkPdgHadron{411, 421, 10433, 30433, 435, 437, 4325, 4326, 4315, 4316, 531};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
@@ -74,8 +75,10 @@ int External() {
                     for (int iRepl{0}; iRepl<6; ++iRepl) {
                         if (absPdg == pdgReplParticles[iRepl][0]) {
                             pdgReplPartCounters[iRepl][0]++;
+                            sumOrigReplacedParticles[pdgReplParticles[iRepl][0]]++;
                         } else if (absPdg == pdgReplParticles[iRepl][1]) {
                             pdgReplPartCounters[iRepl][1]++;
+                            sumOrigReplacedParticles[pdgReplParticles[iRepl][0]]++;
                         }
                     }
                 }
@@ -146,8 +149,12 @@ int External() {
     }
 
     for (int iRepl{0}; iRepl<6; ++iRepl) {
-        if (std::abs(pdgReplPartCounters[iRepl][1] - freqRepl[iRepl] * pdgReplPartCounters[iRepl][0]) > 2 * std::sqrt(freqRepl[iRepl] * pdgReplPartCounters[iRepl][0])) { // 2 sigma compatibility
-            std::cerr << "Fraction of replaced " << pdgReplParticles[iRepl][0] << " into " << pdgReplParticles[iRepl][1] << " is " << float(pdgReplPartCounters[iRepl][1]) / pdgReplPartCounters[iRepl][0] <<" (expected "<< freqRepl[iRepl] << ")\n";
+        if (std::abs(pdgReplPartCounters[iRepl][1] - freqRepl[iRepl] * sumOrigReplacedParticles[pdgReplParticles[iRepl][0]]) > 2 * std::sqrt(freqRepl[iRepl] * sumOrigReplacedParticles[pdgReplParticles[iRepl][0]])) { // 2 sigma compatibility
+            float fracMeas = 0.;
+            if (sumOrigReplacedParticles[pdgReplParticles[iRepl][0]] > 0.) {
+                fracMeas = float(pdgReplPartCounters[iRepl][1]) / sumOrigReplacedParticles[pdgReplParticles[iRepl][0]];
+            } 
+            std::cerr << "Fraction of replaced " << pdgReplParticles[iRepl][0] << " into " << pdgReplParticles[iRepl][1] << " is " << fracMeas <<" (expected "<< freqRepl[iRepl] << ")\n";
             return 1;    
         }
     }
