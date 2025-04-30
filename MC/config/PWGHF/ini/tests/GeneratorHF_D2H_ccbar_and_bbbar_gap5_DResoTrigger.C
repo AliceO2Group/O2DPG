@@ -82,13 +82,15 @@ int External() {
 
                 std::vector<int> pdgsDecay{};
                 std::vector<int> pdgsDecayAntiPart{};
-                for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
-                    auto pdgDau = tracks->at(j).GetPdgCode();
-                    pdgsDecay.push_back(pdgDau);
-                    if (pdgDau != 333) { // phi is antiparticle of itself
-                        pdgsDecayAntiPart.push_back(-pdgDau);
-                    } else {
-                        pdgsDecayAntiPart.push_back(pdgDau);
+                if (track.getFirstDaughterTrackId() >= 0 && track.getLastDaughterTrackId() >= 0) {
+                    for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
+                        auto pdgDau = tracks->at(j).GetPdgCode();
+                        pdgsDecay.push_back(pdgDau);
+                        if (pdgDau != 333) { // phi is antiparticle of itself
+                            pdgsDecayAntiPart.push_back(-pdgDau);
+                        } else {
+                            pdgsDecayAntiPart.push_back(pdgDau);
+                        }
                     }
                 }
 
