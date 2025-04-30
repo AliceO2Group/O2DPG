@@ -4,19 +4,22 @@ int External() {
     int checkPdgQuarkOne{4};
     int checkPdgQuarkTwo{5};
     float ratioTrigger = 1./5.; // one event triggered out of 5
-    std::array<std::array<int, 2>, 4> pdgReplParticles = {{10433, 30433}, {10433, 437}, {435, 4325}, {435, 4326}};
-    std::array<std::array<int, 2>, 4> pdgReplPartCounters = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
-    std::array<float, 4> freqRepl = {0.1, 0.1, 0.1, 0.1}; // one event triggered out of 5
+    std::array<std::array<int, 2>, 6> pdgReplParticles = {{10433, 30433}, {10433, 437}, {435, 4325}, {435, 4326}, {425, 4315}, {425, 4316}};
+    std::array<std::array<int, 2>, 6> pdgReplPartCounters = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+    std::array<float, 4> freqRepl = {0.1, 0.1, 0.1, 0.1, 0.5, 0.5}; // one event triggered out of 5
 
-    std::vector<int> checkPdgHadron{10433, 30433, 435, 437, 4325, 4326};
+    std::vector<int> checkPdgHadron{10433, 30433, 435, 437, 4325, 4326, 4315, 4316};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
         {411, {{-321, 211, 211}, {-313, 211}, {211, 311}, {211, 333}}}, // D+
+        {421, {{-321, 211}, {-321, 211, 111}}}, // D0
         {435, {{311, 413}, {311, 411}}}, // Ds2*(2573)
         {10433, {{311, 413}}}, // Ds1(2536)
         {30433, {{311, 413}}}, // Ds1*(2700)
         {437, {{311, 413}}}, // Ds3*(2860)
-        {4325, {{411, 3122}}}, // Xic(3055)
-        {4326, {{411, 3122}}}, // Xic(3080)
+        {4325, {{411, 3122}}}, // Xic(3055)+
+        {4326, {{411, 3122}}}, // Xic(3080)+
+        {4315, {{421, 3122}}}, // Xic(3055)+
+        {4316, {{421, 3122}}}, // Xic(3080)+
         {531, {{-435, -11, 12}, {-10433, -11, 12}, {-435, -13, 14}, {-10433, -13, 14}, {-435, -15, 16}, {-10433, -15, 16}, {-435, 211}}}// Bs0
     };
 

@@ -32,20 +32,24 @@ public:
     mHadronPdgList = hadronPdgList;
     mPartPdgToReplaceList = partPdgToReplaceList;
     mFreqReplaceList = freqReplaceList;
-    // Ds1*(2700), Ds1*(2860), Ds3*(2860), Xic(3055), Xic(3080)
-    mCustomPartPdgs = {30433, 40433, 437, 4325, 4326};
+    // Ds1*(2700), Ds1*(2860), Ds3*(2860), Xic(3055)+, Xic(3080)+, Xic(3055)0, Xic(3080)0
+    mCustomPartPdgs = {30433, 40433, 437, 4315, 4316, 4325, 4326};
     mCustomPartMasses[30433] = 2.714f;
     mCustomPartMasses[40433] =  2.859f;
     mCustomPartMasses[437] = 2.860f;
+    mCustomPartMasses[4315] = 3.0590f;
+    mCustomPartMasses[4316] = 3.0799f;
     mCustomPartMasses[4325] = 3.0559f;
     mCustomPartMasses[4326] = 3.0772f;
     mCustomPartWidths[30433] = 0.122f;
     mCustomPartWidths[40433] =  0.160f;
     mCustomPartWidths[437] = 0.053f;
+    mCustomPartWidths[4315] = 0.0064f;
+    mCustomPartWidths[4316] = 0.0056f;
     mCustomPartWidths[4325] = 0.0078f;
     mCustomPartWidths[4326] = 0.0036f;
     Print();
-  }  
+  }    
 
   ///  Destructor
   ~GeneratorPythia8GapTriggeredHF() = default;
@@ -285,10 +289,12 @@ protected:
     }
     float energy = std::sqrt(px*px + py*py + pz*pz + mass*mass);
 
+    // we remove particle to replace and its daughters
+    mPythia.event[iPartToReplace].undoDecay();
     mPythia.event.remove(iPartToReplace, iPartToReplace, true); // we remove the original particle
+
     mPythia.event.append(charge * pdgCodeNew, status, mothers[0], mothers[1], 0, 0, 0, 0, px, py, pz, energy, mass);
     mPythia.moreDecays(); // we need to decay the new particle
-
     return true;
   }
 
