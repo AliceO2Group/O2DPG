@@ -1,5 +1,5 @@
 int External() {
-    std::string path{"tf1/sgn_Kine.root"};
+    std::string path{"o2sim_Kine.root"};
 
     int checkPdgQuarkOne{4};
     int checkPdgQuarkTwo{5};
