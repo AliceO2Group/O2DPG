@@ -482,7 +482,9 @@ if len(CONFKEYMV) > 0:
 
 workflow['stages'].append(GRP_TASK)
 
-includeQED = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb")) or (args.with_qed == True)
+# QED is enabled only for same beam species for now
+QED_enabled = True if (PDGA==PDGB and PDGA!=2212) else False
+includeQED = (QED_enabled or (doembedding and QED_enabled)) or (args.with_qed == True)
 signalprefix='sgn'
 
 # No vertexing for event pool generation; otherwise the vertex comes from CCDB and later from CollContext
@@ -493,8 +495,15 @@ vtxmode_sgngen = 'kCollContext'
 # preproduce the collision context / timeframe structure for all timeframes at once
 precollneeds=[GRP_TASK['name']]
 NEventsQED=10000  # max number of QED events to simulate per timeframe
-PbPbXSec=8. # expected PbPb cross section
-QEDXSecExpected=35237.5  # expected magnitude of QED cross section
+# Hadronic cross section values are taken from Glauber MC
+XSecSys = {'PbPb': 8., 'OO': 1.273, 'NeNe': 1.736}
+# QED cross section values were calculated with TEPEMGEN
+# OO and NeNe at 5.36 TeV, while the old PbPb value was kept as before
+# If the collision energy changes these values need to be updated
+# More info on the calculation can be found in the TEPEMGEN folder of AEGIS
+# specifically in the epemgen.f file
+QEDXSecExpected = {'PbPb': 35237.5, 'OO': 3.17289, 'NeNe': 7.74633} # expected magnitude of QED cross section from TEPEMGEN
+Zsys = {'PbPb': 82, 'OO': 8, 'NeNe': 10} # atomic number of colliding species
 PreCollContextTask=createTask(name='precollcontext', needs=precollneeds, cpu='1')
 
 # adapt timeframeID + orbits + seed + qed
@@ -518,9 +527,14 @@ PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + interac
 
 PreCollContextTask['cmd'] += ' --bcPatternFile ccdb'  # <--- the object should have been set in (local) CCDB
 if includeQED:
-   qedrate = INTRATE * QEDXSecExpected / PbPbXSec   # hadronic interaction rate * cross_section_ratio
-   qedspec = 'qed' + ',' + str(qedrate) + ',10000000:' + str(NEventsQED)
-   PreCollContextTask['cmd'] += ' --QEDinteraction ' + qedspec
+   if PDGA==2212 or PDGB==2212:
+      # QED is not enabled for pp and pA collisions
+      print('o2dpg_sim_workflow: Warning! QED is not enabled for pp or pA collisions')
+      includeQED = False
+   else:
+      qedrate = INTRATE * QEDXSecExpected[COLTYPE] / XSecSys[COLTYPE]   # hadronic interaction rate * cross_section_ratio
+      qedspec = 'qed' + ',' + str(qedrate) + ',10000000:' + str(NEventsQED)
+      PreCollContextTask['cmd'] += ' --QEDinteraction ' + qedspec
 workflow['stages'].append(PreCollContextTask)
 
 
@@ -696,11 +710,11 @@ for tf in range(1, NTIMEFRAMES + 1):
                         + ' -n ' + str(NEventsQED) + ' -m PIPE ITS MFT FT0 FV0 FDD '                                  \
                         + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run) \
                         + ' --seed ' + str(TFSEED)                                                                    \
-                        + ' -g extgen --configKeyValues \"GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;Diamond.width[2]=6.\"'  # + ' --fromCollContext collisioncontext.root'
+                        + ' -g extgen --configKeyValues \"GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;QEDGenParam.Z='+str(Zsys[COLTYPE])+';QEDGenParam.cmEnergy='+str(ECMS)+';Diamond.width[2]=6.\"'  # + ' --fromCollContext collisioncontext.root'
      QED_task['cmd'] += '; RC=$?; QEDXSecCheck=`grep xSectionQED qedgenparam.ini | sed \'s/xSectionQED=//\'`'
-     QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected) + ' = $QEDXSecCheck"; [[ ${RC} == 0 ]]'
+     QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected[COLTYPE]) + ' = $QEDXSecCheck"; [[ ${RC} == 0 ]]'
      # TODO: propagate the Xsecion ratio dynamically
-     QEDdigiargs=' --simPrefixQED qed' +  ' --qed-x-section-ratio ' + str(QEDXSecExpected/PbPbXSec)
+     QEDdigiargs=' --simPrefixQED qed' +  ' --qed-x-section-ratio ' + str(QEDXSecExpected[COLTYPE]/XSecSys[COLTYPE])
      workflow['stages'].append(QED_task)
 
    # recompute the number of workers to increase CPU efficiency
