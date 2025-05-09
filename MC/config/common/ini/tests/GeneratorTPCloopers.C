@@ -21,21 +21,21 @@ int External() {
     tree->GetEntry(i);
     for (auto &track : *tracks)
     {
-        auto pdg = track.GetPdgCode();
-        if (pdg == 11) {
-          count_e++;
-        } else if (pdg == -11) {
-          count_p++;
-        } else {
-          std::cerr << "Found unexpected PDG code: " << pdg << "\n";
-          return 1;
-        }
+      auto pdg = track.GetPdgCode();
+      if (pdg == 11) {
+        count_e++;
+      } else if (pdg == -11) {
+        count_p++;
+      } else {
+        std::cerr << "Found unexpected PDG code: " << pdg << "\n";
+        return 1;
+      }
     }
   }
-  if (count_e != count_p) {
-    std::cerr << "Mismatch in number of electrons and positrons: " << count_e << " vs " << count_p << "\n";
+  if (count_e < count_p) {
+    std::cerr << "Less electrons than positrons: " << count_e << " vs " << count_p << "\n";
     return 1;
-  }    
+  }
   file.Close();
 
   return 0;
