@@ -29,4 +29,5 @@ set nfreeze 1            !number of freeze out events per hydro event
 set modsho 1             !printout every modsho events
 set centrality 0         !0=min bias
 set ihepmc 2             !HepMC output enabled on stdout
-set nfull 10
+set nfull 10             !Total number of events to be generated
+set ihq 1                !Enable EPOS4HQ

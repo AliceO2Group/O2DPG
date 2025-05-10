@@ -94,7 +94,7 @@ exec_test()
     echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_GENERIC_KINE}
     echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_SIM}
     # run the simulation, fail if not successful
-    o2-sim -g ${generator_lower} ${trigger} --noGeant -n 100 -j 4 --configFile ${ini_path} --configKeyValues "GeneratorPythia8.includePartonEvent=true" >> ${LOG_FILE_SIM} 2>&1
+    o2-sim -g ${generator_lower} ${trigger} --noGeant -n 100 -j 4 --configFile ${ini_path} --configKeyValues "GeneratorPythia8.includePartonEvent=true"
     RET=${?}
     [[ "${RET}" != "0" ]] && { remove_artifacts ; return ${RET} ; }
 
@@ -104,7 +104,7 @@ exec_test()
 
     # now run the test script that we know at this point exists
     cp ${test_script} ${generator}.C
-    root -l -b -q ${generator}.C >> ${LOG_FILE_KINE} 2>&1
+    root -l -b -q ${generator}.C
     local ret_test=${?}
     [[ "${RET}" != "0" ]] || RET=${ret_test}
     rm ${generator}.C
