@@ -213,3 +213,13 @@ def option_if_available(executable, option, envfile = None):
     """Checks if an option is available for a given executable and returns it as a string. Otherwise empty string"""
     _, inverse_lookup = get_dpl_options_for_executable(executable, envfile)
     return ' ' + option if option in inverse_lookup else ''
+
+
+# helper function to overwrite some values; prints out stuff that it changes
+def overwrite_config(config, mainkey, subkey, value):
+    oldvalue = config.get(mainkey,{}).get(subkey, None)
+    print (f"Overwriting {mainkey}.{subkey}: {'None' if oldvalue is None else oldvalue} -> {value}")
+    if mainkey not in config:
+      # Initialize the main key in the dictionary if it does not already exist
+      config[mainkey] = {}
+    config[mainkey][subkey] = value
