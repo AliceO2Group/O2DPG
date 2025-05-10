@@ -16,7 +16,7 @@ class GeneratorPythia8LongLivedGun : public o2::eventgen::GeneratorPythia8
 {
 public:
   /// constructor
-  GeneratorPythia8LongLivedGun(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10, int input_pdg2 = -1) : pdg{input_pdg}, nParticles{nInject}, genMinPt{ptMin}, genMaxPt{ptMax}, m{getMass(input_pdg)}, pdg2{input_pdg2}
+  GeneratorPythia8LongLivedGun(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10, float etaMin = -1.0, float etaMax = 1.0, float phiMin = 0.0, float phiMax = TMath::Pi(), int input_pdg2 = -1) : pdg{input_pdg}, nParticles{nInject}, genMinPt{ptMin}, genMaxPt{ptMax}, genMinEta{etaMin}, genMaxEta{etaMax}, genMinPhi{phiMin}, genMaxPhi{phiMax},  m{getMass(input_pdg)}, pdg2{input_pdg2}
   {
   }
 
@@ -51,7 +51,7 @@ public:
     {
       const double pt = gRandom->Uniform(genMinPt, genMaxPt);
       const double eta = gRandom->Uniform(genMinEta, genMaxEta);
-      const double phi = gRandom->Uniform(0, TMath::TwoPi());
+      const double phi = gRandom->Uniform(genMinPhi, genMaxPhi);
       const double px{pt * std::cos(phi)};
       const double py{pt * std::sin(phi)};
       const double pz{pt * std::sinh(eta)};
@@ -69,7 +69,7 @@ public:
       {
         const double pt = gRandom->Uniform(genMinPt, genMaxPt);
         const double eta = gRandom->Uniform(genMinEta, genMaxEta);
-        const double phi = gRandom->Uniform(0, TMath::TwoPi());
+        const double phi = gRandom->Uniform(genMinPhi, genMaxPhi);
         const double px{pt * std::cos(phi)};
         const double py{pt * std::sin(phi)};
         const double pz{pt * std::sinh(eta)};
@@ -88,8 +88,10 @@ public:
 private:
   double genMinPt = 0.5;  /// minimum 3-momentum for generated particles
   double genMaxPt = 12.;  /// maximum 3-momentum for generated particles
-  double genMinEta = -1.; /// minimum pseudorapidity for generated particles
-  double genMaxEta = +1.; /// maximum pseudorapidity for generated particles
+  double genMinEta = -1.0; /// minimum pseudorapidity for generated particles
+  double genMaxEta = +1.0; /// maximum pseudorapidity for generated particles
+  double genMinPhi = 0.0; /// minimum pseudorapidity for generated particles
+  double genMaxPhi = TMath::Pi(); /// maximum pseudorapidity for generated particles
 
   double m = 0;       /// particle mass [GeV/c^2]
   int pdg = 0;        /// particle pdg code
@@ -101,7 +103,8 @@ private:
 };
 
 ///___________________________________________________________
-FairGenerator *generateLongLived(int pdg, int nInject, float ptMin = 1, float ptMax = 10, int pdg2 = -1)
+FairGenerator *generateLongLived(int pdg, int nInject, float ptMin = 1, float ptMax = 10, float etaMin = -1.0, float etaMax = 1.0, float phiMin = 0.0, float phiMax = TMath::Pi(), int pdg2 = -1)
 {
-  return new GeneratorPythia8LongLivedGun(pdg, nInject, ptMin, ptMax, pdg2);
+  return new GeneratorPythia8LongLivedGun(pdg, nInject, ptMin, ptMax, etaMin, etaMax, phiMin, phiMax, pdg2);
 }
+
