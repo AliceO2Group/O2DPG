@@ -104,10 +104,10 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag, con
      add_QC_finalization('MCHTracksTaskQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mch-tracks-task.json')
   if isActive('MCH') and isActive('MID'):
      add_QC_finalization('MCHMIDTracksTaskQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mchmid-tracks-task.json')
-  if isActive('MCH') and isActive('MFT'):
-     add_QC_finalization('MCHMFTTaskQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mftmch-tracks-task.json')
   if isActive('MCH') and isActive('MID') and isActive('MFT'):
      add_QC_finalization('MUONTracksMFTTaskQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mftmchmid-tracks-task.json')
+  elif isActive('MCH') and isActive('MFT'):
+     add_QC_finalization('MCHMFTTaskQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/mftmch-tracks-task.json')
   if isActive('FT0') and isActive('TRD'):
      add_QC_finalization('tofft0PIDQC', 'json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tof.json')
   elif isActive('FT0'):
