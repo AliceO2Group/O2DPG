@@ -1788,21 +1788,17 @@ for tf in range(1, NTIMEFRAMES + 1):
                 readerCommand='o2-global-track-cluster-reader --track-types "MCH,MID,MCH-MID" --cluster-types "MCH,MID"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mchmid-tracks-task.json')
   
-                
-     ### MCH && MFT
-     #if isActive('MCH') and isActive('MFT') :
-     #   addQCPerTF(taskName='MCHMFTTaskQC',
-     #           needs=[MFTMCHMATCHtask['name']],
-     #           readerCommand='o2-global-track-cluster-reader --track-types "MCH,MFT,MFT-MCH" --cluster-types "MCH,MFT"',
-     #           configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mftmch-tracks-task.json')
-                
-     ### MCH && MID && MFT
+     ### MCH && MID && MFT || MCH && MFT
      if isActive('MCH') and isActive('MID') and isActive('MFT') :
         addQCPerTF(taskName='MUONTracksMFTTaskQC',
                 needs=[MFTMCHMATCHtask['name'], MCHMIDMATCHtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "MFT,MCH,MID,MCH-MID,MFT-MCH,MFT-MCH-MID" --cluster-types "MCH,MID,MFT"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mftmchmid-tracks-task.json')
-
+     elif isActive('MCH') and isActive('MFT') :
+        addQCPerTF(taskName='MCHMFTTaskQC',
+                needs=[MFTMCHMATCHtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "MCH,MFT,MFT-MCH" --cluster-types "MCH,MFT"',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mftmch-tracks-task.json')
 
  
    #<------------------ TPC - time-series objects
