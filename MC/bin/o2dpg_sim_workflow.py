@@ -1509,42 +1509,17 @@ for tf in range(1, NTIMEFRAMES + 1):
                 readerCommand='o2-global-track-cluster-reader --track-types "MCH,MID,MCH-MID" --cluster-types "MCH,MID"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mchmid-tracks-task.json')
   
-                
-     ### MCH && MFT
-     if isActive('MCH') and isActive('MFT') :
-        addQCPerTF(taskName='MCHMFTTaskQC',
-                needs=[MFTMCHMATCHtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "MCH,MFT,MFT-MCH" --cluster-types "MCH,MFT"',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mftmch-tracks-task.json')
-                
-     ### MCH && MID && MFT
+     ### MCH && MID && MFT || MCH && MFT
      if isActive('MCH') and isActive('MID') and isActive('MFT') :
         addQCPerTF(taskName='MUONTracksMFTTaskQC',
                 needs=[MFTMCHMATCHtask['name'], MCHMIDMATCHtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "MFT,MCH,MID,MCH-MID,MFT-MCH,MFT-MCH-MID" --cluster-types "MCH,MID,MFT"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mftmchmid-tracks-task.json')
-
-   #secondary vertexer
-   svfinder_threads = ' --threads 1 '
-   svfinder_cpu = 1
-   if COLTYPE == "PbPb" or (doembedding and COLTYPEBKG == "PbPb"):
-     svfinder_threads = ' --threads 8 '
-     svfinder_cpu = 8
-   SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name'], FT0FV0EMCCTPDIGItask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
-   SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
-   SVFINDERtask['cmd'] = '${O2_ROOT}/bin/o2-secondary-vertexing-workflow '
-   SVFINDERtask['cmd'] += getDPL_global_options(bigshm=True) + svfinder_threads + putConfigValuesNew(['svertexer', 'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco) \
-                       + tpc_corr_scaling_options + tpc_corr_options_mc
-   # Take None as default, we only add more if nothing from anchorConfig
-   svfinder_sources = anchorConfig.get('o2-secondary-vertexing-workflow-options', {}). get('vertexing-sources', 'ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP')
-   SVFINDERtask['cmd'] += ' --vertexing-sources ' + svfinder_sources + (' --combine-source-devices','')[args.no_combine_dpl_devices]
-   # strangeness tracking is now called from the secondary vertexer
-   if args.no_strangeness_tracking:
-      SVFINDERtask['cmd'] += ' --disable-strangeness-tracker'
-   # if enabled, it may require MC labels
-   else:
-      SVFINDERtask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
-   workflow['stages'].append(SVFINDERtask)
+     elif isActive('MCH') and isActive('MFT') :
+        addQCPerTF(taskName='MCHMFTTaskQC',
+                needs=[MFTMCHMATCHtask['name']],
+                readerCommand='o2-global-track-cluster-reader --track-types "MCH,MFT,MFT-MCH" --cluster-types "MCH,MFT"',
+                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mftmch-tracks-task.json')
 
   # -----------
   # produce AOD
