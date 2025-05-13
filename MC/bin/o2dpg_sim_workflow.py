@@ -42,7 +42,7 @@ sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
 from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers, merge_dicts
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
-from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg, option_if_available
+from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg, option_if_available, overwrite_config
 from o2dpg_dpl_config_tools import parse_command_string, modify_dpl_command, dpl_option_from_config, TaskFinalizer
 
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
@@ -218,6 +218,19 @@ if args.overwrite_config != '':
    
    # merge the dictionaries into anchorConfig, the latter takes precedence
    merge_dicts(anchorConfig, config_overwrite)
+
+# We still may need adjust configurations manually for consistency:
+#
+# * Force simpler TPC digitization of if TPC reco does not have the mc-time-gain option:
+tpc_envfile = 'env_async.env' if environ.get('ALIEN_JDL_O2DPG_ASYNC_RECO_TAG') is not None else None
+tpcreco_mctimegain = option_if_available('o2-tpc-reco-workflow', '--tpc-mc-time-gain', envfile=tpc_envfile)
+if tpcreco_mctimegain == '':
+   # this was communicated by Jens Wiechula@TPC; avoids dEdX issue https://its.cern.ch/jira/browse/O2-5486 for the 2tag mechanism
+   print ("TPC reco does not support --tpc-mc-time-gain. Adjusting some config for TPC digitization")
+   overwrite_config(anchorConfig['ConfigParams'],'TPCGasParam','OxygenCont',5e-5)
+   overwrite_config(anchorConfig['ConfigParams'],'TPCGEMParam','TotalGainStack',2000)
+   overwrite_config(anchorConfig['ConfigParams'],'GPU_global','dEdxDisableResidualGain',1)
+# TODO: put into it's own function for better modularity
 
 # with the config, we'll create a task_finalizer functor
 # this object takes care of customizing/finishing task command with externally given (anchor) config
@@ -1169,7 +1182,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    # tpc_corr_scaling_options = ('--lumi-type 1', '')[tpcDistortionType != 0]
 
    #<--------- TPC reco task
-   tpc_envfile = 'env_async.env' if environ.get('ALIEN_JDL_O2DPG_ASYNC_RECO_TAG') is not None else None
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
    TPCRECOtask['cmd'] = task_finalizer([
      '${O2_ROOT}/bin/o2-tpc-reco-workflow',
@@ -1185,7 +1197,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      ('',' --disable-mc')[args.no_mc_labels],
      tpc_corr_scaling_options, 
      tpc_corr_options_mc,
-     option_if_available('o2-tpc-reco-workflow', '--tpc-mc-time-gain', envfile=tpc_envfile)])
+     tpcreco_mctimegain])
    workflow['stages'].append(TPCRECOtask)
 
    #<--------- ITS reco task 
