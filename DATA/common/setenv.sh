@@ -144,7 +144,7 @@ if [[ `uname` == Darwin ]]; then export UDS_PREFIX=; else export UDS_PREFIX="@";
 
 # Env variables required for workflow setup
 if [[ $SYNCMODE == 1 ]]; then
-  if [[ -z "${WORKFLOW_DETECTORS_MATCHING+x}" ]]; then export WORKFLOW_DETECTORS_MATCHING="ITSTPC,ITSTPCTRD,ITSTPCTOF,ITSTPCTRDTOF,PRIMVTX"; fi # Select matchings that are enabled in sync mode
+  if [[ -z "${WORKFLOW_DETECTORS_MATCHING+x}" ]]; then export WORKFLOW_DETECTORS_MATCHING="ITSTPC,ITSTPCTRD,ITSTPCTOF,ITSTPCTRDTOF,PRIMVTX,SECVTX"; fi # Select matchings that are enabled in sync mode
 else
   if [[ -z "${WORKFLOW_DETECTORS_MATCHING+x}" ]]; then export WORKFLOW_DETECTORS_MATCHING="ALL"; fi # All matching / vertexing enabled in async mode
 fi
