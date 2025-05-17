@@ -412,40 +412,28 @@ WEIGHTPOW=float(args.weightPow)
 PTHATMIN=float(args.ptHatMin)
 PTHATMAX=float(args.ptHatMax)
 
-# translate here collision type to PDG
+colsys = {'pp':[2212,2212], 'pPb':[2212,1000822080], 'Pbp':[1000822080,2212], 'PbPb':[1000822080,1000822080], 'pO':[2212,1000080160], 'Op':[1000080160,2212], 'OO':[1000080160,1000080160], 'NeNe':[1000100200,1000100200]}
+# translate here collision type to PDG of allowed particles
 COLTYPE=args.col
+if COLTYPE in colsys.keys():
+   PDGA=colsys[COLTYPE][0]
+   PDGB=colsys[COLTYPE][1]
+else:
+   print('o2dpg_sim_workflow: Error! Unknown collision system %s' % COLTYPE)
+   exit(1)
 
 doembedding=True if args.embedding=='True' or args.embedding==True else False
-
-if COLTYPE == 'pp':
-   PDGA=2212 # proton
-   PDGB=2212 # proton
-
-if COLTYPE == 'PbPb':
-   PDGA=1000822080 # Pb
-   PDGB=1000822080 # Pb
-   if ECMS < 0:    # assign 5.02 TeV to Pb-Pb
-      print('o2dpg_sim_workflow: Set CM Energy to PbPb case 5.02 TeV')
-      ECMS=5020.0
-
-if COLTYPE == 'pPb':
-   PDGA=2212       # proton
-   PDGB=1000822080 # Pb
-
-if COLTYPE == 'Pbp':
-   PDGA=1000822080 # Pb
-   PDGB=2212       # proton
 
 # If not set previously, set beam energy B equal to A
 if EBEAMB < 0 and ECMS < 0:
    EBEAMB=EBEAMA
    print('o2dpg_sim_workflow: Set beam energy same in A and B beams')
-   if COLTYPE=="pPb" or COLTYPE=="Pbp":
-      print('o2dpg_sim_workflow: Careful! both beam energies are the same')
+   if PDGA != PDGB:
+      print('o2dpg_sim_workflow: Careful! Set same energies for different particle beams!')
 
 if ECMS > 0:
-   if COLTYPE=="pPb" or COLTYPE=="Pbp":
-      print('o2dpg_sim_workflow: Careful! ECM set for pPb/Pbp collisions!')
+   if PDGA != PDGB:
+      print('o2dpg_sim_workflow: Careful! ECM set for for different particle beams!')
 
 if ECMS < 0 and EBEAMA < 0 and EBEAMB < 0:
    print('o2dpg_sim_workflow: Error! CM or Beam Energy not set!!!')
@@ -507,7 +495,9 @@ if len(CONFKEYMV) > 0:
 
 workflow['stages'].append(GRP_TASK)
 
-includeQED = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb")) or (args.with_qed == True)
+# QED is enabled only for same beam species for now
+QED_enabled = True if (PDGA==PDGB and PDGA!=2212) else False
+includeQED = (QED_enabled or (doembedding and QED_enabled)) or (args.with_qed == True)
 signalprefix='sgn'
 
 # No vertexing for event pool generation; otherwise the vertex comes from CCDB and later from CollContext
@@ -518,8 +508,15 @@ vtxmode_sgngen = 'kCollContext'
 # preproduce the collision context / timeframe structure for all timeframes at once
 precollneeds=[GRP_TASK['name']]
 NEventsQED=10000  # max number of QED events to simulate per timeframe
-PbPbXSec=8. # expected PbPb cross section
-QEDXSecExpected=35237.5  # expected magnitude of QED cross section
+# Hadronic cross section values are taken from Glauber MC
+XSecSys = {'PbPb': 8., 'OO': 1.273, 'NeNe': 1.736}
+# QED cross section values were calculated with TEPEMGEN
+# OO and NeNe at 5.36 TeV, while the old PbPb value was kept as before
+# If the collision energy changes these values need to be updated
+# More info on the calculation can be found in the TEPEMGEN folder of AEGIS
+# specifically in the epemgen.f file
+QEDXSecExpected = {'PbPb': 35237.5, 'OO': 3.17289, 'NeNe': 7.74633} # expected magnitude of QED cross section from TEPEMGEN
+Zsys = {'PbPb': 82, 'OO': 8, 'NeNe': 10} # atomic number of colliding species
 PreCollContextTask=createTask(name='precollcontext', needs=precollneeds, cpu='1')
 
 # adapt timeframeID + orbits + seed + qed
@@ -543,9 +540,14 @@ PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + interac
 
 PreCollContextTask['cmd'] += ' --bcPatternFile ccdb'  # <--- the object should have been set in (local) CCDB
 if includeQED:
-   qedrate = INTRATE * QEDXSecExpected / PbPbXSec   # hadronic interaction rate * cross_section_ratio
-   qedspec = 'qed' + ',' + str(qedrate) + ',10000000:' + str(NEventsQED)
-   PreCollContextTask['cmd'] += ' --QEDinteraction ' + qedspec
+   if PDGA==2212 or PDGB==2212:
+      # QED is not enabled for pp and pA collisions
+      print('o2dpg_sim_workflow: Warning! QED is not enabled for pp or pA collisions')
+      includeQED = False
+   else:
+      qedrate = INTRATE * QEDXSecExpected[COLTYPE] / XSecSys[COLTYPE]   # hadronic interaction rate * cross_section_ratio
+      qedspec = 'qed' + ',' + str(qedrate) + ',10000000:' + str(NEventsQED)
+      PreCollContextTask['cmd'] += ' --QEDinteraction ' + qedspec
 workflow['stages'].append(PreCollContextTask)
 
 
@@ -558,18 +560,20 @@ if doembedding:
            print('o2dpg_sim_workflow: Error! embedding background generator name not provided')
            exit(1)
 
+        # PDG translation for background
+        if COLTYPEBKG in colsys.keys():
+           PDGABKG=colsys[COLTYPEBKG][0]
+           PDGBBKG=colsys[COLTYPEBKG][1]
+        else:
+           print('o2dpg_sim_workflow: Error! Unknown background collision system %s' % COLTYPEBKG)
+           exit(1)
+
         PROCESSBKG=args.procBkg
         ECMSBKG=float(args.eCM)
         EBEAMABKG=float(args.eA)
         EBEAMBBKG=float(args.eB)
 
-        if COLTYPEBKG == 'pp':
-           PDGABKG=2212 # proton
-           PDGBBKG=2212 # proton
-
         if COLTYPEBKG == 'PbPb':
-           PDGABKG=1000822080 # Pb
-           PDGBBKG=1000822080 # Pb
            if ECMSBKG < 0:    # assign 5.02 TeV to Pb-Pb
               print('o2dpg_sim_workflow: Set BKG CM Energy to PbPb case 5.02 TeV')
               ECMSBKG=5020.0
@@ -577,24 +581,16 @@ if doembedding:
               PROCESSBKG = 'heavy_ion'
               print('o2dpg_sim_workflow: Process type not considered for Pythia8 PbPb')
 
-        if COLTYPEBKG == 'pPb':
-           PDGABKG=2212       # proton
-           PDGBBKG=1000822080 # Pb
-
-        if COLTYPEBKG == 'Pbp':
-           PDGABKG=1000822080 # Pb
-           PDGBBKG=2212       # proton
-
         # If not set previously, set beam energy B equal to A
         if EBEAMBBKG < 0 and ECMSBKG < 0:
            EBEAMBBKG=EBEAMABKG
            print('o2dpg_sim_workflow: Set beam energy same in A and B beams')
-           if COLTYPEBKG=="pPb" or COLTYPEBKG=="Pbp":
-              print('o2dpg_sim_workflow: Careful! both beam energies in bkg are the same')
+           if PDGABKG != PDGBBKG:
+              print('o2dpg_sim_workflow: Careful! Set same energies for different background beams!')
 
         if ECMSBKG > 0:
-           if COLTYPEBKG=="pPb" or COLTYPEBKG=="Pbp":
-              print('o2dpg_sim_workflow: Careful! bkg ECM set for pPb/Pbp collisions!')
+           if PDGABKG != PDGBBKG:
+              print('o2dpg_sim_workflow: Careful! ECM set for different background beams!')
 
         if ECMSBKG < 0 and EBEAMABKG < 0 and EBEAMBBKG < 0:
            print('o2dpg_sim_workflow: Error! bkg ECM or Beam Energy not set!!!')
@@ -727,11 +723,11 @@ for tf in range(1, NTIMEFRAMES + 1):
                         + ' -n ' + str(NEventsQED) + ' -m PIPE ITS MFT FT0 FV0 FDD '                                  \
                         + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run) \
                         + ' --seed ' + str(TFSEED)                                                                    \
-                        + ' -g extgen --configKeyValues \"GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;Diamond.width[2]=6.\"'  # + ' --fromCollContext collisioncontext.root'
+                        + ' -g extgen --configKeyValues \"GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;QEDGenParam.Z='+str(Zsys[COLTYPE])+';QEDGenParam.cmEnergy='+str(ECMS)+';Diamond.width[2]=6.\"'  # + ' --fromCollContext collisioncontext.root'
      QED_task['cmd'] += '; RC=$?; QEDXSecCheck=`grep xSectionQED qedgenparam.ini | sed \'s/xSectionQED=//\'`'
-     QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected) + ' = $QEDXSecCheck"; [[ ${RC} == 0 ]]'
+     QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected[COLTYPE]) + ' = $QEDXSecCheck"; [[ ${RC} == 0 ]]'
      # TODO: propagate the Xsecion ratio dynamically
-     QEDdigiargs=' --simPrefixQED qed' +  ' --qed-x-section-ratio ' + str(QEDXSecExpected/PbPbXSec)
+     QEDdigiargs=' --simPrefixQED qed' +  ' --qed-x-section-ratio ' + str(QEDXSecExpected[COLTYPE]/XSecSys[COLTYPE])
      workflow['stages'].append(QED_task)
 
    # recompute the number of workers to increase CPU efficiency
