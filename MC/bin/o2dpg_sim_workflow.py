@@ -227,7 +227,7 @@ tpcreco_mctimegain = option_if_available('o2-tpc-reco-workflow', '--tpc-mc-time-
 if tpcreco_mctimegain == '':
    # this was communicated by Jens Wiechula@TPC; avoids dEdX issue https://its.cern.ch/jira/browse/O2-5486 for the 2tag mechanism
    print ("TPC reco does not support --tpc-mc-time-gain. Adjusting some config for TPC digitization")
-   overwrite_config(anchorConfig['ConfigParams'],'TPCGasParam','OxygenCont',5e-5)
+   overwrite_config(anchorConfig['ConfigParams'],'TPCGasParam','OxygenCont',5e-6)
    overwrite_config(anchorConfig['ConfigParams'],'TPCGEMParam','TotalGainStack',2000)
    overwrite_config(anchorConfig['ConfigParams'],'GPU_global','dEdxDisableResidualGain',1)
 # TODO: put into it's own function for better modularity
