@@ -29,6 +29,8 @@ o2::eventgen::GeneratorTGenerator* QEDepem()
   genBg->SetPtRange(qedParam.ptMin, qedParam.ptMax);                               // Set pt limits (GeV) for e+-: 1MeV corresponds to max R=13.3mm at 5kGaus
   genBg->SetOrigin(diamond.position[0], diamond.position[1], diamond.position[2]); // vertex position in space
   genBg->SetSigma(diamond.width[0], diamond.width[1], diamond.width[2]);           // vertex sigma
+  genBg->SetCMEnergy(qedParam.cmEnergy);                                           // center of mass energy per nucleon pair in GeV
+  genBg->SetZ(qedParam.Z);                                                         // atomic number of the projectile/target (only symmetric systems are compatible for now)
   genBg->SetTimeOrigin(0.);                                                        // vertex position in time
   genBg->Init();
 
