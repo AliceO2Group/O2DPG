@@ -141,6 +141,8 @@ for line in f:
                     command_preopt += ' SHMSIZE=' + (str(int(int(os.environ['RECOSHMSIZE']) * 3 / 2)) if mi100node else os.environ['RECOSHMSIZE'])
                     if mi100node:
                         command_preopt += ' EPN_NODE_MI100=1 EPN_GLOBAL_SCALING="3/2"'
+                        if os.getenv('DISABLE_MI100_SERIALIZATION', '0') == '1':
+                            command_preopt += ' DISABLE_MI100_SERIALIZATION=1'
                 if reco_num_nodes_override == 0:
                     command_preopt += ' RECO_NUM_NODES_WORKFLOW=' + wf[1]
                 if is_calib_workflow:
