@@ -24,6 +24,10 @@
         "moduleName": "QcMID",
         "detectorName": "MID",
         "cycleDurationSeconds": "60",
+        "movingWindows": [ "mLocalBoardsMap", "mLocalBoardsMap11","mLocalBoardsMap12","mLocalBoardsMap21","mLocalBoardsMap22",
+                                              "BendHitsMap11", "BendHitsMap12", "BendHitsMap21", "BendHitsMap22",
+                                              "NBendHitsMap11", "NBendHitsMap12", "NBendHitsMap21", "NBendHitsMap22"
+                        ],
         "dataSource": {
           "type": "direct",
           "query": "digits:MID/DATA;digits_rof:MID/DATAROF"
