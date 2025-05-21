@@ -1,5 +1,61 @@
 int External()
 {
+  // Print folder content through ls command
+  std::cout << "### Folder content ###" << std::endl;
+  std::system("ls -l");
+  // Print the content of the o2sim_serverlog file
+  std::ifstream serverLog("o2sim_serverlog");
+  std::cout << "### o2sim_serverlog ###" << std::endl;
+  if (!serverLog.is_open())
+  {
+    std::cerr << "Cannot open o2sim_serverlog file\n";
+    return 1;
+  }
+  std::string line;
+  while (std::getline(serverLog, line))
+  {
+    std::cout << line << "\n";
+  }
+  serverLog.close();
+  // Print the content of the o2sim_mergerlog file
+  std::ifstream mergerLog("o2sim_mergerlog");
+  std::cout << "### o2sim_mergerlog ###" << std::endl;
+  if (!mergerLog.is_open())
+  {
+    std::cerr << "Cannot open o2sim_mergerlog file\n";
+    return 1;
+  }
+  while (std::getline(mergerLog, line))
+  {
+    std::cout << line << "\n";
+  }
+  mergerLog.close();
+  // Print the content of the o2sim_workerlog0 file
+  std::ifstream workerLog("o2sim_workerlog0");
+  std::cout << "### o2sim_workerlog0 ###" << std::endl;
+  if (!workerLog.is_open())
+  {
+    std::cerr << "Cannot open o2sim_workerlog0 file\n";
+    return 1;
+  }
+  while (std::getline(workerLog, line))
+  {
+    std::cout << line << "\n";
+  }
+  workerLog.close();
+  // Print the content of the z-cfg.mtr file
+  std::ifstream mtrLog("z-cfg.mtr");
+  std::cout << "### z-cfg.mtr ###" << std::endl;
+  if (!mtrLog.is_open())
+  {
+    std::cerr << "Cannot open z-cfg.mtr file\n";
+    return 1;
+  }
+  while (std::getline(mtrLog, line))
+  {
+    std::cout << line << "\n";
+  }
+  mtrLog.close();
   std::string path{"o2sim_Kine.root"};
   // Check that file exists, can be opened and has the correct tree
   TFile file(path.c_str(), "READ");
