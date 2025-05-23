@@ -3,7 +3,7 @@
 #include <vector>
 #include <fstream>
 #include <rapidjson/document.h>
-#include "CCDB/BasicCCDBManager.h"
+#include "CCDB/CCDBTimeStampUtils.h"
 #include "CCDB/CcdbApi.h"
 
 // Static Ort::Env instance for multiple onnx model loading
