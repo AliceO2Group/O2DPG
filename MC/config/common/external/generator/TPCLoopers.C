@@ -403,7 +403,13 @@ FairGenerator *
     const std::array<bool, 2> isCCDB = {models[0].starts_with("ccdb:"), models[1].starts_with("ccdb:")};
     if (std::any_of(isAlien.begin(), isAlien.end(), [](bool v) { return v; }))
     {
-        TGrid::Connect("alien://");
+        if (!gGrid) {
+            TGrid::Connect("alien://");
+            if (!gGrid) {
+                LOG(fatal) << "AliEn connection failed, check token.";
+                exit(1);
+            }
+        }
         for (size_t i = 0; i < models.size(); ++i)
         {
             if (isAlien[i] && !TFile::Cp(models[i].c_str(), local_names[i].c_str()))
