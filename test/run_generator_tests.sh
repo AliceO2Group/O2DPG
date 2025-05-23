@@ -161,8 +161,12 @@ add_ini_files_from_macros()
     # given a list of macros, collect all INI files which contain at least one of them
     local macro_files=$@
     for mf in ${macro_files} ; do
-        # if any, strip the leading O2DPG_ROOT path to only grep for the relative trailing path
-        mf=${mf##${O2DPG_ROOT}/}
+        # if any, strip the leading O2DPG_ROOT or REPO_DIR path to only grep for the relative trailing path
+        if [[ "${mf}" == ${O2DPG_ROOT}* ]]; then
+            mf=${mf##${O2DPG_ROOT}/}
+        elif [[ "${mf}" == ${REPO_DIR}* ]]; then
+            mf=${mf##${REPO_DIR}/}
+        fi
         local other_ini_files=$(grep -r -l ${mf} | grep ".ini$")
         # so this macro is not included in any of the INI file,
         # maybe it is included by another macro which is then included in an INI file
