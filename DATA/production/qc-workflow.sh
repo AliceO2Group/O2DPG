@@ -278,7 +278,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         # replace the input sources depending on the detector compostition and matching detectors
         ITSTPCMatchQuery="trackITSTPC:GLO/TPCITS/0;trackITSTPCABREFS:GLO/TPCITSAB_REFS/0;trackITSTPCABCLID:GLO/TPCITSAB_CLID/0;trackTPC:TPC/TRACKS;trackTPCClRefs:TPC/CLUSREFS/0;trackITS:ITS/TRACKS/0;trackITSROF:ITS/ITSTrackROF/0;trackITSClIdx:ITS/TRACKCLSID/0;alpparITS:ITS/ALPIDEPARAM/0?lifetime=condition&ccdb-path=ITS/Config/AlpideParam;SVParam:GLO/SVPARAM/0?lifetime=condition&ccdb-path=GLO/Config/SVertexerParam"
         TRACKSOURCESK0="ITS,TPC,ITS-TPC"
-        if has_processing_step MATCH_SECVTX || has_detector_matching SECVTX; then
+        if [[ $BEAMTYPE != "cosmic" ]] && (has_processing_step MATCH_SECVTX || has_detector_matching SECVTX); then
           if [[ $SYNCMODE == 1 ]] || [[ $EPNSYNCMODE == 1 ]]; then
             HAS_K0_ENABLED=$(jq -r .qc.tasks.MTCITSTPC.taskParameters.doK0QC "${LOCAL_FILENAME}")
           else
