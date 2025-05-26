@@ -395,4 +395,4 @@ FairGenerator *GeneratorPythia8GapHF(int inputTriggerRatio, float yQuarkMin = -1
   myGen->setHadronRapidity(yHadronMin, yHadronMax);
 
   return myGen;
-}
+} 
