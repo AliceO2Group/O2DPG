@@ -382,7 +382,7 @@ class GenTPCLoopers : public Generator
 // ONNX model files can be local, on AliEn or in the ALICE CCDB.
 // For local and alien files it is mandatory to provide the filenames, for the CCDB instead the
 // path to the object in the CCDB is sufficient. The model files will be downloaded locally.
-// Example of CCDB path: "ccdb:Users/n/name/test"
+// Example of CCDB path: "ccdb://Users/n/name/test"
 // Example of alien path: "alien:///alice/cern.ch/user/n/name/test/test.onnx"
 FairGenerator *
     Generator_TPCLoopers(std::string model_pairs = "tpcloopmodel.onnx", std::string model_compton = "tpcloopmodelcompton.onnx",
@@ -400,7 +400,7 @@ FairGenerator *
     const std::array<std::string, 2> models = {model_pairs, model_compton};
     const std::array<std::string, 2> local_names = {"WGANpair.onnx", "WGANcompton.onnx"};
     const std::array<bool, 2> isAlien = {models[0].starts_with("alien://"), models[1].starts_with("alien://")};
-    const std::array<bool, 2> isCCDB = {models[0].starts_with("ccdb:"), models[1].starts_with("ccdb:")};
+    const std::array<bool, 2> isCCDB = {models[0].starts_with("ccdb://"), models[1].starts_with("ccdb://")};
     if (std::any_of(isAlien.begin(), isAlien.end(), [](bool v) { return v; }))
     {
         if (!gGrid) {
@@ -427,8 +427,8 @@ FairGenerator *
         {
             if (isCCDB[i])
             {
-                auto model_path = models[i].substr(5);
-                // Treat filename is provided in the CCDB path
+                auto model_path = models[i].substr(7); // Remove "ccdb://"
+                // Treat filename if provided in the CCDB path
                 auto extension = model_path.find(".onnx");
                 if (extension != std::string::npos)
                 {
