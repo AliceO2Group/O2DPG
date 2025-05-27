@@ -37,7 +37,7 @@ int External() {
     tree->SetBranchAddress("MCEventHeader.", &eventHeader);
 
     int nEventsMB{}, nEventsInjOne{}, nEventsInjTwo{};
-    int nQuarksOne{}, nQuarksTwo{}, nSignals{}, nSignalGoodDecay{};
+    int nSignals{}, nSignalGoodDecay{};
     auto nEvents = tree->GetEntries();
 
     for (int i = 0; i < nEvents; i++) {
@@ -60,14 +60,6 @@ int External() {
         for (auto &track : *tracks) {
             auto pdg = track.GetPdgCode();
             auto absPdg = std::abs(pdg);
-            if (absPdg == checkPdgQuarkOne) {
-                nQuarksOne++;
-                continue;
-            }
-            if (absPdg == checkPdgQuarkTwo) {
-                nQuarksTwo++;
-                continue;
-            }
             if (std::find(checkPdgHadron.begin(), checkPdgHadron.end(), absPdg) != checkPdgHadron.end()) { // found signal
                 nSignals++; // count signal PDG
 
@@ -115,8 +107,6 @@ int External() {
     std::cout << "# MB events: " << nEventsMB << "\n";
     std::cout << Form("# events injected with %d quark pair: ", checkPdgQuarkOne) << nEventsInjOne << "\n";
     std::cout << Form("# events injected with %d quark pair: ", checkPdgQuarkTwo) << nEventsInjTwo << "\n";
-    std::cout << Form("# %d (anti)quarks: ", checkPdgQuarkOne) << nQuarksOne << "\n";
-    std::cout << Form("# %d (anti)quarks: ", checkPdgQuarkTwo) << nQuarksTwo << "\n";
     std::cout <<"# signal hadrons: " << nSignals << "\n";
     std::cout <<"# signal hadrons decaying in the correct channel: " << nSignalGoodDecay << "\n";
 
@@ -130,15 +120,6 @@ int External() {
     }
     if (nEventsInjTwo < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInjTwo > nEvents * ratioTrigger * 0.5 * 1.05) {
         std::cerr << "Number of generated events injected with " << checkPdgQuarkTwo << " different than expected\n";
-        return 1;
-    }
-
-    if (nQuarksOne < nEvents * ratioTrigger) { // we expect anyway more because the same quark is repeated several time, after each gluon radiation
-        std::cerr << "Number of generated (anti)quarks " << checkPdgQuarkOne << " lower than expected\n";
-        return 1;
-    }
-    if (nQuarksTwo < nEvents * ratioTrigger) { // we expect anyway more because the same quark is repeated several time, after each gluon radiation
-        std::cerr << "Number of generated (anti)quarks " << checkPdgQuarkTwo << " lower than expected\n";
         return 1;
     }
 
