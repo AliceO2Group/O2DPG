@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/bin/sh
 # Script based on CRMC example
 # EPOS4 option files must contain ihepmc set to 2 to print HepMC
 # data on stdout. -hepmc flag is not needed anymore, but -hepstd is fundamental
 # in order not to print useless information on stdout (a z-*optns*.mtr file will be created)
 
 optns="example"
-seed=$RANDOM
+seed=$(od -An -N2 -tu2 /dev/urandom | tr -d ' ')
 EPOS4=""
 
 if [ -z "$EPO4VSN" ]; then
@@ -62,7 +62,7 @@ fi
 
 if [ $seed -eq 0 ]; then
     # Seed can't be 0, random number will be used
-    seed=$RANDOM
+    seed=$(od -An -N2 -tu2 /dev/urandom | tr -d ' ')
 fi
 
 # OR filters the stdout with only HepMC useful data
