@@ -1,4 +1,4 @@
-"""timeseries_diff.py
+""" AliasDataframe.py
 import sys,os; sys.path.insert(1, os.environ[f"O2DPG"]+"/UTILS/dfextensions");
 from  AliasDataFrame import *
 Utility helpers extension of the pandas DataFrame to support on-demand computed columns (aliases)
@@ -7,15 +7,13 @@ Utility helpers extension of the pandas DataFrame to support on-demand computed 
 import pandas as pd
 import numpy as np
 import json
-import os
 import uproot
-
+import ROOT     # type: ignore
 class AliasDataFrame:
     """
     A wrapper for pandas DataFrame that supports on-demand computed columns (aliases)
     with dependency tracking and persistence.
     Example usage:
-    >>> import pandas as pd
     >>> df = pd.DataFrame({"x": [1, 2, 3], "y": [10, 20, 30]})
     >>> adf = AliasDataFrame(df)
     >>> adf.add_alias("z", "x + y")
@@ -174,8 +172,7 @@ class AliasDataFrame:
 
         with uproot.recreate(filename) as f:
             f[treename] = export_df
-
-        import ROOT
+        # Update the ROOT file with aliases
         f = ROOT.TFile.Open(filename, "UPDATE")
         tree = f.Get(treename)
         for alias, expr in self.aliases.items():
@@ -183,7 +180,8 @@ class AliasDataFrame:
         tree.Write("", ROOT.TObject.kOverwrite)
         f.Close()
 
-    def read_tree(self, filename, treename="tree"):
+    @staticmethod
+    def read_tree(filename, treename="tree"):
         with uproot.open(filename) as f:
             df = f[treename].arrays(library="pd")
         adf = AliasDataFrame(df)
