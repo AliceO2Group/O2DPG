@@ -61,13 +61,18 @@ print(summary)
 ### Example Summary Output
 
 ```
-              elapsed_sec           rss_gb
-                     mean  max  min   mean   max   min
-step
-loop::step[0]         0.10 0.10 0.10  0.14  0.14  0.14
-loop::step[1]         0.20 0.20 0.20  0.15  0.15  0.15
-loop::step[2]         0.30 0.30 0.30  0.15  0.15  0.15
-setup::start          0.00 0.00 0.00  0.13  0.13  0.13
+Out[5]:
+{'summary_by_step':              elapsed_sec                  rss_gb
+                     mean   max  min count   mean   max   min count
+ step
+ loop::step          0.34  0.61  0.1    15  0.148  0.22  0.13    15
+ setup::start        0.00  0.00  0.0     5  0.148  0.22  0.13     5,
+ 'summary_by_step_and_index':                    elapsed_sec                   rss_gb
+                           mean   max   min count   mean   max   min count
+ step       index_0
+ loop::step 0.0           0.102  0.11  0.10     5  0.148  0.22  0.13     5
+            1.0           0.308  0.31  0.30     5  0.148  0.22  0.13     5
+            2.0           0.610  0.61  0.61     5  0.148  0.22  0.13     5}
 ```
 
 ## Plotting
@@ -94,25 +99,60 @@ This will be automatically parsed into new DataFrame columns:
 * `index_1` → 2
 
 ## Advanced: Custom Configuration
+can be obtained modyfying the `default_plot_config` and `default_summary_config` dictionaries.
+and invoking the `PerformanceLogger.plot` and `PerformanceLogger.summarize_with_config` with that configs
+
+PerformanceLogger.plot(df, default_plot_config, output_pdf="perf_plots.pdf")
 
 ```python
-custom_summary = {
-    "by": ["step", "index_0"],
-    "stats": ["mean", "max"]
-}
-
-custom_plots = {
-    "RSS Over Time": {
+default_plot_config={
+    "RSS vs Time": {
         "kind": "line",
         "varX": "timestamp",
         "varY": "rss_gb",
-        "title": "RSS vs Time",
-        "sort": "timestamp",
+        "title": "RSS over Time",
+        "sort": "timestamp"
+    },
+    "RSS vs Step (chronological)": {
+        "kind": "line",
+        "varX": "rowID",
+        "varY": "rss_gb",
+        "title": "RSS vs Step",
+        "xlabel": "step",
+        "xticklabels": "step",
+        "sort": "rowID"
+    },
+    "Elapsed Time vs Step": {
+        "kind": "bar",
+        "varX": "step",
+        "varY": "elapsed_sec",
+        "title": "Elapsed Time per Step",
+        "sort": None
+    },
+    "RSS Summary Stats": {
+        "varX": "step",
+        "varY": "rss_gb",
+        "aggregation": ["mean", "median", "std"],
+        "title": "RSS Summary Statistics",
+        "xlabel": "Step",
+        "ylabel": "RSS (GB)",
+        "sort": "step"
     }
+    
 }
 
-PerformanceLogger.plot(df, custom_plots)
+default_summary_config={
+    "summary_by_step": {
+        "by": ["step"],
+        "stats": ["mean", "max", "min", "count"]
+    },
+    "summary_by_step_and_index": {
+        "by": ["step", "index_0"],
+        "stats": ["mean", "max", "min", "count"]
+    }
+}
 ```
+
 
 ## License
 ???

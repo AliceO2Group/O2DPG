@@ -24,15 +24,16 @@ class PerformanceLogger:
             f.write(line)
         print(f"{step_full} | {elapsed:.2f} | {mem_gb:.2f} | {self.user} | {self.host}")
 
+
     @staticmethod
     def log_to_dataframe(log_paths: Union[str, List[str]], sep: str = "|") -> pd.DataFrame:
         if isinstance(log_paths, str):
             log_paths = [log_paths]
 
         rows = []
-        for path in log_paths:
+        for log_id, path in enumerate(log_paths):
             with open(path) as f:
-                for line in f:
+                for row_id, line in enumerate(f):
                     parts = [x.strip() for x in line.strip().split(sep)]
                     if len(parts) < 5:
                         continue
@@ -44,7 +45,9 @@ class PerformanceLogger:
                         "rss_gb": float(rss_str),
                         "user": user,
                         "host": host,
-                        "logfile": path
+                        "logfile": path,
+                        "rowID": row_id,
+                        "logID": log_id
                     }
 
                     if "[" in step and "]" in step:
@@ -52,8 +55,8 @@ class PerformanceLogger:
                         row["step"] = base
                         idx = idx.rstrip("]")
                         for i, val in enumerate(idx.split(",")):
-                            if val.isdigit():
-                                row[f"index_{i}"] = int(val)
+                            if val.strip().isdigit():
+                                row[f"index_{i}"] = int(val.strip())
                     rows.append(row)
 
         return pd.DataFrame(rows)
@@ -62,12 +65,16 @@ class PerformanceLogger:
     def summarize_with_config(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
         group_cols = config.get("by", ["step"])
         stats = config.get("stats", ["mean", "max", "min"])
-
         agg = {}
         for col in ["elapsed_sec", "rss_gb"]:
             agg[col] = stats
-
         return df.groupby(group_cols).agg(agg)
+    @staticmethod
+    def summarize_with_configs(df: pd.DataFrame, config_dict: Dict[str, Dict]) -> Dict[str, pd.DataFrame]:
+        summaries = {}
+        for name, config in config_dict.items():
+            summaries[name] = PerformanceLogger.summarize_with_config(df, config)
+        return summaries
 
     @staticmethod
     def plot(df: pd.DataFrame,
@@ -87,25 +94,45 @@ class PerformanceLogger:
             if "filter" in config:
                 subdf = subdf.query(config["filter"])
 
-            if "sort" in config:
-                subdf = subdf.sort_values(config["sort"])
+            varX = config.get("varX", "timestamp")
+            varY = config.get("varY", "elapsed_sec")
+            aggregation = config.get("aggregation")
+            xlabel = config.get("xlabel", varX)
+            ylabel = config.get("ylabel", varY)
 
-            x = subdf[config.get("varX", "timestamp")]
-            y = subdf[config.get("varY", "elapsed_sec")]
-            kind = config.get("kind", "line")
+            if aggregation:
+                if isinstance(aggregation, list):
+                    agg_df = subdf.groupby(varX)[varY].agg(aggregation)
+                    subdf = agg_df.reset_index()
+                else:
+                    subdf = subdf.groupby(varX)[varY].agg(aggregation).reset_index()
+
+            sort_column = config.get("sort")
+            if sort_column:
+                subdf = subdf.sort_values(sort_column)
 
             plt.figure()
-            if kind == "line":
-                plt.plot(x, y, marker="o")
-            elif kind == "bar":
-                plt.bar(x, y)
+
+            if aggregation and isinstance(aggregation, list):
+                for stat in aggregation:
+                    plt.plot(subdf[varX], subdf[stat], marker="o", label=stat)
+                plt.legend()
             else:
-                raise ValueError(f"Unsupported plot kind: {kind}")
+                y = subdf[varY]
+                kind = config.get("kind", "line")
+                if kind == "line":
+                    plt.plot(subdf[varX], y, marker="o")
+                elif kind == "bar":
+                    plt.bar(subdf[varX], y)
+                else:
+                    raise ValueError(f"Unsupported plot kind: {kind}")
+
+            if "xticklabels" in config:
+                plt.xticks(ticks=subdf[varX], labels=subdf[config["xticklabels"]], rotation=45)
 
             plt.title(config.get("title", name))
-            plt.xlabel(config.get("xlabel", config.get("varX", "timestamp")))
-            plt.ylabel(config.get("ylabel", config.get("varY", "elapsed_sec")))
-            plt.xticks(rotation=45)
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel)
             plt.tight_layout()
 
             if output_pdf:
@@ -118,33 +145,61 @@ class PerformanceLogger:
             pdf.close()
 
 
+
+
 # Default configurations
 
 default_plot_config={
-        "RSS vs Time": {
-            "kind": "line",
-            "varX": "timestamp",
-            "varY": "rss_gb",
-            "title": "RSS over Time",
-            "sort": "timestamp"
-        },
-        "RSS vs step": {
-            "kind": "line",
-            "varX": "step",
-            "varY": "rss_gb",
-            "title": "RSS over Time",
-        },
-        "Elapsed Time vs Step": {
-            "kind": "bar",
-            "varX": "step",
-            "varY": "elapsed_sec",
-            "title": "Elapsed Time per Step",
-            "sort": "step"
-        }
+    "RSS vs Time": {
+        "kind": "line",
+        "varX": "timestamp",
+        "varY": "rss_gb",
+        "title": "RSS over Time",
+        "sort": "timestamp"
+    },
+    "RSS vs Step (chronological)": {
+        "kind": "line",
+        "varX": "rowID",
+        "varY": "rss_gb",
+        "title": "RSS vs Step",
+        "xlabel": "step",
+        "xticklabels": "step",
+        "sort": "rowID"
+    },
+    "Elapsed Time vs Step": {
+        "kind": "bar",
+        "varX": "step",
+        "varY": "elapsed_sec",
+        "title": "Elapsed Time per Step",
+        "sort": None
+    },
+    "RSS Summary Stats": {
+        "varX": "step",
+        "varY": "rss_gb",
+        "aggregation": ["mean", "median", "std"],
+        "title": "RSS Summary Statistics",
+        "xlabel": "Step",
+        "ylabel": "RSS (GB)",
+        "sort": "step"
+    },
+    "Elapsed Time Summary Stats": {
+        "varX": "step",
+        "varY": "elapsed_sec",
+        "aggregation": ["mean", "median", "std"],
+        "title": "Elapsed Time Summary Statistics",
+        "xlabel": "Step",
+        "ylabel": "Elapsed Time (s)",
+        "sort": "step"
+    },
 }
 
 default_summary_config={
+    "summary_by_step": {
         "by": ["step"],
-        "stats": ["mean", "max", "min"]
+        "stats": ["mean", "max", "min", "count"]
+    },
+    "summary_by_step_and_index": {
+        "by": ["step", "index_0"],
+        "stats": ["mean", "max", "min", "count"]
     }
-
+}
