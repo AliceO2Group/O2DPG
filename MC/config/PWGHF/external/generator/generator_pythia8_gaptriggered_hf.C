@@ -184,7 +184,6 @@ protected:
 
     for (auto iPart{0}; iPart < mPythia.event.size(); ++iPart)
     {
-
       // search for Q-Qbar mother with at least one Q in rapidity window
       if (!isGoodAtPartonLevel)
       {
@@ -254,7 +253,7 @@ protected:
 
   bool replaceParticle(int iPartToReplace, int pdgCodeNew) {
 
-    std::array<int, 2> mothers = {mPythia.event[iPartToReplace].mother1(), mPythia.event[iPartToReplace].mother2()};
+    auto mothers = mPythia.event[iPartToReplace].motherList();
 
     std::array<int, 25> pdgDiquarks = {1103, 2101, 2103, 2203, 3101, 3103, 3201, 3203, 3303, 4101, 4103, 4201, 4203, 4301, 4303, 4403, 5101, 5103, 5201, 5203, 5301, 5303, 5401, 5403, 5503};
 
@@ -288,15 +287,57 @@ protected:
     }
     float energy = std::sqrt(px*px + py*py + pz*pz + mass*mass);
 
+    // buffer daughter indices of mothers
+    std::vector<std::vector<int>> dauOfMothers{};
+    for (auto const& mother: mothers) {
+      dauOfMothers.push_back(mPythia.event[mother].daughterList());
+    }
+
     // we remove particle to replace and its daughters
     mPythia.event[iPartToReplace].undoDecay();
-    mPythia.event.remove(iPartToReplace, iPartToReplace, true); // we remove the original particle
-
-    int status = std::abs(mPythia.event[iPartToReplace].status());
+    int status = std::abs(mPythia.event[iPartToReplace].status()); // we must get it here otherwise it is negative (already decayed)
     if (status < 81 || status > 89) {
       status = 81;
     }
-    mPythia.event.append(charge * pdgCodeNew, status, mothers[0], mothers[1], 0, 0, 0, 0, px, py, pz, energy, mass);
+    mPythia.event.remove(iPartToReplace, iPartToReplace, true); // we remove the original particle
+
+    // we restore the daughter indices of the mothers after the removal
+    int newPartIdx{0};
+    std::array<int, 2> newMothers = {0, 0};
+    if (mGenConfig.includePartonEvent) { // only necessary in case of parton event, otherwise we keep no mother
+      newMothers[0] = mothers.front();
+      newMothers[1] = mothers.back();
+      newPartIdx = mPythia.event.size();
+    }
+    for (auto iMom{0u}; iMom<mothers.size(); ++iMom) {
+      auto dau1 = dauOfMothers[iMom].front();
+      auto dau2 = dauOfMothers[iMom].back();
+      if (dau2 > dau1) {
+        mPythia.event[mothers[iMom]].daughter1(dau1);
+        mPythia.event[mothers[iMom]].daughter2(dau2 - 1);
+      } else if (dau1 == dau2) {
+        if (dau1 == 0) {
+          mPythia.event[mothers[iMom]].daughter1(0);
+          mPythia.event[mothers[iMom]].daughter2(0);
+        } else { // in this case we set it equal to the new particle
+          mPythia.event[mothers[iMom]].daughter1(newPartIdx);
+          mPythia.event[mothers[iMom]].daughter2(newPartIdx);
+        }
+      } else if (dau2 < dau1) { // in this case we set it equal to the new particle
+        if (dau2 == 0) {
+          mPythia.event[mothers[iMom]].daughter1(newPartIdx);
+        } else {
+          if (dau1 == iPartToReplace) {
+            mPythia.event[mothers[iMom]].daughter1(newPartIdx);
+          } else {
+            mPythia.event[mothers[iMom]].daughter2(newPartIdx);
+          }
+        }
+      }
+      auto dauOfMomUp = mPythia.event[mothers[iMom]].daughterList();
+    }
+
+    mPythia.event.append(charge * pdgCodeNew, status, newMothers[0], newMothers[1], 0, 0, 0, 0, px, py, pz, energy, mass);
     mPythia.moreDecays(); // we need to decay the new particle
 
     return true;
