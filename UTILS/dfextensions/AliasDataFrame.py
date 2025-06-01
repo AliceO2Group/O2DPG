@@ -190,18 +190,24 @@ class AliasDataFrame:
             except Exception as e:
                 print(f"Failed to materialize {name}: {e}")
 
-    def save(self, path_prefix):
-        self.df.to_parquet(f"{path_prefix}.parquet", compression="zstd")
+    def save(self, path_prefix, dropAliasColumns=True):
+        if dropAliasColumns:
+            cols = [c for c in self.df.columns if c not in self.aliases]
+        else:
+            cols = list(self.df.columns)
+        self.df[cols].to_parquet(f"{path_prefix}.parquet", compression="zstd")
         with open(f"{path_prefix}.aliases.json", "w") as f:
-            json.dump(self.aliases, f, indent=2)
+            json.dump({"aliases": self.aliases, "dtypes": {k: str(v) for k, v in self.alias_dtypes.items()}}, f, indent=2)
 
     @staticmethod
     def load(path_prefix):
         df = pd.read_parquet(f"{path_prefix}.parquet")
         with open(f"{path_prefix}.aliases.json") as f:
-            aliases = json.load(f)
+            data = json.load(f)
         adf = AliasDataFrame(df)
-        adf.aliases = aliases
+        adf.aliases = data["aliases"]
+        if "dtypes" in data:
+            adf.alias_dtypes = {k: getattr(np, v) for k, v in data["dtypes"].items()}
         return adf
 
     def export_tree(self, filename, treename="tree", dropAliasColumns=True):
