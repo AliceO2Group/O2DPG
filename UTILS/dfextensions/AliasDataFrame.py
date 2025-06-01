@@ -3,12 +3,14 @@ import sys,os; sys.path.insert(1, os.environ[f"O2DPG"]+"/UTILS/dfextensions");
 from  AliasDataFrame import *
 Utility helpers extension of the pandas DataFrame to support on-demand computed columns (aliases)
 """
-
 import pandas as pd
 import numpy as np
 import json
 import uproot
 import ROOT     # type: ignore
+import matplotlib.pyplot as plt
+import networkx as nx
+
 class AliasDataFrame:
     """
     A wrapper for pandas DataFrame that supports on-demand computed columns (aliases)
@@ -29,9 +31,25 @@ class AliasDataFrame:
     def __init__(self, df):
         self.df = df
         self.aliases = {}
+        self.alias_dtypes = {}  # Optional output types for each alias
 
-    def add_alias(self, name, expression):
+    def add_alias(self, name, expression, dtype=None):
+        try:
+            dummy_env = {k: 1 for k in list(self.df.columns) + list(self.aliases.keys())}
+            dummy_env.update(self._default_functions())
+            eval(expression, self._default_functions(), dummy_env)
+        except Exception as e:
+            print(f"[Alias add warning] '{name}' may be invalid: {e}")
         self.aliases[name] = expression
+        if dtype is not None:
+            self.alias_dtypes[name] = dtype
+
+    def _default_functions(self):
+        import math
+        env = {k: getattr(math, k) for k in dir(math) if not k.startswith("_")}
+        env.update({k: getattr(np, k) for k in dir(np) if not k.startswith("_")})
+        env["np"] = np
+        return env
 
     def _resolve_dependencies(self):
         from collections import defaultdict
@@ -43,6 +61,18 @@ class AliasDataFrame:
                 if token in self.aliases:
                     dependencies[name].add(token)
         return dependencies
+
+    def plot_alias_dependencies(self):
+        deps = self._resolve_dependencies()
+        G = nx.DiGraph()
+        for alias, subdeps in deps.items():
+            for dep in subdeps:
+                G.add_edge(dep, alias)
+        pos = nx.spring_layout(G)
+        plt.figure(figsize=(10, 6))
+        nx.draw(G, pos, with_labels=True, node_color='lightblue', edge_color='gray', node_size=2000, font_size=10, arrows=True)
+        plt.title("Alias Dependency Graph")
+        plt.show()
 
     def _topological_sort(self):
         from collections import defaultdict, deque
@@ -76,7 +106,9 @@ class AliasDataFrame:
         broken = []
         for name, expr in self.aliases.items():
             try:
-                eval(expr, {}, self.df)
+                local_env = {col: self.df[col] for col in self.df.columns}
+                local_env.update({k: self.df[k] for k in self.aliases if k in self.df})
+                eval(expr, self._default_functions(), local_env)
             except Exception:
                 broken.append(name)
         return broken
@@ -97,12 +129,17 @@ class AliasDataFrame:
         for k, v in deps.items():
             print(f"  {k}: {sorted(v)}")
 
-    def materialize_alias0(self, name):
+    def materialize_alias0(self, name, dtype=None):
         if name in self.aliases:
             local_env = {col: self.df[col] for col in self.df.columns}
             local_env.update({k: self.df[k] for k in self.aliases if k in self.df})
-            self.df[name] = eval(self.aliases[name], {}, local_env)
-    def materialize_alias(self, name, cleanTemporary=False):
+            result = eval(self.aliases[name], self._default_functions(), local_env)
+            result_dtype = dtype or self.alias_dtypes.get(name)
+            if result_dtype is not None:
+                result = result.astype(result_dtype)
+            self.df[name] = result
+
+    def materialize_alias(self, name, cleanTemporary=False, dtype=None):
         if name not in self.aliases:
             return
         to_materialize = []
@@ -120,14 +157,17 @@ class AliasDataFrame:
 
         visit(name)
 
-        # Track which ones were newly created
         original_columns = set(self.df.columns)
 
         for alias in to_materialize:
             local_env = {col: self.df[col] for col in self.df.columns}
             local_env.update({k: self.df[k] for k in self.aliases if k in self.df})
             try:
-                self.df[alias] = eval(self.aliases[alias], {}, local_env)
+                result = eval(self.aliases[alias], self._default_functions(), local_env)
+                result_dtype = dtype or self.alias_dtypes.get(alias)
+                if result_dtype is not None:
+                    result = result.astype(result_dtype)
+                self.df[alias] = result
             except Exception as e:
                 print(f"Failed to materialize {alias}: {e}")
 
@@ -136,14 +176,17 @@ class AliasDataFrame:
                 if alias != name and alias not in original_columns:
                     self.df.drop(columns=[alias], inplace=True)
 
-
-    def materialize_all(self):
+    def materialize_all(self, dtype=None):
         order = self._topological_sort()
         for name in order:
             try:
                 local_env = {col: self.df[col] for col in self.df.columns}
                 local_env.update({k: self.df[k] for k in self.df.columns if k in self.aliases})
-                self.df[name] = eval(self.aliases[name], {}, local_env)
+                result = eval(self.aliases[name], self._default_functions(), local_env)
+                result_dtype = dtype or self.alias_dtypes.get(name)
+                if result_dtype is not None:
+                    result = result.astype(result_dtype)
+                self.df[name] = result
             except Exception as e:
                 print(f"Failed to materialize {name}: {e}")
 
@@ -166,13 +209,11 @@ class AliasDataFrame:
             export_cols = [col for col in self.df.columns if col not in self.aliases]
         else:
             export_cols = list(self.df.columns)
-        # Convert float16 columns to float32 for ROOT compatibility
         dtype_casts = {col: np.float32 for col in export_cols if self.df[col].dtype == np.float16}
         export_df = self.df[export_cols].astype(dtype_casts)
 
         with uproot.recreate(filename) as f:
             f[treename] = export_df
-        # Update the ROOT file with aliases
         f = ROOT.TFile.Open(filename, "UPDATE")
         tree = f.Get(treename)
         for alias, expr in self.aliases.items():
