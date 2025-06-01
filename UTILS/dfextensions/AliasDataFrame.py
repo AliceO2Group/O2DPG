@@ -191,23 +191,49 @@ class AliasDataFrame:
                 print(f"Failed to materialize {name}: {e}")
 
     def save(self, path_prefix, dropAliasColumns=True):
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+
         if dropAliasColumns:
             cols = [c for c in self.df.columns if c not in self.aliases]
         else:
             cols = list(self.df.columns)
-        self.df[cols].to_parquet(f"{path_prefix}.parquet", compression="zstd")
+
+        # Save Parquet with metadata
+        table = pa.Table.from_pandas(self.df[cols])
+        metadata = {
+            "aliases": json.dumps(self.aliases),
+            "dtypes": json.dumps({k: v.__name__ for k, v in self.alias_dtypes.items()})
+        }
+        existing_meta = table.schema.metadata or {}
+        combined_meta = existing_meta.copy()
+        combined_meta.update({k.encode(): v.encode() for k, v in metadata.items()})
+        table = table.replace_schema_metadata(combined_meta)
+        pq.write_table(table, f"{path_prefix}.parquet", compression="zstd")
+
+        # Also write JSON file for explicit tracking
         with open(f"{path_prefix}.aliases.json", "w") as f:
-            json.dump({"aliases": self.aliases, "dtypes": {k: str(v) for k, v in self.alias_dtypes.items()}}, f, indent=2)
+            json.dump(metadata, f, indent=2)
 
     @staticmethod
     def load(path_prefix):
-        df = pd.read_parquet(f"{path_prefix}.parquet")
-        with open(f"{path_prefix}.aliases.json") as f:
-            data = json.load(f)
+        import pyarrow.parquet as pq
+        table = pq.read_table(f"{path_prefix}.parquet")
+        df = table.to_pandas()
         adf = AliasDataFrame(df)
-        adf.aliases = data["aliases"]
-        if "dtypes" in data:
-            adf.alias_dtypes = {k: getattr(np, v) for k, v in data["dtypes"].items()}
+
+        # Try metadata first
+        meta = table.schema.metadata or {}
+        if b"aliases" in meta and b"dtypes" in meta:
+            adf.aliases = json.loads(meta[b"aliases"].decode())
+            adf.alias_dtypes = {k: getattr(np, v) for k, v in json.loads(meta[b"dtypes"].decode()).items()}
+        else:
+            # Fallback to JSON
+            with open(f"{path_prefix}.aliases.json") as f:
+                data = json.load(f)
+                adf.aliases = json.loads(data["aliases"])
+                adf.alias_dtypes = {k: getattr(np, v) for k, v in json.loads(data["dtypes"]).items()}
+
         return adf
 
     def export_tree(self, filename, treename="tree", dropAliasColumns=True):
