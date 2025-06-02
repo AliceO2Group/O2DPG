@@ -147,6 +147,17 @@ public:
     return true;
   }
 
+  Bool_t checkEOF() {
+    // Check if the POWHEG generation is done
+    int result = system(("grep -q /LesHouchesEvents " + mLHEFoutput).c_str());
+    if (result == 0)
+    {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   Bool_t POWchecker() {
     // Check if the POWHEG events file exists
     LOG(info) << "Waiting for " << mLHEFoutput << " to exist";
@@ -155,6 +166,11 @@ public:
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     LOG(info) << "POWHEG events file for job " << mCurrFile << " found";
+    while (!checkEOF())
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    LOG(info) << "POWHEG events ready";
     return true;
   }
 
