@@ -5,9 +5,6 @@ from  FormulaLinearModel import *
 Utility helpers extension for FormulaLinearModel.py
 """
 
-import ast
-import numpy as np
-from sklearn.linear_model import LinearRegression
 
 import ast
 import numpy as np
@@ -127,7 +124,7 @@ class FormulaLinearModel:
         args = ", ".join(self.variables)
         return f"function {self.name}({args}) {{ return {expr}; }}"
 
-    def to_cppstd(name, variables, expression, precision=6):
+    def to_cppstd(self, name, variables, expression, precision=6):
         args = ", ".join([f"const std::vector<float>& {v}" for v in variables])
         output = [f"std::vector<float> {name}(size_t n, {args}) {{"]
         output.append(f"  std::vector<float> result(n);")
@@ -144,7 +141,7 @@ class FormulaLinearModel:
         return "\n".join(output)
 
 
-    def to_cpparrow(name, variables, expression, precision=6):
+    def to_cpparrow(self, name, variables, expression, precision=6):
         args = ", ".join([f"const arrow::FloatArray& {v}" for v in variables])
         output = [f"std::shared_ptr<arrow::FloatArray> {name}(int64_t n, {args}, arrow::MemoryPool* pool) {{"]
         output.append(f"  arrow::FloatBuilder builder(pool);")
