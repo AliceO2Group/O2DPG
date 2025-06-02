@@ -32,8 +32,13 @@ class AliasDataFrame:
         self.df = df
         self.aliases = {}
         self.alias_dtypes = {}  # Optional output types for each alias
+        self.constant_aliases = set()  # Optional set of constants that should not be materialized
 
-    def add_alias(self, name, expression, dtype=None):
+    def add_alias(self, name, expression, dtype=None, is_constant=False):
+        """
+        Add an alias expression to the DataFrame.
+        Optionally specify output dtype and whether it's a constant (scalar-only).
+        """
         try:
             dummy_env = {k: 1 for k in list(self.df.columns) + list(self.aliases.keys())}
             dummy_env.update(self._default_functions())
@@ -43,6 +48,10 @@ class AliasDataFrame:
         self.aliases[name] = expression
         if dtype is not None:
             self.alias_dtypes[name] = dtype
+        if is_constant:
+            if name in self._resolve_dependencies() and self._resolve_dependencies()[name]:
+                print(f"[Alias warning] '{name}' marked as constant but has dependencies.")
+            self.constant_aliases.add(name)
 
     def _default_functions(self):
         import math
@@ -137,7 +146,8 @@ class AliasDataFrame:
             result_dtype = dtype or self.alias_dtypes.get(name)
             if result_dtype is not None:
                 result = result.astype(result_dtype)
-            self.df[name] = result
+            if name not in self.constant_aliases:
+                self.df[name] = result
 
     def materialize_alias(self, name, cleanTemporary=False, dtype=None):
         if name not in self.aliases:
@@ -160,6 +170,8 @@ class AliasDataFrame:
         original_columns = set(self.df.columns)
 
         for alias in to_materialize:
+            if alias in self.constant_aliases:
+                continue
             local_env = {col: self.df[col] for col in self.df.columns}
             local_env.update({k: self.df[k] for k in self.aliases if k in self.df})
             try:
@@ -179,6 +191,8 @@ class AliasDataFrame:
     def materialize_all(self, dtype=None):
         order = self._topological_sort()
         for name in order:
+            if name in self.constant_aliases:
+                continue
             try:
                 local_env = {col: self.df[col] for col in self.df.columns}
                 local_env.update({k: self.df[k] for k in self.df.columns if k in self.aliases})
