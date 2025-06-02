@@ -145,7 +145,10 @@ class AliasDataFrame:
             result = eval(self.aliases[name], self._default_functions(), local_env)
             result_dtype = dtype or self.alias_dtypes.get(name)
             if result_dtype is not None:
-                result = result.astype(result_dtype)
+                try:
+                    result = result.astype(result_dtype)
+                except AttributeError:
+                    result = result_dtype(result)
             if name not in self.constant_aliases:
                 self.df[name] = result
 
@@ -178,7 +181,10 @@ class AliasDataFrame:
                 result = eval(self.aliases[alias], self._default_functions(), local_env)
                 result_dtype = dtype or self.alias_dtypes.get(alias)
                 if result_dtype is not None:
-                    result = result.astype(result_dtype)
+                    try:
+                        result = result.astype(result_dtype)
+                    except AttributeError:
+                        result = result_dtype(result)
                 self.df[alias] = result
             except Exception as e:
                 print(f"Failed to materialize {alias}: {e}")
@@ -199,7 +205,10 @@ class AliasDataFrame:
                 result = eval(self.aliases[name], self._default_functions(), local_env)
                 result_dtype = dtype or self.alias_dtypes.get(name)
                 if result_dtype is not None:
-                    result = result.astype(result_dtype)
+                    try:
+                        result = result.astype(result_dtype)
+                    except AttributeError:
+                        result = result_dtype(result)
                 self.df[name] = result
             except Exception as e:
                 print(f"Failed to materialize {name}: {e}")
