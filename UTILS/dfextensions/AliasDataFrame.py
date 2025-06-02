@@ -15,17 +15,6 @@ class AliasDataFrame:
     """
     A wrapper for pandas DataFrame that supports on-demand computed columns (aliases)
     with dependency tracking and persistence.
-    Example usage:
-    >>> df = pd.DataFrame({"x": [1, 2, 3], "y": [10, 20, 30]})
-    >>> adf = AliasDataFrame(df)
-    >>> adf.add_alias("z", "x + y")
-    >>> adf.add_alias("w", "z * 2")
-    >>> adf.materialize_all()
-    >>> print(adf.df)
-    You can also save and load the dataframe along with aliases:
-    >>> adf.save("mydata")
-    >>> adf2 = AliasDataFrame.load("mydata")
-    >>> adf2.describe_aliases()
     """
 
     def __init__(self, df):
@@ -35,10 +24,6 @@ class AliasDataFrame:
         self.constant_aliases = set()  # Optional set of constants that should not be materialized
 
     def add_alias(self, name, expression, dtype=None, is_constant=False):
-        """
-        Add an alias expression to the DataFrame.
-        Optionally specify output dtype and whether it's a constant (scalar-only).
-        """
         try:
             dummy_env = {k: 1 for k in list(self.df.columns) + list(self.aliases.keys())}
             dummy_env.update(self._default_functions())
@@ -142,6 +127,12 @@ class AliasDataFrame:
         if name in self.aliases:
             local_env = {col: self.df[col] for col in self.df.columns}
             local_env.update({k: self.df[k] for k in self.aliases if k in self.df})
+            for cname in self.constant_aliases:
+                try:
+                    val = eval(self.aliases[cname], self._default_functions())
+                    local_env[cname] = val
+                except Exception as e:
+                    print(f"[Alias constant] Failed to evaluate constant '{cname}': {e}")
             result = eval(self.aliases[name], self._default_functions(), local_env)
             result_dtype = dtype or self.alias_dtypes.get(name)
             if result_dtype is not None:
@@ -177,6 +168,12 @@ class AliasDataFrame:
                 continue
             local_env = {col: self.df[col] for col in self.df.columns}
             local_env.update({k: self.df[k] for k in self.aliases if k in self.df})
+            for cname in self.constant_aliases:
+                try:
+                    val = eval(self.aliases[cname], self._default_functions())
+                    local_env[cname] = val
+                except Exception as e:
+                    print(f"[Alias constant] Failed to evaluate constant '{cname}': {e}")
             try:
                 result = eval(self.aliases[alias], self._default_functions(), local_env)
                 result_dtype = dtype or self.alias_dtypes.get(alias)
@@ -202,6 +199,9 @@ class AliasDataFrame:
             try:
                 local_env = {col: self.df[col] for col in self.df.columns}
                 local_env.update({k: self.df[k] for k in self.df.columns if k in self.aliases})
+                for cname in self.constant_aliases:
+                    val = eval(self.aliases[cname], self._default_functions())
+                    local_env[cname] = val
                 result = eval(self.aliases[name], self._default_functions(), local_env)
                 result_dtype = dtype or self.alias_dtypes.get(name)
                 if result_dtype is not None:
@@ -222,11 +222,11 @@ class AliasDataFrame:
         else:
             cols = list(self.df.columns)
 
-        # Save Parquet with metadata
         table = pa.Table.from_pandas(self.df[cols])
         metadata = {
             "aliases": json.dumps(self.aliases),
-            "dtypes": json.dumps({k: v.__name__ for k, v in self.alias_dtypes.items()})
+            "dtypes": json.dumps({k: v.__name__ for k, v in self.alias_dtypes.items()}),
+            "constants": json.dumps(list(self.constant_aliases))
         }
         existing_meta = table.schema.metadata or {}
         combined_meta = existing_meta.copy()
@@ -234,7 +234,6 @@ class AliasDataFrame:
         table = table.replace_schema_metadata(combined_meta)
         pq.write_table(table, f"{path_prefix}.parquet", compression="zstd")
 
-        # Also write JSON file for explicit tracking
         with open(f"{path_prefix}.aliases.json", "w") as f:
             json.dump(metadata, f, indent=2)
 
@@ -245,17 +244,19 @@ class AliasDataFrame:
         df = table.to_pandas()
         adf = AliasDataFrame(df)
 
-        # Try metadata first
         meta = table.schema.metadata or {}
         if b"aliases" in meta and b"dtypes" in meta:
             adf.aliases = json.loads(meta[b"aliases"].decode())
             adf.alias_dtypes = {k: getattr(np, v) for k, v in json.loads(meta[b"dtypes"].decode()).items()}
+            if b"constants" in meta:
+                adf.constant_aliases = set(json.loads(meta[b"constants"].decode()))
         else:
-            # Fallback to JSON
             with open(f"{path_prefix}.aliases.json") as f:
                 data = json.load(f)
                 adf.aliases = json.loads(data["aliases"])
                 adf.alias_dtypes = {k: getattr(np, v) for k, v in json.loads(data["dtypes"]).items()}
+                if "constants" in data:
+                    adf.constant_aliases = set(json.loads(data["constants"]))
 
         return adf
 
@@ -272,7 +273,13 @@ class AliasDataFrame:
         f = ROOT.TFile.Open(filename, "UPDATE")
         tree = f.Get(treename)
         for alias, expr in self.aliases.items():
-            tree.SetAlias(alias, expr)
+            expr_str = expr
+            try:
+                val = float(expr)
+                expr_str = f"({val}+0)"
+            except Exception:
+                pass
+            tree.SetAlias(alias, expr_str)
         tree.Write("", ROOT.TObject.kOverwrite)
         f.Close()
 
