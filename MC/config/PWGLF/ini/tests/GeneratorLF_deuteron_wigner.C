@@ -31,11 +31,11 @@ int External() {
   }
 
   if (nSelected == 0) {
-    std::cerr << "No event of interest\n";
-    return 1;
+    std::cout << "No events with deuterons found.\n";
+  } else {
+    std::cout << "Found " << nSelected << " events with deuterons\n";
   }
-
-  std::cout << "Found " << nSelected << " events with deuterons\n";
   return 0;
+
 }
 
