@@ -46,35 +46,26 @@ public:
   ~GeneratorPythia8DeuteronWigner() override = default;
 
   bool Init() override {
-    addSubGenerator(0, "Pythia8 with (anti)deuterons formed via coalescence using the Wigner density formalism");
+    addSubGenerator(0, "Pythia8 events with (anti)deuterons formed via coalescence using the Wigner density formalism, provided the coalescence condition is fulfilled");
     return o2::eventgen::GeneratorPythia8::Init();
   }
 
 protected:
   bool generateEvent() override {
-    if (mGeneratedEvents % 100 == 0) {
-      LOG(info) << ">> Generating event " << mGeneratedEvents;
+    
+    if (GeneratorPythia8::generateEvent() && EventHasDeuteron(mPythia.event)) {
+      LOG(debug) << ">> A Deuteron was formed!";
     }
 
-    bool genOk = false;
-    int localCounter = 0;
-    while (!genOk) {
-      if (GeneratorPythia8::generateEvent()) {
-        genOk = selectEvent(mPythia.event);
-      }
-      localCounter++;
-    }
-
-    LOG(debug) << ">> Generation of event of interest successful after " << localCounter << " iterations";
     notifySubGenerator(0);
     ++mGeneratedEvents;
     return true;
   }
 
-  bool selectEvent(Pythia8::Event& event) {
+  bool EventHasDeuteron(Pythia8::Event& event) {
 
-    const double md = 1.87561294257; // Deuteron mass [GeV]
     bool deuteronIsFormed = false;
+    const double md = 1.87561294257; // Deuteron mass [GeV]
 
     std::vector<int> proton_ID, neutron_ID;
     std::vector<int> proton_status, neutron_status;
@@ -92,10 +83,6 @@ protected:
         neutron_ID.push_back(iPart);
         neutron_status.push_back(0);
       }
-    }
-
-    if (proton_ID.empty() || neutron_ID.empty()) {
-      return false;
     }
 
     int radiusBin = mTwoDimCoalProbability->GetXaxis()->FindBin(mSourceRadius);
@@ -130,9 +117,10 @@ protected:
           continue;
         }
         double coalProb = prob_vs_q->GetBinContent(prob_vs_q->FindBin(deltaP));
-        double rnd = gRandom->Uniform(0.0, 1.0);
+        double rndCoalProb = gRandom->Uniform(0.0, 1.0);
+        double rndSpinIsospin = gRandom->Uniform(0.0, 1.0);
 
-        if (rnd < coalProb) {
+        if (rndCoalProb < coalProb && rndSpinIsospin < 3.0/8.0) {
           double energy = std::hypot(p.pAbs(), md);
           p.e(energy);
           int deuteronPDG = sign_p * 1000010020;
