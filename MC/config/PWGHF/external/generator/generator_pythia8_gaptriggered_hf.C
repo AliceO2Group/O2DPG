@@ -1,5 +1,6 @@
 #include "FairGenerator.h"
 #include "Generators/GeneratorPythia8.h"
+#include "Generators/GeneratorPythia8Param.h"
 #include "Pythia8/Pythia.h"
 #include "TRandom.h"
 #include "TDatabasePDG.h"
@@ -304,7 +305,7 @@ protected:
     // we restore the daughter indices of the mothers after the removal
     int newPartIdx{0};
     std::array<int, 2> newMothers = {0, 0};
-    if (mGenConfig.includePartonEvent) { // only necessary in case of parton event, otherwise we keep no mother
+    if (o2::eventgen::GeneratorPythia8Param::Instance().includePartonEvent) { // only necessary in case of parton event, otherwise we keep no mother
       newMothers[0] = mothers.front();
       newMothers[1] = mothers.back();
       newPartIdx = mPythia.event.size();
@@ -334,7 +335,6 @@ protected:
           }
         }
       }
-      auto dauOfMomUp = mPythia.event[mothers[iMom]].daughterList();
     }
 
     mPythia.event.append(charge * pdgCodeNew, status, newMothers[0], newMothers[1], 0, 0, 0, 0, px, py, pz, energy, mass);
