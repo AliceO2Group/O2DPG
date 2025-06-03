@@ -11,6 +11,51 @@ import ROOT     # type: ignore
 import matplotlib.pyplot as plt
 import networkx as nx
 
+
+
+def convert_expr_to_root(expr):
+    # Static version of AST-based translation from Python to ROOT expression
+    import ast
+    import re
+
+    class RootTransformer(ast.NodeTransformer):
+        FUNC_MAP = {
+            "arctan2": "atan2",
+            "mod": "fmod",
+            "sqrt": "sqrt",
+            "log": "log",
+            "log10": "log10",
+            "exp": "exp",
+            "abs": "abs",
+            "power": "pow",
+            "maximum": "TMath::Max",
+            "minimum": "TMath::Min"
+        }
+
+        def visit_Call(self, node):
+            def get_func_name(n):
+                if isinstance(n, ast.Attribute):
+                    return n.attr
+                elif isinstance(n, ast.Name):
+                    return n.id
+                return ""
+
+            func_name = get_func_name(node.func)
+            root_func = self.FUNC_MAP.get(func_name, func_name)
+
+            node.args = [self.visit(arg) for arg in node.args]
+            node.func = ast.Name(id=root_func, ctx=ast.Load())
+            return node
+
+    try:
+        expr_clean = re.sub(r"\bnp\.", "", expr)
+        tree = ast.parse(expr_clean, mode='eval')
+        tree = RootTransformer().visit(tree)
+        ast.fix_missing_locations(tree)
+        return ast.unparse(tree)
+    except Exception:
+        return expr
+
 class AliasDataFrame:
     """
     A wrapper for pandas DataFrame that supports on-demand computed columns (aliases)
@@ -270,16 +315,26 @@ class AliasDataFrame:
 
         with uproot.recreate(filename) as f:
             f[treename] = export_df
+
+        # Write ROOT aliases and metadata
         f = ROOT.TFile.Open(filename, "UPDATE")
         tree = f.Get(treename)
         for alias, expr in self.aliases.items():
-            expr_str = expr
             try:
                 val = float(expr)
-                expr_str = f"({val}+0)"
+                expr_str = f"({val}+0)"  # ROOT bug workaround for pure constants
             except Exception:
-                pass
+                expr_str = self._convert_expr_to_root(expr)
             tree.SetAlias(alias, expr_str)
+
+        # Store Python metadata as JSON string in TTree::UserInfo
+        metadata = {
+            "aliases": self.aliases,
+            "dtypes": {k: v.__name__ for k, v in self.alias_dtypes.items()},
+            "constants": list(self.constant_aliases),
+        }
+        jmeta = json.dumps(metadata)
+        tree.GetUserInfo().Add(ROOT.TObjString(jmeta))
         tree.Write("", ROOT.TObject.kOverwrite)
         f.Close()
 
@@ -288,13 +343,30 @@ class AliasDataFrame:
         with uproot.open(filename) as f:
             df = f[treename].arrays(library="pd")
         adf = AliasDataFrame(df)
-        f = ROOT.TFile.Open(filename, "UPDATE")
+
+        f = ROOT.TFile.Open(filename)
         try:
             tree = f.Get(treename)
             if not tree:
                 raise ValueError(f"Tree '{treename}' not found in file '{filename}'")
             for alias in tree.GetListOfAliases():
                 adf.aliases[alias.GetName()] = alias.GetTitle()
+
+            user_info = tree.GetUserInfo()
+            for i in range(user_info.GetEntries()):
+                obj = user_info.At(i)
+                if isinstance(obj, ROOT.TObjString):
+                    try:
+                        jmeta = json.loads(obj.GetString().Data())
+                        adf.aliases.update(jmeta.get("aliases", {}))
+                        adf.alias_dtypes.update({k: getattr(np, v) for k, v in jmeta.get("dtypes", {}).items()})
+                        adf.constant_aliases.update(jmeta.get("constants", []))
+                        break
+                    except Exception:
+                        pass
         finally:
             f.Close()
         return adf
+
+    def _convert_expr_to_root(self, expr):
+        return convert_expr_to_root(expr)
