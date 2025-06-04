@@ -10,7 +10,7 @@ import uproot
 import ROOT     # type: ignore
 import matplotlib.pyplot as plt
 import networkx as nx
-
+import re
 
 
 def convert_expr_to_root(expr):
@@ -257,6 +257,57 @@ class AliasDataFrame:
                 self.df[name] = result
             except Exception as e:
                 print(f"Failed to materialize {name}: {e}")
+    def materialize_aliases(self, targets, cleanTemporary=True, verbose=False):
+        import networkx as nx
+        # Step 1: Build dependency graph
+        def build_graph():
+            g = nx.DiGraph()
+            for alias, expr in self.aliases.items():
+                for token in re.findall(r'\b\w+\b', expr):
+                    if token in self.aliases:
+                        g.add_edge(token, alias)
+            return g
+
+        g = build_graph()
+
+        # Step 2: Extract subgraph and topologically sort
+        required = set()
+        for t in targets:
+            if t not in self.aliases:
+                if verbose:
+                    print(f"[materialize_aliases] Skipping non-alias target: {t}")
+                continue  # not an alias, skip
+            if t not in g:
+                if verbose:
+                    print(f"[materialize_aliases] Alias '{t}' is not in dependency graph (no dependencies)")
+                continue  # alias exists but not in graph
+            try:
+                required |= nx.ancestors(g, t)
+            except nx.NetworkXError:
+                if verbose:
+                    print(f"[materialize_aliases] NetworkXError on alias: {t}")
+                continue
+            required.add(t)
+
+        ordered = list(nx.topological_sort(g.subgraph(required)))
+
+        # Step 3: Materialize and optionally clean temporary ones
+        added = []
+        for name in ordered:
+            if name not in self.df.columns:
+                if verbose:
+                    print(f"[materialize_aliases] Materializing: {name}")
+                self.materialize_alias(name)
+                added.append(name)
+
+        if cleanTemporary:
+            for col in added:
+                if col not in targets and col in self.df.columns:
+                    if verbose:
+                        print(f"[materialize_aliases] Cleaning up temporary column: {col}")
+                    self.df.drop(columns=[col], inplace=True)
+
+        return added
 
     def save(self, path_prefix, dropAliasColumns=True):
         import pyarrow as pa
