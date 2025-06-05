@@ -31,15 +31,11 @@ public:
     // Connect to CCDB and retrieve coalescence probability two-dimensional table
     o2::ccdb::CcdbApi ccdb_api;
     ccdb_api.init("https://alice-ccdb.cern.ch");
-    TFile* file = ccdb_api.retrieveFromTFileAny<TFile>("Users/a/alcaliva/WignerCoalescence/ArgonneProbability.root");
+          
+    mTwoDimCoalProbability = ccdb_api.retrieveFromTFileAny<TH2D>("Users/a/alcaliva/WignerCoalescence/ArgonneProbability/AddedSDWave");
 
-    if (!file) {
-      LOG(fatal) << "Could not retrieve ArgonneProbability.root from CCDB!";
-    }
-
-    mTwoDimCoalProbability = dynamic_cast<TH2D*>(file->FindObject("AddedSDWave"));
     if (!mTwoDimCoalProbability) {
-      LOG(fatal) << "Could not find 'AddedSDWave' histogram in the input file!";
+      LOG(fatal) << "Could not find coalescence probability table in input file!";
     }
   }
 
