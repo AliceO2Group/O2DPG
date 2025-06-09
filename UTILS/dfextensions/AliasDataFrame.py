@@ -115,6 +115,16 @@ class AliasDataFrame:
                     dependencies[name].add(token)
         return dependencies
 
+    def _check_for_cycles(self):
+        graph = nx.DiGraph()
+        for name, deps in self._resolve_dependencies().items():
+            for dep in deps:
+                graph.add_edge(dep, name)
+        try:
+            list(nx.topological_sort(graph))
+        except nx.NetworkXUnfeasible:
+            raise ValueError("Cycle detected in alias dependencies")
+
     def plot_alias_dependencies(self):
         deps = self._resolve_dependencies()
         G = nx.DiGraph()
@@ -129,6 +139,7 @@ class AliasDataFrame:
 
     def _topological_sort(self):
         from collections import defaultdict, deque
+        self._check_for_cycles()
         dependencies = self._resolve_dependencies()
         reverse_deps = defaultdict(set)
         indegree = defaultdict(int)
@@ -227,6 +238,7 @@ class AliasDataFrame:
         return added
 
     def materialize_all(self):
+        self._check_for_cycles()
         for name in self.aliases:
             self.materialize_alias(name)
 
