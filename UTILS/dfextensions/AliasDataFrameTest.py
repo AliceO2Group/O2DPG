@@ -48,9 +48,8 @@ class TestAliasDataFrame(unittest.TestCase):
 
     def test_circular_dependency_raises_error(self):
         self.adf.add_alias("a", "b * 2")
-        self.adf.add_alias("b", "a + 1")
         with self.assertRaises(ValueError):
-            self.adf.materialize_all()
+            self.adf.add_alias("b", "a + 1")
 
     def test_undefined_symbol_raises_error(self):
         self.adf.add_alias("z", "x + non_existent_variable")
