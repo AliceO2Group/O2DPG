@@ -92,12 +92,19 @@ class AliasDataFrame:
             env[sf_name] = sf
         return env
 
+    def _check_for_cycles(self):
+        try:
+            self._topological_sort()
+        except ValueError as e:
+            raise ValueError("Cycle detected in alias dependencies") from e
+
     def add_alias(self, name, expression, dtype=None, is_constant=False):
         self.aliases[name] = expression
         if dtype is not None:
             self.alias_dtypes[name] = dtype
         if is_constant:
             self.constant_aliases.add(name)
+        self._check_for_cycles()
 
     def _eval_in_namespace(self, expr):
         local_env = {col: self.df[col] for col in self.df.columns}
@@ -188,17 +195,14 @@ class AliasDataFrame:
             print(f"[materialize_alias] Warning: alias '{name}' not found.")
             return
         expr = self.aliases[name]
-        try:
-            result = self._eval_in_namespace(expr)
-            result_dtype = dtype or self.alias_dtypes.get(name)
-            if result_dtype is not None:
-                try:
-                    result = result.astype(result_dtype)
-                except AttributeError:
-                    result = result_dtype(result)
-            self.df[name] = result
-        except Exception as e:
-            print(f"Failed to materialize {name}: {e}")
+        result = self._eval_in_namespace(expr)
+        result_dtype = dtype or self.alias_dtypes.get(name)
+        if result_dtype is not None:
+            try:
+                result = result.astype(result_dtype)
+            except AttributeError:
+                result = result_dtype(result)
+        self.df[name] = result
 
     def materialize_aliases(self, targets, cleanTemporary=True, verbose=False):
         import networkx as nx
