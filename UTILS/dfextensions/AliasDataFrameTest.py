@@ -46,6 +46,31 @@ class TestAliasDataFrame(unittest.TestCase):
         expected = np.log(self.adf.df["CTPLumi_countsFV0"] / median).astype(np.float16)
         pd.testing.assert_series_equal(self.adf.df["logRate"], expected, check_names=False)
 
+    def test_circular_dependency_raises_error(self):
+        self.adf.add_alias("a", "b * 2")
+        self.adf.add_alias("b", "a + 1")
+        with self.assertRaises(ValueError):
+            self.adf.materialize_all()
+
+    def test_undefined_symbol_raises_error(self):
+        self.adf.add_alias("z", "x + non_existent_variable")
+        with self.assertRaises(Exception):
+            self.adf.materialize_all()
+
+    def test_invalid_syntax_raises_error(self):
+        self.adf.add_alias("z", "x +* y")
+        with self.assertRaises(SyntaxError):
+            self.adf.materialize_all()
+
+    def test_partial_materialization(self):
+        self.adf.add_alias("a", "x + 1")
+        self.adf.add_alias("b", "a + 1")
+        self.adf.add_alias("c", "y + 1")
+        self.adf.materialize_alias("b")
+        self.assertIn("a", self.adf.df.columns)
+        self.assertIn("b", self.adf.df.columns)
+        self.assertNotIn("c", self.adf.df.columns)
+
 class TestAliasDataFrameWithSubframes(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -85,6 +110,12 @@ class TestAliasDataFrameWithSubframes(unittest.TestCase):
         expected = merged["mX"] - merged["mX_track"]
         pd.testing.assert_series_equal(self.adf_clusters.df["mDX"].reset_index(drop=True), expected.reset_index(drop=True), check_names=False)
 
+    def test_unregistered_subframe_raises_error(self):
+        adf_tmp = AliasDataFrame(self.df_clusters)
+        adf_tmp.add_alias("mDX", "mX - T.mX")
+        with self.assertRaises(NameError):
+            adf_tmp.materialize_all()
+
     def test_save_and_load_integrity(self):
         import tempfile
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -100,9 +131,9 @@ class TestAliasDataFrameWithSubframes(unittest.TestCase):
             adf_clusters_loaded.materialize_all()
 
             assert "mDX" in adf_clusters_loaded.df.columns
-            # Check mean difference is negligible
             mean_diff = np.mean(adf_clusters_loaded.df["mDX"] - self.adf_clusters.df["mDX"])
             assert abs(mean_diff) < 1e-3, f"Mean difference too large: {mean_diff}"
+            self.assertDictEqual(self.adf_clusters.aliases, adf_clusters_loaded.aliases)
 
 if __name__ == "__main__":
     unittest.main()
