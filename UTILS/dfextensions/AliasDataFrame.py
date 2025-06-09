@@ -195,6 +195,18 @@ class AliasDataFrame:
             print(f"[materialize_alias] Warning: alias '{name}' not found.")
             return
         expr = self.aliases[name]
+
+        # Automatically materialize any referenced aliases or subframe aliases
+        tokens = re.findall(r'\b\w+\b|\w+\.\w+', expr)
+        for token in tokens:
+            if '.' in token:
+                sf_name, sf_attr = token.split('.', 1)
+                sf = self.get_subframe(sf_name)
+                if sf and sf_attr in sf.aliases and sf_attr not in sf.df.columns:
+                    sf.materialize_alias(sf_attr)
+            elif token in self.aliases and token not in self.df.columns:
+                self.materialize_alias(token)
+
         result = self._eval_in_namespace(expr)
         result_dtype = dtype or self.alias_dtypes.get(name)
         if result_dtype is not None:
