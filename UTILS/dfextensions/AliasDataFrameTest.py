@@ -163,9 +163,8 @@ class TestAliasDataFrameWithSubframes(unittest.TestCase):
             tmp_path = tmp.name
 
         adf_loaded = AliasDataFrame.read_tree(tmp_path, treename="clusters")
-        with self.assertRaises(KeyError):
-            _ = adf_loaded._subframes["T"]
-
+        self.assertIn("T", adf_loaded._subframes.subframes)
+        self.assertTrue(isinstance(adf_loaded.get_subframe("T"), AliasDataFrame))
         os.remove(tmp_path)
 
 if __name__ == "__main__":

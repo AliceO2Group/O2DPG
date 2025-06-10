@@ -291,15 +291,27 @@ class AliasDataFrame:
                 adf.constant_aliases = set(json.loads(meta[b"constants"].decode()))
         return adf
 
-    def export_tree(self, filename, treename="tree", dropAliasColumns=True):
-        if dropAliasColumns:
-            export_cols = [col for col in self.df.columns if col not in self.aliases]
+    def export_tree(self, filename_or_file, treename="tree", dropAliasColumns=True):
+        is_path = isinstance(filename_or_file, str)
+
+        if is_path:
+            with uproot.recreate(filename_or_file) as f:
+                self._write_to_uproot(f, treename, dropAliasColumns)
+            self._write_metadata_to_root(filename_or_file, treename)
         else:
-            export_cols = list(self.df.columns)
+            self._write_to_uproot(filename_or_file, treename, dropAliasColumns)
+
+    def _write_to_uproot(self, uproot_file, treename, dropAliasColumns):
+        export_cols = [col for col in self.df.columns if not dropAliasColumns or col not in self.aliases]
         dtype_casts = {col: np.float32 for col in export_cols if self.df[col].dtype == np.float16}
         export_df = self.df[export_cols].astype(dtype_casts)
-        with uproot.recreate(filename) as f:
-            f[treename] = export_df
+
+        uproot_file[treename] = export_df
+
+        for subframe_name, sub_adf in self._subframes.items():
+            sub_adf.export_tree(uproot_file, f"{treename}__subframe__{subframe_name}", dropAliasColumns)
+
+    def _write_metadata_to_root(self, filename, treename):
         f = ROOT.TFile.Open(filename, "UPDATE")
         tree = f.Get(treename)
         for alias, expr in self.aliases.items():
@@ -313,13 +325,13 @@ class AliasDataFrame:
             "aliases": self.aliases,
             "dtypes": {k: v.__name__ for k, v in self.alias_dtypes.items()},
             "constants": list(self.constant_aliases),
+            "subframes": list(self._subframes.subframes.keys())
         }
         jmeta = json.dumps(metadata)
         tree.GetUserInfo().Add(ROOT.TObjString(jmeta))
         tree.Write("", ROOT.TObject.kOverwrite)
         f.Close()
 
-    @staticmethod
     def read_tree(filename, treename="tree"):
         with uproot.open(filename) as f:
             df = f[treename].arrays(library="pd")
@@ -338,6 +350,9 @@ class AliasDataFrame:
                         adf.aliases.update(jmeta.get("aliases", {}))
                         adf.alias_dtypes.update({k: getattr(np, v) for k, v in jmeta.get("dtypes", {}).items()})
                         adf.constant_aliases.update(jmeta.get("constants", []))
+                        for sf_name in jmeta.get("subframes", []):
+                            sf = AliasDataFrame.read_tree(filename, treename=f"{treename}__subframe__{sf_name}")
+                            adf.register_subframe(sf_name, sf)
                         break
                     except Exception:
                         pass
