@@ -72,7 +72,6 @@ class TestAliasDataFrame(unittest.TestCase):
         self.assertNotIn("c", self.adf.df.columns)
 
     def test_export_import_tree_roundtrip(self):
-        # Create test DataFrame
         df = pd.DataFrame({
             "x": np.linspace(0, 10, 100),
             "y": np.linspace(10, 20, 100)
@@ -81,21 +80,17 @@ class TestAliasDataFrame(unittest.TestCase):
         adf.add_alias("z", "x + y", dtype=np.float64)
         adf.materialize_all()
 
-        # Export to temporary file
         with tempfile.NamedTemporaryFile(suffix=".root", delete=False) as tmp:
             adf.export_tree(tmp.name, treename="testTree", dropAliasColumns=False)
             tmp_path = tmp.name
 
-        # Read back from ROOT
         adf_loaded = AliasDataFrame.read_tree(tmp_path, treename="testTree")
 
-        # Check that aliases and data match
         assert "z" in adf_loaded.aliases
         assert adf_loaded.aliases["z"] == "x + y"
         adf_loaded.materialize_alias("z")
-        pd.testing.assert_series_equal(adf["z"], adf_loaded["z"], check_names=False)
+        pd.testing.assert_series_equal(adf.df["z"], adf_loaded.df["z"], check_names=False)
 
-        # Clean up
         os.remove(tmp_path)
 
 class TestAliasDataFrameWithSubframes(unittest.TestCase):
@@ -161,6 +156,17 @@ class TestAliasDataFrameWithSubframes(unittest.TestCase):
             mean_diff = np.mean(adf_clusters_loaded.df["mDX"] - self.adf_clusters.df["mDX"])
             assert abs(mean_diff) < 1e-3, f"Mean difference too large: {mean_diff}"
             self.assertDictEqual(self.adf_clusters.aliases, adf_clusters_loaded.aliases)
+
+    def test_export_tree_read_tree_with_subframe(self):
+        with tempfile.NamedTemporaryFile(suffix=".root", delete=False) as tmp:
+            self.adf_clusters.export_tree(tmp.name, treename="clusters")
+            tmp_path = tmp.name
+
+        adf_loaded = AliasDataFrame.read_tree(tmp_path, treename="clusters")
+        with self.assertRaises(KeyError):
+            _ = adf_loaded._subframes["T"]
+
+        os.remove(tmp_path)
 
 if __name__ == "__main__":
     unittest.main()
