@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 from AliasDataFrame import AliasDataFrame  # Adjust if needed
+import tempfile
 
 class TestAliasDataFrame(unittest.TestCase):
     def setUp(self):
@@ -69,6 +70,33 @@ class TestAliasDataFrame(unittest.TestCase):
         self.assertIn("a", self.adf.df.columns)
         self.assertIn("b", self.adf.df.columns)
         self.assertNotIn("c", self.adf.df.columns)
+
+    def test_export_import_tree_roundtrip(self):
+        # Create test DataFrame
+        df = pd.DataFrame({
+            "x": np.linspace(0, 10, 100),
+            "y": np.linspace(10, 20, 100)
+        })
+        adf = AliasDataFrame(df)
+        adf.add_alias("z", "x + y", dtype=np.float64)
+        adf.materialize_all()
+
+        # Export to temporary file
+        with tempfile.NamedTemporaryFile(suffix=".root", delete=False) as tmp:
+            adf.export_tree(tmp.name, treename="testTree", dropAliasColumns=False)
+            tmp_path = tmp.name
+
+        # Read back from ROOT
+        adf_loaded = AliasDataFrame.read_tree(tmp_path, treename="testTree")
+
+        # Check that aliases and data match
+        assert "z" in adf_loaded.aliases
+        assert adf_loaded.aliases["z"] == "x + y"
+        adf_loaded.materialize_alias("z")
+        pd.testing.assert_series_equal(adf["z"], adf_loaded["z"], check_names=False)
+
+        # Clean up
+        os.remove(tmp_path)
 
 class TestAliasDataFrameWithSubframes(unittest.TestCase):
     @classmethod
