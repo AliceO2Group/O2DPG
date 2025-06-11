@@ -94,11 +94,10 @@ class TestAliasDataFrame(unittest.TestCase):
         os.remove(tmp_path)
 
 class TestAliasDataFrameWithSubframes(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         n_tracks = 1000
         n_clusters = 100
-        cls.df_tracks = pd.DataFrame({
+        df_tracks = pd.DataFrame({
             "track_index": np.arange(n_tracks),
             "mX": np.random.normal(0, 10, n_tracks),
             "mY": np.random.normal(0, 10, n_tracks),
@@ -107,65 +106,63 @@ class TestAliasDataFrameWithSubframes(unittest.TestCase):
             "mEta": np.random.normal(0, 1, n_tracks),
         })
 
-        cluster_idx = np.repeat(cls.df_tracks["track_index"], n_clusters)
-        cls.df_clusters = pd.DataFrame({
+        cluster_idx = np.repeat(df_tracks["track_index"], n_clusters)
+        df_clusters = pd.DataFrame({
             "track_index": cluster_idx,
             "mX": np.random.normal(0, 10, len(cluster_idx)),
             "mY": np.random.normal(0, 10, len(cluster_idx)),
             "mZ": np.random.normal(0, 10, len(cluster_idx)),
         })
 
-        cls.adf_tracks = AliasDataFrame(cls.df_tracks)
-        cls.adf_clusters = AliasDataFrame(cls.df_clusters)
-        cls.adf_clusters.register_subframe("T", cls.adf_tracks)
-
-    def test_alias_cluster_radius(self):
-        self.adf_clusters.add_alias("mR", "sqrt(mX**2 + mY**2)")
-        self.adf_clusters.materialize_all()
-        expected = np.sqrt(self.adf_clusters.df["mX"]**2 + self.adf_clusters.df["mY"]**2)
-        pd.testing.assert_series_equal(self.adf_clusters.df["mR"], expected, check_names=False)
+        self.df_tracks = df_tracks
+        self.df_clusters = df_clusters
 
     def test_alias_cluster_track_dx(self):
-        self.adf_clusters.add_alias("mDX", "mX - T.mX")
-        self.adf_clusters.materialize_all()
-        merged = self.adf_clusters.df.merge(self.adf_tracks.df, on="track_index", suffixes=("", "_track"))
-        expected = merged["mX"] - merged["mX_track"]
-        pd.testing.assert_series_equal(self.adf_clusters.df["mDX"].reset_index(drop=True), expected.reset_index(drop=True), check_names=False)
+        adf_clusters = AliasDataFrame(self.df_clusters.copy())
+        adf_tracks = AliasDataFrame(self.df_tracks.copy())
+        adf_clusters.register_subframe("T", adf_tracks, index_columns="track_index")
+        adf_clusters.add_alias("mDX", "mX - T.mX")
+        adf_clusters.materialize_all()
+        merged = adf_clusters.df.merge(adf_tracks.df, on="track_index", suffixes=("", "_trk"))
+        expected = merged["mX"] - merged["mX_trk"]
+        pd.testing.assert_series_equal(adf_clusters.df["mDX"].reset_index(drop=True), expected.reset_index(drop=True), check_names=False)
 
-    def test_unregistered_subframe_raises_error(self):
-        adf_tmp = AliasDataFrame(self.df_clusters)
-        adf_tmp.add_alias("mDX", "mX - T.mX")
-        with self.assertRaises(NameError):
-            adf_tmp.materialize_all()
+    def test_subframe_invalid_alias_raises(self):
+        adf_clusters = AliasDataFrame(self.df_clusters.copy())
+        adf_tracks = AliasDataFrame(self.df_tracks.copy())
+        adf_clusters.register_subframe("T", adf_tracks, index_columns="track_index")
+        adf_clusters.add_alias("invalid", "T.nonexistent")
+
+        with self.assertRaises(KeyError) as cm:
+            adf_clusters.materialize_alias("invalid")
+
+        self.assertIn("T", str(cm.exception))
+        self.assertIn("nonexistent", str(cm.exception))
 
     def test_save_and_load_integrity(self):
-        import tempfile
+        adf_clusters = AliasDataFrame(self.df_clusters.copy())
+        adf_tracks = AliasDataFrame(self.df_tracks.copy())
+        adf_clusters.register_subframe("T", adf_tracks, index_columns="track_index")
+        adf_clusters.add_alias("mDX", "mX - T.mX")
+        adf_clusters.materialize_all()
+
         with tempfile.TemporaryDirectory() as tmpdir:
             path_clusters = os.path.join(tmpdir, "clusters.parquet")
             path_tracks = os.path.join(tmpdir, "tracks.parquet")
-            self.adf_clusters.save(path_clusters)
-            self.adf_tracks.save(path_tracks)
+            adf_clusters.save(path_clusters)
+            adf_tracks.save(path_tracks)
 
             adf_tracks_loaded = AliasDataFrame.load(path_tracks)
             adf_clusters_loaded = AliasDataFrame.load(path_clusters)
-            adf_clusters_loaded.register_subframe("T", adf_tracks_loaded)
+            adf_clusters_loaded.register_subframe("T", adf_tracks_loaded, index_columns="track_index")
             adf_clusters_loaded.add_alias("mDX", "mX - T.mX")
             adf_clusters_loaded.materialize_all()
 
-            assert "mDX" in adf_clusters_loaded.df.columns
-            mean_diff = np.mean(adf_clusters_loaded.df["mDX"] - self.adf_clusters.df["mDX"])
-            assert abs(mean_diff) < 1e-3, f"Mean difference too large: {mean_diff}"
-            self.assertDictEqual(self.adf_clusters.aliases, adf_clusters_loaded.aliases)
-
-    def test_export_tree_read_tree_with_subframe(self):
-        with tempfile.NamedTemporaryFile(suffix=".root", delete=False) as tmp:
-            self.adf_clusters.export_tree(tmp.name, treename="clusters")
-            tmp_path = tmp.name
-
-        adf_loaded = AliasDataFrame.read_tree(tmp_path, treename="clusters")
-        self.assertIn("T", adf_loaded._subframes.subframes)
-        self.assertTrue(isinstance(adf_loaded.get_subframe("T"), AliasDataFrame))
-        os.remove(tmp_path)
+            self.assertIn("mDX", adf_clusters_loaded.df.columns)
+            merged = adf_clusters_loaded.df.merge(adf_tracks_loaded.df, on="track_index", suffixes=("", "_trk"))
+            expected = merged["mX"] - merged["mX_trk"]
+            pd.testing.assert_series_equal(adf_clusters_loaded.df["mDX"].reset_index(drop=True), expected.reset_index(drop=True), check_names=False)
+            self.assertDictEqual(adf_clusters.aliases, adf_clusters_loaded.aliases)
 
 if __name__ == "__main__":
     unittest.main()

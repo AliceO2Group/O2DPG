@@ -11,16 +11,22 @@ import ast
 
 class SubframeRegistry:
     def __init__(self):
-        self.subframes = {}
+        self.subframes = {}  # name → {'frame': adf, 'index': index_columns}
 
-    def add_subframe(self, name, alias_df):
-        self.subframes[name] = alias_df
+    def add_subframe(self, name, alias_df, index_columns, pre_index=False):
+        if pre_index and not alias_df.df.index.names == index_columns:
+            alias_df.df.set_index(index_columns, inplace=True)
+        self.subframes[name] = {'frame': alias_df, 'index': index_columns}
 
     def get(self, name):
+        return self.subframes.get(name, {}).get('frame', None)
+
+    def get_entry(self, name):
         return self.subframes.get(name, None)
 
     def items(self):
         return self.subframes.items()
+
 
 def convert_expr_to_root(expr):
     class RootTransformer(ast.NodeTransformer):
@@ -77,8 +83,8 @@ class AliasDataFrame:
             return self.df[item]
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{item}'")
 
-    def register_subframe(self, name, adf):
-        self._subframes.add_subframe(name, adf)
+    def register_subframe(self, name, adf, index_columns, pre_index=False):
+        self._subframes.add_subframe(name, adf, index_columns, pre_index=pre_index)
 
     def get_subframe(self, name):
         return self._subframes.get(name)
@@ -88,9 +94,40 @@ class AliasDataFrame:
         env = {k: getattr(math, k) for k in dir(math) if not k.startswith("_")}
         env.update({k: getattr(np, k) for k in dir(np) if not k.startswith("_")})
         env["np"] = np
-        for sf_name, sf in self._subframes.items():
-            env[sf_name] = sf
+        for sf_name, sf_entry in self._subframes.items():
+            env[sf_name] = sf_entry['frame']
         return env
+
+    def _prepare_subframe_joins(self, expr):
+        tokens = re.findall(r'(\b\w+)\.(\w+)', expr)
+        for sf_name, sf_col in tokens:
+            entry = self._subframes.get_entry(sf_name)
+            if not entry:
+                continue
+            sub_adf = entry['frame']
+            sub_df = sub_adf.df
+            index_cols = entry['index']
+            if isinstance(index_cols, str):
+                index_cols = [index_cols]
+            merge_cols = index_cols + [sf_col]
+            suffix = f'__{sf_name}'
+
+            try:
+                cols_to_merge = sub_df[merge_cols]
+            except KeyError:
+                if sf_col in sub_adf.aliases:
+                    sub_adf.materialize_alias(sf_col)
+                    sub_df = sub_adf.df
+                    cols_to_merge = sub_df[merge_cols]
+                else:
+                    raise KeyError(f"Subframe '{sf_name}' does not contain or define alias '{sf_col}'")
+
+            joined = self.df.merge(cols_to_merge, on=index_cols, suffixes=('', suffix))
+            col_renamed = f'{sf_col}{suffix}'
+            if col_renamed in joined.columns:
+                self.df[col_renamed] = joined[col_renamed].values
+                expr = expr.replace(f'{sf_name}.{sf_col}', col_renamed)
+        return expr
 
     def _check_for_cycles(self):
         try:
@@ -107,8 +144,8 @@ class AliasDataFrame:
         self._check_for_cycles()
 
     def _eval_in_namespace(self, expr):
+        expr = self._prepare_subframe_joins(expr)
         local_env = {col: self.df[col] for col in self.df.columns}
-        local_env.update({k: self.df[k] for k in self.aliases if k in self.df})
         local_env.update(self._default_functions())
         return eval(expr, {}, local_env)
 
@@ -300,8 +337,8 @@ class AliasDataFrame:
             self._write_metadata_to_root(filename_or_file, treename)
         else:
             self._write_to_uproot(filename_or_file, treename, dropAliasColumns)
-        for subframe_name, sub_adf in self._subframes.items():
-            sub_adf._write_metadata_to_root(filename_or_file, f"{treename}__subframe__{subframe_name}")
+        for subframe_name, entry in self._subframes.items():
+            entry["frame"]._write_metadata_to_root(filename_or_file, f"{treename}__subframe__{subframe_name}")
 
     def _write_to_uproot(self, uproot_file, treename, dropAliasColumns):
         export_cols = [col for col in self.df.columns if not dropAliasColumns or col not in self.aliases]
@@ -310,8 +347,8 @@ class AliasDataFrame:
 
         uproot_file[treename] = export_df
 
-        for subframe_name, sub_adf in self._subframes.items():
-            sub_adf.export_tree(uproot_file, f"{treename}__subframe__{subframe_name}", dropAliasColumns)
+        for subframe_name, entry in self._subframes.items():
+            entry["frame"].export_tree(uproot_file, f"{treename}__subframe__{subframe_name}", dropAliasColumns)
 
     def _write_metadata_to_root(self, filename, treename):
         f = ROOT.TFile.Open(filename, "UPDATE")
@@ -325,6 +362,7 @@ class AliasDataFrame:
             tree.SetAlias(alias, expr_str)
         metadata = {
             "aliases": self.aliases,
+            "subframe_indices": {k: v["index"] for k, v in self._subframes.items()},
             "dtypes": {k: v.__name__ for k, v in self.alias_dtypes.items()},
             "constants": list(self.constant_aliases),
             "subframes": list(self._subframes.subframes.keys())
@@ -334,6 +372,7 @@ class AliasDataFrame:
         tree.Write("", ROOT.TObject.kOverwrite)
         f.Close()
 
+    @staticmethod
     def read_tree(filename, treename="tree"):
         with uproot.open(filename) as f:
             df = f[treename].arrays(library="pd")
@@ -354,7 +393,10 @@ class AliasDataFrame:
                         adf.constant_aliases.update(jmeta.get("constants", []))
                         for sf_name in jmeta.get("subframes", []):
                             sf = AliasDataFrame.read_tree(filename, treename=f"{treename}__subframe__{sf_name}")
-                            adf.register_subframe(sf_name, sf)
+                            index = jmeta.get("subframe_indices", {}).get(sf_name)
+                            if index is None:
+                                raise ValueError(f"Missing index_columns for subframe '{sf_name}' in metadata")
+                            adf.register_subframe(sf_name, sf, index_columns=index)
                         break
                     except Exception:
                         pass
