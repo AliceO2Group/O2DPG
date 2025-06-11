@@ -300,6 +300,8 @@ class AliasDataFrame:
             self._write_metadata_to_root(filename_or_file, treename)
         else:
             self._write_to_uproot(filename_or_file, treename, dropAliasColumns)
+        for subframe_name, sub_adf in self._subframes.items():
+            sub_adf._write_metadata_to_root(filename_or_file, f"{treename}__subframe__{subframe_name}")
 
     def _write_to_uproot(self, uproot_file, treename, dropAliasColumns):
         export_cols = [col for col in self.df.columns if not dropAliasColumns or col not in self.aliases]
