@@ -738,7 +738,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      workflow['stages'].append(QED_task)
 
    # recompute the number of workers to increase CPU efficiency
-   NWORKERS_TF = compute_n_workers(INTRATE, COLTYPE) if (not args.force_n_workers) else NWORKERS
+   NWORKERS_TF = compute_n_workers(INTRATE, COLTYPE, n_workers_user = NWORKERS) if (not args.force_n_workers) else NWORKERS
 
    # produce the signal configuration
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)
