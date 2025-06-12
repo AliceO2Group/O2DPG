@@ -27,12 +27,22 @@ adf.materialize_alias("pt")
 Reference a subframe (e.g. per-cluster frame linked to a per-track frame):
 
 ```python
-adf_clusters.register_subframe("T", adf_tracks, index_columns=["track_index"])
-adf_clusters.add_alias("dX", "mX - T.mX")
-adf_clusters.materialize_alias("dX")
+adf_clusters.register_subframe("track", adf_tracks, index_columns="track_index")
+adf_tracks.register_subframe("collision", adf_collisions, index_columns="collision_index")
+
+adf_clusters.add_alias("dX", "mX - track.mX")
+adf_clusters.add_alias("vertexZ", "track.collision.z")
 ```
 
-Under the hood, this performs a join using `track_index` between clusters and tracks, rewrites `T.mX` to the joined column, and evaluates in that context.
+Under the hood, this performs joins using index columns such as `track_index` and `collision_index`, rewrites dotted expressions like `track.mX` and `track.collision.z` to joined columns, and evaluates in that context.
+
+For example, in ALICE data:
+
+- clusters reference tracks: `cluster → track`
+- tracks reference collisions: `track → collision`
+- V0s reference two tracks: `v0 → track1`, `v0 → track2`
+
+These relations can be declared using `register_subframe()` and used symbolically in aliases.
 
 ### ✅ Dependency Graph & Cycle Detection
 
@@ -48,6 +58,15 @@ adf.plot_alias_dependencies()
 
 ```python
 adf.add_alias("scale", "1.5", dtype=np.float32, is_constant=True)
+```
+
+### ✅ Attribute Access for Aliases and Subframes
+
+Access aliases and subframe members with convenient dot notation:
+
+```python
+adf.cutHighPt  # equivalent to adf["cutHighPt"]
+adf.track.pt   # evaluates pt from registered subframe "track"
 ```
 
 ---
@@ -91,6 +110,7 @@ Tests included for:
 * Constant and hierarchical aliasing
 * Partial materialization
 * Subframe joins on index columns
+* Chained access via `adf.attr` and `adf.subframe.alias`
 * Persistence round-trips for `.parquet` and `.root`
 * Error detection: cycles, invalid expressions, undefined symbols
 
@@ -161,7 +181,7 @@ It brings the clarity of a computation graph to structured table analysis — a 
 
 * [ ] Secure expression parser (no raw `eval`)
 * [ ] Aliased column caching / invalidation strategy
-* [ ] Inter-subframe join strategies (e.g., key-based, 1\:n)
+* [ ] Inter-subframe join strategies (e.g., key-based, 1: n)
 * [ ] Jupyter widget or CLI tool for alias graph exploration
 * [ ] Broadcasting-aware joins or 2D index support
 
@@ -169,12 +189,12 @@ It brings the clarity of a computation graph to structured table analysis — a 
 
 ## 🧑‍🔬 Designed for...
 
-* Physics workflows (e.g. ALICE clusters ↔ tracks ↔ collisions)
+* Physics workflows (e.g. ALICE Physics analysis V0 ↔ tracks ↔ collisions)
 * Symbolic calibration / correction workflows
 * Structured data exports with traceable metadata
 
 ---
 
-**Author:** \[You]
+**Author:** Marian Ivanov
 
 MIT License
