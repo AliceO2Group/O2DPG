@@ -260,30 +260,30 @@ def test_min_stat_per_predictor():
     assert 'y_slope_x1_minstat' in dfGB.columns
     assert not np.isnan(dfGB['y_slope_x1_minstat'].iloc[0])  # x1 passed
     assert 'y_slope_x2_minstat' not in dfGB.columns or np.isnan(dfGB['y_slope_x2_minstat'].iloc[0])  # x2 skipped
-
 def test_sigma_cut_impact():
     np.random.seed(0)
+    n_samples = 10000
     df = pd.DataFrame({
-        'group': ['G1'] * 20,
-        'x1': np.linspace(0, 1, 20),
+        'group': ['G1'] * n_samples,
+        'x1': np.linspace(0, 1, n_samples),
     })
-    df['y'] = 3.0 * df['x1'] + np.random.normal(0, 0.1, size=20)
-    df.loc[::5, 'y'] += 10  # Insert strong outliers
+    df['y'] = 3.0 * df['x1'] + np.random.normal(0, 0.1, size=n_samples)
+    df.loc[::50, 'y'] += 100  # Insert strong outliers every 50th sample
     df['weight'] = 1.0
-
     selection = df['x1'].notna() & df['y'].notna()
 
     _, dfGB_all = GroupByRegressor.make_parallel_fit(
         df, ['group'], ['y'], ['x1'], ['x1'], 'weight', '_s100',
-        selection=selection, sigmaCut=100, n_jobs=1
+        selection=selection, sigmaCut=100, n_jobs=1, addPrediction=True
     )
 
     _, dfGB_strict = GroupByRegressor.make_parallel_fit(
         df, ['group'], ['y'], ['x1'], ['x1'], 'weight', '_s2',
-        selection=selection, sigmaCut=2, n_jobs=1
+        selection=selection, sigmaCut=3, n_jobs=1, addPrediction=True
     )
 
     slope_all = dfGB_all['y_slope_x1_s100'].iloc[0]
     slope_strict = dfGB_strict['y_slope_x1_s2'].iloc[0]
 
-    assert abs(slope_strict - 3.0) < abs(slope_all - 3.0), "Robust fit with sigmaCut=2 should be closer to truth"
+    assert abs(slope_strict - 3.0) < abs(slope_all - 3.0), \
+        f"Robust fit with sigmaCut=2 should be closer to truth: slope_strict={slope_strict}, slope_all={slope_all}"

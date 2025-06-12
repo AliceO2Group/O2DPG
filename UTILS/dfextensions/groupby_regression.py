@@ -139,8 +139,14 @@ class GroupByRegressor:
                 y = df_clean[target_col].values
                 w = df_clean[weights].values
 
-                model = HuberRegressor(tol=1e-4)
-                model.fit(X, y, sample_weight=w)
+                try:
+                    model = HuberRegressor(tol=1e-4)
+                    model.fit(X, y, sample_weight=w)
+                except Exception as e:
+                    logging.warning(f"HuberRegressor failed for {target_col} in group {key}: {e}. Falling back to LinearRegression.")
+                    model = LinearRegression()
+                    model.fit(X, y, sample_weight=w)
+
                 predicted = model.predict(X)
                 residuals = y - predicted
                 n, p = X.shape
@@ -158,7 +164,13 @@ class GroupByRegressor:
 
                 mask = np.abs(residuals) <= sigmaCut * mad
                 if mask.sum() >= min(minStat):
-                    model.fit(X[mask], y[mask], sample_weight=w[mask])
+                    try:
+                        model.fit(X[mask], y[mask], sample_weight=w[mask])
+                    except Exception as e:
+                        logging.warning(f"HuberRegressor re-fit with outlier mask failed for {target_col} in group {key}: {e}. Falling back to LinearRegression.")
+                        model = LinearRegression()
+                        model.fit(X[mask], y[mask], sample_weight=w[mask])
+
                     predicted = model.predict(X)
                     residuals = y - predicted
                     rms = np.sqrt(np.mean(residuals ** 2))
@@ -189,8 +201,6 @@ class GroupByRegressor:
             group_dict[col] = df_group[col].median()
 
         return group_dict
-
-
     @staticmethod
     def make_parallel_fit(
             df: pd.DataFrame,
