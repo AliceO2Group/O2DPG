@@ -131,6 +131,60 @@ df_out, dfGB = GroupByRegressor.make_parallel_fit(
 ## Tips
 
 💡 Use `cast_dtype='float16'` for storage savings, but ensure it's compatible with downstream numerical precision requirements.
+**Improvements for groupby\_regression.md**
+
+---
+
+### Usage Example for `cast_dtype`
+
+In the `make_parallel_fit` and `make_linear_fit` functions, the `cast_dtype` parameter ensures consistent numeric precision for slope, intercept, and error terms. This is useful for long pipelines or for memory-sensitive applications.
+
+```python
+import pandas as pd
+import numpy as np
+from dfextensions.groupby_regression import GroupByRegressor
+
+# Sample DataFrame
+df = pd.DataFrame({
+    'group': ['A'] * 10 + ['B'] * 10,
+    'x': np.linspace(0, 1, 20),
+    'y': np.linspace(0, 2, 20) + np.random.normal(0, 0.1, 20),
+    'weight': 1.0,
+})
+
+# Linear fit with casting to float32
+df_out, dfGB = GroupByRegressor.make_parallel_fit(
+    df,
+    gb_columns=['group'],
+    fit_columns=['y'],
+    linear_columns=['x'],
+    median_columns=['x'],
+    weights='weight',
+    suffix='_f32',
+    selection=df['x'].notna(),
+    cast_dtype='float32',
+    addPrediction=True
+)
+
+# Check resulting data types
+print(dfGB.dtypes)
+```
+
+### Output (Example)
+
+```
+group                      object
+x_f32                    float64
+y_slope_x_f32            float32
+y_err_x_f32              float32
+y_intercept_f32          float32
+y_rms_f32                float32
+y_mad_f32                float32
+bin_count_f32              int64
+dtype: object
+```
+
+
 
 ## Recent Changes
 

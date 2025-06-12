@@ -4,7 +4,7 @@ import logging
 from sklearn.linear_model import LinearRegression, HuberRegressor
 from joblib import Parallel, delayed
 from numpy.linalg import inv, LinAlgError
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Callable
 
 
 class GroupByRegressor:
@@ -111,12 +111,12 @@ class GroupByRegressor:
             median_columns: List[str],
             weights: str,
             minStat: List[int],
-            sigmaCut: float = 4
+            sigmaCut: float = 4,
+            fitter: Union[str, Callable] = "auto"
     ) -> dict:
         group_dict = dict(zip(gb_columns, key))
         predictors = []
 
-        # Count valid rows for each predictor and include only if enough
         for i, col in enumerate(linear_columns0):
             required_columns = [col] + fit_columns + [weights]
             df_valid = df_group[required_columns].dropna()
@@ -128,7 +128,6 @@ class GroupByRegressor:
                 if not predictors:
                     continue
 
-                # Drop rows with any NaNs in predictors, target, or weights
                 subset_columns = predictors + [target_col, weights]
                 df_clean = df_group.dropna(subset=subset_columns)
 
@@ -139,11 +138,20 @@ class GroupByRegressor:
                 y = df_clean[target_col].values
                 w = df_clean[weights].values
 
-                try:
+                model = None
+                if callable(fitter):
+                    model = fitter()
+                elif fitter == "robust":
                     model = HuberRegressor(tol=1e-4)
+                elif fitter == "ols":
+                    model = LinearRegression()
+                else:
+                    model = HuberRegressor(tol=1e-4)
+
+                try:
                     model.fit(X, y, sample_weight=w)
                 except Exception as e:
-                    logging.warning(f"HuberRegressor failed for {target_col} in group {key}: {e}. Falling back to LinearRegression.")
+                    logging.warning(f"{model.__class__.__name__} failed for {target_col} in group {key}: {e}. Falling back to LinearRegression.")
                     model = LinearRegression()
                     model.fit(X, y, sample_weight=w)
 
@@ -167,7 +175,7 @@ class GroupByRegressor:
                     try:
                         model.fit(X[mask], y[mask], sample_weight=w[mask])
                     except Exception as e:
-                        logging.warning(f"HuberRegressor re-fit with outlier mask failed for {target_col} in group {key}: {e}. Falling back to LinearRegression.")
+                        logging.warning(f"{model.__class__.__name__} re-fit with outlier mask failed for {target_col} in group {key}: {e}. Falling back to LinearRegression.")
                         model = LinearRegression()
                         model.fit(X[mask], y[mask], sample_weight=w[mask])
 
@@ -201,6 +209,7 @@ class GroupByRegressor:
             group_dict[col] = df_group[col].median()
 
         return group_dict
+
     @staticmethod
     def make_parallel_fit(
             df: pd.DataFrame,
@@ -215,7 +224,8 @@ class GroupByRegressor:
             cast_dtype: Union[str, None] = None,
             n_jobs: int = 1,
             min_stat: List[int] = [10, 10],
-            sigmaCut: float = 4.0
+            sigmaCut: float = 4.0,
+            fitter: Union[str, Callable] = "auto"
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Perform grouped robust linear regression using HuberRegressor in parallel.
@@ -244,7 +254,7 @@ class GroupByRegressor:
         results = Parallel(n_jobs=n_jobs)(
             delayed(GroupByRegressor.process_group_robust)(
                 key, group_df, gb_columns, fit_columns, linear_columns,
-                median_columns, weights, min_stat, sigmaCut
+                median_columns, weights, min_stat, sigmaCut, fitter
             )
             for key, group_df in grouped
         )
