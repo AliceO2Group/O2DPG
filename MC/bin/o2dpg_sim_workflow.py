@@ -93,6 +93,7 @@ parser.add_argument('-procBkg',help='process type: inel, ..., do not set it for 
 parser.add_argument('-iniBkg',help='embedding background generator init parameters file (full path required)', default='${O2DPG_ROOT}/MC/config/common/ini/basic.ini')
 parser.add_argument('-confKeyBkg',help='embedding background configuration key values, for example: "GeneratorPythia8.config=pythia8bkg.cfg"', default='')
 parser.add_argument('-colBkg',help='embedding background collision system', default='PbPb')
+parser.add_argument('-confKeyQED',help='Config key parameters influencing the QED background simulator', default='')
 
 parser.add_argument('-e',help='simengine', default='TGeant4', choices=['TGeant4', 'TGeant3', 'TFluka'])
 parser.add_argument('-tf',type=int,help='number of timeframes', default=2)
@@ -719,11 +720,17 @@ for tf in range(1, NTIMEFRAMES + 1):
      # ATTENTION: CHANGING THE PARAMETERS/CUTS HERE MIGHT INVALIDATE THE QED INTERACTION RATES USED ELSEWHERE
      #
      ########################################################################################################
+
+     # determine final conf key for QED simulation
+     QEDBaseConfig = "GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;QEDGenParam.Z="+str(Zsys[COLTYPE])+";QEDGenParam.cmEnergy="+str(ECMS)+";Diamond.width[2]=6.;"
+     QEDCONFKEY = constructConfigKeyArg(create_geant_config(args, QEDBaseConfig + args.confKeyQED))
+
      QED_task['cmd'] = 'o2-sim -e TGeant3 --field ccdb -j ' + str('1') +  ' -o qed'                                   \
                         + ' -n ' + str(NEventsQED) + ' -m PIPE ITS MFT FT0 FV0 FDD '                                  \
                         + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run) \
                         + ' --seed ' + str(TFSEED)                                                                    \
-                        + ' -g extgen --configKeyValues \"GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;QEDGenParam.Z='+str(Zsys[COLTYPE])+';QEDGenParam.cmEnergy='+str(ECMS)+';Diamond.width[2]=6.\"'  # + ' --fromCollContext collisioncontext.root'
+                        + ' -g extgen '                                                                               \
+                        + QEDCONFKEY
      QED_task['cmd'] += '; RC=$?; QEDXSecCheck=`grep xSectionQED qedgenparam.ini | sed \'s/xSectionQED=//\'`'
      QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected[COLTYPE]) + ' = $QEDXSecCheck"; [[ ${RC} == 0 ]]'
      # TODO: propagate the Xsecion ratio dynamically
@@ -731,7 +738,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      workflow['stages'].append(QED_task)
 
    # recompute the number of workers to increase CPU efficiency
-   NWORKERS_TF = compute_n_workers(INTRATE, COLTYPE) if (not args.force_n_workers) else NWORKERS
+   NWORKERS_TF = compute_n_workers(INTRATE, COLTYPE, n_workers_user = NWORKERS) if (not args.force_n_workers) else NWORKERS
 
    # produce the signal configuration
    SGN_CONFIG_task=createTask(name='gensgnconf_'+str(tf), tf=tf, cwd=timeframeworkdir)
