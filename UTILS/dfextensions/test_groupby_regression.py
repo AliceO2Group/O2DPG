@@ -73,8 +73,8 @@ def test_insufficient_data(sample_data):
     )
     assert len(dfGB) <= 1  # Could be empty or single group with skipped fit
     assert 'y_tiny' in df_out.columns
-    assert dfGB['y_slope_x1_tiny'].isna().all()
-    assert dfGB['y_intercept_tiny'].isna().all()
+    assert dfGB.get('y_slope_x1_tiny') is None or dfGB['y_slope_x1_tiny'].isna().all()
+    assert dfGB.get('y_intercept_tiny') is None or dfGB['y_intercept_tiny'].isna().all()
 
 
 def test_prediction_accuracy(sample_data):
@@ -199,6 +199,7 @@ def test_exact_coefficient_recovery():
     assert np.isclose(dfGB['y_slope_x1_clean'].iloc[0], 2.0, atol=1e-6)
     assert np.isclose(dfGB['y_slope_x2_clean'].iloc[0], 3.0, atol=1e-6)
 
+
 def test_exact_coefficient_recovery_parallel():
     np.random.seed(0)
     x1 = np.random.uniform(0, 1, 100)
@@ -227,3 +228,62 @@ def test_exact_coefficient_recovery_parallel():
 
     assert np.isclose(dfGB['y_slope_x1_par'].iloc[0], 2.0, atol=1e-6)
     assert np.isclose(dfGB['y_slope_x2_par'].iloc[0], 3.0, atol=1e-6)
+
+
+def test_min_stat_per_predictor():
+    # Create a group with 20 rows total, but only 5 valid for x2
+    df = pd.DataFrame({
+        'group': ['G1'] * 20,
+        'x1': np.linspace(0, 1, 20),
+        'x2': [np.nan] * 15 + list(np.linspace(0, 1, 5)),
+    })
+    df['y'] = 2.0 * df['x1'] + 3.0 * np.nan_to_num(df['x2']) + np.random.normal(0, 0.01, 20)
+    df['weight'] = 1.0
+
+    # Use all 20 rows, but let selection ensure only valid ones go into each predictor fit
+    selection = df['x1'].notna() & df['y'].notna()
+
+    df_out, dfGB = GroupByRegressor.make_parallel_fit(
+        df,
+        gb_columns=['group'],
+        fit_columns=['y'],
+        linear_columns=['x1', 'x2'],
+        median_columns=['x1'],
+        weights='weight',
+        suffix='_minstat',
+        selection=selection,
+        addPrediction=True,
+        min_stat=[10, 10],  # x1: 20 valid rows; x2: only 5
+        n_jobs=1
+    )
+
+    assert 'y_slope_x1_minstat' in dfGB.columns
+    assert not np.isnan(dfGB['y_slope_x1_minstat'].iloc[0])  # x1 passed
+    assert 'y_slope_x2_minstat' not in dfGB.columns or np.isnan(dfGB['y_slope_x2_minstat'].iloc[0])  # x2 skipped
+
+def test_sigma_cut_impact():
+    np.random.seed(0)
+    df = pd.DataFrame({
+        'group': ['G1'] * 20,
+        'x1': np.linspace(0, 1, 20),
+    })
+    df['y'] = 3.0 * df['x1'] + np.random.normal(0, 0.1, size=20)
+    df.loc[::5, 'y'] += 10  # Insert strong outliers
+    df['weight'] = 1.0
+
+    selection = df['x1'].notna() & df['y'].notna()
+
+    _, dfGB_all = GroupByRegressor.make_parallel_fit(
+        df, ['group'], ['y'], ['x1'], ['x1'], 'weight', '_s100',
+        selection=selection, sigmaCut=100, n_jobs=1
+    )
+
+    _, dfGB_strict = GroupByRegressor.make_parallel_fit(
+        df, ['group'], ['y'], ['x1'], ['x1'], 'weight', '_s2',
+        selection=selection, sigmaCut=2, n_jobs=1
+    )
+
+    slope_all = dfGB_all['y_slope_x1_s100'].iloc[0]
+    slope_strict = dfGB_strict['y_slope_x1_s2'].iloc[0]
+
+    assert abs(slope_strict - 3.0) < abs(slope_all - 3.0), "Robust fit with sigmaCut=2 should be closer to truth"

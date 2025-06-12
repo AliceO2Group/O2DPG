@@ -113,46 +113,31 @@ class GroupByRegressor:
             minStat: List[int],
             sigmaCut: float = 4
     ) -> dict:
-        """
-        Process a single group: perform robust regression fits on each target column,
-        compute median values, RMS and MAD of the residuals.
-        After an initial Huber fit, points with residuals > sigmaCut * MAD are removed and the fit is redone
-        if enough points remain.
-
-        For each predictor in linear_columns0, the predictor is used only if the number of rows in the group
-        is greater than the corresponding value in minStat.
-
-        Parameters:
-          key: Group key.
-          df_group (pd.DataFrame): Data for the group.
-          gb_columns (list): Columns used for grouping.
-          fit_columns (list): Target columns to be fit.
-          linear_columns0 (list): List of candidate predictor columns.
-          median_columns (list): List of columns for which median values are computed.
-          weights (str): Column name for weights.
-          minStat (list[int]): List of minimum number of rows required to use each predictor in linear_columns0.
-          sigmaCut (float): Factor to remove outliers (points with residual > sigmaCut * MAD).
-
-        Returns:
-          dict: A dictionary containing group keys, fit parameters, RMS, and MAD.
-        """
         group_dict = dict(zip(gb_columns, key))
-        n_rows = len(df_group)
         predictors = []
 
+        # Count valid rows for each predictor and include only if enough
         for i, col in enumerate(linear_columns0):
-            if n_rows > minStat[i]:
+            required_columns = [col] + fit_columns + [weights]
+            df_valid = df_group[required_columns].dropna()
+            if len(df_valid) >= minStat[i]:
                 predictors.append(col)
 
         for target_col in fit_columns:
             try:
                 if not predictors:
                     continue
-                X = df_group[predictors].values
-                y = df_group[target_col].values
-                w = df_group[weights].values
-                if len(y) < min(minStat):
+
+                # Drop rows with any NaNs in predictors, target, or weights
+                subset_columns = predictors + [target_col, weights]
+                df_clean = df_group.dropna(subset=subset_columns)
+
+                if len(df_clean) < min(minStat):
                     continue
+
+                X = df_clean[predictors].values
+                y = df_clean[target_col].values
+                w = df_clean[weights].values
 
                 model = HuberRegressor(tol=1e-4)
                 model.fit(X, y, sample_weight=w)
