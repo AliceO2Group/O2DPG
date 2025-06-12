@@ -92,6 +92,23 @@ class TestAliasDataFrame(unittest.TestCase):
         pd.testing.assert_series_equal(adf.df["z"], adf_loaded.df["z"], check_names=False)
 
         os.remove(tmp_path)
+    def test_getattr_column_and_alias_access(self):
+        df = pd.DataFrame({
+            "x": np.arange(5),
+            "y": np.arange(5) * 2
+        })
+        adf = AliasDataFrame(df)
+        adf.add_alias("z", "x + y", dtype=np.int32)
+
+        # Access real column
+        assert (adf.x == df["x"]).all()
+        # Access alias before materialization
+        assert "z" not in adf.df.columns
+        z_val = adf.z
+        assert "z" in adf.df.columns
+        expected = df["x"] + df["y"]
+        np.testing.assert_array_equal(z_val, expected)
+
 
 class TestAliasDataFrameWithSubframes(unittest.TestCase):
     def setUp(self):
@@ -163,6 +180,68 @@ class TestAliasDataFrameWithSubframes(unittest.TestCase):
             expected = merged["mX"] - merged["mX_trk"]
             pd.testing.assert_series_equal(adf_clusters_loaded.df["mDX"].reset_index(drop=True), expected.reset_index(drop=True), check_names=False)
             self.assertDictEqual(adf_clusters.aliases, adf_clusters_loaded.aliases)
+
+    def test_getattr_subframe_alias_access(self):
+        # Parent frame
+        df_main = pd.DataFrame({"track_id": [0, 1, 2], "x": [10, 20, 30]})
+        adf_main = AliasDataFrame(df_main)
+        # Subframe with alias
+        df_sub = pd.DataFrame({"track_id": [0, 1, 2], "residual": [1.1, 2.2, 3.3]})
+        adf_sub = AliasDataFrame(df_sub)
+        adf_sub.add_alias("residual_scaled", "residual * 100", dtype=np.float64)
+
+        # Register subframe
+        adf_main.register_subframe("track", adf_sub, index_columns="track_id")
+
+        # Add alias depending on subframe alias
+        adf_main.add_alias("resid100", "track.residual_scaled", dtype=np.float64)
+
+        # Trigger materialization via __getattr__
+        assert "resid100" not in adf_main.df.columns
+        result = adf_main.resid100
+        assert "resid100" in adf_main.df.columns
+        np.testing.assert_array_equal(result, df_sub["residual"] * 100)
+
+    def test_getattr_chained_subframe_access(self):
+        df_main = pd.DataFrame({"idx": [0, 1, 2]})
+        df_sub = pd.DataFrame({"idx": [0, 1, 2], "x": [5, 6, 7]})
+        adf_main = AliasDataFrame(df_main)
+        adf_sub = AliasDataFrame(df_sub)
+        adf_sub.add_alias("cutX", "x > 5")
+
+        adf_main.register_subframe("sub", adf_sub, index_columns="idx")
+        adf_sub.materialize_alias("cutX")
+
+        # This should fail until we implement proper attribute forwarding
+        with self.assertRaises(AttributeError):
+            _ = adf_main.sub.cutX
+
+    def test_getattr_column_and_alias_access(self):
+        df = pd.DataFrame({"x": np.arange(10)})
+        adf = AliasDataFrame(df)
+        adf.add_alias("y", "x * 2")
+        adf.materialize_alias("y")
+
+        # Check column access
+        assert np.all(adf.x == df["x"])  # explicit value check
+        # Check alias access
+        assert np.all(adf.y == df["x"] * 2)  # explicit value check
+
+
+    def test_getattr_chained_subframe_access(self):
+        df_main = pd.DataFrame({"id": [0, 1, 2]})
+        df_sub = pd.DataFrame({"id": [0, 1, 2], "a": [5, 6, 7]})
+        adf_main = AliasDataFrame(df_main)
+        adf_sub = AliasDataFrame(df_sub)
+        adf_sub.add_alias("cutA", "a > 5")
+        adf_main.register_subframe("sub", adf_sub, index_columns="id")
+
+        adf_sub.materialize_alias("cutA")
+
+        # Check chained access
+        expected = np.array([False, True, True])
+        assert np.all(adf_main.sub.cutA == expected)  # explicit value check
+
 
 if __name__ == "__main__":
     unittest.main()

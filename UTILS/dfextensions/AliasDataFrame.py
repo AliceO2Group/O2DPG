@@ -10,6 +10,9 @@ import re
 import ast
 
 class SubframeRegistry:
+    """
+    Registry to manage subframes (nested AliasDataFrame instances).
+    """
     def __init__(self):
         self.subframes = {}  # name → {'frame': adf, 'index': index_columns}
 
@@ -68,6 +71,10 @@ def convert_expr_to_root(expr):
         return expr
 
 class AliasDataFrame:
+    """
+    AliasDataFrame allows for defining and evaluating lazy-evaluated column aliases
+    on top of a pandas DataFrame, including nested subframes with hierarchical indexing.
+    """
     def __init__(self, df):
         self.df = df
         self.aliases = {}
@@ -75,13 +82,17 @@ class AliasDataFrame:
         self.constant_aliases = set()
         self._subframes = SubframeRegistry()
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str):
         if item in self.df.columns:
             return self.df[item]
         if item in self.aliases:
             self.materialize_alias(item)
             return self.df[item]
+        sf = self._subframes.get(item)
+        if sf is not None:
+            return sf
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{item}'")
+
 
     def register_subframe(self, name, adf, index_columns, pre_index=False):
         self._subframes.add_subframe(name, adf, index_columns, pre_index=pre_index)
@@ -136,6 +147,14 @@ class AliasDataFrame:
             raise ValueError("Cycle detected in alias dependencies") from e
 
     def add_alias(self, name, expression, dtype=None, is_constant=False):
+        """
+        Define a new alias.
+        Args:
+            name: Name of the alias.
+            expression: Expression string using pandas or NumPy operations.
+            dtype: Optional numpy dtype to enforce.
+            is_constant: Whether the alias represents a scalar constant.
+        """
         self.aliases[name] = expression
         if dtype is not None:
             self.alias_dtypes[name] = dtype
@@ -228,6 +247,17 @@ class AliasDataFrame:
             print(f"  {k}: {sorted(v)}")
 
     def materialize_alias(self, name, cleanTemporary=False, dtype=None):
+        """
+        Evaluate an alias and store its result as a real column.
+        Args:
+            name: Alias name to materialize.
+            cleanTemporary: Whether to clean up intermediate dependencies.
+            dtype: Optional override dtype to cast to.
+
+        Raises:
+            KeyError: If alias is not defined.
+            Exception: If alias evaluation fails.
+        """
         if name not in self.aliases:
             print(f"[materialize_alias] Warning: alias '{name}' not found.")
             return
