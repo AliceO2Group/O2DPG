@@ -4,11 +4,12 @@ import logging
 from sklearn.linear_model import LinearRegression, HuberRegressor
 from joblib import Parallel, delayed
 from numpy.linalg import inv, LinAlgError
+from typing import Union, List, Tuple
 
 
 class GroupByRegressor:
     @staticmethod
-    def _cast_fit_columns(dfGB, cast_dtype=None):
+    def _cast_fit_columns(dfGB: pd.DataFrame, cast_dtype: Union[str, None] = None) -> pd.DataFrame:
         if cast_dtype is not None:
             for col in dfGB.columns:
                 if ("slope" in col or "intercept" in col or "rms" in col or "mad" in col):
@@ -16,26 +17,35 @@ class GroupByRegressor:
         return dfGB
 
     @staticmethod
-    def make_linear_fit(df, gb_columns, fit_columns, linear_columns, median_columns, suffix, selection, addPrediction=False, cast_dtype=None, min_stat=10):
+    def make_linear_fit(
+            df: pd.DataFrame,
+            gb_columns: List[str],
+            fit_columns: List[str],
+            linear_columns: List[str],
+            median_columns: List[str],
+            suffix: str,
+            selection: pd.Series,
+            addPrediction: bool = False,
+            cast_dtype: Union[str, None] = None,
+            min_stat: int = 10
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        Perform standard linear regression fits for grouped data and compute median values.
+        Perform grouped ordinary least squares linear regression and compute medians.
 
         Parameters:
             df (pd.DataFrame): Input dataframe.
-            gb_columns (list): Columns to group by.
-            fit_columns (list): Target columns for linear regression.
-            linear_columns (list): Independent variables used for the fit.
-            median_columns (list): Columns for which median values are computed.
-            suffix (str): Suffix to append to columns in the output dfGB.
-            selection (pd.Series): Boolean mask for selecting rows.
-            addPrediction (bool): If True, merge predictions back into df.
-            cast_dtype (str or None): If not None, cast fit-related columns to this dtype.
-            min_stat (int): Minimum number of rows required to perform regression.
+            gb_columns (List[str]): Columns to group by.
+            fit_columns (List[str]): Target columns for regression.
+            linear_columns (List[str]): Predictor columns.
+            median_columns (List[str]): Columns to compute median.
+            suffix (str): Suffix for output columns.
+            selection (pd.Series): Boolean mask to filter rows.
+            addPrediction (bool): If True, add predicted values to df.
+            cast_dtype (str|None): Data type to cast result coefficients.
+            min_stat (int): Minimum number of rows per group to perform regression.
 
         Returns:
-            tuple: (df, dfGB) where
-                df is the original dataframe with predicted values appended (if addPrediction is True),
-                and dfGB is the group-by statistics dataframe containing medians and fit coefficients.
+            Tuple[pd.DataFrame, pd.DataFrame]: (df with predictions, group-level regression results)
         """
         df_selected = df.loc[selection]
         group_results = []
@@ -44,12 +54,13 @@ class GroupByRegressor:
         for group_vals, df_group in df_selected.groupby(gb_columns):
             group_dict = dict(zip(gb_columns, group_vals))
             group_sizes[group_vals] = len(df_group)
+
             for target_col in fit_columns:
                 try:
                     X = df_group[linear_columns].values
                     y = df_group[target_col].values
                     if len(X) < min_stat:
-                        for col in linear_columns:
+                        for i, col in enumerate(linear_columns):
                             group_dict[f"{target_col}_slope_{col}"] = np.nan
                         group_dict[f"{target_col}_intercept"] = np.nan
                         continue
@@ -75,7 +86,6 @@ class GroupByRegressor:
         bin_counts = np.array([group_sizes.get(tuple(row), 0) for row in dfGB[gb_columns].itertuples(index=False)], dtype=np.int32)
         dfGB["bin_count"] = bin_counts
         dfGB = dfGB.rename(columns={col: f"{col}{suffix}" for col in dfGB.columns if col not in gb_columns})
-        dfGB = dfGB.copy()
 
         if addPrediction:
             df = df.merge(dfGB, on=gb_columns, how="left")
@@ -92,7 +102,17 @@ class GroupByRegressor:
         return df, dfGB
 
     @staticmethod
-    def process_group_robust(key, df_group, gb_columns, fit_columns, linear_columns0, median_columns, weights, minStat=[], sigmaCut=4):
+    def process_group_robust(
+            key: tuple,
+            df_group: pd.DataFrame,
+            gb_columns: List[str],
+            fit_columns: List[str],
+            linear_columns0: List[str],
+            median_columns: List[str],
+            weights: str,
+            minStat: List[int],
+            sigmaCut: float = 4
+    ) -> dict:
         """
         Process a single group: perform robust regression fits on each target column,
         compute median values, RMS and MAD of the residuals.
@@ -110,7 +130,7 @@ class GroupByRegressor:
           linear_columns0 (list): List of candidate predictor columns.
           median_columns (list): List of columns for which median values are computed.
           weights (str): Column name for weights.
-          minStat (list): List of minimum number of rows required to use each predictor in linear_columns0.
+          minStat (list[int]): List of minimum number of rows required to use each predictor in linear_columns0.
           sigmaCut (float): Factor to remove outliers (points with residual > sigmaCut * MAD).
 
         Returns:
@@ -184,3 +204,76 @@ class GroupByRegressor:
             group_dict[col] = df_group[col].median()
 
         return group_dict
+
+
+    @staticmethod
+    def make_parallel_fit(
+            df: pd.DataFrame,
+            gb_columns: List[str],
+            fit_columns: List[str],
+            linear_columns: List[str],
+            median_columns: List[str],
+            weights: str,
+            suffix: str,
+            selection: pd.Series,
+            addPrediction: bool = False,
+            cast_dtype: Union[str, None] = None,
+            n_jobs: int = 1,
+            min_stat: List[int] = [10, 10],
+            sigmaCut: float = 4.0
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Perform grouped robust linear regression using HuberRegressor in parallel.
+
+        Parameters:
+            df (pd.DataFrame): Input dataframe.
+            gb_columns (List[str]): Columns to group by.
+            fit_columns (List[str]): Target columns for regression.
+            linear_columns (List[str]): Predictor columns.
+            median_columns (List[str]): Columns to compute medians.
+            weights (str): Column name of weights for fitting.
+            suffix (str): Suffix to append to output columns.
+            selection (pd.Series): Boolean selection mask.
+            addPrediction (bool): If True, add prediction columns to df.
+            cast_dtype (Union[str, None]): Optional dtype cast for fit outputs.
+            n_jobs (int): Number of parallel jobs.
+            min_stat (List[int]): Minimum number of rows required to use each predictor.
+            sigmaCut (float): Outlier threshold in MAD units.
+
+        Returns:
+            Tuple[pd.DataFrame, pd.DataFrame]: DataFrame with predictions and group-level statistics.
+        """
+        df_selected = df.loc[selection]
+        grouped = df_selected.groupby(gb_columns)
+
+        results = Parallel(n_jobs=n_jobs)(
+            delayed(GroupByRegressor.process_group_robust)(
+                key, group_df, gb_columns, fit_columns, linear_columns,
+                median_columns, weights, min_stat, sigmaCut
+            )
+            for key, group_df in grouped
+        )
+
+        dfGB = pd.DataFrame(results)
+        dfGB = GroupByRegressor._cast_fit_columns(dfGB, cast_dtype)
+
+        bin_counts = np.array([
+            len(grouped.get_group(key)) if key in grouped.groups else 0
+            for key in dfGB[gb_columns].itertuples(index=False, name=None)
+        ], dtype=np.int32)
+        dfGB["bin_count"] = bin_counts
+        dfGB = dfGB.rename(columns={col: f"{col}{suffix}" for col in dfGB.columns if col not in gb_columns})
+
+        if addPrediction:
+            df = df.merge(dfGB, on=gb_columns, how="left")
+            for target_col in fit_columns:
+                intercept_col = f"{target_col}_intercept{suffix}"
+                if intercept_col not in df.columns:
+                    continue
+                df[f"{target_col}{suffix}"] = df[intercept_col]
+                for col in linear_columns:
+                    slope_col = f"{target_col}_slope_{col}{suffix}"
+                    if slope_col in df.columns:
+                        df[f"{target_col}{suffix}"] += df[slope_col] * df[col]
+
+        return df, dfGB
