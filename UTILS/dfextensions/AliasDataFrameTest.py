@@ -202,30 +202,6 @@ class TestAliasDataFrameWithSubframes(unittest.TestCase):
         assert "resid100" in adf_main.df.columns
         np.testing.assert_array_equal(result, df_sub["residual"] * 100)
 
-    def test_getattr_chained_subframe_access(self):
-        df_main = pd.DataFrame({"idx": [0, 1, 2]})
-        df_sub = pd.DataFrame({"idx": [0, 1, 2], "x": [5, 6, 7]})
-        adf_main = AliasDataFrame(df_main)
-        adf_sub = AliasDataFrame(df_sub)
-        adf_sub.add_alias("cutX", "x > 5")
-
-        adf_main.register_subframe("sub", adf_sub, index_columns="idx")
-        adf_sub.materialize_alias("cutX")
-
-        # This should fail until we implement proper attribute forwarding
-        with self.assertRaises(AttributeError):
-            _ = adf_main.sub.cutX
-
-    def test_getattr_column_and_alias_access0(self):
-        df = pd.DataFrame({"x": np.arange(10)})
-        adf = AliasDataFrame(df)
-        adf.add_alias("y", "x * 2")
-        adf.materialize_alias("y")
-
-        # Check column access
-        assert np.all(adf.x == df["x"])  # explicit value check
-        # Check alias access
-        assert np.all(adf.y == df["x"] * 2)  # explicit value check
 
 
     def test_getattr_chained_subframe_access(self):
