@@ -216,7 +216,7 @@ class TestAliasDataFrameWithSubframes(unittest.TestCase):
         with self.assertRaises(AttributeError):
             _ = adf_main.sub.cutX
 
-    def test_getattr_column_and_alias_access(self):
+    def test_getattr_column_and_alias_access0(self):
         df = pd.DataFrame({"x": np.arange(10)})
         adf = AliasDataFrame(df)
         adf.add_alias("y", "x * 2")

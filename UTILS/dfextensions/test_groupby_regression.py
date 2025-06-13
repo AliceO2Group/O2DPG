@@ -287,3 +287,80 @@ def test_sigma_cut_impact():
 
     assert abs(slope_strict - 3.0) < abs(slope_all - 3.0), \
         f"Robust fit with sigmaCut=2 should be closer to truth: slope_strict={slope_strict}, slope_all={slope_all}"
+
+
+
+def test_make_parallel_fit_robust(sample_data):
+    df = sample_data.copy()
+    df_out, dfGB = GroupByRegressor.make_parallel_fit(
+        df,
+        gb_columns=['group'],
+        fit_columns=['y'],
+        linear_columns=['x1', 'x2'],
+        median_columns=['x1'],
+        weights='weight',
+        suffix='_rob',
+        selection=(df['x1'] > -10),
+        addPrediction=True,
+        n_jobs=1,
+        min_stat=[5, 5],
+        fitter="robust"
+    )
+    assert not dfGB.empty
+    assert 'y_rob' in df_out.columns
+    assert 'y_slope_x1_rob' in dfGB.columns
+    assert 'y_intercept_rob' in dfGB.columns
+
+
+def test_make_parallel_fit_with_linear_regression(sample_data):
+    df = sample_data.copy()
+    df_out, dfGB = GroupByRegressor.make_parallel_fit(
+        df,
+        gb_columns=['group'],
+        fit_columns=['y'],
+        linear_columns=['x1', 'x2'],
+        median_columns=['x1'],
+        weights='weight',
+        suffix='_ols',
+        selection=(df['x1'] > -10),
+        addPrediction=True,
+        n_jobs=1,
+        min_stat=[5, 5],
+        fitter="ols"
+    )
+    assert not dfGB.empty
+    assert 'y_ols' in df_out.columns
+    assert 'y_slope_x1_ols' in dfGB.columns
+    assert 'y_intercept_ols' in dfGB.columns
+
+def test_make_parallel_fit_with_custom_fitter(sample_data):
+    class DummyFitter:
+        def fit(self, X, y, sample_weight=None):
+            self.coef_ = np.zeros(X.shape[1])
+            self.intercept_ = 42
+            return self
+
+        def predict(self, X):
+            return np.full(X.shape[0], self.intercept_)
+
+    df = sample_data.copy()
+    df_out, dfGB = GroupByRegressor.make_parallel_fit(
+        df,
+        gb_columns=['group'],
+        fit_columns=['y'],
+        linear_columns=['x1'],
+        median_columns=['x1'],
+        weights='weight',
+        suffix='_dummy',
+        selection=(df['x1'] > -10),
+        addPrediction=True,
+        n_jobs=1,
+        min_stat=[5],
+        fitter=DummyFitter
+    )
+    predicted = df_out['y_dummy'].dropna()
+    assert not predicted.empty
+    assert np.allclose(predicted.unique(), 42)
+    assert 'y_slope_x1_dummy' in dfGB.columns
+    assert dfGB['y_slope_x1_dummy'].iloc[0] == 0
+    assert dfGB['y_intercept_dummy'].iloc[0] == 42
