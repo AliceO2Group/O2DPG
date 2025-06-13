@@ -76,6 +76,11 @@ class AliasDataFrame:
     on top of a pandas DataFrame, including nested subframes with hierarchical indexing.
     """
     def __init__(self, df):
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError(
+                f"AliasDataFrame must be initialized with a pandas.DataFrame. "
+                f"Received type: {type(df)}"
+            )
         self.df = df
         self.aliases = {}
         self.alias_dtypes = {}
