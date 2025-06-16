@@ -43,19 +43,26 @@ FairGenerator* generateEPOS4(const std::string &name, const int& nEvents)
         buffer << line << "\n";
     }
     file.close();
+    auto gen = new GeneratorEPOS4();
+    auto &param0 = o2::eventgen::GeneratorFileOrCmdParam::Instance();
+    auto &param = o2::eventgen::GeneratorHepMCParam::Instance();
+    auto &conf = o2::conf::SimConfig::Instance();
+    // Randomise seed (useful for multiple instances of the generator)
+    int randomSeed = gRandom->Integer(conf.getStartSeed());
     // Write the updated content back to a file in the current directory
-    std::ofstream outFile("cfg.optns");
+    std::string optnsFileName(Form("cfg%d.optns", randomSeed));
+    std::ofstream outFile(optnsFileName);
     outFile << buffer.str();
     if (!found)
     {
         outFile << "set nfull " + std::to_string(nEvents);
     }
     outFile.close();
-    auto gen = new GeneratorEPOS4();
-    auto& param0 = o2::eventgen::GeneratorFileOrCmdParam::Instance();
-    auto& param = o2::eventgen::GeneratorHepMCParam::Instance();
-    auto& conf = o2::conf::SimConfig::Instance();
+    optnsFileName = optnsFileName.substr(0, optnsFileName.find_last_of('.')); // remove the .optns extension
     // setup the HepMC generator to run with automatic FIFOs
     gen->setup(param0, param, conf);
+    // Replace seed and optns file
+    gen->setCmd(param0.cmd + " -i " + optnsFileName);
+    gen->setSeed(randomSeed);
     return gen;
 }
