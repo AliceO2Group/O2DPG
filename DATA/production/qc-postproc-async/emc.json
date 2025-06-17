@@ -496,7 +496,7 @@
                 "moduleName": "QualityControl",
                 "detectorName": "EMC",
                 "resumeTrend": "false",
-                "producePlotsOnUpdate": "true",
+                "producePlotsOnUpdate": "false",
                 "dataSources": [
                     {
                         "type": "repository",
