@@ -200,13 +200,21 @@ def load_external_config(configfile):
     return config
 
 anchorConfig = {}
+anchorConfig_generic = { "ConfigParams": create_sim_config(args) }
 if args.anchor_config != '':
    print ("** Using external config **")
    anchorConfig = load_external_config(args.anchor_config)
+   # adjust the anchorConfig with keys from the generic config, not mentioned in the external config
+   # (useful for instance for digitization parameters or others not usually mentioned in async reco)
+   for key in anchorConfig_generic["ConfigParams"]:
+      if not key in anchorConfig["ConfigParams"]:
+         print (f"Transcribing key {key} from generic config into final config")
+         anchorConfig["ConfigParams"][key] = anchorConfig_generic["ConfigParams"][key]
+
 else:
    # we load a generic config
    print ("** Using generic config **")
-   anchorConfig = { "ConfigParams": create_sim_config(args) }
+   anchorConfig = anchorConfig_generic
 # we apply additional external user choices for the configuration
 # this will overwrite config from earlier stages
 if args.overwrite_config != '':
@@ -1095,7 +1103,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       f'--interactionRate {INTRATE}',
       f'--incontext {CONTEXTFILE}',
       '--disable-write-ini',
-      putConfigValues(listOfMainKeys=['EMCSimParam'], localCF={"DigiParams.seed" : str(TFSEED)}),
+      putConfigValues(listOfMainKeys=['EMCSimParam','FV0DigParam','FT0DigParam'], localCF={"DigiParams.seed" : str(TFSEED)}),
       ('--combine-devices','')[args.no_combine_dpl_devices],
       ('',' --disable-mc')[args.no_mc_labels], 
       QEDdigiargs,
