@@ -722,7 +722,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      ########################################################################################################
 
      # determine final conf key for QED simulation
-     QEDBaseConfig = "GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;QEDGenParam.Z="+str(Zsys[COLTYPE])+";QEDGenParam.cmEnergy="+str(ECMS)+";Diamond.width[2]=6.;"
+     QEDBaseConfig = "GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;QEDGenParam.xSectionHad="+str(XSecSys[COLTYPE])+";QEDGenParam.Z="+str(Zsys[COLTYPE])+";QEDGenParam.cmEnergy="+str(ECMS)+";Diamond.width[2]=6.;"
      QEDCONFKEY = constructConfigKeyArg(create_geant_config(args, QEDBaseConfig + args.confKeyQED))
 
      QED_task['cmd'] = 'o2-sim -e TGeant3 --field ccdb -j ' + str('1') +  ' -o qed'                                   \
