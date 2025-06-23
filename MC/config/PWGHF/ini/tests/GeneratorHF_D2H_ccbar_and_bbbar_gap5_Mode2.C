@@ -24,7 +24,7 @@ int External() {
 			{-10311, 211},            // D+ -> Kbar0^*(1430)0, pi+
 			{-313, 211},              // D+ -> Kbar^*(892)0, pi+
 			{-321, 211, 211, 111},    // D+ -> K-, pi+, pi+, pi0
-			{333, 211},               // D+ -> phi(1020)0, pi+
+			{333, 211},               // D+ -> phi(1020)0, pi+  
 			{-313, 321},              // D+ -> Kbar^*(892)0, K+
 			{-10311, 321},            // D+ -> Kbar0^*(1430)0, K+
 			{-321, 321, 211},         // D+ -> K-, K+, pi+
@@ -127,7 +127,7 @@ int External() {
                 for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
                     auto pdgDau = tracks->at(j).GetPdgCode();
                     pdgsDecay.push_back(pdgDau);
-                    if (pdgDau != 333) { // phi is antiparticle of itself
+                    if (pdgDau != 333 && pdgDau != 111 && pdgDau != 221 && pdgDau != 113 && pdgDau != 225) { // phi is antiparticle of itself
                         pdgsDecayAntiPart.push_back(-pdgDau);
                     } else {
                         pdgsDecayAntiPart.push_back(pdgDau);
@@ -138,6 +138,7 @@ int External() {
                 std::sort(pdgsDecayAntiPart.begin(), pdgsDecayAntiPart.end());
 
                 for (auto &decay : checkHadronDecays[std::abs(pdg)]) {
+                    std::sort(decay.begin(), decay.end());
                     if (pdgsDecay == decay || pdgsDecayAntiPart == decay) {
                         nSignalGoodDecay++;
                         break;
