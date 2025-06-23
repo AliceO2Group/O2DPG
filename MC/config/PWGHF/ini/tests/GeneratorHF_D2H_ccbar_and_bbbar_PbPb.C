@@ -8,13 +8,74 @@ int External() {
 
     std::vector<int> checkPdgHadron{411, 421, 431, 4122, 4132, 4232, 4332};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
-        {411, {{-321, 211, 211}, {-313, 211}, {211, 311}, {211, 333}}}, // D+
-        {421, {{-321, 211}, {-321, 111, 211}}}, // D0
-        {431, {{211, 333}, {-313, 321}}}, // Ds+
-        {4122, {{-313, 2212}, {-321, 2224}, {211, 102134}, {-321, 211, 2212}, {311, 2212}}}, // Lc+
-        {4132, {{211, 3312}}}, // Xic0
-        {4232, {{-313, 2212}, {-321, 3324}, {211, 211, 3312}, {-321, 211, 2212}}}, // Xic+
-        {4332, {{211, 3334}}} // Omegac+
+        {421, {
+			{-321, 211},              // D0 -> K-, pi+
+			{-321, 211, 111},         // D0 -> K-, pi+, pi0
+			{213, -321},              // D0 -> rho(770)+, K-
+			{-313, 111},              // D0 -> Kbar^*(892)0, pi0
+			{-323, 211},              // D0 -> K^*(892)-, pi+
+			{-211, 211},              // D0 -> pi-, pi+
+			{213, -211},              // D0 -> rho(770)+, pi-
+			{-211, 211, 111},         // D0 -> pi-, pi+, pi0
+			{-321, 321},              // D0 -> K-, K+
+		}},
+
+		{411, {
+			{-321, 211, 211},         // D+ -> K-, pi+, pi+
+			{-10311, 211},            // D+ -> Kbar0^*(1430)0, pi+
+			{-313, 211},              // D+ -> Kbar^*(892)0, pi+
+			{-321, 211, 211, 111},    // D+ -> K-, pi+, pi+, pi0
+			{333, 211},               // D+ -> phi(1020)0, pi+
+			{-313, 321},              // D+ -> Kbar^*(892)0, K+
+			{-10311, 321},            // D+ -> Kbar0^*(1430)0, K+
+			{-321, 321, 211},         // D+ -> K-, K+, pi+
+			{113, 211},               // D+ -> rho(770)0, pi+
+			{225, 211},               // D+ -> f2(1270)0, pi+
+			{-211, 211, 211},         // D+ -> pi-, pi+, pi+
+		}},
+
+		{431, {
+			{333, 211},               // Ds+ -> phi(1020)0, pi+
+			{-313, 321},              // Ds+ -> Kbar^*(892)0, K+
+			{333, 213},               // Ds+ -> phi(1020)0, rho(770)+
+			{113, 211},               // Ds+ -> rho(770)0, pi+
+			{225, 211},               // Ds+ -> f2(1270)0, pi+
+			{-211, 211, 211},         // Ds+ -> pi-, pi+, pi+
+			{313, 211},               // Ds+ -> K^*(892)0, pi+
+			{10221, 321},             // Ds+ -> f0(1370)0, K+
+			{113, 321},               // Ds+ -> rho(770)0, K+
+			{-211, 321, 211},         // Ds+ -> pi-, K+, pi+
+			{221, 211},               // Ds+ -> eta, pi+
+		}},
+
+		{4122, {
+			{2212, -321, 211},        // Lambdac+ -> p, K-, pi+
+			{2212, -313},             // Lambdac+ -> p, Kbar^*(892)0
+			{2224, -321},             // Lambdac+ -> Delta(1232)++, K-
+			{102134, 211},            // Lambdac+ -> 102134, pi+
+			{2212, 311},              // Lambdac+ -> p, K0
+			{2212, -321, 211, 111},   // Lambdac+ -> p, K-, pi+, pi0
+			{2212, -211, 211},        // Lambdac+ -> p, pi-, pi+
+			{2212, 333},              // Lambdac+ -> p, phi(1020)0
+		}},
+
+		{4232, {
+			{2212, -321, 211},        // Xic+ -> p, K-, pi+
+			{2212, -313},             // Xic+ -> p, Kbar^*(892)0
+			{3312, 211, 211},         // Xic+ -> Xi-, pi+, pi+
+			{2212, 333},              // Xic+ -> p, phi(1020)0
+			{3222, -211, 211},        // Xic+ -> Sigma+, pi-, pi+
+			{3324, 211},              // Xic+ -> Xi(1530)0, pi+
+		}},
+
+		{4132, {
+			{3312, 211},              // Xic0 -> Xi-, pi+
+		}},
+
+		{4332, {
+			{3334, 211},              // Omegac0 -> Omega-, pi+
+			{3312, 211},              // Omegac0 -> Xi-, pi+
+		}},
     };
 
     TFile file(path.c_str(), "READ");
@@ -67,7 +128,7 @@ int External() {
                 for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
                     auto pdgDau = tracks->at(j).GetPdgCode();
                     pdgsDecay.push_back(pdgDau);
-                    if (pdgDau != 333) { // phi is antiparticle of itself
+                    if (pdgDau != 333 && pdgDau != 111 && pdgDau != 221 && pdgDau != 113 && pdgDau != 225) { // phi is antiparticle of itself
                         pdgsDecayAntiPart.push_back(-pdgDau);
                     } else {
                         pdgsDecayAntiPart.push_back(pdgDau);
@@ -78,6 +139,7 @@ int External() {
                 std::sort(pdgsDecayAntiPart.begin(), pdgsDecayAntiPart.end());
 
                 for (auto &decay : checkHadronDecays[std::abs(pdg)]) {
+                    std::sort(decay.begin(), decay.end());
                     if (pdgsDecay == decay || pdgsDecayAntiPart == decay) {
                         nSignalGoodDecay++;
                         break;
