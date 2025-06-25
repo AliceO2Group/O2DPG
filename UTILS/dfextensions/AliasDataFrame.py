@@ -112,6 +112,12 @@ class AliasDataFrame:
         env["np"] = np
         for sf_name, sf_entry in self._subframes.items():
             env[sf_name] = sf_entry['frame']
+            # Custom compatibility for SetAlias-like expressions
+        env["int"] = lambda x: np.array(x).astype(np.int32)
+        env["uint"] = lambda x: np.array(x).astype(np.uint32)
+        env["float"] = lambda x: np.array(x).astype(np.float32)
+        env["round"] = np.round
+        env["clip"] = np.clip
         return env
 
     def _prepare_subframe_joins(self, expr):
