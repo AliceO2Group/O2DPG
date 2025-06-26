@@ -368,15 +368,16 @@ echo_info "Ready to start main workflow"
 
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} --dynamic-resources
 MCRC=$?  # <--- we'll report back this code
-if [[ "${ALIEN_JDL_ADDTIMESERIESINMC}" != "0" ]]; then
+if [[ "${MCRC}" == "0" && "${ALIEN_JDL_ADDTIMESERIESINMC}" != "0" ]]; then
   # Default value is 1 so this is run by default.
   echo_info "Running TPC time series"
   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt tpctimes
+  # Note: We could maybe avoid this if-else by including `tpctimes` directly in the workflow-targets above
 fi
 
-[[ ! -z "${DISABLE_QC}" ]] && echo_info "QC is disabled, skip it."
+[[ -n "${DISABLE_QC}" ]] && echo_info "QC is disabled, skip it."
 
-if [[ -z "${DISABLE_QC}" && "${MCRC}" = "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
+if [[ -z "${DISABLE_QC}" && "${MCRC}" == "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
   # do QC tasks
   echo_info "Doing QC"
   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} -k
