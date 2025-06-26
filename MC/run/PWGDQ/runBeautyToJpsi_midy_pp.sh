@@ -5,8 +5,6 @@
 [ ! "${O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
 
 
-# ----------- LOAD UTILITY FUNCTIONS --------------------------
-. ${O2_ROOT}/share/scripts/jobutils.sh 
 
 RNDSEED=${RNDSEED:-0}
 NSIGEVENTS=${NSIGEVENTS:-1}

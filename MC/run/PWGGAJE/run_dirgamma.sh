@@ -9,8 +9,6 @@
 
 #set -x
 
-# ----------- LOAD UTILITY FUNCTIONS --------------------------
-. ${O2_ROOT}/share/scripts/jobutils.sh
 
 # ----------- START ACTUAL JOB  -----------------------------
 

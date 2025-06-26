@@ -8,8 +8,6 @@
 export ALICEO2_CCDB_LOCALCACHE=$PWD/.ccdb
 
 
-# ----------- LOAD UTILITY FUNCTIONS --------------------------
-. ${O2_ROOT}/share/scripts/jobutils.sh
 
 NSIGEVENTS=${NSIGEVENTS:-10}
 NWORKERS=${NWORKERS:-8}
