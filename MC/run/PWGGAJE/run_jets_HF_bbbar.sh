@@ -7,8 +7,6 @@
 [ ! "${O2DPG_ROOT}" ] && echo "Error: This needs O2DPG loaded" && exit 1
 [ ! "${O2_ROOT}" ] && echo "Error: This needs O2 loaded" && exit 1
 
-# ----------- LOAD UTILITY FUNCTIONS --------------------------
-. ${O2_ROOT}/share/scripts/jobutils.sh
 
 
 # ----------- START ACTUAL JOB  -----------------------------
