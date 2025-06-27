@@ -369,19 +369,19 @@ class AliasDataFrame:
                 adf.constant_aliases = set(json.loads(meta[b"constants"].decode()))
         return adf
 
-    def export_tree(self, filename_or_file, treename="tree", dropAliasColumns=True):
+    def export_tree(self, filename_or_file, treename="tree", dropAliasColumns=True,compression=uproot.LZMA(level=9),chunk_bytes=None):
         is_path = isinstance(filename_or_file, str)
 
         if is_path:
-            with uproot.recreate(filename_or_file) as f:
-                self._write_to_uproot(f, treename, dropAliasColumns)
+            with uproot.recreate(filename_or_file,compression=compression) as f:
+                self._write_to_uproot(f, treename, dropAliasColumns, chunk_bytes=chunk_bytes)
             self._write_metadata_to_root(filename_or_file, treename)
         else:
             self._write_to_uproot(filename_or_file, treename, dropAliasColumns)
         for subframe_name, entry in self._subframes.items():
             entry["frame"]._write_metadata_to_root(filename_or_file, f"{treename}__subframe__{subframe_name}")
 
-    def _write_to_uproot(self, uproot_file, treename, dropAliasColumns):
+    def _write_to_uproot(self, uproot_file, treename, dropAliasColumns,chunk_bytes=None):
         export_cols = [col for col in self.df.columns if not dropAliasColumns or col not in self.aliases]
         dtype_casts = {col: np.float32 for col in export_cols if self.df[col].dtype == np.float16}
         export_df = self.df[export_cols].astype(dtype_casts)
