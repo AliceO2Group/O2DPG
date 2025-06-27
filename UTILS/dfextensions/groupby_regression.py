@@ -116,6 +116,8 @@ class GroupByRegressor:
     ) -> dict:
         group_dict = dict(zip(gb_columns, key))
         predictors = []
+        if isinstance(weights, str) and weights not in df_group.columns:
+            raise ValueError(f"Weight column '{weights}' not found in input DataFrame.")
 
         for i, col in enumerate(linear_columns0):
             required_columns = [col] + fit_columns + [weights]
@@ -248,6 +250,9 @@ class GroupByRegressor:
         Returns:
             Tuple[pd.DataFrame, pd.DataFrame]: DataFrame with predictions and group-level statistics.
         """
+        if isinstance(weights, str) and weights not in df.columns:
+            raise ValueError(f"Weight column '{weights}' not found in input DataFrame")
+
         df_selected = df.loc[selection]
         grouped = df_selected.groupby(gb_columns)
 
