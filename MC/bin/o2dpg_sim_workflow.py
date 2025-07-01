@@ -1592,7 +1592,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       f"--info-sources {aodinfosources}",
       "--lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}",
       "--anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}",
-      "--anchor-prod ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}",
+      "--anchor-prod ${ALIEN_JDL_LPMANCHORPRODUCTION:-unknown}",
       "--combine-source-devices" if not args.no_combine_dpl_devices else "",
       "--disable-mc" if args.no_mc_labels else "",
       "--enable-truncation 0" if environ.get("O2DPG_AOD_NOTRUNCATE") or environ.get("ALIEN_JDL_O2DPG_AOD_NOTRUNCATE") else "",
