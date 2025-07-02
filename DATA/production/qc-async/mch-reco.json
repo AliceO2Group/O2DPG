@@ -49,6 +49,13 @@
                 "dataSource": {
                     "type": "direct",
                     "query": "preclusters:MCH/PRECLUSTERS/0;preclusterdigits:MCH/PRECLUSTERDIGITS/0"
+                },
+                "movingWindows": [
+                    "PseudoeffPerDualSampa"
+                ],
+                "taskParameters": {
+                    "Enable1DPseudoeffMaps": "true",
+                    "Enable2DPseudoeffMaps": "false"
                 }
             },
             "FRofs": {
