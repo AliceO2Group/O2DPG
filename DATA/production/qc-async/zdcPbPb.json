@@ -3,290 +3,62 @@
     "config": {
       "database": {
         "implementation": "CCDB",
-        "host": "alio2-cr1-hv-qcdb1.cern.ch:8083"
+        "host": "alio2-cr1-hv-qcdb1.cern.ch:8083",
+        "username": "not_applicable",
+        "password": "not_applicable",
+        "name": "not_applicable"
       },
       "Activity": {
-        "number": "",
-        "provenance": "qc_async",
-        "periodName": "",
-        "passName": "apass0"
+        "number": "42",
+        "type": "2"
       },
       "monitoring": {
-        "url": "no-op://"
+        "url": "influxdb-unix:///tmp/telegraf.sock"
       },
       "consul": {
-        "url": ""
+        "url": "http://ali-consul.cern.ch:8500"
       },
       "conditionDB": {
         "url": "http://o2-ccdb.internal"
-      },
-      "postprocessing": {
-        "periodSeconds": "0.1"
-      },
-      "infologger": {                     "": "Configuration of the Infologger (optional).",
-        "filterDiscardDebug": "true",     "": "Set to 1 to discard debug and trace messages (default: false)",
-        "filterDiscardLevel": "6",        "": "Message at this level or above are discarded (default: 21 - Trace)"
       }
     },
-    "postprocessing": {
-      "RecPP": {
+    "tasks": {
+      "ZDCRec": {
         "active": "true",
-        "className": "o2::quality_control_modules::zdc::ZDCRecDataPostProcessing",
+	"taskName": "Rec",
+        "className": "o2::quality_control_modules::zdc::ZDCRecDataTask",
         "moduleName": "QcZDC",
         "detectorName": "ZDC",
-        "customization": [],
-        "dataSourcesADC": [
-          {
-            "type": "repository",
-            "path": "ZDC/MO/Rec",
-            "names": [
-              "ZNAC:h_ADC_ZNA_TC",
-              "ZNA1:h_ADC_ZNA_T1",
-              "ZNA2:h_ADC_ZNA_T2",
-              "ZNA3:h_ADC_ZNA_T3",
-              "ZNA4:h_ADC_ZNA_T4",
-              "ZNAS:h_ADC_ZNA_SUM",
-              "ZPAC:h_ADC_ZPA_TC",
-              "ZPA1:h_ADC_ZPA_T1",
-              "ZPA2:h_ADC_ZPA_T2",
-              "ZPA3:h_ADC_ZPA_T3",
-              "ZPA4:h_ADC_ZPA_T4",
-              "ZPAS:h_ADC_ZPA_SUM",
-              "ZEM1:h_ADC_ZEM1",
-              "ZEM2:h_ADC_ZEM2",
-              "ZNCC:h_ADC_ZNC_TC",
-              "ZNC1:h_ADC_ZNC_T1",
-              "ZNC2:h_ADC_ZNC_T2",
-              "ZNC3:h_ADC_ZNC_T3",
-              "ZNC4:h_ADC_ZNC_T4",
-              "ZNCS:h_ADC_ZNC_SUM",
-              "ZPCC:h_ADC_ZPC_TC",
-              "ZPC1:h_ADC_ZPC_T1",
-              "ZPC2:h_ADC_ZPC_T2",
-              "ZPC3:h_ADC_ZPC_T3",
-              "ZPC4:h_ADC_ZPC_T4",
-              "ZPCS:h_ADC_ZPC_SUM"
-            ]
-          }
-        ],
-        "dataSourcesTDC": [
-          {
-            "type": "repository",
-            "path": "ZDC/MO/Rec",
-            "names": [
-              "ZNAC:h_TDC_ZNA_TC_V",
-              "ZNAS:h_TDC_ZNA_SUM_V",
-              "ZPAC:h_TDC_ZPA_TC_V",
-              "ZPAS:h_TDC_ZPA_SUM_V",
-              "ZEM1:h_TDC_ZEM1_V",
-              "ZEM2:h_TDC_ZEM2_V",
-              "ZNCC:h_TDC_ZNC_TC_V",
-              "ZNCS:h_TDC_ZNC_SUM_V",
-              "ZPCC:h_TDC_ZPC_TC_V",
-              "ZPCS:h_TDC_ZPC_SUM_V"
-            ]
-          }
-        ],
-        "dataSourcesTDCA": [
-          {
-            "type": "repository",
-            "path": "ZDC/MO/Rec",
-            "names": [
-              "ZNAC:h_TDC_ZNA_TC_A",
-              "ZNAS:h_TDC_ZNA_SUM_A",
-              "ZPAC:h_TDC_ZPA_TC_A",
-              "ZPAS:h_TDC_ZPA_SUM_A",
-              "ZEM1:h_TDC_ZEM1_A",
-              "ZEM2:h_TDC_ZEM2_A",
-              "ZNCC:h_TDC_ZNC_TC_A",
-              "ZNCS:h_TDC_ZNC_SUM_A",
-              "ZPCC:h_TDC_ZPC_TC_A",
-              "ZPCS:h_TDC_ZPC_SUM_A"
-            ]
-          }
-        ],
-        "dataSourcesPeak1n": [
-          {
-            "type": "repository",
-            "path": "ZDC/MO/Rec",
-            "names": [
-              "ZNAC:h_TDC_ZNA_TC_A",
-              "ZNAS:h_TDC_ZNA_SUM_A",
-              "ZNCC:h_TDC_ZNC_TC_A",
-              "ZNCS:h_TDC_ZNC_SUM_A"
-            ]
-          }
-        ],
-        "dataSourcesPeak1p": [
-          {
-            "type": "repository",
-            "path": "ZDC/MO/Rec",
-            "names": [
-              "ZPAC:h_TDC_ZPA_TC_A",
-              "ZPAS:h_TDC_ZPA_SUM_A",
-              "ZPCC:h_TDC_ZPC_TC_A",
-              "ZPCS:h_TDC_ZPC_SUM_A"
-            ]
-          }
-        ],
-        "initTrigger": [
-          "userorcontrol"
-        ],
-        "updateTrigger": [
-          "foreachlatest:qcdb:ZDC/MO/Rec/h_ADC_ZNA_TC"
-        ],
-        "stopTrigger": [
-          "userorcontrol"
-        ]
-      },
-      "ZDCQuality": {
-        "active": "true",
-        "className": "o2::quality_control_modules::common::QualityTask",
-        "moduleName": "QualityControl",
-        "detectorName": "ZDC",
-        "qualityGroups": [
-          {
-            "name": "global",
-            "title": "GLOBAL ZDC QUALITY",
-            "path": "ZDC/QO",
-            "ignoreQualitiesDetails": [
-              "Null",
-              "Good",
-              "Medium",
-              "Bad"
-            ],
-            "inputObjects": [
-              {
-                "name": "ZDCQuality/ZDCQuality",
-                "title": "ZDC Quality",
-                "messageBad": "Bad histograms",
-                "messageMedium": "Add bookkeeping entry",
-                "messageGood": "All checks are OK",
-                "messageNull": "Some histograms are empty!!!"
-              }
-            ]
-          },
-          {
-            "name": "details",
-            "title": "ZDC DETAILS",
-            "path": "ZDC/QO",
-            "ignoreQualitiesDetails": [],
-            "inputObjects": [
-              {
-                "name": "QcZDCRecCheck",
-                "title": "Rec check"
-              }
-            ]
-          }
-        ],
-        "initTrigger": [
-          "userorcontrol"
-        ],
-        "updateTrigger": [
-          "foreachlatest:qcdb:ZDC/QO/ZDCQuality/ZDCQuality"
-        ],
-        "stopTrigger": [
-          "userorcontrol"
-        ]
-      }
-    },
-    "checks": {
-      "RecCheck": {
-        "active": "true",
-        "className": "o2::quality_control_modules::zdc::ZDCRecDataCheck",
-        "moduleName": "QcZDC",
-        "detectorName": "ZDC",
-        "policy": "OnAny",
-        "checkParameters": {
- "ADC_ZNAC" : "40.2;10;20",
-              "ADC_ZNA1" : "10.6;1000;2000",
-              "ADC_ZNA2" : "11.8;1000;2000",
-              "ADC_ZNA3" : "8.6;1000;2000",
-              "ADC_ZNA4" : "6.9;1000;2000",
-              "ADC_ZNAS" : "41.7;1000;2000",
-              "ADC_ZPAC" : "17.7;1000;2000",
-              "ADC_ZPA1" : "1.63;1000;2000",
-              "ADC_ZPA2" : "2.86;1000;2000",
-              "ADC_ZPA3" : "5.30;1000;2000",
-              "ADC_ZPA4" : "12.25;1000;2000",
-              "ADC_ZPAS" : "20.2;1000;2000",
-              "ADC_ZEM1" : "803.2;1000;2000",
-              "ADC_ZEM2" : "891.2;1000;2000",
-              "ADC_ZNCC" : "40.7;1000;2000",
-              "ADC_ZNC1" : "9.7;1000;2000",
-              "ADC_ZNC2" : "15.8;1000;2000",
-              "ADC_ZNC3" : "6.2;1000;2000",
-              "ADC_ZNC4" : "8.6;1000;2000",
-              "ADC_ZNCS" : "42.3;1000;2000",
-              "ADC_ZPCC" : "19.6;1000;2000",
-              "ADC_ZPC1" : "14.19;1000;2000",
-              "ADC_ZPC2" : "7.63;1000;2000",
-              "ADC_ZPC3" : "2.96;1000;2000",
-              "ADC_ZPC4" : "1.21;1000;2000",
-              "ADC_ZPCS" : "20.9;1000;2000",
-              "ADC_POS_MSG_X": "0.15",
-              "ADC_POS_MSG_Y": "0.92",
-              "TDC_ZNAC" : "0.14;1000;2000",
-              "TDC_ZNAS" : "0.05;1000;2000",
-              "TDC_ZPAC" : "-0.39;1000;2000",
-              "TDC_ZPAS" : "-0.11;1000;2000",
-              "TDC_ZEM1" : "0.07;1000;2000",
-              "TDC_ZEM2" : "0.02;1000;2000",
-              "TDC_ZNCC" : "0.19;1000;2000",
-              "TDC_ZNCS" : "0.08;1000;2000",
-              "TDC_ZPCC" : "-0.29;1000;2000",
-              "TDC_ZPCS" : "-0.20;1000;2000",
-              "TDC_POS_MSG_X": "0.01",
-              "TDC_POS_MSG_Y": "0.92",
-              "TDCA_ZNAC" : "326;1000;2000",
-              "TDCA_ZNAS" : "331;1000;2000",
-              "TDCA_ZPAC" : "130;1000;2000",
-              "TDCA_ZPAS" : "146;1000;2000",
-              "TDCA_ZEM1" : "1203;1000;2000",
-              "TDCA_ZEM2" : "1265;1000;2000",
-              "TDCA_ZNCC" : "329;1000;2000",
-              "TDCA_ZNCS" : "339;1000;2000",
-              "TDCA_ZPCC" : "146;1000;2000",
-              "TDCA_ZPCS" : "150;1000;2000",
-              "TDCA_POS_MSG_X": "0.01",
-              "TDCA_POS_MSG_Y": "0.92",
-              "PEAK1N_ZNAC" : "40;1000;2000",
-              "PEAK1N_ZNAS" : "40;1000;2000",
-              "PEAK1N_ZNCC" : "40;1000;2000",
-              "PEAK1N_ZNCS" : "40;1000;2000",
-              "PEAK1N_POS_MSG_X": "0.01",
-              "PEAK1N_POS_MSG_Y": "0.92",
-              "PEAK1P_ZPAC" : "52;1000;2000",
-              "PEAK1P_ZPAS" : "52;1000;2000",
-              "PEAK1P_ZPCC" : "52;1000;2000",
-              "PEAK1P_ZPCS" : "52;1000;2000",
-              "PEAK1P_POS_MSG_X": "0.01",
-              "PEAK1P_POS_MSG_Y": "0.92"
+        "cycleDurationSeconds": "60",
+        "maxNumberCycles": "-1",
+        "dataSource": {
+          "type": "direct",
+          "query": "zdc-bcrec:ZDC/BCREC/0;zdc-energyrec:ZDC/ENERGY/0;zdc-tdcrec:ZDC/TDCDATA/0;zdc-inforec:ZDC/INFO/0"
         },
-        "dataSource": [
-          {
-            "type": "PostProcessing",
-            "name": "RecPP",
-            "MOs": [
-              "h_summary_ADC" , "h_summary_TDC",  "h_summary_TDCA",  "h_summary_Peak1n",  "h_summary_Peak1p"
-            ]
-          }
-        ]
-      }
-    },
-    "aggregators": {
-      "ZDCQuality": {
-        "active": "true",
-        "className": "o2::quality_control_modules::common::WorstOfAllAggregator",
-        "moduleName": "QcCommon",
-        "policy": "OnAll",
-        "detectorName": "ZDC",
-        "dataSource": [
-          {
-            "type": "Check",
-            "name": "RecCheck"
-          }
-        ]
+        "taskParameters": {
+          "ADC": "1440; -3;357",
+          "ADCZEM": "3025;-100;12000",
+          "ADCH": "115;-3;20",
+          "TDCT": "2400;-13.5;11.45",
+          "TDCA": "1440; -3;357",
+          "TDCAZEM": "2050;-0.5;4099.5",
+          "TDCAH": "230;-3;20",
+          "ADCSUMvsTC": "144;-3;357;144;-3;357",
+          "ADCZEMvsADCZEM": "121;-100;12000;121;-100;12000",
+          "ADCZEMvsTC": "121;-100;12000;144;-3;357",
+          "ADCvsTDCT": "120;-13.5;11.45;144;-3;357",
+          "ADCZEMvsTDCT": "120;-13.5;11.45;121;-100;12000",
+          "TDCDIFF": "240;-27;22.90;240;-27;22.90",
+          "TDCAvsTDCT": "120;-13.5;11.45;144;-3;357",
+          "TDCAZEMvsTDCT": "120;-13.5;11.45;125;-1;3999",
+          "TDCAvsTDCA": "144;-3;357;144;-3;357",
+          "TDCAZEMvsTDCAZEM": "125;-1;3999;125;-1;3999",
+          "TDCAZEMvsTDCA": "125;-1;3999;144;-3;357;",
+          "CENTR_ZNA": "200;-2;2;200;-2;2",
+          "CENTR_ZNC": "200;-2;2;200;-2;2",
+          "CENTR_ZPA": "2240;0;22.4",
+          "CENTR_ZPC": "2240;-22.4;0"
+        }
       }
     }
   }
