@@ -994,6 +994,9 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    tpcLocalCF={"DigiParams.maxOrbitsToDigitize" : str(orbitsPerTF), "DigiParams.seed" : str(TFSEED)}
 
+   # force TPC common mode correction in all cases to avoid issues the CMk values stored in the CCDB
+   tpcLocalCF['TPCEleParam.DigiMode'] = str(2) # 2 = o2::tpc::DigitzationMode::ZeroSuppressionCMCorr from TPCBase/ParameterElectronics.h
+
    # handle distortions and scaling using MC maps
    # this assumes the lumi inside the maps is stored in FT0 (pp) scalers
    # in case of PbPb the conversion factor ZDC ->FT0 (pp) must be taken into account in the scalers
