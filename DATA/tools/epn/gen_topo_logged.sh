@@ -26,6 +26,8 @@ if [[ ! -z $GEN_TOPO_LOGDATE ]]; then
     while read STDERRLINE; do
       echo "$GEN_TOPO_LOGDATE $ECS_ENVIRONMENT_ID :     $STDERRLINE" >> /var/log/topology/gen-topo.log
     done < $STDERRFILE
+    echo "FATAL $(tail -n 1 $STDERRFILE)" 1>&2
+    echo -e "\n - full stderr output:" 1>&2
   fi
 fi
 
