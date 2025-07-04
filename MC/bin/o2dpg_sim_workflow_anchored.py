@@ -17,6 +17,15 @@ import pandas as pd
 import subprocess
 import shlex
 
+# hack to find the script for meta upload
+o2dpg_root = os.environ.get("O2DPG_ROOT")
+if o2dpg_root is None:
+  raise EnvironmentError("O2DPG_ROOT is not set in the environment.")
+mc_prodinfo_path = os.path.abspath(os.path.join(o2dpg_root, "MC", "prodinfo"))
+sys.path.append(mc_prodinfo_path)
+from mcprodinfo_ccdb_upload import MCProdInfo, upload_mcprodinfo_meta, query_mcprodinfo
+import dataclasses
+
 # Creates a time anchored MC workflow; positioned within a given run-number (as function of production size etc)
 
 # Example:
@@ -417,6 +426,16 @@ def exclude_timestamp(ts, orbit, run, filename, global_run_params):
     print(f"This run as globally {total_excluded_fraction} of it's data marked to be exluded")
     return excluded
 
+def publish_MCProdInfo(mc_prod_info, ccdb_url = "https://alice-ccdb.cern.ch", username = "aliprod", include_meta_into_aod=False):
+   print("Publishing MCProdInfo")
+
+   # see if this already has meta-data uploaded, otherwise do nothing
+   mc_prod_info_q = query_mcprodinfo(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag)
+   if mc_prod_info_q == None:
+    # could make this depend on hash values in future
+    upload_mcprodinfo_meta(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag, dataclasses.asdict(mc_prod_info))
+
+
 def main():
     parser = argparse.ArgumentParser(description='Creates an O2DPG simulation workflow, anchored to a given LHC run. The workflows are time anchored at regular positions within a run as a function of production size, split-id and cycle.')
 
@@ -431,6 +450,7 @@ def main():
     parser.add_argument("--run-time-span-file", type=str, dest="run_span_file", help="Run-time-span-file for exclusions of timestamps (bad data periods etc.)", default="")
     parser.add_argument("--invert-irframe-selection", action='store_true', help="Inverts the logic of --run-time-span-file")
     parser.add_argument("--orbitsPerTF", type=str, help="Force a certain orbits-per-timeframe number; Automatically taken from CCDB if not given.", default="")
+    parser.add_argument('--publish-mcprodinfo', action='store_true', default=False, help="Publish MCProdInfo metadata to CCDB")
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
     print (args)
@@ -547,11 +567,28 @@ def main():
     else:
       print ("Creating time-anchored workflow...")
       print ("Executing: " + cmd)
-      # os.system(cmd)
       try:
         cmd_list = shlex.split(os.path.expandvars(cmd))
         output = subprocess.check_output(cmd_list, text=True, stdin=subprocess.DEVNULL, timeout = 120)
         print (output)
+
+        # when we get here, we can publish info about the production (optionally)
+        if args.publish_mcprodinfo == True or os.getenv("PUBLISH_MCPRODINFO") != None:
+          prod_tag = os.getenv("ALIEN_JDL_LPMPRODUCTIONTAG")
+          grid_user_name = os.getenv("JALIEN_USER")
+          mcprod_ccdb_server = os.getenv("PUBLISH_MCPRODINFO_CCDBSERVER")
+          if mcprod_ccdb_server == None:
+            mcprod_ccdb_server = "https://alice-ccdb.cern.ch"
+          if prod_tag != None and grid_user_name != None:
+            info = MCProdInfo(LPMProductionTag = prod_tag,
+                              Col = ColSystem,
+                              IntRate =rate,
+                              RunNumber = args.run_number,
+                              OrbitsPerTF = GLOparams["OrbitsPerTF"])
+            publish_MCProdInfo(info, username = grid_user_name, ccdb_url = mcprod_ccdb_server)
+          else:
+            print("No production tag or GRID user name known. Not publishing MCProdInfo")
+
       except subprocess.CalledProcessError as e:
         print(f"Command failed with return code {e.returncode}")
         print("Output:")
