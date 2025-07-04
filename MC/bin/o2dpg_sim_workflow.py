@@ -45,6 +45,9 @@ from o2dpg_qc_finalization_workflow import include_all_QC_finalization
 from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg, option_if_available, overwrite_config
 from o2dpg_dpl_config_tools import parse_command_string, modify_dpl_command, dpl_option_from_config, TaskFinalizer
 
+# for some JAliEn interaction
+from alienpy.alien import JAlien
+
 parser = argparse.ArgumentParser(description='Create an ALICE (Run3) MC simulation workflow')
 
 # the run-number of data taking or default if unanchored
@@ -1581,6 +1584,18 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    aod_df_id = '{0:03}'.format(tf)
 
+   import os
+   aod_creator = os.getenv("JALIEN_USER")
+   if aod_creator == None:
+      # we use JAliEn to determine the user and capture it's output into a variable via redirect_stdout
+      import io
+      from contextlib import redirect_stdout
+      f = io.StringIO()
+      with redirect_stdout(f):
+         if JAlien(['whoami']) == 0:
+            aod_creator = f.getvalue().strip()
+            print (f"Determined GRID username {aod_creator}")
+
    AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='4000', cpu='1')
    AODtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
    AODtask['cmd'] += '[ -f AO2D.root ] && rm AO2D.root; '  
@@ -1596,6 +1611,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       "--lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}",
       "--anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}",
       "--anchor-prod ${ALIEN_JDL_LPMANCHORPRODUCTION:-unknown}",
+      f"--created-by {aod_creator}",
       "--combine-source-devices" if not args.no_combine_dpl_devices else "",
       "--disable-mc" if args.no_mc_labels else "",
       "--enable-truncation 0" if environ.get("O2DPG_AOD_NOTRUNCATE") or environ.get("ALIEN_JDL_O2DPG_AOD_NOTRUNCATE") else "",

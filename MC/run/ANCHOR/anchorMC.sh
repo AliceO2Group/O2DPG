@@ -162,7 +162,7 @@ SEED=${ALIEN_PROC_ID:-${SEED:-1}}
 ONCVMFS=0
 
 if [ "${ALIEN_JDL_O2DPG_OVERWRITE}" ]; then
-  echo "Setting O2DPG_ROOT to overwritten path"
+  echo "Setting O2DPG_ROOT to overwritten path ${ALIEN_JDL_O2DPG_OVERWRITE}"
   export O2DPG_ROOT=${ALIEN_JDL_O2DPG_OVERWRITE}
 fi
 
@@ -287,10 +287,21 @@ MODULES="--skipModules ZDC"
 # Since this is used, set it explicitly
 ALICEO2_CCDB_LOCALCACHE=${ALICEO2_CCDB_LOCALCACHE:-$(pwd)/ccdb}
 
+# publish MCPRODINFO for first few jobs of a production
+# if external script exported PUBLISH_MCPRODINFO, it will be published anyways
+if [ -z "$PUBLISH_MCPRODINFO" ] && [ "$SPLITID" -lt 20 ]; then
+  PUBLISH_MCPRODINFO_OPTION="--publish-mcprodinfo"
+  echo "Will publish MCProdInfo"
+  export AOD_ADDITIONAL_METADATA_FILE="mc-prod-meta-file.json"
+
+else
+  echo "Will not publish MCProdInfo"
+fi
+
 # these arguments will be digested by o2dpg_sim_workflow_anchored.py
 baseargs="-tf ${NTIMEFRAMES} --split-id ${SPLITID} --prod-split ${PRODSPLIT} --cycle ${CYCLE} --run-number ${ALIEN_JDL_LPMRUNNUMBER}                                \
           ${ALIEN_JDL_RUN_TIME_SPAN_FILE:+--run-time-span-file ${ALIEN_JDL_RUN_TIME_SPAN_FILE} ${ALIEN_JDL_INVERT_IRFRAME_SELECTION:+--invert-irframe-selection}}   \
-          ${ALIEN_JDL_MC_ORBITS_PER_TF:+--orbitsPerTF ${ALIEN_JDL_MC_ORBITS_PER_TF}}"
+          ${ALIEN_JDL_MC_ORBITS_PER_TF:+--orbitsPerTF ${ALIEN_JDL_MC_ORBITS_PER_TF}} ${PUBLISH_MCPRODINFO_OPTION}"
 
 # these arguments will be passed as well but only eventually be digested by o2dpg_sim_workflow.py which is called from o2dpg_sim_workflow_anchored.py
 remainingargs="-seed ${SEED} -ns ${NSIGEVENTS} --include-local-qc --pregenCollContext"
