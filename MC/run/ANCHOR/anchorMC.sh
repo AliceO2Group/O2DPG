@@ -292,8 +292,6 @@ ALICEO2_CCDB_LOCALCACHE=${ALICEO2_CCDB_LOCALCACHE:-$(pwd)/ccdb}
 if [ -z "$PUBLISH_MCPRODINFO" ] && [ "$SPLITID" -lt 20 ]; then
   PUBLISH_MCPRODINFO_OPTION="--publish-mcprodinfo"
   echo "Will publish MCProdInfo"
-  export AOD_ADDITIONAL_METADATA_FILE="mc-prod-meta-file.json"
-
 else
   echo "Will not publish MCProdInfo"
 fi
