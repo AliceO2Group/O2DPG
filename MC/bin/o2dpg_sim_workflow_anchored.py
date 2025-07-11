@@ -258,21 +258,45 @@ def retrieve_MinBias_CTPScaler_Rate(ctpscaler, finaltime, trig_eff_arg, NBunches
     and calculates the interation rate to be applied in Monte Carlo digitizers.
     Uses trig_eff_arg when positive, otherwise calculates the effTrigger.
     """
+    trigger_effs = {
+        "pp": {
+            "1000": 0.68,
+            "6000": 0.737,
+            "default": 0.759
+        },
+        "pO": {
+            "default": 0.8222
+        },
+        "Op": {
+            "default": 0.8222
+        },
+        "OO": {
+            "default": 0.8677
+        },
+        "NeNe": {
+            "default": 0.9147
+        },
+        "PbPb": {
+            "default": 28.0  # this is ZDC
+        }
+    }
 
     # determine first of all the trigger efficiency
     effTrigger = trig_eff_arg
     if effTrigger < 0:
-      if ColSystem == "pp":
-        if eCM < 1000:
-          effTrigger = 0.68
-        elif eCM < 6000:
-          effTrigger = 0.737
+      # Check if ColSystem is defined in trigger_effs
+      if ColSystem in trigger_effs:
+        if ColSystem == "pp":
+          if eCM < 1000:
+            effTrigger = trigger_effs["pp"]["1000"]
+          elif eCM < 6000:
+            effTrigger = trigger_effs["pp"]["6000"]
+          else:
+            effTrigger = trigger_effs["pp"]["default"]
         else:
-          effTrigger = 0.759
-      elif ColSystem == "PbPb":
-        effTrigger = 28.0 # this is ZDC
+          effTrigger = trigger_effs[ColSystem]["default"]
       else:
-        effTrigger = 0.759
+        effTrigger = 0.759  # The simulation will fail later if the collision system is not defined
 
     # this is the default for pp
     ctpclass = 0 # <---- we take the scaler for FT0
@@ -481,21 +505,34 @@ def main():
 
     # determine some fundamental physics quantities
     eCM = grplhcif.getSqrtS()
+    eA = grplhcif.getBeamEnergyPerNucleonInGeV(o2.constants.lhc.BeamDirection.BeamC)
+    eB = grplhcif.getBeamEnergyPerNucleonInGeV(o2.constants.lhc.BeamDirection.BeamA)
     A1 = grplhcif.getAtomicNumberB1()
     A2 = grplhcif.getAtomicNumberB2()
 
     # determine collision system and energy
-    print ("Determined eMC ", eCM)
+    print ("Determined eCM ", eCM)
+    print ("Determined eA ", eA)
+    print ("Determined eB ", eB)
     print ("Determined atomic number A1 ", A1)
     print ("Determined atomic number A2 ", A2)
     ColSystem = ""
-    if A1 == 82 and A2 == 82:
-      ColSystem = "PbPb"
-    elif A1 == 1 and A2 == 1:
-      ColSystem = "pp"
-    else:
-      print ("Unknown collision system ... exiting")
-      exit (1)
+    col_systems = {
+        "pp": (1, 1),
+        "pO": (1, 8),
+        "Op": (8, 1),
+        "OO": (8, 8),
+        "NeNe": (10, 10),
+        "PbPb": (82, 82)
+    }
+    # check if we have a known collision system
+    for system, (a1, a2) in col_systems.items():
+        if A1 == a1 and A2 == a2:
+            ColSystem = system
+            break
+    if ColSystem == "":
+        print(f"ERROR: Unknown collision system for A1={A1}, A2={A2}. Check the GRPLHCIF object.")
+        exit(1)
 
     print ("Collision system ", ColSystem)
 
@@ -555,8 +592,9 @@ def main():
     # we finally pass forward to the unanchored MC workflow creation
     # TODO: this needs to be done in a pythonic way clearly
     # NOTE: forwardargs can - in principle - contain some of the arguments that are appended here. However, the last passed argument wins, so they would be overwritten.
+    energyarg = (" -eCM " + str(eCM)) if A1 == A2 else (" -eA " + str(eA) + " -eB " + str(eB))
     forwardargs += " -tf " + str(args.tf) + " --sor " + str(run_start) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit "       \
-                   + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + " -eCM " + str(eCM)
+                   + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + str(energyarg)
     if not '--readoutDets' in forwardargs:
        forwardargs += ' --readoutDets ' + GLOparams['detList']
     print ("forward args ", forwardargs)
