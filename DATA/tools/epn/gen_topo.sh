@@ -61,6 +61,5 @@ fi
 # Run stage 2 of GenTopo, which does the PDP part, still from hardcoded updatable RPM path
 /opt/alisw/el9/GenTopo/bin/gen_topo_o2dpg.sh
 if [ $? != 0 ]; then
-  echo topology generation failed 1>&2
   exit 1
 fi
