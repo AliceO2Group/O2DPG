@@ -27,12 +27,12 @@ class MCProdInfo:
            # Hash only the meaningful fields
             data_to_hash = {
                 k: v for k, v in asdict(self).items()
-                if k != 'hash'
+                if k != 'Hash'
             }
             hash_str = hashlib.sha256(
                 json.dumps(data_to_hash, sort_keys=True).encode()
             ).hexdigest()
-            object.__setattr__(self, 'hash', hash_str)
+            object.__setattr__(self, 'Hash', hash_str)
 
 
 import re
