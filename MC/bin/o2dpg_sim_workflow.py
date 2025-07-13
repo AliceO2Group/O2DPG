@@ -1608,7 +1608,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       f"--run-number {args.run}",
       getDPL_global_options(bigshm=True),
       f"--info-sources {aodinfosources}",
-      "--lpmp-prod-tag ${ALIEN_JDL_LPMPRODUCTIONTAG:-unknown}",
+      f"--lpmp-prod-tag {args.productionTag}",
       "--anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}",
       "--anchor-prod ${ALIEN_JDL_LPMANCHORPRODUCTION:-unknown}",
       f"--created-by {aod_creator}",
