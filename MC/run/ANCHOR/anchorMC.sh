@@ -45,9 +45,7 @@ print_help()
   echo
   echo "as well as:"
   echo "NTIMEFRAMES,"
-  echo "NSIGEVENTS,"
   echo "SPLITID,"
-  echo "CYCLE,"
   echo "PRODSPLIT."
   echo
   echo "Optional are:"
@@ -62,6 +60,8 @@ print_help()
   echo "ALIEN_JDL_INVERT_IRFRAME_SELECTION, invertes the choice of ALIEN_JDL_RUN_TIME_SPAN_FILE"
   echo "ALIEN_JDL_CCDB_CONDITION_NOT_AFTER, sets the condition_not_after timestamp for CCDB queries"
   echo "DISABLE_QC, set this to disable QC, e.g. to 1"
+  echo "CYCLE, to set a cycle number different than 0"
+  echo "NSIGEVENTS, to enforce a specific upper limit of events in a timeframe (not counting orbit-early) events"
 }
 
 # Prevent the script from being soured to omit unexpected surprises when exit is used
@@ -142,11 +142,20 @@ fi
 [ -z "${ALIEN_JDL_LPMANCHORYEAR}" ] && { echo_error "Set ALIEN_JDL_LPMANCHORYEAR or ANCHORYEAR" ; exit 1 ; }
 
 [ -z "${NTIMEFRAMES}" ] && { echo_error "Set NTIMEFRAMES" ; exit 1 ; }
-[ -z "${NSIGEVENTS}" ] && { echo_error "Set NSIGEVENTS" ; exit 1 ; }
 [ -z "${SPLITID}" ] && { echo_error "Set SPLITID" ; exit 1 ; }
-[ -z "${CYCLE}" ] && { echo_error "Set CYCLE" ; exit 1 ; }
 [ -z "${PRODSPLIT}" ] && { echo_error "Set PRODSPLIT" ; exit 1 ; }
 
+# The number of signal events can be given, but should be useful only in
+# certain expert modes. In the default case, the final event number is determined by the timeframe length.
+if [ -z "${NSIGEVENTS}" ]; then
+  NSIGEVENTS=10000 # this is just some big number; In the simulation the event number is the minimum of this number and what fits into a single timeframe
+                   # based on the interaction rate. The number is a reasonable upper limit related to ~5696 collisions that fit into 32 LHC orbits at 2MHz interaction rate.
+fi
+
+if [ -z "${CYCLE}" ]; then
+  echo_info "No CYCLE number given ... defaulting to 0"
+  CYCLE=0
+fi
 
 # this generates an exact reproducer script for this job
 # that can be used locally for debugging etc.
