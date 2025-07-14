@@ -91,7 +91,7 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     NTRDTRKTHREADS=3
     ITSTRK_THREADS=2
     ITSTPC_THREADS=2
-  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_4gpu" ]]; then
+  elif [[ $OPTIMIZED_PARALLEL_ASYNC =~ ^pp_4gpu(_|$) ]]; then
     if [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]]; then
       if [[ ! -z ${ALIEN_JDL_LPMANCHORYEAR} && ${ALIEN_JDL_LPMANCHORYEAR} -lt 2023 ]]; then
         TIMEFRAME_RATE_LIMIT=45
@@ -100,13 +100,18 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
       fi
     fi
     [[ -z ${SHMSIZE:-} ]] && SHMSIZE=100000000000
+    if [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_4gpu_NERSC" ]]; then
+      NGPUS=1
+      GPUTYPE=CUDA
+    else
+      NGPUS=4
+    fi
     NGPURECOTHREADS=8
     NTRDTRKTHREADS=2
     ITSTRK_THREADS=2
     ITSTPC_THREADS=2
     SVERTEX_THREADS=4
     TPCTIMESERIES_THREADS=2
-    NGPUS=4
     N_TPCTRK=4
     N_FWDMATCH=2
     N_PRIMVTXMATCH=1
@@ -123,11 +128,16 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_ITSTRK=12
     N_ITSCL=2
     export DPL_SMOOTH_RATE_LIMITING=1
-  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_4gpu" ]]; then
+  elif [[ $OPTIMIZED_PARALLEL_ASYNC =~ ^PbPb_4gpu(_|$) ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=35
     [[ -z ${SHMSIZE:-} ]] && SHMSIZE=100000000000 # SHM_LIMIT 3/4
     [[ -z ${TIMEFRAME_SHM_LIMIT:-} ]] && TIMEFRAME_SHM_LIMIT=$(($SHMSIZE / 3))
-    NGPUS=4
+    if [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_4gpu_NERSC" ]]; then
+      NGPUS=1
+      GPUTYPE=CUDA
+    else
+      NGPUS=4
+    fi
     NGPURECOTHREADS=8
     NTRDTRKTHREADS=8
     ITSTRK_THREADS=5
