@@ -186,7 +186,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
   ITSTRK_THREADS=2
   ITSTPC_THREADS=2
   # Tuned multiplicities for sync pp / Pb-Pb processing
-  if [[ $BEAMTYPE == "pp" ]]; then
+  if [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
     N_ITSRAWDEC=$(math_max $((6 * $EPNPIPELINES * $NGPUS / 4)) 1)
     N_MFTRAWDEC=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
     if [[ "${GEN_TOPO_AUTOSCALE_PROCESSES:-}" == "1" && $RUNTYPE == "PHYSICS" ]]; then
@@ -229,7 +229,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
     N_ITSRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSRAWDEC:-1}) # This means, if we have 60 EPN nodes, we need at least 3 ITS RAW decoders (will be scaled down by a factor of two automatically if we have 2 NUMA domains)
     N_MFTRAWDEC=$(math_max $((3 * 60 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_MFTRAWDEC:-1})
     if [[ $RUNTYPE == "PHYSICS" || $RUNTYPE == "COSMICS" ]]; then
-      if [[ $BEAMTYPE == "pp" ]]; then
+      if [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
         N_ITSTRK=$(math_max $((9 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
       elif [[ $BEAMTYPE == "cosmic" ]]; then
         N_ITSTRK=$(math_max $((5 * 200 / $RECO_NUM_NODES_WORKFLOW_CMP)) ${N_ITSTRK:-1})
@@ -249,7 +249,7 @@ if [[ -z ${EVE_NTH_EVENT:-} ]]; then
     EVE_NTH_EVENT=2
   elif [[ "$HIGH_RATE_PP" == "1" ]]; then
     EVE_NTH_EVENT=10
-  elif [[ $BEAMTYPE == "pp" ]]; then
+  elif [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
     EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
   else # COSMICS / TECHNICALS / ...
     EVE_NTH_EVENT=1
@@ -269,7 +269,7 @@ else
 fi
 
 # Random data sampling fraction for MCH
-if [[ $BEAMTYPE == "pp" ]]; then
+if [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
     : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.5}
     : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.995}
 elif [[ "$HIGH_RATE_PP" == "1" ]]; then

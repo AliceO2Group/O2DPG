@@ -51,6 +51,14 @@ fi
 echo "BeamType = $BEAMTYPE"
 echo "PERIOD = $PERIOD"
 
+
+if [[ $BEAMTYPE == "pO" ]] || [[ $BEAMTYPE == "Op" ]] || [[ $BEAMTYPE == "Op" ]] || [[ $BEAMTYPE == "OO" ]] || [[ $BEAMTYPE == "NeNe" ]] ; then
+  export LIGHTNUCLEI=1
+else
+  export LIGHTNUCLEI=0
+fi
+
+
 # detector list
 echo -e "\n"
 echo "Printing detector list for reconstruction"
@@ -366,7 +374,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     [[ $APPLYS11 == 1 ]] && export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=78;" || export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[11]=20;"
   elif [[ $BEAMTYPE == "PbPb" && ( ( $ALIEN_JDL_LPMANCHORYEAR == "2023" && $ANCHORED_PASS_NUMBER -gt 4 ) || ( $ALIEN_JDL_LPMANCHORYEAR == "2024" && $ANCHORED_PASS_NUMBER -gt 1 )  ) ]] ; then
     export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[0]=78;tpcitsMatch.askMinTPCRow[1]=78;tpcitsMatch.askMinTPCRow[2]=78;tpcitsMatch.askMinTPCRow[3]=78;tpcitsMatch.askMinTPCRow[4]=78;tpcitsMatch.askMinTPCRow[5]=78;tpcitsMatch.askMinTPCRow[6]=78;tpcitsMatch.askMinTPCRow[7]=78;tpcitsMatch.askMinTPCRow[8]=78;tpcitsMatch.askMinTPCRow[9]=78;tpcitsMatch.askMinTPCRow[10]=78;tpcitsMatch.askMinTPCRow[11]=78;tpcitsMatch.askMinTPCRow[12]=78;tpcitsMatch.askMinTPCRow[13]=78;tpcitsMatch.askMinTPCRow[14]=78;tpcitsMatch.askMinTPCRow[15]=78;tpcitsMatch.askMinTPCRow[16]=78;tpcitsMatch.askMinTPCRow[17]=78;tpcitsMatch.askMinTPCRow[18]=78;tpcitsMatch.askMinTPCRow[19]=78;tpcitsMatch.askMinTPCRow[20]=78;tpcitsMatch.askMinTPCRow[21]=78;tpcitsMatch.askMinTPCRow[22]=78;tpcitsMatch.askMinTPCRow[23]=78;tpcitsMatch.askMinTPCRow[24]=78;tpcitsMatch.askMinTPCRow[25]=78;tpcitsMatch.askMinTPCRow[26]=78;tpcitsMatch.askMinTPCRow[27]=78;tpcitsMatch.askMinTPCRow[28]=78;tpcitsMatch.askMinTPCRow[29]=78;tpcitsMatch.askMinTPCRow[30]=78;tpcitsMatch.askMinTPCRow[31]=78;tpcitsMatch.askMinTPCRow[32]=78;tpcitsMatch.askMinTPCRow[33]=78;tpcitsMatch.askMinTPCRow[34]=78;tpcitsMatch.askMinTPCRow[35]=78;"
-  elif [[ $BEAMTYPE == "pp" ]] ; then
+  elif [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]] ; then
     export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[0]=78;tpcitsMatch.askMinTPCRow[1]=78;tpcitsMatch.askMinTPCRow[2]=78;tpcitsMatch.askMinTPCRow[3]=78;tpcitsMatch.askMinTPCRow[4]=78;tpcitsMatch.askMinTPCRow[5]=78;tpcitsMatch.askMinTPCRow[6]=78;tpcitsMatch.askMinTPCRow[7]=78;tpcitsMatch.askMinTPCRow[8]=78;tpcitsMatch.askMinTPCRow[9]=78;tpcitsMatch.askMinTPCRow[10]=78;tpcitsMatch.askMinTPCRow[11]=78;tpcitsMatch.askMinTPCRow[12]=78;tpcitsMatch.askMinTPCRow[13]=78;tpcitsMatch.askMinTPCRow[14]=78;tpcitsMatch.askMinTPCRow[15]=78;tpcitsMatch.askMinTPCRow[16]=78;tpcitsMatch.askMinTPCRow[17]=78;tpcitsMatch.askMinTPCRow[18]=78;tpcitsMatch.askMinTPCRow[19]=78;tpcitsMatch.askMinTPCRow[20]=78;tpcitsMatch.askMinTPCRow[21]=78;tpcitsMatch.askMinTPCRow[22]=78;tpcitsMatch.askMinTPCRow[23]=78;tpcitsMatch.askMinTPCRow[24]=78;tpcitsMatch.askMinTPCRow[25]=78;tpcitsMatch.askMinTPCRow[26]=78;tpcitsMatch.askMinTPCRow[27]=78;tpcitsMatch.askMinTPCRow[28]=78;tpcitsMatch.askMinTPCRow[29]=78;tpcitsMatch.askMinTPCRow[30]=78;tpcitsMatch.askMinTPCRow[31]=78;tpcitsMatch.askMinTPCRow[32]=78;tpcitsMatch.askMinTPCRow[33]=78;tpcitsMatch.askMinTPCRow[34]=78;tpcitsMatch.askMinTPCRow[35]=78;"
   fi
 
@@ -546,7 +554,7 @@ if [[ $BEAMTYPE == "PbPb" ]]; then
   if [[ -z "$ALIEN_JDL_DISABLE_UPC" || $ALIEN_JDL_DISABLE_UPC != 1 ]]; then
     EXTRA_ITSRECO_CONFIG+=";ITSVertexerParam.nIterations=2;ITSCATrackerParam.doUPCIteration=true;"
   fi
-elif [[ $BEAMTYPE == "pp" ]]; then
+elif [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
   EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.startLayerMask[0]=127;ITSCATrackerParam.startLayerMask[1]=127;ITSCATrackerParam.startLayerMask[2]=127;"
   EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPtIterLgt[0]=0.05;ITSCATrackerParam.minPtIterLgt[1]=0.05;ITSCATrackerParam.minPtIterLgt[2]=0.05;ITSCATrackerParam.minPtIterLgt[3]=0.05;ITSCATrackerParam.minPtIterLgt[4]=0.05;ITSCATrackerParam.minPtIterLgt[5]=0.05;ITSCATrackerParam.minPtIterLgt[6]=0.05;ITSCATrackerParam.minPtIterLgt[7]=0.05;ITSCATrackerParam.minPtIterLgt[8]=0.05;ITSCATrackerParam.minPtIterLgt[9]=0.09;ITSCATrackerParam.minPtIterLgt[10]=0.167;ITSCATrackerParam.minPtIterLgt[11]=0.125;"
@@ -582,11 +590,13 @@ fi
 
 export PVERTEXER+=";pvertexer.acceptableScale2=9;pvertexer.minScale2=2;$EXTRA_PRIMVTX_TimeMargin;"
 if [[ $ALIGNLEVEL == 1 ]]; then
-  if [[ $BEAMTYPE == "pp" ]]; then
-    export PVERTEXER+=";pvertexer.maxChi2TZDebris=40;pvertexer.maxChi2Mean=12;pvertexer.maxMultRatDebris=1.;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
-  elif [[ $BEAMTYPE == "PbPb" ]]; then
+  if [[ $BEAMTYPE == "PbPb" ]]; then
     export PVERTEXER+=";pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;pvertexer.maxITSOnlyFraction=0.85;pvertexer.maxTDiffDebris=1.5;pvertexer.maxZDiffDebris=0.3;pvertexer.addZSigma2Debris=0.09;pvertexer.addTimeSigma2Debris=2.25;pvertexer.maxChi2TZDebris=100;pvertexer.maxMultRatDebris=1.;pvertexer.maxTDiffDebrisExtra=-1.;pvertexer.dbscanDeltaT=-0.55;pvertexer.maxTMAD=1.;pvertexer.maxZMAD=0.04;"
     has_detector_reco FT0 && PVERTEX_CONFIG+=" --validate-with-ft0 "
+  elif [[ $BEAMTYPE == "pp" ]]; then
+    export PVERTEXER+=";pvertexer.maxChi2TZDebris=40;pvertexer.maxChi2Mean=12;pvertexer.maxMultRatDebris=1.;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
+  elif [[ $LIGHTNUCLEI == "1" ]]; then
+    export PVERTEXER+=";pvertexer.maxChi2TZDebris=100;pvertexer.maxChi2Mean=12;pvertexer.maxMultRatDebris=0.6;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
   fi
 fi
 
@@ -637,14 +647,14 @@ export ARGS_EXTRA_PROCESS_o2_fv0_reco_workflow+=" --fv0-reconstructor"
 #...
 
 # ad-hoc settings for MFT
-if [[ $BEAMTYPE == "pp" || $PERIOD == "LHC22s" ]]; then
+if [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" || $PERIOD == "LHC22s" ]]; then
   export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow+=";MFTTracking.RBins=30;MFTTracking.PhiBins=120;MFTTracking.ZVtxMin=-13;MFTTracking.ZVtxMax=13;MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT;$MAXBCDIFFTOSQUASHBIAS_MFT"
 else
   export CONFIG_EXTRA_PROCESS_o2_mft_reco_workflow+=";MFTTracking.MFTRadLength=0.084;$MAXBCDIFFTOMASKBIAS_MFT;$MAXBCDIFFTOSQUASHBIAS_MFT"
 fi
 
 # ad-hoc settings for MCH
-if [[ $BEAMTYPE == "pp" ]]; then
+if [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
   export CONFIG_EXTRA_PROCESS_o2_mch_reco_workflow+=";MCHTracking.chamberResolutionX=0.4;MCHTracking.chamberResolutionY=0.4;MCHTracking.sigmaCutForTracking=7;MCHTracking.sigmaCutForImprovement=6"
 fi
 
@@ -653,7 +663,7 @@ fi
 # Setting MUON_MATCHING_NCANDIDATES=0 disables the storage of multiple candidates
 if [[ -z "${MUON_MATCHING_NCANDIDATES:-}" ]]; then
   MUON_MATCHING_NCANDIDATES=0 # disable the saving of nCandidated by default
-  if [[ $BEAMTYPE == "pp" ]]; then MUON_MATCHING_NCANDIDATES=5; fi
+  if [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then MUON_MATCHING_NCANDIDATES=5; fi
   if [[ $BEAMTYPE == "PbPb" ]]; then MUON_MATCHING_NCANDIDATES=20; fi
 fi
 if [[ "x${MUON_MATCHING_NCANDIDATES}" != "x0" ]]; then
