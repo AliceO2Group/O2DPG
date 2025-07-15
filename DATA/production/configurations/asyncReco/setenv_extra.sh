@@ -369,8 +369,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   elif [[ $BEAMTYPE == "pp" ]] ; then
     export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[0]=78;tpcitsMatch.askMinTPCRow[1]=78;tpcitsMatch.askMinTPCRow[2]=78;tpcitsMatch.askMinTPCRow[3]=78;tpcitsMatch.askMinTPCRow[4]=78;tpcitsMatch.askMinTPCRow[5]=78;tpcitsMatch.askMinTPCRow[6]=78;tpcitsMatch.askMinTPCRow[7]=78;tpcitsMatch.askMinTPCRow[8]=78;tpcitsMatch.askMinTPCRow[9]=78;tpcitsMatch.askMinTPCRow[10]=78;tpcitsMatch.askMinTPCRow[11]=78;tpcitsMatch.askMinTPCRow[12]=78;tpcitsMatch.askMinTPCRow[13]=78;tpcitsMatch.askMinTPCRow[14]=78;tpcitsMatch.askMinTPCRow[15]=78;tpcitsMatch.askMinTPCRow[16]=78;tpcitsMatch.askMinTPCRow[17]=78;tpcitsMatch.askMinTPCRow[18]=78;tpcitsMatch.askMinTPCRow[19]=78;tpcitsMatch.askMinTPCRow[20]=78;tpcitsMatch.askMinTPCRow[21]=78;tpcitsMatch.askMinTPCRow[22]=78;tpcitsMatch.askMinTPCRow[23]=78;tpcitsMatch.askMinTPCRow[24]=78;tpcitsMatch.askMinTPCRow[25]=78;tpcitsMatch.askMinTPCRow[26]=78;tpcitsMatch.askMinTPCRow[27]=78;tpcitsMatch.askMinTPCRow[28]=78;tpcitsMatch.askMinTPCRow[29]=78;tpcitsMatch.askMinTPCRow[30]=78;tpcitsMatch.askMinTPCRow[31]=78;tpcitsMatch.askMinTPCRow[32]=78;tpcitsMatch.askMinTPCRow[33]=78;tpcitsMatch.askMinTPCRow[34]=78;tpcitsMatch.askMinTPCRow[35]=78;"
   fi
-  
-  
+
+
   # settings to improve inner pad-rows contribution
   export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.rejectIFCLowRadiusCluster=1;"
   if grep extrapolationTrackingRowRange $O2_ROOT/include/GPU/GPUSettingsList.h &> /dev/null ; then
@@ -395,14 +395,14 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.tpcUseOldCPUDecoding=1;GPU_proc.tpcApplyClusterFilterOnCPU=$ALIEN_JDL_TPCCLUSTERFILTER;"
   fi
 
-  if [[ -n "$ALIEN_JDL_TPCCHICUTOPT" ]]; then # 0 or 1 to disable or enable (default) the chi2 cut both on one-side and smoothed Kalman chi2 
+  if [[ -n "$ALIEN_JDL_TPCCHICUTOPT" ]]; then # 0 or 1 to disable or enable (default) the chi2 cut both on one-side and smoothed Kalman chi2
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.mergerInterpolateRejectAlsoOnCurrentPosition=$ALIEN_JDL_TPCCHICUTOPT;"
   fi
 
   if [[ -n "$ALIEN_JDL_TPCCLUSEDGEREDEF" ]]; then # if >0 (float) undo the edge cluster bit for TPC clusters with distance to the edge exceeding this value
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.clustersEdgeFixDistance=$ALIEN_JDL_TPCCLUSEDGEREDEF;"
   fi
-  
+
   #-------------------------------------- TPC corrections -----------------------------------------------
   # we need to provide to TPC
   # 1) interaction rate info (lumi) used for scaling or errors and possible of the corrections : INST_IR_FOR_TPC
@@ -412,6 +412,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   TPC_SCALING_SOURCE=${ALIEN_JDL_TPCSCALINGSOURCE-IDCCCDB}
   # MEAN_IR_FOR_TPC allows (1) to alter the map mean IR if >0 or (2) disable  all corrections if <0
   MEAN_IR_FOR_TPC=${ALIEN_JDL_MEANIRFORTPC-}
+  # optional mean IR to impose for the ref. map
+  MEAN_IR_REF_FOR_TPC=${ALIEN_JDL_MEANIRREFFORTPC-}
 
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2022" ]]; then
     INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-CTPCCDB} # by default override inst.IR by the mean IR from CCDB and use it for scaling
@@ -431,10 +433,10 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   [[ -n "$ALIEN_JDL_MSHAPECORRECTION" && $ALIEN_JDL_MSHAPECORRECTION == "0" ]] && ENABLE_MSHAPE=0 || ENABLE_MSHAPE=1
 
   if [[ -n $MEAN_IR_FOR_TPC ]] ; then  # firs check if corrections were not disabled via MEAN_IR_FOR_TPC
-    if [[ $MEAN_IR_FOR_TPC -gt 0 ]] ; then # positive value overrides map mean lumi
-      echo "Applying externally provided map mean IR for scaling, $MEAN_IR_FOR_TPC Hz"
+    if (( $(echo "$MEAN_IR_FOR_TPC > 0" | bc -l) )) ; then # positive value overrides map mean lumi
+      echo "Applying externally provided map mean IR for scaling, $MEAN_IR_FOR_TPC"
       export TPC_CORR_SCALING+=";TPCCorrMap.lumiMean=$MEAN_IR_FOR_TPC;" # take mean lumy at face value
-    elif [[ $MEAN_IR_FOR_TPC -lt 0 ]] ; then # negative mean lumi disables all corrections
+    elif (( $(echo "$MEAN_IR_FOR_TPC < 0" | bc -l) )) ; then # negative mean lumi disables all corrections
       echo "Negative MEAN_IR_FOR_TPC -> all TPC corrections will be ignored"
       export TPC_CORR_SCALING+=" --lumi-type 0 "
       export TPC_CORR_SCALING+=";TPCCorrMap.lumiMean=$MEAN_IR_FOR_TPC;"
@@ -446,8 +448,14 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     fi
   fi # MEAN_IR_FOR_TPC overridden
 
+  if [[ -n $MEAN_IR_REF_FOR_TPC ]] ; then
+    echo "Applying externally provided map mean reference map IR, $MEAN_IR_REF_FOR_TPC"
+    export TPC_CORR_SCALING+=";TPCCorrMap.lumiMeanRef=$MEAN_IR_REF_FOR_TPC"
+  fi
+
+
   # set IR for TPC, even if it is not used for corrections scaling
-  if [[ $INST_IR_FOR_TPC -gt 0 ]]; then # externally imposed CTP IR
+  if  (( $(echo "$INST_IR_FOR_TPC > 0" | bc -l) )) ; then # externally imposed CTP IR
     echo "Applying externally provided istantaneous IR $INST_IR_FOR_TPC Hz"
     export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
   elif [[ $INST_IR_FOR_TPC == "CTP" ]]; then
