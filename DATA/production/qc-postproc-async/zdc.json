@@ -87,6 +87,48 @@
             ]
           }
         ],
+        "dataSourcesTDCA": [
+          {
+            "type": "repository",
+            "path": "ZDC/MO/Rec",
+            "names": [
+              "ZNAC:h_TDC_ZNA_TC_A",
+              "ZNAS:h_TDC_ZNA_SUM_A",
+              "ZPAC:h_TDC_ZPA_TC_A",
+              "ZPAS:h_TDC_ZPA_SUM_A",
+              "ZEM1:h_TDC_ZEM1_A",
+              "ZEM2:h_TDC_ZEM2_A",
+              "ZNCC:h_TDC_ZNC_TC_A",
+              "ZNCS:h_TDC_ZNC_SUM_A",
+              "ZPCC:h_TDC_ZPC_TC_A",
+              "ZPCS:h_TDC_ZPC_SUM_A"
+            ]
+          }
+        ],
+        "dataSourcesPeak1n": [
+          {
+            "type": "repository",
+            "path": "ZDC/MO/Rec",
+            "names": [
+              "ZNAC:h_TDC_ZNA_TC_A",
+              "ZNAS:h_TDC_ZNA_SUM_A",
+              "ZNCC:h_TDC_ZNC_TC_A",
+              "ZNCS:h_TDC_ZNC_SUM_A"
+            ]
+          }
+        ],
+        "dataSourcesPeak1p": [
+          {
+            "type": "repository",
+            "path": "ZDC/MO/Rec",
+            "names": [
+              "ZPAC:h_TDC_ZPA_TC_A",
+              "ZPAS:h_TDC_ZPA_SUM_A",
+              "ZPCC:h_TDC_ZPC_TC_A",
+              "ZPCS:h_TDC_ZPC_SUM_A"
+            ]
+          }
+        ],
         "initTrigger": [
           "userorcontrol"
         ],
@@ -117,7 +159,7 @@
               {
                 "name": "ZDCQuality/ZDCQuality",
                 "title": "ZDC Quality",
-                "messageBad": "Inform on-call immediately",
+                "messageBad": "Bad histograms",
                 "messageMedium": "Add bookkeeping entry",
                 "messageGood": "All checks are OK",
                 "messageNull": "Some histograms are empty!!!"
@@ -156,53 +198,77 @@
         "detectorName": "ZDC",
         "policy": "OnAny",
         "checkParameters": {
-          "ADC_ZNAC": "700;200;400",
-          "ADC_ZNA1": "260;100;200",
-          "ADC_ZNA2": "300;100;200",
-          "ADC_ZNA3": "170;100;200",
-          "ADC_ZNA4": "170;100;200",
-          "ADC_ZNAS": "700;200;400",
-          "ADC_ZPAC": "700;200;400",
-          "ADC_ZPA1": "60;50;100",
-          "ADC_ZPA2": "80;50;100",
-          "ADC_ZPA3": "245;50;100",
-          "ADC_ZPA4": "700;200;400",
-          "ADC_ZPAS": "850;200;400",
-          "ADC_ZEM1": "1230;200;400",
-          "ADC_ZEM2": "1275;200;400",
-          "ADC_ZNCC": "700;200;400",
-          "ADC_ZNC1": "130;100;200",
-          "ADC_ZNC2": "280;100;200",
-          "ADC_ZNC3": "130;100;200",
-          "ADC_ZNC4": "260;100;200",
-          "ADC_ZNCS": "600;200;400",
-          "ADC_ZPCC": "790;200;400",
-          "ADC_ZPC1": "770;200;400",
-          "ADC_ZPC2": "350;100;200",
-          "ADC_ZPC3": "97;50;100",
-          "ADC_ZPC4": "67;50;67",
-          "ADC_ZPCS": "1044;200;400",
-          "ADC_POS_MSG_X": "0.15",
-          "ADC_POS_MSG_Y": "0.92",
-          "TDC_ZNAC": "0.0;2.0;4.0",
-          "TDC_ZNAS": "0.0;2.0;4.0",
-          "TDC_ZPAC": "0.0;2.0;4.0",
-          "TDC_ZPAS": "0.0;2.0;4.0",
-          "TDC_ZEM1": "0.0;2.0;4.0",
-          "TDC_ZEM2": "0.0;2.0;4.0",
-          "TDC_ZNCC": "0.0;2.0;4.0",
-          "TDC_ZNCS": "0.0;2.0;4.0",
-          "TDC_ZPCC": "0.0;2.0;4.0",
-          "TDC_ZPCS": "0.0;2.0;4.0",
-          "TDC_POS_MSG_X": "0.01",
-          "TDC_POS_MSG_Y": "0.92"
+ "ADC_ZNAC" : "40.2;10;20",
+              "ADC_ZNA1" : "10.6;1000;2000",
+              "ADC_ZNA2" : "11.8;1000;2000",
+              "ADC_ZNA3" : "8.6;1000;2000",
+              "ADC_ZNA4" : "6.9;1000;2000",
+              "ADC_ZNAS" : "41.7;1000;2000",
+              "ADC_ZPAC" : "17.7;1000;2000",
+              "ADC_ZPA1" : "1.63;1000;2000",
+              "ADC_ZPA2" : "2.86;1000;2000",
+              "ADC_ZPA3" : "5.30;1000;2000",
+              "ADC_ZPA4" : "12.25;1000;2000",
+              "ADC_ZPAS" : "20.2;1000;2000",
+              "ADC_ZEM1" : "803.2;1000;2000",
+              "ADC_ZEM2" : "891.2;1000;2000",
+              "ADC_ZNCC" : "40.7;1000;2000",
+              "ADC_ZNC1" : "9.7;1000;2000",
+              "ADC_ZNC2" : "15.8;1000;2000",
+              "ADC_ZNC3" : "6.2;1000;2000",
+              "ADC_ZNC4" : "8.6;1000;2000",
+              "ADC_ZNCS" : "42.3;1000;2000",
+              "ADC_ZPCC" : "19.6;1000;2000",
+              "ADC_ZPC1" : "14.19;1000;2000",
+              "ADC_ZPC2" : "7.63;1000;2000",
+              "ADC_ZPC3" : "2.96;1000;2000",
+              "ADC_ZPC4" : "1.21;1000;2000",
+              "ADC_ZPCS" : "20.9;1000;2000",
+              "ADC_POS_MSG_X": "0.15",
+              "ADC_POS_MSG_Y": "0.92",
+              "TDC_ZNAC" : "0.14;1000;2000",
+              "TDC_ZNAS" : "0.05;1000;2000",
+              "TDC_ZPAC" : "-0.39;1000;2000",
+              "TDC_ZPAS" : "-0.11;1000;2000",
+              "TDC_ZEM1" : "0.07;1000;2000",
+              "TDC_ZEM2" : "0.02;1000;2000",
+              "TDC_ZNCC" : "0.19;1000;2000",
+              "TDC_ZNCS" : "0.08;1000;2000",
+              "TDC_ZPCC" : "-0.29;1000;2000",
+              "TDC_ZPCS" : "-0.20;1000;2000",
+              "TDC_POS_MSG_X": "0.01",
+              "TDC_POS_MSG_Y": "0.92",
+              "TDCA_ZNAC" : "326;1000;2000",
+              "TDCA_ZNAS" : "331;1000;2000",
+              "TDCA_ZPAC" : "130;1000;2000",
+              "TDCA_ZPAS" : "146;1000;2000",
+              "TDCA_ZEM1" : "1203;1000;2000",
+              "TDCA_ZEM2" : "1265;1000;2000",
+              "TDCA_ZNCC" : "329;1000;2000",
+              "TDCA_ZNCS" : "339;1000;2000",
+              "TDCA_ZPCC" : "146;1000;2000",
+              "TDCA_ZPCS" : "150;1000;2000",
+              "TDCA_POS_MSG_X": "0.01",
+              "TDCA_POS_MSG_Y": "0.92",
+              "PEAK1N_ZNAC" : "40;1000;2000",
+              "PEAK1N_ZNAS" : "40;1000;2000",
+              "PEAK1N_ZNCC" : "40;1000;2000",
+              "PEAK1N_ZNCS" : "40;1000;2000",
+              "PEAK1N_POS_MSG_X": "0.01",
+              "PEAK1N_POS_MSG_Y": "0.92",
+              "PEAK1P_ZPAC" : "52;1000;2000",
+              "PEAK1P_ZPAS" : "52;1000;2000",
+              "PEAK1P_ZPCC" : "52;1000;2000",
+              "PEAK1P_ZPCS" : "52;1000;2000",
+              "PEAK1P_POS_MSG_X": "0.01",
+              "PEAK1P_POS_MSG_Y": "0.92"
         },
         "dataSource": [
           {
             "type": "PostProcessing",
             "name": "RecPP",
             "MOs": [
-              "h_summary_ADC", "h_summary_TDC"
+              "h_summary_ADC" , "h_summary_TDC",  "h_summary_TDCA",  "h_summary_Peak1n",  "h_summary_Peak1p"
             ]
           }
         ]
