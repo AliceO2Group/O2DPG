@@ -1,0 +1,68 @@
+
+/control/verbose 2
+/mcVerbose/all 1
+/mcVerbose/geometryManager 1
+/mcVerbose/opGeometryManager 1
+/mcTracking/loopVerbose 1
+/mcVerbose/composedPhysicsList 2
+/mcVerbose/runAction 2   # For looping thresholds control
+#/tracking/verbose 1
+#//control/cout/ignoreThreadsExcept 0
+
+/mcPhysics/rangeCuts 0.001 mm
+/mcRegions/setRangePrecision 5
+/mcTracking/skipNeutrino true
+/mcDet/setIsMaxStepInLowDensityMaterials true
+/mcDet/setMaxStepInLowDensityMaterials 10 m
+/mcMagField/setConstDistance 1 mm
+/mcDet/setIsZeroMagField true
+/mcControl/useRootRandom true # couple G4 random seed to gRandom
+
+# optical
+
+/process/optical/verbose 0
+/process/optical/processActivation Scintillation 0
+/process/optical/processActivation OpWLS 0
+/process/optical/processActivation OpMieHG 0
+/process/optical/cerenkov/setTrackSecondariesFirst false
+/mcMagField/stepperType NystromRK4
+
+# PAI for TRD
+# Geant4 VMC >= v3.2
+/mcPhysics/emModel/setEmModel  PAI
+/mcPhysics/emModel/setRegions  TRD_Gas-mix
+/mcPhysics/emModel/setParticles  all
+/mcPrimaryGenerator/skipUnknownParticles true # don't crash when seeing unknown ion etc. (issue warning)
+
+#
+# Precise Msc for EMCAL
+#
+# Geant4 VMC >= v3.2
+/mcPhysics/emModel/setEmModel  SpecialUrbanMsc
+/mcPhysics/emModel/setRegions  EMC_Lead$ EMC_Scintillator$
+/mcPhysics/emModel/setParticles  e- e+
+
+# combined transportation + Msc mode is currently broken for ALICE (Geant 10.2.0)
+/process/em/transportationWithMsc Disabled
+
+#
+# Adding extra lines for fixing tracking bias
+#
+/mcMagField/setDeltaIntersection  1.0e-05 mm
+/mcMagField/setMinimumEpsilonStep 0.5e-05
+/mcMagField/setMaximumEpsilonStep 1.0e-05
+/mcMagField/printParameters
+
+# Change default parameters for killing looping particles
+#
+/mcPhysics/useHighLooperThresholds
+/mcRun/setLooperThresholdImportantEnergy 100. MeV
+
+# Define media with the INCLXX physics list; here basically in all ITS media
+#/mcVerbose/biasingConfigurationManager 3
+/mcPhysics/biasing/setModel inclxx
+/mcPhysics/biasing/setRegions ITS_AIR$ ITS_WATER$ ITS_COPPER$ ITS_KAPTON(POLYCH2)$ ITS_GLUE_IBFPC$ ITS_CERAMIC$ ITS_K13D2U2k$ ITS_K13D2U120$ ITS_F6151B05M$ ITS_M60J3K$ ITS_M55J6K$ ITS_FGS003$ ITS_CarbonFleece$ ITS_PEEKCF30$ ITS_GLUE$ ITS_ALUMINUM$ ITS_INOX304$ ALPIDE_METALSTACK$ ALPIDE_SI$
+/mcPhysics/biasing/setParticles proton neutron pi+ pi-
+
+# external decayer
+/mcPhysics/setExtDecayerSelection hypertriton anti_hypertriton
