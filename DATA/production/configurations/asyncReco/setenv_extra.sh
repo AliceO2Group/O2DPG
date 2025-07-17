@@ -3,15 +3,6 @@
 
 # process flags passed to the script
 
-if [[ -z "$ALIEN_JDL_USEGPUS" || $ALIEN_JDL_USEGPUS != 1 ]]; then
-  export SETENV_NO_ULIMIT=1
-fi
-
-# to avoid memory issues - we don't do this on the EPNs, since it can affect the performance
-if [[ $ALIEN_JDL_USEGPUS != 1 ]]; then
-  export DPL_DEFAULT_PIPELINE_LENGTH=16
-fi
-
 # check if this is a production on skimmed data
 if grep -q /skimmed/ wn.xml ; then
   export ON_SKIMMED_DATA=1;
@@ -369,8 +360,8 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   elif [[ $BEAMTYPE == "pp" ]] ; then
     export ITSTPCMATCH="${ITSTPCMATCH};tpcitsMatch.askMinTPCRow[0]=78;tpcitsMatch.askMinTPCRow[1]=78;tpcitsMatch.askMinTPCRow[2]=78;tpcitsMatch.askMinTPCRow[3]=78;tpcitsMatch.askMinTPCRow[4]=78;tpcitsMatch.askMinTPCRow[5]=78;tpcitsMatch.askMinTPCRow[6]=78;tpcitsMatch.askMinTPCRow[7]=78;tpcitsMatch.askMinTPCRow[8]=78;tpcitsMatch.askMinTPCRow[9]=78;tpcitsMatch.askMinTPCRow[10]=78;tpcitsMatch.askMinTPCRow[11]=78;tpcitsMatch.askMinTPCRow[12]=78;tpcitsMatch.askMinTPCRow[13]=78;tpcitsMatch.askMinTPCRow[14]=78;tpcitsMatch.askMinTPCRow[15]=78;tpcitsMatch.askMinTPCRow[16]=78;tpcitsMatch.askMinTPCRow[17]=78;tpcitsMatch.askMinTPCRow[18]=78;tpcitsMatch.askMinTPCRow[19]=78;tpcitsMatch.askMinTPCRow[20]=78;tpcitsMatch.askMinTPCRow[21]=78;tpcitsMatch.askMinTPCRow[22]=78;tpcitsMatch.askMinTPCRow[23]=78;tpcitsMatch.askMinTPCRow[24]=78;tpcitsMatch.askMinTPCRow[25]=78;tpcitsMatch.askMinTPCRow[26]=78;tpcitsMatch.askMinTPCRow[27]=78;tpcitsMatch.askMinTPCRow[28]=78;tpcitsMatch.askMinTPCRow[29]=78;tpcitsMatch.askMinTPCRow[30]=78;tpcitsMatch.askMinTPCRow[31]=78;tpcitsMatch.askMinTPCRow[32]=78;tpcitsMatch.askMinTPCRow[33]=78;tpcitsMatch.askMinTPCRow[34]=78;tpcitsMatch.askMinTPCRow[35]=78;"
   fi
-  
-  
+
+
   # settings to improve inner pad-rows contribution
   export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.trackletMinSharedNormFactor=1.;GPU_rec_tpc.trackletMaxSharedFraction=0.3;GPU_rec_tpc.rejectIFCLowRadiusCluster=1;"
   if grep extrapolationTrackingRowRange $O2_ROOT/include/GPU/GPUSettingsList.h &> /dev/null ; then
@@ -395,14 +386,14 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.tpcUseOldCPUDecoding=1;GPU_proc.tpcApplyClusterFilterOnCPU=$ALIEN_JDL_TPCCLUSTERFILTER;"
   fi
 
-  if [[ -n "$ALIEN_JDL_TPCCHICUTOPT" ]]; then # 0 or 1 to disable or enable (default) the chi2 cut both on one-side and smoothed Kalman chi2 
+  if [[ -n "$ALIEN_JDL_TPCCHICUTOPT" ]]; then # 0 or 1 to disable or enable (default) the chi2 cut both on one-side and smoothed Kalman chi2
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.mergerInterpolateRejectAlsoOnCurrentPosition=$ALIEN_JDL_TPCCHICUTOPT;"
   fi
 
   if [[ -n "$ALIEN_JDL_TPCCLUSEDGEREDEF" ]]; then # if >0 (float) undo the edge cluster bit for TPC clusters with distance to the edge exceeding this value
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.clustersEdgeFixDistance=$ALIEN_JDL_TPCCLUSEDGEREDEF;"
   fi
-  
+
   #-------------------------------------- TPC corrections -----------------------------------------------
   # we need to provide to TPC
   # 1) interaction rate info (lumi) used for scaling or errors and possible of the corrections : INST_IR_FOR_TPC
