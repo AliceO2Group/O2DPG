@@ -596,7 +596,7 @@ if [[ $ALIGNLEVEL == 1 ]]; then
   elif [[ $BEAMTYPE == "pp" ]]; then
     export PVERTEXER+=";pvertexer.maxChi2TZDebris=40;pvertexer.maxChi2Mean=12;pvertexer.maxMultRatDebris=1.;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
   elif [[ $LIGHTNUCLEI == "1" ]]; then
-    export PVERTEXER+=";pvertexer.maxChi2TZDebris=100;pvertexer.maxChi2Mean=12;pvertexer.maxMultRatDebris=0.6;pvertexer.addTimeSigma2Debris=1e-2;pvertexer.meanVertexExtraErrSelection=0.03;"
+    export PVERTEXER+="pvertexer.maxChi2TZDebris=3000;pvertexer.maxTDiffDebris=0.7;pvertexer.maxZDiffDebris=0.5;pvertexer.maxMultRatDebris=0.25;pvertexer.addTimeSigma2Debris=0.2;pvertexer.addZSigma2Debris=0.2;pvertexer.maxChi2TZDebrisExtra=50;pvertexer.maxTDiffDebrisExtra=-1;pvertexer.maxZDiffDebrisExtra=0.03;pvertexer.maxMultRatDebrisExtra=0.25;pvertexer.meanVertexExtraErrSelection=0.03;pvertexer.maxITSOnlyFraction=0.8;pvertexer.meanVertexExtraErrSelection=0.03;"
   fi
 fi
 
