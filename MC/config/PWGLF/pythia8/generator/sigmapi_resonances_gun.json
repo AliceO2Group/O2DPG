@@ -1,0 +1,29 @@
+{
+    "lambda(1405)" : {
+        "pdg": 102132,
+        "n": 2,
+        "ptMin": 0.0,
+        "ptMax": 10,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "lambda(1520)" : {
+        "pdg": 102134,
+        "n": 2,
+        "ptMin": 0.0,
+        "ptMax": 10,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    },
+    "sigma(1385)" : {
+        "pdg": 3214,
+        "n": 2,
+        "ptMin": 0.0,
+        "ptMax": 10,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "genDecayed": true
+    }
+}
