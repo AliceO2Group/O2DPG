@@ -33,7 +33,7 @@ public:
     mHadronPdgList = hadronPdgList;
     mPartPdgToReplaceList = partPdgToReplaceList;
     mFreqReplaceList = freqReplaceList;
-    // Ds1*(2700), Ds1*(2860), Ds3*(2860), Xic(3055)+, Xic(3080)+, Xic(3055)0, Xic(3080)0, LambdaC(2595), LambdaC(2625)
+    // Ds1*(2700), Ds1*(2860), Ds3*(2860), Xic(3055)+, Xic(3080)+, Xic(3055)0, Xic(3080)0, LambdaC(2625), LambdaC(2595)
     mCustomPartPdgs = {30433, 40433, 437, 4315, 4316, 4325, 4326, 4124, 14122};
     mCustomPartMasses[30433] = 2.714f;
     mCustomPartMasses[40433] =  2.859f;
