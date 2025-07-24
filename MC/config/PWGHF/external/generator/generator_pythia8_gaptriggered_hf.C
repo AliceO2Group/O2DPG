@@ -33,8 +33,8 @@ public:
     mHadronPdgList = hadronPdgList;
     mPartPdgToReplaceList = partPdgToReplaceList;
     mFreqReplaceList = freqReplaceList;
-    // Ds1*(2700), Ds1*(2860), Ds3*(2860), Xic(3055)+, Xic(3080)+, Xic(3055)0, Xic(3080)0
-    mCustomPartPdgs = {30433, 40433, 437, 4315, 4316, 4325, 4326};
+    // Ds1*(2700), Ds1*(2860), Ds3*(2860), Xic(3055)+, Xic(3080)+, Xic(3055)0, Xic(3080)0, LambdaC(2625), LambdaC(2595)
+    mCustomPartPdgs = {30433, 40433, 437, 4315, 4316, 4325, 4326, 4124, 14122};
     mCustomPartMasses[30433] = 2.714f;
     mCustomPartMasses[40433] =  2.859f;
     mCustomPartMasses[437] = 2.860f;
@@ -42,6 +42,8 @@ public:
     mCustomPartMasses[4316] = 3.0799f;
     mCustomPartMasses[4325] = 3.0559f;
     mCustomPartMasses[4326] = 3.0772f;
+    mCustomPartMasses[4124] = 2.62810f;
+    mCustomPartMasses[14122] = 2.59225f;
     mCustomPartWidths[30433] = 0.122f;
     mCustomPartWidths[40433] =  0.160f;
     mCustomPartWidths[437] = 0.053f;
@@ -49,6 +51,8 @@ public:
     mCustomPartWidths[4316] = 0.0056f;
     mCustomPartWidths[4325] = 0.0078f;
     mCustomPartWidths[4326] = 0.0036f;
+    mCustomPartWidths[4124] = 0.00052f;
+    mCustomPartWidths[14122] = 0.0026f;
     Print();
   }    
 
