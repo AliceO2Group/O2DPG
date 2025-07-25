@@ -53,10 +53,8 @@ int External()
                 }
                 if(hasBeautyMoth){
                     nSignalPsi2S++;
-                    std::cout << "Signal PDG: " << pdg << "\n";
                     for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
                         auto pdgDau = tracks->at(j).GetPdgCode();
-                        std::cout << "Daughter " << j << " is: " << pdgDau << "\n";
                         if(TMath::Abs(pdgDau) == checkPdgDecay[0] ) { nSignalJpsi++; if( std::abs(track.GetRapidity()) < rapidityWindow) nSignalJpsiWithinAcc++; idJpsi = j; }
                         if(pdgDau == checkPdgDecay[1] ) { nSignalPionsPos++; if( std::abs(track.GetRapidity()) < rapidityWindow) nSignalPionsPosWithinAcc++; }
                         if(pdgDau == checkPdgDecay[2] ) { nSignalPionsNeg++; if( std::abs(track.GetRapidity()) < rapidityWindow) nSignalPionsNegWithinAcc++; }
@@ -73,7 +71,6 @@ int External()
                     // check for parent-child relations
                     auto pdg0 = child0.GetPdgCode();
                     auto pdg1 = child1.GetPdgCode();
-                    std::cout << "Lepton daughter particles of mother  " << trackJpsi.GetPdgCode() << " are PDG0: " << pdg0 << " PDG1: " << pdg1 << "\n";
                     if (std::abs(pdg0) == leptonPdg && std::abs(pdg1) == leptonPdg && pdg0 == -pdg1) {
                         nLeptonPairs++;
                         if (child0.getToBeDone() && child1.getToBeDone()) {

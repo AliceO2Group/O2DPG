@@ -356,11 +356,9 @@ class GeneratorEvtGen : public T
       case kEvtBeautyUpgrade:
         SetDecayTable(Form("%s/BEAUTYUPGRADE.DEC", pathO2.Data()));
         break;
-        // Yiping's test
       case kEvtBPsiJpsiPiPi:
         SetDecayTable(Form("%s/BTOPSITOJPSIPIPI.DEC", pathO2.Data()));
         break;
-        // end Yiping's test
     }
     return;
   };
