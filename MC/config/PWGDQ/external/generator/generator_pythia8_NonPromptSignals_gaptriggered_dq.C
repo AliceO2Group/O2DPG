@@ -373,7 +373,7 @@ FairGenerator*
     printf("PDG %d \n", std::stoi(spdg));
     gen->addHadronPDGs(std::stoi(spdg));
   }
-  gen->SetForceDecay(kEvtBPsiJpsiPiPi);
+  gen->SetForceDecay(kEvtBtoPsi2SToJpsiPiPi);
 
   // set random seed
   gen->readString("Random:setSeed on");
