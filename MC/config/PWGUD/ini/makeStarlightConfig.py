@@ -8,7 +8,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Make Starlight configuration',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument('--collType',default='PbPb', choices=['PbPb', 'pPb', 'Pbp', 'pp', 'OO', 'pO', 'Op'],
+parser.add_argument('--collType',default='PbPb', choices=['PbPb', 'pPb', 'Pbp', 'pp', 'OO', 'pO', 'Op', 'NeNe'],
                    help='Colission system')
                    
 parser.add_argument('--eCM', type=float, default='5360',
@@ -74,6 +74,11 @@ if 'Op' in args.collType:
     pA = 16
     tZ = 1
     tA = 1 
+if 'NeNe' in args.collType:
+    pZ = 10
+    pA = 20
+    tZ = 10
+    tA = 20
 
 ### open output file
 fout = open(args.output, 'w')

@@ -119,6 +119,7 @@ class GeneratorStarlight_class : public Generator
     {"kCohJpsiToEl",         2,  443011,   20, -1.0, -1.0,  443, 0 }, //
     {"kCohJpsiToElRad",      2,  443011,   20, -1.0, -1.0,  443, 1 }, //
     {"kCohJpsiToProton",     2, 4432212,   20, -1.0, -1.0,  443, 0 }, //
+    {"kCohJpsiToLLbar",      2, 4433122,   20, -1.0, -1.0,  443, 0 }, //
     {"kCohJpsi4Prong",       2,  443013,   20, -1.0, -1.0,  443, 1 }, //
     {"kCohJpsi6Prong",       2,  443013,   20, -1.0, -1.0,  443, 1 }, //
     {"kCohPsi2sToMu",        2,  444013,   20, -1.0, -1.0,  100443, 0 }, //
