@@ -463,7 +463,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
 
 
   # set IR for TPC, even if it is not used for corrections scaling
-  if  (( $(echo "$INST_IR_FOR_TPC > 0" | bc -l) )) ; then # externally imposed CTP IR
+  if [[ "$INST_IR_FOR_TPC" =~ ^-?[0-9]*\.?[0-9]+$ ]] && (( $(echo "$INST_IR_FOR_TPC > 0" | bc -l) )) ; then # externally imposed CTP IR
     echo "Applying externally provided istantaneous IR $INST_IR_FOR_TPC Hz"
     export TPC_CORR_SCALING+=";TPCCorrMap.lumiInst=$INST_IR_FOR_TPC"
   elif [[ $INST_IR_FOR_TPC == "CTP" ]]; then
