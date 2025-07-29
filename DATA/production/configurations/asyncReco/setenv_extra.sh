@@ -802,6 +802,10 @@ if [[ $ALIEN_JDL_THINAODS == "1" ]] ; then
   export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --thin-tracks"
 fi
 
+if [[ $ALIEN_JDL_PREPROPAGATE == "1" ]] ; then
+  export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --propagate-tracks 1 --propagate-tracks-max-xiu 5"
+fi
+
 # Enabling QC
 if [[ $ALIEN_JDL_QCOFF != "1" ]]; then
   export WORKFLOW_PARAMETERS="QC,${WORKFLOW_PARAMETERS}"
