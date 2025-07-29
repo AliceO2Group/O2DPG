@@ -803,7 +803,7 @@ if [[ $ALIEN_JDL_THINAODS == "1" ]] ; then
 fi
 
 if [[ $ALIEN_JDL_PREPROPAGATE == "1" ]] ; then
-  export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --propagate-tracks 1 --propagate-tracks-max-xiu 5"
+  export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --propagate-tracks --propagate-tracks-max-xiu 5"
 fi
 
 # Enabling QC
