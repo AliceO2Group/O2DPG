@@ -15,16 +15,15 @@ class GeneratorEPOS4 : public o2::eventgen::GeneratorHepMC
                 LOG(error) << "Failed to import particles from HepMC event!";
                 return false;
             }
-            // Remove charmonia chi_0c and chi_1c from the particles list (incompatible with default G4 physics list)
+            // Skip transport of charmonia chi_0c and chi_1c (incompatible with default G4 physics list)
             // These are not decayed by EPOS4 (no daughters)
             if (!mEnChi)
             {
                 for (int a = 0; a < mParticles.size(); ++a) {
                     if (mParticles[a].GetPdgCode() == 10441 || mParticles[a].GetPdgCode() == 20443)
                     {
-                        LOG(debug) << "Removing charmonium state " << mParticles[a].GetPdgCode() << " from particles list";
-                        mParticles.erase(mParticles.begin() + a);
-                        --a; // Adjust index after erasing
+                        LOG(debug) << "Setting charmonium state " << mParticles[a].GetPdgCode() << " with index " << a << " not to be transported";
+                        mParticles[a].SetBit(ParticleStatus::kToBeDone, false);
                     }
                 }
             }
@@ -34,7 +33,7 @@ class GeneratorEPOS4 : public o2::eventgen::GeneratorHepMC
         void setChiFlag(bool &flag) {
             mEnChi = flag;
             if (!flag) {
-                LOG(info) << "Charmonium states chi_0c and chi_1c will be removed from the particles list";
+                LOG(info) << "Charmonium states chi_0c and chi_1c will not be transported.";
             }
         }
 
