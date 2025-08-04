@@ -315,8 +315,9 @@ def adjust_RECO_environment(workflowspec, package = ""):
     for taskid in range(len(workflowspec['stages'])):
         if (matches_or_inherits_label(taskid, from_stage, matches_label)):
            # now we do the final adjust (as annotation) in the workflow itself
-           if workflowspec['stages'][taskid].get("alternative_alienv_package") == None:
-              workflowspec['stages'][taskid]["alternative_alienv_package"] = package
+           if workflowspec['stages'][taskid].get('disable_alternative_reco_software', False) != True:
+              if workflowspec['stages'][taskid].get("alternative_alienv_package") == None:
+                 workflowspec['stages'][taskid]["alternative_alienv_package"] = package
 
 def merge_dicts(dict1, dict2):
     """

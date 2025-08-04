@@ -234,8 +234,8 @@ if args.overwrite_config != '':
 # We still may need adjust configurations manually for consistency:
 #
 # * Force simpler TPC digitization of if TPC reco does not have the mc-time-gain option:
-tpc_envfile = 'env_async.env' if environ.get('ALIEN_JDL_O2DPG_ASYNC_RECO_TAG') is not None else None
-tpcreco_mctimegain = option_if_available('o2-tpc-reco-workflow', '--tpc-mc-time-gain', envfile=tpc_envfile)
+async_envfile = 'env_async.env' if environ.get('ALIEN_JDL_O2DPG_ASYNC_RECO_TAG') is not None else None
+tpcreco_mctimegain = option_if_available('o2-tpc-reco-workflow', '--tpc-mc-time-gain', envfile=async_envfile)
 if tpcreco_mctimegain == '':
    # this was communicated by Jens Wiechula@TPC; avoids dEdX issue https://its.cern.ch/jira/browse/O2-5486 for the 2tag mechanism
    print ("TPC reco does not support --tpc-mc-time-gain. Adjusting some config for TPC digitization")
@@ -1596,10 +1596,15 @@ for tf in range(1, NTIMEFRAMES + 1):
             aod_creator = f.getvalue().strip()
             print (f"Determined GRID username {aod_creator}")
 
+   # this option might not be universally available
+   created_by_option = option_if_available('o2-aod-producer-workflow', '--created-by', envfile=async_envfile)
+   if created_by_option != '':
+      created_by_option += ' ' + aod_creator
+
    AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='4000', cpu='1')
    AODtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
-   AODtask['cmd'] += '[ -f AO2D.root ] && rm AO2D.root; '  
-   AODtask["cmd"] += task_finalizer([
+   AODtask['cmd'] += '[ -f AO2D.root ] && rm AO2D.root; '
+   AODtask['cmd'] += task_finalizer([
       "${O2_ROOT}/bin/o2-aod-producer-workflow",
       "--reco-mctracks-only 1",
       "--aod-writer-keep dangling",
@@ -1611,13 +1616,14 @@ for tf in range(1, NTIMEFRAMES + 1):
       f"--lpmp-prod-tag {args.productionTag}",
       "--anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}",
       "--anchor-prod ${ALIEN_JDL_LPMANCHORPRODUCTION:-unknown}",
-      f"--created-by {aod_creator}",
+      created_by_option,
       "--combine-source-devices" if not args.no_combine_dpl_devices else "",
       "--disable-mc" if args.no_mc_labels else "",
       "--enable-truncation 0" if environ.get("O2DPG_AOD_NOTRUNCATE") or environ.get("ALIEN_JDL_O2DPG_AOD_NOTRUNCATE") else "",
       "--disable-strangeness-tracker" if args.no_strangeness_tracking else "",
       f"--aod-timeframe-id ${{ALIEN_PROC_ID}}{aod_df_id}" if not args.run_anchored else "",
    ])
+   # Consider in future: AODtask['disable_alternative_reco_software'] = True # do not apply reco software here (we prefer latest aod converter)
    workflow['stages'].append(AODtask)
 
    #
