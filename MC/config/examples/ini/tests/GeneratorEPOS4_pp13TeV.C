@@ -34,8 +34,8 @@ int External()
     std::cerr << "Expected 100 events, got " << nEvents << "\n";
     return 1;
   }
-  // check if each event has two protons with 6800 GeV of energy
-  // exits if the particle is not a proton 
+  // check if each event has two protons with 6500 GeV of energy
+  // exits if the particle is not a proton
   for (int i = 0; i < nEvents; i++)
   {
     auto check = tree->GetEntry(i);
@@ -44,7 +44,7 @@ int External()
     {
       auto track = tracks->at(idxMCTrack);
       double energy = track.GetEnergy();
-      // Check if track energy is approximately equal to 6800 GeV (a tolerance of 65 keV is considered, straight equality does not work due to floating point precision)
+      // Check if track energy is approximately equal to 6500 GeV (a tolerance of 65 keV is considered, straight equality does not work due to floating point precision)
       if (std::abs(energy - 6500) < 1e-4)
       {
         if (track.GetPdgCode() != 2212){
