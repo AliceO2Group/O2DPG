@@ -216,6 +216,7 @@ while [ $# -gt 0 ] ; do
         --prodsplit) PRODSPLIT=$2; shift 2 ;; # allows to set JDL production split level (useful to easily replicate workflows)
         --singularity) SINGULARITY=ON; shift 1 ;; # run everything inside singularity
         --wait) WAITFORALIEN=ON; shift 1 ;; #wait for alien jobs to finish
+        --wait-any) WAITFORALIENANY=ON; WAITFORALIEN=ON; shift 1 ;; #wait for any good==done alien jobs to return
         --outputspec) OUTPUTSPEC=$2; shift 2 ;; #provide comma separate list of JDL file specs to be put as part of JDL Output field (example '"*.log@disk=1","*.root@disk=2"')
 	-h) Usage ; exit ;;
         --help) Usage ; exit ;;
@@ -227,6 +228,7 @@ export JOBTTL
 export JOBLABEL
 export MATTERMOSTHOOK
 export CONTROLSERVER
+
 [[ $PRODSPLIT -gt 100 ]] && echo "Production split needs to be smaller than 100 for the moment" && exit 1
 
 # check for presence of jq (needed in code path to fetch output files)
@@ -270,9 +272,10 @@ pok "Set the job name by running $0 <scriptname> <jobname>"
 # Generate local workdir
 #
 if [[ "${ONGRID}" == "0" ]]; then
-  WORKDIR=${WORKDIR:-/tmp/alien_work/$(basename "$MY_JOBWORKDIR")}
-  [ ! -d "${WORKDIR}" ] && mkdir -p ${WORKDIR}
-  [ ! "${CONTINUE_WORKDIR}" ] && cp "${MY_JOBSCRIPT}" "${WORKDIR}/alien_jobscript.sh"
+  GRID_SUBMIT_WORKDIR=${GRID_SUBMIT_WORKDIR:-/tmp/alien_work/$(basename "$MY_JOBWORKDIR")}
+  echo "WORKDIR FOR THIS JOB IS ${GRID_SUBMIT_WORKDIR}"
+  [ ! -d "${GRID_SUBMIT_WORKDIR}" ] && mkdir -p ${GRID_SUBMIT_WORKDIR}
+  [ ! "${CONTINUE_WORKDIR}" ] && cp "${MY_JOBSCRIPT}" "${GRID_SUBMIT_WORKDIR}/alien_jobscript.sh"
 fi
 
 # 
@@ -349,7 +352,7 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
   cd "$(dirname "$0")"
   THIS_SCRIPT="$PWD/$(basename "$0")"
 
-  cd "${WORKDIR}"
+  cd "${GRID_SUBMIT_WORKDIR}"
 
   QUOT='"'
   # ---- Generate JDL ----------------
@@ -436,11 +439,18 @@ EOF
       continue
     fi
     let counter=0 # reset counter
-    JOBSTATUS=$(alien.py ps -j ${MY_JOBID} | awk '//{print $3}')
-    # echo -ne "Waiting for jobs to return; Last status ${JOBSTATUS}"
+
+    # this is the global job status (a D here means the production is done)
+    JOBSTATUS=$(alien.py ps -j ${MY_JOBID} | awk '//{print $3}') # this is the global job status
+    # in addition we may query individual splits
+    if [ "${WAITFORANY}" ]; then
+      if ALIENPY_JSON=true alien.py ps -a -m "${MY_JOBID}" | grep "status" | grep -q "DONE"; then
+        JOBSTATUS="D"  # a D here means == some job finished successfully
+      fi
+    fi
 
     if [ "${JOBSTATUS}" == "D" ]; then
-      echo "Job done"
+      echo "${WAITFORALIENANY:+At least one }Job(s) done"
       WAITFORALIEN=""  # guarantees to go out of outer while loop
 
       if [ "${FETCHOUTPUT}" ]; then
@@ -473,10 +483,6 @@ EOF
           done
       fi
     fi
-    if [[ "${FOO:0:1}" == [EK] ]]; then
-      echo "Job error occured"
-      exit 1
-    fi
   done
   # get the job data products locally if requested
 
@@ -490,7 +496,7 @@ if [[ ${SINGULARITY} ]]; then
   # if singularity was asked we restart this script within a container
   # it's actually much like the GRID mode --> which is why we set JALIEN_TOKEN_CERT
   set -x
-  cp $0 ${WORKDIR}
+  cp $0 ${GRID_SUBMIT_WORKDIR}
 
   # detect architecture (ARM or X86)
   ARCH=$(uname -i)
@@ -508,15 +514,15 @@ if [[ ${SINGULARITY} ]]; then
   APPTAINER_EXEC="/cvmfs/alice.cern.ch/containers/bin/apptainer/${ARCH}/current/bin/apptainer"
 
   # we can actually analyse the local JDL to find the package and set it up for the container
-  ${APPTAINER_EXEC} exec -C -B /cvmfs:/cvmfs,${WORKDIR}:/workdir --pwd /workdir -C ${CONTAINER} /workdir/grid_submit.sh \
+  ${APPTAINER_EXEC} exec -C -B /cvmfs:/cvmfs,${GRID_SUBMIT_WORKDIR}:/workdir --pwd /workdir -C ${CONTAINER} /workdir/grid_submit.sh \
   ${CONTINUE_WORKDIR:+"-c ${CONTINUE_WORKDIR}"} --local ${O2TAG:+--o2tag ${O2TAG}} --ttl ${JOBTTL} --label ${JOBLABEL:-label} ${MATTERMOSTHOOK:+--mattermost ${MATTERMOSTHOOK}} ${CONTROLSERVER:+--controlserver ${CONTROLSERVER}}
   set +x
   exit $?
 fi
 
 if [[ "${ONGRID}" == 0 ]]; then
-  banner "Executing job in directory ${WORKDIR}"
-  cd "${WORKDIR}" 2> /dev/null
+  banner "Executing job in directory ${GRID_SUBMIT_WORKDIR}"
+  cd "${GRID_SUBMIT_WORKDIR}" 2> /dev/null
 fi
 
 exec &> >(tee -a alien_log_${ALIEN_PROC_ID:-0}.txt)
