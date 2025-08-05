@@ -519,7 +519,10 @@ vtxmode_sgngen = 'kCollContext'
 
 # preproduce the collision context / timeframe structure for all timeframes at once
 precollneeds=[GRP_TASK['name']]
-NEventsQED=10000  # max number of QED events to simulate per timeframe
+# max number of QED events simulated per timeframe.
+# A large pool of QED events (0.6*INTRATE) is needed to avoid repetition of events in the same or
+# neighbouring ITS readout frames, which would fire already activated pixel, discarding the event.
+NEventsQED = 10000 if (INTRATE <= 16668) else int(INTRATE*0.6)
 # Hadronic cross section values are taken from Glauber MC
 XSecSys = {'PbPb': 8., 'OO': 1.273, 'NeNe': 1.736}
 # QED cross section values were calculated with TEPEMGEN
@@ -723,7 +726,6 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    QEDdigiargs = ""
    if includeQED:
-     NEventsQED=10000 # 35K for a full timeframe?
      qedneeds=[GRP_TASK['name'], PreCollContextTask['name']]
      QED_task=createTask(name='qedsim_'+str(tf), needs=qedneeds, tf=tf, cwd=timeframeworkdir, cpu='1')
      ########################################################################################################
