@@ -54,4 +54,4 @@ export CYCLE=0
 export ALIEN_JDL_ANCHOR_SIM_OPTIONS="%{SIM_OPTIONS}"
 
 # execute MC
-# ${O2DPG_ROOT}/MC/run/ANCHOR/anchorMC.sh
+${O2DPG_ROOT}/MC/run/ANCHOR/anchorMC.sh
