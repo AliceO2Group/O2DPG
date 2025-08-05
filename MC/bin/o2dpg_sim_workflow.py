@@ -522,7 +522,8 @@ precollneeds=[GRP_TASK['name']]
 # max number of QED events simulated per timeframe.
 # A large pool of QED events (0.6*INTRATE) is needed to avoid repetition of events in the same or
 # neighbouring ITS readout frames, which would fire already activated pixel, discarding the event.
-NEventsQED = 10000 if (INTRATE <= 16668) else int(INTRATE*0.6)
+# Discussed in detail in https://its.cern.ch/jira/browse/O2-5861
+NEventsQED = max(10000, int(INTRATE*0.6))
 # Hadronic cross section values are taken from Glauber MC
 XSecSys = {'PbPb': 8., 'OO': 1.273, 'NeNe': 1.736}
 # QED cross section values were calculated with TEPEMGEN
