@@ -487,6 +487,9 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     elif [[ $TPC_SCALING_SOURCE == "CTP" ]]; then
       echo "CTP Lumi from data will be used for TPC scaling"
       export TPC_CORR_SCALING+=" --lumi-type 1 "
+      if [[ $ALIEN_JDL_USEDERIVATIVESFORSCALING == "1" ]]; then
+        export TPC_CORR_SCALING+=" --corrmap-lumi-mode 1 "
+      fi
     elif [[ $TPC_SCALING_SOURCE == "IDCCCDB" ]]; then
       echo "TPC correction with IDC from CCDB will be used"
       export TPC_CORR_SCALING+=" --lumi-type 2 "
