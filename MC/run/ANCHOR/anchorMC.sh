@@ -393,6 +393,11 @@ if [[ "${MCRC}" == "0" && "${ALIEN_JDL_ADDTIMESERIESINMC}" != "0" ]]; then
   # Note: We could maybe avoid this if-else by including `tpctimes` directly in the workflow-targets above
 fi
 
+if [[ "${MCRC}" == "0" && "${ALIEN_JDL_DOTPCRESIDUALEXTRACTION}" = "1" ]]; then
+  echo_info "Running TPC residuals extraction and aggregation"
+    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt scdaggreg
+fi
+
 [[ -n "${DISABLE_QC}" ]] && echo_info "QC is disabled, skip it."
 
 if [[ -z "${DISABLE_QC}" && "${MCRC}" == "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
