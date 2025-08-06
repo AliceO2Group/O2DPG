@@ -153,6 +153,7 @@ parser.add_argument('--mft-assessment-full', action='store_true', help='enables 
 
 # TPC options
 parser.add_argument('--tpc-distortion-type', default=0, type=int, help='Simulate distortions in the TPC (0=no distortions, 1=distortions without scaling, 2=distortions with CTP scaling)')
+parser.add_argument('--tpc-corrmap-lumi-mode', default=2, type=int, help='TPC corrections mode (0=linear, 1=derivative, 2=derivative for special MC maps')
 parser.add_argument('--ctp-scaler', default=0, type=float, help='CTP raw scaler value used for distortion simulation')
 # Global Forward reconstruction configuration
 parser.add_argument('--fwdmatching-assessment-full', action='store_true', help='enables complete assessment of global forward reco')
@@ -472,28 +473,32 @@ globalinittask['cmd'] = 'o2-ccdb-cleansemaphores -p ${ALICEO2_CCDB_LOCALCACHE}'
 workflow['stages'].append(globalinittask)
 ####
 
+usebkgcache=args.use_bkg_from!=None
+includeFullQC=args.include_qc=='True' or args.include_qc==True
+includeLocalQC=args.include_local_qc=='True' or args.include_local_qc==True
+includeAnalysis = args.include_analysis
+includeTPCResiduals=True if environ.get('ALIEN_JDL_DOTPCRESIDUALEXTRACTION') == '1' else False
+ccdbRemap = environ.get('ALIEN_JDL_REMAPPINGS')
+
+qcdir = "QC"
+if (includeLocalQC or includeFullQC) and not isdir(qcdir):
+    mkdir(qcdir)
+
 def getDPL_global_options(bigshm=False, ccdbbackend=True):
    common=" -b --run "
    if len(args.dpl_child_driver) > 0:
      common=common + ' --child-driver ' + str(args.dpl_child_driver)
    if ccdbbackend:
      common=common + " --condition-not-after " + str(args.condition_not_after)
+     if ccdbRemap != None:
+        common=common + " --condition-remap " + ccdbRemap
    if args.noIPC!=None:
       return common + " --no-IPC "
    if bigshm:
       return common + " --shm-segment-size ${SHMSIZE:-50000000000} "
    else:
       return common
-
-usebkgcache=args.use_bkg_from!=None
-includeFullQC=args.include_qc=='True' or args.include_qc==True
-includeLocalQC=args.include_local_qc=='True' or args.include_local_qc==True
-includeAnalysis = args.include_analysis
-
-qcdir = "QC"
-if (includeLocalQC or includeFullQC) and not isdir(qcdir):
-    mkdir(qcdir)
-
+    
 # create/publish the GRPs and other GLO objects for consistent use further down the pipeline
 orbitsPerTF=int(args.orbitsPerTF)
 GRP_TASK = createTask(name='grpcreate', cpu='0')
@@ -1170,17 +1175,19 @@ for tf in range(1, NTIMEFRAMES + 1):
    # in case of PbPb the conversion factor ZDC ->FT0 (pp) must be set
    tpc_corr_options_mc=''
 
+   tpcCorrmapLumiMode = args.tpc_corrmap_lumi_mode
+
    if tpcDistortionType == 0: # disable distortion corrections
       tpc_corr_options_mc=' --corrmap-lumi-mode 0 '
       tpcLocalCFreco['TPCCorrMap.lumiMean'] = '-1';
    elif tpcDistortionType == 1: # disable scaling
-      tpc_corr_options_mc=' --corrmap-lumi-mode 2 '
+      tpc_corr_options_mc=' --corrmap-lumi-mode ' + str(tpcCorrmapLumiMode) + ' '
       tpcLocalCFreco['TPCCorrMap.lumiInst'] = str(CTPSCALER)
       tpcLocalCFreco['TPCCorrMap.lumiMean'] = str(CTPSCALER)
    elif tpcDistortionType == 2: # full scaling with CTP values
       if COLTYPE == 'PbPb':
          tpcLocalCFreco['TPCCorrMap.lumiInstFactor'] = str(lumiInstFactor)
-      tpc_corr_options_mc=' --corrmap-lumi-mode 2 '
+      tpc_corr_options_mc=' --corrmap-lumi-mode ' + str(tpcCorrmapLumiMode) + ' '
       tpcLocalCFreco['TPCCorrMap.lumiInst'] = str(CTPSCALER)
 
    # Setup the TPC correction scaling options for reco; They come from the anchoring setup
@@ -1629,6 +1636,60 @@ for tf in range(1, NTIMEFRAMES + 1):
    # Consider in future: AODtask['disable_alternative_reco_software'] = True # do not apply reco software here (we prefer latest aod converter)
    workflow['stages'].append(AODtask)
 
+   if includeTPCResiduals:
+      print ("Adding TPC residuals extraction and aggregation")
+
+      #<------------- TPC residuals extraction
+      scdcalib_vertex_sources = dpl_option_from_config(anchorConfig,
+                                                       'o2-tpc-scdcalib-interpolation-workflow',
+                                                       'vtx-sources',
+                                                       default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP')
+
+      scdcalib_track_sources = dpl_option_from_config(anchorConfig,
+                                                      'o2-tpc-scdcalib-interpolation-workflow',
+                                                      'tracking-sources',
+                                                      default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP')
+
+      scdcalib_track_extraction = dpl_option_from_config(anchorConfig,
+                                                         'o2-tpc-scdcalib-interpolation-workflow',
+                                                         'tracking-sources-map-extraction',
+                                                         default_value='ITS-TPC')
+
+      SCDCALIBtask = createTask(name='scdcalib_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["CALIB"], mem='4000')
+      SCDCALIBtask['cmd'] = task_finalizer(
+         [ '${O2_ROOT}/bin/o2-tpc-scdcalib-interpolation-workflow',
+           getDPL_global_options(bigshm=True),
+           putConfigValues(['scdcalib']),
+           '--vtx-sources ' + scdcalib_vertex_sources,
+           '--tracking-sources ' + scdcalib_track_sources,
+           '--tracking-sources-map-extraction ' + scdcalib_track_extraction,
+           '--sec-per-slot 1 ',
+           '--send-track-data'
+        ])
+      workflow['stages'].append(SCDCALIBtask)
+
+      #<------------- TPC residuals aggregator
+      scdaggreg_secperslot = dpl_option_from_config(anchorConfig,
+                                                    'o2-calibration-residual-aggregator',
+                                                    'sec-per-slot',
+                                                    default_value='600')
+      scdaggreg_outputtype = dpl_option_from_config(anchorConfig,
+                                                    'o2-calibration-residual-aggregator',
+                                                    'output-type',
+                                                    default_value='trackParams,unbinnedResid')
+
+      SCDAGGREGtask = createTask(name='scdaggreg_'+str(tf), needs=[SCDCALIBtask['name']], tf=tf, cwd=timeframeworkdir, lab=["CALIB"], mem='1500')
+      SCDAGGREGtask['cmd'] = task_finalizer(
+         [ '${O2_ROOT}/bin/o2-calibration-residual-aggregator',
+           getDPL_global_options(bigshm=True),
+           '--sec-per-slot ' + scdaggreg_secperslot,
+           '--enable-ctp ',
+           '--output-dir ./',
+           '--output-type ' +  scdaggreg_outputtype
+         ])
+      workflow['stages'].append(SCDAGGREGtask)
+
+   # conditional
    #
    # QC tasks follow
    #
