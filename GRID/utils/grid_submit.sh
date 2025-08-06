@@ -272,7 +272,7 @@ pok "Set the job name by running $0 <scriptname> <jobname>"
 # Generate local workdir
 #
 if [[ "${ONGRID}" == "0" ]]; then
-  GRID_SUBMIT_WORKDIR=${GRID_SUBMIT_WORKDIR:-/tmp/alien_work/$(basename "$MY_JOBWORKDIR")}
+  GRID_SUBMIT_WORKDIR=${GRID_SUBMIT_WORKDIR:-${TMPDIR:-/tmp}/alien_work/$(basename "$MY_JOBWORKDIR")}
   echo "WORKDIR FOR THIS JOB IS ${GRID_SUBMIT_WORKDIR}"
   [ ! -d "${GRID_SUBMIT_WORKDIR}" ] && mkdir -p ${GRID_SUBMIT_WORKDIR}
   [ ! "${CONTINUE_WORKDIR}" ] && cp "${MY_JOBSCRIPT}" "${GRID_SUBMIT_WORKDIR}/alien_jobscript.sh"
@@ -443,9 +443,20 @@ EOF
     # this is the global job status (a D here means the production is done)
     JOBSTATUS=$(alien.py ps -j ${MY_JOBID} | awk '//{print $3}') # this is the global job status
     # in addition we may query individual splits
-    if [ "${WAITFORANY}" ]; then
-      if ALIENPY_JSON=true alien.py ps -a -m "${MY_JOBID}" | grep "status" | grep -q "DONE"; then
-        JOBSTATUS="D"  # a D here means == some job finished successfully
+    if [ -n "${WAITFORALIENANY}" ]; then
+      DETAILED_STATUS_JSON=$(ALIENPY_JSON=true alien.py ps -a -m "${MY_JOBID}")
+      # check if any is already marked as DONE
+      if jq -e '.results | any(.status == "DONE")' <<<"${DETAILED_STATUS_JSON}" >/dev/null; then
+        JOBSTATUS="D"
+        echo "At least one good job"
+      else
+        # check if there are still jobs running/waiting; if not also finish
+        # this could happen when all jobs are zombies (in which case we also finish)
+        if ! jq -e '.results | any(.status == "WAITING" or .status == "RUNNING" or .status == "SAVING" or .status == "INSERTING")' \
+            <<<"${DETAILED_STATUS_JSON}" >/dev/null; then
+              JOBSTATUS="D"  # some job finished successfully
+              echo "No remaining good job"
+        fi
       fi
     fi
 
