@@ -92,6 +92,8 @@ done
 cd ${WORKING_DIR}
 
 # now we submit all the jobs in the background and wait for them to return
+declare -A logfiles
+declare -A urls
 for s in `ls submit*.sh`; do
   echo "submitting ${s}"
   export GRID_SUBMIT_WORKDIR="${WORKING_DIR}/${s}_workdir"
@@ -99,9 +101,32 @@ for s in `ls submit*.sh`; do
     bash ${s} &> log_${s}
     echo "Job ${s} returned"
   ) &
+  logfiles["$s"]="log_${s}"
 done
 
-# for for all (GRID) jobs to return
+# Next stage is to wait until all jobs are actually running on
+# AliEn
+waitcounter=0
+maxwait=100
+while (( ${#logfiles[@]} > 0 && waitcounter < maxwait )); do
+  for script in "${!logfiles[@]}"; do
+    logfile=${logfiles["$script"]}
+    if grep -q "https://alimonitor.cern.ch/agent/jobs/details.jsp?pid=" "$logfile" 2>/dev/null; then
+      # Extract URL: strip ANSI codes, find URL, take first match
+      url=$(sed 's/\x1B\[[0-9;]*[a-zA-Z]//g' "$logfile" \
+            | grep -o 'https://alimonitor.cern.ch/agent/jobs/details.jsp?pid=[0-9]*' \
+            | head -n1)
+
+      echo "Job ${script} has AliEn job URL: ${url}"
+      urls["$script"]=${url}
+      unset logfiles["$script"]
+    fi
+  done
+  sleep 1
+  ((waitcounter++))
+done
+
+# wait for all (GRID) jobs to return
 echo "Waiting for jobs to return/finish"
 wait
 
@@ -123,7 +148,7 @@ for s in `ls submit*.sh`; do
   WORKFLOWS_FOUND=$(alien.py find ${ALIEN_OUTPUT_FOLDER} workflow.json)
 
   if [[ -z ${WORKFLOWS_FOUND} || -z ${AODS_FOUND} ]]; then
-    echo "❌ Missing files for case $s"
+    echo "❌ Missing files for case $s: Check here for logs ${urls[${s}]}"
     FINAL_SUCCESS=1  # mark as failure
   else
     echo "✅ Files found in $s"
