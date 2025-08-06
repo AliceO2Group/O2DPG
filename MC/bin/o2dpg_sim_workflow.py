@@ -1975,13 +1975,15 @@ else:
    workflow['stages'].append(POOL_merge_task)
 
 # if TPC residuals extraction was requested, we have to merge per-tf trees
-tpcResidMergingNeeds = ['scdaggreg_' + str(tf) for tf in range(1, NTIMEFRAMES + 1)]
-TPCResid_merge_task = createTask(name='tpcresidmerge', needs = tpcResidMergingNeeds, lab=["CALIB"], mem='2000', cpu='1')  
-TPCResid_merge_task['cmd'] = ' set -e ; [ -f tpcresidmerge_input.txt ] && rm tpcresidmerge_input.txt; '
-TPCResid_merge_task['cmd'] += ' for i in `seq 1 ' + str(NTIMEFRAMES) + '`; do find tf${i} -name "o2tpc_residuals_*.root" >> tpcresidmerge_input.txt; done; '
-TPCResid_merge_task['cmd'] += '${O2DPG_ROOT}/UTILS/root_merger.py -o o2tpc_residuals.root -i $(grep -v \"^$\" tpcresidmerge_input.txt | paste -sd, -)'
-workflow['stages'].append(TPCResid_merge_task)
-  
+if includeTPCResiduals:
+   tpcResidMergingNeeds = ['scdaggreg_' + str(tf) for tf in range(1, NTIMEFRAMES + 1)]
+   TPCResid_merge_task = createTask(name='tpcresidmerge', needs = tpcResidMergingNeeds, lab=["CALIB"], mem='2000', cpu='1')
+   TPCResid_merge_task['cmd'] = ' set -e ; [ -f tpcresidmerge_input.txt ] && rm tpcresidmerge_input.txt; '
+   TPCResid_merge_task['cmd'] += ' for i in `seq 1 ' + str(NTIMEFRAMES) + '`; do find tf${i} -name "o2tpc_residuals_*.root" >> tpcresidmerge_input.txt; done; '
+   TPCResid_merge_task['cmd'] += '${O2DPG_ROOT}/UTILS/root_merger.py -o o2tpc_residuals.root -i $(grep -v \"^$\" tpcresidmerge_input.txt | paste -sd, -)'
+   workflow['stages'].append(TPCResid_merge_task)
+
+
 # adjust for alternate (RECO) software environments
 adjust_RECO_environment(workflow, args.alternative_reco_software)
 
