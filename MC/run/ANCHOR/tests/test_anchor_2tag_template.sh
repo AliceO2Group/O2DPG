@@ -53,11 +53,16 @@ export CYCLE=0
 # generator and other sim configuration
 export ALIEN_JDL_ANCHOR_SIM_OPTIONS="%{SIM_OPTIONS}"
 
+export O2DPG_CUSTOM_REPO="%{O2DPG_CUSTOM_REPO}"
+
 # we allow the possibility to use a special O2DPG version
 if [ "${O2DPG_CUSTOM_REPO}" ]; then
+  echo "Checking out custom O2DPG repo ${O2DPG_CUSTOM_REPO}"
   git clone "${O2DPG_CUSTOM_REPO}" O2DPG
   export O2DPG_ROOT=${PWD}/O2DPG
   export ALIEN_JDL_O2DPG_OVERWRITE=${PWD}/O2DPG
+else
+  echo "Using O2DPG from released software tag ${O2DPG_ROOT}"
 fi
 
 # execute MC

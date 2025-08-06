@@ -80,9 +80,17 @@ done
         # put the require spec
         sed -i "s/%{JDL_REQUIREMENT}/${REQUIRE_STRING}/g" "$OUTPUT_FILE_FINAL"
 
+        # inject custom repo if available
+        if [ "${O2DPG_CUSTOM_REPO}" ]; then
+          sed -i "s|%{O2DPG_CUSTOM_REPO}|${O2DPG_CUSTOM_REPO}|g" "$OUTPUT_FILE_FINAL"
+        fi
+
+        TOPWORKDIR=2tag_release_testing_${BUILD_TAG:-${SOFTWARETAG_SIM}}
+
         # we submit the test to the GRID (multiplicity of 4)
         # ${WORKING_DIR}/submit_case${count}_${SOFTWARETAG_ASYNC//::/-}
-        echo "${O2DPG_ROOT}/GRID/utils/grid_submit.sh --prodsplit 4 --singularity --ttl 3600 --script ${OUTPUT_FILE_FINAL} --jobname "anchorTest_${count}" --wait-any --topworkdir 2tag_release_testing_${SOFTWARETAG_SIM}" > ${WORKING_DIR}/submit_case${count}.sh
+        echo "${O2DPG_ROOT}/GRID/utils/grid_submit.sh --prodsplit 4 --singularity --ttl 3600 --script ${OUTPUT_FILE_FINAL} \
+              --jobname "anchorTest_${count}" --wait-any --topworkdir ${TOPWORKDIR}" > ${WORKING_DIR}/submit_case${count}.sh
         # TODO: optional local execution with --local option
 
         ((count++))  # Increment counter for next row
