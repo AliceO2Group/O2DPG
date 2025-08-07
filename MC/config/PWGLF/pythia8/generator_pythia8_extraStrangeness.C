@@ -227,7 +227,7 @@ Double_t boltzPlusPower(const Double_t *x, const Double_t *p)
     // OMEGA ABUNDANCE FIX
     //Adjust relative abundance of multi-strange particles by injecting some
     Double_t lExpectedOmegaToPion = TMath::Max(8.55057e-04 - 7.38732e-04*TMath::Exp(-nChargedParticlesAtMidRap/2.40545e+01) - 6.56785e-05,0.);
-    Double_t lExpectedOmega = 5.0*nPionsAtMidRap*lExpectedOmegaToPion; // extra rich, factor 5
+    Double_t lExpectedOmega = 30.0*nPionsAtMidRap*lExpectedOmegaToPion; // extra rich, factor 30 (omega -> rarer -> smaller Nch bias -> ok to enrich more)
     Int_t lOmegaYield = gRandom->Poisson(3*lExpectedOmega); //factor 3: fix the rapidity acceptance
     m = 1.67245;
     pdg = 3334;
