@@ -394,8 +394,8 @@ if [[ "${MCRC}" == "0" && "${ALIEN_JDL_ADDTIMESERIESINMC}" != "0" ]]; then
 fi
 
 if [[ "${MCRC}" == "0" && "${ALIEN_JDL_DOTPCRESIDUALEXTRACTION}" = "1" ]]; then
-  echo_info "Running TPC residuals extraction and aggregation"
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt scdaggreg
+  echo_info "Running TPC residuals extraction, aggregation and merging"
+    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt tpcresidmerge
 fi
 
 [[ -n "${DISABLE_QC}" ]] && echo_info "QC is disabled, skip it."
