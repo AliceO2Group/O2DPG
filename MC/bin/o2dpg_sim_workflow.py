@@ -1101,7 +1101,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       det_to_digitask[det]=t
 
    # detectors serving CTP need to be treated somewhat special since CTP needs
-   # these inputs at the same time --> still need to be made better
+   # these inputs at the same time --> still need to be made better.
    tneeds = [ContextTask['name']]
    if includeQED:
      tneeds += [QED_task['name']]
@@ -1116,6 +1116,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       '--onlyDet FT0,FV0,EMC,CTP', 
       f'--interactionRate {INTRATE}',
       f'--incontext {CONTEXTFILE}',
+      f'--store-ctp-lumi {CTPSCALER}',
       '--disable-write-ini',
       putConfigValues(listOfMainKeys=['EMCSimParam','FV0DigParam','FT0DigParam'], localCF={"DigiParams.seed" : str(TFSEED)}),
       ('--combine-devices','')[args.no_combine_dpl_devices],
@@ -1684,8 +1685,10 @@ for tf in range(1, NTIMEFRAMES + 1):
            getDPL_global_options(bigshm=True),
            '--sec-per-slot ' + scdaggreg_secperslot,
            '--enable-ctp ',
+           '--enable-track-input',
            '--output-dir ./',
-           '--output-type ' +  scdaggreg_outputtype
+           '--output-type ' +  scdaggreg_outputtype,
+           '--meta-output-dir /dev/null'
          ])
       workflow['stages'].append(SCDAGGREGtask)
 
