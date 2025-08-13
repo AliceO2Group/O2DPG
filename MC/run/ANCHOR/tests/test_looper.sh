@@ -102,7 +102,7 @@ cd ${WORKING_DIR}
 # now we submit all the jobs in the background and wait for them to return
 declare -A logfiles
 declare -A urls
-for s in `ls submit*.sh`; do
+for s in submit*.sh; do
   echo "submitting ${s}"
   export GRID_SUBMIT_WORKDIR="${WORKING_DIR}/${s}_workdir"
   (
@@ -144,7 +144,7 @@ wait
 echo "-- Jobs done ... validating --"
 
 FINAL_SUCCESS=0
-for s in `ls submit*.sh`; do
+for s in submit*.sh; do
   # find output path
   TEST_OUTPUT_PATH="${WORKING_DIR}/${s}_workdir"   # $(grep "Local working directory is" log_${s} | awk '//{print $5}')
 
