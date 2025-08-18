@@ -6,6 +6,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_0(1370)" : {
@@ -15,6 +17,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_0(1500)" : {
@@ -24,6 +28,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_0(1710)" : {
@@ -33,6 +39,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_1(1285)" : {
@@ -42,6 +50,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_1(1420)" : {
@@ -51,6 +61,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_2(1525)" : {
@@ -60,6 +72,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "a_2(1230)" : {
@@ -69,6 +83,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "K1(1270)+": {
@@ -78,6 +94,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "K1(1270)-": {
@@ -87,6 +105,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "Xi(1820)0" : {
@@ -96,6 +116,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "Anti-Xi(1820)0" : {
@@ -105,6 +127,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "Xi(1820)-" : {
@@ -114,6 +138,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "Xi(1820)+" : {
@@ -123,6 +149,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     }
 }

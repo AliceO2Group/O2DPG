@@ -6,6 +6,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_1(1420)" : {
@@ -15,6 +17,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_0(1500)" : {
@@ -24,6 +28,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_0(1710)" : {
@@ -33,6 +39,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_2(1525)" : {
@@ -42,6 +50,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_0(1370)" : {
@@ -51,6 +61,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     }
 }

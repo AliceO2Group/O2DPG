@@ -6,6 +6,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "anti-Lambda(1520)0" : {
@@ -15,6 +17,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "f_0(980)" : {
@@ -24,6 +28,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "Xi(1820)0" : {
@@ -33,6 +39,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "Anti-Xi(1820)0" : {
@@ -42,6 +50,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "Xi(1820)-" : {
@@ -51,6 +61,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     },
     "Xi(1820)+" : {
@@ -60,6 +72,8 @@
         "ptMax": 20,
         "etaMin": -1.2,
         "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
         "genDecayed": true
     }
 }
