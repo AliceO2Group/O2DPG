@@ -18,7 +18,6 @@ export ALIEN_JDL_LPMANCHORPRODUCTION=LHC23f
 export ALIEN_JDL_LPMANCHORYEAR=2023
 
 export NTIMEFRAMES=1
-export NSIGEVENTS=50
 export SPLITID=100
 export PRODSPLIT=153
 export CYCLE=0
@@ -26,9 +25,6 @@ export CYCLE=0
 # on the GRID, this is set and used as seed; when set, it takes precedence over SEED
 #export ALIEN_PROC_ID=2963436952
 export SEED=5
-
-# for pp and 50 events per TF, we launch only 4 workers.
-export NWORKERS=2
 
 export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen pythia8 -confKey \"GeometryManagerParam.useParallelWorld=1;GeometryManagerParam.usePwGeoBVH=1;GeometryManagerParam.usePwCaching=1\" ${LOCAL_CONFIG:+--overwrite-config ${LOCAL_CONFIG}}"
 
