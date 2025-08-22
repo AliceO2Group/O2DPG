@@ -14,15 +14,19 @@ PROXY_OUTSPEC="tunestring:ITS/TSTR;runtype:ITS/RUNT;fittype:ITS/FITT;scantype:IT
 
 CHIPMODBASE=5
 NDECODERS=6
+ADDITIONAL_OPTIONS_DEC=""
+ADDITIONAL_OPTIONS_CAL=""
 if [ $RUNTYPE_ITS == "digital" ]; then
   CHIPMODBASE=10
+fi
+if [ $RUNTYPE_ITS == "digitalnomask" ]; then
+  CHIPMODBASE=10
+  ADDITIONAL_OPTIONS_CAL="--ninj 5"
 fi
 if [ $RUNTYPE_ITS == "thrfull" ]; then
   CHIPMODBASE=20
   NDECODERS=10
 fi
-ADDITIONAL_OPTIONS_DEC=""
-ADDITIONAL_OPTIONS_CAL=""
 if [ $RUNTYPE_ITS == "tuningbb" ]; then
   ADDITIONAL_OPTIONS_CAL="--min-vcasn 30 --max-vcasn 130"
 fi

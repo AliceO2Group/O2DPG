@@ -18,6 +18,8 @@ ITS-thr-full: "O2PDPSuite" reco,80,80,"RUNTYPE_ITS=thrfull production/calib/its-
 
 ITS-digital: "O2PDPSuite" reco,40,40,"RUNTYPE_ITS=digital production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE_ITS=digital production/calib/its-threshold-aggregator.sh"
 
+ITS-digital-no-mask: "O2PDPSuite" reco,40,40,"RUNTYPE_ITS=digitalnomask production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE_ITS=digitalnomask production/calib/its-threshold-aggregator.sh"
+
 ITS-pulselength: "O2PDPSuite" reco,40,40,"RUNTYPE_ITS=pulselength production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE_ITS=pulselength production/calib/its-threshold-aggregator.sh"
 
 ITS-tot-1row: "O2PDPSuite" reco,40,40,"RUNTYPE_ITS=tot1row production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE_ITS=tot1row production/calib/its-threshold-aggregator.sh"

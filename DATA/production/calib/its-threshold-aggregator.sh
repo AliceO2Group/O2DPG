@@ -10,7 +10,7 @@ PROXY_INSPEC="tunestring:ITS/TSTR;runtype:ITS/RUNT;fittype:ITS/FITT;scantype:ITS
 
 CCDBPATH1=""
 CCDBPATH2=""
-if [ $RUNTYPE_ITS == "tuning" ] || [ $RUNTYPE_ITS == "digital" ] || [ $RUNTYPE_ITS == "tuningbb" ]; then
+if [[ $RUNTYPE_ITS == "tuning" ]] || [[ $RUNTYPE_ITS == *digital* ]] || [[ $RUNTYPE_ITS == "tuningbb" ]]; then
   CCDBPATH1="$DCSCCDBSERVER_PERS"
   CCDBPATH2="http://o2-ccdb.internal"
 else 
@@ -26,7 +26,7 @@ WORKFLOW=
 add_W o2-dpl-raw-proxy "--exit-transition-timeout 20 --proxy-name its-thr-input-proxy --dataspec \"$PROXY_INSPEC\" --network-interface ib0 --channel-config \"name=its-thr-input-proxy,method=bind,type=pull,rateLogging=0,transport=zeromq\"" "" 0
 add_W o2-its-threshold-aggregator-workflow "-b" "" 0
 add_W o2-calibration-ccdb-populator-workflow "--ccdb-path=\"$CCDBPATH1\" --sspec-min 0 --sspec-max 0 --name-extention dcs"
-if [ $RUNTYPE_ITS == "digital" ]; then
+if [[ $RUNTYPE_ITS == *digital* ]]; then
   add_W o2-calibration-ccdb-populator-workflow "--ccdb-path=\"$CCDBPATH2\" --sspec-min 1 --sspec-max 1"
 fi
 
