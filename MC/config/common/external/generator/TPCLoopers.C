@@ -5,6 +5,7 @@
 #include <rapidjson/document.h>
 #include "CCDB/CCDBTimeStampUtils.h"
 #include "CCDB/CcdbApi.h"
+#include "DetectorsRaw/HBFUtils.h"
 
 // Static Ort::Env instance for multiple onnx model loading
 static Ort::Env global_env(ORT_LOGGING_LEVEL_WARNING, "GlobalEnv");
@@ -219,9 +220,9 @@ class GenTPCLoopers : public Generator
             {
                 unsigned int nLoopers, nLoopersPairs, nLoopersCompton;
                 LOG(debug) << "mCurrentEvent is " << mCurrentEvent;
-                LOG(debug) << "Current event time: " << ((mCurrentEvent < mInteractionTimeRecords.size() - 1) ? std::to_string(mInteractionTimeRecords[mCurrentEvent + 1].bc2ns() - mInteractionTimeRecords[mCurrentEvent].bc2ns()) : std::to_string(mIntTimeRecMean)) << " ns";
+                LOG(debug) << "Current event time: " << ((mCurrentEvent < mInteractionTimeRecords.size() - 1) ? std::to_string(mInteractionTimeRecords[mCurrentEvent + 1].bc2ns() - mInteractionTimeRecords[mCurrentEvent].bc2ns()) : std::to_string(mTimeEnd - mInteractionTimeRecords[mCurrentEvent].bc2ns())) << " ns";
                 LOG(debug) << "Current time offset wrt BC: " << mInteractionTimeRecords[mCurrentEvent].getTimeOffsetWrtBC() << " ns";
-                mTimeLimit = (mCurrentEvent < mInteractionTimeRecords.size() - 1) ? mInteractionTimeRecords[mCurrentEvent + 1].bc2ns() - mInteractionTimeRecords[mCurrentEvent].bc2ns() : mIntTimeRecMean;
+                mTimeLimit = (mCurrentEvent < mInteractionTimeRecords.size() - 1) ? mInteractionTimeRecords[mCurrentEvent + 1].bc2ns() - mInteractionTimeRecords[mCurrentEvent].bc2ns() : mTimeEnd - mInteractionTimeRecords[mCurrentEvent].bc2ns();
                 // With flat gas the number of loopers are adapted based on time interval widths
                 nLoopers = mFlatGasNumber * (mTimeLimit / mIntTimeRecMean);
                 nLoopersPairs = static_cast<unsigned int>(std::round(nLoopers * mLoopsFractionPairs));
@@ -424,6 +425,12 @@ class GenTPCLoopers : public Generator
                         mIntTimeRecMean += mInteractionTimeRecords[c + 1].bc2ns() - mInteractionTimeRecords[c].bc2ns();
                     }
                     mIntTimeRecMean /= (mInteractionTimeRecords.size() - 1); // Average interaction time record used as reference
+                    const auto& hbfUtils = o2::raw::HBFUtils::Instance();
+                    // Get the start time of the second orbit after the last interaction record
+                    const auto& lastIR = mInteractionTimeRecords.back();
+                    o2::InteractionRecord finalOrbitIR(0, lastIR.orbit + 2); // Final orbit, BC = 0
+                    mTimeEnd = finalOrbitIR.bc2ns();
+                    LOG(debug) << "Final orbit start time: " << mTimeEnd << " ns while last interaction record time is " << mInteractionTimeRecords.back().bc2ns() << " ns";
                 }
             } else {
                 mFlatGasNumber = -1;
@@ -470,6 +477,7 @@ class GenTPCLoopers : public Generator
         Int_t mFlatGasNumber = -1;                                      // Number of flat gas loopers per event
         double mIntTimeRecMean = 1.0;                                   // Average interaction time record used for the reference
         double mTimeLimit = 0.0;                                        // Time limit for the current event
+        double mTimeEnd = 0.0;                                          // Time limit for the last event
         float mLoopsFractionPairs = 0.08;                               // Fraction of loopers from Pairs
 };
 
