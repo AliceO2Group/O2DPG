@@ -20,6 +20,8 @@ class MCProdInfo:
     OrbitsPerTF: int
     # max_events_per_tf: Optional[int] = -1
     Comment: Optional[str] = None
+    McTag: Optional[str] = None # main software tag used 
+    RecoTag: Optional[str] = None # RecoTag (if any)
     Hash: Optional[str] = field(default=None)
 
     def __post_init__(self):
@@ -142,3 +144,12 @@ def upload_mcprodinfo_meta(base_url, user, run_number, lpm_prod_tag, keys, cert_
     os.remove(empty_file)
 
     return response
+
+def publish_MCProdInfo(mc_prod_info, ccdb_url = "https://alice-ccdb.cern.ch", username = "aliprod", include_meta_into_aod=False):
+   print("Publishing MCProdInfo")
+
+   # see if this already has meta-data uploaded, otherwise do nothing
+   mc_prod_info_q = query_mcprodinfo(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag)
+   if mc_prod_info_q == None:
+    # could make this depend on hash values in future
+    upload_mcprodinfo_meta(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag, dataclasses.asdict(mc_prod_info))

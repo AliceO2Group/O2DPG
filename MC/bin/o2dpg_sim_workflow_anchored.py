@@ -23,7 +23,7 @@ if o2dpg_root is None:
   raise EnvironmentError("O2DPG_ROOT is not set in the environment.")
 mc_prodinfo_path = os.path.abspath(os.path.join(o2dpg_root, "MC", "prodinfo"))
 sys.path.append(mc_prodinfo_path)
-from mcprodinfo_ccdb_upload import MCProdInfo, upload_mcprodinfo_meta, query_mcprodinfo
+from mcprodinfo_ccdb_upload import MCProdInfo, publish_MCProdInfo
 import dataclasses
 
 # Creates a time anchored MC workflow; positioned within a given run-number (as function of production size etc)
@@ -450,14 +450,6 @@ def exclude_timestamp(ts, orbit, run, filename, global_run_params):
     print(f"This run as globally {total_excluded_fraction} of it's data marked to be exluded")
     return excluded
 
-def publish_MCProdInfo(mc_prod_info, ccdb_url = "https://alice-ccdb.cern.ch", username = "aliprod", include_meta_into_aod=False):
-   print("Publishing MCProdInfo")
-
-   # see if this already has meta-data uploaded, otherwise do nothing
-   mc_prod_info_q = query_mcprodinfo(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag)
-   if mc_prod_info_q == None:
-    # could make this depend on hash values in future
-    upload_mcprodinfo_meta(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag, dataclasses.asdict(mc_prod_info))
 
 
 def main():
