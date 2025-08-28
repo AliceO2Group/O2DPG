@@ -1951,11 +1951,11 @@ if not args.make_evtpool:
    AOD_merge_task['cmd'] = ' set -e ; [ -f aodmerge_input.txt ] && rm aodmerge_input.txt; '
    AOD_merge_task['cmd'] += ' for i in `seq 1 ' + str(NTIMEFRAMES) + '`; do echo "tf${i}/AO2D.root" >> aodmerge_input.txt; done; '
    AOD_merge_task['cmd'] += ' o2-aod-merger --input aodmerge_input.txt --output AO2D_pre.root'
-   # produce MonaLisa event stat file
-   AOD_merge_task['cmd'] += ' ; ${O2DPG_ROOT}/MC/bin/o2dpg_determine_eventstat.py'
    # reindex the BC + connected tables because it there could be duplicate BC entries due to the orbit-early treatment
    # see https://its.cern.ch/jira/browse/O2-6227
    AOD_merge_task['cmd'] += ' ; root -q -b -l "${O2DPG_ROOT}/MC/utils/AODBcRewriter.C(\\\"AO2D_pre.root\\\",\\\"AO2D.root\\\")"'
+   # produce MonaLisa event stat file
+   AOD_merge_task['cmd'] += ' ; ${O2DPG_ROOT}/MC/bin/o2dpg_determine_eventstat.py'
    AOD_merge_task['alternative_alienv_package'] = "None" # we want latest software for this step
    workflow['stages'].append(AOD_merge_task)
 
