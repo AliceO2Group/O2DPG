@@ -1322,6 +1322,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    #<--------- TOF-TPC(-ITS) global track matcher workflow
    toftpcmatchneeds = [TOFRECOtask['name'], TPCRECOtask['name'], ITSTPCMATCHtask['name'], TRDTRACKINGtask2['name']]
    toftracksrcdefault = dpl_option_from_config(anchorConfig, 'o2-tof-matcher-workflow', 'track-sources', default_value='TPC,ITS-TPC,TPC-TRD,ITS-TPC-TRD')
+   tofusefit = option_if_available('o2-tof-matcher-workflow', '--use-fit', envfile=async_envfile)
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=toftpcmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    tofmatcher_cmd_parts = [
      '${O2_ROOT}/bin/o2-tof-matcher-workflow',
@@ -1332,9 +1333,11 @@ for tf in range(1, NTIMEFRAMES + 1):
                       'ITSCATrackerParam',
                       'MFTClustererParam',
                       'GPU_rec_tpc',
+                      'ft0tag',
                       'trackTuneParams'], tpcLocalCFreco),
      ' --track-sources ' + toftracksrcdefault,
      (' --combine-devices','')[args.no_combine_dpl_devices],
+     tofusefit,
      tpc_corr_scaling_options,
      tpc_corr_options_mc
    ]
