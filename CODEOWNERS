@@ -17,7 +17,7 @@
 /DATA/testing/detectors/TRD
 /DATA/testing/detectors/ZDC
 
-/MC @sawenzel @chiarazampolli @jackal1-66
+/MC @sawenzel @jackal1-66
 
 # PWG experts
 /MC/*/ALICE3 @njacazio
