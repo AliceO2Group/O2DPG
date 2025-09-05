@@ -276,6 +276,18 @@ activeDetectors = { det:1 for det in activeDetectors.split(',') }
 for det in activeDetectors:
     activate_detector(det)
 
+# function to finalize detector source lists based on activeDetectors
+# detector source lists are comma separated lists of DET1, DET2, DET1-DET2, ...
+def cleanDetectorInputList(inputlist):
+   sources_list = inputlist.split(",")
+   # Filter the sources
+   filtered_sources = [
+      src for src in sources_list
+      if all(isActive(part) for part in src.split("-"))
+   ]
+   # Recompose into a comma-separated string
+   return ",".join(filtered_sources)
+
 if not args.with_ZDC:
    # deactivate to be able to use isActive consistently for ZDC
    deactivate_detector('ZDC')
@@ -1071,6 +1083,7 @@ for tf in range(1, NTIMEFRAMES + 1):
          t['cmd'] = ('','ln -nfs ../bkg_Hits*.root . ;')[doembedding]
          detlist = ''
          detlist = ','.join(smallsensorlist)
+         detlist = cleanDetectorInputList(detlist)
          t['cmd'] += commondigicmd + ' --onlyDet ' + detlist
          t['cmd'] += ' --ccdb-tof-sa --forceSelectedDets '
          t['cmd'] += (' --combine-devices ','')[args.no_combine_dpl_devices]
@@ -1292,7 +1305,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    #<--------- TRD global tracking 
    # FIXME This is so far a workaround to avoud a race condition for trdcalibratedtracklets.root
    TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
-   trd_track_sources = dpl_option_from_config(anchorConfig, 'o2-trd-global-tracking', 'track-sources', default_value='TPC,ITS-TPC')
+   trd_track_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig, 'o2-trd-global-tracking', 'track-sources', default_value='TPC,ITS-TPC'))
    TRDTRACKINGtask2['cmd'] = task_finalizer([
       '${O2_ROOT}/bin/o2-trd-global-tracking',
       getDPL_global_options(bigshm=True), 
@@ -1442,7 +1455,8 @@ for tf in range(1, NTIMEFRAMES + 1):
       getDPL_global_options(), 
       putConfigValues(), 
       ('',' --disable-mc')[args.no_mc_labels]])
-   workflow['stages'].append(PHSRECOtask)
+   if isActive("PHS"):
+      workflow['stages'].append(PHSRECOtask)
 
    #<--------- CPV reco workflow
    CPVRECOtask = createTask(name='cpvreco_'+str(tf), needs=[getDigiTaskName("CPV")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1451,7 +1465,8 @@ for tf in range(1, NTIMEFRAMES + 1):
        getDPL_global_options(), 
        putConfigValues(), 
        ('',' --disable-mc')[args.no_mc_labels]])
-   workflow['stages'].append(CPVRECOtask)
+   if isActive("CPV"):
+      workflow['stages'].append(CPVRECOtask)
 
    #<--------- ZDC reco workflow
    ZDCRECOtask = createTask(name='zdcreco_'+str(tf), needs=[getDigiTaskName("ZDC")], tf=tf, cwd=timeframeworkdir, lab=["RECO", "ZDC"])
@@ -1460,7 +1475,8 @@ for tf in range(1, NTIMEFRAMES + 1):
        getDPL_global_options(), 
        putConfigValues(), 
        ('',' --disable-mc')[args.no_mc_labels]])
-   workflow['stages'].append(ZDCRECOtask)
+   if isActive("ZDC"):
+      workflow['stages'].append(ZDCRECOtask)
 
    ## forward matching
    #<--------- MCH-MID forward matching
@@ -1506,7 +1522,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    #<--------- HMP forward matching
    hmpmatchneeds = [HMPRECOtask['name'], ITSTPCMATCHtask['name'], TOFTPCMATCHERtask['name'], TRDTRACKINGtask2['name']]
-   hmp_match_sources = dpl_option_from_config(anchorConfig, 'o2-hmpid-matcher-workflow', 'track-sources', default_value='ITS-TPC,ITS-TPC-TRD,TPC-TRD')
+   hmp_match_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig, 'o2-hmpid-matcher-workflow', 'track-sources', default_value='ITS-TPC,ITS-TPC-TRD,TPC-TRD'))
    HMPMATCHtask = createTask(name='hmpmatch_'+str(tf), needs=hmpmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    HMPMATCHtask['cmd'] = task_finalizer(
       ['${O2_ROOT}/bin/o2-hmpid-matcher-workflow',
@@ -1521,24 +1537,29 @@ for tf in range(1, NTIMEFRAMES + 1):
                                              'o2-primary-vertexing-workflow',
                                              'vertexing-sources',
                                              default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP')
+   pvfinder_sources = cleanDetectorInputList(pvfinder_sources)
+
    pvfinder_matching_sources = dpl_option_from_config(anchorConfig,
                                                       'o2-primary-vertexing-workflow',
                                                       'vertex-track-matching-sources',
                                                       default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP')
-   pvfinderneeds = [TRDTRACKINGtask2['name'], 
-                    FT0RECOtask['name'], 
-                    FV0RECOtask['name'], 
-                    EMCRECOtask['name'], 
-                    PHSRECOtask['name'], 
-                    CPVRECOtask['name'], 
-                    FDDRECOtask['name'], 
-                    ZDCRECOtask['name'], 
-                    HMPMATCHtask['name'], 
-                    HMPMATCHtask['name'], 
-                    ITSTPCMATCHtask['name'], 
-                    TOFTPCMATCHERtask['name'], 
-                    MFTMCHMATCHtask['name'], 
+   pvfinder_matching_sources = cleanDetectorInputList(pvfinder_matching_sources)
+
+   pvfinderneeds = [TRDTRACKINGtask2['name'],
+                    FT0RECOtask['name'],
+                    FV0RECOtask['name'],
+                    EMCRECOtask['name'],
+                    PHSRECOtask['name'] if isActive("PHS") else None,
+                    CPVRECOtask['name'] if isActive("CPV") else None,
+                    FDDRECOtask['name'],
+                    ZDCRECOtask['name'] if isActive("ZDC") else None,
+                    HMPMATCHtask['name'],
+                    HMPMATCHtask['name'],
+                    ITSTPCMATCHtask['name'],
+                    TOFTPCMATCHERtask['name'],
+                    MFTMCHMATCHtask['name'],
                     MCHMIDMATCHtask['name']]
+   pvfinderneeds = [ p for p in pvfinderneeds if p != None ]
 
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS_TF, mem='4000')
    PVFINDERtask['cmd'] = task_finalizer(
@@ -1569,6 +1590,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                           'o2-primary-vertexing-workflow',
                           'vertex-track-matching-sources',
                           default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP')
+   svfinder_sources = cleanDetectorInputList(svfinder_sources)
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name'], FT0FV0EMCCTPDIGItask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')   
    SVFINDERtask['cmd'] = task_finalizer(
    [ '${O2_ROOT}/bin/o2-secondary-vertexing-workflow', 
@@ -1588,6 +1610,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    # TODO This needs further refinement, sources and dependencies should be constructed dynamically
    aod_info_souces_default = 'ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP'
    aodinfosources = dpl_option_from_config(anchorConfig, 'o2-aod-producer-workflow', 'info-sources', default_value=aod_info_souces_default)
+   aodinfosources = cleanDetectorInputList(aodinfosources)
    aodneeds = [PVFINDERtask['name'], SVFINDERtask['name']]
 
    if usebkgcache:
@@ -1641,20 +1664,20 @@ for tf in range(1, NTIMEFRAMES + 1):
       print ("Adding TPC residuals extraction and aggregation")
 
       #<------------- TPC residuals extraction
-      scdcalib_vertex_sources = dpl_option_from_config(anchorConfig,
+      scdcalib_vertex_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig,
                                                        'o2-tpc-scdcalib-interpolation-workflow',
                                                        'vtx-sources',
-                                                       default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP')
+                                                       default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP'))
 
-      scdcalib_track_sources = dpl_option_from_config(anchorConfig,
+      scdcalib_track_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig,
                                                       'o2-tpc-scdcalib-interpolation-workflow',
                                                       'tracking-sources',
-                                                      default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP')
+                                                      default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP'))
 
-      scdcalib_track_extraction = dpl_option_from_config(anchorConfig,
+      scdcalib_track_extraction = cleanDetectorInputList(dpl_option_from_config(anchorConfig,
                                                          'o2-tpc-scdcalib-interpolation-workflow',
                                                          'tracking-sources-map-extraction',
-                                                         default_value='ITS-TPC')
+                                                         default_value='ITS-TPC'))
 
       SCDCALIBtask = createTask(name='scdcalib_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["CALIB"], mem='4000')
       SCDCALIBtask['cmd'] = task_finalizer(
