@@ -1,0 +1,11 @@
+{
+  "access-mc-data": {
+    "reduce-output" : 2  
+  },
+  "access-mc-truth": {
+    "reduce-output" : 2
+  },
+  "loop-over-mc-matched": {
+    "reduce-output" : 2
+  }
+}
