@@ -565,6 +565,9 @@ fi
 # ad-hoc options for GPU reco workflow
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_global.dEdxDisableResidualGainMap=1;$TRACKTUNETPC;$VDRIFTPARAMOPTION;"
 
+# if ITS is running on GPU we need to give the workflow most options from ITS reco
+has_detector_gpu ITS && export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";$CONFIG_EXTRA_PROCESS_o2_its_reco_workflow;"
+
 [[ ! -z $TPCCLUSTERTIMESHIFT ]] && [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]] && export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.clustersShiftTimebins=$TPCCLUSTERTIMESHIFT;"
 
 # ad-hoc settings for TOF reco
