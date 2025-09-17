@@ -60,8 +60,11 @@ public:
       case 12: // generate prompt charmonia cocktail at mid rapidity at 5TeV
         mGeneratorParam = (Generator*)GeneratorCocktailPromptCharmoniaToElectronEvtGen_pp5TeV();
         break; 
-      case 13: // generate prompt charmonia cocktail at mid rapidity at 9.6TeV
+      case 13: // generate prompt charmonia cocktail at fwd rapidity at 9.6TeV
         mGeneratorParam = (Generator*)GeneratorCocktailPromptCharmoniaToMuonEvtGen_pp96TeV();
+        break; 
+      case 14: // generate prompt charmonia cocktail at mid rapidity at 9.6TeV
+        mGeneratorParam = (Generator*)GeneratorCocktailPromptCharmoniaToElectronEvtGen_pp96TeV();
         break; 
       }
     mGeneratorParam->Init();  
