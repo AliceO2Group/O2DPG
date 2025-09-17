@@ -201,11 +201,11 @@ class O2_GeneratorParamJpsiMidY_5TeV : public GeneratorTGenerator
   //-------------------------------------------------------------------------//
   static Double_t PtJPsipp5TeV(const Double_t* px, const Double_t* /*dummy*/)
   {
-    // JPSi pt at 5.02 TeV: https: // www.hepdata.net/record/ins1735351
+    // JPSi pt at 5.02 TeV: https: // https://www.hepdata.net/record/ins1899703 (2108.02523)
     //
-    const Double_t kC = 1774.9;
-    const Double_t kpt0 = 3.38452;
-    const Double_t kn = 2.77889;
+    const Double_t kC = 1.10642;
+    const Double_t kpt0 = 4.5504;
+    const Double_t kn = 3.58669;
     Double_t pt = px[0];
 
     return kC * pt / TMath::Power((1. + (pt / kpt0) * (pt / kpt0)), kn);
@@ -272,11 +272,11 @@ class O2_GeneratorParamPsiMidY_5TeV : public GeneratorTGenerator
   //-------------------------------------------------------------------------//
   static Double_t PtPsipp5TeV(const Double_t* px, const Double_t* /*dummy*/)
   {
-    // Same as JPsi  at 5.02 TeV since ratio is almost flat in pT: https: // www.hepdata.net/record/ins1735351
+    // Same as JPsi  at 5.02 TeV since ratio is almost flat in pT
     //
-    const Double_t kC = 1774.9;
-    const Double_t kpt0 = 3.38452;
-    const Double_t kn = 2.77889;
+    const Double_t kC = 1.10642;
+    const Double_t kpt0 = 4.55041;
+    const Double_t kn = 3.58669;
     Double_t pt = px[0];
 
     return kC * pt / TMath::Power((1. + (pt / kpt0) * (pt / kpt0)), kn);
