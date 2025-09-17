@@ -311,6 +311,151 @@ class O2_GeneratorParamPsiMidY_5TeV : public GeneratorTGenerator
   GeneratorParam* paramPsi = nullptr;
 };
 
+//====================================================================================================
+class O2_GeneratorParamJpsiMidY_96TeV : public GeneratorTGenerator
+{
+
+ public:
+  O2_GeneratorParamJpsiMidY_96TeV() : GeneratorTGenerator("paramJpsi")
+  {
+    paramJpsi = new GeneratorParam(1, -1, PtJPsipp96TeV, YJPsipp96TeV, V2JPsipp96TeV, IpJPsipp96TeV);
+    paramJpsi->SetMomentumRange(0., 1.e6);
+    paramJpsi->SetPtRange(0., 1000.);
+    paramJpsi->SetYRange(-1.0, 1.0);
+    paramJpsi->SetPhiRange(0., 360.);
+    paramJpsi->SetDecayer(new TPythia6Decayer()); // Pythia
+    paramJpsi->SetForceDecay(kNoDecay);           // particle left undecayed
+    setTGenerator(paramJpsi);
+  };
+
+  ~O2_GeneratorParamJpsiMidY_96TeV()
+  {
+    delete paramJpsi;
+  };
+
+  Bool_t Init() override
+  {
+    GeneratorTGenerator::Init();
+    paramJpsi->Init();
+    return true;
+  }
+
+  void SetNSignalPerEvent(Int_t nsig) { paramJpsi->SetNumberParticles(nsig); }
+
+  //-------------------------------------------------------------------------//
+  static Double_t PtJPsipp96TeV(const Double_t* px, const Double_t* /*dummy*/)
+  {
+    // JPSi pt extrapolated at 9.6 TeV: https: // https://www.hepdata.net/record/ins1899703 (2108.02523)
+    //
+    const Double_t kC = 1.48862;
+    const Double_t kpt0 = 4.64005
+    const Double_t kn = 3.57353;
+    Double_t pt = px[0];
+
+    return kC * pt / TMath::Power((1. + (pt / kpt0) * (pt / kpt0)), kn);
+  }
+
+  //-------------------------------------------------------------------------//
+  static Double_t YJPsipp96TeV(const Double_t* py, const Double_t* /*dummy*/)
+  {
+    // Taken the same as: jpsi y in pp at 13 TeV, tuned on data, prompt jpsi ALICE+LHCb, 13 TeV
+    Double_t y = *py;
+    Float_t p0, p1, p2;
+    p0 = 7.79382e+00;
+    p1 = 2.87827e-06;
+    p2 = 4.41847e+00;
+    return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((y - p1) / p2), 2));
+  }
+
+  //-------------------------------------------------------------------------//
+  static Double_t V2JPsipp96TeV(const Double_t* /*dummy*/, const Double_t* /*dummy*/)
+  {
+    // jpsi v2
+    return 0.;
+  }
+
+  //-------------------------------------------------------------------------//
+  static Int_t IpJPsipp96TeV(TRandom*)
+  {
+    return 443;
+  }
+
+ private:
+  GeneratorParam* paramJpsi = nullptr;
+};
+
+class O2_GeneratorParamPsiMidY_96TeV : public GeneratorTGenerator
+{
+
+ public:
+  O2_GeneratorParamPsiMidY_96TeV() : GeneratorTGenerator("ParamPsi")
+  {
+    paramPsi = new GeneratorParam(1, -1, PtPsipp96TeV, YPsipp96TeV, V2Psipp96TeV, IpPsipp96TeV);
+    paramPsi->SetMomentumRange(0., 1.e6);        // Momentum range added from me
+    paramPsi->SetPtRange(0., 1000.);             // transverse of momentum range
+    paramPsi->SetYRange(-1.0, 1.0);              // rapidity range
+    paramPsi->SetPhiRange(0., 360.);             // phi range
+    paramPsi->SetDecayer(new TPythia6Decayer()); // Pythia decayer
+    paramPsi->SetForceDecay(kNoDecay);           // particle left undecayed
+    setTGenerator(paramPsi);                     // Setting parameters to ParamPsi for Psi(2S)
+  };
+
+  ~O2_GeneratorParamPsiMidY_96TeV()
+  {
+    delete paramPsi;
+  };
+
+  Bool_t Init() override
+  {
+    GeneratorTGenerator::Init();
+    paramPsi->Init();
+    return true;
+  }
+  void SetNSignalPerEvent(Int_t nsig) { paramPsi->SetNumberParticles(nsig); }
+
+  //-------------------------------------------------------------------------//
+  static Double_t PtPsipp96TeV(const Double_t* px, const Double_t* /*dummy*/)
+  {
+    // Same as JPsi at JPSi pt extrapolated at 9.6 TeV (since ratio is almost flat in pT)
+    //
+    //
+    const Double_t kC = 1.48862;
+    const Double_t kpt0 = 4.64005
+    const Double_t kn = 3.57353;
+    Double_t pt = px[0];
+
+    return kC * pt / TMath::Power((1. + (pt / kpt0) * (pt / kpt0)), kn);
+  }
+
+  //-------------------------------------------------------------------------//
+  static Double_t YPsipp96TeV(const Double_t* py, const Double_t* /*dummy*/)
+  {
+    // Taken same as jpsi y in pp at 13 TeV, tuned on data, prompt jpsi ALICE+LHCb, 13 TeV
+    Double_t y = *py;
+    Float_t p0, p1, p2;
+    p0 = 7.79382e+00;
+    p1 = 2.87827e-06;
+    p2 = 4.41847e+00;
+    return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((y - p1) / p2), 2));
+  }
+
+  //-------------------------------------------------------------------------//
+  static Double_t V2Psipp96TeV(const Double_t* /*dummy*/, const Double_t* /*dummy*/)
+  {
+    // jpsi v2
+    return 0.;
+  }
+
+  //-------------------------------------------------------------------------//
+  static Int_t IpPsipp96TeV(TRandom*)
+  {
+    return 100443;
+  }
+
+ private:
+  GeneratorParam* paramPsi = nullptr;
+};
+//====================================================================================================
 class O2_GeneratorParamJpsiFwdY : public GeneratorTGenerator
 {
 
@@ -1313,6 +1458,32 @@ FairGenerator* GeneratorCocktailPromptCharmoniaToElectronEvtGen_pp5TeV()
   auto genJpsi = new o2::eventgen::O2_GeneratorParamJpsiMidY_5TeV;
   genJpsi->SetNSignalPerEvent(1); // 1 J/psi generated per event by GeneratorParam
   auto genPsi = new o2::eventgen::O2_GeneratorParamPsiMidY_5TeV;
+  genPsi->SetNSignalPerEvent(1);               // 1 Psi(2S) generated per event by GeneratorParam
+  genCocktailEvtGen->AddGenerator(genJpsi, 1); // add J/psi generator
+  genCocktailEvtGen->AddGenerator(genPsi, 1);  // add Psi(2S) generator
+
+  TString pdgs = "443;100443";
+  std::string spdg;
+  TObjArray* obj = pdgs.Tokenize(";");
+  genCocktailEvtGen->SetSizePdg(obj->GetEntriesFast());
+  for (int i = 0; i < obj->GetEntriesFast(); i++) {
+    spdg = obj->At(i)->GetName();
+    genCocktailEvtGen->AddPdg(std::stoi(spdg), i);
+    printf("PDG %d \n", std::stoi(spdg));
+  }
+  genCocktailEvtGen->SetForceDecay(kEvtDiElectron);
+
+  return genCocktailEvtGen;
+}
+
+FairGenerator* GeneratorCocktailPromptCharmoniaToElectronEvtGen_pp96TeV()
+{
+
+  auto genCocktailEvtGen = new o2::eventgen::GeneratorEvtGen<GeneratorCocktail>();
+
+  auto genJpsi = new o2::eventgen::O2_GeneratorParamJpsiMidY_96TeV;
+  genJpsi->SetNSignalPerEvent(1); // 1 J/psi generated per event by GeneratorParam
+  auto genPsi = new o2::eventgen::O2_GeneratorParamPsiMidY_96TeV;
   genPsi->SetNSignalPerEvent(1);               // 1 Psi(2S) generated per event by GeneratorParam
   genCocktailEvtGen->AddGenerator(genJpsi, 1); // add J/psi generator
   genCocktailEvtGen->AddGenerator(genPsi, 1);  // add Psi(2S) generator
