@@ -135,6 +135,16 @@ def pick_split(prod_tag, run_number, candidates, ascending=True):
 def process_prod_tag(prod_tag, year="2025", ccdb_url=None, username=None):
     base_path = f"/alice/sim/{year}/{prod_tag}"
 
+    workflow_files = alien_find(base_path, "workflow.json")
+    # exclude some unnecessary paths
+    workflow_files = [
+      zf for zf in workflow_files
+      if "/AOD/" not in zf and "/QC/" not in zf and "/TimeseriesTPCmerging/" not in zf and "/Stage" not in zf
+    ]
+    # directories containing workflow.json
+    workflow_dirs = {os.path.dirname(wf) for wf in workflow_files}
+    print (f"Found {len(workflow_dirs)} workflow dirs")
+
     # Step 1: find all log_archive.zip files
     print (f"Querying AliEn for all directories with zip files")
     zip_files = alien_find(base_path, "log_archive.zip")
@@ -144,10 +154,15 @@ def process_prod_tag(prod_tag, year="2025", ccdb_url=None, username=None):
       zf for zf in zip_files
       if "/AOD/" not in zf and "/QC/" not in zf and "/TimeseriesTPCmerging/" not in zf and "/Stage" not in zf
     ]
+    zip_files_dirs = {os.path.dirname(zf) for zf in zip_files}
+    print (f"Found {len(zip_files_dirs)} zip dirs")
+
+    # keep only zips in dirs where workflow.json also exists
+    relevant_zips = [zf for zf in zip_files if os.path.dirname(zf) in workflow_dirs]
 
     # Step 2: group by run_number
     runs = defaultdict(list)
-    for zf in zip_files:
+    for zf in relevant_zips:
         parsed = parse_workflow_path(zf, prod_tag)
         if parsed is None:
             continue
