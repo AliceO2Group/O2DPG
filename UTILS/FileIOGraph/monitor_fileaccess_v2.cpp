@@ -124,10 +124,19 @@ int main(int argc, char **argv)
   struct fanotify_event_metadata *metadata;
 
   // init fanotify
+
+  // with this we can observe specific root directories
+  auto ROOT_PATH_ENV = getenv("FILEACCESS_MON_ROOTPATH");
+  std::string root_path = "/";
+  if (ROOT_PATH_ENV) {
+    std::cerr << "Observing file access below " << root_path << "\n";
+    root_path = std::string(ROOT_PATH_ENV);
+  }
+
   CHK(fan = fanotify_init(FAN_CLASS_NOTIF, O_RDONLY), -1);
   CHK(fanotify_mark(fan, FAN_MARK_ADD | FAN_MARK_MOUNT,
                     FAN_CLOSE_WRITE | FAN_CLOSE_NOWRITE | FAN_EVENT_ON_CHILD,
-                    AT_FDCWD, "/"),
+                    AT_FDCWD, root_path.c_str()),
       -1);
 
   // read env for filtering
