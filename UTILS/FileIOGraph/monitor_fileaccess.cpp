@@ -64,7 +64,7 @@ std::string getcmd(pid_t pid)
     fclose(file);
     for (int byte = 0; byte < bytesRead; ++byte) {
       if (buffer[byte] == '\0') {
-        buffer[byte] == '@';
+        buffer[byte] = '@';
       }
     }
     return std::string(buffer);
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 {
   int fan;
   char buf[4096];
-  char fdpath[32];
+  char fdpath[64];
   char path[PATH_MAX + 1];
   ssize_t buflen, linklen;
   struct fanotify_event_metadata* metadata;
@@ -114,11 +114,11 @@ int main(int argc, char** argv)
   auto MAX_MOTHER_PID_ENV = getenv("MAXMOTHERPID");
   int max_mother_pid = 1; // everything
   if (MAX_MOTHER_PID_ENV != nullptr) {
-    std::cerr << "found env variablen";
+    std::cerr << "found env variable MAX_MOTHER_PID_ENV";
     max_mother_pid = std::atoi(MAX_MOTHER_PID_ENV);
     std::cerr << "Setting topmost mother process to " << max_mother_pid << "\n";
   } else {
-    std::cerr << "No environment given\n";
+    std::cerr << "No environment given. Monitoring globally.\n";
   }
 
   auto thispid = getpid();
@@ -174,10 +174,10 @@ int main(int argc, char** argv)
         }
 
         if (metadata->mask & FAN_CLOSE_WRITE) {
-          printf("%s,write,%s\n", path, parentspid->c_str());
+          printf("\"%s\",write,%s\n", path, parentspid->c_str());
         }
         if (metadata->mask & FAN_CLOSE_NOWRITE) {
-          printf("%s,read,%s\n", path, parentspid->c_str());
+          printf("\"%s\",read,%s\n", path, parentspid->c_str());
         }
       }
 
