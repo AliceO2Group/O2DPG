@@ -71,6 +71,7 @@ parser.add_argument('-proc',help='process type: inel, dirgamma, jets, ccbar, ...
 parser.add_argument('-trigger',help='event selection: particle, external', default='')
 parser.add_argument('-ini',help='generator init parameters file (full paths required), for example: ${O2DPG_ROOT}/MC/config/PWGHF/ini/GeneratorHF.ini', default='')
 parser.add_argument('-confKey',help='o2sim, generator or trigger configuration key values, for example: "GeneratorPythia8.config=pythia8.cfg;A.x=y"', default='')
+parser.add_argument('--detectorList',help='pick which version of ALICE should be simulated', default='ALICE2')
 parser.add_argument('--readoutDets',help='comma separated string of detectors readout (does not modify material budget - only hit creation)', default='all')
 parser.add_argument('--make-evtpool', help='Generate workflow for event pool creation.', action='store_true')
 
@@ -515,7 +516,7 @@ def getDPL_global_options(bigshm=False, ccdbbackend=True):
 orbitsPerTF=int(args.orbitsPerTF)
 GRP_TASK = createTask(name='grpcreate', cpu='0')
 GRP_TASK['cmd'] = 'o2-grp-simgrp-tool createGRPs --timestamp ' + str(args.timestamp) + ' --run ' + str(args.run) + ' --publishto ${ALICEO2_CCDB_LOCALCACHE:-.ccdb} -o grp --hbfpertf ' + str(orbitsPerTF) + ' --field ' + args.field
-GRP_TASK['cmd'] += ' --readoutDets ' + " ".join(activeDetectors) + ' --print ' + ('','--lhcif-CCDB')[args.run_anchored]
+GRP_TASK['cmd'] += ' --detectorList ' + args.detectorList + ' --readoutDets ' + " ".join(activeDetectors) + ' --print ' + ('','--lhcif-CCDB')[args.run_anchored]
 if (not args.run_anchored == True) and len(args.bcPatternFile) > 0:
     GRP_TASK['cmd'] += '  --bcPatternFile ' + str(args.bcPatternFile)
 if len(CONFKEYMV) > 0:
@@ -664,7 +665,8 @@ if doembedding:
                      + ' --field ccdb ' + str(CONFKEYBKG)                                                                \
                      + ('',' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)        \
                      + ' --vertexMode kCCDB'                                                                             \
-                     + ' --fromCollContext collisioncontext.root:bkg'
+                     + ' --fromCollContext collisioncontext.root:bkg '                                                   \
+                     + ' --detectorList ' + args.detectorList
 
         if not isActive('all'):
            BKGtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
@@ -761,6 +763,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                         + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run) \
                         + ' --seed ' + str(TFSEED)                                                                    \
                         + ' -g extgen '                                                                               \
+                        + ' --detectorList ' + args.detectorList                                                      \
                         + QEDCONFKEY
      QED_task['cmd'] += '; RC=$?; QEDXSecCheck=`grep xSectionQED qedgenparam.ini | sed \'s/xSectionQED=//\'`'
      QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected[COLTYPE]) + ' = $QEDXSecCheck"; [[ ${RC} == 0 ]]'
@@ -864,6 +867,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                      + ' -g ' + str(GENERATOR) + ' ' + str(INIFILE) + ' -o genevents ' + embeddinto   \
                      + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1]                \
                      + ' --seed ' + str(TFSEED) + ' -n ' + str(NSIGEVENTS)                            \
+                     + ' --detectorList ' + args.detectorList                                         \
                      + ' --fromCollContext collisioncontext.root:' + signalprefix
    if GENERATOR=="hepmc":
       SGNGENtask['cmd'] += "; RC=$?; ${O2DPG_ROOT}/UTILS/UpdateHepMCEventSkip.sh ../HepMCEventSkip.json " + str(tf) + '; [[ ${RC} == 0 ]]'
@@ -885,6 +889,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                       relative_cpu=7/8, n_workers=NWORKERS_TF, mem=str(sgnmem))
    sgncmdbase = '${O2_ROOT}/bin/o2-sim -e ' + str(SIMENGINE) + ' '  + str(MODULES) + ' -n ' + str(NSIGEVENTS) + ' --seed ' + str(TFSEED)       \
               + ' --field ccdb -j ' + str(NWORKERS_TF) + ' ' + str(CONFKEY) + ' ' + str(INIFILE) + ' -o ' + signalprefix + ' ' + embeddinto       \
+              + ' --detectorList ' + args.detectorList                                                                                            \
               + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)
    if sep_event_mode:
       SGNtask['cmd'] = sgncmdbase + ' -g extkinO2 --extKinFile genevents_Kine.root ' + ' --vertexMode kNoVertex'
