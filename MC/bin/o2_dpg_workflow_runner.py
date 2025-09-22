@@ -85,7 +85,8 @@ def setup_logger(name, log_file, level=logging.INFO):
     return logger
 
 # first file logger
-actionlogger = setup_logger('pipeline_action_logger', ('pipeline_action_' + str(os.getpid()) + '.log', args.action_logfile)[args.action_logfile!=None], level=logging.DEBUG)
+actionlogger_file = ('pipeline_action_' + str(os.getpid()) + '.log', args.action_logfile)[args.action_logfile!=None]
+actionlogger = setup_logger('pipeline_action_logger', actionlogger_file, level=logging.DEBUG)
 
 # second file logger
 metriclogger = setup_logger('pipeline_metric_logger', ('pipeline_metric_' + str(os.getpid()) + '.log', args.action_logfile)[args.action_logfile!=None])
@@ -1808,5 +1809,46 @@ if args.cgroup!=None:
         exit(code)
     actionlogger.info("Running in cgroup")
 
-executor=WorkflowExecutor(args.workflowfile,jmax=int(args.maxjobs),args=args)
-exit (executor.execute())
+
+# This starts the fanotify fileaccess monitoring process
+# if asked for
+o2dpg_filegraph_exec = os.getenv("O2DPG_PRODUCE_FILEGRAPH") # switches filegraph monitoring on and contains the executable name
+if o2dpg_filegraph_exec:
+    env = os.environ.copy()
+    env["FILEACCESS_MON_ROOTPATH"] = os.getcwd()
+    env["MAXMOTHERPID"] = f"{os.getpid()}"
+
+    fileaccess_log_file_name = f"pipeline_fileaccess_{os.getpid()}.log"
+    fileaccess_log_file = open(fileaccess_log_file_name, "w")
+    fileaccess_monitor_proc = subprocess.Popen(
+        [o2dpg_filegraph_exec],
+        stdout=fileaccess_log_file,
+        stderr=subprocess.STDOUT,
+        env=env)
+else:
+    fileaccess_monitor_proc = None
+
+try:
+    # This is core workflow runner invocation
+    executor=WorkflowExecutor(args.workflowfile,jmax=int(args.maxjobs),args=args)
+    rc = executor.execute()
+finally:
+    if fileaccess_monitor_proc:
+        fileaccess_monitor_proc.terminate()  # sends SIGTERM
+        try:
+            fileaccess_monitor_proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            fileaccess_monitor_proc.kill()   # force kill if not stopping
+        # now produce the final filegraph output
+        o2dpg_root = os.getenv("O2DPG_ROOT")
+        analyse_cmd = [
+                sys.executable,  # runs with same Python interpreter
+                f"{o2dpg_root}/UTILS/FileIOGraph/analyse_FileIO.py",
+                "--actionFile", actionlogger_file,
+                "--monitorFile", fileaccess_log_file_name,
+                "-o", f"pipeline_fileaccess_report_{os.getpid()}.json",
+                "--basedir", os.getcwd() ]
+        print (f"Producing FileIOGraph with command {analyse_cmd}")
+        subprocess.run(analyse_cmd, check=True)
+
+sys.exit(rc)

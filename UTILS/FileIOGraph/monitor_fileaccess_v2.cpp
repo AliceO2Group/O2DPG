@@ -129,8 +129,8 @@ int main(int argc, char **argv)
   auto ROOT_PATH_ENV = getenv("FILEACCESS_MON_ROOTPATH");
   std::string root_path = "/";
   if (ROOT_PATH_ENV) {
-    std::cerr << "Observing file access below " << root_path << "\n";
     root_path = std::string(ROOT_PATH_ENV);
+    std::cerr << "Observing file access below " << root_path << "\n";
   }
 
   CHK(fan = fanotify_init(FAN_CLASS_NOTIF, O_RDONLY), -1);
