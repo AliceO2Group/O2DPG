@@ -700,6 +700,9 @@ if doembedding:
 
 # a list of smaller sensors (used to construct digitization tasks in a parametrized way)
 smallsensorlist = [ "ITS", "TOF", "FDD", "MCH", "MID", "MFT", "HMP", "PHS", "CPV", "ZDC" ]
+if args.detectorList == 'ALICE2.1':
+    smallsensorlist = ['IT3' if sensor == 'ITS' else sensor for sensor in smallsensorlist]
+
 # a list of detectors that serve as input for the trigger processor CTP --> these need to be processed together for now
 ctp_trigger_inputlist = [ "FT0", "FV0", "EMC" ]
 
@@ -757,9 +760,11 @@ for tf in range(1, NTIMEFRAMES + 1):
      # determine final conf key for QED simulation
      QEDBaseConfig = "GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;QEDGenParam.xSectionHad="+str(XSecSys[COLTYPE])+";QEDGenParam.Z="+str(Zsys[COLTYPE])+";QEDGenParam.cmEnergy="+str(ECMS)+";Diamond.width[2]=6.;"
      QEDCONFKEY = constructConfigKeyArg(create_geant_config(args, QEDBaseConfig + args.confKeyQED))
-
+     detectors = ' ITS MFT FT0 FV0 FDD '
+     if args.detectorList == 'ALICE2.1':
+         detectors = detectors.replace('ITS', 'IT3')
      QED_task['cmd'] = 'o2-sim -e TGeant3 --field ccdb -j ' + str('1') +  ' -o qed'                                   \
-                        + ' -n ' + str(NEventsQED) + ' -m PIPE ITS MFT FT0 FV0 FDD '                                  \
+                        + ' -n ' + str(NEventsQED) + ' -m ' + detectors                                               \
                         + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run) \
                         + ' --seed ' + str(TFSEED)                                                                    \
                         + ' -g extgen '                                                                               \
@@ -1076,7 +1081,7 @@ for tf in range(1, NTIMEFRAMES + 1):
         tneeds += [QED_task['name']]
       commondigicmd = '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption \
                       + ' --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini'      \
-                      + putConfigValues(["MFTAlpideParam", "ITSAlpideParam", "ITSDigitizerParam"],
+                      + putConfigValues(["MFTAlpideParam", "ITSAlpideParam", "ITSDigitizerParam" if args.detectorList == 'ALICE2' else "IT3DigitizerParam"],
                                            localCF={"DigiParams.seed" : str(TFSEED), "MCHDigitizer.seed" : str(TFSEED)}) + QEDdigiargs
 
       if det=='ALLSMALLER': # here we combine all smaller digits in one DPL workflow
@@ -1249,12 +1254,12 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    #<--------- ITS reco task 
    ITSMemEstimate = 12000 if havePbPb else 2000 # PbPb has much large mem requirement for now (in worst case)
-   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS")],
-                          tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem=str(ITSMemEstimate))  
+   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS" if args.detectorList == 'ALICE2' else "IT3")],
+                          tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem=str(ITSMemEstimate))
    ITSRECOtask['cmd'] = task_finalizer([
-     "${O2_ROOT}/bin/o2-its-reco-workflow",
+     "${O2_ROOT}/bin/o2-its-reco-workflow" if args.detectorList == 'ALICE2' else "${O2_ROOT}/bin/o2-its3-reco-workflow",
      getDPL_global_options(bigshm=havePbPb),
-     '--trackerCA',
+     '--trackerCA' if args.detectorList == 'ALICE2' else '',
      '--tracking-mode async',
      putConfigValues(["ITSVertexerParam", 
                       "ITSAlpideParam",
@@ -1292,6 +1297,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                       'ITSClustererParam', 
                       'GPU_rec_tpc', 
                       'trackTuneParams', 
+                      'GlobalParams',
                       'ft0tag'], 
                       {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco),
      tpc_corr_scaling_options,
@@ -1320,6 +1326,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                        'trackTuneParams',
                        'GPU_rec_tpc',
                        'TPCGasParam',
+                       'GlobalParams',
                        'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco),
       '--track-sources ' + trd_track_sources,
       tpc_corr_scaling_options, 
@@ -1604,7 +1611,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    [ '${O2_ROOT}/bin/o2-secondary-vertexing-workflow', 
       getDPL_global_options(bigshm=True),
       svfinder_threads,
-      putConfigValues(['svertexer', 'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco),
+      putConfigValues(['svertexer', 'TPCCorrMap', 'GlobalParams'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco),
       tpc_corr_scaling_options,
       tpc_corr_options_mc,
       '--vertexing-sources ' + svfinder_sources,
