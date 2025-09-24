@@ -1,0 +1,96 @@
+{
+    "hf-candidate-creator-2prong": {
+        "constrainKfToPv": "false",
+        "propagateToPCA": "true",
+        "useAbsDCA": "false",
+        "useWeightedFinalPCA": "false",
+        "maxR": "200",
+        "maxDZIni": "4",
+        "minParamChange": "0.001",
+        "minRelChi2Change": "0.90000000000000002",
+        "fillHistograms": "true",
+        "isRun2": "false",
+        "ccdbUrl": "http:\/\/alice-ccdb.cern.ch",
+        "ccdbPathGrp": "GLO\/GRP\/GRP",
+        "ccdbPathGrpMag": "GLO\/Config\/GRPMagField",
+        "hfEvSel": {
+            "centralityMin": "0",
+            "centralityMax": "100",
+            "useSel8Trigger": "true",
+            "triggerClass": "-1",
+            "useTvxTrigger": "false",
+            "useTimeFrameBorderCut": "false",
+            "useItsRofBorderCut": "false",
+            "useIsGoodZvtxFT0vsPV": "true",
+            "useNoSameBunchPileup": "true",
+            "useOccupancyCut": "false",
+            "occEstimator": "1",
+            "occupancyMin": "0",
+            "occupancyMax": "1000000",
+            "nPvContributorsMin": "0",
+            "chi2PvMax": "-1",
+            "zPvPosMin": "-10",
+            "zPvPosMax": "10",
+            "useNoCollInTimeRangeNarrow": "false",
+            "useNoCollInTimeRangeStandard": "false",
+            "useNoCollInRofStandard": "false",
+            "softwareTrigger": "",
+            "bcMarginForSoftwareTrigger": "100",
+            "ccdbPathSoftwareTrigger": "Users\/m\/mpuccio\/EventFiltering\/OTS\/",
+            "th2ConfigAxisCent": {
+                "values": [
+                    "100",
+                    "0",
+                    "100"
+                ]
+            },
+            "th2ConfigAxisOccupancy": {
+                "values": [
+                    "24",
+                    "0",
+                    "24000"
+                ]
+            },
+            "requireGoodRct": "true",
+            "rctLabel": "CBT_hadronPID",
+            "rctCheckZDC": "false",
+            "rctTreatLimitedAcceptanceAsBad": "false"
+        },
+        "axisMass": {
+            "values": [
+                "500",
+                "1.6",
+                "2.1"
+            ]
+        },
+        "processPvRefitWithDCAFitterN": "false",
+        "processNoPvRefitWithDCAFitterN": "false",
+        "processPvRefitWithKFParticle": "false",
+        "processNoPvRefitWithKFParticle": "false",
+        "processPvRefitWithDCAFitterNCentFT0C": "false",
+        "processNoPvRefitWithDCAFitterNCentFT0C": "true",
+        "processPvRefitWithKFParticleCentFT0C": "false",
+        "processNoPvRefitWithKFParticleCentFT0C": "false",
+        "processPvRefitWithDCAFitterNCentFT0M": "false",
+        "processNoPvRefitWithDCAFitterNCentFT0M": "false",
+        "processPvRefitWithKFParticleCentFT0M": "false",
+        "processNoPvRefitWithKFParticleCentFT0M": "false",
+        "processPvRefitWithDCAFitterNUpc": "false",
+        "processNoPvRefitWithDCAFitterNUpc": "false",
+        "processPvRefitWithKFParticleUpc": "false",
+        "processNoPvRefitWithKFParticleUpc": "false",
+        "processCollisions": "false",
+        "processCollisionsCentFT0C": "true",
+        "processCollisionsCentFT0M": "false",
+        "processCollisionsUpc": "false"
+    },
+    "hf-candidate-creator-2prong-expressions": {
+        "rejectBackground": "false",
+        "matchKinkedDecayTopology": "false",
+        "matchInteractionsWithMaterial": "false",
+        "matchCorrelatedBackground": "false",
+        "processMc": "false",
+        "processMcCentFT0C": "false",
+        "processMcCentFT0M": "false"
+    }
+}
