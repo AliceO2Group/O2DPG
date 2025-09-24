@@ -194,6 +194,7 @@
                       "o2-analysis-multiplicity-table",
                       "o2-analysis-event-selection",
                       "o2-analysis-track-propagation",
+                      "o2-analysis-timestamp",
                       "o2-analysis-pid-tpc",
                       "o2-analysis-pid-tpc-base",
                       "o2-analysis-pid-tof-full",
