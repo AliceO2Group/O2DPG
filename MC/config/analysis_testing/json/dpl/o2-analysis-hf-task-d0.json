@@ -1,0 +1,161 @@
+{
+    "hf-task-d0": {
+        "selectionFlagD0": "1",
+        "selectionFlagD0bar": "1",
+        "yCandGenMax": "0.5",
+        "yCandRecoMax": "0.80000000000000004",
+        "selectionFlagHf": "1",
+        "selectionTopol": "1",
+        "selectionCand": "1",
+        "selectionPid": "1",
+        "binsPt": {
+            "values": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "10",
+                "12",
+                "16",
+                "24",
+                "36",
+                "50"
+            ]
+        },
+        "centEstimator": "2",
+        "occEstimator": "1",
+        "storeCentrality": "true",
+        "storeOccupancy": "true",
+        "storeTrackQuality": "false",
+        "applyMl": "true",
+        "thnConfigAxisBkgScore": {
+            "values": [
+                "5000",
+                "0",
+                "0.5"
+            ]
+        },
+        "thnConfigAxisNonPromptScore": {
+            "values": [
+                "100",
+                "0",
+                "1"
+            ]
+        },
+        "thnConfigAxisPromptScore": {
+            "values": [
+                "100",
+                "0",
+                "1"
+            ]
+        },
+        "thnConfigAxisMass": {
+            "values": [
+                "120",
+                "1.5848",
+                "2.1848"
+            ]
+        },
+        "thnConfigAxisPtB": {
+            "values": [
+                "1000",
+                "0",
+                "100"
+            ]
+        },
+        "thnConfigAxisPt": {
+            "values": [
+                "500",
+                "0",
+                "50"
+            ]
+        },
+        "thnConfigAxisY": {
+            "values": [
+                "20",
+                "-1",
+                "1"
+            ]
+        },
+        "thnConfigAxisOrigin": {
+            "values": [
+                "3",
+                "-0.5",
+                "2.5"
+            ]
+        },
+        "thnConfigAxisCandType": {
+            "values": [
+                "6",
+                "-0.5",
+                "5.5"
+            ]
+        },
+        "thnConfigAxisGenPtD": {
+            "values": [
+                "500",
+                "0",
+                "50"
+            ]
+        },
+        "thnConfigAxisGenPtB": {
+            "values": [
+                "1000",
+                "0",
+                "100"
+            ]
+        },
+        "thnConfigAxisNumPvContr": {
+            "values": [
+                "800",
+                "-0.5",
+                "7999.5"
+            ]
+        },
+        "thnConfigAxisCent": {
+            "values": [
+                "110",
+                "0",
+                "110"
+            ]
+        },
+        "thnConfigAxisOccupancy": {
+            "values": [
+                "24",
+                "0",
+                "24000"
+            ]
+        },
+        "thnConfigAxisMinItsNCls": {
+            "values": [
+                "5",
+                "3",
+                "8"
+            ]
+        },
+        "thnConfigAxisMinTpcNCrossedRows": {
+            "values": [
+                "10",
+                "70",
+                "180"
+            ]
+        },
+        "processDataWithDCAFitterN": "false",
+        "processDataWithDCAFitterNCent": "false",
+        "processDataWithKFParticle": "false",
+        "processDataWithDCAFitterNMl": "false",
+        "processDataWithDCAFitterNMlCent": "true",
+        "processDataWithKFParticleMl": "false",
+        "processMcWithDCAFitterN": "false",
+        "processMcWithDCAFitterNCent": "false",
+        "processMcWithKFParticle": "false",
+        "processMcWithDCAFitterNMl": "false",
+        "processMcWithDCAFitterNMlCent": "false",
+        "processMcWithKFParticleMl": "false"
+    }
+}
