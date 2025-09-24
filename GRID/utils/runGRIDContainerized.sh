@@ -61,4 +61,4 @@ chmod +x "${JOBSCRIPT}"
 # launch job = script inside the container in the workdir
 APPTAINER_EXEC=${APPTAINER_EXEC:-"/cvmfs/alice.cern.ch/containers/bin/apptainer/${ARCH}/current/bin/apptainer"}
 ${APPTAINER_SUDO:+sudo} ${APPTAINER_EXEC} exec -C -B /cvmfs:/cvmfs,${WORK_DIR}:/workdir                 \
-                  --pwd /workdir --env-file ${WORK_DIR}/envfile ${APPTAINER_CONTAINER} /workdir/job.sh
+                  --pwd /workdir --env-file ${WORK_DIR}/envfile ${APPTAINER_CONTAINER} bash /workdir/job.sh
