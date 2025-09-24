@@ -192,6 +192,7 @@
                       "o2-analysis-hf-pid-creator",
                       "o2-analysis-trackselection",
                       "o2-analysis-multiplicity-table",
+                      "o2-analysis-centrality-table",
                       "o2-analysis-event-selection",
                       "o2-analysis-track-propagation",
                       "o2-analysis-timestamp",
