@@ -348,7 +348,7 @@ class O2_GeneratorParamJpsiMidY_96TeV : public GeneratorTGenerator
     // JPSi pt extrapolated at 9.6 TeV: https: // https://www.hepdata.net/record/ins1899703 (2108.02523)
     //
     const Double_t kC = 1.48862;
-    const Double_t kpt0 = 4.64005
+    const Double_t kpt0 = 4.64005;
     const Double_t kn = 3.57353;
     Double_t pt = px[0];
 
@@ -420,7 +420,7 @@ class O2_GeneratorParamPsiMidY_96TeV : public GeneratorTGenerator
     //
     //
     const Double_t kC = 1.48862;
-    const Double_t kpt0 = 4.64005
+    const Double_t kpt0 = 4.64005;
     const Double_t kn = 3.57353;
     Double_t pt = px[0];
 
