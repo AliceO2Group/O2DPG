@@ -111,7 +111,7 @@ public:
         LOG(info) << "[notifyEmbedding] ----- Collision impact parameter: " << x;
 
         /// number of events to be embedded in a background event
-        mNumSigEvs = std::max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.));
+        mNumSigEvs = 5 + 0.886202881*std::pow(std::max(0.0f, 17.5f - x),1.7);
         LOG(info) << "[notifyEmbedding] ----- generating " << mNumSigEvs << " signal events " << std::endl;
     };
 
