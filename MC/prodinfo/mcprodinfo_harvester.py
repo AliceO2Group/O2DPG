@@ -132,7 +132,7 @@ def pick_split(prod_tag, run_number, candidates, ascending=True):
     return None, None, None, None
 
 
-def process_prod_tag(prod_tag, year="2025", ccdb_url=None, username=None):
+def process_prod_tag(prod_tag, year="2025", ccdb_url=None, username=None, overwrite=False):
     base_path = f"/alice/sim/{year}/{prod_tag}"
 
     workflow_files = alien_find(base_path, "workflow.json")
@@ -184,7 +184,7 @@ def process_prod_tag(prod_tag, year="2025", ccdb_url=None, username=None):
             if info_min.OrbitsPerTF != info_max.OrbitsPerTF:
                 print(f"❌ OrbitsPerTF mismatch for run {run_number}")
 
-        publish_MCProdInfo(info_min, username=username, ccdb_url=ccdb_url)
+        publish_MCProdInfo(info_min, username=username, ccdb_url=ccdb_url, force_overwrite=overwrite)
         print (info_min)
 
 
@@ -196,9 +196,10 @@ def main():
     parser.add_argument("--ccdb", required=False, default="https://alice-ccdb.cern.ch", help="CCDB server URL")
     parser.add_argument("--username", required=False, help="GRID username (needs appropriate AliEn token initialized)")
     parser.add_argument("--year", default="2025", help="Production year (default: 2025)")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing entries")
     args = parser.parse_args()
 
-    process_prod_tag(args.prod_tag, year=args.year, ccdb_url=args.ccdb, username=args.username)
+    process_prod_tag(args.prod_tag, year=args.year, ccdb_url=args.ccdb, username=args.username, overwrite=args.overwrite)
 
 if __name__ == "__main__":
     main()
