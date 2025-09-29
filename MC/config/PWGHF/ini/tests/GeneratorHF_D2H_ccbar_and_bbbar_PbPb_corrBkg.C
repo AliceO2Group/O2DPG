@@ -6,7 +6,7 @@ int External() {
     int checkPdgQuarkTwo{5};
     float ratioTrigger = 1.; // one event triggered out of 1
 
-    std::vector<int> checkPdgHadron{411, 421, 431, 4122, 4132, 4232, 4332};
+    std::vector<int> checkPdgHadron{411, 421, 431, 4122, 4232};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
         {421, {
 			{-321, 211},              // D0 -> K-, pi+
@@ -66,15 +66,6 @@ int External() {
 			{2212, 333},              // Xic+ -> p, phi(1020)0
 			{3222, -211, 211},        // Xic+ -> Sigma+, pi-, pi+
 			{3324, 211},              // Xic+ -> Xi(1530)0, pi+
-		}},
-
-		{4132, {
-			{3312, 211},              // Xic0 -> Xi-, pi+
-		}},
-
-		{4332, {
-			{3334, 211},              // Omegac0 -> Omega-, pi+
-			{3312, 211},              // Omegac0 -> Xi-, pi+
 		}},
     };
 
