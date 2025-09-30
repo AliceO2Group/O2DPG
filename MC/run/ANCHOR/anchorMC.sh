@@ -338,6 +338,10 @@ fi
 TIMESTAMP=`grep "Determined timestamp to be" ${anchoringLogFile} | awk '//{print $6}'`
 echo_info "TIMESTAMP IS ${TIMESTAMP}"
 
+if [ "${ONLY_WORKFLOW_CREATION}" ]; then
+  exit 0
+fi
+
 # check if this job is exluded because it falls inside a bad data-taking period
 ISEXCLUDED=$(grep "TIMESTAMP IS EXCLUDED IN RUN" ${anchoringLogFile})
 if [ "${ISEXCLUDED}" ]; then
@@ -383,30 +387,36 @@ export FAIRMQ_IPC_PREFIX=./
 
 echo_info "Ready to start main workflow"
 
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} --dynamic-resources
+# Let us construct the workflow targets
+targetString=""
+if [ "${ALIEN_JDL_O2DPGWORKFLOWTARGET}" ]; then
+   # The user gave ${ALIEN_JDL_O2DPGWORKFLOWTARGET}. This is an expert mode not used in production.
+   # In this case, we will build just that. No QC, no TPC timeseries, ...
+   targetString=${ALIEN_JDL_O2DPGWORKFLOWTARGET}
+else
+   targetString="'aodmerge.*'"
+   # Now add more targets depending on options
+   # -) The TPC timeseries targets
+   if [[ "${ALIEN_JDL_ADDTIMESERIESINMC}" == "1" ]]; then
+     targetString="${targetString} 'tpctimes.*'"
+   fi
+   # -) TPC residual calibration
+   if [ "${ALIEN_JDL_DOTPCRESIDUALSEXTRACTION}" ]; then
+     targetString="${targetString} 'tpcresidmerge.*'"
+   fi
+   # -) QC tasks
+   if [[ -z "${DISABLE_QC}" && "${remainingargs}" == *"--include-local-qc"* ]]; then
+     targetString="${targetString} '^.*QC.*'" # QC tasks should have QC in the name
+   fi
+fi
+echo_info "Workflow will run with target specification ${targetString}"
+
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${targetString}                                    \
+                                               --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} --dynamic-resources                \
+                                               ${ALIEN_O2DPG_FILEGRAPH:+--remove-files-early ${ALIEN_O2DPG_FILEGRAPH}} \
+                                               ${ALIEN_O2DPG_ADDITIONAL_WORKFLOW_RUNNER_ARGS}
+
 MCRC=$?  # <--- we'll report back this code
-if [[ "${MCRC}" == "0" && "${ALIEN_JDL_ADDTIMESERIESINMC}" != "0" ]]; then
-  # Default value is 1 so this is run by default.
-  echo_info "Running TPC time series"
-  ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt tpctimes
-  # Note: We could maybe avoid this if-else by including `tpctimes` directly in the workflow-targets above
-fi
-
-if [[ "${MCRC}" == "0" && "${ALIEN_JDL_DOTPCRESIDUALEXTRACTION}" = "1" ]]; then
-  echo_info "Running TPC residuals extraction, aggregation and merging"
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt tpcresidmerge
-fi
-
-[[ -n "${DISABLE_QC}" ]] && echo_info "QC is disabled, skip it."
-
-if [[ -z "${DISABLE_QC}" && "${MCRC}" == "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
-  # do QC tasks
-  echo_info "Doing QC"
-  ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} -k
-  # NOTE that with the -k|--keep-going option, the runner will try to keep on executing even if some tasks fail.
-  # That means, even if there is a failing QC task, the return code will be 0
-  MCRC=$?
-fi
 
 #
 # full logs tar-ed for output, regardless the error code or validation - to catch also QC logs...

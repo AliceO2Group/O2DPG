@@ -100,6 +100,7 @@ _ , meta = read_workflow(args.workflowfile)
 meta["cpu_limit"] = args.cpu_limit
 meta["mem_limit"] = args.mem_limit
 meta["workflow_file"] = os.path.abspath(args.workflowfile)
+args.target_tasks = [f.strip('"').strip("'") for f in args.target_tasks] # strip quotes from the shell
 meta["target_task"] = args.target_tasks
 meta["rerun_from"] = args.rerun_from
 meta["target_labels"] = args.target_labels
@@ -321,12 +322,12 @@ def load_json(workflowfile):
 
 
 # filters the original workflowspec according to wanted targets or labels
-# returns a new workflowspec
+# returns a new workflowspec and the list of "final" workflowtargets
 def filter_workflow(workflowspec, targets=[], targetlabels=[]):
     if len(targets)==0:
-       return workflowspec
+       return workflowspec, []
     if len(targetlabels)==0 and len(targets)==1 and targets[0]=="*":
-       return workflowspec
+       return workflowspec, []
 
     transformedworkflowspec = workflowspec
 
@@ -334,7 +335,7 @@ def filter_workflow(workflowspec, targets=[], targetlabels=[]):
         for filt in targets:
             if filt=="*":
                 return True
-            if re.match(filt, t)!=None:
+            if re.match(filt, t) != None:
                 return True
         return False
 
@@ -372,6 +373,8 @@ def filter_workflow(workflowspec, targets=[], targetlabels=[]):
              ok = False
              break
        cache[t['name']] = ok
+       if ok == False:
+           print (f"Disabling target {t['name']} due to unsatisfied requirements")
        return ok
 
     okcache = {}
@@ -404,7 +407,7 @@ def filter_workflow(workflowspec, targets=[], targetlabels=[]):
     # we finaly copy everything matching the targets as well
     # as all their requirements
     transformedworkflowspec['stages']=[ l for l in workflowspec['stages'] if needed_by_targets(l['name']) ]
-    return transformedworkflowspec
+    return transformedworkflowspec, full_target_name_list
 
 
 # builds topological orderings (for each timeframe)
@@ -898,7 +901,7 @@ class ResourceManager:
                     break
 
 
-def filegraph_expand_timeframes(data: dict, timeframes: set) -> dict:
+def filegraph_expand_timeframes(data: dict, timeframes: set, target_namelist) -> dict:
     """
     A utility function for the fileaccess logic. Takes a template and duplicates
     for the multi-timeframe structure.
@@ -921,6 +924,12 @@ def filegraph_expand_timeframes(data: dict, timeframes: set) -> dict:
             entry["written_by"] = [
                 re.sub(r"_\d+$", f"_{i}", w) for w in entry["written_by"]
             ]
+            # for now we mark some files as keep if they are written
+            # by a target in the runner targetlist. TODO: Add other mechanisms
+            # to ask for file keeping (such as via regex or the like)
+            for e in entry["written_by"]:
+                if e in target_namelist:
+                    entry["keep"] = True
             entry["read_by"] = [
                 re.sub(r"_\d+$", f"_{i}", r) for r in entry["read_by"]
             ]
@@ -945,7 +954,8 @@ class WorkflowExecutor:
            os.environ[e] = str(value)
 
       # only keep those tasks that are necessary to be executed based on user's filters
-      self.workflowspec = filter_workflow(self.workflowspec, args.target_tasks, args.target_labels)
+      self.full_target_namelist = []
+      self.workflowspec, self.full_target_namelist = filter_workflow(self.workflowspec, args.target_tasks, args.target_labels)
 
       if not self.workflowspec['stages']:
           if args.target_tasks:
@@ -1015,7 +1025,7 @@ class WorkflowExecutor:
           with open(args.remove_files_early) as f:
             filegraph_data = json.load(f)
             self.do_early_file_removal = True
-            self.file_removal_candidates = filegraph_expand_timeframes(filegraph_data, self.timeframeset)
+            self.file_removal_candidates = filegraph_expand_timeframes(filegraph_data, self.timeframeset, self.full_target_namelist)
 
 
     def perform_early_file_removal(self, taskids):
@@ -1031,7 +1041,7 @@ class WorkflowExecutor:
           if os.path.exists(filepath):
             fsize = os.path.getsize(filepath)
             os.remove(filepath)
-            actionlogger.info(f"Removing {filepath} since no longer needed. Freeing {fsize/1024.} MB.")
+            actionlogger.info(f"Removing {filepath} since no longer needed. Freeing {fsize/1024./1024.} MB.")
             return True
 
           return False
@@ -1057,7 +1067,7 @@ class WorkflowExecutor:
                         file_entry['written_by'].remove(taskname)
 
                     # TODO: in principle the written_by criterion might not be needed
-                    if len(file_entry['read_by']) == 0 and len(file_entry['written_by']) == 0:
+                    if len(file_entry['read_by']) == 0 and len(file_entry['written_by']) == 0 and file_entry.get('keep', False) == False:
                         # the filename mentioned here is no longer needed and we can remove it
                         # make sure it is there and then delete it
                         if remove_if_exists(filename):
@@ -1329,6 +1339,17 @@ class WorkflowExecutor:
         globalPSS=0.
         resources_per_task = {}
 
+        # On a global level, we are interested in total disc space used (not differential in tasks)
+        # We can call system "du" as the fastest impl
+        def disk_usage_du(path: str) -> int:
+          """Use system du to get total size in bytes."""
+          out = subprocess.check_output(['du', '-sb', path], text=True)
+          return int(out.split()[0])
+
+        disc_usage = -1
+        if os.getenv("MONITOR_DISC_USAGE"):
+            disc_usage = disk_usage_du(os.getcwd()) / 1024. / 1024 # in MB
+
         for tid, proc in process_list:
 
             # proc is Popen object
@@ -1399,7 +1420,15 @@ class WorkflowExecutor:
             totalUSS = totalUSS / 1024 / 1024
             totalPSS = totalPSS / 1024 / 1024
             nice_value = proc.nice()
-            resources_per_task[tid]={'iter':self.internalmonitorid, 'name':self.idtotask[tid], 'cpu':totalCPU, 'uss':totalUSS, 'pss':totalPSS, 'nice':nice_value, 'swap':totalSWAP, 'label':self.workflowspec['stages'][tid]['labels']}
+            resources_per_task[tid]={'iter':self.internalmonitorid,
+                                     'name':self.idtotask[tid],
+                                     'cpu':totalCPU,
+                                     'uss':totalUSS,
+                                     'pss':totalPSS,
+                                     'nice':nice_value,
+                                     'swap':totalSWAP,
+                                     'label':self.workflowspec['stages'][tid]['labels'],
+                                     'disc': disc_usage}
             self.resource_manager.add_monitored_resources(tid, time_delta, totalCPU / 100, totalPSS)
             if nice_value == self.resource_manager.nice_default:
                 globalCPU += totalCPU
