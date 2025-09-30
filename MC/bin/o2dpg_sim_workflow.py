@@ -1330,7 +1330,8 @@ for tf in range(1, NTIMEFRAMES + 1):
      putConfigValues(),
      ('',' --disable-mc')[args.no_mc_labels]
    ])
-   workflow['stages'].append(TOFRECOtask)
+   if isActive('TOF'):
+      workflow['stages'].append(TOFRECOtask)
 
    #<--------- TOF-TPC(-ITS) global track matcher workflow
    toftpcmatchneeds = [TOFRECOtask['name'], TPCRECOtask['name'], ITSTPCMATCHtask['name'], TRDTRACKINGtask2['name']]
@@ -1355,7 +1356,8 @@ for tf in range(1, NTIMEFRAMES + 1):
      tpc_corr_options_mc
    ]
    TOFTPCMATCHERtask['cmd'] = task_finalizer(tofmatcher_cmd_parts)
-   workflow['stages'].append(TOFTPCMATCHERtask)
+   if isActive('TOF'):
+      workflow['stages'].append(TOFTPCMATCHERtask)
 
    # MFT reco: needing access to kinematics (when assessment enabled)
    mftreconeeds = [getDigiTaskName("MFT")]
@@ -1524,7 +1526,11 @@ for tf in range(1, NTIMEFRAMES + 1):
    workflow['stages'].append(HMPRECOtask)
 
    #<--------- HMP forward matching
-   hmpmatchneeds = [HMPRECOtask['name'], ITSTPCMATCHtask['name'], TOFTPCMATCHERtask['name'], TRDTRACKINGtask2['name']]
+   hmpmatchneeds = [HMPRECOtask['name'], 
+                    ITSTPCMATCHtask['name'], 
+                    TOFTPCMATCHERtask['name'] if isActive("TOF") else None, 
+                    TRDTRACKINGtask2['name']]
+   hmpmatchneeds = [ n for n in hmpmatchneeds if n != None ]
    hmp_match_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig, 'o2-hmpid-matcher-workflow', 'track-sources', default_value='ITS-TPC,ITS-TPC-TRD,TPC-TRD'))
    HMPMATCHtask = createTask(name='hmpmatch_'+str(tf), needs=hmpmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    HMPMATCHtask['cmd'] = task_finalizer(
@@ -1559,7 +1565,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                     HMPMATCHtask['name'],
                     HMPMATCHtask['name'],
                     ITSTPCMATCHtask['name'],
-                    TOFTPCMATCHERtask['name'],
+                    TOFTPCMATCHERtask['name'] if isActive("TOF") else None,
                     MFTMCHMATCHtask['name'],
                     MCHMIDMATCHtask['name']]
    pvfinderneeds = [ p for p in pvfinderneeds if p != None ]
@@ -1792,11 +1798,12 @@ for tf in range(1, NTIMEFRAMES + 1):
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-tracking-task.json')
 
      ### TOF
-     addQCPerTF(taskName='tofDigitsQC',
-                needs=[getDigiTaskName("TOF")],
-                readerCommand='${O2_ROOT}/bin/o2-tof-reco-workflow --delay-1st-tf 3 --input-type digits --output-type none',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofdigits.json',
-                objectsFile='tofDigitsQC.root')
+     if isActive('TOF'):
+         addQCPerTF(taskName='tofDigitsQC',
+                    needs=[getDigiTaskName("TOF")],
+                    readerCommand='${O2_ROOT}/bin/o2-tof-reco-workflow --delay-1st-tf 3 --input-type digits --output-type none',
+                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofdigits.json',
+                    objectsFile='tofDigitsQC.root')
 
      # depending if TRD and FT0 are available
      if isActive('FT0') and isActive('TRD'):
