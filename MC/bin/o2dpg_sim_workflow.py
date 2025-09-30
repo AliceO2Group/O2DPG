@@ -1805,27 +1805,27 @@ for tf in range(1, NTIMEFRAMES + 1):
                     configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/tofdigits.json',
                     objectsFile='tofDigitsQC.root')
 
-     # depending if TRD and FT0 are available
-     if isActive('FT0') and isActive('TRD'):
-        addQCPerTF(taskName='tofft0PIDQC',
+         # depending if TRD and FT0 are available
+         if isActive('FT0') and isActive('TRD'):
+            addQCPerTF(taskName='tofft0PIDQC',
                    needs=[TOFTPCMATCHERtask['name'], FT0RECOtask['name']],
                    readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF,TPC-TRD,TPC-TRD-TOF" --cluster-types FT0',
                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tof.json')
-     elif isActive('FT0'):
-       addQCPerTF(taskName='tofft0PIDQC',
+         elif isActive('FT0'):
+            addQCPerTF(taskName='tofft0PIDQC',
                    needs=[TOFTPCMATCHERtask['name']],
                    readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC" --cluster-types FT0',
-                  configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tofNoTRD.json')
-     elif isActive('TRD'):
-        addQCPerTF(taskName='tofPIDQC',
+                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/pidft0tofNoTRD.json')
+         elif isActive('TRD'):
+            addQCPerTF(taskName='tofPIDQC',
                    needs=[TOFTPCMATCHERtask['name']],
                    readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC,ITS-TPC-TRD,ITS-TPC-TRD-TOF,TPC-TRD,TPC-TRD-TOF" --cluster-types none',
-                  configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/pidtof.json')
-     else:
-       addQCPerTF(taskName='tofPIDQC',
+                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/pidtof.json')
+         else:
+            addQCPerTF(taskName='tofPIDQC',
                    needs=[TOFTPCMATCHERtask['name']],
                    readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TOF,TPC-TOF,TPC" --cluster-types none',
-                  configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/pidtofNoTRD.json')
+                   configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/pidtofNoTRD.json')
 
      ### EMCAL
      if isActive('EMC'):
