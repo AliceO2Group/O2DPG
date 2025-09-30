@@ -46,7 +46,7 @@ def include_all_QC_finalization(ntimeframes, standalone, run, productionTag, con
     if standalone == True:
       needs = []
     elif needs == None:
-      needs = [taskName + '_local' + str(tf) for tf in range(1, ntimeframes + 1)]
+      needs = [taskName + '_local_' + str(tf) for tf in range(1, ntimeframes + 1)]
 
     task = createTask(name=QC_finalize_name(taskName), needs=needs, cwd=qcdir, lab=["QC"], cpu=1, mem='2000')
     def remove_json_prefix(path):

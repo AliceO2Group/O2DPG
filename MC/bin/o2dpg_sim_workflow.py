@@ -1726,7 +1726,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if includeFullQC or includeLocalQC:
 
      def addQCPerTF(taskName, needs, readerCommand, configFilePath, objectsFile=''):
-       task = createTask(name=taskName + '_local' + str(tf), needs=needs, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
+       task = createTask(name=taskName + '_local_' + str(tf), needs=needs, tf=tf, cwd=timeframeworkdir, lab=["QC"], cpu=1, mem='2000')
        objectsFile = objectsFile if len(objectsFile) > 0 else taskName + '.root'
 
        def remove_json_prefix(path):
