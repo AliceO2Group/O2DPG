@@ -2170,23 +2170,50 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    #<------------------ TPC - time-series objects
    # initial implementation taken from comments in https://its.cern.ch/jira/browse/O2-4612
-   # TODO: this needs to be made configurable (as a function of which detectors are actually present)
+   # the inputs follow the active detectors where the time series accepts --track-sources
+   tpcts_sources = ''
+   tpcts_ownreaders = ''
+   if isActive("ITS") and isActive("TPC") and isActive("FT0"):
+      tpcts_sources = option_if_available('o2-tpc-time-series-workflow', '--track-sources', envfile=async_envfile)
+      tpcts_ownreaders = option_if_available('o2-tpc-time-series-workflow', '--disable-root-input', envfile=async_envfile)
+      if not tpcts_sources and tf == 1:
+         print("WARNING: o2-tpc-time-series-workflow has no --track-sources; the TPC time series runs only with TOF and TRD active")
+   if tpcts_sources:
+      # only the tracks which the TRD and TOF matching produce with the anchored configuration
+      trdsrc = trd_track_sources.split(',')
+      tofsrc = toftracksrcdefault.split(',')
+      tpcts_tracklist = ["ITS", "TPC", "ITS-TPC"]
+      tpcts_tracklist += ["ITS-TPC-TRD"] if "ITS-TPC" in trdsrc else []
+      tpcts_tracklist += ["ITS-TPC-TOF"] if "ITS-TPC" in tofsrc else []
+      tpcts_tracklist += ["ITS-TPC-TRD-TOF"] if "ITS-TPC" in trdsrc and "ITS-TPC-TRD" in tofsrc else []
+      tpcts_tracktypes = cleanDetectorInputList(",".join(tpcts_tracklist))
+      tpcts_clustertypes = "FT0,TPC"
+      tpcts_clustertypes += ",TOF" if "TOF" in tpcts_tracktypes else ""
+      tpcts_clustertypes += ",TRD" if "TRD" in tpcts_tracktypes else ""
+      tpcts_detectors = "ITS,TPC,FT0"
+   else:
+      # older async tags (e.g. 2023 apass4, 2024 pp apass1) always ask for TOF and TRD inputs
+      tpcts_tracktypes = "ITS,TPC,ITS-TPC,ITS-TPC-TOF,ITS-TPC-TRD-TOF"
+      tpcts_clustertypes = "FT0,TOF,TPC"
+      tpcts_detectors = "ITS,TPC,FT0,TOF,TRD"
    tpctsneeds = [ TPCRECOtask['name'],
                   ITSTPCMATCHtask['name'],
-                  TOFTPCMATCHERtask['name'],
                   FT0RECOtask['name'],
-                  PVFINDERtask['name'],
-                  TRDTRACKINGtask2['name']
+                  PVFINDERtask['name']
                 ]
+   addWhenActive("TOF", tpctsneeds, TOFTPCMATCHERtask['name'])
+   addWhenActive("TRD", tpctsneeds, TRDTRACKINGtask2['name'])
    TPCTStask = createTask(name='tpctimeseries_'+str(tf), needs=tpctsneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='2000', cpu='1')
-   TPCTStask['cmd'] = 'o2-global-track-cluster-reader --disable-mc --cluster-types "FT0,TOF,TPC" --track-types "ITS,TPC,ITS-TPC,ITS-TPC-TOF,ITS-TPC-TRD-TOF"'
+   TPCTStask['cmd'] = f'o2-global-track-cluster-reader --disable-mc --cluster-types "{tpcts_clustertypes}" --track-types "{tpcts_tracktypes}"'
    TPCTStask['cmd'] += ' --primary-vertices '
    TPCTStask['cmd'] += staggITS
-   TPCTStask['cmd'] += ' | o2-tpc-time-series-workflow --enable-unbinned-root-output --sample-unbinned-tsallis --sampling-factor 0.01 '
+   # newer builds have their own readers; switch them off so that only the reader above runs
+   TPCTStask['cmd'] += f' | o2-tpc-time-series-workflow{tpcts_ownreaders}'
+   TPCTStask['cmd'] += f'{tpcts_sources} "{tpcts_tracktypes},FT0"' if tpcts_sources else ''
+   TPCTStask['cmd'] += ' --enable-unbinned-root-output --sample-unbinned-tsallis --sampling-factor 0.01 '
    TPCTStask['cmd'] += staggITS
    TPCTStask['cmd'] += putConfigValues() + ' ' + getDPL_global_options(bigshm=True)
-   # could be relaxed or changed once the timerseries worklow is more reactive to input cluster- and track-types
-   addWhenActive("TOF,TPC,FT0", workflow['stages'], TPCTStask)
+   addWhenActive(tpcts_detectors, workflow['stages'], TPCTStask)
 
   # cleanup
   # --------
