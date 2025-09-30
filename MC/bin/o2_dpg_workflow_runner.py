@@ -1777,6 +1777,7 @@ Use the `--produce-script myscript.sh` option for this.
                if not (args.no_rootinit_speedup == True):
                   print ("setting up ROOT system")
                   os.environ['ROOT_LDSYSPATH'] = libpath.decode()
+                  os.environ['CLING_LDSYSPATH'] = libpath.decode()
 
                # b) the PATH for compiler includes needed by Cling
                cmd = "LC_ALL=C c++ -xc++ -E -v /dev/null 2>&1 | sed -n '/^#include/,${/^ \\/.*++/{p}}'"
@@ -1787,6 +1788,7 @@ Use the `--produce-script myscript.sh` option for this.
                if not (args.no_rootinit_speedup == True):
                   actionlogger.info("Determined ROOT_CPPSYSINCL=" + joined)
                   os.environ['ROOT_CPPSYSINCL'] = joined
+                  os.environ['CLING_CPPSYSINCL'] = joined
 
         speedup_ROOT_Init()
 
