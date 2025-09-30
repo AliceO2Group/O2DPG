@@ -132,8 +132,18 @@ def pick_split(prod_tag, run_number, candidates, ascending=True):
     return None, None, None, None
 
 
-def process_prod_tag(prod_tag, year="2025", ccdb_url=None, username=None):
+def process_prod_tag(prod_tag, year="2025", ccdb_url=None, username=None, overwrite=False):
     base_path = f"/alice/sim/{year}/{prod_tag}"
+
+    workflow_files = alien_find(base_path, "workflow.json")
+    # exclude some unnecessary paths
+    workflow_files = [
+      zf for zf in workflow_files
+      if "/AOD/" not in zf and "/QC/" not in zf and "/TimeseriesTPCmerging/" not in zf and "/Stage" not in zf
+    ]
+    # directories containing workflow.json
+    workflow_dirs = {os.path.dirname(wf) for wf in workflow_files}
+    print (f"Found {len(workflow_dirs)} workflow dirs")
 
     # Step 1: find all log_archive.zip files
     print (f"Querying AliEn for all directories with zip files")
@@ -144,10 +154,15 @@ def process_prod_tag(prod_tag, year="2025", ccdb_url=None, username=None):
       zf for zf in zip_files
       if "/AOD/" not in zf and "/QC/" not in zf and "/TimeseriesTPCmerging/" not in zf and "/Stage" not in zf
     ]
+    zip_files_dirs = {os.path.dirname(zf) for zf in zip_files}
+    print (f"Found {len(zip_files_dirs)} zip dirs")
+
+    # keep only zips in dirs where workflow.json also exists
+    relevant_zips = [zf for zf in zip_files if os.path.dirname(zf) in workflow_dirs]
 
     # Step 2: group by run_number
     runs = defaultdict(list)
-    for zf in zip_files:
+    for zf in relevant_zips:
         parsed = parse_workflow_path(zf, prod_tag)
         if parsed is None:
             continue
@@ -169,7 +184,7 @@ def process_prod_tag(prod_tag, year="2025", ccdb_url=None, username=None):
             if info_min.OrbitsPerTF != info_max.OrbitsPerTF:
                 print(f"❌ OrbitsPerTF mismatch for run {run_number}")
 
-        publish_MCProdInfo(info_min, username=username, ccdb_url=ccdb_url)
+        publish_MCProdInfo(info_min, username=username, ccdb_url=ccdb_url, force_overwrite=overwrite)
         print (info_min)
 
 
@@ -181,9 +196,10 @@ def main():
     parser.add_argument("--ccdb", required=False, default="https://alice-ccdb.cern.ch", help="CCDB server URL")
     parser.add_argument("--username", required=False, help="GRID username (needs appropriate AliEn token initialized)")
     parser.add_argument("--year", default="2025", help="Production year (default: 2025)")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing entries")
     args = parser.parse_args()
 
-    process_prod_tag(args.prod_tag, year=args.year, ccdb_url=args.ccdb, username=args.username)
+    process_prod_tag(args.prod_tag, year=args.year, ccdb_url=args.ccdb, username=args.username, overwrite=args.overwrite)
 
 if __name__ == "__main__":
     main()
