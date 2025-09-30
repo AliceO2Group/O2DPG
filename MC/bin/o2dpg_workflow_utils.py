@@ -172,6 +172,9 @@ def dump_workflow(workflow, filename, meta=None):
             s['cmd'] = '. ' + taskwrapper_string + ' ' + s['name']+'.log \'' + s['cmd'] + '\''
         # remove unnecessary whitespaces for better readibility
         s['cmd'] = trimString(s['cmd'])
+        # remove None entries from needs list
+        s['needs'] = [ n for n in s['needs'] if n != None ]
+
     # make the final dict to be dumped
     to_dump = {"stages": to_dump}
     filename = make_workflow_filename(filename)
