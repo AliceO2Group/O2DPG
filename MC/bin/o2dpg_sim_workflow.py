@@ -510,10 +510,60 @@ def getDPL_global_options(bigshm=False, ccdbbackend=True):
       return common + " --shm-segment-size ${SHMSIZE:-50000000000} "
    else:
       return common
-    
+
+
+# prefetch the aligned geometry object (for use in reconstruction)
+GEOM_PREFETCH_TASK = createTask(name='geomprefetch', cpu='0')
+# We need to query the config if this is done with or without parallel world. This needs to be improved
+# as it could be defaulted in the ConfigKey system
+with_parallel_world = 1 if args.confKey.find("useParallelWorld=1") != -1 else 0
+geom_cmd = f'''
+# -- Create aligned geometry using ITS ideal alignment to avoid overlaps in geant
+ENABLEPW={with_parallel_world}
+
+# when parallel world processing is disabled we need to switch off ITS alignment
+if [ "${{ENABLEPW}}" == "0" ]; then
+   CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align"
+   TIMESTAMP_IDEAL_MC=1
+   ${{O2_ROOT}}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${{CCDBOBJECTS_IDEAL_MC}} \
+      -d ${{ALICEO2_CCDB_LOCALCACHE}} --timestamp ${{TIMESTAMP_IDEAL_MC}}
+   CCDB_RC="$?"
+   if [ ! "${{CCDB_RC}}" == "0" ]; then
+     echo "Problem during CCDB prefetching of ${{CCDBOBJECTS_IDEAL_MC}}. Exiting."
+     exit ${{CCDB_RC}}
+   fi
+fi
+
+if [ "$ENABLEPW" == "0" ]; then
+  REMAP_OPT="--condition-remap=file://${{ALICEO2_CCDB_LOCALCACHE}}=ITS/Calib/Align"
+else
+  REMAP_OPT=""
+fi
+
+# fetch the global alignment geometry
+${{O2_ROOT}}/bin/o2-create-aligned-geometry-workflow ${{ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after $ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}} \
+      --configKeyValues "HBFUtils.startTime={args.timestamp}" -b --run ${{REMAP_OPT}}
+
+# copy the object into the CCDB cache
+mkdir -p $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned
+ln -s -f $PWD/o2sim_geometry-aligned.root $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned/snapshot.root
+if [ "$ENABLEPW" == "0" ]; then
+   [[ -f $PWD/its_GeometryTGeo.root ]] && mkdir -p $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry && ln -s -f $PWD/its_GeometryTGeo.root $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry/snapshot.root
+fi
+
+# MFT
+[[ -f $PWD/mft_GeometryTGeo.root ]] && mkdir -p $ALICEO2_CCDB_LOCALCACHE/MFT/Config/Geometry && ln -s -f $PWD/mft_GeometryTGeo.root $ALICEO2_CCDB_LOCALCACHE/MFT/Config/Geometry/snapshot.root
+'''
+
+with open("geomprefetcher_script.sh",'w') as f:
+   f.write(geom_cmd)
+GEOM_PREFETCH_TASK['cmd'] = 'chmod +x ${PWD}/geomprefetcher_script.sh; ${PWD}/geomprefetcher_script.sh'
+workflow['stages'].append(GEOM_PREFETCH_TASK)
+
+
 # create/publish the GRPs and other GLO objects for consistent use further down the pipeline
 orbitsPerTF=int(args.orbitsPerTF)
-GRP_TASK = createTask(name='grpcreate', cpu='0')
+GRP_TASK = createTask(name='grpcreate', needs=["geomprefetch"], cpu='0')
 GRP_TASK['cmd'] = 'o2-grp-simgrp-tool createGRPs --timestamp ' + str(args.timestamp) + ' --run ' + str(args.run) + ' --publishto ${ALICEO2_CCDB_LOCALCACHE:-.ccdb} -o grp --hbfpertf ' + str(orbitsPerTF) + ' --field ' + args.field
 GRP_TASK['cmd'] += ' --readoutDets ' + " ".join(activeDetectors) + ' --print ' + ('','--lhcif-CCDB')[args.run_anchored]
 if (not args.run_anchored == True) and len(args.bcPatternFile) > 0:
