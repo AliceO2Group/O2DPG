@@ -1948,11 +1948,13 @@ for tf in range(1, NTIMEFRAMES + 1):
    # TODO: this needs to be made configurable (as a function of which detectors are actually present)
    tpctsneeds = [ TPCRECOtask['name'],
                   ITSTPCMATCHtask['name'],
-                  TOFTPCMATCHERtask['name'],
+                  TOFTPCMATCHERtask['name'] if isActive("TOF") else None,
                   PVFINDERtask['name']
                 ]
+   timeseries_tracktypes=cleanDetectorInputList("ITS,TPC,ITS-TPC,ITS-TPC-TOF,ITS-TPC-TRD-TOF")
+   timeseries_clustertypes=cleanDetectorInputList("FT0,TOF,TPC")
    TPCTStask = createTask(name='tpctimeseries_'+str(tf), needs=tpctsneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='2000', cpu='1')
-   TPCTStask['cmd'] = 'o2-global-track-cluster-reader --disable-mc --cluster-types "FT0,TOF,TPC" --track-types "ITS,TPC,ITS-TPC,ITS-TPC-TOF,ITS-TPC-TRD-TOF"'
+   TPCTStask['cmd'] = f'o2-global-track-cluster-reader --disable-mc --cluster-types {timeseries_clustertypes} --track-types {timeseries_tracktypes}'
    TPCTStask['cmd'] += ' --primary-vertices '
    TPCTStask['cmd'] += ' | o2-tpc-time-series-workflow --enable-unbinned-root-output --sample-unbinned-tsallis --sampling-factor 0.01 '
    TPCTStask['cmd'] += putConfigValues() + ' ' + getDPL_global_options(bigshm=True)
