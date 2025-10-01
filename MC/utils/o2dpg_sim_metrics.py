@@ -773,6 +773,19 @@ def print_statistics(resource_object):
   print ("Mean-CPU (cores): ", mean_cpu)
   print ("Max-CPU (cores): ", max_cpu)
   print ("CPU-efficiency: ", mean_cpu / meta["cpu_limit"])
+
+  #(c) Top N memory consumers by name
+  top_n = 5
+  top_mem = (
+        dframe.groupby('name')['pss']
+        .max()                            # peak PSS for each component
+        .sort_values(ascending=False)     # sort by memory usage
+        .head(top_n)
+    )
+
+  print(f"\nTop-{top_n} memory consumers (by peak PSS):")
+  for comp, mem in top_mem.items():
+      print(f"  {comp:<20s} {mem:10.2f} MB")
   print ("---> ")
 
 def stat(args):
