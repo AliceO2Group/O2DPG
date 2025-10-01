@@ -460,9 +460,9 @@ def update_resource_estimates(workflow, resource_json):
             oldmem = task["resources"]["mem"]
             actionlogger.info("Updating mem estimate for " + task["name"] + " from " + str(oldmem) + " to " + str(newmem))
             task["resources"]["mem"] = newmem
-        newcpu = new_resources.get("cpu", None)
 
         # cpu
+        newcpu = new_resources.get("cpu", None)
         if newcpu is not None:
             oldcpu = task["resources"]["cpu"]
             rel_cpu = task["resources"]["relative_cpu"]
