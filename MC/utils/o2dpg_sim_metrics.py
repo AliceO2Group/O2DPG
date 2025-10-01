@@ -782,10 +782,13 @@ def print_statistics(resource_object):
         .sort_values(ascending=False)     # sort by memory usage
         .head(top_n)
     )
-
   print(f"\nTop-{top_n} memory consumers (by peak PSS):")
   for comp, mem in top_mem.items():
       print(f"  {comp:<20s} {mem:10.2f} MB")
+
+  #(d) max disc consumption
+  print ("\nMax-DISC usage (MB): ", dframe['disc'].max())
+  print ("Mean-DISC usage (MB): ", dframe['disc'].mean())
   print ("---> ")
 
 def stat(args):
