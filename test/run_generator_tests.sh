@@ -79,10 +79,10 @@ get_test_script_path_for_ini()
 get_nevents_from_ini()
 {
     # function to force the number of events to be simulated from the ini file (default = 100)
-    # Syntax: #NEV> 10 (space between #NEV> and the number is mandatory)
+    # Syntax: #NEV_TEST> 10 (space between #NEV_TEST> and the number is mandatory)
     # To be used only if external generator takes too long to run causing timeouts in CI
     local ini_path=${1}
-    local nev=$(grep "#NEV>" ${ini_path} | tail -n 1 | awk '{print $2}' | tr -d ' ')
+    local nev=$(grep "#NEV_TEST>" ${ini_path} | tail -n 1 | awk '{print $2}' | tr -d ' ')
     [[ "${nev}" == "" ]] && nev=100
     echo ${nev}
 }
