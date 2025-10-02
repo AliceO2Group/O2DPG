@@ -567,7 +567,7 @@ orbitsPerTF=int(args.orbitsPerTF)
 GRP_TASK = createTask(name='grpcreate', needs=["geomprefetch"], cpu='0')
 GRP_TASK['cmd'] = 'o2-grp-simgrp-tool createGRPs --timestamp ' + str(args.timestamp) + ' --run ' + str(args.run) + ' --publishto ${ALICEO2_CCDB_LOCALCACHE:-.ccdb} -o grp --hbfpertf ' + str(orbitsPerTF) + ' --field ' + args.field
 GRP_TASK['cmd'] += ' --detectorList ' + args.detectorList + ' --readoutDets ' + " ".join(activeDetectors) + ' --print ' + ('','--lhcif-CCDB')[args.run_anchored]
-if (not args.run_anchored == True) and len(args.bcPatternFile) > 0:
+if len(args.bcPatternFile) > 0:
     GRP_TASK['cmd'] += '  --bcPatternFile ' + str(args.bcPatternFile)
 if len(CONFKEYMV) > 0:
     # this is allowing the possibility to setup/use a different MeanVertex object than the one from CCDB
