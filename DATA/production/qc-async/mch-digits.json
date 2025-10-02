@@ -36,7 +36,12 @@
                     "type": "direct",
                     "query": "digits:MCH/DIGITS"
                 },
+                "movingWindows": [
+                    "RateSignalPerDualSampa"
+                ],
                 "taskParameters": {
+                    "Enable1DRateMaps": "true",
+                    "Enable2DRateMaps": "false",
                     "Diagnostic": "false"
                 },
                 "grpGeomRequest": {
