@@ -760,11 +760,11 @@ for tf in range(1, NTIMEFRAMES + 1):
      # determine final conf key for QED simulation
      QEDBaseConfig = "GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;QEDGenParam.xSectionHad="+str(XSecSys[COLTYPE])+";QEDGenParam.Z="+str(Zsys[COLTYPE])+";QEDGenParam.cmEnergy="+str(ECMS)+";Diamond.width[2]=6.;"
      QEDCONFKEY = constructConfigKeyArg(create_geant_config(args, QEDBaseConfig + args.confKeyQED))
-     detectors = ' ITS MFT FT0 FV0 FDD '
+     qed_detectorlist = ' ITS MFT FT0 FV0 FDD '
      if args.detectorList == 'ALICE2.1':
-         detectors = detectors.replace('ITS', 'IT3')
+         qed_detectorlist = qed_detectorlist.replace('ITS', 'IT3')
      QED_task['cmd'] = 'o2-sim -e TGeant3 --field ccdb -j ' + str('1') +  ' -o qed'                                   \
-                        + ' -n ' + str(NEventsQED) + ' -m ' + detectors                                               \
+                        + ' -n ' + str(NEventsQED) + ' -m ' + qed_detectorlist                                        \
                         + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run) \
                         + ' --seed ' + str(TFSEED)                                                                    \
                         + ' -g extgen '                                                                               \
