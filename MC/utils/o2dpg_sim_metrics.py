@@ -1000,11 +1000,14 @@ def stat(args):
     print_statistics(res)
 
 
-def merge_stats_into(list_of_json_stats, outputfile):
+def merge_stats_into(list_of_json_stats, outputfile, metadata):
   running = {}
   # read all the inputs
   for inp_json in list_of_json_stats:
     running = merge_stats(inp_json, running)
+
+  # attach meta-data
+  running["meta-data"] = metadata
 
   # now write out the result into the output file
   if running:
@@ -1012,10 +1015,17 @@ def merge_stats_into(list_of_json_stats, outputfile):
         json.dump(running, f)
 
 
+def build_meta_header(stringarg):
+  meta = {}
+  if stringarg != "":
+    meta = json.loads(stringarg)
+  return meta
+
 def json_stat(args):
   resources = extract_resources(args.pipelines)
   all_stats = [produce_json_stat(res) for res in resources]
-  merge_stats_into(all_stats, args.output)
+
+  merge_stats_into(all_stats, args.output, build_meta_header(args.header_data))
 
 
 def merge_json_stats(args):
@@ -1024,7 +1034,8 @@ def merge_json_stats(args):
     # load the json as a dict
     with open(inp,'r') as f:
       all_stats.append(json.load(f))
-  merge_stats_into(all_stats, args.output)
+
+  merge_stats_into(all_stats, args.output, build_meta_header(args.header_data))
 
 def history(args):
   """
@@ -1277,11 +1288,13 @@ def main():
   json_stat_parser.set_defaults(func=json_stat)
   json_stat_parser.add_argument("-p", "--pipelines", nargs="*", help="Pipeline_metric files from o2_dpg_workflow_runner; Merges information", required=True)
   json_stat_parser.add_argument("-o", "--output", type=str, help="Output json filename", required=True)
+  json_stat_parser.add_argument("-hd", "--header-data", type=str, default='', help="Some meta-data headers to be included in the JSON")
 
   merge_stat_parser = sub_parsers.add_parser("merge-json-stats", help="Merge information from json-stats into an aggregated stat")
   merge_stat_parser.set_defaults(func=merge_json_stats)
   merge_stat_parser.add_argument("-i", "--inputs", nargs="*", help="List of incoming/input json stat files", required=True)
   merge_stat_parser.add_argument("-o", "--output", type=str, help="Output json filename", required=True)
+  merge_stat_parser.add_argument("-hd", "--header-data", type=str, default="", help="Some meta-data headers to be included in the JSON")
 
   plot_parser = sub_parsers.add_parser("history", help="Plot (multiple) metrics from extracted metrics JSON file(s)")
   plot_parser.set_defaults(func=history)
