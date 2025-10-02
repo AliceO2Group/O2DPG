@@ -818,7 +818,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                         + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run) \
                         + ' --seed ' + str(TFSEED)                                                                    \
                         + ' -g extgen '                                                                               \
-                        + ' --detectorList ' + args.detectorList                                                      \
+                        + ' --detectorList ' + args.detectorList + ' '                                                \
                         + QEDCONFKEY
      QED_task['cmd'] += '; RC=$?; QEDXSecCheck=`grep xSectionQED qedgenparam.ini | sed \'s/xSectionQED=//\'`'
      QED_task['cmd'] += '; echo "CheckXSection ' + str(QEDXSecExpected[COLTYPE]) + ' = $QEDXSecCheck"; [[ ${RC} == 0 ]]'
