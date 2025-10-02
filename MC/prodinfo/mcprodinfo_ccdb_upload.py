@@ -148,6 +148,10 @@ def upload_mcprodinfo_meta(base_url, user, run_number, lpm_prod_tag, keys, cert_
 def publish_MCProdInfo(mc_prod_info, ccdb_url = "https://alice-ccdb.cern.ch", username = "aliprod", force_overwrite=False, include_meta_into_aod=False):
    print("Publishing MCProdInfo")
 
+   if mc_prod_info.LPMProductionTag == None or len(mc_prod_info.LPMProductionTag) == 0:
+       print ("No LPM production tag found; Not publishing")
+       return
+
    # see if this already has meta-data uploaded, otherwise do nothing
    mc_prod_info_q = query_mcprodinfo(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag)
    if mc_prod_info_q == None or force_overwrite == True:
