@@ -1004,15 +1004,18 @@ def merge_stats_into(list_of_json_stats, outputfile, metadata):
   running = {}
   # read all the inputs
   for inp_json in list_of_json_stats:
+    # we may have to strip the meta-data section first of all
     running = merge_stats(inp_json, running)
 
   # attach meta-data
   running["meta-data"] = metadata
 
   # now write out the result into the output file
-  if running:
+  if running and outputfile != None:
      with open(outputfile, 'w') as f:
         json.dump(running, f)
+
+  return running
 
 
 def build_meta_header(stringarg):
