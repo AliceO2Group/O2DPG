@@ -714,7 +714,7 @@ if doembedding:
                      + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)                    \
                      + ' --field ccdb ' + str(CONFKEYBKG)                                                                \
                      + ('',' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)        \
-                     + ' --vertexMode kCCDB'                                                                             \
+                     + ' --vertexMode ' + vtxmode_sgngen                                                                 \
                      + ' --fromCollContext collisioncontext.root:bkg '                                                   \
                      + ' --detectorList ' + args.detectorList
 
