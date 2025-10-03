@@ -294,8 +294,6 @@ fi
 # -- CREATE THE MC JOB DESCRIPTION ANCHORED TO RUN --
 
 MODULES="--skipModules ZDC"
-# Since this is used, set it explicitly
-ALICEO2_CCDB_LOCALCACHE=${ALICEO2_CCDB_LOCALCACHE:-$(pwd)/ccdb}
 
 # publish MCPRODINFO for first few jobs of a production
 # if external script exported PUBLISH_MCPRODINFO, it will be published anyways
