@@ -1018,18 +1018,26 @@ def merge_stats_into(list_of_json_stats, outputfile, metadata):
   return running
 
 
-def build_meta_header(stringarg):
+def build_meta_header(arg):
   meta = {}
-  if stringarg != "":
-    meta = json.loads(stringarg)
+  if type(arg) == str:
+    if arg != "":
+      meta = json.loads(arg)
+  elif type(arg) == dict:
+      meta = deepcopy(arg)
+  else:
+    print ("Unsupported Meta input type")
   return meta
 
-def json_stat(args):
-  resources = extract_resources(args.pipelines)
+def json_stat_impl(pipelines, output, header_data):
+  resources = extract_resources(pipelines)
   all_stats = [produce_json_stat(res) for res in resources]
 
-  merge_stats_into(all_stats, args.output, build_meta_header(args.header_data))
+  merge_stats_into(all_stats, output, build_meta_header(header_data))
 
+
+def json_stat(args):
+  json_stat_impl(args.pipelines, args.output, args.header_data)
 
 def merge_json_stats(args):
   all_stats = []
