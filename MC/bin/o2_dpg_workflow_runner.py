@@ -1029,6 +1029,12 @@ class WorkflowExecutor:
             self.do_early_file_removal = True
             self.file_removal_candidates = filegraph_expand_timeframes(filegraph_data, self.timeframeset, self.full_target_namelist)
 
+    def apply_global_env(self, environ_dict):
+      for e in self.globalinit['env']:
+        if environ_dict.get(e, None) == None:
+           value = self.globalinit['env'][e]
+           actionlogger.info("Applying global environment from init section " + str(e) + " : " + str(value))
+           environ_dict[e] = str(value)
 
     def perform_early_file_removal(self, taskids):
         """
@@ -1259,9 +1265,13 @@ class WorkflowExecutor:
       if self.workflowspec['stages'][tid].get('env')!=None:
           taskenv.update(self.workflowspec['stages'][tid]['env'])
 
-      # envfilename = "taskenv_" + str(tid) + ".json"
-      # with open(envfilename, "w") as file:
-      #    json.dump(taskenv, file, indent=2)
+      # add global workflow environment
+      self.apply_global_env(taskenv)
+
+      if os.environ.get('PIPELINE_RUNNER_DUMP_TASKENVS') != None:
+          envfilename = "taskenv_" + str(tid) + ".log"
+          with open(envfilename, "w") as file:
+            json.dump(taskenv, file, indent=2)
 
       p = psutil.Popen(['/bin/bash','-c',c], cwd=workdir, env=taskenv)
       try:
