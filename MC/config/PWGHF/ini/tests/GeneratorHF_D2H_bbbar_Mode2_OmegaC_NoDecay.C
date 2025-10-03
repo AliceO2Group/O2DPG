@@ -1,7 +1,7 @@
 int External() {
     std::string path{"o2sim_Kine.root"};
 
-    int checkPdgQuarkOne = 5;
+    int checkPdgQuark{5};
 
     int checkPdgHadron{4332};
     int checkHadronDecays{0};
