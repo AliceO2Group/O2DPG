@@ -16,6 +16,7 @@
 ///               Here PDG, Number injected, pT limits, rapidity limits are provided via an intermediate configuration file
 ///
 
+#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include "SimulationDataFormat/MCGenStatus.h"
 #include "SimulationDataFormat/MCUtils.h"
 #include "fairlogger/Logger.h"
@@ -23,7 +24,7 @@
 #include <fstream>
 #include "Generators/GeneratorPythia8Param.h"
 #include "Generators/DecayerPythia8Param.h"
-#include "Generators/GeneratorPythia8.h"
+#endif
 #include <nlohmann/json.hpp>
 #include "generator_pythia8_longlived.C"
 
