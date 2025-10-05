@@ -161,6 +161,23 @@ def log_line(logger, message):
     else:
         logger.write(message + "\n")
 
+def quote_for_nested_string(val):
+    s = str(val)
+    # Already double-quoted?
+    if s.startswith('"') and s.endswith('"'):
+        return s
+    # Escape inner quotes
+    s_escaped = s.replace('"', r'\"')
+    return f'"{s_escaped}"'
+
+def quote_if_needed(val):
+    # Only quote values that are likely to break shell parsing
+    # or contain nested shell-sensitive characters
+    s = str(val)
+    if re.search(r'[ \t;:&|<>]', s):
+        return quote_for_nested_string(s)
+    return s
+
 def modify_dpl_command(cmd_str, config_anchor, allow_overwrite=False, logger=None, configname=None):
     # check if cmd_str is given as list, in which case we transfrom to string
     if isinstance(cmd_str, list) == True:
@@ -195,12 +212,6 @@ def modify_dpl_command(cmd_str, config_anchor, allow_overwrite=False, logger=Non
     new_cmd = [exe]
     added = []
     overwritten = []
-
-    def quote_if_needed(val):
-        s = str(val)
-        if " " in s and not (s.startswith('"') and s.endswith('"')):
-           return f'"{s}"'
-        return s
 
     # Step 1: Existing options (preserved or overwritten)
     for key, val in existing_opts.items():

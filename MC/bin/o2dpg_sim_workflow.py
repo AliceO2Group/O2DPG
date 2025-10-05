@@ -43,7 +43,7 @@ sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers, merge_dicts
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
 from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg, option_if_available, overwrite_config
-from o2dpg_dpl_config_tools import parse_command_string, modify_dpl_command, dpl_option_from_config, TaskFinalizer
+from o2dpg_dpl_config_tools import dpl_option_from_config, TaskFinalizer, quote_if_needed
 
 # for some JAliEn interaction
 from alienpy.alien import JAlien
@@ -504,7 +504,7 @@ def getDPL_global_options(bigshm=False, ccdbbackend=True):
    if ccdbbackend:
      common=common + " --condition-not-after " + str(args.condition_not_after)
      if ccdbRemap != None:
-        common=common + " --condition-remap " + ccdbRemap
+        common=common + f" --condition-remap {quote_if_needed(ccdbRemap)} "
    if args.noIPC!=None:
       return common + " --no-IPC "
    if bigshm:
