@@ -25,6 +25,7 @@
 #include "Generators/GeneratorPythia8Param.h"
 #include "Generators/DecayerPythia8Param.h"
 #endif
+#include "Generators/GeneratorPythia8.h"
 #include <nlohmann/json.hpp>
 #include "generator_pythia8_longlived.C"
 
@@ -275,9 +276,9 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
         const double phi = gRandom->Uniform(0, TMath::TwoPi());
         const double px{pt * std::cos(phi)};
         const double py{pt * std::sin(phi)};
-        // Convert rapidity to pz using the relation: pz = pt * sinh(rapidity)
-        const double pz{pt * std::sinh(rapidity)};
-        const double et{std::hypot(std::hypot(pt, pz), cfg.mMass)};
+        const double mT = std::sqrt(cfg.mMass * cfg.mMass + pt * pt);
+        const double pz{mT * std::sinh(rapidity)};
+        const double et{mT * std::cosh(rapidity)};
 
         // TParticle::TParticle(Int_t pdg,
         //                      Int_t status,
