@@ -25,6 +25,10 @@
 #include "Generators/GeneratorPythia8Param.h"
 #include "Generators/DecayerPythia8Param.h"
 #endif
+#if defined(__CLING__) && !defined(__ROOTCLING__)
+#include "SimulationDataFormat/MCGenStatus.h"
+#include "SimulationDataFormat/MCUtils.h"
+#endif
 #include "Generators/GeneratorPythia8.h"
 #include <nlohmann/json.hpp>
 #include "generator_pythia8_longlived.C"
