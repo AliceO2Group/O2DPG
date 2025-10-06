@@ -1,7 +1,7 @@
 int External() {
     std::string path{"o2sim_Kine.root"};
 
-    int checkPdgQuarkOne = 4;
+    int checkPdgQuark{4};
 
     int checkPdgHadron{4332};
     int checkHadronDecays{3334};
@@ -46,7 +46,7 @@ int External() {
                 for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
                     auto pdgDau = tracks->at(j).GetPdgCode();
                     if (std::abs(pdgDau) == checkHadronDecays) {
-                        nSignalGoodDecay;
+                        nSignalGoodDecay++;
                         break;
                     }
                 }

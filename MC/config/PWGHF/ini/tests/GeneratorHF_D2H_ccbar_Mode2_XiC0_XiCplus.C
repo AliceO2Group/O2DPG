@@ -74,6 +74,7 @@ int External() {
                 std::sort(pdgsDecayAntiPart.begin(), pdgsDecayAntiPart.end());
 
                 for (auto &decay : checkHadronDecays[std::abs(pdg)]) {
+                    std::sort(decay.begin(), decay.end());
                     if (pdgsDecay == decay || pdgsDecayAntiPart == decay) {
                         nSignalGoodDecay++;
                         break;
