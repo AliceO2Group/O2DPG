@@ -22,7 +22,12 @@ def deactivate_detector(det):
     INACTIVE_DETECTORS.append(det)
 
 def isActive(det):
-    return det not in INACTIVE_DETECTORS and ("all" in ACTIVE_DETECTORS or det in ACTIVE_DETECTORS)
+    def check(detector):
+        return detector not in INACTIVE_DETECTORS and ("all" in ACTIVE_DETECTORS or detector in ACTIVE_DETECTORS)
+    if det == "ITS": # special remapping for upgrade only needed in one direction since IT3 output pretends to be ITS
+        return check("ITS") or check("IT3")
+    else:
+        return check(det)
 
 def compute_n_workers(interaction_rate, collision_system, n_workers_user=8, n_workers_min=1, interaction_rate_linear_below=300000):
     """
