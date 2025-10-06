@@ -17,8 +17,14 @@
 ///
 
 #if !defined(__CLING__) || defined(__ROOTCLING__)
+#if __has_include("SimulationDataFormat/MCGenStatus.h")
 #include "SimulationDataFormat/MCGenStatus.h"
+#else
+#include "SimulationDataFormat/MCGenProperties.h"
+#endif
+#if __has_include("SimulationDataFormat/MCUtils.h")
 #include "SimulationDataFormat/MCUtils.h"
+#endif
 #include "fairlogger/Logger.h"
 #include "TSystem.h"
 #include <fstream>
@@ -26,6 +32,14 @@
 #include "Generators/DecayerPythia8Param.h"
 #endif
 #if defined(__CLING__) && !defined(__ROOTCLING__)
+#if __has_include("SimulationDataFormat/MCGenStatus.h")
+#include "SimulationDataFormat/MCGenStatus.h"
+#elif __has_include("SimulationDataFormat/MCGenProperties.h")
+#include "SimulationDataFormat/MCGenProperties.h"
+#endif
+#if __has_include("SimulationDataFormat/MCUtils.h")
+#include "SimulationDataFormat/MCUtils.h"
+#endif
 #pragma cling load("libO2Generators")
 #endif
 #include "Generators/GeneratorPythia8.h"
