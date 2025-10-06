@@ -26,8 +26,7 @@
 #include "Generators/DecayerPythia8Param.h"
 #endif
 #if defined(__CLING__) && !defined(__ROOTCLING__)
-#include "SimulationDataFormat/MCGenStatus.h"
-#include "SimulationDataFormat/MCUtils.h"
+#pragma cling load("libO2Generators")
 #endif
 #include "Generators/GeneratorPythia8.h"
 #include <nlohmann/json.hpp>
