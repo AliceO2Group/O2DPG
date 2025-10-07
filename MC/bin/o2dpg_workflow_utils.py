@@ -24,6 +24,7 @@ def deactivate_detector(det):
 def isActive(det):
     def check(detector):
         return detector not in INACTIVE_DETECTORS and ("all" in ACTIVE_DETECTORS or detector in ACTIVE_DETECTORS)
+
     if det == "ITS": # special remapping for upgrade only needed in one direction since IT3 output pretends to be ITS
         return check("ITS") or check("IT3")
     else:
