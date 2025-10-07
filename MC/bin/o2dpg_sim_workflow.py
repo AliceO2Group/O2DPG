@@ -1617,19 +1617,18 @@ for tf in range(1, NTIMEFRAMES + 1):
    pvfinder_matching_sources = cleanDetectorInputList(pvfinder_matching_sources)
 
    pvfinderneeds = [TRDTRACKINGtask2['name'],
-                    FT0RECOtask['name'],
-                    FV0RECOtask['name'],
-                    EMCRECOtask['name'],
+                    FT0RECOtask['name'] if isActive("FT0") else None,
+                    FV0RECOtask['name'] if isActive("FV0") else None,
+                    EMCRECOtask['name'] if isActive("EMC") else None,
                     PHSRECOtask['name'] if isActive("PHS") else None,
                     CPVRECOtask['name'] if isActive("CPV") else None,
-                    FDDRECOtask['name'],
+                    FDDRECOtask['name'] if isActive("FDD") else None,
                     ZDCRECOtask['name'] if isActive("ZDC") else None,
-                    HMPMATCHtask['name'],
-                    HMPMATCHtask['name'],
-                    ITSTPCMATCHtask['name'],
-                    TOFTPCMATCHERtask['name'] if isActive("TOF") else None,
-                    MFTMCHMATCHtask['name'],
-                    MCHMIDMATCHtask['name']]
+                    HMPMATCHtask['name'] if isActive("HMP") else None,
+                    ITSTPCMATCHtask['name'] if isActive("ITS") and isActive("TPC") else None,
+                    TOFTPCMATCHERtask['name'] if isActive("TPC") and isActive("TOF") else None,
+                    MFTMCHMATCHtask['name'] if isActive("MFT") and isActive("MCH") else None,
+                    MCHMIDMATCHtask['name'] if isActive("MCH") and isActive("MID") else None]
    pvfinderneeds = [ p for p in pvfinderneeds if p != None ]
 
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS_TF, mem='4000')
