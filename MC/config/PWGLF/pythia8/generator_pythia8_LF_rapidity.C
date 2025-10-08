@@ -17,18 +17,13 @@
 ///
 
 #if !defined(__CLING__) || defined(__ROOTCLING__)
-#include <cmath>
-#include <fstream>
 #include "Pythia8/Pythia.h"
 #include "FairGenerator.h"
 #include "Generators/GeneratorPythia8.h"
-#include "Generators/GeneratorPythia8Param.h"
 #include "TRandom3.h"
 #include "TParticlePDG.h"
 #include "TDatabasePDG.h"
 #include "TMath.h"
-#include "TSystem.h"
-#include "fairlogger/Logger.h"
 #if __has_include("SimulationDataFormat/MCGenStatus.h")
 #include "SimulationDataFormat/MCGenStatus.h"
 #else
@@ -37,8 +32,14 @@
 #if __has_include("SimulationDataFormat/MCUtils.h")
 #include "SimulationDataFormat/MCUtils.h"
 #endif
+#include "fairlogger/Logger.h"
+#include "TSystem.h"
+#include <fstream>
+#include "Generators/GeneratorPythia8Param.h"
+#include <cmath>
 #endif
-
+// DecayerPythia8Param needs to be included after the #endif to work with Cling
+#include "Generators/DecayerPythia8Param.h"
 #if defined(__CLING__) && !defined(__ROOTCLING__)
 #if __has_include("SimulationDataFormat/MCGenStatus.h")
 #include "SimulationDataFormat/MCGenStatus.h"
@@ -50,9 +51,7 @@
 #endif
 #pragma cling load("libO2Generators")
 #endif
-
 #include "Generators/GeneratorPythia8.h"
-#include "Generators/DecayerPythia8Param.h"
 #include <nlohmann/json.hpp>
 
 using namespace Pythia8;
