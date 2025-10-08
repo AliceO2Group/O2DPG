@@ -17,6 +17,18 @@
 ///
 
 #if !defined(__CLING__) || defined(__ROOTCLING__)
+#include <cmath>
+#include <fstream>
+#include "Pythia8/Pythia.h"
+#include "FairGenerator.h"
+#include "Generators/GeneratorPythia8.h"
+#include "Generators/GeneratorPythia8Param.h"
+#include "TRandom3.h"
+#include "TParticlePDG.h"
+#include "TDatabasePDG.h"
+#include "TMath.h"
+#include "TSystem.h"
+#include "fairlogger/Logger.h"
 #if __has_include("SimulationDataFormat/MCGenStatus.h")
 #include "SimulationDataFormat/MCGenStatus.h"
 #else
@@ -25,12 +37,8 @@
 #if __has_include("SimulationDataFormat/MCUtils.h")
 #include "SimulationDataFormat/MCUtils.h"
 #endif
-#include "fairlogger/Logger.h"
-#include "TSystem.h"
-#include <fstream>
-#include "Generators/GeneratorPythia8Param.h"
-#include "Generators/DecayerPythia8Param.h"
 #endif
+
 #if defined(__CLING__) && !defined(__ROOTCLING__)
 #if __has_include("SimulationDataFormat/MCGenStatus.h")
 #include "SimulationDataFormat/MCGenStatus.h"
@@ -42,12 +50,31 @@
 #endif
 #pragma cling load("libO2Generators")
 #endif
+
 #include "Generators/GeneratorPythia8.h"
+#include "Generators/DecayerPythia8Param.h"
 #include <nlohmann/json.hpp>
-#include "generator_pythia8_longlived.C"
 
 using namespace Pythia8;
 using namespace o2::mcgenstatus;
+
+// Helper function to get mass from PDG code (copied from generator_pythia8_longlived.C to avoid include issues)
+namespace {
+double getMassFromPDG(int input_pdg)
+{
+  double mass = 0;
+  if (TDatabasePDG::Instance())
+  {
+    TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(input_pdg);
+    if (particle) {
+      mass = particle->Mass();
+    } else {
+      LOG(warning) << "Unknown particle requested with PDG " << input_pdg << ", mass set to 0";
+    }
+  }
+  return mass;
+}
+}
 
 class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
 {
@@ -336,7 +363,7 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
                                                            mRapidityMin{rapidityMin},
                                                            mRapidityMax{rapidityMax}
     {
-      mMass = GeneratorPythia8LongLivedGun::getMass(mPdg);
+      mMass = getMassFromPDG(mPdg);
       if (mMass <= 0) {
         LOG(fatal) << "Could not find mass for mPdg " << mPdg;
       }
