@@ -1,0 +1,29 @@
+{
+    "ambiguous-track-propagation": {
+        "ccdburl": "http://alice-ccdb.cern.ch",
+        "geoPath": "GLO/Config/GeometryAligned",
+        "grpmagPath": "GLO/Config/GRPMagField",
+        "mVtxPath": "GLO/Calib/MeanVertex",
+        "produceExtra": "0",
+        "produceHistos": "0",
+        "removeTrivialAssoc": "0",
+        "binsDCAxy": {
+            "values": [
+                "200",
+                "-1",
+                "1"
+            ]
+        },
+        "binsDCAz": {
+            "values": [
+                "200",
+                "-1",
+                "1"
+            ]
+        },
+        "processCentral": "0",
+        "processMFT": "0",
+        "processMFTReassoc": "1",
+        "processMFTReassoc3D": "0"
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "fwd-track-to-collision-association": {
+        "nSigmaForTimeCompat": "4",
+        "timeMargin": "0",
+        "includeUnassigned": "0",
+        "fillTableOfCollIdsPerTrack": "1",
+        "bcWindowForOneSigma": "115",
+        "processFwdAssocWithTime": "0",
+        "processFwdStandardAssoc": "0",
+        "processMFTAssocWithTime": "1",
+        "processMFTStandardAssoc": "0"
+    }
+}

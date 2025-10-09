@@ -1,0 +1,403 @@
+{
+    "propagation-service": {
+        "ccdburl": "http://alice-ccdb.cern.ch",
+        "ccdb": {
+            "ccdb-url": "http://alice-ccdb.cern.ch",
+            "lutPath": "GLO/Param/MatLUTInner",
+            "grpmagPath": "GLO/Config/GRPMagField",
+            "mVtxPath": "GLO/Calib/MeanVertex"
+        },
+        "enabledTables": {
+            "labels_rows": [
+                "V0Indices",
+                "V0CoresBase",
+                "V0Covs",
+                "CascIndices",
+                "KFCascIndices",
+                "TraCascIndices",
+                "StoredCascCores",
+                "StoredKFCascCores",
+                "StoredTraCascCores",
+                "CascCovs",
+                "KFCascCovs",
+                "TraCascCovs",
+                "V0TrackXs",
+                "CascTrackXs",
+                "CascBBs",
+                "V0DauCovs",
+                "V0DauCovIUs",
+                "V0TraPosAtDCAs",
+                "V0TraPosAtIUs",
+                "V0Ivanovs",
+                "McV0Labels",
+                "V0MCCores",
+                "V0CoreMCLabels",
+                "V0MCCollRefs",
+                "McCascLabels",
+                "McKFCascLabels",
+                "McTraCascLabels",
+                "McCascBBTags",
+                "CascMCCores",
+                "CascCoreMCLabels",
+                "CascMCCollRefs",
+                "CascToTraRefs",
+                "CascToKFRefs",
+                "TraToCascRefs",
+                "KFToCascRefs",
+                "V0FoundTags",
+                "CascFoundTags"
+            ],
+            "labels_cols": [
+                "enable"
+            ],
+            "values": [
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "1"
+                ],
+                [
+                    "1"
+                ],
+                [
+                    "1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ],
+                [
+                    "-1"
+                ]
+            ]
+        },
+        "deduplicationAlgorithm": "1",
+        "useV0BufferForCascades": "0",
+        "mc_findableMode": "0",
+        "refitWithMaterialCorrection": "0",
+        "v0BuilderOpts": {
+            "generatePhotonCandidates": "0",
+            "moveTPCOnlyTracks": "1",
+            "minCrossedRows": "60",
+            "dcanegtopv": "0.0500000007",
+            "dcapostopv": "0.0500000007",
+            "v0cospa": "0.96999999999999997",
+            "dcav0dau": "1.5",
+            "v0radius": "0.899999976",
+            "maxDaughterEta": "0.800000012",
+            "mc_populateV0MCCoresSymmetric": "0",
+            "mc_populateV0MCCoresAsymmetric": "1",
+            "mc_treatPiToMuDecays": "1",
+            "mc_rapidityWindow": "0.5",
+            "mc_keepOnlyPhysicalPrimary": "1",
+            "mc_addGeneratedK0Short": "1",
+            "mc_addGeneratedLambda": "1",
+            "mc_addGeneratedAntiLambda": "1",
+            "mc_addGeneratedGamma": "0",
+            "mc_addGeneratedGammaMakeCollinear": "0",
+            "mc_findableDetachedV0": "0"
+        },
+        "cascadeBuilderOpts": {
+            "useCascadeMomentumAtPrimVtx": "0",
+            "minCrossedRows": "60",
+            "dcabachtopv": "0.0500000007",
+            "cascradius": "0.899999976",
+            "casccospa": "0.970000029",
+            "dcacascdau": "1.5",
+            "lambdaMassWindow": "0.00999999978",
+            "maxDaughterEta": "0.800000012",
+            "kfTuneForOmega": "0",
+            "kfConstructMethod": "2",
+            "kfUseV0MassConstraint": "1",
+            "kfUseCascadeMassConstraint": "0",
+            "kfDoDCAFitterPreMinimV0": "1",
+            "kfDoDCAFitterPreMinimCasc": "1",
+            "mc_populateCascMCCoresSymmetric": "0",
+            "mc_populateCascMCCoresAsymmetric": "1",
+            "mc_addGeneratedXiMinus": "1",
+            "mc_addGeneratedXiPlus": "1",
+            "mc_addGeneratedOmegaMinus": "1",
+            "mc_addGeneratedOmegaPlus": "1",
+            "mc_treatPiToMuDecays": "1",
+            "mc_rapidityWindow": "0.5",
+            "mc_keepOnlyPhysicalPrimary": "1",
+            "mc_findableDetachedCascade": "0"
+        },
+        "preSelectOpts": {
+            "preselectOnlyDesiredV0s": "0",
+            "preselectOnlyDesiredCascades": "0",
+            "lifetimeCut": {
+                "labels_rows": "",
+                "labels_cols": [
+                    "lifetimeCutK0S",
+                    "lifetimeCutLambda",
+                    "lifetimeCutXi",
+                    "lifetimeCutOmega"
+                ],
+                "values": [
+                    [
+                        "20",
+                        "60",
+                        "40",
+                        "20"
+                    ]
+                ]
+            },
+            "massCutPhoton": "0.300000012",
+            "massCutK0": {
+                "labels_rows": "",
+                "labels_cols": [
+                    "constant",
+                    "linear",
+                    "expoConstant",
+                    "expoRelax"
+                ],
+                "values": [
+                    [
+                        "0.00281882007",
+                        "0.00114057004",
+                        "0.00172138005",
+                        "0.500262022"
+                    ]
+                ]
+            },
+            "massCutLambda": {
+                "labels_rows": "",
+                "labels_cols": [
+                    "constant",
+                    "linear",
+                    "expoConstant",
+                    "expoRelax"
+                ],
+                "values": [
+                    [
+                        "0.00117517996",
+                        "0.000124098995",
+                        "0.00547936978",
+                        "0.308008999"
+                    ]
+                ]
+            },
+            "massCutXi": {
+                "labels_rows": "",
+                "labels_cols": [
+                    "constant",
+                    "linear",
+                    "expoConstant",
+                    "expoRelax"
+                ],
+                "values": [
+                    [
+                        "0.00143209996",
+                        "0.000203560994",
+                        "0.00243186997",
+                        "0.799668014"
+                    ]
+                ]
+            },
+            "massCutOm": {
+                "labels_rows": "",
+                "labels_cols": [
+                    "constant",
+                    "linear",
+                    "expoConstant",
+                    "expoRelax"
+                ],
+                "values": [
+                    [
+                        "0.00143209996",
+                        "0.000203560994",
+                        "0.00243186997",
+                        "0.799668014"
+                    ]
+                ]
+            },
+            "massWindownumberOfSigmas": "20",
+            "massWindowSafetyMargin": "0.00100000005",
+            "maxTPCpidNsigma": "5"
+        },
+        "trackTuner": {
+            "debugInfo": "0",
+            "updateTrackDCAs": "0",
+            "updateTrackCovMat": "0",
+            "updateCurvature": "0",
+            "updateCurvatureIU": "0",
+            "updatePulls": "0",
+            "isInputFileFromCCDB": "0",
+            "pathInputFile": "",
+            "nameInputFile": "",
+            "pathFileQoverPt": "",
+            "nameFileQoverPt": "",
+            "usePvRefitCorrections": "0",
+            "qOverPtMC": "-1",
+            "qOverPtData": "-1",
+            "nPhiBins": "0"
+        },
+        "trackPropagation": {
+            "minPropagationDistance": "5",
+            "useTrackTuner": "0",
+            "useTrkPid": "0",
+            "fillTrackTunerTable": "0",
+            "trackTunerConfigSource": "1",
+            "trackTunerParams": "debugInfo=0|updateTrackDCAs=1|updateTrackCovMat=1|updateCurvature=0|updateCurvatureIU=0|updatePulls=0|isInputFileFromCCDB=1|pathInputFile=Users\/m\/mfaggin\/test\/inputsTrackTuner\/PbPb2022|nameInputFile=trackTuner_DataLHC22sPass5_McLHC22l1b2_run529397.root|pathFileQoverPt=Users\/h\/hsharma\/qOverPtGraphs|nameFileQoverPt=D0sigma_Data_removal_itstps_MC_LHC22b1b.root|usePvRefitCorrections=0|qOverPtMC=-1.|qOverPtData=-1.",
+            "axisPtQA": {
+                "values": [
+                    "0",
+                    "0",
+                    "0.10000000149011612",
+                    "0.20000000298023224",
+                    "0.30000001192092896",
+                    "0.4000000059604645",
+                    "0.5",
+                    "0.6000000238418579",
+                    "0.699999988079071",
+                    "0.800000011920929",
+                    "0.8999999761581421",
+                    "1",
+                    "1.100000023841858",
+                    "1.2000000476837158",
+                    "1.2999999523162842",
+                    "1.399999976158142",
+                    "1.5",
+                    "1.600000023841858",
+                    "1.7000000476837158",
+                    "1.7999999523162842",
+                    "1.899999976158142",
+                    "2",
+                    "2.200000047683716",
+                    "2.4000000953674316",
+                    "2.5999999046325684",
+                    "2.799999952316284",
+                    "3",
+                    "3.200000047683716",
+                    "3.4000000953674316",
+                    "3.5999999046325684",
+                    "3.799999952316284",
+                    "4",
+                    "4.400000095367432",
+                    "4.800000190734863",
+                    "5.199999809265137",
+                    "5.599999904632568",
+                    "6",
+                    "6.5",
+                    "7",
+                    "7.5",
+                    "8",
+                    "9",
+                    "10",
+                    "11",
+                    "12",
+                    "13",
+                    "14",
+                    "15",
+                    "17",
+                    "19",
+                    "21",
+                    "23",
+                    "25",
+                    "30",
+                    "35",
+                    "40",
+                    "50"
+                ]
+            }
+        },
+        "processRealData": "0",
+        "processMonteCarlo": "0",
+        "processRealDataWithPID": "1",
+        "processMonteCarloWithPID": "0"
+    }
+}
