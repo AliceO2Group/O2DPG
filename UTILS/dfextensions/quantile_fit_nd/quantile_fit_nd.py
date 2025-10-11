@@ -158,7 +158,11 @@ def fit_quantile_linear_nd(
     for ch_val, df_ch in df.groupby(channel_key, sort=False, dropna=False):
         # iterate bins of nuisance axes
         if bin_cols:
-            gb = df_ch.groupby(bin_cols, sort=False, dropna=False)
+            if len(bin_cols) == 1:
+                # avoid FutureWarning: use scalar grouper when only one column
+                gb = df_ch.groupby(bin_cols[0], sort=False, dropna=False)
+            else:
+                gb = df_ch.groupby(bin_cols, sort=False, dropna=False)
         else:
             # single group with empty tuple key
             df_ch = df_ch.copy()
@@ -294,8 +298,11 @@ class QuantileEvaluator:
         t = self.table
         if "channel_id" not in t.columns or "q_center" not in t.columns:
             raise ValueError("Calibration table missing 'channel_id' or 'q_center'.")
-        # detect nuisance axes from columns ending with _center
-        self.axes = [c[:-7] for c in t.columns if c.endswith("_center")]
+        # detect nuisance axes from columns ending with _center, but EXCLUDE q_center
+        self.axes = []
+        for c in t.columns:
+                if c.endswith("_center") and c != "q_center":
+                    self.axes.append(c[:-7])  # strip '_center'
         self.q_centers = np.sort(t["q_center"].unique())
         # map channel -> nested dicts of arrays over (q, axis1, axis2, ...)
         self.store: Dict[Any, Dict[str, Any]] = {}
