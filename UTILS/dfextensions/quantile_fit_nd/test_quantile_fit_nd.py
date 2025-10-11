@@ -7,6 +7,8 @@ from dfextensions.quantile_fit_nd.quantile_fit_nd import (
     fit_quantile_linear_nd,
     QuantileEvaluator,
 )
+from dfextensions.quantile_fit_nd.utils import discrete_to_uniform_rank_poisson
+
 
 RNG = np.random.default_rng(42)
 
@@ -16,11 +18,8 @@ def gen_Q_from_distribution(dist: str, n: int, params: dict) -> np.ndarray:
         return RNG.uniform(0.0, 1.0, size=n)
     elif dist == "poisson":
         lam = params.get("lam", 20.0)
-        m = RNG.poisson(lam, size=n)
-        from math import erf
-        z = (m + 0.5 - lam) / np.sqrt(max(lam, 1e-6))
-        cdf = 0.5 * (1.0 + np.array([erf(zi / np.sqrt(2)) for zi in z]))
-        return np.clip(cdf, 0.0, 1.0)
+        k = RNG.poisson(lam, size=n)
+        return discrete_to_uniform_rank_poisson(k, lam, mode="randomized", rng=RNG)
     elif dist == "gaussian":
         mu = params.get("mu", 0.0)
         sigma = params.get("sigma", 1.0)
