@@ -229,8 +229,30 @@ Drift/stability analysis is expected in external tooling by **chaining** calibra
 | `nuisance_axes` | `{"z": "z_vtx"}` | Axes for smoothing                       |
 
 ---
+## 14. Discrete Inputs (policy)
 
-## 14. Future extensions
+**Assumption:** Within each sliding window \(|Q - q_0| \le \Delta q\), the rank \(Q\) has enough spread to estimate a slope.
+
+For **discrete sources** (e.g. integer tracks/clusters, Poisson-like):
+convert counts to a continuous rank **before** calling the fitter:
+
+- **Randomized PIT (preferred):**
+  \( U = F(k-1) + V\,[F(k)-F(k-1)], \ V\sim \mathrm{Unif}(0,1) \)
+  (exact Uniform(0,1), information-preserving).
+- **Mid-ranks (deterministic):**
+  \( \tilde U = \tfrac{F(k-1)+F(k)}{2} \).
+
+Helpers provided:
+- `discrete_to_uniform_rank_poisson(k, lam, mode='randomized'|'midrank')`
+- `discrete_to_uniform_rank_empirical(x, mode='randomized'|'midrank')`
+
+The core fitter does **not** widen Δq or inject noise; it will label windows
+with insufficient spread as `low_Q_spread`. This separation keeps the
+calibration math transparent and reproducible.
+
+
+
+## 15. Future extensions
 
 * Optional **Huber** robust regression mode.
 * Degree-2 local fits with derivative-based monotonicity checks.
