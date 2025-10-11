@@ -107,7 +107,7 @@ def fit_quantile_linear_nd(
         nuisance_axes: Dict[str, str] = None,     # e.g. {"z": "z_vtx", "eta": "eta"}
         n_bins_axes: Dict[str, int] = None,       # e.g. {"z": 10}
         mask_col: Optional[str] = "is_outlier",
-        b_min_option: str = "auto",                # "auto" or "fixed"
+        b_min_option: str = "auto",               # "auto" or "fixed"
         b_min_value: float = 1e-6,
         fit_mode: str = "ols",
         kappa_w: float = 1.3,
@@ -117,32 +117,33 @@ def fit_quantile_linear_nd(
     Fit local linear inverse-CDF per channel, per (q_center, nuisance bins).
     Returns a flat DataFrame (calibration table) with coefficients and diagnostics.
 
-    Columns expected:
+    Columns expected in df:
       - channel_key, Q, X, and nuisance columns per nuisance_axes dict.
       - mask_col (optional): True rows are excluded.
 
     Notes:
-      - degree-1 only, Δq-centered model.
+      - Degree-1 only, Δq-centered model: X = a + b*(Q - q_center).
       - b>0 enforced via floor (auto/fixed).
       - sigma_Q = sigma_X|Q / |b|
-      - sigma_Q_irr optional (needs dX/dN proxy; here left NaN by default).
+      - sigma_Q_irr left NaN unless a multiplicity model is provided downstream.
     """
     if nuisance_axes is None:
         nuisance_axes = {}
     if n_bins_axes is None:
         n_bins_axes = {ax: 10 for ax in nuisance_axes}
+
     df = df.copy()
 
+    # Ensure a boolean keep-mask exists
     if mask_col is None or mask_col not in df.columns:
         df["_mask_keep"] = True
         mask_col_use = "_mask_keep"
     else:
         mask_col_use = mask_col
 
-    # Prepare nuisance bin centers per axis
+    # ------------------------ build nuisance binning ------------------------
     axis_to_centers: Dict[str, np.ndarray] = {}
     axis_to_idxcol: Dict[str, str] = {}
-
     for ax, col in nuisance_axes.items():
         centers = _build_uniform_centers(df[col].to_numpy(np.float64), int(n_bins_axes.get(ax, 10)))
         axis_to_centers[ax] = centers
@@ -150,21 +151,18 @@ def fit_quantile_linear_nd(
         df[idxcol] = _assign_bin_indices(df[col].to_numpy(np.float64), centers)
         axis_to_idxcol[ax] = idxcol
 
-    # Group by channel and nuisance bin tuple
     bin_cols = [axis_to_idxcol[a] for a in nuisance_axes]
-    out_rows = []
+    out_rows: list[dict] = []
 
-    # iterate per channel
+    # --------------------------- iterate channels --------------------------
     for ch_val, df_ch in df.groupby(channel_key, sort=False, dropna=False):
         # iterate bins of nuisance axes
         if bin_cols:
             if len(bin_cols) == 1:
-                # avoid FutureWarning: use scalar grouper when only one column
-                gb = df_ch.groupby(bin_cols[0], sort=False, dropna=False)
+                gb = df_ch.groupby(bin_cols[0], sort=False, dropna=False)  # avoid FutureWarning
             else:
                 gb = df_ch.groupby(bin_cols, sort=False, dropna=False)
         else:
-            # single group with empty tuple key
             df_ch = df_ch.copy()
             df_ch["__bin_dummy__"] = 0
             gb = df_ch.groupby(["__bin_dummy__"], sort=False, dropna=False)
@@ -174,18 +172,23 @@ def fit_quantile_linear_nd(
                 bin_key = (bin_key,)
 
             # select non-outliers
-            gmask = (df_cell[mask_col_use] == False) if mask_col_use in df_cell.columns else np.ones(len(df_cell), dtype=bool)
-            if gmask.sum() < 6:
-                # record empty cells as NaN rows for all q_centers (optional)
+            keep = (df_cell[mask_col_use] == False) if mask_col_use in df_cell.columns else np.ones(len(df_cell), dtype=bool)
+            n_keep = int(keep.sum())
+            masked_frac = 1.0 - float(keep.mean())
+
+            X_all = df_cell.loc[keep, "X"].to_numpy(np.float64)
+            Q_all = df_cell.loc[keep, "Q"].to_numpy(np.float64)
+
+            # If too few points overall, emit NaNs for all q-centers in this cell
+            if n_keep < 6:
                 for q0 in q_centers:
                     row = {
                         "channel_id": ch_val,
                         "q_center": float(q0),
                         "a": np.nan, "b": np.nan, "sigma_Q": np.nan,
                         "sigma_Q_irr": np.nan, "dX_dN": np.nan,
-                        "fit_stats": json.dumps({"n_used": int(gmask.sum()), "ok": False, "masked_frac": float(1.0 - gmask.mean())})
+                        "fit_stats": json.dumps({"n_used": n_keep, "ok": False, "masked_frac": float(masked_frac)})
                     }
-                    # write nuisance centers
                     for ax_i, ax in enumerate(nuisance_axes):
                         row[f"{ax}_center"] = float(axis_to_centers[ax][bin_key[ax_i]])
                     if timestamp is not None:
@@ -193,33 +196,44 @@ def fit_quantile_linear_nd(
                     out_rows.append(row)
                 continue
 
-            X_all = df_cell.loc[gmask, "X"].to_numpy(np.float64)
-            Q_all = df_cell.loc[gmask, "Q"].to_numpy(np.float64)
-
-            # stats for auto floor
-            sigmaX_cell = float(np.std(X_all)) if X_all.size > 1 else 0.0
-            bmin = _auto_b_min(sigmaX_cell, dq) if b_min_option == "auto" else float(b_min_value)
-
-            masked_frac = 1.0 - float(gmask.mean())
-
+            # -------------------- per-q_center sliding window --------------------
             for q0 in q_centers:
                 in_win = (Q_all >= q0 - dq) & (Q_all <= q0 + dq)
-                if in_win.sum() < 6:
+                n_win = int(in_win.sum())
+
+                # window-local auto b_min (compute BEFORE branching to avoid NameError)
+                if b_min_option == "auto":
+                    if n_win > 1:
+                        sigmaX_win = float(np.std(X_all[in_win]))
+                    else:
+                        # fallback to overall scatter in this cell
+                        sigmaX_win = float(np.std(X_all)) if X_all.size > 1 else 0.0
+                    bmin = _auto_b_min(sigmaX_win, dq)
+                else:
+                    bmin = float(b_min_value)
+
+                if n_win < 6:
                     row = {
                         "channel_id": ch_val,
                         "q_center": float(q0),
                         "a": np.nan, "b": np.nan, "sigma_Q": np.nan,
                         "sigma_Q_irr": np.nan, "dX_dN": np.nan,
-                        "fit_stats": json.dumps({"n_used": int(in_win.sum()), "ok": False, "masked_frac": masked_frac})
+                        "fit_stats": json.dumps({
+                            "n_used": n_win, "ok": False,
+                            "masked_frac": float(masked_frac),
+                            "b_min": float(bmin)
+                        })
                     }
                 else:
                     a, b, sigX, n_used, stats = _local_fit_delta_q(Q_all[in_win], X_all[in_win], q0)
+
                     # monotonicity floor
                     if not np.isfinite(b) or b <= 0.0:
                         b = bmin
                         clipped = True
                     else:
                         clipped = False
+
                     sigma_Q = _sigma_Q_from_sigmaX(b, sigX)
                     fit_stats = {
                         "n_used": int(n_used),
@@ -237,7 +251,7 @@ def fit_quantile_linear_nd(
                         "fit_stats": json.dumps(fit_stats)
                     }
 
-                # write nuisance centers
+                # write nuisance centers and optional timestamp
                 for ax_i, ax in enumerate(nuisance_axes):
                     row[f"{ax}_center"] = float(axis_to_centers[ax][bin_key[ax_i]])
                 if timestamp is not None:
@@ -246,7 +260,7 @@ def fit_quantile_linear_nd(
 
     table = pd.DataFrame(out_rows)
 
-    # Attach metadata
+    # ------------------------------ metadata ------------------------------
     table.attrs.update({
         "model": "X = a + b*(Q - q_center)",
         "dq": float(dq),
@@ -258,21 +272,17 @@ def fit_quantile_linear_nd(
         "channel_key": channel_key,
     })
 
-    # Finite-diff derivatives along nuisance axes (db_d<axis>)
+    # --------- finite-difference derivatives along nuisance axes ----------
     for ax in nuisance_axes:
-        # compute per-channel, per-q_center derivative across axis centers
         der_col = f"db_d{ax}"
         table[der_col] = np.nan
-        # group by channel & q_center
         for (ch, q0), g in table.groupby(["channel_id", "q_center"], sort=False):
             centers = np.unique(g[f"{ax}_center"].to_numpy(np.float64))
             if centers.size < 2:
                 continue
-            # sort by center
             gg = g.sort_values(f"{ax}_center")
             bvals = gg["b"].to_numpy(np.float64)
             xc = gg[f"{ax}_center"].to_numpy(np.float64)
-            # central differences
             d = np.full_like(bvals, np.nan)
             if bvals.size >= 2:
                 d[0] = (bvals[1] - bvals[0]) / max(xc[1] - xc[0], 1e-12)
