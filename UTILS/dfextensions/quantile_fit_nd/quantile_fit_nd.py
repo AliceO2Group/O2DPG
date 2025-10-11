@@ -346,7 +346,7 @@ class QuantileEvaluator:
         item = self.store.get(channel_id)
         if item is None:
             return np.nan, np.nan, np.nan
-        a_vec = self._interp_nuisance_vector(item["A"], coords)
+        a_vec = self._interp_nuisance_vector(item["A"], coords)  # vector over q-centers
         b_vec = self._interp_nuisance_vector(item["B"], coords)
         s_vec = self._interp_nuisance_vector(item["SQ"], coords)
         # interpolate across q-centers
@@ -360,12 +360,52 @@ class QuantileEvaluator:
         return float(a), float(b), float(s)
 
     def invert_rank(self, X: float, *, channel_id: Any, **coords) -> float:
-        # choose q near 0.5 to fetch a,b, then compute local inversion; then clamp
-        a, b, _ = self.params(channel_id=channel_id, q=0.5, **coords)
-        if not np.isfinite(a) or not np.isfinite(b) or b == 0.0:
+        """
+        Invert amplitude -> rank using the Δq-centered grid.
+
+        Strategy:
+          1) Evaluate vectors a(q0), b(q0) over all q-centers at the requested nuisance coords.
+          2) Form candidates: Q_hat(q0) = q0 + (X - a(q0)) / b(q0).
+          3) Pick the candidate closest to its center (argmin |Q_hat - q0|).
+          4) Do 1–2 fixed-point refinement steps with linear interpolation in q.
+
+        Returns:
+          Q in [0, 1] (np.nan if no valid slope information is available).
+        """
+        item = self.store.get(channel_id)
+        if item is None:
             return np.nan
-        Q = (X - a) / b + 0.5  # local around 0.5; for better accuracy call with actual q
-        return float(np.clip(Q, 0.0, 1.0))
+
+        # Vectors over q-centers at the requested nuisance coordinates
+        a_vec = self._interp_nuisance_vector(item["A"], coords)  # shape: (n_q,)
+        b_vec = self._interp_nuisance_vector(item["B"], coords)  # shape: (n_q,)
+        qc = self.q_centers
+
+        # Form candidate ranks; ignore invalid/negative slopes
+        b_safe = np.where(np.isfinite(b_vec) & (b_vec > 0.0), b_vec, np.nan)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            q_candidates = qc + (X - a_vec) / b_safe
+
+        # Choose the self-consistent candidate (closest to its own center)
+        dif = np.abs(q_candidates - qc)
+        if not np.any(np.isfinite(dif)):
+            return np.nan
+        j = int(np.nanargmin(dif))
+        q = float(np.clip(q_candidates[j], 0.0, 1.0))
+
+        # Fixed-point refinement (2 iterations)
+        for _ in range(2):
+            a = _linear_interp_1d(qc, a_vec, q)
+            b = _linear_interp_1d(qc, b_vec, q)
+            if not np.isfinite(a) or not np.isfinite(b) or b <= 0.0:
+                break
+            q_new = float(np.clip(q + (X - a) / b, 0.0, 1.0))
+            if abs(q_new - q) < 1e-6:
+                q = q_new
+                break
+            q = q_new
+
+        return q
 
 
 # ------------------------------ I/O helpers ------------------------------
