@@ -5,6 +5,7 @@ import getpass
 import pandas as pd
 import matplotlib.pyplot as plt
 from typing import Union, List, Dict, Optional
+import sys
 
 class PerformanceLogger:
     def __init__(self, log_path: str, sep: str = "|"):
@@ -32,32 +33,35 @@ class PerformanceLogger:
 
         rows = []
         for log_id, path in enumerate(log_paths):
-            with open(path) as f:
-                for row_id, line in enumerate(f):
-                    parts = [x.strip() for x in line.strip().split(sep)]
-                    if len(parts) < 5:
-                        continue
-                    timestamp, step, elapsed_str, rss_str, user, host = parts[:6]
-                    row = {
-                        "timestamp": timestamp,
-                        "step": step,
-                        "elapsed_sec": float(elapsed_str),
-                        "rss_gb": float(rss_str),
-                        "user": user,
-                        "host": host,
-                        "logfile": path,
-                        "rowID": row_id,
-                        "logID": log_id
-                    }
+            try:
+                with open(path) as f:
+                    for row_id, line in enumerate(f):
+                        parts = [x.strip() for x in line.strip().split(sep)]
+                        if len(parts) < 5:
+                            continue
+                        timestamp, step, elapsed_str, rss_str, user, host = parts[:6]
+                        row = {
+                            "timestamp": timestamp,
+                            "step": step,
+                            "elapsed_sec": float(elapsed_str),
+                            "rss_gb": float(rss_str),
+                            "user": user,
+                            "host": host,
+                            "logfile": path,
+                            "rowID": row_id,
+                            "logID": log_id
+                        }
 
-                    if "[" in step and "]" in step:
-                        base, idx = step.split("[")
-                        row["step"] = base
-                        idx = idx.rstrip("]")
-                        for i, val in enumerate(idx.split(",")):
-                            if val.strip().isdigit():
-                                row[f"index_{i}"] = int(val.strip())
-                    rows.append(row)
+                        if "[" in step and "]" in step:
+                            base, idx = step.split("[")
+                            row["step"] = base
+                            idx = idx.rstrip("]")
+                            for i, val in enumerate(idx.split(",")):
+                                if val.strip().isdigit():
+                                    row[f"index_{i}"] = int(val.strip())
+                        rows.append(row)
+            except FileNotFoundError:
+                continue
 
         return pd.DataFrame(rows)
 
@@ -134,11 +138,11 @@ class PerformanceLogger:
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
             plt.tight_layout()
-
+            is_testing = "pytest" in sys.modules
             if output_pdf:
                 pdf.savefig()
                 plt.close()
-            else:
+            elif not is_testing:
                 plt.show()
 
         if output_pdf:
