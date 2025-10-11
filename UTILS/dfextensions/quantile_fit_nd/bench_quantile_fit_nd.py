@@ -314,7 +314,8 @@ def main():
     # Plots
     if args.plot:
         _plot_scaling(res, dists)
-        print("Saved PNG plots: bench_scaling_{dist}.png")
+        print("Saved PNG plots:", ", ".join(f"bench_scaling_{d}.png" for d in dists))
+
 
     # Checks (warn by default; --strict to raise)
     for dist in dists:
