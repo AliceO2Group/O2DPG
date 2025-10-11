@@ -61,28 +61,57 @@ def _linear_interp_1d(xc: np.ndarray, yc: np.ndarray, x: float) -> float:
     return float((1 - t) * y0 + t * y1)
 
 
-def _local_fit_delta_q(Q: np.ndarray, X: np.ndarray, q0: float) -> Tuple[float, float, float, int, Dict[str, float]]:
+def _local_fit_delta_q(Qw: np.ndarray, Xw: np.ndarray, q0: float) -> Tuple[float, float, float, int, Dict[str, Any]]:
     """
-    OLS for X = a + b*(Q - q0). Returns (a, b, sigma_X_given_Q, n_used, stats).
+    Stable 2-parameter OLS in the Δq-centered model:
+        X = a + b * (Q - q0)
+    Returns:
+      a, b, sigma_X|Q (RMS of residuals), n_used, stats(dict)
+    Rejects windows with insufficient Q spread to estimate slope reliably.
     """
-    n = Q.size
-    stats = {}
-    if n < 6:
-        return np.nan, np.nan, np.nan, n, {"n_used": n, "ok": False}
-    dq = Q - q0
-    dq0 = dq.mean()
-    x0 = X.mean()
-    dq_c = dq - dq0
-    x_c = X - x0
-    sxx = float(np.dot(dq_c, dq_c))
-    if sxx <= 0:
-        return np.nan, np.nan, np.nan, n, {"n_used": n, "ok": False}
-    b = float(np.dot(dq_c, x_c) / sxx)
-    a = x0 - b * dq0
-    res = X - (a + b * (Q - q0))
-    sig = float(np.sqrt(np.mean(res * res)))
-    stats = {"n_used": n, "rms": float(np.sqrt(np.mean(res**2))), "ok": True}
-    return a, b, sig, n, stats
+    Qw = np.asarray(Qw, dtype=np.float64)
+    Xw = np.asarray(Xw, dtype=np.float64)
+    m = np.isfinite(Qw) & np.isfinite(Xw)
+    Qw, Xw = Qw[m], Xw[m]
+    n = Qw.size
+    if n < 3:
+        return np.nan, np.nan, np.nan, int(n), {"ok": False, "reason": "n<3"}
+
+    dq = Qw - q0
+    # Degeneracy checks for discrete/plateau windows (typical in Poisson-CDF ranks)
+    # Require at least 3 unique Q values and a minimal span in Q.
+    uq = np.unique(np.round(Qw, 6))  # rounding collapses near-duplicates
+    span_q = float(np.max(Qw) - np.min(Qw)) if n else 0.0
+    if uq.size < 3 or span_q < 1e-3:
+        return np.nan, np.nan, np.nan, int(n), {
+            "ok": False, "reason": "low_Q_spread", "n_unique_q": int(uq.size), "span_q": span_q
+        }
+
+    # Design matrix for OLS: [1, (Q - q0)]
+    A = np.column_stack([np.ones(n, dtype=np.float64), dq])
+    # Least squares solution (stable even when dq mean ≠ 0)
+    sol, resid, rank, svals = np.linalg.lstsq(A, Xw, rcond=None)
+    a, b = float(sol[0]), float(sol[1])
+
+    # Residual RMS as sigma_X|Q
+    if n > 2:
+        if resid.size > 0:
+            rss = float(resid[0])
+        else:
+            # fallback if lstsq doesn't return resid (e.g., rank-deficient weird cases)
+            rss = float(np.sum((Xw - (a + b * dq)) ** 2))
+        sigmaX = float(np.sqrt(max(rss, 0.0) / (n - 2)))
+    else:
+        sigmaX = np.nan
+
+    stats = {
+        "ok": True,
+        "rms": sigmaX,
+        "n_used": int(n),
+        "n_unique_q": int(uq.size),
+        "span_q": span_q,
+    }
+    return a, b, sigmaX, int(n), stats
 
 
 def _sigma_Q_from_sigmaX(b: float, sigma_X_given_Q: float) -> float:
@@ -115,17 +144,15 @@ def fit_quantile_linear_nd(
 ) -> pd.DataFrame:
     """
     Fit local linear inverse-CDF per channel, per (q_center, nuisance bins).
-    Returns a flat DataFrame (calibration table) with coefficients and diagnostics.
+    Degree-1, Δq-centered model: X = a + b*(Q - q_center).
 
-    Columns expected in df:
-      - channel_key, Q, X, and nuisance columns per nuisance_axes dict.
-      - mask_col (optional): True rows are excluded.
+    Monotonicity:
+      - Enforce floor b>=b_min ONLY for valid fits with non-positive b.
+      - Degenerate windows (low Q spread / too few unique Q) remain NaN (no flooring).
 
-    Notes:
-      - Degree-1 only, Δq-centered model: X = a + b*(Q - q_center).
-      - b>0 enforced via floor (auto/fixed).
-      - sigma_Q = sigma_X|Q / |b|
-      - sigma_Q_irr left NaN unless a multiplicity model is provided downstream.
+    sigma_Q = sigma_X|Q / |b|
+
+    Returns a flat DataFrame with coefficients and diagnostics.
     """
     if nuisance_axes is None:
         nuisance_axes = {}
@@ -187,7 +214,7 @@ def fit_quantile_linear_nd(
                         "q_center": float(q0),
                         "a": np.nan, "b": np.nan, "sigma_Q": np.nan,
                         "sigma_Q_irr": np.nan, "dX_dN": np.nan,
-                        "fit_stats": json.dumps({"n_used": n_keep, "ok": False, "masked_frac": float(masked_frac)})
+                        "fit_stats": json.dumps({"n_used": n_keep, "ok": False, "reason": "cell_n<6", "masked_frac": float(masked_frac)})
                     }
                     for ax_i, ax in enumerate(nuisance_axes):
                         row[f"{ax}_center"] = float(axis_to_centers[ax][bin_key[ax_i]])
@@ -201,12 +228,11 @@ def fit_quantile_linear_nd(
                 in_win = (Q_all >= q0 - dq) & (Q_all <= q0 + dq)
                 n_win = int(in_win.sum())
 
-                # window-local auto b_min (compute BEFORE branching to avoid NameError)
+                # window-local b_min (compute BEFORE branching)
                 if b_min_option == "auto":
                     if n_win > 1:
                         sigmaX_win = float(np.std(X_all[in_win]))
                     else:
-                        # fallback to overall scatter in this cell
                         sigmaX_win = float(np.std(X_all)) if X_all.size > 1 else 0.0
                     bmin = _auto_b_min(sigmaX_win, dq)
                 else:
@@ -219,37 +245,48 @@ def fit_quantile_linear_nd(
                         "a": np.nan, "b": np.nan, "sigma_Q": np.nan,
                         "sigma_Q_irr": np.nan, "dX_dN": np.nan,
                         "fit_stats": json.dumps({
-                            "n_used": n_win, "ok": False,
-                            "masked_frac": float(masked_frac),
-                            "b_min": float(bmin)
+                            "n_used": n_win, "ok": False, "reason": "win_n<6",
+                            "masked_frac": float(masked_frac), "b_min": float(bmin)
                         })
                     }
                 else:
                     a, b, sigX, n_used, stats = _local_fit_delta_q(Q_all[in_win], X_all[in_win], q0)
 
-                    # monotonicity floor
-                    if not np.isfinite(b) or b <= 0.0:
-                        b = bmin
-                        clipped = True
+                    # If fit is NOT ok (e.g. low_Q_spread), keep NaNs (do NOT floor here)
+                    if not bool(stats.get("ok", True)):
+                        row = {
+                            "channel_id": ch_val,
+                            "q_center": float(q0),
+                            "a": np.nan, "b": np.nan, "sigma_Q": np.nan,
+                            "sigma_Q_irr": np.nan, "dX_dN": np.nan,
+                            "fit_stats": json.dumps({
+                                **stats, "ok": False, "n_used": int(n_used),
+                                "masked_frac": float(masked_frac), "b_min": float(bmin)
+                            })
+                        }
                     else:
+                        # Valid fit: enforce b floor only if b<=0 (monotonicity)
                         clipped = False
+                        if not np.isfinite(b) or b <= 0.0:
+                            b = max(bmin, 1e-9)
+                            clipped = True
 
-                    sigma_Q = _sigma_Q_from_sigmaX(b, sigX)
-                    fit_stats = {
-                        "n_used": int(n_used),
-                        "ok": bool(stats.get("ok", True)),
-                        "rms": float(stats.get("rms", np.nan)),
-                        "masked_frac": float(masked_frac),
-                        "clipped": bool(clipped),
-                        "b_min": float(bmin),
-                    }
-                    row = {
-                        "channel_id": ch_val,
-                        "q_center": float(q0),
-                        "a": float(a), "b": float(b), "sigma_Q": float(sigma_Q),
-                        "sigma_Q_irr": np.nan, "dX_dN": np.nan,
-                        "fit_stats": json.dumps(fit_stats)
-                    }
+                        sigma_Q = _sigma_Q_from_sigmaX(b, sigX)
+                        fit_stats = {
+                            **stats,
+                            "n_used": int(n_used),
+                            "ok": True,
+                            "masked_frac": float(masked_frac),
+                            "clipped": bool(clipped),
+                            "b_min": float(bmin),
+                        }
+                        row = {
+                            "channel_id": ch_val,
+                            "q_center": float(q0),
+                            "a": float(a), "b": float(b), "sigma_Q": float(sigma_Q),
+                            "sigma_Q_irr": np.nan, "dX_dN": np.nan,
+                            "fit_stats": json.dumps(fit_stats)
+                        }
 
                 # write nuisance centers and optional timestamp
                 for ax_i, ax in enumerate(nuisance_axes):
@@ -293,6 +330,7 @@ def fit_quantile_linear_nd(
             table.loc[gg.index, der_col] = d
 
     return table
+
 
 
 # --------------------------- Evaluator API -------------------------------
@@ -378,55 +416,97 @@ class QuantileEvaluator:
 
     def invert_rank(self, X: float, *, channel_id: Any, **coords) -> float:
         """
-        Invert amplitude -> rank using the Δq-centered grid with robust fixed-point iteration.
-
-        Steps:
-          - Build candidate Q̂(q0) = q0 + (X - a(q0)) / b(q0) over all q-centers (at given nuisances).
-          - Choose the self-consistent candidate (min |Q̂ - q0|) as the initial guess.
-          - Run damped fixed-point iteration: q <- q + λ * (X - a(q)) / b(q), with λ in (0,1].
-          - Clamp to [0,1]; stop when |Δq| < tol or max_iter reached.
-
-        Returns:
-          q in [0,1], or NaN if unavailable.
+        Invert amplitude -> rank using a monotone, piecewise-blended segment model:
+          For q in [q_k, q_{k+1}], define
+            X_blend(q) = (1-t)*(a_k + b_k*(q - q_k)) + t*(a_{k+1} + b_{k+1}*(q - q_{k+1})),
+            t = (q - q_k) / (q_{k+1} - q_k).
+        With b_k>0, X_blend is monotone increasing => solve X_blend(q)=X via bisection.
+        Returns q in [0,1] or NaN if no information is available.
         """
         item = self.store.get(channel_id)
         if item is None:
             return np.nan
 
-        a_vec = self._interp_nuisance_vector(item["A"], coords)  # shape (n_q,)
-        b_vec = self._interp_nuisance_vector(item["B"], coords)  # shape (n_q,)
         qc = self.q_centers
-
-        # Candidate ranks from all centers
-        b_safe = np.where(np.isfinite(b_vec) & (b_vec > 0.0), b_vec, np.nan)
-        with np.errstate(invalid="ignore", divide="ignore"):
-            q_candidates = qc + (X - a_vec) / b_safe
-
-        dif = np.abs(q_candidates - qc)
-        if not np.any(np.isfinite(dif)):
+        if qc.size < 2:
             return np.nan
-        j0 = int(np.nanargmin(dif))
-        q = float(np.clip(q_candidates[j0], 0.0, 1.0))
 
-        # Damped fixed-point
-        max_iter = 10
-        tol = 1e-6
-        lam = 0.8  # damping
-        for _ in range(max_iter):
-            a = _linear_interp_1d(qc, a_vec, q)
-            b = _linear_interp_1d(qc, b_vec, q)
-            if not np.isfinite(a) or not np.isfinite(b) or b <= 0.0:
-                break
-            step = (X - a) / b
-            if not np.isfinite(step):
-                break
-            q_new = float(np.clip(q + lam * step, 0.0, 1.0))
-            if abs(q_new - q) < tol:
-                q = q_new
-                break
-            q = q_new
+        # Interpolate nuisance -> vectors over q-centers
+        a_vec = self._interp_nuisance_vector(item["A"], coords)
+        b_vec = self._interp_nuisance_vector(item["B"], coords)
 
-        return q
+        # Fill NaNs across q using linear interpolation on valid centers
+        valid = np.isfinite(a_vec) & np.isfinite(b_vec) & (b_vec > 0.0)
+        if valid.sum() < 2:
+            return np.nan
+
+        def _fill1d(xc, y):
+            v = np.isfinite(y)
+            if v.sum() == 0:
+                return y
+            if v.sum() == 1:
+                # only one point: flat fill
+                y2 = np.full_like(y, y[v][0])
+                return y2
+            y2 = np.array(y, dtype=np.float64, copy=True)
+            y2[~v] = np.interp(xc[~v], xc[v], y[v])
+            return y2
+
+        a_f = _fill1d(qc, a_vec)
+        b_f = _fill1d(qc, b_vec)
+        # enforce positive floor to keep monotonicity
+        b_f = np.where(np.isfinite(b_f) & (b_f > 0.0), b_f, 1e-9)
+
+        # Fast helpers for segment evaluation
+        def X_blend(q: float) -> float:
+            # find segment
+            if q <= qc[0]:
+                k = 0
+            elif q >= qc[-1]:
+                k = qc.size - 2
+            else:
+                k = int(np.clip(np.searchsorted(qc, q) - 1, 0, qc.size - 2))
+            qk, qk1 = qc[k], qc[k + 1]
+            t = (q - qk) / (qk1 - qk) if qk1 > qk else 0.0
+            ak, bk = a_f[k], b_f[k]
+            ak1, bk1 = a_f[k + 1], b_f[k + 1]
+            xk = ak + bk * (q - qk)
+            xk1 = ak1 + bk1 * (q - qk1)
+            return float((1.0 - t) * xk + t * xk1)
+
+        # Bracket on [0,1]
+        f0 = X_blend(0.0) - X
+        f1 = X_blend(1.0) - X
+        if not np.isfinite(f0) or not np.isfinite(f1):
+            return np.nan
+
+        # If not bracketed, clamp to nearest end (rare with our synthetic noise)
+        if f0 == 0.0:
+            return 0.0
+        if f1 == 0.0:
+            return 1.0
+        if f0 > 0.0 and f1 > 0.0:
+            return 0.0
+        if f0 < 0.0 and f1 < 0.0:
+            return 1.0
+
+        # Bisection
+        lo, hi = 0.0, 1.0
+        flo, fhi = f0, f1
+        for _ in range(40):
+            mid = 0.5 * (lo + hi)
+            fm = X_blend(mid) - X
+            if not np.isfinite(fm):
+                break
+            # root in [lo, mid] ?
+            if (flo <= 0.0 and fm >= 0.0) or (flo >= 0.0 and fm <= 0.0):
+                hi, fhi = mid, fm
+            else:
+                lo, flo = mid, fm
+            if abs(hi - lo) < 1e-6:
+                break
+        return float(0.5 * (lo + hi))
+
 
 
 # ------------------------------ I/O helpers ------------------------------
