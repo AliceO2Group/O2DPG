@@ -5,7 +5,7 @@ from sklearn.linear_model import LinearRegression, HuberRegressor
 from joblib import Parallel, delayed
 from numpy.linalg import inv, LinAlgError
 from typing import Union, List, Tuple, Callable
-
+from random import shuffle
 
 class GroupByRegressor:
     @staticmethod
@@ -114,6 +114,7 @@ class GroupByRegressor:
             sigmaCut: float = 4,
             fitter: Union[str, Callable] = "auto"
     ) -> dict:
+        # TODO 0handle the case os singl gb column
         group_dict = dict(zip(gb_columns, key))
         predictors = []
         if isinstance(weights, str) and weights not in df_group.columns:
@@ -227,7 +228,8 @@ class GroupByRegressor:
             n_jobs: int = 1,
             min_stat: List[int] = [10, 10],
             sigmaCut: float = 4.0,
-            fitter: Union[str, Callable] = "auto"
+            fitter: Union[str, Callable] = "auto",
+            batch_size: Union[int, None] = None  # ← new argument
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Perform grouped robust linear regression using HuberRegressor in parallel.
@@ -256,12 +258,15 @@ class GroupByRegressor:
         df_selected = df.loc[selection]
         grouped = df_selected.groupby(gb_columns)
 
-        results = Parallel(n_jobs=n_jobs)(
+        filtered_items = [(key, idxs) for key, idxs in grouped.groups.items() if len(idxs) >= min_stat[0]/2]
+        # shuffle(filtered_items) # Shuffle to ensure random order in parallel processing - should be an option
+
+        results = Parallel(n_jobs=n_jobs,batch_size=batch_size)(
             delayed(GroupByRegressor.process_group_robust)(
-                key, group_df, gb_columns, fit_columns, linear_columns,
+                key, df_selected.loc[idxs], gb_columns, fit_columns, linear_columns,
                 median_columns, weights, min_stat, sigmaCut, fitter
             )
-            for key, group_df in grouped
+            for key, idxs in filtered_items
         )
 
         dfGB = pd.DataFrame(results)
