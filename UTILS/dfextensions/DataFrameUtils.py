@@ -20,6 +20,47 @@ def df_draw_scatter(
         jitter=False,
         show=True                # if False, don't plt.show(); always return (fig, ax)
 ):
+    """
+    Create a scatter plot from a DataFrame with optional color, marker size, and jitter.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Input DataFrame containing the data.
+    expr : str
+        Expression in 'y:x' format specifying y-axis and x-axis columns (e.g., 'sigma:pTmin').
+    selection : str, bool array, or callable, optional
+        Filter to apply. Can be a pandas query string (engine='python'), a boolean mask,
+        or a callable returning a mask (default: None, uses full df).
+    color : str, optional
+        Column name for color mapping (continuous or categorical, default: None).
+    marker : str, optional
+        Column name for marker size mapping (numeric, default: None).
+    cmap : str, optional
+        Colormap name (e.g., 'tab10', default: 'tab10').
+    jitter : bool, optional
+        Add small random jitter to x and y coordinates (default: False).
+    show : bool, optional
+        Display the plot if True (default: True); always returns (fig, ax).
+
+    Returns
+    -------
+    tuple
+        (fig, ax) : matplotlib Figure and Axes objects for further customization.
+
+    Raises
+    ------
+    ValueError
+        If expr is not in 'y:x' format or selection query fails.
+    TypeError
+        If selection is neither str, bool array, nor callable.
+
+    Notes
+    -----
+    - Filters NA values from x and y before plotting.
+    - Jitter helps visualize quantized data (x: ±0.1, y: ±2e-4).
+    - Colorbar is added for continuous color; categorical colors use the first color for NA.
+    """
     # --- parse "y:x"
     try:
         y_col, x_col = expr.split(":")
@@ -144,46 +185,69 @@ def df_draw_scatter_categorical(
         show: bool = False,
 ):
     """
-    Scatter plot with categorical COLOR and MARKER SHAPE; flexible size control. Returns (fig, ax).
+        Create a scatter plot with categorical colors and marker shapes from a DataFrame.
 
-    Parameters
-    ----------
-    expr : str
-        ROOT-like "y:x" expression, e.g. "sigma:pTmin".
-    selection : str, optional
-        pandas query string evaluated with engine="python".
-        Example: "productionId.str.contains(r'(?:LHC25b8a|LHC24)', regex=True, na=False)".
-    color : str, optional
-        Categorical column used for colors (legend #1).
-    marker_style : str, optional
-        Categorical column used for marker shapes (legend #2).
-    marker_size : None | "" | number | str, optional
-        - None or ""  → constant default size (150 pt^2).
-        - number      → fixed size (pt^2) for all points.
-        - str (column):
-            * numeric → min–max normalize to [100, 400] pt^2
-            * non-numeric → map categories to sizes (150, 220, 290, …)
-    jitter : bool, default False
-        Add small uniform jitter to x and y.
-    top_k_color, other_label_color, order_color :
-        control color categories (reduce tail to 'Other', set order).
-    top_k_marker, other_label_marker, order_marker :
-        control marker-shape categories.
-    palette : list, optional
-        Colors to cycle through; defaults to repeating 'tab20'.
-    markers : list, optional
-        Marker shapes; defaults to ["o","s","^","D","P","X","v","<",">","h","H","*","p"].
-    legend_outside : bool, default True
-        Reserve right margin and place legends outside so they aren’t clipped.
-    legend_cols_color, legend_cols_marker : int
-        Number of columns for each legend block.
-    show : bool, default True
-        If True, plt.show() is called. Function always returns (fig, ax).
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            Input DataFrame containing the data.
+        expr : str
+            Expression in 'y:x' format specifying y-axis and x-axis columns (e.g., 'sigma:pTmin').
+        selection : str, optional
+            Pandas query string (engine='python') to filter data (e.g., "productionId.str.contains(...)").
+        color : str, optional
+            Column name for categorical color mapping (legend #1, default: None).
+        marker_style : str, optional
+            Column name for categorical marker shape mapping (legend #2, default: None).
+        marker_size : None | "" | number | str, optional
+            - None or "" : Constant size (150 pt²).
+            - number : Fixed size (pt²) for all points.
+            - str : Column name; numeric values normalized to [100, 400] pt², categorical cycled (150, 220, ...).
+        jitter : bool, default False
+            Add small uniform jitter to x and y coordinates.
+        top_k_color : int, optional
+            Keep top-K color categories, others mapped to `other_label_color` (default: None).
+        other_label_color : str, default "Other"
+            Label for non-top-K color categories.
+        order_color : list, optional
+            Explicit order for color legend categories (default: by frequency).
+        top_k_marker : int, optional
+            Keep top-K marker categories, others mapped to `other_label_marker` (default: None).
+        other_label_marker : str, default "Other"
+            Label for non-top-K marker categories.
+        order_marker : list, optional
+            Explicit order for marker legend categories (default: by frequency).
+        palette : list, optional
+            List of color specs to cycle (default: repeats 'tab20').
+        markers : list, optional
+            List of marker styles (default: ["o", "s", "^", ...]).
+        legend_outside : bool, default True
+            Place legends outside plot, reserving right margin.
+        legend_cols_color : int, default 1
+            Number of columns in color legend.
+        legend_cols_marker : int, default 1
+            Number of columns in marker legend.
+        show : bool, default True
+            Display the plot if True (default: True); always returns (fig, ax).
 
-    Raises
-    ------
-    ValueError / TypeError on malformed expr or failed selection.
-    """
+        Returns
+        -------
+        tuple
+            (fig, ax) : matplotlib Figure and Axes objects.
+
+        Raises
+        ------
+        ValueError
+            If expr is not 'y:x' format or selection query fails.
+        TypeError
+            If selection is not a string or marker_size is invalid.
+
+        Notes
+        -----
+        - Designed for ALICE data visualization (e.g., D0 resolution plots).
+        - Filters NA values and handles categorical data robustly.
+        - Legends are added outside to avoid clipping; adjust `bbox_to_anchor` if needed.
+        """
     # --- parse "y:x"
     try:
         y_col, x_col = expr.split(":")
@@ -385,7 +449,7 @@ def drawExample():
         marker_size=100,    # pt²
     )
     fig.savefig("out.png", dpi=200, bbox_inches="tight")
-
+    ##
     fig, ax = df_draw_scatter_categorical(
         df, "sigma:pTmin",
         selection="productionId.str.contains(r'(?:LHC24|LHC25a5)', regex=True, na=False)",
@@ -393,7 +457,7 @@ def drawExample():
         marker_style="centmin",
         marker_size=100,    # pt²
     )
-    fig.savefig("resol_LHC24_LHC25a5.png", dpi=200, bbox_inches="tight")
+    fig.savefig("resol_LHC24_LHC25a5.png", dpi=200)
 
     fig, ax = df_draw_scatter_categorical(
         df, "sigma:pTmin",
