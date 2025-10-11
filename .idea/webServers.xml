@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="dbecb708-34f1-4beb-a73f-f041b606c85b" name="virgo">
+        <fileTransfer accessType="SFTP" host="virgo" port="22" sshConfigId="c15091ed-53ed-4818-ab90-668084ae857f" sshConfig="miranov@virgo:22 agent" authAgent="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="c8078661-c9bc-4fef-952d-980436cf4256" name="virgo_3">
+        <fileTransfer accessType="SFTP" host="virgo" port="22" sshConfigId="c15091ed-53ed-4818-ab90-668084ae857f" sshConfig="miranov@virgo:22 agent" authAgent="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="a70e5fda-43ed-4346-ab1f-866366b21d1a" name="virgo2">
+        <fileTransfer accessType="SFTP" host="virgo" port="22" sshConfigId="c15091ed-53ed-4818-ab90-668084ae857f" sshConfig="miranov@virgo:22 agent" authAgent="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

@@ -378,46 +378,50 @@ class QuantileEvaluator:
 
     def invert_rank(self, X: float, *, channel_id: Any, **coords) -> float:
         """
-        Invert amplitude -> rank using the Δq-centered grid.
+        Invert amplitude -> rank using the Δq-centered grid with robust fixed-point iteration.
 
-        Strategy:
-          1) Evaluate vectors a(q0), b(q0) over all q-centers at the requested nuisance coords.
-          2) Form candidates: Q_hat(q0) = q0 + (X - a(q0)) / b(q0).
-          3) Pick the candidate closest to its center (argmin |Q_hat - q0|).
-          4) Do 1–2 fixed-point refinement steps with linear interpolation in q.
+        Steps:
+          - Build candidate Q̂(q0) = q0 + (X - a(q0)) / b(q0) over all q-centers (at given nuisances).
+          - Choose the self-consistent candidate (min |Q̂ - q0|) as the initial guess.
+          - Run damped fixed-point iteration: q <- q + λ * (X - a(q)) / b(q), with λ in (0,1].
+          - Clamp to [0,1]; stop when |Δq| < tol or max_iter reached.
 
         Returns:
-          Q in [0, 1] (np.nan if no valid slope information is available).
+          q in [0,1], or NaN if unavailable.
         """
         item = self.store.get(channel_id)
         if item is None:
             return np.nan
 
-        # Vectors over q-centers at the requested nuisance coordinates
-        a_vec = self._interp_nuisance_vector(item["A"], coords)  # shape: (n_q,)
-        b_vec = self._interp_nuisance_vector(item["B"], coords)  # shape: (n_q,)
+        a_vec = self._interp_nuisance_vector(item["A"], coords)  # shape (n_q,)
+        b_vec = self._interp_nuisance_vector(item["B"], coords)  # shape (n_q,)
         qc = self.q_centers
 
-        # Form candidate ranks; ignore invalid/negative slopes
+        # Candidate ranks from all centers
         b_safe = np.where(np.isfinite(b_vec) & (b_vec > 0.0), b_vec, np.nan)
         with np.errstate(invalid="ignore", divide="ignore"):
             q_candidates = qc + (X - a_vec) / b_safe
 
-        # Choose the self-consistent candidate (closest to its own center)
         dif = np.abs(q_candidates - qc)
         if not np.any(np.isfinite(dif)):
             return np.nan
-        j = int(np.nanargmin(dif))
-        q = float(np.clip(q_candidates[j], 0.0, 1.0))
+        j0 = int(np.nanargmin(dif))
+        q = float(np.clip(q_candidates[j0], 0.0, 1.0))
 
-        # Fixed-point refinement (2 iterations)
-        for _ in range(2):
+        # Damped fixed-point
+        max_iter = 10
+        tol = 1e-6
+        lam = 0.8  # damping
+        for _ in range(max_iter):
             a = _linear_interp_1d(qc, a_vec, q)
             b = _linear_interp_1d(qc, b_vec, q)
             if not np.isfinite(a) or not np.isfinite(b) or b <= 0.0:
                 break
-            q_new = float(np.clip(q + (X - a) / b, 0.0, 1.0))
-            if abs(q_new - q) < 1e-6:
+            step = (X - a) / b
+            if not np.isfinite(step):
+                break
+            q_new = float(np.clip(q + lam * step, 0.0, 1.0))
+            if abs(q_new - q) < tol:
                 q = q_new
                 break
             q = q_new

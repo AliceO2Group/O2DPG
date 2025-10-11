@@ -1,0 +1,257 @@
+
+=== Per–z-bin diagnostics (dist=uniform, N=5000) ===
+z_center | b_expected | b_meas_w | SE_pred(6σ) | |Δb|/SE6 | windows | clipped%
+-10.000 |     48.056 |   49.236 |     38.761 |   0.030 |      11 |    0.00
+ -7.778 |     48.480 |   50.779 |     29.501 |   0.078 |      11 |    0.00
+ -5.556 |     48.898 |   48.954 |     26.448 |   0.002 |      11 |    0.00
+ -3.333 |     49.354 |   48.876 |     18.367 |   0.026 |      11 |    0.00
+ -1.111 |     49.786 |   51.573 |     15.788 |   0.113 |      11 |    0.00
+  1.111 |     50.214 |   50.275 |     19.083 |   0.003 |      11 |    0.00
+  3.333 |     50.649 |   51.742 |     19.846 |   0.055 |      11 |    0.00
+  5.556 |     51.096 |   52.493 |     22.533 |   0.062 |      11 |    0.00
+  7.778 |     51.539 |   51.703 |     28.169 |   0.006 |      11 |    0.00
+ 10.000 |     51.957 |   49.482 |     46.666 |   0.053 |      11 |    0.00
+sigma_Q: mean relative error = 0.161
+Round-trip residuals: RMS=0.0107, MAD=0.0065, p10=-0.0132, p90=0.0138
+.
+=== Per–z-bin diagnostics (dist=poisson, N=5000) ===
+z_center | b_expected | b_meas_w | SE_pred(6σ) | |Δb|/SE6 | windows | clipped%
+-10.000 |     48.051 |   34.583 |     39.876 |   0.338 |      11 |   36.36
+ -7.778 |     48.466 |   35.496 |     34.306 |   0.378 |      11 |   36.36
+ -5.556 |     48.905 |   34.907 | 1060660.172 |   0.000 |      11 |   27.27
+ -3.333 |     49.352 |   34.517 | 1060660.172 |   0.000 |      11 |   36.36
+ -1.111 |     49.787 |   35.102 | 1060660.172 |   0.000 |      11 |   36.36
+  1.111 |     50.214 |  139.314 | 1060660.172 |   0.000 |      11 |   27.27
+  3.333 |     50.650 |   42.839 | 1060660.172 |   0.000 |      11 |   27.27
+  5.556 |     51.088 |   36.846 |     26.858 |   0.530 |      11 |   36.36
+  7.778 |     51.521 |   35.851 |     42.220 |   0.371 |      11 |   36.36
+ 10.000 |     51.954 |   34.474 |     37.751 |   0.463 |      10 |   40.00
+sigma_Q: mean relative error = 0.209
+Round-trip residuals: RMS=0.1839, MAD=0.0256, p10=-0.0112, p90=0.3703
+F
+=== Per–z-bin diagnostics (dist=gaussian, N=5000) ===
+z_center | b_expected | b_meas_w | SE_pred(6σ) | |Δb|/SE6 | windows | clipped%
+-10.000 |     48.042 |   46.202 |     38.747 |   0.047 |      11 |    0.00
+ -7.778 |     48.461 |   49.433 |     45.374 |   0.021 |      11 |    0.00
+ -5.556 |     48.912 |   47.042 |     23.751 |   0.079 |      11 |    0.00
+ -3.333 |     49.346 |   49.011 |     20.682 |   0.016 |      11 |    0.00
+ -1.111 |     49.783 |   50.817 |     17.194 |   0.060 |      11 |    0.00
+  1.111 |     50.224 |   50.351 |     17.176 |   0.007 |      11 |    0.00
+  3.333 |     50.654 |   51.119 |     18.520 |   0.025 |      11 |    0.00
+  5.556 |     51.088 |   51.100 |     23.415 |   0.001 |      11 |    0.00
+  7.778 |     51.518 |   48.606 |     39.272 |   0.074 |      11 |    0.00
+ 10.000 |     51.950 |   50.639 |     40.500 |   0.032 |      11 |    0.00
+sigma_Q: mean relative error = 0.182
+Round-trip residuals: RMS=0.0104, MAD=0.0066, p10=-0.0125, p90=0.0138
+.
+=== Per–z-bin diagnostics (dist=uniform, N=50000) ===
+z_center | b_expected | b_meas_w | SE_pred(6σ) | |Δb|/SE6 | windows | clipped%
+-10.000 |     48.046 |   47.185 |     11.530 |   0.075 |      11 |    0.00
+ -7.778 |     48.466 |   48.530 |      9.737 |   0.007 |      11 |    0.00
+ -5.556 |     48.908 |   48.545 |      7.034 |   0.052 |      11 |    0.00
+ -3.333 |     49.345 |   48.976 |      5.753 |   0.064 |      11 |    0.00
+ -1.111 |     49.779 |   50.371 |      5.268 |   0.112 |      11 |    0.00
+  1.111 |     50.217 |   50.163 |      5.256 |   0.010 |      11 |    0.00
+  3.333 |     50.659 |   50.216 |      6.056 |   0.073 |      11 |    0.00
+  5.556 |     51.091 |   51.015 |      7.348 |   0.010 |      11 |    0.00
+  7.778 |     51.532 |   52.065 |     10.208 |   0.052 |      11 |    0.00
+ 10.000 |     51.952 |   52.283 |     11.194 |   0.030 |      11 |    0.00
+sigma_Q: mean relative error = 0.216
+Round-trip residuals: RMS=0.0099, MAD=0.0066, p10=-0.0131, p90=0.0122
+.
+=== Per–z-bin diagnostics (dist=poisson, N=50000) ===
+z_center | b_expected | b_meas_w | SE_pred(6σ) | |Δb|/SE6 | windows | clipped%
+-10.000 |     48.047 |   31.559 | 1060660.172 |   0.000 |      11 |   36.36
+ -7.778 |     48.469 |   61.647 | 1060660.172 |   0.000 |      11 |   27.27
+ -5.556 |     48.906 |   33.818 | 1060660.172 |   0.000 |      11 |   36.36
+ -3.333 |     49.347 |   34.293 |      7.313 |   2.059 |      11 |   36.36
+ -1.111 |     49.782 |   79.005 | 1060660.172 |   0.000 |      11 |   27.27
+  1.111 |     50.217 |   34.368 | 1060660.172 |   0.000 |      11 |   36.36
+  3.333 |     50.654 |   35.119 |      7.135 |   2.177 |      11 |   36.36
+  5.556 |     51.093 |   36.197 | 1060660.172 |   0.000 |      11 |   36.36
+  7.778 |     51.531 |  218.600 | 1060660.172 |   0.000 |      11 |   27.27
+ 10.000 |     51.953 |  104.290 | 1060660.172 |   0.000 |      11 |   27.27
+F
+=== Per–z-bin diagnostics (dist=gaussian, N=50000) ===
+z_center | b_expected | b_meas_w | SE_pred(6σ) | |Δb|/SE6 | windows | clipped%
+-10.000 |     48.045 |   47.930 |     11.642 |   0.010 |      11 |    0.00
+ -7.778 |     48.469 |   48.089 |      9.772 |   0.039 |      11 |    0.00
+ -5.556 |     48.907 |   49.026 |      7.060 |   0.017 |      11 |    0.00
+ -3.333 |     49.346 |   48.898 |      5.938 |   0.075 |      11 |    0.00
+ -1.111 |     49.779 |   49.888 |      5.464 |   0.020 |      11 |    0.00
+  1.111 |     50.221 |   50.208 |      5.319 |   0.002 |      11 |    0.00
+  3.333 |     50.657 |   50.034 |      5.749 |   0.108 |      11 |    0.00
+  5.556 |     51.092 |   50.758 |      7.184 |   0.047 |      11 |    0.00
+  7.778 |     51.527 |   51.921 |      9.946 |   0.040 |      11 |    0.00
+ 10.000 |     51.952 |   51.621 |     11.384 |   0.029 |      11 |    0.00
+sigma_Q: mean relative error = 0.225
+Round-trip residuals: RMS=0.0098, MAD=0.0070, p10=-0.0136, p90=0.0127
+.
+=== Edge coverage diagnostics ===
+predicted feasible fraction = 0.625, 6σ lower bound = 0.032, measured finite fraction = 0.625
+edge positive-b fraction = 0.625
+.
+=================================== FAILURES ===================================
+______________________ test_fit_and_sigmaQ[5000-poisson] _______________________
+
+dist = 'poisson', n_points = 5000
+
+    @pytest.mark.parametrize("dist", ["uniform", "poisson", "gaussian"])
+    @pytest.mark.parametrize("n_points", [5_000, 50_000])
+    def test_fit_and_sigmaQ(dist, n_points):
+        df, truth = gen_synthetic_df(n_points, dist=dist)
+        q_centers = np.linspace(0.0, 1.0, 11)
+        dq = 0.05
+    
+        table = fit_quantile_linear_nd(
+            df,
+            channel_key="channel_id",
+            q_centers=q_centers,
+            dq=dq,
+            nuisance_axes={"z": "z_vtx"},
+            n_bins_axes={"z": 10},
+        )
+        assert not table.empty
+        assert {"a", "b", "sigma_Q", "z_center", "q_center", "fit_stats"}.issubset(table.columns)
+    
+        # Expected b(z) from sample, using fit's z-bin edges
+        z_centers = np.sort(table["z_center"].unique())
+        z_edges = _edges_from_centers(z_centers)
+        b_expected = _expected_b_per_zbin_from_sample(df, z_edges, truth)
+    
+        # Weighted measured b(z) using window counts (n_used) per (z,q) cell
+        b_meas_w = np.full_like(b_expected, np.nan, dtype=float)
+        se_pred = _predicted_se_b_per_zbin(df, z_edges, q_centers, dq, sigma_X_given_Q=truth["sigma_X_given_Q"])
+        print("\n=== Per–z-bin diagnostics (dist={}, N={}) ===".format(dist, n_points))
+        print("z_center | b_expected | b_meas_w | SE_pred(6σ) | |Δb|/SE6 | windows | clipped%")
+    
+        for i, zc in enumerate(z_centers):
+            g = table[table["z_center"] == zc]
+            if g.empty:
+                continue
+            weights, clipped = _json_stats_to_arrays(g)
+            # Only use rows with finite b and positive weights
+            ok = np.isfinite(g["b"].to_numpy()) & (weights > 0)
+            if ok.sum() == 0:
+                continue
+            w = weights[ok]
+            bvals = g["b"].to_numpy()[ok]
+            b_meas_w[i] = np.average(bvals, weights=w)
+    
+            # Diagnostics
+            se6 = 6.0 * se_pred[i] if np.isfinite(se_pred[i]) else np.nan
+            db = abs((b_meas_w[i] - b_expected[i])) if np.isfinite(b_expected[i]) and np.isfinite(b_meas_w[i]) else np.nan
+            ratio = (db / se6) if (np.isfinite(db) and np.isfinite(se6) and se6 > 0) else np.nan
+            clip_pct = 100.0 * (clipped[ok].mean() if ok.size else 0.0)
+    
+            print(f"{zc:7.3f} | {b_expected[i]:10.3f} | {b_meas_w[i]:8.3f} | {se6:10.3f} | {ratio:7.3f} | {ok.sum():7d} | {clip_pct:7.2f}")
+    
+        # 6σ check across valid bins
+        ok_mask = np.isfinite(b_expected) & np.isfinite(b_meas_w) & np.isfinite(se_pred)
+        assert ok_mask.any(), "No valid z-bins to compare."
+        abs_diff = np.abs(b_meas_w[ok_mask] - b_expected[ok_mask])
+        bound6 = 6.0 * se_pred[ok_mask]
+        # report worst-case ratio for debug
+        worst = float(np.nanmax(abs_diff / np.maximum(bound6, 1e-12)))
+        assert np.all(abs_diff <= (bound6 + 1e-12)), f"6σ slope check failed in at least one z-bin: max(|Δb|/(6·SE)) = {worst:.2f}"
+    
+        # sigma_Q vs truth (pragmatic bound)
+        sigma_q_true = truth["sigma_X_given_Q"] / np.maximum(1e-9, b_expected)
+        sigma_q_meas = table.groupby("z_center")["sigma_Q"].median().reindex(z_centers).to_numpy()
+        m_ok = np.isfinite(sigma_q_true) & np.isfinite(sigma_q_meas)
+        rel_err_sig = np.nanmean(np.abs(sigma_q_meas[m_ok] - sigma_q_true[m_ok]) / np.maximum(1e-9, sigma_q_true[m_ok]))
+        print(f"sigma_Q: mean relative error = {rel_err_sig:.3f}")
+        assert rel_err_sig < 0.30, f"sigma_Q rel err too large: {rel_err_sig:.3f}"
+    
+        # Round-trip Q->X->Q diagnostics
+        evalr = QuantileEvaluator(table)
+        idx = np.linspace(0, len(df) - 1, num=300, dtype=int)
+        resid = []
+        for irow in idx:
+            z = float(df.loc[irow, "z_vtx"])
+            q_true = float(df.loc[irow, "Q"])
+            x = float(df.loc[irow, "X"])
+            q_hat = evalr.invert_rank(x, channel_id="ch0", z=z)
+            resid.append(q_hat - q_true)
+        resid = np.array(resid, dtype=float)
+        rms = float(np.sqrt(np.mean(np.square(resid))))
+        mad = float(np.median(np.abs(resid - np.median(resid))))
+        q10, q90 = float(np.quantile(resid, 0.10)), float(np.quantile(resid, 0.90))
+        print(f"Round-trip residuals: RMS={rms:.4f}, MAD={mad:.4f}, p10={q10:.4f}, p90={q90:.4f}")
+>       assert rms < 0.07, f"round-trip Q residual RMS too large: {rms:.3f}"
+E       AssertionError: round-trip Q residual RMS too large: 0.184
+E       assert 0.18389594095124212 < 0.07
+
+test_quantile_fit_nd.py:213: AssertionError
+______________________ test_fit_and_sigmaQ[50000-poisson] ______________________
+
+dist = 'poisson', n_points = 50000
+
+    @pytest.mark.parametrize("dist", ["uniform", "poisson", "gaussian"])
+    @pytest.mark.parametrize("n_points", [5_000, 50_000])
+    def test_fit_and_sigmaQ(dist, n_points):
+        df, truth = gen_synthetic_df(n_points, dist=dist)
+        q_centers = np.linspace(0.0, 1.0, 11)
+        dq = 0.05
+    
+        table = fit_quantile_linear_nd(
+            df,
+            channel_key="channel_id",
+            q_centers=q_centers,
+            dq=dq,
+            nuisance_axes={"z": "z_vtx"},
+            n_bins_axes={"z": 10},
+        )
+        assert not table.empty
+        assert {"a", "b", "sigma_Q", "z_center", "q_center", "fit_stats"}.issubset(table.columns)
+    
+        # Expected b(z) from sample, using fit's z-bin edges
+        z_centers = np.sort(table["z_center"].unique())
+        z_edges = _edges_from_centers(z_centers)
+        b_expected = _expected_b_per_zbin_from_sample(df, z_edges, truth)
+    
+        # Weighted measured b(z) using window counts (n_used) per (z,q) cell
+        b_meas_w = np.full_like(b_expected, np.nan, dtype=float)
+        se_pred = _predicted_se_b_per_zbin(df, z_edges, q_centers, dq, sigma_X_given_Q=truth["sigma_X_given_Q"])
+        print("\n=== Per–z-bin diagnostics (dist={}, N={}) ===".format(dist, n_points))
+        print("z_center | b_expected | b_meas_w | SE_pred(6σ) | |Δb|/SE6 | windows | clipped%")
+    
+        for i, zc in enumerate(z_centers):
+            g = table[table["z_center"] == zc]
+            if g.empty:
+                continue
+            weights, clipped = _json_stats_to_arrays(g)
+            # Only use rows with finite b and positive weights
+            ok = np.isfinite(g["b"].to_numpy()) & (weights > 0)
+            if ok.sum() == 0:
+                continue
+            w = weights[ok]
+            bvals = g["b"].to_numpy()[ok]
+            b_meas_w[i] = np.average(bvals, weights=w)
+    
+            # Diagnostics
+            se6 = 6.0 * se_pred[i] if np.isfinite(se_pred[i]) else np.nan
+            db = abs((b_meas_w[i] - b_expected[i])) if np.isfinite(b_expected[i]) and np.isfinite(b_meas_w[i]) else np.nan
+            ratio = (db / se6) if (np.isfinite(db) and np.isfinite(se6) and se6 > 0) else np.nan
+            clip_pct = 100.0 * (clipped[ok].mean() if ok.size else 0.0)
+    
+            print(f"{zc:7.3f} | {b_expected[i]:10.3f} | {b_meas_w[i]:8.3f} | {se6:10.3f} | {ratio:7.3f} | {ok.sum():7d} | {clip_pct:7.2f}")
+    
+        # 6σ check across valid bins
+        ok_mask = np.isfinite(b_expected) & np.isfinite(b_meas_w) & np.isfinite(se_pred)
+        assert ok_mask.any(), "No valid z-bins to compare."
+        abs_diff = np.abs(b_meas_w[ok_mask] - b_expected[ok_mask])
+        bound6 = 6.0 * se_pred[ok_mask]
+        # report worst-case ratio for debug
+        worst = float(np.nanmax(abs_diff / np.maximum(bound6, 1e-12)))
+>       assert np.all(abs_diff <= (bound6 + 1e-12)), f"6σ slope check failed in at least one z-bin: max(|Δb|/(6·SE)) = {worst:.2f}"
+E       AssertionError: 6σ slope check failed in at least one z-bin: max(|Δb|/(6·SE)) = 2.18
+E       assert False
+E        +  where False = <function all at 0x106a5e820>(array([ 16.48811608,  13.17799275,  15.08786535,  15.05438857,\n        29.22345167,  15.84940708,  15.53429296,  14.89612857,\n       167.06942336,  52.33722826]) <= (array([1.06066017e+06, 1.06066017e+06, 1.06066017e+06, 7.31252651e+00,\n       1.06066017e+06, 1.06066017e+06, 7.13471332e+00, 1.06066017e+06,\n       1.06066017e+06, 1.06066017e+06]) + 1e-12))
+E        +    where <function all at 0x106a5e820> = np.all
+
+test_quantile_fit_nd.py:188: AssertionError
+=========================== short test summary info ============================
+FAILED test_quantile_fit_nd.py::test_fit_and_sigmaQ[5000-poisson] - Assertion...
+FAILED test_quantile_fit_nd.py::test_fit_and_sigmaQ[50000-poisson] - Assertio...
+2 failed, 5 passed in 2.46s
