@@ -53,11 +53,23 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     [[ ! -z ${TIMEFRAME_RATE_LIMIT:-} ]] && unset TIMEFRAME_RATE_LIMIT
     [[ ! -z ${SHMSIZE:-} ]] && unset SHMSIZE
   fi
-  if [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_8cpu" ]]; then
+  if [[ $OPTIMIZED_PARALLEL_ASYNC == "8cpu" ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=3
     [[ -z ${SHMSIZE:-} ]] && SHMSIZE=16000000000
     NGPURECOTHREADS=5
-  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_16cpu" ]]; then
+    if [[ $BEAMTYPE == "pp" ]]; then
+      if (( $(echo "$RUN_IR > 800000" | bc -l) )); then
+        TIMEFRAME_RATE_LIMIT=1
+      elif (( $(echo "$RUN_IR < 50000" | bc -l) )); then
+        TIMEFRAME_RATE_LIMIT=6
+      else
+        TIMEFRAME_RATE_LIMIT=3
+      fi
+    else # PbPb
+      TIMEFRAME_RATE_LIMIT=2
+      SVERTEX_THREADS=5
+    fi
+  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "16cpu" ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=8
     [[ -z ${SHMSIZE:-} ]] && SHMSIZE=22000000000
     NGPURECOTHREADS=9
@@ -78,20 +90,28 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_MCHCL=3
     N_TOFMATCH=2
     N_TPCENTDEC=3
-  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_1gpu" ]]; then
+  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_1gpu_EPN" || $OPTIMIZED_PARALLEL_ASYNC == "pp_1gpu_EPN_unoptimized" ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=8
     [[ -z ${SHMSIZE:-} ]] && SHMSIZE=30000000000
-    N_TOFMATCH=2
-    N_MCHCL=3
-    N_TPCENTDEC=2
-    N_TPCITS=3
+    NGPUS=1
+    GPUTYPE=HIP
+    GPUMEMSIZE=$((25 << 30))
     N_MCHTRK=2
-    N_ITSTRK=3
-    NGPURECOTHREADS=8
+    N_TPCTRK=$NGPUS
+    if [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_1gpu_EPN" ]]; then
+      N_TOFMATCH=2
+      N_MCHCL=3
+      N_TPCENTDEC=2
+      N_TPCITS=3
+      N_ITSTRK=3
+      NGPURECOTHREADS=8
+    else
+      NGPURECOTHREADS=4
+    fi
     NTRDTRKTHREADS=3
     ITSTRK_THREADS=2
     ITSTPC_THREADS=2
-  elif [[ $OPTIMIZED_PARALLEL_ASYNC =~ ^pp_4gpu(_|$) ]]; then
+  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_gpu_NERSC" || $OPTIMIZED_PARALLEL_ASYNC == "pp_4gpu_EPN" ]]; then
     if [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]]; then
       if [[ ! -z ${ALIEN_JDL_LPMANCHORYEAR} && ${ALIEN_JDL_LPMANCHORYEAR} -lt 2023 ]]; then
         TIMEFRAME_RATE_LIMIT=45
@@ -100,19 +120,21 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
       fi
     fi
     [[ -z ${SHMSIZE:-} ]] && SHMSIZE=100000000000
-    if [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_4gpu_NERSC" ]]; then
+    if [[ $OPTIMIZED_PARALLEL_ASYNC == "pp_gpu_NERSC" ]]; then
       NGPUS=1
       GPUTYPE=CUDA
     else
       NGPUS=4
+      GPUTYPE=HIP
     fi
+    GPUMEMSIZE=$((25 << 30))
     NGPURECOTHREADS=8
     NTRDTRKTHREADS=2
     ITSTRK_THREADS=2
     ITSTPC_THREADS=2
     SVERTEX_THREADS=4
     TPCTIMESERIES_THREADS=2
-    N_TPCTRK=4
+    N_TPCTRK=$NGPUS
     N_FWDMATCH=2
     N_PRIMVTXMATCH=1
     N_PRIMVTX=1
@@ -128,16 +150,18 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_ITSTRK=12
     N_ITSCL=2
     export DPL_SMOOTH_RATE_LIMITING=1
-  elif [[ $OPTIMIZED_PARALLEL_ASYNC =~ ^PbPb_4gpu(_|$) ]]; then
+  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_gpu_NERSC" || $OPTIMIZED_PARALLEL_ASYNC == "PbPb_4gpu_EPN" ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=35
     [[ -z ${SHMSIZE:-} ]] && SHMSIZE=100000000000 # SHM_LIMIT 3/4
     [[ -z ${TIMEFRAME_SHM_LIMIT:-} ]] && TIMEFRAME_SHM_LIMIT=$(($SHMSIZE / 3))
-    if [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_4gpu_NERSC" ]]; then
+    if [[ $OPTIMIZED_PARALLEL_ASYNC == "PbPb_gpu_NERSC" ]]; then
       NGPUS=1
       GPUTYPE=CUDA
     else
       NGPUS=4
+      GPUTYPE=HIP
     fi
+    GPUMEMSIZE=$((25 << 30))
     NGPURECOTHREADS=8
     NTRDTRKTHREADS=8
     ITSTRK_THREADS=5
@@ -172,6 +196,9 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     N_MCHTRK=1
     N_TOFMATCH=9
     N_TPCTRK=6
+  elif [[ $OPTIMIZED_PARALLEL_ASYNC == "keep_root" ]]; then
+    TIMEFRAME_RATE_LIMIT=4
+    SHMSIZE=30000000000
   else
     echo "Invalid optimized setting '$OPTIMIZED_PARALLEL_ASYNC'" 1>&2
     exit 1
@@ -192,6 +219,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
     if [[ "${GEN_TOPO_AUTOSCALE_PROCESSES:-}" == "1" && $RUNTYPE == "PHYSICS" ]]; then
       N_MCHCL=$(math_max $((6 * 100 / $RECO_NUM_NODES_WORKFLOW_CMP)) 1)
     fi
+    N_MCHRAWDEC=2
     if [[ "$HIGH_RATE_PP" == "1" ]]; then
       N_TPCITS=$(math_max $((5 * $EPNPIPELINES * $NGPUS / 4)) 1)
       N_TPCENT=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
@@ -208,6 +236,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
   else
     if [[ $BEAMTYPE == "PbPb" ]]; then
       N_ITSTRK=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
+      N_MCHRAWDEC=2
     elif [[ $BEAMTYPE == "cosmic" ]]; then
       N_ITSTRK=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
     fi

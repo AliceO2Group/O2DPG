@@ -52,7 +52,7 @@ print_help()
   echo "ALIEN_JDL_CPULIMIT or CPULIMIT, set the CPU limit of the workflow runner, default: 8,"
   echo "NWORKERS, set the number of workers during detector transport, default: 8,"
   echo "ALIEN_JDL_SIMENGINE or SIMENGINE, choose the transport engine, default: TGeant4,"
-  echo "ALIEN_JDL_WORKFLOWDETECTORS, set detectors to be taken into account, default: ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,CTP,"
+  echo "ALIEN_JDL_WORKFLOWDETECTORS, set detectors to be taken into account, default: not-used (take the ones from async-reco)"
   echo "ALIEN_JDL_ANCHOR_SIM_OPTIONS, additional options that are passed to the workflow creation, default: -gen pythia8,"
   echo "ALIEN_JDL_ADDTIMESERIESINMC, run TPC time series. Default: 1, switch off by setting to 0,"
   echo "ALIEN_JDL_MC_ORBITS_PER_TF=N, enforce some orbits per timeframe, instead of determining from CCDB"
@@ -103,7 +103,6 @@ alien-token-info >/dev/null 2>&1
 # the only four where there is a real default for
 export ALIEN_JDL_CPULIMIT=${ALIEN_JDL_CPULIMIT:-${CPULIMIT:-8}}
 export ALIEN_JDL_SIMENGINE=${ALIEN_JDL_SIMENGINE:-${SIMENGINE:-TGeant4}}
-export ALIEN_JDL_WORKFLOWDETECTORS=${ALIEN_JDL_WORKFLOWDETECTORS:-ITS,TPC,TOF,FV0,FT0,FDD,MID,MFT,MCH,TRD,EMC,PHS,CPV,HMP,CTP}
 # can be passed to contain additional options that will be passed to o2dpg_sim_workflow_anchored.py and eventually to o2dpg_sim_workflow.py
 export ALIEN_JDL_ANCHOR_SIM_OPTIONS=${ALIEN_JDL_ANCHOR_SIM_OPTIONS:--gen pythia8}
 # all others MUST be set by the user/on the outside
@@ -120,18 +119,7 @@ export ALIEN_JDL_LPMANCHORYEAR=${ALIEN_JDL_LPMANCHORYEAR:-${ANCHORYEAR}}
 # decide whether to run TPC time series; on by default, switched off by setting to 0
 export ALIEN_JDL_ADDTIMESERIESINMC=${ALIEN_JDL_ADDTIMESERIESINMC:-1}
 
-# cache the production tag, will be set to a special anchor tag; reset later in fact
-ALIEN_JDL_LPMPRODUCTIONTAG_KEEP=$ALIEN_JDL_LPMPRODUCTIONTAG
-echo_info "Substituting ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG with ALIEN_JDL_LPMANCHORPRODUCTION=$ALIEN_JDL_LPMANCHORPRODUCTION for simulating reco pass..."
-ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMANCHORPRODUCTION
-
-if [[ $ALIEN_JDL_ANCHOR_SIM_OPTIONS == *"--tpc-distortion-type 2"* ]]; then
-  export O2DPG_ENABLE_TPC_DISTORTIONS=ON
-  # set the SCALING SOURCE to CTP for MC unless explicitely given from outside
-  export ALIEN_JDL_TPCSCALINGSOURCE=${ALIEN_JDL_TPCSCALINGSOURCE:-"CTP"}
-fi
-
-# check variables that need to be set
+# check for presence of essential variables that need to be set
 [ -z "${ALIEN_JDL_LPMANCHORPASSNAME}" ] && { echo_error "Set ALIEN_JDL_LPMANCHORPASSNAME or ANCHORPASSNAME" ; exit 1 ; }
 [ -z "${ALIEN_JDL_LPMRUNNUMBER}" ] && { echo_error "Set ALIEN_JDL_LPMRUNNUMBER or RUNNUMBER" ; exit 1 ; }
 [ -z "${ALIEN_JDL_LPMPRODUCTIONTYPE}" ] && { echo_error "Set ALIEN_JDL_LPMPRODUCTIONTYPE or PRODUCTIONTYPE" ; exit 1 ; }
@@ -144,6 +132,19 @@ fi
 [ -z "${NTIMEFRAMES}" ] && { echo_error "Set NTIMEFRAMES" ; exit 1 ; }
 [ -z "${SPLITID}" ] && { echo_error "Set SPLITID" ; exit 1 ; }
 [ -z "${PRODSPLIT}" ] && { echo_error "Set PRODSPLIT" ; exit 1 ; }
+
+
+# cache the production tag, will be set to a special anchor tag; reset later in fact
+ALIEN_JDL_LPMPRODUCTIONTAG_KEEP=$ALIEN_JDL_LPMPRODUCTIONTAG
+echo_info "Substituting ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG with ALIEN_JDL_LPMANCHORPRODUCTION=$ALIEN_JDL_LPMANCHORPRODUCTION for simulating reco pass..."
+ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMANCHORPRODUCTION
+
+if [[ $ALIEN_JDL_ANCHOR_SIM_OPTIONS == *"--tpc-distortion-type 2"* ]]; then
+  export O2DPG_ENABLE_TPC_DISTORTIONS=ON
+  # set the SCALING SOURCE to CTP for MC unless explicitely given from outside
+  export ALIEN_JDL_TPCSCALINGSOURCE=${ALIEN_JDL_TPCSCALINGSOURCE:-"CTP"}
+fi
+
 
 # The number of signal events can be given, but should be useful only in
 # certain expert modes. In the default case, the final event number is determined by the timeframe length.
@@ -293,8 +294,6 @@ fi
 # -- CREATE THE MC JOB DESCRIPTION ANCHORED TO RUN --
 
 MODULES="--skipModules ZDC"
-# Since this is used, set it explicitly
-ALICEO2_CCDB_LOCALCACHE=${ALICEO2_CCDB_LOCALCACHE:-$(pwd)/ccdb}
 
 # publish MCPRODINFO for first few jobs of a production
 # if external script exported PUBLISH_MCPRODINFO, it will be published anyways
@@ -339,6 +338,10 @@ fi
 TIMESTAMP=`grep "Determined timestamp to be" ${anchoringLogFile} | awk '//{print $6}'`
 echo_info "TIMESTAMP IS ${TIMESTAMP}"
 
+if [ "${ONLY_WORKFLOW_CREATION}" ]; then
+  exit 0
+fi
+
 # check if this job is exluded because it falls inside a bad data-taking period
 ISEXCLUDED=$(grep "TIMESTAMP IS EXCLUDED IN RUN" ${anchoringLogFile})
 if [ "${ISEXCLUDED}" ]; then
@@ -348,66 +351,42 @@ if [ "${ISEXCLUDED}" ]; then
   exit 0
 fi
 
-# -- Create aligned geometry using ITS ideal alignment to avoid overlaps in geant
-ENABLEPW=0
-if [[ ${remainingargs} == *"GeometryManagerParam.useParallelWorld=1"* ]]; then
-  ENABLEPW=1
-fi
-
-if [ "${ENABLEPW}" == "0" ]; then
-  CCDBOBJECTS_IDEAL_MC="ITS/Calib/Align"
-  TIMESTAMP_IDEAL_MC=1
-  ${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch/ -p ${CCDBOBJECTS_IDEAL_MC} -d ${ALICEO2_CCDB_LOCALCACHE} --timestamp ${TIMESTAMP_IDEAL_MC}
-  CCDB_RC="${?}"
-  if [ ! "${CCDB_RC}" == "0" ]; then
-    echo_error "Problem during CCDB prefetching of ${CCDBOBJECTS_IDEAL_MC}. Exiting."
-    exit ${CCDB_RC}
-  fi
-fi
-
-# TODO This can potentially be removed or if needed, should be taken over by o2dpg_sim_workflow_anchored.py and O2_dpg_workflow_runner.py
-if [ "${ENABLEPW}" == "0" ]; then
-  echo "run with echo in pipe" | ${O2_ROOT}/bin/o2-create-aligned-geometry-workflow ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}} --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" --condition-remap=file://${ALICEO2_CCDB_LOCALCACHE}=ITS/Calib/Align -b --run
-else
-  echo "run with echo in pipe" | ${O2_ROOT}/bin/o2-create-aligned-geometry-workflow ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}} --configKeyValues "HBFUtils.startTime=${TIMESTAMP}" -b --run
-fi
-mkdir -p $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned
-ln -s -f $PWD/o2sim_geometry-aligned.root $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned/snapshot.root
-if [ "${ENABLEPW}" == "0" ]; then
-  [[ -f $PWD/its_GeometryTGeo.root ]] && mkdir -p $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry && ln -s -f $PWD/its_GeometryTGeo.root $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry/snapshot.root
-fi
-[[ -f $PWD/mft_GeometryTGeo.root ]] && mkdir -p $ALICEO2_CCDB_LOCALCACHE/MFT/Config/Geometry && ln -s -f $PWD/mft_GeometryTGeo.root $ALICEO2_CCDB_LOCALCACHE/MFT/Config/Geometry/snapshot.root
-
-# -- RUN THE MC WORKLOAD TO PRODUCE AOD --
+# -- RUN THE MC WORKLOAD TO PRODUCE TARGETS --
 
 export FAIRMQ_IPC_PREFIX=./
 
 echo_info "Ready to start main workflow"
 
-${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${ALIEN_JDL_O2DPGWORKFLOWTARGET:-aod} --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} --dynamic-resources
+# Let us construct the workflow targets
+targetString=""
+if [ "${ALIEN_JDL_O2DPGWORKFLOWTARGET}" ]; then
+   # The user gave ${ALIEN_JDL_O2DPGWORKFLOWTARGET}. This is an expert mode not used in production.
+   # In this case, we will build just that. No QC, no TPC timeseries, ...
+   targetString=${ALIEN_JDL_O2DPGWORKFLOWTARGET}
+else
+   targetString="'aodmerge.*'"
+   # Now add more targets depending on options
+   # -) The TPC timeseries targets
+   if [[ "${ALIEN_JDL_ADDTIMESERIESINMC}" == "1" ]]; then
+     targetString="${targetString} 'tpctimes.*'"
+   fi
+   # -) TPC residual calibration
+   if [ "${ALIEN_JDL_DOTPCRESIDUALSEXTRACTION}" ]; then
+     targetString="${targetString} 'tpcresidmerge.*'"
+   fi
+   # -) QC tasks
+   if [[ -z "${DISABLE_QC}" && "${remainingargs}" == *"--include-local-qc"* ]]; then
+     targetString="${targetString} '^.*QC.*'" # QC tasks should have QC in the name
+   fi
+fi
+echo_info "Workflow will run with target specification ${targetString}"
+
+${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${targetString}                                    \
+                                               --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} --dynamic-resources                \
+                                               ${ALIEN_O2DPG_FILEGRAPH:+--remove-files-early ${ALIEN_O2DPG_FILEGRAPH}} \
+                                               ${ALIEN_O2DPG_ADDITIONAL_WORKFLOW_RUNNER_ARGS}
+
 MCRC=$?  # <--- we'll report back this code
-if [[ "${MCRC}" == "0" && "${ALIEN_JDL_ADDTIMESERIESINMC}" != "0" ]]; then
-  # Default value is 1 so this is run by default.
-  echo_info "Running TPC time series"
-  ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt tpctimes
-  # Note: We could maybe avoid this if-else by including `tpctimes` directly in the workflow-targets above
-fi
-
-if [[ "${MCRC}" == "0" && "${ALIEN_JDL_DOTPCRESIDUALEXTRACTION}" = "1" ]]; then
-  echo_info "Running TPC residuals extraction, aggregation and merging"
-    ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt tpcresidmerge
-fi
-
-[[ -n "${DISABLE_QC}" ]] && echo_info "QC is disabled, skip it."
-
-if [[ -z "${DISABLE_QC}" && "${MCRC}" == "0" && "${remainingargs}" == *"--include-local-qc"* ]] ; then
-  # do QC tasks
-  echo_info "Doing QC"
-  ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --target-labels QC --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} -k
-  # NOTE that with the -k|--keep-going option, the runner will try to keep on executing even if some tasks fail.
-  # That means, even if there is a failing QC task, the return code will be 0
-  MCRC=$?
-fi
 
 #
 # full logs tar-ed for output, regardless the error code or validation - to catch also QC logs...

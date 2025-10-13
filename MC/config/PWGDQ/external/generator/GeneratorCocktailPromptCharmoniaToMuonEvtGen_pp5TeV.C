@@ -133,11 +133,17 @@ class O2_GeneratorParamPsi : public GeneratorTGenerator
   static Double_t YPsipp5TeV(const Double_t* py, const Double_t* /*dummy*/)
   {
     // psi2s y in pp at 5.02 TeV, tuned on https://www.hepdata.net/record/ins1935680
+    // WARNING! The shape extracted from data provide wired rapidity shape (low stat.), the J/psi one is used 
     Double_t y = *py;
     Float_t p0, p1, p2;
+    // Extracted from Psi(2S) Run 2 data
+    //p0 = 1;
+    //p1 = -17.4857;
+    //p2 = 2.98887;
+    // Same parametrization as J/psi
     p0 = 1;
-    p1 = -17.4857;
-    p2 = 2.98887;
+    p1 = 0.0338222;
+    p2 = 2.96748;
     return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((y - p1) / p2), 2));
   }
 

@@ -121,9 +121,11 @@ def read_AO2D_eventcount(file):
     return eventcount
 
 AO2D_eventcount = read_AO2D_eventcount(args.aod_file)
-GEANT_eventcount = read_accumulated_GEANT_eventcount()
-if AO2D_eventcount != GEANT_eventcount:
-    print ("WARN: AO2D MC event count and GEANT event count differ")
+
+# for debugging
+# GEANT_eventcount = read_accumulated_GEANT_eventcount()
+# if AO2D_eventcount != GEANT_eventcount:
+#    print ("WARN: AO2D MC event count and GEANT event count differ")
 
 print ("Found " + str(AO2D_eventcount) + " events in AO2D file")
 write_stat_file(AO2D_eventcount)

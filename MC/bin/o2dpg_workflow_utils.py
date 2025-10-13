@@ -22,7 +22,13 @@ def deactivate_detector(det):
     INACTIVE_DETECTORS.append(det)
 
 def isActive(det):
-    return det not in INACTIVE_DETECTORS and ("all" in ACTIVE_DETECTORS or det in ACTIVE_DETECTORS)
+    def check(detector):
+        return detector not in INACTIVE_DETECTORS and ("all" in ACTIVE_DETECTORS or detector in ACTIVE_DETECTORS)
+
+    if det == "ITS": # special remapping for upgrade only needed in one direction since IT3 output pretends to be ITS
+        return check("ITS") or check("IT3")
+    else:
+        return check(det)
 
 def compute_n_workers(interaction_rate, collision_system, n_workers_user=8, n_workers_min=1, interaction_rate_linear_below=300000):
     """
@@ -172,6 +178,9 @@ def dump_workflow(workflow, filename, meta=None):
             s['cmd'] = '. ' + taskwrapper_string + ' ' + s['name']+'.log \'' + s['cmd'] + '\''
         # remove unnecessary whitespaces for better readibility
         s['cmd'] = trimString(s['cmd'])
+        # remove None entries from needs list
+        s['needs'] = [ n for n in s['needs'] if n != None ]
+
     # make the final dict to be dumped
     to_dump = {"stages": to_dump}
     filename = make_workflow_filename(filename)

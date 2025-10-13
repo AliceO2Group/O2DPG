@@ -3,15 +3,6 @@
 
 # process flags passed to the script
 
-if [[ -z "$ALIEN_JDL_USEGPUS" || $ALIEN_JDL_USEGPUS != 1 ]]; then
-  export SETENV_NO_ULIMIT=1
-fi
-
-# to avoid memory issues - we don't do this on the EPNs, since it can affect the performance
-if [[ $ALIEN_JDL_USEGPUS != 1 ]]; then
-  export DPL_DEFAULT_PIPELINE_LENGTH=16
-fi
-
 # check if this is a production on skimmed data
 if grep -q /skimmed/ wn.xml ; then
   export ON_SKIMMED_DATA=1;
@@ -573,6 +564,9 @@ fi
 
 # ad-hoc options for GPU reco workflow
 export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_global.dEdxDisableResidualGainMap=1;$TRACKTUNETPC;$VDRIFTPARAMOPTION;"
+
+# if ITS is running on GPU we need to give the workflow most options from ITS reco
+has_detector_gpu ITS && export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";$CONFIG_EXTRA_PROCESS_o2_its_reco_workflow;"
 
 [[ ! -z $TPCCLUSTERTIMESHIFT ]] && [[ $ALIEN_JDL_LPMPRODUCTIONTYPE != "MC" ]] && export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.clustersShiftTimebins=$TPCCLUSTERTIMESHIFT;"
 

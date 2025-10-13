@@ -6,8 +6,17 @@ int External() {
 
     std::vector<int> checkPdgHadron{4132, 4232};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
-        {4132, {{211, 3312}}}, // Xic0
-        {4232, {{-313, 2212}, {-321, 3324}, {211, 211, 3312}, {-321, 211, 2212}}} // Xic+
+        {4132, {
+			{3312, 211},              // Xic0 -> Xi-, pi+
+		}},
+        {4232, {
+			{2212, -321, 211},        // Xic+ -> p, K-, pi+
+			{2212, -313},             // Xic+ -> p, Kbar^*(892)0
+			{3312, 211, 211},         // Xic+ -> Xi-, pi+, pi+
+			{2212, 333},              // Xic+ -> p, phi(1020)0
+			{3222, -211, 211},        // Xic+ -> Sigma+, pi-, pi+
+			{3324, 211},              // Xic+ -> Xi(1530)0, pi+
+		}},
     };
 
     TFile file(path.c_str(), "READ");
@@ -65,6 +74,7 @@ int External() {
                 std::sort(pdgsDecayAntiPart.begin(), pdgsDecayAntiPart.end());
 
                 for (auto &decay : checkHadronDecays[std::abs(pdg)]) {
+                    std::sort(decay.begin(), decay.end());
                     if (pdgsDecay == decay || pdgsDecayAntiPart == decay) {
                         nSignalGoodDecay++;
                         break;

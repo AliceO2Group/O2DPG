@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(description='Produce O2DPG MC file dependency r
 # the run-number of data taking or default if unanchored
 parser.add_argument('--actionFile', type=str, help="O2DPG pipeline runner action file")
 parser.add_argument('--monitorFile', type=str, help="monitoring file provided by fanotify tool. See O2DPG/UTILS/FileIOGraph.")
-parser.add_argument('--basedir', type=str, help="O2DPG workflow dir")
+parser.add_argument('--basedir', default="/", type=str, help="O2DPG workflow dir")
 parser.add_argument('--file-filters', nargs='+', default=[r'.*'], help="Filters (regular expressions) to select files (default all = '.*')")
 parser.add_argument('--graphviz', type=str, help="Produce a graphviz plot")
 parser.add_argument('-o','--output', type=str, help="Output JSON report")
@@ -60,7 +60,8 @@ task_writes = { tname : set() for tname in O2DPGtask_to_pid }
 file_written_task = {}
 file_consumed_task = {}
 
-pattern = re.compile(args.basedir + r'([^,]+),((?:read|write)),(.*)')
+pattern = re.compile(r'"?([^"]+)"?,((?:read|write)),(.*)')
+basedir_pattern = re.compile("^" + args.basedir)
 # neglecting some framework file names
 file_exclude_filter = re.compile(r'(.*)\.log(.*)|(ccdb/log)|(.*)dpl-config\.json')
 
@@ -75,6 +76,13 @@ with open(args.monitorFile, 'r') as file:
             file_name = match.group(1)
             mode = match.group(2)
             pids = match.group(3).split(";")
+
+            # see if matches the workdir
+            if not basedir_pattern.match(file_name):
+                continue
+
+            # remove basedir from file_name
+            file_name = file_name.replace(args.basedir + '/', "./", 1)
 
             # implement file name filter
             if file_exclude_filter.match(file_name):

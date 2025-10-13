@@ -1,10 +1,10 @@
 int External() {
     std::string path{"o2sim_Kine.root"};
 
-    int checkPdgQuarkOne = 4;
+    int checkPdgQuark{4};
 
     int checkPdgHadron{4332};
-    int checkHadronDecays{3334};
+    int checkHadronDecays{0};
 
     TFile file(path.c_str(), "READ");
     if (file.IsZombie()) {
@@ -19,7 +19,7 @@ int External() {
     tree->SetBranchAddress("MCEventHeader.", &eventHeader);
 
     int nEventsInj{};
-    int nQuarks{}, nSignals{}, nSignalGoodDecay{};
+    int nQuarks{}, nSignals{};
     auto nEvents = tree->GetEntries();
 
     for (int i = 0; i < nEvents; i++) {
@@ -44,10 +44,8 @@ int External() {
                 nSignals++; // count signal PDG
 
                 for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
-                    auto pdgDau = tracks->at(j).GetPdgCode();
-                    if (std::abs(pdgDau) == checkHadronDecays) {
-                        nSignalGoodDecay;
-                        break;
+                    if (j >= 0) {
+                        checkHadronDecays += 1;
                     }
                 }
             }
@@ -59,7 +57,7 @@ int External() {
     std::cout << Form("# events injected with %d quark pair: ", checkPdgQuark) << nEventsInj << "\n";
     std::cout << Form("# %d (anti)quarks: ", checkPdgQuark) << nQuarks << "\n";
     std::cout <<"# signal hadrons: " << nSignals << "\n";
-    std::cout <<"# signal hadrons decaying in the correct channel: " << nSignalGoodDecay << "\n";
+    std::cout <<"# signal hadrons decaying : " << checkHadronDecays << "\n";
 
     if (nEventsInj < nEvents) {
         std::cerr << "Number of generated events with triggered events different than expected\n";
@@ -76,9 +74,8 @@ int External() {
         return 1;
     }
 
-    float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
-    if (fracForcedDecays < 0.9) { // we put some tolerance (it should not happen, but to be conservative)
-        std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
+    if (checkHadronDecays > 0) {
+        std::cerr << "Decayed OmegaC, it should never decay\n";
         return 1;
     }
 

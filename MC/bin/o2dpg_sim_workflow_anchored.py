@@ -23,7 +23,7 @@ if o2dpg_root is None:
   raise EnvironmentError("O2DPG_ROOT is not set in the environment.")
 mc_prodinfo_path = os.path.abspath(os.path.join(o2dpg_root, "MC", "prodinfo"))
 sys.path.append(mc_prodinfo_path)
-from mcprodinfo_ccdb_upload import MCProdInfo, upload_mcprodinfo_meta, query_mcprodinfo
+from mcprodinfo_ccdb_upload import MCProdInfo, publish_MCProdInfo
 import dataclasses
 
 # Creates a time anchored MC workflow; positioned within a given run-number (as function of production size etc)
@@ -450,14 +450,6 @@ def exclude_timestamp(ts, orbit, run, filename, global_run_params):
     print(f"This run as globally {total_excluded_fraction} of it's data marked to be exluded")
     return excluded
 
-def publish_MCProdInfo(mc_prod_info, ccdb_url = "https://alice-ccdb.cern.ch", username = "aliprod", include_meta_into_aod=False):
-   print("Publishing MCProdInfo")
-
-   # see if this already has meta-data uploaded, otherwise do nothing
-   mc_prod_info_q = query_mcprodinfo(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag)
-   if mc_prod_info_q == None:
-    # could make this depend on hash values in future
-    upload_mcprodinfo_meta(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag, dataclasses.asdict(mc_prod_info))
 
 
 def main():
@@ -590,13 +582,19 @@ def main():
          forwardargs += ' --ctp-scaler ' + str(ctp_local_rate_raw)
 
     # we finally pass forward to the unanchored MC workflow creation
-    # TODO: this needs to be done in a pythonic way clearly
-    # NOTE: forwardargs can - in principle - contain some of the arguments that are appended here. However, the last passed argument wins, so they would be overwritten.
+    # NOTE: forwardargs can - in principle - contain some of the arguments that are appended here. 
+    # However, the last passed argument wins, so they would be overwritten. If this should not happen, the option
+    # needs to be handled as further below:
     energyarg = (" -eCM " + str(eCM)) if A1 == A2 else (" -eA " + str(eA) + " -eB " + str(eB))
     forwardargs += " -tf " + str(args.tf) + " --sor " + str(run_start) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit "       \
-                   + str(GLOparams["FirstOrbit"]) + " -field ccdb -bcPatternFile ccdb" + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + str(energyarg)
+                   + str(GLOparams["FirstOrbit"]) + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + str(energyarg)
+    # the following options can be overwritten/influence from the outside
     if not '--readoutDets' in forwardargs:
        forwardargs += ' --readoutDets ' + GLOparams['detList']
+    if not '-field' in forwardargs:
+       forwardargs += ' -field ccdb '
+    if not '-bcPatternFile' in forwardargs:
+       forwardargs += ' -bcPatternFile ccdb '
     print ("forward args ", forwardargs)
     cmd = "${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py " + forwardargs
 
