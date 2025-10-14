@@ -18,14 +18,11 @@ cd /Herwig/Generators
 ##################################################
 # LHC physics parameters (override defaults here) 
 ##################################################
-set EventGenerator:EventHandler:LuminosityFunction:Energy 13000.0
-
-
+set EventGenerator:EventHandler:LuminosityFunction:Energy 13600.0
 # Minimum Bias
 read snippets/MB.in
 
 # Recommended set of parameters for MB/UE runs
-
 set /Herwig/Hadronization/ColourReconnector:ReconnectionProbability 0.5
 set /Herwig/UnderlyingEvent/MPIHandler:pTmin0 3.502683
 set /Herwig/UnderlyingEvent/MPIHandler:InvRadius 1.402055
@@ -33,45 +30,7 @@ set /Herwig/UnderlyingEvent/MPIHandler:Power 0.416852
 set /Herwig/Partons/RemnantDecayer:ladderPower -0.08
 set /Herwig/Partons/RemnantDecayer:ladderNorm 0.95
 
-# Diffraction model
-# read snippets/Diffraction.in
-
-# Read in snippet in order to use baryonic reconnection model with modified gluon splitting (uds)
-# For more details see [S. Gieseke, P. Kirchgaeßer, S. Plätzer. arXiv:1710.10906]]
-##############################################################################################
-
-# read BaryonicReconnection.in
-
-
-##################################################
-# Analyses
-##################################################
-
-
-# cd /Herwig/Analysis
-# create ThePEG::RivetAnalysis RivetAnalysis RivetAnalysis.so
-
-# cd /Herwig/Generators
-# insert EventGenerator:AnalysisHandlers 0 /Herwig/Analysis/RivetAnalysis
-
-# insert /Herwig/Analysis/RivetAnalysis:Analyses 0 ATLAS_20XX_XXXXXXX
-
-
-#set /Herwig/Analysis/Plot:EventNumber 54
-#cd /Herwig/Generators
-#insert EventGenerator:AnalysisHandlers 0 /Herwig/Analysis/Plot
-
-# read /Herwig/snippets/HepMC.in
-#create ThePEG::HepMCFile /Herwig/Analysis/HepMC HepMCAnalysis.so
-#set /Herwig/Analysis/HepMC:PrintEvent $NEV
-#set /Herwig/Analysis/HepMC:Format GenEvent
-#set /Herwig/Analysis/HepMC:Units GeV_mm
-#set /Herwig/Analysis/HepMC:Filename ${FIFOPATH}
-#insert /Herwig/Generators/EventGenerator:AnalysisHandlers 0 /Herwig/Analysis/HepMC
-
-
 ##################################################
 # Save run for later usage with 'Herwig run'
 ##################################################
-# cd /Herwig/Generators
 saverun LHC EventGenerator
