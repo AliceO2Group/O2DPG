@@ -1,0 +1,23 @@
+{
+    "generators": [
+        {
+            "cocktail": [
+                {
+                    "name": "pythia8pp",
+                    "config": ""
+                },
+                {
+                    "name": "external",
+                    "config": {
+                        "fileName": "${O2DPG_MC_CONFIG_ROOT}/MC/config/common/external/generator/performanceGenerator.C",
+                        "funcName": "Generator_Performance()",
+                        "iniFile": ""
+                    }
+                }
+            ]
+        }
+    ],
+    "fractions": [
+        1
+    ]
+}
