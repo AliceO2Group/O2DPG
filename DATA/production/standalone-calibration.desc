@@ -38,9 +38,9 @@ TPC-pulser-long: "O2PDPSuite" reco,1,1," production/calib/tpc-pulser-long.sh"
 
 TPC-pedestal: "O2PDPSuite" reco,1,1," production/calib/tpc-pedestal.sh"
 
-TPC-laser: "O2PDPSuite" reco,1,1,"SHMSIZE=$((128 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) HOSTMEMSIZE=$(( 5 << 30 ))  production/calib/tpc-laser.sh"
+TPC-laser: "O2PDPSuite" reco,1,1,"SHMSIZE=$((128 << 30)) production/calib/tpc-laser.sh"
 
-TPC-laser-multi: "O2PDPSuite" reco,10,10,"SHMSIZE=$((128 << 30)) GPUTYPE=HIP GPUMEMSIZE=$(( 24 << 30 )) HOSTMEMSIZE=$(( 5 << 30 ))  production/calib/tpc-laser-filter.sh" calib,1,"production/calib/tpc-laser-aggregator.sh"
+TPC-laser-multi: "O2PDPSuite" reco,10,10,"SHMSIZE=$((128 << 30)) production/calib/tpc-laser-filter.sh" calib,1,"production/calib/tpc-laser-aggregator.sh"
 
 MFT-noise-calibration: "O2PDPSuite" reco,20,20,"production/calib/mft-noise-processing.sh" calib,20,"production/calib/mft-noise-aggregator.sh"
 

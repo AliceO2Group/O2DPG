@@ -10,6 +10,14 @@ FILEWORKDIR="/home/wiechula/processData/inputFilesTracking/triggeredLaser"
 
 FILEWORKDIR2="/home/epn/odc/files/"
 
+GPUTYPE=${GPUTYPE:-CPU}
+HOSTMEMSIZE=0
+if workflow_has_parameter GPU; then
+  GPUTYPE=HIP
+  GPUMEMSIZE=$(( 24 << 30 ))
+  HOSTMEMSIZE=$(( 5 << 30 ))
+fi
+
 if [ $NUMAGPUIDS != 0 ]; then
   ARGS_ALL+=" --child-driver 'numactl --membind $NUMAID --cpunodebind $NUMAID'"
 fi
