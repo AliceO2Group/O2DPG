@@ -41,11 +41,7 @@ fi
 
 # Extra arguments for topology merger
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS" ]]; then
-  if [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then
-    export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS="--recozone staging-mi50 --reco100zone staging-mi100 --calibzone calib"
-  else
-    export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS="--recozone online-mi50 --reco100zone online-mi100 --calibzone calib"
-  fi
+  export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_ARGS="--recozone online-mi50 --reco100zone online-mi100 --calibzone calib"
 fi
 if [[ -z "$GEN_TOPO_MI100_NODES" ]]; then export GEN_TOPO_MI100_NODES=-1; fi
 
