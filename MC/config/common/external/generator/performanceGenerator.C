@@ -35,6 +35,8 @@ namespace o2
                     mTag = tag;
                     LOG(info) << "Generator with tag " << mTag << " is selected";
                 }
+                mDecayer = std::make_unique<DecayerPythia8>();
+                mDecayer->Init();
                 Generator::setTimeUnit(1.0);
                 Generator::setPositionUnit(1.0);
             }
@@ -66,6 +68,7 @@ namespace o2
             unsigned short int mNSig = 0;   // Number of particles to generate
             unsigned int mNUE = 0;  // Number of tracks in the Underlying event
             unsigned short int mTag = 1; // Tag to select the generation function
+            std::unique_ptr<DecayerPythia8> mDecayer; // Pythia8 decayer for particles not present in the physics list of Geant4 (like Z0)
             const std::vector<std::shared_ptr<o2::eventgen::Generator>> genList = GeneratorHybrid::getGenerators();
             std::map<unsigned short int, std::function<TParticle()>> genMap;
             UInt_t mGenID = 42;
@@ -137,8 +140,42 @@ namespace o2
                 TParticle generatedParticle(pdgCode, status, -1, -1, -1, -1, px, py, pz, energy, xyz[0], xyz[1], xyz[2], 0.0);
                 generatedParticle.SetStatusCode(o2::mcgenstatus::MCGenStatusEncoding(generatedParticle.GetStatusCode(), 0).fullEncoding);
                 generatedParticle.SetUniqueID(mGenID);
-                generatedParticle.SetBit(ParticleStatus::kToBeDone, //
-                                         o2::mcgenstatus::getHepMCStatusCode(generatedParticle.GetStatusCode()) == 1);
+                if (pdgCode == 23) {
+                    generatedParticle.SetBit(ParticleStatus::kToBeDone, false); // Force Z0 to be decayed by the transport
+                    LOG(debug) << "Processing Z0 with DecayerPythia8";
+                    TLorentzVector *pDec = new TLorentzVector(px, py, pz, energy);
+                    mDecayer->Decay(pdgCode, pDec);
+                    TClonesArray *daughters = new TClonesArray("TParticle");
+                    mDecayer->ImportParticles(daughters);
+                    unsigned short int nDaughters = daughters->GetEntriesFast();
+                    if (daughters && nDaughters > 0) {
+                        for (int i = 0; i < daughters->GetEntriesFast(); i++) {
+                            TParticle* daughter = (TParticle*)daughters->At(i);
+                            daughter->SetUniqueID(mGenID);
+                            if (i > 0)
+                            {
+                                daughter->SetBit(ParticleStatus::kToBeDone, //
+                                                 o2::mcgenstatus::getHepMCStatusCode(generatedParticle.GetStatusCode()) == 1);
+                            }
+                            else
+                            {
+                                // First daughter is the mother (Z0)
+                                daughter->SetBit(ParticleStatus::kToBeDone, false);
+                            }
+                            LOG(debug) << "Daughter " << i << ": PDG=" << daughter->GetPdgCode() << ", E=" << daughter->Energy() << ", p=(" << daughter->Px() << "," << daughter->Py() << "," << daughter->Pz() << ")";
+                            mParticles.push_back(*daughter);
+                        }
+                        LOG(debug) << "Z0 decayed into " << daughters->GetEntriesFast() << " particles";
+                        daughters->Clear("C");
+                        delete daughters;
+                    } else {
+                        LOG(warn) << "DecayerPythia8 failed to decay Z0 or no daughters found";
+                    }
+                    delete pDec;
+                } else {
+                    generatedParticle.SetBit(ParticleStatus::kToBeDone, //
+                                             o2::mcgenstatus::getHepMCStatusCode(generatedParticle.GetStatusCode()) == 1);
+                }
                 return generatedParticle;
             }
 
@@ -261,8 +298,39 @@ namespace o2
                 TParticle generatedParticle(pdgCode, status, -1, -1, -1, -1, px, py, pz, energy, xyz[0], xyz[1], xyz[2], 0.0);
                 generatedParticle.SetStatusCode(o2::mcgenstatus::MCGenStatusEncoding(generatedParticle.GetStatusCode(), 0).fullEncoding);
                 generatedParticle.SetUniqueID(mGenID);
-                generatedParticle.SetBit(ParticleStatus::kToBeDone, //
-                                         o2::mcgenstatus::getHepMCStatusCode(generatedParticle.GetStatusCode()) == 1);
+                if (pdgCode == 23) {
+                    generatedParticle.SetBit(ParticleStatus::kToBeDone, false); // Force Z0 to be decayed by the transport
+                    LOG(debug) << "Processing Z0 with DecayerPythia8";
+                    TLorentzVector *pDec = new TLorentzVector(px, py, pz, energy);
+                    mDecayer->Decay(pdgCode, pDec);
+                    TClonesArray *daughters = new TClonesArray("TParticle");
+                    mDecayer->ImportParticles(daughters);
+                    unsigned short int nDaughters = daughters->GetEntriesFast();
+                    if (daughters && nDaughters > 0) {
+                        for (int i = 0; i < daughters->GetEntriesFast(); i++) {
+                            TParticle* daughter = (TParticle*)daughters->At(i);
+                            daughter->SetUniqueID(mGenID);
+                            if (i > 0) {
+                                daughter->SetBit(ParticleStatus::kToBeDone, //
+                                                 o2::mcgenstatus::getHepMCStatusCode(generatedParticle.GetStatusCode()) == 1);
+                            } else {
+                                // First daughter is the mother (Z0)
+                                daughter->SetBit(ParticleStatus::kToBeDone, false);
+                            }
+                            LOG(debug) << "Daughter " << i << ": PDG=" << daughter->GetPdgCode() << ", E=" << daughter->Energy() << ", p=(" << daughter->Px() << "," << daughter->Py() << "," << daughter->Pz() << ")";
+                            mParticles.push_back(*daughter);
+                        }
+                        LOG(debug) << "Z0 decayed into " << daughters->GetEntriesFast() << " particles";
+                        daughters->Clear("C");
+                        delete daughters;
+                    } else {
+                        LOG(warn) << "DecayerPythia8 failed to decay Z0 or no daughters found";
+                    }
+                    delete pDec;
+                } else {
+                    generatedParticle.SetBit(ParticleStatus::kToBeDone, //
+                                             o2::mcgenstatus::getHepMCStatusCode(generatedParticle.GetStatusCode()) == 1);
+                }
                 return generatedParticle;
             }
 
