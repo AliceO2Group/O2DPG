@@ -1,0 +1,13 @@
+{
+    "ft0-corrected-table": {
+        "resoFT0A": "20",
+        "resoFT0C": "20",
+        "addHistograms": "0",
+        "collisionSystem": "-2",
+        "ccdb-url": "http://alice-ccdb.cern.ch",
+        "ccdb-path-grplhcif": "GLO/Config/GRPLHCIF",
+        "ccdb-timestamp": "-1",
+        "processStandard": "1",
+        "processWithBypassFT0timeInMC": "0"
+    }
+}
