@@ -198,12 +198,12 @@ fi
 #<----- START OF part that should run under a clean alternative software environment if this was given ------
 if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
   if [ "${LOADEDMODULES}" ]; then
-    export > env_before_stashing.env
+    printenv > env_before_stashing.printenv
     echo "Stashing initial modules"
     module save initial_modules.list # we stash the current modules environment
     module list --no-pager
     module purge --no-pager
-    export > env_after_stashing.env
+    printenv > env_after_stashing.printenv
     echo "Modules after purge"
     module list --no-pager
   fi
@@ -272,10 +272,17 @@ if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
   echo "Restoring initial environment"
   module --no-pager restore initial_modules.list
   module saverm initial_modules.list
-  if [ "${ALIEN_JDL_O2DPG_OVERWRITE}" ]; then
-    echo "Setting back O2DPG_ROOT to overwritten path ${ALIEN_JDL_O2DPG_OVERWRITE}"
-    export O2DPG_ROOT=${ALIEN_JDL_O2DPG_OVERWRITE}
-  fi
+
+  # Restore overwritten O2DPG variables set by modules but changed by user
+  # (in particular custom O2DPG_ROOT and O2DPG_MC_CONFIG_ROOT)
+  printenv > env_after_restore.printenv
+  comm -12 <(grep '^O2DPG' env_before_stashing.printenv | cut -d= -f1 | sort) \
+         <(grep '^O2DPG' env_after_restore.printenv  | cut -d= -f1 | sort) |
+  while read -r var; do
+    b=$(grep "^$var=" env_before_stashing.printenv | cut -d= -f2-)
+    a=$(grep "^$var=" env_after_restore.printenv  | cut -d= -f2-)
+    [[ "$b" != "$a" ]] && export "$var=$b" && echo "Reapplied: $var to ${b}"
+  done
 fi
 #<----- END OF part that should run under a clean alternative software environment if this was given ------
 
