@@ -1,7 +1,7 @@
 <topology name="o2-dd">
    <declrequirement name="TfBuilderRequirement" type="maxinstances" value="1"/>
    <decltask name="TfBuilderTask">
-     <exe reachable="true">GEN_TOPO_TFBUILDER_ENV_VARIABLES /home/epn/odc/tfbuilder.sh data</exe>
+     <exe reachable="true">GEN_TOPO_TFBUILDER_ENV_VARIABLES /usr/local/bin/tfbuilder.sh data</exe>
        <requirements>
            <name>TfBuilderRequirement</name>
        </requirements>
