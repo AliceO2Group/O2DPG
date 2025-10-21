@@ -30,7 +30,7 @@ fi
 if [ $RUNTYPE_ITS == "tuningbb" ]; then
   ADDITIONAL_OPTIONS_CAL="--min-vcasn 30 --max-vcasn 130"
 fi
-if [[ $RUNTYPE_ITS == "tot1row" || $RUNTYPE_ITS == "vresetd" ]]; then
+if [[ $RUNTYPE_ITS == "tot1row" || $RUNTYPE_ITS == "vresetd-2d" ]]; then
   ADDITIONAL_OPTIONS_CAL="--ninj 10"
 fi
 if [ $RUNTYPE_ITS == "totfullfast" ]; then
