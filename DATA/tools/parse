@@ -223,7 +223,7 @@ for line in f:
                   odccommand += ' ' + os.environ['GEN_TOPO_ODC_EPN_TOPO_ARGS']
                 if True:
                     replacestring = ''
-                    dd_env_variables = ['DD_DISK_FRACTION', 'EPN_DD_TEST', 'EPN_DD_TEST_2', 'EPN_DD_TEST_3', 'SHM_MANAGER_SHMID']
+                    dd_env_variables = ['DD_DISK_FRACTION', 'TF_SINK_NUM_TFS', 'DD_STF_MIN_ID', 'DD_STF_MAX_ID', 'EPN_DD_TEST', 'EPN_DD_TEST_2', 'EPN_DD_TEST_3', 'SHM_MANAGER_SHMID']
                     for i in dd_env_variables:
                         if i in os.environ:
                             replacestring += ' ' + i + '=' + os.environ[i]
