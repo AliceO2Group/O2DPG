@@ -102,7 +102,7 @@ class GroupByRegressor:
         return df, dfGB
 
     @staticmethod
-    def process_group_robust(
+    def process_group_robustBackup(
             key: tuple,
             df_group: pd.DataFrame,
             gb_columns: List[str],
@@ -114,7 +114,7 @@ class GroupByRegressor:
             sigmaCut: float = 4,
             fitter: Union[str, Callable] = "auto"
     ) -> dict:
-        # TODO 0handle the case os singl gb column
+        # TODO handle the case os single gb column
         group_dict = dict(zip(gb_columns, key))
         predictors = []
         if isinstance(weights, str) and weights not in df_group.columns:
@@ -213,6 +213,248 @@ class GroupByRegressor:
 
         return group_dict
 
+@staticmethod
+def process_group_robust(
+        key: tuple,
+        df_group: pd.DataFrame,
+        gb_columns: List[str],
+        fit_columns: List[str],
+        linear_columns0: List[str],
+        median_columns: List[str],
+        weights: str,
+        minStat: List[int],
+        sigmaCut: float = 4,
+        fitter: Union[str, Callable] = "auto",
+        # --- NEW (optional) diagnostics ---
+        diag: bool = False,
+        diag_prefix: str = "diag_",
+) -> dict:
+    """
+    Per-group robust/OLS fit with optional diagnostics.
+
+    Diagnostics (only when diag=True; added once per group into the result dict):
+      - {diag_prefix}n_refits       : int, number of extra fits after the initial one (0 or 1 in this implementation)
+      - {diag_prefix}frac_rejected  : float, fraction rejected by sigmaCut at final mask
+      - {diag_prefix}hat_max        : float, max leverage proxy via QR (max rowwise ||Q||^2)
+      - {diag_prefix}cond_xtx       : float, condition number of X^T X
+      - {diag_prefix}time_ms        : float, wall-time per group (ms) excluding leverage/cond computation
+      - {diag_prefix}n_rows         : int, number of rows in the group (after dropna for predictors/target/weights)
+
+    Notes:
+      - n_refits counts *additional* iterations beyond the first fit. With this one-pass sigmaCut scheme,
+        it will be 0 (no re-fit) or 1 (re-fit once on inliers).
+    """
+    import time
+    import numpy as np
+    import logging
+    from sklearn.linear_model import HuberRegressor, LinearRegression
+
+    # TODO handle the case of single gb column
+    group_dict = dict(zip(gb_columns, key))
+
+    if isinstance(weights, str) and weights not in df_group.columns:
+        raise ValueError(f"Weight column '{weights}' not found in input DataFrame.")
+
+    # Select predictors that meet per-predictor minStat (based on non-null rows with target+weights)
+    predictors: List[str] = []
+    for i, col in enumerate(linear_columns0):
+        required_columns = [col] + fit_columns + [weights]
+        df_valid = df_group[required_columns].dropna()
+        if len(df_valid) >= minStat[i]:
+            predictors.append(col)
+
+    # Prepare diagnostics state (group-level)
+    n_refits_group = 0        # extra fits after initial fit
+    frac_rejected_group = np.nan
+    hat_max_group = np.nan
+    cond_xtx_group = np.nan
+    time_ms_group = np.nan
+    n_rows_group = int(len(df_group))  # raw group size (will refine to cleaned size later)
+
+    # Start timing the *fitting* work (we will stop before leverage/cond to avoid polluting time)
+    t0_group = time.perf_counter()
+
+    # Loop over target columns
+    for target_col in fit_columns:
+        try:
+            if not predictors:
+                # No valid predictors met minStat; emit NaNs for this target
+                for col in linear_columns0:
+                    group_dict[f"{target_col}_slope_{col}"] = np.nan
+                    group_dict[f"{target_col}_err_{col}"] = np.nan
+                group_dict[f"{target_col}_intercept"] = np.nan
+                group_dict[f"{target_col}_rms"] = np.nan
+                group_dict[f"{target_col}_mad"] = np.nan
+                continue
+
+            subset_columns = predictors + [target_col, weights]
+            df_clean = df_group.dropna(subset=subset_columns)
+            if len(df_clean) < min(minStat):
+                # Not enough rows to fit
+                for col in linear_columns0:
+                    group_dict[f"{target_col}_slope_{col}"] = np.nan
+                    group_dict[f"{target_col}_err_{col}"] = np.nan
+                group_dict[f"{target_col}_intercept"] = np.nan
+                group_dict[f"{target_col}_rms"] = np.nan
+                group_dict[f"{target_col}_mad"] = np.nan
+                continue
+
+            # Update cleaned group size for diagnostics
+            n_rows_group = int(len(df_clean))
+
+            X = df_clean[predictors].to_numpy(copy=False)
+            y = df_clean[target_col].to_numpy(copy=False)
+            w = df_clean[weights].to_numpy(copy=False)
+
+            # Choose model
+            if callable(fitter):
+                model = fitter()
+            elif fitter == "robust":
+                model = HuberRegressor(tol=1e-4)
+            elif fitter == "ols":
+                model = LinearRegression()
+            else:
+                model = HuberRegressor(tol=1e-4)
+
+            # Initial fit
+            try:
+                model.fit(X, y, sample_weight=w)
+            except Exception as e:
+                logging.warning(
+                    f"{model.__class__.__name__} failed for {target_col} in group {key}: {e}. "
+                    f"Falling back to LinearRegression."
+                )
+                model = LinearRegression()
+                model.fit(X, y, sample_weight=w)
+
+            # Residuals and robust stats
+            predicted = model.predict(X)
+            residuals = y - predicted
+            rms = float(np.sqrt(np.mean(residuals ** 2)))
+            mad = float(np.median(np.abs(residuals)))
+
+            # One-pass sigmaCut masking (current implementation supports at most a single re-fit)
+            final_mask = None
+            if np.isfinite(mad) and mad > 0 and sigmaCut is not None and sigmaCut < np.inf:
+                mask = (np.abs(residuals) <= sigmaCut * mad)
+                if mask.sum() >= min(minStat):
+                    # Re-fit on inliers
+                    n_refits_group += 1  # <-- counts *extra* fits beyond the first
+                    try:
+                        model.fit(X[mask], y[mask], sample_weight=w[mask])
+                    except Exception as e:
+                        logging.warning(
+                            f"{model.__class__.__name__} re-fit with outlier mask failed for {target_col} "
+                            f"in group {key}: {e}. Falling back to LinearRegression."
+                        )
+                        model = LinearRegression()
+                        model.fit(X[mask], y[mask], sample_weight=w[mask])
+
+                    # Recompute residuals on full X (to report global rms/mad)
+                    predicted = model.predict(X)
+                    residuals = y - predicted
+                    rms = float(np.sqrt(np.mean(residuals ** 2)))
+                    mad = float(np.median(np.abs(residuals)))
+                    final_mask = mask
+                else:
+                    final_mask = np.ones_like(residuals, dtype=bool)
+            else:
+                final_mask = np.ones_like(residuals, dtype=bool)
+
+            # Parameter errors from final fit (on the design actually used to fit)
+            try:
+                if final_mask is not None and final_mask.any():
+                    X_used = X[final_mask]
+                    y_used = y[final_mask]
+                else:
+                    X_used = X
+                    y_used = y
+
+                n, p = X_used.shape
+                denom = n - p if n > p else 1e-9
+                s2 = float(np.sum((y_used - model.predict(X_used)) ** 2) / denom)
+                cov_matrix = np.linalg.inv(X_used.T @ X_used) * s2
+                std_errors = np.sqrt(np.diag(cov_matrix))
+            except np.linalg.LinAlgError:
+                std_errors = np.full(len(predictors), np.nan, dtype=float)
+
+            # Store results for this target
+            for col in linear_columns0:
+                if col in predictors:
+                    idx = predictors.index(col)
+                    group_dict[f"{target_col}_slope_{col}"] = float(model.coef_[idx])
+                    group_dict[f"{target_col}_err_{col}"] = float(std_errors[idx]) if idx < len(std_errors) else np.nan
+                else:
+                    group_dict[f"{target_col}_slope_{col}"] = np.nan
+                    group_dict[f"{target_col}_err_{col}"] = np.nan
+
+            group_dict[f"{target_col}_intercept"] = float(model.intercept_) if hasattr(model, "intercept_") else np.nan
+            group_dict[f"{target_col}_rms"] = rms
+            group_dict[f"{target_col}_mad"] = mad
+
+            # Update group-level diagnostics that depend on the final mask
+            if diag:
+                # Capture timing up to here (pure fitting + residuals + errors); exclude leverage/cond below
+                time_ms_group = (time.perf_counter() - t0_group) * 1e3
+                if final_mask is not None and len(final_mask) > 0:
+                    frac_rejected_group = 1.0 - (float(np.count_nonzero(final_mask)) / float(len(final_mask)))
+                else:
+                    frac_rejected_group = np.nan
+
+        except Exception as e:
+            logging.warning(f"Robust regression failed for {target_col} in group {key}: {e}")
+            for col in linear_columns0:
+                group_dict[f"{target_col}_slope_{col}"] = np.nan
+                group_dict[f"{target_col}_err_{col}"] = np.nan
+            group_dict[f"{target_col}_intercept"] = np.nan
+            group_dict[f"{target_col}_rms"] = np.nan
+            group_dict[f"{target_col}_mad"] = np.nan
+
+    # Medians
+    for col in median_columns:
+        try:
+            group_dict[col] = df_group[col].median()
+        except Exception:
+            group_dict[col] = np.nan
+
+    # Compute leverage & conditioning proxies (kept OUTSIDE the timed span)
+    if diag:
+        try:
+            X_cols = [c for c in linear_columns0 if c in df_group.columns and c in predictors]
+            if X_cols:
+                X_diag = df_group[X_cols].dropna().to_numpy(dtype=np.float64, copy=False)
+            else:
+                X_diag = None
+
+            hat_max_group = np.nan
+            cond_xtx_group = np.nan
+            if X_diag is not None and X_diag.size and X_diag.shape[1] > 0:
+                # cond(X^T X)
+                try:
+                    s = np.linalg.svd(X_diag.T @ X_diag, compute_uv=False)
+                    cond_xtx_group = float(s[0] / s[-1]) if (s.size > 0 and s[-1] > 0) else float("inf")
+                except Exception:
+                    cond_xtx_group = float("inf")
+                # leverage via QR
+                try:
+                    Q, _ = np.linalg.qr(X_diag, mode="reduced")
+                    hat_max_group = float(np.max(np.sum(Q * Q, axis=1)))
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        # Attach diagnostics (once per group)
+        group_dict[f"{diag_prefix}n_refits"] = int(n_refits_group)
+        group_dict[f"{diag_prefix}frac_rejected"] = float(frac_rejected_group) if np.isfinite(frac_rejected_group) else np.nan
+        group_dict[f"{diag_prefix}hat_max"] = float(hat_max_group) if np.isfinite(hat_max_group) else np.nan
+        group_dict[f"{diag_prefix}cond_xtx"] = float(cond_xtx_group) if np.isfinite(cond_xtx_group) else np.nan
+        group_dict[f"{diag_prefix}time_ms"] = float(time_ms_group) if np.isfinite(time_ms_group) else np.nan
+        group_dict[f"{diag_prefix}n_rows"] = int(n_rows_group)
+
+    return group_dict
+
+
     @staticmethod
     def make_parallel_fit(
             df: pd.DataFrame,
@@ -229,7 +471,10 @@ class GroupByRegressor:
             min_stat: List[int] = [10, 10],
             sigmaCut: float = 4.0,
             fitter: Union[str, Callable] = "auto",
-            batch_size: Union[int, None] = None  # ← new argument
+            batch_size: Union[int, None] = None,  # ← new argument
+        # --- NEW: diagnostics switch ---
+            diag: bool = False,
+            diag_prefix: str = "diag_"
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Perform grouped robust linear regression using HuberRegressor in parallel.
@@ -292,3 +537,47 @@ class GroupByRegressor:
                         df[f"{target_col}{suffix}"] += df[slope_col] * df[col]
 
         return df, dfGB
+
+def summarize_diagnostics(dfGB, diag_prefix: str = "diag_", top: int = 50):
+    """
+    Quick look at diagnostic columns emitted by make_parallel_fit(..., diag=True).
+    Returns a dict of small DataFrames for top offenders, and prints a short summary.
+
+    Example:
+        summ = summarize_diagnostics(dfGB, top=20)
+        summ["slowest"].head()
+    """
+    import pandas as pd
+    cols = {
+        "time": f"{diag_prefix}time_ms",
+        "refits": f"{diag_prefix}n_refits",
+        "rej": f"{diag_prefix}frac_rejected",
+        "lev": f"{diag_prefix}hat_max",
+        "cond": f"{diag_prefix}cond_xtx",
+        "nrows": f"{diag_prefix}n_rows",
+    }
+    missing = [c for c in cols.values() if c not in dfGB.columns]
+    if missing:
+        print("[diagnostics] Missing columns (did you run diag=True?):", missing)
+        return {}
+
+    summary = {}
+    # Defensive: numeric coerce
+    d = dfGB.copy()
+    for k, c in cols.items():
+        d[c] = pd.to_numeric(d[c], errors="coerce")
+
+    summary["slowest"] = d.sort_values(cols["time"], ascending=False).head(top)[list({*dfGB.columns[:len(dfGB.columns)//4], *cols.values()})]
+    summary["most_refits"] = d.sort_values(cols["refits"], ascending=False).head(top)[list({*dfGB.columns[:len(dfGB.columns)//4], *cols.values()})]
+    summary["most_rejected"] = d.sort_values(cols["rej"], ascending=False).head(top)[list({*dfGB.columns[:len(dfGB.columns)//4], *cols.values()})]
+    summary["highest_leverage"] = d.sort_values(cols["lev"], ascending=False).head(top)[list({*dfGB.columns[:len(dfGB.columns)//4], *cols.values()})]
+    summary["worst_conditioned"] = d.sort_values(cols["cond"], ascending=False).head(top)[list({*dfGB.columns[:len(dfGB.columns)//4], *cols.values()})]
+
+    # Console summary
+    print("[diagnostics] Groups:", len(dfGB))
+    print("[diagnostics] mean time (ms):", float(d[cols["time"]].mean()))
+    print("[diagnostics] pct with refits>0:", float((d[cols["refits"]] > 0).mean()) * 100.0)
+    print("[diagnostics] mean frac_rejected:", float(d[cols["rej"]].mean()))
+    print("[diagnostics] 99p cond_xtx:", float(d[cols["cond"]].quantile(0.99)))
+    print("[diagnostics] 99p hat_max:", float(d[cols["lev"]].quantile(0.99)))
+    return summary
