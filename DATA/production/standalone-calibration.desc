@@ -26,7 +26,9 @@ ITS-tot-1row: "O2PDPSuite" reco,40,40,"RUNTYPE_ITS=tot1row production/calib/its-
 
 ITS-tot-fullfast: "O2PDPSuite" reco,40,40,"RUNTYPE_ITS=totfullfast production/calib/its-threshold-processing.sh" calib,40,"RUNTYPE_ITS=totfullfast production/calib/its-threshold-aggregator.sh"
 
-ITS-vresetd: "O2PDPSuite" reco,5,5,"RUNTYPE_ITS=vresetd production/calib/its-threshold-processing.sh" calib,5,"RUNTYPE_ITS=vresetd production/calib/its-threshold-aggregator.sh"
+ITS-vresetd-1d: "O2PDPSuite" reco,5,5,"RUNTYPE_ITS=vresetd-1d production/calib/its-threshold-processing.sh" calib,5,"RUNTYPE_ITS=vresetd-1d production/calib/its-threshold-aggregator.sh"
+
+ITS-vresetd-2d: "O2PDPSuite" reco,5,5,"RUNTYPE_ITS=vresetd-2d production/calib/its-threshold-processing.sh" calib,5,"RUNTYPE_ITS=vresetd-2d production/calib/its-threshold-aggregator.sh"
 
 TOF-diagnostic-calibration: "O2PDPSuite" reco,10,10,"SHMSIZE=120376524800 production/calib/tof-standalone-reco.sh" calib,4,"production/calib/tof-diagn-aggregator.sh"
 
