@@ -168,6 +168,31 @@ def run_suite(args) -> Tuple[List[Dict[str, Any]], str, str, str | None]:
     # Outlier sets
     scenarios.append(Scenario("5% Outliers (3σ), Serial", 0.05, 3.0, args.rows_per_group, args.groups, 1, args.fitter, args.sigmaCut))
     scenarios.append(Scenario("10% Outliers (5σ), Serial", 0.10, 5.0, args.rows_per_group, args.groups, 1, args.fitter, args.sigmaCut))
+    # High-outlier stress test
+    scenarios.append(
+        Scenario(
+            "30% Outliers (5σ), Serial",
+            0.30, 5.0,
+            args.rows_per_group,
+            args.groups,
+            1,
+            args.fitter,
+            args.sigmaCut,
+        )
+    )
+    if not args.serial_only:
+        scenarios.append(
+            Scenario(
+                "30% Outliers (5σ), Parallel",
+                0.30, 5.0,
+                args.rows_per_group,
+                args.groups,
+                args.n_jobs,
+                args.fitter,
+                args.sigmaCut,
+            )
+        )
+
     if not args.serial_only:
         scenarios.append(Scenario("10% Outliers (5σ), Parallel", 0.10, 5.0, args.rows_per_group, args.groups, args.n_jobs, args.fitter, args.sigmaCut))
     scenarios.append(Scenario("10% Outliers (10σ), Serial", 0.10, 10.0, args.rows_per_group, args.groups, 1, args.fitter, args.sigmaCut))
@@ -206,7 +231,7 @@ def run_suite(args) -> Tuple[List[Dict[str, Any]], str, str, str | None]:
 def parse_args():
     p = argparse.ArgumentParser(description="GroupBy Regression Benchmark Suite")
     p.add_argument("--rows-per-group", type=int, default=5, help="Rows per group.")
-    p.add_argument("--groups", type=int, default=10000, help="Number of groups.")
+    p.add_argument("--groups", type=int, default=5000, help="Number of groups.")
     p.add_argument("--n-jobs", type=int, default=4, help="Workers for parallel scenarios.")
     p.add_argument("--sigmaCut", type=float, default=5.0, help="Sigma cut for robust fitting.")
     p.add_argument("--fitter", type=str, default="ols", help="Fitter: ols|robust|huber depending on implementation.")
