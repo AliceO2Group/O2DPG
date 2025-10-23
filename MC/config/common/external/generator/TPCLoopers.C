@@ -224,7 +224,8 @@ class GenTPCLoopers : public Generator
                 LOG(debug) << "Current time offset wrt BC: " << mInteractionTimeRecords[mCurrentEvent].getTimeOffsetWrtBC() << " ns";
                 mTimeLimit = (mCurrentEvent < mInteractionTimeRecords.size() - 1) ? mInteractionTimeRecords[mCurrentEvent + 1].bc2ns() - mInteractionTimeRecords[mCurrentEvent].bc2ns() : mTimeEnd - mInteractionTimeRecords[mCurrentEvent].bc2ns();
                 // With flat gas the number of loopers are adapted based on time interval widths
-                nLoopers = mFlatGasNumber * (mTimeLimit / mIntTimeRecMean);
+                // The denominator is either the LHC orbit (if mFlatGasOrbit is true) or the mean interaction time record interval
+                nLoopers = mFlatGasOrbit ? (mFlatGasNumber * (mTimeLimit / o2::constants::lhc::LHCOrbitNS)) : (mFlatGasNumber * (mTimeLimit / mIntTimeRecMean));
                 nLoopersPairs = static_cast<unsigned int>(std::round(nLoopers * mLoopsFractionPairs));
                 nLoopersCompton = nLoopers - nLoopersPairs;
                 SetNLoopers(nLoopersPairs, nLoopersCompton);
@@ -397,18 +398,28 @@ class GenTPCLoopers : public Generator
             }
         }
 
-        void setFlatGas(Bool_t &flat, const Int_t &number = -1)
+        void setFlatGas(Bool_t &flat, const Int_t &number = -1, const Int_t &nloopers_orbit = -1)
         {
             mFlatGas = flat;
             if (mFlatGas)
             {
-                if (number < 0)
+                if(nloopers_orbit > 0)
                 {
-                    LOG(warn) << "Warning: Number of loopers per event must be non-negative! Switching option off.";
-                    mFlatGas = false;
-                    mFlatGasNumber = -1;
+                    mFlatGasOrbit = true;
+                    mFlatGasNumber = nloopers_orbit;
+                    LOG(info) << "Flat gas loopers will be generated using orbit reference.";
                 } else {
-                    mFlatGasNumber = number;
+                    mFlatGasOrbit = false;
+                    if (number < 0)
+                    {
+                        LOG(warn) << "Warning: Number of loopers per event must be non-negative! Switching option off.";
+                        mFlatGas = false;
+                        mFlatGasNumber = -1;
+                    } else {
+                        mFlatGasNumber = number;
+                    }
+                }
+                if (mFlatGas){
                     mContextFile = std::filesystem::exists("collisioncontext.root") ? TFile::Open("collisioncontext.root") : nullptr;
                     mCollisionContext = mContextFile ? (o2::steer::DigitizationContext *)mContextFile->Get("DigitizationContext") : nullptr;
                     mInteractionTimeRecords = mCollisionContext ? mCollisionContext->getEventRecords() : std::vector<o2::InteractionTimeRecord>{};
@@ -425,9 +436,9 @@ class GenTPCLoopers : public Generator
                         mIntTimeRecMean += mInteractionTimeRecords[c + 1].bc2ns() - mInteractionTimeRecords[c].bc2ns();
                     }
                     mIntTimeRecMean /= (mInteractionTimeRecords.size() - 1); // Average interaction time record used as reference
-                    const auto& hbfUtils = o2::raw::HBFUtils::Instance();
+                    const auto &hbfUtils = o2::raw::HBFUtils::Instance();
                     // Get the start time of the second orbit after the last interaction record
-                    const auto& lastIR = mInteractionTimeRecords.back();
+                    const auto &lastIR = mInteractionTimeRecords.back();
                     o2::InteractionRecord finalOrbitIR(0, lastIR.orbit + 2); // Final orbit, BC = 0
                     mTimeEnd = finalOrbitIR.bc2ns();
                     LOG(debug) << "Final orbit start time: " << mTimeEnd << " ns while last interaction record time is " << mInteractionTimeRecords.back().bc2ns() << " ns";
@@ -435,7 +446,7 @@ class GenTPCLoopers : public Generator
             } else {
                 mFlatGasNumber = -1;
             }
-            LOG(info) << "Flat gas loopers: " << (mFlatGas ? "ON" : "OFF") << ", Reference loopers number per event: " << mFlatGasNumber;
+            LOG(info) << "Flat gas loopers: " << (mFlatGas ? "ON" : "OFF") << ", Reference loopers number per " << (mFlatGasOrbit ? "orbit " : "event ") << mFlatGasNumber;
         }
 
         void setFractionPairs(float &fractionPairs)
@@ -447,6 +458,45 @@ class GenTPCLoopers : public Generator
             }
             mLoopsFractionPairs = fractionPairs;
             LOG(info) << "Pairs fraction set to: " << mLoopsFractionPairs;
+        }
+
+        void SetRate(const std::string &rateFile, const bool isPbPb = true, const int &intRate = 50000)
+        {
+            // Checking if the rate file exists and is not empty
+            TFile rate_file(rateFile.c_str(), "READ");
+            if (!rate_file.IsOpen() || rate_file.IsZombie())
+            {
+                LOG(fatal) << "Error: Rate file is empty or does not exist!";
+                exit(1);
+            }
+            const char* fitName = isPbPb ? "fitPbPb" : "fitpp";
+            auto fit = (TF1 *)rate_file.Get(fitName);
+            if (!fit)
+            {
+                LOG(fatal) << "Error: Could not find fit function '" << fitName << "' in rate file!";
+                exit(1);
+            }
+            auto ref = static_cast<int>(std::floor(fit->Eval(intRate / 1000.))); // fit expects rate in kHz
+            rate_file.Close();
+            if (ref <= 0)
+            {
+                LOG(fatal) << "Computed flat gas number reference per orbit is <=0";
+                exit(1);
+            } else {
+                LOG(info) << "Set flat gas number to " << ref << " loopers per orbit using " << fitName << " from " << intRate << " Hz interaction rate.";
+                auto flat = true;
+                setFlatGas(flat, -1, ref);
+            }
+        }
+
+        void SetAdjust(const float &adjust = 0.f)
+        {
+            if (mFlatGas && mFlatGasOrbit && adjust >= -1.f && adjust != 0.f)
+            {
+                LOG(info) << "Adjusting flat gas number per orbit by " << adjust * 100.f << "%";
+                mFlatGasNumber = static_cast<int>(std::round(mFlatGasNumber * (1.f + adjust)));
+                LOG(info) << "New flat gas number per orbit: " << mFlatGasNumber;
+            }
         }
 
     private:
@@ -474,11 +524,13 @@ class GenTPCLoopers : public Generator
         o2::steer::DigitizationContext *mCollisionContext = nullptr;    // Pointer to the digitization context
         std::vector<o2::InteractionTimeRecord> mInteractionTimeRecords; // Interaction time records from collision context
         Bool_t mFlatGas = false;                                        // Flag to indicate if flat gas loopers are used
+        Bool_t mFlatGasOrbit = false;                                   // Flag to indicate if flat gas loopers are per orbit
         Int_t mFlatGasNumber = -1;                                      // Number of flat gas loopers per event
         double mIntTimeRecMean = 1.0;                                   // Average interaction time record used for the reference
         double mTimeLimit = 0.0;                                        // Time limit for the current event
         double mTimeEnd = 0.0;                                          // Time limit for the last event
         float mLoopsFractionPairs = 0.08;                               // Fraction of loopers from Pairs
+        std::string mRateFile = "";                                     // File with clusters/rate information per orbit
 };
 
 } // namespace eventgen
@@ -562,7 +614,7 @@ FairGenerator *
 FairGenerator *
 Generator_TPCLoopersFlat(std::string model_pairs = "tpcloopmodel.onnx", std::string model_compton = "tpcloopmodelcompton.onnx",
                          std::string scaler_pair = "scaler_pair.json", std::string scaler_compton = "scaler_compton.json",
-                         bool flat_gas = true, const int loops_num = 500, float fraction_pairs = 0.08)
+                         bool flat_gas = true, const int loops_num = 500, float fraction_pairs = 0.08, const int nloopers_orbit = -1)
 {
     // Expand all environment paths
     model_pairs = gSystem->ExpandPathName(model_pairs.c_str());
@@ -624,6 +676,79 @@ Generator_TPCLoopersFlat(std::string model_pairs = "tpcloopmodel.onnx", std::str
     model_compton = isAlien[1] || isCCDB[1] ? local_names[1] : model_compton;
     auto generator = new o2::eventgen::GenTPCLoopers(model_pairs, model_compton, "", "", scaler_pair, scaler_compton);
     generator->setFractionPairs(fraction_pairs);
-    generator->setFlatGas(flat_gas, loops_num);
+    generator->setFlatGas(flat_gas, loops_num, nloopers_orbit);
+    return generator;
+}
+
+// Generator with flat gas loopers. Reference number of loopers is provided per orbit via external file
+FairGenerator *
+Generator_TPCLoopersOrbitRef(std::string model_pairs = "tpcloopmodel.onnx", std::string model_compton = "tpcloopmodelcompton.onnx",
+                              std::string scaler_pair = "scaler_pair.json", std::string scaler_compton = "scaler_compton.json",
+                              std::string nclxrate = "nclxrate.root", bool isPbPb = true, const int intrate = 38000, const float adjust = 0.f)
+{
+    // Expand all environment paths
+    model_pairs = gSystem->ExpandPathName(model_pairs.c_str());
+    model_compton = gSystem->ExpandPathName(model_compton.c_str());
+    scaler_pair = gSystem->ExpandPathName(scaler_pair.c_str());
+    scaler_compton = gSystem->ExpandPathName(scaler_compton.c_str());
+    nclxrate = gSystem->ExpandPathName(nclxrate.c_str());
+    const std::array<std::string, 3> models = {model_pairs, model_compton, nclxrate};
+    const std::array<std::string, 3> local_names = {"WGANpair.onnx", "WGANcompton.onnx", "nclxrate.root"};
+    const std::array<bool, 3> isAlien = {models[0].starts_with("alien://"), models[1].starts_with("alien://"), nclxrate.starts_with("alien://")};
+    const std::array<bool, 3> isCCDB = {models[0].starts_with("ccdb://"), models[1].starts_with("ccdb://"), nclxrate.starts_with("ccdb://")};
+    if (std::any_of(isAlien.begin(), isAlien.end(), [](bool v)
+                    { return v; }))
+    {
+        if (!gGrid)
+        {
+            TGrid::Connect("alien://");
+            if (!gGrid)
+            {
+                LOG(fatal) << "AliEn connection failed, check token.";
+                exit(1);
+            }
+        }
+        for (size_t i = 0; i < models.size(); ++i)
+        {
+            if (isAlien[i] && !TFile::Cp(models[i].c_str(), local_names[i].c_str()))
+            {
+                LOG(fatal) << "Error: Model file " << models[i] << " does not exist!";
+                exit(1);
+            }
+        }
+    }
+    if (std::any_of(isCCDB.begin(), isCCDB.end(), [](bool v)
+                    { return v; }))
+    {
+        o2::ccdb::CcdbApi ccdb_api;
+        ccdb_api.init("http://alice-ccdb.cern.ch");
+        for (size_t i = 0; i < models.size(); ++i)
+        {
+            if (isCCDB[i])
+            {
+                auto model_path = models[i].substr(7); // Remove "ccdb://"
+                // Treat filename if provided in the CCDB path
+                auto extension = model_path.find(".onnx");
+                if (extension != std::string::npos)
+                {
+                    auto last_slash = model_path.find_last_of('/');
+                    model_path = model_path.substr(0, last_slash);
+                }
+                std::map<std::string, std::string> filter;
+                if (!ccdb_api.retrieveBlob(model_path, "./", filter, o2::ccdb::getCurrentTimestamp(), false, local_names[i].c_str()))
+                {
+                    LOG(fatal) << "Error: issues in retrieving " << model_path << " from CCDB!";
+                    exit(1);
+                }
+            }
+        }
+    }
+    model_pairs = isAlien[0] || isCCDB[0] ? local_names[0] : model_pairs;
+    model_compton = isAlien[1] || isCCDB[1] ? local_names[1] : model_compton;
+    nclxrate = isAlien[2] || isCCDB[2] ? local_names[2] : nclxrate;
+    auto generator = new o2::eventgen::GenTPCLoopers(model_pairs, model_compton, "", "", scaler_pair, scaler_compton);
+    generator->SetRate(nclxrate, isPbPb, intrate);
+    // Adjust can be negative (-1 maximum) or positive to decrease or increase the number of loopers per orbit
+    generator->SetAdjust(adjust);
     return generator;
 }
