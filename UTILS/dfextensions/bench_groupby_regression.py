@@ -51,6 +51,26 @@ def _make_groups(n_rows: int, n_groups: int, rng: np.random.Generator) -> np.nda
     rng.shuffle(base)
     return base
 
+def _find_diag_col(df: pd.DataFrame, base: str, dp: str, suffix: str | None = None) -> str | None:
+    """
+    Return diagnostics column for a given base (e.g. 'time_ms'), handling suffixes.
+    If suffix is provided, match startswith(dp+base) and endswith(suffix).
+    """
+    exact = dp + base
+    if suffix is None and exact in df.columns:
+        return exact
+    pref = dp + base
+    for c in df.columns:
+        if not isinstance(c, str):
+            continue
+        if not c.startswith(pref):
+            continue
+        if suffix is not None and not c.endswith(suffix):
+            continue
+        return c
+    return None
+
+
 def create_clean_data(n_rows: int, n_groups: int, *, seed: int = 42, noise_sigma: float = 1.0, x_corr: float = 0.0) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     group = _make_groups(n_rows, n_groups, rng)
@@ -89,8 +109,7 @@ class Scenario:
     fitter: str
     sigmaCut: float
 
-def _run_one(df: pd.DataFrame, scenario: Scenario) -> Dict[str, Any]:
-    # Workaround for module expecting tuple keys: duplicate group
+def _run_one(df: pd.DataFrame, scenario: Scenario, args) -> Dict[str, Any]:
     df = df.copy()
     df["group2"] = df["group"].astype(np.int32)
     df["weight"] = 1.0
@@ -112,10 +131,13 @@ def _run_one(df: pd.DataFrame, scenario: Scenario) -> Dict[str, Any]:
         sigmaCut=scenario.sigmaCut,
         fitter=scenario.fitter,
         batch_size="auto",
+        diag=getattr(args, "diag", False),
+        diag_prefix=getattr(args, "diag_prefix", "diag_"),
     )
     dt = time.perf_counter() - t0
-    n_groups = int(df_params.shape[0])
-    per_1k = dt / (n_groups / 1000.0) if n_groups else float("nan")
+    n_groups_eff = int(df_params.shape[0])
+    per_1k = dt / (n_groups_eff / 1000.0) if n_groups_eff else float("nan")
+
     return {
         "scenario": scenario.name,
         "config": {
@@ -130,8 +152,9 @@ def _run_one(df: pd.DataFrame, scenario: Scenario) -> Dict[str, Any]:
         "result": {
             "total_sec": dt,
             "sec_per_1k_groups": per_1k,
-            "n_groups_effective": n_groups,
+            "n_groups_effective": n_groups_eff,
         },
+        "df_params": df_params if getattr(args, "diag", False) else None,  # <-- add this
     }
 
 def _make_df(s: Scenario, seed: int = 7) -> pd.DataFrame:
@@ -200,20 +223,61 @@ def run_suite(args) -> Tuple[List[Dict[str, Any]], str, str, str | None]:
     # Prepare output
     out_dir = Path(args.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
-
+    diag_rows=[]
+    human_summaries: List[Tuple[str, str]] = []
     # Run
     results: List[Dict[str, Any]] = []
     for s in scenarios:
         df = _make_df(s, seed=args.seed)
-        results.append(_run_one(df, s))
+        # PASS ARGS HERE
+        out = _run_one(df, s, args)
+        results.append(out)
+        if args.diag and out.get("df_params") is not None:
+            dfp = out["df_params"]
+            dp = args.diag_prefix
+            # Try to infer a suffix from any diag column (optional). If you know your suffix, set it via CLI later.
+            # For now we won’t guess; we’ll just use dp and allow both suffixed or unsuffixed.
+
+            # 2a) Write top-10 violators per scenario
+            safe = (s.name.replace(" ", "_")
+                    .replace("%","pct")
+                    .replace("(","").replace(")","")
+                    .replace("σ","sigma"))
+            tcol = _find_diag_col(dfp, "time_ms", dp)
+            if tcol:
+                dfp.sort_values(tcol, ascending=False).head(10).to_csv(
+                    out_dir / f"diag_top10_time__{safe}.csv", index=False
+                )
+            rcol = _find_diag_col(dfp, "n_refits", dp)
+            if rcol:
+                dfp.sort_values(rcol, ascending=False).head(10).to_csv(
+                    out_dir / f"diag_top10_refits__{safe}.csv", index=False
+                )
+
+            # 2b) Class-level summary (machine + human)
+            summary = GroupByRegressor.summarize_diagnostics(dfp, diag_prefix=dp,diag_suffix="_fit")
+            summary_row = {"scenario": s.name, **summary}
+            diag_rows.append(summary_row)
+            human = GroupByRegressor.format_diagnostics_summary(summary)
+            human_summaries.append((s.name, human))
+        if args.diag:
+            txt_path = out_dir / "benchmark_report.txt"
+            with open(txt_path, "a") as f:
+                f.write("\nDiagnostics summary (per scenario):\n")
+                for name, human in human_summaries:
+                    f.write(f"  - {name}: {human}\n")
+                f.write("\nTop-10 violators were saved per scenario as:\n")
+                f.write("  diag_top10_time__<scenario>.csv, diag_top10_refits__<scenario>.csv\n")
+
 
     # Save
     txt_path = out_dir / "benchmark_report.txt"
     json_path = out_dir / "benchmark_results.json"
     with open(txt_path, "w") as f:
         f.write(_format_report(results))
+    results_slim = [{k: v for k, v in r.items() if k != "df_params"} for r in results]
     with open(json_path, "w") as f:
-        json.dump(results, f, indent=2)
+        json.dump(results_slim, f, indent=2)
 
     csv_path = None
     if args.emit_csv:
@@ -225,6 +289,15 @@ def run_suite(args) -> Tuple[List[Dict[str, Any]], str, str, str | None]:
             for r in results:
                 cfg = r["config"]; res = r["result"]
                 w.writerow([r["scenario"], cfg["n_jobs"], cfg["sigmaCut"], cfg["fitter"], cfg["rows_per_group"], cfg["n_groups"], cfg["outlier_pct"], cfg["outlier_mag"], res["total_sec"], res["sec_per_1k_groups"], res["n_groups_effective"]])
+
+    # --- Append diagnostics summaries to the text report ---
+    if args.diag and 'human_summaries' in locals() and human_summaries:
+        with open(txt_path, "a") as f:
+            f.write("\nDiagnostics summary (per scenario):\n")
+            for name, human in human_summaries:
+                f.write(f"  - {name}: {human}\n")
+            f.write("\nTop-10 violators saved as diag_top10_time__<scenario>.csv "
+                    "and diag_top10_refits__<scenario>.csv\n")
 
     return results, str(txt_path), str(json_path), (str(csv_path) if csv_path else None)
 
@@ -240,10 +313,17 @@ def parse_args():
     p.add_argument("--emit-csv", action="store_true", help="Also emit CSV summary.")
     p.add_argument("--serial-only", action="store_true", help="Skip parallel scenarios.")
     p.add_argument("--quick", action="store_true", help="Small quick run: groups=200.")
+    p.add_argument("--diag", action="store_true",
+                   help="Collect per-group diagnostics into dfGB (diag_* columns).")
+    p.add_argument("--diag-prefix", type=str, default="diag_",
+               help="Prefix for diagnostic columns (default: diag_).")
+
     args = p.parse_args()
     if args.quick:
         args.groups = min(args.groups, 200)
     return args
+
+
 
 def main():
     args = parse_args()
