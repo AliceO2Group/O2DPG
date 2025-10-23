@@ -119,15 +119,63 @@ python3 bench_groupby_regression.py \
 ---
 
 **Last updated:** Oct 22, 2025 (this revision)
+# Restart Context: GroupBy Regression Benchmarking & Diagnostics Integration
+
+**Date:** October 23 2025  
+**Project:** dfextensions (ALICE O2 Physics)  
+**Focus:** `groupby_regression.py` — diagnostic instrumentation and benchmark integration  
+**Next Phase:** Real-data performance characterization
 
 ---
 
-### Commit message
+## Summary of Latest Changes
 
-```
-docs(restartContext): update with 5k/5 default, 30% outliers, and leverage-outlier plan
+* **Diagnostics added to core class**
+    - `GroupByRegressor.summarize_diagnostics()` and `format_diagnostics_summary()` now compute mean/median/std + quantiles (p50–p99) for all key diagnostic metrics (`time_ms`, `n_refits`, `frac_rejected`, `cond_xtx`, `hat_max`, `n_rows`).
+    - Handles both prefixed (`diag_…`) and suffixed (`…_fit`, `…_dIDC`) columns.
 
-- Record new cross-platform results (Mac vs Linux) and observation that response-only outliers do not slow runtime
-- Add action plan: leverage-outlier generator + refit counters + multi-target cost check
-- Keep PR target; align benchmarks and docs with 5k/5 default
-```
+* **Benchmark integration**
+    - `bench_groupby_regression.py` now:
+        - Calls class-level summary after each scenario.
+        - Writes per-scenario `diag_summary.csv` and appends human-readable summaries to `benchmark_report.txt`.
+        - Saves `diag_top10_time__<scenario>.csv` and `diag_top10_refits__<scenario>.csv` for quick inspection.
+    - Default benchmark: `--rows-per-group 5 --groups 1000 --diag`.
+
+* **Validation**
+    - Real-data summary confirmed correct suffix handling (`_dIDC`).
+    - Pytest and all synthetic benchmarks pass.
+
+---
+
+## Observations from Real Data
+
+* Median per-group fit time ≈ 7 ms (p99 ≈ 12 ms).
+* ~99 % of groups perform 3 robust re-fits → robust loop fully active.
+* Only ~2 % mean rejection fraction, but 99th percentile ≈ 0.4 → a few heavy-outlier bins drive cost.
+* Conditioning (cond_xtx ≈ 1) and leverage (hat_max ≈ 0.18) are stable → slowdown dominated by the sigmaCut iteration.
+
+---
+
+## Next Steps (Real-Use-Case Phase)
+
+1. **Collect diagnostic distributions on full calibration samples**
+    - Export `diag_full__*` and `diag_top10_*` CSVs.
+    - Aggregate with `summarize_diagnostics()` to study tails and correlations.
+
+2. **Benchmark subsets vs. full parallel runs**
+    - Quantify the gain observed when splitting into smaller chunks (cache + spawn effects).
+
+3. **Add leverage-outlier generator** to reproduce re-fit behaviour in synthetic benchmarks.
+
+4. **Consider optimization paths**
+    - Cap `max_refits` / early-stop criterion.
+    - Introduce `make_parallel_fitFast` minimal version for groups O(10).
+
+5. **Documentation**
+    - Update `groupby_regression.md` “Performance & Benchmarking” section with diagnostic summary example and reference to top-violator CSVs.
+
+---
+
+**Last updated:** Oct 23 2025
+
+

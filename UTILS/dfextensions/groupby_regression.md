@@ -190,6 +190,29 @@ Even at **30% response outliers**, runtime remains essentially unchanged (no rob
 To emulate worst-case slowdowns seen on real data, a **leverage-outlier** mode (X-contamination) will be added in a follow-up.
 
 
+### Diagnostic Summary Utilities
+
+The regression framework can optionally emit per-group diagnostics when `diag=True`
+is passed to `make_parallel_fit()`.
+
+Diagnostics include:
+
+| Field | Meaning |
+|:------|:--------|
+| `diag_time_ms` | Wall-time spent per group (ms) |
+| `diag_n_refits` | Number of extra robust re-fits required |
+| `diag_frac_rejected` | Fraction of rejected points after sigma-cut |
+| `diag_cond_xtx` | Condition number proxy for design matrix |
+| `diag_hat_max` | Maximum leverage in predictors |
+| `diag_n_rows` | Number of rows in the group |
+
+Summaries can be generated directly:
+
+```python
+summary = GroupByRegressor.summarize_diagnostics(dfGB, diag_prefix="diag_", suffix="_fit")
+print(GroupByRegressor.format_diagnostics_summary(summary))
+```
+
 ### Interpretation
 
 * The **OLS path** scales linearly with group count.
