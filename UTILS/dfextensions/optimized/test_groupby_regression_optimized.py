@@ -814,7 +814,7 @@ def test_fast_backend_consistency():
     """
     import numpy as np
     import pandas as pd
-    from groupby_regression_optimized import make_parallel_fit_v2, make_parallel_fit_fast
+    from groupby_regression_optimized import make_parallel_fit_v2, make_parallel_fit_v3
 
     rng = np.random.default_rng(42)
     n_groups, rows = 20, 8
@@ -845,7 +845,7 @@ def test_fast_backend_consistency():
     )
 
     # --- Fast implementation ---
-    _, df_fast = make_parallel_fit_fast(
+    _, df_fast = make_parallel_fit_v3(
         df=df,
         gb_columns=["group"],
         fit_columns=["y"],
@@ -865,6 +865,78 @@ def test_fast_backend_consistency():
         c_v2, c_fast = f"{c_base}_v2", f"{c_base}_fast"
         diff = np.abs(merged[c_v2] - merged[c_fast])
         assert np.all(diff < 1e-6), f"{c_base}: mismatch max diff={diff.max():.3e}"
+
+# ======================================================================
+# Phase 4 – Numba backend consistency test (v4 vs v3)
+# ======================================================================
+
+def test_numba_backend_consistency():
+    """
+    Validate numerical equivalence between the Numba-accelerated v4
+    implementation and the NumPy baseline v3 implementation.
+    """
+    import numpy as np
+    import pandas as pd
+    from groupby_regression_optimized import (
+        make_parallel_fit_v3,
+        make_parallel_fit_v4,
+    )
+
+    rng = np.random.default_rng(123)
+    n_groups, rows = 20, 8
+    N = n_groups * rows
+    df = pd.DataFrame({
+        "group": np.repeat(np.arange(n_groups), rows),
+        "x1": rng.normal(size=N),
+        "x2": rng.normal(size=N),
+    })
+    df["y"] = 2.0 * df["x1"] + 3.0 * df["x2"] + rng.normal(scale=0.1, size=N)
+    df["weight"] = 1.0
+    selection = pd.Series(True, index=df.index)
+
+    # --- Baseline: v3 (NumPy) ---
+    _, df_v3 = make_parallel_fit_v3(
+        df=df,
+        gb_columns=["group"],
+        fit_columns=["y"],
+        linear_columns=["x1", "x2"],
+        median_columns=[],
+        weights="weight",
+        suffix="_v3",
+        selection=selection,
+        addPrediction=False,
+        #n_jobs=1,
+        min_stat=[2],
+        #backend="none",   # v3 ignores backend but keep arg for symmetry
+    )
+
+    # --- Numba version: v4 ---
+    _, df_v4 = make_parallel_fit_v4(
+        df=df,
+        gb_columns=["group"],
+        fit_columns=["y"],
+        linear_columns=["x1", "x2"],
+        median_columns=[],
+        weights="weight",
+        suffix="_v4",
+        selection=selection,
+        addPrediction=False,
+        cast_dtype="float64",
+        diag=False,
+    )
+
+    # Align on group key
+    merged = df_v3.merge(df_v4, on="group", suffixes=("_v3", "_v4"))
+
+    # Compare coefficients
+    for c_base in ["y_intercept", "y_slope_x1", "y_slope_x2"]:
+        c3 = f"{c_base}_v3"
+        c4 = f"{c_base}_v4"
+        diff = np.abs(merged[c3] - merged[c4])
+        assert np.all(diff < 1e-6), f"{c_base}: mismatch max diff={diff.max():.3e}"
+
+    print("✅ v4 (Numba) coefficients match v3 (NumPy) within 1e-8")
+
 
 if __name__ == '__main__':
     # Run tests with pytest

@@ -72,7 +72,7 @@ def benchmark_fast_backend_v2(
     Compare make_parallel_fit_v2 (loky/threading) vs make_parallel_fit_fast
     using warm-ups + median repeats. Returns {backend: median_seconds}.
     """
-    from groupby_regression_optimized import make_parallel_fit_v2, make_parallel_fit_fast
+    from groupby_regression_optimized import make_parallel_fit_v2, make_parallel_fit_v3, make_parallel_fit_v4
 
     set_blas_threads_one_v2()
     df = _mk_synth_data_v2(n_groups=n_groups, rows=rows, seed=seed)
@@ -110,28 +110,44 @@ def benchmark_fast_backend_v2(
             backend="threading",
         )
 
-    def cfg_fast():
-        return make_parallel_fit_fast(
+    def cfg_v3():
+        return make_parallel_fit_v3(
             df=df,
             gb_columns=["group"],
             fit_columns=["y"],
             linear_columns=["x1", "x2"],
             median_columns=[],
             weights="weight",
-            suffix="_fast",
+            suffix="_v3",
             selection=selection,
+            addPrediction=False,
             cast_dtype="float64",
-            min_stat=[2],
+            min_stat=3,  # Note: v3 uses int, not list
             diag=False,
             diag_prefix="diag_",
-            addPrediction=False,
         )
-
-    backends = [("loky", cfg_loky), ("threading", cfg_threading), ("fast", cfg_fast)]
+    def cfg_v4():
+        return make_parallel_fit_v4(
+            df=df,
+            gb_columns=["group"],
+            fit_columns=["y"],
+            linear_columns=["x1", "x2"],
+            median_columns=[],
+            weights="weight",
+            suffix="_v4",
+            selection=selection,
+            addPrediction=False,
+            cast_dtype="float64",
+            min_stat=3,  # Note: v4 uses int, not list
+            diag=False,
+            diag_prefix="diag_",
+        )
+    # ← FIXED: This line was indented inside cfg_v4(), now it's at the right level
+    backends = [("loky", cfg_loky), ("v3", cfg_v3), ("v4", cfg_v4)]
 
     if verbose:
         print("\n" + "=" * 70)
-        print("PHASE 3: Fast backend benchmark (warm-up + median)")
+        print("PHASE 3: Backend benchmark (v2/v3/v4 comparison)")
         print("=" * 70)
         print(f"Data: {n_groups} groups × {rows} rows = {n_groups*rows} total | n_jobs={n_jobs}")
         print(f"Warm-ups: {warmups}  Repeats: {repeats}\n")
@@ -269,6 +285,16 @@ def main_v2(argv: List[str] | None = None) -> None:
     p.add_argument("--csv", type=str, help="Optional path to append CSV results")
     args = p.parse_args(argv)
 
+
+    if getattr(args, "phase3", False):
+        return run_phase3_benchmarks_v2(
+            n_groups=args.n_groups,
+            rows=args.rows,
+            n_jobs=args.n_jobs,
+            warmups=args.warmups,
+            repeats=args.repeats,
+            csv_path=getattr(args, "csv", None),
+        )
     if args.phase2:
         run_phase2_suite_v2()
     else:

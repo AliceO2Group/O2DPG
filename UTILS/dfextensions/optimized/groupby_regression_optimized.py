@@ -438,7 +438,7 @@ import numpy as np
 import pandas as pd
 import time
 
-def make_parallel_fit_fast(
+def make_parallel_fit_v3(
         df: pd.DataFrame,
         *,
         gb_columns,
@@ -449,7 +449,7 @@ def make_parallel_fit_fast(
         suffix: str = "_fast",
         selection=None,
         addPrediction: bool = False,
-        cast_dtype,
+        cast_dtype: Union[str, None] ="float32",
         diag: bool = True,
         diag_prefix: str = "diag_",
         min_stat:  3,
@@ -617,3 +617,269 @@ def make_parallel_fit_fast(
     return df_out, dfGB.reset_index(drop=True)
 
 
+
+# ======================================================================
+# Phase 4 — Numba-accelerated per-group OLS (weighted)  — make_parallel_fit_v4
+# ======================================================================
+
+# Numba import (safe; we fall back if absent)
+try:
+    from numba import njit
+    _NUMBA_OK = True
+except Exception:
+    _NUMBA_OK = False
+
+
+if _NUMBA_OK:
+    @njit(fastmath=True)
+    def _ols_kernel_numba_weighted(X_all, Y_all, W_all, offsets, n_groups, n_feat, n_tgt, min_stat, out_beta):
+        """
+        Weighted per-group OLS with intercept, compiled in nopython mode.
+
+        Parameters
+        ----------
+        X_all   : (N, n_feat) float64
+        Y_all   : (N, n_tgt)  float64
+        W_all   : (N,)        float64  (weights; use 1.0 if unweighted)
+        offsets : (G+1,)      int32    (group start indices in sorted arrays)
+        n_groups: int
+        n_feat  : int
+        n_tgt   : int
+        min_stat: int
+        out_beta: (G, n_feat+1, n_tgt) float64  (beta rows: [intercept, slopes...])
+        """
+        p = n_feat + 1  # intercept + features
+        for g in range(n_groups):
+            i0 = offsets[g]
+            i1 = offsets[g + 1]
+            m = i1 - i0
+            if m < min_stat or m <= n_feat:
+                # insufficient stats to solve (or underdetermined)
+                continue
+
+            # Build X1 with intercept
+            # X1 shape: (m, p)
+            # X1[:,0] = 1
+            # X1[:,1:] = X_all[i0:i1]
+            X1 = np.ones((m, p))
+            Xg = X_all[i0:i1]
+            for r in range(m):
+                for c in range(n_feat):
+                    X1[r, c + 1] = Xg[r, c]
+
+            # Weighted normal equations:
+            #   XtX = Σ_r w_r * x_r x_r^T
+            #   XtY = Σ_r w_r * x_r y_r^T
+            XtX = np.empty((p, p))
+            for i in range(p):
+                for j in range(p):
+                    s = 0.0
+                    for r in range(m):
+                        wr = W_all[i0 + r]
+                        s += wr * X1[r, i] * X1[r, j]
+                    XtX[i, j] = s
+
+            Yg = Y_all[i0:i1]
+            XtY = np.empty((p, n_tgt))
+            for i in range(p):
+                for t in range(n_tgt):
+                    s = 0.0
+                    for r in range(m):
+                        wr = W_all[i0 + r]
+                        s += wr * X1[r, i] * Yg[r, t]
+                    XtY[i, t] = s
+
+            # Solve XtX * B = XtY via Gauss–Jordan with partial pivoting
+            A = XtX.copy()
+            B = XtY.copy()
+
+            for k in range(p):
+                # pivot search
+                piv = k
+                amax = abs(A[k, k])
+                for i in range(k + 1, p):
+                    v = abs(A[i, k])
+                    if v > amax:
+                        amax = v
+                        piv = i
+                # robust guard for near singular
+                if amax < 1e-12:
+                    # singular; leave zeros for this group
+                    for ii in range(p):
+                        for tt in range(n_tgt):
+                            out_beta[g, ii, tt] = 0.0
+                    break
+
+                # row swap if needed
+                if piv != k:
+                    for j in range(p):
+                        tmp = A[k, j]; A[k, j] = A[piv, j]; A[piv, j] = tmp
+                    for tt in range(n_tgt):
+                        tmp = B[k, tt]; B[k, tt] = B[piv, tt]; B[piv, tt] = tmp
+
+                pivval = A[k, k]
+                invp = 1.0 / pivval
+                A[k, k] = 1.0
+                for j in range(k + 1, p):
+                    A[k, j] *= invp
+                for tt in range(n_tgt):
+                    B[k, tt] *= invp
+
+                for i in range(p):
+                    if i == k:
+                        continue
+                    f = A[i, k]
+                    if f != 0.0:
+                        A[i, k] = 0.0
+                        for j in range(k + 1, p):
+                            A[i, j] -= f * A[k, j]
+                        for tt in range(n_tgt):
+                            B[i, tt] -= f * B[k, tt]
+
+            # write solution β
+            for i in range(p):
+                for tt in range(n_tgt):
+                    out_beta[g, i, tt] = B[i, tt]
+
+
+def make_parallel_fit_v4(
+        df: pd.DataFrame,
+        *,
+        gb_columns,
+        fit_columns,
+        linear_columns,
+        median_columns=None,
+        weights=None,
+        suffix: str = "_v4",
+        selection=None,
+        addPrediction: bool = False,
+        cast_dtype: str= "float64",
+        diag: bool = True,
+        diag_prefix: str = "diag_",
+        min_stat: int = 3,
+):
+    """
+    Phase 4 — Numba-accelerated per-group **weighted** OLS.
+    - Same schema and user-facing behavior as v3 (intercept + slopes + optional predictions).
+    - Supports 1 or multi-column group keys.
+    - If Numba is unavailable, falls back to a pure-NumPy weighted loop.
+    """
+    t0 = time.perf_counter()
+    if median_columns is None:
+        median_columns = []
+    if isinstance(min_stat, (list, tuple)):
+        min_stat = int(np.max(min_stat))
+
+    # Selection
+    df_use = df.loc[selection] if selection is not None else df
+
+    # Stable sort by group columns to form contiguous blocks
+    sort_keys = gb_columns if isinstance(gb_columns, (list, tuple)) else [gb_columns]
+    df_sorted = df_use.sort_values(sort_keys, kind="mergesort").reset_index(drop=True)
+
+    # Build group IDs & offsets for single or multi-key groupby
+    if len(sort_keys) == 1:
+        key = sort_keys[0]
+        key_vals = df_sorted[key].to_numpy()
+        uniq_keys, start_idx = np.unique(key_vals, return_index=True)
+        group_offsets = np.empty(len(uniq_keys) + 1, dtype=np.int32)
+        group_offsets[:-1] = start_idx.astype(np.int32)
+        group_offsets[-1] = len(df_sorted)
+        n_groups = len(uniq_keys)
+        group_id_rows = {key: uniq_keys}
+    else:
+        # Structured array unique for multi-key grouping
+        rec = df_sorted[sort_keys].to_records(index=False)
+        uniq_rec, start_idx = np.unique(rec, return_index=True)
+        group_offsets = np.empty(len(uniq_rec) + 1, dtype=np.int32)
+        group_offsets[:-1] = start_idx.astype(np.int32)
+        group_offsets[-1] = len(df_sorted)
+        n_groups = len(uniq_rec)
+        # Convert structured uniques back into dict of arrays for DataFrame assembly
+        group_id_rows = {name: uniq_rec[name] for name in uniq_rec.dtype.names}
+
+    # Flattened matrices
+    X_all = df_sorted[linear_columns].to_numpy(dtype=np.float64, copy=False)
+    Y_all = df_sorted[fit_columns].to_numpy(dtype=np.float64, copy=False)
+
+    # Weights: ones if not provided
+    if weights is None:
+        W_all = np.ones(len(df_sorted), dtype=np.float64)
+    else:
+        W_all = df_sorted[weights].to_numpy(dtype=np.float64, copy=False)
+
+    n_feat = X_all.shape[1]
+    n_tgt = Y_all.shape[1]
+    beta = np.zeros((n_groups, n_feat + 1, n_tgt), dtype=np.float64)
+
+    if _NUMBA_OK:
+        _ols_kernel_numba_weighted(
+            X_all, Y_all, W_all, group_offsets.astype(np.int32),
+            n_groups, n_feat, n_tgt, int(min_stat), beta
+        )
+    else:
+        # Pure NumPy fallback (weighted)
+        p = n_feat + 1
+        for g in range(n_groups):
+            i0, i1 = group_offsets[g], group_offsets[g + 1]
+            m = i1 - i0
+            if m < min_stat or m <= n_feat:
+                continue
+            Xg = X_all[i0:i1]
+            Yg = Y_all[i0:i1]
+            Wg = W_all[i0:i1]  # shape (m,)
+            # Build X1 with intercept
+            X1 = np.c_[np.ones(m), Xg]  # (m, p)
+            # Weighted normal equations
+            # XtX = X1^T * W * X1 ; XtY = X1^T * W * Yg
+            XtX = (X1.T * Wg).dot(X1)            # (p,p)
+            XtY = (X1.T * Wg.reshape(-1,)).dot(Yg)  # (p,n_tgt)
+            try:
+                B = np.linalg.solve(XtX, XtY)
+                beta[g, :, :] = B
+            except np.linalg.LinAlgError:
+                # leave zeros for this group
+                pass
+
+    # Assemble dfGB (same schema as v3)
+    rows = []
+    for gi in range(n_groups):
+        row = {}
+        # write group id columns
+        for k, col in enumerate(group_id_rows.keys()):
+            row[col] = group_id_rows[col][gi]
+        # write coefficients
+        for t_idx, tname in enumerate(fit_columns):
+            row[f"{tname}_intercept{suffix}"] = beta[gi, 0, t_idx]
+            for j, cname in enumerate(linear_columns, start=1):
+                row[f"{tname}_slope_{cname}{suffix}"] = beta[gi, j, t_idx]
+        rows.append(row)
+
+    dfGB = pd.DataFrame(rows)
+
+    # Diagnostics (minimal; mirrors v3 style)
+    if diag:
+        dfGB[f"{diag_prefix}wall_ms"] = (time.perf_counter() - t0) * 1e3
+        dfGB[f"{diag_prefix}n_groups"] = len(dfGB)
+
+    # Optional cast
+    if cast_dtype is not None and len(dfGB):
+        # Don't cast the group key columns
+        safe_keys = sort_keys
+        dfGB = dfGB.astype({
+            c: cast_dtype
+            for c in dfGB.columns
+            if c not in safe_keys and dfGB[c].dtype == "float64"
+        })
+
+    # Optional prediction join
+    df_out = df_use.copy()
+    if addPrediction and len(dfGB):
+        df_out = df_out.merge(dfGB, on=sort_keys, how="left")
+        for t in fit_columns:
+            pred = df_out[f"{t}_intercept{suffix}"].copy()
+            for cname in linear_columns:
+                pred += df_out[f"{t}_slope_{cname}{suffix}"] * df_out[cname]
+            df_out[f"{t}_pred{suffix}"] = pred
+
+    return df_out, dfGB
