@@ -71,7 +71,7 @@ class GeneratorPythia8GapTriggeredLFmumu : public GeneratorPythia8 {
       // eta
       auto geneta = new GeneratorParam(nPart,emlib,GeneratorParamEMlib::kEta,"eta"); // 221
       geneta->SetName("eta");
-      geneta->SetMomentumRange(0., 25.);
+      geneta->SetMomentumRange(0., 200.);
       geneta->SetPtRange(minPt, maxPt);
       geneta->SetYRange(yMin, yMax);
       geneta->SetPhiRange(phiMin, phiMax);
@@ -86,7 +86,7 @@ class GeneratorPythia8GapTriggeredLFmumu : public GeneratorPythia8 {
       // etaprime
       auto genetaprime = new GeneratorParam(nPart,emlib,GeneratorParamEMlib::kEtaprime,"etaprime"); // 331
       genetaprime->SetName("etaprime");
-      genetaprime->SetMomentumRange(0., 25.);
+      genetaprime->SetMomentumRange(0., 200.);
       genetaprime->SetPtRange(minPt, maxPt);
       genetaprime->SetYRange(yMin, yMax);
       genetaprime->SetPhiRange(phiMin, phiMax);
@@ -101,7 +101,7 @@ class GeneratorPythia8GapTriggeredLFmumu : public GeneratorPythia8 {
       // rho
       auto genrho = new GeneratorParam(nPart,emlib,GeneratorParamEMlib::kRho0,"rho"); // 113
       genrho->SetName("rho");
-      genrho->SetMomentumRange(0., 25.);
+      genrho->SetMomentumRange(0., 200.);
       genrho->SetPtRange(minPt, maxPt);
       genrho->SetYRange(yMin, yMax);
       genrho->SetPhiRange(phiMin, phiMax);
@@ -116,7 +116,7 @@ class GeneratorPythia8GapTriggeredLFmumu : public GeneratorPythia8 {
       // Omega
       auto genomega = new GeneratorParam(nPart,emlib,GeneratorParamEMlib::kOmega,"omega"); //223
       genomega->SetName("omega");
-      genomega->SetMomentumRange(0., 25.);
+      genomega->SetMomentumRange(0., 200.);
       genomega->SetPtRange(minPt, maxPt);
       genomega->SetYRange(yMin, yMax);
       genomega->SetPhiRange(phiMin, phiMax);
@@ -131,7 +131,7 @@ class GeneratorPythia8GapTriggeredLFmumu : public GeneratorPythia8 {
       // phi
       auto genphi = new GeneratorParam(nPart,emlib,GeneratorParamEMlib::kPhi,"phi"); //333
       genphi->SetName("phi");
-      genphi->SetMomentumRange(0., 25.);
+      genphi->SetMomentumRange(0., 200.);
       genphi->SetPtRange(minPt, maxPt);
       genphi->SetYRange(yMin, yMax);
       genphi->SetPhiRange(phiMin, phiMax);
