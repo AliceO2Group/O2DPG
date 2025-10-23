@@ -369,7 +369,15 @@ class AliasDataFrame:
                 adf.constant_aliases = set(json.loads(meta[b"constants"].decode()))
         return adf
 
-    def export_tree(self, filename_or_file, treename="tree", dropAliasColumns=True,compression=uproot.LZMA(level=5)):
+    def export_tree(self, filename_or_file, treename="tree", dropAliasColumns=True,compression=uproot.ZLIB(level=1)):
+        """
+        uproot.LZMA(level=5)
+        :param filename_or_file:
+        :param treename:
+        :param dropAliasColumns:
+        :param compression:
+        :return:
+        """
         is_path = isinstance(filename_or_file, str)
 
         if is_path:
