@@ -1,8 +1,8 @@
 import pytest
 import pandas as pd
 import numpy as np
-from groupby_regression import GroupByRegressor
-
+#from groupby_regression import GroupByRegressor
+from .groupby_regression import GroupByRegressor
 
 @pytest.fixture
 def sample_data():
@@ -364,3 +364,57 @@ def test_make_parallel_fit_with_custom_fitter(sample_data):
     assert 'y_slope_x1_dummy' in dfGB.columns
     assert dfGB['y_slope_x1_dummy'].iloc[0] == 0
     assert dfGB['y_intercept_dummy'].iloc[0] == 42
+
+
+def _make_groups(n_rows, n_groups, seed=0):
+    rng = np.random.default_rng(seed)
+    base = np.repeat(np.arange(n_groups, dtype=np.int32), n_rows // n_groups)
+    rem = n_rows - base.size
+    if rem > 0:
+        base = np.concatenate([base, rng.choice(n_groups, size=rem, replace=False)])
+    rng.shuffle(base)
+    return base
+
+def _create_clean(n_rows=1000, n_groups=200, seed=0):
+    rng = np.random.default_rng(seed)
+    g = _make_groups(n_rows, n_groups, seed)
+    x = rng.normal(size=(n_rows, 2)).astype(np.float32)
+    y = (2*x[:,0] + 3*x[:,1] + rng.normal(0,1.0,size=n_rows)).astype(np.float32)
+    df = pd.DataFrame({"group": g, "x1": x[:,0], "x2": x[:,1], "y": y})
+    df["group2"] = df["group"]
+    df["weight"] = 1.0
+    return df
+
+def test_diagnostics_columns_present():
+    df = _create_clean()
+    sel = pd.Series(True, index=df.index)
+    _, dfGB = GroupByRegressor.make_parallel_fit(
+        df,
+        gb_columns=["group", "group2"],
+        fit_columns=["y"],
+        linear_columns=["x1", "x2"],
+        median_columns=[],
+        weights="weight",
+        suffix="_fit",
+        selection=sel,
+        addPrediction=False,
+        n_jobs=1,
+        min_stat=[3, 4],
+        sigmaCut=5,
+        fitter="ols",
+        batch_size="auto",
+        diag=True,                # <-- exercise diagnostics
+        diag_prefix="diag_",
+    )
+    # Change the expected column names to include the suffix
+    suffix = "_fit" # <-- Add this line for clarity
+    cols = [
+        f"diag_n_refits{suffix}", f"diag_frac_rejected{suffix}", f"diag_hat_max{suffix}",
+        f"diag_cond_xtx{suffix}", f"diag_time_ms{suffix}", f"diag_n_rows{suffix}",
+    ]
+
+    for c in cols:
+        assert c in dfGB.columns, f"missing diagnostic column {c}"
+    # The original un-suffixed assertion: assert (dfGB["diag_n_refits"] >= 0).all()
+    # must also be updated to:
+    assert (dfGB[f"diag_n_refits{suffix}"] >= 0).all()
