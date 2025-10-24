@@ -52,8 +52,14 @@ namespace o2
                 if ( mFraction != -1) {
                     // This line assumes that the current generator is run in a cocktail with another generator
                     // which is run before the current one in a sequential way
-                    mNUE = genList.front()->getParticles().size();
-                    LOG(debug) << "Number of tracks from UE is " << mNUE;
+                    if (!mGenList) {
+                        auto &hybridInstance = GeneratorHybrid::Instance();
+                        mGenList = &hybridInstance.getGenerators();
+                    }
+                    if (!mGenList->empty()) {
+                        mNUE = mGenList->front()->getParticles().size();
+                        LOG(debug) << "Number of tracks from UE is " << mNUE;
+                    }
                 }
                 unsigned short nSig = (mFraction == -1) ? mNSig : std::lround(mFraction * mNUE);
                 LOG(debug) << "Generating additional " << nSig << " particles";
@@ -69,7 +75,7 @@ namespace o2
             unsigned int mNUE = 0;  // Number of tracks in the Underlying event
             unsigned short int mTag = 1; // Tag to select the generation function
             std::unique_ptr<DecayerPythia8> mDecayer; // Pythia8 decayer for particles not present in the physics list of Geant4 (like Z0)
-            const std::vector<std::shared_ptr<o2::eventgen::Generator>> genList = GeneratorHybrid::getGenerators();
+            const std::vector<std::shared_ptr<o2::eventgen::Generator>>* mGenList = nullptr; // Cached generators list
             std::map<unsigned short int, std::function<TParticle()>> genMap;
             UInt_t mGenID = 42;
 
