@@ -124,6 +124,7 @@ parser.add_argument('--early-tf-cleanup',action='store_true', help='whether to c
 # power features (for playing) --> does not appear in help message
 #  help='Treat smaller sensors in a single digitization')
 parser.add_argument('--pregenCollContext', action='store_true', help=argparse.SUPPRESS) # Now the default, giving this option or not makes not difference. We keep it for backward compatibility
+parser.add_argument('--data-anchoring', type=str, default='', help="Take collision contexts (from data) stored in this path")
 parser.add_argument('--no-combine-smaller-digi', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--no-combine-dpl-devices', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--no-mc-labels', action='store_true', default=False, help=argparse.SUPPRESS)
@@ -620,7 +621,8 @@ PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + interac
                             + ' --extract-per-timeframe tf:sgn'                                                            \
                             + ' --with-vertices ' + vtxmode_precoll                                                        \
                             + ' --maxCollsPerTF ' + str(args.ns)                                                           \
-                            + ' --orbitsEarly ' + str(args.orbits_early)
+                            + ' --orbitsEarly ' + str(args.orbits_early)                                                   \
+                            + ('',f" --import-external {args.data_anchoring}")[len(args.data_anchoring) > 0]
 
 PreCollContextTask['cmd'] += ' --bcPatternFile ccdb'  # <--- the object should have been set in (local) CCDB
 if includeQED:
