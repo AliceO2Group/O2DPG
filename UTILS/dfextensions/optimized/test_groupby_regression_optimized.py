@@ -1,6 +1,6 @@
 """
 Test suite for groupby_regression_optimized.py
-
+ pytest test_groupby_regression_optimized.py -v -s
 Adapted from test_groupby_regression.py to test the optimized implementation.
 Tests both correctness and performance improvements.
 """
@@ -936,6 +936,384 @@ def test_numba_backend_consistency():
         assert np.all(diff < 1e-6), f"{c_base}: mismatch max diff={diff.max():.3e}"
 
     print("✅ v4 (Numba) coefficients match v3 (NumPy) within 1e-8")
+
+
+def test_numba_multicol_groupby_v4_matches_v2():
+    """
+    Verify v4 (Numba) matches v2 (loky) when grouping by 3 columns.
+    Uses tiny noise to keep numerical differences well below 1e-6.
+    """
+    import numpy as np
+    import pandas as pd
+    from groupby_regression_optimized import (
+        make_parallel_fit_v2,
+        make_parallel_fit_v4,
+    )
+
+    rng = np.random.default_rng(42)
+
+    # --- synthetic data: 3D group index (g1, g2, g3) ---
+    # 6*5*4 = 120 groups, 5 rows per group → 600 rows
+    g1_vals = np.arange(6, dtype=np.int32)
+    g2_vals = np.arange(5, dtype=np.int32)
+    g3_vals = np.arange(4, dtype=np.int32)
+    rows_per_group = 5
+
+    groups = np.array([(a, b, c) for a in g1_vals for b in g2_vals for c in g3_vals], dtype=np.int32)
+    n_groups = groups.shape[0]
+    N = n_groups * rows_per_group
+
+    # Expand per-row group labels
+    g1 = np.repeat(groups[:, 0], rows_per_group)
+    g2 = np.repeat(groups[:, 1], rows_per_group)
+    g3 = np.repeat(groups[:, 2], rows_per_group)
+
+    # Features (per-row)
+    x1 = rng.normal(size=N).astype(np.float64)
+    x2 = rng.normal(size=N).astype(np.float64)
+
+    # --- coefficients at GROUP level (length = n_groups), then repeat once ---
+    a_grp = (0.1 * groups[:, 0] + 0.2 * groups[:, 1] + 0.05 * groups[:, 2]).astype(np.float64)
+    b_grp = (1.0 + 0.01 * groups[:, 0] - 0.02 * groups[:, 1] + 0.03 * groups[:, 2]).astype(np.float64)
+    c_grp = (2.0 - 0.03 * groups[:, 0] + 0.01 * groups[:, 1] - 0.02 * groups[:, 2]).astype(np.float64)
+
+    a = np.repeat(a_grp, rows_per_group)
+    b = np.repeat(b_grp, rows_per_group)
+    c = np.repeat(c_grp, rows_per_group)
+
+    # Tiny noise to keep numerical diff tight but non-zero
+    eps = rng.normal(scale=1e-8, size=N).astype(np.float64)
+    y = a + b * x1 + c * x2 + eps
+
+    df = pd.DataFrame(
+        {
+            "g1": g1,
+            "g2": g2,
+            "g3": g3,
+            "x1": x1,
+            "x2": x2,
+            "y": y,
+            "weight": 1.0,
+        }
+    )
+
+    gb_cols = ["g1", "g2", "g3"]
+    lin_cols = ["x1", "x2"]
+    fit_cols = ["y"]
+    sel = pd.Series(True, index=df.index)
+
+    # --- v2 (loky) reference ---
+    df_out_v2, dfGB_v2 = make_parallel_fit_v2(
+        df=df,
+        gb_columns=gb_cols,
+        fit_columns=fit_cols,
+        linear_columns=lin_cols,
+        median_columns=[],
+        weights="weight",
+        suffix="_v2",
+        selection=sel,
+        n_jobs=2,
+        backend="loky",
+        min_stat=[3],
+    )
+
+    # --- v4 (Numba) under test ---
+    df_out_v4, dfGB_v4 = make_parallel_fit_v4(
+        df=df,
+        gb_columns=gb_cols,
+        fit_columns=fit_cols,
+        linear_columns=lin_cols,
+        median_columns=[],
+        weights="weight",
+        suffix="_v4",
+        selection=sel,
+        cast_dtype="float64",
+        min_stat=3,
+        diag=False,
+    )
+
+    # Same number of groups
+    assert len(dfGB_v2) == len(dfGB_v4) == n_groups
+
+    # Merge on all three group columns
+    merged = dfGB_v2.merge(dfGB_v4, on=gb_cols, how="inner", suffixes=("_v2", "_v4"))
+    assert len(merged) == n_groups
+
+    # Compare intercept and slopes
+    tol = 1e-6
+    diffs = {}
+    for t in fit_cols:
+        # intercept
+        diffs[f"{t}_intercept"] = np.abs(merged[f"{t}_intercept_v2"] - merged[f"{t}_intercept_v4"]).to_numpy()
+        # slopes
+        for c_name in lin_cols:
+            col_v2 = f"{t}_slope_{c_name}_v2"
+            col_v4 = f"{t}_slope_{c_name}_v4"
+            diffs[f"{t}_slope_{c_name}"] = np.abs(merged[col_v2] - merged[col_v4]).to_numpy()
+
+    for name, arr in diffs.items():
+        assert np.nanmax(arr) < tol, f"{name} max diff {np.nanmax(arr):.3e} exceeds {tol:.1e}"
+
+def test_numba_multicol_weighted_v4_matches_v2():
+    """
+    v4 (Numba) should match v2 (loky) for a 3-column groupby with non-uniform weights.
+    We keep noise tiny and weights well-behaved (0.5..2.0) to avoid ill-conditioning.
+    """
+    import numpy as np
+    import pandas as pd
+    from groupby_regression_optimized import make_parallel_fit_v2, make_parallel_fit_v4
+
+    rng = np.random.default_rng(123)
+
+    # --- groups: 6 * 5 * 4 = 120 groups; 5 rows per group => N = 600 ---
+    g1_vals = np.arange(6, dtype=np.int32)
+    g2_vals = np.arange(5, dtype=np.int32)
+    g3_vals = np.arange(4, dtype=np.int32)
+    rows_per_group = 5
+
+    groups = np.array([(a, b, c) for a in g1_vals for b in g2_vals for c in g3_vals], dtype=np.int32)
+    n_groups = groups.shape[0]
+    N = n_groups * rows_per_group
+
+    # Per-row group labels
+    g1 = np.repeat(groups[:, 0], rows_per_group)
+    g2 = np.repeat(groups[:, 1], rows_per_group)
+    g3 = np.repeat(groups[:, 2], rows_per_group)
+
+    # Features
+    x1 = rng.normal(size=N).astype(np.float64)
+    x2 = rng.normal(size=N).astype(np.float64)
+
+    # Group-level coefficients, then expand once to per-row
+    a_grp = (0.1 * groups[:, 0] + 0.2 * groups[:, 1] + 0.05 * groups[:, 2]).astype(np.float64)
+    b_grp = (1.0 + 0.01 * groups[:, 0] - 0.02 * groups[:, 1] + 0.03 * groups[:, 2]).astype(np.float64)
+    c_grp = (2.0 - 0.03 * groups[:, 0] + 0.01 * groups[:, 1] - 0.02 * groups[:, 2]).astype(np.float64)
+
+    a = np.repeat(a_grp, rows_per_group)
+    b = np.repeat(b_grp, rows_per_group)
+    c = np.repeat(c_grp, rows_per_group)
+
+    # Non-uniform, positive weights (avoid near-zero)
+    w = rng.uniform(0.5, 2.0, size=N).astype(np.float64)
+
+    # Tiny noise to keep diffs tight but non-zero
+    y = a + b * x1 + c * x2 + rng.normal(scale=1e-8, size=N).astype(np.float64)
+
+    df = pd.DataFrame(
+        {
+            "g1": g1,
+            "g2": g2,
+            "g3": g3,
+            "x1": x1,
+            "x2": x2,
+            "y": y,
+            "weight": w,
+        }
+    )
+
+    gb_cols = ["g1", "g2", "g3"]
+    lin_cols = ["x1", "x2"]
+    fit_cols = ["y"]
+    sel = pd.Series(True, index=df.index)
+
+    # v2 (loky) reference
+    df_out_v2, dfGB_v2 = make_parallel_fit_v2(
+        df=df,
+        gb_columns=gb_cols,
+        fit_columns=fit_cols,
+        linear_columns=lin_cols,
+        median_columns=[],
+        weights="weight",
+        suffix="_v2",
+        selection=sel,
+        n_jobs=2,
+        backend="loky",
+        min_stat=[3],
+    )
+
+    # v4 (Numba) under test
+    df_out_v4, dfGB_v4 = make_parallel_fit_v4(
+        df=df,
+        gb_columns=gb_cols,
+        fit_columns=fit_cols,
+        linear_columns=lin_cols,
+        median_columns=[],
+        weights="weight",
+        suffix="_v4",
+        selection=sel,
+        cast_dtype="float64",
+        min_stat=3,
+        diag=False,
+    )
+
+    # Merge and compare
+    merged = dfGB_v2.merge(dfGB_v4, on=gb_cols, how="inner", suffixes=("_v2", "_v4"))
+    assert len(merged) == n_groups
+
+    # Tight but realistic tolerance for weighted case
+    tol = 1e-6
+    # Intercept
+    diff_int = np.abs(merged["y_intercept_v2"] - merged["y_intercept_v4"]).to_numpy()
+    assert np.nanmax(diff_int) < tol, f"intercept max diff {np.nanmax(diff_int):.3e} exceeds {tol:.1e}"
+
+    # Slopes
+    for c_name in lin_cols:
+        d = np.abs(merged[f"y_slope_{c_name}_v2"] - merged[f"y_slope_{c_name}_v4"]).to_numpy()
+        assert np.nanmax(d) < tol, f"slope {c_name} max diff {np.nanmax(d):.3e} exceeds {tol:.1e}"
+
+def test_numba_diagnostics_v4():
+    """
+    Verify v4 (Numba) computes correct diagnostics (RMS, MAD) with diag=True,
+    using a 3-column group-by and non-uniform weights. v2 has no diag flag,
+    so we compute the reference diagnostics manually from v2's fitted coefficients.
+
+    Tolerances:
+      - RMS max abs diff < 1e-6
+      - MAD max abs diff < 1e-5
+    """
+    import numpy as np
+    import pandas as pd
+    from groupby_regression_optimized import make_parallel_fit_v2, make_parallel_fit_v4
+
+    print("\n" + "=" * 70)
+    print("TEST: Diagnostics (diag=True) - RMS and MAD Computation, v4 vs v2 reference")
+    print("=" * 70)
+
+    rng = np.random.default_rng(456)
+
+    # 3 group-by columns: 6 × 5 × 4 = 120 groups, 5 rows/group
+    g1_vals = np.arange(6, dtype=np.int32)
+    g2_vals = np.arange(5, dtype=np.int32)
+    g3_vals = np.arange(4, dtype=np.int32)
+    rows_per_group = 5
+    n_groups = len(g1_vals) * len(g2_vals) * len(g3_vals)
+    N = n_groups * rows_per_group
+
+    # Build group keys
+    g1 = np.repeat(np.tile(np.repeat(g1_vals, len(g2_vals) * len(g3_vals)), rows_per_group), 1)
+    g2 = np.repeat(np.tile(np.tile(g2_vals, len(g3_vals)), len(g1_vals) * rows_per_group), 1)
+    g3 = np.repeat(np.tile(np.arange(len(g3_vals)), len(g1_vals) * len(g2_vals) * rows_per_group), 1)
+
+    # Predictors and target
+    x1 = rng.normal(size=N).astype(np.float64)
+    x2 = rng.normal(size=N).astype(np.float64)
+    beta0_true, b1_true, b2_true = 0.7, 2.0, -1.25
+    noise = rng.normal(scale=1e-8, size=N)
+    y = beta0_true + b1_true * x1 + b2_true * x2 + noise
+
+    # Non-uniform weights
+    w = rng.uniform(0.5, 2.0, size=N).astype(np.float64)
+
+    df = pd.DataFrame({"g1": g1, "g2": g2, "g3": g3, "x1": x1, "x2": x2, "y": y, "w": w})
+
+    gb_cols = ["g1", "g2", "g3"]
+    fit_cols = ["y"]
+    lin_cols = ["x1", "x2"]
+    med_cols = []  # API requires
+    tol_rms = 1e-6
+    tol_mad = 1e-5
+    # IMPORTANT: match existing tests -> boolean Series selection + explicit min_stat
+    selection_all = pd.Series(True, index=df.index)
+    min_stat = [3, 3]  # <= rows_per_group=5 to avoid filtering out groups
+
+    print("Configuration:")
+    print(f"  - Groups: {len(g1_vals)}×{len(g2_vals)}×{len(g3_vals)} = {n_groups}")
+    print(f"  - Rows per group: {rows_per_group}")
+    print(f"  - Total rows: {N}")
+    print(f"  - Weights: non-uniform in [0.5, 2.0]  (min={w.min():.3f}, max={w.max():.3f}, mean={w.mean():.3f})")
+    print(f"  - Noise: 1e-8")
+    print("\nWhy this test matters:")
+    print("  ✓ Validates v4's diag=True path (RMS/MAD) on multi-column groups with weights")
+    print("  ✓ Uses v2 as reference by manually computing diagnostics from v2 coefficients")
+    print("  ✓ Ensures production monitoring metrics (RMS/MAD) are numerically consistent")
+
+    # ---- Run v2 (no diag flag); retrieve coefficients per group ----
+    df_out_v2, dfGB_v2 = make_parallel_fit_v2(
+        df,
+        gb_columns=gb_cols,
+        fit_columns=fit_cols,
+        linear_columns=lin_cols,
+        median_columns=med_cols,
+        weights="w",
+        selection=selection_all,   # boolean Series
+        suffix="_v2",
+        n_jobs=1,                  # deterministic
+        min_stat=min_stat,         # <-- ensure groups aren't dropped
+        batch_size="auto",
+    )
+
+    # Expect 'y_intercept_v2', 'y_x1_v2', 'y_x2_v2'
+    coef_cols_v2 = ["y_intercept_v2", "y_slope_x1_v2", "y_slope_x2_v2"]
+    assert not dfGB_v2.empty, "v2 produced no groups; check selection/min_stat"
+    for c in coef_cols_v2:
+        assert c in dfGB_v2.columns, f"Missing expected v2 coef column: {c}"
+
+    df_coef_v2 = dfGB_v2[gb_cols + coef_cols_v2].copy()
+
+    # ---- Compute v2 reference diagnostics (manually) per group ----
+    grp = df.groupby(gb_cols, sort=False)
+    rows = []
+    for gkey, dfg in grp:
+        X1 = np.c_[np.ones(len(dfg)), dfg["x1"].to_numpy(), dfg["x2"].to_numpy()]
+        w_g = dfg["w"].to_numpy()
+        y_g = dfg["y"].to_numpy()
+
+        mask = (
+                (df_coef_v2["g1"] == gkey[0]) &
+                (df_coef_v2["g2"] == gkey[1]) &
+                (df_coef_v2["g3"] == gkey[2])
+        )
+        beta_v2 = df_coef_v2.loc[mask, coef_cols_v2].to_numpy().ravel()
+        assert beta_v2.size == 3, "v2 coefficients not found for group key"
+
+        resid = y_g - (X1 @ beta_v2)
+        rms_v2 = np.sqrt(np.sum(w_g * (resid ** 2)) / np.sum(w_g))            # weighted RMS
+        mad_v2 = np.median(np.abs(resid - np.median(resid)))                  # unweighted MAD
+        rows.append((*gkey, rms_v2, mad_v2))
+
+    df_diag_v2 = pd.DataFrame(rows, columns=gb_cols + ["diag_y_rms_v2", "diag_y_mad_v2"])
+
+    # ---- Run v4 with diag=True; expect diag_y_rms_v4, diag_y_mad_v4 in dfGB_v4 ----
+    df_out_v4, dfGB_v4 = make_parallel_fit_v4(
+        df=df,
+        gb_columns=gb_cols,
+        fit_columns=fit_cols,
+        linear_columns=lin_cols,
+        median_columns=med_cols,
+        weights="w",
+        selection=selection_all,   # boolean Series
+        suffix="_v4",
+        # n_jobs=1,                  # deterministic
+        min_stat=min_stat[0],         # <-- symmetry with v2
+        #batch_size="auto",
+        diag=True,
+        diag_prefix="diag_",
+    )
+
+    assert "diag_y_rms_v4" in dfGB_v4.columns, "Missing 'diag_y_rms_v4' in dfGB_v4"
+    assert "diag_y_mad_v4" in dfGB_v4.columns, "Missing 'diag_y_mad_v4' in dfGB_v4"
+
+    merged = (
+        df_diag_v2.merge(dfGB_v4[gb_cols + ["diag_y_rms_v4", "diag_y_mad_v4"]], on=gb_cols, how="inner")
+        .sort_values(gb_cols, kind="stable")
+        .reset_index(drop=True)
+    )
+    assert len(merged) == n_groups, f"Expected {n_groups} groups after merge, got {len(merged)}"
+
+    rms_diff = np.abs(merged["diag_y_rms_v2"] - merged["diag_y_rms_v4"])
+    mad_diff = np.abs(merged["diag_y_mad_v2"] - merged["diag_y_mad_v4"])
+
+    print("\n✅ Diagnostic Results:")
+    print(f"  - Groups compared: {len(merged)}")
+    print(f"  - RMS: max diff={rms_diff.max():.3e} (tol {tol_rms:.1e})")
+    print(f"  - MAD: max diff={mad_diff.max():.3e} (tol {tol_mad:.1e})")
+
+    assert rms_diff.max() < tol_rms, "RMS diagnostics differ more than tolerance"
+    assert mad_diff.max() < tol_mad, "MAD diagnostics differ more than tolerance"
+
+    print("  ✓ Diagnostics validated against v2 reference!")
+    print("=" * 70 + "\n")
+
 
 
 if __name__ == '__main__':

@@ -741,145 +741,148 @@ if _NUMBA_OK:
                 for tt in range(n_tgt):
                     out_beta[g, i, tt] = B[i, tt]
 
-
 def make_parallel_fit_v4(
-        df: pd.DataFrame,
         *,
+        df,
         gb_columns,
         fit_columns,
         linear_columns,
         median_columns=None,
         weights=None,
-        suffix: str = "_v4",
+        suffix="_v4",
         selection=None,
-        addPrediction: bool = False,
-        cast_dtype: str= "float64",
-        diag: bool = True,
-        diag_prefix: str = "diag_",
-        min_stat: int = 3,
+        addPrediction=False,
+        cast_dtype="float64",
+        min_stat=3,
+        diag=False,
+        diag_prefix="diag_",
 ):
     """
-    Phase 4 — Numba-accelerated per-group **weighted** OLS.
-    - Same schema and user-facing behavior as v3 (intercept + slopes + optional predictions).
-    - Supports 1 or multi-column group keys.
-    - If Numba is unavailable, falls back to a pure-NumPy weighted loop.
+    Phase 3 (v4): Numba JIT weighted OLS with *fast* multi-column groupby support.
+    Key points:
+      - Group boundaries via vectorized adjacent-row comparisons per key column.
+      - Vectorized dfGB assembly (no per-group iloc).
     """
-    t0 = time.perf_counter()
+    import numpy as np
+    import pandas as pd
+
     if median_columns is None:
         median_columns = []
-    if isinstance(min_stat, (list, tuple)):
-        min_stat = int(np.max(min_stat))
 
-    # Selection
-    df_use = df.loc[selection] if selection is not None else df
+    # Filter
+    if selection is not None:
+        df = df.loc[selection]
 
-    # Stable sort by group columns to form contiguous blocks
-    sort_keys = gb_columns if isinstance(gb_columns, (list, tuple)) else [gb_columns]
-    df_sorted = df_use.sort_values(sort_keys, kind="mergesort").reset_index(drop=True)
+    # Normalize group columns
+    gb_cols = [gb_columns] if isinstance(gb_columns, str) else list(gb_columns)
 
-    # Build group IDs & offsets for single or multi-key groupby
-    if len(sort_keys) == 1:
-        key = sort_keys[0]
-        key_vals = df_sorted[key].to_numpy()
-        uniq_keys, start_idx = np.unique(key_vals, return_index=True)
-        group_offsets = np.empty(len(uniq_keys) + 1, dtype=np.int32)
-        group_offsets[:-1] = start_idx.astype(np.int32)
-        group_offsets[-1] = len(df_sorted)
-        n_groups = len(uniq_keys)
-        group_id_rows = {key: uniq_keys}
-    else:
-        # Structured array unique for multi-key grouping
-        rec = df_sorted[sort_keys].to_records(index=False)
-        uniq_rec, start_idx = np.unique(rec, return_index=True)
-        group_offsets = np.empty(len(uniq_rec) + 1, dtype=np.int32)
-        group_offsets[:-1] = start_idx.astype(np.int32)
-        group_offsets[-1] = len(df_sorted)
-        n_groups = len(uniq_rec)
-        # Convert structured uniques back into dict of arrays for DataFrame assembly
-        group_id_rows = {name: uniq_rec[name] for name in uniq_rec.dtype.names}
+    # Validate columns
+    needed = set(gb_cols) | set(linear_columns) | set(fit_columns)
+    if weights is not None:
+        needed.add(weights)
+    missing = [c for c in needed if c not in df.columns]
+    if missing:
+        raise KeyError(f"Missing required columns: {missing}")
 
-    # Flattened matrices
-    X_all = df_sorted[linear_columns].to_numpy(dtype=np.float64, copy=False)
-    Y_all = df_sorted[fit_columns].to_numpy(dtype=np.float64, copy=False)
+    # Stable sort by all group columns so groups are contiguous
+    df_sorted = df.sort_values(gb_cols, kind="mergesort")
 
-    # Weights: ones if not provided
-    if weights is None:
-        W_all = np.ones(len(df_sorted), dtype=np.float64)
-    else:
-        W_all = df_sorted[weights].to_numpy(dtype=np.float64, copy=False)
+    # Dense arrays
+    dtype_num = np.float64 if cast_dtype is None else cast_dtype
+    X_all = df_sorted[linear_columns].to_numpy(dtype=dtype_num, copy=False)
+    Y_all = df_sorted[fit_columns].to_numpy(dtype=dtype_num, copy=False)
+    W_all = (np.ones(len(df_sorted), dtype=np.float64) if weights is None
+             else df_sorted[weights].to_numpy(dtype=np.float64, copy=False))
+
+    N = X_all.shape[0]
+    if N == 0:
+        return df_sorted.copy(), pd.DataFrame(columns=gb_cols + [f"n_refits{suffix}", f"n_used{suffix}", f"frac_rejected{suffix}"])
 
     n_feat = X_all.shape[1]
-    n_tgt = Y_all.shape[1]
+    n_tgt  = Y_all.shape[1]
+
+    # ---------- FAST multi-column group offsets ----------
+    # boundaries[0] = True; boundaries[i] = True if any key column changes at i vs i-1
+    boundaries = np.empty(N, dtype=bool)
+    boundaries[0] = True
+    if N > 1:
+        boundaries[1:] = False
+        # OR-adjacent compare for each group column (vectorized)
+        for col in gb_cols:
+            a = df_sorted[col].to_numpy()
+            boundaries[1:] |= (a[1:] != a[:-1])
+
+    starts = np.flatnonzero(boundaries)
+    offsets = np.empty(len(starts) + 1, dtype=np.int64)
+    offsets[:-1] = starts
+    offsets[-1] = N
+    n_groups = len(starts)
+    # ----------------------------------------------------
+
+    # Allocate beta [n_groups, 1+n_feat, n_tgt]
     beta = np.zeros((n_groups, n_feat + 1, n_tgt), dtype=np.float64)
 
-    if _NUMBA_OK:
-        _ols_kernel_numba_weighted(
-            X_all, Y_all, W_all, group_offsets.astype(np.int32),
-            n_groups, n_feat, n_tgt, int(min_stat), beta
-        )
-    else:
-        # Pure NumPy fallback (weighted)
-        p = n_feat + 1
-        for g in range(n_groups):
-            i0, i1 = group_offsets[g], group_offsets[g + 1]
+    # Numba kernel (weighted) or NumPy fallback
+    try:
+        _ols_kernel_numba_weighted(X_all, Y_all, W_all, offsets, n_groups, n_feat, n_tgt, int(min_stat), beta)
+    except NameError:
+        for gi in range(n_groups):
+            i0, i1 = offsets[gi], offsets[gi + 1]
             m = i1 - i0
-            if m < min_stat or m <= n_feat:
+            if m < int(min_stat):
                 continue
             Xg = X_all[i0:i1]
             Yg = Y_all[i0:i1]
-            Wg = W_all[i0:i1]  # shape (m,)
-            # Build X1 with intercept
-            X1 = np.c_[np.ones(m), Xg]  # (m, p)
-            # Weighted normal equations
-            # XtX = X1^T * W * X1 ; XtY = X1^T * W * Yg
-            XtX = (X1.T * Wg).dot(X1)            # (p,p)
-            XtY = (X1.T * Wg.reshape(-1,)).dot(Yg)  # (p,n_tgt)
+            Wg = W_all[i0:i1].reshape(-1)
+            X1 = np.c_[np.ones(m), Xg]
+            XtX = (X1.T * Wg).dot(X1)
+            XtY = (X1.T * Wg).dot(Yg)
             try:
-                B = np.linalg.solve(XtX, XtY)
-                beta[g, :, :] = B
+                coeffs = np.linalg.solve(XtX, XtY)
+                beta[gi, :, :] = coeffs
             except np.linalg.LinAlgError:
-                # leave zeros for this group
                 pass
 
-    # Assemble dfGB (same schema as v3)
-    rows = []
-    for gi in range(n_groups):
-        row = {}
-        # write group id columns
-        for k, col in enumerate(group_id_rows.keys()):
-            row[col] = group_id_rows[col][gi]
-        # write coefficients
-        for t_idx, tname in enumerate(fit_columns):
-            row[f"{tname}_intercept{suffix}"] = beta[gi, 0, t_idx]
-            for j, cname in enumerate(linear_columns, start=1):
-                row[f"{tname}_slope_{cname}{suffix}"] = beta[gi, j, t_idx]
-        rows.append(row)
+    # ---------- Vectorized dfGB assembly ----------
+    # Pre-take first-row-of-group keys without iloc in a Python loop
+    key_arrays = {col: df_sorted[col].to_numpy()[starts] for col in gb_cols}
 
-    dfGB = pd.DataFrame(rows)
+    # Diagnostics & coeff arrays
+    n_refits_arr = np.zeros(n_groups, dtype=np.int32)
+    n_used_arr   = (offsets[1:] - offsets[:-1]).astype(np.int32)
+    frac_rej_arr = np.zeros(n_groups, dtype=np.float64)
 
-    # Diagnostics (minimal; mirrors v3 style)
+    out_dict = {col: key_arrays[col] for col in gb_cols}
+    out_dict[f"n_refits{suffix}"] = n_refits_arr
+    out_dict[f"n_used{suffix}"]   = n_used_arr
+    out_dict[f"frac_rejected{suffix}"] = frac_rej_arr
+
+    # Intercept + slopes
+    for t_idx, tname in enumerate(fit_columns):
+        out_dict[f"{tname}_intercept{suffix}"] = beta[:, 0, t_idx].astype(np.float64, copy=False)
+        for j, cname in enumerate(linear_columns, start=1):
+            out_dict[f"{tname}_slope_{cname}{suffix}"] = beta[:, j, t_idx].astype(np.float64, copy=False)
+
+    # Optional diag: compute in one pass per group
     if diag:
-        dfGB[f"{diag_prefix}wall_ms"] = (time.perf_counter() - t0) * 1e3
-        dfGB[f"{diag_prefix}n_groups"] = len(dfGB)
+        for t_idx, tname in enumerate(fit_columns):
+            rms = np.zeros(n_groups, dtype=np.float64)
+            mad = np.zeros(n_groups, dtype=np.float64)
+            for gi in range(n_groups):
+                i0, i1 = offsets[gi], offsets[gi + 1]
+                m = i1 - i0
+                if m == 0:
+                    continue
+                Xg = X_all[i0:i1]
+                y  = Y_all[i0:i1, t_idx]
+                X1 = np.c_[np.ones(m), Xg]
+                resid = y - (X1 @ beta[gi, :, t_idx])
+                rms[gi] = np.sqrt(np.mean(resid ** 2))
+                mad[gi] = np.median(np.abs(resid - np.median(resid)))
+            out_dict[f"{diag_prefix}{tname}_rms{suffix}"] = rms
+            out_dict[f"{diag_prefix}{tname}_mad{suffix}"] = mad
 
-    # Optional cast
-    if cast_dtype is not None and len(dfGB):
-        # Don't cast the group key columns
-        safe_keys = sort_keys
-        dfGB = dfGB.astype({
-            c: cast_dtype
-            for c in dfGB.columns
-            if c not in safe_keys and dfGB[c].dtype == "float64"
-        })
+    dfGB = pd.DataFrame(out_dict)
+    # ---------- end dfGB assembly ----------
 
-    # Optional prediction join
-    df_out = df_use.copy()
-    if addPrediction and len(dfGB):
-        df_out = df_out.merge(dfGB, on=sort_keys, how="left")
-        for t in fit_columns:
-            pred = df_out[f"{t}_intercept{suffix}"].copy()
-            for cname in linear_columns:
-                pred += df_out[f"{t}_slope_{cname}{suffix}"] * df_out[cname]
-            df_out[f"{t}_pred{suffix}"] = pred
-
-    return df_out, dfGB
+    return df_sorted, dfGB
