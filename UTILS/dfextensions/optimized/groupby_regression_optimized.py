@@ -183,188 +183,167 @@ class GroupByRegressorOptimized:
     
     @staticmethod
     def make_parallel_fit_optimized(
-        df: pd.DataFrame,
-        gb_columns: List[str],
-        fit_columns: List[str],
-        linear_columns: List[str],
-        median_columns: List[str],
-        weights: str,
-        suffix: str,
-        selection: pd.Series,
-        addPrediction: bool = False,
-        cast_dtype: Union[str, None] = None,
-        n_jobs: int = 1,
-        min_stat: Union[int, List[int]] = 10,
-        sigmaCut: float = 5.0,
-        fitter: Union[str, Callable] = "ols",
-        batch_size: Union[str, int] = "auto",
-        batch_strategy: str = "auto",
-        max_refits: int = 10,
-        small_group_threshold: int = 30,
-        min_batch_size: int = 10,
-        backend: str = 'loky',
+            df: pd.DataFrame,
+            gb_columns: List[str],
+            fit_columns: List[str],
+            linear_columns: List[str],
+            median_columns: List[str],
+            weights: str,
+            suffix: str,
+            selection: pd.Series,
+            addPrediction: bool = False,
+            cast_dtype: Union[str, None] = None,
+            n_jobs: int = 1,
+            min_stat: Union[int, List[int]] = 10,
+            sigmaCut: float = 5.0,
+            fitter: Union[str, Callable] = "ols",
+            batch_size: Union[str, int] = "auto",
+            batch_strategy: str = "auto",
+            max_refits: int = 10,
+            small_group_threshold: int = 30,
+            min_batch_size: int = 10,
+            backend: str = 'loky',
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Optimized parallel fitting with array-based data passing and smart batching.
-        
-        New parameters:
-            batch_strategy: "auto", "no_batching", "size_bucketing"
-                - auto: Choose based on group size distribution
-                - no_batching: Original behavior (each group is a task)
-                - size_bucketing: Batch small groups together
-            small_group_threshold: Groups smaller than this are considered "small"
-            min_batch_size: Minimum number of small groups per batch
-            backend: "loky", "threading", "multiprocessing"
-                - loky (default): Process-based, best for medium/large groups (>50 rows)
-                - threading: Thread-based, best for small groups (<15 rows) if GIL-free
-                - multiprocessing: Process-based, alternative to loky
-        
-        Performance improvements:
-            - Avoids DataFrame slicing in workers (60-80% overhead reduction)
-            - Batches small groups to reduce spawn overhead (2-5× faster for small groups)
-            - Better memory locality
-            - Threading backend for GIL-free operations (10× faster for tiny groups)
-        
-        Note on min_stat:
-            The optimized version simplifies per-predictor min_stat checks for performance.
-            If min_stat=[10, 20], the original would skip predictors individually per group.
-            The optimized version uses min(min_stat) for the entire group.
-            For most use cases (same min_stat for all predictors), behavior is identical.
-            If you need strict per-predictor filtering, use the original implementation.
         """
-        if isinstance(weights, str) and weights not in df.columns:
-            raise ValueError(f"Weight column '{weights}' not found")
-        
-        if isinstance(min_stat, int):
-            min_stat = [min_stat] * len(linear_columns)
-        
-        # Warn if user provided different min_stat per predictor
-        if len(set(min_stat)) > 1:
-            logging.warning(
-                f"Optimized version uses min(min_stat)={min(min_stat)} for all predictors. "
-                f"Per-predictor filtering (min_stat={min_stat}) is not supported. "
-                f"Use original implementation if this is required."
-            )
-        
-        df_selected = df.loc[selection].copy()
-        
-        # Pre-extract arrays (done once in parent process)
-        X_all = df_selected[linear_columns].values.astype(np.float64)
-        w_all = df_selected[weights].values.astype(np.float64)
-        
-        # For targets, we'll handle them one at a time to save memory
-        target_results = []
-        
-        for target_idx, target_col in enumerate(fit_columns):
-            y_all = df_selected[target_col].values.astype(np.float64)
-            
-            # Group and filter
-            grouped = df_selected.groupby(gb_columns)
-            filtered_items = [
-                (key, idxs.values) 
-                for key, idxs in grouped.groups.items() 
-                if len(idxs) >= min(min_stat)
-            ]
-            
-            if not filtered_items:
-                logging.warning(f"No groups passed filtering for {target_col}")
-                continue
-            
-            # Decide on batching strategy
-            if batch_strategy == "auto":
-                group_sizes = [len(idxs) for _, idxs in filtered_items]
-                median_size = np.median(group_sizes)
-                pct_small = np.mean([s < small_group_threshold for s in group_sizes])
-                
-                if pct_small > 0.7 and n_jobs > 1:
-                    batch_strategy = "size_bucketing"
-                else:
-                    batch_strategy = "no_batching"
-                
-                logging.info(f"Auto-selected batch_strategy={batch_strategy} "
-                           f"(median_size={median_size:.1f}, pct_small={pct_small:.1%})")
-            
-            # Process groups
-            if batch_strategy == "size_bucketing" and n_jobs > 1:
-                # Separate small and large groups
-                small_groups = []
-                large_groups = []
-                
-                for key, idxs in filtered_items:
-                    if len(idxs) < small_group_threshold:
-                        small_groups.append((key, idxs))
-                    else:
-                        large_groups.append((key, idxs))
-                
-                # Batch small groups
-                small_batches = [
-                    small_groups[i:i+min_batch_size]
-                    for i in range(0, len(small_groups), min_batch_size)
-                ]
-                
-                logging.info(f"Processing {len(large_groups)} large groups + "
-                           f"{len(small_groups)} small groups in {len(small_batches)} batches")
-                
-                # Process large groups individually
-                large_results = Parallel(n_jobs=n_jobs, backend=backend)(
+        logger = logging.getLogger(__name__)
+        if isinstance(min_stat, list):
+            min_stat = min(min_stat) if len(min_stat) > 0 else 1
+
+        # Apply selection
+        df_selected = df[selection].copy()
+        if df_selected.empty:
+            return df.assign(**{f"{col}{suffix}": np.nan for col in fit_columns}), \
+                pd.DataFrame(columns=gb_columns)
+
+        # Prepare arrays (array-based path)
+        y_matrix = df_selected[fit_columns].to_numpy()
+        X_all = df_selected[linear_columns].to_numpy()
+        w_all = df_selected[weights].to_numpy() if isinstance(weights, str) else np.ones(len(df_selected))
+
+        # Group indices (array-based)
+        grouped = df_selected.groupby(gb_columns, sort=False, observed=True)
+        groups_items = list(grouped.groups.items())
+
+        # Choose batching strategy
+        def choose_strategy():
+            if batch_strategy in ("no_batching", "size_bucketing"):
+                return batch_strategy
+            # auto
+            sizes = np.array([len(idxs) for _, idxs in groups_items])
+            if (sizes <= small_group_threshold).mean() > 0.7 and len(groups_items) > 50:
+                return "size_bucketing"
+            return "no_batching"
+
+        strategy = choose_strategy()
+
+        # Pre-build y index per target
+        target_indices = {t: i for i, t in enumerate(fit_columns)}
+
+        target_results: List[Tuple[str, List[dict]]] = []
+
+        for target_col in fit_columns:
+            target_idx = target_indices[target_col]
+
+            # batching
+            if strategy == "size_bucketing":
+                small = [(k, idxs) for k, idxs in groups_items if len(idxs) < small_group_threshold]
+                large = [(k, idxs) for k, idxs in groups_items if len(idxs) >= small_group_threshold]
+
+                # Bucket small groups
+                small_sorted = sorted(small, key=lambda kv: len(kv[1]), reverse=True)
+                buckets: List[List[Tuple[tuple, np.ndarray]]] = []
+                current: List[Tuple[tuple, np.ndarray]] = []
+                current_size = 0
+                for k, idxs in small_sorted:
+                    current.append((k, idxs))
+                    current_size += len(idxs)
+                    if current_size >= max(min_batch_size, small_group_threshold):
+                        buckets.append(current)
+                        current = []
+                        current_size = 0
+                if current:
+                    buckets.append(current)
+
+                def process_bucket(bucket):
+                    out = []
+                    for key, idxs in bucket:
+                        out.append(process_group_array_based(
+                            key, idxs, X_all, y_matrix[:, target_idx], w_all,
+                            gb_columns, target_idx, list(range(len(linear_columns))),
+                            min_stat, sigmaCut, fitter, max_refits
+                        ))
+                    return out
+
+                results_small = Parallel(n_jobs=n_jobs, backend=backend)(
+                    delayed(process_bucket)(b) for b in buckets
+                )
+                results_small = [r for sub in results_small for r in sub]
+
+                # Large groups individually
+                results_large = Parallel(n_jobs=n_jobs, batch_size=batch_size, backend=backend)(
                     delayed(process_group_array_based)(
-                        key, idxs, X_all, y_all, w_all, gb_columns, 
-                        target_idx, list(range(len(linear_columns))),
-                        min(min_stat), sigmaCut, fitter, max_refits
+                        key, idxs, X_all, y_matrix[:, target_idx], w_all,
+                        gb_columns, target_idx, list(range(len(linear_columns))),
+                        min_stat, sigmaCut, fitter, max_refits
                     )
-                    for key, idxs in large_groups
+                    for key, idxs in large
                 )
-                
-                # Process small groups in batches
-                small_batch_results = Parallel(n_jobs=n_jobs, backend=backend)(
-                    delayed(process_batch_of_groups)(
-                        batch, X_all, y_all, w_all, gb_columns,
-                        target_idx, list(range(len(linear_columns))),
-                        min(min_stat), sigmaCut, fitter, max_refits
-                    )
-                    for batch in small_batches
-                )
-                
-                # Flatten batched results
-                small_results = [r for batch in small_batch_results for r in batch]
-                results = large_results + small_results
-                
+
+                results = results_small + results_large
+
             else:
                 # Original approach: each group is a task
                 results = Parallel(n_jobs=n_jobs, batch_size=batch_size, backend=backend)(
                     delayed(process_group_array_based)(
-                        key, idxs, X_all, y_all, w_all, gb_columns,
-                        target_idx, list(range(len(linear_columns))),
-                        min(min_stat), sigmaCut, fitter, max_refits
+                        key, idxs, X_all, y_matrix[:, target_idx], w_all,
+                        gb_columns, target_idx, list(range(len(linear_columns))),
+                        min_stat, sigmaCut, fitter, max_refits
                     )
-                    for key, idxs in filtered_items
+                    for key, idxs in groups_items
                 )
-            
+
             target_results.append((target_col, results))
-        
-        # Construct dfGB
-        dfGB = pd.DataFrame([r for _, results in target_results for r in results])
-        
-        # Expand coefficients into separate columns (only if coefficients exist)
-        if not dfGB.empty and 'coefficients' in dfGB.columns:
-            for target_col, results in target_results:
-                for i, pred_col in enumerate(linear_columns):
-                    col_name = f"{target_col}_slope_{pred_col}"
-                    dfGB[col_name] = dfGB['coefficients'].apply(
-                        lambda x: x[i] if isinstance(x, np.ndarray) and len(x) > i else np.nan
-                    )
-                
-                if 'intercept' in dfGB.columns:
-                    dfGB[f"{target_col}_intercept"] = dfGB['intercept']
-                if 'rms' in dfGB.columns:
-                    dfGB[f"{target_col}_rms"] = dfGB['rms']
-                if 'mad' in dfGB.columns:
-                    dfGB[f"{target_col}_mad"] = dfGB['mad']
-        
-        # Remove temporary columns
-        dfGB = dfGB.drop(columns=['coefficients', 'intercept', 'rms', 'mad'], errors='ignore')
-        
-        # Add medians
+
+        # Construct dfGB: merge target results horizontally (one row per group)
+        dfGB = None
+        for t_idx, (target_col, results) in enumerate(target_results):
+            df_t = pd.DataFrame(results)
+            if df_t.empty:
+                continue
+            # Expand coefficients into per-predictor columns for this target
+            # Expand coefficients into per-predictor columns for this target
+            if 'coefficients' in df_t.columns:
+                for idx, pred_col in enumerate(linear_columns):
+                    colname = f"{target_col}_slope_{pred_col}"
+                    df_t[colname] = [
+                        (arr[idx] if isinstance(arr, (np.ndarray, list, tuple)) and len(arr) > idx else np.nan)
+                        for arr in df_t['coefficients']
+                    ]
+            if 'intercept' in df_t.columns:
+                df_t[f"{target_col}_intercept"] = df_t['intercept']
+            if 'rms' in df_t.columns:
+                df_t[f"{target_col}_rms"] = df_t['rms']
+            if 'mad' in df_t.columns:
+                df_t[f"{target_col}_mad"] = df_t['mad']
+
+            # Drop temp columns; for additional targets keep only gb keys + target-specific cols
+            drop_cols = ['coefficients', 'intercept', 'rms', 'mad']
+            if t_idx > 0:
+                keep_cols = set(gb_columns) | {c for c in df_t.columns if c.startswith(f"{target_col}_")}
+                df_t = df_t[[c for c in df_t.columns if c in keep_cols]]
+            df_t = df_t.drop(columns=[c for c in drop_cols if c in df_t.columns], errors='ignore')
+
+            if dfGB is None:
+                dfGB = df_t
+            else:
+                dfGB = dfGB.merge(df_t, on=gb_columns, how='left')
+
+        if dfGB is None:
+            dfGB = pd.DataFrame(columns=gb_columns)
+
+        # Add medians (per-group)
         if median_columns:
             median_results = []
             for key, idxs in grouped.groups.items():
@@ -374,19 +353,17 @@ class GroupByRegressorOptimized:
                 median_results.append(group_dict)
             df_medians = pd.DataFrame(median_results)
             dfGB = dfGB.merge(df_medians, on=gb_columns, how='left')
-        
-        # Cast dtypes
+
+        # Cast dtypes for numeric fit metrics
         if cast_dtype:
             for col in dfGB.columns:
                 if any(x in col for x in ['slope', 'intercept', 'rms', 'mad']):
                     dfGB[col] = dfGB[col].astype(cast_dtype)
-        
-        # Add suffix
-        dfGB = dfGB.rename(
-            columns={col: f"{col}{suffix}" for col in dfGB.columns if col not in gb_columns}
-        )
-        
-        # Add predictions
+
+        # Add suffix (keep gb_columns unchanged)
+        dfGB = dfGB.rename(columns={col: f"{col}{suffix}" for col in dfGB.columns if col not in gb_columns})
+
+        # Optionally add predictions back to the input df
         if addPrediction and not dfGB.empty:
             df = df.merge(dfGB, on=gb_columns, how="left")
             for target_col in fit_columns:
@@ -398,8 +375,9 @@ class GroupByRegressorOptimized:
                     slope_col = f"{target_col}_slope_{pred_col}{suffix}"
                     if slope_col in df.columns:
                         df[f"{target_col}{suffix}"] += df[slope_col] * df[pred_col]
-        
+
         return df, dfGB
+
 
 
 # Convenience wrapper for backward compatibility

@@ -1315,6 +1315,114 @@ def test_numba_diagnostics_v4():
     print("=" * 70 + "\n")
 
 
+def test_v2_group_rows_not_multiplied_by_targets():
+    import numpy as np, pandas as pd
+    from groupby_regression_optimized import make_parallel_fit_v2
+
+    rng = np.random.default_rng(123)
+    # 8×7×6 = 336 groups, 5 rows/group
+    xV, yV, zV, rpg = 8, 7, 6, 5
+    x = np.repeat(np.arange(xV), yV*zV*rpg)
+    y = np.tile(np.repeat(np.arange(yV), zV*rpg), xV)
+    z = np.tile(np.repeat(np.arange(zV), rpg), xV*yV)
+    N = len(x)
+    w = np.ones(N); d = rng.normal(size=N)
+    df = pd.DataFrame(dict(xBin=x,y2xBin=y,z2xBin=z, deltaIDC=d, w=w,
+                           dX=2+1.1*d, dY=-1+0.8*d, dZ=0.5-0.3*d))
+    sel = pd.Series(True, index=df.index)
+    gb = ['xBin','y2xBin','z2xBin']
+    expected_groups = xV*yV*zV
+
+    # single-target
+    _, g1 = make_parallel_fit_v2(df=df, gb_columns=gb,
+                                 fit_columns=['dX'], linear_columns=['deltaIDC'],
+                                 median_columns=[], weights='w', suffix='_v2',
+                                 selection=sel, n_jobs=1, min_stat=[3])
+    # multi-target (this used to blow rows up by ×3)
+    _, g3 = make_parallel_fit_v2(df=df, gb_columns=gb,
+                                 fit_columns=['dX','dY','dZ'], linear_columns=['deltaIDC'],
+                                 median_columns=[], weights='w', suffix='_v2',
+                                 selection=sel, n_jobs=1, min_stat=[3])
+
+    # ---- Diagnostics ----
+    print("\n=== TEST: v2 multi-target layout (horizontal merge) ===")
+    print(f"Expected groups: {expected_groups}")
+    print(f"Single-target rows: {len(g1)} | Multi-target rows: {len(g3)}")
+    print(f"g3 columns (sample): {list(g3.columns)[:12]}{' ...' if len(g3.columns)>12 else ''}")
+
+    # Row cardinality
+    assert len(g1) == expected_groups, f"single-target: expected {expected_groups} rows, got {len(g1)}"
+    assert len(g3) == expected_groups, (
+        f"multi-target: expected {expected_groups} rows (one per group), got {len(g3)}. "
+        "This would indicate vertical stacking instead of horizontal merge."
+    )
+
+    # No duplicate group keys
+    dups = g3.duplicated(gb).sum()
+    assert dups == 0, f"Found {dups} duplicated group keys in multi-target output; expected none."
+
+    # Presence of target-specific columns (intercept + first slope) with suffix
+    linear_columns = ['deltaIDC']
+    for t in ['dX','dY','dZ']:
+        needed = [f"{t}_intercept_v2", f"{t}_slope_{linear_columns[0]}_v2"]
+        missing = [c for c in needed if c not in g3.columns]
+        assert not missing, f"Missing per-target columns for {t}: {missing}"
+
+def test_v2_v3_v4_identical_groups_3col():
+    import numpy as np, pandas as pd
+    from groupby_regression_optimized import make_parallel_fit_v2, make_parallel_fit_v3, make_parallel_fit_v4
+
+    rng = np.random.default_rng(321)
+    xV,yV,zV,rpg = 5,4,3,4
+    x = np.repeat(np.arange(xV), yV*zV*rpg)
+    y = np.tile(np.repeat(np.arange(yV), zV*rpg), xV)
+    z = np.tile(np.repeat(np.arange(zV), rpg), xV*yV)
+    N = len(x); d = rng.normal(size=N)
+    df = pd.DataFrame(dict(xBin=x,y2xBin=y,z2xBin=z, deltaIDC=d, w=np.ones(N),
+                           dX=1+d, dY=2-0.5*d, dZ=-1+0.2*d))
+    sel = pd.Series(True, index=df.index)
+    gb = ['xBin','y2xBin','z2xBin']
+    expected_groups = xV*yV*zV
+
+    _, g2 = make_parallel_fit_v2(df=df, gb_columns=gb, fit_columns=['dX','dY','dZ'],
+                                 linear_columns=['deltaIDC'], median_columns=[],
+                                 weights='w', suffix='_v2', selection=sel, n_jobs=1, min_stat=[2])
+    _, g3 = make_parallel_fit_v3(df=df, gb_columns=gb, fit_columns=['dX','dY','dZ'],
+                                 linear_columns=['deltaIDC'], median_columns=[],
+                                 weights='w', suffix='_v3', selection=sel, min_stat=[2])
+    _, g4 = make_parallel_fit_v4(df=df, gb_columns=gb, fit_columns=['dX','dY','dZ'],
+                                 linear_columns=['deltaIDC'], median_columns=[],
+                                 weights='w', suffix='_v4', selection=sel, min_stat=2)
+
+    # ---- Diagnostics ----
+    print("\n=== TEST: v2 vs v3 vs v4 layout (3 targets) ===")
+    print(f"Expected groups: {expected_groups}")
+    print(f"v2 rows: {len(g2)} | v3 rows: {len(g3)} | v4 rows: {len(g4)}")
+
+    # Row counts equal to group cardinality
+    for name, dfgb in (("v2", g2), ("v3", g3), ("v4", g4)):
+        assert len(dfgb) == expected_groups, f"{name}: expected {expected_groups} rows, got {len(dfgb)}"
+        dups = dfgb.duplicated(gb).sum()
+        assert dups == 0, f"{name}: found {dups} duplicated group keys; expected none."
+
+    # Group-key sets identical
+    s2 = set(map(tuple, g2[gb].drop_duplicates().to_numpy()))
+    s3 = set(map(tuple, g3[gb].drop_duplicates().to_numpy()))
+    s4 = set(map(tuple, g4[gb].drop_duplicates().to_numpy()))
+    assert s2 == s3 == s4, f"group-key sets must match: v2={len(s2)} v3={len(s3)} v4={len(s4)}"
+
+    # Sanity: per-target columns (intercept + first slope) exist in each version
+    def _require_cols(dfgb, suffix):
+        for t in ['dX','dY','dZ']:
+            needed = [f"{t}_intercept{suffix}", f"{t}_slope_deltaIDC{suffix}"]
+            missing = [c for c in needed if c not in dfgb.columns]
+            assert not missing, f"{suffix}: missing expected columns for {t}: {missing}"
+
+    _require_cols(g2, "_v2")
+    _require_cols(g3, "_v3")
+    _require_cols(g4, "_v4")
+
+
 
 if __name__ == '__main__':
     # Run tests with pytest
