@@ -35,11 +35,17 @@ import pandas as pd
 
 # --- Import the project module ---
 try:
+    # Try package-relative import first (when run as module)
     from .. import groupby_regression as gr
     from ..groupby_regression import GroupByRegressor
-except Exception as e:
-    print("[ERROR] Failed to import groupby_regression.py:", e, file=sys.stderr)
-    raise
+except ImportError:
+    # Fall back to adding parent to path (when run as script)
+    script_dir = Path(__file__).parent
+    package_dir = script_dir.parent
+    sys.path.insert(0, str(package_dir))
+
+    import groupby_regression as gr
+    from groupby_regression import GroupByRegressor
 
 # --- Data Generators (Phase 1) ---
 def _make_groups(n_rows: int, n_groups: int, rng: np.random.Generator) -> np.ndarray:
