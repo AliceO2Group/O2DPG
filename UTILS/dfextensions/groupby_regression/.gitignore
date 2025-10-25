@@ -34,3 +34,6 @@ diff.txt
 # benchmarks/bench_out/*.txt
 # benchmarks/bench_out/*.csv
 # benchmarks/bench_out/*.png
+
+# Transitional artifacts
+diff.txt
