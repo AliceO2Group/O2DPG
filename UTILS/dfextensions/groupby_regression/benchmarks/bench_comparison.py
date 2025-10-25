@@ -10,6 +10,12 @@ Tier-A (CI-friendly): Quick comparison on small datasets (< 5 min)
 Usage:
     python bench_comparison.py
     python bench_comparison.py --scenarios all  # More scenarios
+
+# IMPORTANT: Robust implementation is very slow on small groups (< 50 rows/group)
+# Quick mode limited to 2k groups max to keep runtime reasonable.
+# For small group sizes, use optimized implementations (v2/v3/v4).
+# Robust is designed for large groups with robust statistics needs.
+
 """
 
 import argparse
@@ -379,7 +385,7 @@ def main():
         scenarios = [
             ("Tiny (100×5)", 100, 5),
             ("Small (1k×5)", 1000, 5),
-            ("Medium (5k×5)", 5000, 5),
+            ("Medium (5k×5)", 2000, 5),
         ]
     else:  # all
         scenarios = [

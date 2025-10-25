@@ -1,0 +1,38 @@
+GroupBy Regression: Engine Comparison
+======================================================================
+Date: 2025-10-25T15:45:17.308438
+Host: Marians-MBP-3.fritz.box
+
+
+Scenario: Tiny (100×5)
+Dataset: 100 groups × 5 rows
+----------------------------------------------------------------------
+robust  :   2.68s ( 26.80s/1k) [100 groups]
+v2      :   0.78s (  7.78s/1k) [100 groups]
+v4      :   0.68s (  6.84s/1k) [100 groups]
+
+Speedup vs robust:
+  v2: 3.4×
+  v4: 3.9×
+
+Scenario: Small (1k×5)
+Dataset: 1000 groups × 5 rows
+----------------------------------------------------------------------
+robust  :  25.85s ( 25.85s/1k) [1000 groups]
+v2      :   0.29s (  0.29s/1k) [1000 groups]
+v4      :   0.00s (  0.00s/1k) [1000 groups]
+
+Speedup vs robust:
+  v2: 89.1×
+  v4: 17705.5×
+
+Scenario: Medium (5k×5)
+Dataset: 5000 groups × 5 rows
+----------------------------------------------------------------------
+robust  : 126.36s ( 25.27s/1k) [5000 groups]
+v2      :   1.50s (  0.30s/1k) [5000 groups]
+v4      :   0.00s (  0.00s/1k) [5000 groups]
+
+Speedup vs robust:
+  v2: 84.4×
+  v4: 41552.9×
