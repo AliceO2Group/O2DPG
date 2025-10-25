@@ -1,3 +1,8 @@
 
 # Transitional artifacts
 diff.txt
+
+# Transitional artifacts
+diff.txt
+*.log
+groupby_regression_git.log
