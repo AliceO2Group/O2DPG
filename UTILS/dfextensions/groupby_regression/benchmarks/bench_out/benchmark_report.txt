@@ -1,0 +1,33 @@
+========================================================================
+Optimized GroupBy Regression Benchmark
+========================================================================
+Python 3.9.6 | NumPy 1.24.2 | Pandas 1.5.3 | Numba 0.59.1 | sklearn 1.2.2 | joblib 1.2.0
+CPU: Apple M2 Max | Cores: 12 | Platform: macOS-14.5-arm64-arm-64bit
+
+[full]  v2 | clean_serial_2k5         groups=  2500, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=1   | time=0.166s, speed=15032.0 groups/s
+[full]  v3 | clean_serial_2k5         groups=  2500, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=1   | time=0.208s, speed=12030.2 groups/s
+[full]  v4 | clean_serial_2k5         groups=  2500, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=1   | time=0.376s, speed=6644.0 groups/s
+[full]  v2 | clean_parallel_2k5       groups=  2500, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=16  | time=0.180s, speed=13927.5 groups/s
+[full]  v3 | clean_parallel_2k5       groups=  2500, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=16  | time=0.171s, speed=14604.8 groups/s
+[full]  v4 | clean_parallel_2k5       groups=  2500, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=16  | time=0.002s, speed=1054722.4 groups/s
+[full]  v2 | clean_serial_5k20        groups=  5000, rows/group=  20, outliers=  0%@0.0 σ, n_jobs=1   | time=2.028s, speed=2466.0 groups/s
+[full]  v3 | clean_serial_5k20        groups=  5000, rows/group=  20, outliers=  0%@0.0 σ, n_jobs=1   | time=1.963s, speed=2547.1 groups/s
+[full]  v4 | clean_serial_5k20        groups=  5000, rows/group=  20, outliers=  0%@0.0 σ, n_jobs=1   | time=0.010s, speed=478684.6 groups/s
+[full]  v2 | clean_parallel_5k20      groups=  5000, rows/group=  20, outliers=  0%@0.0 σ, n_jobs=16  | time=2.023s, speed=2471.1 groups/s
+[full]  v3 | clean_parallel_5k20      groups=  5000, rows/group=  20, outliers=  0%@0.0 σ, n_jobs=16  | time=1.914s, speed=2613.0 groups/s
+[full]  v4 | clean_parallel_5k20      groups=  5000, rows/group=  20, outliers=  0%@0.0 σ, n_jobs=16  | time=0.011s, speed=461666.3 groups/s
+[full]  v2 | out5pct_3sigma_5k20      groups=  5000, rows/group=  20, outliers=  5%@3.0 σ, n_jobs=16  | time=2.021s, speed=2474.2 groups/s
+[full]  v3 | out5pct_3sigma_5k20      groups=  5000, rows/group=  20, outliers=  5%@3.0 σ, n_jobs=16  | time=1.988s, speed=2514.5 groups/s
+[full]  v4 | out5pct_3sigma_5k20      groups=  5000, rows/group=  20, outliers=  5%@3.0 σ, n_jobs=16  | time=0.011s, speed=452048.9 groups/s
+[full]  v2 | out10pct_5sigma_10k5     groups= 10000, rows/group=   5, outliers= 10%@5.0 σ, n_jobs=16  | time=0.689s, speed=14518.5 groups/s
+[full]  v3 | out10pct_5sigma_10k5     groups= 10000, rows/group=   5, outliers= 10%@5.0 σ, n_jobs=16  | time=0.787s, speed=12699.0 groups/s
+[full]  v4 | out10pct_5sigma_10k5     groups= 10000, rows/group=   5, outliers= 10%@5.0 σ, n_jobs=16  | time=0.006s, speed=1582643.6 groups/s
+[full]  v2 | out10pct_10sigma_10k5    groups= 10000, rows/group=   5, outliers= 10%@10.0σ, n_jobs=16  | time=0.718s, speed=13926.7 groups/s
+[full]  v3 | out10pct_10sigma_10k5    groups= 10000, rows/group=   5, outliers= 10%@10.0σ, n_jobs=16  | time=0.778s, speed=12851.2 groups/s
+[full]  v4 | out10pct_10sigma_10k5    groups= 10000, rows/group=   5, outliers= 10%@10.0σ, n_jobs=16  | time=0.009s, speed=1109359.7 groups/s
+[full]  v2 | clean_parallel_20k5      groups= 20000, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=24  | time=1.384s, speed=14447.9 groups/s
+[full]  v3 | clean_parallel_20k5      groups= 20000, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=24  | time=1.528s, speed=13084.8 groups/s
+[full]  v4 | clean_parallel_20k5      groups= 20000, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=24  | time=0.012s, speed=1738991.8 groups/s
+[full]  v2 | clean_parallel_30k5      groups= 30000, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=24  | time=1.991s, speed=15064.7 groups/s
+[full]  v3 | clean_parallel_30k5      groups= 30000, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=24  | time=2.347s, speed=12782.4 groups/s
+[full]  v4 | clean_parallel_30k5      groups= 30000, rows/group=   5, outliers=  0%@0.0 σ, n_jobs=24  | time=0.016s, speed=1825030.3 groups/s

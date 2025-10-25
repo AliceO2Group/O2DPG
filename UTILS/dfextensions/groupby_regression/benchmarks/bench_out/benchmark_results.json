@@ -1,0 +1,723 @@
+{
+  "env": {
+    "cpu": "Apple M2 Max",
+    "cpu_count": 12,
+    "joblib": "1.2.0",
+    "machine": "arm64",
+    "numba": "0.59.1",
+    "numpy": "1.24.2",
+    "pandas": "1.5.3",
+    "platform": "macOS-14.5-arm64-arm-64bit",
+    "processor": "arm",
+    "python": "3.9.6",
+    "sklearn": "1.2.2"
+  },
+  "mode": "full",
+  "results": [
+    {
+      "engine": "v2",
+      "metrics": {
+        "dfGB_shape": [
+          12053,
+          14
+        ],
+        "df_out_shape": [
+          12500,
+          7
+        ],
+        "elapsed_s": 0.16631191700000003,
+        "groups_per_s": 15031.995572512098,
+        "rows_total": 12500
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 2500,
+        "n_jobs": 1,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_serial_2k5",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v3",
+      "metrics": {
+        "dfGB_shape": [
+          7,
+          13
+        ],
+        "df_out_shape": [
+          12500,
+          7
+        ],
+        "elapsed_s": 0.20780991700000007,
+        "groups_per_s": 12030.22471733146,
+        "rows_total": 12500
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 2500,
+        "n_jobs": 1,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_serial_2k5",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v4",
+      "metrics": {
+        "dfGB_shape": [
+          12053,
+          10
+        ],
+        "df_out_shape": [
+          12500,
+          7
+        ],
+        "elapsed_s": 0.37628008299999993,
+        "groups_per_s": 6643.987053654393,
+        "rows_total": 12500
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 2500,
+        "n_jobs": 1,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_serial_2k5",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v2",
+      "metrics": {
+        "dfGB_shape": [
+          12007,
+          14
+        ],
+        "df_out_shape": [
+          12500,
+          7
+        ],
+        "elapsed_s": 0.17950158299999996,
+        "groups_per_s": 13927.453776271157,
+        "rows_total": 12500
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 2500,
+        "n_jobs": 16,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_parallel_2k5",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v3",
+      "metrics": {
+        "dfGB_shape": [
+          8,
+          13
+        ],
+        "df_out_shape": [
+          12500,
+          7
+        ],
+        "elapsed_s": 0.17117616700000005,
+        "groups_per_s": 14604.836898818978,
+        "rows_total": 12500
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 2500,
+        "n_jobs": 16,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_parallel_2k5",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v4",
+      "metrics": {
+        "dfGB_shape": [
+          12007,
+          10
+        ],
+        "df_out_shape": [
+          12500,
+          7
+        ],
+        "elapsed_s": 0.0023702919999997185,
+        "groups_per_s": 1054722.3717585416,
+        "rows_total": 12500
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 2500,
+        "n_jobs": 16,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_parallel_2k5",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v2",
+      "metrics": {
+        "dfGB_shape": [
+          83222,
+          14
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 2.027614958,
+        "groups_per_s": 2465.9514274504577,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 5000,
+        "n_jobs": 1,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 20,
+        "scenario_id": "clean_serial_5k20",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v3",
+      "metrics": {
+        "dfGB_shape": [
+          1787,
+          13
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 1.9630057499999998,
+        "groups_per_s": 2547.1142914380157,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 5000,
+        "n_jobs": 1,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 20,
+        "scenario_id": "clean_serial_5k20",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v4",
+      "metrics": {
+        "dfGB_shape": [
+          83222,
+          10
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 0.010445291999999995,
+        "groups_per_s": 478684.55951255385,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 5000,
+        "n_jobs": 1,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 20,
+        "scenario_id": "clean_serial_5k20",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v2",
+      "metrics": {
+        "dfGB_shape": [
+          82902,
+          14
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 2.023409708,
+        "groups_per_s": 2471.0764113819305,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 5000,
+        "n_jobs": 16,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 20,
+        "scenario_id": "clean_parallel_5k20",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v3",
+      "metrics": {
+        "dfGB_shape": [
+          1803,
+          13
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 1.9135261660000005,
+        "groups_per_s": 2612.97707282044,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 5000,
+        "n_jobs": 16,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 20,
+        "scenario_id": "clean_parallel_5k20",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v4",
+      "metrics": {
+        "dfGB_shape": [
+          82902,
+          10
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 0.010830333999999553,
+        "groups_per_s": 461666.27917478874,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 5000,
+        "n_jobs": 16,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 20,
+        "scenario_id": "clean_parallel_5k20",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v2",
+      "metrics": {
+        "dfGB_shape": [
+          83098,
+          14
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 2.0208281250000013,
+        "groups_per_s": 2474.2331810133514,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 5000,
+        "n_jobs": 16,
+        "outlier_rate": 0.05,
+        "outlier_sigma": 3.0,
+        "rows_per_group": 20,
+        "scenario_id": "out5pct_3sigma_5k20",
+        "sigmaCut": 5
+      }
+    },
+    {
+      "engine": "v3",
+      "metrics": {
+        "dfGB_shape": [
+          1792,
+          13
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 1.9884944999999998,
+        "groups_per_s": 2514.4650890409807,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 5000,
+        "n_jobs": 16,
+        "outlier_rate": 0.05,
+        "outlier_sigma": 3.0,
+        "rows_per_group": 20,
+        "scenario_id": "out5pct_3sigma_5k20",
+        "sigmaCut": 5
+      }
+    },
+    {
+      "engine": "v4",
+      "metrics": {
+        "dfGB_shape": [
+          83098,
+          10
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 0.011060750000000397,
+        "groups_per_s": 452048.91169222887,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 5000,
+        "n_jobs": 16,
+        "outlier_rate": 0.05,
+        "outlier_sigma": 3.0,
+        "rows_per_group": 20,
+        "scenario_id": "out5pct_3sigma_5k20",
+        "sigmaCut": 5
+      }
+    },
+    {
+      "engine": "v2",
+      "metrics": {
+        "dfGB_shape": [
+          47976,
+          14
+        ],
+        "df_out_shape": [
+          50000,
+          7
+        ],
+        "elapsed_s": 0.688775999999999,
+        "groups_per_s": 14518.508194246047,
+        "rows_total": 50000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 10000,
+        "n_jobs": 16,
+        "outlier_rate": 0.1,
+        "outlier_sigma": 5.0,
+        "rows_per_group": 5,
+        "scenario_id": "out10pct_5sigma_10k5",
+        "sigmaCut": 5
+      }
+    },
+    {
+      "engine": "v3",
+      "metrics": {
+        "dfGB_shape": [
+          43,
+          13
+        ],
+        "df_out_shape": [
+          50000,
+          7
+        ],
+        "elapsed_s": 0.7874643339999992,
+        "groups_per_s": 12698.987837587589,
+        "rows_total": 50000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 10000,
+        "n_jobs": 16,
+        "outlier_rate": 0.1,
+        "outlier_sigma": 5.0,
+        "rows_per_group": 5,
+        "scenario_id": "out10pct_5sigma_10k5",
+        "sigmaCut": 5
+      }
+    },
+    {
+      "engine": "v4",
+      "metrics": {
+        "dfGB_shape": [
+          47976,
+          10
+        ],
+        "df_out_shape": [
+          50000,
+          7
+        ],
+        "elapsed_s": 0.006318541999998928,
+        "groups_per_s": 1582643.5908793036,
+        "rows_total": 50000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 10000,
+        "n_jobs": 16,
+        "outlier_rate": 0.1,
+        "outlier_sigma": 5.0,
+        "rows_per_group": 5,
+        "scenario_id": "out10pct_5sigma_10k5",
+        "sigmaCut": 5
+      }
+    },
+    {
+      "engine": "v2",
+      "metrics": {
+        "dfGB_shape": [
+          48028,
+          14
+        ],
+        "df_out_shape": [
+          50000,
+          7
+        ],
+        "elapsed_s": 0.7180463330000002,
+        "groups_per_s": 13926.677904223761,
+        "rows_total": 50000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 10000,
+        "n_jobs": 16,
+        "outlier_rate": 0.1,
+        "outlier_sigma": 10.0,
+        "rows_per_group": 5,
+        "scenario_id": "out10pct_10sigma_10k5",
+        "sigmaCut": 5
+      }
+    },
+    {
+      "engine": "v3",
+      "metrics": {
+        "dfGB_shape": [
+          41,
+          13
+        ],
+        "df_out_shape": [
+          50000,
+          7
+        ],
+        "elapsed_s": 0.7781391249999992,
+        "groups_per_s": 12851.172340164763,
+        "rows_total": 50000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 10000,
+        "n_jobs": 16,
+        "outlier_rate": 0.1,
+        "outlier_sigma": 10.0,
+        "rows_per_group": 5,
+        "scenario_id": "out10pct_10sigma_10k5",
+        "sigmaCut": 5
+      }
+    },
+    {
+      "engine": "v4",
+      "metrics": {
+        "dfGB_shape": [
+          48028,
+          10
+        ],
+        "df_out_shape": [
+          50000,
+          7
+        ],
+        "elapsed_s": 0.00901420900000005,
+        "groups_per_s": 1109359.6787028061,
+        "rows_total": 50000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 10000,
+        "n_jobs": 16,
+        "outlier_rate": 0.1,
+        "outlier_sigma": 10.0,
+        "rows_per_group": 5,
+        "scenario_id": "out10pct_10sigma_10k5",
+        "sigmaCut": 5
+      }
+    },
+    {
+      "engine": "v2",
+      "metrics": {
+        "dfGB_shape": [
+          95949,
+          14
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 1.384287208,
+        "groups_per_s": 14447.868826943606,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 20000,
+        "n_jobs": 24,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_parallel_20k5",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v3",
+      "metrics": {
+        "dfGB_shape": [
+          88,
+          13
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 1.5284890000000004,
+        "groups_per_s": 13084.81775138715,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 20000,
+        "n_jobs": 24,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_parallel_20k5",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v4",
+      "metrics": {
+        "dfGB_shape": [
+          95949,
+          10
+        ],
+        "df_out_shape": [
+          100000,
+          7
+        ],
+        "elapsed_s": 0.011500916999999333,
+        "groups_per_s": 1738991.769091209,
+        "rows_total": 100000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 20000,
+        "n_jobs": 24,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_parallel_20k5",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v2",
+      "metrics": {
+        "dfGB_shape": [
+          144144,
+          14
+        ],
+        "df_out_shape": [
+          150000,
+          7
+        ],
+        "elapsed_s": 1.9914126249999988,
+        "groups_per_s": 15064.683041265753,
+        "rows_total": 150000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 30000,
+        "n_jobs": 24,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_parallel_30k5",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v3",
+      "metrics": {
+        "dfGB_shape": [
+          121,
+          13
+        ],
+        "df_out_shape": [
+          150000,
+          7
+        ],
+        "elapsed_s": 2.3469848330000005,
+        "groups_per_s": 12782.357848326152,
+        "rows_total": 150000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 30000,
+        "n_jobs": 24,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_parallel_30k5",
+        "sigmaCut": 100
+      }
+    },
+    {
+      "engine": "v4",
+      "metrics": {
+        "dfGB_shape": [
+          144144,
+          10
+        ],
+        "df_out_shape": [
+          150000,
+          7
+        ],
+        "elapsed_s": 0.01643808299999705,
+        "groups_per_s": 1825030.3274417939,
+        "rows_total": 150000
+      },
+      "scenario": {
+        "fitter": "ols",
+        "n_groups": 30000,
+        "n_jobs": 24,
+        "outlier_rate": 0.0,
+        "outlier_sigma": 0.0,
+        "rows_per_group": 5,
+        "scenario_id": "clean_parallel_30k5",
+        "sigmaCut": 100
+      }
+    }
+  ],
+  "run_id": "1761420273-362aa7de",
+  "source": "local",
+  "timestamp": "2025-10-25 21:24:33"
+}
