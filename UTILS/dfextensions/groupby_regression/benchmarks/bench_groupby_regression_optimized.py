@@ -36,7 +36,7 @@ groups_per_s, rows_total, commit, python, numpy, pandas, numba, sklearn, joblib,
 """
 
 from __future__ import annotations
-import argparse, json, os, sys, time, uuid, platform, subprocess, inspect
+import argparse, json, os, sys, time, uuid, platform, subprocess
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, Any, List, Tuple
@@ -84,11 +84,13 @@ def get_environment_info() -> Dict[str, Any]:
 # ---------------- Imports (follow bench_comparison.py pattern) ----------------
 def _import_implementations():
     try:
-        from groupby_regression_optimized import (
+        # Try package-relative import first
+        from ..groupby_regression_optimized import (
             make_parallel_fit_v2, make_parallel_fit_v3, make_parallel_fit_v4
         )
         return ("package", make_parallel_fit_v2, make_parallel_fit_v3, make_parallel_fit_v4)
-    except Exception:
+    except ImportError:
+        # Fallback: add parent to path
         here = Path(__file__).resolve()
         root = here.parent.parent
         sys.path.insert(0, str(root))
@@ -128,81 +130,21 @@ def _make_synthetic_data(n_groups: int, rows_per_group: int,
     })
     return df
 
-# ---------------- Signature-aware engine wrapper ----------------
-_ALIAS_MAP = {
-    # canonical -> possible alternates
-    "gb_columns": ["gb_columns", "gbColumns", "groupby_columns"],
-    "fit_columns": ["fit_columns", "fitColumns", "targets"],
-    "linear_columns": ["linear_columns", "linearColumns", "features"],
-    "median_columns": ["median_columns", "medianColumns"],
-    "weights": ["weights", "weight_column"],
-    "suffix": ["suffix"],
-    "selection": ["selection", "mask"],
-    "addPrediction": ["addPrediction", "add_prediction"],
-    "n_jobs": ["n_jobs", "nThreads", "n_workers"],
-    "min_stat": ["min_stat", "minStat"],
-    "fitter": ["fitter"],
-    "sigmaCut": ["sigmaCut", "sigma_cut"],
-    "batch_size": ["batch_size", "batchSize"],
-}
-
-def _normalize_kwargs_for_signature(fun, kwargs: Dict[str, Any]) -> Dict[str, Any]:
-    """Map/limit kwargs to what `fun` actually accepts."""
-    sig = inspect.signature(fun)
-    params = set(sig.parameters.keys())
-    out: Dict[str, Any] = {}
-
-    # Build reverse alias map keyed by actual parameter names present
-    alias_candidates = {}
-    for canonical, alts in _ALIAS_MAP.items():
-        for alt in alts:
-            alias_candidates[alt] = canonical
-
-    # First pass: if kw already matches a param, keep
-    for k, v in kwargs.items():
-        if k in params:
-            out[k] = v
-
-    # Second pass: try alias mapping for missing ones
-    for k, v in kwargs.items():
-        if k in out:
-            continue
-        # map k -> canonical, then see if any alias for canonical matches a real param
-        canonical = alias_candidates.get(k, None)
-        if not canonical:
-            continue
-        for alt in _ALIAS_MAP.get(canonical, []):
-            if alt in params:
-                out[alt] = v
-                break
-
-    # Special case: if neither 'addPrediction' nor 'add_prediction' present, but one is required
-    # we rely on 'params' to decide; otherwise ignore.
-    return out
-
-def _call_engine(fun, df: pd.DataFrame, **kwargs):
-    filt = _normalize_kwargs_for_signature(fun, kwargs)
-    return fun(df, **filt)
-
 # ---------------- Numba warm-up ----------------
-def warm_up_numba(make_parallel_fit_v4, *, verbose: bool = True) -> None:
-    df = _make_synthetic_data(n_groups=10, rows_per_group=5, seed=123)
+def warm_up_numba(v4_fun, verbose: bool = False):
+    """Trigger Numba JIT compilation before benchmarking."""
     try:
-        _call_engine(
-            make_parallel_fit_v4, df,
+        df_tiny = _make_synthetic_data(10, 5, seed=999)
+        _ = v4_fun(
+            df=df_tiny,
             gb_columns=["g0","g1","g2"],
-            fit_columns=["y1","y2"],
+            fit_columns=["y1"],
             linear_columns=["x"],
             median_columns=[],
             weights="wFit",
-            suffix="_warm",
-            selection=pd.Series(np.ones(len(df), dtype=bool)),
-            addPrediction=False,
-            n_jobs=1,            # dropped automatically if v4 doesn't accept it
-            min_stat=[3,3],
-            fitter="ols",
-            sigmaCut=100,
-            batch_size="auto"
+            suffix="_warmup",
+            selection=pd.Series(np.ones(len(df_tiny), dtype=bool)),
+            min_stat=3
         )
         if verbose:
             print("[warm-up] Numba v4 compilation done.")
@@ -248,9 +190,12 @@ def full_scenarios() -> List[Scenario]:
 
 # ---------------- Core runner ----------------
 def _run_once(engine_name: str, fun, df: pd.DataFrame, sc: Scenario) -> Tuple[float, Dict[str, Any]]:
+    """Run one engine on one scenario and return timing + metadata."""
     t0 = time.perf_counter()
-    df_out, dfGB = _call_engine(
-        fun, df,
+
+    # Call engine directly with keyword arguments
+    df_out, dfGB = fun(
+        df=df,
         gb_columns=["g0","g1","g2"],
         fit_columns=["y1","y2"],
         linear_columns=["x"],
@@ -258,13 +203,9 @@ def _run_once(engine_name: str, fun, df: pd.DataFrame, sc: Scenario) -> Tuple[fl
         weights="wFit",
         suffix="_b",
         selection=pd.Series(np.ones(len(df), dtype=bool)),
-        addPrediction=False,
-        n_jobs=sc.n_jobs,      # dropped for engines that don't accept it
-        min_stat=[3,3],
-        fitter=sc.fitter,
-        sigmaCut=sc.sigmaCut,
-        batch_size="auto"
+        min_stat=3
     )
+
     elapsed = time.perf_counter() - t0
 
     rows_total = len(df)
@@ -339,11 +280,8 @@ def parse_args():
 def main():
     args = parse_args()
 
-    source, v2_raw, v3_raw, v4_raw = _import_implementations()
-    # Wrap engines with signature-aware caller to guarantee safe kwargs handling.
-    def wrap(fun):
-        return lambda df, **kw: _call_engine(fun, df, **kw)
-    v2, v3, v4 = wrap(v2_raw), wrap(v3_raw), wrap(v4_raw)
+    # Import implementations
+    source, v2, v3, v4 = _import_implementations()
 
     env = get_environment_info()
     ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -352,8 +290,8 @@ def main():
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Warm-up JIT (filtered call)
-    warm_up_numba(v4_raw, verbose=True)
+    # Warm-up JIT
+    warm_up_numba(v4, verbose=True)
 
     scenarios = full_scenarios() if args.full else quick_scenarios()
     engines = [("v2", v2), ("v3", v3), ("v4", v4)]
