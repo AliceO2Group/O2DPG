@@ -670,3 +670,14 @@ class GroupByRegressor:
         )
         return lines[0]
 
+
+# ============================================================================
+# Aliases for clarity
+# ============================================================================
+
+# Export both "robust" (preferred) and "legacy" (compatibility) names
+#make_parallel_fit_robust = make_parallel_fit
+#make_parallel_fit_legacy = make_parallel_fit
+
+# Note: "legacy" doesn't mean deprecated - this is production-proven code!
+# We use this name to distinguish from "optimized" fast implementations.

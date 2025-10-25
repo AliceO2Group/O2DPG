@@ -36,7 +36,7 @@ import pandas as pd
 # --- Import the project module ---
 try:
     from .. import groupby_regression as gr
-    from ..groupby_regression import GroupByRegressor
+    from groupby_regression import GroupByRegressor
 except Exception as e:
     print("[ERROR] Failed to import groupby_regression.py:", e, file=sys.stderr)
     raise

@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import numpy as np
 #from groupby_regression import GroupByRegressor
-from ..groupby_regression import GroupByRegressor
+from .groupby_regression import GroupByRegressor
 
 @pytest.fixture
 def sample_data():
