@@ -472,25 +472,130 @@ dX_values = [-2.1, 0.5, -1.8, ...]         # target distortions
 
 ### 5.1 C++ Implementation (2015-2024)
 
-**Overview:** The original sliding window implementation was developed in C++ within the ALICE AliRoot/O2 framework, using N-dimensional histograms as input structures.
+**Overview:** The original sliding window implementation was developed in C++ within the ALICE AliRoot framework, 
+using N-dimensional histograms as input structures. The code has not yet been ported to the Run 3 O2 framework, 
+and until recently it was used for Run 3 data with AliRoot as a side package.
+
+It was used for performance and dE/dx parameterisation, as well as the initial implementation of the TPC distortion 
+maps in 2015. Q/q, track delta, and efficiency  variables were grouped into histograms with the same binning. 
+Several versions of binning with different granularity and focus were used, in order to bypass the ROOT internal 
+limitation of 1 GB.
+
+Detector-based summary binning versions:
+* Kinematical variables (q/pt, tgl)
+* ~ occupancy
+* Phi/sector modulation (90 or 180 bins in the full phi range, or 10–20 bins per sector assuming sector symmetry)
+
 
 **Key features:**
-- Multi-dimensional histogram-based approach using ROOT's THnSparse
-- Efficient kernel lookups via histogram bin navigation
-- Support for various boundary conditions (mirror, truncate, periodic)
+- Multi-dimensional histogram-based approach using ROOT's THnSparse binned (1GBy limit)
+  - O(10) varaiblae types x 5 biining types used (see comment above)  
+  - aggregation using smapled data on server (bash parallel comand), or farm if larger production
+- Sliding window implmentation as a proposprocessing step together with groupby regression
+  - Kernel-based neighbor aggregation using histogram bin indexing
+  - In addition to calluating sldiing window statistcs (mean,median, std,mad LTM) of variables  of interest 
+      (dEdx,efficency,track deltai) aslo mean of varaibles used for binning (q/pt,eta,phi,occupancy)
+  - Weighting schemes: uniform, distance-based (inverse distance, Gaussian)
+- User-defined fit functions (linear, polynomial, custom)
 - Integrated with ALICE offline analysis framework
 
+#### 5.1 C++ Function Signature
+
+```C++
+/// Create list of histograms specified by selection
+/// Should be rough equivalent of the "ALICE train" TTree->Draw();
+///  a.) Data are read only once
+///  b.) values expression are reused (evaluated only once)
+///  c.) Axis labelling and names of variables extracted from the tree metadata (.AxisTitle)
+/// * default cut
+///   * default selection applied common for all histograms (can be empty)
+///
+/// * hisString : - semicolomn separated string
+///   * his0;his1; ...; hisN
+/// * histogram syntax:
+///    * var0:var1:...:<#weight>>>hisName(bins0,min0,max0,bins1,min0,min, minValue,maxValue)
+///    * Syntax:
+///      * vari are histogramming expression
+///      * weight (or cut) entry is optional
+///        * default cut is always applied, weight is applied on top
+///    * ranges syntax:
+///      *  nbins,max,min where max and min are double or format strings
+///        * in case format string % specified using (Fraction, mean,meanFraction, rms, rmsFraction)
+///          *  %fraction.sigma
+///          *  #cumulant
+///          *  range for bin content can be specified in the same format (by default is not set)
+/*!
+##### CPU time to process one histogram or set of histograms (in particular case of esdTrack queries) is the same - and it is determined (90 %) by tree->GetEntry
+\code
+  THn * his0= (THn*)hisArray->At(0);
+  his0->Projection(0)->Draw("");
+  tree->SetLineColor(2);
+  TStopwatch timer; tree->Draw("esdTrack.Pt()","(esdTrack.fFlags&0x40)>0&&esdTrack.fTPCncls>70","same",60000); timer.Print();
+\endcode
+*/
+
+/// \param tree         - input tree
+/// \param hisString    - selection string
+/// \param defaultCut   - default selection applied common for all histograms (can be empty)
+/// \param firstEntry   - first entry to process
+/// \param lastEntry    - last entry to process
+/// \param chunkSize    - chunk size
+/// \param verbose      - verbosity
+/// \return             - TObjArray of N-dimensional histograms
+/*!
+#### Example usage:
+\code
+    chunkSize=10000;
+    verbose=7;
+    chinput=gSystem->ExpandPathName("$NOTES/JIRA/PWGPP-227/data/2016/LHC16t/000267161/pass1_CENT_wSDD/filteredLocal.list");
+    TString defaultCut="esdTrack.fTPCncls>70";
+    TTree *tree=(TTree*)AliXRDPROOFtoolkit::MakeChain(chinput, "highPt", 0, 1000000000,0);
+    TString hisString="";
+    hisString+="esdTrack.Pt():#esdTrack.fTPCncls>70>>hisPtAll(100,0,30);";
+    hisString+="esdTrack.GetAlpha():#esdTrack.fTPCncls>70>>hisAlpha(90,-3.2,3.2);";
+    hisString+="esdTrack.GetTgl():#esdTrack.fTPCncls>70>>hisTgl(20,-1.2,1.2);";
+    hisString+="esdTrack.Pt():esdTrack.GetAlpha():esdTrack.GetTgl():#esdTrack.fTPCncls>70>>hisPtPhiThetaAll(100,0,30,90,-3.2,3.2,20,-1.2,1.2);";
+    hisString+="esdTrack.Pt():#(esdTrack.fFlags&0x4)>0>>hisPtITS(100,1,10);";
+    hisString+="esdTrack.fIp.Pt():#(esdTrack.fFlags&0x4)>0>>hisPtTPCOnly(100,1,10);";
+    TStopwatch timer; hisArray = AliTreePlayer::MakeHistograms(tree, hisString, "(esdTrack.fFlags&0x40)>0&&esdTrack.fTPCncls>70",0,60000,100000); timer.Print();
+\endcode
+ */
+TObjArray  * AliTreePlayer::MakeHistograms(TTree * tree, TString hisString, TString defaultCut, Int_t firstEntry, Int_t lastEntry, Int_t chunkSize, Int_t verbose){
+```
+```C++
+/// TStatToolkit::MakePDFMap function to calculate statistics form the N dimensnal PDF map
+/// Original implementation - a copy of the MakeDistortionMapFast
+/// \param histo              -  input n dimsnional histogram
+/// \param pcstream           -  output stream to store tree with PDF statistic maps
+/// \param projectionInfo     -
+/// \param options            - option - parameterize statistic to extract
+/// \param verbose            - verbosity of extraction
+/// Example:
+/// options["exportGraph"]="1";
+///  options["exportGraphCumulative"]="1";
+///  options["LTMestimators"]="0.6:0.5:0.4";
+//  options["LTMFitRange"]="0.6:5:1";
+void TStatToolkit::MakePDFMap(THnBase *histo, TTreeSRedirector *pcstream, TMatrixD &projectionInfo, std::map<std::string, std::string> pdfOptions, Int_t verbose)
+
+
+```
+
+
 **Strengths:**
-- Proven in production for TPC calibration (distortion maps, 2015-2024)
+- Proven in production for globale trackin and calibration QA
 - Computationally efficient for large datasets
 - Well-tested and reliable
+- Used for expert QAs
 
 **Limitations:**
-- Rigid configuration: adding new fit functions required C++ code changes
-- Complex API: required deep knowledge of ROOT histogram internals
-- Limited extensibility: difficult to prototype new methods
-- Tight coupling to ALICE-specific data structures
-- Challenging for non-experts to use or modify
+- Tight coupling with ROOT - addopting ROT string based configuration for describing histograms
+- Using C++11 - not easy configuration - preferied not to rely on templates
+- Rigid configuration: string based API to define histograms and mapping (in pythyo using dictionaries)
+- Limited extensibility: difficult to add new fit functions
+- Relying on the AliRoot framework - not directly usable in O2 or scientific Python ecosystem
+
+
+
 
 ### 5.2 Python Implementation v1 (2024)
 
@@ -508,7 +613,7 @@ dX_values = [-2.1, 0.5, -1.8, ...]         # target distortions
 - Simple conceptual model
 - Leverages existing pandas/numpy ecosystem
 - Easy to prototype and modify
-- Works with standard groupby-regression tools (v4 engine)
+- Works with standard groupby-regression tools 
 
 **Limitations:**
 - **Memory explosion:** 27× expansion for ±1 window, 125× for ±2 window
@@ -536,7 +641,8 @@ dX_values = [-2.1, 0.5, -1.8, ...]         # target distortions
 - Clean API accessible to non-experts
 - Production-scale performance (<4GB memory, <30 min runtime)
 
----
+
+
 
 ## 6. Specifications - Requirements
 
