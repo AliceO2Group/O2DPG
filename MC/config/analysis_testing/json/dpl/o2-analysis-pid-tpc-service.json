@@ -6,7 +6,7 @@
             "ccdbPath": "Analysis/PID/TPC/Response",
             "recoPass": "",
             "ccdb-timestamp": "0",
-            "useNetworkCorrection": "1",
+            "useNetworkCorrection": "0",
             "autofetchNetworks": "1",
             "skipTPCOnly": "0",
             "networkPathLocally": "network.onnx",

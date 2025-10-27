@@ -1,185 +1,145 @@
 {
     "mult-cent-table": {
-        "enabledTables": {
-            "labels_rows": [
-                "FV0Mults",
-                "FV0AOuterMults",
-                "FT0Mults",
-                "FDDMults",
-                "ZDCMults",
-                "TrackletMults",
-                "TPCMults",
-                "PVMults",
-                "MultsExtra",
-                "MultSelections",
-                "FV0MultZeqs",
-                "FT0MultZeqs",
-                "FDDMultZeqs",
-                "PVMultZeqs",
-                "GlobalMultZeqs",
-                "MFTMultZeqs",
-                "MultMCExtras",
-                "Mult2MCExtras",
-                "MFTMults",
-                "MultsGlobal",
-                "CentRun2V0Ms",
-                "CentRun2V0As",
-                "CentRun2SPDTrks",
-                "CentRun2SPDClss",
-                "CentRun2CL0s",
-                "CentRun2CL1s",
-                "CentFV0As",
-                "CentFT0Ms",
-                "CentFT0As",
-                "CentFT0Cs",
-                "CentFT0CVariant1s",
-                "CentFDDMs",
-                "CentNTPVs",
-                "CentNGlobals",
-                "CentMFTs",
-                "BCCentFT0Ms",
-                "BCCentFT0As",
-                "BCCentFT0Cs"
-            ],
-            "labels_cols": [
-                "enable"
-            ],
-            "values": [
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ],
-                [
-                    "-1"
-                ]
-            ]
-        },
-        "autoConfigureProcess": "0",
-        "doVertexZeq": "1",
-        "minPtGlobalTrack": "0.150000006",
-        "maxPtGlobalTrack": "1e+10",
-        "minNclsITSGlobalTrack": "5",
-        "minNclsITSibGlobalTrack": "1",
-        "ccdbPathVtxZ": "Centrality/Calibration",
-        "ccdbPathCentrality": "Centrality/Estimators",
-        "reconstructionPass": "",
-        "generatorName": "",
-        "embedINELgtZEROselection": "0",
-        "ccdburl": "http://alice-ccdb.cern.ch",
-        "processRun2": "0",
-        "processRun3": "0",
-        "processRun3WithGlobalCounters": "1",
-        "processMFT": "1",
-        "processMonteCarlo": "0",
-        "processMonteCarlo2Mults": "0",
-        "processCentralityRun2": "0",
-        "processCentralityRun3": "1"
-    }
+    "generatorName": "",
+    "processRun3WithGlobalCounters": "0",
+    "processMFT": "0",
+    "processRun3": "1",
+    "processCentralityRun2": "0",
+    "processRun2": "0",
+    "processMonteCarlo2Mults": "0",
+    "enabledTables": {
+      "values": [
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ],
+        [
+          -1
+        ]
+      ]
+    },
+    "maxPtGlobalTrack": "1e+10",
+    "embedINELgtZEROselection": "0",
+    "minPtGlobalTrack": "0.15",
+    "autoConfigureProcess": "0",
+    "ccdbPathCentrality": "Centrality/Estimators",
+    "doVertexZeq": "1",
+    "ccdbPathVtxZ": "Centrality/Calibration",
+    "minNclsITSibGlobalTrack": "1",
+    "reconstructionPass": "",
+    "ccdburl": "http://alice-ccdb.cern.ch",
+    "processCentralityRun3": "1",
+    "minNclsITSGlobalTrack": "5",
+    "processMonteCarlo": "0"
+  }
 }
