@@ -5,6 +5,8 @@
 **Date:** 2025-10-27  
 **Version:** 0.1 (Draft)
 
+**Note:** ALICE-specific acronyms and terminology are explained in Appendix A (Glossary).
+
 ---
 
 ## 1. Motivation
@@ -238,11 +240,11 @@ Each dataset exhibits the characteristic challenges of high-dimensional sparse d
 
 **Purpose:** Validate spatial sliding window aggregation with realistic detector calibration data.
 
-**Data source:** ALICE TPC sector 3 distortion corrections from 5 time slices example fordistertion vs integrated digital current (IDC) calibration
+**Data source:** ALICE TPC sector 3 distortion corrections from 5 time slices - example for distortion vs integrated digital current (IDC) calibration
 
 #### 2.2.1 Structure
 
-**File:** `tpc_realistic_test.parquet` (14 MB parquet for 1 sector - 5 maps-tome slices for distortion vs curent fits)
+**File:** `tpc_realistic_test.parquet` (14 MB parquet for 1 sector - 5 maps/time slices for distortion vs current fits)
 
 **Dimensions:**
 ```
@@ -280,7 +282,7 @@ All target variables are fully populated (405,423 non-null values).
 **Detector state:**
 - `meanIDC`: Mean Integrator Drift Current [mean: 1.89, median: 1.97]
 - `medianIDC`: Median IDC [mean: 1.89, median: 1.97]
-- `deltaIDC`: IDC variation in respect to fill average 
+- `deltaIDC`: IDC variation in respect to fill average
 - `meanCTP`, `medianCTP`: QA variable. -independent current proxy
 
 
@@ -320,9 +322,9 @@ This dataset validates:
 **Purpose:** Multi-dimensional performance metrics requiring combined spatial, kinematic, and temporal aggregation.
 
 #### 2.4.1 Track Segment Resolution
-To provide comprehensive tracking performance characterization, 
-we analyze track segment residuals and QA variabels  as functions of multiple kinematic and detector conditions.
-Varaibles are usualy transmed e.g instead of binnin in pt we use q/pt for better linearity, and to miinmize amout of bins
+To provide comprehensive tracking performance characterization,
+we analyze track segment residuals and QA variables as functions of multiple kinematic and detector conditions.
+Variables are usually transformed, e.g., instead of binning in pT we use q/pT for better linearity, and to minimize the number of bins
 resp. to get enough statistics per bin.
 **Measurement:** TPC-ITS matching and TPC-vertex constraints
 
@@ -344,38 +346,34 @@ Total bins: 200 × 20 × 180 × 10 × 10 = 144,000,000
 - Angular matching: Δθ, Δφ at vertex
 - DCA (Distance of Closest Approach): XY and Z components
 - χ² distributions per track type
-- efficinecy 
+- efficiency
 - PID- dEdx, dEdx per region and per specie
 
 
 
 
-### 2.5 Dataset Comparison Summary 
-<!-- MI-SECTION: Note for later review --> To be updated by Claude.
+### 2.5 Dataset Comparison Summary
 
-Data volume here is approacimate. Usually I mal limitted by the 2 GBy limit THN sizein ROOT
+**Note:** Data volumes are approximate. Production analyses are typically limited by the **1 GB THN** (multidimensional histogram) size limit in ROOT.
 
-| **Dataset** | **Dimensions** | **Bins** | **Rows** | **Memory** | **Sparsity** | **Window Type** |
-|-------------|---------------|----------|----------|------------|--------------|-----------------|
-| **A: TPC Spatial** | 3D (x,y,z) | 85k | 405k | 46 MB | 26% occupied | Integer ±1-2 |
-| **B: TPC Temporal** | 4D (x,y,z,t) | 1.5M | 7-10M | 0.8-1.5 GB | 20-30% | Integer + time |
-| **C: Track Resolution** | 5D (pT,η,φ,occ,t) | 144M | 100M-1B | 10-100 GB | 50-70% sparse | Float ±1-3 |
-| **C: Efficiency** | 4D (pT,η,φ,occ) | 3.2M | 10M-100M | 1-10 GB | 30-50% | Float ±1-2 |
-| **C: PID** | 3D (p,dE/dx,occ) | 200k | 1M-10M | 0.1-1 GB | 40-60% | Float ±2-5 |
+| **Dataset** | **Dimensions** | **Bins** | **Rows (approx)** | **Memory** | **Sparsity** | **Window Type** |
+|-------------|---------------|----------|-------------------|------------|--------------|-----------------|
+| **A: TPC Spatial** | 3D (x,y,z) | 85k | 405k | 46 MB/sector | ~26% occupied | Integer ±1-2 |
+| **C: Track Resolution** | 5D (q/pT,η,φ,occ,rate) | 7.2M | 1M-10M | 0.1-1 GB | 50-70% sparse | Float ±1-3 |
 
 **Key observations:**
-- **Dimensionality:** 3D to 6D (if combining parameters)
-- **Bin counts:** 10⁴ to 10⁸ (memory and compute constraints vary)
-- **Sparsity:** 20-70% of bins have insufficient individual statistics
-- **Window types:** Integer (spatial bins), float (kinematic variables), mixed
-- **Memory range:** 50 MB (test) to 100 GB (full production without sampling)
+- **Dimensionality:** 3D to 5D in these examples (extensible to 6D+)
+- **Bin counts:** 10⁴ to 10⁷ (memory and ROOT THN constraints)
+- **Sparsity:** 26-70% of bins have insufficient individual statistics
+- **Window types:** Integer (spatial bins), float (kinematic variables)
+- **Memory range:** 50 MB (single sector) to 1 GB (full kinematic space)
+- **Practical limits:** 1 GB THN size in ROOT constrains production binning
 
 ---
 
 ### 2.6 Data Characteristics Relevant to Sliding Window Design
 
 #### 2.6.1 Bin Structure Types
-<!-- MI-SECTION: Note for later review --> To be updated by Claude.
 
 **Observed in ALICE data:**
 
@@ -385,9 +383,9 @@ Data volume here is approacimate. Usually I mal limitted by the 2 GBy limit THN 
     - Example: xBin ∈ [0, 151], step=1
 
 2. **Non-uniform float coordinates** (kinematic variables, time)
-    - Variable bin widths (e.g., logarithmic pT binning)
-    - Neighbors defined by distance, not index
-    - Example: pT bins = [0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 1.0, ...]
+    - Variable bin widths (e.g., q/pT transformation for linearity)
+    - Neighbors defined by distance or bin index
+    - Example: q/pT bins with non-uniform spacing for better statistics distribution
 
 3. **Periodic dimensions** (φ angles)
     - Wrap-around at boundaries: φ=0 ≡ φ=2π
@@ -425,7 +423,7 @@ dX_values = [-2.1, 0.5, -1.8, ...]         # target distortions
 - xBin=0: Inner field cage (mirror or truncate)
 - xBin=151: Outer field cage (mirror or truncate)
 - z2xBin=0,27: Readout planes (asymmetric, truncate)
-- 3 internal boundaries (stacks  edges at rows 63,100,...): (non smoothing across)
+- 3 internal boundaries (stack edges at rows 63, 100, ...): no smoothing across boundaries
 - φ: Periodic (wrap-around)
 
 
@@ -436,7 +434,7 @@ dX_values = [-2.1, 0.5, -1.8, ...]         # target distortions
 
 ---
 
-### 2.7 Data Availability and Access for bencmarkings
+### 2.7 Data Availability and Access for Benchmarking
 
 **Test dataset (Dataset A):**
 - File: `benchmarks/data/tpc_realistic_test.parquet` (14 MB)
@@ -472,13 +470,13 @@ dX_values = [-2.1, 0.5, -1.8, ...]         # target distortions
 
 ### 5.1 C++ Implementation (2015-2024)
 
-**Overview:** The original sliding window implementation was developed in C++ within the ALICE AliRoot framework, 
-using N-dimensional histograms as input structures. The code has not yet been ported to the Run 3 O2 framework, 
+**Overview:** The original sliding window implementation was developed in C++ within the ALICE AliRoot framework,
+using N-dimensional histograms as input structures. The code has not yet been ported to the Run 3 O2 framework,
 and until recently it was used for Run 3 data with AliRoot as a side package.
 
-It was used for performance and dE/dx parameterisation, as well as the initial implementation of the TPC distortion 
-maps in 2015. Q/q, track delta, and efficiency  variables were grouped into histograms with the same binning. 
-Several versions of binning with different granularity and focus were used, in order to bypass the ROOT internal 
+It was used for performance and dE/dx parameterisation, as well as the initial implementation of the TPC distortion
+maps in 2015. Q/q, track delta, and efficiency variables were grouped into histograms with the same binning.
+Several versions of binning with different granularity and focus were used, in order to bypass the ROOT internal
 limitation of 1 GB.
 
 Detector-based summary binning versions:
@@ -488,14 +486,14 @@ Detector-based summary binning versions:
 
 
 **Key features:**
-- Multi-dimensional histogram-based approach using ROOT's THnSparse binned (1GBy limit)
-  - O(10) varaiblae types x 5 biining types used (see comment above)  
-  - aggregation using smapled data on server (bash parallel comand), or farm if larger production
-- Sliding window implmentation as a proposprocessing step together with groupby regression
-  - Kernel-based neighbor aggregation using histogram bin indexing
-  - In addition to calluating sldiing window statistcs (mean,median, std,mad LTM) of variables  of interest 
-      (dEdx,efficency,track deltai) aslo mean of varaibles used for binning (q/pt,eta,phi,occupancy)
-  - Weighting schemes: uniform, distance-based (inverse distance, Gaussian)
+- Multi-dimensional histogram-based approach using ROOT's THnSparse (1 GB limit per histogram object)
+    - O(10) variable types × 5 binning types used (see comment above)
+    - Aggregation using sampled data on server (bash parallel command), or farm if larger production
+- Sliding window implementation as a preprocessing step together with groupby regression
+    - Kernel-based neighbor aggregation using histogram bin indexing
+    - In addition to calculating sliding window statistics (mean, median, std, mad, LTM) of variables of interest
+      (dE/dx, efficiency, track delta) also mean of variables used for binning (q/pT, eta, phi, occupancy)
+    - Weighting schemes: uniform, distance-based (inverse distance, Gaussian)
 - User-defined fit functions (linear, polynomial, custom)
 - Integrated with ALICE offline analysis framework
 
@@ -563,7 +561,7 @@ Detector-based summary binning versions:
 TObjArray  * AliTreePlayer::MakeHistograms(TTree * tree, TString hisString, TString defaultCut, Int_t firstEntry, Int_t lastEntry, Int_t chunkSize, Int_t verbose){
 ```
 ```C++
-/// TStatToolkit::MakePDFMap function to calculate statistics form the N dimensnal PDF map
+/// TStatToolkit::MakePDFMap function to calculate statistics from the N-dimensional PDF map
 /// Original implementation - a copy of the MakeDistortionMapFast
 /// \param histo              -  input n dimsnional histogram
 /// \param pcstream           -  output stream to store tree with PDF statistic maps
@@ -582,15 +580,15 @@ void TStatToolkit::MakePDFMap(THnBase *histo, TTreeSRedirector *pcstream, TMatri
 
 
 **Strengths:**
-- Proven in production for globale trackin and calibration QA
+- Proven in production for global tracking and calibration QA
 - Computationally efficient for large datasets
 - Well-tested and reliable
 - Used for expert QAs
 
 **Limitations:**
-- Tight coupling with ROOT - addopting ROT string based configuration for describing histograms
-- Using C++11 - not easy configuration - preferied not to rely on templates
-- Rigid configuration: string based API to define histograms and mapping (in pythyo using dictionaries)
+- Tight coupling with ROOT - adopting ROOT string-based configuration for describing histograms
+- Using C++11 - not easy configuration - preferred not to rely on templates
+- Rigid configuration: string-based API to define histograms and mapping (in Python using dictionaries)
 - Limited extensibility: difficult to add new fit functions
 - Relying on the AliRoot framework - not directly usable in O2 or scientific Python ecosystem
 
@@ -613,7 +611,7 @@ void TStatToolkit::MakePDFMap(THnBase *histo, TTreeSRedirector *pcstream, TMatri
 - Simple conceptual model
 - Leverages existing pandas/numpy ecosystem
 - Easy to prototype and modify
-- Works with standard groupby-regression tools 
+- Works with standard groupby-regression tools
 
 **Limitations:**
 - **Memory explosion:** 27× expansion for ±1 window, 125× for ±2 window
@@ -655,6 +653,32 @@ void TStatToolkit::MakePDFMap(THnBase *histo, TTreeSRedirector *pcstream, TMatri
 - Ivanov, M., Ivanov, M., Eulisse, G. (2024). "RootInteractive tool for multidimensional statistical analysis, machine learning and analytical model validation." arXiv:2403.19330v1 [hep-ex]
 - [ALICE TPC references to be added]
 - [Statistical smoothing references to be added]
+
+---
+
+## Appendix A: Glossary of ALICE-Specific Terms
+
+This specification uses terminology from the ALICE experiment at CERN and the ROOT data analysis framework. For readers outside the ALICE collaboration, key terms are defined below:
+
+**ALICE:** A Large Ion Collider Experiment at CERN's Large Hadron Collider (LHC), specializing in heavy-ion physics and quark-gluon plasma studies.
+
+**AliRoot:** Legacy ALICE offline analysis framework (C++03, ~2000-present), tightly integrated with ROOT and GEANT3. Used for data processing and physics analysis during LHC Run 1 and Run 2. Still used for historical data analysis, being phased out in favor of O2 for new production.
+
+**O2:** ALICE Run 3 analysis framework (modern C++17, 2022+), successor to AliRoot with improved performance, memory efficiency, and maintainability. Built on FairRoot and Data Processing Layer (DPL). Designed for the high-luminosity Run 3 data-taking period with continuous readout.
+
+**TPC (Time Projection Chamber):** ALICE's main tracking detector. A large cylindrical gas detector that reconstructs charged particle trajectories in three dimensions by measuring ionization electrons drifting in an electric field. Covers pseudorapidity range |η| < 0.9, providing up to 159 space points per track.
+
+**THnSparse:** ROOT class for N-dimensional sparse histograms. Stores only populated bins to save memory, limited to ~2³¹ bins (~1 GB typical practical limit due to ROOT's internal 32-bit indexing). Used extensively in ALICE for multi-dimensional performance and calibration studies.
+
+**TTree:** ROOT's columnar data structure for storing event-based analysis data. Similar conceptually to Apache Parquet or HDF5, but with C++ tight integration and high-energy physics conventions. Supports compression and lazy branch loading for selective access.
+
+**dE/dx (energy loss per unit length):** Ionization energy deposited by a charged particle per unit path length in the TPC gas. Primary observable for particle identification (π/K/p/e⁻ separation) via the Bethe-Bloch formula.
+
+**Distortion maps:** 3D vector fields describing systematic track reconstruction errors in the TPC due to space charge effects, E×B effects, and field inhomogeneities. Derived from comparison of reconstructed and true (Monte Carlo or reference) track positions. Calibrated using sliding window regression over spatial and temporal bins.
+
+**ROOT:** CERN's C++ framework for data analysis in high-energy physics. Provides histograms (TH1, THnSparse), trees (TTree), fitting (TF1), and I/O. Standard tool in particle physics but has performance limitations for multi-TB scale datasets typical of Run 3.
+
+**Run 3:** ALICE data-taking period starting 2022, with Pb-Pb collision rates 50× higher than Run 2 and continuous readout (50 kHz Pb-Pb, up to 500 kHz pp), requiring new frameworks and analysis techniques.
 
 ---
 
