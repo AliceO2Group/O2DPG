@@ -220,7 +220,239 @@ This document defines a **Sliding Window GroupBy Regression** framework that:
 
 ## 2. Example Data
 
-[To be written in next iteration]
+This section describes representative datasets used to motivate and validate the sliding window regression framework. These examples span ALICE tracking, calibration, and performance studies, illustrating the range of dimensionalities, bin structures, and statistical challenges the framework must address.
+
+### 2.1 Dataset Overview
+
+Three primary dataset categories demonstrate the framework's applicability:
+
+1. **TPC Spatial Distortion Maps** (current test data)
+2. **TPC Temporal Evolution** (production scale)
+3. **Tracking Performance Parameterization** (multi-dimensional)
+
+Each dataset exhibits the characteristic challenges of high-dimensional sparse data requiring local aggregation through sliding window techniques.
+
+---
+
+### 2.2 Dataset A: TPC Spatial Distortion Maps (Test Data)
+
+**Purpose:** Validate spatial sliding window aggregation with realistic detector calibration data.
+
+**Data source:** ALICE TPC sector 3 distortion corrections from 5 time slices example fordistertion vs integrated digital current (IDC) calibration
+
+#### 2.2.1 Structure
+
+**File:** `tpc_realistic_test.parquet` (14 MB parquet for 1 sector - 5 maps-tome slices for distortion vs curent fits)
+
+**Dimensions:**
+```
+Rows: 405,423
+Columns: O(20)
+
+Spatial binning:
+- xBin:    152 bins [0 to 151]  (radial direction in TPC)
+- y2xBin:   20 bins [0 to  19]  (pad-row normalized y)
+- z2xBin:   28 bins [0 to  27]  (drift-direction normalized z)
+- bsec:      1 value [3]         (sector 3 only in test data)
+
+
+Temporal structure:
+- run:            1 unique run
+- medianTimeMS:   5 unique time points
+- firstTFTime:    5 time slices
+```
+
+#### 2.2.2 Target Variables (Fit Targets)
+
+**Distortion corrections (primary):**
+- `dX`: Radial distortion [-4.4 to +5.0 cm]
+- `dY`: Pad-row direction distortion [-1.4 to +2.0 cm]
+- `dZ`: Drift direction distortion [-2.0 to +3.6 cm]
+
+**Derived quantities:**
+- `EXYCorr`: Combined XY correction magnitude [-0.84 to +0.89]
+- `D3`: 3D distortion magnitude [0.23 to 4.85 cm]
+
+All target variables are fully populated (405,423 non-null values).
+
+#### 2.2.3 Features (Fit Predictors)
+
+**Detector state:**
+- `meanIDC`: Mean Integrator Drift Current [mean: 1.89, median: 1.97]
+- `medianIDC`: Median IDC [mean: 1.89, median: 1.97]
+- `deltaIDC`: IDC variation in respect to fill average 
+- `meanCTP`, `medianCTP`: QA variable. -independent current proxy
+
+
+**Statistics:**
+- `entries`: Entries per bin [median: 2840]
+- `weight`: Statistical weight
+
+**Quality:**
+- `flags`: Quality flags (value: 7 in test data)
+
+
+**Memory footprint:** using per sector splitting
+- In-memory (pandas): 45.6 MB
+- Per-row overhead: 113 bytes
+
+#### 2.2.5 Use Case
+
+This dataset validates:
+- **Spatial sliding window** aggregation (±1 in xBin, y2xBin, z2xBin)
+- **Integer bin indexing** with boundary handling
+- **Linear regression** within sliding windows (dX, dY, dZ ~ meanIDC)
+- **Multi-target fitting** (simultaneous fits for dX, dY, dZ)
+
+
+**Expected workflow:**
+1. For each center bin (xBin, y2xBin, z2xBin)
+2. Aggregate data from ±1 neighbors (3×3×3 = 27 bins)
+3. Fit linear model: `dX ~ meanIDC` (and similarly for dY, dZ)
+4. Extract coefficients, uncertainties, and diagnostics per center bin
+5. Result: Smoothed distortion field with improved statistics
+
+---
+
+
+### 2.4 Dataset C: Tracking Performance Parameterization
+
+**Purpose:** Multi-dimensional performance metrics requiring combined spatial, kinematic, and temporal aggregation.
+
+#### 2.4.1 Track Segment Resolution
+To provide comprehensive tracking performance characterization, 
+we analyze track segment residuals and QA variabels  as functions of multiple kinematic and detector conditions.
+Varaibles are usualy transmed e.g instead of binnin in pt we use q/pt for better linearity, and to miinmize amout of bins
+resp. to get enough statistics per bin.
+**Measurement:** TPC-ITS matching and TPC-vertex constraints
+
+**Dimensions:**
+```
+5D parameter space:
+- q/Pt       200 bins [-8 to +8 c/GeV]   (charge over pT)
+- η:         20 bins [-1.0 to +1.0]      (pseudorapidity)  
+- φ:         180 bins [0 to 2π]           (azimuthal angle)
+- sqrt(occupancy): -510 bins               (number of track in TPC volume)
+- rate (kHz): 5-10 bins [0 to 50 kHz]      (detector load)
+
+Total bins: 200 × 20 × 180 × 10 × 10 = 144,000,000
+
+```
+
+**Targets:**
+- Track segment residuals: mean bias, RMS, quantiles (10%, 50%, 90%)
+- Angular matching: Δθ, Δφ at vertex
+- DCA (Distance of Closest Approach): XY and Z components
+- χ² distributions per track type
+- efficinecy 
+- PID- dEdx, dEdx per region and per specie
+
+
+
+
+### 2.5 Dataset Comparison Summary 
+<!-- MI-SECTION: Note for later review --> To be updated by Claude.
+
+Data volume here is approacimate. Usually I mal limitted by the 2 GBy limit THN sizein ROOT
+
+| **Dataset** | **Dimensions** | **Bins** | **Rows** | **Memory** | **Sparsity** | **Window Type** |
+|-------------|---------------|----------|----------|------------|--------------|-----------------|
+| **A: TPC Spatial** | 3D (x,y,z) | 85k | 405k | 46 MB | 26% occupied | Integer ±1-2 |
+| **B: TPC Temporal** | 4D (x,y,z,t) | 1.5M | 7-10M | 0.8-1.5 GB | 20-30% | Integer + time |
+| **C: Track Resolution** | 5D (pT,η,φ,occ,t) | 144M | 100M-1B | 10-100 GB | 50-70% sparse | Float ±1-3 |
+| **C: Efficiency** | 4D (pT,η,φ,occ) | 3.2M | 10M-100M | 1-10 GB | 30-50% | Float ±1-2 |
+| **C: PID** | 3D (p,dE/dx,occ) | 200k | 1M-10M | 0.1-1 GB | 40-60% | Float ±2-5 |
+
+**Key observations:**
+- **Dimensionality:** 3D to 6D (if combining parameters)
+- **Bin counts:** 10⁴ to 10⁸ (memory and compute constraints vary)
+- **Sparsity:** 20-70% of bins have insufficient individual statistics
+- **Window types:** Integer (spatial bins), float (kinematic variables), mixed
+- **Memory range:** 50 MB (test) to 100 GB (full production without sampling)
+
+---
+
+### 2.6 Data Characteristics Relevant to Sliding Window Design
+
+#### 2.6.1 Bin Structure Types
+<!-- MI-SECTION: Note for later review --> To be updated by Claude.
+
+**Observed in ALICE data:**
+
+1. **Uniform integer grids** (TPC spatial bins)
+    - Regular spacing, known bin IDs
+    - Efficient neighbor lookup: bin ± 1, ± 2
+    - Example: xBin ∈ [0, 151], step=1
+
+2. **Non-uniform float coordinates** (kinematic variables, time)
+    - Variable bin widths (e.g., logarithmic pT binning)
+    - Neighbors defined by distance, not index
+    - Example: pT bins = [0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 1.0, ...]
+
+3. **Periodic dimensions** (φ angles)
+    - Wrap-around at boundaries: φ=0 ≡ φ=2π
+    - Requires special boundary handling
+
+4. **Mixed types** (combined analyses)
+    - Spatial (integer) + kinematic (float) + temporal (float)
+    - Requires flexible window specification per dimension
+
+#### 2.6.2 Statistical Properties
+
+**From Dataset A analysis:**
+
+```python
+# Bin-level statistics (before sliding window):
+entries_per_bin = [1, 1, 1, 2, 1, 1, ...]  # median: 1
+mean_IDC = [1.89, 1.92, 1.88, ...]         # varies per bin
+dX_values = [-2.1, 0.5, -1.8, ...]         # target distortions
+
+# Challenge: Cannot reliably fit dX ~ meanIDC with n=1-2 points per bin
+# Solution: Sliding window aggregates 27-125 neighbors → sufficient stats
+```
+
+**Statistical needs:**
+- **Minimum for mean/median:** ~10 points (robust estimates)
+- **Minimum for RMS/quantiles:** ~30 points (stable tail estimates)
+- **Minimum for linear fit:** ~50 points (reliable slope, uncertainty)
+- **Typical window provides:** 27 (±1 in 3D) to 343 (±3 in 3D) potential bins
+
+**Reality check:** Not all neighbor bins are populated, effective N often 20-60% of theoretical maximum due to sparsity.
+
+#### 2.6.3 Boundary Effects
+
+**Spatial boundaries (TPC geometry):**
+- xBin=0: Inner field cage (mirror or truncate)
+- xBin=151: Outer field cage (mirror or truncate)
+- z2xBin=0,27: Readout planes (asymmetric, truncate)
+- 3 internal boundaries (stacks  edges at rows 63,100,...): (non smoothing across)
+- φ: Periodic (wrap-around)
+
+
+**Implications for sliding window:**
+- Must support per-dimension boundary rules
+- Cannot use one-size-fits-all approach
+- Boundary bins have fewer neighbors → adjust weighting or normalization
+
+---
+
+### 2.7 Data Availability and Access for bencmarkings
+
+**Test dataset (Dataset A):**
+- File: `benchmarks/data/tpc_realistic_test.parquet` (14 MB)
+- Format: Apache Parquet (optimized) or pickle (compatibility)
+- Source: ALICE TPC sector 3, 5 time slices, anonymized for testing
+- Public: Yes (within O2DPG repository for development and validation)
+
+
+**Synthetic data generation:**
+- For testing and benchmarking: Can generate representative synthetic data
+- Preserves statistical structure without real detector specifics
+- Script: `benchmarks/data/generate_synthetic_tpc_data.py` (to be added)
+
+---
+
+**Next steps:** Section 3 describes concrete use cases and workflows that leverage these datasets to demonstrate the sliding window framework's capabilities.
 
 ---
 
