@@ -76,6 +76,7 @@
                       "o2-analysis-propagationservice",
                       "o2-analysis-trackselection",
                       "o2-analysis-multcenttable",
+                      "o2-analysis-fwdtrack-to-collision-associator",
                       "o2-analysis-mm-track-propagation",
                       "o2-analysis-mm-dndeta-mft"]
         },
