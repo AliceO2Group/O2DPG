@@ -26,6 +26,13 @@ from .groupby_regression_optimized import (
     GroupByRegressorOptimized,
 )
 
+# Phase 7: Sliding Window Regression (M7.1)
+from .groupby_regression_sliding_window import (
+    make_sliding_window_fit,
+    InvalidWindowSpec,
+    PerformanceWarning,
+)
+
 # Version info
 __version__ = '2.0.0'
 __author__ = 'Marian Ivanov'
@@ -37,4 +44,8 @@ __all__ = [
     'make_parallel_fit_v3',
     'make_parallel_fit_v4',
     'GroupByRegressorOptimized',
+    # Sliding Window (Phase 7)
+    'make_sliding_window_fit',
+    'InvalidWindowSpec',
+    'PerformanceWarning',
 ]
