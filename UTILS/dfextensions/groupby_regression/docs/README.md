@@ -192,7 +192,7 @@ df_out, df_group = make_parallel_fit_v4(
 
 Based on benchmarks on Apple M2 Max (12 cores):
 
-![Throughput by Engine](benchmarks/bench_out/throughput_by_engine.png)
+![Throughput by Engine](../benchmarks/bench_out/throughput_by_engine.png)
 
 **Key insights:**
 - v4 is **76-194× faster** than robust on typical scenarios
@@ -415,14 +415,14 @@ python benchmarks/plot_groupby_regression_optimized.py
 
 ### Scaling Analysis
 
-![Scaling vs Groups](benchmarks/bench_out/scaling_groups.png)
+![Scaling vs Groups](../benchmarks/bench_out/scaling_groups.png)
 
 **Key findings:**
 - v2/v3: ~2.5k-15k groups/s (stable across scales)
 - v4: ~0.5M-1.8M groups/s (scales excellently)
 - v4 performance dip at 5k groups (investigation ongoing)
 
-![Scaling vs Parallelism](benchmarks/bench_out/scaling_n_jobs.png)
+![Scaling vs Parallelism](../benchmarks/bench_out/scaling_n_jobs.png)
 
 **Parallel scaling:**
 - v2/v3: Plateau at ~8-16 cores (process/thread overhead)
@@ -449,7 +449,7 @@ See your benchmark results for machine-specific scaling behavior.
 
 ### Speedup Summary
 
-![Speedup v4 over v2](benchmarks/bench_out/speedup_v4_over_v2.png)
+![Speedup v4 over v2](../benchmarks/bench_out/speedup_v4_over_v2.png)
 
 **Typical speedups (v4 vs robust):**
 - Small groups (5 rows): 76×
