@@ -1,6 +1,23 @@
 #!/bin/bash
 
 ######################################
+# Add Herwig, GSL, ThePEG and nlohmann_json packages to root include path and library path if not already present
+######################################
+
+# ROOT_INCLUDE_PATH
+[[ -n "$THEPEG_ROOT" && ":$ROOT_INCLUDE_PATH:" != *":$THEPEG_ROOT/include:"* ]] && ROOT_INCLUDE_PATH="$THEPEG_ROOT/include:$ROOT_INCLUDE_PATH"
+[[ -n "$HERWIG_ROOT" && ":$ROOT_INCLUDE_PATH:" != *":$HERWIG_ROOT/include:"* ]] && ROOT_INCLUDE_PATH="$HERWIG_ROOT/include:$ROOT_INCLUDE_PATH"
+[[ -n "$GSL_ROOT" && ":$ROOT_INCLUDE_PATH:" != *":$GSL_ROOT/include:"* ]] && ROOT_INCLUDE_PATH="$GSL_ROOT/include:$ROOT_INCLUDE_PATH"
+[[ -n "$NLOHMANN_JSON_ROOT" && ":$ROOT_INCLUDE_PATH:" != *":$NLOHMANN_JSON_ROOT/include:"* ]] && ROOT_INCLUDE_PATH="$NLOHMANN_JSON_ROOT/include:$ROOT_INCLUDE_PATH"
+
+# LD_LIBRARY_PATH
+[[ -n "$THEPEG_ROOT" && ":$LD_LIBRARY_PATH:" != *":$THEPEG_ROOT/lib/ThePEG:"* ]] && LD_LIBRARY_PATH="$THEPEG_ROOT/lib/ThePEG:$LD_LIBRARY_PATH"
+[[ -n "$HERWIG_ROOT" && ":$LD_LIBRARY_PATH:" != *":$HERWIG_ROOT/lib/Herwig:"* ]] && LD_LIBRARY_PATH="$HERWIG_ROOT/lib/Herwig:$LD_LIBRARY_PATH"
+[[ -n "$GSL_ROOT" && ":$LD_LIBRARY_PATH:" != *":$GSL_ROOT/lib:"* ]] && LD_LIBRARY_PATH="$GSL_ROOT/lib:$LD_LIBRARY_PATH"
+
+export ROOT_INCLUDE_PATH LD_LIBRARY_PATH
+
+######################################
 # Entrypoint for O2DPG related tests #
 ######################################
 
