@@ -1,0 +1,96 @@
+{
+    "tof-pid-merge": {
+        "enableQaHistograms": "0",
+        "enableTOFParamsForBetaMass": "0",
+        "enableParticle": {
+            "labels_rows": [
+                "El",
+                "Mu",
+                "Pi",
+                "Ka",
+                "Pr",
+                "De",
+                "Tr",
+                "He",
+                "Al"
+            ],
+            "labels_cols": [
+                "Enable",
+                "EnableFull"
+            ],
+            "values": [
+                [
+                    "-1",
+                    "-1"
+                ],
+                [
+                    "-1",
+                    "-1"
+                ],
+                [
+                    "-1",
+                    "-1"
+                ],
+                [
+                    "-1",
+                    "-1"
+                ],
+                [
+                    "-1",
+                    "-1"
+                ],
+                [
+                    "-1",
+                    "-1"
+                ],
+                [
+                    "-1",
+                    "-1"
+                ],
+                [
+                    "-1",
+                    "-1"
+                ],
+                [
+                    "-1",
+                    "-1"
+                ]
+            ]
+        },
+        "processRun3": "1",
+        "processRun2": "0",
+        "processRun2BetaM": "0",
+        "processRun3BetaM": "1"
+    },
+    "tof-signal": {
+        "enableQaHistograms": "0",
+        "ccdb-url": "http://alice-ccdb.cern.ch",
+        "ccdb-path-grplhcif": "GLO/Config/GRPLHCIF",
+        "ccdb-timestamp": "-1",
+        "timeShiftCCDBPathPos": "Analysis/PID/TOFOffsetPos",
+        "timeShiftCCDBPathNeg": "Analysis/PID/TOFOffsetPos",
+        "timeShiftCCDBPathPosMC": "",
+        "timeShiftCCDBPathNegMC": "",
+        "paramFileName": "",
+        "parametrizationPath": "TOF/Calib/Params",
+        "reconstructionPass": "metadata",
+        "reconstructionPassDefault": "unanchored",
+        "fatalOnPassNotAvailable": "0",
+        "enableTimeDependentResponse": "1",
+        "collisionSystem": "-1",
+        "autoSetProcessFunctions": "1",
+        "processRun3": "1",
+        "processRun2": "0"
+    },
+    "tof-event-time": {
+        "minMomentum": "0.5",
+        "maxMomentum": "2",
+        "maxEvTimeTOF": "100000",
+        "sel8TOFEvTime": "0",
+        "computeEvTimeWithTOF": "1",
+        "computeEvTimeWithFT0": "1",
+        "maxNtracksInSet": "10",
+        "processRun2": "0",
+        "processRun3": "1"
+    }
+}

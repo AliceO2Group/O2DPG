@@ -1,0 +1,57 @@
+{
+    "event-selection-service": {
+        "timestamp": {
+            "verbose": "0",
+            "fatalOnInvalidTimestamp": "0",
+            "rct-path": "RCT/Info/RunInformation",
+            "orbit-reset-path": "CTP/Calib/OrbitReset",
+            "isRun2MC": "-1"
+        },
+        "bcselOpts": {
+            "amIneeded": "-1",
+            "triggerBcShift": "0",
+            "ITSROFrameStartBorderMargin": "-1",
+            "ITSROFrameEndBorderMargin": "-1",
+            "TimeFrameStartBorderMargin": "-1",
+            "TimeFrameEndBorderMargin": "-1",
+            "checkRunDurationLimits": "0",
+            "maxInactiveChipsPerLayer": {
+                "values": [
+                    "8",
+                    "8",
+                    "8",
+                    "111",
+                    "111",
+                    "195",
+                    "195"
+                ]
+            },
+            "NumberOfOrbitsPerTF": "-1"
+        },
+        "evselOpts": {
+            "amIneeded": "-1",
+            "muonSelection": "0",
+            "maxDiffZvtxFT0vsPV": "1",
+            "isMC": "-1",
+            "confSigmaBCforHighPtTracks": "4",
+            "TimeIntervalForOccupancyCalculationMin": "-40",
+            "TimeIntervalForOccupancyCalculationMax": "100",
+            "TimeRangeVetoOnCollStandard": "10",
+            "TimeRangeVetoOnCollNarrow": "2",
+            "FT0CamplPerCollCutVetoOnCollInTimeRange": "8000",
+            "FT0CamplPerCollCutVetoOnCollInROF": "5000",
+            "EpsilonVzDiffVetoInROF": "0.300000012",
+            "UseWeightsForOccupancyEstimator": "1",
+            "NumberOfOrbitsPerTF": "-1",
+            "TestAlternativeBcMatching": "0",
+            "TestModifyTimeVetoOnNearbyColl": "0",
+            "TestVetoOnTRDinPast": "0",
+            "TestVzDiffNsigma": "3",
+            "TestVzDiffMargin": "0.200000003"
+        },
+        "lumiOpts": {
+            "amIneeded": "-1"
+        },
+        "ccdburl": "http://alice-ccdb.cern.ch"
+    }
+}

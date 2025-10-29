@@ -1,12 +1,14 @@
 {
   "track-selection": {
-    "compatibilityIU": "false",
-    "etaMax": "0.8",
-    "etaMin": "-0.8",
-    "isRun3": "true",
-    "itsMatching": "1",
+    "isRun3": "1",
+    "produceTable": "-1",
     "produceFBextendedTable": "-1",
+    "compatibilityIU": "0",
+    "itsMatching": "1",
+    "dcaSetup": "0",
+    "ptMin": "0.100000001",
     "ptMax": "1e+10",
-    "ptMin": "0.1"
+    "etaMin": "-1",
+    "etaMax": "1"
   }
 }
