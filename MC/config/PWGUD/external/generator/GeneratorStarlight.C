@@ -77,14 +77,14 @@ class GeneratorStarlight_class : public Generator
   bool Init() override
   {
     Generator::Init();
-	
+
   float beam1energy = TMath::Sqrt(Double_t(projZ)/projA*targA/targZ)*eCM/2;
   float beam2energy = TMath::Sqrt(Double_t(projA)/projZ*targZ/targA)*eCM/2;
   float gamma1  = beam1energy/0.938272;
   float gamma2  = beam2energy/0.938272;
   float rapMax = 4.1 + 0.5*(TMath::ACosH(gamma2)-TMath::ACosH(gamma1));
   float dy = 0.01;
-	  
+
   const struct SLConfig {
     const char* name;
     int       prod_mode;
@@ -166,14 +166,14 @@ class GeneratorStarlight_class : public Generator
       break;
     }
   }
-  
+
   if (idx == -1) {
     std::cout << "STARLIGHT process "<< mSelectedConfiguration <<" is not supported" << std::endl;
     return false;
   }
-  
+
   mPdgMother = slConfig[idx].pdg_mother;
-  mDecayEvtGen = slConfig[idx].decay_EvtGen;  
+  mDecayEvtGen = slConfig[idx].decay_EvtGen;
 
   unsigned int random_seed = generateRandomSeed();
 
@@ -211,6 +211,8 @@ class GeneratorStarlight_class : public Generator
   if(slConfig[idx].prod_mode == 5 || slConfig[idx].prod_mode == 6 || slConfig[idx].prod_mode == 7){
     setParameter("MIN_GAMMA_ENERGY = 1000.0");
     setParameter("MAX_GAMMA_ENERGY = 600000.0");
+    setParameter("KEEP_PHI = 1");
+    setParameter("KEEP_KSTAR = 1");
   }
 
   TString extraPars(mExtraParams);
@@ -221,18 +223,18 @@ class GeneratorStarlight_class : public Generator
   if (not mInputParameters.init()) {
       std::cout << "InitStarLight parameter initialization has failed" << std::endl;
       return false;
-    } 
-	
+    }
+
   mStarLight = new starlight;
   mStarLight->setInputParameters(&mInputParameters);
   mRandomGenerator.SetSeed(mInputParameters.randomSeed());
-  mStarLight->setRandomGenerator(&mRandomGenerator); 
-  return mStarLight->init(); 
-  
+  mStarLight->setRandomGenerator(&mRandomGenerator);
+  return mStarLight->init();
+
   };
-  
-  bool generateEvent() override { 
-  
+
+  bool generateEvent() override {
+
     if (!mStarLight) {
     std::cout <<"GenerateEvent: StarLight class/object not properly constructed"<<std::endl;
     return false;
@@ -246,15 +248,15 @@ class GeneratorStarlight_class : public Generator
   mEvent = mStarLight->produceEvent();
   // boost event to the experiment CM frame
   mEvent.boost(0.5*(TMath::ACosH(mInputParameters.beam1LorentzGamma()) - TMath::ACosH(mInputParameters.beam2LorentzGamma())));
-  
-  return true; 
- 
+
+  return true;
+
   };
 
   // at importParticles we add particles to the output particle vector
   // according to the selected configuration
   bool importParticles() override
-  {    
+  {
   int nVtx(0);
   float vtx(0), vty(0), vtz(0), vtt(0);
   const std::vector<vector3>* slVtx;
@@ -327,9 +329,9 @@ class GeneratorStarlight_class : public Generator
 	  //particle.Print();
 	  mParticles.push_back(particle);
       o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back(), true);
-    }  
+    }
   }
-  return true; 
+  return true;
   }
 
    protected:
@@ -340,7 +342,7 @@ class GeneratorStarlight_class : public Generator
    int targZ=82;
 
    private:
-   starlight        *mStarLight = 0x0;     
+   starlight        *mStarLight = 0x0;
    inputParameters  mInputParameters;  //   simulation input information.
    randomGenerator  mRandomGenerator;  //   STARLIGHT's own random generator
    upcXEvent        mEvent;            //  object holding STARlight simulated event.
@@ -350,12 +352,12 @@ class GeneratorStarlight_class : public Generator
    int mPdgMother = -1;
    bool mDecayEvtGen = 0;
 
-   
+
  };
- 
+
 } // namespace eventgen
 } // namespace o2
- 
+
 
 FairGenerator*
   GeneratorStarlight(std::string configuration = "empty",float energyCM = 5020, int beam1Z = 82, int beam1A = 208, int beam2Z = 82, int beam2A = 208, std::string extrapars = "",std::string dpmjetconf = "")
