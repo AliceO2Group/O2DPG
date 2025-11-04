@@ -1,5 +1,5 @@
 !--------------------------------------------------------------------
-!           proton-proton collisions at 13 TeV with hydro and hadronic cascade
+!           proton-proton collisions at 13.6 TeV with hydro and hadronic cascade
 !--------------------------------------------------------------------
 
 !---------------------------------------
@@ -11,7 +11,7 @@ set laproj 1 !projectile atomic number
 set maproj 1 !projectile mass number
 set latarg 1 !target atomic number
 set matarg 1 !target mass number
-set ecms 13000 !sqrt(s)_pp
+set ecms 13600 !sqrt(s)_pp
 set istmax 25 !max status considered for storage
 
 ftime on     !string formation time non-zero
@@ -25,7 +25,7 @@ core full                !core/corona activated
 hydro hlle               !hydro activated
 eos x3ff                 !eos activated (epos standard EoS)
 hacas full               !hadronic cascade activated (UrQMD)
-set nfreeze 1            !number of freeze out events per hydro event
+set nfreeze 10           !number of freeze out events per hydro event
 set modsho 1             !printout every modsho events
 set centrality 0         !0=min bias
 set ihepmc 2             !HepMC output enabled on stdout
