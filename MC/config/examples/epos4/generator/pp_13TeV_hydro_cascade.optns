@@ -25,7 +25,7 @@ core full                !core/corona activated
 hydro hlle               !hydro activated
 eos x3ff                 !eos activated (epos standard EoS)
 hacas full               !hadronic cascade activated (UrQMD)
-set nfreeze 1            !number of freeze out events per hydro event
+set nfreeze 10           !number of freeze out events per hydro event
 set modsho 1             !printout every modsho events
 set centrality 0         !0=min bias
 set ihepmc 2             !HepMC output enabled on stdout
