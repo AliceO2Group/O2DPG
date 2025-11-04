@@ -491,14 +491,17 @@ includeFullQC=args.include_qc=='True' or args.include_qc==True
 includeLocalQC=args.include_local_qc=='True' or args.include_local_qc==True
 includeAnalysis = args.include_analysis
 includeTPCResiduals=True if environ.get('ALIEN_JDL_DOTPCRESIDUALEXTRACTION') == '1' else False
+includeTPCSyncMode=True if environ.get('ALIEN_JDL_DOTPCSYNCMODE') == '1' else False
 ccdbRemap = environ.get('ALIEN_JDL_REMAPPINGS')
 
 qcdir = "QC"
 if (includeLocalQC or includeFullQC) and not isdir(qcdir):
     mkdir(qcdir)
 
-def getDPL_global_options(bigshm=False, ccdbbackend=True):
-   common=" -b --run "
+def getDPL_global_options(bigshm=False, ccdbbackend=True, runcommand=True):
+   common=" "
+   if runcommand:
+      common=common + ' -b --run '
    if len(args.dpl_child_driver) > 0:
      common=common + ' --child-driver ' + str(args.dpl_child_driver)
    if ccdbbackend:
@@ -1015,15 +1018,15 @@ for tf in range(1, NTIMEFRAMES + 1):
    if (args.sor != -1):
       globalTFConfigValues["HBFUtils.startTime"] = args.sor
 
-   def putConfigValues(listOfMainKeys=[], localCF = {}):
+   def putConfigValues(listOfMainKeys=[], localCF = {}, globalTFConfig = True):
      """
      Creates the final --configValues string to be passed to the workflows.
      Uses the globalTFConfigValues and applies other parameters on top
      listOfMainKeys : list of keys to be applied from the global configuration object
      localCF: a dictionary mapping key to param - possibly overrides settings taken from global config
      """
-     returnstring = ' --configKeyValues "'
-     cf = globalTFConfigValues.copy()
+     returnstring = ' --configKeyValues "'     
+     cf = globalTFConfigValues.copy() if globalTFConfig else {}
      isfirst=True
 
      # now bring in the relevant keys
@@ -1284,6 +1287,27 @@ for tf in range(1, NTIMEFRAMES + 1):
    # tpc_corr_scaling_options = ('--lumi-type 1', '')[tpcDistortionType != 0]
 
    #<--------- TPC reco task
+   if includeTPCSyncMode:
+      tpcSyncreconeeds = tpcreconeeds.copy()
+      TPCSyncRECOtask=createTask(name='tpcSyncreco_'+str(tf), needs=tpcSyncreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
+      TPCSyncRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True, ccdbbackend=False, runcommand=False) \
+                               + '--input-type clusters --output-type clusters,disable-writer ' \
+                               + putConfigValues()
+      TPCSyncRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-gpu-reco-workflow' + getDPL_global_options(bigshm=True, ccdbbackend=True, runcommand=False) \
+                                + '--input-type clusters --output-type compressed-clusters-flat,clusters,send-clusters-per-sector --filtered-output-specs ' \
+                                + tpc_corr_scaling_options + ' ' + tpc_corr_options_mc \
+                                + putConfigValues(["TPCGasParam", "TPCCorrMap", "trackTuneParams"], 
+                                                  localCF={"GPU_proc.ompThreads":NWORKERS_TF, \
+                                                           "GPU_proc.tpcWriteClustersAfterRejection":1, \
+                                                           "GPU_rec_tpc.compressionTypeMask":0, \
+                                                           "GPU_global.synchronousProcessing":1, \
+                                                           "GPU_proc.tpcIncreasedMinClustersPerRow":500000},
+                                                  globalTFConfig=False)
+      TPCSyncRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True, ccdbbackend=False, runcommand=True) + ' --filtered-input --input-type pass-through --output-type clusters,send-clusters-per-sector '
+      TPCSyncRECOtask['cmd'] += ' ; mv tpc-filtered-native-clusters.root tpc-native-clusters.root'
+      workflow['stages'].append(TPCSyncRECOtask)
+      tpcreconeeds.append(TPCSyncRECOtask['name'])
+
    TPCRECOtask=createTask(name='tpcreco_'+str(tf), needs=tpcreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], relative_cpu=3/8, mem='16000')
    TPCRECOtask['cmd'] = task_finalizer([
      '${O2_ROOT}/bin/o2-tpc-reco-workflow',
