@@ -261,7 +261,7 @@ with open(config_key_param_path, "w") as f:
 # these are all detectors that should be assumed active
 readout_detectors = args.readoutDets
 # here are all detectors that have been set in an anchored script
-activeDetectors = dpl_option_from_config(anchorConfig, 'o2-ctf-reader-workflow', key='onlyDet', default_value='all')
+activeDetectors = dpl_option_from_config(anchorConfig, 'o2-ctf-reader-workflow', key='--onlyDet', default_value='all')
 if activeDetectors == 'all':
     # if "all" here, there was in fact nothing in the anchored script, set to what is passed to this script (which it either also "all" or a subset)
     activeDetectors = readout_detectors
@@ -1125,7 +1125,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                          + ' --onlyDet TRD --interactionRate ' + str(INTRATE) + ' --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' \
                          + putConfigValues(localCF={"TRDSimParams.digithreads" : NWORKERS_TF, "DigiParams.seed" : str(TFSEED)}) + " --forceSelectedDets"
    TRDDigitask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
-   workflow['stages'].append(TRDDigitask)
+   if isActive("TRD"):
+      workflow['stages'].append(TRDDigitask)
 
    # these are digitizers which are single threaded
    def createRestDigiTask(name, det='ALLSMALLER'):
@@ -1385,12 +1386,13 @@ for tf in range(1, NTIMEFRAMES + 1):
                                                 getDPL_global_options(), 
                                                 putConfigValues(),
                                                 ('',' --disable-mc')[args.no_mc_labels]])
-   workflow['stages'].append(TRDTRACKINGtask)
+   if isActive("TRD"):
+      workflow['stages'].append(TRDTRACKINGtask)
 
    #<--------- TRD global tracking 
    # FIXME This is so far a workaround to avoud a race condition for trdcalibratedtracklets.root
    TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
-   trd_track_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig, 'o2-trd-global-tracking', 'track-sources', default_value='TPC,ITS-TPC'))
+   trd_track_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig, 'o2-trd-global-tracking', '--track-sources', default_value='TPC,ITS-TPC'))
    TRDTRACKINGtask2['cmd'] = task_finalizer([
       '${O2_ROOT}/bin/o2-trd-global-tracking',
       getDPL_global_options(bigshm=True), 
@@ -1405,7 +1407,8 @@ for tf in range(1, NTIMEFRAMES + 1):
       '--track-sources ' + trd_track_sources,
       tpc_corr_scaling_options, 
       tpc_corr_options_mc])
-   workflow['stages'].append(TRDTRACKINGtask2)
+   if isActive("TRD"):
+      workflow['stages'].append(TRDTRACKINGtask2)
 
    #<--------- TOF reco task
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], getDigiTaskName("TOF")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1420,8 +1423,11 @@ for tf in range(1, NTIMEFRAMES + 1):
       workflow['stages'].append(TOFRECOtask)
 
    #<--------- TOF-TPC(-ITS) global track matcher workflow
-   toftpcmatchneeds = [TOFRECOtask['name'], TPCRECOtask['name'], ITSTPCMATCHtask['name'], TRDTRACKINGtask2['name']]
-   toftracksrcdefault = dpl_option_from_config(anchorConfig, 'o2-tof-matcher-workflow', 'track-sources', default_value='TPC,ITS-TPC,TPC-TRD,ITS-TPC-TRD')
+   toftpcmatchneeds = [TOFRECOtask['name'],
+                       TPCRECOtask['name'],
+                       ITSTPCMATCHtask['name'],
+                       TRDTRACKINGtask2['name'] if isActive("TRD") else None]
+   toftracksrcdefault = dpl_option_from_config(anchorConfig, 'o2-tof-matcher-workflow', '--track-sources', default_value='TPC,ITS-TPC,TPC-TRD,ITS-TPC-TRD')
    tofusefit = option_if_available('o2-tof-matcher-workflow', '--use-fit', envfile=async_envfile)
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=toftpcmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    tofmatcher_cmd_parts = [
@@ -1615,9 +1621,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    hmpmatchneeds = [HMPRECOtask['name'], 
                     ITSTPCMATCHtask['name'], 
                     TOFTPCMATCHERtask['name'] if isActive("TOF") else None, 
-                    TRDTRACKINGtask2['name']]
+                    TRDTRACKINGtask2['name'] if isActive("TRD") else None]
    hmpmatchneeds = [ n for n in hmpmatchneeds if n != None ]
-   hmp_match_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig, 'o2-hmpid-matcher-workflow', 'track-sources', default_value='ITS-TPC,ITS-TPC-TRD,TPC-TRD'))
+   hmp_match_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig, 'o2-hmpid-matcher-workflow', '--track-sources', default_value='ITS-TPC,ITS-TPC-TRD,TPC-TRD'))
    HMPMATCHtask = createTask(name='hmpmatch_'+str(tf), needs=hmpmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    HMPMATCHtask['cmd'] = task_finalizer(
       ['${O2_ROOT}/bin/o2-hmpid-matcher-workflow',
@@ -1630,17 +1636,17 @@ for tf in range(1, NTIMEFRAMES + 1):
    #<---------- primary vertex finding
    pvfinder_sources = dpl_option_from_config(anchorConfig,
                                              'o2-primary-vertexing-workflow',
-                                             'vertexing-sources',
+                                             '--vertexing-sources',
                                              default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP')
    pvfinder_sources = cleanDetectorInputList(pvfinder_sources)
 
    pvfinder_matching_sources = dpl_option_from_config(anchorConfig,
                                                       'o2-primary-vertexing-workflow',
-                                                      'vertex-track-matching-sources',
+                                                      '--vertex-track-matching-sources',
                                                       default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP')
    pvfinder_matching_sources = cleanDetectorInputList(pvfinder_matching_sources)
 
-   pvfinderneeds = [TRDTRACKINGtask2['name'],
+   pvfinderneeds = [TRDTRACKINGtask2['name'] if isActive("TRD") else None,
                     FT0RECOtask['name'] if isActive("FT0") else None,
                     FV0RECOtask['name'] if isActive("FV0") else None,
                     EMCRECOtask['name'] if isActive("EMC") else None,
@@ -1682,7 +1688,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    
    svfinder_sources = dpl_option_from_config(anchorConfig,
                           'o2-primary-vertexing-workflow',
-                          'vertex-track-matching-sources',
+                          '--vertex-track-matching-sources',
                           default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP')
    svfinder_sources = cleanDetectorInputList(svfinder_sources)
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name'], FT0FV0EMCCTPDIGItask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')   
@@ -1703,7 +1709,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    #<------------- AOD producer
    # TODO This needs further refinement, sources and dependencies should be constructed dynamically
    aod_info_souces_default = 'ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP'
-   aodinfosources = dpl_option_from_config(anchorConfig, 'o2-aod-producer-workflow', 'info-sources', default_value=aod_info_souces_default)
+   aodinfosources = dpl_option_from_config(anchorConfig, 'o2-aod-producer-workflow', '--info-sources', default_value=aod_info_souces_default)
    aodinfosources = cleanDetectorInputList(aodinfosources)
    aodneeds = [PVFINDERtask['name'], SVFINDERtask['name']]
 
@@ -1760,17 +1766,17 @@ for tf in range(1, NTIMEFRAMES + 1):
       #<------------- TPC residuals extraction
       scdcalib_vertex_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig,
                                                        'o2-tpc-scdcalib-interpolation-workflow',
-                                                       'vtx-sources',
+                                                       '--vtx-sources',
                                                        default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP'))
 
       scdcalib_track_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig,
                                                       'o2-tpc-scdcalib-interpolation-workflow',
-                                                      'tracking-sources',
+                                                      '--tracking-sources',
                                                       default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,FDD,HMP,FV0,TRD,MCH,CTP'))
 
       scdcalib_track_extraction = cleanDetectorInputList(dpl_option_from_config(anchorConfig,
                                                          'o2-tpc-scdcalib-interpolation-workflow',
-                                                         'tracking-sources-map-extraction',
+                                                         '--tracking-sources-map-extraction',
                                                          default_value='ITS-TPC'))
 
       SCDCALIBtask = createTask(name='scdcalib_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["CALIB"], mem='4000')
@@ -1789,11 +1795,11 @@ for tf in range(1, NTIMEFRAMES + 1):
       #<------------- TPC residuals aggregator
       scdaggreg_secperslot = dpl_option_from_config(anchorConfig,
                                                     'o2-calibration-residual-aggregator',
-                                                    'sec-per-slot',
+                                                    '--sec-per-slot',
                                                     default_value='600')
       scdaggreg_outputtype = dpl_option_from_config(anchorConfig,
                                                     'o2-calibration-residual-aggregator',
-                                                    'output-type',
+                                                    '--output-type',
                                                     default_value='trackParams,unbinnedResid')
 
       SCDAGGREGtask = createTask(name='scdaggreg_'+str(tf), needs=[SCDCALIBtask['name']], tf=tf, cwd=timeframeworkdir, lab=["CALIB"], mem='1500')
@@ -1873,12 +1879,13 @@ for tf in range(1, NTIMEFRAMES + 1):
 
      ### TRD
      # TODO: check if the readerCommand also reperforms tracklet construction (which already done in digitization)
-     addQCPerTF(taskName='trdDigitsQC',
+     if isActive('TRD'):
+         addQCPerTF(taskName='trdDigitsQC',
                 needs=[TRDDigitask['name']],
                 readerCommand='o2-trd-trap-sim --disable-root-output true',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-standalone-task.json')
 
-     addQCPerTF(taskName='trdTrackingQC',
+         addQCPerTF(taskName='trdTrackingQC',
                 needs=[TRDTRACKINGtask2['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "ITS-TPC-TRD,TPC-TRD" --cluster-types none',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/trd-tracking-task.json')

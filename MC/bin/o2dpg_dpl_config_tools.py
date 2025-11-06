@@ -309,7 +309,11 @@ def dpl_option_from_config(config, dpl_workflow, key, section = "filtered", defa
       """
       if "Executables" in config:
         # new standard
-        return config["Executables"].get(dpl_workflow,{}).get(section,{}).get(key, default_value)
+        value = config["Executables"].get(dpl_workflow,{}).get(section,{}).get(key, None)
+        if value == None:
+           print (f"Could not lookup key/option {key} from {dpl_workflow}")
+           value = default_value
+        return value
       else:
         # backward compatible versions
         dpl_workflow_key = dpl_workflow + '-options'
