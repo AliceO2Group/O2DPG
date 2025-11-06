@@ -122,6 +122,14 @@ def retrieve_Aggregated_RunInfos(run_number):
     detList = o2.detectors.DetID.getNames(runInfo.grpECS.getDetsReadOut())
     assert (run_number == runInfo.runNumber)
     assert (run_number == runInfo.grpECS.getRun())
+
+    print (f"Detector list from RunInfo/GRPECS is {detList}")
+    # potential overwrite in detector list if special env variable ALIEN_JDL_WORKFLOWDETECTORS is set
+    detlist_overwrite = os.getenv("ALIEN_JDL_WORKFLOWDETECTORS")
+    if detlist_overwrite:
+       detList = detlist_overwrite
+       print (f"Detector list is overwritten to {detList} via JDL")
+
     return {"SOR" : runInfo.sor,
             "EOR" : runInfo.eor,
             "FirstOrbit" : runInfo.orbitSOR,
@@ -217,6 +225,12 @@ def retrieve_params_fromGRPECS_and_OrbitReset(ccdbreader, run_number, run_start,
     print ("DetsReadout-Mask: ", grp["mDetsReadout"]['v'])
     detList = o2.detectors.DetID.getNames(grp["mDetsReadout"]['v'])
     print ("Detector list is ", detList)
+
+    # potential reduction in detector list if special env variable ALIEN_JDL_WORKFLOWDETECTORS is set
+    detlist_overwrite = os.getenv("ALIEN_JDL_WORKFLOWDETECTORS")
+    if detlist_overwrite:
+       detList = detlist_overwrite
+       print ("Detector list is overwritten to ", detList)
 
     # orbitReset.get(run_number)
     return {"FirstOrbit" : orbitFirst, "LastOrbit" : orbitLast, "OrbitsPerTF" : int(grp["mNHBFPerTF"]), "detList" : detList}
