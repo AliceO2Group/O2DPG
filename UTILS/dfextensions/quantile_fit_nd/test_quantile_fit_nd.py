@@ -131,7 +131,7 @@ def _json_stats_to_arrays(subtable: pd.DataFrame) -> tuple[np.ndarray, np.ndarra
 @pytest.mark.parametrize("n_points", [5_000, 50_000])
 def test_fit_and_sigmaQ(dist, n_points):
     df, truth = gen_synthetic_df(n_points, dist=dist)
-    q_centers = np.linspace(0.0, 1.0, 11)
+    q_centers = np.linspace(0.0, 1.0, 20)
     dq = 0.05
 
     table = fit_quantile_linear_nd(

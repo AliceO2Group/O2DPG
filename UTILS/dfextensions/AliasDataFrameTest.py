@@ -2,7 +2,7 @@ import unittest
 import pandas as pd
 import numpy as np
 import os
-from AliasDataFrame import AliasDataFrame  # Adjust if needed
+from dfextensions.AliasDataFrame import AliasDataFrame  # Adjust if needed
 import tempfile
 
 class TestAliasDataFrame(unittest.TestCase):
@@ -218,6 +218,27 @@ class TestAliasDataFrameWithSubframes(unittest.TestCase):
         expected = np.array([False, True, True])
         assert np.all(adf_main.sub.cutA == expected)  # explicit value check
 
+    def test_multi_column_index_join(self):
+        """Test subframe join with composite key (track_index, firstTFOrbit)"""
+        df_main = pd.DataFrame({
+            'track_index': [0, 0, 1, 1],
+            'firstTFOrbit': [100, 200, 100, 200],
+            'x': [1, 2, 3, 4]
+        })
+        df_sub = pd.DataFrame({
+            'track_index': [0, 0, 1, 1],
+            'firstTFOrbit': [100, 200, 100, 200],
+            'y': [10, 20, 30, 40]
+        })
+
+        adf_main = AliasDataFrame(df_main)
+        adf_sub = AliasDataFrame(df_sub)
+        adf_main.register_subframe("T", adf_sub, index_columns=["track_index", "firstTFOrbit"])
+        adf_main.add_alias("sum_xy", "x + T.y")
+        adf_main.materialize_alias("sum_xy")
+
+        expected = [11, 22, 33, 44]
+        np.testing.assert_array_equal(adf_main.df['sum_xy'].values, expected)
 
 if __name__ == "__main__":
     unittest.main()

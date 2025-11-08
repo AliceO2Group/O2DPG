@@ -3,7 +3,11 @@ import pandas as pd
 import numpy as np
 import json
 import uproot
-import ROOT  # type: ignore
+try:
+    import ROOT  # type: ignore
+except ImportError as e:
+    print(f"[AliasDataFrame] WARNING: ROOT import failed: {e}")
+    ROOT = None
 import matplotlib.pyplot as plt
 import networkx as nx
 import re
@@ -394,8 +398,8 @@ class AliasDataFrame:
         dtype_casts = {col: np.float32 for col in export_cols if self.df[col].dtype == np.float16}
         export_df = self.df[export_cols].astype(dtype_casts)
 
-        uproot_file[treename] = export_df
-
+        #uproot_file[treename] = export_df
+        uproot_file[treename] = {col: export_df[col].values for col in export_df.columns}
         for subframe_name, entry in self._subframes.items():
             entry["frame"].export_tree(uproot_file, f"{treename}__subframe__{subframe_name}", dropAliasColumns)
 
