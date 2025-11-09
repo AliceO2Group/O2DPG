@@ -240,5 +240,401 @@ class TestAliasDataFrameWithSubframes(unittest.TestCase):
         expected = [11, 22, 33, 44]
         np.testing.assert_array_equal(adf_main.df['sum_xy'].values, expected)
 
+class TestAliasDataFrameCompression(unittest.TestCase):
+    """Test column compression functionality"""
+
+    def setUp(self):
+        """Create test data with values suitable for compression"""
+        np.random.seed(42)
+        df = pd.DataFrame({
+            "dy": np.random.normal(0, 2.0, 1000).astype(np.float32),
+            "dz": np.random.normal(0, 1.5, 1000).astype(np.float32),
+            "tgSlp": np.random.uniform(-0.5, 0.5, 1000).astype(np.float32),
+            "track_id": np.arange(1000)
+        })
+        self.adf = AliasDataFrame(df)
+        self.original_dy = df["dy"].values.copy()
+
+    def test_basic_compression_decompression(self):
+        """Test basic compression creates correct structure"""
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        self.adf.compress_columns(spec)
+
+        # Check compressed column exists
+        self.assertIn('dy_c', self.adf.df.columns)
+        self.assertEqual(self.adf.df['dy_c'].dtype, np.int16)
+
+        # Check original removed from storage
+        self.assertNotIn('dy', self.adf.df.columns)
+
+        # Check decompression alias exists
+        self.assertIn('dy', self.adf.aliases)
+        self.assertEqual(self.adf.aliases['dy'], 'sinh(dy_c/40.)')
+
+        # Check compression_info populated
+        self.assertIn('dy', self.adf.compression_info)
+        info = self.adf.compression_info['dy']
+        self.assertEqual(info['compressed_col'], 'dy_c')
+        self.assertEqual(info['compressed_dtype'], 'int16')
+        self.assertEqual(info['decompressed_dtype'], 'float16')
+
+        # Materialize and check values approximately equal
+        self.adf.materialize_alias('dy')
+        decompressed = self.adf.df['dy'].values
+        np.testing.assert_allclose(decompressed, self.original_dy, rtol=0.01, atol=0.05)
+
+    def test_compression_with_precision_measurement(self):
+        """Test optional precision measurement"""
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        self.adf.compress_columns(spec, measure_precision=True)
+
+        # Check precision info exists
+        self.assertIn('precision', self.adf.compression_info['dy'])
+        prec = self.adf.compression_info['dy']['precision']
+
+        # Check all metrics present
+        self.assertIn('rmse', prec)
+        self.assertIn('max_error', prec)
+        self.assertIn('mean_error', prec)
+
+        # Sanity check values
+        self.assertGreater(prec['rmse'], 0)
+        self.assertLess(prec['rmse'], 0.1)  # Should be small for good compression
+
+    def test_compress_alias_source(self):
+        """Test compressing an alias (not materialized column)"""
+        # Create alias first
+        self.adf.add_alias('dy_scaled', 'dy * 2.0', dtype=np.float32)
+
+        spec = {
+            'dy_scaled': {
+                'compress': 'round(asinh(dy_scaled)*40)',
+                'decompress': 'sinh(dy_scaled_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        # Should work - compresses evaluated alias
+        self.adf.compress_columns(spec)
+
+        self.assertIn('dy_scaled_c', self.adf.df.columns)
+        self.assertIn('dy_scaled', self.adf.aliases)
+
+    def test_double_compression_raises_error(self):
+        """Test that compressing already compressed column raises error"""
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        self.adf.compress_columns(spec)
+
+        # Try to compress again - should fail
+        with self.assertRaises(ValueError) as cm:
+            self.adf.compress_columns(spec)
+
+        self.assertIn('already compressed', str(cm.exception))
+
+    def test_compressed_column_name_collision_raises_error(self):
+        """Test that compressed column name collision is detected"""
+        # Create column that would conflict
+        self.adf.df['dy_c'] = np.zeros(len(self.adf.df))
+
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        with self.assertRaises(ValueError) as cm:
+            self.adf.compress_columns(spec)
+
+        self.assertIn('already exists', str(cm.exception))
+        self.assertIn('dy_c', str(cm.exception))
+
+    def test_decompress_inplace(self):
+        """Test inplace decompression removes compressed column"""
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        self.adf.compress_columns(spec)
+        self.adf.decompress_columns(['dy'], inplace=True)
+
+        # Check decompressed column is physical
+        self.assertIn('dy', self.adf.df.columns)
+        self.assertEqual(self.adf.df['dy'].dtype, np.float16)
+
+        # Check compressed column removed
+        self.assertNotIn('dy_c', self.adf.df.columns)
+
+        # Check compression_info cleaned up
+        self.assertNotIn('dy', self.adf.compression_info)
+
+    def test_decompress_keep_compressed_false(self):
+        """Test decompress with keep_compressed=False"""
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        self.adf.compress_columns(spec)
+        self.adf.decompress_columns(['dy'], keep_compressed=False)
+
+        # Check decompressed column exists
+        self.assertIn('dy', self.adf.df.columns)
+
+        # Check compressed column removed
+        self.assertNotIn('dy_c', self.adf.df.columns)
+
+        # Check compression_info cleaned up
+        self.assertNotIn('dy', self.adf.compression_info)
+
+    def test_missing_compressed_column_raises_error(self):
+        """Test error when compressed column is manually deleted"""
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        self.adf.compress_columns(spec)
+
+        # Manually delete compressed column (simulate corruption)
+        self.adf.df.drop(columns=['dy_c'], inplace=True)
+
+        # Should raise clear error
+        with self.assertRaises(ValueError) as cm:
+            self.adf.decompress_columns(['dy'])
+
+        self.assertIn('missing', str(cm.exception).lower())
+        self.assertIn('dy_c', str(cm.exception))
+
+    def test_partial_failure_handling(self):
+        """Test that failure on one column does not roll back prior successful compressions"""
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            },
+            'dz': {
+                'compress': 'dz +* invalid_syntax',  # Invalid expression
+                'decompress': 'sinh(dz_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        # Should raise error on 'dz'
+        with self.assertRaises(ValueError) as cm:
+            self.adf.compress_columns(spec)
+
+        # Check that 'dy' was successfully compressed (partial success)
+        self.assertIn('dy_c', self.adf.df.columns)
+        self.assertIn('dy', self.adf.aliases)
+        self.assertIn('dy', self.adf.compression_info)
+
+        # Check that 'dz' did NOT create compressed column
+        self.assertNotIn('dz_c', self.adf.df.columns)
+        self.assertNotIn('dz', self.adf.compression_info)
+
+        # Check original 'dz' still exists
+        self.assertIn('dz', self.adf.df.columns)
+
+        # Check error message indicates the failure
+        self.assertIn('Compression failed', str(cm.exception))
+        self.assertIn('dz', str(cm.exception))
+
+    def test_roundtrip_save_load(self):
+        """Test compression metadata survives save/load"""
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            },
+            'dz': {
+                'compress': 'round(asinh(dz)*40)',
+                'decompress': 'sinh(dz_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        self.adf.compress_columns(spec, measure_precision=True)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "compressed.parquet")
+            self.adf.save(path)
+
+            adf_loaded = AliasDataFrame.load(path)
+
+            # Check compression_info preserved
+            self.assertEqual(len(adf_loaded.compression_info), 2)
+            self.assertIn('dy', adf_loaded.compression_info)
+            self.assertIn('dz', adf_loaded.compression_info)
+
+            # Check aliases preserved
+            self.assertIn('dy', adf_loaded.aliases)
+            self.assertEqual(adf_loaded.aliases['dy'], 'sinh(dy_c/40.)')
+
+            # Check precision info preserved
+            self.assertIn('precision', adf_loaded.compression_info['dy'])
+
+            # Materialize and verify values
+            adf_loaded.materialize_alias('dy')
+            np.testing.assert_allclose(
+                adf_loaded.df['dy'].values,
+                self.original_dy,
+                rtol=0.01, atol=0.05
+            )
+
+    def test_roundtrip_export_import_tree(self):
+        """Test compression metadata survives ROOT export/import"""
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        self.adf.compress_columns(spec)
+
+        with tempfile.NamedTemporaryFile(suffix=".root", delete=False) as tmp:
+            self.adf.export_tree(tmp.name, treename="compressed", dropAliasColumns=False)
+            tmp_path = tmp.name
+
+        try:
+            adf_loaded = AliasDataFrame.read_tree(tmp_path, treename="compressed")
+
+            # Check compression_info preserved
+            self.assertIn('dy', adf_loaded.compression_info)
+
+            # Check can use decompression alias
+            adf_loaded.materialize_alias('dy')
+            np.testing.assert_allclose(
+                adf_loaded.df['dy'].values,
+                self.original_dy,
+                rtol=0.01, atol=0.05
+            )
+        finally:
+            os.remove(tmp_path)
+
+    def test_multiple_columns_compression(self):
+        """Test compressing multiple columns at once"""
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            },
+            'dz': {
+                'compress': 'round(asinh(dz)*40)',
+                'decompress': 'sinh(dz_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            },
+            'tgSlp': {
+                'compress': 'round(tgSlp*1000)',
+                'decompress': 'tgSlp_c/1000.',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        self.adf.compress_columns(spec)
+
+        # Check all compressed
+        self.assertIn('dy_c', self.adf.df.columns)
+        self.assertIn('dz_c', self.adf.df.columns)
+        self.assertIn('tgSlp_c', self.adf.df.columns)
+
+        # Check all have decompression aliases
+        self.assertIn('dy', self.adf.aliases)
+        self.assertIn('dz', self.adf.aliases)
+        self.assertIn('tgSlp', self.adf.aliases)
+
+        # Check compression_info complete
+        self.assertEqual(len(self.adf.compression_info), 3)
+
+    def test_get_compression_info(self):
+        """Test compression info retrieval"""
+        spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+        self.adf.compress_columns(spec)
+
+        # Test single column info
+        info = self.adf.get_compression_info('dy')
+        self.assertIsInstance(info, dict)
+        self.assertEqual(info['compressed_col'], 'dy_c')
+
+        # Test all columns as DataFrame
+        df_info = self.adf.get_compression_info()
+        self.assertIsInstance(df_info, pd.DataFrame)
+        self.assertEqual(len(df_info), 1)
+        self.assertIn('dy', df_info.index)
+
+    def test_backward_compatibility_no_compression_info(self):
+        """Test loading old files without compression_info works"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "old_format.parquet")
+
+            # Save without compression
+            self.adf.save(path)
+
+            # Load should work fine
+            adf_loaded = AliasDataFrame.load(path)
+            self.assertEqual(adf_loaded.compression_info, {})
+
+
 if __name__ == "__main__":
     unittest.main()

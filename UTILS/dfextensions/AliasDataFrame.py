@@ -59,7 +59,12 @@ def convert_expr_to_root(expr):
                 return ""
 
             func_name = get_func_name(node.func)
-            root_func = self.FUNC_MAP.get(func_name, func_name)
+
+            # Use NumpyRootMapper for function name translation
+            root_func = NumpyRootMapper.get_root_name(func_name)
+            # Fallback to old FUNC_MAP for backward compatibility
+            if root_func == func_name:
+                root_func = self.FUNC_MAP.get(func_name, func_name)
 
             node.args = [self.visit(arg) for arg in node.args]
             node.func = ast.Name(id=root_func, ctx=ast.Load())
@@ -73,7 +78,66 @@ def convert_expr_to_root(expr):
         return ast.unparse(tree)
     except Exception:
         return expr
+# Add BEFORE class AliasDataFrame:
 
+class NumpyRootMapper:
+    """Maps NumPy function names to ROOT C++ equivalents"""
+
+    # Maps function names to (numpy_attr, root_name)
+    # Some functions are aliases (asinh → arcsinh in numpy)
+    MAPPING = {
+        # Hyperbolic functions (needed for compression)
+        'sinh': ('sinh', 'sinh'),
+        'cosh': ('cosh', 'cosh'),
+        'tanh': ('tanh', 'tanh'),
+        'arcsinh': ('arcsinh', 'asinh'),
+        'arccosh': ('arccosh', 'acosh'),
+        'arctanh': ('arctanh', 'atanh'),
+        'asinh': ('arcsinh', 'asinh'),     # Alias: np.arcsinh
+        'acosh': ('arccosh', 'acosh'),     # Alias: np.arccosh
+        'atanh': ('arctanh', 'atanh'),     # Alias: np.arctanh
+
+        # Trigonometric
+        'sin': ('sin', 'sin'),
+        'cos': ('cos', 'cos'),
+        'tan': ('tan', 'tan'),
+        'arcsin': ('arcsin', 'asin'),
+        'arccos': ('arccos', 'acos'),
+        'arctan': ('arctan', 'atan'),
+        'arctan2': ('arctan2', 'atan2'),
+        'asin': ('arcsin', 'asin'),        # Alias: np.arcsin
+        'acos': ('arccos', 'acos'),        # Alias: np.arccos
+        'atan': ('arctan', 'atan'),        # Alias: np.arctan
+
+        # Exponential/log
+        'exp': ('exp', 'exp'),
+        'log': ('log', 'log'),
+        'log10': ('log10', 'log10'),
+        'sqrt': ('sqrt', 'sqrt'),
+        'pow': ('power', 'pow'),
+        'power': ('power', 'pow'),
+
+        # Rounding
+        'round': ('round', 'round'),
+        'floor': ('floor', 'floor'),
+        'ceil': ('ceil', 'ceil'),
+        'abs': ('abs', 'abs'),
+    }
+
+    @classmethod
+    def get_numpy_functions_for_eval(cls):
+        """Get dict of function_name → numpy_function for evaluation"""
+        funcs = {}
+        for name, (np_attr, _) in cls.MAPPING.items():
+            if hasattr(np, np_attr):
+                funcs[name] = getattr(np, np_attr)
+        return funcs
+
+    @classmethod
+    def get_root_name(cls, name):
+        """Get ROOT C++ equivalent name for a function"""
+        entry = cls.MAPPING.get(name)
+        return entry[1] if entry else name
 class AliasDataFrame:
     """
     AliasDataFrame allows for defining and evaluating lazy-evaluated column aliases
@@ -89,6 +153,7 @@ class AliasDataFrame:
         self.aliases = {}
         self.alias_dtypes = {}
         self.constant_aliases = set()
+        self.compression_info = {}  # NEW: track compressed columns
         self._subframes = SubframeRegistry()
 
     def __getattr__(self, item: str):
@@ -112,16 +177,20 @@ class AliasDataFrame:
     def _default_functions(self):
         import math
         env = {k: getattr(math, k) for k in dir(math) if not k.startswith("_")}
-        env.update({k: getattr(np, k) for k in dir(np) if not k.startswith("_")})
+
+        # Add numpy functions (will override math versions with vectorized numpy)
+        env.update(NumpyRootMapper.get_numpy_functions_for_eval())
+
         env["np"] = np
         for sf_name, sf_entry in self._subframes.items():
             env[sf_name] = sf_entry['frame']
-            # Custom compatibility for SetAlias-like expressions
+
         env["int"] = lambda x: np.array(x).astype(np.int32)
         env["uint"] = lambda x: np.array(x).astype(np.uint32)
         env["float"] = lambda x: np.array(x).astype(np.float32)
         env["round"] = np.round
         env["clip"] = np.clip
+
         return env
 
     def _prepare_subframe_joins(self, expr):
@@ -351,7 +420,8 @@ class AliasDataFrame:
         metadata = {
             "aliases": json.dumps(self.aliases),
             "dtypes": json.dumps({k: v.__name__ for k, v in self.alias_dtypes.items()}),
-            "constants": json.dumps(list(self.constant_aliases))
+            "constants": json.dumps(list(self.constant_aliases)),
+            "compression_info": json.dumps(self.compression_info)  # NEW
         }
         existing_meta = table.schema.metadata or {}
         combined_meta = existing_meta.copy()
@@ -371,6 +441,10 @@ class AliasDataFrame:
             adf.alias_dtypes = {k: getattr(np, v) for k, v in json.loads(meta[b"dtypes"].decode()).items()}
             if b"constants" in meta:
                 adf.constant_aliases = set(json.loads(meta[b"constants"].decode()))
+        if b"compression_info" in meta:
+            adf.compression_info = json.loads(meta[b"compression_info"].decode())
+        else:
+            adf.compression_info = {}  # backward compat
         return adf
 
     def export_tree(self, filename_or_file, treename="tree", dropAliasColumns=True,compression=uproot.ZLIB(level=1)):
@@ -418,7 +492,8 @@ class AliasDataFrame:
             "subframe_indices": {k: v["index"] for k, v in self._subframes.items()},
             "dtypes": {k: v.__name__ for k, v in self.alias_dtypes.items()},
             "constants": list(self.constant_aliases),
-            "subframes": list(self._subframes.subframes.keys())
+            "subframes": list(self._subframes.subframes.keys()),
+            "compression_info": self.compression_info  # NEW
         }
         jmeta = json.dumps(metadata)
         tree.GetUserInfo().Add(ROOT.TObjString(jmeta))
@@ -450,9 +525,361 @@ class AliasDataFrame:
                             if index is None:
                                 raise ValueError(f"Missing index_columns for subframe '{sf_name}' in metadata")
                             adf.register_subframe(sf_name, sf, index_columns=index)
+                        adf.compression_info = jmeta.get("compression_info", {})
                         break
                     except Exception:
                         pass
         finally:
             f.Close()
         return adf
+
+    # ========================================================================
+    # Compression Support
+    # ========================================================================
+
+    def compress_columns(self, compression_spec, suffix='_c', drop_original=True,
+                         measure_precision=False):
+        """
+        Compress columns using bidirectional transforms.
+
+        Stores compressed version as materialized column, adds decompression
+        alias for lazy evaluation. Original column name becomes alias pointing
+        to decompressed expression.
+
+        Parameters
+        ----------
+        compression_spec : dict
+            Format: {
+                'column_name': {
+                    'compress': 'expression',           # e.g., 'round(asinh(dy)*40)'
+                    'decompress': 'expression',         # e.g., 'sinh(dy_c/40.)'
+                    'compressed_dtype': np.int16,       # Storage dtype
+                    'decompressed_dtype': np.float16    # Reconstructed dtype
+                }
+            }
+        suffix : str, optional
+            Compressed column name suffix (default: '_c')
+        drop_original : bool, optional
+            Remove original column after compression (default: True)
+        measure_precision : bool, optional
+            Compute and store compression precision loss (default: False)
+
+        Returns
+        -------
+        self : AliasDataFrame
+            For method chaining
+
+        Raises
+        ------
+        ValueError
+            If column already compressed, compressed name conflicts, or
+            required config keys missing
+
+        Examples
+        --------
+        >>> spec = {
+        ...     'dy': {
+        ...         'compress': 'round(asinh(dy)*40)',
+        ...         'decompress': 'sinh(dy_c/40.)',
+        ...         'compressed_dtype': np.int16,
+        ...         'decompressed_dtype': np.float16
+        ...     }
+        ... }
+        >>> adf.compress_columns(spec)
+        >>> # Storage: dy_c (int16), dy is alias → sinh(dy_c/40.)
+
+        Notes
+        -----
+        - Compressed columns are materialized immediately
+        - Decompression aliases are lazy (evaluated on demand)
+        - Compression metadata stored for round-trip persistence
+        - Processing is column-by-column: if one fails, previously processed
+          columns remain compressed. Use get_compression_info() to check state.
+        - Error handling delegates to add_alias() for expression validation
+        """
+        for orig_col, config in compression_spec.items():
+            # Validate config
+            required_keys = ['compress', 'decompress', 'compressed_dtype', 'decompressed_dtype']
+            missing = [k for k in required_keys if k not in config]
+            if missing:
+                raise ValueError(
+                    f"Compression config for '{orig_col}' missing required keys: {missing}"
+                )
+
+            # Guard: prevent double compression
+            if orig_col in self.compression_info:
+                raise ValueError(
+                    f"Column '{orig_col}' is already compressed. "
+                    f"Use decompress_columns(['{orig_col}'], inplace=True) to decompress first."
+                )
+
+            compressed_col = f"{orig_col}{suffix}"
+
+            # Guard: prevent name collision
+            if compressed_col in self.df.columns:
+                raise ValueError(
+                    f"Compressed column name '{compressed_col}' already exists in DataFrame. "
+                    f"Choose a different suffix or rename the existing column."
+                )
+            if compressed_col in self.aliases:
+                raise ValueError(
+                    f"Compressed column name '{compressed_col}' conflicts with existing alias. "
+                    f"Choose a different suffix."
+                )
+
+            # Cache original values if measuring precision
+            original_values = None
+            if measure_precision and orig_col in self.df.columns:
+                original_values = self.df[orig_col].values.copy()
+
+            # Step 1: Create and materialize compressed version
+            try:
+                self.add_alias(compressed_col, config['compress'],
+                               dtype=config['compressed_dtype'])
+                self.materialize_alias(compressed_col)
+                # Remove from aliases to avoid false cycle detection
+                if compressed_col in self.aliases:
+                    del self.aliases[compressed_col]
+                    if compressed_col in self.alias_dtypes:
+                        del self.alias_dtypes[compressed_col]
+            except SyntaxError as e:
+                raise ValueError(
+                    f"Compression failed for '{orig_col}': invalid compress expression.\n"
+                    f"Expression: {config['compress']}\n"
+                    f"Error: {e}"
+                ) from e
+            except KeyError as e:
+                raise ValueError(
+                    f"Compression failed for '{orig_col}': undefined variable in compress expression.\n"
+                    f"Expression: {config['compress']}\n"
+                    f"Error: {e}"
+                ) from e
+            except Exception as e:
+                raise ValueError(
+                    f"Compression failed for '{orig_col}' during compress step: {e}"
+                ) from e
+
+            # Step 2: Measure precision loss if requested
+            precision_info = None
+            if measure_precision and original_values is not None:
+                # Create safe temporary column name
+                temp_decompressed = f"__temp_decompress_{orig_col}"
+                if temp_decompressed in self.df.columns or temp_decompressed in self.aliases:
+                    raise ValueError(
+                        f"Internal error: temporary column name '{temp_decompressed}' already exists. "
+                        f"This should not happen - please report this bug."
+                    )
+
+                try:
+                    self.add_alias(temp_decompressed, config['decompress'],
+                                   dtype=config['decompressed_dtype'])
+                    self.materialize_alias(temp_decompressed)
+                    decompressed_values = self.df[temp_decompressed].values
+
+                    # Compute precision metrics
+                    diff = original_values - decompressed_values
+                    precision_info = {
+                        'rmse': float(np.sqrt(np.mean(diff**2))),
+                        'max_error': float(np.max(np.abs(diff))),
+                        'mean_error': float(np.mean(diff))
+                    }
+
+                    # Clean up temporary column
+                    self.df.drop(columns=[temp_decompressed], inplace=True)
+                    if temp_decompressed in self.aliases:
+                        del self.aliases[temp_decompressed]
+                        if temp_decompressed in self.alias_dtypes:
+                            del self.alias_dtypes[temp_decompressed]
+                except Exception as e:
+                    # Non-fatal: log but continue
+                    precision_info = {'error': str(e)}
+
+            # Step 3: Remove original from storage (if requested and exists)
+            if drop_original and orig_col in self.df.columns:
+                self.df.drop(columns=[orig_col], inplace=True)
+
+            # Step 4: Add decompression alias (original name → decompressed expression)
+            try:
+                self.add_alias(orig_col, config['decompress'],
+                               dtype=config['decompressed_dtype'])
+            except SyntaxError as e:
+                raise ValueError(
+                    f"Compression failed for '{orig_col}': invalid decompress expression.\n"
+                    f"Expression: {config['decompress']}\n"
+                    f"Error: {e}"
+                ) from e
+            except Exception as e:
+                raise ValueError(
+                    f"Compression failed for '{orig_col}' during decompress alias creation: {e}"
+                ) from e
+
+            # Step 5: Store metadata (JSON-safe: dtypes as strings)
+            self.compression_info[orig_col] = {
+                'compressed_col': compressed_col,
+                'compress_expr': config['compress'],
+                'decompress_expr': config['decompress'],
+                'compressed_dtype': np.dtype(config['compressed_dtype']).name,
+                'decompressed_dtype': np.dtype(config['decompressed_dtype']).name,
+                'original_removed': drop_original
+            }
+
+            if precision_info is not None:
+                self.compression_info[orig_col]['precision'] = precision_info
+
+        return self
+
+    def decompress_columns(self, columns=None, inplace=False, keep_compressed=True):
+        """
+        Materialize decompressed versions of compressed columns.
+
+        Parameters
+        ----------
+        columns : list of str, optional
+            Columns to decompress. If None, decompress all compressed columns.
+        inplace : bool, optional
+            If True, replace compressed columns with decompressed versions
+            and remove compression metadata. If False, materialize decompressed
+            alongside compressed (default: False).
+        keep_compressed : bool, optional
+            If False and inplace=False, remove compressed columns after
+            materializing decompressed versions. Ignored when inplace=True
+            (default: True).
+
+        Returns
+        -------
+        self : AliasDataFrame
+            For method chaining
+
+        Raises
+        ------
+        ValueError
+            If specified column is not compressed or compressed column missing
+
+        Examples
+        --------
+        >>> # Keep both compressed and decompressed (default)
+        >>> adf.decompress_columns(['dy', 'dz'])
+
+        >>> # Materialize decompressed, remove compressed
+        >>> adf.decompress_columns(['dy'], keep_compressed=False)
+
+        >>> # Replace compressed with decompressed permanently
+        >>> adf.decompress_columns(inplace=True)
+
+        Notes
+        -----
+        - Uses materialize_alias() to evaluate decompression expressions
+        - inplace=True converts compressed storage back to decompressed storage
+        - keep_compressed only affects behavior when inplace=False
+        - Validates compressed column exists before attempting decompression
+        """
+        if columns is None:
+            columns = list(self.compression_info.keys())
+
+        for col in columns:
+            info = self.compression_info.get(col)
+            if info is None:
+                raise ValueError(
+                    f"Column '{col}' is not marked as compressed. "
+                    f"Available compressed columns: {list(self.compression_info.keys())}"
+                )
+
+            compressed_col = info['compressed_col']
+
+            # Validate compressed column exists
+            if compressed_col not in self.df.columns:
+                raise ValueError(
+                    f"Compressed column '{compressed_col}' for '{col}' is missing. "
+                    f"Cannot decompress without source data."
+                )
+
+            # Materialize decompressed alias
+            self.materialize_alias(col)
+
+            if inplace:
+                # Enforce decompressed dtype
+                target_dtype = np.dtype(info['decompressed_dtype']).type
+                self.df[col] = self.df[col].astype(target_dtype)
+
+                # Remove compressed column
+                self.df.drop(columns=[compressed_col], inplace=True)
+
+                # Remove compression metadata
+                del self.compression_info[col]
+
+            elif not keep_compressed:
+                # Remove compressed column but keep as decompressed
+                self.df.drop(columns=[compressed_col], inplace=True)
+
+                # Remove compression metadata (no longer compressed)
+                del self.compression_info[col]
+
+        return self
+
+    def get_compression_info(self, column=None):
+        """
+        Get compression metadata for columns.
+
+        Parameters
+        ----------
+        column : str, optional
+            Specific column. If None, return all compression info as DataFrame.
+
+        Returns
+        -------
+        dict or pd.DataFrame
+            Compression metadata for specified column or all columns
+
+        Examples
+        --------
+        >>> adf.get_compression_info('dy')
+        {'compressed_col': 'dy_c', 'compress_expr': 'round(asinh(dy)*40)', ...}
+
+        >>> adf.get_compression_info()  # All compressed columns as DataFrame
+        """
+        if column is None:
+            if not self.compression_info:
+                return pd.DataFrame()
+            return pd.DataFrame.from_dict(self.compression_info, orient='index')
+        else:
+            return self.compression_info.get(column, {})
+
+    def describe_compression(self):
+        """
+        Print human-readable compression summary.
+
+        Shows compressed columns, expressions, dtypes, and precision metrics
+        if available.
+
+        Examples
+        --------
+        >>> adf.describe_compression()
+        Compressed Columns:
+        -------------------
+        dy:
+          Compressed as: dy_c (int16)
+          Expression: round(asinh(dy)*40)
+          Decompression: sinh(dy_c/40.) → float16
+          Precision: RMSE=0.0012, Max=0.0045
+        """
+        if not self.compression_info:
+            print("No compressed columns")
+            return
+
+        print("Compressed Columns:")
+        print("-" * 70)
+        for col, info in self.compression_info.items():
+            print(f"\n{col}:")
+            print(f"  Compressed as: {info['compressed_col']} ({info['compressed_dtype']})")
+            print(f"  Expression: {info['compress_expr']}")
+            print(f"  Decompression: {info['decompress_expr']} → {info['decompressed_dtype']}")
+            print(f"  Original removed: {info['original_removed']}")
+
+            if 'precision' in info:
+                prec = info['precision']
+                if 'error' in prec:
+                    print(f"  Precision: measurement failed ({prec['error']})")
+                else:
+                    print(f"  Precision: RMSE={prec['rmse']:.6f}, "
+                          f"Max={prec['max_error']:.6f}, "
+                          f"Mean={prec['mean_error']:.6f}")
