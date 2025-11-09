@@ -1,0 +1,27 @@
+[MESSAGES CONTROL]
+# Disable style warnings that don't affect functionality
+disable=
+    line-too-long,
+    bad-indentation,
+    fixme,
+    logging-fstring-interpolation,
+    too-many-arguments,
+    too-many-positional-arguments,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    broad-exception-caught,
+    invalid-name,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    reimported,
+    import-outside-toplevel,
+    redefined-outer-name,
+    superfluous-parens
+
+[FORMAT]
+max-line-length=120
+
+[BASIC]
+good-names=i,j,k,ex,Run,_,X,y,df,np,dfGB
