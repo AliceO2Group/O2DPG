@@ -676,12 +676,36 @@ class AliasDataFrame:
                     self.materialize_alias(temp_decompressed)
                     decompressed_values = self.df[temp_decompressed].values
 
-                    # Compute precision metrics
-                    diff = original_values - decompressed_values
+                    # Compute precision metrics on finite values only
+                    orig = original_values.astype(np.float64)
+                    decomp = decompressed_values.astype(np.float64)
+                    finite_mask = np.isfinite(orig) & np.isfinite(decomp)
+
+                    n_total = len(orig)
+                    n_finite = int(finite_mask.sum())
+
+                    # Always calculate on finite subset (NaN if empty)
+                    if n_finite > 0:
+                        diff = orig[finite_mask] - decomp[finite_mask]
+                        with np.errstate(over='ignore', invalid='ignore'):
+                            rmse = float(np.sqrt(np.mean(diff ** 2)))
+                            if not np.isfinite(rmse):
+                                rmse = float(np.sqrt(np.median(diff ** 2)) * 1.2533)
+                        max_error = float(np.max(np.abs(diff)))
+                        mean_error = float(np.mean(diff))
+                    else:
+                        rmse = float('nan')
+                        max_error = float('nan')
+                        mean_error = float('nan')
+
+                    # Always same structure
                     precision_info = {
-                        'rmse': float(np.sqrt(np.mean(diff**2))),
-                        'max_error': float(np.max(np.abs(diff))),
-                        'mean_error': float(np.mean(diff))
+                        'n_samples': n_finite,
+                        'n_total': n_total,
+                        'fraction_nonfinite': float((n_total - n_finite) / n_total) if n_total > 0 else 0.0,
+                        'rmse': rmse,
+                        'max_error': max_error,
+                        'mean_error': mean_error
                     }
 
                     # Clean up temporary column
@@ -883,3 +907,9 @@ class AliasDataFrame:
                     print(f"  Precision: RMSE={prec['rmse']:.6f}, "
                           f"Max={prec['max_error']:.6f}, "
                           f"Mean={prec['mean_error']:.6f}")
+                    # Add sample count info
+                    n_samples = prec.get('n_samples', 0)
+                    n_total = prec.get('n_total', n_samples)
+                    frac_nonfinite = prec.get('fraction_nonfinite', 0.0)
+                    #if frac_nonfinite >= 0:
+                    print(f"  Samples: {n_samples:,}/{n_total:,}, "f"Non-finite: {frac_nonfinite*100:.2f}%")
