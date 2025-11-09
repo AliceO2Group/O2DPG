@@ -109,6 +109,53 @@ class TestAliasDataFrame(unittest.TestCase):
         expected = df["x"] + df["y"]
         np.testing.assert_array_equal(z_val, expected)
 
+    def test_bidirectional_atan2_support(self):
+        """Test that both atan2 (ROOT) and arctan2 (Python) work"""
+        df = pd.DataFrame({
+            'x': np.array([1.0, 0.0, -1.0, 0.0]),
+            'y': np.array([0.0, 1.0, 0.0, -1.0])
+        })
+        adf = AliasDataFrame(df)
+
+        # Python style (arctan2)
+        adf.add_alias('phi_python', 'arctan2(y, x)', dtype=np.float32)
+        adf.materialize_alias('phi_python')
+
+        # ROOT style (atan2) - should also work
+        adf.add_alias('phi_root', 'atan2(y, x)', dtype=np.float32)
+        adf.materialize_alias('phi_root')
+
+        # Should be identical
+        np.testing.assert_allclose(adf.df['phi_python'], adf.df['phi_root'], rtol=1e-6)
+
+        # Expected values
+        expected = np.array([0.0, np.pi/2, np.pi, -np.pi/2], dtype=np.float32)
+        np.testing.assert_allclose(adf.df['phi_python'], expected, rtol=1e-6)
+
+    def test_undefined_function_helpful_error(self):
+        """Test that undefined functions give helpful error messages"""
+        df = pd.DataFrame({'x': [1, 2, 3], 'y': [4, 5, 6]})
+        adf = AliasDataFrame(df)
+
+        # Test 1: Undefined function
+        adf.add_alias('bad', 'nonexistent_func(x)', dtype=np.float32)
+        with self.assertRaises(NameError) as cm:
+            adf.materialize_alias('bad')
+
+        error_msg = str(cm.exception)
+        # Check error message contains helpful info
+        self.assertIn('nonexistent_func', error_msg)
+        self.assertIn('Available functions include:', error_msg)
+        self.assertIn('arctan2', error_msg)  # Should mention both forms
+        self.assertIn('atan2', error_msg)
+
+        # Test 2: Undefined variable
+        adf.add_alias('bad2', 'x + undefined_var', dtype=np.float32)
+        with self.assertRaises(NameError) as cm:
+            adf.materialize_alias('bad2')
+
+        error_msg = str(cm.exception)
+        self.assertIn('undefined_var', error_msg)
 
 class TestAliasDataFrameWithSubframes(unittest.TestCase):
     def setUp(self):

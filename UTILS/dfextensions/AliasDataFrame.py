@@ -81,21 +81,20 @@ def convert_expr_to_root(expr):
 # Add BEFORE class AliasDataFrame:
 
 class NumpyRootMapper:
-    """Maps NumPy function names to ROOT C++ equivalents"""
+    """Maps NumPy function names to ROOT C++ equivalents (bidirectional)"""
 
     # Maps function names to (numpy_attr, root_name)
-    # Some functions are aliases (asinh → arcsinh in numpy)
     MAPPING = {
-        # Hyperbolic functions (needed for compression)
+        # Hyperbolic functions
         'sinh': ('sinh', 'sinh'),
         'cosh': ('cosh', 'cosh'),
         'tanh': ('tanh', 'tanh'),
         'arcsinh': ('arcsinh', 'asinh'),
         'arccosh': ('arccosh', 'acosh'),
         'arctanh': ('arctanh', 'atanh'),
-        'asinh': ('arcsinh', 'asinh'),     # Alias: np.arcsinh
-        'acosh': ('arccosh', 'acosh'),     # Alias: np.arccosh
-        'atanh': ('arctanh', 'atanh'),     # Alias: np.arctanh
+        'asinh': ('arcsinh', 'asinh'),
+        'acosh': ('arccosh', 'acosh'),
+        'atanh': ('arctanh', 'atanh'),
 
         # Trigonometric
         'sin': ('sin', 'sin'),
@@ -105,9 +104,10 @@ class NumpyRootMapper:
         'arccos': ('arccos', 'acos'),
         'arctan': ('arctan', 'atan'),
         'arctan2': ('arctan2', 'atan2'),
-        'asin': ('arcsin', 'asin'),        # Alias: np.arcsin
-        'acos': ('arccos', 'acos'),        # Alias: np.arccos
-        'atan': ('arctan', 'atan'),        # Alias: np.arctan
+        'asin': ('arcsin', 'asin'),
+        'acos': ('arccos', 'acos'),
+        'atan': ('arctan', 'atan'),
+        'atan2': ('arctan2', 'atan2'),  # ← NEW: ROOT name maps to numpy
 
         # Exponential/log
         'exp': ('exp', 'exp'),
@@ -126,7 +126,11 @@ class NumpyRootMapper:
 
     @classmethod
     def get_numpy_functions_for_eval(cls):
-        """Get dict of function_name → numpy_function for evaluation"""
+        """Get dict of function_name → numpy_function for evaluation
+
+        Includes both Python names (arctan2) and ROOT names (atan2)
+        for bidirectional compatibility when reading ROOT files.
+        """
         funcs = {}
         for name, (np_attr, _) in cls.MAPPING.items():
             if hasattr(np, np_attr):
@@ -176,18 +180,21 @@ class AliasDataFrame:
 
     def _default_functions(self):
         import math
+
+        # Start with math functions (scalar fallbacks)
         env = {k: getattr(math, k) for k in dir(math) if not k.startswith("_")}
 
-        # Add numpy functions (will override math versions with vectorized numpy)
+        # CRITICAL: Override with numpy vectorized versions
+        # This ensures both arctan2 AND atan2 map to np.arctan2
         env.update(NumpyRootMapper.get_numpy_functions_for_eval())
 
         env["np"] = np
         for sf_name, sf_entry in self._subframes.items():
             env[sf_name] = sf_entry['frame']
 
-        env["int"] = lambda x: np.array(x).astype(np.int32)
-        env["uint"] = lambda x: np.array(x).astype(np.uint32)
-        env["float"] = lambda x: np.array(x).astype(np.float32)
+        env["int"] = lambda x: np.asarray(x, dtype=np.int32)
+        env["uint"] = lambda x: np.asarray(x, dtype=np.uint32)
+        env["float"] = lambda x: np.asarray(x, dtype=np.float32)
         env["round"] = np.round
         env["clip"] = np.clip
 
@@ -250,7 +257,27 @@ class AliasDataFrame:
         expr = self._prepare_subframe_joins(expr)
         local_env = {col: self.df[col] for col in self.df.columns}
         local_env.update(self._default_functions())
-        return eval(expr, {}, local_env)
+
+        try:
+            return eval(expr, {}, local_env)
+        except NameError as e:
+            # Function or variable not found
+            missing_name = str(e).split("'")[1] if "'" in str(e) else "unknown"
+            available_funcs = sorted([k for k in local_env.keys() if callable(local_env.get(k))])[:20]
+            raise NameError(
+                f"Undefined function or variable '{missing_name}' in expression: {expr}\n"
+                f"Available functions include: {', '.join(available_funcs)}\n"
+                f"Hint: Common functions are available, including both 'arctan2' and 'atan2'"
+            ) from e
+        except TypeError as e:
+            if "cannot convert the series" in str(e):
+                raise TypeError(
+                    f"Scalar function used on array data in expression: {expr}\n"
+                    f"Error: {e}\n"
+                    f"Hint: All math functions should be vectorized (numpy-based). "
+                    f"If you see this with standard functions like 'atan2', please report as a bug."
+                ) from e
+            raise
 
     def _resolve_dependencies(self):
         from collections import defaultdict
