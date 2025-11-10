@@ -1,13 +1,26 @@
-import time
-import psutil
+"""
+Performance monitoring and logging utilities.
+
+Provides PerformanceLogger class for tracking execution time and memory usage.
+"""
+# pylint: disable=too-many-locals,too-many-branches,invalid-name,line-too-long
+# pylint: disable=unspecified-encoding,import-outside-toplevel
+# Justified: Complex logging/plotting logic requires multiple variables and branches.
+
+import sys
 import socket
 import getpass
+import time
+from typing import Union, List, Dict, Optional
+
+import psutil
 import pandas as pd
 import matplotlib.pyplot as plt
-from typing import Union, List, Dict, Optional
-import sys
+
 
 class PerformanceLogger:
+    """Performance logger for tracking execution time and memory usage."""
+
     def __init__(self, log_path: str, sep: str = "|"):
         self.log_path = log_path
         self.start_time = time.time()
@@ -16,25 +29,26 @@ class PerformanceLogger:
         self.host = socket.gethostname()
 
     def log(self, step: str, index: Optional[List[int]] = None):
+        """Log a step with optional multi-level index."""
         elapsed = time.time() - self.start_time
         mem_gb = psutil.Process().memory_info().rss / (1024 ** 3)
         index_str = "" if index is None else f"[{','.join(map(str, index))}]"
         step_full = f"{step}{index_str}"
         line = f"{time.strftime('%Y-%m-%d %H:%M:%S')},{int(time.time() * 1000) % 1000:03d} {self.sep} {step_full} {self.sep} {elapsed:.2f} {self.sep} {mem_gb:.2f} {self.sep} {self.user} {self.sep} {self.host}\n"
-        with open(self.log_path, "a") as f:
+        with open(self.log_path, "a", encoding="utf-8") as f:
             f.write(line)
         print(f"{step_full} | {elapsed:.2f} | {mem_gb:.2f} | {self.user} | {self.host}")
 
-
     @staticmethod
     def log_to_dataframe(log_paths: Union[str, List[str]], sep: str = "|") -> pd.DataFrame:
+        """Parse log files into a DataFrame."""
         if isinstance(log_paths, str):
             log_paths = [log_paths]
 
         rows = []
         for log_id, path in enumerate(log_paths):
             try:
-                with open(path) as f:
+                with open(path, encoding="utf-8") as f:
                     for row_id, line in enumerate(f):
                         parts = [x.strip() for x in line.strip().split(sep)]
                         if len(parts) < 5:
@@ -67,14 +81,17 @@ class PerformanceLogger:
 
     @staticmethod
     def summarize_with_config(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
+        """Summarize DataFrame with given configuration."""
         group_cols = config.get("by", ["step"])
         stats = config.get("stats", ["mean", "max", "min"])
         agg = {}
         for col in ["elapsed_sec", "rss_gb"]:
             agg[col] = stats
         return df.groupby(group_cols).agg(agg)
+
     @staticmethod
     def summarize_with_configs(df: pd.DataFrame, config_dict: Dict[str, Dict]) -> Dict[str, pd.DataFrame]:
+        """Summarize DataFrame with multiple configurations."""
         summaries = {}
         for name, config in config_dict.items():
             summaries[name] = PerformanceLogger.summarize_with_config(df, config)
@@ -85,7 +102,7 @@ class PerformanceLogger:
              config_dict: Dict[str, Dict],
              filter_expr: Optional[str] = None,
              output_pdf: Optional[str] = None):
-
+        """Plot performance data with given configurations."""
         if filter_expr:
             df = df.query(filter_expr)
 
@@ -149,11 +166,9 @@ class PerformanceLogger:
             pdf.close()
 
 
-
-
 # Default configurations
 
-default_plot_config={
+default_plot_config = {
     "RSS vs Time": {
         "kind": "line",
         "varX": "timestamp",
@@ -197,7 +212,7 @@ default_plot_config={
     },
 }
 
-default_summary_config={
+default_summary_config = {
     "summary_by_step": {
         "by": ["step"],
         "stats": ["mean", "max", "min", "count"]

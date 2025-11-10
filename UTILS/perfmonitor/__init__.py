@@ -1,4 +1,8 @@
-# perfmonitor/__init__.py
+"""
+Performance monitoring utilities.
+
+Provides tools for tracking and analyzing execution time and memory usage.
+"""
 
 from .performance_logger import (
     PerformanceLogger,
@@ -11,3 +15,5 @@ __all__ = [
     "default_plot_config",
     "default_summary_config"
 ]
+
+__version__ = '1.0.0'

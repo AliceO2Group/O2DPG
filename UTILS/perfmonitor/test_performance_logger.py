@@ -1,7 +1,7 @@
+"""Tests for performance logger."""
 import time
 import tempfile
 import os
-import pytest
 import pandas as pd
 from perfmonitor.performance_logger import (
     PerformanceLogger,
@@ -48,7 +48,7 @@ def test_plot_and_summary(tmp_path):
 
     df = PerformanceLogger.log_to_dataframe([str(log_path)])
 
-    summary = PerformanceLogger.summarize_with_config(df, default_summary_config)
+    summary = PerformanceLogger.summarize_with_configs(df, default_summary_config)
     assert isinstance(summary, dict)
     assert "summary_by_step" in summary
 
@@ -88,6 +88,6 @@ def test_custom_summary():
             "stats": ["mean", "count"]
         }
     }
-    summary = PerformanceLogger.summarize_with_config(df, config)
+    summary = PerformanceLogger.summarize_with_configs(df, config)
     assert "by_index" in summary
     os.remove(log_path)

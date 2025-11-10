@@ -1,0 +1,72 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-7.2.2, pluggy-1.0.0 -- /Users/miranov25/virtualenv/venv3/bin/python3
+cachedir: .pytest_cache
+metadata: {'Python': '3.9.6', 'Platform': 'macOS-14.5-arm64-arm-64bit', 'Packages': {'pytest': '7.2.2', 'pluggy': '1.0.0'}, 'Plugins': {'parallel': '0.1.1', 'tornasync': '0.6.0.post2', 'json-report': '1.5.0', 'nbval': '0.10.0', 'regressions': '2.4.2', 'mock': '3.12.0', 'metadata': '2.0.4', 'anyio': '3.6.2', 'datadir': '1.4.1', 'xdist': '3.6.1'}}
+rootdir: /Users/miranov25/alicesw/O2DPG/UTILS
+plugins: parallel-0.1.1, tornasync-0.6.0.post2, json-report-1.5.0, nbval-0.10.0, regressions-2.4.2, mock-3.12.0, metadata-2.0.4, anyio-3.6.2, datadir-1.4.1, xdist-3.6.1
+collecting ... collected 5 items
+
+test_performance_logger.py::test_basic_logging_and_parsing PASSED        [ 20%]
+test_performance_logger.py::test_missing_log_file_handling PASSED        [ 40%]
+test_performance_logger.py::test_plot_and_summary FAILED                 [ 60%]
+test_performance_logger.py::test_multiple_files PASSED                   [ 80%]
+test_performance_logger.py::test_custom_summary FAILED                   [100%]
+
+=================================== FAILURES ===================================
+____________________________ test_plot_and_summary _____________________________
+
+tmp_path = PosixPath('/private/var/folders/qc/qvvq5x6n53v3327fkwnds3cm0000gn/T/pytest-of-miranov25/pytest-16/test_plot_and_summary0')
+
+    def test_plot_and_summary(tmp_path):
+        log_path = tmp_path / "log.txt"
+        logger = PerformanceLogger(log_path)
+        logger.log("init")
+        time.sleep(0.05)
+        for i in range(3):
+            logger.log("step::loop", index=[i])
+            time.sleep(0.01)
+    
+        df = PerformanceLogger.log_to_dataframe([str(log_path)])
+    
+        summary = PerformanceLogger.summarize_with_config(df, default_summary_config)
+>       assert isinstance(summary, dict)
+E       assert False
+E        +  where False = isinstance(           elapsed_sec             rss_gb            \n                  mean   max   min   mean   max   min\nstep                                                 \ninit          0.000000  0.00  0.00   0.15  0.15  0.15\nstep::loop    0.063333  0.08  0.05   0.15  0.15  0.15, dict)
+
+test_performance_logger.py:52: AssertionError
+----------------------------- Captured stdout call -----------------------------
+init | 0.00 | 0.15 | miranov25 | Marians-MBP-3.fritz.box
+step::loop[0] | 0.05 | 0.15 | miranov25 | Marians-MBP-3.fritz.box
+step::loop[1] | 0.06 | 0.15 | miranov25 | Marians-MBP-3.fritz.box
+step::loop[2] | 0.08 | 0.15 | miranov25 | Marians-MBP-3.fritz.box
+_____________________________ test_custom_summary ______________________________
+
+    def test_custom_summary():
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            log_path = tmp.name
+    
+        logger = PerformanceLogger(log_path)
+        for i in range(3):
+            logger.log("step::measure", index=[i])
+            time.sleep(0.01)
+    
+        df = PerformanceLogger.log_to_dataframe([log_path])
+        config = {
+            "by_index": {
+                "by": ["index_0"],
+                "stats": ["mean", "count"]
+            }
+        }
+        summary = PerformanceLogger.summarize_with_config(df, config)
+>       assert "by_index" in summary
+E       AssertionError: assert 'by_index' in               elapsed_sec            rss_gb            \n                     mean   max  min   mean   max   min\nstep                                                   \nstep::measure        0.01  0.02  0.0   0.15  0.15  0.15
+
+test_performance_logger.py:92: AssertionError
+----------------------------- Captured stdout call -----------------------------
+step::measure[0] | 0.00 | 0.15 | miranov25 | Marians-MBP-3.fritz.box
+step::measure[1] | 0.01 | 0.15 | miranov25 | Marians-MBP-3.fritz.box
+step::measure[2] | 0.02 | 0.15 | miranov25 | Marians-MBP-3.fritz.box
+=========================== short test summary info ============================
+FAILED test_performance_logger.py::test_plot_and_summary - assert False
+FAILED test_performance_logger.py::test_custom_summary - AssertionError: asse...
+========================= 2 failed, 3 passed in 1.00s ==========================
