@@ -12,9 +12,8 @@
 
 from __future__ import annotations
 
-from typing import List, Dict, Tuple, Optional
+
 import itertools
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -849,7 +848,7 @@ def test_window_size_zero_parity_with_v4_relaxed():
       Establishes continuity with v4 when sliding window is disabled.
     """
     try:
-        from ..groupby_regression import make_parallel_fit as make_parallel_fit_v4
+        from dfextensions.groupby_regression import make_parallel_fit_v4
     except Exception:
         pytest.skip("v4 not available for comparison")
 
@@ -863,7 +862,7 @@ def test_window_size_zero_parity_with_v4_relaxed():
         fit_formula='value ~ x', fitter='ols'
     )
     v4_df, v4_params = make_parallel_fit_v4(
-        df, gb_columns=['xBin', 'yBin', 'zBin'],
+        df=df, gb_columns=['xBin', 'yBin', 'zBin'],
         fit_columns=['value'], linear_columns=['x'],
         median_columns=[], weights='weight', suffix='_v4',
         selection=pd.Series(True, index=df.index), min_stat=3

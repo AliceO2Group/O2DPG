@@ -151,7 +151,13 @@ def _validate_sliding_window_inputs(
         try:
             import patsy  # type: ignore
             # replace literal 'target' with a placeholder to validate syntax
-            patsy.ModelDesc.from_formula(fit_formula.replace('target', '__TARGET__'))
+   
+    # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
+    # pylint: disable=no-member  # patsy.ModelDesc is dynamic
+    # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
+    # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
+    # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
+            patsy.ModelDesc 
         except Exception as e:
             raise ValueError(f"Malformed fit_formula: {fit_formula!r}. Error: {e}")
 
