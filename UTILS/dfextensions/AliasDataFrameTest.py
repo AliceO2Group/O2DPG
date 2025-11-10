@@ -448,7 +448,7 @@ class TestAliasDataFrameCompression(unittest.TestCase):
         self.assertNotIn('dy', self.adf.compression_info)
 
     def test_decompress_keep_compressed_false(self):
-        """Test decompress with keep_compressed=False"""
+        """Test decompress with keep_compressed=False and keep_schema=False"""
         spec = {
             'dy': {
                 'compress': 'round(asinh(dy)*40)',
@@ -459,7 +459,8 @@ class TestAliasDataFrameCompression(unittest.TestCase):
         }
 
         self.adf.compress_columns(spec)
-        self.adf.decompress_columns(['dy'], keep_compressed=False)
+        # New API: explicitly remove schema
+        self.adf.decompress_columns(['dy'], keep_compressed=False, keep_schema=False)
 
         # Check decompressed column exists
         self.assertIn('dy', self.adf.df.columns)
@@ -555,8 +556,8 @@ class TestAliasDataFrameCompression(unittest.TestCase):
 
             adf_loaded = AliasDataFrame.load(path)
 
-            # Check compression_info preserved
-            self.assertEqual(len(adf_loaded.compression_info), 2)
+            # Check compression_info preserved (2 columns + __meta__)
+            self.assertEqual(len(adf_loaded.compression_info), 3)
             self.assertIn('dy', adf_loaded.compression_info)
             self.assertIn('dz', adf_loaded.compression_info)
 
@@ -643,8 +644,9 @@ class TestAliasDataFrameCompression(unittest.TestCase):
         self.assertIn('dz', self.adf.aliases)
         self.assertIn('tgSlp', self.adf.aliases)
 
-        # Check compression_info complete
-        self.assertEqual(len(self.adf.compression_info), 3)
+        # Check compression_info complete (3 columns + __meta__)
+        self.assertEqual(len(self.adf.compression_info), 4)
+        self.assertIn('__meta__', self.adf.compression_info)
 
     def test_get_compression_info(self):
         """Test compression info retrieval"""
@@ -678,9 +680,536 @@ class TestAliasDataFrameCompression(unittest.TestCase):
             # Save without compression
             self.adf.save(path)
 
-            # Load should work fine
+            # Load should work fine - __meta__ should be present
             adf_loaded = AliasDataFrame.load(path)
-            self.assertEqual(adf_loaded.compression_info, {})
+            # Only __meta__ should be present (no actual compressed columns)
+            self.assertEqual(len(adf_loaded.compression_info), 1)
+            self.assertIn('__meta__', adf_loaded.compression_info)
+
+
+class TestCompressionStateMachine(unittest.TestCase):
+    """Test compression state machine transitions and invariants"""
+
+    def setUp(self):
+        """Create test data for compression tests"""
+        np.random.seed(42)
+        df = pd.DataFrame({
+            "dy": np.random.normal(0, 2.0, 1000).astype(np.float32),
+            "dz": np.random.normal(0, 1.5, 1000).astype(np.float32),
+            "tgSlp": np.random.uniform(-0.5, 0.5, 1000).astype(np.float32),
+        })
+        self.adf = AliasDataFrame(df)
+        self.original_dy = df["dy"].values.copy()
+        
+        self.spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            },
+            'dz': {
+                'compress': 'round(asinh(dz)*40)',
+                'decompress': 'sinh(dz_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+
+    def test_metadata_versioning(self):
+        """Test that __meta__ is present in compression_info"""
+        self.assertIn("__meta__", self.adf.compression_info)
+        meta = self.adf.compression_info["__meta__"]
+        self.assertEqual(meta["schema_version"], 1)
+        self.assertEqual(meta["state_machine"], "CompressionState.v1")
+
+    def test_schema_only_definition(self):
+        """Test SCHEMA_ONLY state (forward declaration)"""
+        # Define schema without data
+        self.adf.define_compression_schema(self.spec)
+        
+        # Check state is SCHEMA_ONLY
+        from dfextensions.AliasDataFrame import CompressionState
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.SCHEMA_ONLY)
+        self.assertEqual(self.adf.get_compression_state('dz'), CompressionState.SCHEMA_ONLY)
+        
+        # Check no physical columns created
+        self.assertNotIn('dy_c', self.adf.df.columns)
+        self.assertNotIn('dz_c', self.adf.df.columns)
+        
+        # Check original columns still exist
+        self.assertIn('dy', self.adf.df.columns)
+        self.assertIn('dz', self.adf.df.columns)
+        
+        # Check metadata stored
+        info = self.adf.compression_info['dy']
+        self.assertEqual(info['compressed_col'], 'dy_c')
+        self.assertEqual(info['compress_expr'], self.spec['dy']['compress'])
+        self.assertEqual(info['state'], CompressionState.SCHEMA_ONLY)
+
+    def test_schema_only_then_compress(self):
+        """Test SCHEMA_ONLY → COMPRESSED transition"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        # Step 1: Define schema
+        self.adf.define_compression_schema(self.spec)
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.SCHEMA_ONLY)
+        
+        # Step 2: Apply compression using schema
+        self.adf.compress_columns(columns=['dy'])
+        
+        # Check state transitioned to COMPRESSED
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        
+        # Check physical columns exist
+        self.assertIn('dy_c', self.adf.df.columns)
+        self.assertEqual(self.adf.df['dy_c'].dtype, np.int16)
+        
+        # Check decompression alias exists
+        self.assertIn('dy', self.adf.aliases)
+        self.assertEqual(self.adf.aliases['dy'], self.spec['dy']['decompress'])
+        
+        # Check original removed
+        self.assertNotIn('dy', self.adf.df.columns)
+
+    def test_direct_compression_without_schema(self):
+        """Test None → COMPRESSED transition (inline compression)"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        self.adf.compress_columns({'dy': self.spec['dy']})
+        
+        # Check state is COMPRESSED
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        
+        # Check invariants
+        self.assertIn('dy_c', self.adf.df.columns)
+        self.assertIn('dy', self.adf.aliases)
+        self.assertNotIn('dy', self.adf.df.columns)
+
+    def test_full_compression_cycle(self):
+        """Test COMPRESSED → DECOMPRESSED → COMPRESSED (recompression)"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        # Step 1: Compress
+        self.adf.compress_columns({'dy': self.spec['dy']})
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        
+        # Step 2: Decompress with keep_schema=True
+        self.adf.decompress_columns(['dy'], keep_schema=True, keep_compressed=False)
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.DECOMPRESSED)
+        
+        # Check invariants after decompression
+        self.assertIn('dy', self.adf.df.columns)  # Physical column
+        self.assertNotIn('dy', self.adf.aliases)   # No alias
+        self.assertNotIn('dy_c', self.adf.df.columns)  # Compressed removed
+        
+        # Step 3: Recompress using stored schema
+        self.adf.compress_columns(columns=['dy'])
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        
+        # Check invariants after recompression
+        self.assertIn('dy_c', self.adf.df.columns)
+        self.assertIn('dy', self.adf.aliases)
+        self.assertNotIn('dy', self.adf.df.columns)
+        
+        # Verify data integrity
+        self.adf.materialize_alias('dy')
+        np.testing.assert_allclose(
+            self.adf.df['dy'].values,
+            self.original_dy,
+            rtol=0.01, atol=0.05
+        )
+
+    def test_decompress_with_keep_schema_false(self):
+        """Test COMPRESSED → None transition (remove all metadata)"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        self.adf.compress_columns({'dy': self.spec['dy']})
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        
+        self.adf.decompress_columns(['dy'], keep_schema=False)
+        
+        # Check state removed
+        self.assertIsNone(self.adf.get_compression_state('dy'))
+        self.assertNotIn('dy', self.adf.compression_info)
+        
+        # Check physical column exists
+        self.assertIn('dy', self.adf.df.columns)
+        self.assertNotIn('dy', self.adf.aliases)
+
+    def test_error_on_double_compression(self):
+        """Test that re-compressing COMPRESSED state raises error"""
+        self.adf.compress_columns({'dy': self.spec['dy']})
+        
+        with self.assertRaises(ValueError) as cm:
+            self.adf.compress_columns({'dy': self.spec['dy']})
+        
+        self.assertIn('already compressed', str(cm.exception))
+        # Check that it suggests decompression
+        self.assertIn('decompress', str(cm.exception).lower())
+
+    def test_collision_same_schema_recompression(self):
+        """Test recompression with matching schema is allowed"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        # Compress, decompress, recompress
+        self.adf.compress_columns({'dy': self.spec['dy']})
+        self.adf.decompress_columns(['dy'], keep_schema=True, keep_compressed=False)
+        
+        # This should work - reuses dy_c name from schema
+        self.adf.compress_columns(columns=['dy'])
+        
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        self.assertIn('dy_c', self.adf.df.columns)
+
+    def test_collision_foreign_column(self):
+        """Test collision with unrelated column raises error"""
+        # Create conflicting column
+        self.adf.df['dy_c'] = np.zeros(len(self.adf.df))
+        
+        with self.assertRaises(ValueError) as cm:
+            self.adf.compress_columns({'dy': self.spec['dy']})
+        
+        self.assertIn('already exists', str(cm.exception))
+        self.assertIn('dy_c', str(cm.exception))
+
+    def test_collision_other_schema(self):
+        """Test collision with another column's compressed_col raises error"""
+        # First create an unrelated column called 'dy_c'
+        self.adf.df['dy_c'] = np.ones(len(self.adf.df))
+        
+        # Now try to compress dy, which would want to create dy_c
+        with self.assertRaises(ValueError) as cm:
+            self.adf.compress_columns({'dy': self.spec['dy']})
+        
+        # Check error message mentions the conflict
+        self.assertIn('already exists', str(cm.exception).lower())
+        self.assertIn('dy_c', str(cm.exception))
+
+    def test_compress_all_schema_only_columns(self):
+        """Test compress_columns() with no args compresses all SCHEMA_ONLY"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        # Define schemas
+        self.adf.define_compression_schema(self.spec)
+        
+        # Compress all at once (no args)
+        self.adf.compress_columns()
+        
+        # Check both compressed
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        self.assertEqual(self.adf.get_compression_state('dz'), CompressionState.COMPRESSED)
+
+    def test_is_compressed_helper(self):
+        """Test is_compressed() helper method"""
+        self.assertFalse(self.adf.is_compressed('dy'))
+        
+        self.adf.compress_columns({'dy': self.spec['dy']})
+        self.assertTrue(self.adf.is_compressed('dy'))
+        
+        self.adf.decompress_columns(['dy'], keep_schema=True)
+        self.assertFalse(self.adf.is_compressed('dy'))
+
+    def test_get_compression_info_excludes_meta(self):
+        """Test get_compression_info() filters __meta__"""
+        self.adf.compress_columns({'dy': self.spec['dy']})
+        
+        # Single column - should work
+        info = self.adf.get_compression_info('dy')
+        self.assertIsInstance(info, dict)
+        self.assertIn('state', info)
+        
+        # All columns - should exclude __meta__
+        df_info = self.adf.get_compression_info()
+        self.assertNotIn('__meta__', df_info.index)
+        self.assertIn('dy', df_info.index)
+
+    def test_precision_measurement_with_state(self):
+        """Test precision measurement works with new state system"""
+        self.adf.compress_columns({'dy': self.spec['dy']}, measure_precision=True)
+        
+        info = self.adf.compression_info['dy']
+        self.assertIn('precision', info)
+        self.assertIn('rmse', info['precision'])
+        self.assertGreater(info['precision']['rmse'], 0)
+
+    def test_schema_from_info_helper(self):
+        """Test _schema_from_info() reconstructs spec correctly"""
+        self.adf.define_compression_schema({'dy': self.spec['dy']})
+        
+        reconstructed = self.adf._schema_from_info('dy')
+        
+        self.assertEqual(reconstructed['compress'], self.spec['dy']['compress'])
+        self.assertEqual(reconstructed['decompress'], self.spec['dy']['decompress'])
+        self.assertEqual(reconstructed['compressed_dtype'], self.spec['dy']['compressed_dtype'])
+
+    def test_invalid_state_transition_schema_only_to_decompress(self):
+        """Test that SCHEMA_ONLY → DECOMPRESS is a no-op"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        self.adf.define_compression_schema({'dy': self.spec['dy']})
+        
+        # Try to decompress SCHEMA_ONLY column (should be no-op)
+        self.adf.decompress_columns(['dy'])
+        
+        # State should still be SCHEMA_ONLY
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.SCHEMA_ONLY)
+
+    def test_backward_compatibility_old_files(self):
+        """Test that old files without __meta__ are handled"""
+        # Simulate old file by removing __meta__
+        if "__meta__" in self.adf.compression_info:
+            del self.adf.compression_info["__meta__"]
+        
+        # get_compression_info should still work
+        df_info = self.adf.get_compression_info()
+        self.assertIsInstance(df_info, pd.DataFrame)
+
+    def test_state_invariants_after_compress(self):
+        """Test state invariants after compression"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        self.adf.compress_columns({'dy': self.spec['dy']})
+        
+        # Invariant checks
+        state = self.adf.get_compression_state('dy')
+        self.assertEqual(state, CompressionState.COMPRESSED)
+        
+        # Physical compressed column exists
+        self.assertIn('dy_c', self.adf.df.columns)
+        
+        # Original is alias, not physical
+        self.assertNotIn('dy', self.adf.df.columns)
+        self.assertIn('dy', self.adf.aliases)
+        
+        # Metadata consistent
+        info = self.adf.compression_info['dy']
+        self.assertEqual(info['state'], CompressionState.COMPRESSED)
+        self.assertEqual(info['compressed_col'], 'dy_c')
+
+    def test_state_invariants_after_decompress(self):
+        """Test state invariants after decompression"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        self.adf.compress_columns({'dy': self.spec['dy']})
+        self.adf.decompress_columns(['dy'], keep_schema=True, keep_compressed=True)
+        
+        # Invariant checks
+        state = self.adf.get_compression_state('dy')
+        self.assertEqual(state, CompressionState.DECOMPRESSED)
+        
+        # Decompressed column is physical
+        self.assertIn('dy', self.adf.df.columns)
+        
+        # Not an alias
+        self.assertNotIn('dy', self.adf.aliases)
+        
+        # Compressed column still exists (keep_compressed=True)
+        self.assertIn('dy_c', self.adf.df.columns)
+        
+        # Metadata consistent
+        info = self.adf.compression_info['dy']
+        self.assertEqual(info['state'], CompressionState.DECOMPRESSED)
+
+    def test_selective_registration_from_spec(self):
+        """Test compress_columns(spec, columns=[subset]) only registers subset"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        # Compress only dy from full spec
+        self.adf.compress_columns(self.spec, columns=['dy'])
+        
+        # Check ONLY dy registered and compressed
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        self.assertIsNone(self.adf.get_compression_state('dz'))  # NOT registered
+        
+        # Check metadata
+        self.assertIn('dy', self.adf.compression_info)
+        self.assertNotIn('dz', self.adf.compression_info)
+        
+        # Check physical columns
+        self.assertIn('dy_c', self.adf.df.columns)
+        self.assertNotIn('dz_c', self.adf.df.columns)
+
+    def test_multiple_selective_calls(self):
+        """Test Pattern 2: Multiple compress_columns calls with subsets"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        # First call: compress dy
+        self.adf.compress_columns(self.spec, columns=['dy'])
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        
+        # Second call: compress dz (should work, not error)
+        self.adf.compress_columns(self.spec, columns=['dz'])
+        self.assertEqual(self.adf.get_compression_state('dz'), CompressionState.COMPRESSED)
+        
+        # Both should be compressed now
+        self.assertTrue(self.adf.is_compressed('dy'))
+        self.assertTrue(self.adf.is_compressed('dz'))
+        
+        # Both have separate metadata
+        self.assertIn('dy', self.adf.compression_info)
+        self.assertIn('dz', self.adf.compression_info)
+
+    def test_selective_mode_skips_same_schema_compressed(self):
+        """Test that re-compressing with SAME schema is silently skipped (idempotent)"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        # Compress
+        self.adf.compress_columns(self.spec, columns=['dy'])
+        dy_c_before = self.adf.df['dy_c'].copy()
+        
+        # Try to compress again with same schema (should skip)
+        self.adf.compress_columns(self.spec, columns=['dy'])
+        
+        # Should still be compressed, data unchanged
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        np.testing.assert_array_equal(self.adf.df['dy_c'], dy_c_before)
+
+    def test_selective_mode_errors_on_schema_change_when_compressed(self):
+        """Test error when trying to change schema of COMPRESSED column"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        # Compress with original schema
+        self.adf.compress_columns(self.spec, columns=['dy'])
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        
+        # Try to compress with different schema
+        new_spec = {
+            'dy': {
+                'compress': 'round(dy*1000)',  # Different transform
+                'decompress': 'dy_c/1000.',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float32
+            }
+        }
+        
+        with self.assertRaises(ValueError) as cm:
+            self.adf.compress_columns(new_spec, columns=['dy'])
+        
+        self.assertIn('already compressed', str(cm.exception).lower())
+        self.assertIn('different schema', str(cm.exception).lower())
+        self.assertIn('decompress first', str(cm.exception).lower())
+
+    def test_selective_mode_validates_column_exists(self):
+        """Test that selective mode validates column exists in DataFrame"""
+        spec = {
+            'nonexistent': {
+                'compress': 'round(nonexistent*10)',
+                'decompress': 'nonexistent_c/10.',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float32
+            }
+        }
+        
+        with self.assertRaises(ValueError) as cm:
+            self.adf.compress_columns(spec, columns=['nonexistent'])
+        
+        self.assertIn('not found in DataFrame', str(cm.exception))
+        self.assertIn('nonexistent', str(cm.exception))
+
+    def test_selective_mode_validates_columns_in_spec(self):
+        """Test that selective mode validates requested columns are in spec"""
+        with self.assertRaises(ValueError) as cm:
+            self.adf.compress_columns(self.spec, columns=['dy', 'nonexistent'])
+        
+        self.assertIn('not found in compression_spec', str(cm.exception))
+        self.assertIn('nonexistent', str(cm.exception))
+
+    def test_selective_mode_updates_schema_for_schema_only(self):
+        """Test that Pattern 2 can update schema for SCHEMA_ONLY columns"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        # Step 1: Register initial schema (Pattern 1)
+        old_spec = {
+            'dy': {
+                'compress': 'round(dy*10)',
+                'decompress': 'dy_c/10.',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float32
+            }
+        }
+        self.adf.define_compression_schema(old_spec)
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.SCHEMA_ONLY)
+        
+        # Step 2: Update schema using Pattern 2
+        new_spec = {
+            'dy': {
+                'compress': 'round(asinh(dy)*40)',
+                'decompress': 'sinh(dy_c/40.)',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float16
+            }
+        }
+        self.adf.compress_columns(new_spec, columns=['dy'])
+        
+        # Check schema was updated and compressed
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        info = self.adf.compression_info['dy']
+        self.assertEqual(info['compress_expr'], 'round(asinh(dy)*40)')
+        self.assertEqual(info['decompressed_dtype'], 'float16')
+
+    def test_real_world_incremental_compression_pattern2(self):
+        """Test Scenario 3 from spec: incremental compression using Pattern 2"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        # Add tgSlp to test data
+        self.adf.df['tgSlp'] = np.random.uniform(-0.5, 0.5, len(self.adf.df))
+        
+        # Step 1: Compress subset for initial analysis (Pattern 2)
+        self.adf.compress_columns(self.spec, columns=['dy', 'dz'])
+        
+        self.assertTrue(self.adf.is_compressed('dy'))
+        self.assertTrue(self.adf.is_compressed('dz'))
+        self.assertIsNone(self.adf.get_compression_state('tgSlp'))
+        
+        # Step 2: Later compress additional column (Pattern 2)
+        tgSlp_spec = {
+            'tgSlp': {
+                'compress': 'round(tgSlp*1000)',
+                'decompress': 'tgSlp_c/1000.',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float32
+            }
+        }
+        self.adf.compress_columns(tgSlp_spec, columns=['tgSlp'])
+        
+        # All three compressed now
+        self.assertTrue(self.adf.is_compressed('dy'))
+        self.assertTrue(self.adf.is_compressed('dz'))
+        self.assertTrue(self.adf.is_compressed('tgSlp'))
+        
+        # Verify data integrity
+        self.assertIn('dy_c', self.adf.df.columns)
+        self.assertIn('dz_c', self.adf.df.columns)
+        self.assertIn('tgSlp_c', self.adf.df.columns)
+
+    def test_pattern1_pattern2_mixing(self):
+        """Test mixing Pattern 1 (schema-first) and Pattern 2 (selective)"""
+        from dfextensions.AliasDataFrame import CompressionState
+        
+        # Pattern 1: Define full schema
+        self.adf.define_compression_schema(self.spec)
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.SCHEMA_ONLY)
+        self.assertEqual(self.adf.get_compression_state('dz'), CompressionState.SCHEMA_ONLY)
+        
+        # Pattern 2: Compress only dy with potentially updated schema
+        updated_spec = {
+            'dy': {
+                'compress': 'round(dy*100)',  # Different from original
+                'decompress': 'dy_c/100.',
+                'compressed_dtype': np.int16,
+                'decompressed_dtype': np.float32
+            }
+        }
+        self.adf.compress_columns(updated_spec, columns=['dy'])
+        
+        # dy should be compressed with new schema
+        self.assertEqual(self.adf.get_compression_state('dy'), CompressionState.COMPRESSED)
+        self.assertEqual(self.adf.compression_info['dy']['compress_expr'], 'round(dy*100)')
+        
+        # dz should still be SCHEMA_ONLY with original schema
+        self.assertEqual(self.adf.get_compression_state('dz'), CompressionState.SCHEMA_ONLY)
+        self.assertEqual(self.adf.compression_info['dz']['compress_expr'], self.spec['dz']['compress'])
 
 
 if __name__ == "__main__":
