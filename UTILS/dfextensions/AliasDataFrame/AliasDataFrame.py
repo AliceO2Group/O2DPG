@@ -1,4 +1,5 @@
-import sys, os; sys.path.insert(1, os.environ.get("O2DPG", "") + "/UTILS/dfextensions")
+import sys
+import os; sys.path.insert(1, os.environ.get("O2DPG", "") + "/UTILS/dfextensions")
 import pandas as pd
 import numpy as np
 import json
@@ -146,7 +147,7 @@ class NumpyRootMapper:
 class CompressionState:
     """
     Compression state constants for column compression lifecycle.
-    
+
     States:
         COMPRESSED: Physical compressed column exists, original is alias
         DECOMPRESSED: Decompressed column exists physically, schema retained
@@ -487,19 +488,19 @@ class AliasDataFrame:
             adf.alias_dtypes = {k: getattr(np, v) for k, v in json.loads(meta[b"dtypes"].decode()).items()}
             if b"constants" in meta:
                 adf.constant_aliases = set(json.loads(meta[b"constants"].decode()))
-        
+
         # Load compression_info and ensure __meta__ is present
         if b"compression_info" in meta:
             adf.compression_info = json.loads(meta[b"compression_info"].decode())
         else:
             adf.compression_info = {}  # backward compat
-        
+
         if "__meta__" not in adf.compression_info:
             adf.compression_info["__meta__"] = {
                 "schema_version": 1,
                 "state_machine": "CompressionState.v1"
             }
-        
+
         return adf
 
     def export_tree(self, filename_or_file, treename="tree", dropAliasColumns=True,compression=uproot.ZLIB(level=1)):
@@ -580,7 +581,7 @@ class AliasDataFrame:
                             if index is None:
                                 raise ValueError(f"Missing index_columns for subframe '{sf_name}' in metadata")
                             adf.register_subframe(sf_name, sf, index_columns=index)
-                        
+
                         # Load compression_info and ensure __meta__ is present
                         adf.compression_info = jmeta.get("compression_info", {})
                         if "__meta__" not in adf.compression_info:
@@ -602,17 +603,17 @@ class AliasDataFrame:
     def get_compression_state(self, column):
         """
         Get the compression state of a column.
-        
+
         Parameters
         ----------
         column : str
             Column name to check
-            
+
         Returns
         -------
         str or None
             CompressionState constant if column is tracked, None otherwise
-            
+
         Examples
         --------
         >>> adf.get_compression_state('dy')
@@ -621,42 +622,42 @@ class AliasDataFrame:
         if column not in self.compression_info or column == "__meta__":
             return None
         return self.compression_info[column].get('state')
-    
+
     def is_compressed(self, column):
         """
         Check if a column is currently in compressed state.
-        
+
         Parameters
         ----------
         column : str
             Column name to check
-            
+
         Returns
         -------
         bool
             True if column state is COMPRESSED
-            
+
         Examples
         --------
         >>> adf.is_compressed('dy')
         True
         """
         return self.get_compression_state(column) == CompressionState.COMPRESSED
-    
+
     def _schema_from_info(self, column):
         """
         Reconstruct compression spec from stored compression_info.
-        
+
         Parameters
         ----------
         column : str
             Column name
-            
+
         Returns
         -------
         dict
             Compression specification with compress/decompress/dtypes
-            
+
         Raises
         ------
         ValueError
@@ -664,7 +665,7 @@ class AliasDataFrame:
         """
         if column not in self.compression_info:
             raise ValueError(f"No compression schema found for column '{column}'")
-        
+
         info = self.compression_info[column]
         return {
             'compress': info['compress_expr'],
@@ -672,18 +673,18 @@ class AliasDataFrame:
             'compressed_dtype': getattr(np, info['compressed_dtype']),
             'decompressed_dtype': getattr(np, info['decompressed_dtype'])
         }
-    
+
     def _schemas_equal(self, schema1, schema2):
         """
         Compare two compression schemas for equality.
-        
+
         Checks if compress/decompress expressions and dtypes match.
-        
+
         Parameters
         ----------
         schema1, schema2 : dict
             Compression specifications to compare
-            
+
         Returns
         -------
         bool
@@ -756,11 +757,11 @@ class AliasDataFrame:
         >>> adf.define_compression_schema(spec)  # All → SCHEMA_ONLY
         >>> adf.compress_columns(columns=['dy', 'dz'])  # Subset → COMPRESSED
         >>> adf.compress_columns(columns=['tgSlp'])  # Later, compress more
-        
+
         >>> # Pattern 2: Selective compression (register + compress together)
         >>> adf.compress_columns(spec, columns=['dy', 'dz'])  # Only dy, dz
         >>> adf.compress_columns(spec, columns=['tgSlp'])  # Add tgSlp later
-        
+
         >>> # Direct compression (all columns in spec)
         >>> adf.compress_columns(spec)  # Compress everything
 
@@ -777,7 +778,7 @@ class AliasDataFrame:
             # Mode: compress all columns with SCHEMA_ONLY or DECOMPRESSED state
             cols_to_process = [
                 col for col in self.compression_info
-                if col != "__meta__" and 
+                if col != "__meta__" and
                 self.compression_info[col].get('state') in (CompressionState.SCHEMA_ONLY, CompressionState.DECOMPRESSED)
             ]
             if not cols_to_process:
@@ -800,7 +801,7 @@ class AliasDataFrame:
             # Only process columns explicitly listed in 'columns' parameter
             cols_to_process = columns
             schema_mode = 'selective'
-            
+
             # Validate all requested columns are in spec
             missing_cols = [c for c in columns if c not in compression_spec]
             if missing_cols:
@@ -838,7 +839,7 @@ class AliasDataFrame:
                         f"Compression config for '{orig_col}' missing required keys: {missing}"
                     )
                 compressed_col = f"{orig_col}{suffix}"
-            
+
             # For selective mode, validate column exists and handle schema updates
             if schema_mode == 'selective':
                 # Validate column exists in DataFrame or aliases
@@ -852,7 +853,7 @@ class AliasDataFrame:
 
             # Check current state and validate transitions
             current_state = self.get_compression_state(orig_col)
-            
+
             if schema_mode == 'define':
                 # Schema-only mode: just store metadata
                 if current_state is not None:
@@ -888,7 +889,7 @@ class AliasDataFrame:
                         f"  adf.decompress_columns(['{orig_col}'], keep_schema=False)\n"
                         f"  adf.compress_columns(new_spec, columns=['{orig_col}'])"
                     )
-            
+
             # Standard state validation for non-selective modes
             if current_state == CompressionState.COMPRESSED:
                 raise ValueError(
@@ -908,7 +909,7 @@ class AliasDataFrame:
                         f"Column '{orig_col}' has no compression schema. "
                         f"Cannot reuse non-existent schema."
                     )
-            
+
             # Collision detection for compressed_col name
             self._validate_compressed_col_name(orig_col, compressed_col)
 
@@ -922,7 +923,7 @@ class AliasDataFrame:
                 # For recompression, remove old compressed column if it exists
                 if compressed_col in self.df.columns:
                     self.df.drop(columns=[compressed_col], inplace=True)
-                
+
                 self.add_alias(compressed_col, config['compress'],
                                dtype=config['compressed_dtype'])
                 self.materialize_alias(compressed_col)
@@ -995,11 +996,11 @@ class AliasDataFrame:
                 self.compression_info[orig_col]['precision'] = precision_info
 
         return self
-    
+
     def _validate_compressed_col_name(self, orig_col, compressed_col):
         """
         Validate compressed column name doesn't conflict.
-        
+
         Three cases:
         1. Matching schema (recompression) - allow
         2. Name used by other column - error
@@ -1011,7 +1012,7 @@ class AliasDataFrame:
             if stored_compressed_col == compressed_col:
                 # This is recompression - allowed
                 return
-        
+
         # Case 2: Check if another column owns this compressed_col name
         for col, info in self.compression_info.items():
             if col == "__meta__" or col == orig_col:
@@ -1021,7 +1022,7 @@ class AliasDataFrame:
                     f"Compressed column name '{compressed_col}' is already used by column '{col}'. "
                     f"Choose a different suffix or fix existing schema."
                 )
-        
+
         # Case 3: Check if name exists in df or aliases (not from schema)
         if compressed_col in self.df.columns:
             raise ValueError(
@@ -1033,11 +1034,11 @@ class AliasDataFrame:
                 f"Compressed column name '{compressed_col}' conflicts with existing alias. "
                 f"Choose a different suffix."
             )
-    
+
     def _measure_compression_precision(self, orig_col, original_values, config):
         """
         Measure compression precision loss with RMSE and error metrics.
-        
+
         Returns dict with precision metrics or error info.
         """
         temp_decompressed = f"__temp_decompress_{orig_col}"
@@ -1091,30 +1092,30 @@ class AliasDataFrame:
                 del self.aliases[temp_decompressed]
                 if temp_decompressed in self.alias_dtypes:
                     del self.alias_dtypes[temp_decompressed]
-            
+
             return precision_info
         except Exception as e:
             # Non-fatal: return error info
             return {'error': str(e)}
-    
+
     def define_compression_schema(self, compression_spec, suffix='_c'):
         """
         Define compression schema without compressing data (forward declaration).
-        
+
         Creates SCHEMA_ONLY entries that can be applied later when data exists.
-        
+
         Parameters
         ----------
         compression_spec : dict
             Compression specification (same format as compress_columns)
         suffix : str, optional
             Compressed column name suffix (default: '_c')
-            
+
         Returns
         -------
         self : AliasDataFrame
             For method chaining
-            
+
         Examples
         --------
         >>> # Define schema upfront
@@ -1156,7 +1157,7 @@ class AliasDataFrame:
         --------
         >>> # Decompress, keep schema for recompression
         >>> adf.decompress_columns(['dy', 'dz'])  # state → DECOMPRESSED
-        
+
         >>> # Decompress and remove all compression info
         >>> adf.decompress_columns(['dy'], keep_schema=False)  # state → None
 
@@ -1171,29 +1172,29 @@ class AliasDataFrame:
         if inplace:
             keep_schema = False
             keep_compressed = False
-        
+
         # Determine columns to process
         if columns is None:
             # Only decompress columns in COMPRESSED state
             columns = [
                 col for col in self.compression_info
-                if col != "__meta__" and 
+                if col != "__meta__" and
                 self.compression_info[col].get('state') == CompressionState.COMPRESSED
             ]
-        
+
         # Filter __meta__
         columns = [c for c in columns if c != "__meta__"]
-        
+
         for col in columns:
             if col not in self.compression_info:
                 raise ValueError(
                     f"Column '{col}' has no compression metadata. "
                     f"Available: {[c for c in self.compression_info.keys() if c != '__meta__']}"
                 )
-            
+
             info = self.compression_info[col]
             current_state = info.get('state')
-            
+
             # Validate state transition
             if current_state == CompressionState.SCHEMA_ONLY:
                 # Warn but allow (no-op): never compressed, nothing to decompress
@@ -1206,7 +1207,7 @@ class AliasDataFrame:
                     f"Column '{col}' is in state '{current_state}', cannot decompress. "
                     f"Only COMPRESSED columns can be decompressed."
                 )
-            
+
             compressed_col = info['compressed_col']
 
             # Validate compressed column exists
@@ -1222,13 +1223,13 @@ class AliasDataFrame:
                     f"Internal error: decompression alias for '{col}' is missing. "
                     f"This indicates corrupted compression_info."
                 )
-            
+
             self.materialize_alias(col)
-            
+
             # Step 2: Enforce decompressed dtype
             target_dtype = np.dtype(info['decompressed_dtype']).type
             self.df[col] = self.df[col].astype(target_dtype)
-            
+
             # Step 3: Remove decompression alias (col is now physical)
             if col in self.aliases:
                 del self.aliases[col]
@@ -1238,7 +1239,7 @@ class AliasDataFrame:
             # Step 4: Handle compressed column
             if not keep_compressed:
                 self.df.drop(columns=[compressed_col], inplace=True)
-            
+
             # Step 5: Update state
             if keep_schema:
                 # Transition to DECOMPRESSED state
@@ -1300,7 +1301,7 @@ class AliasDataFrame:
         """
         # Filter out __meta__
         columns_info = {k: v for k, v in self.compression_info.items() if k != "__meta__"}
-        
+
         if not columns_info:
             print("No compressed columns")
             return
