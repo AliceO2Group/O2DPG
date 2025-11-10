@@ -290,7 +290,7 @@ def test_sigma_cut_impact():
 
 
 
-def test_make_parallel_fit_robust(sample_data):
+def test_make_parallel_fit_robust_v2(sample_data):
     df = sample_data.copy()
     df_out, dfGB = GroupByRegressor.make_parallel_fit(
         df,

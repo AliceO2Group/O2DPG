@@ -779,7 +779,7 @@ def test_window_size_zero_parity_with_v4_relaxed():
       Establishes continuity with v4 when sliding window is disabled.
     """
     try:
-        from ..groupby_regression_optimized import make_parallel_fit as make_parallel_fit_v4
+        from ..groupby_regression import make_parallel_fit as make_parallel_fit_v4
     except Exception:
         pytest.skip("v4 not available for comparison")
 

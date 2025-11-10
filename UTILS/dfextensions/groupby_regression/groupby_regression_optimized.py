@@ -413,6 +413,8 @@ def make_parallel_fit_v2(
 # ======================================================================
 
 import numpy as np
+from numpy.linalg import LinAlgError
+from numpy.linalg import LinAlgError
 import pandas as pd
 import time
 
