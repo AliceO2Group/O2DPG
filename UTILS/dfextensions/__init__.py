@@ -4,6 +4,7 @@
 from .FormulaLinearModel import FormulaLinearModel
 from .DataFrameUtils import *  # if it provides general helper functions
 from .groupby_regression import *  # or other relevant functions
+from .AliasDataFrame import AliasDataFrame, CompressionState
 
 __all__ = [
     "AliasDataFrame",
@@ -11,9 +12,3 @@ __all__ = [
     "GroupByRegressor"
 ]
 
-
-try:
-    from .AliasDataFrame import AliasDataFrame
-    __all__.append("AliasDataFrame")
-except ImportError:
-    pass
