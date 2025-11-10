@@ -1,0 +1,25 @@
+************* Module dfextensions.groupby_regression.groupby_regression
+groupby_regression.py:82:90: E0602: Undefined variable 'group_vals' (undefined-variable)
+groupby_regression.py:468:4: W0102: Dangerous default value [] as argument (dangerous-default-value)
+groupby_regression.py:554:4: E0213: Method 'summarize_diagnostics_top' should have "self" as first argument (no-self-argument)
+groupby_regression.py:572:56: E1101: Instance of 'GroupByRegressor' has no 'columns' member (no-member)
+groupby_regression.py:579:12: E1101: Instance of 'GroupByRegressor' has no 'copy' member (no-member)
+groupby_regression.py:583:91: E1101: Instance of 'GroupByRegressor' has no 'columns' member (no-member)
+groupby_regression.py:583:109: E1101: Instance of 'GroupByRegressor' has no 'columns' member (no-member)
+groupby_regression.py:584:97: E1101: Instance of 'GroupByRegressor' has no 'columns' member (no-member)
+groupby_regression.py:584:115: E1101: Instance of 'GroupByRegressor' has no 'columns' member (no-member)
+groupby_regression.py:585:96: E1101: Instance of 'GroupByRegressor' has no 'columns' member (no-member)
+groupby_regression.py:585:114: E1101: Instance of 'GroupByRegressor' has no 'columns' member (no-member)
+groupby_regression.py:586:99: E1101: Instance of 'GroupByRegressor' has no 'columns' member (no-member)
+groupby_regression.py:586:117: E1101: Instance of 'GroupByRegressor' has no 'columns' member (no-member)
+groupby_regression.py:587:101: E1101: Instance of 'GroupByRegressor' has no 'columns' member (no-member)
+groupby_regression.py:587:119: E1101: Instance of 'GroupByRegressor' has no 'columns' member (no-member)
+groupby_regression.py:580:12: W0612: Unused variable 'k' (unused-variable)
+groupby_regression.py:3:0: C0411: standard import "logging" should be placed before third party imports "numpy", "pandas" (wrong-import-order)
+groupby_regression.py:7:0: C0411: standard import "typing.Union" should be placed before third party imports "numpy", "pandas", "sklearn.linear_model.LinearRegression", "joblib.Parallel", "numpy.linalg.inv" (wrong-import-order)
+groupby_regression.py:8:0: C0411: standard import "random.shuffle" should be placed before third party imports "numpy", "pandas", "sklearn.linear_model.LinearRegression", "joblib.Parallel", "numpy.linalg.inv" (wrong-import-order)
+groupby_regression.py:8:0: W0611: Unused shuffle imported from random (unused-import)
+
+------------------------------------------------------------------
+Your code has been rated at 8.00/10 (previous run: 8.00/10, +0.00)
+

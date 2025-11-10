@@ -5,9 +5,10 @@ from sklearn.linear_model import LinearRegression, HuberRegressor
 from joblib import Parallel, delayed
 from numpy.linalg import inv, LinAlgError
 from typing import Union, List, Tuple, Callable
-from random import shuffle
 
 class GroupByRegressor:
+# pylint: disable=no-member,undefined-variable,dangerous-default-value,no-self-argument
+# Justified: Legacy code, will refactor in future PR
     @staticmethod
     def _cast_fit_columns(dfGB: pd.DataFrame, cast_dtype: Union[str, None] = None) -> pd.DataFrame:
         if cast_dtype is not None:

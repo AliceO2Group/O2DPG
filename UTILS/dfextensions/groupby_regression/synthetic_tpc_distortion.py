@@ -21,16 +21,16 @@ def make_synthetic_tpc_distortion(
 ) -> pd.DataFrame:
     """
     Generate synthetic TPC distortion data with realistic physical model.
-    
+
     Physical Model:
     ---------------
-    dX_true = dX0 
+    dX_true = dX0
               + a_drift * drift * (a1_dr * dr + a2_dr * dr²)
               + a_drift_dsec * drift * (a1_dsec * dsec + a1_dsec_dr * dsec * dr)
               + a1_IDC * meanIDC
-    
+
     dX_meas = dX_true + N(0, sigma_meas)
-    
+
     Parameters:
     -----------
     n_bins_dr : int
@@ -47,7 +47,7 @@ def make_synthetic_tpc_distortion(
         Random seed for reproducibility
     params : dict, optional
         Distortion model parameters. If None, uses defaults.
-        
+
     Returns:
     --------
     pd.DataFrame with columns:
@@ -62,7 +62,7 @@ def make_synthetic_tpc_distortion(
         - dX_true: True distortion (cm)
         - dX_meas: Measured distortion with noise (cm)
         - weight: Entry weight (1.0 for now)
-        
+
     Example:
     --------
     >>> df = make_synthetic_tpc_distortion(entries_per_bin=100)
@@ -76,7 +76,7 @@ def make_synthetic_tpc_distortion(
     ... )
     >>> # Check recovery of dX_true
     """
-    
+
     # Default physical parameters
     if params is None:
         params = {
@@ -89,9 +89,9 @@ def make_synthetic_tpc_distortion(
             'a1_dsec_dr': 0.3,             # Sector-radial coupling
             'a1_IDC': 2.0e-3               # Mean current sensitivity
         }
-    
+
     rng = np.random.default_rng(seed)
-    
+
     # Create 3D grid of bins
     import itertools
     bin_grid = np.array(list(itertools.product(
@@ -99,42 +99,42 @@ def make_synthetic_tpc_distortion(
         range(n_bins_y2x),
         range(n_bins_z2x)
     )))
-    
+
     # Expand to entries per bin
     bins_expanded = np.repeat(bin_grid, entries_per_bin, axis=0)
-    
+
     df = pd.DataFrame({
         'xBin': bins_expanded[:, 0].astype(np.int32),
         'y2xBin': bins_expanded[:, 1].astype(np.int32),
         'z2xBin': bins_expanded[:, 2].astype(np.int32)
     })
-    
+
     # Physical coordinates
     # r: Radius (82-250 cm, corresponding to xBin 0-170)
     df['r'] = 82.0 + df['xBin'] * (250.0 - 82.0) / n_bins_dr
-    
+
     # dr: Continuous radial coordinate (normalized)
     df['dr'] = df['xBin'].astype(float)
-    
+
     # drift: Drift length (cm)
     # z2xBin=0 is readout, z2xBin=20 is cathode (~250 cm drift)
     df['drift'] = 250.0 - (df['z2xBin'] / n_bins_z2x) * df['r']
-    
+
     # dsec: Relative position to sector centre
     # y2xBin=10 is centre, normalized to [-0.5, 0.5]
     df['dsec'] = (df['y2xBin'] - n_bins_y2x/2.0) / n_bins_y2x
-    
+
     # meanIDC: Mean current density indicator (random per entry)
     df['meanIDC'] = rng.normal(0.0, 1.0, len(df))
-    
+
     # Weight (uniform for now)
     df['weight'] = 1.0
-    
+
     # Compute TRUE distortion using physical model
     dX_true = (
         params['dX0']
         + params['a_drift'] * df['drift'] * (
-            params['a1_dr'] * df['dr'] 
+            params['a1_dr'] * df['dr']
             + params['a2_dr'] * df['dr']**2
         )
         + params['a_drift_dsec'] * df['drift'] * (
@@ -143,12 +143,12 @@ def make_synthetic_tpc_distortion(
         )
         + params['a1_IDC'] * df['meanIDC']
     )
-    
+
     df['dX_true'] = dX_true
-    
+
     # Add measurement noise
     df['dX_meas'] = df['dX_true'] + rng.normal(0.0, sigma_meas, len(df))
-    
+
     # Store ground truth parameters in DataFrame attrs for validation
     df.attrs['ground_truth_params'] = params.copy()
     df.attrs['sigma_meas'] = sigma_meas
@@ -157,7 +157,7 @@ def make_synthetic_tpc_distortion(
     df.attrs['n_bins_y2x'] = n_bins_y2x
     df.attrs['entries_per_bin'] = entries_per_bin
     df.attrs['seed'] = seed
-    
+
     return df
 
 
@@ -176,7 +176,7 @@ if __name__ == '__main__':
     print("="*70)
     print("Synthetic TPC Distortion Data Generator Test")
     print("="*70)
-    
+
     # Generate small test dataset
     print("\n📊 Generating test data...")
     df = make_synthetic_tpc_distortion(
@@ -186,24 +186,24 @@ if __name__ == '__main__':
         entries_per_bin=10,  # Small for test
         seed=42
     )
-    
+
     print(f"   Generated {len(df):,} rows")
     print(f"   Unique bins: {len(df[['xBin','y2xBin','z2xBin']].drop_duplicates())}")
-    
+
     print("\n📋 DataFrame columns:")
     for col in df.columns:
         print(f"   - {col}: {df[col].dtype}, range [{df[col].min():.4f}, {df[col].max():.4f}]")
-    
+
     print("\n📊 Ground truth parameters:")
     params = get_ground_truth_params(df)
     for key, val in params.items():
         print(f"   {key}: {val:.6e}")
-    
+
     print(f"\n📊 Measurement noise: σ = {get_measurement_noise(df):.4f} cm")
-    
+
     print("\n📊 Sample statistics:")
     print(f"   dX_true:  μ={df['dX_true'].mean():.6f}, σ={df['dX_true'].std():.6f}")
     print(f"   dX_meas:  μ={df['dX_meas'].mean():.6f}, σ={df['dX_meas'].std():.6f}")
     print(f"   Noise:    RMS={(df['dX_meas']-df['dX_true']).std():.6f} (expected: {get_measurement_noise(df):.4f})")
-    
+
     print("\n✅ Generator test complete")

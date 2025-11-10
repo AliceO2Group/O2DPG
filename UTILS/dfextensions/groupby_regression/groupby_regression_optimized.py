@@ -31,9 +31,9 @@ def process_group_array_based(
 ) -> dict:
     """
     Process a single group using pre-extracted arrays.
-    
+
     This avoids DataFrame slicing overhead by working directly with NumPy arrays.
-    
+
     Args:
         key: Group key tuple
         indices: Row indices for this group (into X_all, y_all, w_all)
@@ -47,7 +47,7 @@ def process_group_array_based(
         sigmaCut: Outlier threshold (MAD units)
         fitter: "ols", "robust", or callable
         max_refits: Maximum robust iterations
-    
+
     Returns:
         Dictionary with fit results for this group
     """
@@ -56,25 +56,25 @@ def process_group_array_based(
         group_dict = dict(zip(gb_columns, key))
     else:
         group_dict = {gb_columns[0]: key}
-    
+
     if len(indices) < min_stat:
         return group_dict  # Will be filled with NaN by caller
-    
+
     try:
         # Extract data for this group - single operation, contiguous memory
         X = X_all[indices][:, predictor_indices]
         y = y_all[indices]  # y_all is 1D for single target
         w = w_all[indices]
-        
+
         # Remove any remaining NaN rows
         valid_mask = np.isfinite(X).all(axis=1) & np.isfinite(y) & np.isfinite(w)
         if valid_mask.sum() < min_stat:
             return group_dict
-        
+
         X = X[valid_mask]
         y = y[valid_mask]
         w = w[valid_mask]
-        
+
         # Select fitter
         if callable(fitter):
             model = fitter()
@@ -84,19 +84,19 @@ def process_group_array_based(
             model = HuberRegressor(tol=1e-4)
         else:
             model = LinearRegression()
-        
+
         # Robust fitting with outlier rejection
         mask = np.ones(len(y), dtype=bool)
         n_refits = 0
-        
+
         for iteration in range(max_refits):
             if mask.sum() < min_stat:
                 break
-                
+
             X_fit = X[mask]
             y_fit = y[mask]
             w_fit = w[mask]
-            
+
             # Fit with explicit error handling
             try:
                 model.fit(X_fit, y_fit, sample_weight=w_fit)
@@ -108,43 +108,43 @@ def process_group_array_based(
                 # Catch any other fitting errors
                 logging.warning(f"Unexpected error in fit for group {key}: {e}")
                 return group_dict  # Return NaNs gracefully
-            
+
             # Check for convergence
             if iteration == 0 or sigmaCut > 50:  # No outlier rejection
                 break
-            
+
             # Compute residuals and MAD
             pred = model.predict(X)
             residuals = y - pred
             mad = np.median(np.abs(residuals - np.median(residuals)))
-            
+
             if mad < 1e-9:  # Perfect fit
                 break
-            
+
             # Update mask
             new_mask = np.abs(residuals) < sigmaCut * mad * 1.4826
             if np.array_equal(mask, new_mask):  # Converged
                 break
-            
+
             mask = new_mask
             n_refits += 1
-        
+
         # Store results
         group_dict['coefficients'] = model.coef_
         group_dict['intercept'] = model.intercept_
         group_dict['n_refits'] = n_refits
         group_dict['n_used'] = mask.sum()
         group_dict['frac_rejected'] = 1.0 - (mask.sum() / len(y))
-        
+
         # Compute residual statistics
         pred_final = model.predict(X[mask])
         res_final = y[mask] - pred_final
         group_dict['rms'] = np.sqrt(np.mean(res_final**2))
         group_dict['mad'] = np.median(np.abs(res_final - np.median(res_final))) * 1.4826
-        
+
     except Exception as e:
         logging.warning(f"Fit failed for group {key}: {e}")
-    
+
     return group_dict
 
 
@@ -163,7 +163,7 @@ def process_batch_of_groups(
 ) -> List[dict]:
     """
     Process multiple small groups in a single worker task.
-    
+
     This reduces process spawn overhead for datasets with many small groups.
     """
     results = []
@@ -180,7 +180,7 @@ class GroupByRegressorOptimized:
     """
     Optimized version of GroupByRegressor with improved parallelization.
     """
-    
+
     @staticmethod
     def make_parallel_fit_optimized(
             df: pd.DataFrame,
@@ -394,11 +394,11 @@ def make_parallel_fit_v2(
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Drop-in replacement for GroupByRegressor.make_parallel_fit with optimizations.
-    
+
     Usage:
         # Old way:
         df_out, dfGB = GroupByRegressor.make_parallel_fit(df, ...)
-        
+
         # New way (same API):
         df_out, dfGB = make_parallel_fit_v2(df, ...)
     """
