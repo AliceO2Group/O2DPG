@@ -80,7 +80,7 @@ class GroupByRegressor:
                         group_dict[f"{target_col}_slope_{col}"] = model.coef_[i]
                     group_dict[f"{target_col}_intercept"] = model.intercept_
                 except Exception as e:
-                    logging.warning(f"Linear regression failed for {target_col} in group {group_vals}: {e}")
+                    logging.warning(f"Linear regression failed for {target_col} in group {groupby_key}: {e}")
                     for col in linear_columns:
                         group_dict[f"{target_col}_slope_{col}"] = np.nan
                     group_dict[f"{target_col}_intercept"] = np.nan
