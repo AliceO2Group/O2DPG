@@ -1,6 +1,5 @@
 
 """ FormulaLinearModel.py
-import sys,os; sys.path.insert(1, os.environ[f"O2DPG"]+"/UTILS/dfextensions");
 from  FormulaLinearModel import *
 Utility helpers extension for FormulaLinearModel.py
 """
