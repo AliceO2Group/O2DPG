@@ -153,7 +153,13 @@ def _validate_sliding_window_inputs(
             # replace literal 'target' with a placeholder to validate syntax
    
     # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
+    # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
+    # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
     # pylint: disable=no-member  # patsy.ModelDesc is dynamic
+    # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
+    # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
+    # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
+    # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
     # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
     # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
     # pylint: disable=no-member  # patsy.ModelDesc is dynamically generated
