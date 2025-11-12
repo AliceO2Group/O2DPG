@@ -8,7 +8,8 @@ namespace o2
         class GenPerf : public Generator
         {
         public:
-            GenPerf(float fraction = 0.03f, unsigned short int nsig = 100, unsigned short int tag = 1)
+            GenPerf(float fraction = 0.03f, unsigned short int nsig = 100, unsigned short int tag = 1, bool setDecayZ0 = false)
+                : mDecayZ0(setDecayZ0)
             {
                 if (fraction == -1) {
                     LOG(info) << nsig << " Signal particles will be generated in each event";
@@ -35,8 +36,15 @@ namespace o2
                     mTag = tag;
                     LOG(info) << "Generator with tag " << mTag << " is selected";
                 }
-                mDecayer = std::make_unique<DecayerPythia8>();
-                mDecayer->Init();
+                if (mDecayZ0){
+                    LOG(info) << "Z0 decays will be handled with Pythia8";
+                    mPythia = std::make_unique<Pythia8::Pythia>();
+                    // Configure Pythia8 with minimal beam setup for standalone decays
+                    mPythia->readString("WeakSingleBoson:ffbar2gmZ = on");
+                    mPythia->init(); // Initialize
+                } else {
+                    LOG(info) << "Z0 decays will be created but not transported (incompatible with Geant4 physics list)";
+                }
                 Generator::setTimeUnit(1.0);
                 Generator::setPositionUnit(1.0);
             }
@@ -64,7 +72,20 @@ namespace o2
                 unsigned short nSig = (mFraction == -1) ? mNSig : std::lround(mFraction * mNUE);
                 LOG(debug) << "Generating additional " << nSig << " particles";
                 for (int k = 0; k < nSig; k++){
-                    mParticles.push_back(genMap[mTag]());
+                    auto part = genMap[mTag]();
+                    if(part.GetPdgCode() == 23) {
+                        if(!mDecayZ0) {
+                            mParticles.push_back(part);
+                        } else {
+                            auto daughters = decayZ0(part);
+                            for (auto &dau : daughters)
+                            {
+                                mParticles.push_back(dau);
+                            }
+                        }
+                    } else {
+                        mParticles.push_back(part);
+                    }
                 }
                 return kTRUE;
             }
@@ -74,7 +95,8 @@ namespace o2
             unsigned short int mNSig = 0;   // Number of particles to generate
             unsigned int mNUE = 0;  // Number of tracks in the Underlying event
             unsigned short int mTag = 1; // Tag to select the generation function
-            std::unique_ptr<DecayerPythia8> mDecayer; // Pythia8 decayer for particles not present in the physics list of Geant4 (like Z0)
+            bool mDecayZ0 = false; // Whether to decay Z0 with Pythia8
+            std::unique_ptr<Pythia8::Pythia> mPythia; // Pythia8 instance for particle decays not present in the physics list of Geant4 (like Z0)
             const std::vector<std::shared_ptr<o2::eventgen::Generator>>* mGenList = nullptr; // Cached generators list
             std::map<unsigned short int, std::function<TParticle()>> genMap;
             UInt_t mGenID = 42;
@@ -148,36 +170,6 @@ namespace o2
                 generatedParticle.SetUniqueID(mGenID);
                 if (pdgCode == 23) {
                     generatedParticle.SetBit(ParticleStatus::kToBeDone, false); // Force Z0 to be decayed by the transport
-                    LOG(debug) << "Processing Z0 with DecayerPythia8";
-                    TLorentzVector *pDec = new TLorentzVector(px, py, pz, energy);
-                    mDecayer->Decay(pdgCode, pDec);
-                    TClonesArray *daughters = new TClonesArray("TParticle");
-                    mDecayer->ImportParticles(daughters);
-                    unsigned short int nDaughters = daughters->GetEntriesFast();
-                    if (daughters && nDaughters > 0) {
-                        for (int i = 0; i < daughters->GetEntriesFast(); i++) {
-                            TParticle* daughter = (TParticle*)daughters->At(i);
-                            daughter->SetUniqueID(mGenID);
-                            if (i > 0)
-                            {
-                                daughter->SetBit(ParticleStatus::kToBeDone, //
-                                                 o2::mcgenstatus::getHepMCStatusCode(generatedParticle.GetStatusCode()) == 1);
-                            }
-                            else
-                            {
-                                // First daughter is the mother (Z0)
-                                daughter->SetBit(ParticleStatus::kToBeDone, false);
-                            }
-                            LOG(debug) << "Daughter " << i << ": PDG=" << daughter->GetPdgCode() << ", E=" << daughter->Energy() << ", p=(" << daughter->Px() << "," << daughter->Py() << "," << daughter->Pz() << ")";
-                            mParticles.push_back(*daughter);
-                        }
-                        LOG(debug) << "Z0 decayed into " << daughters->GetEntriesFast() << " particles";
-                        daughters->Clear("C");
-                        delete daughters;
-                    } else {
-                        LOG(warn) << "DecayerPythia8 failed to decay Z0 or no daughters found";
-                    }
-                    delete pDec;
                 } else {
                     generatedParticle.SetBit(ParticleStatus::kToBeDone, //
                                              o2::mcgenstatus::getHepMCStatusCode(generatedParticle.GetStatusCode()) == 1);
@@ -305,34 +297,8 @@ namespace o2
                 generatedParticle.SetStatusCode(o2::mcgenstatus::MCGenStatusEncoding(generatedParticle.GetStatusCode(), 0).fullEncoding);
                 generatedParticle.SetUniqueID(mGenID);
                 if (pdgCode == 23) {
-                    generatedParticle.SetBit(ParticleStatus::kToBeDone, false); // Force Z0 to be decayed by the transport
-                    LOG(debug) << "Processing Z0 with DecayerPythia8";
-                    TLorentzVector *pDec = new TLorentzVector(px, py, pz, energy);
-                    mDecayer->Decay(pdgCode, pDec);
-                    TClonesArray *daughters = new TClonesArray("TParticle");
-                    mDecayer->ImportParticles(daughters);
-                    unsigned short int nDaughters = daughters->GetEntriesFast();
-                    if (daughters && nDaughters > 0) {
-                        for (int i = 0; i < daughters->GetEntriesFast(); i++) {
-                            TParticle* daughter = (TParticle*)daughters->At(i);
-                            daughter->SetUniqueID(mGenID);
-                            if (i > 0) {
-                                daughter->SetBit(ParticleStatus::kToBeDone, //
-                                                 o2::mcgenstatus::getHepMCStatusCode(generatedParticle.GetStatusCode()) == 1);
-                            } else {
-                                // First daughter is the mother (Z0)
-                                daughter->SetBit(ParticleStatus::kToBeDone, false);
-                            }
-                            LOG(debug) << "Daughter " << i << ": PDG=" << daughter->GetPdgCode() << ", E=" << daughter->Energy() << ", p=(" << daughter->Px() << "," << daughter->Py() << "," << daughter->Pz() << ")";
-                            mParticles.push_back(*daughter);
-                        }
-                        LOG(debug) << "Z0 decayed into " << daughters->GetEntriesFast() << " particles";
-                        daughters->Clear("C");
-                        delete daughters;
-                    } else {
-                        LOG(warn) << "DecayerPythia8 failed to decay Z0 or no daughters found";
-                    }
-                    delete pDec;
+                    generatedParticle.SetBit(ParticleStatus::kToBeDone, false);
+                    // Z0 will follow another decay procedure
                 } else {
                     generatedParticle.SetBit(ParticleStatus::kToBeDone, //
                                              o2::mcgenstatus::getHepMCStatusCode(generatedParticle.GetStatusCode()) == 1);
@@ -347,6 +313,74 @@ namespace o2
                 genMap[1] = [this]()
                 { return generateParticle1(); };
             }
+
+            std::vector<TParticle> decayZ0(TParticle &z0)
+            {
+                std::vector<TParticle> subparts;
+                // Start a Pythia8 event with Z0
+                mPythia->next();
+                // Find the Z0 and its final products
+                auto &event = mPythia->event;
+                for (int j = 0; j < event.size(); ++j)
+                {
+                    const Pythia8::Particle &p = event[j];
+                    if (p.id() == 23) // PDG code for Z0
+                    {
+                        // Push Z0 itself
+                        subparts.push_back(TParticle(p.id(), p.status(),
+                                                     -1, -1, -1, -1,
+                                                     p.px(), p.py(),
+                                                     p.pz(), p.e(),
+                                                     z0.Vx(), z0.Vy(), z0.Vz(), 0.0));
+                        subparts.back().SetStatusCode(o2::mcgenstatus::MCGenStatusEncoding(p.status(), 0).fullEncoding);
+                        subparts.back().SetUniqueID(mGenID);
+                        subparts.back().SetBit(ParticleStatus::kToBeDone, false);
+                        // Navigate through intermediate Z0s to find final decay products
+                        int iZ0 = j;
+                        while (event[iZ0].daughter1() != 0 &&
+                               event[event[iZ0].daughter1()].id() == 23)
+                        {
+                            iZ0 = event[iZ0].daughter1();
+                        }
+                        // Recursively collect all final-state descendants
+                        std::function<void(int)> collectFinalState = [&](int idx)
+                        {
+                            const Pythia8::Particle &particle = event[idx];
+
+                            if (particle.isFinal())
+                            {
+                                subparts.push_back(TParticle(particle.id(), particle.status(),
+                                                             -1, -1, -1, -1,
+                                                             particle.px(), particle.py(),
+                                                             particle.pz(), particle.e(),
+                                                             p.xProd() + z0.Vx(), p.yProd() + z0.Vy(), p.zProd() + z0.Vz(), 0.0));
+                                subparts.back().SetStatusCode(o2::mcgenstatus::MCGenStatusEncoding(particle.status(), 0).fullEncoding);
+                                subparts.back().SetUniqueID(mGenID+1);
+                                subparts.back().SetBit(ParticleStatus::kToBeDone,
+                                    o2::mcgenstatus::getHepMCStatusCode(subparts.back().GetStatusCode()) == 1);
+                            }
+                            else
+                            {
+                                // Not final-state, recurse through daughters
+                                int d1 = particle.daughter1();
+                                int d2 = particle.daughter2();
+                                if (d1 > 0)
+                                {
+                                    for (int k = d1; k <= d2; ++k)
+                                    {
+                                        collectFinalState(k);
+                                    }
+                                }
+                            }
+                        };
+
+                        // Start collecting from the final Z0
+                        collectFinalState(iZ0);
+                        break; // Found and processed the Z0
+                    }
+                }
+                return subparts;
+            }
         };
 
     } // namespace eventgen
@@ -356,8 +390,8 @@ namespace o2
 // fraction == -1 enables the fixed number of signal particles per event (nsig)
 // tag selects the generator type to be used
 FairGenerator *
-Generator_Performance(const float fraction = 0.03f, const unsigned short int nsig = 100, unsigned short int tag = 1)
+Generator_Performance(const float fraction = 0.03f, const unsigned short int nsig = 100, unsigned short int tag = 1, bool setDecayZ0 = false)
 {
-    auto generator = new o2::eventgen::GenPerf(fraction, nsig, tag);
+    auto generator = new o2::eventgen::GenPerf(fraction, nsig, tag, setDecayZ0);
     return generator;
 }
