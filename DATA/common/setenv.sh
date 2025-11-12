@@ -195,6 +195,7 @@ TRD_SOURCES=
 TOF_SOURCES=
 HMP_SOURCES=
 TRACK_SOURCES=
+: ${TRACK_SOURCES_GLO:=}
 has_detectors_reco ITS TPC && has_detector_matching ITSTPC && add_comma_separated TRACK_SOURCES "ITS-TPC"
 has_detectors_reco TPC TRD && has_detector_matching TPCTRD && { add_comma_separated TRD_SOURCES TPC; add_comma_separated TRACK_SOURCES "TPC-TRD"; }
 has_detectors_reco ITS TPC TRD && has_detector_matching ITSTPC && has_detector_matching ITSTPCTRD && { add_comma_separated TRD_SOURCES ITS-TPC; add_comma_separated TRACK_SOURCES "ITS-TPC-TRD"; }
@@ -211,6 +212,8 @@ has_detectors_reco HMP TPC TOF && has_detector_matching TPCTOF && add_comma_sepa
 has_detectors_reco HMP TPC TRD TOF && has_detector_matching TPCTRD && has_detector_matching TPCTRDTOF && add_comma_separated HMP_SOURCES "TPC-TRD-TOF"
 has_detectors_reco MFT MCH && has_detector_matching MFTMCH && add_comma_separated TRACK_SOURCES "MFT-MCH"
 has_detectors_reco MCH MID && has_detector_matching MCHMID && add_comma_separated TRACK_SOURCES "MCH-MID"
+[[ "0$TRACK_SOURCES_GLO" == "0" ]] && TRACK_SOURCES_GLO=$TRACK_SOURCES
+
 for det in `echo $LIST_OF_DETECTORS | sed "s/,/ /g"`; do
   if [[ $LIST_OF_ASYNC_RECO_STEPS =~ (^| )${det}( |$) ]]; then
     has_detector ${det} && has_processing_step ${det}_RECO && add_comma_separated TRACK_SOURCES "$det"
@@ -240,12 +243,6 @@ fi
 : ${VERTEX_TRACK_MATCHING_SOURCES:="$TRACK_SOURCES"}
 [[ ! -z $VERTEXING_SOURCES ]] && PVERTEX_CONFIG+=" --vertexing-sources $VERTEXING_SOURCES"
 [[ ! -z $VERTEX_TRACK_MATCHING_SOURCES ]] && PVERTEX_CONFIG+=" --vertex-track-matching-sources $VERTEX_TRACK_MATCHING_SOURCES"
-
-if [[ -z ${SVERTEXING_SOURCES:-} ]]; then
-  SVERTEXING_SOURCES="$VERTEXING_SOURCES"
-elif [[ "${SVERTEXING_SOURCES^^}" == "NONE" ]]; then
-  SVERTEXING_SOURCES=
-fi
 
 # this option requires well calibrated timing beween different detectors, at the moment suppress it
 #has_detector_reco FT0 && PVERTEX_CONFIG+=" --validate-with-ft0"
