@@ -42,4 +42,12 @@ Decay phi
 1.0 K+      K-                                      VSS; #[Reconstructed PDG2011]
 Enddecay
 
+Decay K*0
+1.0      K+  pi-                        VSS;
+Enddecay
+
+Decay anti-K*0
+1.0      K-  pi+                        VSS;
+Enddecay
+
 End
