@@ -1,5 +1,7 @@
 // External generator requested in https://its.cern.ch/jira/browse/O2-6235
 // for multidimensional performance studies
+// Example usage:
+// o2-sim -j 8 -o test -n 100 --seed 612 -g hybrid --configKeyValues "GeneratorHybrid.configFile=${O2DPG_MC_CONFIG_ROOT}/MC/config/common/external/generator/perfConf.json"
 namespace o2
 {
     namespace eventgen
@@ -8,8 +10,7 @@ namespace o2
         class GenPerf : public Generator
         {
         public:
-            GenPerf(float fraction = 0.03f, unsigned short int nsig = 100, unsigned short int tag = 1, bool setDecayZ0 = false)
-                : mDecayZ0(setDecayZ0)
+            GenPerf(float fraction = 0.03f, unsigned short int nsig = 100, unsigned short int tag = 1)
             {
                 if (fraction == -1) {
                     LOG(info) << nsig << " Signal particles will be generated in each event";
@@ -36,15 +37,13 @@ namespace o2
                     mTag = tag;
                     LOG(info) << "Generator with tag " << mTag << " is selected";
                 }
-                if (mDecayZ0){
-                    LOG(info) << "Z0 decays will be handled with Pythia8";
-                    mPythia = std::make_unique<Pythia8::Pythia>();
-                    // Configure Pythia8 with minimal beam setup for standalone decays
-                    mPythia->readString("WeakSingleBoson:ffbar2gmZ = on");
-                    mPythia->init(); // Initialize
-                } else {
-                    LOG(info) << "Z0 decays will be created but not transported (incompatible with Geant4 physics list)";
-                }
+                LOG(info) << "Z0 decays are handled with Pythia8";
+                mPythia = std::make_unique<Pythia8::Pythia>();
+                // Turn off all event generation - we only want to decay our Z0
+                mPythia->readString("ProcessLevel:all = off");
+                // Disable standard event checks since we're manually building the event
+                mPythia->readString("Check:event = off");
+                mPythia->init(); // Initialize
                 Generator::setTimeUnit(1.0);
                 Generator::setPositionUnit(1.0);
             }
@@ -74,14 +73,10 @@ namespace o2
                 for (int k = 0; k < nSig; k++){
                     auto part = genMap[mTag]();
                     if(part.GetPdgCode() == 23) {
-                        if(!mDecayZ0) {
-                            mParticles.push_back(part);
-                        } else {
-                            auto daughters = decayZ0(part);
-                            for (auto &dau : daughters)
-                            {
-                                mParticles.push_back(dau);
-                            }
+                        auto daughters = decayZ0(part);
+                        for (auto &dau : daughters)
+                        {
+                            mParticles.push_back(dau);
                         }
                     } else {
                         mParticles.push_back(part);
@@ -95,7 +90,6 @@ namespace o2
             unsigned short int mNSig = 0;   // Number of particles to generate
             unsigned int mNUE = 0;  // Number of tracks in the Underlying event
             unsigned short int mTag = 1; // Tag to select the generation function
-            bool mDecayZ0 = false; // Whether to decay Z0 with Pythia8
             std::unique_ptr<Pythia8::Pythia> mPythia; // Pythia8 instance for particle decays not present in the physics list of Geant4 (like Z0)
             const std::vector<std::shared_ptr<o2::eventgen::Generator>>* mGenList = nullptr; // Cached generators list
             std::map<unsigned short int, std::function<TParticle()>> genMap;
@@ -317,10 +311,22 @@ namespace o2
             std::vector<TParticle> decayZ0(TParticle &z0)
             {
                 std::vector<TParticle> subparts;
-                // Start a Pythia8 event with Z0
-                mPythia->next();
-                // Find the Z0 and its final products
                 auto &event = mPythia->event;
+                // Reset event record for new decay
+                event.reset();
+                // Add the Z0 particle to the event record
+                // Arguments: id, status, mother1, mother2, daughter1, daughter2,
+                //            col, acol, px, py, pz, e, m, scale, pol
+                // Status code: 91 = incoming particles (needed for proper decay handling)
+                int iZ0 = event.append(23, 91, 0, 0, 0, 0, 0, 0,
+                                       z0.Px(), z0.Py(), z0.Pz(), z0.Energy(), z0.GetMass());
+                // Set production vertex
+                event[iZ0].vProd(z0.Vx(), z0.Vy(), z0.Vz(), 0.0);
+                // Forcing decay by calling hadron level function
+                if (!mPythia->forceHadronLevel())
+                {
+                    cout << "Warning: Z0 decay failed!" << endl;
+                }
                 for (int j = 0; j < event.size(); ++j)
                 {
                     const Pythia8::Particle &p = event[j];
@@ -343,39 +349,34 @@ namespace o2
                             iZ0 = event[iZ0].daughter1();
                         }
                         // Recursively collect all final-state descendants
-                        std::function<void(int)> collectFinalState = [&](int idx)
+                        std::function<void(int)> collectAllDescendants = [&](int idx)
                         {
                             const Pythia8::Particle &particle = event[idx];
-
-                            if (particle.isFinal())
+                            subparts.push_back(TParticle(particle.id(), particle.status(),
+                                                         -1, -1, -1, -1,
+                                                         particle.px(), particle.py(),
+                                                         particle.pz(), particle.e(),
+                                                         p.xProd(), p.yProd(), p.zProd(), p.tProd()));
+                            subparts.back().SetStatusCode(o2::mcgenstatus::MCGenStatusEncoding(particle.status(), 0).fullEncoding);
+                            subparts.back().SetUniqueID(mGenID + 1);
+                            subparts.back().SetBit(ParticleStatus::kToBeDone,
+                                                   o2::mcgenstatus::getHepMCStatusCode(subparts.back().GetStatusCode()) == 1);
+                            // Not final-state, recurse through daughters
+                            if (!particle.isFinal())
                             {
-                                subparts.push_back(TParticle(particle.id(), particle.status(),
-                                                             -1, -1, -1, -1,
-                                                             particle.px(), particle.py(),
-                                                             particle.pz(), particle.e(),
-                                                             p.xProd() + z0.Vx(), p.yProd() + z0.Vy(), p.zProd() + z0.Vz(), 0.0));
-                                subparts.back().SetStatusCode(o2::mcgenstatus::MCGenStatusEncoding(particle.status(), 0).fullEncoding);
-                                subparts.back().SetUniqueID(mGenID+1);
-                                subparts.back().SetBit(ParticleStatus::kToBeDone,
-                                    o2::mcgenstatus::getHepMCStatusCode(subparts.back().GetStatusCode()) == 1);
-                            }
-                            else
-                            {
-                                // Not final-state, recurse through daughters
                                 int d1 = particle.daughter1();
                                 int d2 = particle.daughter2();
                                 if (d1 > 0)
                                 {
                                     for (int k = d1; k <= d2; ++k)
                                     {
-                                        collectFinalState(k);
+                                        collectAllDescendants(k);
                                     }
                                 }
                             }
                         };
-
                         // Start collecting from the final Z0
-                        collectFinalState(iZ0);
+                        collectAllDescendants(iZ0);
                         break; // Found and processed the Z0
                     }
                 }
@@ -390,8 +391,8 @@ namespace o2
 // fraction == -1 enables the fixed number of signal particles per event (nsig)
 // tag selects the generator type to be used
 FairGenerator *
-Generator_Performance(const float fraction = 0.03f, const unsigned short int nsig = 100, unsigned short int tag = 1, bool setDecayZ0 = false)
+Generator_Performance(const float fraction = 0.03f, const unsigned short int nsig = 100, unsigned short int tag = 1)
 {
-    auto generator = new o2::eventgen::GenPerf(fraction, nsig, tag, setDecayZ0);
+    auto generator = new o2::eventgen::GenPerf(fraction, nsig, tag);
     return generator;
 }
