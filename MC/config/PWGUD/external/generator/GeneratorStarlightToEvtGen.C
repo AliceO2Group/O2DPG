@@ -18,7 +18,7 @@ FairGenerator*
     gen->AddPdg(-15,1);
   }
   else if(configuration.find("kDpmjet") != std::string::npos){
-    gen->SetSizePdg(11);
+    gen->SetSizePdg(14);
     gen->AddPdg( 411,0);
     gen->AddPdg(-411,1);
     gen->AddPdg( 421,2);
@@ -30,6 +30,9 @@ FairGenerator*
     gen->AddPdg( 4122,8);
     gen->AddPdg(-4122,9);
     gen->AddPdg( 333,10);
+    gen->AddPdg(-333,11);
+    gen->AddPdg( 313,12);
+    gen->AddPdg(-313,13);
   }
   else{
     gen->SetPolarization(1); //Transversal
@@ -38,7 +41,7 @@ FairGenerator*
     gen->AddPdg(100443,1);
     gen->AddPdg(223,2);
   }
-  
+
   TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGUD/external/generator/DecayTablesEvtGen");
   if      (configuration.find("Psi2sToMuPi") != std::string::npos) gen->SetDecayTable(Form("%s/PSI2S.MUMUPIPI.DEC",pathO2.Data()));
   else if (configuration.find("Psi2sToElPi") != std::string::npos) gen->SetDecayTable(Form("%s/PSI2S.EEPIPI.DEC",pathO2.Data()));
@@ -53,6 +56,6 @@ FairGenerator*
   else if (configuration.find("Jpsi4Prong") != std::string::npos) gen->SetDecayTable(Form("%s/JPSI.4PRONG.DEC",pathO2.Data()));
   else if (configuration.find("Jpsi6Prong") != std::string::npos) gen->SetDecayTable(Form("%s/JPSI.6PRONG.DEC",pathO2.Data()));
   else if (configuration.find("Dpmjet") != std::string::npos) gen->SetDecayTable(Form("%s/OPENCHARM.DEC",pathO2.Data()));
- 
+
   return gen;
 }
