@@ -420,8 +420,15 @@ class GenTPCLoopers : public Generator
                     }
                 }
                 if (mFlatGas){
-                    mContextFile = std::filesystem::exists("collisioncontext.root") ? TFile::Open("collisioncontext.root") : nullptr;
-                    mCollisionContext = mContextFile ? (o2::steer::DigitizationContext *)mContextFile->Get("DigitizationContext") : nullptr;
+                    // Check if mContextFile is already opened
+                    if(!mContextFile)
+                    {
+                        mContextFile = std::filesystem::exists("collisioncontext.root") ? TFile::Open("collisioncontext.root") : nullptr;
+                    }
+                    if(!mCollisionContext)
+                    {
+                        mCollisionContext = mContextFile ? (o2::steer::DigitizationContext *)mContextFile->Get("DigitizationContext") : nullptr;
+                    }
                     mInteractionTimeRecords = mCollisionContext ? mCollisionContext->getEventRecords() : std::vector<o2::InteractionTimeRecord>{};
                     if (mInteractionTimeRecords.empty())
                     {
@@ -476,14 +483,32 @@ class GenTPCLoopers : public Generator
                 LOG(fatal) << "Error: Could not find fit function '" << fitName << "' in rate file!";
                 exit(1);
             }
-            auto ref = static_cast<int>(std::floor(fit->Eval(intRate / 1000.))); // fit expects rate in kHz
+            mInteractionRate = intRate;
+            if(mInteractionRate < 0)
+            {
+                mContextFile = std::filesystem::exists("collisioncontext.root") ? TFile::Open("collisioncontext.root") : nullptr;
+                if(!mContextFile || mContextFile->IsZombie())
+                {
+                    LOG(fatal) << "Error: Interaction rate not provided and collision context file not found!";
+                    exit(1);
+                }
+                mCollisionContext = (o2::steer::DigitizationContext *)mContextFile->Get("DigitizationContext");
+                mInteractionRate = std::floor(mCollisionContext->getDigitizerInteractionRate());
+                LOG(info) << "Interaction rate retrieved from collision context: " << mInteractionRate << " Hz";
+                if (mInteractionRate < 0)
+                {
+                    LOG(fatal) << "Error: Invalid interaction rate retrieved from collision context!";
+                    exit(1);
+                }
+            }
+            auto ref = static_cast<int>(std::floor(fit->Eval(mInteractionRate / 1000.))); // fit expects rate in kHz
             rate_file.Close();
             if (ref <= 0)
             {
                 LOG(fatal) << "Computed flat gas number reference per orbit is <=0";
                 exit(1);
             } else {
-                LOG(info) << "Set flat gas number to " << ref << " loopers per orbit using " << fitName << " from " << intRate << " Hz interaction rate.";
+                LOG(info) << "Set flat gas number to " << ref << " loopers per orbit using " << fitName << " from " << mInteractionRate << " Hz interaction rate.";
                 auto flat = true;
                 setFlatGas(flat, -1, ref);
             }
@@ -531,6 +556,7 @@ class GenTPCLoopers : public Generator
         double mTimeEnd = 0.0;                                          // Time limit for the last event
         float mLoopsFractionPairs = 0.08;                               // Fraction of loopers from Pairs
         std::string mRateFile = "";                                     // File with clusters/rate information per orbit
+        int mInteractionRate = 38000;                                   // Interaction rate in Hz
 };
 
 } // namespace eventgen
@@ -684,7 +710,7 @@ Generator_TPCLoopersFlat(std::string model_pairs = "tpcloopmodel.onnx", std::str
 FairGenerator *
 Generator_TPCLoopersOrbitRef(std::string model_pairs = "tpcloopmodel.onnx", std::string model_compton = "tpcloopmodelcompton.onnx",
                               std::string scaler_pair = "scaler_pair.json", std::string scaler_compton = "scaler_compton.json",
-                              std::string nclxrate = "nclxrate.root", bool isPbPb = true, const int intrate = 38000, const float adjust = 0.f)
+                              std::string nclxrate = "nclxrate.root", bool isPbPb = true, const int intrate = -1, const float adjust = 0.f)
 {
     // Expand all environment paths
     model_pairs = gSystem->ExpandPathName(model_pairs.c_str());
