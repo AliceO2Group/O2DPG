@@ -134,6 +134,7 @@ def create_geant_config(args, externalConfigString):
     # ----- add default settings -----
 
     add(config, {"MFTBase.buildAlignment" : "true"})
+    add(config, {"GenTPCLoopers.colsys" : args.col})
 
     # ----- apply external overwrites from command line -------
     for keyval in externalConfigString.split(";"):
