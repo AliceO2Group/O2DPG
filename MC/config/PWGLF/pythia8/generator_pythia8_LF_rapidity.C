@@ -12,7 +12,7 @@
 ///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity({{1000010020, 10, 0.5, 10, -1.0, 1.0}, {1000010030, 10, 0.5, 10, -1.0, 1.0}})'`
 ///               Here PDG, Number injected, pT limits, rapidity limits are divided per particle
 ///         or:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei_rapidity.gun")'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/exotic_nuclei_pp.gun")'`
 ///               Here PDG, Number injected, pT limits, rapidity limits are provided via an intermediate configuration file
 ///
 
@@ -51,29 +51,30 @@
 #endif
 #pragma cling load("libO2Generators")
 #endif
-#include "Generators/GeneratorPythia8.h"
+// #include "Generators/GeneratorPythia8.h"
+#include "generator_pythia8_longlived.C"
 #include <nlohmann/json.hpp>
 
 using namespace Pythia8;
 using namespace o2::mcgenstatus;
 
-// Helper function to get mass from PDG code (copied from generator_pythia8_longlived.C to avoid include issues)
-namespace {
-double getMassFromPDG(int input_pdg)
-{
-  double mass = 0;
-  if (TDatabasePDG::Instance())
-  {
-    TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(input_pdg);
-    if (particle) {
-      mass = particle->Mass();
-    } else {
-      LOG(warning) << "Unknown particle requested with PDG " << input_pdg << ", mass set to 0";
-    }
-  }
-  return mass;
-}
-}
+// // Helper function to get mass from PDG code (copied from generator_pythia8_longlived.C to avoid include issues)
+// namespace {
+// double getMassFromPDG(int input_pdg)
+// {
+//   double mass = 0;
+//   if (TDatabasePDG::Instance())
+//   {
+//     TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(input_pdg);
+//     if (particle) {
+//       mass = particle->Mass();
+//     } else {
+//       LOG(warning) << "Unknown particle requested with PDG " << input_pdg << ", mass set to 0";
+//     }
+//   }
+//   return mass;
+// }
+// }
 
 class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
 {
@@ -362,7 +363,8 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
                                                            mRapidityMin{rapidityMin},
                                                            mRapidityMax{rapidityMax}
     {
-      mMass = getMassFromPDG(mPdg);
+      // mMass = getMassFromPDG(mPdg);
+      mMass = GeneratorPythia8LongLivedGun::getMass(mPdg);
       if (mMass <= 0) {
         LOG(fatal) << "Could not find mass for mPdg " << mPdg;
       }
@@ -533,7 +535,7 @@ FairGenerator* generateLFRapidity(std::vector<GeneratorPythia8LFRapidity::Config
 
 ///___________________________________________________________
 /// Create generator via input file
-FairGenerator* generateLFRapidity(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei_rapidity.gun",
+FairGenerator* generateLFRapidity(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/exotic_nuclei_pp.gun",
                           bool injectOnePDGPerEvent = true,
                           int gapBetweenInjection = 0,
                           bool useTrigger = false,
@@ -587,7 +589,7 @@ FairGenerator* generateLFRapidity(std::string configuration = "${O2DPG_MC_CONFIG
 
 ///___________________________________________________________
 /// Create generator via input file for the triggered mode
-FairGenerator* generateLFRapidityTriggered(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei_rapidity.gun",
+FairGenerator* generateLFRapidityTriggered(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/exotic_nuclei_pp.gun",
                                    int gapBetweenInjection = 0,
                                    std::string pythiaCfgMb = "",
                                    std::string pythiaCfgSignal = "")
