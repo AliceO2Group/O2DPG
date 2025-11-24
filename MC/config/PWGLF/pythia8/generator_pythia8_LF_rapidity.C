@@ -12,7 +12,7 @@
 ///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity({{1000010020, 10, 0.5, 10, -1.0, 1.0}, {1000010030, 10, 0.5, 10, -1.0, 1.0}})'`
 ///               Here PDG, Number injected, pT limits, rapidity limits are divided per particle
 ///         or:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei_rapidity.gun")'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/exotic_nuclei_pp.gun")'`
 ///               Here PDG, Number injected, pT limits, rapidity limits are provided via an intermediate configuration file
 ///
 
@@ -533,7 +533,7 @@ FairGenerator* generateLFRapidity(std::vector<GeneratorPythia8LFRapidity::Config
 
 ///___________________________________________________________
 /// Create generator via input file
-FairGenerator* generateLFRapidity(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei_rapidity.gun",
+FairGenerator* generateLFRapidity(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/exotic_nuclei_pp.gun",
                           bool injectOnePDGPerEvent = true,
                           int gapBetweenInjection = 0,
                           bool useTrigger = false,
@@ -587,7 +587,7 @@ FairGenerator* generateLFRapidity(std::string configuration = "${O2DPG_MC_CONFIG
 
 ///___________________________________________________________
 /// Create generator via input file for the triggered mode
-FairGenerator* generateLFRapidityTriggered(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/nuclei_rapidity.gun",
+FairGenerator* generateLFRapidityTriggered(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/exotic_nuclei_pp.gun",
                                    int gapBetweenInjection = 0,
                                    std::string pythiaCfgMb = "",
                                    std::string pythiaCfgSignal = "")
