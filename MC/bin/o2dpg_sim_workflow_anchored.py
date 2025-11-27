@@ -394,6 +394,29 @@ def determine_timestamp(sor, eor, splitinfo, cycle, ntf, HBF_per_timeframe = 256
     assert (timestamp_of_production <= eor)
     return int(timestamp_of_production), production_offset
 
+def determine_timestamp_from_timeframeID(sor, eor, timeframeID, HBF_per_timeframe = 256):
+    """
+    Determines the timestamp based on the given timeframeID within a run
+    Args:
+        sor: int
+            start-of-run in milliseconds since epoch
+        eor: int
+            end-of-run in milliseconds since epoch
+        timeframeID: int
+            timeframe id
+        HBF_per_timeframe: int
+            number of orbits per timeframe
+    Returns:
+        int: timestamp in milliseconds
+    """
+    # length of this run in micro seconds, since we use the orbit duration in micro seconds
+
+    timestamp_of_production = sor + timeframeID * HBF_per_timeframe * LHCOrbitMUS / 1000
+    # this is a closure test. If we had perfect floating point precision everywhere, it wouldn't fail.
+    # But since we don't have that and there are some int casts as well, better check again.
+    assert (timestamp_of_production >= sor)
+    assert (timestamp_of_production <= eor)
+    return int(timestamp_of_production)
 
 def exclude_timestamp(ts, orbit, run, filename, global_run_params):
     """
@@ -481,6 +504,7 @@ def main():
     parser.add_argument("--invert-irframe-selection", action='store_true', help="Inverts the logic of --run-time-span-file")
     parser.add_argument("--orbitsPerTF", type=str, help="Force a certain orbits-per-timeframe number; Automatically taken from CCDB if not given.", default="")
     parser.add_argument('--publish-mcprodinfo', action='store_true', default=False, help="Publish MCProdInfo metadata to CCDB")
+    parser.add_argument('--timeframeID', type=int, help="If given, anchor to this specific timeframe id within a run. Takes precendence over determination based on (split-id, prod-split, cycle)", default=-1)
     parser.add_argument('forward', nargs=argparse.REMAINDER) # forward args passed to actual workflow creation
     args = parser.parse_args()
     print (args)
@@ -553,7 +577,13 @@ def main():
          GLOparams["OrbitsPerTF"] = determined_orbits
 
     # determine timestamp, and production offset for the final MC job to run
-    timestamp, prod_offset = determine_timestamp(run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
+    timestamp = 0
+    prod_offset = 0
+    if args.timeframeID != -1:
+      timestamp = determine_timestamp_from_timeframeID(run_start, run_end, args.timeframeID, GLOparams["OrbitsPerTF"])
+      prod_offset = args.timeframeID
+    else:
+      timestamp, prod_offset = determine_timestamp(run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
 
     # determine orbit corresponding to timestamp (mainly used in exclude_timestamp function)
     orbit = GLOparams["FirstOrbit"] + int((timestamp - GLOparams["SOR"]) / ( LHCOrbitMUS / 1000))
