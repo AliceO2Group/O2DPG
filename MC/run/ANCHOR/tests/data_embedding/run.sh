@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+# Simple test for Data anchoring
+#
+
+export ALIEN_JDL_LPMANCHORPASSNAME=apass2
+export ALIEN_JDL_MCANCHOR=apass2
+export ALIEN_JDL_CPULIMIT=8
+export ALIEN_JDL_LPMRUNNUMBER=544742
+export ALIEN_JDL_LPMPRODUCTIONTYPE=MC
+export ALIEN_JDL_LPMINTERACTIONTYPE=pp
+export ALIEN_JDL_LPMPRODUCTIONTAG=LHC24a2
+export ALIEN_JDL_LPMANCHORRUN=544742
+export ALIEN_JDL_LPMANCHORPRODUCTION=LHC23f
+export ALIEN_JDL_LPMANCHORYEAR=2023
+
+# need to give a data AOD
+export ALIEN_JDL_MC_DATA_EMBEDDING_AO2D="alien:///alice/data/2023/LHC23zzm/544742/apass5/0000/o2_ctf_run00544742_orbit0137377824_tf0002239365_epn262/002/AO2D.root"
+
+export NTIMEFRAMES=1
+export NWORKERS=1
+export SPLITID=1
+export PRODSPLIT=1
+export ALIEN_JDL_O2DPGWORKFLOWTARGET=aod
+
+# setup of the signal generator
+export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen pythia8pp"
+
+export DISABLE_QC=1
+${O2DPG_ROOT}/MC/run/ANCHOR/anchorMC_DataEmbedding.sh
