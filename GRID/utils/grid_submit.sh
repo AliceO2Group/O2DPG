@@ -208,7 +208,7 @@ while [ $# -gt 0 ] ; do
         --cores) CPUCORES=$2; shift 2 ;; # allow to specify the CPU cores (check compatibility with partition !)
         --dry) DRYRUN="ON"; shift 1 ;; # do a try run and not actually interact with the GRID (just produce local jdl file)
         --o2tag) O2TAG=$2; shift 2 ;; #
-	--packagespec) PACKAGESPEC=$2; shift 2 ;; # the alisw, cvmfs package list (command separated - example: '"VO_ALICE@FLUKA_VMC::4-1.1-vmc3-1","VO_ALICE@O2::daily-20230628-0200-1"')
+        --packagespec) PACKAGESPEC=$2; shift 2 ;; # the alisw, cvmfs package list (command separated - example: '"VO_ALICE@FLUKA_VMC::4-1.1-vmc3-1","VO_ALICE@O2::daily-20230628-0200-1"')
         --asuser) ASUSER=$2; shift 2 ;; #
         --label) JOBLABEL=$2; shift 2 ;; # label identifying the production (e.g. as a production identifier)
         --mattermost) MATTERMOSTHOOK=$2; shift 2 ;; # if given, status and metric information about the job will be sent to this hook
@@ -218,7 +218,8 @@ while [ $# -gt 0 ] ; do
         --wait) WAITFORALIEN=ON; shift 1 ;; #wait for alien jobs to finish
         --wait-any) WAITFORALIENANY=ON; WAITFORALIEN=ON; shift 1 ;; #wait for any good==done alien jobs to return
         --outputspec) OUTPUTSPEC=$2; shift 2 ;; #provide comma separate list of JDL file specs to be put as part of JDL Output field (example '"*.log@disk=1","*.root@disk=2"')
-	-h) Usage ; exit ;;
+        --split-on-collection) DATACOLLECTION=$2; shift 2 ;; # this will split the jobs on InputDataCollection and "file" mode
+        -h) Usage ; exit ;;
         --help) Usage ; exit ;;
         --fetch-output) FETCHOUTPUT=ON; shift 1 ;; # if to fetch all JOB output locally (to make this job as if it ran locally); only works when we block until all JOBS EXIT
         *) break ;;
@@ -355,13 +356,21 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
   cd "${GRID_SUBMIT_WORKDIR}"
 
   QUOT='"'
+  SPLITMODE="production:1-${PRODSPLIT}"
+  if [ "${DATACOLLECTION}" ]; then
+    SPLITMODE="file"
+  fi
   # ---- Generate JDL ----------------
   # TODO: Make this configurable or read from a preamble section in the jobfile
   cat > "${MY_JOBNAMEDATE}.jdl" <<EOF
 Executable = "${MY_BINDIR}/${MY_JOBNAMEDATE}.sh";
 Arguments = "${CONTINUE_WORKDIR:+"-c ${CONTINUE_WORKDIR}"} --local ${O2TAG:+--o2tag ${O2TAG}} --ttl ${JOBTTL} --label ${JOBLABEL:-label} --prodsplit ${PRODSPLIT} ${MATTERMOSTHOOK:+--mattermost ${MATTERMOSTHOOK}} ${CONTROLSERVER:+--controlserver ${CONTROLSERVER}}";
 InputFile = "LF:${MY_JOBWORKDIR}/alien_jobscript.sh";
-${PRODSPLIT:+Split = ${QUOT}production:1-${PRODSPLIT}${QUOT};}
+${DATACOLLECTION:+InputDataList = ${QUOT}input.list${QUOT};}
+${DATACOLLECTION:+InputDataListFormat = ${QUOT}txt-list${QUOT};}
+${DATACOLLECTION:+InputDataCollection = ${QUOT}LF:${MY_JOBWORKDIR}/collection.xml,nodownload${QUOT};}
+${PRODSPLIT:+Split = ${QUOT}${SPLITMODE}${QUOT};}
+${DATACOLLECTION:+SplitMaxInputFileNumber = 1;}
 OutputDir = "${MY_JOBWORKDIR}/${PRODSPLIT:+#alien_counter_03i#}";
 Requirements = member(other.GridPartitions,"${GRIDPARTITION:-multicore_8}");
 CPUCores = "${CPUCORES}";
@@ -382,6 +391,15 @@ EOF
   if [ ! "${DRYRUN}" ]; then
     command_file="alien_commands.txt"
 
+    if [ "$DATACOLLECTION" ]; then
+      pok "Preparing data collection XML file"
+      alien.py toXml $(cat ${DATACOLLECTION}) > collection.xml
+      if [ "$?" != "0" ]; then
+        per "Problem with data collection preparation"
+        exit 1
+      fi
+    fi
+
     pok "Preparing job \"$MY_JOBNAMEDATE\""
     (
       # assemble all GRID interaction in a single script / transaction
@@ -396,6 +414,9 @@ EOF
       echo "rm ${MY_BINDIR}/${MY_JOBNAMEDATE}.sh" >> ${command_file}    # remove current job script
       echo "cp file:${PWD}/${MY_JOBNAMEDATE}.jdl alien://${MY_JOBWORKDIR}/${MY_JOBNAMEDATE}.jdl@DISK=1" >> ${command_file}  # copy the jdl
       echo "cp file:${THIS_SCRIPT} alien://${MY_BINDIR}/${MY_JOBNAMEDATE}.sh@DISK=1" >> ${command_file}  # copy current job script to AliEn
+      if [ "${DATACOLLECTION}" ]; then
+        echo "cp file:collection.xml alien://${MY_JOBWORKDIR}/collection.xml"  >> ${command_file}
+      fi
       [ ! "${CONTINUE_WORKDIR}" ] && echo "cp file:${MY_JOBSCRIPT} alien://${MY_JOBWORKDIR}/alien_jobscript.sh" >> ${command_file}
     ) > alienlog.txt 2>&1
 
