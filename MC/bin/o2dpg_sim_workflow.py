@@ -8,12 +8,12 @@
 #
 # Execution examples:
 #  - pp PYTHIA jets, 2 events, triggered on high pT decay photons on all barrel calorimeters acceptance, eCMS 13 TeV
-#     ./o2dpg_sim_workflow.py -e TGeant3 -ns 2 -j 8 -tf 1 -mod "--skipModules ZDC" -col pp -eCM 13000 \
+#     ./o2dpg_sim_workflow.py -e TGeant3 -ns 2 -j 8 -tf 1 -col pp -eCM 13000 \
 #                             -proc "jets" -ptHatBin 3 \
 #                             -trigger "external" -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_decay_gamma_allcalo_TrigPt3_5.ini"
 #
 #  - pp PYTHIA ccbar events embedded into heavy-ion environment, 2 PYTHIA events into 1 bkg event, beams energy 2.510
-#     ./o2dpg_sim_workflow.py -e TGeant3 -nb 1 -ns 2 -j 8 -tf 1 -mod "--skipModules ZDC"  \
+#     ./o2dpg_sim_workflow.py -e TGeant3 -nb 1 -ns 2 -j 8 -tf 1  \
 #                             -col pp -eA 2.510 -proc "ccbar"  --embedding
 #
 
