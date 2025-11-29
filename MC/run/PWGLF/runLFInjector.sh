@@ -6,7 +6,6 @@
 
 # The following variables can be set from the outside:
 # - NWORKERS: number of workers to use (default 8)
-# - MODULES: modules to be run (default "--skipModules ZDC")
 # - SIMENGINE: simulation engine (default TGeant4)
 # - NSIGEVENTS: number of signal events (default 1)
 # - NBKGEVENTS: number of background events (default 1)
@@ -40,7 +39,6 @@ export IGNORE_VALIDITYCHECK_OF_CCDB_LOCALCACHE=1
 # ----------- START ACTUAL JOB  -------------------------------
 
 NWORKERS=${NWORKERS:-8}
-MODULES=${MODULES:---skipModules ZDC}
 SIMENGINE=${SIMENGINE:-TGeant4}
 NSIGEVENTS=${NSIGEVENTS:-1}
 NBKGEVENTS=${NBKGEVENTS:-1}
@@ -63,7 +61,7 @@ echo "ENERGY = $ENERGY"
 echo "CFGINIFILE = $CFGINIFILE"
 
 # create workflow
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${ENERGY} -col ${SYSTEM} -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} -confKey "Diamond.width[2]=6." -e ${SIMENGINE} ${SEED} -mod "${MODULES}" \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${ENERGY} -col ${SYSTEM} -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} -confKey "Diamond.width[2]=6." -e ${SIMENGINE} ${SEED} \
         -ini ${CFGINIFILE}
 
 # run workflow

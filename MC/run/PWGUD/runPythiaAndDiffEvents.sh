@@ -27,8 +27,6 @@ DVX=0.01
 DVY=0.01
 DVZ=6.00
 
-MODULES="--skipModules ZDC"
-
 # create workflow
 SIGINTRATE=`echo "${BKGINTRATE}*${NSIGPTF}/${NBKGPTF}" | bc`
 NBKG=`echo "${NBKGPTF}*${NTIMEFRAMES}" | bc`
@@ -38,7 +36,6 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py \
   -eCM ${ECM} \
   -j ${NWORKERS} \
   -e TGeant4 \
-  -mod "${MODULES}" \
   -tf ${NTIMEFRAMES} \
   -interactionRate ${BKGINTRATE} \
   -gen hepmc \
