@@ -12,7 +12,7 @@ NBKGEVENTS=${NBKGEVENTS:-1}
 NWORKERS=${NWORKERS:-8}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
 
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -interactionRate 500000 -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -e TGeant4 -mod "--skipModules ZDC" \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -interactionRate 500000 -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -e TGeant4 \
         -ini $O2DPG_ROOT/MC/config/PWGDQ/ini/Generator_InjectedPromptCharmoniaMidy_TriggerGap.ini
 
 # run workflow

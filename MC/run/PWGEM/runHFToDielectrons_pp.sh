@@ -33,7 +33,7 @@ fi
 
 
 
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -e TGeant4 -mod "--skipModules ZDC" \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -e TGeant4 \
      -trigger "external" -ini $O2DPG_ROOT/MC/config/PWGEM/ini/$CONFIGNAME  \
     -genBkg pythia8 -procBkg cdiff -colBkg pp --embedding -nb ${NBKGEVENTS} \
     -confKeyBkg "Diamond.width[2]=6" -interactionRate 500000 

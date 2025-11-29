@@ -19,7 +19,7 @@ ENERGY=${ENERGY:-13600}
 [[ ${SPLITID} != "" ]] && SEED="-seed ${SPLITID}" || SEED=""
 
 # create workflow
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${ENERGY} -col ${SYSTEM} -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} -confKey "Diamond.width[0]=0.005;Diamond.width[1]=0.005;Diamond.width[2]=6." -e ${SIMENGINE} ${SEED} -mod "--skipModules ZDC" \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${ENERGY} -col ${SYSTEM} -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} -confKey "Diamond.width[0]=0.005;Diamond.width[1]=0.005;Diamond.width[2]=6." -e ${SIMENGINE} ${SEED} \
         -ini $O2DPG_ROOT/MC/config/PWGLF/ini/GeneratorLF_highpt_strangeness.ini
 
 # run workflow

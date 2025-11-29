@@ -12,7 +12,7 @@ NBKGEVENTS=${NBKGEVENTS:-1}
 NWORKERS=${NWORKERS:-8}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
 
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -e TGeant4 -mod "--skipModules ZDC" \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -e TGeant4 \
 	 -ini $O2DPG_ROOT/MC/config/PWGDQ/ini/GeneratorHF_bbbar_PsiAndJpsi_midy_triggerGap.ini -interactionRate 500000 
 
 # run workflow

@@ -57,7 +57,7 @@ echo 'Parton PDG option ' $CONFIG_OUTPARTON_PDG
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen pythia8 -proc "jets"     \
                                             -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}                \
                                             -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}       \
-                                            -j ${NWORKERS} -mod "--skipModules ZDC"                    \
+                                            -j ${NWORKERS}                    \
                                             -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/hook_jets.ini"    \
                                             -weightPow ${WEIGHTPOW}
 # run workflow

@@ -21,7 +21,7 @@ NTIMEFRAMES=${NTIMEFRAMES:-1}
 # create workflow
 
 #ccbar filter
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 900 -col pp -gen pythia8 -proc "inel" -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 10000 -confKey "Diamond.width[2]=6." -e TGeant4 -mod "--skipModules ZDC" \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 900 -col pp -gen pythia8 -proc "inel" -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 10000 -confKey "Diamond.width[2]=6." -e TGeant4 \
         -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHF_ccbar.ini \
 
 # run workflow
