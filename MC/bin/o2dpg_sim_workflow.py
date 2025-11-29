@@ -108,7 +108,7 @@ parser.add_argument('-j', '--n-workers', dest='n_workers', help='number of worke
 parser.add_argument('--force-n-workers', dest='force_n_workers', action='store_true', help='by default, number of workers is re-computed '
                                                                                            'for given interaction rate; '
                                                                                            'pass this to avoid that')
-parser.add_argument('-mod',help='Active modules (deprecated)', default='--skipModules ZDC')
+parser.add_argument('--skipModules',nargs="*", help="List of modules to skip in geometry budget (and therefore processing)", default=["ZDC"])
 parser.add_argument('--with-ZDC', action='store_true', help='Enable ZDC in workflow')
 parser.add_argument('-seed',help='random seed number', default=None)
 parser.add_argument('-o',help='output workflow file', default='workflow.json')
@@ -408,7 +408,21 @@ if args.timestamp==-1:
 
 NTIMEFRAMES=int(args.tf)
 NWORKERS=args.n_workers
-MODULES = "--skipModules ZDC" if not isActive("ZDC") else ""
+
+# Processing skipped material budget (modules):
+# - If user did NOT specify --with-ZDC
+# - AND ZDC is not already in the list 
+# --> append ZDC automatically
+if args.with_ZDC:
+   # User wants ZDC to *not* be skipped → ensure it's removed
+   args.skipModules = [m for m in args.skipModules if m != "ZDC"]
+else:
+   # If user did not request --with-ZDC,
+   # auto-append ZDC unless already present
+   if "ZDC" not in args.skipModules:
+      args.skipModules.append("ZDC")
+
+SKIPMODULES = " ".join(["--skipModules"] + args.skipModules) if len(args.skipModules) > 0 else ""
 SIMENGINE=args.e
 BFIELD=args.field
 RNDSEED=args.seed # typically the argument should be the jobid, but if we get None the current time is used for the initialisation
@@ -716,7 +730,7 @@ if doembedding:
         bkgsimneeds = [BKG_CONFIG_task['name'], GRP_TASK['name'], PreCollContextTask['name']]
         BKGtask=createTask(name='bkgsim', lab=["GEANT"], needs=bkgsimneeds, cpu=NWORKERS)
         BKGtask['cmd']='${O2_ROOT}/bin/o2-sim -e ' + SIMENGINE   + ' -j ' + str(NWORKERS) + ' -n '     + str(NBKGEVENTS) \
-                     + ' -g  '      + str(GENBKG) + ' '    + str(MODULES)  + ' -o bkg ' + str(INIBKG)                    \
+                     + ' -g  '      + str(GENBKG) + ' '    + str(SKIPMODULES)  + ' -o bkg ' + str(INIBKG)                \
                      + ' --field ccdb ' + str(CONFKEYBKG)                                                                \
                      + ('',' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)        \
                      + ' --vertexMode ' + vtxmode_sgngen                                                                 \
@@ -947,7 +961,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    sgnmem = 6000 if COLTYPE == 'PbPb' else 4000
    SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"],
                       relative_cpu=7/8, n_workers=NWORKERS_TF, mem=str(sgnmem))
-   sgncmdbase = '${O2_ROOT}/bin/o2-sim -e ' + str(SIMENGINE) + ' '  + str(MODULES) + ' -n ' + str(NSIGEVENTS) + ' --seed ' + str(TFSEED)       \
+   sgncmdbase = '${O2_ROOT}/bin/o2-sim -e ' + str(SIMENGINE) + ' '  + str(SKIPMODULES) + ' -n ' + str(NSIGEVENTS) + ' --seed ' + str(TFSEED)      \
               + ' --field ccdb -j ' + str(NWORKERS_TF) + ' ' + str(CONFKEY) + ' ' + str(INIFILE) + ' -o ' + signalprefix + ' ' + embeddinto       \
               + ' --detectorList ' + args.detectorList                                                                                            \
               + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run)
