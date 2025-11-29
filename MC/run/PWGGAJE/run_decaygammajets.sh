@@ -77,7 +77,7 @@ echo 'Detector acceptance option ' $PARTICLE_ACCEPTANCE
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen pythia8 -proc "jets" \
                                             -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}            \
                                             -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}   \
-                                            -j ${NWORKERS} -mod "--skipModules ZDC"                \
+                                            -j ${NWORKERS}                \
                                             -weightPow ${WEIGHTPOW}                                \
                                             -trigger "external" -ini "\$O2DPG_ROOT/MC/config/PWGGAJE/ini/trigger_decay_gamma.ini"
 

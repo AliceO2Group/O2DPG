@@ -22,7 +22,7 @@ NBKGEVENTS=$(($NSIGEVENTS * $NBKGEVENTSPERSIGNALEVENT))
 # create workflow
 
 #ccbar filter
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -e ${SIMENGINE} ${SEED} -eCM 13600 -col pp -colBkg pp -gen pythia8 -genBkg pythia8 -procBkg "" -j ${NWORKERS} -ns ${NSIGEVENTS} -nb ${NBKGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 500000 -confKey "Diamond.width[2]=6." -mod "--skipModules ZDC" \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -e ${SIMENGINE} ${SEED} -eCM 13600 -col pp -colBkg pp -gen pythia8 -genBkg pythia8 -procBkg "" -j ${NWORKERS} -ns ${NSIGEVENTS} -nb ${NBKGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 500000 -confKey "Diamond.width[2]=6." \
         --embedding --embeddPattern r0:e${NBKGEVENTSPERSIGNALEVENT} -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHFTrigger_ccbar.ini -iniBkg $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHFTrigger_bkg.ini \
 
 # run workflow
