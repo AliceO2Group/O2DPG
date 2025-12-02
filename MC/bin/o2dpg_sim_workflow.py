@@ -109,6 +109,7 @@ parser.add_argument('--force-n-workers', dest='force_n_workers', action='store_t
                                                                                            'for given interaction rate; '
                                                                                            'pass this to avoid that')
 parser.add_argument('--skipModules',nargs="*", help="List of modules to skip in geometry budget (and therefore processing)", default=["ZDC"])
+parser.add_argument('--skipReadout',nargs="*", help="List of modules to take out from readout", default=[""])
 parser.add_argument('--with-ZDC', action='store_true', help='Enable ZDC in workflow')
 parser.add_argument('-seed',help='random seed number', default=None)
 parser.add_argument('-o',help='output workflow file', default='workflow.json')
@@ -257,6 +258,19 @@ with open(config_key_param_path, "w") as f:
    print(f"INFO: Written additional config key parameters to JSON {config_key_param_path}")
    json.dump(anchorConfig, f, indent=2)
 
+# Processing skipped material budget (modules):
+# - If user did NOT specify --with-ZDC
+# - AND ZDC is not already in the list
+# --> append ZDC automatically
+if args.with_ZDC:
+   # User wants ZDC to *not* be skipped → ensure it's removed
+   args.skipModules = [m for m in args.skipModules if m != "ZDC"]
+else:
+   # If user did not request --with-ZDC,
+   # auto-append ZDC unless already present
+   if "ZDC" not in args.skipModules:
+      args.skipModules.append("ZDC")
+
 # with this we can tailor the workflow to the presence of
 # certain detectors
 # these are all detectors that should be assumed active
@@ -267,14 +281,14 @@ if activeDetectors == 'all':
     # if "all" here, there was in fact nothing in the anchored script, set to what is passed to this script (which it either also "all" or a subset)
     activeDetectors = readout_detectors
 elif readout_detectors != 'all' and activeDetectors != 'all':
-    # in this case both are comma-seperated lists. Take intersection
+    # in this case both are comma-separated lists. Take intersection
     r = set(readout_detectors.split(','))
     a = set(activeDetectors.split(','))
     activeDetectors = ','.join(r & a)
 # the last case: simply take what comes from the anchored config
 
 # convert to set/hashmap
-activeDetectors = { det:1 for det in activeDetectors.split(',') }
+activeDetectors = { det:1 for det in activeDetectors.split(',') if det not in args.skipModules and det not in args.skipReadout}
 for det in activeDetectors:
     activate_detector(det)
 
@@ -409,18 +423,6 @@ if args.timestamp==-1:
 NTIMEFRAMES=int(args.tf)
 NWORKERS=args.n_workers
 
-# Processing skipped material budget (modules):
-# - If user did NOT specify --with-ZDC
-# - AND ZDC is not already in the list 
-# --> append ZDC automatically
-if args.with_ZDC:
-   # User wants ZDC to *not* be skipped → ensure it's removed
-   args.skipModules = [m for m in args.skipModules if m != "ZDC"]
-else:
-   # If user did not request --with-ZDC,
-   # auto-append ZDC unless already present
-   if "ZDC" not in args.skipModules:
-      args.skipModules.append("ZDC")
 
 SKIPMODULES = " ".join(["--skipModules"] + args.skipModules) if len(args.skipModules) > 0 else ""
 SIMENGINE=args.e
@@ -1443,7 +1445,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                        TPCRECOtask['name'],
                        ITSTPCMATCHtask['name'],
                        TRDTRACKINGtask2['name'] if isActive("TRD") else None]
-   toftracksrcdefault = dpl_option_from_config(anchorConfig, 'o2-tof-matcher-workflow', '--track-sources', default_value='TPC,ITS-TPC,TPC-TRD,ITS-TPC-TRD')
+   toftracksrcdefault = cleanDetectorInputList(dpl_option_from_config(anchorConfig, 'o2-tof-matcher-workflow', '--track-sources', default_value='TPC,ITS-TPC,TPC-TRD,ITS-TPC-TRD'))
    tofusefit = option_if_available('o2-tof-matcher-workflow', '--use-fit', envfile=async_envfile)
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=toftpcmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    tofmatcher_cmd_parts = [
