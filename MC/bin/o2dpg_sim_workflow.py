@@ -957,8 +957,9 @@ for tf in range(1, NTIMEFRAMES + 1):
          SGNGENtask['cmd'] += ' ; RC=$? ; [[ ${RC} == 0 || ${RC} == 124 ]]'
       continue
 
-   # GeneratorFromO2Kine parameters are needed only before the transport
-   CONFKEY = re.sub(r'GeneratorFromO2Kine.*?;', '', CONFKEY)
+   # Adding TPC loopers collision system, while removing default extkinO2 config for sgnsim
+   TPCLoopersConfig = ';GenTPCLoopers.colsys=' + COLTYPE
+   CONFKEY = constructConfigKeyArg(create_geant_config(args, args.confKey + TPCLoopersConfig))
 
    sgnmem = 6000 if COLTYPE == 'PbPb' else 4000
    SGNtask=createTask(name='sgnsim_'+str(tf), needs=signalneeds, tf=tf, cwd='tf'+str(tf), lab=["GEANT"],
