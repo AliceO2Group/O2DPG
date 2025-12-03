@@ -79,7 +79,7 @@ protected:
         for (int pdg : mHadronsPDGs) {   // check that at least one of the pdg code is found in the event
           if (event[ida].id() == pdg) {
             if ((event[ida].y() > mRapidityMin) && (event[ida].y() < mRapidityMax)) {
-              cout << "============= Found jpsi y,pt " <<  event[ida].y() << ", " << event[ida].pT() << endl;
+              //cout << "============= Found jpsi y,pt " <<  event[ida].y() << ", " << event[ida].pT() << endl;
               out.push_back(ida);
             }
           }
@@ -241,9 +241,9 @@ Bool_t importParticles() override
       particle.SetFirstDaughter(daughter1);
       particle.SetLastDaughter(daughter2);
     }
-    LOG(info) << "-----------------------------------------------";
-    LOG(info) << "============ After event " << isig << " (size " << decayChains.size() << ")";
-    LOG(info) << "Full stack (size " << mParticles.size() << "):";
+    //LOG(info) << "-----------------------------------------------";
+    //LOG(info) << "============ After event " << isig << " (size " << decayChains.size() << ")";
+    //LOG(info) << "Full stack (size " << mParticles.size() << "):";
     //LOG(info) << "New particles from signal event " << isig;
     //for (int id = originalSize; id < (int)mParticles.size(); ++id) {
     //  const auto& p = mParticles[id];
@@ -254,7 +254,7 @@ Bool_t importParticles() override
     //            << ", firstDaughter="    << p.GetFirstDaughter()
     //            << ", lastDaughter="     << p.GetLastDaughter();
     //}
-    LOG(info) << "-----------------------------------------------";
+    //LOG(info) << "-----------------------------------------------";
   }
 
   if (mVerbose) mOutputEvent.list();
