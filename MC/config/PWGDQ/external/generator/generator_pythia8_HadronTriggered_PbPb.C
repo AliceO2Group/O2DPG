@@ -26,7 +26,7 @@ public:
     mInverseTriggerRatio = inputTriggerRatio;
     // define minimum bias event generator
     auto seed = (gRandom->TRandom::GetSeed() % 900000000);
-    TString pathconfigMB = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/generator/pythia8_PbPb_5TeV.cfg");
+    TString pathconfigMB = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/ALICE3/pythia8/generator/pythia8_PbPb_536tev.cfg");
     pythiaMBgen.readFile(pathconfigMB.Data());
     pythiaMBgen.readString("Random:setSeed on");
     pythiaMBgen.readString("Random:seed " + std::to_string(seed));
@@ -79,7 +79,7 @@ protected:
         for (int pdg : mHadronsPDGs) {   // check that at least one of the pdg code is found in the event
           if (event[ida].id() == pdg) {
             if ((event[ida].y() > mRapidityMin) && (event[ida].y() < mRapidityMax)) {
-              cout << "============= Found jpsi y,pt " <<  event[ida].y() << ", " << event[ida].pT() << endl;
+              //cout << "============= Found jpsi y,pt " <<  event[ida].y() << ", " << event[ida].pT() << endl;
               out.push_back(ida);
             }
           }
@@ -90,12 +90,22 @@ protected:
     return out;
   }
 
+  bool keepAncestor(int idabs){
+  // charmonium 
+  int mid2 = (idabs / 10) % 100; // 443,100443,20443,445...
+  if (mid2 == 44) return true;
+
+  // open charm/beauty hadron (D, B, charmed/bottom baryon...)
+  int flav = (idabs / 100) % 10;
+  if (flav == 4 || flav == 5) return true;
+
+  return false;
+}
+
 void collectAncestors(const Pythia8::Event& event, int idx, std::vector<int>& decayChains, std::vector<char>& visited) {
   if (idx < 0 || idx >= event.size()) return;
-  if (!visited[idx]) { 
-    visited[idx] = 1; 
-    decayChains.push_back(idx); 
-  }
+  if (visited[idx]) return;
+  visited[idx] = 1;
 
   const int idabs = std::abs(event[idx].id());
   if (idabs == 4 || idabs == 5 || idabs == 21) return;
@@ -108,6 +118,8 @@ void collectAncestors(const Pythia8::Event& event, int idx, std::vector<int>& de
     if (m == idx) continue;
     collectAncestors(event, m, decayChains, visited);
   }
+  
+  if (keepAncestor(idabs)) decayChains.push_back(idx);
 }
 
 void collectDaughters(const Pythia8::Event& event, int idx, std::vector<int>& decayChains, std::vector<char>& visited) {
@@ -123,6 +135,7 @@ void collectDaughters(const Pythia8::Event& event, int idx, std::vector<int>& de
   int daughter2 = event[idx].daughter2();
   if (daughter1 < 0) return;
   if (daughter2 < daughter1) daughter2 = daughter1;
+
   for (int d = daughter1; d <= daughter2; ++d) {
     if (d == idx) continue;
     collectDaughters(event, d, decayChains, visited);
@@ -131,19 +144,28 @@ void collectDaughters(const Pythia8::Event& event, int idx, std::vector<int>& de
 
 TParticle makeTParticleTemp(const Pythia8::Event& event, int idx) {
   const auto& q = event[idx];
-  int status = q.status();
-  if (status < 0) {
-    return TParticle(0, 0, -1, -1, -1, -1,
-                     0.,0.,0.,0., 0.,0.,0.,0.);
-    }
-
+  int status = q.daughter1() < 0? 1 : 2;
+  
   int m1 = q.mother1();
   int m2 = q.mother2();
   int d1 = q.daughter1();
   int d2 = q.daughter2();
-  return TParticle(q.id(), status, m1, m2, d1, d2,
+  TParticle tparticle(q.id(), status, m1, m2, d1, d2,
                    q.px(), q.py(), q.pz(), q.e(),
                    q.xProd(), q.yProd(), q.zProd(), q.tProd());
+
+  if (tparticle.GetStatusCode() == 1) {
+        tparticle.SetStatusCode(
+            o2::mcgenstatus::MCGenStatusEncoding(1, 91).fullEncoding);
+        tparticle.SetBit(ParticleStatus::kToBeDone, true);
+      } else {
+        tparticle.SetStatusCode(
+            o2::mcgenstatus::MCGenStatusEncoding(2, -91).fullEncoding);
+        tparticle.SetBit(ParticleStatus::kToBeDone, false);
+      }
+
+  return tparticle;
+
 }
 
 Bool_t importParticles() override
@@ -169,7 +191,9 @@ Bool_t importParticles() override
 
     std::vector<int> decayChains;
     std::vector<char> visited(mPythia.event.size(), 0);
-    decayChains.reserve(256);
+    decayChains.reserve(mPythia.event.size());
+
+    //int originalSize = mParticles.size();
 
     // find all ancestors of the charmonia
     for (size_t ic = 0; ic < charmonia.size(); ++ic) {
@@ -187,15 +211,14 @@ Bool_t importParticles() override
     mParticles.reserve(mParticles.size() + (int)decayChains.size());
 
     for (int i = 0; i < (int)decayChains.size(); ++i) {
-     const int srcIdx = decayChains[i];
-     if (srcIdx < 0 || srcIdx >= mPythia.event.size()) continue;
+      const int srcIdx = decayChains[i];
+      if (srcIdx < 0 || srcIdx >= mPythia.event.size()) continue;
 
-     TParticle part = makeTParticleTemp(mPythia.event, srcIdx);
-     if(part.GetPdgCode() == 0) continue;
+      TParticle part = makeTParticleTemp(mPythia.event, srcIdx);
 
-     int newIdx = (int)mParticles.size();
-     mParticles.push_back(part);
-     idxMap[srcIdx] = newIdx;
+      int newIdx = (int)mParticles.size();
+      mParticles.push_back(part);
+      idxMap[srcIdx] = newIdx;
     }
     
     for (int iLoc = 0; iLoc < (int) decayChains.size(); ++iLoc) {
@@ -218,11 +241,20 @@ Bool_t importParticles() override
       particle.SetFirstDaughter(daughter1);
       particle.SetLastDaughter(daughter2);
     }
-    LOG(info) << "-----------------------------------------------";
-    LOG(info) << "============ After event " << isig << " (size " << decayChains.size() << ")";
-    LOG(info) << "Full stack (size " << mParticles.size() << "):";
-    LOG(info) << "-----------------------------------------------";
-    // printParticleVector(mParticles);
+    //LOG(info) << "-----------------------------------------------";
+    //LOG(info) << "============ After event " << isig << " (size " << decayChains.size() << ")";
+    //LOG(info) << "Full stack (size " << mParticles.size() << "):";
+    //LOG(info) << "New particles from signal event " << isig;
+    //for (int id = originalSize; id < (int)mParticles.size(); ++id) {
+    //  const auto& p = mParticles[id];
+    //  LOG(info) << "   id = " << id
+    //            << ", pdg = " << p.GetPdgCode()
+    //            << " --> firstMother="   << p.GetFirstMother()
+    //            << ", lastMother="       << p.GetSecondMother()
+    //            << ", firstDaughter="    << p.GetFirstDaughter()
+    //            << ", lastDaughter="     << p.GetLastDaughter();
+    //}
+    //LOG(info) << "-----------------------------------------------";
   }
 
   if (mVerbose) mOutputEvent.list();
