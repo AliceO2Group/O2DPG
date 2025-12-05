@@ -32,7 +32,7 @@ enum NucleiBits {
   kHe4 = 4,
 };
 
-std::vector<unsigned int> pdgList = {10010010, 1000010030, 1000020030, 1010010030, 1000020040};
+std::vector<unsigned int> pdgList = {1000010020, 1000010030, 1000020030, 1010010030, 1000020040};
 std::vector<float> massList = {1.875612, 2.80892113298, 2.808391, 2.991134, 3.727379};
 
 bool doCoal(Pythia8::Event& event, int charge, int pdgCode, float mass, bool trivialCoal, double coalescenceRadius, bool nuclFromDecay, int iD1, int iD2, int iD3 = -1, int iD4 = -1)
