@@ -1514,7 +1514,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    MIDRECOtask['cmd'] += task_finalizer(['${O2_ROOT}/bin/o2-mid-reco-workflow', 
                                              getDPL_global_options(), 
                                              putConfigValues(),('',' --disable-mc')[args.no_mc_labels]])
-   workflow['stages'].append(MIDRECOtask)
+   if isActive('MID'):
+      workflow['stages'].append(MIDRECOtask)
 
    #<--------- FDD reco workflow
    FDDRECOtask = createTask(name='fddreco_'+str(tf), needs=[getDigiTaskName("FDD")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1602,15 +1603,19 @@ for tf in range(1, NTIMEFRAMES + 1):
        getDPL_global_options(ccdbbackend=False),
        putConfigValues(),
        ('',' --disable-mc')[args.no_mc_labels]])
-   workflow['stages'].append(MCHMIDMATCHtask)
+   if isActive("MID") and isActive("MCH"):
+      workflow['stages'].append(MCHMIDMATCHtask)
 
    #<--------- MFT-MCH forward matching
-   MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
+   forwardmatchneeds = [MCHRECOtask['name'],
+                        MFTRECOtask['name'],
+                        MCHMIDMATCHtask['name'] if isActive("MID") else None]
+   MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=forwardmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MFTMCHMATCHtask['cmd'] = task_finalizer(
       ['${O2_ROOT}/bin/o2-globalfwd-matcher-workflow',
         putConfigValues(['ITSAlpideConfig',
                          'MFTAlpideConfig',
-                         'FwdMatching'],{"FwdMatching.useMIDMatch":"true"}),
+                         'FwdMatching'],{"FwdMatching.useMIDMatch": "true" if isActive("MID") else "false"}),
        ('',' --disable-mc')[args.no_mc_labels]])
 
    if args.fwdmatching_assessment_full == True:
