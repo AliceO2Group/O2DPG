@@ -162,6 +162,7 @@ parser.add_argument('--ctp-scaler', default=0, type=float, help='CTP raw scaler 
 parser.add_argument('--fwdmatching-assessment-full', action='store_true', help='enables complete assessment of global forward reco')
 parser.add_argument('--fwdmatching-4-param', action='store_true', help='excludes q/pt from matching parameters')
 parser.add_argument('--fwdmatching-cut-4-param', action='store_true', help='apply selection cuts on position and angular parameters')
+parser.add_argument('--tpc-reco-confkeyvalues', default=";", help="configKeyValues passed to the tpc-reco-workflow")
 
 # Matching training for machine learning
 parser.add_argument('--fwdmatching-save-trainingdata', action='store_true', help='enables saving parameters at plane for matching training with machine learning')
@@ -1246,7 +1247,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        tpcclustertasks.append(taskname)
        tpcclussect = createTask(name=taskname, needs=tpcclusterneed, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='2', mem='8000')
        digitmergerstr = '${O2_ROOT}/bin/o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' --tpc-lanes ' + str(NWORKERS_TF) + ' | '
-       tpcclussect['cmd'] = (digitmergerstr,'')[args.no_tpc_digitchunking] + ' ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type ' + ('digitizer','digits')[args.no_tpc_digitchunking] + ' --output-type clusters,send-clusters-per-sector --tpc-native-cluster-writer \" --outfile tpc-native-clusters-part'+ str((int)(s/sectorpertask)) + '.root\" --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' ' + putConfigValues(["GPU_global"], {"GPU_proc.ompThreads" : 4}) + ('',' --disable-mc')[args.no_mc_labels]
+       tpcclussect['cmd'] = (digitmergerstr,'')[args.no_tpc_digitchunking] + ' ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type ' + ('digitizer','digits')[args.no_tpc_digitchunking] + ' --output-type clusters,send-clusters-per-sector --tpc-native-cluster-writer \" --outfile tpc-native-clusters-part'+ str((int)(s/sectorpertask)) + '.root\" --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' ' + (putConfigValues(["GPU_global"], {"GPU_proc.ompThreads" : 4})).replace("--configKeyValues \"", "--configKeyValues \"" + args.tpc_reco_confkeyvalues + ";") + ('',' --disable-mc')[args.no_mc_labels]
        tpcclussect['env'] = { "OMP_NUM_THREADS" : "4" , "TBB_NUM_THREADS" : "4" }
        tpcclussect['semaphore'] = "tpctriggers.root"
        tpcclussect['retry_count'] = 2  # the task has a race condition --> makes sense to retry
@@ -1259,7 +1260,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    else:
      tpcclus = createTask(name='tpccluster_' + str(tf), needs=tpcclusterneed, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS_TF, mem='2000')
      tpcclus['cmd'] = '${O2_ROOT}/bin/o2-tpc-chunkeddigit-merger --tpc-lanes ' + str(NWORKERS_TF)
-     tpcclus['cmd'] += ' | ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector ' + putConfigValues(["GPU_global","TPCGasParam","TPCCorrMap"],{"GPU_proc.ompThreads" : 1}) + ('',' --disable-mc')[args.no_mc_labels]
+     tpcclus['cmd'] += ' | ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector ' + (putConfigValues(["GPU_global","TPCGasParam","TPCCorrMap"],{"GPU_proc.ompThreads" : 1})).replace("--configKeyValues \"", "--configKeyValues \"" + args.tpc_reco_confkeyvalues + ";") + ('',' --disable-mc')[args.no_mc_labels]
      workflow['stages'].append(tpcclus)
      tpcreconeeds.append(tpcclus['name'])
 
@@ -1338,7 +1339,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                       "TPCCorrMap", 
                       "GPU_rec_tpc", 
                       "trackTuneParams"], 
-                      {"GPU_proc.ompThreads":NWORKERS_TF} | tpcLocalCFreco),
+                      {"GPU_proc.ompThreads":NWORKERS_TF} | tpcLocalCFreco).replace("--configKeyValues \"", "--configKeyValues \"" + args.tpc_reco_confkeyvalues + ";"),
      ('',' --disable-mc')[args.no_mc_labels],
      tpc_corr_scaling_options, 
      tpc_corr_options_mc,
