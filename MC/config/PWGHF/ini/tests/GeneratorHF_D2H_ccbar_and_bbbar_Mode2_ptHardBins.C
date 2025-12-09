@@ -68,7 +68,7 @@ int External() {
                 for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
                     auto pdgDau = tracks->at(j).GetPdgCode();
                     pdgsDecay.push_back(pdgDau);
-                    if (pdgDau != 333) { // phi is antiparticle of itself
+                    if (pdgDau != 333  && pdgDau != 111) { // phi is antiparticle of itself
                         pdgsDecayAntiPart.push_back(-pdgDau);
                     } else {
                         pdgsDecayAntiPart.push_back(pdgDau);
