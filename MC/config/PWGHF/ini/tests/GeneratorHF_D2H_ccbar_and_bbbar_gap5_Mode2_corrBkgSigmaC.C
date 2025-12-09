@@ -5,7 +5,7 @@
 #include <iostream>
 
 int External() {
-    std::string path{"/home/mattia/Documenti/cernbox/Documents/PostDoc/D2H/MC/corrBkgSigmaC/tf1/genevents_Kine.root"};
+    std::string path{"o2sim_Kine.root"};
 
     int checkPdgQuarkOne{4};
     int checkPdgQuarkTwo{5};
