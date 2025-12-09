@@ -9,7 +9,7 @@ int External() {
     std::array<float, 6> freqRepl = {0.1, 0.1, 0.1, 0.1, 0.5, 0.5};
     std::map<int, int> sumOrigReplacedParticles = {{10433, 0}, {435, 0}, {425, 0}};
 
-    std::array<int, 11> checkPdgHadron{411, 421, 10433, 30433, 435, 437, 4325, 4326, 4315, 4316, 531};
+    std::array<int, 11> checkPdgHadron{411, 421, 10433, 30433, 435, 437, 4325, 4326, 4315, 4316, 531, 425};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
         {411, {{-321, 211, 211}, {-313, 211}, {211, 311}, {211, 333}}}, // D+
         {421, {{-321, 211}, {-321, 211, 111}}}, // D0
@@ -21,7 +21,8 @@ int External() {
         {4326, {{411, 3122}}}, // Xic(3080)+
         {4315, {{421, 3122}}}, // Xic(3055)+
         {4316, {{421, 3122}}}, // Xic(3080)+
-        {531, {{-435, -11, 12}, {-10433, -11, 12}, {-435, -13, 14}, {-10433, -13, 14}, {-435, -15, 16}, {-10433, -15, 16}, {-435, 211}}}// Bs0
+        {531, {{-435, -11, 12}, {-10433, -11, 12}, {-435, -13, 14}, {-10433, -13, 14}, {-435, -15, 16}, {-10433, -15, 16}, {-435, 211}}}, // Bs0
+        {425, {{413, -211}, {423, 111}, {411, -211}, {421, 111}, {413, -211, 111}, {423, 211, -211}}}
     };
 
     TFile file(path.c_str(), "READ");
@@ -81,7 +82,7 @@ int External() {
                     for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
                         auto pdgDau = tracks->at(j).GetPdgCode();
                         pdgsDecay.push_back(pdgDau);
-                        if (pdgDau != 333) { // phi is antiparticle of itself
+                        if (pdgDau != 333 && pdgDau != 111) { // phi and pi0 are antiparticles of themselves
                             pdgsDecayAntiPart.push_back(-pdgDau);
                         } else {
                             pdgsDecayAntiPart.push_back(pdgDau);
