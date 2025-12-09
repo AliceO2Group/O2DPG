@@ -9,7 +9,7 @@ int External() {
     std::array<float, 6> freqRepl = {0.1, 0.1, 0.1, 0.1, 0.5, 0.5};
     std::map<int, int> sumOrigReplacedParticles = {{10433, 0}, {435, 0}, {425, 0}};
 
-    std::array<int, 11> checkPdgHadron{411, 421, 10433, 30433, 435, 437, 4325, 4326, 4315, 4316, 531, 425};
+    std::array<int, 12> checkPdgHadron{411, 421, 10433, 30433, 435, 437, 4325, 4326, 4315, 4316, 531, 425};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
         {411, {{-321, 211, 211}, {-313, 211}, {211, 311}, {211, 333}}}, // D+
         {421, {{-321, 211}, {-321, 211, 111}}}, // D0
