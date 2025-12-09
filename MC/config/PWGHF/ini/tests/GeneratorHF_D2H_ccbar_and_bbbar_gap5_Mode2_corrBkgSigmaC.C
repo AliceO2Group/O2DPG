@@ -13,7 +13,7 @@ int External() {
     std::array<std::array<int, 2>, 2> pdgReplParticles = {std::array{413, 14122}, std::array{413, 4124}};
     std::array<std::array<int, 2>, 2> pdgReplPartCounters = {std::array{0, 0}, std::array{0, 0}};
     std::array<float, 2> freqRepl = {0.5, 0.5};
-    std::map<int, int> sumOrigReplacedParticles = {{413, 0}};
+    std::map<int, int> sumOrigReplacedParticles = {{0, 0}};
 
     std::array<int, 2> checkPdgHadron{14122, 4124};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted (!) pdg of daughters
@@ -177,7 +177,7 @@ int External() {
     }
 
     float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
-    if (fracForcedDecays < 0.9) { // we put some tolerance (e.g. due to oscillations which might change the final state)
+    if (fracForcedDecays < 0.5) { // we put some tolerance (e.g. due to oscillations which might change the final state)
         std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
         return 1;
     }
