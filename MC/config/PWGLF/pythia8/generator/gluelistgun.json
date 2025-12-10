@@ -1,0 +1,46 @@
+{
+    "f_2(1270)": {
+        "pdg": 225,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
+        "genDecayed": true
+    },
+    "f_0(1710)": {
+        "pdg": 10331,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
+        "genDecayed": true
+    },
+    "f_2(1525)": {
+        "pdg": 335,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
+        "genDecayed": true
+    },
+    "a_2(1230)": {
+        "pdg": 115,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
+        "genDecayed": true
+    }
+}
