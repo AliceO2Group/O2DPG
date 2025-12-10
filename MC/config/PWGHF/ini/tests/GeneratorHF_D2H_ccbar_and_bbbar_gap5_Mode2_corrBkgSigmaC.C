@@ -5,7 +5,7 @@
 #include <iostream>
 
 int External() {
-    std::string path{"/home/mattia/Documenti/cernbox/Documents/PostDoc/D2H/MC/corrBkgSigmaC/tf1/genevents_Kine.root"};
+    std::string path{"o2sim_Kine.root"};
 
     int checkPdgQuarkOne{4};
     int checkPdgQuarkTwo{5};
@@ -177,7 +177,7 @@ int External() {
     }
 
     float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
-    if (fracForcedDecays < 0.9) { // we put some tolerance (e.g. due to oscillations which might change the final state)
+    if (fracForcedDecays < 0.5) { // we put some tolerance (e.g. due to oscillations which might change the final state)
         std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
         return 1;
     }

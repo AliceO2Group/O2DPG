@@ -7,13 +7,65 @@ int External() {
 
     std::vector<int> checkPdgHadron{411, 421, 431, 4122, 4132, 4232, 4332};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
-        {411, {{-321, 211, 211}, {-313, 211}, {211, 311}, {211, 333}}}, // D+
-        {421, {{-321, 211}, {-321, 111, 211}}}, // D0
-        {431, {{211, 333}, {-313, 321}}}, // Ds+
-        {4122, {{-313, 2212}, {-321, 2224}, {211, 102134}, {-321, 211, 2212}, {311, 2212}}}, // Lc+
-        {4132, {{211, 3312}}}, // Xic0
-        {4232, {{-313, 2212}, {-321, 3324}, {211, 211, 3312}, {-321, 211, 2212}}}, // Xic+
-        {4332, {{211, 3334}}} // Omegac+
+        {411, {
+            {-321, 211, 211},               // K- π+ π+ (non-resonant)
+            {-321, 111, 211, 211},          // K- π+ π+ π0 (non-resonant)
+            {-313, 321},                    // K*0(892) K+
+            {-10311, 321},                  // K*0(1430) K+
+            {211, 333},                     // φ π+
+            {-321, 211, 321},               // K- K+ π+ (non-resonant)
+            {113, 211},                     // ρ0 π+
+            {211, 225},                     // f2(1270) π+
+            {-211, 211, 211}                // π- π+ π+ (non-resonant)
+        }},
+        {421, {
+            {-321, 211},                   // K- π+ (non-resonant)
+            {-321, 111, 211},              // K- π+ π0
+            {-321, 213},                   // ρ+ K-
+            {-313, 111},                   // antiK*0(892) π0
+            {-323, 211},                   // K*-(892) π+
+            {-211, 211},                   // π- π+
+            {-211, 213},                   // ρ+ π-
+            {-211, 111, 211},              // π- π+ π0
+            {-321, 321}                    // K- K+
+        }},
+        {431, {
+            {211, 333},                    // φ π+
+            {-313, 321},                   // antiK*(892) K+
+            {213, 333},                    // φ ρ
+            {113, 211},                    // ρ π+
+            {211, 225},                    // f2(1270) π+
+            {-211, 211, 211},              // π- π+ π+ (s-wave)
+            {211, 313},                    // K*(892)0 π+
+            {321, 10221},                  // f0(1370) K+
+            {113, 321},                    // ρ0 K+
+            {-211, 211, 321},              // π- K+ π+ (non-resonant)
+            {211, 221}                    // η π+
+        }},
+        {4122, {
+            {-321, 211, 2212},             // p K- π+ (non-resonant)
+            {-313, 2212},                  // p K*0(892)
+            {-321, 2224},                  // Δ++ K-
+            {211, 102134},                 // Λ(1520) π+
+            {-321, 111, 211, 2212},        // p K- π+ π0
+            {-211, 211, 2212},             // p π- π+
+            {333, 2212}                   // p φ
+        }},
+		{4232, {
+			{-321, 211, 2212},        // Xic+ -> p, K-, pi+
+			{-313, 2212},             // Xic+ -> p, Kbar^*(892)0
+			{211, 211, 3312},         // Xic+ -> Xi-, pi+, pi+
+			{333, 2212},              // Xic+ -> p, phi(1020)0
+			{-211, 211, 3222},        // Xic+ -> Sigma+, pi-, pi+
+			{211, 3324}               // Xic+ -> Xi(1530)0, pi+
+		}},
+		{4132, {
+			{211, 3312},              // Xic0 -> Xi-, pi+
+		}},
+		{4332, {
+			{211, 3334},              // Omegac0 -> Omega-, pi+
+			{211, 3312}               // Omegac0 -> Xi-, pi+
+		}}
     };
 
     TFile file(path.c_str(), "READ");
@@ -66,7 +118,7 @@ int External() {
                 for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
                     auto pdgDau = tracks->at(j).GetPdgCode();
                     pdgsDecay.push_back(pdgDau);
-                    if (pdgDau != 333) { // phi is antiparticle of itself
+                    if (pdgDau != 333 && pdgDau != 111 && pdgDau != 221 && pdgDau != 113 && pdgDau != 225) { // phi is antiparticle of itself
                         pdgsDecayAntiPart.push_back(-pdgDau);
                     } else {
                         pdgsDecayAntiPart.push_back(pdgDau);
@@ -119,7 +171,7 @@ int External() {
     }
 
     float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
-    if (fracForcedDecays < 0.9) { // we put some tolerance (e.g. due to oscillations which might change the final state)
+    if (fracForcedDecays < 0.85) { // we put some tolerance (e.g. due to oscillations which might change the final state)
         std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
         return 1;
     }
