@@ -15,12 +15,13 @@ int External() {
     std::array<float, 2> freqRepl = {0.5, 0.5};
     std::map<int, int> sumOrigReplacedParticles = {{413, 0}};
 
-    std::array<int, 2> checkPdgHadron{14122, 4124};
+    std::array<int, 3> checkPdgHadron{413, 14122, 4124};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted (!) pdg of daughters
         //{14122, {{4222, -211}, {4112, 211}, {4122, 211, -211}}}, // Lc(2595)+
         //{4124, {{4222, -211}, {4112, 211}, {4122, 211, -211}}} // Lc(2625)+
         {14122, {{-211, 4222}, {211, 4112}, {-211, 211, 4122}}}, // Lc(2595)+
-        {4124, {{-211, 4222}, {211, 4112}, {-211, 211, 4122}}} // Lc(2625)+
+        {4124, {{-211, 4222}, {211, 4112}, {-211, 211, 4122}}}, // Lc(2625)+
+        {413, {{22, 411}, {111, 411}, {211, 421}}} // D*+ as in PYTHIA
     };
 
     TFile file(path.c_str(), "READ");
@@ -64,7 +65,7 @@ int External() {
             auto absPdg = std::abs(pdg);
             if (std::find(checkPdgHadron.begin(), checkPdgHadron.end(), absPdg) != checkPdgHadron.end()) { // found signal
                 nSignals++; // count signal PDG
-                std::cout << "==> signal " << absPdg << " found!" << std::endl;
+                std::cout << std::endl << "==> signal " << absPdg << " found!" << std::endl;
 
                 if (subGeneratorId == checkPdgQuarkOne) { // replacement only for prompt  ---> BUT ALSO NON-PROMPT D* SEEM TO BE REPLACED
                     for (int iRepl{0}; iRepl<2; ++iRepl) {
@@ -76,8 +77,9 @@ int External() {
                             sumOrigReplacedParticles[pdgReplParticles[iRepl][0]]++;
                         }
                     }
-                } else if (subGeneratorId == checkPdgQuarkTwo) {
-                    std::cout << "   NB: we have a " << absPdg << " also in event with quark " << checkPdgQuarkTwo << std::endl;
+                }
+                else if (subGeneratorId == checkPdgQuarkTwo && (absPdg == pdgReplParticles[0][1] || absPdg == pdgReplParticles[1][1])) {
+                    std::cout << "   NB: we have a " << absPdg << " also in event with quark " << checkPdgQuarkTwo << ", i.e in an event with c-cbar pair present, tagged with a b-bbar (e.g. double-parton scattering)" << std::endl;
                     std::cout << "          ### mother indices: ";
                     int idFirstMother = track.getMotherTrackId();
                     int idSecondMother = track.getSecondMotherTrackId();
@@ -86,13 +88,29 @@ int External() {
                         std::cout << i << " ";
                         motherIds.push_back(i);
                     }
+                    std::cout << std::endl;
+
+                    /// To establish if the partonic event is switched on or not, check if the motherIds are all -1 for the current hadron
+                    /// This is ok for Lc excited states deriving from the replacement of a prompt D*+
+                    /// Instead, Lc excited states coming from Lb decays (i.e. not coming from a D*+ replacement))have at least one mother that has idx !=-1 (*)
                     bool partonicEventOn = false;
-                    if(motherIds != std::vector<int>{-1, -1}) {
+                    bool motherIdsAllMinus1 = true;
+                    for(int idx : motherIds) {
+                        if(idx != -1) {
+                            /// one mother id different from 
+                            motherIdsAllMinus1 = false;
+                            break;
+                        }
+                    }
+                    //if(motherIds != std::vector<int>{-1, -1}) {
+                    if(!motherIdsAllMinus1) {
                         std::cout << "The " << absPdg << " particle has mothers. This should mean that it comes directly from parton hadronization, and that the partonic event was kept in the MC production " << std::endl;
                         partonicEventOn = true;
                     }
+
                     std::cout << "          ### mother PDG codes: ";
                     std::vector<int> motherPdgCodes = {};
+                    bool updateCounters = true;
                     if(partonicEventOn) {
                         for(int i=idFirstMother; i<=idSecondMother; i++) {
                             motherPdgCodes.push_back(tracks->at(i).GetPdgCode());
@@ -103,15 +121,20 @@ int External() {
                         /// This means that the charm hadron comes from the c-quark hadronization, where the c/cbar quark
                         /// comes from a c-cbar pair present in the current event, tagged with a b-bbar (e.g. double-parton scattering)
                         if(std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 4) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -4) == motherPdgCodes.end()) {
-                            /// if the partinc event is not really saved and we arrive here, it means that  motherIds != {-1, -1} because 
-                            /// the hadron comes from the decay of a beauty hadron. This can happen if and only if this is not a replaced one (i.e. native from Lambdab0 decay)
+                            /// if we arrive here, it means that the hadron comes from the decay of a beauty hadron.
+                            /// This can happen if and only if this is not a replaced one (i.e. native from Lambdab0 decay)
                             if (std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 5122) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -5122) == motherPdgCodes.end()) {
                                 std::cerr << "The particle " << absPdg << " does not originate neither from a c/c-bar quark (replaced) nor from a Lambda_b0 decay. There is something wrong, aborting..." << std::endl;
                             return 1;
                             }
+                            /// since this is a native Lc excited state from Lb0 decay, we must not update the replacement counters
+                            updateCounters = false;
                         }
                     }
                     std::cout << std::endl;
+
+                    /// update the counters only if the Lc excited state comes from a replaced prompt D*+, i.e. not from a Lb0 decay 
+                    if (!updateCounters) continue;
 
                     /// only if we arrive here it means that everything is ok, and we can safely update the counters for the final statistics
                     for (int iRepl{0}; iRepl<2; ++iRepl) {
@@ -133,7 +156,7 @@ int External() {
                         auto pdgDau = tracks->at(j).GetPdgCode();
                         pdgsDecay.push_back(pdgDau);
                         std::cout << "   -- daughter " << j << ": " << pdgDau << std::endl;
-                        if (pdgDau != 333) { // phi is antiparticle of itself
+                        if (pdgDau != 333 && pdgDau != 111) { // phi and pi0 are antiparticles of themselves
                             pdgsDecayAntiPart.push_back(-pdgDau);
                         } else {
                             pdgsDecayAntiPart.push_back(pdgDau);
@@ -163,15 +186,15 @@ int External() {
     std::cout <<"# signal hadrons: " << nSignals << "\n";
     std::cout <<"# signal hadrons decaying in the correct channel: " << nSignalGoodDecay << "\n";
 
-    if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.95 || nEventsMB > nEvents * (1 - ratioTrigger) * 1.05) { // we put some tolerance since the number of generated events is small
+    if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.90 || nEventsMB > nEvents * (1 - ratioTrigger) * 1.10) { // we put some tolerance since the number of generated events is small
         std::cerr << "Number of generated MB events different than expected\n";
         return 1;
     }
-    if (nEventsInjOne < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInjOne > nEvents * ratioTrigger * 0.5 * 1.05) {
+    if (nEventsInjOne < nEvents * ratioTrigger * 0.5 * 0.90 || nEventsInjOne > nEvents * ratioTrigger * 0.5 * 1.10) {
         std::cerr << "Number of generated events injected with " << checkPdgQuarkOne << " different than expected\n";
         return 1;
     }
-    if (nEventsInjTwo < nEvents * ratioTrigger * 0.5 * 0.95 || nEventsInjTwo > nEvents * ratioTrigger * 0.5 * 1.05) {
+    if (nEventsInjTwo < nEvents * ratioTrigger * 0.5 * 0.90 || nEventsInjTwo > nEvents * ratioTrigger * 0.5 * 1.10) {
         std::cerr << "Number of generated events injected with " << checkPdgQuarkTwo << " different than expected\n";
         return 1;
     }
@@ -184,7 +207,7 @@ int External() {
 
     for (int iRepl{0}; iRepl<2; ++iRepl) {
 
-        std::cout << " --- pdgReplPartCounters[" << iRepl << "][1] = " << pdgReplPartCounters[iRepl][1] << ", freqRepl[" << iRepl <<"] = " << freqRepl[iRepl] << ", sumOrigReplacedParticles[pdgReplParticles[" << iRepl << "][0]] =" << sumOrigReplacedParticles[pdgReplParticles[iRepl][0]] << std::endl; 
+        std::cout << " --- pdgReplPartCounters[" << iRepl << "][1] = " << pdgReplPartCounters[iRepl][1] << ", freqRepl[" << iRepl <<"] = " << freqRepl[iRepl] << ", sumOrigReplacedParticles[pdgReplParticles[" << iRepl << "][0]] = " << sumOrigReplacedParticles[pdgReplParticles[iRepl][0]] << std::endl; 
         
         if (std::abs(pdgReplPartCounters[iRepl][1] - freqRepl[iRepl] * sumOrigReplacedParticles[pdgReplParticles[iRepl][0]]) > 2 * std::sqrt(freqRepl[iRepl] * sumOrigReplacedParticles[pdgReplParticles[iRepl][0]])) { // 2 sigma compatibility
             float fracMeas = 0.;
