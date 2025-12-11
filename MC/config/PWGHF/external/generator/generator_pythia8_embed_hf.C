@@ -10,6 +10,8 @@
 
 using namespace Pythia8;
 
+#include <cmath>
+
 namespace hf_generators
 {
     enum GenType : int {
@@ -35,7 +37,13 @@ public:
     //}
 
     ///  Destructor
-    ~GeneratorPythia8EmbedHF() = default;
+    ~GeneratorPythia8EmbedHF() {
+        // Clean up the internally created HF generator if any
+        if (mGeneratorEvHF) {
+            delete mGeneratorEvHF;
+            mGeneratorEvHF = nullptr;
+        }
+    }
 
     /// Init
     bool Init() override
@@ -51,29 +59,30 @@ public:
     /// \param yHadronMin minimum hadron rapidity
     /// \param yHadronMax maximum hadron rapidity
     /// \param hadronPdgList list of PDG codes for hadrons to be used in trigger
-    void setupGeneratorEvHF(int genType, bool usePtHardBins, float yQuarkMin, float yQuarkMax, float yHadronMin, float yHadronMax, std::vector<int> hadronPdgList = {}) {
+    /// \param quarkPdgList list of PDG codes for quarks to be enriched in the trigger
+    void setupGeneratorEvHF(int genType, bool usePtHardBins, float yQuarkMin, float yQuarkMax, float yHadronMin, float yHadronMax, std::vector<int> quarkPdgList = {}, std::vector<int> hadronPdgList = {}, std::vector<std::array<int,2>> partPdgToReplaceList = {}, std::vector<float> freqReplaceList = {}) {
         mGeneratorEvHF = nullptr;
         switch (genType)
         {
         case hf_generators::GapTriggeredCharm:
             LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GeneratorPythia8GapTriggeredCharm **********";
             LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
-            mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapTriggeredCharm(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList));
+            mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapTriggeredCharm(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList, partPdgToReplaceList, freqReplaceList));
             break;
         case hf_generators::GapTriggeredBeauty:
             LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GeneratorPythia8GapTriggeredBeauty **********";
             LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
-            mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapTriggeredBeauty(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList));
+            mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapTriggeredBeauty(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList, partPdgToReplaceList, freqReplaceList));
             break;
         case hf_generators::GapTriggeredCharmAndBeauty:
             LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GeneratorPythia8GapTriggeredCharmAndBeauty **********";
             LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
-            mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapTriggeredCharmAndBeauty(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList));
+            mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapTriggeredCharmAndBeauty(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList, partPdgToReplaceList, freqReplaceList));
             break;
         case hf_generators::GapHF:
             LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GeneratorPythia8GapHF **********";
             LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
-            mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapHF(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList));
+            mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapHF(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, quarkPdgList, hadronPdgList, partPdgToReplaceList, freqReplaceList));
             break;
         default:
             LOG(fatal) << "********** [GeneratorPythia8EmbedHF] bad configuration, fix it! **********";
@@ -111,7 +120,8 @@ public:
         LOG(info) << "[notifyEmbedding] ----- Collision impact parameter: " << x;
 
         /// number of events to be embedded in a background event
-        mNumSigEvs = 5 + 0.886202881*std::pow(std::max(0.0f, 17.5f - x),1.7);
+        // compute and round the number of signal events to an integer
+        mNumSigEvs = static_cast<int>(std::lround(5.0 + 0.886202881 * std::pow(std::max(0.0f, 17.5f - x), 1.7)));
         LOG(info) << "[notifyEmbedding] ----- generating " << mNumSigEvs << " signal events " << std::endl;
     };
 
@@ -142,6 +152,7 @@ bool isFromCharmOrBeauty(const int partId, std::vector<TParticle> const& particl
     std::vector<int64_t> initVec{partId};
     arrayIds.push_back(initVec); // the first vector contains the index of the original particle
     int stage = 0;
+    
     while(arrayIds[-stage].size() > 0) {
 
         //LOG(info) << "### stage " << stage << ", arrayIds[-stage].size() = " << arrayIds[-stage].size();
@@ -149,6 +160,7 @@ bool isFromCharmOrBeauty(const int partId, std::vector<TParticle> const& particl
         std::vector<int64_t> arrayIdsStage{};
 
         for (auto& iPart : arrayIds[-stage]) { // check all the particles that were the mothers at the previous stage
+            
             const TParticle& partStage = particles.at(iPart);
 
             // check the first mother
@@ -380,34 +392,34 @@ private:
 };
 
 // Charm enriched
-FairGenerator * GeneratorPythia8EmbedHFCharm(bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
+FairGenerator * GeneratorPythia8EmbedHFCharm(bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> quarkPdgList = {}, std::vector<int> hadronPdgList = {}, std::vector<std::array<int,2>> partPdgToReplaceList = {}, std::vector<float> freqReplaceList = {})
 {
     auto myGen = new GeneratorPythia8EmbedHF();
 
     /// setup the internal generator for HF events
-    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredCharm, usePtHardBins, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
+    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredCharm, usePtHardBins, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, quarkPdgList, hadronPdgList, partPdgToReplaceList, freqReplaceList);
 
     return myGen;
 }
 
 // Beauty enriched
-FairGenerator * GeneratorPythia8EmbedHFBeauty(bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
+FairGenerator * GeneratorPythia8EmbedHFBeauty(bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> quarkPdgList = {}, std::vector<int> hadronPdgList = {}, std::vector<std::array<int,2>> partPdgToReplaceList = {}, std::vector<float> freqReplaceList = {})
 {
     auto myGen = new GeneratorPythia8EmbedHF();
 
     /// setup the internal generator for HF events
-    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredBeauty, usePtHardBins, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
+    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredBeauty, usePtHardBins, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, quarkPdgList, hadronPdgList, partPdgToReplaceList, freqReplaceList);
 
     return myGen;
 }
 
 // Charm and beauty enriched (with same ratio)
-FairGenerator * GeneratorPythia8EmbedHFCharmAndBeauty(bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
+FairGenerator * GeneratorPythia8EmbedHFCharmAndBeauty(bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> quarkPdgList = {}, std::vector<int> hadronPdgList = {}, std::vector<std::array<int,2>> partPdgToReplaceList = {}, std::vector<float> freqReplaceList = {})
 {
     auto myGen = new GeneratorPythia8EmbedHF();
 
     /// setup the internal generator for HF events
-    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredCharmAndBeauty, usePtHardBins, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList);
+    myGen->setupGeneratorEvHF(hf_generators::GapTriggeredCharmAndBeauty, usePtHardBins, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, quarkPdgList, hadronPdgList, partPdgToReplaceList, freqReplaceList);
 
     return myGen;
 }
