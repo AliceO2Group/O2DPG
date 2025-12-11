@@ -394,6 +394,10 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.tpcUseOldCPUDecoding=1;GPU_proc.tpcApplyClusterFilterOnCPU=$ALIEN_JDL_TPCCLUSTERFILTER;"
   fi
 
+  if [[ -n "$ALIEN_JDL_TPCMEMORYSCALING" ]]; then
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.memoryScalingFactor=$ALIEN_JDL_TPCMEMORYSCALING;"
+  fi
+
   if [[ -n "$ALIEN_JDL_TPCCHICUTOPT" ]]; then # 0 or 1 to disable or enable (default) the chi2 cut both on one-side and smoothed Kalman chi2
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_rec_tpc.mergerInterpolateRejectAlsoOnCurrentPosition=$ALIEN_JDL_TPCCHICUTOPT;"
   fi
@@ -544,7 +548,7 @@ export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysEr
 # ad-hoc options for ITS reco workflow
 EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.deltaRof=0;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;ITSCATrackerParam.nROFsPerIterations=12;ITSCATrackerParam.perPrimaryVertexProcessing=false;ITSCATrackerParam.fataliseUponFailure=false;ITSCATrackerParam.dropTFUponFailure=true"
+  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.deltaRof=0;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;ITSCATrackerParam.nROFsPerIterations=12;ITSCATrackerParam.perPrimaryVertexProcessing=false;ITSCATrackerParam.fataliseUponFailure=false;ITSCATrackerParam.dropTFUponFailure=true;ITSCATrackerParam.maxMemory=21474836480;"
   if [[ -z "$ALIEN_JDL_DISABLE_UPC" || $ALIEN_JDL_DISABLE_UPC != 1 ]]; then
     EXTRA_ITSRECO_CONFIG+=";ITSVertexerParam.nIterations=2;ITSCATrackerParam.doUPCIteration=true;"
   fi
