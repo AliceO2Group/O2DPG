@@ -630,20 +630,7 @@ interactionspecification = signalprefix + ',' + str(INTRATE) + ',' + str(1000000
 if doembedding:
    interactionspecification = 'bkg,' + str(INTRATE) + ',' + str(NTIMEFRAMES*args.ns) + ':' + str(args.nb) + ' ' + signalprefix + ',' + args.embeddPattern
 
-PreCollContextTask['cmd']='${O2_ROOT}/bin/o2-steer-colcontexttool -i ' + interactionspecification                          \
-                            + ' --show-context '                                                                           \
-                            + ' --timeframeID ' + str(int(args.production_offset)*NTIMEFRAMES)                             \
-                            + ' --orbitsPerTF ' + str(orbitsPerTF)                                                         \
-                            + ' --orbits ' + str(NTIMEFRAMES * (orbitsPerTF))                                              \
-                            + ' --seed ' + str(RNDSEED)                                                                    \
-                            + ' --noEmptyTF --first-orbit ' + str(args.first_orbit)                                        \
-                            + ' --extract-per-timeframe tf:sgn'                                                            \
-                            + ' --with-vertices ' + vtxmode_precoll                                                        \
-                            + ' --maxCollsPerTF ' + str(args.ns)                                                           \
-                            + ' --orbitsEarly ' + str(args.orbits_early)                                                   \
-                            + ('',f" --import-external {args.data_anchoring}")[len(args.data_anchoring) > 0]
-
-PreCollContextTask['cmd'] += ' --bcPatternFile ccdb'  # <--- the object should have been set in (local) CCDB
+qedspec=""
 if includeQED:
    if PDGA==2212 or PDGB==2212:
       # QED is not enabled for pp and pA collisions
@@ -652,9 +639,28 @@ if includeQED:
    else:
       qedrate = INTRATE * QEDXSecExpected[COLTYPE] / XSecSys[COLTYPE]   # hadronic interaction rate * cross_section_ratio
       qedspec = 'qed' + ',' + str(qedrate) + ',10000000:' + str(NEventsQED)
-      PreCollContextTask['cmd'] += ' --QEDinteraction ' + qedspec
-workflow['stages'].append(PreCollContextTask)
 
+PreCollContextTask['cmd'] = task_finalizer([
+      '${O2_ROOT}/bin/o2-steer-colcontexttool',
+      f'-i {interactionspecification}',
+      '--show-context',
+      f'--timeframeID {int(args.production_offset)*NTIMEFRAMES}',
+      f'--orbitsPerTF {orbitsPerTF}',
+      f'--orbits {NTIMEFRAMES * (orbitsPerTF)}',
+      f'--seed {RNDSEED}',
+      '--noEmptyTF',
+      f'--first-orbit {args.first_orbit}',
+      '--extract-per-timeframe tf:sgn',
+      f'--with-vertices {vtxmode_precoll}',
+      f'--maxCollsPerTF {args.ns}',
+      f'--orbitsEarly {args.orbits_early}',
+      f'--timestamp {args.timestamp}',
+      f'--import-external {args.data_anchoring}' if len(args.data_anchoring) > 0 else None,
+      '--bcPatternFile ccdb',
+      f'--QEDinteraction {qedspec}' if includeQED else None
+      ], configname = 'precollcontext')
+workflow['stages'].append(PreCollContextTask)
+#TODO: in future add standard ' --nontrivial-mu-distribution ccdb://http://ccdb-test.cern.ch:8080/GLO/CALIB/EVSELQA/HBCTVX'
 
 if doembedding:
     if not usebkgcache:
