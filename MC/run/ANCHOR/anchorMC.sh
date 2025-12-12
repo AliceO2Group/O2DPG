@@ -378,7 +378,7 @@ else
      targetString="${targetString} 'tpctimes.*'"
    fi
    # -) TPC residual calibration
-   if [ "${ALIEN_JDL_DOTPCRESIDUALSEXTRACTION}" ]; then
+   if [ "${ALIEN_JDL_DOTPCRESIDUALEXTRACTION}" ]; then
      targetString="${targetString} 'tpcresidmerge.*'"
    fi
    # -) QC tasks
