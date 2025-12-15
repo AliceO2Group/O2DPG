@@ -9,6 +9,7 @@
                 "includePartonEvent": false,
                 "particleFilter": "",
                 "verbose": 0
+            }
         },
         {
             "name": "pythia8",
@@ -19,6 +20,7 @@
                 "includePartonEvent": false,
                 "particleFilter": "",
                 "verbose": 0
+            }
         }
     ],
     "fractions": [
