@@ -1,0 +1,28 @@
+{
+    "generators": [
+        {
+            "name": "pythia8",
+            "config": {
+                "config": "${O2_ROOT}/share/Generators/egconfig/pythia8_inel.cfg",
+                "hooksFileName": "",
+                "hooksFuncName": "",
+                "includePartonEvent": false,
+                "particleFilter": "",
+                "verbose": 0
+        },
+        {
+            "name": "pythia8",
+            "config": {
+                "config": "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/pythia8_jet_ropes_136tev.cfg",
+                "hooksFileName": "",
+                "hooksFuncName": "",
+                "includePartonEvent": false,
+                "particleFilter": "",
+                "verbose": 0
+        }
+    ],
+    "fractions": [
+        4,
+        1
+    ]
+}
