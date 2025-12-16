@@ -1253,7 +1253,22 @@ for tf in range(1, NTIMEFRAMES + 1):
        tpcclustertasks.append(taskname)
        tpcclussect = createTask(name=taskname, needs=tpcclusterneed, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='2', mem='8000')
        digitmergerstr = '${O2_ROOT}/bin/o2-tpc-chunkeddigit-merger --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' --tpc-lanes ' + str(NWORKERS_TF) + ' | '
-       tpcclussect['cmd'] = (digitmergerstr,'')[args.no_tpc_digitchunking] + ' ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True) + ' --input-type ' + ('digitizer','digits')[args.no_tpc_digitchunking] + ' --output-type clusters,send-clusters-per-sector --tpc-native-cluster-writer \" --outfile tpc-native-clusters-part'+ str((int)(s/sectorpertask)) + '.root\" --tpc-sectors ' + str(s)+'-'+str(s+sectorpertask-1) + ' ' + putConfigValues(["GPU_global"], {"GPU_proc.ompThreads" : 4}) + ('',' --disable-mc')[args.no_mc_labels]
+       tpcclussect['cmd'] = (digitmergerstr,'')[args.no_tpc_digitchunking] + task_finalizer(
+          [
+            '${O2_ROOT}/bin/o2-tpc-reco-workflow',
+            getDPL_global_options(bigshm=True),
+            '--input-type ' + ('digitizer','digits')[args.no_tpc_digitchunking],
+            '--output-type clusters,send-clusters-per-sector',
+            f'--tpc-native-cluster-writer \" --outfile tpc-native-clusters-part{(int)(s/sectorpertask)}.root\"',
+            f'--tpc-sectors {s}-{s+sectorpertask-1}',
+            putConfigValues(["GPU_global",
+                             "GPU_proc_nn",
+                             "TPCCorrMap",
+                             "TPCGasParam"], {"GPU_proc.ompThreads" : 4}),
+            '--disable-mc' if args.no_mc_labels else None
+          ], configname="tpcclusterizertask"
+       )
+
        tpcclussect['env'] = { "OMP_NUM_THREADS" : "4" , "TBB_NUM_THREADS" : "4" }
        tpcclussect['semaphore'] = "tpctriggers.root"
        tpcclussect['retry_count'] = 2  # the task has a race condition --> makes sense to retry
@@ -1264,6 +1279,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      workflow['stages'].append(TPCCLUSMERGEtask)
      tpcreconeeds.append(TPCCLUSMERGEtask['name'])
    else:
+     # TODO: adapt this to the case above and merge code / avoid code duplication
      tpcclus = createTask(name='tpccluster_' + str(tf), needs=tpcclusterneed, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS_TF, mem='2000')
      tpcclus['cmd'] = '${O2_ROOT}/bin/o2-tpc-chunkeddigit-merger --tpc-lanes ' + str(NWORKERS_TF)
      tpcclus['cmd'] += ' | ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector ' + putConfigValues(["GPU_global","TPCGasParam","TPCCorrMap"],{"GPU_proc.ompThreads" : 1}) + ('',' --disable-mc')[args.no_mc_labels]
