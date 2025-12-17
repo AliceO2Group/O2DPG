@@ -113,6 +113,7 @@ exec_test()
     local generator_lower=$(echo "${generator}" | tr '[:upper:]' '[:lower:]')
     # TODO Potentially, one could run an external generator that derives from GeneratorPythia8 and so could probably use configuration for TriggerPythia8
     local trigger=${3:+-t ${generator_lower}}
+    local trigger_dpl=${3:+--trigger ${generator_lower}}
     local RET=0
     # this is how our test script is expected to be called
     local test_script=$(get_test_script_path_for_ini ${ini_path})
@@ -122,7 +123,15 @@ exec_test()
     echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_KINE}
     echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_GENERIC_KINE}
     echo "### Testing ${ini_path} with generator ${generator} ###" > ${LOG_FILE_SIM}
+    echo "### Testing DPL-eventgen ###" >> ${LOG_FILE_SIM}
+    # run the event generation using the dpl-eventgen executable.
+    # This is a basic running test, however it's important because the system running on Hyperloop
+    # is largely used for MCGEN productions and is currently tested only locally
+    o2-sim-dpl-eventgen --generator ${generator_lower} ${trigger_dpl} --nEvents ${nev} --configFile ${ini_path} --configKeyValues "GeneratorPythia8.includePartonEvent=true" -b >> ${LOG_FILE_SIM} 2>&1
+    RET=${?}
+    [[ "${RET}" != "0" ]] && { remove_artifacts ; return ${RET} ; }
     # run the simulation, fail if not successful
+    echo "### Testing base o2-sim executable ###" >> ${LOG_FILE_SIM}
     o2-sim -g ${generator_lower} ${trigger} --noGeant -n ${nev} -j 4 --configFile ${ini_path} --configKeyValues "GeneratorPythia8.includePartonEvent=true" >> ${LOG_FILE_SIM} 2>&1
     RET=${?}
     [[ "${RET}" != "0" ]] && { remove_artifacts ; return ${RET} ; }
