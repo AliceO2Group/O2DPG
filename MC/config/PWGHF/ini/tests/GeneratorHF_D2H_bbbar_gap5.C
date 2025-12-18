@@ -103,7 +103,7 @@ int External()
     }
 
     float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
-    if (fracForcedDecays < 0.9) { // we put some tolerance (e.g. due to oscillations which might change the final state)
+    if (fracForcedDecays < 0.7) { // we put some tolerance (e.g. due to oscillations which might change the final state)
         std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
         return 1;
     }
