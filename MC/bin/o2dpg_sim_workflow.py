@@ -295,6 +295,8 @@ for det in activeDetectors:
 # function to finalize detector source lists based on activeDetectors
 # detector source lists are comma separated lists of DET1, DET2, DET1-DET2, ...
 def cleanDetectorInputList(inputlist):
+   if inputlist == "all":
+      return inputlist
    sources_list = inputlist.split(",")
    # Filter the sources
    filtered_sources = [
