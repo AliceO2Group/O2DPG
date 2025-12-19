@@ -8,6 +8,7 @@
 # O2PDPSuite::async-async-2022-pp-apass7-v1,apass7,    | 526641
 # 2023
 O2sim::v20250806-1,O2PDPSuite::async-async-2023-PbPb-apass5-v5-slc9-alidist-async-2023-PbPb-apass5-v5-1,apass5,Pb-Pb,544091,PbPb,LHC23zzh,2023,-gen pythia8
+O2sim::v20250806-1,O2PDPSuite::async-async-20240229.pp.2b-slc9-alidist-O2PDPSuite-daily-20231208-0100-async1-1,apass4,p-p,535085,pp,LHC23f,2023,-gen pythia8
 # 2024
 O2sim::v20250806-1,O2PDPSuite::async-async-2024-pp-apass1-v7-slc9-alidist-async-2024-pp-apass1-v7-1,apass1,p-p,553185,pp,LHC24al,2024,-gen pythia8
 O2sim::v20250806-1,O2PDPSuite::async-async-2024-ppRef-apass1-v1-slc9-alidist-async-2024-ppRef-apass1-v1-1,apass1,p-p,559348,pp,LHC24ap,2024,-gen pythia8
