@@ -14,8 +14,8 @@
         "ccdbPathGrp": "GLO\/GRP\/GRP",
         "ccdbPathGrpMag": "GLO\/Config\/GRPMagField",
         "hfEvSel": {
-            "centralityMin": "0",
-            "centralityMax": "100",
+            "centralityMin": "-10",
+            "centralityMax": "110",
             "useSel8Trigger": "true",
             "triggerClass": "-1",
             "useTvxTrigger": "false",
