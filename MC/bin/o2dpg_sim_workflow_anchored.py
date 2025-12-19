@@ -266,6 +266,21 @@ def retrieve_CTPScalers(ccdbreader, run_number, timestamp=None):
       return ctpscaler
     return None
 
+def retrieve_ITS_RampDuration(ccdbreader, timestamp):
+    """
+    Retrieves the ITS ramp-up duration for a given timestamp and
+    returns it in milliseconds.
+    ITS does not deliver digits during a certain ramp-up period so
+    the start of run is adjusted accordingly using this value.
+    """
+    _, ramp_duration = ccdbreader.fetch("ITS/Calib/RampDuration", "vector<float>", timestamp=timestamp)
+    if ramp_duration and len(ramp_duration) > 0:
+        # The vector contains the duration in seconds, convert to milliseconds
+        duration_ms = int(ramp_duration[0] * 1000)
+        return duration_ms
+    print("WARNING: ITS ramp duration vector is empty, using 0")
+    return 0
+
 def retrieve_MinBias_CTPScaler_Rate(ctpscaler, finaltime, trig_eff_arg, NBunches, ColSystem, eCM):
     """
     retrieves the CTP scalers object for a given timestamp
@@ -520,7 +535,11 @@ def main():
     run_start = GLOparams["SOR"]
     run_end = GLOparams["EOR"]
 
-    mid_run_timestamp = (run_start + run_end) // 2
+    # Adjust start of run using ITS ramp-up period
+    ITS_rampup = retrieve_ITS_RampDuration(ccdbreader, run_start)
+    print(f"ITS ramp-up time: {ITS_rampup} ms")
+    effective_run_start = run_start + ITS_rampup
+    mid_run_timestamp = (effective_run_start + run_end) // 2
 
     # --------
     # fetch other important global properties needed further below
@@ -580,16 +599,16 @@ def main():
     timestamp = 0
     prod_offset = 0
     if args.timeframeID != -1:
-      timestamp = determine_timestamp_from_timeframeID(run_start, run_end, args.timeframeID, GLOparams["OrbitsPerTF"])
+      timestamp = determine_timestamp_from_timeframeID(effective_run_start, run_end, args.timeframeID, GLOparams["OrbitsPerTF"])
       prod_offset = args.timeframeID
     else:
-      timestamp, prod_offset = determine_timestamp(run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
+      timestamp, prod_offset = determine_timestamp(effective_run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
 
     # determine orbit corresponding to timestamp (mainly used in exclude_timestamp function)
     orbit = GLOparams["FirstOrbit"] + int((timestamp - GLOparams["SOR"]) / ( LHCOrbitMUS / 1000))
 
     # this is anchored to
-    print ("Determined start-of-run to be: ", run_start)
+    print ("Determined start-of-run to be: ", effective_run_start)
     print ("Determined end-of-run to be: ", run_end)
     print ("Determined timestamp to be : ", timestamp)
     print ("Determined offset to be : ", prod_offset)
@@ -630,7 +649,7 @@ def main():
     # However, the last passed argument wins, so they would be overwritten. If this should not happen, the option
     # needs to be handled as further below:
     energyarg = (" -eCM " + str(eCM)) if A1 == A2 else (" -eA " + str(eA) + " -eB " + str(eB))
-    forwardargs += " -tf " + str(args.tf) + " --sor " + str(run_start) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit "       \
+    forwardargs += " -tf " + str(args.tf) + " --sor " + str(effective_run_start) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit "       \
                    + str(GLOparams["FirstOrbit"]) + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + str(energyarg)
     # the following options can be overwritten/influence from the outside
     if not '--readoutDets' in forwardargs:
