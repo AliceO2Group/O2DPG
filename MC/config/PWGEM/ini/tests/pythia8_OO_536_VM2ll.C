@@ -50,7 +50,7 @@ int External() {
   return 0;
 }
 
-//int Pythia8()  
-//{  
-//    return External();
-//}
+int pythia8()
+{
+    return External();
+}
