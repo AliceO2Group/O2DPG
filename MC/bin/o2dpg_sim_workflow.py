@@ -2095,7 +2095,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCTStask['cmd'] += ' --primary-vertices '
    TPCTStask['cmd'] += ' | o2-tpc-time-series-workflow --enable-unbinned-root-output --sample-unbinned-tsallis --sampling-factor 0.01 '
    TPCTStask['cmd'] += putConfigValues() + ' ' + getDPL_global_options(bigshm=True)
-   workflow['stages'].append(TPCTStask)
+   if isActive('TOF') and isActive('TPC') and isActive('FT0'):
+      # could be relaxed or changed once the timerseries worklow is more reactive to input cluster- and track-types
+      workflow['stages'].append(TPCTStask)
 
   # cleanup
   # --------
