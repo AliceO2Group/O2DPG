@@ -35,7 +35,7 @@ class GeneratorPythia8GapTriggeredPionEta : public o2::eventgen::GeneratorPythia
   }
 
   ///  Destructor
-  GeneratorPythia8GapTriggeredPionEta() = default;
+  ~GeneratorPythia8GapTriggeredPionEta() = default;
   ///  Print the input
   void Print()
   {
