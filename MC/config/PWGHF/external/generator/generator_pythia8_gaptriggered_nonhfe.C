@@ -13,12 +13,12 @@
 
 using namespace Pythia8;
 
-class GeneratorPythia8GapTriggeredPionEta : public o2::eventgen::GeneratorPythia8
+class GeneratorPythia8GapTriggeredNonHF : public o2::eventgen::GeneratorPythia8
 {
  public:
   /// default constructor
-  GeneratorPythia8GapTriggeredPionEta() = default;
-  GeneratorPythia8GapTriggeredPionEta(int inputTriggerRatio = 5, std::vector<int> quarkPdgList = {}, std::vector<int> hadronPdgList = {})
+  GeneratorPythia8GapTriggeredNonHF() = default;
+  GeneratorPythia8GapTriggeredNonHF(int inputTriggerRatio = 5, std::vector<int> quarkPdgList = {}, std::vector<int> hadronPdgList = {})
   {
     mGeneratedEvents = 0;
     mInverseTriggerRatio = inputTriggerRatio;
@@ -35,7 +35,7 @@ class GeneratorPythia8GapTriggeredPionEta : public o2::eventgen::GeneratorPythia
   }
 
   ///  Destructor
-  ~GeneratorPythia8GapTriggeredPionEta() = default;
+  ~GeneratorPythia8GapTriggeredNonHF() = default;
   ///  Print the input
   void Print()
   {
