@@ -205,7 +205,7 @@ class GeneratorPythia8GapTriggeredPionEta : public o2::eventgen::GeneratorPythia
 // Charm-enriched
 FairGenerator* GeneratorPythia8GapTriggeredPionAndEta(int inputTriggerRatio, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {})
 {
-  auto myGen = new GeneratorPythia8GapTriggeredPionEta(inputTriggerRatio, std::vector<int>{1, 2, 3}, hadronPdgList);
+  auto myGen = new GeneratorPythia8GapTriggeredNonHF(inputTriggerRatio, std::vector<int>{1, 2, 3}, hadronPdgList);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->setUsedSeed(seed);
   myGen->readString("Random:setSeed on");
