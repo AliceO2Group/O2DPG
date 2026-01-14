@@ -80,7 +80,7 @@
         "rejectITSROFBorder": "1",
         "rejectTFBorder": "1",
         "requireIsVertexITSTPC": "0",
-        "requireIsGoodZvtxFT0VsPV": "1",
+        "requireIsGoodZvtxFT0VsPV": "0",
         "requireIsVertexTOFmatched": "0",
         "requireIsVertexTRDmatched": "0",
         "rejectSameBunchPileup": "1",
