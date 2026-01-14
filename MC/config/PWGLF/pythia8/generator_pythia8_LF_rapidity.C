@@ -104,6 +104,13 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       pythiaObjectMinimumBias.readString("Random:setSeed = on");
       pythiaObjectMinimumBias.readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
 
+      // FIX: Init signal pythia object
+      if (!pythiaObjectSignal.readFile(pythiaCfgSignal)) {
+        LOG(fatal) << "Could not pythiaObjectSignal.readFile(\"" << pythiaCfgSignal << "\")";
+      }
+      pythiaObjectSignal.readString("Random:setSeed = on");
+      pythiaObjectSignal.readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
+
       if (!pythiaObjectMinimumBias.init()) {
         LOG(fatal) << "Could not pythiaObjectMinimumBias.init() from " << pythiaCfgMb;
       }
@@ -117,6 +124,10 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
         LOG(info) << "Instance LFRapidity \'Pythia8\' generator with following parameters for MB event";
         LOG(info) << param;
         pythiaCfgMb = param.config;
+      }
+      // FIX: Fallback if still empty to default minbias
+      if (pythiaCfgMb == "") {
+         pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg";
       }
       pythiaCfgMb = gSystem->ExpandPathName(pythiaCfgMb.c_str());
       if (!pythiaObjectMinimumBias.readFile(pythiaCfgMb)) {
