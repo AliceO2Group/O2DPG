@@ -61,36 +61,38 @@ protected:
   bool isPhysicalPrimaryOrFromHF(const Pythia8::Particle& p,
                                 const Pythia8::Event& event)
   {
-    // Must be final
     if (!p.isFinal()) {
       return false;
     }
 
-    // Physical primary: no real mother (or beam)
-    if (p.mother1() <= 0) {
-      return true;
+    const int absPdg = std::abs(p.id());
+
+    // Particle species selection
+    const bool isAcceptedSpecies = (absPdg == 211 || absPdg == 321 || absPdg == 2212 || absPdg == 1000010020 || absPdg == 11 || absPdg == 13);
+
+    if (!isAcceptedSpecies) {
+      return false;
     }
 
-    // Walk up ancestry to identify charm or beauty
+    // Walk up ancestry
     int motherIdx = p.mother1();
+
     while (motherIdx > 0) {
       const auto& mother = event[motherIdx];
-      int absPdg = std::abs(mother.id());
+      const int absMotherPdg = std::abs(mother.id());
 
-      // Charm or beauty hadrons
-      if ((absPdg / 100 == 4) || (absPdg / 100 == 5) ||
-          (absPdg / 1000 == 4) || (absPdg / 1000 == 5)) {
+      // Charm or beauty hadron → accept (HF decay)
+      if ((absMotherPdg / 100 == 4) || (absMotherPdg / 100 == 5) || (absMotherPdg / 1000 == 4) || (absMotherPdg / 1000 == 5)) {
         return true;
       }
 
-      // Stop at beam
-      if (mother.mother1() <= 0) {
-        break;
+      // Weakly decaying hadron → reject (non-physical primary)
+      if (mother.isHadron() && mother.tau0() > 1.0) {
+        return false;
       }
       motherIdx = mother.mother1();
     }
-
-    return false;
+    return true;
   }
 
   bool generateEvent() override {
