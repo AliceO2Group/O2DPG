@@ -109,20 +109,21 @@ int External() {
     std::cerr << "Number of generated MB events different than expected\n";
     return 1;
   }
-  if (nEventsInjOne < nEvents * ratioTrigger * 0.5 * 0.95 ||
-      nEventsInjOne > nEvents * ratioTrigger * 0.5 * 1.05) {
+constexpr float nInjectedSpecies = 3.f;
+  if (nEventsInjOne < nEvents * ratioTrigger * 1/nInjectedSpecies * 0.95 ||
+      nEventsInjOne > nEvents * ratioTrigger * 1/nInjectedSpecies * 1.05) {
     std::cerr << "Number of generated events injected with " << checkPdgQuarkOne
               << " different than expected\n";
     return 1;
   }
-  if (nEventsInjTwo < nEvents * ratioTrigger * 0.5 * 0.95 ||
-      nEventsInjTwo > nEvents * ratioTrigger * 0.5 * 1.05) {
+  if (nEventsInjTwo < nEvents * ratioTrigger * 1/nInjectedSpecies * 0.95 ||
+      nEventsInjTwo > nEvents * ratioTrigger * 1/nInjectedSpecies * 1.05) {
     std::cerr << "Number of generated events injected with " << checkPdgQuarkTwo
               << " different than expected\n";
     return 1;
   }
-  if (nEventsInjThree < nEvents * ratioTrigger * 0.5 * 0.95 ||
-      nEventsInjThree > nEvents * ratioTrigger * 0.5 * 1.05) {
+  if (nEventsInjThree < nEvents * ratioTrigger * 1/nInjectedSpecies * 0.95 ||
+      nEventsInjThree > nEvents * ratioTrigger * 1/nInjectedSpecies * 1.05) {
     std::cerr << "Number of generated events injected with " << checkPdgQuarkThree
               << " different than expected\n";
     return 1;
