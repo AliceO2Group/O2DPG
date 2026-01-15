@@ -417,7 +417,7 @@ if [[ $ASYNC_PASS_NO_OPTIMIZED_DEFAULTS != 1 ]]; then
   if [[ $ALIEN_JDL_USEGPUS == 1 ]] ; then
     echo "Enabling GPUS"
     if [[ -z $ALIEN_JDL_SITEARCH ]]; then echo "ERROR: Must set ALIEN_JDL_SITEARCH to define GPU architecture!"; exit 1; fi
-    if [[ $ALIEN_JDL_SITEARCH == "NERSC" ]]; then # Disable mlock / ulimit / gpu memory registration - has performance impact, but doesn't work at NERSC for now
+    if [[ $ALIEN_JDL_SITEARCH == "NERSC" || $ALIEN_JDL_SITEARCH == "GENERIC_NVIDIA" || $ALIEN_JDL_SITEARCH == "GENERIC_AMD" ]]; then # Disable mlock / ulimit / gpu memory registration - has performance impact, but doesn't work at NERSC for now
       export SETENV_NO_ULIMIT=1
       export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.noGPUMemoryRegistration=1;"
     fi
@@ -428,7 +428,11 @@ if [[ $ASYNC_PASS_NO_OPTIMIZED_DEFAULTS != 1 ]]; then
     elif [[ $ALIEN_JDL_SITEARCH == "EPN_MI50" ]]; then
       ALIEN_JDL_SITEARCH_TMP=EPN
     fi
-    if [[ "ALIEN_JDL_USEFULLNUMADOMAIN" == 0 ]]; then
+    if [[ $ALIEN_JDL_SITEARCH == "GENERIC_NVIDIA" ]]; then
+      export OPTIMIZED_PARALLEL_ASYNC=8cpu_NVIDIA
+    elif [[ $ALIEN_JDL_SITEARCH == "GENERIC_AMD" ]]; then
+      export OPTIMIZED_PARALLEL_ASYNC=8cpu_AMD
+    elif [[ "ALIEN_JDL_USEFULLNUMADOMAIN" == 0 ]]; then
       if [[ $keep -eq 0 ]]; then
         if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
           export OPTIMIZED_PARALLEL_ASYNC=pp_1gpu_${ALIEN_JDL_SITEARCH_TMP} # (16 cores, 1 gpu per job, pp)
