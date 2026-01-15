@@ -1,14 +1,17 @@
-#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include "FairGenerator.h"
 #include "FairPrimaryGenerator.h"
 #include "Generators/GeneratorPythia8.h"
+
 #include "Pythia8/Pythia.h"
+
 #include "TDatabasePDG.h"
 #include "TMath.h"
 #include "TParticlePDG.h"
 #include "TRandom3.h"
 #include "TSystem.h"
+
 #include "fairlogger/Logger.h"
+
 #include <fastjet/AreaDefinition.hh>
 #include <fastjet/ClusterSequence.hh>
 #include <fastjet/ClusterSequenceArea.hh>
@@ -17,6 +20,7 @@
 #include <fastjet/Selector.hh>
 #include <fastjet/tools/JetMedianBackgroundEstimator.hh>
 #include <fastjet/tools/Subtractor.hh>
+
 #include <cmath>
 #include <fstream>
 #include <string>
@@ -24,7 +28,6 @@
 
 using namespace Pythia8;
 using namespace fastjet;
-#endif
 
 /// Pythia8 event generator for pp collisions
 /// Selection of events with Xi or Omega inside jets with pt > 10 GeV
