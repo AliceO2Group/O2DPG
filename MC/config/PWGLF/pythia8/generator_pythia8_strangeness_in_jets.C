@@ -4,27 +4,14 @@
 
 #include "Pythia8/Pythia.h"
 
-#include "TDatabasePDG.h"
-#include "TMath.h"
-#include "TParticlePDG.h"
-#include "TRandom3.h"
-#include "TSystem.h"
-
-#include "fairlogger/Logger.h"
-
-#include <fastjet/AreaDefinition.hh>
-#include <fastjet/ClusterSequence.hh>
-#include <fastjet/ClusterSequenceArea.hh>
-#include <fastjet/GhostedAreaSpec.hh>
 #include <fastjet/PseudoJet.hh>
-#include <fastjet/Selector.hh>
-#include <fastjet/tools/JetMedianBackgroundEstimator.hh>
-#include <fastjet/tools/Subtractor.hh>
+#include <fastjet/JetDefinition.hh>
+#include <fastjet/ClusterSequence.hh>
 
 #include <cmath>
-#include <fstream>
-#include <string>
 #include <vector>
+#include <string>
+#include <algorithm>
 
 using namespace Pythia8;
 using namespace fastjet;
