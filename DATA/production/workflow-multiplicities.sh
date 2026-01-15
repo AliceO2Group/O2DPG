@@ -53,9 +53,20 @@ if [[ ! -z ${OPTIMIZED_PARALLEL_ASYNC:-} ]]; then
     [[ ! -z ${TIMEFRAME_RATE_LIMIT:-} ]] && unset TIMEFRAME_RATE_LIMIT
     [[ ! -z ${SHMSIZE:-} ]] && unset SHMSIZE
   fi
-  if [[ $OPTIMIZED_PARALLEL_ASYNC == "8cpu" ]]; then
+  if [[ $OPTIMIZED_PARALLEL_ASYNC == "8cpu" || $OPTIMIZED_PARALLEL_ASYNC == "8cpu_NVIDIA" || $OPTIMIZED_PARALLEL_ASYNC == "8cpu_AMD" ]]; then
     [[ -z ${TIMEFRAME_RATE_LIMIT:-} ]] && TIMEFRAME_RATE_LIMIT=3
     [[ -z ${SHMSIZE:-} ]] && SHMSIZE=16000000000
+    if [[ $OPTIMIZED_PARALLEL_ASYNC == "8cpu_NVIDIA" ]]; then
+      NGPUS=1
+      GPUTYPE=CUDA
+      GPUMEMSIZE=$((25 << 30))
+      N_TPCTRK=$NGPUS
+    elif [[ $OPTIMIZED_PARALLEL_ASYNC == "8cpu_AMD" ]]; then
+      NGPUS=1
+      GPUTYPE=HIP
+      GPUMEMSIZE=$((25 << 30))
+      N_TPCTRK=$NGPUS
+    fi
     NGPURECOTHREADS=5
     if [[ $BEAMTYPE == "pp" ]]; then
       if (( $(echo "$RUN_IR > 800000" | bc -l) )); then
