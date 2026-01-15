@@ -9,7 +9,14 @@
 #include "TRandom3.h"
 #include "TSystem.h"
 #include "fairlogger/Logger.h"
-#include "fastjet/ClusterSequence.hh"
+#include <fastjet/AreaDefinition.hh>
+#include <fastjet/ClusterSequence.hh>
+#include <fastjet/ClusterSequenceArea.hh>
+#include <fastjet/GhostedAreaSpec.hh>
+#include <fastjet/PseudoJet.hh>
+#include <fastjet/Selector.hh>
+#include <fastjet/tools/JetMedianBackgroundEstimator.hh>
+#include <fastjet/tools/Subtractor.hh>
 #include <cmath>
 #include <fstream>
 #include <string>
@@ -113,7 +120,7 @@ protected:
     const std::vector<int> pdgXiOmega = {3312, -3312, 3334, -3334};
     const double mpi = 0.1395704;
 
-    std::vector<PseudoJet> fjParticles;
+    std::vector<fastjet::PseudoJet> fjParticles;
 
     for (int i = 0; i < event.size(); ++i) {
       const auto& p = event[i];
@@ -129,16 +136,16 @@ protected:
 
       double energy = std::sqrt(p.p() * p.p() + mpi * mpi);
 
-      PseudoJet pj(p.px(), p.py(), p.pz(), energy);
+      fastjet::PseudoJet pj(p.px(), p.py(), p.pz(), energy);
       pj.set_user_index(i);   // map back to Pythia index
       fjParticles.push_back(pj);
     }
 
     if (fjParticles.empty()) return false;
 
-    JetDefinition jetDef(antikt_algorithm, mJetR);
-    ClusterSequence cs(fjParticles, jetDef);
-    auto jets = sorted_by_pt(cs.inclusive_jets(mPtJetThreshold));
+    fastjet::JetDefinition jetDef(fastjet::antikt_algorithm, mJetR);
+    fastjet::ClusterSequence cs(fjParticles, jetDef);
+    auto jets = fastjet::sorted_by_pt(cs.inclusive_jets(mPtJetThreshold));
 
     for (const auto& jet : jets) {
       for (const auto& c : jet.constituents()) {
