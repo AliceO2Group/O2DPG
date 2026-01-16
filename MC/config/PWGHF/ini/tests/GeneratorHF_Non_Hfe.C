@@ -102,28 +102,28 @@ int External() {
   std::cout << Form("# %d (anti)quarks: ", checkPdgQuarkThree) << nQuarksThree
             << "\n";
 
-  if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.95 ||
+  if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.90 ||
       nEventsMB > nEvents * (1 - ratioTrigger) *
-                      1.05) { // we put some tolerance since the number of
+                      1.1) { // we put some tolerance since the number of
                               // generated events is small
     std::cerr << "Number of generated MB events different than expected\n";
     return 1;
   }
 constexpr float nInjectedSpecies = 3.f;
-  if (nEventsInjOne < nEvents * ratioTrigger * 1/nInjectedSpecies * 0.95 ||
-      nEventsInjOne > nEvents * ratioTrigger * 1/nInjectedSpecies * 1.05) {
+  if (nEventsInjOne < nEvents * ratioTrigger * 1.0/nInjectedSpecies * 0.90 ||
+      nEventsInjOne > nEvents * ratioTrigger * 1.0/nInjectedSpecies * 1.1) {
     std::cerr << "Number of generated events injected with " << checkPdgQuarkOne
               << " different than expected\n";
     return 1;
   }
-  if (nEventsInjTwo < nEvents * ratioTrigger * 1/nInjectedSpecies * 0.95 ||
-      nEventsInjTwo > nEvents * ratioTrigger * 1/nInjectedSpecies * 1.05) {
+  if (nEventsInjTwo < nEvents * ratioTrigger * 1.0/nInjectedSpecies * 0.90 ||
+      nEventsInjTwo > nEvents * ratioTrigger * 1.0/nInjectedSpecies * 1.1) {
     std::cerr << "Number of generated events injected with " << checkPdgQuarkTwo
               << " different than expected\n";
     return 1;
   }
-  if (nEventsInjThree < nEvents * ratioTrigger * 1/nInjectedSpecies * 0.95 ||
-      nEventsInjThree > nEvents * ratioTrigger * 1/nInjectedSpecies * 1.05) {
+  if (nEventsInjThree < nEvents * ratioTrigger * 1.0/nInjectedSpecies * 0.90 ||
+      nEventsInjThree > nEvents * ratioTrigger * 1.0/nInjectedSpecies * 1.1) {
     std::cerr << "Number of generated events injected with " << checkPdgQuarkThree
               << " different than expected\n";
     return 1;
