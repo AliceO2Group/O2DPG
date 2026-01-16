@@ -3,17 +3,17 @@
 /// \author Bong-Hwi Lim bong-hwi.lim@cern.ch
 /// \author Based on generator_pythia8_LF.C by Nicolò Jacazio
 /// \since  2025/08/18
-/// \brief  Implementation of a gun generator for multiple particles using rapidity instead of eta, built on generator_pythia8_longlived.C
-///         Needs PDG, Number of injected, minimum and maximum pT, minimum and maximum rapidity. These can be provided in three ways, bundeling variables, particles or from input file
+/// \brief  Implementation of a gun generator for multiple particles using rapidity or pseudorapidity (default) instead of eta, built on generator_pythia8_longlived.C
+///         Needs PDG, Number of injected, minimum and maximum pT, minimum and maximum y/eta. These can be provided in three ways, bundeling variables, particles or from input file
 ///         usage:
 ///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity({1000010020, 1000010030}, {10, 10}, {0.5, 0.5}, {10, 10}, {-1.0, -1.0}, {1.0, 1.0})'`
-///               Here PDG, Number injected, pT limits, rapidity limits are separated and matched by index
+///               Here PDG, Number injected, pT limits, y/eta limits are separated and matched by index
 ///         or:
 ///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity({{1000010020, 10, 0.5, 10, -1.0, 1.0}, {1000010030, 10, 0.5, 10, -1.0, 1.0}})'`
-///               Here PDG, Number injected, pT limits, rapidity limits are divided per particle
+///               Here PDG, Number injected, pT limits, y/eta limits are divided per particle
 ///         or:
 ///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/exotic_nuclei_pp.gun")'`
-///               Here PDG, Number injected, pT limits, rapidity limits are provided via an intermediate configuration file
+///               Here PDG, Number injected, pT limits, y/eta limits are provided via an intermediate configuration file
 ///
 
 #if !defined(__CLING__) || defined(__ROOTCLING__)
@@ -58,41 +58,26 @@
 using namespace Pythia8;
 using namespace o2::mcgenstatus;
 
-// // Helper function to get mass from PDG code (copied from generator_pythia8_longlived.C to avoid include issues)
-// namespace {
-// double getMassFromPDG(int input_pdg)
-// {
-//   double mass = 0;
-//   if (TDatabasePDG::Instance())
-//   {
-//     TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(input_pdg);
-//     if (particle) {
-//       mass = particle->Mass();
-//     } else {
-//       LOG(warning) << "Unknown particle requested with PDG " << input_pdg << ", mass set to 0";
-//     }
-//   }
-//   return mass;
-// }
-// }
-
 class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
 {
  public:
   /// Parametric constructor
-  GeneratorPythia8LFRapidity(bool injOnePerEvent /*= true*/,
-                     int gapBetweenInjection /*= 0*/,
-                     bool useTrigger /*= false*/,
-                     std::string pythiaCfgMb /*= "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg"*/,
-                     std::string pythiaCfgSignal /*= "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_signal.cfg"*/) : GeneratorPythia8{},
-                                                                                                                          mOneInjectionPerEvent{injOnePerEvent},
-                                                                                                                          mGapBetweenInjection{gapBetweenInjection},
-                                                                                                                          mUseTriggering{useTrigger}
+  GeneratorPythia8LFRapidity(bool injOnePerEvent = true,
+                             int gapBetweenInjection = 0,
+                             bool useTrigger = false,
+                             bool useRapidity = false,
+                             std::string pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg",
+                             std::string pythiaCfgSignal = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_signal.cfg") : GeneratorPythia8{},
+                                                                                                                                  mOneInjectionPerEvent{injOnePerEvent},
+                                                                                                                                  mGapBetweenInjection{gapBetweenInjection},
+                                                                                                                                  mUseTriggering{useTrigger},
+                                                                                                                                  mUseRapidity{useRapidity}
   {
     LOG(info) << "GeneratorPythia8LFRapidity constructor";
     LOG(info) << "++ mOneInjectionPerEvent: " << mOneInjectionPerEvent;
     LOG(info) << "++ mGapBetweenInjection: " << mGapBetweenInjection;
     LOG(info) << "++ mUseTriggering: " << mUseTriggering;
+    LOG(info) << "++ mUseRapidity: " << mUseRapidity;
     LOG(info) << "++ pythiaCfgMb: " << pythiaCfgMb;
     LOG(info) << "++ pythiaCfgSignal: " << pythiaCfgSignal;
     gRandom->SetSeed(0);
@@ -119,20 +104,43 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       pythiaObjectMinimumBias.readString("Random:setSeed = on");
       pythiaObjectMinimumBias.readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
 
-      if (!pythiaObjectMinimumBias.init()) {
-        LOG(fatal) << "Could not pythiaObjectMinimumBias.init() from " << pythiaCfgMb;
-      }
+      // FIX: Init signal pythia object
       if (!pythiaObjectSignal.readFile(pythiaCfgSignal)) {
         LOG(fatal) << "Could not pythiaObjectSignal.readFile(\"" << pythiaCfgSignal << "\")";
       }
       pythiaObjectSignal.readString("Random:setSeed = on");
       pythiaObjectSignal.readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
+
+      if (!pythiaObjectMinimumBias.init()) {
+        LOG(fatal) << "Could not pythiaObjectMinimumBias.init() from " << pythiaCfgMb;
+      }
       if (!pythiaObjectSignal.init()) {
         LOG(fatal) << "Could not pythiaObjectSignal.init() from " << pythiaCfgSignal;
       }
     } else { // Using simple injection with internal decay (if needed). Fetching the parameters from the configuration file of the PythiaDecayer
+
+      if (pythiaCfgMb == "") { // If no configuration file is provided, use the one from the Pythia8Param
+        auto& param = o2::eventgen::GeneratorPythia8Param::Instance();
+        LOG(info) << "Instance LFRapidity \'Pythia8\' generator with following parameters for MB event";
+        LOG(info) << param;
+        pythiaCfgMb = param.config;
+      }
+      // FIX: Fallback if still empty to default minbias
+      if (pythiaCfgMb == "") {
+         pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg";
+      }
+      pythiaCfgMb = gSystem->ExpandPathName(pythiaCfgMb.c_str());
+      if (!pythiaObjectMinimumBias.readFile(pythiaCfgMb)) {
+        LOG(fatal) << "Could not pythiaObjectMinimumBias.readFile(\"" << pythiaCfgMb << "\")";
+      }
+      pythiaObjectMinimumBias.readString("Random:setSeed = on");
+      pythiaObjectMinimumBias.readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
+      if (!pythiaObjectMinimumBias.init()) {
+        LOG(fatal) << "Could not pythiaObjectMinimumBias.init() from " << pythiaCfgMb;
+      }
+
       /** switch off process level **/
-      mPythia.readString("ProcessLevel:all off");
+      mPythiaGun.readString("ProcessLevel:all off");
 
       /** config **/
       auto& paramGen = o2::eventgen::GeneratorPythia8Param::Instance();
@@ -149,7 +157,7 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
         }
         std::string config = gSystem->ExpandPathName(param.config[i].c_str());
         LOG(info) << "GeneratorPythia8LFRapidity Reading configuration from file: " << config;
-        if (!mPythia.readFile(config, true)) {
+        if (!mPythiaGun.readFile(config, true)) {
           LOG(fatal) << "Failed to init \'DecayerPythia8\': problems with configuration file "
                      << config;
           return;
@@ -158,13 +166,13 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
 
       /** show changed particle data **/
       if (param.showChanged) {
-        mPythia.readString(std::string("Init:showChangedParticleData on"));
+        mPythiaGun.readString(std::string("Init:showChangedParticleData on"));
       } else {
-        mPythia.readString(std::string("Init:showChangedParticleData off"));
+        mPythiaGun.readString(std::string("Init:showChangedParticleData off"));
       }
 
       /** initialise **/
-      if (!mPythia.init()) {
+      if (!mPythiaGun.init()) {
         LOG(fatal) << "Failed to init \'DecayerPythia8\': init returned with error";
         return;
       }
@@ -180,19 +188,37 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
   //__________________________________________________________________
   Bool_t generateEvent() override
   {
-    if (!mUseTriggering) { // If the triggering is used we handle the the gap when generating the signal
+    if (!mUseTriggering) { // Injected mode: Embedding into MB
+      // 1. Generate Background (MB)
+      // LOG(info) << "Generating background event " << mEventCounter;
+      bool lGenerationOK = false;
+      while (!lGenerationOK) {
+        lGenerationOK = pythiaObjectMinimumBias.next();
+      }
+      mPythia.event = pythiaObjectMinimumBias.event; // Copy MB event to main event
+
+      // 2. Determine if we inject specific particles (Gap logic)
+      bool doInjection = true;
       if (mGapBetweenInjection > 0) {
         if (mGapBetweenInjection == 1 && mEventCounter % 2 == 0) {
-          LOG(info) << "Skipping event " << mEventCounter;
-          return true;
+          doInjection = false;
         } else if (mEventCounter % mGapBetweenInjection != 0) {
-          LOG(info) << "Skipping event " << mEventCounter;
-          return true;
+          doInjection = false;
         }
       }
+
+      if (!doInjection) {
+        LOG(info) << "Skipping injection for event " << mEventCounter;
+        return true;
+      }
     }
-    LOG(info) << "generateEvent " << mEventCounter;
-    mPythia.event.reset();
+
+    LOG(info) << "generateEvent (Injection) " << mEventCounter;
+
+    // For Triggered mode, we start clean. For Injected mode, we have MB in mPythia.event
+    if (mUseTriggering) {
+      mPythia.event.reset();
+    }
 
     mConfigToUse = mOneInjectionPerEvent ? static_cast<int>(gRandom->Uniform(0.f, getNGuns())) : -1;
     LOG(info) << "Using configuration " << mConfigToUse << " out of " << getNGuns() << ", of which " << mGunConfigs.size() << " are transport decayed and " << mGunConfigsGenDecayed.size() << " are generator decayed";
@@ -206,7 +232,7 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       }
       LOG(info) << "Using config container ";
       cfg.print();
-      if (mUseTriggering) {   // Do the triggering
+      if (mUseTriggering) { // Do the triggering
         bool doSignal{mEventCounter % (mGapBetweenInjection + 1) == 0}; // Do signal or gap
 
         if (doSignal) {
@@ -218,13 +244,13 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
             if (!pythiaObjectSignal.next()) {
               continue;
             }
-            // Check if triggered condition satisfied - using rapidity instead of eta
-            for (Long_t j = 0; j < pythiaObjectSignal.event.size(); j++) {
+            // Check if triggered condition satisfied
+            for (int j = 0; j < pythiaObjectSignal.event.size(); j++) {
               const int& pypid = pythiaObjectSignal.event[j].id();
-              const float& pyrapidity = pythiaObjectSignal.event[j].y(); // Using rapidity (y) instead of eta
+              const float& pyeta = mUseRapidity ? pythiaObjectSignal.event[j].y() : pythiaObjectSignal.event[j].eta();
               const float& pypt = pythiaObjectSignal.event[j].pT();
-              if (pypid == cfg.mPdg && cfg.mRapidityMin < pyrapidity && pyrapidity < cfg.mRapidityMax && pypt > cfg.mPtMin && pypt < cfg.mPtMax) {
-                LOG(info) << "Found particle " << j << " " << pypid << " with rapidity " << pyrapidity << " and pT " << pypt << " in event " << mEventCounter << " after " << nTries << " tries";
+              if (pypid == cfg.mPdg && cfg.mMin < pyeta && pyeta < cfg.mMax && pypt > cfg.mPtMin && pypt < cfg.mPtMax) {
+                LOG(info) << "Found particle " << j << " " << pypid << " with " << (mUseRapidity ? "rapidity" : "eta") << " " << pyeta << " and pT " << pypt << " in event " << mEventCounter << " after " << nTries << " tries";
                 satisfiesTrigger = true;
                 break;
               }
@@ -243,17 +269,31 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
         }
         continue;
       }
-      // Do the injection - using rapidity instead of eta
+
+      // Do the injection
+      // Use mPythiaGun for separate generation and decay
+      mPythiaGun.event.reset();
       for (int i{0}; i < cfg.mNInject; ++i) {
         const double pt = gRandom->Uniform(cfg.mPtMin, cfg.mPtMax);
-        const double rapidity = gRandom->Uniform(cfg.mRapidityMin, cfg.mRapidityMax);
+        const double eta = gRandom->Uniform(cfg.mMin, cfg.mMax);
         const double phi = gRandom->Uniform(0, TMath::TwoPi());
         const double px{pt * std::cos(phi)};
         const double py{pt * std::sin(phi)};
-        // Convert rapidity to pz using the relation: pz = pt * sinh(rapidity)
-        const double mT = std::sqrt(cfg.mMass * cfg.mMass + pt * pt);
-        const double pz{mT * std::sinh(rapidity)};
-        const double et{mT * std::cosh(rapidity)}; // Energy E = mT * cosh(y)
+
+        double pz = 0;
+        double et = 0;
+
+        if (mUseRapidity) {
+          // Rapidty Case
+          const double mT = std::sqrt(cfg.mMass * cfg.mMass + pt * pt);
+          pz = mT * std::sinh(eta);
+          et = mT * std::cosh(eta);
+        } else {
+          // Eta Case
+          pz = pt * std::sinh(eta);
+          const double p = pt * std::cosh(eta);
+          et = std::sqrt(p * p + cfg.mMass * cfg.mMass);
+        }
 
         Particle particle;
         particle.id(cfg.mPdg);
@@ -266,21 +306,49 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
         particle.xProd(0.f);
         particle.yProd(0.f);
         particle.zProd(0.f);
-        mPythia.particleData.mayDecay(cfg.mPdg, true); // force decay
-        mPythia.event.append(particle);
+        mPythiaGun.particleData.mayDecay(cfg.mPdg, true); // force decay
+        mPythiaGun.event.append(particle);
       }
+      // Decay the gun particles
+      mPythiaGun.moreDecays();
+      mPythiaGun.next();
+
+      // Merge mPythiaGun event into mPythia.event (MB)
+      int offset = mPythia.event.size();
+      LOG(info) << "Merging " << mPythiaGun.event.size() - 1 << " injected particles into MB event of size " << offset;
+
+      for (int i = 1; i < mPythiaGun.event.size(); ++i) { // Skip system particle 0
+        Particle& p = mPythiaGun.event[i];
+        // Adjust history indices
+        int mother1 = p.mother1();
+        int mother2 = p.mother2();
+        int daughter1 = p.daughter1();
+        int daughter2 = p.daughter2();
+
+        if (mother1 > 0)
+          mother1 += offset - 1;
+        if (mother2 > 0)
+          mother2 += offset - 1;
+        if (daughter1 > 0)
+          daughter1 += offset - 1;
+        if (daughter2 > 0)
+          daughter2 += offset - 1;
+
+        p.mothers(mother1, mother2);
+        p.daughters(daughter1, daughter2);
+
+        mPythia.event.append(p);
+      }
+
       injectedForThisEvent = true;
     }
-    if (injectedForThisEvent) {
-      LOG(info) << "Calling next!";
-      mPythia.moreDecays();
-      mPythia.next();
-      if (mPythia.event.size() <= 2) {
-        LOG(fatal) << "Event size is " << mPythia.event.size() << ", this is not good! Check that the decay actually happened or consider not using the generator decayed particles!";
-      } else {
-        LOG(info) << "Event size is " << mPythia.event.size() << " particles";
-      }
-    }
+
+    // For purely trivial injection (no generator decay needed in loop or just transport decay), we still might have injection flag
+    // But above loop covers generator decayed.
+    // What if we only have Transport Decay particles? (mGunConfigs)
+    // We treat them in importParticles usually.
+    // But if we are in embedding mode, we just need to ensure the MB event is there.
+    // The mGunConfigs are handled in importParticles.
 
     if (mVerbose) {
       LOG(info) << "Eventlisting";
@@ -312,17 +380,26 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       if (mConfigToUse >= 0 && (nConfig - 1) != mConfigToUse) {
         continue;
       }
-      LOGF(info, "Injecting %i particles with PDG %i, pT in [%f, %f], rapidity in [%f, %f]", cfg.mNInject, cfg.mPdg, cfg.mPtMin, cfg.mPtMax, cfg.mRapidityMin, cfg.mRapidityMax);
+      LOGF(info, "Injecting %i particles with PDG %i, pT in [%f, %f], %s in [%f, %f]", cfg.mNInject, cfg.mPdg, cfg.mPtMin, cfg.mPtMax, (mUseRapidity ? "rapidity" : "eta"), cfg.mMin, cfg.mMax);
 
       for (int i{0}; i < cfg.mNInject; ++i) {
         const double pt = gRandom->Uniform(cfg.mPtMin, cfg.mPtMax);
-        const double rapidity = gRandom->Uniform(cfg.mRapidityMin, cfg.mRapidityMax);
+        const double eta = gRandom->Uniform(cfg.mMin, cfg.mMax);
         const double phi = gRandom->Uniform(0, TMath::TwoPi());
         const double px{pt * std::cos(phi)};
         const double py{pt * std::sin(phi)};
-        const double mT = std::sqrt(cfg.mMass * cfg.mMass + pt * pt);
-        const double pz{mT * std::sinh(rapidity)};
-        const double et{mT * std::cosh(rapidity)};
+        double pz = 0;
+        double et = 0;
+
+        if (mUseRapidity) {
+          const double mT = std::sqrt(cfg.mMass * cfg.mMass + pt * pt);
+          pz = mT * std::sinh(eta);
+          et = mT * std::cosh(eta);
+        } else {
+          pz = pt * std::sinh(eta);
+          const double p = pt * std::cosh(eta);
+          et = std::sqrt(p * p + cfg.mMass * cfg.mMass);
+        }
 
         // TParticle::TParticle(Int_t pdg,
         //                      Int_t status,
@@ -347,7 +424,7 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       LOG(info) << "Printing particles that are appended";
       int n = 0;
       for (const auto& p : mParticles) {
-        LOG(info) << "Particle " << n++ << " is a " << p.GetPdgCode() << " with status " << p.GetStatusCode() << " and px = " << p.Px() << " py = " << p.Py() << " pz = " << p.Pz();
+        LOG(info) << "Particle " << n++ << " is a " << p.GetPdgCode() << " with status " << p.GetStatusCode() << " and px = " << p.Py() << " py = " << p.Py() << " pz = " << p.Pz();
       }
     }
     return true;
@@ -356,20 +433,20 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
   struct ConfigContainer {
     ConfigContainer(int input_pdg = 0, int n = 1,
                     float ptMin = 1, float ptMax = 10,
-                    float rapidityMin = -1, float rapidityMax = 1) : mPdg{input_pdg},
-                                                           mNInject{n},
-                                                           mPtMin{ptMin},
-                                                           mPtMax{ptMax},
-                                                           mRapidityMin{rapidityMin},
-                                                           mRapidityMax{rapidityMax}
+                    float min = -1, float max = 1) : mPdg{input_pdg},
+                                                     mNInject{n},
+                                                     mPtMin{ptMin},
+                                                     mPtMax{ptMax},
+                                                     mMin{min},
+                                                     mMax{max}
     {
       // mMass = getMassFromPDG(mPdg);
       mMass = GeneratorPythia8LongLivedGun::getMass(mPdg);
       if (mMass <= 0) {
         LOG(fatal) << "Could not find mass for mPdg " << mPdg;
       }
-      LOGF(info, "ConfigContainer: mPdg = %i, mNInject = %i, mPtMin = %f, mPtMax = %f, mRapidityMin = %f, mRapidityMax = %f, mMass = %f",
-           mPdg, mNInject, mPtMin, mPtMax, mRapidityMin, mRapidityMax, mMass);
+      LOGF(info, "ConfigContainer: mPdg = %i, mNInject = %i, mPtMin = %f, mPtMax = %f, mMin = %f, mMax = %f, mMass = %f",
+           mPdg, mNInject, mPtMin, mPtMax, mMin, mMax, mMass);
     };
 
     ConfigContainer(TObjArray* arr) : ConfigContainer(atoi(arr->At(0)->GetName()),
@@ -399,20 +476,20 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       }
     };
     ConfigContainer(TString line) : ConfigContainer(line.Tokenize(" ")){};
-    ConfigContainer(const nlohmann::json& jsonParams) : ConfigContainer(jsonParams["pdg"],
+    ConfigContainer(const nlohmann::json& jsonParams, bool useRapidity = false) : ConfigContainer(jsonParams["pdg"],
                                                                         jsonParams["n"],
                                                                         jsonParams["ptMin"],
                                                                         jsonParams["ptMax"],
-                                                                        jsonParams["rapidityMin"],
-                                                                        jsonParams["rapidityMax"]){};
+                                                                        (useRapidity && jsonParams.contains("rapidityMin")) ? jsonParams["rapidityMin"] : (jsonParams.contains("min") ? jsonParams["min"] : jsonParams["etaMin"]),
+                                                                        (useRapidity && jsonParams.contains("rapidityMax")) ? jsonParams["rapidityMax"] : (jsonParams.contains("max") ? jsonParams["max"] : jsonParams["etaMax"])){};
 
     // Data Members
     const int mPdg = 0;
     const int mNInject = 1;
     const float mPtMin = 1;
     const float mPtMax = 10;
-    const float mRapidityMin = -1.f;
-    const float mRapidityMax = 1.f;
+    const float mMin = -1.f;
+    const float mMax = 1.f;
     double mMass = 0.f;
 
     void print() const
@@ -421,36 +498,36 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       LOGF(info, "int mNInject = %i", mNInject);
       LOGF(info, "float mPtMin = %f", mPtMin);
       LOGF(info, "float mPtMax = %f", mPtMax);
-      LOGF(info, "float mRapidityMin = %f", mRapidityMin);
-      LOGF(info, "float mRapidityMax = %f", mRapidityMax);
+      LOGF(info, "float mMin = %f", mMin);
+      LOGF(info, "float mMax = %f", mMax);
       LOGF(info, "double mMass = %f", mMass);
     }
   };
 
   //__________________________________________________________________
-  ConfigContainer addGun(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10, float rapidityMin = 1, float rapidityMax = 10)
+  ConfigContainer addGun(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10, float min = 1, float max = 10)
   {
     if (mUseTriggering) { // If in trigger mode, every particle needs to be generated from pythia
-      return addGunGenDecayed(input_pdg, nInject, ptMin, ptMax, rapidityMin, rapidityMax);
+      return addGunGenDecayed(input_pdg, nInject, ptMin, ptMax, min, max);
     }
-    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax, rapidityMin, rapidityMax};
+    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax, min, max};
     mGunConfigs.push_back(cfg);
     return cfg;
   }
 
   //__________________________________________________________________
-  ConfigContainer addGun(ConfigContainer cfg) { return addGun(cfg.mPdg, cfg.mNInject, cfg.mPtMin, cfg.mPtMax, cfg.mRapidityMin, cfg.mRapidityMax); }
+  ConfigContainer addGun(ConfigContainer cfg) { return addGun(cfg.mPdg, cfg.mNInject, cfg.mPtMin, cfg.mPtMax, cfg.mMin, cfg.mMax); }
 
   //__________________________________________________________________
-  ConfigContainer addGunGenDecayed(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10, float rapidityMin = 1, float rapidityMax = 10)
+  ConfigContainer addGunGenDecayed(int input_pdg, int nInject = 1, float ptMin = 1, float ptMax = 10, float min = 1, float max = 10)
   {
-    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax, rapidityMin, rapidityMax};
+    ConfigContainer cfg{input_pdg, nInject, ptMin, ptMax, min, max};
     mGunConfigsGenDecayed.push_back(cfg);
     return cfg;
   }
 
   //__________________________________________________________________
-  ConfigContainer addGunGenDecayed(ConfigContainer cfg) { return addGunGenDecayed(cfg.mPdg, cfg.mNInject, cfg.mPtMin, cfg.mPtMax, cfg.mRapidityMin, cfg.mRapidityMax); }
+  ConfigContainer addGunGenDecayed(ConfigContainer cfg) { return addGunGenDecayed(cfg.mPdg, cfg.mNInject, cfg.mPtMin, cfg.mPtMax, cfg.mMin, cfg.mMax); }
 
   //__________________________________________________________________
   long int getNGuns() const { return mGunConfigs.size() + mGunConfigsGenDecayed.size(); }
@@ -480,6 +557,7 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
   const bool mOneInjectionPerEvent = true; // if true, only one injection per event is performed, i.e. if multiple PDG (including antiparticles) are requested to be injected only one will be done per event
   const bool mUseTriggering = false;       // if true, use triggering instead of injection
   const int mGapBetweenInjection = 0;      // Gap between two signal events. 0 means injection at every event
+  const bool mUseRapidity = false;         // if true, use rapidity instead of eta
 
   // Running variables
   int mConfigToUse = -1; // Index of the configuration to use
@@ -488,22 +566,23 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
 
   std::vector<ConfigContainer> mGunConfigs;           // List of gun configurations to use
   std::vector<ConfigContainer> mGunConfigsGenDecayed; // List of gun configurations to use that will be decayed by the generator
-  Pythia8::Pythia pythiaObjectSignal;                          // Signal collision generator
-  Pythia8::Pythia pythiaObjectMinimumBias;                     // Minimum bias collision generator
+  Pythia8::Pythia pythiaObjectSignal;                 // Signal collision generator
+  Pythia8::Pythia pythiaObjectMinimumBias;            // Minimum bias collision generator
+  Pythia8::Pythia mPythiaGun;                         // Gun generator with decay support
 };
 
 ///___________________________________________________________
 /// Create generator via arrays of entries. By default injecting in every event and all particles
-FairGenerator* generateLFRapidity(std::vector<int> PDGs, std::vector<int> nInject, std::vector<float> ptMin, std::vector<float> ptMax, std::vector<float> rapidityMin, std::vector<float> rapidityMax)
+FairGenerator* generateLFRapidity(std::vector<int> PDGs, std::vector<int> nInject, std::vector<float> ptMin, std::vector<float> ptMax, std::vector<float> min, std::vector<float> max, bool useRapidity = false)
 {
-  const std::vector<unsigned long> entries = {PDGs.size(), nInject.size(), ptMin.size(), ptMax.size(), rapidityMin.size(), rapidityMax.size()};
+  const std::vector<unsigned long> entries = {PDGs.size(), nInject.size(), ptMin.size(), ptMax.size(), min.size(), max.size()};
   if (!std::equal(entries.begin() + 1, entries.end(), entries.begin())) {
     LOGF(fatal, "Not equal number of entries, check configuration");
     return nullptr;
   }
-  GeneratorPythia8LFRapidity* multiGun = new GeneratorPythia8LFRapidity(false, 0, false, "", "");
+  GeneratorPythia8LFRapidity* multiGun = new GeneratorPythia8LFRapidity(false, 0, false, useRapidity, "", "");
   for (unsigned long i = 0; i < entries[0]; i++) {
-    multiGun->addGun(PDGs[i], nInject[i], ptMin[i], ptMax[i], rapidityMin[i], rapidityMax[i]);
+    multiGun->addGun(PDGs[i], nInject[i], ptMin[i], ptMax[i], min[i], max[i]);
   }
   return multiGun;
 }
@@ -511,14 +590,15 @@ FairGenerator* generateLFRapidity(std::vector<int> PDGs, std::vector<int> nInjec
 ///___________________________________________________________
 /// Create generator via an array of configurations
 FairGenerator* generateLFRapidity(std::vector<GeneratorPythia8LFRapidity::ConfigContainer> cfg,
-                          std::vector<GeneratorPythia8LFRapidity::ConfigContainer> cfgGenDecayed,
-                          bool injectOnePDGPerEvent = true,
-                          int gapBetweenInjection = 0,
-                          bool useTrigger = false,
-                          std::string pythiaCfgMb = "",
-                          std::string pythiaCfgSignal = "")
+                                  std::vector<GeneratorPythia8LFRapidity::ConfigContainer> cfgGenDecayed,
+                                  bool injectOnePDGPerEvent = true,
+                                  int gapBetweenInjection = 0,
+                                  bool useTrigger = false,
+                                  bool useRapidity = false,
+                                  std::string pythiaCfgMb = "",
+                                  std::string pythiaCfgSignal = "")
 {
-  GeneratorPythia8LFRapidity* multiGun = new GeneratorPythia8LFRapidity(injectOnePDGPerEvent, gapBetweenInjection, useTrigger, pythiaCfgMb, pythiaCfgSignal);
+  GeneratorPythia8LFRapidity* multiGun = new GeneratorPythia8LFRapidity(injectOnePDGPerEvent, gapBetweenInjection, useTrigger, useRapidity, pythiaCfgMb, pythiaCfgSignal);
   for (const auto& c : cfg) {
     LOGF(info, "Adding gun %i", multiGun->getNGuns());
     c.print();
@@ -536,11 +616,12 @@ FairGenerator* generateLFRapidity(std::vector<GeneratorPythia8LFRapidity::Config
 ///___________________________________________________________
 /// Create generator via input file
 FairGenerator* generateLFRapidity(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/exotic_nuclei_pp.gun",
-                          bool injectOnePDGPerEvent = true,
-                          int gapBetweenInjection = 0,
-                          bool useTrigger = false,
-                          std::string pythiaCfgMb = "",
-                          std::string pythiaCfgSignal = "")
+                                  bool injectOnePDGPerEvent = true,
+                                  int gapBetweenInjection = 0,
+                                  bool useTrigger = false,
+                                  bool useRapidity = false,
+                                  std::string pythiaCfgMb = "",
+                                  std::string pythiaCfgSignal = "")
 {
   configuration = gSystem->ExpandPathName(configuration.c_str());
   LOGF(info, "Using configuration file '%s'", configuration.c_str());
@@ -558,9 +639,9 @@ FairGenerator* generateLFRapidity(std::string configuration = "${O2DPG_MC_CONFIG
       std::cout << param << std::endl;
       // cfgVecGenDecayed.push_back(GeneratorPythia8LFRapidity::ConfigContainer{paramfile[n].template get<int>(), param});
       if (param["genDecayed"]) {
-        cfgVecGenDecayed.push_back(GeneratorPythia8LFRapidity::ConfigContainer{param});
+        cfgVecGenDecayed.push_back(GeneratorPythia8LFRapidity::ConfigContainer{param, useRapidity});
       } else {
-        cfgVec.push_back(GeneratorPythia8LFRapidity::ConfigContainer{param});
+        cfgVec.push_back(GeneratorPythia8LFRapidity::ConfigContainer{param, useRapidity});
       }
     }
   } else {
@@ -584,21 +665,22 @@ FairGenerator* generateLFRapidity(std::string configuration = "${O2DPG_MC_CONFIG
       }
     }
   }
-  return generateLFRapidity(cfgVec, cfgVecGenDecayed, injectOnePDGPerEvent, gapBetweenInjection, useTrigger, pythiaCfgMb, pythiaCfgSignal);
+  return generateLFRapidity(cfgVec, cfgVecGenDecayed, injectOnePDGPerEvent, gapBetweenInjection, useTrigger, useRapidity, pythiaCfgMb, pythiaCfgSignal);
 }
 
 ///___________________________________________________________
 /// Create generator via input file for the triggered mode
 FairGenerator* generateLFRapidityTriggered(std::string configuration = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/exotic_nuclei_pp.gun",
-                                   int gapBetweenInjection = 0,
-                                   std::string pythiaCfgMb = "",
-                                   std::string pythiaCfgSignal = "")
+                                           int gapBetweenInjection = 0,
+                                           bool useRapidity = false,
+                                           std::string pythiaCfgMb = "",
+                                           std::string pythiaCfgSignal = "")
 {
-  return generateLFRapidity(configuration, /*injectOnePDGPerEvent=*/true, gapBetweenInjection, /*useTrigger=*/true, pythiaCfgMb, pythiaCfgSignal);
+  return generateLFRapidity(configuration, /*injectOnePDGPerEvent=*/true, gapBetweenInjection, /*useTrigger=*/true, useRapidity, pythiaCfgMb, pythiaCfgSignal);
 }
 
 ///___________________________________________________________
-void generator_pythia8_LF_rapidity(bool testInj = true, bool testTrg = false, const char* particleListFile = "cfg_rapidity.json")
+void generator_pythia8_LF_rapidity(bool testInj = true, bool testTrg = false, bool useRapidity = false, const char* particleListFile = "cfg_rapidity.json")
 {
   LOG(info) << "Compiled correctly!";
   if (!testInj && !testTrg) {
@@ -607,7 +689,7 @@ void generator_pythia8_LF_rapidity(bool testInj = true, bool testTrg = false, co
   // Injected mode
   if (testInj) {
     LOG(info) << "Testing the injected mode";
-    auto* gen = static_cast<GeneratorPythia8LFRapidity*>(generateLFRapidity(particleListFile));
+    auto* gen = static_cast<GeneratorPythia8LFRapidity*>(generateLFRapidity(particleListFile, true, 0, false, useRapidity));
     gen->setVerbose();
     gen->Print();
     gen->print();
@@ -620,9 +702,10 @@ void generator_pythia8_LF_rapidity(bool testInj = true, bool testTrg = false, co
   if (testTrg) {
     LOG(info) << "Testing the triggered mode";
     GeneratorPythia8LFRapidity* gen = static_cast<GeneratorPythia8LFRapidity*>(generateLFRapidityTriggered(particleListFile,
-                                                                                   /*gapBetweenInjection=*/0,
-                                                                                   /*pythiaCfgMb=*/"inel136tev.cfg",
-                                                                                   /*pythiaCfgSignal=*/"inel136tev.cfg"));
+                                                                                                           /*gapBetweenInjection=*/0,
+                                                                                                           useRapidity,
+                                                                                                           /*pythiaCfgMb=*/"inel136tev.cfg",
+                                                                                                           /*pythiaCfgSignal=*/"inel136tev.cfg"));
     gen->setVerbose();
     gen->Print();
     gen->print();
