@@ -45,8 +45,9 @@ int External()
     std::cout <<"# signal hadrons: " << nSignals << "\n";
     std::cout <<"# signal hadrons decaying into nuclei: " << nSignalGoodDecay << "\n";
 
-    float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
-    if (fracForcedDecays < 0.8) // we put some tolerance (lambdaB in MB events do not coalesce)
+    float fracForcedDecays = nSignals ? float(nSignalGoodDecay) / nSignals : 0.0f;
+    float uncFracForcedDecays = nSignals ? std::sqrt(fracForcedDecays * (1 - fracForcedDecays) / nSignals) / nSignals : 1.0f;
+    if (std::abs(fracForcedDecays - 0.8) > uncFracForcedDecays) // we put some tolerance (lambdaB in MB events do not coalesce)
     {
         std::cerr << "Fraction of signals decaying into nuclei: " << fracForcedDecays << ", lower than expected\n";
         return 1;
