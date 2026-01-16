@@ -151,7 +151,7 @@ protected:
     }
     if (ptMax == 0.0)
       return false;
-    if (std::abs(etaJet) + Rjet > 0.8)
+    if (std::abs(etaJet) + mRjet > 0.8)
       return false;
     if (!containsXiOrOmega)
       return false;
@@ -164,11 +164,11 @@ protected:
       double deltaEta = std::abs(p.eta() - etaJet);
       double deltaPhi = getDeltaPhi(p.phi(),phiJet);
       double deltaR = std::sqrt(deltaEta * deltaEta + deltaPhi * deltaPhi);
-      if (deltaR < Rjet) {
+      if (deltaR < mRjet) {
         ptJet += p.pT();
       }
     }
-    if (ptJet < ptJetMin)
+    if (ptJet < mptJetMin)
       return false;
 
     return true;
