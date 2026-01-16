@@ -24,7 +24,7 @@ Whenever an `ini` file is detedcted to be tested, a test macro is required to be
 ```bash
 <name-of-ini-file>.C
 ```
-Note, that `run_tests.sh` will automatically detect all generators used in an `ini`. For at least one generator defined in the `ini` file there must be a test. Each test is defined as a function in the `<name-of-ini-file>.C` macro. Assuming you want to test `External` and `Pythia8` generator, the macro should look like
+Note, that `run_tests.sh` will automatically detect all generators used in an `ini`. For at least one generator defined in the `ini` file there must be a test. Each test is defined as a function in the `<name-of-ini-file>.C` macro. Assuming you want to test `External`, `Pythia8` and `Hybrid` generators, the macro should look like
 ```cpp
 int pythia8()
 {
@@ -33,6 +33,12 @@ int pythia8()
 }
 
 int External()
+{
+    // do your test
+    return ret;
+}
+
+int Hybrid()
 {
     // do your test
     return ret;
