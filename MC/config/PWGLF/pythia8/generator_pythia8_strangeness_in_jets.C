@@ -181,3 +181,12 @@ private:
   uint64_t mGeneratedEvents{0};
 };
 
+///___________________________________________________________
+FairGenerator *generateStrangenessInJets(double ptJet = 10.0, double rJet = 0.4, int gap = 4) {
+
+  auto myGenerator = new GeneratorPythia8StrangenessInJet(ptJet,rJet,gap);
+  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
+  myGenerator->readString("Random:setSeed on");
+  myGenerator->readString("Random:seed " + std::to_string(seed));
+  return myGenerator;
+}
