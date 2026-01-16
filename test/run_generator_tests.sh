@@ -21,7 +21,7 @@ export ROOT_INCLUDE_PATH LD_LIBRARY_PATH
 # Entrypoint for O2DPG related tests #
 ######################################
 
-CHECK_GENERATORS="pythia8 External"
+CHECK_GENERATORS="pythia8 External Hybrid"
 
 # The test parent dir to be cretaed in current directory
 TEST_PARENT_DIR="o2dpg_tests/generators"
