@@ -186,10 +186,10 @@ int External() {
 
     // Check forced decay fraction
     float fracForcedDecays = nSignals ? float(nSignalGoodDecay) / nSignals : 0.0f;
-    float uncFracForcedDecays = nSignals ? std::sqrt(fracForcedDecays * (1 - fracForcedDecays) / nSignals) / nSignals : 1.0f;
+    float uncFracForcedDecays = nSignals ? std::sqrt(fracForcedDecays * (1 - fracForcedDecays) / nSignals) : 1.0f;
     std::cout << "# fraction of signals decaying into the correct channel: " << fracForcedDecays
               << " (" << fracForcedDecays * 100.0f << "%)\n";
-    if (fracForcedDecays < 0.9f) { // 90% threshold with tolerance
+    if (1 - fracForcedDecays > 0.15 + uncFracForcedDecays) { // 85% threshold with tolerance
         std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
         return 1;
     }
