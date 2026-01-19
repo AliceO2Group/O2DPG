@@ -134,7 +134,7 @@ int External() {
     for (int iRepl{0}; iRepl<6; ++iRepl) {
         float numPart = sumOrigReplacedParticles[pdgReplParticles[iRepl][0]];
         float fracMeas = numPart ? float(pdgReplPartCounters[iRepl][1]) / numPart : 0.0f;
-        float fracMeasUnc = fracMeas ? std::sqrt(pdgReplPartCounters[iRepl][1]) / numPart : 1.0f;
+        float fracMeasUnc = (fracMeas && numPart != 1) ? std::sqrt(pdgReplPartCounters[iRepl][1]) / numPart : 1.0f;
  
         if (std::abs(fracMeas - freqRepl[iRepl]) > fracMeasUnc) {
             std::cerr << "Fraction of replaced " << pdgReplParticles[iRepl][0] << " into " << pdgReplParticles[iRepl][1] << " is " << fracMeas <<" (expected "<< freqRepl[iRepl] << ")\n";
