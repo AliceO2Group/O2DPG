@@ -21,7 +21,7 @@
             "useTvxTrigger": "false",
             "useTimeFrameBorderCut": "false",
             "useItsRofBorderCut": "false",
-            "useIsGoodZvtxFT0vsPV": "true",
+            "useIsGoodZvtxFT0vsPV": "false",
             "useNoSameBunchPileup": "true",
             "useOccupancyCut": "false",
             "occEstimator": "1",
