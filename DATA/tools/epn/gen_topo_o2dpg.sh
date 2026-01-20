@@ -24,10 +24,10 @@ if [[ -z "$DDSHMSIZE" ]]; then echo \$DDSHMSIZE missing; exit 1; fi # SHM Size f
 # In case of debug mode, overwrite some settings
 if [[ "${DEBUG_TOPOLOGY_GENERATION:=0}" == "1" ]]; then
   echo "Debugging mode enabled. Setting options accordingly" 1>&2
-  RECO_NUM_NODES_OVERRIDE=1       # to avoid slurm query, specify number of nodes to fixed value
-  GEN_TOPO_MI100_NODES=1          # also for MI100 nodes
-  GEN_TOPO_OVERRIDE_TEMPDIR=$PWD  # keep temporary files like QC jsons in local directory
-  EPN2EOS_METAFILES_DIR=/tmp      # nothing is written here, just needs to be set to something
+  export RECO_NUM_NODES_OVERRIDE=1       # to avoid slurm query, specify number of nodes to fixed value
+  export GEN_TOPO_MI100_NODES=1          # also for MI100 nodes
+  export GEN_TOPO_OVERRIDE_TEMPDIR=$PWD  # keep temporary files like QC jsons in local directory
+  export EPN2EOS_METAFILES_DIR=/tmp      # nothing is written here, just needs to be set to something
   unset ECS_ENVIRONMENT_ID
   unset GEN_TOPO_CACHE_HASH
 fi
