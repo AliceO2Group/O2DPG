@@ -310,9 +310,9 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
               ITSTPCMatchQuery+=";matchTPCTRDTOF/TOF/MTC_TPCTRD/0"
               TRACKSOURCESK0+=",TPC-TRD-TOF"
             fi
-            if has_secvtx_source TOF; then
+            if has_detector_in_secvtx_sources TOF; then
               ITSTPCMatchQuery+=";tofcluster:TOF/CLUSTERS/0"
-              TRACKSOURCESK0+=",TOF"
+              has_secvtx_source TOF && TRACKSOURCESK0+=",TOF"
             fi
             if has_secvtx_source TRD; then
               TRACKSOURCESK0+=",TRD"
