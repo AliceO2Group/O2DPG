@@ -59,6 +59,11 @@ has_secvtx_source()
   [[ $SVERTEXING_SOURCES =~ (^|,)"ALL"(,|$) ]] || [[ $SVERTEXING_SOURCES =~ (^|,)"$1"(,|$) ]]
 }
 
+has_detector_in_secvtx_sources()
+{
+  [[ $SVERTEXING_SOURCES =~ (^|,)"ALL"(,|$) ]] || [[ $SVERTEXING_SOURCES =~ (^|,|-)"$1"(-|,|$) ]]
+}
+
 has_detector_qc()
 {
   has_detector $1 && [[ $WORKFLOW_DETECTORS_QC =~ (^|,)"$1"(,|$) ]]
