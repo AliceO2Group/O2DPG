@@ -258,16 +258,13 @@ protected:
 
   bool replaceParticle(int iPartToReplace, int pdgCodeNew) {
 
-    auto mothers = mPythia.event[iPartToReplace].motherList();
-
-    std::array<int, 25> pdgDiquarks = {1103, 2101, 2103, 2203, 3101, 3103, 3201, 3203, 3303, 4101, 4103, 4201, 4203, 4301, 4303, 4403, 5101, 5103, 5201, 5203, 5301, 5303, 5401, 5403, 5503};
-
-    for (auto const& mother: mothers) {
-      auto pdgMother = std::abs(mPythia.event[mother].id());
-      if (pdgMother > 100 && std::find(pdgDiquarks.begin(), pdgDiquarks.end(), pdgMother) == pdgDiquarks.end()) {
-        return false;
-      }
+    // Check status code: particles with status 91-99 come from decays and should not be replaced
+    int statusMother = std::abs(mPythia.event[iPartToReplace].status());
+    if (statusMother >= 91 && statusMother <= 99) {
+      return false;
     }
+
+    auto mothers = mPythia.event[iPartToReplace].motherList();
 
     int charge = mPythia.event[iPartToReplace].id() / std::abs(mPythia.event[iPartToReplace].id());
     float px = mPythia.event[iPartToReplace].px();

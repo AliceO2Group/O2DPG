@@ -124,18 +124,19 @@ int External() {
         return 1;
     }
 
-    float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
-    if (fracForcedDecays < 0.9) { // we put some tolerance (e.g. due to oscillations which might change the final state)
+    float fracForcedDecays = nSignals ? float(nSignalGoodDecay) / nSignals : 0.0f;
+    float uncFracForcedDecays = nSignals ? std::sqrt(fracForcedDecays * (1 - fracForcedDecays) / nSignals) : 1.0f;
+    if (1 - fracForcedDecays > 0.15 + uncFracForcedDecays) { // we put some tolerance (e.g. due to oscillations which might change the final state)
         std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
         return 1;
     }
 
     for (int iRepl{0}; iRepl<6; ++iRepl) {
-        if (std::abs(pdgReplPartCounters[iRepl][1] - freqRepl[iRepl] * sumOrigReplacedParticles[pdgReplParticles[iRepl][0]]) > 2 * std::sqrt(freqRepl[iRepl] * sumOrigReplacedParticles[pdgReplParticles[iRepl][0]])) { // 2 sigma compatibility
-            float fracMeas = 0.;
-            if (sumOrigReplacedParticles[pdgReplParticles[iRepl][0]] > 0.) {
-                fracMeas = float(pdgReplPartCounters[iRepl][1]) / sumOrigReplacedParticles[pdgReplParticles[iRepl][0]];
-            } 
+        float numPart = sumOrigReplacedParticles[pdgReplParticles[iRepl][0]];
+        float fracMeas = numPart ? float(pdgReplPartCounters[iRepl][1]) / numPart : 0.0f;
+        float fracMeasUnc = (fracMeas && numPart != 1) ? std::sqrt(pdgReplPartCounters[iRepl][1]) / numPart : 1.0f;
+ 
+        if (std::abs(fracMeas - freqRepl[iRepl]) > fracMeasUnc) {
             std::cerr << "Fraction of replaced " << pdgReplParticles[iRepl][0] << " into " << pdgReplParticles[iRepl][1] << " is " << fracMeas <<" (expected "<< freqRepl[iRepl] << ")\n";
             return 1;    
         }
