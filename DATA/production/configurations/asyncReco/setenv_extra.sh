@@ -761,6 +761,16 @@ if [[ $ADD_CALIB == "1" ]]; then
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
     export CCDB_POPULATOR_UPLOAD_PATH="file://$PWD"
   fi
+
+  # enable time gain calibration
+  if [[ $ALIEN_JDL_DOTPCTIMEGAINCALIB == 1 ]]; then
+    echo "Enabling TPC time gain calibration"
+    export CALIB_TPC_TIMEGAIN=1
+    export ARGS_EXTRA_PROCESS_o2_tpc_calibrator_dedx+=" --dump-histograms 1 --min-entries 1" # write full calibration objects for time gain without rejecting low statistics timeslots
+    export ARGS_EXTRA_PROCESS_o2_tpc_miptrack_filter+=" --use-global-tracks"
+    export SCALEEVENTS_TPC_TIMEGAIN=1 # use all TFs
+    export SCALETRACKS_TPC_TIMEGAIN=-1 # use all tracks
+  fi
 fi
 
 # Enabling AOD
