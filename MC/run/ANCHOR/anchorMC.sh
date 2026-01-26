@@ -275,14 +275,17 @@ if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
 
   # Restore overwritten O2DPG variables set by modules but changed by user
   # (in particular custom O2DPG_ROOT and O2DPG_MC_CONFIG_ROOT)
+  # We must avoid piping into a while loop (otherwise the internal export is executed in sub-shell)
   printenv > env_after_restore.printenv
-  comm -12 <(grep '^O2DPG' env_before_stashing.printenv | cut -d= -f1 | sort) \
-         <(grep '^O2DPG' env_after_restore.printenv  | cut -d= -f1 | sort) |
   while read -r var; do
     b=$(grep "^$var=" env_before_stashing.printenv | cut -d= -f2-)
     a=$(grep "^$var=" env_after_restore.printenv  | cut -d= -f2-)
     [[ "$b" != "$a" ]] && export "$var=$b" && echo "Reapplied: $var to ${b}"
-  done
+  done < <(
+    comm -12 \
+      <(grep '^O2DPG' env_before_stashing.printenv | cut -d= -f1 | sort) \
+      <(grep '^O2DPG' env_after_restore.printenv  | cut -d= -f1 | sort))
+
 fi
 #<----- END OF part that should run under a clean alternative software environment if this was given ------
 
