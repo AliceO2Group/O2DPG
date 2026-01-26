@@ -9,8 +9,11 @@
             "name":"not_applicable"
          },
          "Activity":{
-            "number":"42",
-            "type":"2"
+            "number": "42",
+            "type": "2",
+            "provenance": "qc_mc",
+            "passName": "passMC",
+            "periodName": "SimChallenge"
          },
          "monitoring":{
             "url":"infologger:///debug?qc"
