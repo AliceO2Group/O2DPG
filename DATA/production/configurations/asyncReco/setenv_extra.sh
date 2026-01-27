@@ -768,8 +768,8 @@ if [[ $ADD_CALIB == "1" ]]; then
     export CALIB_TPC_TIMEGAIN=1
     export ARGS_EXTRA_PROCESS_o2_tpc_calibrator_dedx+=" --dump-histograms 1 --min-entries 1" # write full calibration objects for time gain without rejecting low statistics timeslots
     export ARGS_EXTRA_PROCESS_o2_tpc_miptrack_filter+=" --use-global-tracks"
-    export SCALEEVENTS_TPC_TIMEGAIN=1 # use all TFs
-    export SCALETRACKS_TPC_TIMEGAIN=-1 # use all tracks
+    export SCALEEVENTS_TPC_TIMEGAIN=${SCALEEVENTS_TPC_TIMEGAIN:-1} # use all TFs
+    export SCALETRACKS_TPC_TIMEGAIN=${SCALETRACKS_TPC_TIMEGAIN:--1} # use all tracks
   fi
 fi
 
