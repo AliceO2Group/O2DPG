@@ -109,9 +109,10 @@ exec_test()
     local ini_path=${1}
     local generator=${2} # for now one of "Pythia8" or "External", at this point we know that settings for the generator are defined in this ini
     local generator_lower=$(echo "${generator}" | tr '[:upper:]' '[:lower:]')
+    local test_id=${3}  # DPL session ID
     # TODO Potentially, one could run an external generator that derives from GeneratorPythia8 and so could probably use configuration for TriggerPythia8
-    local trigger=${3:+-t ${generator_lower}}
-    local trigger_dpl=${3:+--trigger ${generator_lower}}
+    local trigger=${4:+-t ${generator_lower}}
+    local trigger_dpl=${4:+--trigger ${generator_lower}}
     local RET=0
     # this is how our test script is expected to be called
     local test_script=$(get_test_script_path_for_ini ${ini_path})
@@ -124,8 +125,9 @@ exec_test()
     echo "### Testing DPL-eventgen ###" >> ${LOG_FILE_SIM}
     # run the event generation using the dpl-eventgen executable.
     # This is a basic running test, however it's important because the system running on Hyperloop
-    # is largely used for MCGEN productions and is currently tested only locally
-    o2-sim-dpl-eventgen --generator ${generator_lower} ${trigger_dpl} --nEvents ${nev} --configFile ${ini_path} --configKeyValues "GeneratorPythia8.includePartonEvent=true" -b >> ${LOG_FILE_SIM} 2>&1
+    # is largely used for MCGEN productions and is currently tested only locally.
+    # Using unique session labels to prevent channel binding conflicts in parallel execution
+    o2-sim-dpl-eventgen --session test_${test_id} --generator ${generator_lower} ${trigger_dpl} --nEvents ${nev} --configFile ${ini_path} --configKeyValues "GeneratorPythia8.includePartonEvent=true" -b >> ${LOG_FILE_SIM} 2>&1
     RET=${?}
     [[ "${RET}" != "0" ]] && { remove_artifacts ; return ${RET} ; }
     # run the simulation, fail if not successful
@@ -189,7 +191,7 @@ check_generators()
             # Run test in background
             (
                 cd ${test_dir}
-                exec_test ${ini_path} ${g} ${has_trigger}
+                exec_test ${ini_path} ${g} ${test_num} ${has_trigger}
                 exit $?
             ) &
             local pid=$!
@@ -387,11 +389,11 @@ print_usage()
 
 # whether or not to exit after first test has failed
 fail_immediately=
-[[ "${1}" == "--fail_immediately" ]] && fail_immediately=1
+[[ "${1}" == "--fail-immediately" ]] && fail_immediately=1
 
 while [ "$1" != "" ] ; do
     case $1 in
-        --fail_immediately ) shift
+        --fail-immediately ) shift
                              fail_immediately=1
                              ;;
         --keep-artifacts )   shift
