@@ -7,9 +7,9 @@ int ExternalLc() {
 
     // PDG replacements: Λc(4122) -> resonances
     std::array<std::array<int, 2>, 4> pdgReplParticles = {
-        std::array{4122, 34122},   // Λc -> Λc(2860)
-        std::array{4122, 44122},   // Λc -> Λc(2880)
-        std::array{4122, 54122},   // Λc -> Λc(2940)
+        std::array{4122, 24124},   // Λc -> Λc(2860)
+        std::array{4122, 24126},   // Λc -> Λc(2880)
+        std::array{4122, 4125},    // Λc -> Λc(2940)
         std::array{4122, 9422111}  // Λc -> Tc(3100)
     };
 
@@ -22,15 +22,15 @@ int ExternalLc() {
     std::map<int,int> sumOrigReplacedParticles = {{4122,0}};
 
     // Hadrons to check
-    std::array<int, 5> checkPdgHadron{34122, 44122, 54122, 9422111, 5122};
+    std::array<int, 5> checkPdgHadron{24124, 24126, 4125, 9422111, 5122};
 
     // Correct decays
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{
-        {34122, {{421, 2212}}},    
-        {44122, {{421, 2212}}},    
-        {54122, {{421, 2212}}},    
-        {9422111, {{413, 2212}}},  
-        {5122, {{421, 2212, -211}, {41221, -211}, {34122, -211}, {44122, -211}, {54122, -211}}} 
+        {24124, {{421, 2212}}},
+        {24126, {{421, 2212}}},
+        {4125, {{421, 2212}}},
+        {9422111, {{413, 2212}}},
+        {5122, {{421, 2212, -211}, {41221, -211}, {24124, -211}, {24126, -211}, {4125, -211}}}
     };
 
     TFile file(path.c_str(), "READ");
