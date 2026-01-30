@@ -51,17 +51,17 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then # Cal
   if [[ $CAN_DO_CALIB_PRIMVTX_MEANVTX == 1 ]]; then
     if [[ -z ${CALIB_PRIMVTX_MEANVTX+x} ]]; then CALIB_PRIMVTX_MEANVTX=1; fi
   fi
-  
+
   # calibrations for ITS
   if [[ $CAN_DO_CALIB_ITS_DEADMAP_TIME == 1 ]]; then
     if [[ -z ${CALIB_ITS_DEADMAP_TIME+x} ]]; then CALIB_ITS_DEADMAP_TIME=1; fi
   fi
-  
+
   # calibrations for MFT
   if [[ $CAN_DO_CALIB_MFT_DEADMAP_TIME == 1 ]]; then
     if [[ -z ${CALIB_MFT_DEADMAP_TIME+x} ]]; then CALIB_MFT_DEADMAP_TIME=1; fi
   fi
-  
+
   # calibrations for TOF
   if [[ $CAN_DO_CALIB_TOF_DIAGNOSTICS == 1 ]]; then
     if [[ -z ${CALIB_TOF_DIAGNOSTICS+x} ]]; then CALIB_TOF_DIAGNOSTICS=1; fi
@@ -260,7 +260,7 @@ if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
 
   # MFT
   if [[ $CALIB_MFT_DEADMAP_TIME == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "mftChipStatus:MFT/CHIPSSTATUS/0"; fi
-  
+
   # TOF
   if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibTOF:TOF/CALIBDATA/0"; fi
   if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "diagWords:TOF/DIAFREQ/0"; fi
@@ -268,6 +268,7 @@ if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   # TPC
   if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then
     add_semicolon_separated CALIBDATASPEC_BARREL_TF "unbinnedTPCResiduals:GLO/UNBINNEDRES/0"
+    add_semicolon_separated CALIBDATASPEC_BARREL_TF "detectorInfoResiduals:GLO/DETINFORES/0"
     add_semicolon_separated CALIBDATASPEC_BARREL_TF "trackReferences:GLO/TRKREFS/0"
   fi
   if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ ${CALIB_TPC_SCDCALIB_SENDTRKDATA:-} == "1" ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcInterpTrkData:GLO/TRKDATA/0"; fi
