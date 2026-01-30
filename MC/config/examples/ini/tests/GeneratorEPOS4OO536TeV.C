@@ -44,7 +44,7 @@ int External()
   constexpr int kOxygenPDG = 1000080160;   // O-16 ion
   constexpr double kEnucleon = 5360.;      // GeV per nucleon
   constexpr int kA = 16;                   // Oxygen mass number
-  constexpr double kOxygenEnergy = kA * kEnucleon; // 85760 GeV
+  constexpr double kOxygenEnergy = kA * kEnucleon / 2.0; // 85760 / 2 GeV
 
   // Check if each event has two oxygen ions at expected energy
   for (int i = 0; i < nEvents; i++)
