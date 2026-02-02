@@ -205,6 +205,10 @@ if [[ "$ALIEN_JDL_EXTRACTTIMESERIES" == "1" ]]; then
   export ADD_CALIB=1
 fi
 
+if [[ "$ALIEN_JDL_DOTPCTIMEGAINCALIB" == "1" ]]; then
+  export ADD_CALIB=1
+fi
+
 # AOD file size
 if [[ -n "$ALIEN_JDL_AODFILESIZE" ]]; then
   export AOD_FILE_SIZE="$ALIEN_JDL_AODFILESIZE"
