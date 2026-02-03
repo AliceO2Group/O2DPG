@@ -91,9 +91,9 @@ TOPWORKDIR=""
 
         TOPWORKDIR=2tag_release_testing_${BUILD_TAG:-${SOFTWARETAG_SIM}}
 
-        # we submit the test to the GRID (multiplicity of 4)
+        # we submit the test to the GRID (with some multiplicity)
         # ${WORKING_DIR}/submit_case${count}_${SOFTWARETAG_ASYNC//::/-}
-        echo "${O2DPG_ROOT}/GRID/utils/grid_submit.sh --prodsplit 4 --singularity --ttl 3600 --script ${OUTPUT_FILE_FINAL} \
+        echo "${O2DPG_ROOT}/GRID/utils/grid_submit.sh --prodsplit ${PRODSPLIT:-4} --singularity --ttl ${TTL:-3600} --script ${OUTPUT_FILE_FINAL} \
               --jobname "anchorTest_${count}" --wait-any --topworkdir ${TOPWORKDIR}" > ${WORKING_DIR}/submit_case${count}.sh
         # TODO: optional local execution with --local option
 
