@@ -941,7 +941,7 @@ class O2_GeneratorParamJpsipp96TeV : public GeneratorTGenerator
     paramJpsi = new GeneratorParam(1, -1, PtJPsipp96TeV, YJPsipp96TeV, V2JPsipp96TeV, IpJPsipp96TeV);
     paramJpsi->SetMomentumRange(0., 1.e6);
     paramJpsi->SetPtRange(0, 999.);
-    paramJpsi->SetYRange(-4.2, -2.3);
+    paramJpsi->SetYRange(-4.2, -1.8);
     paramJpsi->SetPhiRange(0., 360.);
     paramJpsi->SetDecayer(new TPythia6Decayer());
     paramJpsi->SetForceDecay(kNoDecay); // particle left undecayed
