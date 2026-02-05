@@ -1056,11 +1056,13 @@ class O2_GeneratorParamPsipp96TeV : public GeneratorTGenerator
   {
     // Taking same parameters as Psi(2S) at 13 TeV
     Double_t y = *py;
+    Double_t deltaY = 0.35;
+    Double_t yCM = y - deltaY;
     Float_t p0, p1, p2;
     p0 = 1;
     p1 = 0;
     p2 = 2.98887;
-    return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((y - p1) / p2), 2));
+    return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((yCM - p1) / p2), 2));
   }
 
   //-------------------------------------------------------------------------//
@@ -1130,13 +1132,11 @@ class O2_GeneratorParamJpsiPbPb5TeV : public GeneratorTGenerator
   {
     // jpsi y in PbPb, tuned on data (2015) -> Castillo embedding https://alice.its.cern.ch/jira/browse/ALIROOT-8174?jql=text%20~%20%22LHC19a2%22
     Double_t y = *py;
-    Double_t deltaY = 0.35;
-    Double_t yCM = y - deltaY;
     Float_t p0, p1, p2;
     p0 = 1.09886e6;
     p1 = 0;
     p2 = 2.12568;
-    return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((yCM - p1) / p2), 2));
+    return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((y - p1) / p2), 2));
   }
 
   //-------------------------------------------------------------------------//
