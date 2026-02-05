@@ -979,7 +979,7 @@ class O2_GeneratorParamJpsipp96TeV : public GeneratorTGenerator
   //-------------------------------------------------------------------------//
   static Double_t YJPsipp96TeV(const Double_t* py, const Double_t* /*dummy*/)
   {
-    // Parameters extrapolated linearly between 5 TeV and 13 TeV as a function of log(sqrt(s))
+    // Parameters extrapolated linearly between 5 TeV and 13 TeV as a function of log(sqrt(s)), shifted by a rapidity boost dy=0.35
     Double_t y = *py;
     Double_t deltaY = 0.35;
     Double_t yCM = y - deltaY;
