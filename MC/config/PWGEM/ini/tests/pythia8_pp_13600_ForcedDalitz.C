@@ -27,25 +27,7 @@ int External() {
         return 1;
       }
     }
-    // // check if each event has at least two oxygen ions
-    // for (int i = 0; i < nEvents; i++)
-    // {
-    //   auto check = tree->GetEntry(i);
-    //   int count = 0;
-    //   for (int idxMCTrack = 0; idxMCTrack < tracks->size(); ++idxMCTrack)
-    //   {
-    //     auto track = tracks->at(idxMCTrack);
-    //     if (track.GetPdgCode() == 1000080160)
-    //     {
-    //       count++;
-    //     }
-    //   }
-    //   if (count < 2)
-    //   {
-    //     std::cerr << "Event " << i << " has less than 2 oxygen ions\n";
-    //     return 1;
-    //   }
-    // }
+
   
     return 0;
   }
