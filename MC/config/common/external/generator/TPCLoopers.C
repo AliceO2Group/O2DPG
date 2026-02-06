@@ -7,12 +7,19 @@
 #include "CCDB/CcdbApi.h"
 #include "DetectorsRaw/HBFUtils.h"
 
+//** This external generator is now used for development purposes only.
+//** Fast simulated TPC loopers are automatically integrated as detector effect in O2
+//** starting from the O2PDPSuite::MC-prod-2026-v3-1 official release (05/02/2026)
+//** Previous cocktails configurations using this generator must not be used anymore for recent tags,
+//** as they will increase the default TPC loopers contribution.
+//** For support: Marco Giacalone <marco.giacalone@cern.ch>.
+
 // Static Ort::Env instance for multiple onnx model loading
 static Ort::Env global_env(ORT_LOGGING_LEVEL_WARNING, "GlobalEnv");
 
 // This class is responsible for loading the scaler parameters from a JSON file
 // and applying the inverse transformation to the generated data.
-struct Scaler
+struct Scaler_debug
 {
     std::vector<double> normal_min;
     std::vector<double> normal_max;
@@ -71,10 +78,10 @@ private:
 };
 
 // This class loads the ONNX model and generates samples using it.
-class ONNXGenerator
+class ONNXGenerator_debug
 {
 public:
-    ONNXGenerator(Ort::Env &shared_env, const std::string &model_path)
+    ONNXGenerator_debug(Ort::Env &shared_env, const std::string &model_path)
         : env(shared_env), session(env, model_path.c_str(), Ort::SessionOptions{})
     {
         // Create session options
@@ -129,12 +136,12 @@ namespace o2
 namespace eventgen
 {
 
-class GenTPCLoopers : public Generator
+class GenTPCLoopers_debug : public Generator
 {
     public:
-        GenTPCLoopers(std::string model_pairs = "tpcloopmodel.onnx", std::string model_compton = "tpcloopmodelcompton.onnx",
-                      std::string poisson = "poisson.csv", std::string gauss = "gauss.csv", std::string scaler_pair = "scaler_pair.json",
-                      std::string scaler_compton = "scaler_compton.json")
+        GenTPCLoopers_debug(std::string model_pairs = "tpcloopmodel.onnx", std::string model_compton = "tpcloopmodelcompton.onnx",
+                            std::string poisson = "poisson.csv", std::string gauss = "gauss.csv", std::string scaler_pair = "scaler_pair.json",
+                            std::string scaler_compton = "scaler_compton.json")
         {
             // Checking if the model files exist and are not empty
             std::ifstream model_file[2];
@@ -200,11 +207,11 @@ class GenTPCLoopers : public Generator
                     mGaussSet = true;
                 }
             }
-            mONNX_pair = std::make_unique<ONNXGenerator>(global_env, model_pairs);
-            mScaler_pair = std::make_unique<Scaler>();
+            mONNX_pair = std::make_unique<ONNXGenerator_debug>(global_env, model_pairs);
+            mScaler_pair = std::make_unique<Scaler_debug>();
             mScaler_pair->load(scaler_pair);
-            mONNX_compton = std::make_unique<ONNXGenerator>(global_env, model_compton);
-            mScaler_compton = std::make_unique<Scaler>();
+            mONNX_compton = std::make_unique<ONNXGenerator_debug>(global_env, model_compton);
+            mScaler_compton = std::make_unique<Scaler_debug>();
             mScaler_compton->load(scaler_compton);
             Generator::setTimeUnit(1.0);
             Generator::setPositionUnit(1.0);
@@ -525,10 +532,10 @@ class GenTPCLoopers : public Generator
         }
 
     private:
-        std::unique_ptr<ONNXGenerator> mONNX_pair = nullptr;
-        std::unique_ptr<ONNXGenerator> mONNX_compton = nullptr;
-        std::unique_ptr<Scaler> mScaler_pair = nullptr;
-        std::unique_ptr<Scaler> mScaler_compton = nullptr;
+        std::unique_ptr<ONNXGenerator_debug> mONNX_pair = nullptr;
+        std::unique_ptr<ONNXGenerator_debug> mONNX_compton = nullptr;
+        std::unique_ptr<Scaler_debug> mScaler_pair = nullptr;
+        std::unique_ptr<Scaler_debug> mScaler_compton = nullptr;
         double mPoisson[3] = {0.0, 0.0, 0.0}; // Mu, Min and Max of Poissonian
         double mGauss[4] = {0.0, 0.0, 0.0, 0.0}; // Mean, Std, Min, Max
         std::vector<std::vector<double>> mGenPairs;
@@ -629,7 +636,7 @@ FairGenerator *
     }
     model_pairs = isAlien[0] || isCCDB[0] ? local_names[0] : model_pairs;
     model_compton = isAlien[1] || isCCDB[1] ? local_names[1] : model_compton;
-    auto generator = new o2::eventgen::GenTPCLoopers(model_pairs, model_compton, poisson, gauss, scaler_pair, scaler_compton);
+    auto generator = new o2::eventgen::GenTPCLoopers_debug(model_pairs, model_compton, poisson, gauss, scaler_pair, scaler_compton);
     generator->SetNLoopers(nloopers_pairs, nloopers_compton);
     generator->SetMultiplier(mult);
     return generator;
@@ -700,7 +707,7 @@ Generator_TPCLoopersFlat(std::string model_pairs = "tpcloopmodel.onnx", std::str
     }
     model_pairs = isAlien[0] || isCCDB[0] ? local_names[0] : model_pairs;
     model_compton = isAlien[1] || isCCDB[1] ? local_names[1] : model_compton;
-    auto generator = new o2::eventgen::GenTPCLoopers(model_pairs, model_compton, "", "", scaler_pair, scaler_compton);
+    auto generator = new o2::eventgen::GenTPCLoopers_debug(model_pairs, model_compton, "", "", scaler_pair, scaler_compton);
     generator->setFractionPairs(fraction_pairs);
     generator->setFlatGas(flat_gas, loops_num, nloopers_orbit);
     return generator;
@@ -772,7 +779,7 @@ Generator_TPCLoopersOrbitRef(std::string model_pairs = "tpcloopmodel.onnx", std:
     model_pairs = isAlien[0] || isCCDB[0] ? local_names[0] : model_pairs;
     model_compton = isAlien[1] || isCCDB[1] ? local_names[1] : model_compton;
     nclxrate = isAlien[2] || isCCDB[2] ? local_names[2] : nclxrate;
-    auto generator = new o2::eventgen::GenTPCLoopers(model_pairs, model_compton, "", "", scaler_pair, scaler_compton);
+    auto generator = new o2::eventgen::GenTPCLoopers_debug(model_pairs, model_compton, "", "", scaler_pair, scaler_compton);
     generator->SetRate(nclxrate, isPbPb, intrate);
     // Adjust can be negative (-1 maximum) or positive to decrease or increase the number of loopers per orbit
     generator->SetAdjust(adjust);
