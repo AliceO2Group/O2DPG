@@ -941,7 +941,7 @@ class O2_GeneratorParamJpsipp96TeV : public GeneratorTGenerator
     paramJpsi = new GeneratorParam(1, -1, PtJPsipp96TeV, YJPsipp96TeV, V2JPsipp96TeV, IpJPsipp96TeV);
     paramJpsi->SetMomentumRange(0., 1.e6);
     paramJpsi->SetPtRange(0, 999.);
-    paramJpsi->SetYRange(-4.2, -2.3);
+    paramJpsi->SetYRange(-4.2, -2.0);
     paramJpsi->SetPhiRange(0., 360.);
     paramJpsi->SetDecayer(new TPythia6Decayer());
     paramJpsi->SetForceDecay(kNoDecay); // particle left undecayed
@@ -979,13 +979,15 @@ class O2_GeneratorParamJpsipp96TeV : public GeneratorTGenerator
   //-------------------------------------------------------------------------//
   static Double_t YJPsipp96TeV(const Double_t* py, const Double_t* /*dummy*/)
   {
-    // Parameters extrapolated linearly between 5 TeV and 13 TeV as a function of log(sqrt(s))
+    // Parameters extrapolated linearly between 5 TeV and 13 TeV as a function of log(sqrt(s)), shifted by a rapidity boost dy=0.35
     Double_t y = *py;
+    Double_t deltaY = 0.35;
+    Double_t yCM = y - deltaY;
     Float_t p0, p1, p2;
     p0 = 1;
     p1 = 0.0107769;
     p2 = 2.98205;
-    return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((y - p1) / p2), 2));
+    return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((yCM - p1) / p2), 2));
   }
 
   //-------------------------------------------------------------------------//
@@ -1014,7 +1016,7 @@ class O2_GeneratorParamPsipp96TeV : public GeneratorTGenerator
     paramPsi = new GeneratorParam(1, -1, PtPsipp96TeV, YPsipp96TeV, V2Psipp96TeV, IpPsipp96TeV);
     paramPsi->SetMomentumRange(0., 1.e6);
     paramPsi->SetPtRange(0, 999.);
-    paramPsi->SetYRange(-4.2, -2.3);
+    paramPsi->SetYRange(-4.2, -2.0);
     paramPsi->SetPhiRange(0., 360.);
     paramPsi->SetDecayer(new TPythia6Decayer());
     paramPsi->SetForceDecay(kNoDecay); // particle left undecayed
@@ -1054,11 +1056,13 @@ class O2_GeneratorParamPsipp96TeV : public GeneratorTGenerator
   {
     // Taking same parameters as Psi(2S) at 13 TeV
     Double_t y = *py;
+    Double_t deltaY = 0.35;
+    Double_t yCM = y - deltaY;
     Float_t p0, p1, p2;
     p0 = 1;
     p1 = 0;
     p2 = 2.98887;
-    return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((y - p1) / p2), 2));
+    return p0 * TMath::Exp(-(1. / 2.) * TMath::Power(((yCM - p1) / p2), 2));
   }
 
   //-------------------------------------------------------------------------//
