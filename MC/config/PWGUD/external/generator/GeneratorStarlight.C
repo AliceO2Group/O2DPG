@@ -151,8 +151,11 @@ class GeneratorStarlight_class : public Generator
     {"kIncohUpsilonToEl",    4,  553011,   20, -1.0, -1.0,  553, 0 }, //
     {"kDpmjetSingleA",        5,  113,   20, -1.0, -1.0,  -1, 0 }, //
     {"kDpmjetSingleC",        5,  113,   20, -1.0, -1.0,  -1, 0 }, //
-    {"kTauLowToEl3Pi",       1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
-    {"kTauLowToPo3Pi",       1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowToL+3Pi",       1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowToL-3Pi",       1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowToPi+3Pi",      1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowToPi-3Pi",      1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
+    {"kTauLowTo6Pi",         1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
     {"kTauLowToElMu",        1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
     {"kTauLowToElPiPi0",     1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
     {"kTauLowToPoPiPi0",     1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV
