@@ -1,5 +1,5 @@
 Decay tau-
-1.0 e-      anti-nu_e nu_tau                        PHOTOS TAULNUNU; #[Reconstructed PDG2011]
+1.0 pi-     pi-     pi+     nu_tau                  TAUHADNU -0.108 0.775 0.149 1.364 0.400 1.23 0.4; #[Reconstructed PDG2011]
 Enddecay
 Decay tau+
 1.0 pi+     pi+     pi-     anti-nu_tau                  TAUHADNU -0.108 0.775 0.149 1.364 0.400 1.23 0.4; #[Reconstructed PDG2011]
