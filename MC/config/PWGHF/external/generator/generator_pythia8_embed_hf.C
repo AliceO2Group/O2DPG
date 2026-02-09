@@ -420,4 +420,3 @@ FairGenerator * GeneratorPythia8EmbedHFCharmAndBeauty(bool usePtHardBins = false
     return myGen;
 }
 
- 
