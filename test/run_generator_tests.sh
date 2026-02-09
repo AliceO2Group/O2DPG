@@ -46,23 +46,23 @@ TEST_COUNTER=1
 # whether or not to delete everything except logs (default is to delete)
 KEEP_ONLY_LOGS=1
 
+# Number of workers for parallel test runs
+JOBS=${JOBS:-8}
+echo "Running tests with up to ${JOBS} parallel jobs"
 # Prepare some colored output
 SRED="\033[0;31m"
 SGREEN="\033[0;32m"
 SEND="\033[0m"
-
 
 echo_green()
 {
     echo -e "${SGREEN}${*}${SEND}"
 }
 
-
 echo_red()
 {
     echo -e "${SRED}${*}${SEND}"
 }
-
 
 # Prevent the script from being soured to omit unexpected surprises when exit is used
 SCRIPT_NAME="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
@@ -71,11 +71,9 @@ if [ "${SCRIPT_NAME}" != "$(basename ${BASH_SOURCE[0]})" ] ; then
     return 1
 fi
 
-
 ##################################
 # Core and utility functionality #
 ##################################
-
 
 get_test_script_path_for_ini()
 {
@@ -111,9 +109,10 @@ exec_test()
     local ini_path=${1}
     local generator=${2} # for now one of "Pythia8" or "External", at this point we know that settings for the generator are defined in this ini
     local generator_lower=$(echo "${generator}" | tr '[:upper:]' '[:lower:]')
+    local test_id=${3}  # DPL session ID
     # TODO Potentially, one could run an external generator that derives from GeneratorPythia8 and so could probably use configuration for TriggerPythia8
-    local trigger=${3:+-t ${generator_lower}}
-    local trigger_dpl=${3:+--trigger ${generator_lower}}
+    local trigger=${4:+-t ${generator_lower}}
+    local trigger_dpl=${4:+--trigger ${generator_lower}}
     local RET=0
     # this is how our test script is expected to be called
     local test_script=$(get_test_script_path_for_ini ${ini_path})
@@ -126,13 +125,14 @@ exec_test()
     echo "### Testing DPL-eventgen ###" >> ${LOG_FILE_SIM}
     # run the event generation using the dpl-eventgen executable.
     # This is a basic running test, however it's important because the system running on Hyperloop
-    # is largely used for MCGEN productions and is currently tested only locally
-    o2-sim-dpl-eventgen --generator ${generator_lower} ${trigger_dpl} --nEvents ${nev} --configFile ${ini_path} --configKeyValues "GeneratorPythia8.includePartonEvent=true" -b >> ${LOG_FILE_SIM} 2>&1
+    # is largely used for MCGEN productions and is currently tested only locally.
+    # Using unique session labels to prevent channel binding conflicts in parallel execution
+    o2-sim-dpl-eventgen --session test_${test_id} --generator ${generator_lower} ${trigger_dpl} --nEvents ${nev} --configFile ${ini_path} --configKeyValues "GeneratorPythia8.includePartonEvent=true" -b >> ${LOG_FILE_SIM} 2>&1
     RET=${?}
     [[ "${RET}" != "0" ]] && { remove_artifacts ; return ${RET} ; }
     # run the simulation, fail if not successful
     echo "### Testing base o2-sim executable ###" >> ${LOG_FILE_SIM}
-    o2-sim -g ${generator_lower} ${trigger} --noGeant -n ${nev} -j 4 --configFile ${ini_path} --configKeyValues "GeneratorPythia8.includePartonEvent=true" >> ${LOG_FILE_SIM} 2>&1
+    o2-sim -g ${generator_lower} ${trigger} --noGeant -n ${nev} -j 1 --configFile ${ini_path} --configKeyValues "GeneratorPythia8.includePartonEvent=true" >> ${LOG_FILE_SIM} 2>&1
     RET=${?}
     [[ "${RET}" != "0" ]] && { remove_artifacts ; return ${RET} ; }
 
@@ -151,6 +151,13 @@ exec_test()
     return ${RET}
 }
 
+wait_for_slot()
+{
+    # Wait until the number of background jobs is within the limit
+    while (( $(jobs -r | wc -l) >= JOBS )) ; do
+        sleep 0.1
+    done
+}
 
 check_generators()
 {
@@ -169,30 +176,36 @@ check_generators()
             local look_for=$(grep " ${g}.*\(\)" ${test_script})
             local has_trigger="$(grep Trigger${g} ${ini_path})"
             [[ -z "${look_for}" ]] && continue
-            echo -n "Test ${TEST_COUNTER}: ${ini_path} with generator ${g}"
             tested_any=1
             # prepare the test directory
             local test_dir=${TEST_COUNTER}_$(basename ${ini})_${g}_dir
             rm -rf ${test_dir} 2> /dev/null
             mkdir ${test_dir}
-            pushd ${test_dir} > /dev/null
-                # one single test
-                exec_test ${ini_path} ${g} ${has_trigger}
-                RET=${?}
-            popd > /dev/null
-            if [[ "${RET}" != "0" ]] ; then
-                echo_red " -> FAILED"
-                ret_this=${RET}
-            else
-                echo_green " -> PASSED"
-            fi
+            local test_num=${TEST_COUNTER}
             ((TEST_COUNTER++))
+
+            # Wait for an available slot before starting a new test
+            wait_for_slot
+
+            echo "Test ${test_num}: ${ini_path} with generator ${g} - STARTED"
+            # Run test in background
+            (
+                cd ${test_dir}
+                exec_test ${ini_path} ${g} ${test_num} ${has_trigger}
+                exit $?
+            ) &
+            local pid=$!
+
+            # Store test information in global arrays
+            test_pids+=(${pid})
+            test_numbers+=(${test_num})
+            test_generators+=(${g})
+            test_ini_paths+=("${ini_path}")
         fi
     done
     [[ -z "${tested_any}" ]] && { echo_red "No test scenario was found for any generator. There must be at least one generator to be tested." ; ret_this=1 ; }
     return ${ret_this}
 }
-
 
 add_ini_files_from_macros()
 {
@@ -216,7 +229,6 @@ add_ini_files_from_macros()
     done
 }
 
-
 get_root_includes()
 {
     # check if some R__ADD_INCLUDE_PATH is used in the including macro and check the included file against that
@@ -235,7 +247,6 @@ get_root_includes()
     done <<< "$(grep R__ADD_INCLUDE_PATH ${including_file})"
     echo ${full_includes}
 }
-
 
 find_including_macros()
 {
@@ -283,7 +294,6 @@ find_including_macros()
     echo ${including_macros}
 }
 
-
 add_ini_files_from_tests()
 {
     # Collect also those INI files for which the test has been changed
@@ -301,7 +311,6 @@ add_ini_files_from_tests()
         INI_FILES+=" ${tc} "
     done
 }
-
 
 collect_ini_files()
 {
@@ -335,7 +344,6 @@ collect_ini_files()
     done
     add_ini_files_from_tests ${macros}
 }
-
 
 get_git_repo_directory()
 {
@@ -381,11 +389,11 @@ print_usage()
 
 # whether or not to exit after first test has failed
 fail_immediately=
-[[ "${1}" == "--fail_immediately" ]] && fail_immediately=1
+[[ "${1}" == "--fail-immediately" ]] && fail_immediately=1
 
 while [ "$1" != "" ] ; do
     case $1 in
-        --fail_immediately ) shift
+        --fail-immediately ) shift
                              fail_immediately=1
                              ;;
         --keep-artifacts )   shift
@@ -469,6 +477,12 @@ pushd ${TEST_PARENT_DIR} > /dev/null
 # global return code to be returned at the end
 ret_global=0
 
+# Global arrays to track all test jobs (across all INI files)
+declare -a test_pids
+declare -a test_numbers
+declare -a test_generators
+declare -a test_ini_paths
+
 # check each of the INI files
 for ini in ${ini_files_full_paths} ; do
 
@@ -495,6 +509,50 @@ for ini in ${ini_files_full_paths} ; do
         [[ "${fail_immediately}" == "1" ]] && break
     fi
 done
+
+# Wait for all test jobs to complete and collect results
+total_tests=${#test_pids[@]}
+completed=0
+while (( completed < total_tests )) ; do
+    # Wait for any background job to complete
+    wait -n
+    RET=$?
+
+    # Find which job completed by checking which PID no longer exists
+    for idx in "${!test_pids[@]}" ; do
+        pid="${test_pids[$idx]}"
+        if ! kill -0 ${pid} 2>/dev/null ; then
+            # This job has completed, get its actual exit status
+            wait ${pid} 2>/dev/null
+            RET=$?
+
+            test_num="${test_numbers[$idx]}"
+            generator="${test_generators[$idx]}"
+            ini_path="${test_ini_paths[$idx]}"
+
+            if [[ "${RET}" != "0" ]] ; then
+                echo_red "Test ${test_num}: ${ini_path} with generator ${generator} -> FAILED"
+                ret_global=${RET}
+                if [[ "${fail_immediately}" == "1" ]] ; then
+                    # Kill remaining background jobs
+                    for remaining_pid in "${test_pids[@]}" ; do
+                        kill ${remaining_pid} 2>/dev/null
+                    done
+                    completed=${total_tests}
+                    break
+                fi
+            else
+                echo_green "Test ${test_num}: ${ini_path} with generator ${generator} -> PASSED"
+            fi
+
+            # Remove this job from tracking
+            unset test_pids[$idx]
+            ((completed++))
+            break
+        fi
+    done
+done
+
 # return to where we came from
 popd > /dev/null
 
