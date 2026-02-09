@@ -1,158 +1,68 @@
+#include <TFile.h>
+#include <TTree.h>
+#include <vector>
+#include <iostream>
+#include <cmath>
+#include "DataFormats/MCTrack.h"
+
 int External() {
-  std::string path{"o2sim_Kine.root"};
+    std::string path{"o2sim_Kine.root"};
 
-  int checkPdgDecayElectron = 11;
-  int checkPdgQuarkOne = 1;         // d quark
-  int checkPdgQuarkTwo = 2;         // u quark
-  int checkPdgQuarkThree = 3;       // s quark
-  float ratioTrigger = 1. / 5;      // one event triggered out of 5
+    const int pdgPi0 = 111;
+    const int pdgEta = 221;
+    const double yMin = -1.5;
+    const double yMax = 1.5;
+    const int minNb = 1;
 
+    TFile file(path.c_str(), "READ");
+    if (file.IsZombie()) {
+        std::cerr << "Cannot open ROOT file " << path << "\n";
+        return 1;
+    }
 
-  TFile file(path.c_str(), "READ");
-  if (file.IsZombie()) {
-    std::cerr << "Cannot open ROOT file" << path << "\n";
-    return 1;
-  }
+    auto tree = (TTree*)file.Get("o2sim");
+    if (!tree) {
+        std::cerr << "Cannot find tree o2sim\n";
+        return 1;
+    }
 
-  auto tree = (TTree *)file.Get("o2sim");
-  if (!tree) {
-    std::cerr << "Cannot find tree o2sim in file" << path << "\n";
-    return 1;
-  }
+    std::vector<o2::MCTrack>* tracks{};
+    tree->SetBranchAddress("MCTrack", &tracks);
 
-  std::vector<o2::MCTrack> *tracks{};
-  tree->SetBranchAddress("MCTrack", &tracks);
-  o2::dataformats::MCEventHeader *eventHeader = nullptr;
-  tree->SetBranchAddress("MCEventHeader.", &eventHeader);
+    int nEvents = tree->GetEntries();
+    int nAccepted = 0;
+    int totalPi0 = 0, totalEta = 0;
 
-  int nEventsMB{}, nEventsInjOne{}, nEventsInjTwo{}, nEventsInjThree{};
-  int nQuarksOne{}, nQuarksTwo{}, nQuarksThree{};
-  int nElectrons{};
-  auto nEvents = tree->GetEntries();
+    for (int i = 0; i < nEvents; ++i) {
+        tree->GetEntry(i);
 
-  for (int i = 0; i < nEvents; i++) {
-    tree->GetEntry(i);
+        int count = 0;
+        for (auto& track : *tracks) {
+            int pdg = std::abs(track.GetPdgCode());
+            double y = track.GetRapidity();
 
-    // check subgenerator information
-    if (eventHeader->hasInfo(o2::mcgenid::GeneratorProperty::SUBGENERATORID)) {
-      bool isValid = false;
-      int subGeneratorId = eventHeader->getInfo<int>(
-          o2::mcgenid::GeneratorProperty::SUBGENERATORID, isValid);
-      if (subGeneratorId == 0) {
-        nEventsMB++;
-      } else if (subGeneratorId == checkPdgQuarkOne) {
-        nEventsInjOne++;
-      } else if (subGeneratorId == checkPdgQuarkTwo) {
-        nEventsInjTwo++;
-      } else if (subGeneratorId == checkPdgQuarkThree) {
-        nEventsInjThree++;
-      }
-    } // if event header
+            if ((pdg == pdgPi0 || pdg == pdgEta) && y >= yMin && y <= yMax) {
+                count++;
+                if (pdg == pdgPi0) totalPi0++;
+                if (pdg == pdgEta) totalEta++;
+            }
+        }
 
-    int nelectronsev = 0;
+        if (count < minNb) {
+            std::cerr << " Trigger violation in event " << i
+                      << " (found " << count << " π0/η in rapidity window)\n";
+            return 1;
+        }
 
-    for (auto &track : *tracks) {
-      auto pdg = track.GetPdgCode();
-      if (std::abs(pdg) == checkPdgQuarkOne) {
-        nQuarksOne++;
-        continue;
-      }
-      if (std::abs(pdg) == checkPdgQuarkTwo) {
-        nQuarksTwo++;
-        continue;
-      }
-      if (std::abs(pdg) == checkPdgQuarkThree) {
-             nQuarksThree++;
-              continue;
-       }
+        nAccepted++;
+    }
 
+    std::cout << "--------------------------------------\n";
+    std::cout << "Trigger test: π0/η within rapidity window\n";
+    std::cout << "Events tested: " << nEvents << "\n";
+    std::cout << "Events accepted: " << nAccepted << "\n";
+    std::cout << "# π0: " << totalPi0 << ", # η: " << totalEta << "\n";
+    std::cout << "Trigger test PASSED\n";
 
-      auto y = track.GetRapidity();
-      if (std::abs(pdg) == checkPdgDecayElectron) {
-        int igmother = track.getMotherTrackId();
-        auto gmTrack = (*tracks)[igmother];
-        int gmpdg = gmTrack.GetPdgCode();
-        if (int(std::abs(gmpdg) / 100.) == 1 ||
-            int(std::abs(gmpdg) / 1000.) == 1 ||
-            int(std::abs(gmpdg) / 100.) == 2 ||
-            int(std::abs(gmpdg) / 1000.) == 2 ||
-            int(std::abs(gmpdg) / 100.) == 3 ||
-            int(std::abs(gmpdg) / 1000.) == 3) {
-          nElectrons++;
-          nelectronsev++;
-        } // gmpdg
-      } // pdgdecay
-    } // loop track
-    // std::cout << "#electrons per event: " << nelectronsev << "\n";
-  }
-
-  std::cout << "--------------------------------\n";
-  std::cout << "# Events: " << nEvents << "\n";
-  std::cout << "# MB events: " << nEventsMB << "\n";
-  std::cout << Form("# events injected with %d quark pair: ", checkPdgQuarkOne)
-            << nEventsInjOne << "\n";
-  std::cout << Form("# events injected with %d quark pair: ", checkPdgQuarkTwo)
-            << nEventsInjTwo << "\n";
-  std::cout << Form("# events injected with %d quark pair: ", checkPdgQuarkThree)
-            << nEventsInjThree << "\n";
-  std::cout << Form("# %d (anti)quarks: ", checkPdgQuarkOne) << nQuarksOne
-            << "\n";
-  std::cout << Form("# %d (anti)quarks: ", checkPdgQuarkTwo) << nQuarksTwo
-            << "\n";
-  std::cout << Form("# %d (anti)quarks: ", checkPdgQuarkThree) << nQuarksThree
-            << "\n";
-
-  if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.90 ||
-      nEventsMB > nEvents * (1 - ratioTrigger) *
-                      1.1) { // we put some tolerance since the number of
-                              // generated events is small
-    std::cerr << "Number of generated MB events different than expected\n";
-    return 1;
-  }
-constexpr float nInjectedSpecies = 3.f;
-  if (nEventsInjOne < nEvents * ratioTrigger * 1.0/nInjectedSpecies * 0.90 ||
-      nEventsInjOne > nEvents * ratioTrigger * 1.0/nInjectedSpecies * 1.1) {
-    std::cerr << "Number of generated events injected with " << checkPdgQuarkOne
-              << " different than expected\n";
-    return 1;
-  }
-  if (nEventsInjTwo < nEvents * ratioTrigger * 1.0/nInjectedSpecies * 0.90 ||
-      nEventsInjTwo > nEvents * ratioTrigger * 1.0/nInjectedSpecies * 1.1) {
-    std::cerr << "Number of generated events injected with " << checkPdgQuarkTwo
-              << " different than expected\n";
-    return 1;
-  }
-  if (nEventsInjThree < nEvents * ratioTrigger * 1.0/nInjectedSpecies * 0.90 ||
-      nEventsInjThree > nEvents * ratioTrigger * 1.0/nInjectedSpecies * 1.1) {
-    std::cerr << "Number of generated events injected with " << checkPdgQuarkThree
-              << " different than expected\n";
-    return 1;
-  }
-  if (nQuarksOne <
-      nEvents *
-          ratioTrigger) { // we expect anyway more because the same quark is
-                          // repeated several time, after each gluon radiation
-    std::cerr << "Number of generated (anti)quarks " << checkPdgQuarkOne
-              << " lower than expected\n";
-    return 1;
-  }
-  if (nQuarksTwo <
-      nEvents *
-          ratioTrigger) { // we expect anyway more because the same quark is
-                          // repeated several time, after each gluon radiation
-    std::cerr << "Number of generated (anti)quarks " << checkPdgQuarkTwo
-              << " lower than expected\n";
-    return 1;
-  }
-    if (nQuarksThree <
-      nEvents *
-          ratioTrigger) { // we expect anyway more because the same quark is
-                          // repeated several time, after each gluon radiation
-    std::cerr << "Number of generated (anti)quarks " << checkPdgQuarkThree
-              << " lower than expected\n";
-    return 1;
-  }
-  std::cout << "#electrons: " << nElectrons << "\n";
-
-  return 0;
-} // external
+    return 0;
+}
