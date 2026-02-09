@@ -12,24 +12,26 @@
 ////  authors: Rashi Gupta (rashi.gupta@cern.ch)
 ///  authors: Ravindra Singh (ravindra.singh@cern.ch)
 /// ============================================================================
-
-
-
-
-o2::eventgen::Trigger selectPionEtaWithinAcc(Int_t pdgPartForAccCut = 111; 221, double rapidityMin = -1.5, double rapidityMax = 1.5, int minNb = 1)
+o2::eventgen::Trigger selectPionEtaWithinAcc(TString pdgPartForAccCut = "111;221", double rapidityMin = -1.5, double rapidityMax = 1.5, int minNb = 1)
 {
     return [pdgPartForAccCut, rapidityMin, rapidityMax, minNb](const std::vector<TParticle>& particles) -> bool {
-        int count = 0;
-        for (const auto& particle : particles) {
-            Int_t pdg = TMath::Abs(particle.GetPdgCode());
-            if (pdg == pdgPartForAccCut) { // select π⁰ (111) or η (221)
-                double y = particle.Y();
-                if (y >= rapidityMin && y <= rapidityMax) {
-                    count++;
-                }
-            }
-        }
+    TObjArray* obj = pdgPartForAccCut.Tokenize(";");
+    int count = 0;
+    for (const auto& particle : particles) {
+      int pdg = TMath::Abs(particle.GetPdgCode());
+      double y = particle.Y();
 
+      if (y < rapidityMin || y > rapidityMax) continue;
+
+      for (int i = 0; i < obj->GetEntriesFast(); ++i) {
+        int pdgCode = std::stoi(obj->At(i)->GetName());
+
+        if (pdg == pdgCode) {
+          count++;
+          break;
+        }
+      }
+    }
         // Only accept events with at least minNb π⁰/η
         if (count >= minNb)
             return kTRUE;
