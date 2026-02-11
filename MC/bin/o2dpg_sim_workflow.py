@@ -174,6 +174,7 @@ O2DPG_ROOT=environ.get('O2DPG_ROOT')
 O2_ROOT=environ.get('O2_ROOT')
 QUALITYCONTROL_ROOT=environ.get('QUALITYCONTROL_ROOT')
 O2PHYSICS_ROOT=environ.get('O2PHYSICS_ROOT')
+ccdbRemap = environ.get('ALIEN_JDL_REMAPPINGS')
 
 if O2DPG_ROOT == None:
    print('Error: This needs O2DPG loaded')
@@ -237,15 +238,25 @@ if args.overwrite_config != '':
 
 # We still may need adjust configurations manually for consistency:
 #
-# * Force simpler TPC digitization of if TPC reco does not have the mc-time-gain option:
+# * Force simpler TPC digitization of if TPC reco does not have the mc-time-gain option or remap to a different CCDB object if we are anchored to 2023:
 async_envfile = 'env_async.env' if environ.get('ALIEN_JDL_O2DPG_ASYNC_RECO_TAG') is not None else None
 tpcreco_mctimegain = option_if_available('o2-tpc-reco-workflow', '--tpc-mc-time-gain', envfile=async_envfile)
 if tpcreco_mctimegain == '':
-   # this was communicated by Jens Wiechula@TPC; avoids dEdX issue https://its.cern.ch/jira/browse/O2-5486 for the 2tag mechanism
-   print ("TPC reco does not support --tpc-mc-time-gain. Adjusting some config for TPC digitization")
-   overwrite_config(anchorConfig['ConfigParams'],'TPCGasParam','OxygenCont',5e-6)
-   overwrite_config(anchorConfig['ConfigParams'],'TPCGEMParam','TotalGainStack',2000)
-   overwrite_config(anchorConfig['ConfigParams'],'GPU_global','dEdxDisableResidualGain',1)
+   # TODO: Upload all MC time gain objects to TestReco and remove year dependence
+   year = environ.get('ALIEN_JDL_LPMANCHORYEAR') if environ.get('ALIEN_JDL_LPMANCHORYEAR') is not None else environ.get('ANCHORYEAR') 
+   if year == '2023':
+      print("TPC reco does not support --tpc-mc-time-gain. Remapping time gain objects for 2023 MC")
+      # Year dependent workaround for MC anchored to 2023, solving the issue with 2tag mechanism
+      extra = 'https://alice-ccdb.cern.ch/TestReco/=TPC/Calib/TimeGain'
+      environ['ALIEN_JDL_REMAPPINGS'] = (ccdbRemap + ';' + extra) if ccdbRemap else extra
+      # Keep the cached variable in sync, since getDPL_global_options uses it
+      ccdbRemap = environ.get('ALIEN_JDL_REMAPPINGS')
+   else:
+      # this was communicated by Jens Wiechula@TPC; avoids dEdX issue https://its.cern.ch/jira/browse/O2-5486 for the 2tag mechanism
+      print ("TPC reco does not support --tpc-mc-time-gain. Adjusting some config for TPC digitization")
+      overwrite_config(anchorConfig['ConfigParams'],'TPCGasParam','OxygenCont',5e-6)
+      overwrite_config(anchorConfig['ConfigParams'],'TPCGEMParam','TotalGainStack',2000)
+      overwrite_config(anchorConfig['ConfigParams'],'GPU_global','dEdxDisableResidualGain',1)
 # TODO: put into it's own function for better modularity
 
 # with the config, we'll create a task_finalizer functor
@@ -511,7 +522,6 @@ includeLocalQC=args.include_local_qc=='True' or args.include_local_qc==True
 includeAnalysis = args.include_analysis
 includeTPCResiduals=True if environ.get('ALIEN_JDL_DOTPCRESIDUALEXTRACTION') == '1' else False
 includeTPCSyncMode=True if environ.get('ALIEN_JDL_DOTPCSYNCMODE') == '1' else False
-ccdbRemap = environ.get('ALIEN_JDL_REMAPPINGS')
 
 qcdir = "QC"
 if (includeLocalQC or includeFullQC) and not isdir(qcdir):
