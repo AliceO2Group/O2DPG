@@ -27,8 +27,8 @@ int External()
 
   // Expecting only events with a 0-10% centrality
   // 0-100%  gives a mean of ~1350
-
-  if (meanNTracksPerEvent < 1300) {
+  // 2300 should be enough
+  if (meanNTracksPerEvent < 2300) {
     return 1;
   }
 
