@@ -261,9 +261,7 @@ namespace o2
                 // 3. Status: 11 for partons (jets), 1 for final-state
                 int status = isParton(pdgCode) ? 11 : 1;
                 // 4. Kinematics (flat 1/pT, max ~5000 GeV / pTScale)
-                float min_inv_pt = kBaseMinInvPt / pTScale; // E.g., max pT=40,000 GeV for b quarks
-                float max_inv_pt = kBaseMaxInvPt / pTScale; // E.g., max pT=40,000 GeV for b quarks
-                float inv_pt = (gRandom->Rndm() / pTScale) * (max_inv_pt - min_inv_pt) + min_inv_pt;
+                ffloat inv_pt = gRandom->Rndm() * (kBaseMaxInvPt - kBaseMinInvPt) + kBaseMinInvPt;
                 float pt = 1.0f / inv_pt;
                 float phi = gRandom->Rndm() * 2.0f * TMath::Pi();
                 float eta = gRandom->Rndm() * 3.0f - 1.5f; // ALICE TPC: -1.5 to 1.5
