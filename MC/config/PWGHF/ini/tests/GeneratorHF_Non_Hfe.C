@@ -1,11 +1,4 @@
-#include <TFile.h>
-#include <TTree.h>
-#include <vector>
-#include <iostream>
-#include <cmath>
-#include "DataFormats/MCTrack.h"
-
-int External() {
+int Hybrid() {
     std::string path{"o2sim_Kine.root"};
 
     const int pdgPi0 = 111;
