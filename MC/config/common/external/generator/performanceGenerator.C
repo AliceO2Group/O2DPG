@@ -209,7 +209,7 @@ namespace o2
 
             // pT bounds: Max pT ~5 TeV (ALICE Pb-Pb energy)
             const float kMaxInvPt = 2.f;      // Min pT = 0.5 GeV
-            const float kBaseMinInvPt = 2e-4f; // Max pT = 5000 GeV (unscaled)
+            const float kMinInvPt = 2e-4f;    // Max pT = 5000 GeV (unscaled)
 
             // Check if particle is a parton (quark/gluon, status=11)
             bool isParton(int& pdgCode)
@@ -261,7 +261,7 @@ namespace o2
                 // 3. Status: 11 for partons (jets), 1 for final-state
                 int status = isParton(pdgCode) ? 11 : 1;
                 // 4. Kinematics (flat 1/pT, max ~5000 GeV / pTScale)
-                ffloat inv_pt = gRandom->Rndm() * (kBaseMaxInvPt - kBaseMinInvPt) + kBaseMinInvPt;
+                float inv_pt = gRandom->Rndm() * (kMaxInvPt - kMinInvPt) + kMinInvPt;
                 float pt = 1.0f / inv_pt;
                 float phi = gRandom->Rndm() * 2.0f * TMath::Pi();
                 float eta = gRandom->Rndm() * 3.0f - 1.5f; // ALICE TPC: -1.5 to 1.5
