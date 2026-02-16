@@ -21,7 +21,7 @@ export ROOT_INCLUDE_PATH LD_LIBRARY_PATH
 # Entrypoint for O2DPG related tests #
 ######################################
 
-CHECK_GENERATORS="pythia8 External Hybrid"
+CHECK_GENERATORS="Pythia8 External Hybrid"
 
 # The test parent dir to be cretaed in current directory
 TEST_PARENT_DIR="o2dpg_tests/generators"
@@ -174,6 +174,10 @@ check_generators()
         # check if this generator is mentioned in the INI file and only then test it
         if [[ "$(grep ${g} ${ini_path})" != "" ]] ; then
             local look_for=$(grep " ${g}.*\(\)" ${test_script})
+            # For Pythia8 the function in the test script is lowercase for compatibility purposes
+            if [[ "${g}" == "Pythia8" ]]; then
+                look_for=$(grep " pythia8.*\(\)" ${test_script})
+            fi
             local has_trigger="$(grep Trigger${g} ${ini_path})"
             [[ -z "${look_for}" ]] && continue
             tested_any=1
