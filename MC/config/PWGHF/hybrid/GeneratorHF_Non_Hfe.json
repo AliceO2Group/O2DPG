@@ -1,0 +1,27 @@
+{
+  "generators": [
+    {
+      "name": "pythia8",
+      "config": {
+        "config": "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGHF/pythia8/generator/pythia8_NonHfe.cfg",
+        "hooksFileName": "",
+        "hooksFuncName": "",
+        "includePartonEvent": true,
+        "particleFilter": "",
+        "verbose": 0
+      },
+      "triggers": {
+        "mode": "or",
+        "specs": [
+          {
+            "macro": "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGHF/trigger/selectNonHfe.C",
+            "function": "selectPionEtaWithinAcc(\"111;221\",-1.5,1.5,1)"
+          }
+        ]
+      }
+    }
+  ],
+  "fractions": [
+    1
+  ]
+}
