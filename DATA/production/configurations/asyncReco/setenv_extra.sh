@@ -29,11 +29,15 @@ if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]] || [[ -z $RUN_BFIELD ]]; then
   export RUN_BFIELD=`cat BField.txt`
   export RUN_DETECTOR_LIST=`cat DetList.txt`
 fi
+
+BABSI=$(printf "%.0f" "${RUN_BFIELD#-}")
+[[ "$BABSI" < 12500 && "$BABSI" > 11500 ]] && LOWFIELD=1 || LOWFIELD=0
+
 echo -e "\n"
 echo "Printing run features"
 echo "DETECTOR LIST for current run ($RUNNUMBER) = $RUN_DETECTOR_LIST"
 echo "DURATION for current run ($RUNNUMBER) = $RUN_DURATION"
-echo "B FIELD for current run ($RUNNUMBER) = $RUN_BFIELD"
+echo "B FIELD for current run ($RUNNUMBER) = $RUN_BFIELD (LOWFIELD = ${LOWFIELD})"
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
 if (( $(echo "$RUN_IR <= 0" | bc -l) )); then
   echo "Changing run IR to 1 Hz, because $RUN_IR makes no sense"
@@ -550,6 +554,9 @@ if [[ $BEAMTYPE == "PbPb" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.deltaRof=0;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;ITSCATrackerParam.nROFsPerIterations=12;ITSCATrackerParam.perPrimaryVertexProcessing=false;ITSCATrackerParam.fataliseUponFailure=false;ITSCATrackerParam.dropTFUponFailure=true;ITSCATrackerParam.maxMemory=21474836480;"
   if [[ -z "$ALIEN_JDL_DISABLE_UPC" || $ALIEN_JDL_DISABLE_UPC != 1 ]]; then
     EXTRA_ITSRECO_CONFIG+=";ITSVertexerParam.nIterations=2;ITSCATrackerParam.doUPCIteration=true;"
+  fi
+  if [[ $LOWFIELD == "1" ]]; then
+    EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPt=2.5;"
   fi
 elif [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
