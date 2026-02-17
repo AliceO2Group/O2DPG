@@ -71,7 +71,7 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
                              int gapBetweenInjection = 0,
                              bool useTrigger = false,
                              bool useRapidity = false,
-                             std::string pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg",
+                             std::string pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/pythia8_inel_136tev.cfg",
                              std::string pythiaCfgSignal = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_signal.cfg") : GeneratorPythia8{},
                                                                                                                                         mOneInjectionPerEvent{injOnePerEvent},
                                                                                                                                         mGapBetweenInjection{gapBetweenInjection},
@@ -132,7 +132,7 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       }
       // FIX: Fallback if still empty to default minbias
       if (pythiaCfgMb == "") {
-        pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg";
+        pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/pythia8_inel_136tev.cfg";
       }
       pythiaCfgMb = gSystem->ExpandPathName(pythiaCfgMb.c_str());
       if (!pythiaObjectMinimumBias.readFile(pythiaCfgMb)) {
