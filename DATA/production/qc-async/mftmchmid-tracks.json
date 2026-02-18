@@ -13,7 +13,7 @@
           "type": "direct",
           "_type": "dataSamplingPolicy",
           "name": "muon-tracks",
-          "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;matchMCHMID:GLO/MTC_MCHMID"
+          "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS/0;trackMIDROF:MID/TRACKROFS/0;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS/0;trackClMIDROF:MID/TRCLUSROFS/0;matchMCHMID:GLO/MTC_MCHMID"
         },
         "movingWindows": [
             "WithCuts/TracksPerTF",
@@ -64,7 +64,7 @@
           "_type": "direct",
           "type": "dataSamplingPolicy",
           "name": "glo-mu-tracks",
-          "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;matchMCHMID:GLO/MTC_MCHMID"
+          "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS/0;trackMIDROF:MID/TRACKROFS/0;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS/0;trackClMIDROF:MID/TRCLUSROFS/0;matchMCHMID:GLO/MTC_MCHMID"
         },
         "movingWindows": [
             "MCH-MID/WithCuts/TracksPerTF",
@@ -111,7 +111,7 @@
       "id": "muon-tracks",
       "active": "true",
       "machines": [],
-      "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;matchMCHMID:GLO/MTC_MCHMID",
+      "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS/0;trackMIDROF:MID/TRACKROFS/0;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS/0;trackClMIDROF:MID/TRCLUSROFS/0;matchMCHMID:GLO/MTC_MCHMID",
       "samplingConditions": [
         {
           "condition": "random",
@@ -125,7 +125,7 @@
       "id": "glo-mu-tracks",
       "active": "true",
       "machines": [],
-      "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS;trackMIDROF:MID/TRACKROFS;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS;trackClMIDROF:MID/TRCLUSROFS;matchMCHMID:GLO/MTC_MCHMID",
+      "query": "trackMCH:MCH/TRACKS;trackMCHROF:MCH/TRACKROFS;trackMCHTRACKCLUSTERS:MCH/TRACKCLUSTERS;mchtrackdigits:MCH/CLUSTERDIGITS;trackMFT:MFT/TRACKS;trackMFTROF:MFT/MFTTrackROF;trackMFTClIdx:MFT/TRACKCLSID;alpparMFT:MFT/ALPIDEPARAM/0?lifetime=condition&ccdb-path=MFT/Config/AlpideParam;fwdtracks:GLO/GLFWD;trackMID:MID/TRACKS/0;trackMIDROF:MID/TRACKROFS/0;trackMIDTRACKCLUSTERS:MID/TRACKCLUSTERS/0;trackClMIDROF:MID/TRCLUSROFS/0;matchMCHMID:GLO/MTC_MCHMID",
       "samplingConditions": [
         {
           "condition": "random",
