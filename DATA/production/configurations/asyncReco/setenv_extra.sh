@@ -31,7 +31,7 @@ if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]] || [[ -z $RUN_BFIELD ]]; then
 fi
 
 BABSI=$(printf "%.0f" "${RUN_BFIELD#-}")
-[[ "$BABSI" < 12500 && "$BABSI" > 11500 ]] && LOWFIELD=1 || LOWFIELD=0
+[[ "$BABSI" -lt 12500 && "$BABSI" -gt 11500 ]] && LOWFIELD=1 || LOWFIELD=0
 
 echo -e "\n"
 echo "Printing run features"
