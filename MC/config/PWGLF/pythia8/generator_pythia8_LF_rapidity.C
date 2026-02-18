@@ -1,5 +1,6 @@
 ///
 /// \file   generator_pythia8_LF_rapidity.C
+/// \author Hirak Kumar Koley hirak.koley@cern.ch
 /// \author Bong-Hwi Lim bong-hwi.lim@cern.ch
 /// \author Based on generator_pythia8_LF.C by Nicolò Jacazio
 /// \since  2025/08/18
