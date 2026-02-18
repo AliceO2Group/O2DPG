@@ -72,7 +72,7 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
                              bool useTrigger = false,
                              bool useRapidity = false,
                              std::string pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/pythia8_inel_136tev.cfg",
-                             std::string pythiaCfgSignal = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_signal.cfg") : GeneratorPythia8{},
+                             std::string pythiaCfgSignal = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/pythia8_inel_136tev.cfg") : GeneratorPythia8{},
                                                                                                                                         mOneInjectionPerEvent{injOnePerEvent},
                                                                                                                                         mGapBetweenInjection{gapBetweenInjection},
                                                                                                                                         mUseTriggering{useTrigger},
@@ -147,12 +147,6 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       /** switch off process level **/
       mPythiaGun.readString("ProcessLevel:all off");
 
-      /** config **/
-      /* auto& paramGen = o2::eventgen::GeneratorPythia8Param::Instance();
-      if (!paramGen.config.empty()) {
-        LOG(fatal) << "Configuration file provided for \'GeneratorPythia8\' should be empty for this injection scheme";
-        return;
-      } */
       auto& param = o2::eventgen::DecayerPythia8Param::Instance();
       LOG(info) << "Init \'GeneratorPythia8LFRapidity\' with following parameters";
       LOG(info) << param;
