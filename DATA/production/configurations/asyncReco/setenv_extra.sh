@@ -555,6 +555,7 @@ elif [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
   EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.startLayerMask[0]=127;ITSCATrackerParam.startLayerMask[1]=127;ITSCATrackerParam.startLayerMask[2]=127;"
   EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPtIterLgt[0]=0.05;ITSCATrackerParam.minPtIterLgt[1]=0.05;ITSCATrackerParam.minPtIterLgt[2]=0.05;ITSCATrackerParam.minPtIterLgt[3]=0.05;ITSCATrackerParam.minPtIterLgt[4]=0.05;ITSCATrackerParam.minPtIterLgt[5]=0.05;ITSCATrackerParam.minPtIterLgt[6]=0.05;ITSCATrackerParam.minPtIterLgt[7]=0.05;ITSCATrackerParam.minPtIterLgt[8]=0.05;ITSCATrackerParam.minPtIterLgt[9]=0.09;ITSCATrackerParam.minPtIterLgt[10]=0.167;ITSCATrackerParam.minPtIterLgt[11]=0.125;"
+  EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.deltaRof=1;ITSVertexerParam.deltaRof=1;" # enable delta-rof tracking
 #  this is to impose old pp pT cuts (overriding hardcoded pbpb24 apass1 settings)
 #  EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPtIterLgt[0]=0.05;ITSCATrackerParam.minPtIterLgt[1]=0.05;ITSCATrackerParam.minPtIterLgt[2]=0.05;ITSCATrackerParam.minPtIterLgt[3]=0.05;ITSCATrackerParam.minPtIterLgt[4]=0.05;ITSCATrackerParam.minPtIterLgt[5]=0.05;ITSCATrackerParam.minPtIterLgt[6]=0.05;ITSCATrackerParam.minPtIterLgt[7]=0.05;ITSCATrackerParam.minPtIterLgt[8]=0.05;ITSCATrackerParam.minPtIterLgt[9]=0.05;ITSCATrackerParam.minPtIterLgt[10]=0.05;ITSCATrackerParam.minPtIterLgt[11]=0.05;"
 fi
