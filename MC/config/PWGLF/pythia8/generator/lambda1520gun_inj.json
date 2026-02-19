@@ -1,0 +1,24 @@
+{
+    "Lambda(1520)0" : {
+        "pdg": 102134,
+        "n": 5,
+        "ptMin": 0.0,
+        "ptMax": 15,
+        "etaMin": -1.0,
+        "etaMax": 1.0,
+        "rapidityMin": -1.0,
+        "rapidityMax": 1.0,
+        "genDecayed": true
+    },
+    "anti-Lambda(1520)0" : {
+        "pdg": -102134,
+        "n": 5,
+        "ptMin": 0.0,
+        "ptMax": 15,
+        "etaMin": -1.0,
+        "etaMax": 1.0,
+        "rapidityMin": -1.0,
+        "rapidityMax": 1.0,
+        "genDecayed": true
+    }
+}

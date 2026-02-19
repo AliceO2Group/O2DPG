@@ -1,5 +1,6 @@
 ///
 /// \file   generator_pythia8_LF_rapidity.C
+/// \author Hirak Kumar Koley hirak.koley@cern.ch
 /// \author Bong-Hwi Lim bong-hwi.lim@cern.ch
 /// \author Based on generator_pythia8_LF.C by Nicolò Jacazio
 /// \since  2025/08/18
@@ -17,13 +18,15 @@
 ///
 
 #if !defined(__CLING__) || defined(__ROOTCLING__)
-#include "Pythia8/Pythia.h"
 #include "FairGenerator.h"
-#include "Generators/GeneratorPythia8.h"
-#include "TRandom3.h"
-#include "TParticlePDG.h"
+
 #include "TDatabasePDG.h"
 #include "TMath.h"
+#include "TParticlePDG.h"
+#include "TRandom3.h"
+
+#include "Generators/GeneratorPythia8.h"
+#include "Pythia8/Pythia.h"
 #if __has_include("SimulationDataFormat/MCGenStatus.h")
 #include "SimulationDataFormat/MCGenStatus.h"
 #else
@@ -32,11 +35,13 @@
 #if __has_include("SimulationDataFormat/MCUtils.h")
 #include "SimulationDataFormat/MCUtils.h"
 #endif
-#include "fairlogger/Logger.h"
 #include "TSystem.h"
-#include <fstream>
+
 #include "Generators/GeneratorPythia8Param.h"
+#include "fairlogger/Logger.h"
+
 #include <cmath>
+#include <fstream>
 #endif
 // DecayerPythia8Param needs to be included after the #endif to work with Cling
 #include "Generators/DecayerPythia8Param.h"
@@ -53,6 +58,7 @@
 #endif
 // #include "Generators/GeneratorPythia8.h"
 #include "generator_pythia8_longlived.C"
+
 #include <nlohmann/json.hpp>
 
 using namespace Pythia8;
@@ -66,12 +72,12 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
                              int gapBetweenInjection = 0,
                              bool useTrigger = false,
                              bool useRapidity = false,
-                             std::string pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg",
-                             std::string pythiaCfgSignal = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_signal.cfg") : GeneratorPythia8{},
-                                                                                                                                  mOneInjectionPerEvent{injOnePerEvent},
-                                                                                                                                  mGapBetweenInjection{gapBetweenInjection},
-                                                                                                                                  mUseTriggering{useTrigger},
-                                                                                                                                  mUseRapidity{useRapidity}
+                             std::string pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/pythia8_inel_136tev.cfg",
+                             std::string pythiaCfgSignal = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/pythia8_inel_136tev.cfg") : GeneratorPythia8{},
+                                                                                                                                        mOneInjectionPerEvent{injOnePerEvent},
+                                                                                                                                        mGapBetweenInjection{gapBetweenInjection},
+                                                                                                                                        mUseTriggering{useTrigger},
+                                                                                                                                        mUseRapidity{useRapidity}
   {
     LOG(info) << "GeneratorPythia8LFRapidity constructor";
     LOG(info) << "++ mOneInjectionPerEvent: " << mOneInjectionPerEvent;
@@ -127,7 +133,7 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       }
       // FIX: Fallback if still empty to default minbias
       if (pythiaCfgMb == "") {
-         pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/pythia8_inel_minbias.cfg";
+        pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/pythia8_inel_136tev.cfg";
       }
       pythiaCfgMb = gSystem->ExpandPathName(pythiaCfgMb.c_str());
       if (!pythiaObjectMinimumBias.readFile(pythiaCfgMb)) {
@@ -142,12 +148,6 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       /** switch off process level **/
       mPythiaGun.readString("ProcessLevel:all off");
 
-      /** config **/
-      auto& paramGen = o2::eventgen::GeneratorPythia8Param::Instance();
-      if (!paramGen.config.empty()) {
-        LOG(fatal) << "Configuration file provided for \'GeneratorPythia8\' should be empty for this injection scheme";
-        return;
-      }
       auto& param = o2::eventgen::DecayerPythia8Param::Instance();
       LOG(info) << "Init \'GeneratorPythia8LFRapidity\' with following parameters";
       LOG(info) << param;
@@ -191,11 +191,12 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
     if (!mUseTriggering) { // Injected mode: Embedding into MB
       // 1. Generate Background (MB)
       // LOG(info) << "Generating background event " << mEventCounter;
+
       bool lGenerationOK = false;
       while (!lGenerationOK) {
         lGenerationOK = pythiaObjectMinimumBias.next();
       }
-      mPythia.event = pythiaObjectMinimumBias.event; // Copy MB event to main event
+      mPythia.event = pythiaObjectMinimumBias.event;
 
       // 2. Determine if we inject specific particles (Gap logic)
       bool doInjection = true;
@@ -232,7 +233,7 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       }
       LOG(info) << "Using config container ";
       cfg.print();
-      if (mUseTriggering) { // Do the triggering
+      if (mUseTriggering) {                                             // Do the triggering
         bool doSignal{mEventCounter % (mGapBetweenInjection + 1) == 0}; // Do signal or gap
 
         if (doSignal) {
@@ -475,13 +476,13 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
         }
       }
     };
-    ConfigContainer(TString line) : ConfigContainer(line.Tokenize(" ")){};
+    ConfigContainer(TString line) : ConfigContainer(line.Tokenize(" ")) {};
     ConfigContainer(const nlohmann::json& jsonParams, bool useRapidity = false) : ConfigContainer(jsonParams["pdg"],
-                                                                        jsonParams["n"],
-                                                                        jsonParams["ptMin"],
-                                                                        jsonParams["ptMax"],
-                                                                        (useRapidity && jsonParams.contains("rapidityMin")) ? jsonParams["rapidityMin"] : (jsonParams.contains("min") ? jsonParams["min"] : jsonParams["etaMin"]),
-                                                                        (useRapidity && jsonParams.contains("rapidityMax")) ? jsonParams["rapidityMax"] : (jsonParams.contains("max") ? jsonParams["max"] : jsonParams["etaMax"])){};
+                                                                                                  jsonParams["n"],
+                                                                                                  jsonParams["ptMin"],
+                                                                                                  jsonParams["ptMax"],
+                                                                                                  (useRapidity && jsonParams.contains("rapidityMin")) ? jsonParams["rapidityMin"] : (jsonParams.contains("min") ? jsonParams["min"] : jsonParams["etaMin"]),
+                                                                                                  (useRapidity && jsonParams.contains("rapidityMax")) ? jsonParams["rapidityMax"] : (jsonParams.contains("max") ? jsonParams["max"] : jsonParams["etaMax"])) {};
 
     // Data Members
     const int mPdg = 0;
