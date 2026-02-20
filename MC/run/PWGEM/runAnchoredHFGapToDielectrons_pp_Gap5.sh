@@ -37,13 +37,10 @@ export NWORKERS=2
 RNDSIG=$(($RANDOM % 100))
 
 
-if [[ $RNDSIG -ge 0 && $RNDSIG -lt 30 ]];
+if [[ $RNDSIG -ge 0 && $RNDSIG -lt 20 ]];
 then
         CONFIGNAME="GeneratorHFGapTriggered_Charm_Gap5.ini"
-elif [[ $RNDSIG -ge 30 && $RNDSIG -lt 50 ]];
-then
-        CONFIGNAME="GeneratorHFGapTriggered_BeautyForcedDecay_Gap5.ini"
-elif [[ $RNDSIG -ge 50 && $RNDSIG -lt 100 ]];
+elif [[ $RNDSIG -ge 20 && $RNDSIG -lt 100 ]];
 then
         CONFIGNAME="GeneratorHFGapTriggered_BeautyNoForcedDecay_Gap5.ini"
 fi
