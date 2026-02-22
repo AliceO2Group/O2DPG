@@ -1,0 +1,15 @@
+README.md
+setup.py
+dfextensions/AliasDataFrame.py
+dfextensions/AliasDataFrameTest.py
+dfextensions/DataFrameUtils.py
+dfextensions/FormulaLinearModel.py
+dfextensions/__init__.py
+dfextensions/groupby_regression.py
+dfextensions/test_groupby_regression.py
+perfmonitor/__init__.py
+perfmonitor/performance_logger.py
+utils.egg-info/PKG-INFO
+utils.egg-info/SOURCES.txt
+utils.egg-info/dependency_links.txt
+utils.egg-info/top_level.txt

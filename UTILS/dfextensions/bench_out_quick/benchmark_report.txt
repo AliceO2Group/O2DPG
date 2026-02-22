@@ -1,0 +1,26 @@
+================================================================
+BENCHMARK: GroupBy Regression
+================================================================
+
+Scenario: Clean Data, Serial
+  Config: n_jobs=1, sigmaCut=5.0, fitter=ols
+  Data: 1,000 rows, 200 groups (target 200), ~5 rows/group
+  Result: 0.36s (1.78s per 1k groups)
+
+Scenario: 5% Outliers (3σ), Serial
+  Config: n_jobs=1, sigmaCut=5.0, fitter=ols
+  Data: 1,000 rows, 200 groups (target 200), ~5 rows/group
+  Outliers: 5% at 3.0σ
+  Result: 0.34s (1.72s per 1k groups)
+
+Scenario: 10% Outliers (5σ), Serial
+  Config: n_jobs=1, sigmaCut=5.0, fitter=ols
+  Data: 1,000 rows, 200 groups (target 200), ~5 rows/group
+  Outliers: 10% at 5.0σ
+  Result: 0.34s (1.71s per 1k groups)
+
+Scenario: 10% Outliers (10σ), Serial
+  Config: n_jobs=1, sigmaCut=5.0, fitter=ols
+  Data: 1,000 rows, 200 groups (target 200), ~5 rows/group
+  Outliers: 10% at 10.0σ
+  Result: 0.34s (1.71s per 1k groups)
