@@ -599,6 +599,7 @@ cat /proc/meminfo > alien_meminfo.log
 # ----------- PREPARE SOME ALIEN ENV -- useful for the job -----------
 
 if [ "${ONGRID}" = "1" ]; then
+  export ALIENPY_JCENTRAL=alice-jcentral.cern.ch
   notify_mattermost "STARTING GRID ${ALIEN_PROC_ID} CHECK $(which alien.py)"
   alien.py ps --jdl ${ALIEN_PROC_ID} > this_jdl.jdl
   ALIEN_JOB_OUTPUTDIR=$(grep "OutputDir" this_jdl.jdl | awk '//{print $3}' | sed 's/"//g' | sed 's/;//')
