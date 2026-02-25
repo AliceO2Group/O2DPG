@@ -6,8 +6,8 @@ int External()
     int numberOfEventsProcessed{0};
     int numberOfEventsProcessedWithoutInjection{0};
     std::vector<int> injectedPDGs = {
-        3124,    // Lambda(1520)0
-        -3124,   // Lambda(1520)0bar
+        102134,    // Lambda(1520)0
+        -102134,   // Lambda(1520)0bar
     };
     std::vector<std::vector<int>> decayDaughters = {
         {2212, -321}, // Lambda(1520)0
