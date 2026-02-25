@@ -3,6 +3,7 @@
 #include "Pythia8/Pythia.h"
 #include "TRandom.h"
 #include <fairlogger/Logger.h>
+#include <algorithm>
 #include <string>
 #include <vector>
 
