@@ -120,6 +120,28 @@
         "rapidityMax": 1.2,
         "genDecayed": true
     },
+    "Lambda(1520)0" : {
+        "pdg": 102134,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
+        "genDecayed": true
+    },
+    "anti-Lambda(1520)0" : {
+        "pdg": -102134,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
+        "genDecayed": true
+    },
     "Xi(1820)0": {
         "pdg": 123314,
         "n": 1,
