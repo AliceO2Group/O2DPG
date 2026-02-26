@@ -31,7 +31,7 @@ G4CFG="${O2DPG_ROOT}/MC/config/PWGLF/pythia8/decayer/g4_ext_decayer_lambda.in"
 $O2_SIM_WORKFLOW -eCM ${ENERGY} -col ${SYSTEM} -gen external \
         -j ${NWORKERS} \
         -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} \
-        -confKey "Diamond.width[0]=0.1;Diamond.width[1]=0.1;Diamond.width[2]=6.;;G4.physicsmode=kUSER;G4.userPhysicsList=FTFP_BERT_EMV+optical+biasing+hyperNuclei;DecayerPythia8.config[1]=${CFGDECAY};DecayerPythia8.showChanged=1;G4.configMacroFile=${G4CFG}" \
+        -confKey "Diamond.width[0]=0.1;Diamond.width[1]=0.1;Diamond.width[2]=6.;;DecayerPythia8.config[1]=${CFGDECAY};DecayerPythia8.showChanged=1;G4.configMacroFile=${G4CFG}" \
         ${SEED} \
         -e ${SIMENGINE} \
         -ini $CFGINIFILE
