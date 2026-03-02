@@ -26,9 +26,9 @@ public:
     o2::ccdb::CcdbApi ccdb_api;
     ccdb_api.init("https://alice-ccdb.cern.ch");
 
-    // config was placed at midpoint of run 564356, retrieve that
+    // config was placed at midpoint of run 544122, retrieve that
     std::map<string, string> metadataRCT, headers;
-    headers = ccdb_api.retrieveHeaders("RCT/Info/RunInformation/564356", metadataRCT, -1);
+    headers = ccdb_api.retrieveHeaders("RCT/Info/RunInformation/544122", metadataRCT, -1);
     int64_t tsSOR = atol(headers["SOR"].c_str());
     int64_t tsEOR = atol(headers["EOR"].c_str());    
     int64_t midRun = 0.5*tsSOR+0.5*tsEOR;
