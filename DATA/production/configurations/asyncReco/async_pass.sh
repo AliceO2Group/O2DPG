@@ -445,9 +445,17 @@ if [[ $ASYNC_PASS_NO_OPTIMIZED_DEFAULTS != 1 ]]; then
       fi
     else
       if [[ $BEAMTYPE == "pp" ]]; then
-        export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA, 4 gpu per job, pp)
+        if [[ $ALIEN_JDL_SITEARCH =~ ^EPN ]]; then
+          export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA, 4 gpu per job, pp)
+        else
+          export OPTIMIZED_PARALLEL_ASYNC=pp_gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 gpu per job, pp)
+        fi
       else  # PbPb
-        export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA 4 gpu per job, PbPb)
+        if [[ $ALIEN_JDL_SITEARCH =~ ^EPN ]]; then
+          export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA 4 gpu per job, PbPb)
+        else
+          export OPTIMIZED_PARALLEL_ASYNC=PbPb_gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 gpu per job, PbPb)
+        fi
       fi
     fi
   else
