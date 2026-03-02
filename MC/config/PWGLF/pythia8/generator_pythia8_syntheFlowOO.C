@@ -14,11 +14,11 @@
 #include <map>
 #include <unordered_set>
 
-class GeneratorPythia8SyntheFlow : public o2::eventgen::GeneratorPythia8
+class GeneratorPythia8SyntheFlowOO : public o2::eventgen::GeneratorPythia8
 {
 public:
   /// Constructor
-  GeneratorPythia8SyntheFlow() {
+  GeneratorPythia8SyntheFlowOO() {
     lutGen = new o2::eventgen::FlowMapper();
     
     // -------- CONFIGURE SYNTHETIC FLOW ------------
@@ -46,7 +46,7 @@ public:
   }
 
   ///  Destructor
-  ~GeneratorPythia8SyntheFlow() = default;
+  ~GeneratorPythia8SyntheFlowOO() = default;
   
   //__________________________________________________________________
   Bool_t generateEvent() override {
@@ -97,9 +97,9 @@ private:
   o2::eventgen::FlowMapper *lutGen; // for mapping phi angles
 };
 
- FairGenerator *generator_syntheFlow()
+ FairGenerator *generator_syntheFlowOO()
  {
-  auto generator = new GeneratorPythia8SyntheFlow();
+  auto generator = new GeneratorPythia8SyntheFlowOO();
   gRandom->SetSeed(0);
   generator->readString("Random:setSeed = on");
   generator->readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
