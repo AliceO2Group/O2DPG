@@ -650,8 +650,10 @@ def main():
     # needs to be handled as further below:
     energyarg = (" -eCM " + str(eCM)) if A1 == A2 else (" -eA " + str(eA) + " -eB " + str(eB))
     forwardargs += " -tf " + str(args.tf) + " --sor " + str(effective_run_start) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit "       \
-                   + str(GLOparams["FirstOrbit"]) + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + " -col " + str(ColSystem) + str(energyarg)
-    # the following options can be overwritten/influence from the outside
+                   + str(GLOparams["FirstOrbit"]) + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + str(energyarg)
+    # the following options can be overwritten/influenced from the outside
+    if not '-col' in forwardargs:
+       forwardargs += ' -col ' + ColSystem
     if not '--readoutDets' in forwardargs:
        forwardargs += ' --readoutDets ' + GLOparams['detList']
     if not '-field' in forwardargs:
