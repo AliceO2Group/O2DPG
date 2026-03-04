@@ -77,9 +77,9 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         QC_JSON_TOF=apricot://o2/components/qc/ANY/any/tof-full-epn-qcmn-on-epn
       fi
     fi
-    [[ -z "${QC_JSON_FDD:-}" ]] && QC_JSON_FDD=apricot://o2/components/qc/ANY/any/fdd-digits-qc-epn
-    [[ -z "${QC_JSON_FT0:-}" ]] && QC_JSON_FT0=apricot://o2/components/qc/ANY/any/ft0-digits-qc-epn
-    [[ -z "${QC_JSON_FV0:-}" ]] && QC_JSON_FV0=apricot://o2/components/qc/ANY/any/fv0-digits-qc-epn
+    [[ -z "${QC_JSON_FDD:-}" ]] && QC_JSON_FDD=apricot://o2/components/qc/ANY/any/fdd-digits-qcmn-epn
+    [[ -z "${QC_JSON_FT0:-}" ]] && QC_JSON_FT0=apricot://o2/components/qc/ANY/any/ft0-digits-qcmn-epn
+    [[ -z "${QC_JSON_FV0:-}" ]] && QC_JSON_FV0=apricot://o2/components/qc/ANY/any/fv0-digits-qcmn-epn
     if [[ -z "${QC_JSON_EMC:-}" ]]; then
       if [[ "$BEAMTYPE" == "PbPb" ]]; then
         if has_detector CTP; then
