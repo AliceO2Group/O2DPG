@@ -336,6 +336,8 @@ if [[ "0$OLDVERSION" == "01" ]] && [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" ||
   fi
 fi
 
+EXTRA_PRIMVTX_TimeMargin=""
+
 # some settings in common between workflows and affecting ITS-TPC matching
 : ${CUT_MATCH_CHI2:=250}
 if [[ $ALIGNLEVEL == 0 ]]; then
@@ -347,7 +349,12 @@ if [[ $ALIGNLEVEL == 0 ]]; then
 elif [[ $ALIGNLEVEL == 1 ]]; then
   ERRIB="100e-8"
   ERROB="100e-8"
-  [[ -z $TPCITSTIMEERR ]] && TPCITSTIMEERR="0.2"
+  if [[ $ALIEN_JDL_LPMANCHORYEAR == "2026" ]] ; then
+    [[ -z $TPCITSTIMEERR ]] && TPCITSTIMEERR="0.05"
+    EXTRA_PRIMVTX_TimeMargin="pvertexer.timeMarginVertexTime=0.3"
+  else
+    [[ -z $TPCITSTIMEERR ]] && TPCITSTIMEERR="0.2"
+  fi
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" && $BEAMTYPE == "PbPb" && $ANCHORED_PASS_NUMBER -lt 5 ]] || [[ $PERIOD == "LHC24al" ]] ; then
     [[ $ALIEN_JDL_LPMANCHORYEAR == "2023" ]] && [[ $BEAMTYPE == "PbPb" ]] && CUT_MATCH_CHI2=80 || CUT_MATCH_CHI2=100
     export ITSTPCMATCH="tpcitsMatch.safeMarginTimeCorrErr=2.;tpcitsMatch.XMatchingRef=60.;tpcitsMatch.cutMatchingChi2=$CUT_MATCH_CHI2;;tpcitsMatch.crudeAbsDiffCut[0]=6;tpcitsMatch.crudeAbsDiffCut[1]=6;tpcitsMatch.crudeAbsDiffCut[2]=0.3;tpcitsMatch.crudeAbsDiffCut[3]=0.3;tpcitsMatch.crudeAbsDiffCut[4]=2.5;tpcitsMatch.crudeNSigma2Cut[0]=64;tpcitsMatch.crudeNSigma2Cut[1]=64;tpcitsMatch.crudeNSigma2Cut[2]=64;tpcitsMatch.crudeNSigma2Cut[3]=64;tpcitsMatch.crudeNSigma2Cut[4]=64;"
@@ -591,7 +598,6 @@ export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow+=" --use-ccdb"
 # following comment https://alice.its.cern.ch/jira/browse/O2-2691?focusedCommentId=278262&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-278262
 #export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2.;pvertexer.nSigmaTimeTrack=4.;pvertexer.timeMarginTrackTime=0.5;pvertexer.timeMarginVertexTime=7.;pvertexer.nSigmaTimeCut=10;pvertexer.dbscanMaxDist2=36;pvertexer.dcaTolerance=3.;pvertexer.pullIniCut=100;pvertexer.addZSigma2=0.1;pvertexer.tukey=20.;pvertexer.addZSigma2Debris=0.01;pvertexer.addTimeSigma2Debris=1.;pvertexer.maxChi2Mean=30;pvertexer.timeMarginReattach=3.;pvertexer.addTimeSigma2Debris=1.;pvertexer.dbscanDeltaT=24;pvertexer.maxChi2TZDebris=100;pvertexer.maxMultRatDebris=1.;pvertexer.dbscanAdaptCoef=20.;pvertexer.timeMarginVertexTime=1.3"
 # updated on 7 Sept 2022
-EXTRA_PRIMVTX_TimeMargin=""
 if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == LHC22* || $PERIOD == LHC23* ]]; then
   EXTRA_PRIMVTX_TimeMargin="pvertexer.timeMarginVertexTime=1.3"
 fi
