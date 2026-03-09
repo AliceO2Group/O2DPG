@@ -65,4 +65,4 @@
 /mcPhysics/biasing/setParticles proton neutron pi+ pi-
 
 # external decayer
-/mcPhysics/setExtDecayerSelection omega_c0 anti_omega_c0
+/mcPhysics/setExtDecayerSelection omega_c0 anti_omega_c0 xi_c0 anti_xi_c0
