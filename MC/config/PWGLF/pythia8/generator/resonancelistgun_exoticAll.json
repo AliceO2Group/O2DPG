@@ -55,7 +55,7 @@
         "genDecayed": true
     },
     "f_1(1285)": {
-        "pdg": 15223,
+        "pdg": 20223,
         "n": 3,
         "ptMin": 0.0,
         "ptMax": 15,
@@ -65,8 +65,8 @@
         "rapidityMax": 1.0,
         "genDecayed": true
     },
-    "f_1(1415)": {
-        "pdg": 15333,
+    "f_1(1420)": {
+        "pdg": 20333,
         "n": 3,
         "ptMin": 0.0,
         "ptMax": 15,
@@ -87,7 +87,7 @@
         "rapidityMax": 1.0,
         "genDecayed": true
     },
-    "a_2(1315)": {
+    "a_2(1320)": {
         "pdg": 115,
         "n": 3,
         "ptMin": 0.0,
@@ -142,7 +142,7 @@
         "rapidityMax": 1.0,
         "genDecayed": true
     },
-    "Xi(1815)0": {
+    "Xi(1820)0": {
         "pdg": 123314,
         "n": 3,
         "ptMin": 0.0,
