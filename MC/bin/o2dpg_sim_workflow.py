@@ -1809,6 +1809,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       f"--lpmp-prod-tag {args.productionTag}",
       "--anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}",
       "--anchor-prod ${ALIEN_JDL_LPMANCHORPRODUCTION:-unknown}",
+      "--reco-pass ${ALIEN_JDL_LPMPASSNAME:-unknown}",
       created_by_option,
       "--combine-source-devices" if not args.no_combine_dpl_devices else "",
       "--disable-mc" if args.no_mc_labels else "",
