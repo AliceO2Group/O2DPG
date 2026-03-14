@@ -108,49 +108,5 @@
         "rapidityMin": -1.0,
         "rapidityMax": 1.0,
         "genDecayed": true
-    },
-    "Xi(1820)0": {
-        "pdg": 123314,
-        "n": 3,
-        "ptMin": 0.0,
-        "ptMax": 15,
-        "etaMin": -1.0,
-        "etaMax": 1.0,
-        "rapidityMin": -1.0,
-        "rapidityMax": 1.0,
-        "genDecayed": true
-    },
-    "Anti-Xi(1820)0": {
-        "pdg": -123314,
-        "n": 3,
-        "ptMin": 0.0,
-        "ptMax": 15,
-        "etaMin": -1.0,
-        "etaMax": 1.0,
-        "rapidityMin": -1.0,
-        "rapidityMax": 1.0,
-        "genDecayed": true
-    },
-    "Xi(1820)-": {
-        "pdg": 123324,
-        "n": 3,
-        "ptMin": 0.0,
-        "ptMax": 15,
-        "etaMin": -1.0,
-        "etaMax": 1.0,
-        "rapidityMin": -1.0,
-        "rapidityMax": 1.0,
-        "genDecayed": true
-    },
-    "Xi(1820)+": {
-        "pdg": -123324,
-        "n": 3,
-        "ptMin": 0.0,
-        "ptMax": 15,
-        "etaMin": -1.0,
-        "etaMax": 1.0,
-        "rapidityMin": -1.0,
-        "rapidityMax": 1.0,
-        "genDecayed": true
     }
 }
