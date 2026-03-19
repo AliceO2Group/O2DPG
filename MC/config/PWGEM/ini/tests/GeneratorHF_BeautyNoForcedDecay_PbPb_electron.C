@@ -102,7 +102,7 @@ int External()
     std::cerr << "The number of leptons should be the same as the number of leptons which should be transported.\n";
     return 1;
   }
-  if (nLeptonsInAcceptance ==  nEvents) {
+  if (nLeptonsInAcceptance !=  nEvents) {
     std::cerr << "The number of leptons in acceptance should be at least equaled to the number of events.\n";
     return 1;
   }
