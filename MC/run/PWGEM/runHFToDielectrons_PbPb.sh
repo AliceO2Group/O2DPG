@@ -28,7 +28,7 @@ export NSIGEVENTS=20
 export NBKGEVENTS=10
 
 # define the generator via ini file
-# use 20/40/40 sampling for different generators
+# use 20/80 sampling for different generators
 # generate random number
 RNDSIG=$(($RANDOM % 100))
 

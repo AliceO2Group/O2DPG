@@ -9,7 +9,6 @@
 
 #include <map>
 #include <unordered_set>
-//#include <utility>	// for std::pair
 
 using namespace Pythia8;
 

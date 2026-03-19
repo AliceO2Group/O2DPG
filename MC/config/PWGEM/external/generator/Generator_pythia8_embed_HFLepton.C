@@ -28,12 +28,6 @@ public:
     /// default constructor
     GeneratorPythia8EmbedHFLepton() = default;
 
-    /// constructor
-    //GeneratorPythia8EmbedHF(int numSigEvs = 1) {
-    //    mNumSigEvs = numSigEvs;
-    //    //mGeneratedEvents = 0;
-    //}
-
     ///  Destructor
     ~GeneratorPythia8EmbedHFLepton() {
         // Clean up the internally created HF generator if any
