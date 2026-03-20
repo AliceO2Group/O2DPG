@@ -201,15 +201,15 @@ FairGenerator* GeneratorPythia8GapTriggeredCharmLepton(int inputTriggerRatio, in
 
 
 // Beauty-enriched forced decay
-FairGenerator* GeneratorPythia8GapTriggeredBeautyForcedDecays(int inputTriggerRatio, int inputExternalID, float yMin = -1.5, float yMax = 1.5)
+FairGenerator* GeneratorPythia8GapTriggeredBeautyForcedDecays(int inputTriggerRatio, int inputExternalID, int pdgLepton, float yMinQ = -1.5, float yMaxQ = 1.5, float yMinL = -1, float yMaxL = 1)
 {
   auto myGen = new GeneratorPythia8GapTriggeredHFLeptonOO("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGEM/pythia8/generator/pythia8_bbbar_OO_536_forceddecayscharmbeauty.cfg", 5, inputTriggerRatio, inputExternalID);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
   myGen->readString("Random:seed " + std::to_string(seed));
-  myGen->setQuarkRapidity(yMin, yMax);
-  myGen->addTriggerOnDaughter(2, 11);
-  myGen->setDaughterRapidity(-1., 1.);
+  myGen->setQuarkRapidity(yMinQ, yMaxQ);
+  myGen->addTriggerOnDaughter(2, pdgLepton);
+  myGen->setDaughterRapidity(yMinL, yMaxL);
   return myGen;
 }
 
