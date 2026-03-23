@@ -1816,7 +1816,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       "--anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}",
       "--anchor-prod ${ALIEN_JDL_LPMANCHORPRODUCTION:-unknown}",
       "--reco-pass ${ALIEN_JDL_LPMPASSNAME:-unknown}",
-      f"--aod-parent {args.aod_parent_file}" if len(args.aod_parent_file) > 0 else ""
+      f"--aod-parent {args.aod_parent_file}" if len(args.aod_parent_file) > 0 else "",
       created_by_option,
       "--combine-source-devices" if not args.no_combine_dpl_devices else "",
       "--disable-mc" if args.no_mc_labels else "",
