@@ -9,43 +9,34 @@
 
 #include <map>
 #include <unordered_set>
-//#include <utility>	// for std::pair
 
 using namespace Pythia8;
 
-class GeneratorPythia8GapTriggeredHFLeptonOO : public o2::eventgen::GeneratorPythia8
+class GeneratorPythia8HFLeptonpp : public o2::eventgen::GeneratorPythia8
 {
 public:
   /// default constructor
-  GeneratorPythia8GapTriggeredHFLeptonOO() = default;
+  GeneratorPythia8HFLeptonpp() = default;
 
   /// constructor
-  GeneratorPythia8GapTriggeredHFLeptonOO(TString configsignal, int quarkPdg = 4, int lInputTriggerRatio = 5, int lInputExternalID = 0)
+  GeneratorPythia8HFLeptonpp(TString configsignal, int quarkPdg = 4, int lInputExternalID = 0)
   {
 
     lGeneratedEvents = 0;
-    lInverseTriggerRatio = lInputTriggerRatio;
     lExternalID = lInputExternalID;
     mQuarkPdg = quarkPdg;
 
     auto seed = (gRandom->TRandom::GetSeed() % 900000000);
 
-    int offset = (int)(gRandom->Uniform(lInverseTriggerRatio)); // create offset to mitigate edge effects due to small number of events per job
+    int offset = (int)(gRandom->Uniform(1)); // create offset to mitigate edge effects due to small number of events per job
     lGeneratedEvents += offset;
-    
-    cout << "Initalizing extra PYTHIA object used to generate min-bias events..." << endl;
-    TString pathconfigMB = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}//MC/config/common/pythia8/generator/pythia8_OO_536.cfg");
-    pythiaObjectMinimumBias.readFile(pathconfigMB.Data());
-    pythiaObjectMinimumBias.readString("Random:setSeed on");
-    pythiaObjectMinimumBias.readString("Random:seed " + std::to_string(seed));
-    pythiaObjectMinimumBias.init();
-    cout << "Initalization of gap event is complete" << endl;
 
-    cout << "Initalizing extra PYTHIA object used to generate signal events..." << endl;
+    cout << "Initalizing PYTHIA object used to generate signal events..." << endl;
     TString pathconfigSignal = gSystem->ExpandPathName(configsignal.Data());
     pythiaObjectSignal.readFile(pathconfigSignal.Data());
     pythiaObjectSignal.readString("Random:setSeed on");
     pythiaObjectSignal.readString("Random:seed " + std::to_string(seed));
+    pythiaObjectSignal.readString("Beams:eCM = 5360.0");
     pythiaObjectSignal.init();
     cout << "Initalization of signal event is complete" << endl;
 
@@ -53,14 +44,13 @@ public:
     // addCocktailConstituent(type, "interesting");
     // addCocktailConstitent(0, "minbias");
     // Add Sub generators
-    addSubGenerator(0, "default generator");
     addSubGenerator(1, "charm lepton");
     addSubGenerator(2, "beauty forced decay");
     addSubGenerator(3, "beauty no foced decay");
   }
 
   ///  Destructor
-  ~GeneratorPythia8GapTriggeredHFLeptonOO() = default;
+  ~GeneratorPythia8HFLeptonpp() = default;
 
   void addTriggerOnDaughter(int nb, int pdg)
   {
@@ -85,26 +75,15 @@ protected:
     /// reset event
     mPythia.event.reset();
 
-    // Simple straightforward check to alternate generators
-    if (lGeneratedEvents % lInverseTriggerRatio == 0) {
-      // Generate event of interest
-      Bool_t lGenerationOK = kFALSE;
-      while (!lGenerationOK) {
-        if (pythiaObjectSignal.next()) {
-          lGenerationOK = selectEvent(pythiaObjectSignal.event);
-        }
+    // Generate event of interest
+    Bool_t lGenerationOK = kFALSE;
+    while (!lGenerationOK) {
+      if (pythiaObjectSignal.next()) {
+        lGenerationOK = selectEvent(pythiaObjectSignal.event);
       }
-      mPythia.event = pythiaObjectSignal.event;
-      notifySubGenerator(lExternalID);
-    } else {
-      // Generate minimum-bias event
-      Bool_t lGenerationOK = kFALSE;
-      while (!lGenerationOK) {
-        lGenerationOK = pythiaObjectMinimumBias.next();
-      }
-      mPythia.event = pythiaObjectMinimumBias.event;
-      notifySubGenerator(0);
     }
+    mPythia.event = pythiaObjectSignal.event;
+    notifySubGenerator(lExternalID);
 
     lGeneratedEvents++;
     // mPythia.next();
@@ -173,23 +152,20 @@ private:
   float mDaughterRapidityMin;
   float mDaughterRapidityMax;
 
-  // Control gap-triggering
   Long64_t lGeneratedEvents;
-  int lInverseTriggerRatio;
   // ID for different generators
   int lExternalID;
 
   // Base event generators
-  Pythia8::Pythia pythiaObjectMinimumBias; ///Minimum bias collision generator
   Pythia8::Pythia pythiaObjectSignal;      ///Signal collision generator
 };
 
 // Predefined generators:
 
 // Charm-enriched forced decay
-FairGenerator* GeneratorPythia8GapTriggeredCharmLepton(int inputTriggerRatio, int inputExternalID, int pdgLepton, float yMinQ = -1.5, float yMaxQ = 1.5, float yMinL = -1, float yMaxL = 1)
+FairGenerator* GeneratorPythia8CharmLepton(int inputExternalID, int pdgLepton, float yMinQ = -1.5, float yMaxQ = 1.5, float yMinL = -1, float yMaxL = 1)
 {
-  auto myGen = new GeneratorPythia8GapTriggeredHFLeptonOO("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGEM/pythia8/generator/pythia8_OO_536_ccbar.cfg", 4, inputTriggerRatio, inputExternalID);
+  auto myGen = new GeneratorPythia8HFLeptonpp("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGEM/pythia8/generator/pythia8_pp_cr2_forceddecayscharm.cfg", 4, inputExternalID);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
   myGen->readString("Random:seed " + std::to_string(seed));
@@ -199,11 +175,10 @@ FairGenerator* GeneratorPythia8GapTriggeredCharmLepton(int inputTriggerRatio, in
   return myGen;
 }
 
-
 // Beauty-enriched forced decay
-FairGenerator* GeneratorPythia8GapTriggeredBeautyForcedDecays(int inputTriggerRatio, int inputExternalID, int pdgLepton, float yMinQ = -1.5, float yMaxQ = 1.5, float yMinL = -1, float yMaxL = 1)
+FairGenerator* GeneratorPythia8BeautyForcedDecays(int inputExternalID, int pdgLepton, float yMinQ = -1.5, float yMaxQ = 1.5, float yMinL = -1, float yMaxL = 1)
 {
-  auto myGen = new GeneratorPythia8GapTriggeredHFLeptonOO("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGEM/pythia8/generator/pythia8_bbbar_OO_536_forceddecayscharmbeauty.cfg", 5, inputTriggerRatio, inputExternalID);
+  auto myGen = new GeneratorPythia8HFLeptonpp("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGEM/pythia8/generator/pythia8_bbbar_forceddecayscharmbeauty.cfg", 5, inputExternalID);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
   myGen->readString("Random:seed " + std::to_string(seed));
@@ -214,9 +189,9 @@ FairGenerator* GeneratorPythia8GapTriggeredBeautyForcedDecays(int inputTriggerRa
 }
 
 // Beauty-enriched no forced decay
-FairGenerator* GeneratorPythia8GapTriggeredBeautyNoForcedDecays(int inputTriggerRatio, int inputExternalID, int pdgLepton, float yMinQ = -1.5, float yMaxQ = 1.5, float yMinL = -1, float yMaxL = 1)
+FairGenerator* GeneratorPythia8BeautyNoForcedDecays(int inputExternalID, int pdgLepton, float yMinQ = -1.5, float yMaxQ = 1.5, float yMinL = -1, float yMaxL = 1)
 {
-  auto myGen = new GeneratorPythia8GapTriggeredHFLeptonOO("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGEM/pythia8/generator/pythia8_OO_536_bbbar.cfg", 5, inputTriggerRatio, inputExternalID);
+  auto myGen = new GeneratorPythia8HFLeptonpp("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGEM/pythia8/generator/pythia8_bbbar.cfg", 5, inputExternalID);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
   myGen->readString("Random:seed " + std::to_string(seed));

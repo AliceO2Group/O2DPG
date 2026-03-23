@@ -6,16 +6,28 @@ int External()
     int numberOfEventsProcessed{0};
     int numberOfEventsProcessedWithoutInjection{0};
     std::vector<int> injectedPDGs = {
+        225,     // f_2(1270)
+        10221,   // f_0(1370)
+        9030221, // f_0(1500)
+        10331,   // f_0(1710)
+        20223,   // f_1(1285)
+        20333,   // f_1(1420)
+        335,     // f_2(1525)
+        115,     // a_2(1320)
         102134,    // Lambda(1520)0
-        -102134,   // Lambda(1520)0bar
-        3324,      // Xi(1530)0
-        -3324     // Xi(1530)0bar
+        -102134   // Lambda(1520)0bar
     };
     std::vector<std::vector<int>> decayDaughters = {
-        {2212, -321}, // Lambda(1520)0
-        {-2212, 321}, // Lambda(1520)0bar
-        {3312, 211}, // Xi(1530)0
-        {-3312, -211} // Xi(1530)0bar
+        {310, 310},       // f_2(1270)
+        {310, 310},       // f_0(1370)
+        {310, 310},       // f_0(1500)
+        {310, 310},       // f_0(1710)
+        {310, -321, 211}, // f_1(1285)
+        {310, -321, 211}, // f_1(1420)
+        {310, 310},       // f_2(1525)
+        {310, 310},       // a_2(1320)
+        {2212, -321},     // Lambda(1520)0
+        {-2212, 321}      // Lambda(1520)0bar
     };
 
     auto nInjection = injectedPDGs.size();

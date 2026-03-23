@@ -617,7 +617,7 @@ signalprefix='sgn'
 # No vertexing for event pool generation; otherwise the vertex comes from CCDB and later from CollContext
 # (Note that the CCDB case covers the kDiamond case, since this is picked up in GRP_TASK)
 vtxmode_precoll = 'kNoVertex' if args.make_evtpool else 'kCCDB'
-vtxmode_sgngen = 'kCollContext'
+vtxmode_sgngen = 'kNoVertex' if args.make_evtpool else 'kCollContext'
 
 # preproduce the collision context / timeframe structure for all timeframes at once
 precollneeds=[GRP_TASK['name']]
