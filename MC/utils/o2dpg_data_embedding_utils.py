@@ -1,6 +1,13 @@
 # Set of python modules/util functions for the MC-to-DATA embedding
 # Mostly concerning extraction of MC collision context from existing data AO2D.root
 
+import warnings
+warnings.filterwarnings(
+    "ignore",
+    message="pandas.Int64Index is deprecated",
+    category=FutureWarning,
+)
+
 import ROOT
 import uproot
 import pandas as pd
@@ -240,7 +247,7 @@ def fetch_bccoll_to_localFile(alien_file, local_filename):
   return True
 
 
-def convert_to_digicontext(aod_timeframe=None, timeframeID=-1):
+def convert_to_digicontext(aod_timeframe, df_folder, timeframeID=-1):
     """
     converts AOD collision information from AO2D to collision context
     which can be used for MC
@@ -282,13 +289,16 @@ def convert_to_digicontext(aod_timeframe=None, timeframeID=-1):
     
     # set the bunch filling ---> NEED to fetch it from CCDB
     # digicontext.setBunchFilling(bunchFillings[0]);
+
+    # TODO: set the interaction rate (for TPC loopers)
+    # digicontext.mDigitizerInteractionRate = ...
     
     prefixes = ROOT.std.vector("std::string")();
     prefixes.push_back("sgn")
     
     digicontext.setSimPrefixes(prefixes);
     digicontext.printCollisionSummary();
-    digicontext.saveToFile(f"collission_context_{timeframeID}.root")
+    digicontext.saveToFile(f"collission_context_{df_folder}:{timeframeID}.root")
 
 
 def process_data_AO2D(file_name, run_number, upper_limit = -1):
@@ -315,7 +325,8 @@ def process_data_AO2D(file_name, run_number, upper_limit = -1):
                     break
                 tf = row['timeframeID']
                 cols = row['position_vectors']
-                convert_to_digicontext(cols, tf)
+                df = key.split('@')[0] # this is the DF folder name
+                convert_to_digicontext(cols, df, tf)
                 counter = counter + 1
 
 
@@ -324,7 +335,7 @@ def main():
 
     parser.add_argument("--run-number", type=int, help="Run number to anchor to", required=True)
     parser.add_argument("--aod-file", type=str, help="Data AO2D file (can be on AliEn)", required=True)
-    parser.add_argument("--limit", type=int, default=-1, help="Upper limit of timeframes to be extracted")
+    parser.add_argument("--limit", type=int, default=-1, help="Upper limit of timeframes to be extracted (-1 is no limit)")
     args = parser.parse_args()
 
     process_data_AO2D(args.aod_file, args.run_number, args.limit)
