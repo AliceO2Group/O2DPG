@@ -302,6 +302,9 @@ elif readout_detectors != 'all' and activeDetectors != 'all':
 activeDetectors = { det:1 for det in activeDetectors.split(',') if det not in args.skipModules and det not in args.skipReadout}
 for det in activeDetectors:
     activate_detector(det)
+for det in args.skipModules:
+    print(f"Skipping detector {det} in simulation")
+    deactivate_detector(det)
 
 # function to finalize detector source lists based on activeDetectors
 # detector source lists are comma separated lists of DET1, DET2, DET1-DET2, ...
@@ -1227,7 +1230,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       getDPL_global_options(), 
       f'-n {args.ns}', 
       simsoption,
-      '--onlyDet FT0,FV0,EMC,CTP', 
+      '--onlyDet ' + ','.join([det for det in ['FT0', 'FV0', 'EMC', 'CTP'] if isActive(det)]),
       f'--interactionRate {INTRATE}',
       f'--incontext {CONTEXTFILE}',
       f'--store-ctp-lumi {CTPSCALER}',
