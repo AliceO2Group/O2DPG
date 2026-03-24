@@ -117,6 +117,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     [[ -z "${QC_JSON_CPV:-}" ]] && QC_JSON_CPV=apricot://o2/components/qc/ANY/any/cpv-physics-qcmn-epn
     [[ -z "${QC_JSON_TRD:-}" ]] && QC_JSON_TRD=apricot://o2/components/qc/ANY/any/trd-full-qcmn
     [[ -z "${QC_JSON_PHS:-}" ]] && QC_JSON_PHS=apricot://o2/components/qc/ANY/any/phos-raw-clusters-epn
+    [[ -z "${QC_JSON_CTP:-}" ]] && QC_JSON_CTP=apricot://o2/components/qc/ANY/any/ctp-raw-qc-epn
     [[ -z "${QC_JSON_GLO_PRIMVTX:-}" ]] && QC_JSON_GLO_PRIMVTX=apricot://o2/components/qc/ANY/any/glo-vtx-qcmn-epn
     [[ -z "${QC_JSON_GLO_ITSTPC:-}" ]] && QC_JSON_GLO_ITSTPC=apricot://o2/components/qc/ANY/any/glo-itstpc-mtch-qcmn-epn
     if [[ -z "${QC_JSON_TOF_MATCH:-}" ]]; then
