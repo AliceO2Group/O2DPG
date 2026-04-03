@@ -1,6 +1,6 @@
 {
-    "f_2(1270)": {
-        "pdg": 225,
+    "K_1(1270)": {
+        "pdg": 10313,
         "n": 3,
         "ptMin": 0.0,
         "ptMax": 30,
@@ -45,6 +45,17 @@
     },
     "f_0(2200)": {
         "pdg": 9070221,
+        "n": 3,
+        "ptMin": 0.0,
+        "ptMax": 30,
+        "etaMin": -1.0,
+        "etaMax": 1.0,
+        "rapidityMin": -1.0,
+        "rapidityMax": 1.0,
+        "genDecayed": true
+    },
+    "f_2(1270)": {
+        "pdg": 225,
         "n": 3,
         "ptMin": 0.0,
         "ptMax": 30,
