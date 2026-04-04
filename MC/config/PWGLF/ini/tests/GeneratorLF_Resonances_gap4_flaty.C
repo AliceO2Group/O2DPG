@@ -15,8 +15,8 @@ int External()
         335,     // f_2(1525)
         115,     // a_2(1320)
         9070221, // f_0(2200)
-        102134,    // Lambda(1520)0
-        -102134   // Lambda(1520)0bar
+        102134,  // Lambda(1520)0
+        -102134  // Lambda(1520)0bar
     };
     std::vector<std::vector<int>> decayDaughters = {
         {310, 310},       // f_2(1270)
