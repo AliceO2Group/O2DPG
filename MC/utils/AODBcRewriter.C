@@ -55,6 +55,18 @@ static const char *findIndexBranchName(TTree *t) {
   return nullptr;
 }
 
+static const char *findMcCollisionIndexBranchName(TTree *t) {
+  if (!t)
+    return nullptr;
+  if (t->GetBranch("fIndexMcCollisions"))
+    return "fIndexMcCollisions";
+  return nullptr;
+}
+
+static inline bool isMcCollisionTree(const char *tname) {
+  return TString(tname).BeginsWith("O2mccollision");
+}
+
 // Scalar type tag
 enum class ScalarTag {
   kInt,
@@ -336,6 +348,10 @@ struct BCMaps {
   std::vector<Int_t> indexMap;
   std::vector<ULong64_t> uniqueBCs;
   std::unordered_map<size_t, std::vector<size_t>> newIndexOrigins;
+
+  // McCollision scheme (populated when O2mccollision is sorted) during first stage
+  std::vector<Long64_t> mcOldEntries;
+  std::vector<Long64_t> mcNewEntries;
 };
 
 static BCMaps buildBCMaps(TTree *treeBCs) {
@@ -543,7 +559,7 @@ static bool isVLA(TBranch *br) {
 // This is the VLA-aware rewritePayloadSorted implementation (keeps previous
 // tested behavior)
 static void rewritePayloadSorted(TDirectory *dirIn, TDirectory *dirOut,
-                                 const BCMaps &maps) {
+                                 BCMaps &maps) {
   std::unordered_set<std::string> skipNames; // for count branches
   TIter it(dirIn->GetListOfKeys());
   while (TKey *k = (TKey *)it()) {
@@ -562,6 +578,13 @@ static void rewritePayloadSorted(TDirectory *dirIn, TDirectory *dirOut,
 
     const char *idxName = findIndexBranchName(src);
     if (!idxName) {
+      // Tables indexed by McCollisions (not BCs) are forwarded to the second
+      // stage where the sorting scheme is available.
+      if (findMcCollisionIndexBranchName(src)) {
+        std::cout << "    [forward] " << tname
+                  << " (McCollision-indexed) -> second stage\n";
+        continue;
+      }
       dirOut->cd();
       std::cout << "    [copy] " << tname << " (no index) -> cloning\n";
       TTree *c = src->CloneTree(-1, "fast");
@@ -648,6 +671,18 @@ static void rewritePayloadSorted(TDirectory *dirIn, TDirectory *dirOut,
                          return a.newBC < b.newBC;
                        return a.entry < b.entry;
                      });
+
+    // If this is the McCollision tree, record the sort permutation so that
+    // tables indexed by McCollisions (fIndexMcCollisions) can be reordered consistently
+    if (isMcCollisionTree(tname)) {
+      maps.mcOldEntries.resize(keys.size());
+      maps.mcNewEntries.assign(nEnt, -1);
+      for (Long64_t j = 0; j < (Long64_t)keys.size(); ++j) {
+        maps.mcOldEntries[j] = keys[j].entry;
+        if (keys[j].entry >= 0)
+          maps.mcNewEntries[keys[j].entry] = j;
+      }
+    }
 
     // prepare output tree
     dirOut->cd();
@@ -888,6 +923,133 @@ static void rewritePayloadSorted(TDirectory *dirIn, TDirectory *dirOut,
               << changed << " index values; sorted\n";
     out->Write();
   } // end while keys in dir
+
+  // ---- second stage: tables indexed by McCollisions using fIndexMcCollisions ----
+  if (!maps.mcNewEntries.empty()) {
+    TIter it2(dirIn->GetListOfKeys());
+    while (TKey *k2 = (TKey *)it2()) {
+      if (TString(k2->GetClassName()) != "TTree")
+        continue;
+      std::unique_ptr<TObject> holder2(k2->ReadObj());
+      TTree *src2 = dynamic_cast<TTree *>(holder2.get());
+      if (!src2)
+        continue;
+      const char *tname2 = src2->GetName();
+      if (isBCtree(tname2) || isFlagsTree(tname2))
+        continue;
+      if (findIndexBranchName(src2))
+        continue; // handled in first stage
+      const char *mcIdxName = findMcCollisionIndexBranchName(src2);
+      if (!mcIdxName) {
+        // No BC index and no McCollision index → already handled (copied) earlier
+        continue;
+      }
+
+      std::cout << "    [proc] reindex+SORT " << tname2
+                << " (McCollision index=" << mcIdxName << ")\n";
+
+      TBranch *inMcIdxBr = src2->GetBranch(mcIdxName);
+      if (!inMcIdxBr) {
+        std::cerr << "      ERR no McCollision index branch\n";
+        continue;
+      }
+      Int_t oldMcI = 0, newMcI = 0;
+      inMcIdxBr->SetAddress(&oldMcI);
+
+      // Build sort keys: sort by new McCollision position.
+      Long64_t nEnt2 = src2->GetEntries();
+      std::vector<SortKey> keys2;
+      keys2.reserve(nEnt2);
+      for (Long64_t i = 0; i < nEnt2; ++i) {
+        inMcIdxBr->GetEntry(i);
+        Long64_t newMcPos = -1;
+        if (oldMcI >= 0 &&
+            (size_t)oldMcI < maps.mcNewEntries.size())
+          newMcPos = maps.mcNewEntries[(size_t)oldMcI];
+        keys2.push_back({i, newMcPos});
+      }
+      std::stable_sort(keys2.begin(), keys2.end(),
+                       [](const SortKey &a, const SortKey &b) {
+                         bool ai = (a.newBC < 0), bi = (b.newBC < 0);
+                         if (ai != bi)
+                           return !ai && bi;
+                         if (a.newBC != b.newBC)
+                           return a.newBC < b.newBC;
+                         return a.entry < b.entry;
+                       });
+
+      dirOut->cd();
+      TTree *out2 = src2->CloneTree(0, "fast");
+
+      std::unordered_map<std::string, TBranch *> inBrs2, outBrs2;
+      for (auto *b : *src2->GetListOfBranches())
+        inBrs2[((TBranch *)b)->GetName()] = (TBranch *)b;
+      for (auto *b : *out2->GetListOfBranches())
+        outBrs2[((TBranch *)b)->GetName()] = (TBranch *)b;
+
+      TBranch *outMcIdxBr = out2->GetBranch(mcIdxName);
+      outMcIdxBr->SetAddress(&newMcI);
+
+      std::unordered_set<std::string> skipNames2;
+      skipNames2.insert(mcIdxName);
+
+      std::vector<std::unique_ptr<BufBase>> scalarBufs2;
+      for (auto &kv : inBrs2) {
+        if (skipNames2.count(kv.first))
+          continue;
+        TBranch *inBr = kv.second;
+        TBranch *ouBr = outBrs2.count(kv.first) ? outBrs2[kv.first] : nullptr;
+        if (!ouBr)
+          continue;
+        TLeaf *leaf = (TLeaf *)inBr->GetListOfLeaves()->At(0);
+        if (!leaf || isVLA(inBr))
+          continue; // no variable-length arrays seen in McCollision-indexed tables (could be changed in the future)
+        ScalarTag tag = leafType(leaf);
+        if (tag == ScalarTag::kUnknown)
+          continue;
+        auto sb = bindScalarBranch(inBr, ouBr, tag);
+        if (sb)
+          scalarBufs2.emplace_back(std::move(sb));
+      }
+
+      Long64_t changed2 = 0;
+      for (const auto &sk : keys2) {
+        src2->GetEntry(sk.entry);
+        Int_t prev = oldMcI;
+        newMcI = (sk.newBC >= 0 ? (Int_t)sk.newBC : -1);
+        if (newMcI != prev)
+          ++changed2;
+        out2->Fill();
+      }
+      std::cout << "      wrote " << out2->GetEntries()
+                << " rows; remapped " << changed2
+                << " McCollision index values; sorted\n";
+      out2->Write();
+    }
+  } else {
+    // No mccollision permutation available: clone deferred trees as-is
+    TIter it2(dirIn->GetListOfKeys());
+    while (TKey *k2 = (TKey *)it2()) {
+      if (TString(k2->GetClassName()) != "TTree")
+        continue;
+      std::unique_ptr<TObject> holder2(k2->ReadObj());
+      TTree *src2 = dynamic_cast<TTree *>(holder2.get());
+      if (!src2)
+        continue;
+      if (isBCtree(src2->GetName()) || isFlagsTree(src2->GetName()))
+        continue;
+      if (findIndexBranchName(src2))
+        continue;
+      if (!findMcCollisionIndexBranchName(src2))
+        continue;
+      std::cerr << "    [warn] no mccollision permutation for "
+                << src2->GetName() << " -> cloning as-is\n";
+      dirOut->cd();
+      TTree *c = src2->CloneTree(-1, "fast");
+      c->SetDirectory(dirOut);
+      c->Write();
+    }
+  }
 
   // non-tree objects: copy as-is (but for TMap use WriteTObject to preserve
   // class)
