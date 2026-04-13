@@ -16,7 +16,7 @@
       }
     },
     {
-      "name": "boxgenPion",
+      "name": "boxgen",
       "config": {
         "pdg": 111,
         "prange[0]": 0.1,
@@ -27,7 +27,7 @@
       }
     },
     {
-      "name": "boxgenEta",
+      "name": "boxgen",
       "config": {
         "pdg": 221,
         "prange[0]": 0.1,
