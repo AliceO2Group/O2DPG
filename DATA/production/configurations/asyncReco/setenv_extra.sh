@@ -558,18 +558,23 @@ export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysEr
 # ad-hoc options for ITS reco workflow
 EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.deltaRof=0;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;ITSCATrackerParam.nROFsPerIterations=12;ITSCATrackerParam.perPrimaryVertexProcessing=false;ITSCATrackerParam.fataliseUponFailure=false;ITSCATrackerParam.dropTFUponFailure=true;ITSCATrackerParam.maxMemory=21474836480;"
+  # tracker memory
+  EXTRA_ITSRECO_CONFIG=";ITSCATrackerParam.perPrimaryVertexProcessing=false;ITSCATrackerParam.fataliseUponFailure=false;ITSCATrackerParam.dropTFUponFailure=true;ITSCATrackerParam.maxMemory=21474836480;"
   if [[ -z "$ALIEN_JDL_DISABLE_UPC" || $ALIEN_JDL_DISABLE_UPC != 1 ]]; then
     EXTRA_ITSRECO_CONFIG+=";ITSVertexerParam.nIterations=2;ITSCATrackerParam.doUPCIteration=true;"
   fi
   if [[ $LOWFIELD == "1" ]]; then
-    EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPt=2.5;"
+    EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPt=2.5;" # disables B-field scaling
   fi
 elif [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
+  # vertexer
+  EXTRA_ITSRECO_CONFIG=";ITSVertexerParam.pairCut=0.0317563;ITSVertexerParam.clusterCut=0.6640964;ITSVertexerParam.coarseZWindow=0.2049018;ITSVertexerParam.seedDedupZCut=0.0711793;ITSVertexerParam.refitDedupZCut=0.0680009;ITSVertexerParam.duplicateZCut=0.1582193;ITSVertexerParam.finalSelectionZCut=0.1081465;ITSVertexerParam.duplicateDistance2Cut=0.0117033;ITSVertexerParam.clusterContributorsCut=2;ITSVertexerParam.seedMemberRadiusZ=0;ITSVertexerParam.vertNsigmaCut=4.0;ITSVertexerParam.vertRadiusSigma=0.0452309;ITSVertexerParam.trackletSigma=0.0025941;"
+  # allowed start layers
   EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.startLayerMask[0]=127;ITSCATrackerParam.startLayerMask[1]=127;ITSCATrackerParam.startLayerMask[2]=127;"
+  # low pt-cutoffs
   EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPtIterLgt[0]=0.05;ITSCATrackerParam.minPtIterLgt[1]=0.05;ITSCATrackerParam.minPtIterLgt[2]=0.05;ITSCATrackerParam.minPtIterLgt[3]=0.05;ITSCATrackerParam.minPtIterLgt[4]=0.05;ITSCATrackerParam.minPtIterLgt[5]=0.05;ITSCATrackerParam.minPtIterLgt[6]=0.05;ITSCATrackerParam.minPtIterLgt[7]=0.05;ITSCATrackerParam.minPtIterLgt[8]=0.05;ITSCATrackerParam.minPtIterLgt[9]=0.09;ITSCATrackerParam.minPtIterLgt[10]=0.167;ITSCATrackerParam.minPtIterLgt[11]=0.125;"
-  EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.deltaRof=1;ITSVertexerParam.deltaRof=1;" # enable delta-rof tracking
+  # enable delta-rof tracking
+  EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.addTimeError[0]=30;ITSCATrackerParam.addTimeError[1]=30;ITSCATrackerParam.addTimeError[2]=30;ITSCATrackerParam.addTimeError[3]=30;ITSCATrackerParam.addTimeError[4]=30;ITSCATrackerParam.addTimeError[5]=30;ITSCATrackerParam.addTimeError[6]=30;ITSVertexerParam.seedMemberRadiusTime=1;"
 #  this is to impose old pp pT cuts (overriding hardcoded pbpb24 apass1 settings)
 #  EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPtIterLgt[0]=0.05;ITSCATrackerParam.minPtIterLgt[1]=0.05;ITSCATrackerParam.minPtIterLgt[2]=0.05;ITSCATrackerParam.minPtIterLgt[3]=0.05;ITSCATrackerParam.minPtIterLgt[4]=0.05;ITSCATrackerParam.minPtIterLgt[5]=0.05;ITSCATrackerParam.minPtIterLgt[6]=0.05;ITSCATrackerParam.minPtIterLgt[7]=0.05;ITSCATrackerParam.minPtIterLgt[8]=0.05;ITSCATrackerParam.minPtIterLgt[9]=0.05;ITSCATrackerParam.minPtIterLgt[10]=0.05;ITSCATrackerParam.minPtIterLgt[11]=0.05;"
 fi
