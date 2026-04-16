@@ -28,7 +28,9 @@ def create_sim_config(args):
        if 302000 <= int(args.run) and int(args.run) < 309999:
            add(config, {"ITSAlpideParam.roFrameLengthInBC" : 198})
        # ITS reco settings
-       add(config, {"ITSVertexerParam.pairCut": 0.0317563,
+       add(config, {"ITSVertexerParam.phiCut": 0.4,
+                    "ITSVertexerParam.tanLambdaCut": 0.17,
+                    "ITSVertexerParam.pairCut": 0.0317563,
                     "ITSVertexerParam.clusterCut": 0.6640964,
                     "ITSVertexerParam.coarseZWindow": 0.2049018,
                     "ITSVertexerParam.seedDedupZCut": 0.0711793,
@@ -95,10 +97,6 @@ def create_sim_config(args):
         add(config, {"FwdMatching.matchFcn" : "matchsXYPhiTanl"})
     if args.fwdmatching_cut_4_param == True:
         add(config, {"FwdMatching.cutFcn" : "cut3SigmaXYAngles"})
-
-    # deal with larger combinatorics
-    if args.col == "PbPb" or (args.embedding and args.colBkg == "PbPb"):
-        add(config, {"ITSVertexerParam.lowMultBeamDistCut": "0."})
 
     # FIT digitizer settings
     # 2023 PbPb
