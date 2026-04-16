@@ -178,6 +178,9 @@ if [[ $CAN_DO_CALIB_TPC_SAC == 1 ]]; then
     fi
   fi
 fi
+if [[ -z ${CALIB_TPC_CMV} ]]; then
+	CALIB_TPC_CMV=0;
+fi
 
 ( [[ -z ${CALIB_FT0_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_FT0_INTEGRATEDCURR == 0 ]] ) && CALIB_FT0_INTEGRATEDCURR=0
 ( [[ -z ${CALIB_FV0_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_FV0_INTEGRATEDCURR == 0 ]] ) && CALIB_FV0_INTEGRATEDCURR=0
@@ -306,6 +309,13 @@ fi
 if [[ -z ${CALIBDATASPEC_TPCIDC_C:-} ]]; then
   # TPC
   if [[ $CALIB_TPC_IDC == 1 ]]; then add_semicolon_separated CALIBDATASPEC_TPCIDC_C "idcsgroupc:TPC/IDCGROUPC"; fi
+fi
+if [[ -z ${CALIBDATASPEC_TPCCMV:-} ]]; then
+  # TPC
+  if [[ $CALIB_TPC_CMV == 1 ]];  then 
+	add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvgroup:TPC/CMVGROUP";
+	add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvorbit:TPC/CMVORBITINFO";
+	fi
 fi
 
 # define spec for proxy for TPC SAC
