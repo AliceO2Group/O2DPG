@@ -125,7 +125,7 @@ def create_sim_config(args):
         if COLTYPEIR == "pp":
             # 15 ADC channels / MIP
             add(config, {"FV0DigParam.adcChannelsPerMip": "15"})
-        if COLTYPEIR == "pp" or COLTYPEIR == "OO" or COLTYPEIR == "NeNe" or COLTYPIER == "pO":
+        if COLTYPEIR == "OO" or COLTYPEIR == "NeNe" or COLTYPIER == "pO":
             # 11 ADC channels / MIP
             add(config, {"FV0DigParam.adcChannelsPerMip": "11"})
 
