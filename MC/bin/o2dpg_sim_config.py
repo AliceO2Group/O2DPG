@@ -117,7 +117,7 @@ def create_sim_config(args):
             add(config, {"FT0DigParam.mtrg_central_trh": "1433", "FT0DigParam.mtrg_semicentral_trh": "35"})
             # FV0 trigger settings
             add(config, {"FV0DigParam.NchannelsLevel": "2", "FV0DigParam.InnerChargeLevel": "4", "FV0DigParam.OuterChargeLevel": "4", "FV0DigParam.ChargeLevel": "1080"})
-        if COLTYPEIR == "pp" or COLTYPEIR == "OO" or COLTYPEIR == "NeNe":
+        if COLTYPEIR == "pp" or COLTYPEIR == "OO" or COLTYPEIR == "NeNe" or COLTYPIER == "pO":
             # central and semicentral FT0 thresholds 
             add(config, {"FT0DigParam.mtrg_central_trh": "40", "FT0DigParam.mtrg_semicentral_trh": "20"})
             # FV0 trigger settings
