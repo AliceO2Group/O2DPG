@@ -40,9 +40,7 @@ def create_sim_config(args):
                     "ITSVertexerParam.duplicateDistance2Cut": 0.0117033,
                     "ITSVertexerParam.clusterContributorsCut": 2,
                     "ITSVertexerParam.seedMemberRadiusZ": 0,
-                    "ITSVertexerParam.vertNsigmaCut": 4.0,
-                    "ITSVertexerParam.vertRadiusSigma": 0.0452309,
-                    "ITSVertexerParam.trackletSigma": 0.0025941})
+                    "ITSVertexerParam.nSigmaCut": 0.032841})
        # primary vertexing settings
        if 301000 <= int(args.run) and int(args.run) <= 301999:
           add(config, {"pvertexer.acceptableScale2" : 9,
