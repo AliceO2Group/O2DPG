@@ -1390,7 +1390,6 @@ for tf in range(1, NTIMEFRAMES + 1):
    ITSRECOtask['cmd'] = task_finalizer([
      "${O2_ROOT}/bin/o2-its-reco-workflow" if args.detectorList == 'ALICE2' else "${O2_ROOT}/bin/o2-its3-reco-workflow",
      getDPL_global_options(bigshm=havePbPb),
-     '--trackerCA' if args.detectorList == 'ALICE2' else '',
      '--tracking-mode async',
      putConfigValues(["ITSVertexerParam", 
                       "ITSAlpideParam",

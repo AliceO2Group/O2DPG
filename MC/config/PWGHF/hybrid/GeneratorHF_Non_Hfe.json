@@ -3,12 +3,7 @@
     {
       "name": "pythia8",
       "config": {
-        "config": "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGHF/pythia8/generator/pythia8_NonHfe.cfg",
-        "hooksFileName": "",
-        "hooksFuncName": "",
-        "includePartonEvent": true,
-        "particleFilter": "",
-        "verbose": 0
+        "config": "${O2DPG_MC_CONFIG_ROOT}/MC/config/common/pythia8/generator/pythia8_NonHfe.cfg"
       },
       "triggers": {
         "mode": "or",
@@ -19,9 +14,27 @@
           }
         ]
       }
+    },
+    {
+      "name": "boxgen",
+      "config": {
+        "pdg": 111,
+        "prange[0]": 0.1,
+        "prange[1]": 50.0,
+        "eta[0]": -0.8,
+        "eta[1]": 0.8
+      }
+    },
+    {
+      "name": "boxgen",
+      "config": {
+        "pdg": 221,
+        "prange[0]": 0.1,
+        "prange[1]": 50.0,
+        "eta[0]": -0.8,
+        "eta[1]": 0.8
+      }
     }
   ],
-  "fractions": [
-    1
-  ]
+  "fractions": [1, 1, 1]
 }
