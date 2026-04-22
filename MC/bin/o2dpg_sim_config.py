@@ -111,6 +111,29 @@ def create_sim_config(args):
         if COLTYPEIR == "PbPb":
             # 4 ADC channels / MIP
             add(config, {"FV0DigParam.adcChannelsPerMip": "4"})
+    # 2025
+    # first and last run of 2025
+    if 562260 <= int(args.run) and int(args.run) <= 568721:
+        # 14 ADC channels / MIP for FT0
+        add(config, {"FT0DigParam.mMip_in_V": "7", "FT0DigParam.mMV_2_Nchannels": "2", "FT0DigParam.mMV_2_NchannelsInverse": "0.5"})
+        if COLTYPEIR == "PbPb":
+            # 4 ADC channels / MIP
+            add(config, {"FV0DigParam.adcChannelsPerMip": "4"})
+            # central and semicentral FT0 thresholds 
+            add(config, {"FT0DigParam.mtrg_central_trh": "1433", "FT0DigParam.mtrg_semicentral_trh": "35"})
+            # FV0 trigger settings
+            add(config, {"FV0DigParam.NchannelsLevel": "2", "FV0DigParam.InnerChargeLevel": "4", "FV0DigParam.OuterChargeLevel": "4", "FV0DigParam.ChargeLevel": "1080"})
+        if COLTYPEIR == "pp" or COLTYPEIR == "OO" or COLTYPEIR == "NeNe" or COLTYPEIR == "pO":
+            # central and semicentral FT0 thresholds 
+            add(config, {"FT0DigParam.mtrg_central_trh": "40", "FT0DigParam.mtrg_semicentral_trh": "20"})
+            # FV0 trigger settings
+            add(config, {"FV0DigParam.NchannelsLevel": "2", "FV0DigParam.InnerChargeLevel": "4", "FV0DigParam.OuterChargeLevel": "4", "FV0DigParam.ChargeLevel": "8"})
+        if COLTYPEIR == "pp":
+            # 15 ADC channels / MIP
+            add(config, {"FV0DigParam.adcChannelsPerMip": "15"})
+        if COLTYPEIR == "OO" or COLTYPEIR == "NeNe" or COLTYPEIR == "pO":
+            # 11 ADC channels / MIP
+            add(config, {"FV0DigParam.adcChannelsPerMip": "11"})
 
     return config
 
