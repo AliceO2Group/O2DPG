@@ -28,9 +28,19 @@ def create_sim_config(args):
        if 302000 <= int(args.run) and int(args.run) < 309999:
            add(config, {"ITSAlpideParam.roFrameLengthInBC" : 198})
        # ITS reco settings
-       add(config, {"ITSVertexerParam.phiCut" : 0.5,
-                    "ITSVertexerParam.clusterContributorsCut" : 3,
-                    "ITSVertexerParam.tanLambdaCut" : 0.2})
+       add(config, {"ITSVertexerParam.phiCut": 0.4,
+                    "ITSVertexerParam.tanLambdaCut": 0.17,
+                    "ITSVertexerParam.pairCut": 0.0317563,
+                    "ITSVertexerParam.clusterCut": 0.6640964,
+                    "ITSVertexerParam.coarseZWindow": 0.2049018,
+                    "ITSVertexerParam.seedDedupZCut": 0.0711793,
+                    "ITSVertexerParam.refitDedupZCut": 0.0680009,
+                    "ITSVertexerParam.duplicateZCut": 0.1582193,
+                    "ITSVertexerParam.finalSelectionZCut": 0.1081465,
+                    "ITSVertexerParam.duplicateDistance2Cut": 0.0117033,
+                    "ITSVertexerParam.clusterContributorsCut": 2,
+                    "ITSVertexerParam.seedMemberRadiusZ": 0,
+                    "ITSVertexerParam.nSigmaCut": 0.032841})
        # primary vertexing settings
        if 301000 <= int(args.run) and int(args.run) <= 301999:
           add(config, {"pvertexer.acceptableScale2" : 9,
@@ -86,10 +96,6 @@ def create_sim_config(args):
     if args.fwdmatching_cut_4_param == True:
         add(config, {"FwdMatching.cutFcn" : "cut3SigmaXYAngles"})
 
-    # deal with larger combinatorics
-    if args.col == "PbPb" or (args.embedding and args.colBkg == "PbPb"):
-        add(config, {"ITSVertexerParam.lowMultBeamDistCut": "0."})
-
     # FIT digitizer settings
     # 2023 PbPb
     if 543437 <= int(args.run) and int(args.run) <= 545367:
@@ -105,6 +111,29 @@ def create_sim_config(args):
         if COLTYPEIR == "PbPb":
             # 4 ADC channels / MIP
             add(config, {"FV0DigParam.adcChannelsPerMip": "4"})
+    # 2025
+    # first and last run of 2025
+    if 562260 <= int(args.run) and int(args.run) <= 568721:
+        # 14 ADC channels / MIP for FT0
+        add(config, {"FT0DigParam.mMip_in_V": "7", "FT0DigParam.mMV_2_Nchannels": "2", "FT0DigParam.mMV_2_NchannelsInverse": "0.5"})
+        if COLTYPEIR == "PbPb":
+            # 4 ADC channels / MIP
+            add(config, {"FV0DigParam.adcChannelsPerMip": "4"})
+            # central and semicentral FT0 thresholds 
+            add(config, {"FT0DigParam.mtrg_central_trh": "1433", "FT0DigParam.mtrg_semicentral_trh": "35"})
+            # FV0 trigger settings
+            add(config, {"FV0DigParam.NchannelsLevel": "2", "FV0DigParam.InnerChargeLevel": "4", "FV0DigParam.OuterChargeLevel": "4", "FV0DigParam.ChargeLevel": "1080"})
+        if COLTYPEIR == "pp" or COLTYPEIR == "OO" or COLTYPEIR == "NeNe" or COLTYPEIR == "pO":
+            # central and semicentral FT0 thresholds 
+            add(config, {"FT0DigParam.mtrg_central_trh": "40", "FT0DigParam.mtrg_semicentral_trh": "20"})
+            # FV0 trigger settings
+            add(config, {"FV0DigParam.NchannelsLevel": "2", "FV0DigParam.InnerChargeLevel": "4", "FV0DigParam.OuterChargeLevel": "4", "FV0DigParam.ChargeLevel": "8"})
+        if COLTYPEIR == "pp":
+            # 15 ADC channels / MIP
+            add(config, {"FV0DigParam.adcChannelsPerMip": "15"})
+        if COLTYPEIR == "OO" or COLTYPEIR == "NeNe" or COLTYPEIR == "pO":
+            # 11 ADC channels / MIP
+            add(config, {"FV0DigParam.adcChannelsPerMip": "11"})
 
     return config
 
