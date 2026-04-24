@@ -178,7 +178,7 @@ if [[ $CAN_DO_CALIB_TPC_SAC == 1 ]]; then
     fi
   fi
 fi
-if [[ -z ${CALIB_TPC_CMV} ]]; then
+if [[ -z ${CALIB_TPC_CMV+x} ]]; then
 	CALIB_TPC_CMV=0;
 fi
 
