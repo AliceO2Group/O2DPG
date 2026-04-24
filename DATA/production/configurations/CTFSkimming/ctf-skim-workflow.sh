@@ -89,7 +89,7 @@ done
 
 if [[ -z ${IRFRAMES:-} ]] || [[ -z ${CTFLIST:-} ]] ; then
   echo "Format: ${0##*/} -f <IRFramesFile> -c <CTFsList>"
-  exit 1  
+  exit 1
 fi
 
 [[ "0${ALLOW_MISSING_DET:-}" == "00" ]] && ALLOW_MISSING_DET= || ALLOW_MISSING_DET="--allow-missing-detectors"
@@ -107,12 +107,12 @@ add_W o2-ctf-reader-workflow "--ctf-data-subspec 1 --ir-frames-files $IRFRAMES $
 
 if [[ -z ${NO_ITSMFT_MASKING:-} ]] ; then
   has_detector_ctf ITS && add_W o2-its-reco-workflow "--digits-from-upstream --disable-mc --disable-tracking --disable-root-output --pipeline $(get_N its-tracker ITS REST 1 ITSTRK)" "ITSClustererParam.maxBCDiffToMaskBias=10;"
-  has_detector_ctf MFT && add_W o2-mft-reco-workflow "--digits-from-upstream --disable-mc --disable-tracking --disable-root-output --pipeline $(get_N mft-tracker MFT REST 1 MFTTRK)" "MFTClustererParam.maxBCDiffToMaskBias=10;"    
+  has_detector_ctf MFT && add_W o2-mft-reco-workflow "--digits-from-upstream --disable-mc --disable-tracking --disable-root-output --pipeline $(get_N mft-tracker MFT REST 1 MFTTRK)" "MFTClustererParam.maxBCDiffToMaskBias=10;"
 fi
 
 has_detector_ctf ITS && add_W o2-itsmft-entropy-encoder-workflow "$RANS_OPT --select-ir-frames --irframe-margin-bwd ${ITS_MARGIN_BWD:-$DEF_MARGIN_BWD} --irframe-margin-fwd ${ITS_MARGIN_FWD:-$DEF_MARGIN_FWD} --mem-factor ${ITS_ENC_MEMFACT:-1.5} --pipeline $(get_N its-entropy-encoder ITS CTF 1)"
 has_detector_ctf MFT && add_W o2-itsmft-entropy-encoder-workflow "$RANS_OPT --select-ir-frames --irframe-margin-bwd ${MFT_MARGIN_BWD:-$DEF_MARGIN_BWD} --irframe-margin-fwd ${MFT_MARGIN_FWD:-$DEF_MARGIN_FWD} --mem-factor ${MFT_ENC_MEMFACT:-1.5} --runmft true --pipeline $(get_N mft-entropy-encoder MFT CTF 1)"
-has_detector_ctf TPC && add_W o2-tpc-reco-workflow "$RANS_OPT --select-ir-frames --irframe-margin-bwd ${TPC_MARGIN_BWD:-$DEF_MARGIN_BWD} --irframe-margin-fwd ${TPC_MARGIN_FWD:-$DEF_MARGIN_FWD} --mem-factor ${TPC_ENC_MEMFACT:-1.} --input-type compressed-clusters-flat --output-type encoded-clusters,disable-writer --pipeline $(get_N tpc-entropy-encoder TPC CTF 1 TPCENT)"
+has_detector_ctf TPC && add_W o2-tpc-reco-workflow "$RANS_OPT --select-ir-frames --irframe-margin-bwd ${TPC_MARGIN_BWD:-$DEF_MARGIN_BWD} --irframe-margin-fwd ${TPC_MARGIN_FWD:-$DEF_MARGIN_FWD} --mem-factor ${TPC_ENC_MEMFACT:-1.} --input-type compressed-clusters-flat-for-encode --output-type encoded-clusters,disable-writer --pipeline $(get_N tpc-entropy-encoder TPC CTF 1 TPCENT)"
 has_detector_ctf TRD && add_W o2-trd-entropy-encoder-workflow "$RANS_OPT --select-ir-frames --irframe-margin-bwd ${TRD_MARGIN_BWD:-$DEF_MARGIN_BWD} --irframe-margin-fwd ${TRD_MARGIN_FWD:-$DEF_MARGIN_FWD} --mem-factor ${TRD_ENC_MEMFACT:-1.5} --pipeline $(get_N trd-entropy-encoder TRD CTF 1 TRDENT)"
 has_detector_ctf TOF && add_W o2-tof-entropy-encoder-workflow "$RANS_OPT --select-ir-frames --irframe-margin-bwd ${TOF_MARGIN_BWD:-$DEF_MARGIN_BWD} --irframe-margin-fwd ${TOF_MARGIN_FWD:-$DEF_MARGIN_FWD} --mem-factor ${TOF_ENC_MEMFACT:-1.5} --pipeline $(get_N tof-entropy-encoder TOF CTF 1)"
 has_detector_ctf FT0 && add_W o2-ft0-entropy-encoder-workflow "$RANS_OPT --select-ir-frames --irframe-margin-bwd ${FT0_MARGIN_BWD:-$DEF_MARGIN_BWD} --irframe-margin-fwd ${FT0_MARGIN_FWD:-$DEF_MARGIN_FWD} --mem-factor ${FT0_ENC_MEMFACT:-1.5} --pipeline $(get_N ft0-entropy-encoder FT0 CTF 1)"
