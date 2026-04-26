@@ -452,7 +452,7 @@ done
 if [ "${ALIEN_JDL_MC_DATA_EMBEDDING_AO2D}" ]; then
   # produce the final merged AO2D
   find ./ -maxdepth 2 -mindepth 2 -name "AO2D.root" > aod_inputs.txt
-  o2-aod-merger --input aod_inputs.txt --output AO2D.root
+  o2-aod-merger --input aod_inputs.txt --output AO2D.root --merge-by-name  # --merge-by-name restricts merging to folders of same name
 fi
 
 #
