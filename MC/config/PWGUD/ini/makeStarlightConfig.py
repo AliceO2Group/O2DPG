@@ -10,17 +10,17 @@ parser = argparse.ArgumentParser(description='Make Starlight configuration',
 
 parser.add_argument('--collType',default='PbPb', choices=['PbPb', 'pPb', 'Pbp', 'pp', 'OO', 'pO', 'Op', 'NeNe'],
                    help='Colission system')
-                   
+
 parser.add_argument('--eCM', type=float, default='5360',
                     help='Centre-of-mass energy')
 
 parser.add_argument('--rapidity', default='cent', choices=['cent_rap', 'muon_rap', 'cent_eta', 'muon_eta'],
                     help='Rapidity to select')
 
-parser.add_argument('--process',default=None, choices=['kTwoGammaToMuLow', 'kTwoGammaToElLow', 'kTwoGammaToMuMedium', 'kTwoGammaToElMedium', 'kTwoGammaToMuHigh', 'kTwoGammaToElHigh', 'kTwoGammaToRhoRho', 'kTwoGammaToF2', 'kCohRhoToPi', 'kCohRhoToElEl', 'kCohRhoToMuMu', 'kCohRhoToPiWithCont', 'kCohRhoToPiFlat', 'kCohPhiToKa', 'kDirectPhiToKaKa', 'kCohPhiToEl', 'kCohOmegaTo2Pi', 'kCohOmegaTo3Pi', 'kCohOmegaToPiPiPi', 'kCohRhoPrimeTo4Pi', 'kCohJpsiToMu', 'kCohJpsiToEl', 'kCohJpsiToElRad', 'kCohJpsiToProton', 'kCohJpsiToLLbar', 'kCohJpsi4Prong', 'kCohJpsi6Prong',  'kCohPsi2sToMu','kCohPsi2sToEl', 'kCohPsi2sToMuPi', 'kCohPsi2sToElPi', 'kCohUpsilonToMu', 'kCohUpsilonToEl', 'kIncohRhoToPi', 'kIncohRhoToElEl', 'kIncohRhoToMuMu', 'kIncohRhoToPiWithCont', 'kIncohRhoToPiFlat', 'kIncohPhiToKa', 'kIncohOmegaTo2Pi', 'kIncohOmegaTo3Pi', 'kIncohOmegaToPiPiPi', 'kIncohRhoPrimeTo4Pi', 'kIncohJpsiToMu', 'kIncohJpsiToEl', 'kIncohJpsiToElRad', 'kIncohJpsiToProton', 'kIncohJpsiToLLbar', 'kIncohPsi2sToMu', 'kIncohPsi2sToEl', 'kIncohPsi2sToMuPi', 'kIncohPsi2sToElPi', 'kIncohUpsilonToMu', 'kIncohUpsilonToEl', 'kDpmjetSingleA', 'kDpmjetSingleA_Dzero', 'kDpmjetSingleA_Dcharged', 'kDpmjetSingleA_Dstar', 'kDpmjetSingleA_Phi', 'kDpmjetSingleA_Kstar', 'kDpmjetSingleC', 'kDpmjetSingleC_Dzero', 'kDpmjetSingleC_Dcharged', 'kDpmjetSingleC_Dstar', 'kDpmjetSingleC_Phi', 'kDpmjetSingleC_Kstar', 'kTauLowToEl3Pi', 'kTauLowToPo3Pi', 'kTauMediumToEl3Pi', 'kTauMediumToPo3Pi', 'kTauHighToEl3Pi', 'kTauHighToPo3Pi', 'kTauLowToElMu', 'kTauLowToElPiPi0', 'kTauLowToPoPiPi0'],
+parser.add_argument('--process',default=None, choices=['kTwoGammaToMuLow', 'kTwoGammaToElLow', 'kTwoGammaToMuMedium', 'kTwoGammaToElMedium', 'kTwoGammaToMuHigh', 'kTwoGammaToElHigh', 'kTwoGammaToRhoRho', 'kTwoGammaToF2', 'kCohRhoToPi', 'kCohRhoToElEl', 'kCohRhoToMuMu', 'kCohRhoToPiWithCont', 'kCohRhoToPiFlat', 'kCohPhiToKa', 'kDirectPhiToKaKa', 'kCohPhiToEl', 'kCohOmegaTo2Pi', 'kCohOmegaTo3Pi', 'kCohOmegaToPiPiPi', 'kCohRhoPrimeTo4Pi', 'kCohJpsiToMu', 'kCohJpsiToEl', 'kCohJpsiToElRad', 'kCohJpsiToProton', 'kCohJpsiToLLbar', 'kCohJpsi4Prong', 'kCohJpsi6Prong',  'kCohPsi2sToMu','kCohPsi2sToEl', 'kCohPsi2sToMuPi', 'kCohPsi2sToElPi', 'kCohUpsilonToMu', 'kCohUpsilonToEl', 'kIncohRhoToPi', 'kIncohRhoToElEl', 'kIncohRhoToMuMu', 'kIncohRhoToPiWithCont', 'kIncohRhoToPiFlat', 'kIncohPhiToKa', 'kIncohOmegaTo2Pi', 'kIncohOmegaTo3Pi', 'kIncohOmegaToPiPiPi', 'kIncohRhoPrimeTo4Pi', 'kIncohJpsiToMu', 'kIncohJpsiToEl', 'kIncohJpsiToElRad', 'kIncohJpsiToProton', 'kIncohJpsiToLLbar', 'kIncohPsi2sToMu', 'kIncohPsi2sToEl', 'kIncohPsi2sToMuPi', 'kIncohPsi2sToElPi', 'kIncohUpsilonToMu', 'kIncohUpsilonToEl', 'kDpmjetSingleA', 'kDpmjetSingleA_Dzero', 'kDpmjetSingleA_Dcharged', 'kDpmjetSingleA_Dstar', 'kDpmjetSingleA_Phi', 'kDpmjetSingleA_Kstar', 'kDpmjetSingleC', 'kDpmjetSingleC_Dzero', 'kDpmjetSingleC_Dcharged', 'kDpmjetSingleC_Dstar', 'kDpmjetSingleC_Phi', 'kDpmjetSingleC_Kstar', 'kTauLowToL+3Pi', 'kTauLowToL-3Pi', 'kTauLowToPi+3Pi', 'kTauLowToPi-3Pi', 'kTauLowTo6Pi', 'kTauLowToElMu', 'kTauLowToElPiPi0', 'kTauLowToPoPiPi0'],
                     help='Process to switch on')
-                    
-                    
+
+
 parser.add_argument('--output', default='GenStarlight.ini',
                     help='Where to write the configuration')
 
@@ -63,17 +63,17 @@ if 'OO' in args.collType:
     pZ = 8
     pA = 16
     tZ = 8
-    tA = 16    
+    tA = 16
 if 'pO' in args.collType:
     pZ = 1
     pA = 1
     tZ = 8
-    tA = 16 
+    tA = 16
 if 'Op' in args.collType:
     pZ = 8
     pA = 16
     tZ = 1
-    tA = 1 
+    tA = 1
 if 'NeNe' in args.collType:
     pZ = 10
     pA = 20
@@ -95,7 +95,7 @@ else:
     else:
         fout.write('fileName = ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/external/generator/GeneratorStarlight.C \n')
         fout.write('funcName = GeneratorStarlight("%s", %f, %d, %d, %d, %d, "%s", "%s")  \n' % (args.process.split('_')[0],args.eCM ,pZ,pA,tZ,tA,args.extraPars,args.dpmjetConf))
-    
+
 ###Trigger
 if not 'kDpmjet' in args.process:
     fout.write('[TriggerExternal] \n')
