@@ -38,6 +38,20 @@ Decay B0
 0.000540000 J/psi   K0      rho0                            PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000800000 J/psi   K*+     pi-                             PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000660000 J/psi   K*0     pi+     pi-                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
+
+# --- chi_c1 ---
+  0.000011200   chi_c1   pi0              SVS;
+  0.000395000   chi_c1   K0               SVS;
+  0.000497000   chi_c1   K+   pi-         PHSP;
+  0.000320000   chi_c1   K0   pi+  pi-    PHSP;
+  0.000350000   chi_c1   K+   pi0  pi-    PHSP;
+
+# --- chi_c2 ---
+  0.000015000   chi_c2   K0               SVS;
+  0.000049000   chi_c2   K*0              SVV_HELAMP 1.0 0.0 0.0;
+  0.000072000   chi_c2   K+   pi-         PHSP;
+  0.000174000   chi_c2   pi+  pi-  K0     PHSP;
+  0.000074000   chi_c2   pi-  pi0  K+     PHSP;
 Enddecay
 
 Decay anti-B0
@@ -78,6 +92,20 @@ Decay anti-B0
 0.000540000 J/psi   anti-K0 rho0                            PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000800000 J/psi   K*-     pi+                             PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000660000 J/psi   anti-K*0 pi-     pi+                    PHSP;  #[New mode added] #[Reconstructed PDG2011]
+
+# --- chi_c1 ---
+  0.000011200   chi_c1   pi0              SVS;
+  0.000395000   chi_c1   anti-K0          SVS;
+  0.000497000   chi_c1   K-   pi+         PHSP;
+  0.000320000   chi_c1   anti-K0 pi- pi+  PHSP;
+  0.000350000   chi_c1   K-   pi0  pi+    PHSP;
+
+# --- chi_c2 ---
+  0.000015000   chi_c2   anti-K0          SVS;
+  0.000049000   chi_c2   anti-K*0         SVV_HELAMP 1.0 0.0 0.0;
+  0.000072000   chi_c2   K-   pi+         PHSP;
+  0.000174000   chi_c2   pi-  pi+ anti-K0 PHSP;
+  0.000074000   chi_c2   pi+  pi0  K-     PHSP;
 Enddecay
 
 Decay B+
@@ -109,6 +137,21 @@ Decay B+
 0.000108000 J/psi   eta     K+                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000350000 J/psi   omega   K+                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000011800 J/psi   p+      anti-Lambda0                    PHSP;  #[New mode added] #[Reconstructed PDG2011]
+
+# --- chi_c1 ---
+  0.000022000   chi_c1   pi+              SVS;
+  0.000474000   chi_c1   K+               SVS;
+  0.000300000   chi_c1   K*+              SVV_HELAMP 1.0 0.0 0.0;
+  0.000329000   chi_c1   K+   pi0         PHSP;
+  0.000580000   chi_c1   K0   pi+         PHSP;
+  0.000374000   chi_c1   K+   pi+  pi-    PHSP;
+
+# --- chi_c2 ---
+  0.000110000   chi_c2   K+               SVS;
+  0.000120000   chi_c2   K*+              SVV_HELAMP 1.0 0.0 0.0;
+  0.000062000   chi_c2   K+   pi0         PHSP;
+  0.000124000   chi_c2   K0   pi+         PHSP;
+  0.000134000   chi_c2   K+   pi+  pi-    PHSP;
 Enddecay
 
 Decay B-
@@ -139,6 +182,21 @@ Decay B-
 0.000108000 J/psi   eta     K-                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000350000 J/psi   omega   K-                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000011800 J/psi   anti-p- Lambda0                         PHSP;  #[New mode added] #[Reconstructed PDG2011]
+
+# --- chi_c1 ---
+  0.000022000   chi_c1   pi-              SVS;
+  0.000474000   chi_c1   K-               SVS;
+  0.000300000   chi_c1   K*-              SVV_HELAMP 1.0 0.0 0.0;
+  0.000329000   chi_c1   K-   pi0         PHSP;
+  0.000580000   chi_c1   anti-K0 pi-      PHSP;
+  0.000374000   chi_c1   K-   pi-  pi+    PHSP;
+
+# --- chi_c2 ---
+  0.000110000   chi_c2   K-               SVS;
+  0.000120000   chi_c2   K*-              SVV_HELAMP 1.0 0.0 0.0;
+  0.000062000   chi_c2   K-   pi0         PHSP;
+  0.000124000   chi_c2   anti-K0 pi-      PHSP;
+  0.000134000   chi_c2   K-   pi-  pi+    PHSP;
 Enddecay
 
 Decay B_s0
@@ -182,6 +240,9 @@ Decay B_s0
 0.0002    J/psi   pi0      pi0       PHSP;
 # PR LHCb 04/08/2004 : add Bs -> phi mu mu, phi e e
 0.0000023   phi    e+     e-                   BTOSLLALI;
+
+# --- chi_c1 ---
+  0.0001970   chi_c1   phi   SVV_HELAMP 1.0 0.0 0.0;
 Enddecay
 
 Decay anti-B_s0
@@ -224,18 +285,29 @@ Decay anti-B_s0
 0.0002    J/psi   pi0      pi0       PHSP;
 # PR LHCb 04/08/2004 : add Bs -> phi mu mu, phi e e
 0.0000023   phi    e-     e+                   BTOSLLALI;
+
+# --- chi_c1 ---
+  0.0001970   chi_c1   phi   SVV_HELAMP 1.0 0.0 0.0;
 Enddecay
 
 Decay Lambda_b0
 ###
 0.00038    Lambda0         psi(2S)                      PHSP;
 0.00047    Lambda0         J/psi                        PHSP;
+  0.0000760   chi_c1   p       K-      PHSP;
+  0.0000050   chi_c1   p       pi-     PHSP;
+  0.0000770   chi_c2   p       K-      PHSP;
+  0.0000048   chi_c2   p       pi-     PHSP;
 Enddecay
 
 Decay anti-Lambda_b0
 ###
 0.00038    anti-Lambda0    psi(2S)                      PHSP;
 0.00047    anti-Lambda0    J/psi                        PHSP;
+  0.0000760   chi_c1   anti-p  K+      PHSP;
+  0.0000050   chi_c1   anti-p  pi+     PHSP;
+  0.0000770   chi_c2   anti-p  K+      PHSP;
+  0.0000048   chi_c2   anti-p  pi+     PHSP;
 Enddecay
 
 Decay Xi_b-
@@ -263,6 +335,19 @@ Decay anti-Omega_b+
   0.00047    anti-Omega+        J/psi                     PHSP;
 Enddecay
 
+
+# =============================================================================================================================
+# JPsi, Psi(2S), ChiC Decays
+# =============================================================================================================================
+###
+Decay chi_c1
+  1.000   J/psi   gamma   PHSP;
+Enddecay
+
+###
+Decay chi_c2
+  1.000   J/psi   gamma   PHSP;
+Enddecay
 
 Decay psi(2S)
 ### from DECAY.DEC
