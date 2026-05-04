@@ -1,1163 +1,1163 @@
 // AODBcRewriter.C
-// Usage: root -l -b -q 'AODBcRewriter.C("AO2D.root","AO2D_rewritten.root")'
-// Fixes globalBC ordering and duplication problems in AO2D files; sorts and
-// rewrites tables refering to the BC table generic branch code only; No
-// knowledge of AOD dataformat used apart from the BC table.
+//
+// Usage:
+//   root -l -b -q 'AODBcRewriter.C("AO2D.root","AO2D_rewritten.root")'
+//
+// -----------------------------------------------------------------------------
+// PURPOSE
+// -----------------------------------------------------------------------------
+// After merging two AO2D files the BC table (O2bc_*) can contain:
+//   (a) Non-monotonic fGlobalBC values — violating a framework requirement.
+//   (b) Duplicate fGlobalBC values    — one logical BC spread across many rows.
+//   (c) Duplicate MCCollisions        — the same MC event repeated because it
+//       appeared in both source files before merging.
+//
+// This tool fixes all three problems in one pass per DF_ directory:
+//
+//   Stage 0  — Sort & deduplicate the BC table.  Build BC permutation map:
+//              bcPerm[oldBCrow] = newBCrow.
+//
+//   Stage 1  — Process every table that carries fIndexBCs / fIndexBC.
+//              Remap the index via bcPerm, sort rows by the new index, and
+//              record a permutation map for each such table so that tables
+//              paste-joined to it can follow.
+//              Special sub-case: O2mccollision_* is deduplicated here —
+//              rows whose (fIndexBCs, generator-level event ID) key has already
+//              been seen are dropped, and a FULL permutation map is produced
+//              (mcCollPerm[oldRow] = newRow, -1 = dropped).
+//
+//   Stage 2  — Process every table that carries fIndexMcCollisions.
+//              Remap via mcCollPerm, sort, record mcCollXxxPerm if needed.
+//
+//   Paste-join tables — tables that have NO index column but are implicitly
+//              joined row-for-row with another table (e.g. O2mccollisionlabel
+//              is paste-joined with O2collision).  They must be reordered
+//              identically to their parent.  The known paste-join relationships
+//              are listed in kPasteJoins below and are applied after the
+//              relevant stage has established the parent permutation.
+//
+//   Unrelated tables — tables with no dependency on BCs or MCCollisions are
+//              copied verbatim.
+//
+// -----------------------------------------------------------------------------
+// DATA MODEL DEPENDENCY GRAPH (relevant subset)
+// -----------------------------------------------------------------------------
+//
+//  BCs (O2bc_*)                                        [Stage 0]
+//   │  fIndexBCs
+//   ├─► Collisions      (O2collision_*)                [Stage 1]
+//   │    │  paste-join ► McCollisionLabels (O2mccollisionlabel_*)
+//   │    │  fIndexCollisions (in tracks etc. — tracked by collPerm)
+//   │    └─► Tracks     (O2track_*, O2trackiu_*, ...)  [Stage 1]
+//   │         paste-join ► McTrackLabels (O2mctracklabel_*)
+//   │
+//   └─► MCCollisions    (O2mccollision_*)              [Stage 1, deduplicated]
+//        │  fIndexMcCollisions
+//        ├─► HepMCXSections   (O2hepmcxsection_*)     [Stage 2]
+//        ├─► HepMCPdfInfos    (O2hepmcpdfinfo_*)       [Stage 2]
+//        └─► HepMCHeavyIons   (O2hepmcheavyion_*)      [Stage 2]
+//
+// All other tables (detector hits, ZDC, FT0, FV0, FDD, …) that carry
+// fIndexBCs are handled generically in Stage 1 without special-casing.
+//
+// -----------------------------------------------------------------------------
 
 #ifndef __CLING__
 #include "RVersion.h"
 #include "TBranch.h"
-#include "TBufferFile.h"
-#include "TClass.h"
 #include "TDirectory.h"
 #include "TFile.h"
 #include "TKey.h"
 #include "TLeaf.h"
-#include "TList.h"
 #include "TMap.h"
-#include "TObjString.h"
 #include "TROOT.h"
 #include "TString.h"
 #include "TTree.h"
-
 #include <algorithm>
-#include <cstdint>
 #include <cstring>
+#include <cstdint>
 #include <iostream>
-#include <limits>
+#include <map>
 #include <memory>
 #include <numeric>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #endif
 
-// ----------------- small helpers -----------------
-static inline bool isDF(const char *name) {
-  return TString(name).BeginsWith("DF_");
-}
-static inline bool isBCtree(const char *tname) {
-  return TString(tname).BeginsWith("O2bc_");
-}
-static inline bool isFlagsTree(const char *tname) {
-  return TString(tname) == "O2bcflag" || TString(tname) == "O2bcflags" ||
-         TString(tname).BeginsWith("O2bcflag");
-}
-static const char *findIndexBranchName(TTree *t) {
-  if (!t)
-    return nullptr;
-  if (t->GetBranch("fIndexBCs"))
-    return "fIndexBCs";
-  if (t->GetBranch("fIndexBC"))
-    return "fIndexBC";
-  return nullptr;
-}
+// ============================================================================
+// SECTION 1 — Types and small helpers
+// ============================================================================
 
-static const char *findMcCollisionIndexBranchName(TTree *t) {
-  if (!t)
-    return nullptr;
-  if (t->GetBranch("fIndexMcCollisions"))
-    return "fIndexMcCollisions";
-  return nullptr;
-}
+// A permutation map: permMap[oldRow] = newRow, -1 means "row was dropped".
+using PermMap = std::vector<Int_t>;
 
-static inline bool isMcCollisionTree(const char *tname) {
-  return TString(tname).BeginsWith("O2mccollision");
-}
-
-// Scalar type tag
-enum class ScalarTag {
-  kInt,
-  kUInt,
-  kShort,
-  kUShort,
-  kLong64,
-  kULong64,
-  kFloat,
-  kDouble,
-  kChar,
-  kUChar,
-  kBool,
-  kUnknown
-};
-static ScalarTag leafType(TLeaf *leaf) {
-  if (!leaf)
-    return ScalarTag::kUnknown;
-  TString tn = leaf->GetTypeName();
-  if (tn == "Int_t")
-    return ScalarTag::kInt;
-  if (tn == "UInt_t")
-    return ScalarTag::kUInt;
-  if (tn == "Short_t")
-    return ScalarTag::kShort;
-  if (tn == "UShort_t")
-    return ScalarTag::kUShort;
-  if (tn == "Long64_t")
-    return ScalarTag::kLong64;
-  if (tn == "ULong64_t")
-    return ScalarTag::kULong64;
-  if (tn == "Float_t")
-    return ScalarTag::kFloat;
-  if (tn == "Double_t")
-    return ScalarTag::kDouble;
-  if (tn == "Char_t")
-    return ScalarTag::kChar;
-  if (tn == "UChar_t")
-    return ScalarTag::kUChar;
-  if (tn == "Bool_t")
-    return ScalarTag::kBool;
-  return ScalarTag::kUnknown;
-}
-static size_t scalarSize(ScalarTag t) {
-  switch (t) {
-  case ScalarTag::kInt:
-    return sizeof(Int_t);
-  case ScalarTag::kUInt:
-    return sizeof(UInt_t);
-  case ScalarTag::kShort:
-    return sizeof(Short_t);
-  case ScalarTag::kUShort:
-    return sizeof(UShort_t);
-  case ScalarTag::kLong64:
-    return sizeof(Long64_t);
-  case ScalarTag::kULong64:
-    return sizeof(ULong64_t);
-  case ScalarTag::kFloat:
-    return sizeof(Float_t);
-  case ScalarTag::kDouble:
-    return sizeof(Double_t);
-  case ScalarTag::kChar:
-    return sizeof(Char_t);
-  case ScalarTag::kUChar:
-    return sizeof(UChar_t);
-  case ScalarTag::kBool:
-    return sizeof(Bool_t);
-  default:
-    return 0;
-  }
-}
-
-// small Buffer base for lifetime management
-struct BufBase {
-  virtual ~BufBase() {}
-  virtual void *ptr() = 0;
-};
-template <typename T> struct ScalarBuf : BufBase {
-  T v;
-  void *ptr() override { return &v; }
-};
-template <typename T> struct ArrayBuf : BufBase {
-  std::vector<T> a;
-  void *ptr() override { return a.data(); }
-};
-
-template <typename T> static std::unique_ptr<BufBase> makeScalarBuf() {
-  return std::make_unique<ScalarBuf<T>>();
-}
-template <typename T> static std::unique_ptr<BufBase> makeArrayBuf(size_t n) {
-  auto p = std::make_unique<ArrayBuf<T>>();
-  if (n == 0)
-    n = 1;
-  p->a.resize(n);
+// Convenience: build an identity permutation of length n.
+static PermMap identityPerm(Long64_t n) {
+  PermMap p(n);
+  std::iota(p.begin(), p.end(), 0);
   return p;
 }
 
-// prescan the count branch to determine max length for a VLA
-static Long64_t prescanMaxLen(TTree *src, TBranch *countBr,
-                              ScalarTag countTag) {
-  if (!countBr)
-    return 1;
-  // temporary buffer
-  std::unique_ptr<BufBase> tmp;
-  switch (countTag) {
-  case ScalarTag::kInt:
-    tmp = makeScalarBuf<Int_t>();
-    break;
-  case ScalarTag::kUInt:
-    tmp = makeScalarBuf<UInt_t>();
-    break;
-  case ScalarTag::kShort:
-    tmp = makeScalarBuf<Short_t>();
-    break;
-  case ScalarTag::kUShort:
-    tmp = makeScalarBuf<UShort_t>();
-    break;
-  case ScalarTag::kLong64:
-    tmp = makeScalarBuf<Long64_t>();
-    break;
-  case ScalarTag::kULong64:
-    tmp = makeScalarBuf<ULong64_t>();
-    break;
-  default:
-    tmp = makeScalarBuf<Int_t>();
-    break;
-  }
-  countBr->SetAddress(tmp->ptr());
-  Long64_t maxLen = 0;
-  Long64_t nEnt = src->GetEntries();
-  for (Long64_t i = 0; i < nEnt; ++i) {
-    countBr->GetEntry(i);
-    Long64_t v = 0;
-    switch (countTag) {
-    case ScalarTag::kInt:
-      v = *(Int_t *)tmp->ptr();
-      break;
-    case ScalarTag::kUInt:
-      v = *(UInt_t *)tmp->ptr();
-      break;
-    case ScalarTag::kShort:
-      v = *(Short_t *)tmp->ptr();
-      break;
-    case ScalarTag::kUShort:
-      v = *(UShort_t *)tmp->ptr();
-      break;
-    case ScalarTag::kLong64:
-      v = *(Long64_t *)tmp->ptr();
-      break;
-    case ScalarTag::kULong64:
-      v = *(ULong64_t *)tmp->ptr();
-      break;
-    default:
-      v = *(Int_t *)tmp->ptr();
-      break;
-    }
-    if (v > maxLen)
-      maxLen = v;
-  }
-  return maxLen;
+// Names of tables that begin with these prefixes are BC tables or flag tables
+// and are handled specially in Stage 0.
+static bool isBCTable(const char *name) {
+  return TString(name).BeginsWith("O2bc");
 }
 
-// bind scalar branch (in and out share same buffer)
-static std::unique_ptr<BufBase> bindScalarBranch(TBranch *inBr, TBranch *outBr,
-                                                 ScalarTag tag) {
-  switch (tag) {
-  case ScalarTag::kInt: {
-    auto b = makeScalarBuf<Int_t>();
-    inBr->SetAddress(b->ptr());
-    outBr->SetAddress(b->ptr());
-    return b;
-  }
-  case ScalarTag::kUInt: {
-    auto b = makeScalarBuf<UInt_t>();
-    inBr->SetAddress(b->ptr());
-    outBr->SetAddress(b->ptr());
-    return b;
-  }
-  case ScalarTag::kShort: {
-    auto b = makeScalarBuf<Short_t>();
-    inBr->SetAddress(b->ptr());
-    outBr->SetAddress(b->ptr());
-    return b;
-  }
-  case ScalarTag::kUShort: {
-    auto b = makeScalarBuf<UShort_t>();
-    inBr->SetAddress(b->ptr());
-    outBr->SetAddress(b->ptr());
-    return b;
-  }
-  case ScalarTag::kLong64: {
-    auto b = makeScalarBuf<Long64_t>();
-    inBr->SetAddress(b->ptr());
-    outBr->SetAddress(b->ptr());
-    return b;
-  }
-  case ScalarTag::kULong64: {
-    auto b = makeScalarBuf<ULong64_t>();
-    inBr->SetAddress(b->ptr());
-    outBr->SetAddress(b->ptr());
-    return b;
-  }
-  case ScalarTag::kFloat: {
-    auto b = makeScalarBuf<Float_t>();
-    inBr->SetAddress(b->ptr());
-    outBr->SetAddress(b->ptr());
-    return b;
-  }
-  case ScalarTag::kDouble: {
-    auto b = makeScalarBuf<Double_t>();
-    inBr->SetAddress(b->ptr());
-    outBr->SetAddress(b->ptr());
-    return b;
-  }
-  case ScalarTag::kChar: {
-    auto b = makeScalarBuf<Char_t>();
-    inBr->SetAddress(b->ptr());
-    outBr->SetAddress(b->ptr());
-    return b;
-  }
-  case ScalarTag::kUChar: {
-    auto b = makeScalarBuf<UChar_t>();
-    inBr->SetAddress(b->ptr());
-    outBr->SetAddress(b->ptr());
-    return b;
-  }
-  default:
-    return nullptr;
-  }
+static bool isDF(const char *name) {
+  return TString(name).BeginsWith("DF_");
 }
 
-// bind VLA typed: returns data buffer and outputs count buffer (via
-// outCountBuf)
-template <typename T>
-static std::unique_ptr<BufBase>
-bindArrayTyped(TBranch *inData, TBranch *outData, TBranch *inCount,
-               TBranch *outCount, ScalarTag countTag, Long64_t maxLen,
-               std::unique_ptr<BufBase> &outCountBuf) {
-  // create count buffer
-  std::unique_ptr<BufBase> countBuf;
-  switch (countTag) {
-  case ScalarTag::kInt:
-    countBuf = makeScalarBuf<Int_t>();
-    break;
-  case ScalarTag::kUInt:
-    countBuf = makeScalarBuf<UInt_t>();
-    break;
-  case ScalarTag::kShort:
-    countBuf = makeScalarBuf<Short_t>();
-    break;
-  case ScalarTag::kUShort:
-    countBuf = makeScalarBuf<UShort_t>();
-    break;
-  case ScalarTag::kLong64:
-    countBuf = makeScalarBuf<Long64_t>();
-    break;
-  case ScalarTag::kULong64:
-    countBuf = makeScalarBuf<ULong64_t>();
-    break;
-  default:
-    countBuf = makeScalarBuf<Int_t>();
-    break;
-  }
-  // data buffer (allocate maxLen)
-  auto dataBuf = makeArrayBuf<T>((size_t)std::max<Long64_t>(1, maxLen));
-
-  inCount->SetAddress(countBuf->ptr());
-  outCount->SetAddress(countBuf->ptr());
-  inData->SetAddress(dataBuf->ptr());
-  outData->SetAddress(dataBuf->ptr());
-
-  outCountBuf = std::move(countBuf);
-  return dataBuf;
+// Return the name of the BC index branch if present, else nullptr.
+static const char *bcIndexBranch(TTree *t) {
+  if (!t) return nullptr;
+  if (t->GetBranch("fIndexBCs"))  return "fIndexBCs";
+  if (t->GetBranch("fIndexBC"))   return "fIndexBC";
+  return nullptr;
 }
 
-// ----------------- BC maps builder -----------------
-struct BCMaps {
-  std::vector<ULong64_t> originalBCs;
-  std::vector<Int_t> indexMap;
-  std::vector<ULong64_t> uniqueBCs;
-  std::unordered_map<size_t, std::vector<size_t>> newIndexOrigins;
+// Return the name of the MCCollision index branch if present, else nullptr.
+static const char *mcCollIndexBranch(TTree *t) {
+  if (!t) return nullptr;
+  if (t->GetBranch("fIndexMcCollisions")) return "fIndexMcCollisions";
+  return nullptr;
+}
 
-  // McCollision scheme (populated when O2mccollision is sorted) during first stage
-  std::vector<Long64_t> mcOldEntries;
-  std::vector<Long64_t> mcNewEntries;
+// Return the name of the Collision index branch if present, else nullptr.
+static const char *collIndexBranch(TTree *t) {
+  if (!t) return nullptr;
+  if (t->GetBranch("fIndexCollisions")) return "fIndexCollisions";
+  return nullptr;
+}
+
+// ============================================================================
+// SECTION 2 — Generic ROOT branch I/O helpers
+// ============================================================================
+//
+// AO2D branches store plain scalar values (Int_t, ULong64_t, Float_t, …) or
+// variable-length arrays (VLAs).  We need to read and write them generically
+// without knowing the concrete type at compile time.  The trick is to allocate
+// a raw byte buffer of the right size, set the branch address to it, and use
+// the ScalarTag enum to know how to interpret it when we need to (e.g. for
+// index remapping).
+
+enum class ScalarTag {
+  kInt, kUInt, kShort, kUShort, kLong64, kULong64,
+  kFloat, kDouble, kChar, kUChar, kBool, kUnknown
 };
 
-static BCMaps buildBCMaps(TTree *treeBCs) {
-  BCMaps maps;
-  if (!treeBCs)
-    return maps;
-  TBranch *br = treeBCs->GetBranch("fGlobalBC");
-  if (!br) {
-    std::cerr << "ERROR: no fGlobalBC\n";
-    return maps;
-  }
-  ULong64_t v = 0;
-  br->SetAddress(&v);
-  Long64_t n = treeBCs->GetEntries();
-  maps.originalBCs.reserve(n);
-  for (Long64_t i = 0; i < n; ++i) {
-    treeBCs->GetEntry(i);
-    maps.originalBCs.push_back(v);
-  }
-
-  std::vector<size_t> order(n);
-  std::iota(order.begin(), order.end(), 0);
-  std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
-    return maps.originalBCs[a] < maps.originalBCs[b];
-  });
-
-  maps.indexMap.assign(n, -1);
-  Int_t newIdx = -1;
-  ULong64_t prev = ULong64_t(-1);
-  for (auto oldIdx : order) {
-    ULong64_t val = maps.originalBCs[oldIdx];
-    if (newIdx < 0 || val != prev) {
-      ++newIdx;
-      prev = val;
-      maps.uniqueBCs.push_back(val);
-    }
-    maps.indexMap[oldIdx] = newIdx;
-    maps.newIndexOrigins[newIdx].push_back(oldIdx);
-  }
-  std::cout << "    BCMaps: oldEntries=" << n
-            << " unique=" << maps.uniqueBCs.size() << "\n";
-  return maps;
+static ScalarTag tagOf(TLeaf *leaf) {
+  if (!leaf) return ScalarTag::kUnknown;
+  TString t = leaf->GetTypeName();
+  if (t == "Int_t")     return ScalarTag::kInt;
+  if (t == "UInt_t")    return ScalarTag::kUInt;
+  if (t == "Short_t")   return ScalarTag::kShort;
+  if (t == "UShort_t")  return ScalarTag::kUShort;
+  if (t == "Long64_t")  return ScalarTag::kLong64;
+  if (t == "ULong64_t") return ScalarTag::kULong64;
+  if (t == "Float_t")   return ScalarTag::kFloat;
+  if (t == "Double_t")  return ScalarTag::kDouble;
+  if (t == "Char_t")    return ScalarTag::kChar;
+  if (t == "UChar_t")   return ScalarTag::kUChar;
+  if (t == "Bool_t")    return ScalarTag::kBool;
+  return ScalarTag::kUnknown;
 }
 
-// ----------------- small helper used for BC/flags copy -----------------
-/*
-  copyTreeSimple:
-   - inTree: input tree (assumed POD-only of types Int_t, ULong64_t, UChar_t)
-   - entryMap: list of input-entry indices to use, in desired output order;
-  (size_t)-1 entries are skipped
-   - outName: name for the output tree
-*/
-static TTree *copyTreeSimple(TTree *inTree, const std::vector<size_t> &entryMap,
-                             const char *outName = nullptr) {
-  if (!inTree)
-    return nullptr;
-  TString tname = outName ? outName : inTree->GetName();
-  TTree *outTree = new TTree(tname, "rebuilt tree");
+static size_t byteSize(ScalarTag t) {
+  switch (t) {
+    case ScalarTag::kInt:     return sizeof(Int_t);
+    case ScalarTag::kUInt:    return sizeof(UInt_t);
+    case ScalarTag::kShort:   return sizeof(Short_t);
+    case ScalarTag::kUShort:  return sizeof(UShort_t);
+    case ScalarTag::kLong64:  return sizeof(Long64_t);
+    case ScalarTag::kULong64: return sizeof(ULong64_t);
+    case ScalarTag::kFloat:   return sizeof(Float_t);
+    case ScalarTag::kDouble:  return sizeof(Double_t);
+    case ScalarTag::kChar:    return sizeof(Char_t);
+    case ScalarTag::kUChar:   return sizeof(UChar_t);
+    case ScalarTag::kBool:    return sizeof(Bool_t);
+    default:                  return 0;
+  }
+}
 
-  std::vector<void *> inBufs, outBufs;
-  std::vector<TBranch *> inBranches;
-  std::vector<TString> types;
-  std::vector<TString> leafCodes;
-  std::vector<TString> bnames;
+// Read an integer value from a raw buffer regardless of its stored type.
+// Used to extract index values (fIndexBCs etc.) from their buffers.
+static Long64_t readAsInt(const void *buf, ScalarTag tag) {
+  switch (tag) {
+    case ScalarTag::kInt:     return *static_cast<const Int_t *>(buf);
+    case ScalarTag::kUInt:    return *static_cast<const UInt_t *>(buf);
+    case ScalarTag::kShort:   return *static_cast<const Short_t *>(buf);
+    case ScalarTag::kUShort:  return *static_cast<const UShort_t *>(buf);
+    case ScalarTag::kLong64:  return *static_cast<const Long64_t *>(buf);
+    case ScalarTag::kULong64: return (Long64_t)*static_cast<const ULong64_t *>(buf);
+    default:                  return -1;
+  }
+}
 
-  for (auto brObj : *inTree->GetListOfBranches()) {
-    TBranch *br = (TBranch *)brObj;
-    TString bname = br->GetName();
-    TLeaf *leaf = (TLeaf *)br->GetListOfLeaves()->At(0);
-    if (!leaf)
+// Write an integer value into a raw buffer.
+static void writeAsInt(void *buf, ScalarTag tag, Long64_t val) {
+  switch (tag) {
+    case ScalarTag::kInt:    *static_cast<Int_t *>(buf)    = (Int_t)val;    break;
+    case ScalarTag::kUInt:   *static_cast<UInt_t *>(buf)   = (UInt_t)val;   break;
+    case ScalarTag::kShort:  *static_cast<Short_t *>(buf)  = (Short_t)val;  break;
+    case ScalarTag::kUShort: *static_cast<UShort_t *>(buf) = (UShort_t)val; break;
+    case ScalarTag::kLong64: *static_cast<Long64_t *>(buf) = (Long64_t)val; break;
+    default: break;
+  }
+}
+
+// Remap a single Int_t index value through a PermMap.  Returns -1 for any
+// out-of-range or already-invalid (negative) value.
+static Int_t remapIdx(Int_t val, const PermMap &perm) {
+  if (val < 0 || (size_t)val >= perm.size()) return -1;
+  return perm[(size_t)val];
+}
+
+// A description of one branch in a tree: its name, scalar type tag, byte
+// size, and whether it is a VLA (variable-length array).  For VLAs we also
+// keep the name of the count branch and the maximum observed element count
+// (needed for buffer sizing).
+struct BranchDesc {
+  std::string name;
+  ScalarTag   tag      = ScalarTag::kUnknown;
+  size_t      elemSize = 0;  // byte size of one element
+  int         nElems   = 1;  // >1 for fixed-size arrays (e.g. fIndexSlice_Daughters[2])
+  bool        isVLA    = false;
+  std::string countBranchName; // only for VLAs
+  Long64_t    maxElems = 1;    // only for VLAs
+};
+
+// Scan all branches of a tree and return their descriptors.  Count branches
+// for VLAs are represented only once (as the count side of the data branch)
+// and are marked so they don't also appear as standalone entries.
+static std::vector<BranchDesc> describeBranches(TTree *tree) {
+  std::vector<BranchDesc> result;
+  std::unordered_set<std::string> countBranchNames;
+
+  // First pass: identify all count branches for VLAs
+  for (auto *obj : *tree->GetListOfBranches()) {
+    TBranch *br = static_cast<TBranch *>(obj);
+    TLeaf *leaf = static_cast<TLeaf *>(br->GetListOfLeaves()->At(0));
+    if (!leaf) continue;
+    if (TLeaf *cnt = leaf->GetLeafCount())
+      countBranchNames.insert(cnt->GetBranch()->GetName());
+  }
+
+  // Second pass: build descriptors
+  for (auto *obj : *tree->GetListOfBranches()) {
+    TBranch *br = static_cast<TBranch *>(obj);
+    std::string bname = br->GetName();
+    TLeaf *leaf = static_cast<TLeaf *>(br->GetListOfLeaves()->At(0));
+    if (!leaf) { std::cerr << "  [warn] branch without leaf: " << bname << "\n"; continue; }
+
+    BranchDesc d;
+    d.name = bname;
+    d.tag  = tagOf(leaf);
+
+    if (TLeaf *cnt = leaf->GetLeafCount()) {
+      // This is a VLA data branch
+      d.isVLA          = true;
+      d.countBranchName = cnt->GetBranch()->GetName();
+      d.tag             = tagOf(leaf);
+      d.elemSize        = byteSize(d.tag);
+
+      // Pre-scan to find the maximum array length (needed for buffer)
+      TBranch *cntBr = cnt->GetBranch();
+      ScalarTag cntTag = tagOf(cnt);
+      size_t cntSz = byteSize(cntTag);
+      if (cntSz == 0) { std::cerr << "  [warn] VLA count branch has unknown type: " << bname << "\n"; continue; }
+      std::vector<unsigned char> cntBuf(cntSz, 0);
+      cntBr->SetAddress(cntBuf.data());
+      Long64_t maxLen = 1;
+      for (Long64_t i = 0; i < tree->GetEntries(); ++i) {
+        cntBr->GetEntry(i);
+        Long64_t v = readAsInt(cntBuf.data(), cntTag);
+        if (v > maxLen) maxLen = v;
+      }
+      d.maxElems = maxLen;
+
+    } else if (countBranchNames.count(bname)) {
+      // This is a count branch — skip it here; handled together with its VLA
       continue;
-    TString type = leaf->GetTypeName();
-
-    void *inBuf = nullptr;
-    void *outBuf = nullptr;
-    TString leafCode;
-
-    if (type == "Int_t") {
-      inBuf = new Int_t;
-      outBuf = new Int_t;
-      leafCode = "I";
-    } else if (type == "ULong64_t") {
-      inBuf = new ULong64_t;
-      outBuf = new ULong64_t;
-      leafCode = "l";
-    } else if (type == "UChar_t") {
-      inBuf = new UChar_t;
-      outBuf = new UChar_t;
-      leafCode = "b";
     } else {
-      std::cerr << "Unsupported branch type " << type << " in "
-                << inTree->GetName() << " branch " << bname << " — skipping\n";
-      continue;
+      // Plain scalar or fixed-size array branch (e.g. fIndexSlice_Daughters[2])
+      d.isVLA    = false;
+      d.elemSize = byteSize(d.tag);
+      d.nElems   = leaf->GetLen();  // 1 for scalars, >1 for fixed arrays
+      if (d.elemSize == 0) {
+        std::cerr << "  [warn] branch " << bname << " has unknown type "
+                  << leaf->GetTypeName() << " — will be skipped\n";
+        continue;
+      }
     }
-
-    br->SetAddress(inBuf);
-    outTree->Branch(bname, outBuf, bname + "/" + leafCode);
-
-    inBufs.push_back(inBuf);
-    outBufs.push_back(outBuf);
-    inBranches.push_back(br);
-    types.push_back(type);
-    leafCodes.push_back(leafCode);
-    bnames.push_back(bname);
+    result.push_back(std::move(d));
   }
-
-  // fill using entryMap (representative input indices)
-  for (size_t idx : entryMap) {
-    if (idx == (size_t)-1)
-      continue;
-    inTree->GetEntry((Long64_t)idx);
-    for (size_t ib = 0; ib < inBranches.size(); ++ib) {
-      if (types[ib] == "Int_t")
-        *(Int_t *)outBufs[ib] = *(Int_t *)inBufs[ib];
-      else if (types[ib] == "ULong64_t")
-        *(ULong64_t *)outBufs[ib] = *(ULong64_t *)inBufs[ib];
-      else if (types[ib] == "UChar_t")
-        *(UChar_t *)outBufs[ib] = *(UChar_t *)inBufs[ib];
-    }
-    outTree->Fill();
-  }
-
-  return outTree;
+  return result;
 }
 
-// ----------------- Rebuild BCs and Flags (refactored) -----------------
-void rebuildBCsAndFlags(TDirectory *dirIn, TDirectory *dirOut, TTree *&outBCs,
-                        BCMaps &maps) {
-  std::cout << "------------------------------------------------\n";
-  std::cout << "Rebuild BCs+flags in " << dirIn->GetName() << "\n";
+// ============================================================================
+// SECTION 3 — Table rewriting engine
+// ============================================================================
+//
+// rewriteTable() is the single generic function that handles any table.
+// It takes:
+//   - src          : the source TTree
+//   - dirOut       : directory to write the output TTree into
+//   - rowOrder     : which source rows to include and in what order
+//                    (a vector of source row indices, possibly a subset)
+//   - indexBranch  : name of the index branch to remap, or "" if none
+//   - parentPerm   : PermMap for remapping that index (may be empty)
+//   - extraRemaps  : additional index columns to remap in-place via their own
+//                    PermMaps (used for intra-table and cross-table indices
+//                    that are not the primary sort key, e.g. mother/daughter
+//                    indices in O2mcparticle or fIndexMcParticles in labels)
+//
+// It returns the permutation of source rows implied by rowOrder, expressed
+// as a PermMap: perm[srcRow] = outputRow, -1 if the row was dropped.
 
-  // find O2bc_* (pick first matching) and O2bcflag
-  TTree *treeBCs = nullptr;
-  TTree *treeFlags = nullptr;
+// Describes one extra index column to remap independently of the sort key.
+struct ExtraRemap {
+  std::string  branchName;  // branch whose integer values to remap
+  const PermMap *perm;      // remapping table: newVal = (*perm)[oldVal]
+};
 
-  for (auto keyObj : *dirIn->GetListOfKeys()) {
-    TKey *key = (TKey *)keyObj;
-    TObject *obj = dirIn->Get(key->GetName());
-    if (!obj)
-      continue;
-    if (!obj->InheritsFrom(TTree::Class()))
-      continue;
-    TTree *t = (TTree *)obj;
-    if (isBCtree(t->GetName())) {
-      treeBCs = t;
-    } else if (isFlagsTree(t->GetName())) {
-      treeFlags = t;
+static PermMap rewriteTable(TTree *src, TDirectory *dirOut,
+                            const std::vector<Long64_t> &rowOrder,
+                            const std::string &indexBranch,
+                            const PermMap &parentPerm,
+                            const std::vector<ExtraRemap> &extraRemaps = {}) {
+
+  Long64_t nSrc = src->GetEntries();
+
+  // Build the inverse permutation (srcRow → outRow) from rowOrder
+  PermMap srcToOut(nSrc, -1);
+  for (Long64_t outRow = 0; outRow < (Long64_t)rowOrder.size(); ++outRow)
+    srcToOut[rowOrder[outRow]] = (Int_t)outRow;
+
+  // Describe all branches
+  auto descs = describeBranches(src);
+
+  // Allocate raw buffers: for each branch one buffer (for VLAs: data buffer
+  // sized maxElems * elemSize, plus a separate count buffer).
+  // We use a std::vector<unsigned char> per branch (automatically memory-safe).
+  struct BranchIO {
+    BranchDesc        desc;
+    std::vector<unsigned char> dataBuf;   // scalar: elemSize bytes; VLA: maxElems*elemSize bytes
+    std::vector<unsigned char> countBuf;  // VLA only
+    ScalarTag         countTag = ScalarTag::kUnknown;
+    TBranch          *inBr     = nullptr;
+    TBranch          *inCntBr  = nullptr;
+  };
+  std::vector<BranchIO> ios;
+  ios.reserve(descs.size());
+
+  for (auto &d : descs) {
+    BranchIO io;
+    io.desc = d;
+    if (!d.isVLA) {
+      // Allocate for all elements (nElems>1 for fixed arrays like fIndexSlice_Daughters[2])
+      io.dataBuf.assign(d.nElems * d.elemSize, 0);
+    } else {
+      io.dataBuf.assign(d.maxElems * d.elemSize, 0);
+      TBranch *cntBr = src->GetBranch(d.countBranchName.c_str());
+      TLeaf *cntLeaf = cntBr ? static_cast<TLeaf *>(cntBr->GetListOfLeaves()->At(0)) : nullptr;
+      io.countTag = cntLeaf ? tagOf(cntLeaf) : ScalarTag::kUnknown;
+      io.countBuf.assign(byteSize(io.countTag), 0);
+      io.inCntBr = cntBr;
+    }
+    io.inBr = src->GetBranch(d.name.c_str());
+    ios.push_back(std::move(io));
+  }
+
+  // Set input branch addresses
+  for (auto &io : ios) {
+    if (io.inBr)    io.inBr->SetAddress(io.dataBuf.data());
+    if (io.inCntBr) io.inCntBr->SetAddress(io.countBuf.data());
+  }
+
+  // Create output tree and set output branch addresses.
+  // We clone the tree structure (no entries) and reset addresses.
+  dirOut->cd();
+  TTree *out = src->CloneTree(0, "fast");
+
+  // Find the index branch (if any) — we will update its value on the fly
+  ScalarTag idxTag = ScalarTag::kUnknown;
+  std::vector<unsigned char> newIdxBuf;
+  TBranch *outIdxBr = nullptr;
+  if (!indexBranch.empty()) {
+    TBranch *inIdxBr = src->GetBranch(indexBranch.c_str());
+    TLeaf *idxLeaf = inIdxBr ? static_cast<TLeaf *>(inIdxBr->GetListOfLeaves()->At(0)) : nullptr;
+    idxTag = idxLeaf ? tagOf(idxLeaf) : ScalarTag::kUnknown;
+    if (idxTag != ScalarTag::kUnknown) {
+      newIdxBuf.assign(byteSize(idxTag), 0);
+      outIdxBr = out->GetBranch(indexBranch.c_str());
+      if (outIdxBr) outIdxBr->SetAddress(newIdxBuf.data());
+    }
+  }
+
+  // Set all other output branch addresses to the same data buffers as input
+  for (auto &io : ios) {
+    if (io.desc.name == indexBranch) continue; // handled separately above
+    TBranch *outBr = out->GetBranch(io.desc.name.c_str());
+    if (!outBr) { std::cerr << "  [warn] no output branch for " << io.desc.name << "\n"; continue; }
+    outBr->SetAddress(io.dataBuf.data());
+    if (io.desc.isVLA) {
+      TBranch *outCntBr = out->GetBranch(io.desc.countBranchName.c_str());
+      if (outCntBr) outCntBr->SetAddress(io.countBuf.data());
+    }
+  }
+
+  // Fill the output tree row by row in the requested order
+  Long64_t nRemapped = 0;
+  for (Long64_t srcRow : rowOrder) {
+    src->GetEntry(srcRow);
+
+    // Remap the index branch if required
+    if (outIdxBr && idxTag != ScalarTag::kUnknown && !parentPerm.empty()) {
+      // Read old index from the input branch's buffer (one of the ios entries)
+      Long64_t oldIdx = -1;
+      for (auto &io : ios) {
+        if (io.desc.name == indexBranch) { oldIdx = readAsInt(io.dataBuf.data(), idxTag); break; }
+      }
+      Long64_t newIdx = -1;
+      if (oldIdx >= 0 && oldIdx < (Long64_t)parentPerm.size())
+        newIdx = parentPerm[oldIdx];
+      writeAsInt(newIdxBuf.data(), idxTag, newIdx >= 0 ? newIdx : -1);
+      if (newIdx != oldIdx) ++nRemapped;
+    }
+
+    // Apply extra in-place index remaps (e.g. intra-table mother/daughter
+    // indices in O2mcparticle, or fIndexMcParticles in label tables).
+    // The output branch shares the same buffer, so modifying dataBuf here
+    // is read by out->Fill() below.
+    for (auto &er : extraRemaps) {
+      for (auto &io : ios) {
+        if (io.desc.name != er.branchName) continue;
+        if (io.desc.isVLA) {
+          // VLA: remap each element according to count
+          Long64_t cnt = readAsInt(io.countBuf.data(), io.countTag);
+          auto *p = reinterpret_cast<Int_t *>(io.dataBuf.data());
+          for (Long64_t j = 0; j < cnt; ++j)
+            p[j] = remapIdx(p[j], *er.perm);
+        } else {
+          // Scalar or fixed-size array: remap all nElems integers
+          auto *p = reinterpret_cast<Int_t *>(io.dataBuf.data());
+          for (int j = 0; j < io.desc.nElems; ++j)
+            p[j] = remapIdx(p[j], *er.perm);
+        }
+        break;
+      }
+    }
+
+    out->Fill();
+  }
+
+  std::cout << "    wrote " << out->GetEntries() << " / " << nSrc
+            << " rows; " << nRemapped << " index values remapped\n";
+  out->Write();
+  return srcToOut;
+}
+
+// ============================================================================
+// SECTION 4 — Stage 0: BC table sort + deduplication
+// ============================================================================
+//
+// Reads fGlobalBC from the BC tree, sorts rows, drops exact-duplicate BC
+// values, and writes the compacted table.  Returns bcPerm[oldRow] = newRow.
+
+struct BCStage0Result {
+  PermMap bcPerm;          // bcPerm[oldRow] = newRow in sorted/deduped BC table
+  Long64_t nUnique = 0;
+};
+
+static BCStage0Result stage0_sortBCs(TTree *treeBCs, TDirectory *dirOut) {
+  BCStage0Result res;
+  Long64_t n = treeBCs->GetEntries();
+  if (n == 0) return res;
+
+  TBranch *brGBC = treeBCs->GetBranch("fGlobalBC");
+  if (!brGBC) { std::cerr << "ERROR: O2bc_* tree has no fGlobalBC branch!\n"; return res; }
+
+  ULong64_t gbc = 0;
+  brGBC->SetAddress(&gbc);
+  std::vector<ULong64_t> gbcs(n);
+  for (Long64_t i = 0; i < n; ++i) { treeBCs->GetEntry(i); gbcs[i] = gbc; }
+
+  // Sort row indices by fGlobalBC
+  std::vector<Long64_t> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::stable_sort(order.begin(), order.end(),
+    [&](Long64_t a, Long64_t b){ return gbcs[a] < gbcs[b]; });
+
+  // Build deduplicated row list and the permutation
+  res.bcPerm.assign(n, -1);
+  std::vector<Long64_t> rowOrder;  // source rows to keep, in output order
+  ULong64_t prev = ULong64_t(-1);
+  Int_t newRow = -1;
+  for (Long64_t srcRow : order) {
+    if (gbcs[srcRow] != prev) {
+      ++newRow;
+      prev = gbcs[srcRow];
+      rowOrder.push_back(srcRow);
+    }
+    // All rows with the same globalBC map to the same new row (deduplication)
+    res.bcPerm[srcRow] = newRow;
+  }
+  res.nUnique = rowOrder.size();
+
+  std::cout << "  BC stage: " << n << " rows -> " << res.nUnique << " unique\n";
+
+  // Write the BC table (no index remapping needed for the table itself)
+  rewriteTable(treeBCs, dirOut, rowOrder, /*indexBranch=*/"", /*parentPerm=*/{});
+
+  return res;
+}
+
+// ============================================================================
+// SECTION 5 — Stage 0b: BC flags table (follows BC row order exactly)
+// ============================================================================
+
+static void stage0_copyBCFlags(TTree *treeFlags, TDirectory *dirOut,
+                               const PermMap &bcPerm) {
+  if (!treeFlags) return;
+  Long64_t nSrc = treeFlags->GetEntries();
+
+  // Build rowOrder: for each unique output BC row, pick the first source row
+  // that mapped to it
+  std::vector<Long64_t> rowOrder;
+  std::map<Int_t, Long64_t> first; // newBCrow -> first srcRow
+  for (Long64_t i = 0; i < (Long64_t)bcPerm.size(); ++i)
+    if (bcPerm[i] >= 0) first.emplace(bcPerm[i], i);  // emplace keeps first
+  rowOrder.reserve(first.size());
+  for (auto &kv : first) rowOrder.push_back(kv.second);
+
+  rewriteTable(treeFlags, dirOut, rowOrder, /*indexBranch=*/"", /*parentPerm=*/{});
+}
+
+// ============================================================================
+// SECTION 6 — Stage 1: Tables indexed by BCs (generic + MCCollisions special)
+// ============================================================================
+//
+// Returns a map: treeName -> PermMap, containing the row permutation for
+// every table processed at this stage.  Callers use this for paste-joined
+// tables and for Stage 2.
+
+// Key used to detect duplicate MCCollisions.
+//
+// Two MCCollision rows are considered identical when BOTH of the following hold:
+//   1. They map to the same BC row after remapping (same globalBC).
+//   2. They carry the same fEventWeight value.
+//
+// fEventWeight is a float written by the generator for every event and is
+// unique enough (in combination with the BC) to distinguish distinct events
+// from the same generator that happen to land in the same BC.
+//
+// IMPORTANT: if fEventWeight is absent from the tree we do NOT deduplicate at
+// all, because we have no reliable way to distinguish distinct events that share
+// the same BC.  Deduplicating on BC alone would incorrectly merge different MC
+// events that were placed in the same bunch crossing.
+struct MCCollKey {
+  Long64_t newBCrow;
+  Float_t  weight;
+  bool operator==(const MCCollKey &o) const {
+    return newBCrow == o.newBCrow && weight == o.weight;
+  }
+};
+struct MCCollKeyHash {
+  size_t operator()(const MCCollKey &k) const {
+    size_t h1 = std::hash<Long64_t>{}(k.newBCrow);
+    // Bit-cast float to uint32 for hashing — avoids UB and NaN weirdness
+    uint32_t wbits;
+    std::memcpy(&wbits, &k.weight, sizeof(wbits));
+    return h1 ^ (size_t(wbits) << 32) ^ size_t(wbits);
+  }
+};
+
+static std::unordered_map<std::string, PermMap>
+stage1_BCindexedTables(TDirectory *dirIn, TDirectory *dirOut,
+                       const PermMap &bcPerm) {
+  std::unordered_map<std::string, PermMap> tablePerms;
+
+  TIter it(dirIn->GetListOfKeys());
+  while (TKey *key = static_cast<TKey *>(it())) {
+    if (TString(key->GetClassName()) != "TTree") continue;
+    std::unique_ptr<TObject> obj(key->ReadObj());
+    TTree *src = dynamic_cast<TTree *>(obj.get());
+    if (!src) continue;
+
+    std::string tname = src->GetName();
+    if (isBCTable(tname.c_str())) continue;  // handled in stage 0
+
+    const char *idxBr = bcIndexBranch(src);
+    if (!idxBr) continue;  // not BC-indexed — handled elsewhere
+
+    std::cout << "  Stage1 [BC-indexed]: " << tname << "\n";
+
+    Long64_t nSrc = src->GetEntries();
+
+    // Read all index values to build the sort order
+    TBranch *inIdxBr = src->GetBranch(idxBr);
+    TLeaf *idxLeaf = static_cast<TLeaf *>(inIdxBr->GetListOfLeaves()->At(0));
+    ScalarTag idxTag = tagOf(idxLeaf);
+    size_t idxSz = byteSize(idxTag);
+    std::vector<unsigned char> idxBuf(idxSz, 0);
+    inIdxBr->SetAddress(idxBuf.data());
+
+    // For MCCollision deduplication: also read fEventWeight if available.
+    // If absent, deduplication is disabled -- see MCCollKey comment for why.
+    bool isMCColl = TString(tname.c_str()).BeginsWith("O2mccollision");
+    TBranch *wBr = isMCColl ? src->GetBranch("fEventWeight") : nullptr;
+    Float_t wVal = 0.f;
+    if (wBr) wBr->SetAddress(&wVal);
+    bool canDedup = isMCColl && (wBr != nullptr);
+    if (isMCColl && !canDedup)
+      std::cout << "    MCCollision: fEventWeight absent -- deduplication disabled\n";
+
+    // Build (newBCrow, srcRow) pairs
+    struct SortEntry { Long64_t newBC; Long64_t srcRow; };
+    std::vector<SortEntry> entries;
+    entries.reserve(nSrc);
+
+    std::unordered_set<MCCollKey, MCCollKeyHash> seenMCColl;
+    std::vector<bool> keep(nSrc, true);
+
+    for (Long64_t i = 0; i < nSrc; ++i) {
+      inIdxBr->GetEntry(i);
+      if (wBr) wBr->GetEntry(i);
+      Long64_t oldBC = readAsInt(idxBuf.data(), idxTag);
+      Long64_t newBC = (oldBC >= 0 && oldBC < (Long64_t)bcPerm.size())
+                       ? bcPerm[oldBC] : -1;
+
+      if (canDedup) {
+        // Deduplication: drop rows with a (newBC, weight) pair seen before.
+        // First occurrence in source row order is kept.
+        MCCollKey k{newBC, wVal};
+        if (!seenMCColl.insert(k).second) {
+          keep[i] = false;
+        }
+      }
+      entries.push_back({newBC, i});
+    }
+
+    // Stable-sort by newBC (invalid = -1 sink to end)
+    std::stable_sort(entries.begin(), entries.end(),
+      [](const SortEntry &a, const SortEntry &b){
+        if (a.newBC < 0 && b.newBC >= 0) return false;
+        if (a.newBC >= 0 && b.newBC < 0) return true;
+        return a.newBC < b.newBC;
+      });
+
+    // Build rowOrder, respecting the keep[] mask for MCCollisions
+    std::vector<Long64_t> rowOrder;
+    rowOrder.reserve(nSrc);
+    for (auto &e : entries) {
+      if (keep[e.srcRow]) rowOrder.push_back(e.srcRow);
+    }
+
+    if (isMCColl) {
+      Long64_t dropped = nSrc - (Long64_t)rowOrder.size();
+      std::cout << "    MCCollision dedup: dropped " << dropped
+                << " duplicate rows (" << rowOrder.size() << " kept)\n";
+    }
+
+    PermMap perm = rewriteTable(src, dirOut, rowOrder, idxBr, bcPerm);
+    tablePerms[tname] = std::move(perm);
+  }
+  return tablePerms;
+}
+
+// ============================================================================
+// SECTION 7 — Stage 2: Tables indexed by MCCollisions
+// ============================================================================
+
+static std::unordered_map<std::string, PermMap>
+stage2_MCCollIndexedTables(TDirectory *dirIn, TDirectory *dirOut,
+                           const PermMap &mcCollPerm) {
+  std::unordered_map<std::string, PermMap> tablePerms;
+
+  TIter it(dirIn->GetListOfKeys());
+  while (TKey *key = static_cast<TKey *>(it())) {
+    if (TString(key->GetClassName()) != "TTree") continue;
+    std::unique_ptr<TObject> obj(key->ReadObj());
+    TTree *src = dynamic_cast<TTree *>(obj.get());
+    if (!src) continue;
+
+    std::string tname = src->GetName();
+    if (isBCTable(tname.c_str())) continue;
+    if (bcIndexBranch(src)) continue; // already handled in stage 1
+
+    const char *idxBr = mcCollIndexBranch(src);
+    if (!idxBr) continue;
+
+    std::cout << "  Stage2 [MCColl-indexed]: " << tname << "\n";
+
+    Long64_t nSrc = src->GetEntries();
+    TBranch *inIdxBr = src->GetBranch(idxBr);
+    TLeaf *idxLeaf = static_cast<TLeaf *>(inIdxBr->GetListOfLeaves()->At(0));
+    ScalarTag idxTag = tagOf(idxLeaf);
+    size_t idxSz = byteSize(idxTag);
+    std::vector<unsigned char> idxBuf(idxSz, 0);
+    inIdxBr->SetAddress(idxBuf.data());
+
+    struct SortEntry { Long64_t newMCColl; Long64_t srcRow; };
+    std::vector<SortEntry> entries;
+    entries.reserve(nSrc);
+
+    for (Long64_t i = 0; i < nSrc; ++i) {
+      inIdxBr->GetEntry(i);
+      Long64_t oldIdx = readAsInt(idxBuf.data(), idxTag);
+      Long64_t newIdx = (oldIdx >= 0 && oldIdx < (Long64_t)mcCollPerm.size())
+                        ? mcCollPerm[oldIdx] : -1;
+      entries.push_back({newIdx, i});
+    }
+
+    // Drop rows whose MCCollision parent was dropped (newIdx == -1 due to dedup)
+    // and sort the rest
+    std::stable_sort(entries.begin(), entries.end(),
+      [](const SortEntry &a, const SortEntry &b){
+        if (a.newMCColl < 0 && b.newMCColl >= 0) return false;
+        if (a.newMCColl >= 0 && b.newMCColl < 0) return true;
+        return a.newMCColl < b.newMCColl;
+      });
+
+    std::vector<Long64_t> rowOrder;
+    rowOrder.reserve(nSrc);
+    Long64_t dropped = 0;
+    for (auto &e : entries) {
+      if (e.newMCColl >= 0) rowOrder.push_back(e.srcRow);
+      else ++dropped;
+    }
+    if (dropped)
+      std::cout << "    dropped " << dropped
+                << " rows whose MCCollision parent was deduplicated\n";
+
+    // For O2mcparticle: compute the self-permutation (old row -> new row) from
+    // the row order BEFORE calling rewriteTable, then pass it as extra remaps
+    // so that intra-table mother/daughter indices are updated in the same pass.
+    // The stable sort above preserves within-collision particle order, which
+    // keeps fIndexSlice_Daughters contiguous — so remapping [first,last] via
+    // selfPerm is correct.
+    std::vector<ExtraRemap> extraRemaps;
+    PermMap selfPerm;
+    if (TString(tname.c_str()).BeginsWith("O2mcparticle")) {
+      selfPerm.assign(nSrc, -1);
+      for (Long64_t outRow = 0; outRow < (Long64_t)rowOrder.size(); ++outRow)
+        selfPerm[rowOrder[outRow]] = (Int_t)outRow;
+      extraRemaps.push_back({"fIndexArray_Mothers",  &selfPerm});
+      extraRemaps.push_back({"fIndexSlice_Daughters", &selfPerm});
+      std::cout << "    O2mcparticle: will remap intra-table mother/daughter indices\n";
+    }
+
+    PermMap perm = rewriteTable(src, dirOut, rowOrder, idxBr, mcCollPerm, extraRemaps);
+    tablePerms[tname] = std::move(perm);
+  }
+  return tablePerms;
+}
+
+// ============================================================================
+// SECTION 8 — Paste-join table handling
+// ============================================================================
+//
+// A paste-joined table has NO index column.  Its row N corresponds to row N
+// of its parent table.  When the parent is reordered, the paste-join table
+// must follow with the identical row permutation.
+//
+// Known paste-join relationships in the AO2D data model
+// (parent table prefix -> paste-joined table prefix):
+//
+//   O2collision_*           -> O2mccollisionlabel_*
+//   O2track_*               -> O2mctracklabel_*
+//   O2trackiu_*             -> O2mctracklabel_*   (alternative track table)
+//   O2fwdtrack_*            -> O2mcfwdtracklabel_*
+//   O2mfttrack_*            -> O2mcmfttracklabel_*
+//
+// The PermMap from the parent stage is used directly as the row order.
+
+// Build the row order from a PermMap (srcRow -> outRow), inverted.
+static std::vector<Long64_t> rowOrderFromPerm(const PermMap &perm) {
+  // perm[srcRow] = outRow (or -1 if dropped)
+  // We need: outRow -> srcRow, i.e. a sorted list of (outRow, srcRow) pairs
+  std::vector<std::pair<Int_t,Long64_t>> pairs;
+  pairs.reserve(perm.size());
+  for (Long64_t srcRow = 0; srcRow < (Long64_t)perm.size(); ++srcRow)
+    if (perm[srcRow] >= 0) pairs.push_back({perm[srcRow], srcRow});
+  std::sort(pairs.begin(), pairs.end());
+  std::vector<Long64_t> order;
+  order.reserve(pairs.size());
+  for (auto &p : pairs) order.push_back(p.second);
+  return order;
+}
+
+// The paste-join map: paste-joined table prefix -> parent table prefix
+// We match by prefix (BeginsWith) because table names carry a numeric suffix.
+static const std::vector<std::pair<std::string,std::string>> kPasteJoins = {
+  // { paste-joined prefix,        parent prefix }
+  { "O2mccollisionlabel",  "O2collision"   },
+  { "O2mctracklabel",      "O2track"       },
+  { "O2mctracklabel",      "O2trackiu"     },  // same label table, alt parent
+  { "O2mcfwdtracklabel",   "O2fwdtrack"    },
+  { "O2mcmfttracklabel",   "O2mfttrack"    },
+};
+
+static void processPasteJoinTables(
+    TDirectory *dirIn, TDirectory *dirOut,
+    const std::unordered_map<std::string, PermMap> &allPerms,
+    const std::unordered_set<std::string> &alreadyWritten) {
+
+  // Find the MC-particle permutation (produced by stage2 for O2mcparticle_*).
+  // Label tables (O2mctracklabel, O2mcfwdtracklabel, O2mcmfttracklabel,
+  // O2mccalolabel) carry fIndexMcParticles / fIndexArrayMcParticles that must
+  // be remapped via this permutation regardless of whether the label table's
+  // row order changes.
+  const PermMap *mcParticlePerm = nullptr;
+  for (auto &[name, perm] : allPerms) {
+    if (TString(name.c_str()).BeginsWith("O2mcparticle")) {
+      mcParticlePerm = &perm;
+      break;
+    }
+  }
+
+  TIter it(dirIn->GetListOfKeys());
+  while (TKey *key = static_cast<TKey *>(it())) {
+    if (TString(key->GetClassName()) != "TTree") continue;
+    std::unique_ptr<TObject> obj(key->ReadObj());
+    TTree *src = dynamic_cast<TTree *>(obj.get());
+    if (!src) continue;
+
+    std::string tname = src->GetName();
+    if (alreadyWritten.count(tname)) continue;
+    if (isBCTable(tname.c_str())) continue;
+    if (bcIndexBranch(src) || mcCollIndexBranch(src)) continue;
+
+    // Build extra remaps for any fIndexMcParticles / fIndexArrayMcParticles
+    // branches in this table (label tables pointing into O2mcparticle).
+    std::vector<ExtraRemap> extraRemaps;
+    if (mcParticlePerm) {
+      if (src->GetBranch("fIndexMcParticles"))
+        extraRemaps.push_back({"fIndexMcParticles",      mcParticlePerm});
+      if (src->GetBranch("fIndexArrayMcParticles"))
+        extraRemaps.push_back({"fIndexArrayMcParticles", mcParticlePerm});
+    }
+
+    // Check if this is a known paste-join table
+    const PermMap *parentPerm = nullptr;
+    std::string parentName;
+    for (auto &[pastePrefix, parentPrefix] : kPasteJoins) {
+      if (!TString(tname.c_str()).BeginsWith(pastePrefix.c_str())) continue;
+      for (auto &[pname, perm] : allPerms) {
+        if (TString(pname.c_str()).BeginsWith(parentPrefix.c_str())) {
+          parentPerm = &perm;
+          parentName = pname;
+          break;
+        }
+      }
+      if (parentPerm) break;
+    }
+
+    if (parentPerm) {
+      std::cout << "  Paste-join: " << tname << " follows " << parentName << "\n";
+      auto rowOrder = rowOrderFromPerm(*parentPerm);
+      if ((Long64_t)rowOrder.size() != src->GetEntries()) {
+        std::cerr << "  [warn] paste-join size mismatch: " << tname
+                  << " has " << src->GetEntries() << " rows but parent perm covers "
+                  << rowOrder.size() << " — cloning as-is\n";
+        dirOut->cd();
+        TTree *c = src->CloneTree(-1, "fast");
+        c->SetDirectory(dirOut);
+        c->Write();
+      } else {
+        rewriteTable(src, dirOut, rowOrder, "", {}, extraRemaps);
+      }
+    } else if (!extraRemaps.empty()) {
+      // Not paste-joined but has indices that need remapping (e.g. O2mccalolabel
+      // which is not in kPasteJoins but carries fIndexArrayMcParticles).
+      std::cout << "  Remap-only: " << tname << "\n";
+      Long64_t n = src->GetEntries();
+      std::vector<Long64_t> identity(n);
+      std::iota(identity.begin(), identity.end(), 0LL);
+      rewriteTable(src, dirOut, identity, "", {}, extraRemaps);
+    } else {
+      // No paste-join and no index remapping needed — fast clone
+      std::cout << "  Copy (no dependency): " << tname << "\n";
+      dirOut->cd();
+      TTree *c = src->CloneTree(-1, "fast");
+      c->SetDirectory(dirOut);
+      c->Write();
+    }
+  }
+}
+
+// ============================================================================
+// SECTION 9 — Non-tree object copying (TMap metadata etc.)
+// ============================================================================
+
+static void copyNonTreeObjects(TDirectory *dirIn, TDirectory *dirOut) {
+  TIter it(dirIn->GetListOfKeys());
+  while (TKey *key = static_cast<TKey *>(it())) {
+    if (TString(key->GetClassName()) == "TTree") continue;
+    std::unique_ptr<TObject> obj(key->ReadObj());
+    dirOut->cd();
+    if (obj->IsA()->InheritsFrom(TMap::Class()))
+      dirOut->WriteTObject(obj.get(), key->GetName(), "Overwrite");
+    else
+      obj->Write(key->GetName(), TObject::kOverwrite);
+  }
+}
+
+// ============================================================================
+// SECTION 10 — Per-DF directory driver
+// ============================================================================
+
+static void processDF(TDirectory *dirIn, TDirectory *dirOut) {
+  std::cout << "========================================\n";
+  std::cout << "Processing " << dirIn->GetName() << "\n";
+
+  // ---- Find BC tree and optional flags tree ----
+  TTree *treeBCs    = nullptr;
+  TTree *treeFlags  = nullptr;
+  {
+    TIter it(dirIn->GetListOfKeys());
+    while (TKey *key = static_cast<TKey *>(it())) {
+      if (TString(key->GetClassName()) != "TTree") continue;
+      TTree *t = static_cast<TTree *>(dirIn->Get(key->GetName()));
+      if (!t) continue;
+      TString tname = t->GetName();
+      if (tname.BeginsWith("O2bc_"))   { treeBCs   = t; }
+      if (tname.BeginsWith("O2bcflag")){ treeFlags = t; }
     }
   }
 
   if (!treeBCs) {
-    std::cerr << "  No BCs tree found in " << dirIn->GetName()
-              << " — skipping\n";
-    outBCs = nullptr;
+    // No BC table — deep-copy everything unchanged
+    std::cout << "  No BC table found — copying directory verbatim\n";
+    TIter it(dirIn->GetListOfKeys());
+    while (TKey *key = static_cast<TKey *>(it())) {
+      std::unique_ptr<TObject> obj(key->ReadObj());
+      dirOut->cd();
+      if (obj->InheritsFrom(TTree::Class())) {
+        TTree *c = static_cast<TTree *>(obj.get())->CloneTree(-1, "fast");
+        c->SetDirectory(dirOut); c->Write();
+      } else if (obj->IsA()->InheritsFrom(TMap::Class())) {
+        dirOut->WriteTObject(obj.get(), key->GetName(), "Overwrite");
+      } else {
+        obj->Write(key->GetName(), TObject::kOverwrite);
+      }
+    }
     return;
   }
 
-  // build maps (dedupe/sort)
-  maps = buildBCMaps(treeBCs);
-
-  // build representative entryMap: one input entry per new BC index (use first
-  // contributor)
-  std::vector<size_t> entryMap(maps.uniqueBCs.size(), (size_t)-1);
-  for (size_t newIdx = 0; newIdx < maps.uniqueBCs.size(); ++newIdx) {
-    const auto &vec = maps.newIndexOrigins.at(newIdx);
-    if (!vec.empty())
-      entryMap[newIdx] = vec.front();
-  }
-
+  // ---- Stage 0: sort & deduplicate BCs ----
+  std::cout << "-- Stage 0: BCs --\n";
   dirOut->cd();
-  // copy BCs tree using representative entries
-  outBCs = copyTreeSimple(treeBCs, entryMap, treeBCs->GetName());
-  if (outBCs) {
-    outBCs->SetDirectory(dirOut);
-    outBCs->Write();
-    std::cout << "   Wrote " << outBCs->GetName() << " with "
-              << outBCs->GetEntries() << " entries\n";
+  BCStage0Result s0 = stage0_sortBCs(treeBCs, dirOut);
+  if (treeFlags) stage0_copyBCFlags(treeFlags, dirOut, s0.bcPerm);
+
+  // Track which tree names have been written so we don't double-write
+  std::unordered_set<std::string> written;
+  written.insert(treeBCs->GetName());
+  if (treeFlags) written.insert(treeFlags->GetName());
+
+  // ---- Stage 1: BC-indexed tables (including MCCollisions dedup) ----
+  std::cout << "-- Stage 1: BC-indexed tables --\n";
+  auto stage1Perms = stage1_BCindexedTables(dirIn, dirOut, s0.bcPerm);
+  for (auto &kv : stage1Perms) written.insert(kv.first);
+
+  // ---- Stage 2: MCCollision-indexed tables ----
+  // Find the MCCollision permutation from stage 1
+  std::cout << "-- Stage 2: MCCollision-indexed tables --\n";
+  PermMap mcCollPerm;
+  for (auto &[tname, perm] : stage1Perms) {
+    if (TString(tname.c_str()).BeginsWith("O2mccollision")) {
+      mcCollPerm = perm;
+      break;
+    }
   }
-
-  // copy flags if present
-  if (treeFlags) {
-    TTree *outFlags = copyTreeSimple(treeFlags, entryMap, treeFlags->GetName());
-    if (outFlags) {
-      outFlags->SetDirectory(dirOut);
-      outFlags->Write();
-      std::cout << "   Wrote " << outFlags->GetName() << " with "
-                << outFlags->GetEntries() << " entries\n";
-    }
-  }
-}
-
-// ----------------- payload rewriting with VLA support -----------------
-struct SortKey {
-  Long64_t entry;
-  Long64_t newBC;
-};
-
-static bool isVLA(TBranch *br) {
-  if (!br)
-    return false;
-  TLeaf *leaf = (TLeaf *)br->GetListOfLeaves()->At(0);
-  return leaf && leaf->GetLeafCount();
-}
-
-// This is the VLA-aware rewritePayloadSorted implementation (keeps previous
-// tested behavior)
-static void rewritePayloadSorted(TDirectory *dirIn, TDirectory *dirOut,
-                                 BCMaps &maps) {
-  std::unordered_set<std::string> skipNames; // for count branches
-  TIter it(dirIn->GetListOfKeys());
-  while (TKey *k = (TKey *)it()) {
-    if (TString(k->GetClassName()) != "TTree")
-      continue;
-    std::unique_ptr<TObject> holder(k->ReadObj()); // keep alive
-    TTree *src = dynamic_cast<TTree *>(holder.get());
-    if (!src)
-      continue;
-    const char *tname = src->GetName();
-
-    if (isBCtree(tname) || isFlagsTree(tname)) {
-      std::cout << "    skipping BC/flag tree " << tname << "\n";
-      continue;
-    }
-
-    const char *idxName = findIndexBranchName(src);
-    if (!idxName) {
-      // Tables indexed by McCollisions (not BCs) are forwarded to the second
-      // stage where the sorting scheme is available.
-      if (findMcCollisionIndexBranchName(src)) {
-        std::cout << "    [forward] " << tname
-                  << " (McCollision-indexed) -> second stage\n";
-        continue;
-      }
-      dirOut->cd();
-      std::cout << "    [copy] " << tname << " (no index) -> cloning\n";
-      TTree *c = src->CloneTree(-1, "fast");
-      c->SetDirectory(dirOut);
-      c->Write();
-      continue;
-    }
-
-    std::cout << "    [proc] reindex+SORT " << tname << " (index=" << idxName
-              << ")\n";
-    // detect index type and bind input buffer
-    TBranch *inIdxBr = src->GetBranch(idxName);
-    if (!inIdxBr) {
-      std::cerr << "      ERR no index branch found\n";
-      continue;
-    }
-    TLeaf *idxLeaf = (TLeaf *)inIdxBr->GetListOfLeaves()->At(0);
-    TString idxType = idxLeaf->GetTypeName();
-
-    enum class IdKind { kI, kUi, kS, kUs, kUnknown };
-    IdKind idk = IdKind::kUnknown;
-    Int_t oldI = 0, newI = 0;
-    UInt_t oldUi = 0, newUi = 0;
-    Short_t oldS = 0, newS = 0;
-    UShort_t oldUs = 0, newUs = 0;
-
-    if (idxType == "Int_t") {
-      idk = IdKind::kI;
-      inIdxBr->SetAddress(&oldI);
-    } else if (idxType == "UInt_t") {
-      idk = IdKind::kUi;
-      inIdxBr->SetAddress(&oldUi);
-    } else if (idxType == "Short_t") {
-      idk = IdKind::kS;
-      inIdxBr->SetAddress(&oldS);
-    } else if (idxType == "UShort_t") {
-      idk = IdKind::kUs;
-      inIdxBr->SetAddress(&oldUs);
-    } else {
-      std::cerr << "      unsupported index type " << idxType
-                << " -> cloning as-is\n";
-      dirOut->cd();
-      auto *c = src->CloneTree(-1, "fast");
-      c->SetDirectory(dirOut);
-      c->Write();
-      continue;
-    }
-
-    // build keys vector
-    Long64_t nEnt = src->GetEntries();
-    std::vector<SortKey> keys;
-    keys.reserve(nEnt);
-    for (Long64_t i = 0; i < nEnt; ++i) {
-      inIdxBr->GetEntry(i);
-      Long64_t oldIdx = 0;
-      switch (idk) {
-      case IdKind::kI:
-        oldIdx = oldI;
-        break;
-      case IdKind::kUi:
-        oldIdx = oldUi;
-        break;
-      case IdKind::kS:
-        oldIdx = oldS;
-        break;
-      case IdKind::kUs:
-        oldIdx = oldUs;
-        break;
-      default:
-        break;
-      }
-      Long64_t newBC = -1;
-      if (oldIdx >= 0 && (size_t)oldIdx < maps.indexMap.size())
-        newBC = maps.indexMap[(size_t)oldIdx];
-      keys.push_back({i, newBC});
-    }
-
-    std::stable_sort(keys.begin(), keys.end(),
-                     [](const SortKey &a, const SortKey &b) {
-                       bool ai = (a.newBC < 0), bi = (b.newBC < 0);
-                       if (ai != bi)
-                         return !ai && bi; // valid first
-                       if (a.newBC != b.newBC)
-                         return a.newBC < b.newBC;
-                       return a.entry < b.entry;
-                     });
-
-    // If this is the McCollision tree, record the sort permutation so that
-    // tables indexed by McCollisions (fIndexMcCollisions) can be reordered consistently
-    if (isMcCollisionTree(tname)) {
-      maps.mcOldEntries.resize(keys.size());
-      maps.mcNewEntries.assign(nEnt, -1);
-      for (Long64_t j = 0; j < (Long64_t)keys.size(); ++j) {
-        maps.mcOldEntries[j] = keys[j].entry;
-        if (keys[j].entry >= 0)
-          maps.mcNewEntries[keys[j].entry] = j;
-      }
-    }
-
-    // prepare output tree
-    dirOut->cd();
-    TTree *out = src->CloneTree(0, "fast");
-    // map branches
-    std::unordered_map<std::string, TBranch *> inBranches, outBranches;
-    for (auto *bobj : *src->GetListOfBranches())
-      inBranches[((TBranch *)bobj)->GetName()] = (TBranch *)bobj;
-    for (auto *bobj : *out->GetListOfBranches())
-      outBranches[((TBranch *)bobj)->GetName()] = (TBranch *)bobj;
-
-    // allocate buffers and bind: scalars & VLAs
-    std::vector<std::unique_ptr<BufBase>> scalarBuffers; // shared in/out
-    std::vector<std::unique_ptr<BufBase>> vlaDataBuffers;
-    std::vector<std::unique_ptr<BufBase>> vlaCountBuffers;
-    std::vector<Long64_t> vlaMaxLens;
-    std::vector<ScalarTag> vlaCountTags;
-    // bind index branch in output to new variable
-    TBranch *outIdxBr = out->GetBranch(idxName);
-    switch (idk) {
-    case IdKind::kI:
-      outIdxBr->SetAddress(&newI);
-      break;
-    case IdKind::kUi:
-      outIdxBr->SetAddress(&newUi);
-      break;
-    case IdKind::kS:
-      outIdxBr->SetAddress(&newS);
-      break;
-    case IdKind::kUs:
-      outIdxBr->SetAddress(&newUs);
-      break;
-    default:
-      break;
-    }
-    skipNames.clear();
-    skipNames.insert(idxName);
-
-    // loop inBranches and bind
-    for (auto &kv : inBranches) {
-      const std::string bname = kv.first;
-      if (skipNames.count(bname))
-        continue;
-      TBranch *inBr = kv.second;
-      TBranch *ouBr = outBranches.count(bname) ? outBranches[bname] : nullptr;
-      if (!ouBr) {
-        std::cerr << "      [warn] no out branch for " << bname << " -> skip\n";
-        continue;
-      }
-      TLeaf *leaf = (TLeaf *)inBr->GetListOfLeaves()->At(0);
-      if (!leaf) {
-        std::cerr << "      [warn] branch w/o leaf " << bname << "\n";
-        continue;
-      }
-
-      if (!isVLA(inBr)) {
-        // scalar
-        ScalarTag tag = leafType(leaf);
-        if (tag == ScalarTag::kUnknown) {
-          std::cerr << "      [warn] unknown scalar type "
-                    << leaf->GetTypeName() << " for " << bname << "\n";
-          continue;
-        }
-        auto sb = bindScalarBranch(inBr, ouBr, tag);
-        if (sb)
-          scalarBuffers.emplace_back(std::move(sb));
-      } else {
-        // VLA -> find count leaf & branch
-        TLeaf *cntLeaf = leaf->GetLeafCount();
-        if (!cntLeaf) {
-          std::cerr << "      [warn] VLA " << bname
-                    << " has no count leaf -> skip\n";
-          continue;
-        }
-        TBranch *inCnt = cntLeaf->GetBranch();
-        TBranch *outCnt = outBranches.count(inCnt->GetName())
-                              ? outBranches[inCnt->GetName()]
-                              : nullptr;
-        if (!outCnt) {
-          std::cerr << "      [warn] missing out count branch "
-                    << inCnt->GetName() << " for VLA " << bname << "\n";
-          continue;
-        }
-        // avoid double-binding count branch as scalar later
-        skipNames.insert(inCnt->GetName());
-        // detect tags
-        ScalarTag dataTag = leafType(leaf);
-        ScalarTag cntTag = leafType(cntLeaf);
-        if (dataTag == ScalarTag::kUnknown || cntTag == ScalarTag::kUnknown) {
-          std::cerr << "      [warn] unsupported VLA types for " << bname
-                    << "\n";
-          continue;
-        }
-        // prescan max len
-        Long64_t maxLen = prescanMaxLen(src, inCnt, cntTag);
-        if (maxLen <= 0)
-          maxLen = leaf->GetMaximum();
-        if (maxLen <= 0)
-          maxLen = 1;
-        // bind typed
-        std::unique_ptr<BufBase> countBufLocal;
-        std::unique_ptr<BufBase> dataBufLocal;
-        switch (dataTag) {
-        case ScalarTag::kInt:
-          dataBufLocal = bindArrayTyped<Int_t>(inBr, ouBr, inCnt, outCnt,
-                                               cntTag, maxLen, countBufLocal);
-          break;
-        case ScalarTag::kUInt:
-          dataBufLocal = bindArrayTyped<UInt_t>(inBr, ouBr, inCnt, outCnt,
-                                                cntTag, maxLen, countBufLocal);
-          break;
-        case ScalarTag::kShort:
-          dataBufLocal = bindArrayTyped<Short_t>(inBr, ouBr, inCnt, outCnt,
-                                                 cntTag, maxLen, countBufLocal);
-          break;
-        case ScalarTag::kUShort:
-          dataBufLocal = bindArrayTyped<UShort_t>(
-              inBr, ouBr, inCnt, outCnt, cntTag, maxLen, countBufLocal);
-          break;
-        case ScalarTag::kLong64:
-          dataBufLocal = bindArrayTyped<Long64_t>(
-              inBr, ouBr, inCnt, outCnt, cntTag, maxLen, countBufLocal);
-          break;
-        case ScalarTag::kULong64:
-          dataBufLocal = bindArrayTyped<ULong64_t>(
-              inBr, ouBr, inCnt, outCnt, cntTag, maxLen, countBufLocal);
-          break;
-        case ScalarTag::kFloat:
-          dataBufLocal = bindArrayTyped<Float_t>(inBr, ouBr, inCnt, outCnt,
-                                                 cntTag, maxLen, countBufLocal);
-          break;
-        case ScalarTag::kDouble:
-          dataBufLocal = bindArrayTyped<Double_t>(
-              inBr, ouBr, inCnt, outCnt, cntTag, maxLen, countBufLocal);
-          break;
-        case ScalarTag::kChar:
-          dataBufLocal = bindArrayTyped<Char_t>(inBr, ouBr, inCnt, outCnt,
-                                                cntTag, maxLen, countBufLocal);
-          break;
-        case ScalarTag::kUChar:
-          dataBufLocal = bindArrayTyped<UChar_t>(inBr, ouBr, inCnt, outCnt,
-                                                 cntTag, maxLen, countBufLocal);
-          break;
-        default:
-          break;
-        }
-        if (dataBufLocal)
-          vlaDataBuffers.emplace_back(std::move(dataBufLocal));
-        if (countBufLocal) {
-          vlaCountBuffers.emplace_back(std::move(countBufLocal));
-          vlaMaxLens.push_back(maxLen);
-          vlaCountTags.push_back(cntTag);
-        }
-      }
-    } // end for branches
-
-    // Now fill out in sorted order. For each key: src->GetEntry(entry) -> clamp
-    // counts -> set new index -> out->Fill()
-    Long64_t changed = 0;
-    for (const auto &sk : keys) {
-      src->GetEntry(sk.entry);
-
-      // clamp count buffers before fill
-      for (size_t ic = 0; ic < vlaCountBuffers.size(); ++ic) {
-        void *p = vlaCountBuffers[ic]->ptr();
-        Long64_t cnt = 0;
-        switch (vlaCountTags[ic]) {
-        case ScalarTag::kInt:
-          cnt = *(Int_t *)p;
-          break;
-        case ScalarTag::kUInt:
-          cnt = *(UInt_t *)p;
-          break;
-        case ScalarTag::kShort:
-          cnt = *(Short_t *)p;
-          break;
-        case ScalarTag::kUShort:
-          cnt = *(UShort_t *)p;
-          break;
-        case ScalarTag::kLong64:
-          cnt = *(Long64_t *)p;
-          break;
-        case ScalarTag::kULong64:
-          cnt = *(ULong64_t *)p;
-          break;
-        default:
-          cnt = *(Int_t *)p;
-          break;
-        }
-        if (cnt < 0)
-          cnt = 0;
-        if (cnt > vlaMaxLens[ic]) {
-          std::cerr << "WARNING: clamping VLA count " << cnt << " to max "
-                    << vlaMaxLens[ic] << " for tree " << tname << "\n";
-          // write back
-          if (vlaMaxLens[ic] <= std::numeric_limits<int>::max()) {
-            *(Int_t *)p = (Int_t)vlaMaxLens[ic];
-          } else {
-            *(Long64_t *)p = (Long64_t)vlaMaxLens[ic];
-          }
-        }
-      }
-
-      // set new index value in out buffer
-      switch (idk) {
-      case IdKind::kI: {
-        Int_t prev = oldI;
-        newI = (sk.newBC >= 0 ? (Int_t)sk.newBC : -1);
-        if (newI != prev)
-          ++changed;
-      } break;
-      case IdKind::kUi: {
-        UInt_t prev = oldUi;
-        newUi = (sk.newBC >= 0 ? (UInt_t)sk.newBC : 0u);
-        if (newUi != prev)
-          ++changed;
-      } break;
-      case IdKind::kS: {
-        Short_t prev = oldS;
-        newS = (sk.newBC >= 0 ? (Short_t)sk.newBC : (Short_t)-1);
-        if (newS != prev)
-          ++changed;
-      } break;
-      case IdKind::kUs: {
-        UShort_t prev = oldUs;
-        newUs = (sk.newBC >= 0 ? (UShort_t)sk.newBC : (UShort_t)0);
-        if (newUs != prev)
-          ++changed;
-      } break;
-      default:
-        break;
-      }
-
-      out->Fill();
-    }
-
-    std::cout << "      wrote " << out->GetEntries() << " rows; remapped "
-              << changed << " index values; sorted\n";
-    out->Write();
-  } // end while keys in dir
-
-  // ---- second stage: tables indexed by McCollisions using fIndexMcCollisions ----
-  if (!maps.mcNewEntries.empty()) {
-    TIter it2(dirIn->GetListOfKeys());
-    while (TKey *k2 = (TKey *)it2()) {
-      if (TString(k2->GetClassName()) != "TTree")
-        continue;
-      std::unique_ptr<TObject> holder2(k2->ReadObj());
-      TTree *src2 = dynamic_cast<TTree *>(holder2.get());
-      if (!src2)
-        continue;
-      const char *tname2 = src2->GetName();
-      if (isBCtree(tname2) || isFlagsTree(tname2))
-        continue;
-      if (findIndexBranchName(src2))
-        continue; // handled in first stage
-      const char *mcIdxName = findMcCollisionIndexBranchName(src2);
-      if (!mcIdxName) {
-        // No BC index and no McCollision index → already handled (copied) earlier
-        continue;
-      }
-
-      std::cout << "    [proc] reindex+SORT " << tname2
-                << " (McCollision index=" << mcIdxName << ")\n";
-
-      TBranch *inMcIdxBr = src2->GetBranch(mcIdxName);
-      if (!inMcIdxBr) {
-        std::cerr << "      ERR no McCollision index branch\n";
-        continue;
-      }
-      Int_t oldMcI = 0, newMcI = 0;
-      inMcIdxBr->SetAddress(&oldMcI);
-
-      // Build sort keys: sort by new McCollision position.
-      Long64_t nEnt2 = src2->GetEntries();
-      std::vector<SortKey> keys2;
-      keys2.reserve(nEnt2);
-      for (Long64_t i = 0; i < nEnt2; ++i) {
-        inMcIdxBr->GetEntry(i);
-        Long64_t newMcPos = -1;
-        if (oldMcI >= 0 &&
-            (size_t)oldMcI < maps.mcNewEntries.size())
-          newMcPos = maps.mcNewEntries[(size_t)oldMcI];
-        keys2.push_back({i, newMcPos});
-      }
-      std::stable_sort(keys2.begin(), keys2.end(),
-                       [](const SortKey &a, const SortKey &b) {
-                         bool ai = (a.newBC < 0), bi = (b.newBC < 0);
-                         if (ai != bi)
-                           return !ai && bi;
-                         if (a.newBC != b.newBC)
-                           return a.newBC < b.newBC;
-                         return a.entry < b.entry;
-                       });
-
-      dirOut->cd();
-      TTree *out2 = src2->CloneTree(0, "fast");
-
-      std::unordered_map<std::string, TBranch *> inBrs2, outBrs2;
-      for (auto *b : *src2->GetListOfBranches())
-        inBrs2[((TBranch *)b)->GetName()] = (TBranch *)b;
-      for (auto *b : *out2->GetListOfBranches())
-        outBrs2[((TBranch *)b)->GetName()] = (TBranch *)b;
-
-      TBranch *outMcIdxBr = out2->GetBranch(mcIdxName);
-      outMcIdxBr->SetAddress(&newMcI);
-
-      std::unordered_set<std::string> skipNames2;
-      skipNames2.insert(mcIdxName);
-
-      std::vector<std::unique_ptr<BufBase>> scalarBufs2;
-      for (auto &kv : inBrs2) {
-        if (skipNames2.count(kv.first))
-          continue;
-        TBranch *inBr = kv.second;
-        TBranch *ouBr = outBrs2.count(kv.first) ? outBrs2[kv.first] : nullptr;
-        if (!ouBr)
-          continue;
-        TLeaf *leaf = (TLeaf *)inBr->GetListOfLeaves()->At(0);
-        if (!leaf || isVLA(inBr))
-          continue; // no variable-length arrays seen in McCollision-indexed tables (could be changed in the future)
-        ScalarTag tag = leafType(leaf);
-        if (tag == ScalarTag::kUnknown)
-          continue;
-        auto sb = bindScalarBranch(inBr, ouBr, tag);
-        if (sb)
-          scalarBufs2.emplace_back(std::move(sb));
-      }
-
-      Long64_t changed2 = 0;
-      for (const auto &sk : keys2) {
-        src2->GetEntry(sk.entry);
-        Int_t prev = oldMcI;
-        newMcI = (sk.newBC >= 0 ? (Int_t)sk.newBC : -1);
-        if (newMcI != prev)
-          ++changed2;
-        out2->Fill();
-      }
-      std::cout << "      wrote " << out2->GetEntries()
-                << " rows; remapped " << changed2
-                << " McCollision index values; sorted\n";
-      out2->Write();
+  if (!mcCollPerm.empty()) {
+    auto stage2Perms = stage2_MCCollIndexedTables(dirIn, dirOut, mcCollPerm);
+    for (auto &kv : stage2Perms) {
+      written.insert(kv.first);
+      stage1Perms[kv.first] = kv.second; // merge into allPerms for paste-join lookup
     }
   } else {
-    // No mccollision permutation available: clone deferred trees as-is
-    TIter it2(dirIn->GetListOfKeys());
-    while (TKey *k2 = (TKey *)it2()) {
-      if (TString(k2->GetClassName()) != "TTree")
-        continue;
-      std::unique_ptr<TObject> holder2(k2->ReadObj());
-      TTree *src2 = dynamic_cast<TTree *>(holder2.get());
-      if (!src2)
-        continue;
-      if (isBCtree(src2->GetName()) || isFlagsTree(src2->GetName()))
-        continue;
-      if (findIndexBranchName(src2))
-        continue;
-      if (!findMcCollisionIndexBranchName(src2))
-        continue;
-      std::cerr << "    [warn] no mccollision permutation for "
-                << src2->GetName() << " -> cloning as-is\n";
-      dirOut->cd();
-      TTree *c = src2->CloneTree(-1, "fast");
-      c->SetDirectory(dirOut);
-      c->Write();
-    }
+    std::cout << "  (no MCCollision table found — skipping stage 2)\n";
   }
 
-  // non-tree objects: copy as-is (but for TMap use WriteTObject to preserve
-  // class)
-  it.Reset();
-  while (TKey *k = (TKey *)it()) {
-    if (TString(k->GetClassName()) == "TTree")
-      continue;
-    TObject *obj = k->ReadObj();
-    dirOut->cd();
-    if (obj->IsA()->InheritsFrom(TMap::Class())) {
-      std::cout << "    Copying TMap " << k->GetName() << " as a whole\n";
-      dirOut->WriteTObject(obj, k->GetName(), "Overwrite");
-    } else {
-      obj->Write(k->GetName(), TObject::kOverwrite);
-    }
-  }
+  // ---- Paste-join tables + unrelated tables ----
+  std::cout << "-- Paste-join and unrelated tables --\n";
+  processPasteJoinTables(dirIn, dirOut, stage1Perms, written);
+
+  // ---- Non-tree objects (TMap metadata) ----
+  copyNonTreeObjects(dirIn, dirOut);
+
+  std::cout << "Done: " << dirIn->GetName() << "\n";
 }
 
-// ----------------- per-DF driver -----------------
-static void processDF(TDirectory *dIn, TDirectory *dOut) {
-  std::cout << "------------------------------------------------\n";
-  std::cout << "Processing DF: " << dIn->GetName() << "\n";
+// ============================================================================
+// SECTION 11 — Post-write validation
+// ============================================================================
+//
+// AODBcRewriterValidate() opens a rewritten AO2D and checks key invariants:
+//   1. BC table is strictly monotonic in fGlobalBC.
+//   2. MC particle intra-table daughter/mother indices are in range and point
+//      to particles belonging to the same MC collision.
+//   3. fIndexMcParticles in label tables is in range.
+//
+// Returns true if all checks pass.  Prints a summary to stdout.
 
-  // 1) rebuild BCs & flags -> maps
-  TTree *bcOut = nullptr;
-  BCMaps maps;
-  rebuildBCsAndFlags(dIn, dOut, bcOut, maps);
+static bool validateDF(TDirectory *d) {
+  bool ok = true;
 
-  if (!bcOut) {
-    std::cout << "  No BCs -> deep copying directory\n";
-    TIter it(dIn->GetListOfKeys());
-    while (TKey *k = (TKey *)it()) {
-      TObject *obj = k->ReadObj();
-      dOut->cd();
-      if (obj->InheritsFrom(TTree::Class())) {
-        TTree *t = (TTree *)obj;
-        TTree *c = t->CloneTree(-1, "fast");
-        c->SetDirectory(dOut);
-        c->Write();
-      } else {
-        if (obj->IsA()->InheritsFrom(TMap::Class())) {
-          dOut->WriteTObject(obj, k->GetName(), "Overwrite");
-        } else {
-          obj->Write(k->GetName(), TObject::kOverwrite);
+  // ---- BC monotonicity ----
+  TIter it(d->GetListOfKeys());
+  TKey *k;
+  TTree *bcTree = nullptr;
+  TTree *mcpTree = nullptr;
+  while ((k = (TKey*)it())) {
+    TObject *obj = d->Get(k->GetName());
+    if (!obj || !obj->InheritsFrom(TTree::Class())) continue;
+    TTree *t = (TTree*)obj;
+    TString tn = t->GetName();
+    if (tn.BeginsWith("O2bc_"))       bcTree = t;
+    if (tn.BeginsWith("O2mcparticle")) mcpTree = t;
+  }
+
+  if (bcTree) {
+    ULong64_t gbc = 0, prev = 0;
+    bcTree->SetBranchAddress("fGlobalBC", &gbc);
+    Long64_t nBC = bcTree->GetEntries();
+    Long64_t nBad = 0;
+    for (Long64_t i = 0; i < nBC; ++i) {
+      bcTree->GetEntry(i);
+      if (i > 0 && gbc <= prev) ++nBad;
+      prev = gbc;
+    }
+    if (nBad > 0) {
+      std::cerr << "  [FAIL] " << bcTree->GetName()
+                << ": " << nBad << " non-monotonic BC entries\n";
+      ok = false;
+    }
+  }
+
+  // ---- MC particle intra-table indices ----
+  if (mcpTree) {
+    Long64_t nMcp = mcpTree->GetEntries();
+    Int_t daughters[2] = {-1,-1}, mcCollIdx = -1, motherSize = 0, mothers[200] = {};
+    mcpTree->SetBranchStatus("*", 0);
+    mcpTree->SetBranchStatus("fIndexSlice_Daughters",   1);
+    mcpTree->SetBranchStatus("fIndexMcCollisions",      1);
+    mcpTree->SetBranchStatus("fIndexArray_Mothers_size",1);
+    mcpTree->SetBranchStatus("fIndexArray_Mothers",     1);
+    mcpTree->SetBranchAddress("fIndexSlice_Daughters",   daughters);
+    mcpTree->SetBranchAddress("fIndexMcCollisions",      &mcCollIdx);
+    mcpTree->SetBranchAddress("fIndexArray_Mothers_size",&motherSize);
+    mcpTree->SetBranchAddress("fIndexArray_Mothers",     mothers);
+
+    // Pre-load MC collision index for cross-collision check
+    std::vector<Int_t> allMcColl(nMcp);
+    for (Long64_t i = 0; i < nMcp; ++i) { mcpTree->GetEntry(i); allMcColl[i] = mcCollIdx; }
+
+    Long64_t badSlice = 0, badMother = 0, badXcoll = 0;
+    for (Long64_t i = 0; i < nMcp; ++i) {
+      mcpTree->GetEntry(i);
+      if (daughters[0] >= 0) {
+        if (daughters[0] >= nMcp || daughters[1] >= nMcp || daughters[0] > daughters[1])
+          ++badSlice;
+        else for (Int_t d2 = daughters[0]; d2 <= daughters[1]; ++d2)
+          if (allMcColl[d2] != mcCollIdx) ++badXcoll;
+      }
+      for (int m = 0; m < std::min(motherSize, 200); ++m) {
+        if (mothers[m] >= 0) {
+          if (mothers[m] >= nMcp) ++badMother;
+          else if (allMcColl[mothers[m]] != mcCollIdx) ++badXcoll;
         }
       }
     }
-    return;
+    if (badSlice || badMother || badXcoll) {
+      std::cerr << "  [FAIL] " << mcpTree->GetName()
+                << ": bad_slice=" << badSlice
+                << "  bad_mother=" << badMother
+                << "  cross_coll=" << badXcoll << "\n";
+      ok = false;
+    }
+    mcpTree->SetBranchStatus("*", 1);
   }
 
-  // 2) rewrite payload tables (reindex+sort)
-  rewritePayloadSorted(dIn, dOut, maps);
-
-  std::cout << "Finished DF: " << dIn->GetName() << "\n";
+  return ok;
 }
 
-// ----------------- top-level driver -----------------
-void AODBcRewriter(const char *inFileName = "AO2D.root",
-                   const char *outFileName = "AO2D_rewritten.root") {
-  std::cout << "Opening input file: " << inFileName << "\n";
-  std::unique_ptr<TFile> fin(TFile::Open(inFileName, "READ"));
-  if (!fin || fin->IsZombie()) {
-    std::cerr << "ERROR opening input\n";
-    return;
+bool AODBcRewriterValidate(const char *fname = "AO2D_rewritten.root") {
+  std::cout << "Validating " << fname << "\n";
+  std::unique_ptr<TFile> f(TFile::Open(fname, "READ"));
+  if (!f || f->IsZombie()) { std::cerr << "Cannot open " << fname << "\n"; return false; }
+
+  bool allOk = true;
+  int nDF = 0;
+  TIter top(f->GetListOfKeys());
+  TKey *k;
+  while ((k = (TKey*)top())) {
+    if (!TString(k->GetName()).BeginsWith("DF_")) continue;
+    TDirectory *d = (TDirectory*)f->Get(k->GetName());
+    bool dfOk = validateDF(d);
+    if (!dfOk) std::cerr << "  -> FAILED in " << k->GetName() << "\n";
+    allOk = allOk && dfOk;
+    ++nDF;
   }
+  f->Close();
+  if (allOk)
+    std::cout << "VALIDATION PASSED (" << nDF << " DFs checked)\n";
+  else
+    std::cout << "VALIDATION FAILED — see [FAIL] lines above\n";
+  return allOk;
+}
+
+// ============================================================================
+// SECTION 12 — Top-level entry point
+// ============================================================================
+
+void AODBcRewriter(const char *inFileName  = "AO2D.root",
+                   const char *outFileName = "AO2D_rewritten.root") {
+
+  std::cout << "AODBcRewriter: input=" << inFileName
+            << " output=" << outFileName << "\n";
+
+  std::unique_ptr<TFile> fin(TFile::Open(inFileName, "READ"));
+  if (!fin || fin->IsZombie()) { std::cerr << "ERROR: cannot open " << inFileName << "\n"; return; }
 
   int algo = fin->GetCompressionAlgorithm();
-  int lvl = fin->GetCompressionLevel();
-  std::cout << "Input compression: algo=" << algo << " level=" << lvl << "\n";
+  int lvl  = fin->GetCompressionLevel();
 
-  // create output applying same compression level when available
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 30, 0)
   std::unique_ptr<TFile> fout(TFile::Open(outFileName, "RECREATE", "", lvl));
 #else
   std::unique_ptr<TFile> fout(TFile::Open(outFileName, "RECREATE"));
 #endif
-  if (!fout || fout->IsZombie()) {
-    std::cerr << "ERROR creating output\n";
-    return;
-  }
+  if (!fout || fout->IsZombie()) { std::cerr << "ERROR: cannot create " << outFileName << "\n"; return; }
   fout->SetCompressionAlgorithm(algo);
   fout->SetCompressionLevel(lvl);
 
-  // top-level keys
   TIter top(fin->GetListOfKeys());
-  while (TKey *key = (TKey *)top()) {
+  while (TKey *key = static_cast<TKey *>(top())) {
     TString name = key->GetName();
-    TObject *obj = key->ReadObj();
+    std::unique_ptr<TObject> obj(key->ReadObj());
+
     if (obj->InheritsFrom(TDirectory::Class()) && isDF(name)) {
-      std::cout << "Found DF folder: " << name << "\n";
-      TDirectory *din = (TDirectory *)obj;
+      TDirectory *din  = static_cast<TDirectory *>(obj.get());
       TDirectory *dout = fout->mkdir(name);
       processDF(din, dout);
     } else {
+      // Top-level non-DF objects (metadata TMaps etc.)
       fout->cd();
-      if (obj->IsA()->InheritsFrom(TMap::Class())) {
-        std::cout << "Copying top-level TMap: " << name << "\n";
-        fout->WriteTObject(obj, name, "Overwrite");
-      } else {
-        std::cout << "Copying top-level object: " << name << " ["
-                  << obj->ClassName() << "]\n";
+      if (obj->IsA()->InheritsFrom(TMap::Class()))
+        fout->WriteTObject(obj.get(), name, "Overwrite");
+      else
         obj->Write(name, TObject::kOverwrite);
-      }
     }
   }
 
   fout->Write("", TObject::kOverwrite);
   fout->Close();
   fin->Close();
-  std::cout << "All done. Output written to " << outFileName << "\n";
+  std::cout << "All done. Output: " << outFileName << "\n";
 }
