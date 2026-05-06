@@ -199,6 +199,7 @@ fi
 ( [[ -z ${CALIB_TPC_RESPADGAIN:-} ]] || [[ $CAN_DO_CALIB_TPC_RESPADGAIN == 0 ]] ) && CALIB_TPC_RESPADGAIN=0
 ( [[ -z ${CALIB_TPC_IDC:-} ]] || [[ $CAN_DO_CALIB_TPC_IDC == 0 ]] ) && CALIB_TPC_IDC=0
 ( [[ -z ${CALIB_TPC_SAC:-} ]] || [[ $CAN_DO_CALIB_TPC_SAC == 0 ]] ) && CALIB_TPC_SAC=0
+( [[ -z ${CALIB_TPC_CMV:-} ]] || [[ $CAN_DO_CALIB_TPC_CMV == 0 ]] ) && CALIB_TPC_CMV=0
 ( [[ -z ${CALIB_TPC_VDRIFTTGL:-} ]] || [[ $CAN_DO_CALIB_TPC_VDRIFTTGL == 0 ]] ) && CALIB_TPC_VDRIFTTGL=0
 ( [[ -z ${CALIB_TRD_VDRIFTEXB:-} ]] || [[ $CAN_DO_CALIB_TRD_VDRIFTEXB == 0 ]] ) && CALIB_TRD_VDRIFTEXB=0
 ( [[ -z ${CALIB_TRD_GAIN:-} ]] || [[ $CAN_DO_CALIB_TRD_GAIN == 0 ]] ) && CALIB_TRD_GAIN=0
@@ -313,11 +314,12 @@ if [[ -z ${CALIBDATASPEC_TPCIDC_C:-} ]]; then
   # TPC
   if [[ $CALIB_TPC_IDC == 1 ]]; then add_semicolon_separated CALIBDATASPEC_TPCIDC_C "idcsgroupc:TPC/IDCGROUPC"; fi
 fi
+# define spec for proxy for TPC CMVs
 if [[ -z ${CALIBDATASPEC_TPCCMV:-} ]]; then
   # TPC
   if [[ $CALIB_TPC_CMV == 1 ]];  then
-	add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvgroup:TPC/CMVGROUP";
-	add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvorbit:TPC/CMVORBITINFO";
+		add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvgroup:TPC/CMVGROUP";
+		add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvorbit:TPC/CMVORBITINFO";
 	fi
 fi
 
