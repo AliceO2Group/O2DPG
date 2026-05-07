@@ -1,4 +1,4 @@
-int Hybrid() {
+int External() {
     std::string path{"o2sim_Kine.root"};
 
     const int pdgPi0 = 111;

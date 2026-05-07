@@ -20,7 +20,7 @@ if has_detector_calib TOF && has_detector_reco TOF && ( ( has_detectors_reco ITS
 if has_detector_calib TPC && has_detectors ITS TPC && has_detector_matching ITSTPC; then CAN_DO_CALIB_TPC_SCDCALIB=1; else CAN_DO_CALIB_TPC_SCDCALIB=0; fi
 if has_detector_calib TPC && has_processing_step TPC_DEDX; then CAN_DO_CALIB_TPC_TIMEGAIN=1; CAN_DO_CALIB_TPC_RESPADGAIN=1; else CAN_DO_CALIB_TPC_TIMEGAIN=0; CAN_DO_CALIB_TPC_RESPADGAIN=0; fi
 if has_detector_calib TPC && has_detectors ITS TPC && has_detector_matching ITSTPC; then CAN_DO_CALIB_TPC_VDRIFTTGL=1; else CAN_DO_CALIB_TPC_VDRIFTTGL=0; fi
-if has_detector_calib TPC; then CAN_DO_CALIB_TPC_IDC=1; CAN_DO_CALIB_TPC_SAC=1; else CAN_DO_CALIB_TPC_IDC=0; CAN_DO_CALIB_TPC_SAC=0; fi
+if has_detector_calib TPC; then CAN_DO_CALIB_TPC_IDC=1; CAN_DO_CALIB_TPC_SAC=1; CAN_DO_CALIB_TPC_CMV=1; else CAN_DO_CALIB_TPC_IDC=0; CAN_DO_CALIB_TPC_SAC=0; CAN_DO_CALIB_TPC_CMV=0; fi
 if [[ ! -z ${FLP_IDS:-} && ! $FLP_IDS =~ (^|,)"145"(,|$) ]] || [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then CAN_DO_CALIB_TPC_SAC=0; fi
 if has_detector_calib TRD && has_detectors ITS TPC TRD && has_detector_matching ITSTPCTRD; then CAN_DO_CALIB_TRD_VDRIFTEXB=1; CAN_DO_CALIB_TRD_GAIN=1; CAN_DO_CALIB_TRD_T0=1; else CAN_DO_CALIB_TRD_VDRIFTEXB=0; CAN_DO_CALIB_TRD_GAIN=0; CAN_DO_CALIB_TRD_T0=0; fi
 if has_detector_calib EMC && has_detector_reco EMC; then CAN_DO_CALIB_EMC_BADCHANNELCALIB=1; CAN_DO_CALIB_EMC_TIMECALIB=1; else CAN_DO_CALIB_EMC_BADCHANNELCALIB=0; CAN_DO_CALIB_EMC_TIMECALIB=0; fi
@@ -178,8 +178,11 @@ if [[ $CAN_DO_CALIB_TPC_SAC == 1 ]]; then
     fi
   fi
 fi
-if [[ -z ${CALIB_TPC_CMV+x} ]]; then
-	CALIB_TPC_CMV=0;
+# CMV (be default, it is always disabled for now)
+if [[ $CAN_DO_CALIB_TPC_CMV == 1 ]]; then
+  if [[ -z ${CALIB_TPC_CMV+x} ]]; then
+		CALIB_TPC_CMV=0;
+  fi
 fi
 
 ( [[ -z ${CALIB_FT0_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_FT0_INTEGRATEDCURR == 0 ]] ) && CALIB_FT0_INTEGRATEDCURR=0
@@ -312,7 +315,7 @@ if [[ -z ${CALIBDATASPEC_TPCIDC_C:-} ]]; then
 fi
 if [[ -z ${CALIBDATASPEC_TPCCMV:-} ]]; then
   # TPC
-  if [[ $CALIB_TPC_CMV == 1 ]];  then 
+  if [[ $CALIB_TPC_CMV == 1 ]];  then
 	add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvgroup:TPC/CMVGROUP";
 	add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvorbit:TPC/CMVORBITINFO";
 	fi
