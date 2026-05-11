@@ -15,7 +15,6 @@
 #include "Pythia8/Pythia.h"
 #include <rapidjson/document.h>
 #include <rapidjson/filereadstream.h>
-// #include "CCDB/CcdbApi.h"
 
 R__LOAD_LIBRARY(libpythia6)
 R__LOAD_LIBRARY(libGeneratorParam)
@@ -27,7 +26,7 @@ using namespace Pythia8;
 // #include "SimulationDataFormat/MCEventHeader.h"
 
 // Input to simulation:
-// inputFilePathName file is expected to be a json file with the structure so:
+// inputFilePathName file is expected to be a json file with the structure like so:
 //  {
 //    "simLog": false,
 //    "sglGenRAA": 1,
@@ -67,7 +66,7 @@ public:
                                                                  // understands it's not a ROOT file), thus one
                                                                  // cannot use TFile::Cp()
     if (gSystem->Exec(aliencp.Data()) != 0) {
-      cout << "Error: Model file " << inputFilePathName << " does not exist!" << endl;
+      cout << "Error: Sim parameters .json file " << inputFilePathName << " does not exist!" << endl;
       exit(1);
     }
     // open the file
