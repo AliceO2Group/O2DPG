@@ -329,7 +329,10 @@ for external_context in collission_context_*.root; do
   # extract timeframe from name
   anchoring_tf="${external_context#collission_context_}" # remove prefix 'collision_context_'
   anchoring_tf="${anchoring_tf%.root}" # remove suffix '.root'
-  echo "Treating timeframe ${anchoring_tf}"
+  # now we have a string with DF_FOLDERNAME:TIMEFRAMEID
+  df_folder="${anchoring_tf%%:*}"
+  anchoring_tf="${anchoring_tf##*:}"
+  echo "Treating timeframe ${anchoring_tf} coming from folder ${df_folder}"
 
   # we do it in a separate workspace
   workspace="TF_${anchoring_tf}"
@@ -366,7 +369,7 @@ for external_context in collission_context_*.root; do
   remainingargs="${remainingargs} ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}}"
   # add external collision context injection
   if [ "${ALIEN_JDL_MC_DATA_EMBEDDING_AO2D}" ]; then
-    remainingargs="${remainingargs} --data-anchoring ${PWD}/../${external_context}"
+    remainingargs="${remainingargs} --data-anchoring ${PWD}/../${external_context} --aod-output-folder ${df_folder##*_} --aod-parent-file ${ALIEN_JDL_MC_DATA_EMBEDDING_AO2D}"
   fi
 
   echo_info "baseargs passed to o2dpg_sim_workflow_anchored.py: ${baseargs}"
