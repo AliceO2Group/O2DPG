@@ -1,13 +1,138 @@
 {
   "qa-event-track": {
-    "checkOnlyPVContributor": "true",
-    "overwriteAxisRangeForPbPb": "!OVERWRITEAXISRANGEFORPBPBVALUE!",
-    "processData": "!ANALYSIS_QC_is_data!",
-    "processDataIU": "false",
-    "processDataIUFiltered": "false",
-    "processMC": "!ANALYSIS_QC_is_mc!",
-    "processTableData": "false",
-    "processTableMC": "false",
-    "trackSelection": "1"
-  }
+          "maxEta": "2",
+          "checkOnlyPVContributor": "1",
+          "minPhi": "-1",
+          "binsPt": {
+            "values": [
+              0,
+              0,
+              0.1,
+              0.2,
+              0.3,
+              0.4,
+              0.5,
+              0.6,
+              0.7,
+              0.8,
+              0.9,
+              1,
+              1.1,
+              1.2,
+              1.3,
+              1.4,
+              1.5,
+              2,
+              5,
+              10,
+              20,
+              50
+            ]
+          },
+          "minPt": "-10",
+          "selectPrim": "0",
+          "selectSec": "0",
+          "forceTRD": "0",
+          "processDataIU": "0",
+          "doDebug": "0",
+          "minTPCcrossedRows": "70",
+          "processTrackMatch": "!ANALYSIS_QC_is_data!",
+          "binsDeltaPt": {
+            "values": [
+              100,
+              -0.495,
+              0.505
+            ]
+          },
+          "selectPID": "0",
+          "PartIdentifier": "2",
+          "forceNotTRD": "0",
+          "binsInvPt": {
+            "values": [
+              0,
+              0,
+              0.1,
+              0.2,
+              0.3,
+              0.4,
+              0.5,
+              0.6,
+              0.7,
+              0.8,
+              0.9,
+              1,
+              1.1,
+              1.2,
+              1.3,
+              1.4,
+              1.5,
+              2,
+              5,
+              10,
+              20,
+              50
+            ]
+          },
+          "minEta": "-2",
+          "doExtraPIDqa": "0",
+          "tfCut": "1",
+          "processRun2ConvertedData": "0",
+          "addRunInfo": "1",
+          "maxPhi": "10",
+          "binsVertexPosZ": {
+            "values": [
+              100,
+              -20,
+              20
+            ]
+          },
+          "selectGoodEvents": "1",
+          "maxPt": "1e+10",
+          "binsDeltaSigned1Pt": {
+            "values": [
+              100,
+              -0.495,
+              0.505
+            ]
+          },
+          "binsSigned1Pt": {
+            "values": [
+              300,
+              -5,
+              5
+            ]
+          },
+          "binsVertexNumContrib": {
+            "values": [
+              200,
+              0,
+              200
+            ]
+          },
+          "binsTrackMultiplicity": {
+            "values": [
+              1000,
+              0,
+              1000
+            ]
+          },
+          "checkFakeMatches": "0",
+          "overwriteAxisRangeForPbPb": "!OVERWRITEAXISRANGEFORPBPBVALUE!",
+          "activateChecksTRD": "0",
+          "binsVertexPosXY": {
+            "values": [
+              500,
+              -1,
+              1
+            ]
+          },
+          "processData": "!ANALYSIS_QC_is_data!",
+          "trackSelection": "1",
+          "selectCharge": "0",
+          "checkPIDforTracking": "0",
+          "processRun2ConvertedMC": "0",
+          "isRun3": "1",
+          "processMC": "!ANALYSIS_QC_is_mc!",
+          "processDataIUFiltered": "0"
+      }
 }
