@@ -301,8 +301,8 @@ if [[ "$HIGH_RATE_PP" == "1" ]]; then
   : ${CUT_RANDOM_FRACTION_ITS:=0.97}
 elif [[ $BEAMTYPE == "PbPb" ]]; then
   : ${CUT_RANDOM_FRACTION_ITS:=-1}
-  : ${CUT_MULT_MIN_ITS:=100}
-  : ${CUT_MULT_MAX_ITS:=200}
+  : ${CUT_MULT_MIN_ITS:=0}
+  : ${CUT_MULT_MAX_ITS:=400}
   : ${CUT_MULT_VTX_ITS:=20}
 else
   : ${CUT_RANDOM_FRACTION_ITS:=0.95}
