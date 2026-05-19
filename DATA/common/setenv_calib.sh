@@ -34,7 +34,7 @@ if [[ $SYNCMODE == 1 ]] && has_processing_step ENTROPY_ENCODER && [[ ! -z "$WORK
 # for async recalibration
 if has_detector_calib EMC && has_detector_reco EMC && [[ $SYNCMODE != 1 ]]; then CAN_DO_CALIB_EMC_ASYNC_RECALIB=1; else CAN_DO_CALIB_EMC_ASYNC_RECALIB=0; fi
 if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC; then CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS=1; else CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS=0; fi
-if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC && has_detector_reco ITS && has_detector_reco FT0; then CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=1; else CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=0; fi
+if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC; then CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=1; else CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=0; fi
 
 # additional individual settings for calibration workflows
 if has_detector CTP; then export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"; else export CALIB_TPC_SCDCALIB_CTP_INPUT=""; fi
