@@ -110,8 +110,10 @@ metriclogger.info(meta)
 # TODO: integrate into standard logger
 def send_webhook(hook, t):
     if hook!=None:
-      command="curl -X POST -H 'Content-type: application/json' --data '{\"text\":\" " + str(t) + "\"}' " + str(hook) + " &> /dev/null"
-      os.system(command)
+      import json
+      data = json.dumps({"text": " " + str(t)})
+      subprocess.run(["curl", "-X", "POST", "-H", "Content-type: application/json", "--data", data, str(hook)],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 # A fallback solution to getting all child procs
 # in case psutil has problems (PermissionError).
