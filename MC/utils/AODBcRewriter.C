@@ -73,6 +73,7 @@
 #include "TROOT.h"
 #include "TString.h"
 #include "TTree.h"
+#include "TGrid.h"
 #include <algorithm>
 #include <cstring>
 #include <cstdint>
@@ -1328,7 +1329,9 @@ void AODBcRewriter(const char *inFileName  = "AO2D.root",
 
   std::cout << "AODBcRewriter: input=" << inFileName
             << " output=" << outFileName << "\n";
-
+  if (TString(inFileName).BeginsWith("alien:")) {
+    TGrid::Connect("alien");
+  }
   std::unique_ptr<TFile> fin(TFile::Open(inFileName, "READ"));
   if (!fin || fin->IsZombie()) { std::cerr << "ERROR: cannot open " << inFileName << "\n"; return; }
 
