@@ -337,6 +337,16 @@ class GeneratorStarlight_class : public Generator
   return true;
   }
 
+  //Store couple of event informations to the MC event header
+  void updateHeader(o2::dataformats::MCEventHeader* eventHeader)override
+  {
+    using Key = o2::dataformats::MCInfoKeys;
+
+    eventHeader->putInfo<std::string>(Key::generator, "STARlight");
+    eventHeader->putInfo<std::string>(Key::processName, mSelectedConfiguration);
+    eventHeader->putInfo<float>("photonEnergy", getPhotonEnergy());
+  }
+
    protected:
    float eCM = 5020; //CMS energy
    int projA=208;	//Beam
