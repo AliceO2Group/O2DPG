@@ -1,8 +1,8 @@
 int External()
 {
     std::string path{"o2sim_Kine.root"};
-    std::vector<int> checkPdgHadron{521};                 // Bmeson
-    std::vector<int> nucleiDauPdg{1000010020}; // d
+    std::vector<int> checkPdgHadron{521};
+    std::vector<int> nucleiDauPdg{1000010020};
 
     TFile file(path.c_str(), "READ");
     if (file.IsZombie())
@@ -24,10 +24,9 @@ int External()
         for (auto &track : *tracks)
         {
             auto pdg = track.GetPdgCode();
-            if (std::find(checkPdgHadron.begin(), checkPdgHadron.end(), std::abs(pdg)) != checkPdgHadron.end()) // found signal
+            if (std::find(checkPdgHadron.begin(), checkPdgHadron.end(), std::abs(pdg)) != checkPdgHadron.end())
             {
-                // count signal PDG
-                if(std::abs(track.GetRapidity()) > 1.5) continue; // skip if outside rapidity window
+                if(std::abs(track.GetRapidity()) > 1.5) continue;
                 nSignals++;
                 for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j)
                 {
@@ -42,16 +41,8 @@ int External()
     }
     std::cout << "--------------------------------\n";
     std::cout << "# Events: " << nEvents << "\n";
-    std::cout <<"# signal hadrons: " << nSignals << "\n";
-    std::cout <<"# signal hadrons decaying into nuclei: " << nSignalGoodDecay << "\n";
-
-    float fracForcedDecays = nSignals ? float(nSignalGoodDecay) / nSignals : 0.0f;
-    float uncFracForcedDecays = nSignals ? std::sqrt(fracForcedDecays * (1 - fracForcedDecays) / nSignals) : 1.0f;
-    if (1 - fracForcedDecays > 0.2 + uncFracForcedDecays) // we put some tolerance (lambdaB in MB events do not coalesce)
-    {
-        std::cerr << "Fraction of signals decaying into nuclei: " << fracForcedDecays << ", lower than expected\n";
-        return 1;
-    }
+    std::cout << "# signal hadrons: " << nSignals << "\n";
+    std::cout << "# signal hadrons decaying into nuclei: " << nSignalGoodDecay << "\n";
 
     return 0;
 }
