@@ -19,14 +19,17 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
  public:
 
   /// constructor
-  GeneratorPythia8HFEmbedCharmNuclei(int pdgCode = 2010010020, float lifetime = 1.f, int nCharmNucleiPerEvent = 10, float yMin = -1.f, float yMax = 1.f, bool trivialCoal = false, float coalMomentum = 0.2)
+  GeneratorPythia8HFEmbedCharmNuclei(int pdgCode = 2010010020, float lifetime = 1.f, int nCharmNucleiPerEvent = 10, float yMin = -1.f, float yMax = 1.f, float ptMax = 25.f, bool trivialCoal = false, float coalMomentum = 0.2, float fracFromB = 0.f)
   {
     nNumberOfCharmNucleiPerEvent = nCharmNucleiPerEvent;
     mRapidityMinCharmNuclei = yMin;
     mRapidityMaxCharmNuclei = yMax;
+    mPtMaxCharmNuclei = ptMax;
     mTrivialCoal = trivialCoal;
     mCoalMomentum = coalMomentum;
+    mFractionFromBeauty = fracFromB;
     mPdgCharmNucleus = pdgCode;
+    mSign = 1;
     if (std::abs(mPdgCharmNucleus) == 2010010020) {
       mMassCharmNucleus = 3.226f;
     } else {
@@ -34,11 +37,12 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
     }
     mLifetimeCharmNucleus = lifetime;
     mDecayDistr = new TF1("mDecayDistr", Form("exp(-x/%f)", mLifetimeCharmNucleus), 0., 1000.);
+    mDecayDistrLb = new TF1("mDecayDistrLb", "exp(-x/0.440)", 0., 1000.);
+    mPtDistrLb = new TF1("mPtDistrLb","[0]*x/TMath::Power((1+TMath::Power(x/[1],[3])),[2])",0.,1000.);
+    mPtDistrLb->SetParameters(1000., 6.97355, 3.20721, 1.71678);
 
     Print();
 
-    /** switch off process level **/
-    // mPythiaGun.readString("ProcessLevel:all off");
     auto& param = o2::eventgen::GeneratorPythia8Param::Instance();
     LOG(info) << "Init \'GeneratorPythia8HFEmbedCharmNuclei\' with following parameters";
     LOG(info) << param;
@@ -67,9 +71,11 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
     LOG(info) << Form("* Mass of charm nuclei to be injected (GeV/c2): %f", mMassCharmNucleus);
     LOG(info) << Form("* Lifetime of charm nuclei to be injected (mm): %f", mLifetimeCharmNucleus);
     LOG(info) << Form("* Number of charm nuclei injected per event: %d", nNumberOfCharmNucleiPerEvent);
-    LOG(info) << Form("* Hadron rapidity: %f - %f", mRapidityMinCharmNuclei, mRapidityMaxCharmNuclei);
+    LOG(info) << Form("* Charmed nucleus rapidity: %f - %f", mRapidityMinCharmNuclei, mRapidityMaxCharmNuclei);
+    LOG(info) << Form("* Charmed nucleus pT max (prompt): %f", mPtMaxCharmNuclei);
     LOG(info) << Form("* Trivial coalescence: %d", mTrivialCoal);
     LOG(info) << Form("* Coalescence momentum: %f", mCoalMomentum);
+    LOG(info) << Form("* Fraction from beauty: %f", mFractionFromBeauty);
     LOG(info) << "***********************************************************************";
   }
 
@@ -97,32 +103,44 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
 
     // we simulate c-deuteron decays
     for (int iCharmNuclei{0}; iCharmNuclei<nNumberOfCharmNucleiPerEvent; ++iCharmNuclei) {
-      int sign = 1;
-      // we alternate positive and negative
-      if (nNumberOfCharmNucleiPerEvent % 2 == 0) {
-        if (iCharmNuclei % 2 != 0) {
-          sign = -1;
-        }
-      } else {
+
+      // we alternate the sign of the generated charmed nuclei, if mSign is set to 0, they are generated with 50% of probability as particle or antiparticle
+      (mSign > 0) ? mSign = -1 : mSign = 1;
+      if (nNumberOfCharmNucleiPerEvent % 2 != 0 && iCharmNuclei == nNumberOfCharmNucleiPerEvent - 1) {
         if (gRandom->Rndm() < 0.5) {
-          sign = -1;
+          mSign = 1;
         }
       }
 
-      auto pt = gRandom->Uniform(0., 50.); // placeholder, to be modified
-      auto y = gRandom->Uniform(mRapidityMinCharmNuclei, mRapidityMaxCharmNuclei);
+      int pdgToGen = mPdgCharmNucleus;
+      float massToGen = mMassCharmNucleus;
+      float lifetimeToGen = mDecayDistr->GetRandom();
+      float minRapToGen = mRapidityMinCharmNuclei;
+      float maxRapToGen = mRapidityMaxCharmNuclei;
+      bool isFromB = gRandom->Rndm() < mFractionFromBeauty;
+      // we determine if it's prompt or non-prompt
+      if (isFromB) {
+        pdgToGen = 5122; // we generate a Lambda_b and we let it decay into the charmed nucleus, no other beauty hadrons are considered
+        massToGen = 5.61940f; // mass of Lambda_b (GeV/c2)
+        lifetimeToGen = mDecayDistrLb->GetRandom();
+        minRapToGen *= 2;
+        maxRapToGen *= 2;
+      }
+
+      auto pt = (!isFromB) ? gRandom->Uniform(0., mPtMaxCharmNuclei) : mPtDistrLb->GetRandom();
+      auto y = gRandom->Uniform(minRapToGen, maxRapToGen);
       auto phi = gRandom->Uniform(0, TMath::TwoPi());
       auto px = pt * TMath::Cos(phi);
       auto py = pt * TMath::Sin(phi);
-      auto mt = TMath::Sqrt(mMassCharmNucleus * mMassCharmNucleus + pt * pt);
+      auto mt = TMath::Sqrt(massToGen * massToGen + pt * pt);
       auto pz = mt * TMath::SinH(y);
       auto p = TMath::Sqrt(pt * pt + pz * pz);
-      auto e = TMath::Sqrt(mMassCharmNucleus * mMassCharmNucleus + p * p);
+      auto e = TMath::Sqrt(massToGen * massToGen + p * p);
 
       Particle particle;
-      particle.id(sign * mPdgCharmNucleus);
+      particle.id(mSign * pdgToGen);
       particle.status(83);
-      particle.m(mMassCharmNucleus);
+      particle.m(massToGen);
       particle.px(px);
       particle.py(py);
       particle.pz(pz);
@@ -130,11 +148,13 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
       particle.xProd(0.f);
       particle.yProd(0.f);
       particle.zProd(0.f);
-      particle.tau(0.f); //mDecayDistr->GetRandom());
+      particle.tau(lifetimeToGen);
+      mPythiaGun.particleData.mayDecay(5122, true); // force decay
       mPythiaGun.particleData.mayDecay(mPdgCharmNucleus, true); // force decay
 
       bool isCoalSuccess{false};
-      while(!isCoalSuccess) {
+      int nTrials{0};
+      while(!isCoalSuccess || nTrials > 1e4) {
         mPythiaGun.event.reset();
         mPythiaGun.event.append(particle);
         mPythiaGun.moreDecays();
@@ -148,8 +168,9 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
           if (absPdg == mPdgCharmNucleus) {
             idxCharmNucleus = iPart;
           }
+          auto mother = part.mother1();
           // if we find a resonance, we remove it, otherwise we prevent the coalescence of daughters from resonances and daughters from charmed nucleus directly
-          if (std::find(pdgShortLivedResos.begin(), pdgShortLivedResos.end(), absPdg) != pdgShortLivedResos.end()) {
+          if (std::find(pdgShortLivedResos.begin(), pdgShortLivedResos.end(), absPdg) != pdgShortLivedResos.end() && mother >= idxCharmNucleus) {
             // we need to change the indices of the daughter particles to point to the charmed nucleus
             auto dauList = part.daughterList();
             for (auto const& dau : dauList) {
@@ -160,22 +181,57 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
           }
         }
         if (isResoFound) { // we have to reset all the particles as daughters of the charm nucleus
-          mPythiaGun.event[idxCharmNucleus].daughter1(idxCharmNucleus + 1);
-          mPythiaGun.event[idxCharmNucleus].daughter2(mPythiaGun.event.size() - 1);
+          std::vector<int> idxDausCharmNucleus{};
+          for (int iPart{0}; iPart<mPythiaGun.event.size(); ++iPart) {
+            auto mother = mPythiaGun.event[iPart].mother1();
+            if (mother == idxCharmNucleus) {
+              idxDausCharmNucleus.push_back(iPart);
+            }
+          }
+          if (idxDausCharmNucleus.size() == idxDausCharmNucleus.back() - idxDausCharmNucleus[0] + 1) {
+            mPythiaGun.event[idxCharmNucleus].daughter1(idxDausCharmNucleus[0]);
+            mPythiaGun.event[idxCharmNucleus].daughter2(idxDausCharmNucleus.back());
+          } else { // the history is broken, we need to restore it
+            std::vector<Particle> newPartList{};
+            std::vector<int> idxToRemove{};
+            for (int iPart{idxDausCharmNucleus[0]}; iPart<mPythiaGun.event.size(); ++iPart) {
+              if (std::find(idxDausCharmNucleus.begin(), idxDausCharmNucleus.end(), iPart) == idxDausCharmNucleus.end()) {
+                newPartList.push_back(mPythiaGun.event[iPart]);
+                idxToRemove.push_back(iPart);
+              }
+            }
+            int removed{0};
+            for (auto const& idx : idxToRemove) {
+              mPythiaGun.event.remove(idx - removed, idx - removed, false);
+              ++removed;
+            }
+            std::vector<int> updatedMothers{};
+            for (int iPart{0}; iPart<newPartList.size(); ++iPart) {
+              mPythiaGun.event.append(newPartList[iPart]);
+              auto mother = newPartList[iPart].mother1();
+              if (std::find(updatedMothers.begin(), updatedMothers.end(), mother) == updatedMothers.end()) {
+                updatedMothers.push_back(mother);
+                int delta = mPythiaGun.event.size() - idxToRemove[iPart] - 1;
+                mPythiaGun.event[mother].daughters(mPythiaGun.event[mother].daughter1() + delta, mPythiaGun.event[mother].daughter2() + delta);
+              }
+            }
+            mPythiaGun.event[idxCharmNucleus].daughter1(idxDausCharmNucleus[0]);
+            mPythiaGun.event[idxCharmNucleus].daughter2(idxDausCharmNucleus[0] + idxDausCharmNucleus.size() - 1);
+          }
         }
 
         int iDau{-1};
         for (int iPart{0}; iPart<mPythiaGun.event.size(); ++iPart) {
-          auto part = mPythiaGun.event[iPart];
-          auto absPdg = std::abs(part.id());
+          auto absPdg = std::abs(mPythiaGun.event[iPart].id());
+          auto mother = mPythiaGun.event[iPart].mother1();
 
-          if (absPdg == 2212 || absPdg == 2112) { // coalescence of protons and deuterons
+          if ((absPdg == 2212 || absPdg == 2112) && mother == idxCharmNucleus) { // coalescence of protons and deuterons
             dausToCoal[++iDau] = iPart;
           }
         }
 
         // we try the coalescence here, if successful we copy particles in the pythia event and we move to the next charm nucleus
-        isCoalSuccess = CoalescencePythia8(mPythiaGun.event, std::vector<unsigned int>{1000010020}, mTrivialCoal, mCoalMomentum, dausToCoal[0], dausToCoal[1]);
+        isCoalSuccess = CoalescencePythia8(mPythiaGun.event, std::vector<unsigned int>{1000010020}, mTrivialCoal, mCoalMomentum, dausToCoal[0], dausToCoal[1], 10.);
         if (isCoalSuccess) {
           int offset = mPythia.event.size(); // we need to rescale the indices of mothers and daughters, accounting for the particles that are already appended to the event
           for (int iPart{0}; iPart<mPythiaGun.event.size(); ++iPart) {
@@ -202,32 +258,39 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
             mPythia.event.append(part);
           }
         }
+        nTrials++;
       }
     }
 
     return true;
   }
 
- private:
+
+private:
   // Properties of selection
   float mMassCharmNucleus;           /// mass of the charmed nucleus
   int mPdgCharmNucleus;              /// pdg code of the charmed nucleus
   float mLifetimeCharmNucleus;       /// lifetime of the charmed nucleus
   int nNumberOfCharmNucleiPerEvent;  /// number of charmed nuclei injected per event
-  float mRapidityMinCharmNuclei;     /// rapidity min
-  float mRapidityMaxCharmNuclei;     /// rapidity max
+  float mRapidityMinCharmNuclei;     /// rapidity min of the generated charmed nuclei
+  float mRapidityMaxCharmNuclei;     /// rapidity max of the generated charmed nuclei
+  float mPtMaxCharmNuclei;           /// pT max of the generated charmed nuclei
   unsigned int mUsedSeed;            /// seed
   bool mTrivialCoal;                 /// if true, the coalescence is done without checking the distance in the phase space of the nucleons
   float mCoalMomentum;               /// coalescence momentum
   Pythia8::Pythia mPythiaGun;        /// Gun generator with decay support
   TF1* mDecayDistr;                  /// Lifetime distribution
+  TF1* mDecayDistrLb;                /// Lifetime distribution for Lb
+  TF1* mPtDistrLb;                   /// pt distribution for Lb (power-law fit to FONLL)
+  float mFractionFromBeauty;         /// fraction of charmed nuclei coming from beauty hadrons
+  int mSign;                         /// sign of the charmed nuclei to be generated, if 0 they are generated with 50% of probability as particle or antiparticle
 };
 
 
 ///___________________________________________________________
-FairGenerator *GenerateHFEmbedCDeuteron(float lifetime = 1.f, int nCharmNucleiPerEvent = 10, float yMin = -1.f, float yMax = 1.f, bool trivialCoal = false, float coalMomentum = 0.2)
+FairGenerator *GenerateHFEmbedCDeuteron(float lifetime = 1.f, int nCharmNucleiPerEvent = 10, float yMin = -1.f, float yMax = 1.f, float ptMax = 25.f, bool trivialCoal = false, float coalMomentum = 0.2f, float fracFromB = 0.25f)
 {
-  auto myGen = new GeneratorPythia8HFEmbedCharmNuclei(2010010020, lifetime, nCharmNucleiPerEvent, yMin, yMax, trivialCoal, coalMomentum);
+  auto myGen = new GeneratorPythia8HFEmbedCharmNuclei(2010010020, lifetime, nCharmNucleiPerEvent, yMin, yMax, ptMax, trivialCoal, coalMomentum, fracFromB);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->readString("Random:setSeed on");
   myGen->readString("Random:seed " + std::to_string(seed));
