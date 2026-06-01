@@ -36,10 +36,15 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
       LOG(fatal) << "********** [GeneratorPythia8HFEmbedCharmNuclei] Only c-deuteron (pdg=2010010020) currently supported! Exit **********";
     }
     mLifetimeCharmNucleus = lifetime;
-    mDecayDistr = new TF1("mDecayDistr", Form("exp(-x/%f)", mLifetimeCharmNucleus), 0., 1000.);
-    mDecayDistrLb = new TF1("mDecayDistrLb", "exp(-x/0.440)", 0., 1000.);
-    mPtDistrLb = new TF1("mPtDistrLb","[0]*x/TMath::Power((1+TMath::Power(x/[1],[3])),[2])",0.,1000.);
+    mDecayDistr = new TF1("mDecayDistr", "TMath::Exp(-x * 1./[0])", 0., mLifetimeCharmNucleus * 100);
+    mDecayDistr->SetNpx(10000);
+    mDecayDistr->SetParameter(0, mLifetimeCharmNucleus);
+    mDecayDistrLb = new TF1("mDecayDistrLb", "TMath::Exp(-x * 1./[0])", 0., 44.f);
+    mDecayDistrLb->SetParameter(0, 0.440f); // lifetime of Lambda_b in mm/c
+    mDecayDistrLb->SetNpx(10000);
+    mPtDistrLb = new TF1("mPtDistrLb","[0]*x/TMath::Power((1+TMath::Power(x/[1],[3])),[2])",0.,100.);
     mPtDistrLb->SetParameters(1000., 6.97355, 3.20721, 1.71678);
+    mPtDistrLb->SetNpx(10000);
 
     Print();
 
@@ -114,7 +119,7 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
 
       int pdgToGen = mPdgCharmNucleus;
       float massToGen = mMassCharmNucleus;
-      float lifetimeToGen = mDecayDistr->GetRandom();
+      float lifetimeToGen = 0.f;
       float minRapToGen = mRapidityMinCharmNuclei;
       float maxRapToGen = mRapidityMaxCharmNuclei;
       bool isFromB = gRandom->Rndm() < mFractionFromBeauty;
@@ -125,6 +130,8 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
         lifetimeToGen = mDecayDistrLb->GetRandom();
         minRapToGen *= 2;
         maxRapToGen *= 2;
+      } else {
+        lifetimeToGen = mDecayDistr->GetRandom();
       }
 
       auto pt = (!isFromB) ? gRandom->Uniform(0., mPtMaxCharmNuclei) : mPtDistrLb->GetRandom();
@@ -244,16 +251,16 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
             auto daughter1 = part.daughter1();
             auto daughter2 = part.daughter2();
             if (mother1 > 0) {
-              part.mother1(mother1 + offset);
+              part.mother1(mother1 + offset - 1);
             }
             if (mother2 > 0) {
-              part.mother2(mother2 + offset);
+              part.mother2(mother2 + offset - 1);
             }
             if (daughter1 > 0) {
-              part.daughter1(daughter1 + offset);
+              part.daughter1(daughter1 + offset - 1);
             }
             if (daughter2 > 0) {
-              part.daughter2(daughter2 + offset);
+              part.daughter2(daughter2 + offset - 1);
             }
             mPythia.event.append(part);
           }
