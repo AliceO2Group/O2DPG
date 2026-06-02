@@ -14,8 +14,9 @@
 //
 // This tool fixes all three problems in one pass per DF_ directory:
 //
-//   Stage 0  — Sort & deduplicate the BC table.  Build BC permutation map:
-//              bcPerm[oldBCrow] = newBCrow.
+//   Stage 0  — Deduplicate the BC table in place (order-preserving; the input
+//              must already be globalBC-sorted).  Build BC permutation map:
+//              bcPerm[oldBCrow] = newBCrow (monotonic non-decreasing).
 //
 //   Stage 1  — Process every table that carries fIndexBCs / fIndexBC.
 //              Remap the index via bcPerm, sort rows by the new index, and
@@ -501,18 +502,31 @@ static PermMap rewriteTable(TTree *src, TDirectory *dirOut,
 }
 
 // ============================================================================
-// SECTION 4 — Stage 0: BC table sort + deduplication
+// SECTION 4 — Stage 0: BC table deduplication (order-preserving)
 // ============================================================================
 //
-// Reads fGlobalBC from the BC tree, sorts rows, drops exact-duplicate BC
-// values, and writes the compacted table.  Returns bcPerm[oldRow] = newRow.
+// Reads fGlobalBC from the BC tree, drops exact-duplicate BC values IN PLACE
+// (preserving input row order), and writes the compacted table.  Returns
+// bcPerm[oldRow] = newRow.
+//
+// The dedup is deliberately order-preserving so that bcPerm is monotonic
+// non-decreasing.  This matters because every BC-indexed table (collisions,
+// FT0/FV0/FDD/Zdc, ...) is sliced per BC and must stay sorted by its fIndexBCs,
+// and collisions are in turn the grouping anchor for tracks (sorted by
+// fIndexCollisions).  A non-order-preserving BC remap would force a full reorder
+// cascade BC -> collisions -> tracks to keep all those groupings valid; keeping
+// bcPerm monotonic means none of those tables need to be reordered at all.
+//
+// This REQUIRES the input BC table to already be sorted by fGlobalBC (the
+// standard AO2D invariant; also asserted on the output by validateDF check #1).
+// We assert it loudly rather than silently emit a non-monotonic BC table.
 
 struct BCStage0Result {
-  PermMap bcPerm;          // bcPerm[oldRow] = newRow in sorted/deduped BC table
+  PermMap bcPerm;          // bcPerm[oldRow] = newRow in the deduped BC table
   Long64_t nUnique = 0;
 };
 
-static BCStage0Result stage0_sortBCs(TTree *treeBCs, TDirectory *dirOut) {
+static BCStage0Result stage0_dedupBCs(TTree *treeBCs, TDirectory *dirOut) {
   BCStage0Result res;
   Long64_t n = treeBCs->GetEntries();
   if (n == 0) return res;
@@ -525,19 +539,29 @@ static BCStage0Result stage0_sortBCs(TTree *treeBCs, TDirectory *dirOut) {
   std::vector<ULong64_t> gbcs(n);
   for (Long64_t i = 0; i < n; ++i) { treeBCs->GetEntry(i); gbcs[i] = gbc; }
 
-  // Sort row indices by fGlobalBC
-  std::vector<Long64_t> order(n);
-  std::iota(order.begin(), order.end(), 0);
-  std::stable_sort(order.begin(), order.end(),
-    [&](Long64_t a, Long64_t b){ return gbcs[a] < gbcs[b]; });
+  // The BC table must already be sorted by fGlobalBC: the dedup below is
+  // order-preserving (merges only adjacent equal-globalBC rows), which keeps
+  // bcPerm monotonic and avoids a reorder cascade through collisions/tracks.
+  // A non-monotonic input would silently break that guarantee, so abort loudly.
+  for (Long64_t i = 1; i < n; ++i) {
+    if (gbcs[i] < gbcs[i - 1]) {
+      std::cerr << "FATAL: O2bc_* table is not sorted by fGlobalBC (row " << i
+                << " globalBC=" << gbcs[i] << " < row " << (i - 1)
+                << " globalBC=" << gbcs[i - 1] << ").\n"
+                << "       AODBcRewriter requires a globalBC-sorted BC table so that\n"
+                << "       BC deduplication is order-preserving; aborting.\n";
+      std::abort();
+    }
+  }
 
-  // Build deduplicated row list and the permutation
+  // Build the deduplicated row list and the (monotonic) permutation in source
+  // row order: adjacent rows sharing a globalBC collapse onto one output row.
   res.bcPerm.assign(n, -1);
   std::vector<Long64_t> rowOrder;  // source rows to keep, in output order
-  ULong64_t prev = ULong64_t(-1);
+  ULong64_t prev = 0;
   Int_t newRow = -1;
-  for (Long64_t srcRow : order) {
-    if (gbcs[srcRow] != prev) {
+  for (Long64_t srcRow = 0; srcRow < n; ++srcRow) {
+    if (newRow < 0 || gbcs[srcRow] != prev) {
       ++newRow;
       prev = gbcs[srcRow];
       rowOrder.push_back(srcRow);
@@ -547,7 +571,7 @@ static BCStage0Result stage0_sortBCs(TTree *treeBCs, TDirectory *dirOut) {
   }
   res.nUnique = rowOrder.size();
 
-  std::cout << "  BC stage: " << n << " rows -> " << res.nUnique << " unique\n";
+  std::cout << "  BC stage: " << n << " rows -> " << res.nUnique << " unique (in-place dedup)\n";
 
   // Write the BC table (no index remapping needed for the table itself)
   rewriteTable(treeBCs, dirOut, rowOrder, /*indexBranch=*/"", /*parentPerm=*/{});
@@ -1020,10 +1044,10 @@ static void processDF(TDirectory *dirIn, TDirectory *dirOut) {
     return;
   }
 
-  // ---- Stage 0: sort & deduplicate BCs ----
+  // ---- Stage 0: deduplicate BCs (order-preserving) ----
   std::cout << "-- Stage 0: BCs --\n";
   dirOut->cd();
-  BCStage0Result s0 = stage0_sortBCs(treeBCs, dirOut);
+  BCStage0Result s0 = stage0_dedupBCs(treeBCs, dirOut);
   if (treeFlags) stage0_copyBCFlags(treeFlags, dirOut, s0.bcPerm);
 
   // Track which tree names have been written so we don't double-write
