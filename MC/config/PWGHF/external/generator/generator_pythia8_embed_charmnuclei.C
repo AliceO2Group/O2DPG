@@ -9,6 +9,9 @@
 #include <string>
 #include <vector>
 
+#include "Math/Vector3D.h"
+#include "Math/Vector4D.h"
+
 R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT)
 #include "MC/config/common/external/generator/CoalescencePythia8.h"
 
@@ -240,6 +243,7 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
         // we try the coalescence here, if successful we copy particles in the pythia event and we move to the next charm nucleus
         isCoalSuccess = CoalescencePythia8(mPythiaGun.event, std::vector<unsigned int>{1000010020}, mTrivialCoal, mCoalMomentum, dausToCoal[0], dausToCoal[1], 10.);
         if (isCoalSuccess) {
+          restoreEnergyConservation(mPythiaGun.event, idxCharmNucleus);
           int offset = mPythia.event.size(); // we need to rescale the indices of mothers and daughters, accounting for the particles that are already appended to the event
           for (int iPart{0}; iPart<mPythiaGun.event.size(); ++iPart) {
             auto part = mPythiaGun.event[iPart];
@@ -274,6 +278,32 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
 
 
 private:
+
+  void restoreEnergyConservation(Pythia8::Event& event, int idxCharmNucleus, float targetMassTolerance = 1e-5) {
+    /// In the coalescence, the energy is not conserved, we rescale the momentum of the charmed nuclei daughters to restore it to avoid changes in the invariant mass of the charmed nucleus
+
+    float scale = 1.f;
+    float invMass{0.f};
+    while (abs(invMass - mMassCharmNucleus) > targetMassTolerance) {
+      ROOT::Math::PxPyPzMVector fourVecCharmNucleus;
+      for (int iDau{event[idxCharmNucleus].daughter1()}; iDau<=event[idxCharmNucleus].daughter2(); ++iDau) {
+        auto dau = event[iDau];
+        fourVecCharmNucleus += ROOT::Math::PxPyPzMVector(dau.px() * scale, dau.py() * scale, dau.pz() * scale, dau.m());
+      }
+      invMass = fourVecCharmNucleus.M();
+      scale *= mMassCharmNucleus / invMass;
+    }
+
+      for (int iDau{event[idxCharmNucleus].daughter1()}; iDau<=event[idxCharmNucleus].daughter2(); ++iDau) {
+      event[iDau].px(event[iDau].px() * scale);
+      event[iDau].py(event[iDau].py() * scale);
+      event[iDau].pz(event[iDau].pz() * scale);
+    }
+    event[idxCharmNucleus].px(event[idxCharmNucleus].px() * scale);
+    event[idxCharmNucleus].py(event[idxCharmNucleus].py() * scale);
+    event[idxCharmNucleus].pz(event[idxCharmNucleus].pz() * scale);
+  }
+
   // Properties of selection
   float mMassCharmNucleus;           /// mass of the charmed nucleus
   int mPdgCharmNucleus;              /// pdg code of the charmed nucleus
