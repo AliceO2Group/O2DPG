@@ -1,3 +1,4 @@
+R__ADD_INCLUDE_PATH($nOOn_ROOT/include)
 R__LOAD_LIBRARY(NeutronGenerator_cxx.so)
 #include "GeneratorStarlight.C"
 #include "NeutronGenerator.h"
