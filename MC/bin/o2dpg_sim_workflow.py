@@ -674,7 +674,7 @@ PreCollContextTask['cmd'] = task_finalizer([
       f'--timestamp {args.timestamp}',
       f'--import-external {args.data_anchoring}' if len(args.data_anchoring) > 0 else None,
       '--bcPatternFile ccdb',
-      ' --nontrivial-mu-distribution ccdb://https://alice-ccdb.cern.ch/FTO/Calib/EventsPerBc',
+      ' --nontrivial-mu-distribution ccdb://https://alice-ccdb.cern.ch/FT0/Calib/EventsPerBc',
       f'--QEDinteraction {qedspec}' if includeQED else None
       ], configname = 'precollcontext')
 workflow['stages'].append(PreCollContextTask)
