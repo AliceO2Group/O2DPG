@@ -1,5 +1,77 @@
 # CLAUDE.md — AODBcRewriter Development Handoff
 
+## Current work state (handoff — 2026-06-09)
+
+**Branch:** `fix/aodbcrewriter-track-regroup` · **Last commit:** `8bb9d30b3c`
+(committed, not yet pushed/validated).
+
+### The bug being fixed: tracks' `-1` collision group split
+
+Downstream O2 analysis (`o2-analysis-event-selection`) was crashing with:
+
+```
+[FATAL] Table Tracks_IU index fIndexCollisions has a group with index -1
+        that is split by 776
+```
+
+O2's `ArrowTableSlicingCache::validateOrder` requires every `fIndexCollisions`
+group in a track table — **including the `-1` "ambiguous" group** — to be one
+contiguous run of rows. Two commits broke this:
+
+- **`b11cd3de`** added a value-wise remap of tracks' `fIndexCollisions` via
+  `collPerm` but left the track **rows in input order**. Since Stage 1 reorders
+  `O2collision` (sort by remapped `fIndexBCs`), the remapped values no longer
+  formed contiguous groups → the split. (b11cd3de made the *values* correct at
+  the cost of the *grouping*; the complete fix needs **both** — reorder rows
+  *and* remap values.)
+- **`28b44ef`** (a colleague's attempt) then replaced the Stage 0 BC **sort**
+  with an order-preserving dedup that `std::abort()`s unless the input BC table
+  is already `globalBC`-sorted. That contradicts PURPOSE (a) — repairing
+  *non-monotonic* BCs in merged files — so it aborted on exactly the files the
+  tool exists to fix ("doesn't run to completion").
+
+### What the current fix does
+
+1. **Reverted only the Stage 0 change** of `28b44ef`: restored `stage0_sortBCs`
+   (sort + dedup) and removed the abort. Non-monotonic merged BCs are repaired
+   again, as intended.
+2. **Kept `28b44ef`'s Stage 1b** (`stage1b_reorderTrackTables`, Section 9b) and
+   the `fIndexTracks*` / `fIndexMFTTracks` / `fIndexFwdTracks` remaps in
+   `processPasteJoinTables`. This regroup-tracks-by-remapped-`fIndexCollisions`
+   mechanism is the *correct* fix for the split; it only ever failed because the
+   aborting Stage 0 stopped it from running. Rewriting it from scratch was
+   judged higher-risk than keeping the reviewed logic.
+3. **Added validator check** `checkCollisionGroupContiguity` (Section 11):
+   mirrors O2's slicing invariant — flags any `fIndexCollisions` group split
+   into >1 run. Runs over every collision-grouped track table.
+
+**Design note / cascade:** sorting BCs is unavoidable for non-monotonic input
+and forces a reorder cascade **BC (Stage 0) → collisions (Stage 1) → tracks
+(Stage 1b)**, propagated to paste-join children and all track references. Do
+**not** re-introduce an "assert already sorted / order-preserving" Stage 0 — it
+is a known dead end (see the history note in the Section 4 code comment).
+
+### Not done yet / next steps for whoever picks this up
+
+- **UNVALIDATED on real data.** Parses cleanly in cling (`.L AODBcRewriter.C`),
+  but has *not* been run on a real merged AO2D, nor through the analysis task
+  that crashed. The macro is interpreter-only; `.L AODBcRewriter.C+` (ACLiC)
+  fails on missing std includes — pre-existing, not a regression.
+  Test sequence: `AODBcRewriter("AO2D.root","out.root")` →
+  `AODBcRewriterValidate("out.root")` (expect no `[FAIL]`) → then the **real**
+  `o2-analysis-event-selection` on `out.root` (ground truth).
+- **Known fragility (whack-a-mole):** the `fIndexTracks*` reference remap is a
+  hardcoded enumeration in `processPasteJoinTables` and the validator's
+  `kIndexBranchToTable`. A missed reference into a reordered track table = silent
+  corruption. Longer term, *derive* index→referent relationships from the AO2D
+  column-name conventions instead of enumerating.
+- **Biggest gap:** there is no executable analysis-level CI for this tool, so
+  regressions are only found in production with delay. Building a reproducer
+  (merged AO2D that triggers the split/abort) + a CI check that runs the real
+  task is the agreed top priority after this fix lands.
+
+---
+
 ## What this tool does
 
 `AODBcRewriter.C` is a ROOT macro that fixes structural integrity problems in
@@ -87,7 +159,8 @@ order strictly follow its paste-join parent.
 | 5 | `stage0_copyBCFlags` | Copy BC flags table following BC row selection |
 | 6 | `MCCollKey`, `MCCollKeyHash`, `stage1_BCindexedTables` | Process all BC-indexed tables; deduplicate MCCollisions |
 | 7 | `stage2_MCCollIndexedTables` | Process all MCCollision-indexed tables; drop rows whose parent was deduped |
-| 8 | `rowOrderFromPerm`, `findPermByPrefix`, `processPasteJoinTables` | Reorder paste-joined tables to follow their parent (1:1 row count guaranteed); remap any of their own index columns value-wise; copy unrelated tables verbatim |
+| 9b | `isCollGroupedTrackTable`, `stage1b_reorderTrackTables` | **Stage 1b**: regroup collision-grouped track tables (`O2track_iu`, `O2mfttrack`, `O2fwdtrack`) by remapped `fIndexCollisions` (`-1` sinks to a contiguous tail); publish track perms so children/references follow. Restores the O2 slicing invariant after the BC→collision reorder cascade |
+| 8 | `rowOrderFromPerm`, `findPermByPrefix`, `processPasteJoinTables` | Reorder paste-joined tables to follow their parent (1:1 row count guaranteed); remap any of their own index columns value-wise (incl. `fIndexTracks*` via the Stage 1b track perms); copy unrelated tables verbatim |
 | 9 | `copyNonTreeObjects` | Copy TMap metadata and other non-TTree objects |
 | 10 | `processDF` | Orchestrates all stages for one `DF_*` directory |
 | 11 | `AODBcRewriter` | Top-level entry: opens files, iterates `DF_*` dirs, preserves compression |
@@ -226,6 +299,24 @@ matches the parent collision table.
 The new validator catches the regression class as
 `[FAIL] paste-join size mismatch: O2mccollisionlabel* has N rows but parent
  O2collision* has M`.
+
+### ~~9. Tracks' `-1` collision group split after BC/collision reorder~~ (RESOLVED — pending validation)
+
+See the **Current work state** section at the top for the full story. In short:
+after Stage 1 reorders `O2collision`, the collision-grouped track tables must be
+**reordered** (not just have their `fIndexCollisions` values remapped) so each
+group — including the `-1` ambiguous group — stays one contiguous run, as O2's
+`ArrowTableSlicingCache::validateOrder` requires.
+
+**Fix:** Stage 1b (`stage1b_reorderTrackTables`, Section 9b) stable-sorts each
+track table by remapped `fIndexCollisions` (`-1` to a contiguous tail), publishes
+the track perm, and `processPasteJoinTables` follows it for paste-join children
+and remaps every `fIndexTracks*` reference. New validator check
+`checkCollisionGroupContiguity` flags split groups as
+`[FAIL] ... fIndexCollisions has N group(s) split into non-contiguous runs`.
+
+**Status:** committed on `fix/aodbcrewriter-track-regroup` (`8bb9d30b3c`), parses
+in cling, **not yet run on a real merged AO2D or the failing analysis task.**
 
 ---
 
