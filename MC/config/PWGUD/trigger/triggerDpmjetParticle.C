@@ -66,5 +66,17 @@ o2::eventgen::Trigger triggerKstar(double rapidityMin = -1., double rapidityMax 
   };
 }
 
+o2::eventgen::Trigger triggerLc(double rapidityMin = -1., double rapidityMax = -1.)
+{
+  return [rapidityMin, rapidityMax](const std::vector<TParticle>& particles) -> bool {
+    for (const auto& particle : particles) {
+      if (TMath::Abs(particle.GetPdgCode()) == 4122)
+        if ((particle.Y() > rapidityMin) && (particle.Y() < rapidityMax))
+          return kTRUE;
+    }
+    return kFALSE;
+  };
+}
+
 
 
