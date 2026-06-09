@@ -1798,6 +1798,12 @@ for tf in range(1, NTIMEFRAMES + 1):
    if created_by_option != '':
       created_by_option += ' ' + aod_creator
 
+   aod_parent_option = option_if_available('o2-aod-producer-workflow', '--aod-parent', envfile=async_envfile)
+   if aod_parent_option != '' and len(args.aod_parent_file) > 0:
+      aod_parent_option += ' ' + args.aod_parent_file
+   else:
+      aod_parent_option = ''
+
    aod_timeframe_id = f"${{ALIEN_PROC_ID}}{aod_df_id}" if not args.run_anchored else ""
    if len(args.aod_output_folder) > 0:
        aod_timeframe_id = args.aod_output_folder
@@ -1818,7 +1824,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       "--anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}",
       "--anchor-prod ${ALIEN_JDL_LPMANCHORPRODUCTION:-unknown}",
       "--reco-pass ${ALIEN_JDL_LPMPASSNAME:-unknown}",
-      f"--aod-parent {args.aod_parent_file}",
+      aod_parent_option,
       created_by_option,
       "--combine-source-devices" if not args.no_combine_dpl_devices else "",
       "--disable-mc" if args.no_mc_labels else "",
