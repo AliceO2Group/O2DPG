@@ -1,0 +1,27 @@
+Distributions: uniform, poisson, gaussian  (Poisson uses PIT, λ=50.0)
+q_step=0.025, dq=0.05, z_bins=20, sample_fraction=0.006
+
+=== Benchmark: uniform ===
+N=   2000 | t_fit=0.049s | rms_b=2.41368 (rms_b*√N=107.94303) | σQ_rel=0.146 | rt_rms=0.01513 (rt_rms*√N=0.67650) | z_inf=20 | mem=nanMB
+N=   5000 | t_fit=0.056s | rms_b=0.55985 (rms_b*√N=39.58722) | σQ_rel=0.066 | rt_rms=0.01024 (rt_rms*√N=0.72411) | z_inf=20 | mem=nanMB
+N=  10000 | t_fit=0.059s | rms_b=0.32056 (rms_b*√N=32.05619) | σQ_rel=0.068 | rt_rms=0.01047 (rt_rms*√N=1.04684) | z_inf=20 | mem=nanMB
+N=  20000 | t_fit=0.064s | rms_b=0.25235 (rms_b*√N=35.68710) | σQ_rel=0.053 | rt_rms=0.00986 (rt_rms*√N=1.39477) | z_inf=20 | mem=nanMB
+N=  50000 | t_fit=0.080s | rms_b=0.15938 (rms_b*√N=35.63915) | σQ_rel=0.060 | rt_rms=0.01008 (rt_rms*√N=2.25341) | z_inf=20 | mem=nanMB
+=== Benchmark: poisson ===
+N=   2000 | t_fit=0.048s | rms_b=1.08724 (rms_b*√N=48.62280) | σQ_rel=0.099 | rt_rms=0.01480 (rt_rms*√N=0.66168) | z_inf=19 | mem=nanMB
+N=   5000 | t_fit=0.056s | rms_b=0.42197 (rms_b*√N=29.83781) | σQ_rel=0.085 | rt_rms=0.01021 (rt_rms*√N=0.72211) | z_inf=20 | mem=nanMB
+N=  10000 | t_fit=0.059s | rms_b=0.30544 (rms_b*√N=30.54434) | σQ_rel=0.074 | rt_rms=0.01037 (rt_rms*√N=1.03662) | z_inf=20 | mem=nanMB
+N=  20000 | t_fit=0.065s | rms_b=0.27920 (rms_b*√N=39.48468) | σQ_rel=0.057 | rt_rms=0.00977 (rt_rms*√N=1.38106) | z_inf=20 | mem=nanMB
+N=  50000 | t_fit=0.083s | rms_b=0.16595 (rms_b*√N=37.10819) | σQ_rel=0.064 | rt_rms=0.00996 (rt_rms*√N=2.22747) | z_inf=20 | mem=nanMB
+=== Benchmark: gaussian ===
+N=   2000 | t_fit=0.048s | rms_b=3.60489 (rms_b*√N=161.21578) | σQ_rel=0.137 | rt_rms=0.00984 (rt_rms*√N=0.43992) | z_inf=20 | mem=nanMB
+N=   5000 | t_fit=0.056s | rms_b=0.57066 (rms_b*√N=40.35166) | σQ_rel=0.073 | rt_rms=0.00845 (rt_rms*√N=0.59739) | z_inf=20 | mem=nanMB
+N=  10000 | t_fit=0.059s | rms_b=0.36336 (rms_b*√N=36.33622) | σQ_rel=0.046 | rt_rms=0.00971 (rt_rms*√N=0.97096) | z_inf=20 | mem=nanMB
+N=  20000 | t_fit=0.065s | rms_b=0.31920 (rms_b*√N=45.14134) | σQ_rel=0.071 | rt_rms=0.00945 (rt_rms*√N=1.33642) | z_inf=20 | mem=nanMB
+N=  50000 | t_fit=0.081s | rms_b=0.13731 (rms_b*√N=30.70329) | σQ_rel=0.055 | rt_rms=0.01000 (rt_rms*√N=2.23535) | z_inf=20 | mem=nanMB
+
+=== Scaling summary (expect: α_b ≈ -0.5, α_rt ≈ 0.0) ===
+uniform  | α_b=-0.802 (→ -0.5) | α_rt=-0.111 (→  0.0) | mean(rms_b√N)=50.18254
+poisson  | α_b=-0.539 (→ -0.5) | α_rt=-0.109 (→  0.0) | mean(rms_b√N)=37.11956
+gaussian | α_b=-0.922 (→ -0.5) | α_rt= 0.017 (→  0.0) | mean(rms_b√N)=62.74966
+Saved PNG plots: bench_scaling_uniform.png, bench_scaling_poisson.png, bench_scaling_gaussian.png
