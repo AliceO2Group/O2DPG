@@ -46,7 +46,7 @@ using namespace Pythia8;
 class GeneratorParametrisedJetModel : public o2::eventgen::GeneratorPythia8 {
 public:
   /// constructor
-  GeneratorParametrisedJetModel(std::string inputSimParametersPath, std::string inputSimParametersFileName, bool generateUE = true, bool debug = false) : mInputSimParametersPath{inputSimParametersPath}, mInputSimParametersFileName{inputSimParametersFileName}, mGenerateUE{generateUE}, mDebug{debug} {
+  GeneratorParametrisedJetModel(std::string inputSimParametersPath, std::string inputSimParametersFileName, bool generateUE = true) : mInputSimParametersPath{inputSimParametersPath}, mInputSimParametersFileName{inputSimParametersFileName}, mGenerateUE{generateUE} {
 
     std::string inputFilePathName = "alien://" + inputSimParametersPath + inputSimParametersFileName;
     if (!gGrid) {
@@ -100,6 +100,10 @@ public:
 
     // write log of simulation?
     std::string writeLog("simLog");
+    if (!jsonDocument.HasMember(writeLog.c_str())) {
+      cout << "Check the sim parameters file! Item " << writeLog.c_str() << " is missing!" << endl;
+      exit(1);
+    }
     mDebug = jsonDocument[writeLog.c_str()].GetBool();
 
     // get parameters for sim
@@ -182,7 +186,7 @@ public:
 
     if (mDebug) {
       cout << "####################### creating partons signal #######################" << endl;
-      cout << "AIMERIC: signal, count " << nJets << " for mNJetsAverage = " << mNJetsAverage << "" << endl;
+      cout << "signal: count " << nJets << " for mNJetsAverage = " << mNJetsAverage << "" << endl;
     }
 
     TClonesArray *genParticlesArray = new TClonesArray("TParticle", 1000);
@@ -388,7 +392,6 @@ private:
 ///___________________________________________________________
 FairGenerator *generateParametrisedJetModel(std::string inputSimParametersPath, 
                                             std::string inputSimParametersFileName, 
-                                            bool generateUE = true,
-                                            bool debug = false) {
-  return new GeneratorParametrisedJetModel(inputSimParametersPath, inputSimParametersFileName, generateUE, debug);
+                                            bool generateUE = true) {
+  return new GeneratorParametrisedJetModel(inputSimParametersPath, inputSimParametersFileName, generateUE);
 }
