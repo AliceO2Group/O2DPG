@@ -1,7 +1,7 @@
 int External()
 {
     int checkPdgSignal[] = {443, 100443};
-    int checkPdgDecay = 13;
+    int checkPdgDecay = 11;
     double rapiditymin = -4.3;
     double rapiditymax = -2.3;
     std::string path{"o2sim_Kine.root"};
