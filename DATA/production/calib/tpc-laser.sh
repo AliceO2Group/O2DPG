@@ -4,7 +4,7 @@ source common/setenv.sh
 
 source common/getCommonArgs.sh
 
-source common/gen_topo_helper_functions.sh 
+source common/gen_topo_helper_functions.sh
 
 FILEWORKDIR="/home/wiechula/processData/inputFilesTracking/triggeredLaser"
 
@@ -77,7 +77,7 @@ if [[ ! -z ${TPC_CALIB_LANES_PAD_RAW:-} ]]; then
     num_lanes=${TPC_CALIB_LANES_PAD_RAW}
 fi
 
-EXTRA_CONFIG="--calib-type ce --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes ${num_lanes} --check-calib-infos" 
+EXTRA_CONFIG="--calib-type ce --publish-after-tfs ${publish_after} --max-events ${max_events} --lanes ${num_lanes} --check-calib-infos"
 
 LASER_DECODER_ADD=''
 
@@ -100,7 +100,8 @@ RECO_CONFIG+="GPU_rec_tpc.trackFollowingMaxRowGap=15;GPU_rec_tpc.trackFollowingM
 WORKFLOW=
 add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\"" "" 0
 add_W o2-tpc-raw-to-digits-workflow "--ignore-grp --input-spec \"$CALIB_INSPEC\" --remove-duplicates --pipeline tpc-raw-to-digits-0:20 --send-ce-digits " "${RAWDIGIT_CONFIG}"
-add_W o2-tpc-reco-workflow " --disable-ctp-lumi-request --input-type digitizer --output-type \"tracks,disable-writer\" --disable-mc --pipeline tpc-zsEncoder:20,tpc-tracker:8 ${GPU_CONFIG} ${REMAP}" "${RECO_CONFIG}"
+add_W o2-tpc-scaler-workflow "--disable-IDC-scalers --disable-ctp-lumi-request"
+add_W o2-tpc-reco-workflow "--input-type digitizer --output-type \"tracks,disable-writer\" --disable-mc --pipeline tpc-zsEncoder:20,tpc-tracker:8 ${GPU_CONFIG} ${REMAP}" "${RECO_CONFIG}"
 add_W o2-tpc-laser-track-filter "" "" 0
 add_W o2-tpc-calib-laser-tracks "--use-filtered-tracks ${EXTRA_CONFIG_TRACKS} --min-tfs=${min_tracks}"
 add_W o2-tpc-calib-pad-raw " ${EXTRA_CONFIG}" "${CALIB_CONFIG}"

@@ -126,6 +126,8 @@ parser.add_argument('--early-tf-cleanup',action='store_true', help='whether to c
 #  help='Treat smaller sensors in a single digitization')
 parser.add_argument('--pregenCollContext', action='store_true', help=argparse.SUPPRESS) # Now the default, giving this option or not makes not difference. We keep it for backward compatibility
 parser.add_argument('--data-anchoring', type=str, default='', help="Take collision contexts (from data) stored in this path")
+parser.add_argument('--aod-output-folder', type=str, default='', help="Force this AOD folder in the AOD producer")
+parser.add_argument('--aod-parent-file', type=str, default='', help="Link this as parent file in the AOD")
 parser.add_argument('--no-combine-smaller-digi', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--no-combine-dpl-devices', action='store_true', help=argparse.SUPPRESS)
 parser.add_argument('--no-mc-labels', action='store_true', default=False, help=argparse.SUPPRESS)
@@ -672,7 +674,7 @@ PreCollContextTask['cmd'] = task_finalizer([
       f'--timestamp {args.timestamp}',
       f'--import-external {args.data_anchoring}' if len(args.data_anchoring) > 0 else None,
       '--bcPatternFile ccdb',
-      ' --nontrivial-mu-distribution ccdb://https://alice-ccdb.cern.ch/FTO/Calib/EventsPerBc',
+      ' --nontrivial-mu-distribution ccdb://https://alice-ccdb.cern.ch/FT0/Calib/EventsPerBc',
       f'--QEDinteraction {qedspec}' if includeQED else None
       ], configname = 'precollcontext')
 workflow['stages'].append(PreCollContextTask)
@@ -1796,6 +1798,16 @@ for tf in range(1, NTIMEFRAMES + 1):
    if created_by_option != '':
       created_by_option += ' ' + aod_creator
 
+   aod_parent_option = option_if_available('o2-aod-producer-workflow', '--aod-parent', envfile=async_envfile)
+   if aod_parent_option != '' and len(args.aod_parent_file) > 0:
+      aod_parent_option += ' ' + args.aod_parent_file
+   else:
+      aod_parent_option = ''
+
+   aod_timeframe_id = f"${{ALIEN_PROC_ID}}{aod_df_id}" if not args.run_anchored else ""
+   if len(args.aod_output_folder) > 0:
+       aod_timeframe_id = args.aod_output_folder
+
    AODtask = createTask(name='aod_'+str(tf), needs=aodneeds, tf=tf, cwd=timeframeworkdir, lab=["AOD"], mem='4000', cpu='1')
    AODtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
    AODtask['cmd'] += '[ -f AO2D.root ] && rm AO2D.root; '
@@ -1812,12 +1824,13 @@ for tf in range(1, NTIMEFRAMES + 1):
       "--anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}",
       "--anchor-prod ${ALIEN_JDL_LPMANCHORPRODUCTION:-unknown}",
       "--reco-pass ${ALIEN_JDL_LPMPASSNAME:-unknown}",
+      aod_parent_option,
       created_by_option,
       "--combine-source-devices" if not args.no_combine_dpl_devices else "",
       "--disable-mc" if args.no_mc_labels else "",
       "--enable-truncation 0" if environ.get("O2DPG_AOD_NOTRUNCATE") or environ.get("ALIEN_JDL_O2DPG_AOD_NOTRUNCATE") else "",
       "--disable-strangeness-tracker" if args.no_strangeness_tracking else "",
-      f"--aod-timeframe-id ${{ALIEN_PROC_ID}}{aod_df_id}" if not args.run_anchored else "",
+      f"--aod-timeframe-id {aod_timeframe_id}" if len(aod_timeframe_id) > 0 else ""
    ])
    # Consider in future: AODtask['disable_alternative_reco_software'] = True # do not apply reco software here (we prefer latest aod converter)
    workflow['stages'].append(AODtask)

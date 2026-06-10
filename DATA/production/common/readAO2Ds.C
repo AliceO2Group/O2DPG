@@ -35,6 +35,17 @@ int readAO2Ds(const char* filename = "AO2D.root")
         std::cout << onameKeyInDir.Data() << std::endl;
       }
       TTree* t = (TTree*)d->Get(onameKeyInDir.Data());
+      // Check that every branch has the same number of entries as the tree itself.
+      // A mismatch indicates a corrupted or truncated write.
+      long long treeEntries = t->GetEntries();
+      for (auto* b : *t->GetListOfBranches()) {
+        auto* br = (TBranch*)b;
+        if (br->GetEntries() != treeEntries) {
+          printf("MISMATCH %s/%s branch %s: tree=%lld branch=%lld\n",
+                 onameKeyInFile.Data(), onameKeyInDir.Data(), br->GetName(), treeEntries, br->GetEntries());
+          retCode |= 4;
+        }
+      }
       if (onameKeyInDir.BeginsWith("O2track") && !onameKeyInDir.Contains("O2tracked") && !onameKeyInDir.Contains("O2trackqa")) {
         vectNEntriesPerTree.push_back({onameKeyInDir.Data(), t->GetEntries()});
       }

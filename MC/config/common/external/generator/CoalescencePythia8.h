@@ -104,7 +104,7 @@ bool doCoal(Pythia8::Event& event, int charge, int pdgCode, float mass, bool tri
   return true;
 }
 
-bool CoalescencePythia8(Pythia8::Event& event, std::vector<unsigned int> inputPdgList = {}, bool trivialCoal = false, double coalMomentum = 0.4, int firstDauID = -1, int lastDauId = -1)
+bool CoalescencePythia8(Pythia8::Event& event, std::vector<unsigned int> inputPdgList = {}, bool trivialCoal = false, double coalMomentum = 0.4, int firstDauID = -1, int lastDauId = -1, float maxRapidity = 1.)
 {
   const double coalescenceRadius{0.5 * 1.122462 * coalMomentum};
   // if coalescence from a heavy hadron, loop only between firstDauID and lastDauID
@@ -131,7 +131,7 @@ bool CoalescencePythia8(Pythia8::Event& event, std::vector<unsigned int> inputPd
   // fill nucleon pools
   std::vector<int> protons[2], neutrons[2], lambdas[2];
   for (auto iPart{loopStart}; iPart <= loopEnd; ++iPart) {
-    if (std::abs(event[iPart].y()) > 1.) // skip particles with y > 1
+    if (std::abs(event[iPart].y()) > maxRapidity) // skip particles with y > ymax
     {
       continue;
     }
