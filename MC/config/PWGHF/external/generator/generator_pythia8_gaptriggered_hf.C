@@ -386,17 +386,11 @@ protected:
   void checkConsistency() {
     for (int iPart{1}; iPart<mPythia.event.size(); ++iPart) {
       // verify if all particles of decay chain are in the TDatabasePDG
+      // taken from https://github.com/AliceO2Group/O2DPG/blob/master/MC/config/PWGDQ/EvtGen/GeneratorEvtGen.C
       if (!TDatabasePDG::Instance()->GetParticle(abs(mPythia.event[iPart].id()))) {
-        std::cout << "Particle code non known in TDatabasePDG " << mPythia.event[iPart].id() << " - set pdg = 89" << std::endl;
+        // std::cout << "Particle code non known in TDatabasePDG " << mPythia.event[iPart].id() << " - set pdg = 89" << std::endl;
         mPythia.event[iPart].id(89);
       }
-
-      // istat = mEvtstdhep->getIStat(i);
-
-      // if (istat != 1 && istat != 2)
-      //   std::cout << "ImportParticles: Attention unknown status code!" << std::endl;
-      // if (istat == 2)
-      //   istat = 11; // status decayed
     }
   }
 
