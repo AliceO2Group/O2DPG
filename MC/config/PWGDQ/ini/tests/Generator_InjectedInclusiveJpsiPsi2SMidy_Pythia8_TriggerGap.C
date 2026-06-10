@@ -1,7 +1,7 @@
 int External()
 {
     int checkPdgSignal = 443;
-    int checkPdgDecay = 13;
+    int checkPdgDecay = 11;
     std::string path{"o2sim_Kine.root"};
     std::cout << "Check for\nsignal PDG " << checkPdgSignal << "\ndecay PDG " << checkPdgDecay << "\n";
     TFile file(path.c_str(), "READ");
