@@ -1,5 +1,5 @@
 int External() {
-    std::string path{"~/test_evtgen/tf3/genevents_Kine.root"};//{"o2sim_Kine.root"};
+    std::string path{"o2sim_Kine.root"};
 
     int checkPdgQuark{5};
     float ratioTrigger = 1./5; // one event triggered out of 5
