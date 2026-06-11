@@ -38,6 +38,7 @@ public:
     mHadronPdgList = hadronPdgList;
     mPartPdgToReplaceList = partPdgToReplaceList;
     mFreqReplaceList = freqReplaceList;
+    mEvtGen = nullptr;
     mUseEvtGen = false;
     mEvtGenDecTable = "";
     // Ds1*(2700), Ds1*(2860), Ds3*(2860), Xic(3055)+, Xic(3080)+, Xic(3055)0, Xic(3080)0, LambdaC(2625), LambdaC(2595), LambdaC(2860), LambdaC(2880), LambdaC(2940), ThetaC(3100)
@@ -186,7 +187,7 @@ protected:
       {
         if (GeneratorPythia8::generateEvent())
         {
-          if (mEvtGen) {
+          if (mUseEvtGen) {
             mEvtGen->decay();
             checkConsistency();
           }
@@ -203,7 +204,7 @@ protected:
       {
         genOk = GeneratorPythia8::generateEvent();
         if (genOk) {
-          if (mEvtGen) {
+          if (mUseEvtGen) {
             mEvtGen->decay();
             checkConsistency();
           }
