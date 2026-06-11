@@ -170,7 +170,8 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
         mPythiaGun.moreDecays();
         std::array<int, 2> dausToCoal = {-1, -1};
         std::vector<int> pdgShortLivedResos = {313, 2224, 102134};
-        bool isResoFound{false};
+        std::map<int, int> statusResoDecay = {{313, 95}, {2224, 96}, {102134, 97}}; // do not use 94, it is used by default for no resonances
+        int whichReso{0};
         int idxCharmNucleus{-1};
         for (int iPart{0}; iPart<mPythiaGun.event.size(); ++iPart) {
           auto part = mPythiaGun.event[iPart];
@@ -180,17 +181,18 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
           }
           auto mother = part.mother1();
           // if we find a resonance, we remove it, otherwise we prevent the coalescence of daughters from resonances and daughters from charmed nucleus directly
-          if (std::find(pdgShortLivedResos.begin(), pdgShortLivedResos.end(), absPdg) != pdgShortLivedResos.end() && mother >= idxCharmNucleus) {
+          auto resoIt = std::find(pdgShortLivedResos.begin(), pdgShortLivedResos.end(), absPdg);
+          if (resoIt != pdgShortLivedResos.end() && mother >= idxCharmNucleus) {
             // we need to change the indices of the daughter particles to point to the charmed nucleus
             auto dauList = part.daughterList();
             for (auto const& dau : dauList) {
               mPythiaGun.event[dau].mother1(idxCharmNucleus);
             }
             mPythiaGun.event.remove(iPart, iPart, true);
-            isResoFound=true;
+            whichReso=*resoIt;
           }
         }
-        if (isResoFound) { // we have to reset all the particles as daughters of the charm nucleus
+        if (whichReso > 0) { // we have to reset all the particles as daughters of the charm nucleus
           std::vector<int> idxDausCharmNucleus{};
           for (int iPart{0}; iPart<mPythiaGun.event.size(); ++iPart) {
             auto mother = mPythiaGun.event[iPart].mother1();
@@ -242,6 +244,9 @@ class GeneratorPythia8HFEmbedCharmNuclei : public o2::eventgen::GeneratorPythia8
 
         // we try the coalescence here, if successful we copy particles in the pythia event and we move to the next charm nucleus
         isCoalSuccess = CoalescencePythia8(mPythiaGun.event, std::vector<unsigned int>{1000010020}, mTrivialCoal, mCoalMomentum, dausToCoal[0], dausToCoal[1], 10.);
+        if (whichReso > 0) {
+          mPythiaGun.event[idxCharmNucleus].status(statusResoDecay[whichReso]);
+        }
         if (isCoalSuccess) {
           restoreEnergyConservation(mPythiaGun.event, idxCharmNucleus);
           int offset = mPythia.event.size(); // we need to rescale the indices of mothers and daughters, accounting for the particles that are already appended to the event
