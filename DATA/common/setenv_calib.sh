@@ -263,7 +263,10 @@ if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "pvtx:GLO/PVTX/0"; fi
 
   # ITS
-  if [[ $CALIB_ITS_DEADMAP_TIME == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "itsChipStatus:ITS/CHIPSSTATUS/0"; fi
+  if [[ $CALIB_ITS_DEADMAP_TIME == 1 ]]; then
+		add_semicolon_separated CALIBDATASPEC_BARREL_TF "itsChipStatus:ITS/CHIPSSTATUS/0"
+		add_semicolon_separated CALIBDATASPEC_BARREL_TF "itsErrorInfo:ITS/ErrorInfo/0"
+  fi
 
   # MFT
   if [[ $CALIB_MFT_DEADMAP_TIME == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "mftChipStatus:MFT/CHIPSSTATUS/0"; fi
