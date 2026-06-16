@@ -219,6 +219,7 @@ while [ $# -gt 0 ] ; do
         --wait-any) WAITFORALIENANY=ON; WAITFORALIEN=ON; shift 1 ;; #wait for any good==done alien jobs to return
         --outputspec) OUTPUTSPEC=$2; shift 2 ;; #provide comma separate list of JDL file specs to be put as part of JDL Output field (example '"*.log@disk=1","*.root@disk=2"')
         --split-on-collection) DATACOLLECTION=$2; shift 2 ;; # this will split the jobs on InputDataCollection and "file" mode
+        --inputfile) INPUTFILES+=("$2"); shift 2 ;; # extra file to pre-stage via JDL InputFile (repeatable). Accepts a bare LFN or "LF:<lfn>". Staged by AliEn before the job starts, so it is NOT charged to job CPU/walltime (unlike an in-job 'alien.py cp').
         -h) Usage ; exit ;;
         --help) Usage ; exit ;;
         --fetch-output) FETCHOUTPUT=ON; shift 1 ;; # if to fetch all JOB output locally (to make this job as if it ran locally); only works when we block until all JOBS EXIT
@@ -366,12 +367,20 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
   if [ "${DATACOLLECTION}" ]; then
     SPLITMODE="file"
   fi
+
+  # Assemble the JDL InputFile list: always the job script, plus any extra files
+  # requested via --inputfile (each pre-staged by AliEn before the job starts).
+  INPUTFILE_ENTRIES="${QUOT}LF:${MY_JOBWORKDIR}/alien_jobscript.sh${QUOT}"
+  for _extra in "${INPUTFILES[@]}"; do
+    [[ "${_extra}" == LF:* ]] || _extra="LF:${_extra}"
+    INPUTFILE_ENTRIES="${INPUTFILE_ENTRIES}, ${QUOT}${_extra}${QUOT}"
+  done
   # ---- Generate JDL ----------------
   # TODO: Make this configurable or read from a preamble section in the jobfile
   cat > "${MY_JOBNAMEDATE}.jdl" <<EOF
 Executable = "${MY_BINDIR}/${MY_JOBNAMEDATE}.sh";
 Arguments = "${CONTINUE_WORKDIR:+"-c ${CONTINUE_WORKDIR}"} --local ${O2TAG:+--o2tag ${O2TAG}} --ttl ${JOBTTL} --label ${JOBLABEL:-label} --prodsplit ${PRODSPLIT} ${MATTERMOSTHOOK:+--mattermost ${MATTERMOSTHOOK}} ${CONTROLSERVER:+--controlserver ${CONTROLSERVER}}";
-InputFile = "LF:${MY_JOBWORKDIR}/alien_jobscript.sh";
+InputFile = { ${INPUTFILE_ENTRIES} };
 ${DATACOLLECTION:+InputDataList = ${QUOT}input.list${QUOT};}
 ${DATACOLLECTION:+InputDataListFormat = ${QUOT}txt-list${QUOT};}
 ${DATACOLLECTION:+InputDataCollection = ${QUOT}LF:${MY_JOBWORKDIR}/collection.xml,nodownload${QUOT};}
