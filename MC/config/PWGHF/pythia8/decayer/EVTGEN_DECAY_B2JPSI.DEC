@@ -417,7 +417,6 @@ Decay B_s0
 0.00070     J/psi       K-          K+                     PHSP;
 0.00070     J/psi       K0          K-         pi+         PHSP;
 0.00070     J/psi       K-          K+         pi0         PHSP;
-0.00070     J/psi       K*0                                PHSP;
 0.000035     J/psi       K*0                               PHSP;
 0.000107     J/psi       K*0        anti-K*0               PHSP;
 # LHCb PR 04/02/04 Add (cc) phi n pi(+/0)
