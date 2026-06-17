@@ -308,7 +308,7 @@ fi
 if [[ $ALIEN_JDL_DOEMCCALIB == "1" ]]; then
   SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_emcal_emc_offline_calib_workflow= "
 fi
-if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
+if [[ -n "$DO_TPC_RESIDUAL_EXTRACTION" && $DO_TPC_RESIDUAL_EXTRACTION != "0" ]]; then
   SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_calibration_residual_aggregator= "
 fi
 if [[ $ALIEN_JDL_DOTRDVDRIFTEXBCALIB == "1" ]]; then
