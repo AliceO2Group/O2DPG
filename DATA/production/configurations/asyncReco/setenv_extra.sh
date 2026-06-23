@@ -828,6 +828,11 @@ if [[ $ALIEN_JDL_PREPROPAGATE == "1" ]] ; then
   export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --propagate-tracks --propagate-tracks-max-xiu 5"
 fi
 
+# possibility to bias the MeanVertex from the CCDB, see https://github.com/AliceO2Group/AliceO2/pull/15549
+if [[ -n $ALIEN_JDL_MVBIAS ]]; then
+  export O2_DPL_MVBIAS=$ALIEN_JDL_MVBIAS
+fi
+
 # Enabling QC
 if [[ $ALIEN_JDL_QCOFF != "1" ]]; then
   export WORKFLOW_PARAMETERS="QC,${WORKFLOW_PARAMETERS}"
