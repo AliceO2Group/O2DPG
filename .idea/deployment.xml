@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="virgo" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="virgo">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/scratch/alice/miranov/alicesw/O2DPG" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="virgo2">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/scratch/alice/miranov/alicesw2/O2DPG/" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="virgo_3">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/scratch/alice/miranov/alicesw3/O2DPG/" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
