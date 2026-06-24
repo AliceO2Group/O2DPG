@@ -99,7 +99,6 @@ def create_sim_config(args):
     # FIT digitizer settings
     #2023 pp
     if 534125 <= int(args.run) and int(args.run) <= 543113:
-        add(config, {"FV0DigParam.adcChannelsPerMip": "15"})
         if COLTYPEIR == "pp":
            # central and semicentral FT0 thresholds 
            add(config, {"FT0DigParam.mtrg_central_trh": "40", "FT0DigParam.mtrg_semicentral_trh": "20"})
