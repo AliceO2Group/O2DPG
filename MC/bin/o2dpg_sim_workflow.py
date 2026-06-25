@@ -83,7 +83,9 @@ parser.add_argument('-eA',help='Beam A energy', default=-1) #6369 PbPb, 2.510 pp
 parser.add_argument('-eB',help='Beam B energy', default=-1)
 parser.add_argument('-col',help='collision system: pp, PbPb, pPb, Pbp, ..., in case of embedding collision system of signal', default='pp')
 parser.add_argument('-field',help='L3 field rounded to kGauss, allowed values: +-2,+-5 and 0; +-5U for uniform field; or "ccdb" to take from conditions database', default='ccdb')
-parser.add_argument('--with-qed',action='store_true', help='Enable QED background contribution (for PbPb always included)')
+qed_group = parser.add_mutually_exclusive_group()
+qed_group.add_argument('--with-qed', dest='with_qed', action='store_true', default=False, help='Force-enable QED background contribution (on by default for same-species heavy-ion collisions such as Pb-Pb)')
+qed_group.add_argument('--no-qed', dest='no_qed', action='store_true', default=False, help='Force-disable QED background contribution, even for same-species heavy-ion collisions where it is enabled by default')
 
 parser.add_argument('-ptHatMin',help='pT hard minimum when no bin requested', default=0)
 parser.add_argument('-ptHatMax',help='pT hard maximum when no bin requested', default=-1)
@@ -612,9 +614,11 @@ if len(CONFKEYMV) > 0:
 
 workflow['stages'].append(GRP_TASK)
 
-# QED is enabled only for same beam species for now
+# QED background is enabled by default only for same-species (heavy-ion) collisions.
+# --with-qed forces it on; --no-qed forces it off and wins over both the default and --with-qed
+# (the two flags are mutually exclusive at the argparse level, so they can never both be set).
 QED_enabled = True if (PDGA==PDGB and PDGA!=2212) else False
-includeQED = (QED_enabled or (doembedding and QED_enabled)) or (args.with_qed == True)
+includeQED = (QED_enabled or args.with_qed) and not args.no_qed
 signalprefix='sgn'
 
 # No vertexing for event pool generation; otherwise the vertex comes from CCDB and later from CollContext
