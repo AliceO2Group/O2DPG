@@ -230,7 +230,13 @@ export JOBLABEL
 export MATTERMOSTHOOK
 export CONTROLSERVER
 
-[[ $PRODSPLIT -gt 100 ]] && echo "Production split needs to be smaller than 100 for the moment" && exit 1
+# Validate the production split level and derive the zero-padding width used for the
+# per-subjob OutputDir counter (#alien_counter_<W>i#) and for local fetching. The width
+# adapts to PRODSPLIT (minimum 3, so existing 3-digit layouts are unchanged), which lifts
+# the former hard cap of 100 while keeping OutputDir naming consistent at any scale.
+[[ ! $PRODSPLIT =~ ^[0-9]+$ || $PRODSPLIT -lt 1 ]] && echo "Production split must be a positive integer (got '${PRODSPLIT}')" && exit 1
+COUNTERWIDTH=${#PRODSPLIT}
+[[ $COUNTERWIDTH -lt 3 ]] && COUNTERWIDTH=3
 
 # check for presence of jq (needed in code path to fetch output files)
 [[ "$FETCHOUTPUT" ]] && { which jq &> /dev/null || { echo "Could not find jq command. Please load or install" && exit 1; }; }
@@ -371,7 +377,7 @@ ${DATACOLLECTION:+InputDataListFormat = ${QUOT}txt-list${QUOT};}
 ${DATACOLLECTION:+InputDataCollection = ${QUOT}LF:${MY_JOBWORKDIR}/collection.xml,nodownload${QUOT};}
 ${PRODSPLIT:+Split = ${QUOT}${SPLITMODE}${QUOT};}
 ${DATACOLLECTION:+SplitMaxInputFileNumber = 1;}
-OutputDir = "${MY_JOBWORKDIR}/${PRODSPLIT:+#alien_counter_03i#}";
+OutputDir = "${MY_JOBWORKDIR}/${PRODSPLIT:+#alien_counter_0${COUNTERWIDTH}i#}";
 Requirements = member(other.GridPartitions,"${GRIDPARTITION:-multicore_8}");
 CPUCores = "${CPUCORES}";
 MemorySize = "60GB";
@@ -504,7 +510,7 @@ EOF
             THIS_JOB=${SUBJOBIDS[jobindex]}
             echo "Fetching for job ${THIS_JOB}"
             if [ "${THIS_STATUS}" == "DONE" ]; then
-               SPLITOUTDIR=$(printf "%03d" ${splitcounter})
+               SPLITOUTDIR=$(printf "%0${COUNTERWIDTH}d" ${splitcounter})
                [ ! -f ${SPLITOUTDIR} ] && mkdir ${SPLITOUTDIR}
                echo "Fetching result files for subjob ${splitcounter} into ${PWD}"
 	             CPCMD="alien.py cp ${MY_JOBWORKDIR}/${SPLITOUTDIR}/* file:./${SPLITOUTDIR}"
