@@ -116,7 +116,8 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       }
       pythiaObjectSignal.readString("Random:setSeed = on");
       pythiaObjectSignal.readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
-
+      pythiaObjectMinimumBias.particleData.addParticle(1000100200, "20Ne", 6, 30, 0, 19.992440);
+      mPythiaGun.particleData.addParticle(1000100200, "20Ne", 6, 30, 0, 19.992440);
       if (!pythiaObjectMinimumBias.init()) {
         LOG(fatal) << "Could not pythiaObjectMinimumBias.init() from " << pythiaCfgMb;
       }
@@ -141,6 +142,9 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       }
       pythiaObjectMinimumBias.readString("Random:setSeed = on");
       pythiaObjectMinimumBias.readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
+     
+      pythiaObjectMinimumBias.particleData.addParticle(1000100200, "20Ne", 6, 30, 0, 19.992440);
+      mPythiaGun.particleData.addParticle(1000100200, "20Ne", 6, 30, 0, 19.992440);
       if (!pythiaObjectMinimumBias.init()) {
         LOG(fatal) << "Could not pythiaObjectMinimumBias.init() from " << pythiaCfgMb;
       }
