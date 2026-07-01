@@ -1,4 +1,4 @@
-int External() {
+int pythia8() {
   std::string path{"o2sim_Kine.root"};
 
   TFile file(path.c_str(), "READ");
