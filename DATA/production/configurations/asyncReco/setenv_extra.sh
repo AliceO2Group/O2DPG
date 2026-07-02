@@ -289,7 +289,7 @@ isFT0inDataTaking=`echo $RUN_DETECTOR_LIST | grep FT0`
 # For runs shorter than 10 minutes we have only a single slot.
 # In that case we have to adopt the slot length in order to
 # set the maximum number of processed tracks per TF correctly
-if (( RUN_DURATION < 600 )); then
+if (( RUN_DURATION < 300 )); then
   export CALIB_TPC_SCDCALIB_SLOTLENGTH=$RUN_DURATION
 fi
 
@@ -716,17 +716,21 @@ if [[ $ADD_CALIB == "1" ]]; then
   export CALIB_TOF_INTEGRATEDCURR=0
   export CALIB_ITS_DEADMAP_TIME=0
   export CALIB_MFT_DEADMAP_TIME=0
-  if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
+  if [[ -n "$DO_TPC_RESIDUAL_EXTRACTION" && $DO_TPC_RESIDUAL_EXTRACTION != "0" ]]; then
+    : ${ALIEN_JDL_TPCRESIDUALTRKSOURCESMAPEXTRACTION:="ITS-TPC"}
+    : ${ALIEN_JDL_TPCRESIDUALMAXTRACKSPERSLOT:=-1}
+    : ${ALIEN_JDL_TPCRESIDUALADDTRACKSMAP:=35000000}
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
-    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=";scdcalib.additionalTracksMap=35000000;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=6;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=90;scdcalib.minTOFTRDPVContributors=2"
-    : ${TPC_RESIDUAL_TRK_SOURCES_MAP_EXTRACTION:="ITS-TPC"}
-    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=" --tracking-sources-map-extraction $TPC_RESIDUAL_TRK_SOURCES_MAP_EXTRACTION"
-    # ad-hoc settings for TPC residual extraction
-    export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator+=" --output-type trackParams,unbinnedResid"
-    if [[ $ALIEN_JDL_DEBUGRESIDUALEXTRACTION == "1" ]]; then
-      export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=";scdcalib.maxTracksPerCalibSlot=-1;scdcalib.minPtNoOuterPoint=0.8;scdcalib.minTPCNClsNoOuterPoint=120"
-      export ARGS_EXTRA_PROCESS_o2_trd_global_tracking+=" --enable-qc"
+    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=";scdcalib.maxTracksPerCalibSlot=$ALIEN_JDL_TPCRESIDUALMAXTRACKSPERSLOT;scdcalib.additionalTracksMap=$ALIEN_JDL_TPCRESIDUALADDTRACKSMAP;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=6;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=50;scdcalib.minTOFTRDPVContributors=2"
+    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=" --tracking-sources-map-extraction $ALIEN_JDL_TPCRESIDUALTRKSOURCESMAPEXTRACTION"
+    if [[ ! $DO_TPC_RESIDUAL_EXTRACTION =~ "NOEXTCLROAD" ]]; then
+      clusterErrors=";GPU_rec_tpc.clusterError2AdditionalY=0.3;GPU_rec_tpc.clusterError2AdditionalZ=0.3"
+
+      export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";$clusterErrors"
+      export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";$clusterErrors"
+      export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$clusterErrors"
+      export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$clusterErrors"
     fi
   fi
   export CALIB_EMC_ASYNC_RECALIB="$ALIEN_JDL_DOEMCCALIB"
@@ -826,6 +830,11 @@ fi
 
 if [[ $ALIEN_JDL_PREPROPAGATE == "1" ]] ; then
   export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --propagate-tracks --propagate-tracks-max-xiu 5"
+fi
+
+# possibility to bias the MeanVertex from the CCDB, see https://github.com/AliceO2Group/AliceO2/pull/15549
+if [[ -n $ALIEN_JDL_MVBIAS ]]; then
+  export O2_DPL_MVBIAS=$ALIEN_JDL_MVBIAS
 fi
 
 # Enabling QC

@@ -40,7 +40,7 @@ if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC; then CAN_DO_CALIB_ASYNC_EXTRAC
 if has_detector CTP; then export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"; else export CALIB_TPC_SCDCALIB_CTP_INPUT=""; fi
 if [[ ${DISABLE_TRD_PH:-} == 1 ]]; then CAN_DO_CALIB_TRD_T0=0; fi
 
-: ${CALIB_TPC_SCDCALIB_SLOTLENGTH:=600} # the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
+: ${CALIB_TPC_SCDCALIB_SLOTLENGTH:=300} # the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
 : ${CALIB_TPC_SCDCALIB_SENDTRKDATA:=1}  # by default, we want to write the track information in addition to unbinned residuals to allow finer filtering offline
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then # Calibrations enabled in non-COSMIC runs
@@ -263,7 +263,10 @@ if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "pvtx:GLO/PVTX/0"; fi
 
   # ITS
-  if [[ $CALIB_ITS_DEADMAP_TIME == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "itsChipStatus:ITS/CHIPSSTATUS/0"; fi
+  if [[ $CALIB_ITS_DEADMAP_TIME == 1 ]]; then
+		add_semicolon_separated CALIBDATASPEC_BARREL_TF "itsChipStatus:ITS/CHIPSSTATUS/0"
+		add_semicolon_separated CALIBDATASPEC_BARREL_TF "itsErrorInfo:ITS/ErrorInfo/0"
+  fi
 
   # MFT
   if [[ $CALIB_MFT_DEADMAP_TIME == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "mftChipStatus:MFT/CHIPSSTATUS/0"; fi
