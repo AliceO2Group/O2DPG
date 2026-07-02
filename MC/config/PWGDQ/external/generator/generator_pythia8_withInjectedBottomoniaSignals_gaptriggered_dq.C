@@ -24,6 +24,9 @@ public:
       case 0: // generate bottomonia cocktail at forward rapidity
         mGeneratorParam = (Generator*)GeneratorCocktailBottomoniaToMuonEvtGen_pp13TeV(); 
         break;
+      case 1: // generate bottomonia cocktail at FwdY for PbPb 5p36TeV
+        mGeneratorParam = (Generator*)GeneratorCocktailBottomoniaToMuonEvtGen_PbPb5TeV();
+        break;
     }
     mGeneratorParam->Init();  
   }
