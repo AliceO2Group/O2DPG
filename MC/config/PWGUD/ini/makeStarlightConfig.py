@@ -127,6 +127,8 @@ elif '_' in args.process:
         fout.write('funcName = triggerPhi(-0.9,0.9) \n')
     if 'Kstar' in args.process:
         fout.write('funcName = triggerKstar(-0.9,0.9) \n')
+    if 'Lc' in args.process:
+        fout.write('funcName = triggerLc(-0.9,0.9) \n')
 
 ### close outout file
 fout.close()
