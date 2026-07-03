@@ -19,7 +19,7 @@ class GeneratorPythia8NonPromptInjectedOOGapTriggeredDQ : public o2::eventgen::G
 public:
   
   /// constructor
-  GeneratorPythia8NonPromptInjectedOOGapTriggeredDQ(int inputTriggerRatio = 5)  {
+  GeneratorPythia8NonPromptInjectedOOGapTriggeredDQ(int inputTriggerRatio = 2)  {
 
     mGeneratedEvents = 0;
     mInverseTriggerRatio = inputTriggerRatio; 
