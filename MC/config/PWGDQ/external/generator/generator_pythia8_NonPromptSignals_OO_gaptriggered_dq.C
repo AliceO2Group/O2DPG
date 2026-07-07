@@ -19,12 +19,36 @@ class GeneratorPythia8NonPromptInjectedOOGapTriggeredDQ : public o2::eventgen::G
 public:
   
   /// constructor
-  GeneratorPythia8NonPromptInjectedOOGapTriggeredDQ(int inputTriggerRatio = 5)  {
+  GeneratorPythia8NonPromptInjectedOOGapTriggeredDQ(int inputTriggerRatio = 2)  {
 
     mGeneratedEvents = 0;
     mInverseTriggerRatio = inputTriggerRatio; 
+
+  // Read INPUT_TRIGGER_RATIO from the shell environment.
+  // If it is not defined, keep the default constructor value.
+  const char* envTriggerRatio = gSystem->Getenv("INPUT_TRIGGER_RATIO");
+
+  if (envTriggerRatio && envTriggerRatio[0] != '\0') {
+    const int valueFromEnv = TString(envTriggerRatio).Atoi();
+
+    if (valueFromEnv > 0) {
+      inputTriggerRatio = valueFromEnv;
+    } else {
+      printf(
+        "WARNING: invalid INPUT_TRIGGER_RATIO=%s, using default value %d\n",
+        envTriggerRatio,
+        inputTriggerRatio);
+    }
+  }
+
+  mGeneratedEvents = 0;
+  mInverseTriggerRatio = inputTriggerRatio;
+
+  printf("Input trigger ratio: %d\n", mInverseTriggerRatio);
+
     // define minimum bias event generator
     auto seed = (gRandom->TRandom::GetSeed() % 900000000);
+
     TString pathconfigMB = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/common/pythia8/generator/pythia8_OO_536.cfg");
     pythiaMBgen.readFile(pathconfigMB.Data());
     pythiaMBgen.readString("Random:setSeed on");
