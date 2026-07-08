@@ -1,0 +1,47 @@
+{
+  "mode": "parallel",
+  "generators": [
+    {
+        "name": "pythia8pp",
+        "config": ""
+    },
+    {
+        "name": "pythia8pp",
+        "config": ""
+    },
+    {
+        "name": "pythia8pp",
+        "config": ""
+    },
+    {
+        "name": "pythia8pp",
+        "config": ""
+    },
+    {
+        "name": "pythia8pp",
+        "config": ""
+    },
+    {
+        "name": "pythia8pp",
+        "config": ""
+    },
+    {
+        "name": "pythia8pp",
+        "config": ""
+    },
+    {
+        "name": "pythia8pp",
+        "config": ""
+    }
+  ],
+  "fractions": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ]
+}
