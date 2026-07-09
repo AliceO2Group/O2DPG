@@ -646,6 +646,14 @@ fi
 # ad-hoc settings for TRD matching
 export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$TRACKTUNETPC;$VDRIFTPARAMOPTION;GPU_rec_trd.minTrackPt=0.3;"
 
+# Pb26 reconstruction uses improved alignment with shifted ITS (mean vertex)
+if [[ $RUNNUMBER -ge 572013 ]] ; then
+  export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";GPU_rec_trd.trkltResRPhiIdeal=0.2;GPU_rec_trd.trkltResVsTanPhiMisalign=1.;"
+  if [[ -z $ALIEN_JDL_MVBIAS ]]; then
+     export O2_DPL_MVBIAS=";mvbias.xyz[0]=0.0332;mvbias.xyz[1]=-0.1825;mvbias.xyz[2]=-0.2846;mvbias.slopeX=-4.27e-05;mvbias.slopeY=-6.96e-05;";
+  fi
+fi
+
 # ad-hoc settings for FT0
 export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow+=" --ft0-reconstructor"
 if [[ $BEAMTYPE == "PbPb" ]]; then
