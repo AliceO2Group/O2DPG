@@ -10,50 +10,6 @@
         "rapidityMax": 1.2,
         "genDecayed": true
     },
-    "Delta++" : {
-        "pdg": 2224,
-        "n": 10,
-        "ptMin": 0.0,
-        "ptMax": 20,
-        "etaMin": -1.2,
-        "etaMax": 1.2,
-        "rapidityMin": -1.2,
-        "rapidityMax": 1.2,
-        "genDecayed": true
-    },
-    "anti-Delta++" : {
-        "pdg": -2224,
-        "n": 10,
-        "ptMin": 0.0,
-        "ptMax": 20,
-        "etaMin": -1.2,
-        "etaMax": 1.2,
-        "rapidityMin": -1.2,
-        "rapidityMax": 1.2,
-        "genDecayed": true
-    },
-    "Delta0" : {
-        "pdg": 2114,
-        "n": 10,
-        "ptMin": 0.0,
-        "ptMax": 20,
-        "etaMin": -1.2,
-        "etaMax": 1.2,
-        "rapidityMin": -1.2,
-        "rapidityMax": 1.2,
-        "genDecayed": true
-    },
-    "anti-Delta0" : {
-        "pdg": -2114,
-        "n": 10,
-        "ptMin": 0.0,
-        "ptMax": 20,
-        "etaMin": -1.2,
-        "etaMax": 1.2,
-        "rapidityMin": -1.2,
-        "rapidityMax": 1.2,
-        "genDecayed": true
-    },
     "K1(1270)+": {
         "pdg": 10323,
         "n": 10,
@@ -187,28 +143,6 @@
         "genDecayed": true
     },
     "Xi(1820)0" : {
-        "pdg": 123314,
-        "n": 10,
-        "ptMin": 0.0,
-        "ptMax": 20,
-        "etaMin": -1.2,
-        "etaMax": 1.2,
-        "rapidityMin": -1.2,
-        "rapidityMax": 1.2,
-        "genDecayed": true
-    },
-    "Anti-Xi(1820)0" : {
-        "pdg": -123314,
-        "n": 10,
-        "ptMin": 0.0,
-        "ptMax": 20,
-        "etaMin": -1.2,
-        "etaMax": 1.2,
-        "rapidityMin": -1.2,
-        "rapidityMax": 1.2,
-        "genDecayed": true
-    },
-    "Xi(1820)-" : {
         "pdg": 123324,
         "n": 10,
         "ptMin": 0.0,
@@ -219,8 +153,30 @@
         "rapidityMax": 1.2,
         "genDecayed": true
     },
-    "Xi(1820)+" : {
+    "Anti-Xi(1820)0" : {
         "pdg": -123324,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
+        "genDecayed": true
+    },
+    "Xi(1820)-" : {
+        "pdg": 123314,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
+        "genDecayed": true
+    },
+    "Xi(1820)+" : {
+        "pdg": -123314,
         "n": 10,
         "ptMin": 0.0,
         "ptMax": 20,
