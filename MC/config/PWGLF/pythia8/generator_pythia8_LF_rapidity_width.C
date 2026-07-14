@@ -1,19 +1,20 @@
 ///
-/// \file   generator_pythia8_LF_rapidity.C
+/// \file   generator_pythia8_LF_rapidity_width.C
 /// \author Hirak Kumar Koley hirak.koley@cern.ch
 /// \author Bong-Hwi Lim bong-hwi.lim@cern.ch
+/// \author Minjae Kim minjae.kim@cern.ch
 /// \author Based on generator_pythia8_LF.C by Nicolò Jacazio
 /// \since  2025/08/18
 /// \brief  Implementation of a gun generator for multiple particles using rapidity or pseudorapidity (default) instead of eta, built on generator_pythia8_longlived.C
 ///         Needs PDG, Number of injected, minimum and maximum pT, minimum and maximum y/eta. These can be provided in three ways, bundeling variables, particles or from input file
 ///         usage:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity({1000010020, 1000010030}, {10, 10}, {0.5, 0.5}, {10, 10}, {-1.0, -1.0}, {1.0, 1.0})'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity_width.C;GeneratorExternal.funcName=generateLFRapidity({1000010020, 1000010030}, {10, 10}, {0.5, 0.5}, {10, 10}, {-1.0, -1.0}, {1.0, 1.0})'`
 ///               Here PDG, Number injected, pT limits, y/eta limits are separated and matched by index
 ///         or:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity({{1000010020, 10, 0.5, 10, -1.0, 1.0}, {1000010030, 10, 0.5, 10, -1.0, 1.0}})'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity_width.C;GeneratorExternal.funcName=generateLFRapidity({{1000010020, 10, 0.5, 10, -1.0, 1.0}, {1000010030, 10, 0.5, 10, -1.0, 1.0}})'`
 ///               Here PDG, Number injected, pT limits, y/eta limits are divided per particle
 ///         or:
-///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity.C;GeneratorExternal.funcName=generateLFRapidity("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/exotic_nuclei_pp.gun")'`
+///               `o2-sim -g external --configKeyValues 'GeneratorExternal.fileName=generator_pythia8_LF_rapidity_width.C;GeneratorExternal.funcName=generateLFRapidity("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/exotic_nuclei_pp.gun")'`
 ///               Here PDG, Number injected, pT limits, y/eta limits are provided via an intermediate configuration file
 ///
 
