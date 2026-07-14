@@ -62,16 +62,17 @@ class UserHooks_promptgamma : public Pythia8::UserHooks
         return true;
       }
     }
-
     // Select photons within acceptance
     //
-    if (detector_acceptance(mAcceptance, event[idGam].phi(), event[idGam].eta())) {
+    Float_t phiGam = event[idGam].phi();
+    if (phiGam < 0) phiGam += 2 * TMath::Pi();
+
+    if (detector_acceptance(mAcceptance, phiGam, event[idGam].eta())) {
       // printf("+++ Accepted event +++ \n");
       printf("Selected gamma, id %d, PDG %d, status %d, mother %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n", idGam,
              event[idGam].id(), event[idGam].status(), event[idGam].mother1(),
              event[idGam].e(), event[idGam].pT(),
-             event[idGam].eta(), event[idGam].phi() * TMath::RadToDeg());
-
+             event[idGam].eta(), phiGam * TMath::RadToDeg());
       //     printf("Back-to-back parton, id  %d, PDG %d, status %d, mother %d, E %2.2f, pT %2.2f, eta %2.2f, phi %2.2f\n", idPar,
       //                 event[idPar].id() , event[idPar].status(), event[idPar].mother1(),
       //                 event[idPar].e()  , event[idPar].pT(),
@@ -83,7 +84,6 @@ class UserHooks_promptgamma : public Pythia8::UserHooks
       //             event[idPar].pT() - event[idGam].pT(),
       //             event[idPar].eta()- event[idGam].eta(),
       //             event[idPar].phi()*TMath::RadToDeg()-event[idGam].phi()*TMath::RadToDeg());
-
       return false;
     } else {
       // printf("--- Rejected event ---\n");

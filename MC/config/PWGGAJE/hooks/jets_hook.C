@@ -40,7 +40,10 @@ class UserHooks_jets : public Pythia8::UserHooks
 
     // Check the first jet
     //
-    bool acc1 = detector_acceptance(mAcceptance, event[id1].phi(), event[id1].eta());
+    Float_t phi_j1 = event[id1].phi();
+    if (phi_j1 < 0) phi_j1 += 2 * TMath::Pi();
+    
+    bool acc1 = detector_acceptance(mAcceptance, phi_j1, event[id1].eta());
     bool okpdg1 = true;
 
     if (mOutPartonPDG > 0 && TMath::Abs(event[id1].id()) != mOutPartonPDG)
@@ -48,7 +51,9 @@ class UserHooks_jets : public Pythia8::UserHooks
 
     // Check the second jet
     //
-    bool acc2 = detector_acceptance(mAcceptance, event[id2].phi(), event[id2].eta());
+    Float_t phi_j2 = event[id2].phi();
+    if (phi_j2 < 0) phi_j2 += 2 * TMath::Pi();
+    bool acc2 = detector_acceptance(mAcceptance, phi_j2, event[id2].eta());
     bool okpdg2 = true;
 
     if (mOutPartonPDG > 0 && TMath::Abs(event[id2].id()) != mOutPartonPDG)
