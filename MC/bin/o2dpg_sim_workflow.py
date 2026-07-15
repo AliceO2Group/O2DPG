@@ -1341,7 +1341,10 @@ for tf in range(1, NTIMEFRAMES + 1):
       anchor_corrmaplumi_mode = '--corrmap-lumi-mode ' + anchor_corrmaplumi_mode
    
    tpc_corr_scaling_options = anchor_lumi_type + ' ' + anchor_corrmaplumi_mode
-   
+   if not isActive('CTP'):
+      # CTP digits won't be produced for this timeframe (CTP not in the readout detector list)
+      tpc_corr_scaling_options += ' --disable-ctp-lumi-request'
+
    # why not simply?
    # tpc_corr_scaling_options = ('--lumi-type 1', '')[tpcDistortionType != 0]
 
