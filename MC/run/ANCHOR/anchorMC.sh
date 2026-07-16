@@ -184,9 +184,18 @@ export > env_base.env
 # (was hardwired to /usr/bin/modulecmd) and verify it supports saved collections. Fail
 # hard -- but only when an alternative-reco tag is set, since single-tag jobs never call
 # 'module' -- instead of silently no-op'ing every 'module' call (cf. O2-7070).
+# The candidate list also resolves symlinks ('readlink -f') and probes the canonical
+# environment-modules install (/usr/share/Modules): on some HPC/container setups
+# /usr/bin/modulecmd is a *dangling* symlink (-> /etc/alternatives -> the real .tcl),
+# which exec's as "No such file or directory"; this recovers when the real binary is
+# still reachable, and otherwise still fails hard (a genuinely missing Modules tree in
+# the job's mount namespace is a site-side problem).
 if ! declare -F module > /dev/null; then
   MODULECMD_BIN=""
-  for _cand in "${MODULECMD}" "/usr/bin/modulecmd" "$(command -v modulecmd 2>/dev/null)" "${MODULESHOME:+${MODULESHOME}/libexec/modulecmd}"; do
+  for _cand in "${MODULECMD}" "/usr/bin/modulecmd" "$(command -v modulecmd 2>/dev/null)" \
+               "${MODULESHOME:+${MODULESHOME}/libexec/modulecmd}" \
+               "$(readlink -f /usr/bin/modulecmd 2>/dev/null)" \
+               /usr/share/Modules/libexec/modulecmd* /usr/share/Modules/*/libexec/modulecmd*; do
     if [ -n "${_cand}" ] && [ -x "${_cand}" ] && "${_cand}" bash savelist > /dev/null 2>&1; then
       MODULECMD_BIN="${_cand}"
       break
@@ -197,8 +206,9 @@ if ! declare -F module > /dev/null; then
   elif [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
     echo_error "Alternative-reco (2-tag) requested (ALIEN_JDL_O2DPG_ASYNC_RECO_TAG=${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG})"
     echo_error "but no 'modulecmd' supporting saved collections (save/restore) was found."
-    echo_error "  Looked at: \$MODULECMD='${MODULECMD}', /usr/bin/modulecmd, PATH, \$MODULESHOME/libexec/modulecmd."
-    echo_error "  Diagnostics: MODULESHOME='${MODULESHOME}' PATH='${PATH}'"
+    echo_error "  Looked at: \$MODULECMD='${MODULECMD}', /usr/bin/modulecmd (+readlink -f), PATH,"
+    echo_error "  \$MODULESHOME/libexec/modulecmd, /usr/share/Modules/{,*/}libexec/modulecmd*."
+    echo_error "  Diagnostics: MODULESHOME='${MODULESHOME}' /usr/bin/modulecmd -> '$(readlink -f /usr/bin/modulecmd 2>/dev/null)' PATH='${PATH}'"
     exit 1
   else
     echo_info "No 'modulecmd' found, but no alternative-reco tag is set, so 'module' is not needed; continuing."
