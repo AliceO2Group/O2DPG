@@ -178,9 +178,38 @@ fi
 
 export > env_base.env
 
+# The 2-tag / alternative-reco setup below uses 'module save/purge/restore' to stash
+# and swap the software environment. If the shell provides no 'module' function, build
+# one on a 'modulecmd' binary. Its location varies by version, so resolve it flexibly
+# (was hardwired to /usr/bin/modulecmd) and verify it supports saved collections. Fail
+# hard -- but only when an alternative-reco tag is set, since single-tag jobs never call
+# 'module' -- instead of silently no-op'ing every 'module' call (cf. O2-7070).
 if ! declare -F module > /dev/null; then
+  MODULECMD_BIN=""
+  for _cand in "${MODULECMD}" "/usr/bin/modulecmd" "$(command -v modulecmd 2>/dev/null)" "${MODULESHOME:+${MODULESHOME}/libexec/modulecmd}"; do
+    if [ -n "${_cand}" ] && [ -x "${_cand}" ] && "${_cand}" bash savelist > /dev/null 2>&1; then
+      MODULECMD_BIN="${_cand}"
+      break
+    fi
+  done
+  if [ -n "${MODULECMD_BIN}" ]; then
+    echo_info "Using modulecmd at ${MODULECMD_BIN}"
+  elif [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
+    echo_error "Alternative-reco (2-tag) requested (ALIEN_JDL_O2DPG_ASYNC_RECO_TAG=${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG})"
+    echo_error "but no 'modulecmd' supporting saved collections (save/restore) was found."
+    echo_error "  Looked at: \$MODULECMD='${MODULECMD}', /usr/bin/modulecmd, PATH, \$MODULESHOME/libexec/modulecmd."
+    echo_error "  Diagnostics: MODULESHOME='${MODULESHOME}' PATH='${PATH}'"
+    exit 1
+  else
+    echo_info "No 'modulecmd' found, but no alternative-reco tag is set, so 'module' is not needed; continuing."
+  fi
+  export MODULECMD_BIN
   module() {
-    eval "$(/usr/bin/modulecmd bash "$@")";
+    if [ -z "${MODULECMD_BIN}" ]; then
+      echo_error "'module ${*}' invoked but no usable 'modulecmd' was found (see earlier diagnostics)."
+      return 127
+    fi
+    eval "$("${MODULECMD_BIN}" bash "$@")";
   }
   export -f module
 fi
