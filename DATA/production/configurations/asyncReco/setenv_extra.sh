@@ -728,9 +728,14 @@ if [[ $ADD_CALIB == "1" ]]; then
     : ${ALIEN_JDL_TPCRESIDUALTRKSOURCESMAPEXTRACTION:="ITS-TPC"}
     : ${ALIEN_JDL_TPCRESIDUALMAXTRACKSPERSLOT:=-1}
     : ${ALIEN_JDL_TPCRESIDUALADDTRACKSMAP:=35000000}
+    : ${ALIEN_JDL_TPCRESIDUAL_WRITEUNFILTERED:=1}
+    : ${ALIEN_JDL_TPCRESIDUAL_KEEPREJECTEDRES:=1}
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
-    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=";scdcalib.maxTracksPerCalibSlot=$ALIEN_JDL_TPCRESIDUALMAXTRACKSPERSLOT;scdcalib.additionalTracksMap=$ALIEN_JDL_TPCRESIDUALADDTRACKSMAP;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=6;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=50;scdcalib.minTOFTRDPVContributors=2"
+    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=";scdcalib.maxTracksPerCalibSlot=$ALIEN_JDL_TPCRESIDUALMAXTRACKSPERSLOT;scdcalib.additionalTracksMap=$ALIEN_JDL_TPCRESIDUALADDTRACKSMAP;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=6;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=50;scdcalib.minTOFTRDPVContributors=2;"
+    CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=$([[ "$ALIEN_JDL_TPCRESIDUAL_WRITEUNFILTERED" == "1" ]] && printf "scdcalib.writeUnfiltered=true;" || printf "scdcalib.writeUnfiltered=false;")
+    CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=$([[ "$ALIEN_JDL_TPCRESIDUAL_KEEPREJECTEDRES" == "1" ]] && printf "scdcalib.keepRejectedResiduals=true;" || printf "scdcalib.keepRejectedResiduals=false;")
+
     export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=" --tracking-sources-map-extraction $ALIEN_JDL_TPCRESIDUALTRKSOURCESMAPEXTRACTION"
     if [[ ! $DO_TPC_RESIDUAL_EXTRACTION =~ "NOEXTCLROAD" ]]; then
       clusterErrors=";GPU_rec_tpc.clusterError2AdditionalY=0.3;GPU_rec_tpc.clusterError2AdditionalZ=0.3"
