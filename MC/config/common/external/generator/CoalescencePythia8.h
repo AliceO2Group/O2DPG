@@ -152,6 +152,9 @@ bool CoalescencePythia8(Pythia8::Event& event, std::vector<unsigned int> inputPd
       for (int iN{0}; iN < neutrons[iC].size(); ++iN) {
         if (nuclearMask & (1 << kDeuteron)) {
           coalHappened |= doCoal(event, iC, pdgList[kDeuteron], massList[kDeuteron], trivialCoal, coalescenceRadius, nuclFromDecay, protons[iC][iP], neutrons[iC][iN]);
+          if (nuclFromDecay && coalHappened) {
+            return true;
+          }
         }
         if (nuclearMask & (1 << kTriton)) {
           for (int iN2{iN + 1}; iN2 < neutrons[iC].size(); ++iN2) {
