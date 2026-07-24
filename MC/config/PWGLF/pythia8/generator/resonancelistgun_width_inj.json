@@ -10,6 +10,17 @@
         "rapidityMax": 1.2,
         "genDecayed": true
     },
+    "phi(1020)" : {
+        "pdg": 333,
+        "n": 10,
+        "ptMin": 0.0,
+        "ptMax": 20,
+        "etaMin": -1.2,
+        "etaMax": 1.2,
+        "rapidityMin": -1.2,
+        "rapidityMax": 1.2,
+        "genDecayed": true
+    },
     "K1(1270)+": {
         "pdg": 10323,
         "n": 10,

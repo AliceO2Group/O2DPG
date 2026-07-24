@@ -191,31 +191,38 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
   ///  Destructor
   ~GeneratorPythia8LFRapidity() = default;
 
+  bool Init() override
+  {
+    // Follow the PWGHF gap-trigger convention and persist the event class in
+    // MCEventHeader::subGeneratorId. The AOD producer exposes this through
+    // mcCollision.getSubGeneratorId().
+    addSubGenerator(kSubGeneratorMinimumBias, "Minimum bias");
+    addSubGenerator(kSubGeneratorLFSignal, "LF signal");
+    return o2::eventgen::GeneratorPythia8::Init();
+  }
+
   //__________________________________________________________________
   Bool_t generateEvent() override
   {
+    // Follow the gap-trigger convention used by PWGHF/PWGDQ: a ratio N
+    // produces signal events at 0, N, 2N, ... and minimum-bias events in
+    // between. Ratios 0 and 1 both mean signal in every event.
+    mDoSignalThisEvent = isSignalEvent();
+    notifySubGenerator(mDoSignalThisEvent ? kSubGeneratorLFSignal : kSubGeneratorMinimumBias);
+
     if (!mUseTriggering) { // Injected mode: Embedding into MB
       // 1. Generate Background (MB)
-      // LOG(info) << "Generating background event " << mEventCounter;
-
       bool lGenerationOK = false;
       while (!lGenerationOK) {
         lGenerationOK = pythiaObjectMinimumBias.next();
       }
       copyMinimumBiasEventForInjection();
 
-      // 2. Determine if we inject specific particles (Gap logic)
-      bool doInjection = true;
-      if (mGapBetweenInjection > 0) {
-        if (mGapBetweenInjection == 1 && mEventCounter % 2 == 0) {
-          doInjection = false;
-        } else if (mEventCounter % mGapBetweenInjection != 0) {
-          doInjection = false;
-        }
-      }
-
-      if (!doInjection) {
-        LOG(info) << "Skipping injection for event " << mEventCounter;
+      // Keep the generated minimum-bias event on gap events. It must still be
+      // imported in importParticles(), otherwise o2-sim sees an empty event
+      // and retries until it obtains another injected event.
+      if (!mDoSignalThisEvent) {
+        LOG(info) << "Generating minimum-bias gap event " << mEventCounter;
         return true;
       }
     }
@@ -230,7 +237,6 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
     mConfigToUse = mOneInjectionPerEvent ? static_cast<int>(gRandom->Uniform(0.f, getNGuns())) : -1;
     LOG(info) << "Using configuration " << mConfigToUse << " out of " << getNGuns() << ", of which " << mGunConfigs.size() << " are transport decayed and " << mGunConfigsGenDecayed.size() << " are generator decayed";
 
-    bool injectedForThisEvent = false;
     int nConfig = mGunConfigs.size(); // We start counting from the configurations of the transport decayed particles
     for (const ConfigContainer& cfg : mGunConfigsGenDecayed) {
       nConfig++;
@@ -239,10 +245,8 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       }
       LOG(info) << "Using config container ";
       cfg.print();
-      if (mUseTriggering) {                                             // Do the triggering
-        bool doSignal{mEventCounter % (mGapBetweenInjection + 1) == 0}; // Do signal or gap
-
-        if (doSignal) {
+      if (mUseTriggering) { // Do the triggering
+        if (mDoSignalThisEvent) {
           LOG(info) << "Generating triggered signal event for particle";
           cfg.print();
           bool satisfiesTrigger = false;
@@ -347,8 +351,6 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
 
         mPythia.event.append(p);
       }
-
-      injectedForThisEvent = true;
     }
 
     // For purely trivial injection (no generator decay needed in loop or just transport decay), we still might have injection flag
@@ -369,66 +371,67 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
   //__________________________________________________________________
   Bool_t importParticles() override
   {
-    if (!mUseTriggering) { // If the triggering is used we handle the the gap when generating the signal
-      if (mGapBetweenInjection > 0) {
-        if (mGapBetweenInjection == 1 && mEventCounter % 2 == 0) {
-          LOG(info) << "Skipping importParticles event " << mEventCounter++;
-          return true;
-        } else if (mEventCounter % mGapBetweenInjection != 0) {
-          LOG(info) << "Skipping importParticles event " << mEventCounter++;
-          return true;
+    LOG(info) << "importParticles " << mEventCounter << " (" << (mDoSignalThisEvent ? "signal" : "minimum bias") << ")";
+
+    // Always import the Pythia event. On gap events this is the minimum-bias
+    // event prepared in generateEvent().
+    if (!GeneratorPythia8::importParticles()) {
+      return false;
+    }
+
+    // Generator-decayed particles were already merged into mPythia.event in
+    // generateEvent(). Append transport-decayed gun particles only on signal
+    // events in injection mode.
+    if (!mUseTriggering && mDoSignalThisEvent) {
+      int nConfig = 0;
+      for (const ConfigContainer& cfg : mGunConfigs) {
+        nConfig++;
+        if (mConfigToUse >= 0 && (nConfig - 1) != mConfigToUse) {
+          continue;
+        }
+        LOGF(info, "Injecting %i particles with PDG %i, pT in [%f, %f], %s in [%f, %f]", cfg.mNInject, cfg.mPdg, cfg.mPtMin, cfg.mPtMax, (mUseRapidity ? "rapidity" : "eta"), cfg.mMin, cfg.mMax);
+
+        for (int i{0}; i < cfg.mNInject; ++i) {
+          const double pt = gRandom->Uniform(cfg.mPtMin, cfg.mPtMax);
+          const double eta = gRandom->Uniform(cfg.mMin, cfg.mMax);
+          const double phi = gRandom->Uniform(0, TMath::TwoPi());
+          const double px{pt * std::cos(phi)};
+          const double py{pt * std::sin(phi)};
+          const double mass = sampleMass(cfg);
+          double pz = 0;
+          double et = 0;
+
+          if (mUseRapidity) {
+            const double mT = std::sqrt(mass * mass + pt * pt);
+            pz = mT * std::sinh(eta);
+            et = mT * std::cosh(eta);
+          } else {
+            pz = pt * std::sinh(eta);
+            const double p = pt * std::cosh(eta);
+            et = std::sqrt(p * p + mass * mass);
+          }
+
+          // TParticle::TParticle(Int_t pdg,
+          //                      Int_t status,
+          //                      Int_t mother1, Int_t mother2,
+          //                      Int_t daughter1, Int_t daughter2,
+          //                      Double_t px, Double_t py, Double_t pz, Double_t etot,
+          //                      Double_t vx, Double_t vy, Double_t vz, Double_t time)
+
+          mParticles.push_back(TParticle(cfg.mPdg,
+                                         MCGenStatusEncoding(1, 1).fullEncoding,
+                                         -1, -1,
+                                         -1, -1,
+                                         px, py, pz, et,
+                                         0., 0., 0., 0.));
+          // make sure status code is encoded properly. Transport flag will be set by default and we have nothing
+          // to do since all pushed particles should be tracked.
+          o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
         }
       }
     }
-    LOG(info) << "importParticles " << mEventCounter++;
-    GeneratorPythia8::importParticles();
-    int nConfig = 0;
-    for (const ConfigContainer& cfg : mGunConfigs) {
-      nConfig++;
-      if (mConfigToUse >= 0 && (nConfig - 1) != mConfigToUse) {
-        continue;
-      }
-      LOGF(info, "Injecting %i particles with PDG %i, pT in [%f, %f], %s in [%f, %f]", cfg.mNInject, cfg.mPdg, cfg.mPtMin, cfg.mPtMax, (mUseRapidity ? "rapidity" : "eta"), cfg.mMin, cfg.mMax);
 
-      for (int i{0}; i < cfg.mNInject; ++i) {
-        const double pt = gRandom->Uniform(cfg.mPtMin, cfg.mPtMax);
-        const double eta = gRandom->Uniform(cfg.mMin, cfg.mMax);
-        const double phi = gRandom->Uniform(0, TMath::TwoPi());
-        const double px{pt * std::cos(phi)};
-        const double py{pt * std::sin(phi)};
-        const double mass = sampleMass(cfg);
-        double pz = 0;
-        double et = 0;
-
-        if (mUseRapidity) {
-          const double mT = std::sqrt(mass * mass + pt * pt);
-          pz = mT * std::sinh(eta);
-          et = mT * std::cosh(eta);
-        } else {
-          pz = pt * std::sinh(eta);
-          const double p = pt * std::cosh(eta);
-          et = std::sqrt(p * p + mass * mass);
-        }
-
-        // TParticle::TParticle(Int_t pdg,
-        //                      Int_t status,
-        //                      Int_t mother1, Int_t mother2,
-        //                      Int_t daughter1, Int_t daughter2,
-        //                      Double_t px, Double_t py, Double_t pz, Double_t etot,
-        //                      Double_t vx, Double_t vy, Double_t vz, Double_t time)
-
-        mParticles.push_back(TParticle(cfg.mPdg,
-                                       MCGenStatusEncoding(1, 1).fullEncoding,
-                                       -1, -1,
-                                       -1, -1,
-                                       px, py, pz, et,
-                                       0., 0., 0., 0.));
-        // make sure status code is encoded properly. Transport flag will be set by default and we have nothing
-        // to do since all pushed particles should be tracked.
-        o2::mcutils::MCGenHelper::encodeParticleStatusAndTracking(mParticles.back());
-      }
-      nConfig++;
-    }
+    mEventCounter++;
     if (mVerbose) {
       LOG(info) << "Printing particles that are appended";
       int n = 0;
@@ -576,6 +579,14 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
   void setVerbose(bool verbose = true) { mVerbose = verbose; }
 
  private:
+  static constexpr int kSubGeneratorMinimumBias = 0;
+  static constexpr int kSubGeneratorLFSignal = 1;
+
+  bool isSignalEvent() const
+  {
+    return mGapBetweenInjection <= 1 || mEventCounter % mGapBetweenInjection == 0;
+  }
+
   void copyMinimumBiasEventForInjection()
   {
     mPythia.event = pythiaObjectMinimumBias.event;
@@ -631,12 +642,13 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
   //  Configuration
   const bool mOneInjectionPerEvent = true; // if true, only one injection per event is performed, i.e. if multiple PDG (including antiparticles) are requested to be injected only one will be done per event
   const bool mUseTriggering = false;       // if true, use triggering instead of injection
-  const int mGapBetweenInjection = 0;      // Gap between two signal events. 0 means injection at every event
+  const int mGapBetweenInjection = 0;      // 0/1: signal every event; N>1: signal every Nth event
   const bool mUseRapidity = false;         // if true, use rapidity instead of eta
 
   // Running variables
   int mConfigToUse = -1; // Index of the configuration to use
   int mEventCounter = 0; // Event counter
+  bool mDoSignalThisEvent = true;
   bool mVerbose = true;  // Verbosity flag
 
   std::vector<ConfigContainer> mGunConfigs;           // List of gun configurations to use
