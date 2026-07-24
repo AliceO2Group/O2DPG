@@ -315,6 +315,21 @@ class O2_GeneratorParamUpsilon1SFwdY_PbPb5TeV : public GeneratorTGenerator
   }
   void SetNSignalPerEvent(Int_t nsig) { paramUpsilon1S->SetNumberParticles(nsig); }
 
+  static Double_t PtUpsilon1SPbPb5TeV(const Double_t* px, const Double_t* /*dummy*/)
+  {
+    // Upsilon(1S) pT in PbPb at 5.36 TeV
+    // Parameterized from pp LHCb 13 TeV (arXiv:1804.09214) scaled to PbPb 5.36 TeV
+    // NOTE: should be updated once dedicated ALICE PbPb 5.36 TeV tuning is available
+    Double_t x = *px;
+    Float_t p0, p1, p2, p3;
+    p0 = 3.68558e+02;
+    p1 = 9.15000e+00;   // softer than pp 13TeV (p1=10.31) reflecting PbPb medium
+    p2 = 1.62309e+00;
+    p3 = 4.84709e+00;
+    return (p0 * x / TMath::Power(1. + TMath::Power(x / p1, p2), p3));
+  }
+
+
   //-------------------------------------------------------------------------//
   static Double_t YUpsilon1SPbPb5TeV(const Double_t* py, const Double_t* /*dummy*/)
   {
