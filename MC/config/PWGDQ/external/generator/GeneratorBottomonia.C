@@ -6,7 +6,9 @@ R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen)
 R__LOAD_LIBRARY(libpythia6)
 #include "GeneratorCocktail.C"
 #include "GeneratorEvtGen.C"
-
+// ==========================
+// === pp 13 TeV classes ====
+// ==========================
 namespace o2
 {
 namespace eventgen
@@ -278,3 +280,258 @@ FairGenerator* GeneratorCocktailBottomoniaToMuonEvtGen_pp13TeV()
 
   return genCocktailEvtGen;
 }
+// === END OF pp13tev CLASSES =====
+
+// ================================
+// ==== PbPb 5.36 TeV classes =====
+// ================================
+namespace o2
+{
+namespace eventgen
+{
+/////////////////////////////////////////////////////////////////////////////
+class O2_GeneratorParamUpsilon1SFwdY_PbPb5TeV : public GeneratorTGenerator
+{
+ public:
+  O2_GeneratorParamUpsilon1SFwdY_PbPb5TeV() : GeneratorTGenerator("ParamUpsilon1S_PbPb5TeV")
+  {
+    paramUpsilon1S = new GeneratorParam(1, -1, PtUpsilon1SPbPb5TeV, YUpsilon1SPbPb5TeV, V2Upsilon1SPbPb5TeV, IpUpsilon1SPbPb5TeV);
+    paramUpsilon1S->SetMomentumRange(0., 1.e6);
+    paramUpsilon1S->SetPtRange(0, 999.);
+    paramUpsilon1S->SetYRange(-4.2, -2.3);        // ALICE muon spectrometer
+    paramUpsilon1S->SetPhiRange(0., 360.);
+    paramUpsilon1S->SetDecayer(new TPythia6Decayer());
+    paramUpsilon1S->SetForceDecay(kNoDecay);       // left undecayed for EvtGen
+    setTGenerator(paramUpsilon1S);
+  };
+
+  ~O2_GeneratorParamUpsilon1SFwdY_PbPb5TeV() { delete paramUpsilon1S; };
+
+  Bool_t Init() override
+  {
+    GeneratorTGenerator::Init();
+    paramUpsilon1S->Init();
+    return true;
+  }
+  void SetNSignalPerEvent(Int_t nsig) { paramUpsilon1S->SetNumberParticles(nsig); }
+
+  static Double_t PtUpsilon1SPbPb5TeV(const Double_t* px, const Double_t* /*dummy*/)
+  {
+    // Upsilon(1S) pT in PbPb at 5.36 TeV
+    // Parameterized from pp LHCb 13 TeV (arXiv:1804.09214) scaled to PbPb 5.36 TeV
+    // NOTE: should be updated once dedicated ALICE PbPb 5.36 TeV tuning is available
+    Double_t x = *px;
+    Float_t p0, p1, p2, p3;
+    p0 = 3.68558e+02;
+    p1 = 9.15000e+00;   // softer than pp 13TeV (p1=10.31) reflecting PbPb medium
+    p2 = 1.62309e+00;
+    p3 = 4.84709e+00;
+    return (p0 * x / TMath::Power(1. + TMath::Power(x / p1, p2), p3));
+  }
+
+
+  //-------------------------------------------------------------------------//
+  static Double_t YUpsilon1SPbPb5TeV(const Double_t* py, const Double_t* /*dummy*/)
+  {
+    // Upsilon(1S) y in PbPb at 5.36 TeV
+    // Based on LHCb pp 13 TeV shape (arXiv:1804.09214), reasonable for PbPb forward y
+    Double_t x = *py;
+    Float_t p0, p1;
+    p0 = 3.07931e+03;
+    p1 = -3.53102e-02;
+    return (p0 * (1. + p1 * x * x));
+  }
+
+  //-------------------------------------------------------------------------//
+  static Double_t V2Upsilon1SPbPb5TeV(const Double_t* /*dummy*/, const Double_t* /*dummy*/)
+  {
+    // Upsilon(1S) v2 - set to 0, can be updated with measurement
+    return 0.;
+  }
+  //-------------------------------------------------------------------------//
+  static Int_t IpUpsilon1SPbPb5TeV(TRandom*)
+  {
+    return 553;  // PDG code Upsilon(1S)
+  }
+
+ private:
+  GeneratorParam* paramUpsilon1S = nullptr;
+};
+/////////////////////////////////////////////////////////////////////////////
+class O2_GeneratorParamUpsilon2SFwdY_PbPb5TeV : public GeneratorTGenerator
+{
+
+ public:
+  O2_GeneratorParamUpsilon2SFwdY_PbPb5TeV()
+    : GeneratorTGenerator("ParamUpsilon2S_PbPb5TeV")
+  {
+    paramUpsilon2S = new GeneratorParam(1, -1, PtUpsilon2SPbPb5TeV, YUpsilon2SPbPb5TeV, V2Upsilon2SPbPb5TeV, IpUpsilon2SPbPb5TeV);
+    paramUpsilon2S->SetMomentumRange(0., 1.e6);
+    paramUpsilon2S->SetPtRange(0, 999.);
+    paramUpsilon2S->SetYRange(-4.2, -2.3);
+    paramUpsilon2S->SetPhiRange(0., 360.);
+    paramUpsilon2S->SetDecayer(new TPythia6Decayer());
+    paramUpsilon2S->SetForceDecay(kNoDecay);
+    setTGenerator(paramUpsilon2S);
+  };
+
+  ~O2_GeneratorParamUpsilon2SFwdY_PbPb5TeV() { delete paramUpsilon2S; };
+
+  Bool_t Init() override
+  {
+    GeneratorTGenerator::Init();
+    paramUpsilon2S->Init();
+    return true;
+  }
+
+  void SetNSignalPerEvent(Int_t nsig) { paramUpsilon2S->SetNumberParticles(nsig); }
+
+  //-------------------------------------------------------------------------//
+  static Double_t PtUpsilon2SPbPb5TeV(const Double_t* px, const Double_t* /*dummy*/)
+  {
+    // Upsilon(2S) pT in PbPb at 5.36 TeV
+    // Scaled from LHCb pp 13 TeV (arXiv:1804.09214)
+    // NOTE: should be updated once dedicated ALICE PbPb 5.36 TeV tuning is available
+    Double_t x = *px;
+    Float_t p0, p1, p2, p3;
+    p0 = 7.29541e+01;
+    p1 = 1.30000e+01;   // scaled down from pp 13TeV (p1=14.81) for PbPb
+    p2 = 1.50018e+00;
+    p3 = 6.34208e+00;
+   return (p0 * x / TMath::Power(1. + TMath::Power(x / p1, p2), p3));
+  }
+
+  //-------------------------------------------------------------------------//
+  static Double_t YUpsilon2SPbPb5TeV(const Double_t* py, const Double_t* /*dummy*/)
+  {
+    // Upsilon(2S) y in PbPb at 5.36 TeV
+    Double_t x = *py;
+    Float_t p0, p1;
+    p0 = 7.50409e+02;
+    p1 = -3.57039e-02;
+    return (p0 * (1. + p1 * x * x));
+  }
+
+  //-------------------------------------------------------------------------//
+  static Double_t V2Upsilon2SPbPb5TeV(const Double_t* /*dummy*/, const Double_t* /*dummy*/)
+  {
+    return 0.;
+  }
+
+  //-------------------------------------------------------------------------//
+  static Int_t IpUpsilon2SPbPb5TeV(TRandom*)
+  {
+    return 100553;  // PDG code Upsilon(2S)
+  }
+
+ private:
+  GeneratorParam* paramUpsilon2S = nullptr;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+class O2_GeneratorParamUpsilon3SFwdY_PbPb5TeV : public GeneratorTGenerator
+{
+ public:
+  O2_GeneratorParamUpsilon3SFwdY_PbPb5TeV() : GeneratorTGenerator("ParamUpsilon3S_PbPb5TeV")
+  {
+    paramUpsilon3S = new GeneratorParam(1, -1, PtUpsilon3SPbPb5TeV, YUpsilon3SPbPb5TeV, V2Upsilon3SPbPb5TeV, IpUpsilon3SPbPb5TeV);
+    paramUpsilon3S->SetMomentumRange(0., 1.e6);
+    paramUpsilon3S->SetPtRange(0, 999.);
+    paramUpsilon3S->SetYRange(-4.2, -2.3);
+    paramUpsilon3S->SetPhiRange(0., 360.);
+    paramUpsilon3S->SetDecayer(new TPythia6Decayer());
+    paramUpsilon3S->SetForceDecay(kNoDecay);
+    setTGenerator(paramUpsilon3S);
+  };
+
+  ~O2_GeneratorParamUpsilon3SFwdY_PbPb5TeV() { delete paramUpsilon3S; };
+
+  Bool_t Init() override
+  {
+    GeneratorTGenerator::Init();
+    paramUpsilon3S->Init();
+    return true;
+  }
+
+  void SetNSignalPerEvent(Int_t nsig) { paramUpsilon3S->SetNumberParticles(nsig); }
+
+  //-------------------------------------------------------------------------//
+  static Double_t PtUpsilon3SPbPb5TeV(const Double_t* px, const Double_t* /*dummy*/)
+  {
+    // Upsilon(3S) pT in PbPb at 5.36 TeV
+    // Scaled from LHCb pp 13 TeV (arXiv:1804.09214)
+    // NOTE: should be updated once dedicated ALICE PbPb 5.36 TeV tuning is available
+    Double_t x = *px;
+    Float_t p0, p1, p2, p3;
+    p0 = 3.14590e+01;
+    p1 = 2.05000e+01;   // scaled from pp 13TeV (p1=23.08) for PbPb
+    p2 = 1.40822e+00;
+    p3 = 9.38026e+00;
+    return (p0 * x / TMath::Power(1. + TMath::Power(x / p1, p2), p3));
+  }
+
+  //-------------------------------------------------------------------------//
+  static Double_t YUpsilon3SPbPb5TeV(const Double_t* py, const Double_t* /*dummy*/)
+  {
+    // Upsilon(3S) y in PbPb at 5.36 TeV
+    Double_t x = *py;
+    Float_t p0, p1;
+    p0 = 3.69961e+02;
+    p1 = -3.54650e-02;
+    return (p0 * (1. + p1 * x * x));
+  }
+
+  //-------------------------------------------------------------------------//
+  static Double_t V2Upsilon3SPbPb5TeV(const Double_t* /*dummy*/, const Double_t* /*dummy*/)
+  {
+    return 0.;
+  }
+
+  //-------------------------------------------------------------------------//
+  static Int_t IpUpsilon3SPbPb5TeV(TRandom*)
+  {
+    return 200553;  // PDG code Upsilon(3S)
+  }
+
+ private:
+  GeneratorParam* paramUpsilon3S = nullptr;
+};
+
+} // namespace eventgen
+} // namespace o2
+
+// ==================================
+// NEW COCKTAIL FUCNTION FOR PbPb ===
+// ==================================
+
+FairGenerator* GeneratorCocktailBottomoniaToMuonEvtGen_PbPb5TeV()
+{
+  auto genCocktailEvtGen = new o2::eventgen::GeneratorEvtGen<GeneratorCocktail>();
+
+  auto genUpsilon1S = new o2::eventgen::O2_GeneratorParamUpsilon1SFwdY_PbPb5TeV;
+  genUpsilon1S->SetNSignalPerEvent(1);
+
+  auto genUpsilon2S = new o2::eventgen::O2_GeneratorParamUpsilon2SFwdY_PbPb5TeV;
+  genUpsilon2S->SetNSignalPerEvent(1);
+
+  auto genUpsilon3S = new o2::eventgen::O2_GeneratorParamUpsilon3SFwdY_PbPb5TeV;
+  genUpsilon3S->SetNSignalPerEvent(1);
+
+  genCocktailEvtGen->AddGenerator(genUpsilon1S, 1);
+  genCocktailEvtGen->AddGenerator(genUpsilon2S, 1);
+  genCocktailEvtGen->AddGenerator(genUpsilon3S, 1);
+
+  TString pdgs = "553;100553;200553";
+  std::string spdg;
+  TObjArray* obj = pdgs.Tokenize(";");
+  genCocktailEvtGen->SetSizePdg(obj->GetEntriesFast());
+  for (int i = 0; i < obj->GetEntriesFast(); i++) {
+    spdg = obj->At(i)->GetName();
+    genCocktailEvtGen->AddPdg(std::stoi(spdg), i);
+    printf("PDG %d \n", std::stoi(spdg));
+  }
+  genCocktailEvtGen->SetForceDecay(kEvtDiMuon); // Υ → μ⁺μ⁻ via EvtGen
+
+  return genCocktailEvtGen;
+}
+// ==== END of cocktail function ======
