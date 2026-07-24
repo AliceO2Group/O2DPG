@@ -26,19 +26,20 @@ class GeneratorPythia8SigmaHadron : public o2::eventgen::GeneratorPythia8
 {
 public:
   /// Constructor
-  GeneratorPythia8SigmaHadron(int hadronPdg, int gapSize = 4, double minPt = 0.2,
+  GeneratorPythia8SigmaHadron(int hadronPdg, int gapSize = 4, double minSigmaPt = 0.2, double minHadronPt = 0.2,
                               double maxPt = 10, double maxEta = 0.8, double kStarMax = 1.0)
       : o2::eventgen::GeneratorPythia8(),
         mHadronPdg(hadronPdg),
         mGapSize(gapSize),
-        mMinPt(minPt),
+        mMinSigmaPt(minSigmaPt),
+        mMinHadronPt(minHadronPt),
         mMaxPt(maxPt),
         mMaxEta(maxEta),
         mKStarMax(kStarMax)
   {
     fmt::printf(
-        ">> Pythia8 generator: Sigma± + hadron(PDG=%d), gap = %d, minPt = %f, maxPt = %f, |eta| < %f, k* < %f\n",
-        hadronPdg, gapSize, minPt, maxPt, maxEta, kStarMax);
+        ">> Pythia8 generator: Sigma± + hadron(PDG=%d), gap = %d, minSigmaPt = %f, minHadronPt = %f, maxPt = %f, |eta| < %f, k* < %f\n",
+        hadronPdg, gapSize, minSigmaPt, minHadronPt, maxPt, maxEta, kStarMax);
   }
 
   ~GeneratorPythia8SigmaHadron() = default;
@@ -135,7 +136,7 @@ protected:
     for (int i = 0; i < event.size(); i++) {
       const auto& p = event[i];
 
-      if (std::abs(p.eta()) > mMaxEta || p.pT() < mMinPt || p.pT() > mMaxPt) {
+      if (std::abs(p.eta()) > mMaxEta || p.pT() > mMaxPt) {
         continue;
       }
 
@@ -143,11 +144,11 @@ protected:
       const int absPdg = std::abs(pdg);
 
       // Sigma- or Sigma+
-      if (absPdg == 3112 || absPdg == 3222) {
+      if ((absPdg == 3112 || absPdg == 3222) && p.pT() >= mMinSigmaPt) {
         sigmaIndices.push_back(i);
       }
 
-      if (std::abs(pdg) == mHadronPdg && !isFromSigmaDecay(p, event)) {
+      if (std::abs(pdg) == mHadronPdg && p.pT() >= mMinHadronPt && !isFromSigmaDecay(p, event)) {
         hadronIndices.push_back(i);
       }
     }
@@ -178,7 +179,8 @@ protected:
 private:
   int mHadronPdg{211};
   int mGapSize{4};
-  double mMinPt{0.2};
+  double mMinSigmaPt{0.2};
+  double mMinHadronPt{0.2};
   double mMaxPt{10.0};
   double mMaxEta{0.8};
   double mKStarMax{1.0};
@@ -186,10 +188,10 @@ private:
 };
 
 ///___________________________________________________________
-FairGenerator* generateSigmaHadron(int hadronPdg, int gap = 4, double minPt = 0.2,
+FairGenerator* generateSigmaHadron(int hadronPdg, int gap = 4, double minSigmaPt = 0.2, double minHadronPt = 0.2,
                                    double maxPt = 10, double maxEta = 0.8, double kStarMax = 1.0)
 {
-  auto myGenerator = new GeneratorPythia8SigmaHadron(hadronPdg, gap, minPt, maxPt, maxEta, kStarMax);
+  auto myGenerator = new GeneratorPythia8SigmaHadron(hadronPdg, gap, minSigmaPt, minHadronPt, maxPt, maxEta, kStarMax);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGenerator->readString("Random:setSeed on");
   myGenerator->readString("Random:seed " + std::to_string(seed));
