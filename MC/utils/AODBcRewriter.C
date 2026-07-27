@@ -900,6 +900,8 @@ static const PermMap *findPermByPrefix(
 //     follow the published parent permutation;
 //   * every fIndexTracks* / fIndexMFTTracks / fIndexFwdTracks reference is
 //     remapped through it in processPasteJoinTables.
+//   * O2fwdtrack match indices (fIndexMFTTracks, fIndexFwdTracks_MatchMCHTrack)
+//     are remapped here after MFT/Fwd permutations are known.
 static bool isCollGroupedTrackTable(const std::string &tname) {
   static const char *kPrefixes[] = {"O2track_iu", "O2track",
                                      "O2mfttrack", "O2fwdtrack"};
@@ -915,6 +917,8 @@ static void stage1b_reorderTrackTables(
 
   const PermMap *collPermP = findPermByPrefix(allPerms, "O2collision_");
   if (!collPermP) return;  // no collisions present — nothing to regroup against
+
+  std::unordered_map<std::string, std::vector<Long64_t>> deferredFwd;
 
   TIter it(dirIn->GetListOfKeys());
   while (TKey *key = static_cast<TKey *>(it())) {
@@ -960,9 +964,32 @@ static void stage1b_reorderTrackTables(
     rowOrder.reserve(nSrc);
     for (auto &e : entries) rowOrder.push_back(e.srcRow);
 
+    PermMap srcToOut(nSrc, -1);
+    for (Long64_t outRow = 0; outRow < (Long64_t)rowOrder.size(); ++outRow)
+      srcToOut[rowOrder[outRow]] = (Int_t)outRow;
+    allPerms[tname] = std::move(srcToOut);
+
+    if (TString(tname.c_str()).BeginsWith("O2fwdtrack")) {
+      deferredFwd[tname] = std::move(rowOrder);
+      continue;
+    }
+
     // Reorder rows and remap fIndexCollisions values through collPerm.
-    PermMap perm = rewriteTable(src, dirOut, rowOrder, "fIndexCollisions", *collPermP);
-    allPerms[tname] = std::move(perm);
+    rewriteTable(src, dirOut, rowOrder, "fIndexCollisions", *collPermP);
+    written.insert(tname);
+  }
+
+  const PermMap *mftPerm = findPermByPrefix(allPerms, "O2mfttrack");
+  const PermMap *fwdPerm = findPermByPrefix(allPerms, "O2fwdtrack");
+  for (auto &[tname, rowOrder] : deferredFwd) {
+    TTree *src = dynamic_cast<TTree *>(dirIn->Get(tname.c_str()));
+    if (!src) continue;
+    std::vector<ExtraRemap> extraRemaps;
+    if (mftPerm && src->GetBranch("fIndexMFTTracks"))
+      extraRemaps.push_back({"fIndexMFTTracks", mftPerm});
+    if (fwdPerm && src->GetBranch("fIndexFwdTracks_MatchMCHTrack"))
+      extraRemaps.push_back({"fIndexFwdTracks_MatchMCHTrack", fwdPerm});
+    rewriteTable(src, dirOut, rowOrder, "fIndexCollisions", *collPermP, extraRemaps);
     written.insert(tname);
   }
 }
