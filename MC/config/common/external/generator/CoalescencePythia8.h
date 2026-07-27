@@ -159,22 +159,34 @@ bool CoalescencePythia8(Pythia8::Event& event, std::vector<unsigned int> inputPd
         if (nuclearMask & (1 << kTriton)) {
           for (int iN2{iN + 1}; iN2 < neutrons[iC].size(); ++iN2) {
             coalHappened |= doCoal(event, iC, pdgList[kTriton], massList[kTriton], trivialCoal, coalescenceRadius, nuclFromDecay, protons[iC][iP], neutrons[iC][iN], neutrons[iC][iN2]);
+            if (nuclFromDecay && coalHappened) {
+              return true;
+            }
           }
         }
         if (nuclearMask & (1 << kHe3)) {
           for (int iP2{iP + 1}; iP2 < protons[iC].size(); ++iP2) {
             coalHappened |= doCoal(event, iC, pdgList[kHe3], massList[kHe3], trivialCoal, coalescenceRadius, nuclFromDecay, protons[iC][iP], protons[iC][iP2], neutrons[iC][iN]);
+            if (nuclFromDecay && coalHappened) {
+              return true;
+            }
           }
         }
         if (nuclearMask & (1 << kHyperTriton)) {
           for (int iL{0}; iL < lambdas[iC].size(); ++iL) {
             coalHappened |= doCoal(event, iC, pdgList[kHyperTriton], massList[kHyperTriton], trivialCoal, coalescenceRadius, nuclFromDecay, protons[iC][iP], neutrons[iC][iN], lambdas[iC][iL]);
+            if (nuclFromDecay && coalHappened) {
+              return true;
+            }
           }
         }
         if (nuclearMask & (1 << kHe4)) {
           for (int iP2{iP + 1}; iP2 < protons[iC].size(); ++iP2) {
             for (int iN2{iN + 1}; iN2 < neutrons[iC].size(); ++iN2) {
               coalHappened |= doCoal(event, iC, pdgList[kHe4], massList[kHe4], trivialCoal, coalescenceRadius, nuclFromDecay, protons[iC][iP], protons[iC][iP2], neutrons[iC][iN], neutrons[iC][iN2]);
+              if (nuclFromDecay && coalHappened) {
+                return true;
+              }
             }
           }
         }
