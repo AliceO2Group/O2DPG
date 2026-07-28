@@ -1075,14 +1075,154 @@ static void stage1b_reorderTrackTables(
   }
 }
 
+// ----------------------------------------------------------------------------
+// Re-sorting tables that are STORED SORTED BY a reference
+//
+// Stage 1b exists because a track table grouped by fIndexCollisions stops being
+// sliceable once the collision table is reordered.  Exactly the same is true of
+// every other table stored sorted by a reference into a table this tool
+// reorders — O2v0_002 and O2cascade_001 by fIndexCollisions, O2fwdtrkcl by
+// fIndexFwdTracks, O2ambiguoustrack and O2trackqa_003 by fIndexTracks.
+// Remapping their values while leaving their rows in place turns a sorted
+// column into an unsorted one, which is the same defect that produced
+//   "Table ... index fIndexCollisions has a group with index -1 that is split".
+//
+// Rather than hardcode which tables are grouped by what — the enumeration habit
+// that caused O2-7098 — the decision is derived from the data: IF a column is
+// non-decreasing in the input, THEN it is an ordering the file carries and the
+// output must preserve it.  That is self-maintaining across schema changes, and
+// it correctly leaves O2mfttrackcov alone: its fIndexMFTTracks is not sorted in
+// the input, so there is no ordering to preserve.
+
+struct ResortCandidate {
+  size_t                   planIdx = 0;
+  std::string              tableName;
+  std::string              keyBranch;
+  std::vector<Long64_t>    keyValues;    // raw input values of keyBranch
+  std::vector<std::string> refPrefixes;  // referent of keyBranch, from kIndexRefs
+};
+
+// Read a scalar Int_t-like index column.  Returns false for VLA / fixed-array
+// columns, which are not row orderings.
+static bool readScalarIndexColumn(TTree *t, const char *branch,
+                                  std::vector<Long64_t> &out) {
+  TBranch *br = t->GetBranch(branch);
+  if (!br) return false;
+  TLeaf *leaf = static_cast<TLeaf *>(br->GetListOfLeaves()->At(0));
+  if (!leaf || leaf->GetLeafCount() || leaf->GetLen() != 1) return false;
+  ScalarTag tag = tagOf(leaf);
+  size_t sz = byteSize(tag);
+  if (sz == 0) return false;
+  std::vector<unsigned char> buf(sz, 0);
+  br->SetAddress(buf.data());
+  out.clear();
+  out.reserve(t->GetEntries());
+  for (Long64_t i = 0; i < t->GetEntries(); ++i) {
+    br->GetEntry(i);
+    out.push_back(readAsInt(buf.data(), tag));
+  }
+  br->ResetAddress();
+  return true;
+}
+
+// The convention this tool writes (and Stage 1b establishes): valid values
+// ascending, the -1 "ambiguous" group as one contiguous run at the end.
+static bool isOrderedWithNullsLast(const std::vector<Long64_t> &v) {
+  Long64_t prev = -1;
+  bool seenNull = false;
+  for (auto x : v) {
+    if (x < 0) { seenNull = true; continue; }
+    if (seenNull) return false;   // a valid value after a null: not this convention
+    if (x < prev) return false;
+    prev = x;
+  }
+  return true;
+}
+
+// Pick the column a table is stored sorted by, if any.  fIndexCollisions wins
+// when several qualify, since that is the grouping O2's slicing cache checks.
+static bool findGroupingColumn(TTree *src, std::string &keyBranch,
+                               std::vector<Long64_t> &keyValues,
+                               std::vector<std::string> &refPrefixes) {
+  if (!src || src->GetEntries() < 2) return false;
+  bool found = false;
+  for (auto &[branchName, prefixes] : kIndexRefs) {
+    std::vector<Long64_t> vals;
+    if (!readScalarIndexColumn(src, branchName.c_str(), vals)) continue;
+    if (!isOrderedWithNullsLast(vals)) continue;
+    bool preferred = (branchName == "fIndexCollisions");
+    if (found && !preferred) continue;
+    keyBranch   = branchName;
+    keyValues   = std::move(vals);
+    refPrefixes = prefixes;
+    found = true;
+    if (preferred) break;
+  }
+  return found;
+}
+
+// Re-sort each candidate by its remapped grouping column.  Iterated to a fixed
+// point because these tables reference each other: O2cascade_001 is sorted by
+// fIndexV0s, and O2v0_002 may itself have just been re-sorted.
+static void resortByGroupingColumn(
+    std::vector<TablePlan> &plans,
+    std::unordered_map<std::string, PermMap> &allPerms,
+    const std::vector<ResortCandidate> &candidates) {
+
+  const int kMaxPasses = 8;
+  int pass = 0;
+  for (; pass < kMaxPasses; ++pass) {
+    bool changed = false;
+    for (auto &cand : candidates) {
+      const PermMap *refPerm = findPermFor(allPerms, cand.refPrefixes);
+      if (!refPerm) continue;   // referent absent from this DF
+
+      Long64_t n = (Long64_t)cand.keyValues.size();
+      struct SortEntry { Long64_t key; Long64_t srcRow; };
+      std::vector<SortEntry> entries;
+      entries.reserve(n);
+      for (Long64_t i = 0; i < n; ++i) {
+        Long64_t old = cand.keyValues[i];
+        Long64_t nw  = (old >= 0 && old < (Long64_t)refPerm->size()) ? (*refPerm)[old] : -1;
+        entries.push_back({nw, i});
+      }
+      // Same ordering convention as Stage 1: -1 sinks to a contiguous tail.
+      std::stable_sort(entries.begin(), entries.end(),
+        [](const SortEntry &a, const SortEntry &b) {
+          if (a.key < 0 && b.key >= 0) return false;
+          if (a.key >= 0 && b.key < 0) return true;
+          return a.key < b.key;
+        });
+      std::vector<Long64_t> rowOrder;
+      rowOrder.reserve(n);
+      for (auto &e : entries) rowOrder.push_back(e.srcRow);
+
+      if (rowOrder == plans[cand.planIdx].rowOrder) continue;
+      plans[cand.planIdx].rowOrder = rowOrder;
+      allPerms[cand.tableName]     = permFromRowOrder(n, rowOrder);
+      changed = true;
+      std::cout << "  Re-sort: " << cand.tableName << " by remapped "
+                << cand.keyBranch << " (was sorted by it on input)\n";
+    }
+    if (!changed) break;
+  }
+  if (pass == kMaxPasses)
+    std::cerr << "  [warn] re-sort did not reach a fixed point after "
+              << kMaxPasses << " passes — check for a reference cycle\n";
+}
+
 // Plan every table not yet claimed by an earlier stage: paste-join children
-// follow their parent's row order, everything else keeps its own.  The index
-// columns they carry are NOT enumerated here any more — buildRemaps() derives
-// them from kIndexRefs when processDF writes.
+// follow their parent's row order, everything else keeps its own — unless it is
+// stored sorted by a reference, in which case resortByGroupingColumn() below
+// re-establishes that ordering.  The index columns these tables carry are NOT
+// enumerated here — buildRemaps() derives them from kIndexRefs when processDF
+// writes.
 static void planRemainingTables(
     TDirectory *dirIn, std::vector<TablePlan> &plans,
     std::unordered_map<std::string, PermMap> &allPerms,
     std::unordered_set<std::string> &planned) {
+
+  std::vector<ResortCandidate> resortCandidates;
 
   TIter it(dirIn->GetListOfKeys());
   while (TKey *key = static_cast<TKey *>(it())) {
@@ -1139,10 +1279,26 @@ static void planRemainingTables(
       std::iota(rowOrder.begin(), rowOrder.end(), 0LL);
     }
 
+    // A table that arrives here with its own row order may still be STORED
+    // SORTED BY one of its index columns; if that column's referent gets
+    // reordered, the sortedness has to be re-established.  Record what is
+    // needed for that; the decision is made below, once every table in this
+    // stage has a permutation.
+    if (!parentPerm) {
+      ResortCandidate cand;
+      if (findGroupingColumn(src, cand.keyBranch, cand.keyValues, cand.refPrefixes)) {
+        cand.planIdx   = plans.size();
+        cand.tableName = tname;
+        resortCandidates.push_back(std::move(cand));
+      }
+    }
+
     allPerms[tname] = permFromRowOrder(nSrc, rowOrder);
     plans.push_back({tname, std::move(rowOrder)});
     planned.insert(tname);
   }
+
+  resortByGroupingColumn(plans, allPerms, resortCandidates);
 }
 
 // ============================================================================
@@ -1824,6 +1980,23 @@ static bool checkLinksDF(TDirectory *din, TDirectory *dout, const char *dfName) 
       if (refName.empty()) continue;   // referent not in this DF
       linksIn.push_back({branchName, &fpIn[refName], &survivors[refName]});
       linksOut.push_back({branchName, &fpOut[refName], nullptr});
+    }
+
+    // Ordering preservation: a column that is sorted on input describes a
+    // grouping the file carries, and O2's slicing cache relies on it.  Remapping
+    // the values while leaving the rows in place silently destroys it — the same
+    // defect as the split "-1" group, just in a different table.
+    for (auto &[branchName, prefixes] : kIndexRefs) {
+      std::vector<Long64_t> vIn, vOut;
+      if (!readScalarIndexColumn(tIn, branchName.c_str(), vIn)) continue;
+      if (!isOrderedWithNullsLast(vIn)) continue;   // no ordering to preserve
+      if (!readScalarIndexColumn(tOut, branchName.c_str(), vOut)) continue;
+      if (!isOrderedWithNullsLast(vOut)) {
+        std::cerr << "  [FAIL] " << dfName << ": " << tn << "." << branchName
+                  << " was sorted on input but is not on output"
+                     " (grouping destroyed — slicing will misbehave)\n";
+        ok = false;
+      }
     }
 
     auto cIn  = linkTupleCounts(tIn,  fpIn[tn],  linksIn);

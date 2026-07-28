@@ -263,6 +263,40 @@ int testAODBcRewriter(const char *inFileName  = "AO2D_test.root",
                            " daughter slices still point at the right particles");
   }
 
+  // ---- Grouping preserved for tables stored sorted by a reference ---------
+  // These are written sorted by an index into a table the rewriter reorders.
+  // Remapping the values without re-sorting the rows leaves the column
+  // unsorted, which breaks O2's slicing cache the same way a split "-1" group
+  // does.  The referenced tables here are all genuinely reordered, so a
+  // no-op implementation cannot pass this by accident.
+  {
+    const char *cases[][2] = {
+      {"O2v0_002",         "fIndexCollisions"},
+      {"O2cascade_001",    "fIndexCollisions"},
+      {"O2cascade_001",    "fIndexV0s"},        // referent is itself re-sorted
+      {"O2fwdtrkcl",       "fIndexFwdTracks"},
+      {"O2ambiguoustrack", "fIndexTracks"},
+    };
+    for (auto &c : cases) {
+      auto vIn  = readInt(get(din,  c[0]), c[1]);
+      auto vOut = readInt(get(dout, c[0]), c[1]);
+      auto ordered = [](const std::vector<Int_t> &v) {
+        Int_t prev = -1; bool seenNull = false;
+        for (auto x : v) {
+          if (x < 0) { seenNull = true; continue; }
+          if (seenNull || x < prev) return false;
+          prev = x;
+        }
+        return true;
+      };
+      std::string what = std::string(c[0]) + "." + c[1];
+      if (vIn.empty())        { fail(what + ": column missing from input"); continue; }
+      if (!ordered(vIn))      { fail(what + ": fixture is not sorted on input — fix makeTestAOD.C"); continue; }
+      if (!ordered(vOut))     fail(what + ": sorted on input, unsorted on output (grouping destroyed)");
+      else                    pass(what + ": still sorted after the rewrite");
+    }
+  }
+
   // ---- Slice into the deduplicated BC table -------------------------------
   {
     auto bcIn  = readULong(get(din,  "O2bc_001"), "fGlobalBC");
