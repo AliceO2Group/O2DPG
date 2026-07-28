@@ -49,6 +49,11 @@ practice **every merged MC AO2D since 4 Jun 2026 is affected**.
    test instead of silently mis-linking data.
 5. **`AODBcRewriterCheckLinks()` (Section 11b)** — the check that can actually
    see this bug class; see "Testing" below.
+6. **Re-sort tables stored sorted by a reference** (`findGroupingColumn` /
+   `resortByGroupingColumn`, Section 8). The same family: `O2fwdtrkcl` and
+   `O2trackqa_003` were coming out unsorted in every DF of two of the three
+   sample files, which breaks O2's slicing the same way the split `-1` group
+   did. Derived from the data, not from a list — see resolved gap 1.
 
 Maurice's #2418 has the same shape (defer `O2fwdtrack`, remap via the MFT/Fwd
 perms) and is correct; this generalises it from one table to all of them.
@@ -331,13 +336,12 @@ row whose `fIndexMcCollisions` pointed to a dropped row is also dropped.
 
 These were identified during the refactor but not yet implemented:
 
-### 1. Tables SORTED BY a reference into a reordered table are not re-sorted
+### ~~1. Tables SORTED BY a reference into a reordered table are not re-sorted~~ (RESOLVED)
 
-**This is the remaining member of the O2-7098 family — open, and the natural
-follow-up PR.** Stage 1b reorders `O2track_iu` / `O2mfttrack` / `O2fwdtrack`.
-Several other tables are *stored sorted by* a reference into one of those (or
-into `O2collision`). Their values are now correctly remapped, but their rows are
-left where they were, so the ordering is destroyed:
+Stage 1b reorders `O2track_iu` / `O2mfttrack` / `O2fwdtrack`. Several other
+tables are *stored sorted by* a reference into one of those (or into
+`O2collision`). Their values were remapped but their rows left where they were,
+so the ordering was destroyed:
 
 | table | key | sorted in input? |
 |---|---|---|
@@ -347,16 +351,22 @@ left where they were, so the ordering is destroyed:
 | `O2v0_002`, `O2cascade_001`, `O2decay3body` | `fIndexCollisions` | yes |
 | `O2mfttrackcov` | `fIndexMFTTracks` | **no** — so not an invariant there |
 
-(measured on `example_AOD/AO2D_pre.root`.) This is the same failure mode as the
-split `-1` group that produced the `ArrowTableSlicingCache::validateOrder`
-FATAL — not yet observed in the wild, but structurally identical.
+(measured on `example_AOD/AO2D_pre.root`.) Same failure mode as the split `-1`
+group that produced the `ArrowTableSlicingCache::validateOrder` FATAL. **Not
+theoretical**: on `example_AOD/AO2D_pre.root` and `bigger2/`, `O2fwdtrkcl` and
+`O2trackqa_003` came out unsorted in *every* DF.
 
-**Suggested fix** — data-derived rather than another hardcoded list: *if `T.B`
-was sorted in the input and `B`'s referent was reordered, re-sort `T` by the
-remapped `B`.* That rule reproduces Stage 1b's behaviour and correctly leaves
-`O2mfttrackcov` alone. It is deliberately **not** in the O2-7098 fix: it changes
-the row order of tables that are currently untouched, so it deserves its own
-review. `AODBcRewriterCheckLinks` is already in place to police it.
+**Fix**: `findGroupingColumn` + `resortByGroupingColumn` (Section 8), driven by
+the data rather than by another hardcoded list — *if `T.B` is non-decreasing in
+the input and `B`'s referent gets reordered, re-sort `T` by the remapped `B`*.
+Self-maintaining across schema changes, and it correctly leaves `O2mfttrackcov`
+alone (its `fIndexMFTTracks` is not sorted on input, so there is no ordering to
+preserve). Iterated to a fixed point, because these tables reference each other:
+`O2cascade_001` is sorted by `fIndexV0s` and `O2v0_002` may itself have just
+been re-sorted.
+
+Policed by a new check in `AODBcRewriterCheckLinks`: a column sorted on input
+must be sorted on output.
 
 ### ~~2. `fIndexCollisions` inside `O2mccollision` is not remapped~~ (MOOT)
 

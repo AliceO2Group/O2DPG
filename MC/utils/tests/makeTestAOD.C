@@ -110,20 +110,30 @@ const int kFwdMatch[]  = {-1, 0, -1, -1, 3, -1};// fwd -> fwd self-reference
 // exactly the metric O2-7098 was reported with.
 const int kFwdMcPart[] = {0, 3, -1, 6, 9, -1};
 
+// V0s and cascades are stored SORTED BY fIndexCollisions, as reconstruction
+// writes them.  The collision table gets reordered, so these have to be
+// re-sorted or the grouping is destroyed.  The cascades are additionally sorted
+// by fIndexV0s, whose referent is itself one of these re-sorted tables — a
+// two-level dependency that a single pass would not resolve.
 const int kNV0        = 2;
 const int kV0Coll[]   = {0, 2};
 const int kV0Pos[]    = {0, 4};
 const int kV0Neg[]    = {1, 5};
 
-const int kNCasc      = 1;
-const int kCascColl[] = {0};
-const int kCascV0[]   = {0};
-const int kCascBach[] = {2};
+const int kNCasc      = 2;
+const int kCascColl[] = {0, 2};
+const int kCascV0[]   = {0, 1};
+const int kCascBach[] = {2, 4};
 
+// Sorted by fIndexTracks / fIndexFwdTracks respectively — both referents are
+// reordered by Stage 1b.
 const int kNAmb          = 2;
 const int kAmbTrack[]    = {3, 6};
 const int kAmbBCFirst[]  = {0, 3};
 const int kAmbBCLast[]   = {2, 4};
+
+const int kNFwdCl        = 4;
+const int kFwdClTrack[]  = {0, 1, 3, 4};
 
 } // namespace
 
@@ -305,6 +315,16 @@ void makeTestAOD(const char *outFileName = "AO2D_test.root")
     t.Branch("fIndexV0s",        &v0,   "fIndexV0s/I");
     t.Branch("fIndexTracks",     &bach, "fIndexTracks/I");
     for (int i = 0; i < kNCasc; ++i) { coll = kCascColl[i]; v0 = kCascV0[i]; bach = kCascBach[i]; t.Fill(); }
+    t.Write();
+  }
+
+  // ---- O2fwdtrkcl (grouped by fIndexFwdTracks, a Stage-1b table) ---------
+  {
+    TTree t("O2fwdtrkcl", "fwd track clusters");
+    int fwd; float x;
+    t.Branch("fIndexFwdTracks", &fwd, "fIndexFwdTracks/I");
+    t.Branch("fX",              &x,   "fX/F");
+    for (int i = 0; i < kNFwdCl; ++i) { fwd = kFwdClTrack[i]; x = 3000.f + i; t.Fill(); }
     t.Write();
   }
 
