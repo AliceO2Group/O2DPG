@@ -107,6 +107,7 @@ bool doCoal(Pythia8::Event& event, int charge, int pdgCode, float mass, bool tri
 bool CoalescencePythia8(Pythia8::Event& event, std::vector<unsigned int> inputPdgList = {}, bool trivialCoal = false, double coalMomentum = 0.4, int firstDauID = -1, int lastDauId = -1, float maxRapidity = 1.)
 {
   const double coalescenceRadius{0.5 * 1.122462 * coalMomentum};
+
   // if coalescence from a heavy hadron, loop only between firstDauID and lastDauID
   int loopStart = firstDauID > -1 ? firstDauID : 0;
   int loopEnd = lastDauId > -1 ? lastDauId : event.size() - 1;
