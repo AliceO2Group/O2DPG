@@ -866,6 +866,10 @@ if [[ -n $ALIEN_JDL_MVBIAS ]]; then
   export O2_DPL_MVBIAS=$ALIEN_JDL_MVBIAS
 fi
 
+if [[ $ALIEN_JDL_LPMANCHORYEAR -ge 2025 ]] ; then
+  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.minTrackdEdxMax2Tot=-1.;"
+fi
+
 # Enabling QC
 if [[ $ALIEN_JDL_QCOFF != "1" ]]; then
   export WORKFLOW_PARAMETERS="QC,${WORKFLOW_PARAMETERS}"
