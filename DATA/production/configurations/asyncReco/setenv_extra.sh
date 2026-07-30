@@ -540,7 +540,6 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=2;trackTuneParams.tpcCovInner[0]=0.05;trackTuneParams.tpcCovInner[1]=0.2;trackTuneParams.tpcCovInner[2]=0.0003;trackTuneParams.tpcCovInner[3]=0.0013;trackTuneParams.tpcCovInner[4]=0.0059300284;trackTuneParams.tpcCovInnerSlope[0]=1.4794650254467986e-08;trackTuneParams.tpcCovInnerSlope[1]=5.9178601017871944e-08;trackTuneParams.tpcCovInnerSlope[2]=8.87679015268079e-11;trackTuneParams.tpcCovInnerSlope[3]=3.846609066161676e-10;trackTuneParams.tpcCovInnerSlope[4]=1.7546539235412473e-09;"
   TRACKTUNETPCOUTER="trackTuneParams.tpcCovOuterType=2;trackTuneParams.tpcCovOuter[0]=0.05;trackTuneParams.tpcCovOuter[1]=0.2;trackTuneParams.tpcCovOuter[2]=0.0003;trackTuneParams.tpcCovOuter[3]=0.0013;trackTuneParams.tpcCovOuter[4]=0.0059300284;trackTuneParams.tpcCovOuterSlope[0]=1.4794650254467986e-08;trackTuneParams.tpcCovOuterSlope[1]=5.9178601017871944e-08;trackTuneParams.tpcCovOuterSlope[2]=8.87679015268079e-11;trackTuneParams.tpcCovOuterSlope[3]=3.846609066161676e-10;trackTuneParams.tpcCovOuterSlope[4]=1.7546539235412473e-09;"
 
-
 fi
 
 TRACKTUNETPC=${TPCEXTRAERR-}
@@ -844,6 +843,11 @@ fi
 if [[ $ALIEN_JDL_PREPROPAGATE == "1" ]] ; then
   export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --propagate-tracks --propagate-tracks-max-xiu 5"
 fi
+
+if [[ $ALIEN_JDL_CONFIG2AODMETA == "1" ]] ; then
+  export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --collect-config-files"
+fi
+
 
 # possibility to bias the MeanVertex from the CCDB, see https://github.com/AliceO2Group/AliceO2/pull/15549
 if [[ -n $ALIEN_JDL_MVBIAS ]]; then
