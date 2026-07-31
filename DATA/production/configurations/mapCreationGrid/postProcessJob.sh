@@ -44,7 +44,7 @@ STAGE1_OUTPUTDIR_BASE=
 COUNTERWIDTH=3
 MACRO_SOURCE=official
 MACRO_ALIEN_DIR_BARE=${MACRO_ALIEN_DIR_BARE:-}
-#JDL_OUTPUT=*.log@disk=1,*.txt@disk=1,*.png@disk=1
+#JDL_OUTPUT=*.log@disk=2,*.txt@disk=2,*.png@disk=2
 #JDL_REQUIRE={member(other.GridPartitions,"multicore_8") && (other.CE != "ALICE::NIHAM::PBS64") && (other.CE != "ALICE::KISTI_GSDC::LCG") && (other.CE != "ALICE::SaoPaulo::LCG")};
 # Site blacklist -- same three CEs excluded as stage 1, see that script's comment for why the
 # GridPartitions clause has to be repeated here (grid_submit.sh replaces its whole default Requirements,
@@ -215,6 +215,11 @@ echo "${STAGE1_OUTPUT_LOCATION}/${STAGE1_OUTPUT_FILE}" > "${STAGE1_SOURCE_FILE}"
 if ! alien.py cp -f "file:${STAGE1_SOURCE_FILE}" "${ALIEN_OUTPUT_DIR}/${STAGE1_SOURCE_FILE}"; then
   echo "WARNING: failed to stage ${STAGE1_SOURCE_FILE} -- provenance pointer only, not fatal" >&2
 fi
+# Remove the local copy now that it's staged: it matches the #JDL_OUTPUT *.txt glob above, and the
+# JobAgent's own passive upload of that glob (run after this script exits) does a plain, non-forced
+# cp -- it would otherwise collide with the LFN this explicit -f upload just created and put the
+# whole subjob into ERROR_SV, even though the actual deliverable upload above succeeded.
+rm -f "${STAGE1_SOURCE_FILE}"
 
 # --- QA plots (voxResQA.C) -- runs on just this one slot's smoothed map, same per-slot granularity as
 # everything else in this pipeline. Non-fatal on failure: QA is a diagnostic nice-to-have, not a blocking
