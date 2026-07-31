@@ -144,7 +144,7 @@ bool CoalescencePythia8(Pythia8::Event& event, std::vector<unsigned int> inputPd
       lambdas[event[iPart].id() > 0].push_back(iPart);
     }
   }
-  // run coalescence
+  // Run coalescence
   bool nuclFromDecay = firstDauID > -1;
   bool coalHappened = false;
 
