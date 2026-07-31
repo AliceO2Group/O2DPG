@@ -353,7 +353,12 @@ Then:
 
 This downloads the *existing* manifest stage 1 already uploaded (does not rebuild it — see the comment in
 the script for why that matters), re-stages the three macros if `MACRO_SOURCE=alien`, and submits one
-production, same slot granularity as stage 1.
+production, same slot granularity as stage 1. It also captures and uploads its own workdir pointer,
+`stage2Workdir.<JOBNAME>.txt`, to `MACRO_ALIEN_DIR` — the same mechanism stage 1 uses for its own output
+(see Step 3), so an external consumer that needs to locate a specific slot's final `FT_*.root`/smoothed
+map (e.g. a downstream pipeline using this stage's output as an input) can reconstruct the path the same
+way stage 2 itself reconstructs stage 1's — read `stage2Workdir.<JOBNAME>.txt` for the base, recompute
+`COUNTERWIDTH` from this submission's manifest line count, join with the zero-padded subjob index.
 
 **Local single-slot test:**
 
