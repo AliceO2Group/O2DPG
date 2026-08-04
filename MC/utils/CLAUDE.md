@@ -1,11 +1,64 @@
 # CLAUDE.md — AODBcRewriter Development Handoff
 
-## Current work state (handoff — 2026-06-09)
+## Current work state (2026-07-28) — O2-7098
 
-**Branch:** `fix/aodbcrewriter-track-regroup` · **Last commit:** `8bb9d30b3c`
-(committed, not yet pushed/validated).
+**Branch:** `swenzel/O2-7098-aodbcrewriter-index-remap`.
 
-### The bug being fixed: tracks' `-1` collision group split
+### The bug: O2fwdtrack's match indices were reordered but not remapped
+
+Reported by Maurice Coquet (JIRA **O2-7098**, patch proposal
+[O2DPG#2418](https://github.com/AliceO2Group/O2DPG/pull/2418)): in anchored MC
+AO2Ds produced since early June 2026, `O2fwdtrack.fIndexMFTTracks` and
+`O2fwdtrack.fIndexFwdTracks_MatchMCHTrack` point at the wrong rows, so the MFT
+leg and the MCH leg of every global muon belong to different MC particles
+(`sameParticle=0`).
+
+**Cause.** Stage 1b (added by #2370, merged 4 Jun 2026) re-sorts `O2track_iu`,
+`O2mfttrack_*` and `O2fwdtrack`, but wrote each table the moment it had planned
+it. `O2fwdtrack` points at `O2mfttrack` — reordered later in the same loop — and
+at *itself*; neither permutation existed yet at write time, so the two columns
+kept pre-reorder row numbers. They stayed in range, so every structural check
+passed.
+
+**Scope.** The corruption does *not* need the BC→collision reorder cascade.
+Stage 1b re-sorts unconditionally to make the split `-1` group contiguous, so in
+practice **every merged MC AO2D since 4 Jun 2026 is affected**.
+
+**Reproduced** on `example_AOD/AO2D_pre.root`: 171 fwd tracks with an MFT match,
+`sameParticle` 30 → **0** with the pre-fix code, 30 → **30** with the fix.
+
+### What the fix does
+
+1. **One index registry, `kIndexRefs` (Section 1).** Every `fIndex*` column and
+   the table it points at, in one place, used by the rewriter, the validator and
+   the drift guard alike. Referent resolution is `isTableNamed()` (`K == P` or
+   `K == P_<digits>`), which — unlike the old `BeginsWith` — keeps
+   `O2mfttrack_001` apart from `O2mfttrackcov`, `O2bc_001` from `O2bcflag` and
+   `O2calo` from `O2calotrigger`.
+2. **`buildRemaps()` (Section 3)** derives a table's complete remap list from
+   that registry. The privileged "primary index + optional extras" split in
+   `rewriteTable` is gone — there is one `writeTable(src, dirOut, rowOrder,
+   remaps)` and every column goes through the same path. Forgetting a column is
+   no longer possible; the old design *required* each stage to remember.
+3. **Plan, then write (Sections 3b + 10).** Every stage now only appends a
+   `TablePlan` and publishes its permutation; `processDF` writes all plans
+   afterwards, when every permutation in the DF is known. This is what makes the
+   forward reference (fwd→mft) and the self reference (fwd→fwd) work.
+4. **Drift guard.** Any `fIndex*` branch not in `kIndexRefs` is a `[warn]` at
+   rewrite time and a `[FAIL]` in the validator. Schema growth now breaks the
+   test instead of silently mis-linking data.
+5. **`AODBcRewriterCheckLinks()` (Section 11b)** — the check that can actually
+   see this bug class; see "Testing" below.
+6. **Re-sort tables stored sorted by a reference** (`findGroupingColumn` /
+   `resortByGroupingColumn`, Section 8). The same family: `O2fwdtrkcl` and
+   `O2trackqa_003` were coming out unsorted in every DF of two of the three
+   sample files, which breaks O2's slicing the same way the split `-1` group
+   did. Derived from the data, not from a list — see resolved gap 1.
+
+Maurice's #2418 has the same shape (defer `O2fwdtrack`, remap via the MFT/Fwd
+perms) and is correct; this generalises it from one table to all of them.
+
+### Previous work state (2026-06-09): tracks' `-1` collision group split
 
 Downstream O2 analysis (`o2-analysis-event-selection`) was crashing with:
 
@@ -51,24 +104,71 @@ and forces a reorder cascade **BC (Stage 0) → collisions (Stage 1) → tracks
 **not** re-introduce an "assert already sorted / order-preserving" Stage 0 — it
 is a known dead end (see the history note in the Section 4 code comment).
 
-### Not done yet / next steps for whoever picks this up
+### Status of the 2026-06-09 items
 
-- **UNVALIDATED on real data.** Parses cleanly in cling (`.L AODBcRewriter.C`),
-  but has *not* been run on a real merged AO2D, nor through the analysis task
-  that crashed. The macro is interpreter-only; `.L AODBcRewriter.C+` (ACLiC)
-  fails on missing std includes — pre-existing, not a regression.
-  Test sequence: `AODBcRewriter("AO2D.root","out.root")` →
-  `AODBcRewriterValidate("out.root")` (expect no `[FAIL]`) → then the **real**
-  `o2-analysis-event-selection` on `out.root` (ground truth).
-- **Known fragility (whack-a-mole):** the `fIndexTracks*` reference remap is a
-  hardcoded enumeration in `processPasteJoinTables` and the validator's
-  `kIndexBranchToTable`. A missed reference into a reordered track table = silent
-  corruption. Longer term, *derive* index→referent relationships from the AO2D
-  column-name conventions instead of enumerating.
-- **Biggest gap:** there is no executable analysis-level CI for this tool, so
-  regressions are only found in production with delay. Building a reproducer
-  (merged AO2D that triggers the split/abort) + a CI check that runs the real
-  task is the agreed top priority after this fix lands.
+- ~~**UNVALIDATED on real data.**~~ Now run on `example_AOD/AO2D_pre.root`,
+  `bigger/` and `bigger2/` (3–4 DFs each, up to 6M MC particles): rewrite clean,
+  `AODBcRewriterValidate` and `AODBcRewriterCheckLinks` both pass. The macro is
+  still interpreter-only; `.L AODBcRewriter.C+` (ACLiC) fails on missing std
+  includes — pre-existing, not a regression.
+- ~~**Known fragility (whack-a-mole).**~~ Resolved by `kIndexRefs` +
+  `buildRemaps()` + the drift guard (see above). There is now exactly one list,
+  and an entry missing from it fails the test rather than corrupting output.
+- ~~**Biggest gap: no executable CI.**~~ `MC/utils/tests/` now provides one that
+  needs nothing but ROOT and runs in seconds. Still open: wiring it into the
+  ALICE CI job list — `.github/workflows/` has no ROOT runner, so it needs a
+  line wherever `test/run_*_tests.sh` are invoked. **Confirm with the O2DPG CI
+  owners rather than guessing.**
+
+---
+
+## Testing
+
+```bash
+${O2DPG_ROOT}/MC/utils/tests/run_aodbcrewriter_tests.sh
+```
+
+Needs only ROOT — no simulation, no O2Physics, no GRID, no committed binary
+fixture. `makeTestAOD.C` builds a few-kB synthetic AO2D carrying every pathology
+the tool exists to repair (non-monotonic + duplicate BCs, duplicate MC
+collisions, a split `-1` track group from two sub-timeframe blocks, fwd↔MFT and
+fwd→fwd matches, V0/cascade links, `fIndexSliceBCs`, mcparticle mother/daughter
+links, and a link-free table for the fast-clone path).
+
+Three independent layers, in increasing specificity:
+
+| layer | what it sees |
+|---|---|
+| `AODBcRewriterValidate(out)` | structural invariants of the output alone |
+| `AODBcRewriterCheckLinks(in, out)` | input vs output: no row changed what it points at |
+| `testAODBcRewriter(in, out)` | named, physics-readable assertions |
+
+**The middle layer is the one that matters for this bug class.** Everything in
+`AODBcRewriterValidate` is structural, and O2-7098 was structurally perfect —
+the row numbers were simply the wrong ones, and in range. Catching that requires
+comparing against the input. `AODBcRewriterCheckLinks` does it without
+permutation dumps or synthetic tagging: it fingerprints each row from its
+non-`fIndex*` branches and compares, per table, the multiset of
+
+```
+( payload fingerprint of the row, payload fingerprint of each row it points at )
+```
+
+before and after. Dedup is handled by canonicalising the *input* side — a
+referenced row that did not survive becomes the null link, which is what the
+rewriter does — so a tuple present in the output but in no input row is always a
+bug. The BC table is fingerprinted on `fGlobalBC` alone, because Stage 0
+*redirects* references onto the surviving row rather than nulling them.
+
+Because it needs no synthetic data, run it on real production files too:
+
+```cpp
+root -l -b -q -e '.L AODBcRewriter.C' \
+     -e 'AODBcRewriterCheckLinks("AO2D_pre.root","AO2D.root")'
+```
+
+Regression-locked: against the pre-fix `master` rewriter the suite reports
+`O2fwdtrack: links not preserved` and `MFT-MCH match: sameParticle=1/6`.
 
 ---
 
@@ -152,41 +252,65 @@ order strictly follow its paste-join parent.
 
 | Section | Function(s) | Purpose |
 |---------|-------------|---------|
-| 1 | `PermMap`, `isBCTable`, `bcIndexBranch`, `mcCollIndexBranch`, `collIndexBranch`, `kPasteJoins`, `isPasteJoinChild` | Core types, name-probe helpers, and the authoritative paste-join list |
+| 1 | `PermMap`, `isBCTable`, `bcIndexBranch`, `mcCollIndexBranch`, `collIndexBranch`, `kPasteJoins`, `isPasteJoinChild`, **`kIndexRefs`**, **`isTableNamed`**, **`unregisteredIndexBranches`** | Core types, name-probe helpers, the paste-join list, and the authoritative index-reference registry |
 | 2 | `ScalarTag`, `tagOf`, `byteSize`, `readAsInt`, `writeAsInt`, `BranchDesc`, `describeBranches` | Generic ROOT branch I/O over raw byte buffers |
-| 3 | `rewriteTable` | **Central engine**: writes any table in a given row order, remapping one nominated index column via a PermMap |
+| 3 | **`writeTable`**, `permFromRowOrder`, `remapBuffer`, `findPermFor`, **`buildRemaps`** | **Central engine**: writes any table in a given row order, remapping *every* index column it carries |
+| 3b | `TablePlan` | Deferred write plan — why planning and writing are separate phases |
 | 4 | `BCStage0Result`, `stage0_sortBCs` | Sort + deduplicate the BC table; produce `bcPerm` |
-| 5 | `stage0_copyBCFlags` | Copy BC flags table following BC row selection |
-| 6 | `MCCollKey`, `MCCollKeyHash`, `stage1_BCindexedTables` | Process all BC-indexed tables; deduplicate MCCollisions |
-| 7 | `stage2_MCCollIndexedTables` | Process all MCCollision-indexed tables; drop rows whose parent was deduped |
+| 5 | `stage0_copyBCFlags` | Plan the BC flags table following BC row selection |
+| 6 | `MCCollKey`, `MCCollKeyHash`, `stage1_BCindexedTables` | Plan all BC-indexed tables; deduplicate MCCollisions |
+| 7 | `stage2_MCCollIndexedTables` | Plan all MCCollision-indexed tables; drop rows whose parent was deduped |
 | 9b | `isCollGroupedTrackTable`, `stage1b_reorderTrackTables` | **Stage 1b**: regroup collision-grouped track tables (`O2track_iu`, `O2mfttrack`, `O2fwdtrack`) by remapped `fIndexCollisions` (`-1` sinks to a contiguous tail); publish track perms so children/references follow. Restores the O2 slicing invariant after the BC→collision reorder cascade |
-| 8 | `rowOrderFromPerm`, `findPermByPrefix`, `processPasteJoinTables` | Reorder paste-joined tables to follow their parent (1:1 row count guaranteed); remap any of their own index columns value-wise (incl. `fIndexTracks*` via the Stage 1b track perms); copy unrelated tables verbatim |
+| 8 | `planRemainingTables` | Paste-joined tables follow their parent's row order; everything else keeps its own |
 | 9 | `copyNonTreeObjects` | Copy TMap metadata and other non-TTree objects |
-| 10 | `processDF` | Orchestrates all stages for one `DF_*` directory |
-| 11 | `AODBcRewriter` | Top-level entry: opens files, iterates `DF_*` dirs, preserves compression |
+| 10 | `processDF` | Orchestrates the **plan phase** then the **write phase** for one `DF_*` directory |
+| 11 | `AODBcRewriterValidate` and helpers | Structural validation of an output file |
+| 11b | `payloadFingerprints`, `linkTupleCounts`, **`AODBcRewriterCheckLinks`** | Input-vs-output link preservation — the check that sees the O2-7098 bug class |
+| 12 | `AODBcRewriter` | Top-level entry: opens files, iterates `DF_*` dirs, preserves compression |
 
-### `rewriteTable` — the central engine
+### `writeTable` — the central engine
 
 ```cpp
-PermMap rewriteTable(TTree *src, TDirectory *dirOut,
-                     const vector<Long64_t> &rowOrder,
-                     const string &indexBranch,
-                     const PermMap &parentPerm);
+void writeTable(TTree *src, TDirectory *dirOut,
+                const vector<Long64_t> &rowOrder,
+                const vector<IndexRemap> &remaps);
 ```
 
 - `rowOrder`: which source rows to emit and in what sequence (may be a subset
   for deduplication, or reordered for sorting)
-- `indexBranch`: name of the one index column to remap (e.g. `"fIndexBCs"`),
-  or `""` for none
-- `parentPerm`: the PermMap from the parent stage used to translate the old
-  index value to a new one
-- Returns `srcToOut` PermMap: `srcToOut[srcRow] = outRow`, -1 if dropped
+- `remaps`: **every** index column to remap, each with its own PermMap —
+  obtained from `buildRemaps(src, allPerms)` and therefore from `kIndexRefs`
+
+There is deliberately **no privileged "primary index"** parameter any more. The
+old signature took one nominated index column plus an optional list of "extras",
+which meant every stage had to remember to populate the extras. Stage 1b did
+not, and that is O2-7098. Do not reintroduce the distinction.
+
+The row permutation a `rowOrder` implies is `permFromRowOrder(nSrc, rowOrder)`
+(`perm[srcRow] = outRow`, -1 if dropped). Stages publish it into `allPerms`
+*before* anything is written, which is what lets a table's remaps refer to
+tables written later — or to itself.
 
 The function handles both scalar branches and VLA (variable-length array)
 branches generically. For VLAs it pre-scans the count branch to find the
 maximum array length and allocates buffers accordingly. Input and output
 branches share the same raw byte buffers; ROOT handles the VLA count
 implicitly through the shared count buffer.
+
+### The two phases in `processDF`
+
+```
+PLAN   stage0 -> stage1 -> stage2 -> stage1b -> planRemainingTables
+       each appends a TablePlan and publishes its PermMap into allPerms
+WRITE  for every plan: buildRemaps(src, allPerms) then writeTable(...)
+       (identity row order and no remaps -> fast CloneTree instead)
+```
+
+Note `allPerms` holds **reference-remapping** semantics, not plain row
+permutations: for the BC table it is `bcPerm`, where several old rows collapse
+onto the surviving one, because that is what references into a deduplicated BC
+table need. For `O2mccollision` a dropped duplicate maps to -1 instead — that is
+the existing, deliberate behaviour (see resolved gap 7), not an oversight.
 
 ---
 
@@ -212,18 +336,46 @@ row whose `fIndexMcCollisions` pointed to a dropped row is also dropped.
 
 These were identified during the refactor but not yet implemented:
 
-### 1. `fIndexCollisions` inside `O2mccollision` is not remapped
+### ~~1. Tables SORTED BY a reference into a reordered table are not re-sorted~~ (RESOLVED)
 
-`O2mccollision` has both `fIndexBCs` (handled) and `fIndexCollisions` (linking
-back to the reconstructed `O2collision` row). After Stage 1 reorders
-`O2collision`, this second index in `O2mccollision` becomes stale.
+Stage 1b reorders `O2track_iu` / `O2mfttrack` / `O2fwdtrack`. Several other
+tables are *stored sorted by* a reference into one of those (or into
+`O2collision`). Their values were remapped but their rows left where they were,
+so the ordering was destroyed:
 
-**Fix**: After `stage1_BCindexedTables` runs, find `collPerm` (the PermMap for
-`O2collision_*`) in `stage1Perms`, then apply a second `rewriteTable` pass on
-`O2mccollision_*` to remap `fIndexCollisions` via `collPerm`. The
-`ExtraRemap` mechanism in `rewriteTable` already supports this pattern.
+| table | key | sorted in input? |
+|---|---|---|
+| `O2fwdtrkcl` | `fIndexFwdTracks` | yes |
+| `O2ambiguoustrack` | `fIndexTracks` | yes |
+| `O2trackqa_003` | `fIndexTracks` | yes |
+| `O2v0_002`, `O2cascade_001`, `O2decay3body` | `fIndexCollisions` | yes |
+| `O2mfttrackcov` | `fIndexMFTTracks` | **no** — so not an invariant there |
 
-### 2. Deduplication key could be strengthened
+(measured on `example_AOD/AO2D_pre.root`.) Same failure mode as the split `-1`
+group that produced the `ArrowTableSlicingCache::validateOrder` FATAL. **Not
+theoretical**: on `example_AOD/AO2D_pre.root` and `bigger2/`, `O2fwdtrkcl` and
+`O2trackqa_003` came out unsorted in *every* DF.
+
+**Fix**: `findGroupingColumn` + `resortByGroupingColumn` (Section 8), driven by
+the data rather than by another hardcoded list — *if `T.B` is non-decreasing in
+the input and `B`'s referent gets reordered, re-sort `T` by the remapped `B`*.
+Self-maintaining across schema changes, and it correctly leaves `O2mfttrackcov`
+alone (its `fIndexMFTTracks` is not sorted on input, so there is no ordering to
+preserve). Iterated to a fixed point, because these tables reference each other:
+`O2cascade_001` is sorted by `fIndexV0s` and `O2v0_002` may itself have just
+been re-sorted.
+
+Policed by a new check in `AODBcRewriterCheckLinks`: a column sorted on input
+must be sorted on output.
+
+### ~~2. `fIndexCollisions` inside `O2mccollision` is not remapped~~ (MOOT)
+
+Checked against three real AO2Ds (`example_AOD/`, `bigger/`, `bigger2/`):
+`O2mccollision_001` carries **only** `fIndexBCs` in the current schema, so there
+is nothing to remap. Should the column reappear, `kIndexRefs` now handles it
+with no code change.
+
+### 3. Deduplication key could be strengthened
 
 The current `(newBCrow, fEventWeight)` key is a good heuristic. A more robust
 key would additionally include `fImpactParameter` and/or `fGeneratorsID` if
@@ -231,20 +383,21 @@ those branches are present. Consider making the key construction a small
 helper function that probes which fields are available and builds the strongest
 possible key.
 
-### 3. `O2mccollision` has two potential parents for paste-join lookup
+### ~~4. `O2mccollision` has two potential parents for paste-join lookup~~ (PARTLY RESOLVED)
 
-In `processDF`, the MCColl PermMap is extracted by scanning `stage1Perms` for
-a name beginning with `"O2mccollision"`. If the DF contains both
-`O2mccollision_000` and `O2mccollision_001` (schema version coexistence),
-only the first found is used. Add a warning and handle this explicitly if it
-becomes relevant.
+Referent resolution now goes through `findPermFor` / `isTableNamed`, which
+matches `P` or `P_<digits>` and, when several schema versions coexist, picks the
+lexicographically smallest name **deterministically** instead of whatever the
+`unordered_map` happened to yield first. Still no warning for the ambiguous
+case — add one if schema-version coexistence ever becomes real.
 
-### 4. Paste-join size-mismatch fallback is silent-ish
+### 5. Paste-join size-mismatch fallback is silent-ish
 
 When a paste-joined table has a different row count from its parent (schema
-drift), the tool falls back to `CloneTree(-1, "fast")` and prints a warning.
-This produces a structurally inconsistent output. Consider making this a hard
-error, or implement a best-effort row-count reconciliation.
+drift), the tool now keeps the child's own row order — index remaps still get
+applied, so nothing is left dangling — and prints a `[warn]`. The output is
+still structurally inconsistent and the validator's paste-join parity check will
+`[FAIL]` on it. Consider making it a hard error, or reconciling row counts.
 
 ### ~~5. No validation pass~~ (RESOLVED)
 
@@ -258,11 +411,14 @@ to confirm output correctness.
 This was the root cause of the O2Physics FATAL
 `MC particle N has daughter with index M > MC particle table size`.
 After Stage 2 reorders `O2mcparticle`, the intra-table mother/daughter indices
-now get remapped via `ExtraRemap` in the same pass (Section 7).
+get remapped through the table's own permutation.
 
 `fIndexMcParticles` in label tables (`O2mctracklabel`, `O2mcfwdtracklabel`,
-`O2mcmfttracklabel`, `O2mccalolabel`) is also now remapped via the MC-particle
-permutation in `processPasteJoinTables` (Section 8).
+`O2mcmfttracklabel`, `O2mccalolabel`) is remapped via the MC-particle
+permutation.
+
+*(Since O2-7098 both are plain `kIndexRefs` entries and need no special
+casing — `buildRemaps` picks them up like any other column.)*
 
 ### ~~8. fIndexSliceBCs in O2ambiguous* not remapped after BC dedup~~ (RESOLVED)
 
@@ -273,12 +429,12 @@ table. It appears in `O2ambiguoustrack`, `O2ambiguousmfttr`,
 were processed by Stage 1. After BC dedup the slice endpoints would then
 point past the compacted table.
 
-**Fix**: `processPasteJoinTables` now also accepts the BC permutation
-(passed explicitly from `processDF`) and applies it value-wise to any
-`fIndexSliceBCs` / `fIndexBCs` / `fIndexBC` column it finds. Validated
-against `example_AOD/AO2D_pre.root`: pre-fix the rewritten output had 7
-and 19 out-of-range slice endpoints in DF_3594457012003; post-fix the
-validator reports zero.
+**Fix**: `bcPerm` is published into `allPerms` under the BC tree's name, so
+`buildRemaps` applies it to any `fIndexSliceBCs` / `fIndexBCs` / `fIndexBC`
+column it finds. Validated against `example_AOD/AO2D_pre.root`: pre-fix the
+rewritten output had 7 and 19 out-of-range slice endpoints in
+DF_3594457012003; post-fix the validator reports zero. `testAODBcRewriter`
+also asserts the endpoints still name the same bunch crossings.
 
 ### ~~7. Paste-join row-count drift on MC-collision dedup~~ (RESOLVED)
 
@@ -291,7 +447,7 @@ to downstream "O2collision_001 is one larger than O2mccollisionlabel" crashes.
 
 **Fix**: `kPasteJoins` was extended to cover every joined pair from
 `AnalysisDataModel.h`. Paste-join children are now *deferred* from Stage 2
-to `processPasteJoinTables`, where they take the parent's row order and have
+to `planRemainingTables`, where they take the parent's row order and have
 their own index columns remapped value-wise. Rows that lose their MC label
 on dedup now correctly produce `fIndexMcCollisions == -1`, and the row count
 matches the parent collision table.
@@ -309,28 +465,48 @@ group — including the `-1` ambiguous group — stays one contiguous run, as O2
 `ArrowTableSlicingCache::validateOrder` requires.
 
 **Fix:** Stage 1b (`stage1b_reorderTrackTables`, Section 9b) stable-sorts each
-track table by remapped `fIndexCollisions` (`-1` to a contiguous tail), publishes
-the track perm, and `processPasteJoinTables` follows it for paste-join children
-and remaps every `fIndexTracks*` reference. New validator check
+track table by remapped `fIndexCollisions` (`-1` to a contiguous tail) and
+publishes the track perm; paste-join children follow it and every
+`fIndexTracks*` reference is remapped through it. Validator check
 `checkCollisionGroupContiguity` flags split groups as
 `[FAIL] ... fIndexCollisions has N group(s) split into non-contiguous runs`.
 
-**Status:** committed on `fix/aodbcrewriter-track-regroup` (`8bb9d30b3c`), parses
-in cling, **not yet run on a real merged AO2D or the failing analysis task.**
+**Status:** on `master` since `5597f516`, now run on real merged AO2Ds. Note
+this fix is what *introduced* gap 10 below.
+
+### ~~10. O2fwdtrack match indices reordered but not remapped (O2-7098)~~ (RESOLVED)
+
+See the **Current work state** section at the top. Stage 1b wrote each table as
+soon as it had planned it, so `O2fwdtrack`'s `fIndexMFTTracks` (pointing at a
+table reordered later in the same loop) and `fIndexFwdTracks_MatchMCHTrack`
+(pointing at itself) kept pre-reorder row numbers.
+
+**Fix:** planning and writing are now separate phases, and every index column is
+derived from the single `kIndexRefs` registry by `buildRemaps` instead of being
+enumerated per stage.
 
 ---
 
 ## Testing checklist
 
-When testing a new AO2D:
+Automated: `${O2DPG_ROOT}/MC/utils/tests/run_aodbcrewriter_tests.sh` (see the
+**Testing** section above). Run it for any change to this tool.
+
+When testing a real AO2D by hand:
 
 1. Run `AODBcRewriterValidate("AO2D_rewritten.root")` (Section 11).
    It checks BC monotonicity, MC-particle intra-table integrity, paste-join
-   row-count parity for every pair in `kPasteJoins`, and `fIndex*` value
-   ranges against the referent table. Failures appear as `[FAIL] ...` lines.
-2. Check stdout from the rewrite run itself for any `[warn]` lines — these
-   indicate branches or tables that fell through to a fallback path.
-3. If deduplication ran, verify the dropped count is as expected by comparing
+   row-count parity for every pair in `kPasteJoins`, `fIndex*` value
+   ranges against the referent table, and that no `fIndex*` column is missing
+   from `kIndexRefs`. Failures appear as `[FAIL] ...` lines.
+2. Run `AODBcRewriterCheckLinks("AO2D_pre.root","AO2D.root")` (Section 11b).
+   **Do not skip this one** — it is the only check that compares against the
+   input, and therefore the only one that can see a mis-remapped index.
+   Roughly 30 s for a 3-DF file with 6M MC particles.
+3. Check stdout from the rewrite run itself for any `[warn]` lines — these
+   indicate branches or tables that fell through to a fallback path, or an
+   index column the registry does not know about.
+4. If deduplication ran, verify the dropped count is as expected by comparing
    the input DF MCCollision count vs. output.
 
 A standalone minimal validation script (kept here for reference; in practice

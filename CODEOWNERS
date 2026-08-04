@@ -18,6 +18,7 @@
 /DATA/testing/detectors/ZDC
 
 /MC @sawenzel @jackal1-66
+/GRID @sawenzel
 
 # PWG experts
 /MC/*/ALICE3 @njacazio

@@ -39,6 +39,25 @@
 //   Unrelated tables — tables with no dependency on BCs or MCCollisions are
 //              copied verbatim.
 //
+//   PLAN, THEN WRITE — every stage above only decides row orders and publishes
+//              the resulting permutations; processDF writes all tables
+//              afterwards.  References are not a DAG: O2fwdtrack points at
+//              O2mfttrack (reordered in the same stage) and at itself, so a
+//              stage that wrote as it went could not remap them.  It did not,
+//              and every global muon in every merged MC AO2D between June and
+//              July 2026 got a foreign MFT and MCH leg (O2-7098).
+//
+//   ONE INDEX REGISTRY — kIndexRefs lists every fIndex* column and the table it
+//              points at.  buildRemaps() turns it into a table's remap set, the
+//              validator range-checks against it, and any fIndex* column NOT in
+//              it is reported loudly.  Do not reintroduce per-stage lists of
+//              "indices this stage knows how to remap".
+//
+//   TESTING — MC/utils/tests/run_aodbcrewriter_tests.sh (ROOT only, seconds).
+//              AODBcRewriterCheckLinks(in, out) is the check that sees a
+//              mis-remapped index; the output-only checks cannot, because a
+//              wrong row number is still a valid one.
+//
 // -----------------------------------------------------------------------------
 // DATA MODEL DEPENDENCY GRAPH (relevant subset)
 // -----------------------------------------------------------------------------
@@ -75,6 +94,7 @@
 #include "TTree.h"
 #include "TGrid.h"
 #include <algorithm>
+#include <cctype>
 #include <cstring>
 #include <cstdint>
 #include <iostream>
@@ -172,6 +192,89 @@ static bool isPasteJoinChild(const std::string &tname) {
   return false;
 }
 
+// ----------------------------------------------------------------------------
+// INDEX-REFERENCE REGISTRY — the single source of truth for "which fIndex*
+// column points into which table".
+//
+// This ONE list drives three things:
+//
+//   * the rewriter  — buildRemaps() turns it into the complete set of value
+//                     remaps for a table, so a reference can no longer be
+//                     forgotten.  Forgetting one is the O2-7098 bug class:
+//                     Stage 1b reordered O2fwdtrack but nobody remapped its
+//                     fIndexMFTTracks / fIndexFwdTracks_MatchMCHTrack, so every
+//                     global muon silently got the wrong MFT and MCH leg.  The
+//                     values stayed in range, so the range check below passed.
+//   * the validator — the generic in-range check.
+//   * the drift guard — any fIndex* branch NOT listed here is reported, so a
+//                     schema addition breaks the test instead of quietly
+//                     producing mis-linked data.
+//
+// The value is a list of candidate table-name prefixes; the first one that
+// resolves in this DF wins (that is how fIndexTracks* prefers O2track_iu over
+// O2track).
+//
+// Referent resolution (isTableNamed): a tree named K is the table named by
+// prefix P when K == P or K == P + "_<digits>" (the AO2D schema-version
+// suffix).  That deliberately separates O2mfttrack_001 from O2mfttrackcov,
+// O2bc_001 from O2bcflag, and O2mccollision_001 from O2mccollisionlabel — a
+// plain BeginsWith() would confuse them.
+static const std::vector<std::pair<std::string, std::vector<std::string>>> kIndexRefs = {
+  { "fIndexBCs",                     { "O2bc" }                  },
+  { "fIndexBC",                      { "O2bc" }                  },
+  { "fIndexSliceBCs",                { "O2bc" }                  },
+  { "fIndexCollisions",              { "O2collision" }           },
+  { "fIndexCollision",               { "O2collision" }           },
+  { "fIndexMcCollisions",            { "O2mccollision" }         },
+  { "fIndexMcParticles",             { "O2mcparticle" }          },
+  { "fIndexArrayMcParticles",        { "O2mcparticle" }          },
+  // O2mcparticle intra-table links (mother list + [first,last] daughter slice).
+  { "fIndexArray_Mothers",           { "O2mcparticle" }          },
+  { "fIndexSlice_Daughters",         { "O2mcparticle" }          },
+  { "fIndexTracks",                  { "O2track_iu", "O2track" } },
+  { "fIndexTracks_0",                { "O2track_iu", "O2track" } },
+  { "fIndexTracks_1",                { "O2track_iu", "O2track" } },
+  { "fIndexTracks_2",                { "O2track_iu", "O2track" } },
+  { "fIndexTracks_Pos",              { "O2track_iu", "O2track" } },
+  { "fIndexTracks_Neg",              { "O2track_iu", "O2track" } },
+  { "fIndexTracks_Bach",             { "O2track_iu", "O2track" } },
+  { "fIndexTracks_ITS",              { "O2track_iu", "O2track" } },
+  { "fIndexMFTTracks",               { "O2mfttrack" }            },
+  { "fIndexFwdTracks",               { "O2fwdtrack" }            },
+  { "fIndexFwdTracks_MatchMCHTrack", { "O2fwdtrack" }            },
+  { "fIndexV0s",                     { "O2v0" }                  },
+  { "fIndexCascades",                { "O2cascade" }             },
+  { "fIndexDecay3Bodys",             { "O2decay3body" }          },
+};
+
+// K names the table with prefix P?  See the comment on kIndexRefs.
+static bool isTableNamed(const std::string &key, const std::string &prefix) {
+  if (key == prefix) return true;
+  if (key.size() <= prefix.size() + 1) return false;
+  if (key.compare(0, prefix.size(), prefix) != 0) return false;
+  if (key[prefix.size()] != '_') return false;
+  for (size_t i = prefix.size() + 1; i < key.size(); ++i)
+    if (!std::isdigit(static_cast<unsigned char>(key[i]))) return false;
+  return true;
+}
+
+// Every fIndex* branch of t that is NOT covered by kIndexRefs.  "*_size" count
+// branches of VLA index arrays are not references and are excluded.  A non-empty
+// result means the schema grew a link the tool does not know how to follow.
+static std::vector<std::string> unregisteredIndexBranches(TTree *t) {
+  std::vector<std::string> out;
+  if (!t) return out;
+  for (auto *obj : *t->GetListOfBranches()) {
+    std::string bname = static_cast<TBranch *>(obj)->GetName();
+    if (bname.rfind("fIndex", 0) != 0) continue;
+    if (bname.size() > 5 && bname.compare(bname.size() - 5, 5, "_size") == 0) continue;
+    bool known = false;
+    for (auto &kv : kIndexRefs) if (kv.first == bname) { known = true; break; }
+    if (!known) out.push_back(bname);
+  }
+  return out;
+}
+
 // ============================================================================
 // SECTION 2 — Generic ROOT branch I/O helpers
 // ============================================================================
@@ -246,13 +349,6 @@ static void writeAsInt(void *buf, ScalarTag tag, Long64_t val) {
     case ScalarTag::kLong64: *static_cast<Long64_t *>(buf) = (Long64_t)val; break;
     default: break;
   }
-}
-
-// Remap a single Int_t index value through a PermMap.  Returns -1 for any
-// out-of-range or already-invalid (negative) value.
-static Int_t remapIdx(Int_t val, const PermMap &perm) {
-  if (val < 0 || (size_t)val >= perm.size()) return -1;
-  return perm[(size_t)val];
 }
 
 // A description of one branch in a tree: its name, scalar type tag, byte
@@ -341,40 +437,59 @@ static std::vector<BranchDesc> describeBranches(TTree *tree) {
 // SECTION 3 — Table rewriting engine
 // ============================================================================
 //
-// rewriteTable() is the single generic function that handles any table.
+// writeTable() is the single generic function that writes any table.
 // It takes:
-//   - src          : the source TTree
-//   - dirOut       : directory to write the output TTree into
-//   - rowOrder     : which source rows to include and in what order
-//                    (a vector of source row indices, possibly a subset)
-//   - indexBranch  : name of the index branch to remap, or "" if none
-//   - parentPerm   : PermMap for remapping that index (may be empty)
-//   - extraRemaps  : additional index columns to remap in-place via their own
-//                    PermMaps (used for intra-table and cross-table indices
-//                    that are not the primary sort key, e.g. mother/daughter
-//                    indices in O2mcparticle or fIndexMcParticles in labels)
+//   - src      : the source TTree
+//   - dirOut   : directory to write the output TTree into
+//   - rowOrder : which source rows to include and in what order
+//                (a vector of source row indices, possibly a subset)
+//   - remaps   : the index columns to remap in-place, each with its own PermMap
 //
-// It returns the permutation of source rows implied by rowOrder, expressed
-// as a PermMap: perm[srcRow] = outputRow, -1 if the row was dropped.
+// There is deliberately NO "primary index" special case.  Every index column —
+// the one the table was sorted by as much as an intra-table mother/daughter
+// link — goes through the same `remaps` list, which callers obtain from
+// buildRemaps() and therefore from the kIndexRefs registry.  The previous
+// design had one privileged index plus an optional list of "extra" ones, and
+// every stage had to remember to populate the extras; Stage 1b did not, which
+// is precisely how O2fwdtrack's match indices were left dangling (O2-7098).
 
-// Describes one extra index column to remap independently of the sort key.
-struct ExtraRemap {
-  std::string  branchName;  // branch whose integer values to remap
-  const PermMap *perm;      // remapping table: newVal = (*perm)[oldVal]
+// Describes one index column to remap.
+struct IndexRemap {
+  std::string    branchName;  // branch whose integer values to remap
+  const PermMap *perm;        // remapping table: newVal = (*perm)[oldVal]
 };
 
-static PermMap rewriteTable(TTree *src, TDirectory *dirOut,
-                            const std::vector<Long64_t> &rowOrder,
-                            const std::string &indexBranch,
-                            const PermMap &parentPerm,
-                            const std::vector<ExtraRemap> &extraRemaps = {}) {
+// The row permutation implied by a rowOrder: perm[srcRow] = outRow, -1 if the
+// row is not emitted.
+static PermMap permFromRowOrder(Long64_t nSrc,
+                                const std::vector<Long64_t> &rowOrder) {
+  PermMap perm(nSrc, -1);
+  for (Long64_t outRow = 0; outRow < (Long64_t)rowOrder.size(); ++outRow)
+    perm[rowOrder[outRow]] = (Int_t)outRow;
+  return perm;
+}
+
+// Remap n consecutive integers of the given type held in buf.  Out-of-range and
+// already-invalid values become -1 (the AO2D "no link" sentinel).
+// Returns how many values actually changed.
+static Long64_t remapBuffer(void *buf, ScalarTag tag, size_t elemSize, int n,
+                            const PermMap &perm) {
+  Long64_t changed = 0;
+  auto *bytes = static_cast<unsigned char *>(buf);
+  for (int j = 0; j < n; ++j) {
+    void *slot = bytes + (size_t)j * elemSize;
+    Long64_t v  = readAsInt(slot, tag);
+    Long64_t nv = (v < 0 || (size_t)v >= perm.size()) ? -1 : perm[(size_t)v];
+    if (nv != v) { writeAsInt(slot, tag, nv); ++changed; }
+  }
+  return changed;
+}
+
+static void writeTable(TTree *src, TDirectory *dirOut,
+                       const std::vector<Long64_t> &rowOrder,
+                       const std::vector<IndexRemap> &remaps = {}) {
 
   Long64_t nSrc = src->GetEntries();
-
-  // Build the inverse permutation (srcRow → outRow) from rowOrder
-  PermMap srcToOut(nSrc, -1);
-  for (Long64_t outRow = 0; outRow < (Long64_t)rowOrder.size(); ++outRow)
-    srcToOut[rowOrder[outRow]] = (Int_t)outRow;
 
   // Describe all branches
   auto descs = describeBranches(src);
@@ -422,24 +537,9 @@ static PermMap rewriteTable(TTree *src, TDirectory *dirOut,
   dirOut->cd();
   TTree *out = src->CloneTree(0, "fast");
 
-  // Find the index branch (if any) — we will update its value on the fly
-  ScalarTag idxTag = ScalarTag::kUnknown;
-  std::vector<unsigned char> newIdxBuf;
-  TBranch *outIdxBr = nullptr;
-  if (!indexBranch.empty()) {
-    TBranch *inIdxBr = src->GetBranch(indexBranch.c_str());
-    TLeaf *idxLeaf = inIdxBr ? static_cast<TLeaf *>(inIdxBr->GetListOfLeaves()->At(0)) : nullptr;
-    idxTag = idxLeaf ? tagOf(idxLeaf) : ScalarTag::kUnknown;
-    if (idxTag != ScalarTag::kUnknown) {
-      newIdxBuf.assign(byteSize(idxTag), 0);
-      outIdxBr = out->GetBranch(indexBranch.c_str());
-      if (outIdxBr) outIdxBr->SetAddress(newIdxBuf.data());
-    }
-  }
-
-  // Set all other output branch addresses to the same data buffers as input
+  // Output branches share the input buffers, so an in-place remap below is
+  // what out->Fill() sees.
   for (auto &io : ios) {
-    if (io.desc.name == indexBranch) continue; // handled separately above
     TBranch *outBr = out->GetBranch(io.desc.name.c_str());
     if (!outBr) { std::cerr << "  [warn] no output branch for " << io.desc.name << "\n"; continue; }
     outBr->SetAddress(io.dataBuf.data());
@@ -449,46 +549,36 @@ static PermMap rewriteTable(TTree *src, TDirectory *dirOut,
     }
   }
 
+  // Resolve each remap to its BranchIO once, up front, instead of searching the
+  // branch list per row (O2mcparticle has millions of rows).
+  struct ResolvedRemap { BranchIO *io; const PermMap *perm; };
+  std::vector<ResolvedRemap> resolved;
+  for (auto &r : remaps) {
+    BranchIO *found = nullptr;
+    for (auto &io : ios) if (io.desc.name == r.branchName) { found = &io; break; }
+    if (!found) continue;   // branch absent (caller probed, so this is unusual)
+    // Index columns are signed 32-bit in the AO2D schema.  Refuse to touch
+    // anything else rather than write -1 into an unsigned field.
+    if (found->desc.tag != ScalarTag::kInt && found->desc.tag != ScalarTag::kShort &&
+        found->desc.tag != ScalarTag::kLong64) {
+      std::cerr << "  [warn] index branch " << r.branchName
+                << " has non-signed-integer type — NOT remapped\n";
+      continue;
+    }
+    resolved.push_back({found, r.perm});
+  }
+
   // Fill the output tree row by row in the requested order
   Long64_t nRemapped = 0;
   for (Long64_t srcRow : rowOrder) {
     src->GetEntry(srcRow);
 
-    // Remap the index branch if required
-    if (outIdxBr && idxTag != ScalarTag::kUnknown && !parentPerm.empty()) {
-      // Read old index from the input branch's buffer (one of the ios entries)
-      Long64_t oldIdx = -1;
-      for (auto &io : ios) {
-        if (io.desc.name == indexBranch) { oldIdx = readAsInt(io.dataBuf.data(), idxTag); break; }
-      }
-      Long64_t newIdx = -1;
-      if (oldIdx >= 0 && oldIdx < (Long64_t)parentPerm.size())
-        newIdx = parentPerm[oldIdx];
-      writeAsInt(newIdxBuf.data(), idxTag, newIdx >= 0 ? newIdx : -1);
-      if (newIdx != oldIdx) ++nRemapped;
-    }
-
-    // Apply extra in-place index remaps (e.g. intra-table mother/daughter
-    // indices in O2mcparticle, or fIndexMcParticles in label tables).
-    // The output branch shares the same buffer, so modifying dataBuf here
-    // is read by out->Fill() below.
-    for (auto &er : extraRemaps) {
-      for (auto &io : ios) {
-        if (io.desc.name != er.branchName) continue;
-        if (io.desc.isVLA) {
-          // VLA: remap each element according to count
-          Long64_t cnt = readAsInt(io.countBuf.data(), io.countTag);
-          auto *p = reinterpret_cast<Int_t *>(io.dataBuf.data());
-          for (Long64_t j = 0; j < cnt; ++j)
-            p[j] = remapIdx(p[j], *er.perm);
-        } else {
-          // Scalar or fixed-size array: remap all nElems integers
-          auto *p = reinterpret_cast<Int_t *>(io.dataBuf.data());
-          for (int j = 0; j < io.desc.nElems; ++j)
-            p[j] = remapIdx(p[j], *er.perm);
-        }
-        break;
-      }
+    for (auto &r : resolved) {
+      BranchIO &io = *r.io;
+      int n = io.desc.isVLA ? (int)readAsInt(io.countBuf.data(), io.countTag)
+                            : io.desc.nElems;
+      nRemapped += remapBuffer(io.dataBuf.data(), io.desc.tag, io.desc.elemSize,
+                               n, *r.perm);
     }
 
     out->Fill();
@@ -497,8 +587,61 @@ static PermMap rewriteTable(TTree *src, TDirectory *dirOut,
   std::cout << "    wrote " << out->GetEntries() << " / " << nSrc
             << " rows; " << nRemapped << " index values remapped\n";
   out->Write();
-  return srcToOut;
 }
+
+// Look up the permutation of the table named by the first prefix that resolves.
+// Ambiguity (several schema versions of the same table in one DF) is resolved
+// deterministically by taking the lexicographically smallest name.
+static const PermMap *findPermFor(
+    const std::unordered_map<std::string, PermMap> &allPerms,
+    const std::vector<std::string> &prefixes,
+    std::string *foundName = nullptr) {
+  for (auto &prefix : prefixes) {
+    const PermMap *best = nullptr;
+    std::string bestName;
+    for (auto &[name, perm] : allPerms) {
+      if (!isTableNamed(name, prefix)) continue;
+      if (bestName.empty() || name < bestName) { best = &perm; bestName = name; }
+    }
+    if (best) { if (foundName) *foundName = bestName; return best; }
+  }
+  return nullptr;
+}
+
+// THE central safety net: derive the complete remap list for a table from the
+// kIndexRefs registry.  Every stage writes through this, so an index column can
+// only be missed by being absent from kIndexRefs — which
+// unregisteredIndexBranches() reports.
+static std::vector<IndexRemap> buildRemaps(
+    TTree *src, const std::unordered_map<std::string, PermMap> &allPerms) {
+  std::vector<IndexRemap> remaps;
+  if (!src) return remaps;
+  for (auto &[branchName, prefixes] : kIndexRefs) {
+    if (!src->GetBranch(branchName.c_str())) continue;
+    const PermMap *perm = findPermFor(allPerms, prefixes);
+    if (!perm) continue;   // referent table not in this DF — nothing to remap
+    remaps.push_back({branchName, perm});
+  }
+  return remaps;
+}
+
+// ============================================================================
+// SECTION 3b — Deferred write plan
+// ============================================================================
+//
+// Writing is deferred until every table's row order (and hence its permutation)
+// is known, because references can point forwards and sideways: O2fwdtrack
+// references O2mfttrack — written later in the same stage — and also itself, via
+// fIndexFwdTracks_MatchMCHTrack.  The old code wrote each table as soon as it
+// had planned it, so those two permutations simply did not exist yet at write
+// time.  That is the mechanism behind O2-7098.
+//
+// So: every stage now only PLANS (appends a TablePlan, publishes its perm into
+// allPerms), and processDF writes all plans afterwards in one pass.
+struct TablePlan {
+  std::string           name;      // tree name; re-fetched from dirIn at write time
+  std::vector<Long64_t> rowOrder;  // source rows to emit, in output order
+};
 
 // ============================================================================
 // SECTION 4 — Stage 0: BC table sort + deduplication
@@ -527,7 +670,7 @@ struct BCStage0Result {
   Long64_t nUnique = 0;
 };
 
-static BCStage0Result stage0_sortBCs(TTree *treeBCs, TDirectory *dirOut) {
+static BCStage0Result stage0_sortBCs(TTree *treeBCs, std::vector<TablePlan> &plans) {
   BCStage0Result res;
   Long64_t n = treeBCs->GetEntries();
   if (n == 0) return res;
@@ -566,8 +709,8 @@ static BCStage0Result stage0_sortBCs(TTree *treeBCs, TDirectory *dirOut) {
 
   std::cout << "  BC stage: " << n << " rows -> " << res.nUnique << " unique (sorted)\n";
 
-  // Write the BC table (no index remapping needed for the table itself)
-  rewriteTable(treeBCs, dirOut, rowOrder, /*indexBranch=*/"", /*parentPerm=*/{});
+  // The BC table itself carries no index columns.
+  plans.push_back({treeBCs->GetName(), std::move(rowOrder)});
 
   return res;
 }
@@ -576,10 +719,9 @@ static BCStage0Result stage0_sortBCs(TTree *treeBCs, TDirectory *dirOut) {
 // SECTION 5 — Stage 0b: BC flags table (follows BC row order exactly)
 // ============================================================================
 
-static void stage0_copyBCFlags(TTree *treeFlags, TDirectory *dirOut,
+static void stage0_copyBCFlags(TTree *treeFlags, std::vector<TablePlan> &plans,
                                const PermMap &bcPerm) {
   if (!treeFlags) return;
-  Long64_t nSrc = treeFlags->GetEntries();
 
   // Build rowOrder: for each unique output BC row, pick the first source row
   // that mapped to it
@@ -590,7 +732,7 @@ static void stage0_copyBCFlags(TTree *treeFlags, TDirectory *dirOut,
   rowOrder.reserve(first.size());
   for (auto &kv : first) rowOrder.push_back(kv.second);
 
-  rewriteTable(treeFlags, dirOut, rowOrder, /*indexBranch=*/"", /*parentPerm=*/{});
+  plans.push_back({treeFlags->GetName(), std::move(rowOrder)});
 }
 
 // ============================================================================
@@ -632,10 +774,10 @@ struct MCCollKeyHash {
   }
 };
 
-static std::unordered_map<std::string, PermMap>
-stage1_BCindexedTables(TDirectory *dirIn, TDirectory *dirOut,
+static void
+stage1_BCindexedTables(TDirectory *dirIn, std::vector<TablePlan> &plans,
+                       std::unordered_map<std::string, PermMap> &allPerms,
                        const PermMap &bcPerm) {
-  std::unordered_map<std::string, PermMap> tablePerms;
 
   TIter it(dirIn->GetListOfKeys());
   while (TKey *key = static_cast<TKey *>(it())) {
@@ -719,20 +861,19 @@ stage1_BCindexedTables(TDirectory *dirIn, TDirectory *dirOut,
                 << " duplicate rows (" << rowOrder.size() << " kept)\n";
     }
 
-    PermMap perm = rewriteTable(src, dirOut, rowOrder, idxBr, bcPerm);
-    tablePerms[tname] = std::move(perm);
+    allPerms[tname] = permFromRowOrder(nSrc, rowOrder);
+    plans.push_back({tname, std::move(rowOrder)});
   }
-  return tablePerms;
 }
 
 // ============================================================================
 // SECTION 7 — Stage 2: Tables indexed by MCCollisions
 // ============================================================================
 
-static std::unordered_map<std::string, PermMap>
-stage2_MCCollIndexedTables(TDirectory *dirIn, TDirectory *dirOut,
+static void
+stage2_MCCollIndexedTables(TDirectory *dirIn, std::vector<TablePlan> &plans,
+                           std::unordered_map<std::string, PermMap> &allPerms,
                            const PermMap &mcCollPerm) {
-  std::unordered_map<std::string, PermMap> tablePerms;
 
   TIter it(dirIn->GetListOfKeys());
   while (TKey *key = static_cast<TKey *>(it())) {
@@ -800,27 +941,16 @@ stage2_MCCollIndexedTables(TDirectory *dirIn, TDirectory *dirOut,
       std::cout << "    dropped " << dropped
                 << " rows whose MCCollision parent was deduplicated\n";
 
-    // For O2mcparticle: compute the self-permutation (old row -> new row) from
-    // the row order BEFORE calling rewriteTable, then pass it as extra remaps
-    // so that intra-table mother/daughter indices are updated in the same pass.
-    // The stable sort above preserves within-collision particle order, which
-    // keeps fIndexSlice_Daughters contiguous — so remapping [first,last] via
-    // selfPerm is correct.
-    std::vector<ExtraRemap> extraRemaps;
-    PermMap selfPerm;
-    if (TString(tname.c_str()).BeginsWith("O2mcparticle")) {
-      selfPerm.assign(nSrc, -1);
-      for (Long64_t outRow = 0; outRow < (Long64_t)rowOrder.size(); ++outRow)
-        selfPerm[rowOrder[outRow]] = (Int_t)outRow;
-      extraRemaps.push_back({"fIndexArray_Mothers",  &selfPerm});
-      extraRemaps.push_back({"fIndexSlice_Daughters", &selfPerm});
-      std::cout << "    O2mcparticle: will remap intra-table mother/daughter indices\n";
-    }
-
-    PermMap perm = rewriteTable(src, dirOut, rowOrder, idxBr, mcCollPerm, extraRemaps);
-    tablePerms[tname] = std::move(perm);
+    // O2mcparticle's intra-table mother/daughter links are remapped through this
+    // table's OWN permutation.  No special case is needed any more: the perm is
+    // published here and buildRemaps() picks it up for fIndexArray_Mothers /
+    // fIndexSlice_Daughters at write time, because writing happens after all
+    // planning.  The stable sort above preserves within-collision particle
+    // order, which keeps fIndexSlice_Daughters contiguous — so remapping
+    // [first,last] elementwise is correct.
+    allPerms[tname] = permFromRowOrder(nSrc, rowOrder);
+    plans.push_back({tname, std::move(rowOrder)});
   }
-  return tablePerms;
 }
 
 // ============================================================================
@@ -835,45 +965,14 @@ stage2_MCCollIndexedTables(TDirectory *dirIn, TDirectory *dirOut,
 //
 // The list of paste-join pairs is in kPasteJoins (Section 1).
 //
-// Index columns we know how to remap in a child:
-//   fIndexMcCollisions       -> via mcCollPerm
-//   fIndexCollisions         -> via collPerm
-//   fIndexMcParticles        -> via mcParticlePerm
-//   fIndexArrayMcParticles   -> via mcParticlePerm (VLA)
+// This stage no longer enumerates which index columns it knows how to remap:
+// buildRemaps() derives them from kIndexRefs at write time, for every table
+// alike.  The old hand-maintained enumeration here is what let O2fwdtrack slip
+// through — the table was never routed to this function in the first place.
 //
 // When the named parent is not in allPerms (e.g. tracks aren't reordered in
 // this build), the child is processed with identity row order so the
 // value-wise remaps still apply but the row order is unchanged.
-
-// Build the row order from a PermMap (srcRow -> outRow), inverted.
-static std::vector<Long64_t> rowOrderFromPerm(const PermMap &perm) {
-  // perm[srcRow] = outRow (or -1 if dropped)
-  // We need: outRow -> srcRow, i.e. a sorted list of (outRow, srcRow) pairs
-  std::vector<std::pair<Int_t,Long64_t>> pairs;
-  pairs.reserve(perm.size());
-  for (Long64_t srcRow = 0; srcRow < (Long64_t)perm.size(); ++srcRow)
-    if (perm[srcRow] >= 0) pairs.push_back({perm[srcRow], srcRow});
-  std::sort(pairs.begin(), pairs.end());
-  std::vector<Long64_t> order;
-  order.reserve(pairs.size());
-  for (auto &p : pairs) order.push_back(p.second);
-  return order;
-}
-
-// Locate a permutation in allPerms whose key begins with a given prefix.
-// Returns nullptr if none found.
-static const PermMap *findPermByPrefix(
-    const std::unordered_map<std::string, PermMap> &allPerms,
-    const char *prefix,
-    std::string *foundName = nullptr) {
-  for (auto &[name, perm] : allPerms) {
-    if (TString(name.c_str()).BeginsWith(prefix)) {
-      if (foundName) *foundName = name;
-      return &perm;
-    }
-  }
-  return nullptr;
-}
 
 // ============================================================================
 // SECTION 9b — Stage 1b: Collision-grouped track tables
@@ -899,7 +998,14 @@ static const PermMap *findPermByPrefix(
 //   * paste-join children (O2trackextra, O2trackcov_iu, O2mctracklabel, ...)
 //     follow the published parent permutation;
 //   * every fIndexTracks* / fIndexMFTTracks / fIndexFwdTracks reference is
-//     remapped through it in processPasteJoinTables.
+//     remapped through it — including the ones the track tables hold on EACH
+//     OTHER.  O2fwdtrack points at O2mfttrack (fIndexMFTTracks) and at itself
+//     (fIndexFwdTracks_MatchMCHTrack), so its remap needs permutations that are
+//     only established later in this very stage.  That is why this function
+//     PLANS all tables first and lets processDF write them afterwards; writing
+//     inline (as it used to) meant those two columns kept pre-reorder row
+//     numbers — in range, so no validator complained, but every global muon
+//     ended up with a foreign MFT and MCH leg.  See O2-7098.
 static bool isCollGroupedTrackTable(const std::string &tname) {
   static const char *kPrefixes[] = {"O2track_iu", "O2track",
                                      "O2mfttrack", "O2fwdtrack"};
@@ -909,11 +1015,11 @@ static bool isCollGroupedTrackTable(const std::string &tname) {
 }
 
 static void stage1b_reorderTrackTables(
-    TDirectory *dirIn, TDirectory *dirOut,
+    TDirectory *dirIn, std::vector<TablePlan> &plans,
     std::unordered_map<std::string, PermMap> &allPerms,
-    std::unordered_set<std::string> &written) {
+    std::unordered_set<std::string> &planned) {
 
-  const PermMap *collPermP = findPermByPrefix(allPerms, "O2collision_");
+  const PermMap *collPermP = findPermFor(allPerms, {"O2collision"});
   if (!collPermP) return;  // no collisions present — nothing to regroup against
 
   TIter it(dirIn->GetListOfKeys());
@@ -924,7 +1030,7 @@ static void stage1b_reorderTrackTables(
     if (!src) continue;
 
     std::string tname = src->GetName();
-    if (written.count(tname)) continue;       // BC-indexed tracks etc. already done
+    if (planned.count(tname)) continue;       // BC-indexed tracks etc. already done
     if (!isCollGroupedTrackTable(tname)) continue;
     if (isPasteJoinChild(tname)) continue;    // children follow their parent below
     if (!src->GetBranch("fIndexCollisions")) continue;
@@ -960,33 +1066,163 @@ static void stage1b_reorderTrackTables(
     rowOrder.reserve(nSrc);
     for (auto &e : entries) rowOrder.push_back(e.srcRow);
 
-    // Reorder rows and remap fIndexCollisions values through collPerm.
-    PermMap perm = rewriteTable(src, dirOut, rowOrder, "fIndexCollisions", *collPermP);
-    allPerms[tname] = std::move(perm);
-    written.insert(tname);
+    // Publish the permutation now; the actual write (with the full set of
+    // remaps, this table's own included) happens in processDF once every
+    // permutation in the DF is known.
+    allPerms[tname] = permFromRowOrder(nSrc, rowOrder);
+    plans.push_back({tname, std::move(rowOrder)});
+    planned.insert(tname);
   }
 }
 
-static void processPasteJoinTables(
-    TDirectory *dirIn, TDirectory *dirOut,
-    const std::unordered_map<std::string, PermMap> &allPerms,
-    const std::unordered_set<std::string> &alreadyWritten,
-    const PermMap *bcPermP = nullptr) {
+// ----------------------------------------------------------------------------
+// Re-sorting tables that are STORED SORTED BY a reference
+//
+// Stage 1b exists because a track table grouped by fIndexCollisions stops being
+// sliceable once the collision table is reordered.  Exactly the same is true of
+// every other table stored sorted by a reference into a table this tool
+// reorders — O2v0_002 and O2cascade_001 by fIndexCollisions, O2fwdtrkcl by
+// fIndexFwdTracks, O2ambiguoustrack and O2trackqa_003 by fIndexTracks.
+// Remapping their values while leaving their rows in place turns a sorted
+// column into an unsorted one, which is the same defect that produced
+//   "Table ... index fIndexCollisions has a group with index -1 that is split".
+//
+// Rather than hardcode which tables are grouped by what — the enumeration habit
+// that caused O2-7098 — the decision is derived from the data: IF a column is
+// non-decreasing in the input, THEN it is an ordering the file carries and the
+// output must preserve it.  That is self-maintaining across schema changes, and
+// it correctly leaves O2mfttrackcov alone: its fIndexMFTTracks is not sorted in
+// the input, so there is no ordering to preserve.
 
-  // Pre-locate the parent permutations that paste-join children may want to
-  // apply to their own index columns.  Any of these may legitimately be null
-  // (e.g. mcParticlePerm absent if there is no O2mcparticle in this DF).
-  const PermMap *mcParticlePerm = findPermByPrefix(allPerms, "O2mcparticle");
-  const PermMap *mcCollPermP    = findPermByPrefix(allPerms, "O2mccollision_");
-  const PermMap *collPermP      = findPermByPrefix(allPerms, "O2collision_");
-  // Track tables reordered in Stage 1b: every reference into them must be
-  // remapped through their permutation (null if the table is absent / wasn't
-  // reordered, in which case no remap is needed).
-  const PermMap *trkPerm        = findPermByPrefix(allPerms, "O2track_iu");
-  const PermMap *mftPerm        = findPermByPrefix(allPerms, "O2mfttrack");
-  const PermMap *fwdPerm        = findPermByPrefix(allPerms, "O2fwdtrack");
-  // bcPermP is passed in from processDF (the BC table is the only stage
-  // whose permutation isn't already published in allPerms).
+struct ResortCandidate {
+  size_t                   planIdx = 0;
+  std::string              tableName;
+  std::string              keyBranch;
+  std::vector<Long64_t>    keyValues;    // raw input values of keyBranch
+  std::vector<std::string> refPrefixes;  // referent of keyBranch, from kIndexRefs
+};
+
+// Read a scalar Int_t-like index column.  Returns false for VLA / fixed-array
+// columns, which are not row orderings.
+static bool readScalarIndexColumn(TTree *t, const char *branch,
+                                  std::vector<Long64_t> &out) {
+  TBranch *br = t->GetBranch(branch);
+  if (!br) return false;
+  TLeaf *leaf = static_cast<TLeaf *>(br->GetListOfLeaves()->At(0));
+  if (!leaf || leaf->GetLeafCount() || leaf->GetLen() != 1) return false;
+  ScalarTag tag = tagOf(leaf);
+  size_t sz = byteSize(tag);
+  if (sz == 0) return false;
+  std::vector<unsigned char> buf(sz, 0);
+  br->SetAddress(buf.data());
+  out.clear();
+  out.reserve(t->GetEntries());
+  for (Long64_t i = 0; i < t->GetEntries(); ++i) {
+    br->GetEntry(i);
+    out.push_back(readAsInt(buf.data(), tag));
+  }
+  br->ResetAddress();
+  return true;
+}
+
+// The convention this tool writes (and Stage 1b establishes): valid values
+// ascending, the -1 "ambiguous" group as one contiguous run at the end.
+static bool isOrderedWithNullsLast(const std::vector<Long64_t> &v) {
+  Long64_t prev = -1;
+  bool seenNull = false;
+  for (auto x : v) {
+    if (x < 0) { seenNull = true; continue; }
+    if (seenNull) return false;   // a valid value after a null: not this convention
+    if (x < prev) return false;
+    prev = x;
+  }
+  return true;
+}
+
+// Pick the column a table is stored sorted by, if any.  fIndexCollisions wins
+// when several qualify, since that is the grouping O2's slicing cache checks.
+static bool findGroupingColumn(TTree *src, std::string &keyBranch,
+                               std::vector<Long64_t> &keyValues,
+                               std::vector<std::string> &refPrefixes) {
+  if (!src || src->GetEntries() < 2) return false;
+  bool found = false;
+  for (auto &[branchName, prefixes] : kIndexRefs) {
+    std::vector<Long64_t> vals;
+    if (!readScalarIndexColumn(src, branchName.c_str(), vals)) continue;
+    if (!isOrderedWithNullsLast(vals)) continue;
+    bool preferred = (branchName == "fIndexCollisions");
+    if (found && !preferred) continue;
+    keyBranch   = branchName;
+    keyValues   = std::move(vals);
+    refPrefixes = prefixes;
+    found = true;
+    if (preferred) break;
+  }
+  return found;
+}
+
+// Re-sort each candidate by its remapped grouping column.  Iterated to a fixed
+// point because these tables reference each other: O2cascade_001 is sorted by
+// fIndexV0s, and O2v0_002 may itself have just been re-sorted.
+static void resortByGroupingColumn(
+    std::vector<TablePlan> &plans,
+    std::unordered_map<std::string, PermMap> &allPerms,
+    const std::vector<ResortCandidate> &candidates) {
+
+  const int kMaxPasses = 8;
+  int pass = 0;
+  for (; pass < kMaxPasses; ++pass) {
+    bool changed = false;
+    for (auto &cand : candidates) {
+      const PermMap *refPerm = findPermFor(allPerms, cand.refPrefixes);
+      if (!refPerm) continue;   // referent absent from this DF
+
+      Long64_t n = (Long64_t)cand.keyValues.size();
+      struct SortEntry { Long64_t key; Long64_t srcRow; };
+      std::vector<SortEntry> entries;
+      entries.reserve(n);
+      for (Long64_t i = 0; i < n; ++i) {
+        Long64_t old = cand.keyValues[i];
+        Long64_t nw  = (old >= 0 && old < (Long64_t)refPerm->size()) ? (*refPerm)[old] : -1;
+        entries.push_back({nw, i});
+      }
+      // Same ordering convention as Stage 1: -1 sinks to a contiguous tail.
+      std::stable_sort(entries.begin(), entries.end(),
+        [](const SortEntry &a, const SortEntry &b) {
+          if (a.key < 0 && b.key >= 0) return false;
+          if (a.key >= 0 && b.key < 0) return true;
+          return a.key < b.key;
+        });
+      std::vector<Long64_t> rowOrder;
+      rowOrder.reserve(n);
+      for (auto &e : entries) rowOrder.push_back(e.srcRow);
+
+      if (rowOrder == plans[cand.planIdx].rowOrder) continue;
+      plans[cand.planIdx].rowOrder = rowOrder;
+      allPerms[cand.tableName]     = permFromRowOrder(n, rowOrder);
+      changed = true;
+      std::cout << "  Re-sort: " << cand.tableName << " by remapped "
+                << cand.keyBranch << " (was sorted by it on input)\n";
+    }
+    if (!changed) break;
+  }
+  if (pass == kMaxPasses)
+    std::cerr << "  [warn] re-sort did not reach a fixed point after "
+              << kMaxPasses << " passes — check for a reference cycle\n";
+}
+
+// Plan every table not yet claimed by an earlier stage: paste-join children
+// follow their parent's row order, everything else keeps its own — unless it is
+// stored sorted by a reference, in which case resortByGroupingColumn() below
+// re-establishes that ordering.  The index columns these tables carry are NOT
+// enumerated here — buildRemaps() derives them from kIndexRefs when processDF
+// writes.
+static void planRemainingTables(
+    TDirectory *dirIn, std::vector<TablePlan> &plans,
+    std::unordered_map<std::string, PermMap> &allPerms,
+    std::unordered_set<std::string> &planned) {
+
+  std::vector<ResortCandidate> resortCandidates;
 
   TIter it(dirIn->GetListOfKeys());
   while (TKey *key = static_cast<TKey *>(it())) {
@@ -996,101 +1232,73 @@ static void processPasteJoinTables(
     if (!src) continue;
 
     std::string tname = src->GetName();
-    if (alreadyWritten.count(tname)) continue;
+    if (planned.count(tname)) continue;
     if (isBCTable(tname.c_str())) continue;
     // Stage-1 BC-indexed and Stage-2 MCColl-indexed non-paste-join tables are
-    // already in alreadyWritten.  A paste-join child carrying its own MCColl
-    // index (e.g. O2mccollisionlabel) was deferred from stage2 and lands here.
+    // already planned.  A paste-join child carrying its own MCColl index
+    // (e.g. O2mccollisionlabel) was deferred from stage2 and lands here.
     if (bcIndexBranch(src)) continue;
     if (mcCollIndexBranch(src) && !isPasteJoinChild(tname)) continue;
 
-    // Build value-wise extra remaps for any index column this table carries
-    // that points into a table whose row order may have changed.
-    std::vector<ExtraRemap> extraRemaps;
-    if (mcParticlePerm) {
-      if (src->GetBranch("fIndexMcParticles"))
-        extraRemaps.push_back({"fIndexMcParticles",      mcParticlePerm});
-      if (src->GetBranch("fIndexArrayMcParticles"))
-        extraRemaps.push_back({"fIndexArrayMcParticles", mcParticlePerm});
-    }
-    if (mcCollPermP && src->GetBranch("fIndexMcCollisions"))
-      extraRemaps.push_back({"fIndexMcCollisions",     mcCollPermP});
-    if (collPermP && src->GetBranch("fIndexCollisions"))
-      extraRemaps.push_back({"fIndexCollisions",       collPermP});
-    if (bcPermP) {
-      // BC-pointing indices that weren't already remapped in Stage 1.
-      // Stage-1 BC-indexed tables (with fIndexBCs / fIndexBC) are in
-      // alreadyWritten by now, so this only fires for tables that escaped
-      // Stage 1 — chiefly the O2ambiguous* family, which carries the SOA
-      // SLICE_INDEX_COLUMN(BC, bc) stored on disk as fIndexSliceBCs[2]/I.
-      // After BC dedup the slice endpoints would otherwise point past the
-      // compacted BC table; remapping through bcPerm fixes this.
-      if (src->GetBranch("fIndexSliceBCs"))
-        extraRemaps.push_back({"fIndexSliceBCs",        bcPermP});
-      if (src->GetBranch("fIndexBCs"))
-        extraRemaps.push_back({"fIndexBCs",             bcPermP});
-      if (src->GetBranch("fIndexBC"))
-        extraRemaps.push_back({"fIndexBC",              bcPermP});
-    }
-
-    // Track-pointing indices: the track tables may have been reordered in
-    // Stage 1b, so every reference into them must be remapped through the
-    // corresponding permutation.  (No-op when the perm is null / absent.)
-    auto addTrkRemap = [&](const char *br, const PermMap *pm) {
-      if (pm && src->GetBranch(br)) extraRemaps.push_back({br, pm});
-    };
-    addTrkRemap("fIndexTracks",                  trkPerm);
-    addTrkRemap("fIndexTracks_0",                trkPerm);
-    addTrkRemap("fIndexTracks_1",                trkPerm);
-    addTrkRemap("fIndexTracks_2",                trkPerm);
-    addTrkRemap("fIndexTracks_Pos",              trkPerm);
-    addTrkRemap("fIndexTracks_Neg",              trkPerm);
-    addTrkRemap("fIndexTracks_ITS",              trkPerm);
-    addTrkRemap("fIndexMFTTracks",               mftPerm);
-    addTrkRemap("fIndexFwdTracks",               fwdPerm);
-    addTrkRemap("fIndexFwdTracks_MatchMCHTrack", fwdPerm);
+    Long64_t nSrc = src->GetEntries();
 
     // Find a paste-join parent for this table (kPasteJoins lookup).
     const PermMap *parentPerm = nullptr;
     std::string parentName;
     for (auto &[pastePrefix, parentPrefix] : kPasteJoins) {
       if (!TString(tname.c_str()).BeginsWith(pastePrefix.c_str())) continue;
-      parentPerm = findPermByPrefix(allPerms, parentPrefix.c_str(), &parentName);
+      parentPerm = findPermFor(allPerms, {parentPrefix}, &parentName);
       if (parentPerm) break;
     }
 
+    std::vector<Long64_t> rowOrder;
     if (parentPerm) {
-      std::cout << "  Paste-join: " << tname << " follows " << parentName << "\n";
-      auto rowOrder = rowOrderFromPerm(*parentPerm);
-      if ((Long64_t)rowOrder.size() != src->GetEntries()) {
-        std::cerr << "  [warn] paste-join size mismatch: " << tname
-                  << " has " << src->GetEntries() << " rows but parent perm covers "
-                  << rowOrder.size() << " — cloning as-is\n";
-        dirOut->cd();
-        TTree *c = src->CloneTree(-1, "fast");
-        c->SetDirectory(dirOut);
-        c->Write();
-      } else {
-        rewriteTable(src, dirOut, rowOrder, "", {}, extraRemaps);
-      }
-    } else if (!extraRemaps.empty() || isPasteJoinChild(tname)) {
-      // Parent wasn't reordered (or not present in this DF) — keep row order
-      // identical but still apply value-wise index remaps and follow the
-      // paste-join 1:1 invariant by going through the identity row order.
-      std::cout << "  Identity-order remap: " << tname << "\n";
-      Long64_t n = src->GetEntries();
-      std::vector<Long64_t> identity(n);
-      std::iota(identity.begin(), identity.end(), 0LL);
-      rewriteTable(src, dirOut, identity, "", {}, extraRemaps);
-    } else {
-      // No paste-join and no index remapping needed — fast clone
-      std::cout << "  Copy (no dependency): " << tname << "\n";
-      dirOut->cd();
-      TTree *c = src->CloneTree(-1, "fast");
-      c->SetDirectory(dirOut);
-      c->Write();
+      // perm[srcRow] = outRow (-1 = dropped); invert it into an output order.
+      std::vector<std::pair<Int_t, Long64_t>> pairs;
+      pairs.reserve(parentPerm->size());
+      for (Long64_t srcRow = 0; srcRow < (Long64_t)parentPerm->size(); ++srcRow)
+        if ((*parentPerm)[srcRow] >= 0) pairs.push_back({(*parentPerm)[srcRow], srcRow});
+      std::sort(pairs.begin(), pairs.end());
+      rowOrder.reserve(pairs.size());
+      for (auto &p : pairs) rowOrder.push_back(p.second);
     }
+
+    if (parentPerm && (Long64_t)rowOrder.size() == nSrc) {
+      std::cout << "  Paste-join: " << tname << " follows " << parentName << "\n";
+    } else {
+      if (parentPerm) {
+        // Schema drift: the child cannot be aligned to its parent.  Keep its own
+        // row order (the index remaps still get applied at write time, so at
+        // least no value is left dangling) and shout — the validator's
+        // paste-join parity check will fail on the output.
+        std::cerr << "  [warn] paste-join size mismatch: " << tname
+                  << " has " << nSrc << " rows but parent perm covers "
+                  << rowOrder.size() << " — keeping own row order\n";
+      }
+      rowOrder.resize(nSrc);
+      std::iota(rowOrder.begin(), rowOrder.end(), 0LL);
+    }
+
+    // A table that arrives here with its own row order may still be STORED
+    // SORTED BY one of its index columns; if that column's referent gets
+    // reordered, the sortedness has to be re-established.  Record what is
+    // needed for that; the decision is made below, once every table in this
+    // stage has a permutation.
+    if (!parentPerm) {
+      ResortCandidate cand;
+      if (findGroupingColumn(src, cand.keyBranch, cand.keyValues, cand.refPrefixes)) {
+        cand.planIdx   = plans.size();
+        cand.tableName = tname;
+        resortCandidates.push_back(std::move(cand));
+      }
+    }
+
+    allPerms[tname] = permFromRowOrder(nSrc, rowOrder);
+    plans.push_back({tname, std::move(rowOrder)});
+    planned.insert(tname);
   }
+
+  resortByGroupingColumn(plans, allPerms, resortCandidates);
 }
 
 // ============================================================================
@@ -1152,52 +1360,86 @@ static void processDF(TDirectory *dirIn, TDirectory *dirOut) {
     return;
   }
 
+  // ==========================================================================
+  // PLAN PHASE — every stage only decides row orders and publishes the
+  // resulting permutations.  Nothing is written yet, because a table's index
+  // columns may point at tables planned later in the same or a later stage
+  // (O2fwdtrack -> O2mfttrack, and O2fwdtrack -> itself).
+  // ==========================================================================
+  std::vector<TablePlan> plans;
+  std::unordered_map<std::string, PermMap> allPerms;
+  std::unordered_set<std::string> planned;
+
   // ---- Stage 0: sort & deduplicate BCs ----
   std::cout << "-- Stage 0: BCs --\n";
-  dirOut->cd();
-  BCStage0Result s0 = stage0_sortBCs(treeBCs, dirOut);
-  if (treeFlags) stage0_copyBCFlags(treeFlags, dirOut, s0.bcPerm);
-
-  // Track which tree names have been written so we don't double-write
-  std::unordered_set<std::string> written;
-  written.insert(treeBCs->GetName());
-  if (treeFlags) written.insert(treeFlags->GetName());
+  BCStage0Result s0 = stage0_sortBCs(treeBCs, plans);
+  if (treeFlags) stage0_copyBCFlags(treeFlags, plans, s0.bcPerm);
+  planned.insert(treeBCs->GetName());
+  if (treeFlags) planned.insert(treeFlags->GetName());
+  // bcPerm is a dedup map (several old rows collapse onto one new row), not a
+  // plain row permutation — which is exactly the mapping references into the BC
+  // table need.  Publishing it under the BC tree's real name lets buildRemaps()
+  // resolve fIndexBCs / fIndexBC / fIndexSliceBCs like any other reference.
+  allPerms[treeBCs->GetName()] = s0.bcPerm;
 
   // ---- Stage 1: BC-indexed tables (including MCCollisions dedup) ----
   std::cout << "-- Stage 1: BC-indexed tables --\n";
-  auto stage1Perms = stage1_BCindexedTables(dirIn, dirOut, s0.bcPerm);
-  for (auto &kv : stage1Perms) written.insert(kv.first);
+  stage1_BCindexedTables(dirIn, plans, allPerms, s0.bcPerm);
+  for (auto &kv : allPerms) planned.insert(kv.first);
 
   // ---- Stage 2: MCCollision-indexed tables ----
-  // Find the MCCollision permutation from stage 1
   std::cout << "-- Stage 2: MCCollision-indexed tables --\n";
-  PermMap mcCollPerm;
-  for (auto &[tname, perm] : stage1Perms) {
-    if (TString(tname.c_str()).BeginsWith("O2mccollision")) {
-      mcCollPerm = perm;
-      break;
-    }
-  }
-  if (!mcCollPerm.empty()) {
-    auto stage2Perms = stage2_MCCollIndexedTables(dirIn, dirOut, mcCollPerm);
-    for (auto &kv : stage2Perms) {
-      written.insert(kv.first);
-      stage1Perms[kv.first] = kv.second; // merge into allPerms for paste-join lookup
-    }
+  const PermMap *mcCollPermP = findPermFor(allPerms, {"O2mccollision"});
+  if (mcCollPermP) {
+    PermMap mcCollPerm = *mcCollPermP;   // copy: allPerms grows below
+    stage2_MCCollIndexedTables(dirIn, plans, allPerms, mcCollPerm);
+    for (auto &kv : allPerms) planned.insert(kv.first);
   } else {
     std::cout << "  (no MCCollision table found — skipping stage 2)\n";
   }
 
   // ---- Stage 1b: regroup collision-grouped track tables ----
-  // Must run after Stage 1 (needs the collision permutation) and before the
-  // paste-join stage (so children follow the new track order and fIndexTracks*
-  // references are remapped).  Publishes track permutations into stage1Perms.
+  // Must run after Stage 1 (needs the collision permutation).
   std::cout << "-- Stage 1b: collision-grouped track tables --\n";
-  stage1b_reorderTrackTables(dirIn, dirOut, stage1Perms, written);
+  stage1b_reorderTrackTables(dirIn, plans, allPerms, planned);
 
   // ---- Paste-join tables + unrelated tables ----
   std::cout << "-- Paste-join and unrelated tables --\n";
-  processPasteJoinTables(dirIn, dirOut, stage1Perms, written, &s0.bcPerm);
+  planRemainingTables(dirIn, plans, allPerms, planned);
+
+  // ==========================================================================
+  // WRITE PHASE — all permutations are known, so every table can now have
+  // ALL of its index columns remapped, whichever table they point at.
+  // ==========================================================================
+  std::cout << "-- Writing " << plans.size() << " tables --\n";
+  for (auto &plan : plans) {
+    TTree *src = dynamic_cast<TTree *>(dirIn->Get(plan.name.c_str()));
+    if (!src) { std::cerr << "  [warn] lost tree " << plan.name << " before write\n"; continue; }
+
+    // Drift guard: a link the registry does not know about cannot be remapped,
+    // so say so loudly here as well as in the validator.
+    for (auto &b : unregisteredIndexBranches(src))
+      std::cerr << "  [warn] " << plan.name << "." << b
+                << " is not in kIndexRefs — it will NOT be remapped\n";
+
+    auto remaps = buildRemaps(src, allPerms);
+
+    bool identity = ((Long64_t)plan.rowOrder.size() == src->GetEntries());
+    for (Long64_t i = 0; identity && i < (Long64_t)plan.rowOrder.size(); ++i)
+      if (plan.rowOrder[i] != i) identity = false;
+
+    if (identity && remaps.empty()) {
+      std::cout << "  Copy (no dependency): " << plan.name << "\n";
+      dirOut->cd();
+      TTree *c = src->CloneTree(-1, "fast");
+      c->SetDirectory(dirOut);
+      c->Write();
+      continue;
+    }
+
+    std::cout << "  Write: " << plan.name << " (" << remaps.size() << " index column(s))\n";
+    writeTable(src, dirOut, plan.rowOrder, remaps);
+  }
 
   // ---- Non-tree objects (TMap metadata) ----
   copyNonTreeObjects(dirIn, dirOut);
@@ -1217,49 +1459,37 @@ static void processDF(TDirectory *dirIn, TDirectory *dirOut) {
 //      (e.g. O2mccollisionlabel matches O2collision).
 //   4. Every fIndex* value across the DF is in range w.r.t. its referent
 //      table (value -1 is always permitted as the "no link" sentinel).
+//   5. Every fIndex* branch present is covered by kIndexRefs — an unknown link
+//      is a link nothing remapped.
 //
 // Returns true if all checks pass.  Prints [FAIL] lines for each violation.
+//
+// NOTE on what these checks can and cannot see: they are all *structural*.  The
+// O2-7098 corruption was in-range and structurally perfect — the row numbers
+// were simply the wrong ones.  Catching that needs the input file too; see
+// AODBcRewriterCheckLinks() at the end of this section.
 
-// Map from fIndex* branch name to the table-name prefix it refers to.  The
-// match on the referent side uses TString::BeginsWith so versioned suffixes
-// (O2collision_001, O2bc_001, ...) are handled.  Branches not in this list
-// are skipped by the range check (this includes O2mcparticle's intra-table
-// fIndexArray_Mothers / fIndexSlice_Daughters, which are checked separately
-// with stricter semantics in the MC-particle block).
-static const std::vector<std::pair<std::string,std::string>> kIndexBranchToTable = {
-  { "fIndexBCs",              "O2bc_"          },
-  { "fIndexBC",               "O2bc_"          },
-  { "fIndexSliceBCs",         "O2bc_"          },
-  { "fIndexCollisions",       "O2collision_"   },
-  { "fIndexCollision",        "O2collision_"   },
-  { "fIndexMcCollisions",     "O2mccollision_" },
-  { "fIndexMcParticles",      "O2mcparticle"   },
-  { "fIndexArrayMcParticles", "O2mcparticle"   },
-  { "fIndexTracks",           "O2track_iu"     },
-  { "fIndexTracks_0",         "O2track_iu"     },
-  { "fIndexTracks_1",         "O2track_iu"     },
-  { "fIndexTracks_2",         "O2track_iu"     },
-  { "fIndexTracks_Pos",       "O2track_iu"     },
-  { "fIndexTracks_Neg",       "O2track_iu"     },
-  { "fIndexTracks_ITS",       "O2track_iu"     },
-  { "fIndexFwdTracks",                       "O2fwdtrack"  },
-  { "fIndexFwdTracks_MatchMCHTrack",         "O2fwdtrack"  },
-  { "fIndexMFTTracks",        "O2mfttrack"     },
-  { "fIndexV0s",              "O2v0_"          },
-  { "fIndexCascades",         "O2cascade_"     },
-  { "fIndexDecay3Bodys",      "O2decay3body"   },
-};
-
-// Find a tree in d whose name begins with the given prefix.  Returns the
-// number of entries, or -1 if not found.
+// Find a tree in d whose name matches the given table prefix (see isTableNamed).
+// Returns the number of entries, or -1 if not found.
 static Long64_t treeEntriesByPrefix(TDirectory *d, const char *prefix) {
   TIter it(d->GetListOfKeys());
   TKey *k;
   while ((k = (TKey*)it())) {
-    if (!TString(k->GetName()).BeginsWith(prefix)) continue;
+    if (!isTableNamed(k->GetName(), prefix)) continue;
     TObject *obj = d->Get(k->GetName());
     if (!obj || !obj->InheritsFrom(TTree::Class())) continue;
     return ((TTree*)obj)->GetEntries();
+  }
+  return -1;
+}
+
+// Entries of the table a given index branch refers to (first prefix that
+// resolves wins), or -1 if the referent is not in this DF.
+static Long64_t referentEntries(TDirectory *d,
+                                const std::vector<std::string> &prefixes) {
+  for (auto &p : prefixes) {
+    Long64_t n = treeEntriesByPrefix(d, p.c_str());
+    if (n >= 0) return n;
   }
   return -1;
 }
@@ -1439,19 +1669,29 @@ static bool validateDF(TDirectory *d) {
     }
   }
 
-  // ---- Generic fIndex* range check ----
+  // ---- Generic fIndex* range check + registry drift guard ----
   // For each table in the DF, scan all fIndex* branches and confirm every
   // value lies in [-1, nReferent).  This catches stale pointers across
   // tables (cross-table index drift) which a per-DF-tree-only check misses.
+  //
+  // Any fIndex* branch that is NOT in kIndexRefs is a hard failure: the
+  // rewriter cannot have remapped it, so if the referent table was reordered
+  // the column is now silently wrong.  Adding the entry to kIndexRefs is the
+  // fix — that is the whole point of having one registry.
   TIter it2(d->GetListOfKeys());
   TKey *k2;
   while ((k2 = (TKey*)it2())) {
     TObject *obj = d->Get(k2->GetName());
     if (!obj || !obj->InheritsFrom(TTree::Class())) continue;
     TTree *t = (TTree*)obj;
-    for (auto &[branchName, referentPrefix] : kIndexBranchToTable) {
+    for (auto &b : unregisteredIndexBranches(t)) {
+      std::cerr << "  [FAIL] " << t->GetName() << "." << b
+                << " is not registered in kIndexRefs — nothing remaps it\n";
+      ok = false;
+    }
+    for (auto &[branchName, referentPrefixes] : kIndexRefs) {
       if (!t->GetBranch(branchName.c_str())) continue;
-      Long64_t nRef = treeEntriesByPrefix(d, referentPrefix.c_str());
+      Long64_t nRef = referentEntries(d, referentPrefixes);
       if (nRef < 0) continue;   // referent not in this DF; skip silently
       Long64_t bad = checkIndexRange(t, branchName.c_str(), nRef);
       if (bad > 0) {
@@ -1510,6 +1750,311 @@ bool AODBcRewriterValidate(const char *fname = "AO2D_rewritten.root") {
     std::cout << "VALIDATION PASSED (" << nDF << " DFs checked)\n";
   else
     std::cout << "VALIDATION FAILED — see [FAIL] lines above\n";
+  return allOk;
+}
+
+// ============================================================================
+// SECTION 11b — Link preservation check (input vs output)
+// ============================================================================
+//
+// WHY THIS EXISTS
+//
+// Everything in Section 11 is a *structural* check of the output alone: are the
+// BCs monotonic, are the paste-join row counts equal, is every index value in
+// range.  O2-7098 passed all of them.  Stage 1b reordered O2fwdtrack without
+// remapping fIndexMFTTracks / fIndexFwdTracks_MatchMCHTrack, so every global
+// muon pointed at a perfectly valid, perfectly in-range, completely unrelated
+// MFT track.  No structural check can see that — you have to compare against
+// the input.
+//
+// THE INVARIANT
+//
+// The rewriter permutes rows and drops duplicates.  It must never change what a
+// row *is* or what it *points at*.  So for every table, the multiset of tuples
+//
+//     ( payload fingerprint of the row,
+//       payload fingerprint of the row each index column points at, ... )
+//
+// must be the same before and after — up to rows that were legitimately
+// dropped.  Row identity comes from the payload fingerprint (a hash of every
+// non-fIndex* branch), so no permutation map, no synthetic tagging and no
+// assumption about ordering is needed.  It runs on real production AO2Ds.
+//
+// Dedup is handled by canonicalising the INPUT side: if a referenced input row
+// has no counterpart in the output (it was dropped), the link is rewritten to
+// the "no link" sentinel first, which is exactly what the rewriter does.  A
+// tuple that exists in the output but in no input row is then always a bug.
+
+static const ULong64_t kFnvOffset = 14695981039346656037ULL;
+static const ULong64_t kFnvPrime  = 1099511628211ULL;
+static const ULong64_t kNullFp    = 0ULL;   // reserved: "points at nothing"
+
+static ULong64_t fnv1a(ULong64_t h, const void *data, size_t n) {
+  const unsigned char *p = static_cast<const unsigned char *>(data);
+  for (size_t i = 0; i < n; ++i) { h ^= p[i]; h *= kFnvPrime; }
+  return h;
+}
+
+// Per-row hash of every non-index branch.  Two rows with the same fingerprint
+// are interchangeable as far as this check is concerned, which is the right
+// semantics: identical rows may be freely permuted among themselves.
+//
+// `onlyBranch`, when given, restricts the hash to that single branch.  It is
+// used for the BC table, and only for it: Stage 0 deduplicates BCs by
+// fGlobalBC and *redirects* references onto the surviving row rather than
+// nulling them, so two BC rows that share a fGlobalBC have to be treated as one
+// identity here.  Every other dedup in this tool drops rows and nulls the
+// references, which the survivor canonicalisation below handles.
+static std::vector<ULong64_t> payloadFingerprints(TTree *t,
+                                                  const char *onlyBranch = nullptr) {
+  std::vector<ULong64_t> fps;
+  if (!t) return fps;
+  Long64_t n = t->GetEntries();
+  fps.resize(n, kFnvOffset);
+
+  auto descs = describeBranches(t);
+  struct IO {
+    BranchDesc desc;
+    std::vector<unsigned char> dataBuf, countBuf;
+    ScalarTag countTag = ScalarTag::kUnknown;
+    TBranch *br = nullptr, *cntBr = nullptr;
+  };
+  std::vector<IO> ios;
+  for (auto &d : descs) {
+    if (onlyBranch) { if (d.name != onlyBranch) continue; }
+    else if (d.name.rfind("fIndex", 0) == 0) continue;  // index columns are not payload
+    IO io; io.desc = d;
+    io.dataBuf.assign((d.isVLA ? d.maxElems : d.nElems) * d.elemSize, 0);
+    io.br = t->GetBranch(d.name.c_str());
+    if (d.isVLA) {
+      io.cntBr = t->GetBranch(d.countBranchName.c_str());
+      TLeaf *cl = io.cntBr ? static_cast<TLeaf *>(io.cntBr->GetListOfLeaves()->At(0)) : nullptr;
+      io.countTag = cl ? tagOf(cl) : ScalarTag::kUnknown;
+      io.countBuf.assign(byteSize(io.countTag), 0);
+    }
+    ios.push_back(std::move(io));
+  }
+  for (auto &io : ios) {
+    if (io.br)    io.br->SetAddress(io.dataBuf.data());
+    if (io.cntBr) io.cntBr->SetAddress(io.countBuf.data());
+  }
+
+  for (Long64_t i = 0; i < n; ++i) {
+    ULong64_t h = kFnvOffset;
+    for (auto &io : ios) {
+      if (io.br)    io.br->GetEntry(i);
+      if (io.cntBr) io.cntBr->GetEntry(i);
+      if (io.desc.isVLA) {
+        Long64_t cnt = readAsInt(io.countBuf.data(), io.countTag);
+        h = fnv1a(h, &cnt, sizeof(cnt));
+        h = fnv1a(h, io.dataBuf.data(), (size_t)std::max<Long64_t>(0, cnt) * io.desc.elemSize);
+      } else {
+        h = fnv1a(h, io.dataBuf.data(), (size_t)io.desc.nElems * io.desc.elemSize);
+      }
+    }
+    fps[i] = (h == kNullFp) ? 1ULL : h;   // never collide with the NULL sentinel
+  }
+  t->ResetBranchAddresses();
+  return fps;
+}
+
+// One index column of a table, resolved to the referent's fingerprint table.
+struct LinkColumn {
+  std::string                   branchName;
+  const std::vector<ULong64_t> *refFp = nullptr;  // referent fingerprints, same file
+  const std::unordered_set<ULong64_t> *survivors = nullptr;  // input side only
+};
+
+// Multiset (as a count map) of the per-row tuples described at the top of this
+// section, hashed down to a single 64-bit key.
+static std::map<ULong64_t, Long64_t> linkTupleCounts(
+    TTree *t, const std::vector<ULong64_t> &ownFp,
+    const std::vector<LinkColumn> &links) {
+
+  std::map<ULong64_t, Long64_t> counts;
+  Long64_t n = t->GetEntries();
+
+  struct IO {
+    BranchDesc desc;
+    std::vector<unsigned char> dataBuf, countBuf;
+    ScalarTag countTag = ScalarTag::kUnknown;
+    TBranch *br = nullptr, *cntBr = nullptr;
+    const LinkColumn *link = nullptr;
+  };
+  auto descs = describeBranches(t);
+  std::vector<IO> ios;
+  for (auto &lk : links) {
+    for (auto &d : descs) {
+      if (d.name != lk.branchName) continue;
+      IO io; io.desc = d; io.link = &lk;
+      io.dataBuf.assign((d.isVLA ? d.maxElems : d.nElems) * d.elemSize, 0);
+      io.br = t->GetBranch(d.name.c_str());
+      if (d.isVLA) {
+        io.cntBr = t->GetBranch(d.countBranchName.c_str());
+        TLeaf *cl = io.cntBr ? static_cast<TLeaf *>(io.cntBr->GetListOfLeaves()->At(0)) : nullptr;
+        io.countTag = cl ? tagOf(cl) : ScalarTag::kUnknown;
+        io.countBuf.assign(byteSize(io.countTag), 0);
+      }
+      ios.push_back(std::move(io));
+      break;
+    }
+  }
+  for (auto &io : ios) {
+    if (io.br)    io.br->SetAddress(io.dataBuf.data());
+    if (io.cntBr) io.cntBr->SetAddress(io.countBuf.data());
+  }
+
+  for (Long64_t i = 0; i < n; ++i) {
+    ULong64_t h = fnv1a(kFnvOffset, &ownFp[i], sizeof(ULong64_t));
+    for (auto &io : ios) {
+      if (io.br)    io.br->GetEntry(i);
+      if (io.cntBr) io.cntBr->GetEntry(i);
+      int cnt = io.desc.isVLA ? (int)readAsInt(io.countBuf.data(), io.countTag)
+                              : io.desc.nElems;
+      for (int j = 0; j < cnt; ++j) {
+        Long64_t v = readAsInt(io.dataBuf.data() + (size_t)j * io.desc.elemSize,
+                               io.desc.tag);
+        ULong64_t fp = kNullFp;
+        if (v >= 0 && v < (Long64_t)io.link->refFp->size()) {
+          fp = (*io.link->refFp)[v];
+          // Input side: a referent row that did not survive into the output is
+          // expected to become a null link, so canonicalise it to one here.
+          if (io.link->survivors && !io.link->survivors->count(fp)) fp = kNullFp;
+        }
+        h = fnv1a(h, &fp, sizeof(fp));
+      }
+    }
+    ++counts[h];
+  }
+  t->ResetBranchAddresses();
+  return counts;
+}
+
+static bool checkLinksDF(TDirectory *din, TDirectory *dout, const char *dfName) {
+  bool ok = true;
+
+  // Collect the tables present in both files.
+  std::vector<std::string> tables;
+  TIter it(din->GetListOfKeys());
+  while (TKey *k = static_cast<TKey *>(it())) {
+    if (TString(k->GetClassName()) != "TTree") continue;
+    std::string tn = k->GetName();
+    if (!dout->Get(tn.c_str())) {
+      std::cerr << "  [FAIL] " << dfName << ": table " << tn << " missing from output\n";
+      ok = false;
+      continue;
+    }
+    tables.push_back(tn);
+  }
+
+  // Fingerprint every table in both files once — referents are looked up by name.
+  std::unordered_map<std::string, std::vector<ULong64_t>> fpIn, fpOut;
+  std::unordered_map<std::string, std::unordered_set<ULong64_t>> survivors;
+  for (auto &tn : tables) {
+    const char *only = isTableNamed(tn, "O2bc") ? "fGlobalBC" : nullptr;
+    fpIn[tn]  = payloadFingerprints(dynamic_cast<TTree *>(din->Get(tn.c_str())),  only);
+    fpOut[tn] = payloadFingerprints(dynamic_cast<TTree *>(dout->Get(tn.c_str())), only);
+    survivors[tn].insert(fpOut[tn].begin(), fpOut[tn].end());
+  }
+
+  for (auto &tn : tables) {
+    TTree *tIn  = dynamic_cast<TTree *>(din->Get(tn.c_str()));
+    TTree *tOut = dynamic_cast<TTree *>(dout->Get(tn.c_str()));
+    if (!tIn || !tOut) continue;
+
+    if (tOut->GetEntries() > tIn->GetEntries()) {
+      std::cerr << "  [FAIL] " << dfName << ": " << tn << " grew from "
+                << tIn->GetEntries() << " to " << tOut->GetEntries() << " rows\n";
+      ok = false;
+    }
+
+    // Resolve this table's index columns to their referent fingerprint tables.
+    std::vector<LinkColumn> linksIn, linksOut;
+    for (auto &[branchName, prefixes] : kIndexRefs) {
+      if (!tIn->GetBranch(branchName.c_str())) continue;
+      std::string refName;
+      for (auto &p : prefixes) {
+        for (auto &cand : tables) if (isTableNamed(cand, p)) { refName = cand; break; }
+        if (!refName.empty()) break;
+      }
+      if (refName.empty()) continue;   // referent not in this DF
+      linksIn.push_back({branchName, &fpIn[refName], &survivors[refName]});
+      linksOut.push_back({branchName, &fpOut[refName], nullptr});
+    }
+
+    // Ordering preservation: a column that is sorted on input describes a
+    // grouping the file carries, and O2's slicing cache relies on it.  Remapping
+    // the values while leaving the rows in place silently destroys it — the same
+    // defect as the split "-1" group, just in a different table.
+    for (auto &[branchName, prefixes] : kIndexRefs) {
+      std::vector<Long64_t> vIn, vOut;
+      if (!readScalarIndexColumn(tIn, branchName.c_str(), vIn)) continue;
+      if (!isOrderedWithNullsLast(vIn)) continue;   // no ordering to preserve
+      if (!readScalarIndexColumn(tOut, branchName.c_str(), vOut)) continue;
+      if (!isOrderedWithNullsLast(vOut)) {
+        std::cerr << "  [FAIL] " << dfName << ": " << tn << "." << branchName
+                  << " was sorted on input but is not on output"
+                     " (grouping destroyed — slicing will misbehave)\n";
+        ok = false;
+      }
+    }
+
+    auto cIn  = linkTupleCounts(tIn,  fpIn[tn],  linksIn);
+    auto cOut = linkTupleCounts(tOut, fpOut[tn], linksOut);
+
+    // Every output tuple must be accounted for by an input tuple.  The reverse
+    // is not required: dedup legitimately removes rows.
+    Long64_t unexplained = 0;
+    for (auto &[key, nOut] : cOut) {
+      auto found = cIn.find(key);
+      Long64_t nIn = (found == cIn.end()) ? 0 : found->second;
+      if (nOut > nIn) unexplained += nOut - nIn;
+    }
+    if (unexplained > 0) {
+      std::cerr << "  [FAIL] " << dfName << ": " << tn << " — " << unexplained
+                << " of " << tOut->GetEntries()
+                << " output row(s) have a payload/link combination that no input"
+                   " row had (rows or references were mis-permuted)\n";
+      ok = false;
+    }
+  }
+  return ok;
+}
+
+// Compare a rewritten AO2D against the file it was produced from and verify
+// that no row changed what it points at.  This is the check that catches the
+// O2-7098 bug class; run it whenever AODBcRewriter.C is touched.
+bool AODBcRewriterCheckLinks(const char *inFileName  = "AO2D_pre.root",
+                             const char *outFileName = "AO2D_rewritten.root") {
+  std::cout << "Checking link preservation: " << inFileName
+            << " -> " << outFileName << "\n";
+  if (TString(inFileName).BeginsWith("alien:") ||
+      TString(outFileName).BeginsWith("alien:")) TGrid::Connect("alien");
+  std::unique_ptr<TFile> fin(TFile::Open(inFileName, "READ"));
+  std::unique_ptr<TFile> fout(TFile::Open(outFileName, "READ"));
+  if (!fin || fin->IsZombie())   { std::cerr << "Cannot open " << inFileName << "\n";  return false; }
+  if (!fout || fout->IsZombie()) { std::cerr << "Cannot open " << outFileName << "\n"; return false; }
+
+  bool allOk = true;
+  int nDF = 0;
+  TIter top(fin->GetListOfKeys());
+  while (TKey *k = static_cast<TKey *>(top())) {
+    if (!isDF(k->GetName())) continue;
+    TDirectory *din  = dynamic_cast<TDirectory *>(fin->Get(k->GetName()));
+    TDirectory *dout = dynamic_cast<TDirectory *>(fout->Get(k->GetName()));
+    if (!din) continue;
+    if (!dout) {
+      std::cerr << "  [FAIL] " << k->GetName() << " missing from output\n";
+      allOk = false;
+      continue;
+    }
+    allOk = checkLinksDF(din, dout, k->GetName()) && allOk;
+    ++nDF;
+  }
+  fin->Close();
+  fout->Close();
+  if (allOk) std::cout << "LINK CHECK PASSED (" << nDF << " DFs checked)\n";
+  else       std::cout << "LINK CHECK FAILED — see [FAIL] lines above\n";
   return allOk;
 }
 
