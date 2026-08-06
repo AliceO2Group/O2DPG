@@ -1,6 +1,7 @@
 /// \file   generator_pythia8_LF_flat_mass.C
+/// \author Sawan sawan.sawan@cern.ch
 /// \brief  Modified LF Gun Generator for Flat Mass PHSP PWA Acceptance/Efficiency MC.
-///         Derived directly from generator_pythia8_LF_rapidity_width.C
+///         Adapted from generator_pythia8_LF_rapidity_width.C
 
 #if !defined(__CLING__) || defined(__ROOTCLING__)
 #include "FairGenerator.h"
