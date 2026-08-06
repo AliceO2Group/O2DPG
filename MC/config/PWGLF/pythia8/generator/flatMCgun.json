@@ -1,0 +1,13 @@
+{
+    "f0(1710)" : {
+        "pdg": 10331,
+        "n": 100,
+        "ptMin": 0.0,
+        "ptMax": 30,
+        "rapidityMin": -1.0,
+        "rapidityMax": 1.0,
+        "massMin": 1.0,
+        "massMax": 3.0,
+        "genDecayed": true
+    }
+}
