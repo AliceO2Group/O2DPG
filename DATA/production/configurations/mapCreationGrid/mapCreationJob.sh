@@ -55,7 +55,7 @@ MACRO_ALIEN_DIR_BARE=${MACRO_ALIEN_DIR_BARE:-}
 # expect to change it in the wrapper when the data changes -- not here. Empty ("") is a supported value
 # meaning "skip bad-ranges filtering entirely for this submission" -- see BAD_RANGES_ARG below.
 BAD_RANGES_NAME=${BAD_RANGES_NAME:-Merge_BadIntervals_LHC26_PbPb_DCA-0P300.txt}
-#JDL_OUTPUT=*.log@disk=1,*.txt@disk=1,*.info@disk=1
+#JDL_OUTPUT=*.log@disk=2,*.txt@disk=2,*.info@disk=2
 #JDL_REQUIRE={member(other.GridPartitions,"multicore_8") && (other.CE != "ALICE::NIHAM::PBS64") && (other.CE != "ALICE::KISTI_GSDC::LCG") && (other.CE != "ALICE::SaoPaulo::LCG")};
 # Site blacklist: these three CEs excluded from this pipeline's jobs. Setting #JDL_REQUIRE overrides
 # grid_submit.sh's own default Requirements entirely (it's read verbatim, not merged -- see

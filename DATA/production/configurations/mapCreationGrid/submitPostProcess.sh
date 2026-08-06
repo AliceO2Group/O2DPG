@@ -32,6 +32,13 @@
 # script doesn't need its own OutputDir logic, it just needs to read/write consistently with whatever
 # stage 1 did.
 #
+# This wrapper also captures and uploads ITS OWN workdir pointer (stage2Workdir.<JOBNAME>.txt), the same
+# way stage 1 does for its own output -- nothing inside this pipeline needed that before (stage 2 is the
+# end of the line here), but an external consumer that needs to locate a specific slot's final
+# FT_*.root/smoothed map (e.g. a downstream pipeline using it as an input) has no other way to find it,
+# since it also lands in an ephemeral ${ALIEN_JDL_OUTPUTDIR}, not a fixed path. Purely additive: this
+# stage's own control flow and outputs are unchanged, it just also records where they went.
+#
 # Usage:
 #   ./submitPostProcess.sh
 
@@ -49,7 +56,7 @@ STAGE1_JOBNAME_TAG="mapcreation-v1"        # must equal the JOBNAME stage 1 (sub
                                            # actually submitted with -- that's what determined where
                                            # stage 1 staged its map.
 TOPWORKDIR="MapCreation"
-PACKAGESPEC="O2::daily-20260729-0000-1"
+PACKAGESPEC="O2::daily-20260730-0000-1"
 ASUSER="pwg_pp"        # see the long comment above -- your own account for personal quota, "pwg_pp" for group
                        # quota (this stage's own submission; independent of what stage 1 used).
 MACRO_SOURCE="official" # same meaning/default as stage 1 (submitMapCreation.sh) -- applies
@@ -104,7 +111,8 @@ COUNTERWIDTH=${#N}
 
 TMP_SCRIPT="$(mktemp)"
 TMP_WORKDIR_POINTER="$(mktemp)"
-trap 'rm -f "${TMP_MANIFEST}" "${TMP_SCRIPT:-}" "${TMP_WORKDIR_POINTER}"' EXIT
+TMP_STAGE2_WORKDIR_POINTER="$(mktemp)"
+trap 'rm -f "${TMP_MANIFEST}" "${TMP_SCRIPT:-}" "${TMP_WORKDIR_POINTER}" "${TMP_STAGE2_WORKDIR_POINTER}"' EXIT
 
 # ONE submission, mirroring stage 1: the windows live in the manifest, so a subjob index identifies a
 # (run, window) pair by itself and there is nothing to loop over.
@@ -142,4 +150,22 @@ GRID_SUBMIT_ARGS=(
 )
 
 echo "== Submitting ${JOBNAME} (prodsplit=${N}, asuser=${ASUSER}) =="
-"${O2DPG_ROOT}/GRID/utils/grid_submit.sh" "${GRID_SUBMIT_ARGS[@]}"
+# Capture grid_submit.sh's own stderr (its "pok" status messages go there) while still showing it live,
+# so we can pull out the one line that tells us where this submission's data will actually land -- same
+# mechanism submitMapCreation.sh uses for its own stage1Workdir pointer. Nothing downstream needed
+# stage 2's own output location before now; this exists so a future consumer (e.g. a pipeline that reads
+# stage 2's FT_*.root as an input) can find it without guessing.
+SUBMIT_LOG=$("${O2DPG_ROOT}/GRID/utils/grid_submit.sh" "${GRID_SUBMIT_ARGS[@]}" 2>&1 | tee /dev/stderr)
+
+# Strip ANSI color codes (pok() wraps its output in \033[32m...\033[m) before parsing.
+MY_JOBWORKDIR=$(echo "${SUBMIT_LOG}" | sed -E 's/\x1b\[[0-9;]*m//g' | sed -n "s/^Your job's working directory will be //p" | tail -1)
+if [[ -z "${MY_JOBWORKDIR}" ]]; then
+  echo "ERROR: could not find \"Your job's working directory will be ...\" in grid_submit.sh's output -- a future consumer of this stage's output won't be able to find it. Aborting." >&2
+  exit 1
+fi
+echo "== MY_JOBWORKDIR (stage 2's own) = ${MY_JOBWORKDIR} =="
+
+STAGE2_WORKDIR_POINTER_NAME="stage2Workdir.${JOBNAME}.txt"
+echo "${MY_JOBWORKDIR}" > "${TMP_STAGE2_WORKDIR_POINTER}"
+alien.py cp -f "file:${TMP_STAGE2_WORKDIR_POINTER}" "${MACRO_ALIEN_DIR}/${STAGE2_WORKDIR_POINTER_NAME}"
+echo "== Uploaded ${STAGE2_WORKDIR_POINTER_NAME} =="
