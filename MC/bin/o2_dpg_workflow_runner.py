@@ -1244,7 +1244,7 @@ class WorkflowExecutor:
       self.procstatus[tid]='Running'
       if args.dry_run:
           drycommand="echo \' " + str(self.scheduling_iteration) + " : would do " + str(self.workflowspec['stages'][tid]['name']) + "\'"
-          return subprocess.Popen(['/bin/bash','-c',drycommand], cwd=workdir)
+          return psutil.Popen(['/bin/bash','-c',drycommand], cwd=workdir)
 
       taskenv = os.environ.copy()
       # apply specific (non-default) software version, if any
