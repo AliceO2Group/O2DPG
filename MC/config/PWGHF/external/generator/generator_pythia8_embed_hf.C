@@ -18,6 +18,7 @@ namespace hf_generators
         GapTriggeredBeauty,         // --> GeneratorPythia8GapTriggeredBeauty: beauty enriched
         GapTriggeredCharmAndBeauty, // --> GeneratorPythia8GapTriggeredCharmAndBeauty: charm and beauty enriched (with same ratio)
         GapHF,                      // --> GeneratorPythia8GapHF
+        GapHFRatio,                 // --> GeneratorPythia8GapHF, quark list built from b/c ratio
         NGenType
     };
 }
@@ -82,6 +83,12 @@ public:
             LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GeneratorPythia8GapHF **********";
             LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
             mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapTriggeredBeauty(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList, partPdgToReplaceList, freqReplaceList));
+            break;
+
+        case hf_generators::GapHFRatio:
+            LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GapHFRatio (custom b/c ratio) **********";
+            LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
+            mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapHF(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, quarkPdgList, hadronPdgList, partPdgToReplaceList, freqReplaceList));
             break;
         default:
             LOG(fatal) << "********** [GeneratorPythia8EmbedHF] bad configuration, fix it! **********";
@@ -387,6 +394,44 @@ private:
 
 };
 
+// Helper: build quarkPdgList from bOverCRatio (= N(beauty)/N(charm), default 1 = 1:1)
+// Integer b/c: taken directly; fractional b/c: reduced to nearest nB:nC with nC+nB <= 20
+static std::vector<int> BuildQuarkListFromBOverC(float bOverCRatio)
+{
+    if (bOverCRatio <= 0.f) { 
+        LOG(fatal) << "bOverCRatio (b/c) must be > 0";
+    }
+    if (bOverCRatio > 19.f) {
+        bOverCRatio = 19.f;
+        LOG(warn) << "bOverCRatio (b/c) too large, using 19:1";
+    }else if (bOverCRatio < 1.f/19.f) {
+        bOverCRatio = 1.f/19.f;
+        LOG(warn) << "bOverCRatio (b/c) too small, using 1:19";
+    }
+
+    int nC = 1, nB = 1;
+    float bestErr = 1e9f;
+    for (int c = 1; c <= 19; ++c) {
+        int b = (int)std::lround(bOverCRatio * c);
+        if (b < 1 || c + b > 20) {
+            continue;
+        } 
+        float err = std::fabs((float)b / c - bOverCRatio);
+        if (err < bestErr) {
+            bestErr = err;
+            nC = c;
+            nB = b;
+        }
+    }
+
+    std::vector<int> list;
+    // Bresenham interleaving
+    int len = nC + nB;
+    for (int k = 0; k < len; ++k)
+        list.push_back((((k + 1) * nC) / len > (k * nC) / len) ? 4 : 5);
+    return list;
+}
+
 // Charm enriched
 FairGenerator * GeneratorPythia8EmbedHFCharm(bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> quarkPdgList = {}, std::vector<int> hadronPdgList = {}, std::vector<std::array<int,2>> partPdgToReplaceList = {}, std::vector<float> freqReplaceList = {})
 {
@@ -420,3 +465,18 @@ FairGenerator * GeneratorPythia8EmbedHFCharmAndBeauty(bool usePtHardBins = false
     return myGen;
 }
 
+// Charm and beauty enriched with tunable b/c ratio
+FairGenerator * GeneratorPythia8EmbedHFRatio(float bOverCRatio = 1.f, bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {}, std::vector<std::array<int,2>> partPdgToReplaceList = {}, std::vector<float> freqReplaceList = {})
+{
+    auto myGen = new GeneratorPythia8EmbedHF();
+
+    /// build the quark list from the b/c ratio
+    auto quarkPdgList = BuildQuarkListFromBOverC(bOverCRatio);
+
+    /// setup the internal generator for HF events
+    myGen->setupGeneratorEvHF(hf_generators::GapHFRatio,
+        usePtHardBins, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax,
+        quarkPdgList, hadronPdgList, partPdgToReplaceList, freqReplaceList);
+
+    return myGen;
+}
