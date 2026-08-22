@@ -59,6 +59,8 @@ print_help()
   echo "ALIEN_JDL_RUN_TIME_SPAN_FILE=FILE, use a run-time-span file to exclude bad data-taking periods"
   echo "ALIEN_JDL_INVERT_IRFRAME_SELECTION, invertes the choice of ALIEN_JDL_RUN_TIME_SPAN_FILE"
   echo "ALIEN_JDL_CCDB_CONDITION_NOT_AFTER, sets the condition_not_after timestamp for CCDB queries"
+  echo "ALIEN_O2DPG_FILEGRAPH=FILE, delete intermediate files early, using a FileIOGraph report"
+  echo "ALIEN_O2DPG_RESOURCES=FILE, use resource estimates learned by a pilot run instead of sampling them"
   echo "DISABLE_QC, set this to disable QC, e.g. to 1"
   echo "CYCLE, to set a cycle number different than 0"
   echo "NSIGEVENTS, to enforce a specific upper limit of events in a timeframe (not counting orbit-early) events"
@@ -430,8 +432,15 @@ else
 fi
 echo_info "Workflow will run with target specification ${targetString}"
 
+# resource estimates learned by a pilot run (o2dpg_sim_metrics.py json-stat)
+# replace the runtime sampling; without them we sample dynamically as before
+RESOURCE_ARGS="--dynamic-resources"
+if [ -n "${ALIEN_O2DPG_RESOURCES}" ]; then
+  RESOURCE_ARGS="--update-resources ${ALIEN_O2DPG_RESOURCES}"
+fi
+
 ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${targetString}                                    \
-                                               --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} --dynamic-resources                \
+                                               --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} ${RESOURCE_ARGS}                     \
                                                ${ALIEN_O2DPG_FILEGRAPH:+--remove-files-early ${ALIEN_O2DPG_FILEGRAPH}} \
                                                ${ALIEN_O2DPG_ADDITIONAL_WORKFLOW_RUNNER_ARGS}
 
