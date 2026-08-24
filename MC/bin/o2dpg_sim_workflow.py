@@ -659,7 +659,11 @@ if includeQED:
       includeQED = False
    else:
       qedrate = INTRATE * QEDXSecExpected[COLTYPE] / XSecSys[COLTYPE]   # hadronic interaction rate * cross_section_ratio
-      qedspec = 'qed' + ',' + str(qedrate) + ',10000000:' + str(NEventsQED)
+      # the QED events are reused in a round robin, so both numbers are the size of the QED pool.
+      # Older O2 versions wrap the QED event IDs at the first number instead of the second one and
+      # would otherwise put event IDs into the MC labels which are not in the QED kinematics.
+      # See https://its.cern.ch/jira/browse/O2-7132
+      qedspec = 'qed' + ',' + str(qedrate) + ',' + str(NEventsQED) + ':' + str(NEventsQED)
 
 PreCollContextTask['cmd'] = task_finalizer([
       '${O2_ROOT}/bin/o2-steer-colcontexttool',
