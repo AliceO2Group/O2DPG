@@ -75,7 +75,9 @@ int External() {
                     // check for parent-child relations
                     auto pdg0 = child0->GetPdgCode();
                     auto pdg1 = child1->GetPdgCode();
-                    std::cout << "First and last children of parent " << checkPdgSignal << " are PDG0: " << pdg0 << " PDG1: " << pdg1 << "\n";
+                    // std::cout << "First and last children of parent " << checkPdgSignal << " are PDG0: " << pdg0 << " PDG1: " << pdg1 << "\n";
+                    if (pdg == checkPdgSignal[0]) std::cout << "First and last children of parent Jpsi are PDG0: " << pdg0 << " PDG1: " << pdg1 << "\n";
+                    if (pdg == checkPdgSignal[1]) std::cout << "First and last children of parent Psi(2S) are PDG0: " << pdg0 << " PDG1: " << pdg1 << "\n";
                     if (std::abs(pdg0) == checkPdgDecay && std::abs(pdg1) == checkPdgDecay && pdg0 == -pdg1) {
                         nLeptonPairs++;
                         if (child0->getToBeDone() && child1->getToBeDone()) {
