@@ -266,6 +266,45 @@ def retrieve_CTPScalers(ccdbreader, run_number, timestamp=None):
       return ctpscaler
     return None
 
+def make_CTP_raw_rate_source(run_number, timestamp, ColSystem):
+    """
+    A function giving the raw CTP counting rate in Hz at a timestamp in milliseconds, and the name
+    of the source it reads.
+
+    Which class to count, at which scaler index and with which scaler type, and how that changed
+    over the years, is CTP's business: o2::ctp::CTPRateFetcher knows it, a fixed scaler index does
+    not. Only the raw rate is taken from it; the pile-up correction is done below.
+    """
+    ccdb = o2.ccdb.BasicCCDBManager.instance()
+    fetcher = o2.ctp.CTPRateFetcher()
+    fetcher.setupRun(run_number, ccdb, int(timestamp), True)
+    # "ZNC" without "hadronic" so that the fetcher does not apply the factor 28 itself
+    source = "ZNC" if ColSystem == "PbPb" else "T0VTX"
+
+    def raw_rate_at(timestamp_ms):
+        return fetcher.fetchNoPuCorr(ccdb, int(timestamp_ms), run_number, source)
+
+    return raw_rate_at, source
+
+def determine_last_collision_time(raw_rate_at, ctpscaler, run_end):
+    """
+    The end of the run as far as collisions are concerned, in milliseconds.
+
+    Data taking goes on after the collisions stop and the time frames written in between hold
+    nothing to simulate: in run 571043 the CTP counts zero over the last 256 s. The run record only
+    knows the end of data taking, so ask the scalers. Mirrors the ITS ramp-up adjustment of the
+    start of the run.
+    """
+    times = [float(r.epochTime) for r in ctpscaler.getScalerRecordO2()]
+    for i in range(len(times) - 1, 0, -1):
+        # interval i spans records i-1 and i; ask in the middle so that getRateGivenT brackets it
+        if raw_rate_at(1000. * 0.5 * (times[i - 1] + times[i])) > 0:
+            if i == len(times) - 1:
+                return run_end
+            # counting stopped inside interval i, so the last moment we know of is where it began
+            return min(int(1000. * times[i - 1]), run_end)
+    return run_end
+
 def retrieve_ITS_RampDuration(ccdbreader, timestamp):
     """
     Retrieves the ITS ramp-up duration for a given timestamp and
@@ -281,12 +320,19 @@ def retrieve_ITS_RampDuration(ccdbreader, timestamp):
     print("WARNING: ITS ramp duration vector is empty, using 0")
     return 0
 
-def retrieve_MinBias_CTPScaler_Rate(ctpscaler, finaltime, trig_eff_arg, NBunches, ColSystem, eCM):
+def retrieve_MinBias_CTPScaler_Rate(raw_rate_at, finaltime, trig_eff_arg, NBunches, ColSystem, eCM, run_number = -1):
     """
-    retrieves the CTP scalers object for a given timestamp
-    and calculates the interation rate to be applied in Monte Carlo digitizers.
-    Uses trig_eff_arg when positive, otherwise calculates the effTrigger.
+    Turns the raw CTP counting rate at finaltime (in milliseconds) into the interaction rate for
+    the digitizers. Uses trig_eff_arg when positive, otherwise the efficiency of the collision
+    system.
+
+    Returns (interaction rate, raw rate). No collisions at that timestamp gives (None, 0.0) so the
+    caller can drop it; anything else unusable gives (None, None), which leaves the externally
+    given -interactionRate in place.
     """
+    # Fraction of inelastic collisions firing the class counted below: FT0 vertex for pp and the
+    # light systems, ZDC for PbPb, where the ratio is above one because the ZDC also sees
+    # electromagnetic dissociation.
     trigger_effs = {
         "pp": {
             "1000": 0.68,
@@ -327,29 +373,38 @@ def retrieve_MinBias_CTPScaler_Rate(ctpscaler, finaltime, trig_eff_arg, NBunches
       else:
         effTrigger = 0.759  # The simulation will fail later if the collision system is not defined
 
-    # this is the default for pp
-    ctpclass = 0 # <---- we take the scaler for FT0
-    ctptype = 1
-    # this is the default for PbPb
-    if ColSystem == "PbPb":
-      ctpclass = 25  # <--- we take scalers for ZDC
-      ctptype = 7
-    print("Fetching rate with time " + str(finaltime) + " class " + str(ctpclass) + " type " + str(ctptype))
-    rate = ctpscaler.getRateGivenT(finaltime, ctpclass, ctptype)
+    raw_rate = raw_rate_at(finaltime)
+    print(f"CTP raw rate at timestamp {finaltime} is {raw_rate} Hz")
 
-    print("Global rate " + str(rate.first) + " local rate " + str(rate.second))
-    ctp_local_rate_raw = None
-    if rate.second >= 0:
-      ctp_local_rate_raw = rate.second
-    if rate.first >= 0:
-      # calculate true rate (input from Chiara Zampolli) using number of bunches
-      coll_bunches = NBunches
-      mu = - math.log(1. - rate.second / 11245 / coll_bunches) / effTrigger
-      finalRate = coll_bunches * mu * 11245
-      return finalRate, ctp_local_rate_raw
+    if raw_rate == 0:
+      print(f"[WARNING]: The CTP counted no collisions in run {run_number} at timestamp "
+            f"{finaltime}; there is nothing to simulate at this moment")
+      return None, 0.0
 
-    print (f"[ERROR]: Could not determine interaction rate; Some (external) default used")
-    return None, None
+    if not raw_rate > 0:
+      print(f"[ERROR]: Could not determine interaction rate for run {run_number} at timestamp "
+            f"{finaltime} (raw rate {raw_rate}); Some (external) default used")
+      return None, None
+
+    # calculate true rate (input from Chiara Zampolli) using number of bunches
+    coll_bunches = NBunches
+    if coll_bunches <= 0:
+      print(f"[ERROR]: Number of colliding bunches is {coll_bunches} for run {run_number}; "
+            f"cannot determine interaction rate; Some (external) default used")
+      return None, None
+
+    # invert the Poisson zero-probability to get the mean number of triggering interactions per
+    # colliding crossing, then divide by the efficiency to get all of them
+    trigger_prob_per_bc = raw_rate / 11245 / coll_bunches
+    if trigger_prob_per_bc >= 1.:
+      print(f"[ERROR]: Raw scaler rate {raw_rate} Hz is not below the {coll_bunches} * 11245 Hz of "
+            f"colliding bunch crossings of run {run_number}; cannot determine interaction rate; "
+            f"Some (external) default used")
+      return None, None
+
+    mu = - math.log(1. - trigger_prob_per_bc) / effTrigger
+    finalRate = coll_bunches * mu * 11245
+    return finalRate, raw_rate
 
 def determine_timestamp(sor, eor, splitinfo, cycle, ntf, HBF_per_timeframe = 256):
     """
@@ -585,11 +640,21 @@ def main():
 
     print ("Collision system ", ColSystem)
 
+    # how to read the raw CTP counting rate in this run, and where the collisions actually end
+    raw_rate_at, ctp_source = make_CTP_raw_rate_source(args.run_number, mid_run_timestamp, ColSystem)
+    print("Reading the CTP rate from source " + ctp_source)
+    collisions_end = determine_last_collision_time(raw_rate_at, ctp_scalers, run_end)
+    if collisions_end < run_end:
+       print(f"Adjusting end-of-run from {run_end} to {collisions_end}: the CTP counted no "
+             f"collisions over the last {(run_end - collisions_end)/1000.:.1f} s of this run")
+       run_end = collisions_end
+       mid_run_timestamp = (effective_run_start + run_end) // 2
+
     # possibly overwrite the orbitsPerTF with some external choices
     if args.orbitsPerTF!="":
        # we actually need the interaction rate for this calculation
        # let's use the one provided from IR.txt (async reco) as quick way to make the decision
-       run_rate, _ = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, mid_run_timestamp/1000., args.trig_eff, grplhcif.getBunchFilling().getNBunches(), ColSystem, eCM)
+       run_rate, _ = retrieve_MinBias_CTPScaler_Rate(raw_rate_at, mid_run_timestamp, args.trig_eff, grplhcif.getBunchFilling().getNBunches(), ColSystem, eCM, args.run_number)
        determined_orbits = parse_orbits_per_tf(args.orbitsPerTF, run_rate)
        if determined_orbits != -1:
          print("Adjusting orbitsPerTF from " + str(GLOparams["OrbitsPerTF"]) + " to " + str(determined_orbits))
@@ -599,7 +664,9 @@ def main():
     timestamp = 0
     prod_offset = 0
     if args.timeframeID != -1:
-      timestamp = determine_timestamp_from_timeframeID(effective_run_start, run_end, args.timeframeID, GLOparams["OrbitsPerTF"])
+      # an explicit timeframe is a fixed position in the run, so bound it by the run as recorded;
+      # if it falls past the collisions the rate below is zero and the job is excluded
+      timestamp = determine_timestamp_from_timeframeID(effective_run_start, GLOparams["EOR"], args.timeframeID, GLOparams["OrbitsPerTF"])
       prod_offset = args.timeframeID
     else:
       timestamp, prod_offset = determine_timestamp(effective_run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
@@ -631,7 +698,11 @@ def main():
     ctp_local_rate_raw = None
 
     if args.ccdb_IRate == True:
-       rate, ctp_local_rate_raw = retrieve_MinBias_CTPScaler_Rate(ctp_scalers, timestamp/1000., args.trig_eff, grplhcif.getBunchFilling().getNBunches(), ColSystem, eCM)
+       rate, ctp_local_rate_raw = retrieve_MinBias_CTPScaler_Rate(raw_rate_at, timestamp, args.trig_eff, grplhcif.getBunchFilling().getNBunches(), ColSystem, eCM, args.run_number)
+
+       # no collisions here, so nothing to simulate: treat it like any other excluded timestamp
+       if rate == None and ctp_local_rate_raw == 0:
+         job_is_exluded = True
 
        if rate != None:
          # if the rate calculation was successful we will use it, otherwise we fall back to some rate given as part
@@ -641,7 +712,7 @@ def main():
          # Use re.sub() to replace the pattern with an empty string
          forwardargs = re.sub(pattern, " ", forwardargs)
          forwardargs += ' -interactionRate ' + str(int(rate))
-       if ctp_local_rate_raw != None:
+       if ctp_local_rate_raw != None and ctp_local_rate_raw > 0:
          forwardargs += ' --ctp-scaler ' + str(ctp_local_rate_raw)
 
     # we finally pass forward to the unanchored MC workflow creation
