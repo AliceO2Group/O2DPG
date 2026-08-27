@@ -46,7 +46,12 @@ using namespace Pythia8;
 class GeneratorParametrisedJetModel : public o2::eventgen::GeneratorPythia8 {
 public:
   /// constructor
-  GeneratorParametrisedJetModel(std::string inputSimParametersPath, std::string inputSimParametersFileName, bool generateUE = true) : mInputSimParametersPath{inputSimParametersPath}, mInputSimParametersFileName{inputSimParametersFileName}, mGenerateUE{generateUE} {
+  GeneratorParametrisedJetModel(std::string inputSimParametersPath, std::string inputSimParametersFileName, bool generateUE, bool generateSignal = true) : mInputSimParametersPath{inputSimParametersPath}, mInputSimParametersFileName{inputSimParametersFileName}, mGenerateUE{generateUE}, mGenerateSignal{generateSignal} {
+
+    if (!generateUE && !generateSignal) {
+      cout << "Both the UE and the signal generation should not be off at the same time" << endl;
+      exit(1);
+    }
 
     std::string inputFilePathName = "alien://" + inputSimParametersPath + inputSimParametersFileName;
     if (!gGrid) {
@@ -182,100 +187,102 @@ public:
     ////////////////// Jet signal /////////////////
     ///////////////////////////////////////////////
 
-    int nJets = gRandom->Poisson(mNJetsAverage);
-
-    if (mDebug) {
-      cout << "####################### creating partons signal #######################" << endl;
-      cout << "signal: count " << nJets << " for mNJetsAverage = " << mNJetsAverage << "" << endl;
-    }
-
-    TClonesArray *genParticlesArray = new TClonesArray("TParticle", 1000);
-
-    int particleCountCurrent = 1; // counts the system fake particle pdg 90
-    for (int iJet{0}; iJet < nJets; ++iJet) {
-      genParticlesArray->Delete();
-
-      const bool isQuark = gRandom->Uniform(0, 1) > 1. / 3 ? true : false; // ratio quarks:gluons = 2:1
-      const int pdgQuark = gRandom->Uniform(0, 1) > 1. / 2 ? mPdgQuarkU : mPdgQuarkD; // half and half for u and d quarks
-      const int pdgJet = (int)isQuark * pdgQuark + (1 - (int)isQuark) * mPdgGluon;
-      const double sglMass = TDatabasePDG::Instance()->GetParticle(pdgJet)->Mass();
-      const double sglPt = mJetYieldFit->GetRandom(mSglCutoffAbscissa, mPtInfinity);
-      const double sglEta = gRandom->Uniform(mGenMinEta, mGenMaxEta);
-      const double sglPhi = gRandom->Uniform(0, o2::constants::math::TwoPI);
-      const double sglPx{sglPt * std::cos(sglPhi)};
-      const double sglPy{sglPt * std::sin(sglPhi)};
-      const double sglPz{sglPt * std::sinh(sglEta)};
-      const double sglEt{std::hypot(std::hypot(sglPt, sglPz), sglMass)};
-
-      Particle myJet;
-      myJet.id(pdgJet);
-      myJet.status(23);
-      myJet.px(sglPx);
-      myJet.py(sglPy);
-      myJet.pz(sglPz);
-      myJet.e(sglEt);
-      myJet.m(sglMass);
-      myJet.xProd(0);
-      myJet.yProd(0);
-      myJet.zProd(0);
-      int jetCol = 101 + 2 * iJet; // each jet gets a different colour and acolour value,
-                                   // so that the pythia knows they're distinct colour
-                                   // lines, i.e. different strings
-      int jetACol = 101 + 2 * iJet + 1;
+    if (mGenerateUE) {
+      int nJets = gRandom->Poisson(mNJetsAverage);
 
       if (mDebug) {
-        cout << "-- || jet parton #" << iJet
-             << ", index=" << mPythia.event.back().index() + 1
-             << ": isQuark = " << isQuark << ", pdg = " << pdgJet
-             << ", pt = " << sglPt << ", mass = " << sglMass << endl;
+        cout << "####################### creating partons signal #######################" << endl;
+        cout << "signal: count " << nJets << " for mNJetsAverage = " << mNJetsAverage << "" << endl;
       }
 
-      auto pythia6Event = TPythia6::Instance();
+      TClonesArray *genParticlesArray = new TClonesArray("TParticle", 1000);
 
-      int lineNumber = 0; // line number seems to be index of particle in array; set to 0 in
-                          // PM code? but doc says it runs Pyexec() right after; iJet doesn't
-                          // work for ijet=1+; set to 0 and it seems to work
-      double sglTheta = 2.0 * std::atan(std::exp(-1 * sglEta));
-      pythia6Event->Py1ent(lineNumber, pdgJet, sglEt, sglTheta, sglPhi);
+      int particleCountCurrent = 1; // counts the system fake particle pdg 90
+      for (int iJet{0}; iJet < nJets; ++iJet) {
+        genParticlesArray->Delete();
 
-      int final = pythia6Event->ImportParticles(genParticlesArray, "Final"); // only saves final state particles; "All" would instead give all the particles
-      int nConstituents = genParticlesArray->GetEntries();
+        const bool isQuark = gRandom->Uniform(0, 1) > 1. / 3 ? true : false; // ratio quarks:gluons = 2:1
+        const int pdgQuark = gRandom->Uniform(0, 1) > 1. / 2 ? mPdgQuarkU : mPdgQuarkD; // half and half for u and d quarks
+        const int pdgJet = (int)isQuark * pdgQuark + (1 - (int)isQuark) * mPdgGluon;
+        const double sglMass = TDatabasePDG::Instance()->GetParticle(pdgJet)->Mass();
+        const double sglPt = mJetYieldFit->GetRandom(mSglCutoffAbscissa, mPtInfinity);
+        const double sglEta = gRandom->Uniform(mGenMinEta, mGenMaxEta);
+        const double sglPhi = gRandom->Uniform(0, o2::constants::math::TwoPI);
+        const double sglPx{sglPt * std::cos(sglPhi)};
+        const double sglPy{sglPt * std::sin(sglPhi)};
+        const double sglPz{sglPt * std::sinh(sglEta)};
+        const double sglEt{std::hypot(std::hypot(sglPt, sglPz), sglMass)};
 
-      mPythia.event.append(myJet);
-      for (int iParticle = 0; iParticle < nConstituents; ++iParticle) {
-        TParticle *tParticle = (TParticle *)genParticlesArray->At(iParticle);
+        Particle myJet;
+        myJet.id(pdgJet);
+        myJet.status(23);
+        myJet.px(sglPx);
+        myJet.py(sglPy);
+        myJet.pz(sglPz);
+        myJet.e(sglEt);
+        myJet.m(sglMass);
+        myJet.xProd(0);
+        myJet.yProd(0);
+        myJet.zProd(0);
+        int jetCol = 101 + 2 * iJet; // each jet gets a different colour and acolour value,
+                                    // so that the pythia knows they're distinct colour
+                                    // lines, i.e. different strings
+        int jetACol = 101 + 2 * iJet + 1;
 
-        Particle pythiaParticle;
-        pythiaParticle.id(tParticle->GetPdgCode());
-        pythiaParticle.status(tParticle->GetStatusCode()); // in pythia6 all the particles that are not
-                                                           // the initial partons have status code 1;
-                                                           // this is because apparently pythia6 does
-                                                           // not decay them automatically yet; they
-                                                           // are by no means all stable particles; but
-                                                           // we do not care for this study
-        pythiaParticle.px(tParticle->Px());
-        pythiaParticle.py(tParticle->Py());
-        pythiaParticle.pz(tParticle->Pz());
-        pythiaParticle.e(tParticle->Energy());
-        pythiaParticle.m(tParticle->GetMass());
-        pythiaParticle.xProd(tParticle->Vx());
-        pythiaParticle.yProd(tParticle->Vy());
-        pythiaParticle.zProd(tParticle->Vz());
-        pythiaParticle.mother1(particleCountCurrent); // particleCountCurrent is the offset to  account for existing IDs of constituents of previous jets.
-                                                      // Not saving the actual mother ID because ImportParticles(genParticlesArray, "Final") only saves the final
-                                                      // particles, and the mother id still refer to particles not saved in
-                                                      // genParticlesArray a priori the mother-daughter links aren't needed
-                                                      // for the closure test this will be used for; keeping the initial
-                                                      // parton as mother for now
+        if (mDebug) {
+          cout << "-- || jet parton #" << iJet
+              << ", index=" << mPythia.event.back().index() + 1
+              << ": isQuark = " << isQuark << ", pdg = " << pdgJet
+              << ", pt = " << sglPt << ", mass = " << sglMass << endl;
+        }
 
-        mPythia.event.append(pythiaParticle);
+        auto pythia6Event = TPythia6::Instance();
+
+        int lineNumber = 0; // line number seems to be index of particle in array; set to 0 in
+                            // PM code? but doc says it runs Pyexec() right after; iJet doesn't
+                            // work for ijet=1+; set to 0 and it seems to work
+        double sglTheta = 2.0 * std::atan(std::exp(-1 * sglEta));
+        pythia6Event->Py1ent(lineNumber, pdgJet, sglEt, sglTheta, sglPhi);
+
+        int final = pythia6Event->ImportParticles(genParticlesArray, "Final"); // only saves final state particles; "All" would instead give all the particles
+        int nConstituents = genParticlesArray->GetEntries();
+
+        mPythia.event.append(myJet);
+        for (int iParticle = 0; iParticle < nConstituents; ++iParticle) {
+          TParticle *tParticle = (TParticle *)genParticlesArray->At(iParticle);
+
+          Particle pythiaParticle;
+          pythiaParticle.id(tParticle->GetPdgCode());
+          pythiaParticle.status(tParticle->GetStatusCode()); // in pythia6 all the particles that are not
+                                                            // the initial partons have status code 1;
+                                                            // this is because apparently pythia6 does
+                                                            // not decay them automatically yet; they
+                                                            // are by no means all stable particles; but
+                                                            // we do not care for this study
+          pythiaParticle.px(tParticle->Px());
+          pythiaParticle.py(tParticle->Py());
+          pythiaParticle.pz(tParticle->Pz());
+          pythiaParticle.e(tParticle->Energy());
+          pythiaParticle.m(tParticle->GetMass());
+          pythiaParticle.xProd(tParticle->Vx());
+          pythiaParticle.yProd(tParticle->Vy());
+          pythiaParticle.zProd(tParticle->Vz());
+          pythiaParticle.mother1(particleCountCurrent); // particleCountCurrent is the offset to  account for existing IDs of constituents of previous jets.
+                                                        // Not saving the actual mother ID because ImportParticles(genParticlesArray, "Final") only saves the final
+                                                        // particles, and the mother id still refer to particles not saved in
+                                                        // genParticlesArray a priori the mother-daughter links aren't needed
+                                                        // for the closure test this will be used for; keeping the initial
+                                                        // parton as mother for now
+
+          mPythia.event.append(pythiaParticle);
+        }
+        particleCountCurrent += nConstituents + 1; // +1 is for the jet parton itself, which is not in the final state
       }
-      particleCountCurrent += nConstituents + 1; // +1 is for the jet parton itself, which is not in the final state
-    }
-    delete genParticlesArray;
+      delete genParticlesArray;
 
-    if (mDebug) {
-      mPythia.event.list();
+      if (mDebug) {
+        mPythia.event.list();
+      }
     }
 
     ///////////////////////////////////////////////
@@ -339,10 +346,11 @@ private:
   ////////////////////////////////////////////////
 
   const double mPtInfinity = 300; // maximum pt (in GeV/c) for generated particles, and upper pT limit for integral and TF1 purposes; too high and GetRandom struggles
-  const double mGenMinEta = -1.; /// minimum pseudorapidity for generated particles
-  const double mGenMaxEta = +1.; /// maximum pseudorapidity for generated particles
+  const double mGenMinEta = -0.9; /// minimum pseudorapidity for generated particles
+  const double mGenMaxEta = +0.9; /// maximum pseudorapidity for generated particles
   int mCollTotalMultWithBkg; /// total multiplicity of the collision
-  bool mGenerateUE = false; /// boolean to request (or not) embedding of the jet signal inside underlying event modelled by a thermal background
+  bool mGenerateSignal = true; /// boolean to request (or not) the generation of the jet signal
+  bool mGenerateUE = false; /// boolean to request (or not) embedding of the jet signal inside underlying event modelled by a thermal background; if mGenerateSignal = false, only the UE is generated
   const std::vector<std::string> mConfigurableSimParameterNames = {
       "sglGenRAA",
       "sglGenTAA",
@@ -392,6 +400,6 @@ private:
 ///___________________________________________________________
 FairGenerator *generateParametrisedJetModel(std::string inputSimParametersPath, 
                                             std::string inputSimParametersFileName, 
-                                            bool generateUE = true) {
-  return new GeneratorParametrisedJetModel(inputSimParametersPath, inputSimParametersFileName, generateUE);
+                                            bool generateUE, bool generateSignal = true) {
+  return new GeneratorParametrisedJetModel(inputSimParametersPath, inputSimParametersFileName, generateUE, generateSignal);
 }
