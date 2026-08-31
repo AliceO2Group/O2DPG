@@ -3,12 +3,11 @@ int External()
     int checkPdgDecay = 13;
     double yMin = -4.3;
     double yMax = -2.3;
-    double ptMin = 0.3;
+    double ptMin = 0.0;
     double ptMax = 999.;
 
     std::string path{"o2sim_Kine.root"};
     std::cout << "Check for primary muons, PDG +-" << checkPdgDecay << ", " << yMin << " < y < " << yMax << ", " << ptMin << " < pt < " << ptMax << " GeV/c\n";
-    std::cout << "Check for\nsignal PDG " << checkPdgSignal << "\ndecay PDG " << checkPdgDecay << "\n";
 
     TFile file(path.c_str(), "READ");
     if (file.IsZombie()) {
