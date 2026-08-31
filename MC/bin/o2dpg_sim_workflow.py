@@ -236,7 +236,7 @@ if args.overwrite_config != '':
    if ("ConfigParams" in anchorConfig) != ("ConfigParams" in config_overwrite):
       print ("Error: overwrite config not following same format as base config; Cannot merge")
       exit (1)
-   
+
    # merge the dictionaries into anchorConfig, the latter takes precedence
    merge_dicts(anchorConfig, config_overwrite)
 
@@ -247,7 +247,7 @@ async_envfile = 'env_async.env' if environ.get('ALIEN_JDL_O2DPG_ASYNC_RECO_TAG')
 tpcreco_mctimegain = option_if_available('o2-tpc-reco-workflow', '--tpc-mc-time-gain', envfile=async_envfile)
 if tpcreco_mctimegain == '':
    # TODO: Upload all MC time gain objects to TestReco and remove year dependence
-   year = environ.get('ALIEN_JDL_LPMANCHORYEAR') if environ.get('ALIEN_JDL_LPMANCHORYEAR') is not None else environ.get('ANCHORYEAR') 
+   year = environ.get('ALIEN_JDL_LPMANCHORYEAR') if environ.get('ALIEN_JDL_LPMANCHORYEAR') is not None else environ.get('ANCHORYEAR')
    if year == '2023':
       print("TPC reco does not support --tpc-mc-time-gain. Remapping time gain objects for 2023 MC")
       # Year dependent workaround for MC anchored to 2023, solving the issue with 2tag mechanism
@@ -374,7 +374,7 @@ def retrieve_sor(run_number):
       if match_object != None:
          SOR=int(match_object[2])
          break
-    
+
     return SOR
 
 
@@ -846,7 +846,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    print("Timeframe " + str(tf) + " seed: ", TFSEED)
    timeframeworkdir='tf'+str(tf)
 
-   # ----  transport task -------   
+   # ----  transport task -------
    # produce QED background for PbPb collissions
 
    QEDdigiargs = ""
@@ -917,7 +917,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        # possible generator)
 
    workflow['stages'].append(SGN_CONFIG_task)
-   
+
    # default flags for extkinO2 signal simulation (no transport)
    extkinO2Config = ''
    if GENERATOR == 'extkinO2':
@@ -1004,7 +1004,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       SGNtask['cmd'] = sgncmdbase + ' -g ' + str(GENERATOR) + ' ' + str(TRIGGER) + ' --vertexMode kCCDB '
    if not isActive('all'):
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
-   
+
    SGNtask['cmd'] += ' --fromCollContext collisioncontext.root'
    workflow['stages'].append(SGNtask)
 
@@ -1074,7 +1074,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      listOfMainKeys : list of keys to be applied from the global configuration object
      localCF: a dictionary mapping key to param - possibly overrides settings taken from global config
      """
-     returnstring = ' --configKeyValues "'     
+     returnstring = ' --configKeyValues "'
      cf = globalTFConfigValues.copy() if globalTFConfig else {}
      isfirst=True
 
@@ -1236,9 +1236,9 @@ for tf in range(1, NTIMEFRAMES + 1):
                                      tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
    FT0FV0EMCCTPDIGItask['cmd'] = ('','ln -nfs ../bkg_HitsFT0.root . ; ln -nfs ../bkg_HitsFV0.root . ; ln -nfs ../bkg_HitsEMC.root; ln -nfs ../bkg_Kine.root; ')[doembedding]
    FT0FV0EMCCTPDIGItask['cmd'] += task_finalizer([
-      '${O2_ROOT}/bin/o2-sim-digitizer-workflow', 
-      getDPL_global_options(), 
-      f'-n {args.ns}', 
+      '${O2_ROOT}/bin/o2-sim-digitizer-workflow',
+      getDPL_global_options(),
+      f'-n {args.ns}',
       simsoption,
       '--onlyDet ' + ','.join([det for det in ['FT0', 'FV0', 'EMC', 'CTP'] if isActive(det)]),
       f'--interactionRate {INTRATE}',
@@ -1247,10 +1247,10 @@ for tf in range(1, NTIMEFRAMES + 1):
       '--disable-write-ini',
       putConfigValues(listOfMainKeys=['EMCSimParam','FV0DigParam','FT0DigParam'], localCF={"DigiParams.seed" : str(TFSEED)}),
       ('--combine-devices','')[args.no_combine_dpl_devices],
-      ('',' --disable-mc')[args.no_mc_labels], 
+      ('',' --disable-mc')[args.no_mc_labels],
       QEDdigiargs,
       '--forceSelectedDets'], configname = 'ft0fv0emcctp_digi')
-   
+
    workflow['stages'].append(FT0FV0EMCCTPDIGItask)
    det_to_digitask["FT0"]=FT0FV0EMCCTPDIGItask
    det_to_digitask["FV0"]=FT0FV0EMCCTPDIGItask
@@ -1347,7 +1347,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    anchor_corrmaplumi_mode = dpl_option_from_config(anchorConfig, 'o2-tpcits-match-workflow', '--corrmap-lumi-mode', section = 'full', default_value = '')
    if anchor_corrmaplumi_mode != '':
       anchor_corrmaplumi_mode = '--corrmap-lumi-mode ' + anchor_corrmaplumi_mode
-   
+
    tpc_corr_scaling_options = anchor_lumi_type + ' ' + anchor_corrmaplumi_mode
    if not isActive('CTP'):
       # CTP digits won't be produced for this timeframe (CTP not in the readout detector list)
@@ -1366,7 +1366,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       TPCSyncRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-gpu-reco-workflow' + getDPL_global_options(bigshm=True, ccdbbackend=True, runcommand=False) \
                                 + '--input-type clusters --output-type compressed-clusters-flat,clusters,send-clusters-per-sector --filtered-output-specs ' \
                                 + tpc_corr_scaling_options + ' ' + tpc_corr_options_mc \
-                                + putConfigValues(["TPCGasParam", "TPCCorrMap", "trackTuneParams"], 
+                                + putConfigValues(["TPCGasParam", "TPCCorrMap", "trackTuneParams"],
                                                   localCF={"GPU_proc.ompThreads":NWORKERS_TF, \
                                                            "GPU_proc.tpcWriteClustersAfterRejection":1, \
                                                            "GPU_rec_tpc.compressionTypeMask":0, \
@@ -1385,18 +1385,18 @@ for tf in range(1, NTIMEFRAMES + 1):
      '--input-type clusters',
      '--output-type tracks,send-clusters-per-sector',
      putConfigValues(["GPU_global",
-                      "TPCGasParam", 
-                      "TPCCorrMap", 
-                      "GPU_rec_tpc", 
-                      "trackTuneParams"], 
+                      "TPCGasParam",
+                      "TPCCorrMap",
+                      "GPU_rec_tpc",
+                      "trackTuneParams"],
                       {"GPU_proc.ompThreads":NWORKERS_TF} | tpcLocalCFreco),
      ('',' --disable-mc')[args.no_mc_labels],
-     tpc_corr_scaling_options, 
+     tpc_corr_scaling_options,
      tpc_corr_options_mc,
      tpcreco_mctimegain])
    workflow['stages'].append(TPCRECOtask)
 
-   #<--------- ITS reco task 
+   #<--------- ITS reco task
    ITSMemEstimate = 12000 if havePbPb else 2000 # PbPb has much large mem requirement for now (in worst case)
    ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS" if args.detectorList == 'ALICE2' else "IT3")],
                           tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem=str(ITSMemEstimate))
@@ -1404,16 +1404,16 @@ for tf in range(1, NTIMEFRAMES + 1):
      "${O2_ROOT}/bin/o2-its-reco-workflow" if args.detectorList == 'ALICE2' else "${O2_ROOT}/bin/o2-its3-reco-workflow",
      getDPL_global_options(bigshm=havePbPb),
      '--tracking-mode async',
-     putConfigValues(["ITSVertexerParam", 
+     putConfigValues(["ITSVertexerParam",
                       "ITSAlpideParam",
-                      "ITSClustererParam", 
-                      "ITSCATrackerParam"], 
+                      "ITSClustererParam",
+                      "ITSCATrackerParam"],
                       {"NameConf.mDirMatLUT" : ".."}),
      ('',' --disable-mc')[args.no_mc_labels]
    ])
    workflow['stages'].append(ITSRECOtask)
 
-   #<--------- FT0 reco task 
+   #<--------- FT0 reco task
    FT0RECOtask = createTask(name='ft0reco_'+str(tf), needs=[getDigiTaskName("FT0")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    FT0RECOtask["cmd"] = task_finalizer([
      '${O2_ROOT}/bin/o2-ft0-reco-workflow',
@@ -1424,7 +1424,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    ])
    workflow['stages'].append(FT0RECOtask)
 
-   #<--------- ITS-TPC track matching task 
+   #<--------- ITS-TPC track matching task
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name'] if isActive("FT0") else None], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
    ITSTPCMATCHtask["cmd"] = task_finalizer([
      '${O2_ROOT}/bin/o2-tpcits-match-workflow',
@@ -1432,38 +1432,38 @@ for tf in range(1, NTIMEFRAMES + 1):
      ' --tpc-track-reader tpctracks.root',
      '--tpc-native-cluster-reader \"--infile tpc-native-clusters.root\"',
      '--use-ft0' if isActive("FT0") else None,
-     putConfigValues(['MFTClustererParam', 
-                      'ITSCATrackerParam', 
-                      'tpcitsMatch', 
-                      'TPCGasParam', 
-                      'TPCCorrMap', 
-                      'ITSClustererParam', 
-                      'GPU_rec_tpc', 
-                      'trackTuneParams', 
+     putConfigValues(['MFTClustererParam',
+                      'ITSCATrackerParam',
+                      'tpcitsMatch',
+                      'TPCGasParam',
+                      'TPCCorrMap',
+                      'ITSClustererParam',
+                      'GPU_rec_tpc',
+                      'trackTuneParams',
                       'GlobalParams',
-                      'ft0tag'], 
+                      'ft0tag'],
                       {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco),
      tpc_corr_scaling_options,
      tpc_corr_options_mc
    ])
    workflow['stages'].append(ITSTPCMATCHtask)
 
-   #<--------- ITS-TPC track matching task 
+   #<--------- ITS-TPC track matching task
    TRDTRACKINGtask = createTask(name='trdreco_'+str(tf), needs=[TRDDigitask['name'], ITSTPCMATCHtask['name'], TPCRECOtask['name'], ITSRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    TRDTRACKINGtask['cmd'] = task_finalizer(['${O2_ROOT}/bin/o2-trd-tracklet-transformer',
-                                                getDPL_global_options(), 
+                                                getDPL_global_options(),
                                                 putConfigValues(),
                                                 ('',' --disable-mc')[args.no_mc_labels]])
    if isActive("TRD"):
       workflow['stages'].append(TRDTRACKINGtask)
 
-   #<--------- TRD global tracking 
+   #<--------- TRD global tracking
    # FIXME This is so far a workaround to avoud a race condition for trdcalibratedtracklets.root
    TRDTRACKINGtask2 = createTask(name='trdreco2_'+str(tf), needs=[TRDTRACKINGtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem='2000')
    trd_track_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig, 'o2-trd-global-tracking', '--track-sources', default_value='TPC,ITS-TPC'))
    TRDTRACKINGtask2['cmd'] = task_finalizer([
       '${O2_ROOT}/bin/o2-trd-global-tracking',
-      getDPL_global_options(bigshm=True), 
+      getDPL_global_options(bigshm=True),
       ('',' --disable-mc')[args.no_mc_labels],
       putConfigValues(['ITSClustererParam',
                        'ITSCATrackerParam',
@@ -1473,7 +1473,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                        'GlobalParams',
                        'TPCCorrMap'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco),
       '--track-sources ' + trd_track_sources,
-      tpc_corr_scaling_options, 
+      tpc_corr_scaling_options,
       tpc_corr_options_mc])
    if isActive("TRD"):
       workflow['stages'].append(TRDTRACKINGtask2)
@@ -1528,10 +1528,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    MFTRECOtask = createTask(name='mftreco_'+str(tf), needs=mftreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MFTRECOtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
    MFTRECOtask['cmd'] += task_finalizer([
-      '${O2_ROOT}/bin/o2-mft-reco-workflow', 
-      getDPL_global_options(), 
-      putConfigValues(['MFTTracking', 
-                       'MFTAlpideParam', 
+      '${O2_ROOT}/bin/o2-mft-reco-workflow',
+      getDPL_global_options(),
+      putConfigValues(['MFTTracking',
+                       'MFTAlpideParam',
                        'ITSClustererParam',
                        'MFTClustererParam']),
       ('','--disable-mc')[args.no_mc_labels],
@@ -1548,9 +1548,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    MCHRECOtask = createTask(name='mchreco_'+str(tf), needs=mchreconeeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MCHRECOtask['cmd'] = ('','ln -nfs ../bkg_Kine.root . ;')[doembedding]
    MCHRECOtask['cmd'] += task_finalizer(
-      ['${O2_ROOT}/bin/o2-mch-reco-workflow', 
-       getDPL_global_options(), 
-       putConfigValues(), 
+      ['${O2_ROOT}/bin/o2-mch-reco-workflow',
+       getDPL_global_options(),
+       putConfigValues(),
        ('',' --disable-mc')[args.no_mc_labels],
        '--enable-clusters-root-output'])
    workflow['stages'].append(MCHRECOtask)
@@ -1561,24 +1561,24 @@ for tf in range(1, NTIMEFRAMES + 1):
       ['${O2_ROOT}/bin/o2-mid-digits-reader-workflow',
        ('',' --disable-mc')[args.no_mc_labels]])
    MIDRECOtask['cmd'] += ' | '
-   MIDRECOtask['cmd'] += task_finalizer(['${O2_ROOT}/bin/o2-mid-reco-workflow', 
-                                             getDPL_global_options(), 
+   MIDRECOtask['cmd'] += task_finalizer(['${O2_ROOT}/bin/o2-mid-reco-workflow',
+                                             getDPL_global_options(),
                                              putConfigValues(),('',' --disable-mc')[args.no_mc_labels]])
    if isActive('MID'):
       workflow['stages'].append(MIDRECOtask)
 
    #<--------- FDD reco workflow
    FDDRECOtask = createTask(name='fddreco_'+str(tf), needs=[getDigiTaskName("FDD")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   FDDRECOtask['cmd'] = task_finalizer(['${O2_ROOT}/bin/o2-fdd-reco-workflow', 
-                                            getDPL_global_options(ccdbbackend=False), 
+   FDDRECOtask['cmd'] = task_finalizer(['${O2_ROOT}/bin/o2-fdd-reco-workflow',
+                                            getDPL_global_options(ccdbbackend=False),
                                             putConfigValues(),
                                             ('',' --disable-mc')[args.no_mc_labels]])
    workflow['stages'].append(FDDRECOtask)
 
    #<--------- FV0 reco workflow
    FV0RECOtask = createTask(name='fv0reco_'+str(tf), needs=[getDigiTaskName("FV0")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   FV0RECOtask['cmd'] = task_finalizer(['${O2_ROOT}/bin/o2-fv0-reco-workflow', 
-                                            getDPL_global_options(), 
+   FV0RECOtask['cmd'] = task_finalizer(['${O2_ROOT}/bin/o2-fv0-reco-workflow',
+                                            getDPL_global_options(),
                                             putConfigValues(),
                                             ('',' --disable-mc')[args.no_mc_labels]])
    workflow['stages'].append(FV0RECOtask)
@@ -1586,41 +1586,41 @@ for tf in range(1, NTIMEFRAMES + 1):
    # calorimeters
    #<--------- EMC reco workflow
    EMCRECOtask = createTask(name='emcalreco_'+str(tf), needs=[getDigiTaskName("EMC")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-   # first part   
+   # first part
    EMCRECOtask['cmd'] = task_finalizer([
-      '${O2_ROOT}/bin/o2-emcal-reco-workflow', 
+      '${O2_ROOT}/bin/o2-emcal-reco-workflow',
       putConfigValues(),
       '--input-type digits',
-      '--output-type cells', 
+      '--output-type cells',
       '--infile emcaldigits.root',
-      '--disable-root-output', 
+      '--disable-root-output',
       '--subspecificationOut 1',
       ('',' --disable-mc')[args.no_mc_labels]])
    # second part
-   EMCRECOtask['cmd'] += ' | ' 
+   EMCRECOtask['cmd'] += ' | '
    EMCRECOtask['cmd'] += task_finalizer([
-      '${O2_ROOT}/bin/o2-emcal-cell-recalibrator-workflow', 
+      '${O2_ROOT}/bin/o2-emcal-cell-recalibrator-workflow',
       putConfigValues(),
-      '--input-subspec 1', 
+      '--input-subspec 1',
       '--output-subspec 0',
-      '--no-timecalib', 
+      '--no-timecalib',
       '--no-gaincalib',
       (' --isMC','')[args.no_mc_labels]])
    # third part
-   EMCRECOtask['cmd'] += ' | ' 
+   EMCRECOtask['cmd'] += ' | '
    EMCRECOtask['cmd'] += task_finalizer([
       '${O2_ROOT}/bin/o2-emcal-cell-writer-workflow',
       getDPL_global_options(),
-      '--subspec 0', 
+      '--subspec 0',
       ('',' --disable-mc')[args.no_mc_labels]])
    workflow['stages'].append(EMCRECOtask)
 
     #<--------- PHS reco workflow
    PHSRECOtask = createTask(name='phsreco_'+str(tf), needs=[getDigiTaskName("PHS")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    PHSRECOtask['cmd'] = task_finalizer([
-      '${O2_ROOT}/bin/o2-phos-reco-workflow', 
-      getDPL_global_options(), 
-      putConfigValues(), 
+      '${O2_ROOT}/bin/o2-phos-reco-workflow',
+      getDPL_global_options(),
+      putConfigValues(),
       ('',' --disable-mc')[args.no_mc_labels]])
    if isActive("PHS"):
       workflow['stages'].append(PHSRECOtask)
@@ -1628,9 +1628,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    #<--------- CPV reco workflow
    CPVRECOtask = createTask(name='cpvreco_'+str(tf), needs=[getDigiTaskName("CPV")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    CPVRECOtask['cmd'] = task_finalizer(
-      ['${O2_ROOT}/bin/o2-cpv-reco-workflow', 
-       getDPL_global_options(), 
-       putConfigValues(), 
+      ['${O2_ROOT}/bin/o2-cpv-reco-workflow',
+       getDPL_global_options(),
+       putConfigValues(),
        ('',' --disable-mc')[args.no_mc_labels]])
    if isActive("CPV"):
       workflow['stages'].append(CPVRECOtask)
@@ -1638,9 +1638,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    #<--------- ZDC reco workflow
    ZDCRECOtask = createTask(name='zdcreco_'+str(tf), needs=[getDigiTaskName("ZDC")], tf=tf, cwd=timeframeworkdir, lab=["RECO", "ZDC"])
    ZDCRECOtask['cmd'] = task_finalizer(
-      ['${O2_ROOT}/bin/o2-zdc-digits-reco', 
-       getDPL_global_options(), 
-       putConfigValues(), 
+      ['${O2_ROOT}/bin/o2-zdc-digits-reco',
+       getDPL_global_options(),
+       putConfigValues(),
        ('',' --disable-mc')[args.no_mc_labels]])
    if isActive("ZDC"):
       workflow['stages'].append(ZDCRECOtask)
@@ -1649,7 +1649,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    #<--------- MCH-MID forward matching
    MCHMIDMATCHtask = createTask(name='mchmidMatch_'+str(tf), needs=[MCHRECOtask['name'], MIDRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MCHMIDMATCHtask['cmd'] = task_finalizer(
-      ['${O2_ROOT}/bin/o2-muon-tracks-matcher-workflow', 
+      ['${O2_ROOT}/bin/o2-muon-tracks-matcher-workflow',
        getDPL_global_options(ccdbbackend=False),
        putConfigValues(),
        ('',' --disable-mc')[args.no_mc_labels]])
@@ -1686,15 +1686,15 @@ for tf in range(1, NTIMEFRAMES + 1):
    #<--------- HMP forward matching
    HMPRECOtask = createTask(name='hmpreco_'+str(tf), needs=[getDigiTaskName('HMP')], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    HMPRECOtask['cmd'] = task_finalizer(
-      ['${O2_ROOT}/bin/o2-hmpid-digits-to-clusters-workflow', 
-       getDPL_global_options(ccdbbackend=False), 
+      ['${O2_ROOT}/bin/o2-hmpid-digits-to-clusters-workflow',
+       getDPL_global_options(ccdbbackend=False),
        putConfigValues()])
    workflow['stages'].append(HMPRECOtask)
 
    #<--------- HMP forward matching
-   hmpmatchneeds = [HMPRECOtask['name'], 
-                    ITSTPCMATCHtask['name'], 
-                    TOFTPCMATCHERtask['name'] if isActive("TOF") else None, 
+   hmpmatchneeds = [HMPRECOtask['name'],
+                    ITSTPCMATCHtask['name'],
+                    TOFTPCMATCHERtask['name'] if isActive("TOF") else None,
                     TRDTRACKINGtask2['name'] if isActive("TRD") else None]
    hmpmatchneeds = [ n for n in hmpmatchneeds if n != None ]
    hmp_match_sources = cleanDetectorInputList(dpl_option_from_config(anchorConfig, 'o2-hmpid-matcher-workflow', '--track-sources', default_value='ITS-TPC,ITS-TPC-TRD,TPC-TRD'))
@@ -1702,7 +1702,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    HMPMATCHtask['cmd'] = task_finalizer(
       ['${O2_ROOT}/bin/o2-hmpid-matcher-workflow',
        '--track-sources ' + hmp_match_sources,
-        getDPL_global_options(), 
+        getDPL_global_options(),
         putConfigValues()
       ])
    workflow['stages'].append(HMPMATCHtask)
@@ -1737,14 +1737,14 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS_TF, mem='4000')
    PVFINDERtask['cmd'] = task_finalizer(
-      [ '${O2_ROOT}/bin/o2-primary-vertexing-workflow', 
+      [ '${O2_ROOT}/bin/o2-primary-vertexing-workflow',
          getDPL_global_options(),
          putConfigValues(['ITSAlpideParam',
-                          'MFTAlpideParam', 
-                          'pvertexer', 
-                          'TPCGasParam', 
-                          'TPCCorrMap', 
-                          'ft0tag'], 
+                          'MFTAlpideParam',
+                          'pvertexer',
+                          'TPCGasParam',
+                          'TPCCorrMap',
+                          'ft0tag'],
                           {"NameConf.mDirMatLUT" : ".."}),
          '--vertexing-sources ' + pvfinder_sources,
          '--vertex-track-matching-sources ' + pvfinder_matching_sources,
@@ -1759,15 +1759,15 @@ for tf in range(1, NTIMEFRAMES + 1):
    if COLTYPE == "PbPb" or (doembedding and COLTYPEBKG == "PbPb"):
      svfinder_threads = ' --threads 8 '
      svfinder_cpu = 8
-   
+
    svfinder_sources = dpl_option_from_config(anchorConfig,
                           'o2-primary-vertexing-workflow',
                           '--vertex-track-matching-sources',
                           default_value='ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP')
    svfinder_sources = cleanDetectorInputList(svfinder_sources)
-   SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name'], FT0FV0EMCCTPDIGItask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')   
+   SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name'], FT0FV0EMCCTPDIGItask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
    SVFINDERtask['cmd'] = task_finalizer(
-   [ '${O2_ROOT}/bin/o2-secondary-vertexing-workflow', 
+   [ '${O2_ROOT}/bin/o2-secondary-vertexing-workflow',
       getDPL_global_options(bigshm=True),
       svfinder_threads,
       putConfigValues(['svertexer', 'TPCCorrMap', 'GlobalParams'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco),
@@ -2093,7 +2093,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[MIDRECOtask['name']],
                 readerCommand='o2-mid-digits-reader-workflow | o2-mid-tracks-reader-workflow',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mid-task.json')
-                
+
      ### MCH
      if isActive('MCH'):
         addQCPerTF(taskName='MCHDigitsTaskQC',
@@ -2119,7 +2119,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                 needs=[MCHMIDMATCHtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types "MCH,MID,MCH-MID" --cluster-types "MCH,MID"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mchmid-tracks-task.json')
-  
+
      ### MCH && MID && MFT || MCH && MFT
      if isActive('MCH') and isActive('MID') and isActive('MFT') :
         addQCPerTF(taskName='MUONTracksMFTTaskQC',
@@ -2132,7 +2132,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                 readerCommand='o2-global-track-cluster-reader --track-types "MCH,MFT,MFT-MCH" --cluster-types "MCH,MFT"',
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mftmch-tracks-task.json')
 
- 
+
    #<------------------ TPC - time-series objects
    # initial implementation taken from comments in https://its.cern.ch/jira/browse/O2-4612
    # TODO: this needs to be made configurable (as a function of which detectors are actually present)
