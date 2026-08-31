@@ -1422,7 +1422,8 @@ for tf in range(1, NTIMEFRAMES + 1):
      '--disable-slewing-calib', # because effect not simulated in MC
      putConfigValues()
    ])
-   workflow['stages'].append(FT0RECOtask)
+   if isActive("FT0"):
+      workflow['stages'].append(FT0RECOtask)
 
    #<--------- ITS-TPC track matching task
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name'] if isActive("FT0") else None], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
@@ -1553,7 +1554,8 @@ for tf in range(1, NTIMEFRAMES + 1):
        putConfigValues(),
        ('',' --disable-mc')[args.no_mc_labels],
        '--enable-clusters-root-output'])
-   workflow['stages'].append(MCHRECOtask)
+   if isActive("MCH"):
+      workflow['stages'].append(MCHRECOtask)
 
    #<--------- MID reco workflow
    MIDRECOtask = createTask(name='midreco_'+str(tf), needs=[getDigiTaskName("MID")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1573,7 +1575,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                                             getDPL_global_options(ccdbbackend=False),
                                             putConfigValues(),
                                             ('',' --disable-mc')[args.no_mc_labels]])
-   workflow['stages'].append(FDDRECOtask)
+   if isActive("FDD"):
+      workflow['stages'].append(FDDRECOtask)
 
    #<--------- FV0 reco workflow
    FV0RECOtask = createTask(name='fv0reco_'+str(tf), needs=[getDigiTaskName("FV0")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1581,7 +1584,8 @@ for tf in range(1, NTIMEFRAMES + 1):
                                             getDPL_global_options(),
                                             putConfigValues(),
                                             ('',' --disable-mc')[args.no_mc_labels]])
-   workflow['stages'].append(FV0RECOtask)
+   if isActive("FV0"):
+      workflow['stages'].append(FV0RECOtask)
 
    # calorimeters
    #<--------- EMC reco workflow
@@ -1613,7 +1617,8 @@ for tf in range(1, NTIMEFRAMES + 1):
       getDPL_global_options(),
       '--subspec 0',
       ('',' --disable-mc')[args.no_mc_labels]])
-   workflow['stages'].append(EMCRECOtask)
+   if isActive("EMC"):
+      workflow['stages'].append(EMCRECOtask)
 
     #<--------- PHS reco workflow
    PHSRECOtask = createTask(name='phsreco_'+str(tf), needs=[getDigiTaskName("PHS")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1674,7 +1679,8 @@ for tf in range(1, NTIMEFRAMES + 1):
          ['${O2_ROOT}/bin/o2-globalfwd-assessment-workflow',
           getDPL_global_options(),
           ('',' --disable-mc')[args.no_mc_labels]])
-   workflow['stages'].append(MFTMCHMATCHtask)
+   if isActive("MFT") and isActive("MCH"):
+      workflow['stages'].append(MFTMCHMATCHtask)
 
    if args.fwdmatching_save_trainingdata == True:
       MFTMCHMATCHTraintask = createTask(name='mftmchMatchTrain_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1689,7 +1695,8 @@ for tf in range(1, NTIMEFRAMES + 1):
       ['${O2_ROOT}/bin/o2-hmpid-digits-to-clusters-workflow',
        getDPL_global_options(ccdbbackend=False),
        putConfigValues()])
-   workflow['stages'].append(HMPRECOtask)
+   if isActive("HMP"):
+      workflow['stages'].append(HMPRECOtask)
 
    #<--------- HMP forward matching
    hmpmatchneeds = [HMPRECOtask['name'],
@@ -1705,7 +1712,8 @@ for tf in range(1, NTIMEFRAMES + 1):
         getDPL_global_options(),
         putConfigValues()
       ])
-   workflow['stages'].append(HMPMATCHtask)
+   if isActive("HMP"):
+      workflow['stages'].append(HMPMATCHtask)
 
    #<---------- primary vertex finding
    pvfinder_sources = dpl_option_from_config(anchorConfig,
