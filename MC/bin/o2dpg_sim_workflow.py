@@ -1658,7 +1658,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    #<--------- MFT-MCH forward matching
    forwardmatchneeds = [MCHRECOtask['name'],
-                        MFTRECOtask['name'] if isActive("MFT") else None,
+                        MFTRECOtask['name'],
                         MCHMIDMATCHtask['name'] if isActive("MID") else None]
    MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=forwardmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MFTMCHMATCHtask['cmd'] = task_finalizer(
