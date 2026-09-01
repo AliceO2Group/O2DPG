@@ -29,6 +29,6 @@ export NBKGEVENTS=10
 
 CONFIGNAME=${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/ini/Generator_InjectedPhotoproucedCharmoniaMidy_PbPb5TeV.ini
 
-export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-eCM 5360 -gen external -j ${NWORKERS} -tf ${NTIMEFRAMES} -e TGeant4 -seed 0 -ini ${CONFIGNAME} -genBkg pythia8 -procBkg \"heavy_ion\" -colBkg PbPb --embedding -nb $NBKGEVENTS --embeddPattern @0:e2"
+export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-eCM 5360 -gen external -j ${NWORKERS} -tf ${NTIMEFRAMES} -e TGeant4 -seed 0 -ini ${CONFIGNAME} --orbits-early 0"
 
 ${O2DPG_ROOT}/MC/run/ANCHOR/anchorMC.sh
