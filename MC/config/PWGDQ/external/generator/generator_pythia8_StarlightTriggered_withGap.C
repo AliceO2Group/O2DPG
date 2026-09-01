@@ -54,7 +54,6 @@ protected:
         while (!genOk) {
             genOk = GeneratorPythia8::generateEvent();
             if (mGeneratedEvents % mInverseTriggerRatio == 0) {
-                std::cout<<"generating event with injected signals"<<std::endl;
                 bool found = false;
                 while (!found) {
                     mGeneratorParam->generateEvent();
@@ -70,7 +69,6 @@ protected:
             }
         }
         mGeneratedEvents++;
-        std::cout<<"generated events: "<<mGeneratedEvents<<std::endl;
         return true;
     }
 
@@ -80,9 +78,7 @@ protected:
 
         bool genOk = false;
         if ((mGeneratedEvents-1) % mInverseTriggerRatio == 0){ // add injected prompt signals to the stack
-            // mGeneratorParam->importParticles();
             int originalSize = mParticles.size();
-            std::cout<<"adding "<<mGeneratorParam->getParticles().size()<<" particles to the stack"<<std::endl;
             for(int ipart=0; ipart < mGeneratorParam->getParticles().size(); ipart++){
                 TParticle part = TParticle(mGeneratorParam->getParticles().at(ipart));
                 if(part.GetFirstMother() >= 0) part.SetFirstMother(part.GetFirstMother() + originalSize);
@@ -98,16 +94,11 @@ protected:
     }
 
     bool findSignalInAcceptance() {
-        std::cout<<"loop over" << mGeneratorParam->getParticles().size()<<" particles"<<std::endl;
-        for (int pdg : mSignalsPDGs) {
-            std::cout<<"signal pdg: "<<pdg<<std::endl;
-        }
         for (int ipart = 0; ipart < mGeneratorParam->getParticles().size(); ipart++) {
             TParticle part = TParticle(mGeneratorParam->getParticles().at(ipart));
             // make sure all signals are in the acceptance
             for (int pdg : mSignalsPDGs) {
                 if (part.GetPdgCode() == pdg) {
-                    std::cout<<"found signal with pdg: "<<part.GetPdgCode()<<", mother: "<<part.GetFirstMother()<<std::endl;
                     if (part.GetFirstMother() == -1) {
                         if (part.Y() < mHadronRapidityMin || part.Y() > mHadronRapidityMax) {
                             return false;
@@ -116,7 +107,6 @@ protected:
                 }
             }
         }
-        std::cout<<"generated signal in acceptance"<<std::endl;
         return true;
     }
 
@@ -124,7 +114,6 @@ private:
     Generator* mGeneratorParam;
     unsigned long long mGeneratedEvents;
     int mInverseTriggerRatio;
-    // Pythia8::Pythia pythiaMBgen; // minimum bias event
     std::vector<int> mSignalsPDGs;
     double mHadronRapidityMin;
     double mHadronRapidityMax;
@@ -140,8 +129,5 @@ FairGenerator*
   gen->addSignalPDGs(443); // J/Psi
   gen->addSignalPDGs(100443); // Psi(2S)
   gen->addSignalPDGs(11); // e
-//   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
-//   gen->readString("Random:setSeed on");
-//   gen->readString("Random:seed " + std::to_string(seed));
   return gen;
 }
