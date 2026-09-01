@@ -51,25 +51,23 @@ protected:
     {
         // GeneratorPythia8::generateEvent();
         bool genOk = false;
-        if (mGeneratedEvents % mInverseTriggerRatio == 0){ // add injected prompt signals to the stack
-            // bool found = false;
-            std::cout<<"generating event with injected signals"<<std::endl;
-            while (!genOk){ 
-                genOk = GeneratorPythia8::generateEvent();
+        while (!genOk) {
+            genOk = GeneratorPythia8::generateEvent();
+            if (mGeneratedEvents % mInverseTriggerRatio == 0) {
+                std::cout<<"generating event with injected signals"<<std::endl;
                 bool found = false;
                 while (!found) {
                     mGeneratorParam->generateEvent();
                     mGeneratorParam->importParticles();
                     found = findSignalInAcceptance();
-                    mGeneratorParam->clearParticles();
+                    if (!found) {
+                        mGeneratorParam->clearParticles();
+                    }
                 }
+                notifySubGenerator(1);
+            } else { // gap event
+                notifySubGenerator(0);
             }
-            notifySubGenerator(1);
-        } else { // gap event
-            while (!genOk) {
-                genOk = GeneratorPythia8::generateEvent();
-            }
-            notifySubGenerator(0);
         }
         mGeneratedEvents++;
         std::cout<<"generated events: "<<mGeneratedEvents<<std::endl;
@@ -82,7 +80,7 @@ protected:
 
         bool genOk = false;
         if ((mGeneratedEvents-1) % mInverseTriggerRatio == 0){ // add injected prompt signals to the stack
-            mGeneratorParam->importParticles();
+            // mGeneratorParam->importParticles();
             int originalSize = mParticles.size();
             std::cout<<"adding "<<mGeneratorParam->getParticles().size()<<" particles to the stack"<<std::endl;
             for(int ipart=0; ipart < mGeneratorParam->getParticles().size(); ipart++){
@@ -117,15 +115,6 @@ protected:
                     }
                 }
             }
-            // if (std::find(mSignalsPDGs.begin(), mSignalsPDGs.end(), part.GetPdgCode()) != mSignalsPDGs.end()) {
-            //     std::cout<<"found signal with pdg: "<<part.GetPdgCode()<<", mother: "<<part.GetFirstMother()<<std::endl;
-            //     if (part.GetFirstMother() == -1) {
-            //         std::cout<<"found signal with pdg: "<<part.GetPdgCode()<<", rapidity: "<<part.Y()<<std::endl;
-            //         if (part.Y() < mHadronRapidityMin || part.Y() > mHadronRapidityMax) {
-            //             return false;
-            //         }
-            //     }
-            // }
         }
         std::cout<<"generated signal in acceptance"<<std::endl;
         return true;
