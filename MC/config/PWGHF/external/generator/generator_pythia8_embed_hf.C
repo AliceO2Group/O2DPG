@@ -18,6 +18,7 @@ namespace hf_generators
         GapTriggeredBeauty,         // --> GeneratorPythia8GapTriggeredBeauty: beauty enriched
         GapTriggeredCharmAndBeauty, // --> GeneratorPythia8GapTriggeredCharmAndBeauty: charm and beauty enriched (with same ratio)
         GapHF,                      // --> GeneratorPythia8GapHF
+        GapHFRatio,                 // --> GeneratorPythia8GapHF, quark list built from b/c ratio
         NGenType
     };
 }
@@ -82,6 +83,12 @@ public:
             LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GeneratorPythia8GapHF **********";
             LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
             mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapTriggeredBeauty(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, hadronPdgList, partPdgToReplaceList, freqReplaceList));
+            break;
+
+        case hf_generators::GapHFRatio:
+            LOG(info) << "********** [GeneratorPythia8EmbedHF] configuring GapHFRatio (custom b/c ratio) **********";
+            LOG(info) << "**********                           Default number of HF signal events to be merged (updated by notifyEmbedding): " << mNumSigEvs;
+            mGeneratorEvHF = dynamic_cast<GeneratorPythia8GapTriggeredHF*>(GeneratorPythia8GapHF(/*no gap trigger*/1, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax, quarkPdgList, hadronPdgList, partPdgToReplaceList, freqReplaceList));
             break;
         default:
             LOG(fatal) << "********** [GeneratorPythia8EmbedHF] bad configuration, fix it! **********";
@@ -387,6 +394,71 @@ private:
 
 };
 
+// Helper: build quarkPdgList from bOverCRatio (= N(beauty)/N(charm), default 1 = 1:1)
+// Integer b/c: taken directly; fractional b/c: reduced to nearest nB:nC with nC+nB <= 20
+static std::vector<int> BuildQuarkListFromBOverC(float bOverCRatio)
+{
+const int iterNMax = 19; 
+ if (bOverCRatio <= 0.f) { 
+     LOG(fatal) << "bOverCRatio (b/c) must be > 0";
+ }
+ if (bOverCRatio > iterNMax*1.f) {
+     bOverCRatio = iterNMax*1.f;
+     LOG(warn) << "bOverCRatio (b/c) too large, using 19:1";
+ }else if (bOverCRatio < 1.f/iterNMax) {
+     bOverCRatio = 1.f/iterNMax;
+     LOG(warn) << "bOverCRatio (b/c) too small, using 1:19";
+ }
+
+ int nC = 1, nB = 1;
+ float bestErr = 1e9f;
+ for (int c = 1; c <= iterNMax; ++c) {
+     int b = static_cast<int>(std::lround(bOverCRatio * c));
+     if (b < 1 || c + b > 20) {
+         continue;
+     }
+     float err = std::fabs(static_cast<float>(b) / c - bOverCRatio);
+     if (err < bestErr) {    
+         /// This check here is needed in case bOverCRatio*c is not integer (it can happen with e.g. bOverCRatio=4./9.)
+         /// In this case, b is its truncation and the desired ratio is not obtained
+         /// It means that one needs to continue iterating until bOverCRatio*c is integer, i.e. b not truncated
+         ///
+         /// Possible cases:
+         ///  1. we want nB = nC*R, with R integer
+         ///     -> we enter here in the first loop iteration
+         ///  2. we want more charm than beauty by an integer amount, i.e. nB = nC*R with R=1./N, with N integer
+         ///     -> we enter here after N iterations, when c=N
+         ///  3. we want either more charm or beauty, but with a factor R that is not integer, as well as its inverse (e.g. bOverCRatio=4./9.)
+         ///     -> In this case, bOverCRatio*c is not integer, namely b is its truncation and the desired ratio is not obtained
+         ///        The code iterates at most until c becomes equal to the denominator of the fraction
+         ///  4. we want one of the previous cases, but we assign to bOverCRatio a value that is not rational
+         ///     or such as we do not enter here within 19 iterations
+         ///     -> nC and nB, are not touched, therefore we do not have the desired fraction. We'll need to throw a fatal (*)
+         ///
+         bestErr = err;
+         nC = c;
+         nB = b;
+
+         /// If we are at this point, we reached already the desired ratio between b and c.
+         /// Let's break the loop
+         break;
+     }
+ }
+ 
+ // (*) check if we have the desired fraction
+ bool isRatioUnity = std::fabs(bOverCRatio-1) < 1e-05;
+ if (!isRatioUnity && nC==1 && nB==1) {
+  LOG(fatal) << "nC=" << nC << ", nB=" << nB << " but you ask bOverCRatio to be " << bOverCRatio <<", which is different from nB/nC. It means either that bOverCRatio is not rational, or that you need more than " << iterNMax << " iterations. Change it!";
+ }
+
+    std::vector<int> list;
+    // Bresenham interleaving
+    int len = nC + nB;
+    for (int k = 0; k < len; ++k)
+        list.push_back((((k + 1) * nC) / len > (k * nC) / len) ? 4 : 5);
+    return list;
+}
+
 // Charm enriched
 FairGenerator * GeneratorPythia8EmbedHFCharm(bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> quarkPdgList = {}, std::vector<int> hadronPdgList = {}, std::vector<std::array<int,2>> partPdgToReplaceList = {}, std::vector<float> freqReplaceList = {})
 {
@@ -420,3 +492,18 @@ FairGenerator * GeneratorPythia8EmbedHFCharmAndBeauty(bool usePtHardBins = false
     return myGen;
 }
 
+// Charm and beauty enriched with tunable b/c ratio
+FairGenerator * GeneratorPythia8EmbedHFRatio(float bOverCRatio = 1.f, bool usePtHardBins = false, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {}, std::vector<std::array<int,2>> partPdgToReplaceList = {}, std::vector<float> freqReplaceList = {})
+{
+    auto myGen = new GeneratorPythia8EmbedHF();
+
+    /// build the quark list from the b/c ratio
+    auto quarkPdgList = BuildQuarkListFromBOverC(bOverCRatio);
+
+    /// setup the internal generator for HF events
+    myGen->setupGeneratorEvHF(hf_generators::GapHFRatio,
+        usePtHardBins, yQuarkMin, yQuarkMax, yHadronMin, yHadronMax,
+        quarkPdgList, hadronPdgList, partPdgToReplaceList, freqReplaceList);
+
+    return myGen;
+}

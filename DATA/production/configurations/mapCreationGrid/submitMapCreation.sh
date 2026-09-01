@@ -65,7 +65,7 @@ TOPWORKDIR="MapCreation"   # replaces grid_submit.sh's generic default "selfjobs
                            # like the real input data's own convention (.../2026/LHC26ak/572244/...) --
                            # that needs a real post-processing/organize step, deliberately deferred to a
                            # later iteration of this pipeline.
-PACKAGESPEC="O2::daily-20260729-0000-1"
+PACKAGESPEC="O2::daily-20260730-0000-1"
 ASUSER="pwg_pp"        # your own account = personal quota. "pwg_pp" = charged to that working group's quota AND
                        # moves MY_JOBWORKDIR/OutputDir to pwg_pp's own space automatically -- see the
                        # long comment above for why this one value now does everything. NOTE support

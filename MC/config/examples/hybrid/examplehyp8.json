@@ -1,0 +1,79 @@
+{
+  "mode": "parallel",
+  "generators": [
+    {
+      "name": "external",
+      "config": {
+        "fileName": "",
+        "funcName": "",
+        "iniFile": "${O2DPG_MC_CONFIG_ROOT}/MC/config/ALICE3/ini/pythia8_pp_136tev.ini"
+      }
+    },
+    {
+      "name": "external",
+      "config": {
+        "fileName": "",
+        "funcName": "",
+        "iniFile": "${O2DPG_MC_CONFIG_ROOT}/MC/config/ALICE3/ini/pythia8_pp_136tev.ini"
+      }
+    },
+    {
+      "name": "external",
+      "config": {
+        "fileName": "",
+        "funcName": "",
+        "iniFile": "${O2DPG_MC_CONFIG_ROOT}/MC/config/ALICE3/ini/pythia8_pp_136tev.ini"
+      }
+    },
+    {
+      "name": "external",
+      "config": {
+        "fileName": "",
+        "funcName": "",
+        "iniFile": "${O2DPG_MC_CONFIG_ROOT}/MC/config/ALICE3/ini/pythia8_pp_136tev.ini"
+      }
+    },
+    {
+      "name": "external",
+      "config": {
+        "fileName": "",
+        "funcName": "",
+        "iniFile": "${O2DPG_MC_CONFIG_ROOT}/MC/config/ALICE3/ini/pythia8_pp_136tev.ini"
+      }
+    },
+    {
+      "name": "external",
+      "config": {
+        "fileName": "",
+        "funcName": "",
+        "iniFile": "${O2DPG_MC_CONFIG_ROOT}/MC/config/ALICE3/ini/pythia8_pp_136tev.ini"
+      }
+    },
+    {
+      "name": "external",
+      "config": {
+        "fileName": "",
+        "funcName": "",
+        "iniFile": "${O2DPG_MC_CONFIG_ROOT}/MC/config/ALICE3/ini/pythia8_pp_136tev.ini"
+      }
+    },
+    {
+      "name": "external",
+      "config": {
+        "fileName": "",
+        "funcName":   "",
+        "iniFile": "${O2DPG_MC_CONFIG_ROOT}/MC/config/ALICE3/ini/pythia8_pp_136tev.ini"
+      }
+    }
+  ],
+  "fractions": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ]
+}
