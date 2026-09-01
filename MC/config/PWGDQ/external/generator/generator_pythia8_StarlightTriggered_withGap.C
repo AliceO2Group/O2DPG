@@ -59,7 +59,9 @@ protected:
                 bool found = false;
                 while (!found) {
                     mGeneratorParam->generateEvent();
+                    mGeneratorParam->importParticles();
                     found = findSignalInAcceptance();
+                    mGeneratorParam->clearParticles();
                 }
             }
             notifySubGenerator(1);
@@ -82,6 +84,7 @@ protected:
         if ((mGeneratedEvents-1) % mInverseTriggerRatio == 0){ // add injected prompt signals to the stack
             mGeneratorParam->importParticles();
             int originalSize = mParticles.size();
+            std::cout<<"adding "<<mGeneratorParam->getParticles().size()<<" particles to the stack"<<std::endl;
             for(int ipart=0; ipart < mGeneratorParam->getParticles().size(); ipart++){
                 TParticle part = TParticle(mGeneratorParam->getParticles().at(ipart));
                 if(part.GetFirstMother() >= 0) part.SetFirstMother(part.GetFirstMother() + originalSize);
