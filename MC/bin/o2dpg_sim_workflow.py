@@ -110,7 +110,7 @@ parser.add_argument('-j', '--n-workers', dest='n_workers', help='number of worke
 parser.add_argument('--force-n-workers', dest='force_n_workers', action='store_true', help='by default, number of workers is re-computed '
                                                                                            'for given interaction rate; '
                                                                                            'pass this to avoid that')
-parser.add_argument('--skipModules',nargs="*", help="List of modules to skip in geometry budget (and therefore processing)", default=["ZDC"])
+parser.add_argument('--skipModules',nargs="*", help="List of modules to skip in geometry budget (and therefore processing)", default=[])
 parser.add_argument('--skipReadout',nargs="*", help="List of modules to take out from readout", default=[""])
 parser.add_argument('--with-ZDC', action='store_true', help='Enable ZDC in workflow')
 parser.add_argument('-seed',help='random seed number', default=None)
@@ -273,18 +273,12 @@ with open(config_key_param_path, "w") as f:
    print(f"INFO: Written additional config key parameters to JSON {config_key_param_path}")
    json.dump(anchorConfig, f, indent=2)
 
-# Processing skipped material budget (modules):
-# - If user did NOT specify --with-ZDC
-# - AND ZDC is not already in the list
-# --> append ZDC automatically
-if args.with_ZDC:
-   # User wants ZDC to *not* be skipped → ensure it's removed
-   args.skipModules = [m for m in args.skipModules if m != "ZDC"]
-else:
-   # If user did not request --with-ZDC,
-   # auto-append ZDC unless already present
-   if "ZDC" not in args.skipModules:
-      args.skipModules.append("ZDC")
+# The ZDC geometry is the +-113 m beam line, its magnets, ZN, ZP and ZEM. What it
+# costs in transport time is the beam line; ZEM sits at z = 7.6 m and carries
+# 217 kg of material inside the FIT and FDD acceptance. Without --with-ZDC we
+# therefore drop the beam line and keep ZEM, instead of dropping the whole module
+# -- see ZDCSimParam.buildBeamLine in create_geant_config(). ZDC stays out of the
+# readout either way, which the deactivate_detector('ZDC') below takes care of.
 
 # with this we can tailor the workflow to the presence of
 # certain detectors

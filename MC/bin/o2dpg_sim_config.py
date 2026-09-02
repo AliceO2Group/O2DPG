@@ -183,6 +183,12 @@ def create_geant_config(args, externalConfigString):
     # ----- add default settings -----
 
     add(config, {"MFTBase.buildAlignment" : "true"})
+
+    # Keep the ZEM calorimeters, drop the +-113 m beam line that makes the ZDC
+    # expensive to transport. --with-ZDC asks for the whole thing, and an explicit
+    # "--skipModules ZDC" still removes the module altogether.
+    if not getattr(args, "with_ZDC", False) and "ZDC" not in getattr(args, "skipModules", []):
+        add(config, {"ZDCSimParam.buildBeamLine" : "false"})
     add(config, {"GenTPCLoopers.colsys" : args.col})
 
     # ----- apply external overwrites from command line -------
