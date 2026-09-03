@@ -1280,6 +1280,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if not args.combine_tpc_clusterization:
      # We treat TPC clusterization in multiple (sector) steps in order to
      # stay within the memory limit or to parallelize over sector from outside (not yet supported within cluster algo)
+     # For the clusterization we disable the TPC SC corrections
      tpcclustertasks=[]
      sectorpertask=18
      for s in range(0,35,sectorpertask):
@@ -1293,6 +1294,8 @@ for tf in range(1, NTIMEFRAMES + 1):
             getDPL_global_options(bigshm=True),
             '--input-type ' + ('digitizer','digits')[args.no_tpc_digitchunking],
             '--output-type clusters,send-clusters-per-sector',
+            '--corrmap-lumi-mode 3',
+            '--disable-ctp-lumi-request',
             f'--tpc-native-cluster-writer \" --outfile tpc-native-clusters-part{(int)(s/sectorpertask)}.root\"',
             f'--tpc-sectors {s}-{s+sectorpertask-1}',
             putConfigValues(["GPU_global",
@@ -1302,6 +1305,7 @@ for tf in range(1, NTIMEFRAMES + 1):
             '--disable-mc' if args.no_mc_labels else None
           ], configname="tpcclusterizertask"
        )
+       # RS: note that --disable-IDC-scalers should be added to options above once it is added by the CorrectionMapsOptions::addGlobalOptions)
 
        tpcclussect['env'] = { "OMP_NUM_THREADS" : "4" , "TBB_NUM_THREADS" : "4" }
        tpcclussect['semaphore'] = "tpctriggers.root"
@@ -1316,7 +1320,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      # TODO: adapt this to the case above and merge code / avoid code duplication
      tpcclus = createTask(name='tpccluster_' + str(tf), needs=tpcclusterneed, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS_TF, mem='2000')
      tpcclus['cmd'] = '${O2_ROOT}/bin/o2-tpc-chunkeddigit-merger --tpc-lanes ' + str(NWORKERS_TF)
-     tpcclus['cmd'] += ' | ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector ' + putConfigValues(["GPU_global","TPCGasParam","TPCCorrMap"],{"GPU_proc.ompThreads" : 1}) + ('',' --disable-mc')[args.no_mc_labels]
+     tpcclus['cmd'] += ' | ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --corrmap-lumi-mode 3 --disable-ctp-lumi-request ' + putConfigValues(["GPU_global","TPCGasParam","TPCCorrMap"],{"GPU_proc.ompThreads" : 1}) + ('',' --disable-mc')[args.no_mc_labels]
      workflow['stages'].append(tpcclus)
      tpcreconeeds.append(tpcclus['name'])
 
@@ -1361,10 +1365,13 @@ for tf in range(1, NTIMEFRAMES + 1):
    if not isActive('CTP'):
       # CTP digits won't be produced for this timeframe (CTP not in the readout detector list)
       tpc_corr_scaling_options += ' --disable-ctp-lumi-request'
-
+      
    # why not simply?
    # tpc_corr_scaling_options = ('--lumi-type 1', '')[tpcDistortionType != 0]
 
+   # at the moment MC is not ready for the sector edge fluctuations (RS: and does not use IDC but --disable-IDC-scalers can be added only once it is added by the CorrectionMapsOptions::addGlobalOptions)
+   tpc_corr_scaling_options += option_if_available('o2-tpc-reco-workflow', '--disable-sec-edge-fluc-correction', envfile=async_envfile)
+   
    #<--------- TPC reco task
    if includeTPCSyncMode:
       tpcSyncreconeeds = tpcreconeeds.copy()
