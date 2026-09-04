@@ -25,17 +25,6 @@ using namespace Pythia8;
 // #include "SimulationDataFormat/ParticleStatus.h"
 // #include "SimulationDataFormat/MCEventHeader.h"
 
-  "simLog": false,
-  "sglGenRAA": 0.45,
-  "sglGenTAA": 23.38,
-  "sglCutoffSteepNess": 15,
-  "sglCutoffAbscissa": 5,
-  "fallSpecterSlopeLog": 6.619076,
-  "fallSpecterAffinePowerConstantTerm": -3.918165,
-  "fallSpecterAffinePowerSlope": -0.002032,
-  "bkgAveragePt": 0.764567,
-  "collTotalMultWithBkg": 1994
-
 // Input to simulation:
 // inputFilePathName file is expected to be a json file with the structure like so:
 //  {
