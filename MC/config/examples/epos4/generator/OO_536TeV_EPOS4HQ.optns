@@ -23,7 +23,7 @@ end
 !---EPOS4HQ specific changes---
 set hqnbcol 1
 set hqnbcolsaveEPOS 1
--------------------------------
+!-------------------------------
 set ninicon 1            !number of initial conditions used for hydro evolution
 core full                !core/corona activated
 hydro hlle               !hydro activated
