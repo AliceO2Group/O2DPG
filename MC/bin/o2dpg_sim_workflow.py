@@ -331,7 +331,17 @@ if not args.with_ZDC:
        del activeDetectors['ZDC']
 
 def addWhenActive(detID, needslist, appendstring):
-   if isActive(detID):
+   """Adds item to a list if detector(s) is (are) active
+
+   Args:
+      detID: str
+         detector to check, can also be comma-separated list of detectors
+      needslist: list
+         list, e.g. of task dicts added to workflow['stages']
+      appendstring: str, dict, ...
+         to be appended to needslist
+   """
+   if all(isActive(part) for part in detID.split(",")):
       needslist.append(appendstring)
 
 def retrieve_sor(run_number):
@@ -1175,8 +1185,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                          + ' --onlyDet TRD --interactionRate ' + str(INTRATE) + ' --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini' \
                          + putConfigValues(localCF={"TRDSimParams.digithreads" : NWORKERS_TF, "DigiParams.seed" : str(TFSEED)}) + " --forceSelectedDets"
    TRDDigitask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
-   if isActive("TRD"):
-      workflow['stages'].append(TRDDigitask)
+   addWhenActive("TRD", workflow['stages'], TRDDigitask)
 
    # these are digitizers which are single threaded
    def createRestDigiTask(name, det='ALLSMALLER'):
@@ -1271,6 +1280,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    if not args.combine_tpc_clusterization:
      # We treat TPC clusterization in multiple (sector) steps in order to
      # stay within the memory limit or to parallelize over sector from outside (not yet supported within cluster algo)
+     # For the clusterization we disable the TPC SC corrections
      tpcclustertasks=[]
      sectorpertask=18
      for s in range(0,35,sectorpertask):
@@ -1284,6 +1294,8 @@ for tf in range(1, NTIMEFRAMES + 1):
             getDPL_global_options(bigshm=True),
             '--input-type ' + ('digitizer','digits')[args.no_tpc_digitchunking],
             '--output-type clusters,send-clusters-per-sector',
+            '--corrmap-lumi-mode 3',
+            '--disable-ctp-lumi-request',
             f'--tpc-native-cluster-writer \" --outfile tpc-native-clusters-part{(int)(s/sectorpertask)}.root\"',
             f'--tpc-sectors {s}-{s+sectorpertask-1}',
             putConfigValues(["GPU_global",
@@ -1293,6 +1305,7 @@ for tf in range(1, NTIMEFRAMES + 1):
             '--disable-mc' if args.no_mc_labels else None
           ], configname="tpcclusterizertask"
        )
+       # RS: note that --disable-IDC-scalers should be added to options above once it is added by the CorrectionMapsOptions::addGlobalOptions)
 
        tpcclussect['env'] = { "OMP_NUM_THREADS" : "4" , "TBB_NUM_THREADS" : "4" }
        tpcclussect['semaphore'] = "tpctriggers.root"
@@ -1307,7 +1320,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      # TODO: adapt this to the case above and merge code / avoid code duplication
      tpcclus = createTask(name='tpccluster_' + str(tf), needs=tpcclusterneed, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS_TF, mem='2000')
      tpcclus['cmd'] = '${O2_ROOT}/bin/o2-tpc-chunkeddigit-merger --tpc-lanes ' + str(NWORKERS_TF)
-     tpcclus['cmd'] += ' | ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector ' + putConfigValues(["GPU_global","TPCGasParam","TPCCorrMap"],{"GPU_proc.ompThreads" : 1}) + ('',' --disable-mc')[args.no_mc_labels]
+     tpcclus['cmd'] += ' | ${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options() + ' --input-type digitizer --output-type clusters,send-clusters-per-sector --corrmap-lumi-mode 3 --disable-ctp-lumi-request ' + putConfigValues(["GPU_global","TPCGasParam","TPCCorrMap"],{"GPU_proc.ompThreads" : 1}) + ('',' --disable-mc')[args.no_mc_labels]
      workflow['stages'].append(tpcclus)
      tpcreconeeds.append(tpcclus['name'])
 
@@ -1352,10 +1365,13 @@ for tf in range(1, NTIMEFRAMES + 1):
    if not isActive('CTP'):
       # CTP digits won't be produced for this timeframe (CTP not in the readout detector list)
       tpc_corr_scaling_options += ' --disable-ctp-lumi-request'
-
+      
    # why not simply?
    # tpc_corr_scaling_options = ('--lumi-type 1', '')[tpcDistortionType != 0]
 
+   # at the moment MC is not ready for the sector edge fluctuations (RS: and does not use IDC but --disable-IDC-scalers can be added only once it is added by the CorrectionMapsOptions::addGlobalOptions)
+   tpc_corr_scaling_options += option_if_available('o2-tpc-reco-workflow', '--disable-sec-edge-fluc-correction', envfile=async_envfile)
+   
    #<--------- TPC reco task
    if includeTPCSyncMode:
       tpcSyncreconeeds = tpcreconeeds.copy()
@@ -1422,8 +1438,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      '--disable-slewing-calib', # because effect not simulated in MC
      putConfigValues()
    ])
-   if isActive("FT0"):
-      workflow['stages'].append(FT0RECOtask)
+   addWhenActive("FT0", workflow['stages'], FT0RECOtask)
 
    #<--------- ITS-TPC track matching task
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name'] if isActive("FT0") else None], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
@@ -1455,8 +1470,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                                                 getDPL_global_options(),
                                                 putConfigValues(),
                                                 ('',' --disable-mc')[args.no_mc_labels]])
-   if isActive("TRD"):
-      workflow['stages'].append(TRDTRACKINGtask)
+   addWhenActive("TRD", workflow['stages'], TRDTRACKINGtask)
 
    #<--------- TRD global tracking
    # FIXME This is so far a workaround to avoud a race condition for trdcalibratedtracklets.root
@@ -1476,8 +1490,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       '--track-sources ' + trd_track_sources,
       tpc_corr_scaling_options,
       tpc_corr_options_mc])
-   if isActive("TRD"):
-      workflow['stages'].append(TRDTRACKINGtask2)
+   addWhenActive("TRD", workflow['stages'], TRDTRACKINGtask2)
 
    #<--------- TOF reco task
    TOFRECOtask = createTask(name='tofmatch_'+str(tf), needs=[ITSTPCMATCHtask['name'], getDigiTaskName("TOF")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1488,8 +1501,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      putConfigValues(),
      ('',' --disable-mc')[args.no_mc_labels]
    ])
-   if isActive('TOF'):
-      workflow['stages'].append(TOFRECOtask)
+   addWhenActive("TOF", workflow['stages'], TOFRECOtask)
 
    #<--------- TOF-TPC(-ITS) global track matcher workflow
    toftpcmatchneeds = [TOFRECOtask['name'],
@@ -1517,8 +1529,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      tpc_corr_options_mc
    ]
    TOFTPCMATCHERtask['cmd'] = task_finalizer(tofmatcher_cmd_parts)
-   if isActive('TOF'):
-      workflow['stages'].append(TOFTPCMATCHERtask)
+   addWhenActive("TOF", workflow['stages'], TOFTPCMATCHERtask)
 
    # MFT reco: needing access to kinematics (when assessment enabled)
    mftreconeeds = [getDigiTaskName("MFT")]
@@ -1537,8 +1548,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                        'MFTClustererParam']),
       ('','--disable-mc')[args.no_mc_labels],
       ('','--run-assessment')[args.mft_assessment_full]])
-   if isActive("MFT"):
-      workflow['stages'].append(MFTRECOtask)
+   addWhenActive("MFT", workflow['stages'], MFTRECOtask)
 
    # MCH reco: needing access to kinematics ... so some extra logic needed here
    mchreconeeds = [getDigiTaskName("MCH")]
@@ -1554,8 +1564,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        putConfigValues(),
        ('',' --disable-mc')[args.no_mc_labels],
        '--enable-clusters-root-output'])
-   if isActive("MCH"):
-      workflow['stages'].append(MCHRECOtask)
+   addWhenActive("MCH", workflow['stages'], MCHRECOtask)
 
    #<--------- MID reco workflow
    MIDRECOtask = createTask(name='midreco_'+str(tf), needs=[getDigiTaskName("MID")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1566,8 +1575,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    MIDRECOtask['cmd'] += task_finalizer(['${O2_ROOT}/bin/o2-mid-reco-workflow',
                                              getDPL_global_options(),
                                              putConfigValues(),('',' --disable-mc')[args.no_mc_labels]])
-   if isActive('MID'):
-      workflow['stages'].append(MIDRECOtask)
+   addWhenActive("MID", workflow['stages'], MIDRECOtask)
 
    #<--------- FDD reco workflow
    FDDRECOtask = createTask(name='fddreco_'+str(tf), needs=[getDigiTaskName("FDD")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1575,8 +1583,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                                             getDPL_global_options(ccdbbackend=False),
                                             putConfigValues(),
                                             ('',' --disable-mc')[args.no_mc_labels]])
-   if isActive("FDD"):
-      workflow['stages'].append(FDDRECOtask)
+   addWhenActive("FDD", workflow['stages'], FDDRECOtask)
 
    #<--------- FV0 reco workflow
    FV0RECOtask = createTask(name='fv0reco_'+str(tf), needs=[getDigiTaskName("FV0")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1584,8 +1591,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                                             getDPL_global_options(),
                                             putConfigValues(),
                                             ('',' --disable-mc')[args.no_mc_labels]])
-   if isActive("FV0"):
-      workflow['stages'].append(FV0RECOtask)
+   addWhenActive("FV0", workflow['stages'], FV0RECOtask)
 
    # calorimeters
    #<--------- EMC reco workflow
@@ -1617,8 +1623,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       getDPL_global_options(),
       '--subspec 0',
       ('',' --disable-mc')[args.no_mc_labels]])
-   if isActive("EMC"):
-      workflow['stages'].append(EMCRECOtask)
+   addWhenActive("EMC", workflow['stages'], EMCRECOtask)
 
     #<--------- PHS reco workflow
    PHSRECOtask = createTask(name='phsreco_'+str(tf), needs=[getDigiTaskName("PHS")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1627,8 +1632,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       getDPL_global_options(),
       putConfigValues(),
       ('',' --disable-mc')[args.no_mc_labels]])
-   if isActive("PHS"):
-      workflow['stages'].append(PHSRECOtask)
+   addWhenActive("PHS", workflow['stages'], PHSRECOtask)
 
    #<--------- CPV reco workflow
    CPVRECOtask = createTask(name='cpvreco_'+str(tf), needs=[getDigiTaskName("CPV")], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1637,8 +1641,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        getDPL_global_options(),
        putConfigValues(),
        ('',' --disable-mc')[args.no_mc_labels]])
-   if isActive("CPV"):
-      workflow['stages'].append(CPVRECOtask)
+   addWhenActive("CPV", workflow['stages'], CPVRECOtask)
 
    #<--------- ZDC reco workflow
    ZDCRECOtask = createTask(name='zdcreco_'+str(tf), needs=[getDigiTaskName("ZDC")], tf=tf, cwd=timeframeworkdir, lab=["RECO", "ZDC"])
@@ -1647,8 +1650,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        getDPL_global_options(),
        putConfigValues(),
        ('',' --disable-mc')[args.no_mc_labels]])
-   if isActive("ZDC"):
-      workflow['stages'].append(ZDCRECOtask)
+   addWhenActive("ZDC", workflow['stages'], ZDCRECOtask)
 
    ## forward matching
    #<--------- MCH-MID forward matching
@@ -1658,8 +1660,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        getDPL_global_options(ccdbbackend=False),
        putConfigValues(),
        ('',' --disable-mc')[args.no_mc_labels]])
-   if isActive("MID") and isActive("MCH"):
-      workflow['stages'].append(MCHMIDMATCHtask)
+   addWhenActive("MID,MCH", workflow['stages'], MCHMIDMATCHtask)
 
    #<--------- MFT-MCH forward matching
    forwardmatchneeds = [MCHRECOtask['name'],
@@ -1679,8 +1680,7 @@ for tf in range(1, NTIMEFRAMES + 1):
          ['${O2_ROOT}/bin/o2-globalfwd-assessment-workflow',
           getDPL_global_options(),
           ('',' --disable-mc')[args.no_mc_labels]])
-   if isActive("MFT") and isActive("MCH"):
-      workflow['stages'].append(MFTMCHMATCHtask)
+   addWhenActive("MFT,MCH", workflow['stages'], MFTMCHMATCHtask)
 
    if args.fwdmatching_save_trainingdata == True:
       MFTMCHMATCHTraintask = createTask(name='mftmchMatchTrain_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
@@ -1695,8 +1695,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       ['${O2_ROOT}/bin/o2-hmpid-digits-to-clusters-workflow',
        getDPL_global_options(ccdbbackend=False),
        putConfigValues()])
-   if isActive("HMP"):
-      workflow['stages'].append(HMPRECOtask)
+   addWhenActive("HMP", workflow['stages'], HMPRECOtask)
 
    #<--------- HMP forward matching
    hmpmatchneeds = [HMPRECOtask['name'],
@@ -1712,8 +1711,7 @@ for tf in range(1, NTIMEFRAMES + 1):
         getDPL_global_options(),
         putConfigValues()
       ])
-   if isActive("HMP"):
-      workflow['stages'].append(HMPMATCHtask)
+   addWhenActive("HMP", workflow['stages'], HMPMATCHtask)
 
    #<---------- primary vertex finding
    pvfinder_sources = dpl_option_from_config(anchorConfig,
@@ -2156,9 +2154,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCTStask['cmd'] += ' --primary-vertices '
    TPCTStask['cmd'] += ' | o2-tpc-time-series-workflow --enable-unbinned-root-output --sample-unbinned-tsallis --sampling-factor 0.01 '
    TPCTStask['cmd'] += putConfigValues() + ' ' + getDPL_global_options(bigshm=True)
-   if isActive('TOF') and isActive('TPC') and isActive('FT0'):
-      # could be relaxed or changed once the timerseries worklow is more reactive to input cluster- and track-types
-      workflow['stages'].append(TPCTStask)
+   # could be relaxed or changed once the timerseries worklow is more reactive to input cluster- and track-types
+   addWhenActive("TOF,TPC,FT0", workflow['stages'], TPCTStask)
 
   # cleanup
   # --------
