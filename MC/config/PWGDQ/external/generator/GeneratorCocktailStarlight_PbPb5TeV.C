@@ -40,7 +40,7 @@ o2::eventgen::GeneratorEvtGen* makeStarlightToEvtGenGenerator(std::string config
   TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGUD/external/generator/DecayTablesEvtGen");
   if      (configuration.find("Psi2sToMuPi") != std::string::npos) generator->SetDecayTable(Form("%s/PSI2S.MUMUPIPI.DEC",pathO2.Data()));
   else if (configuration.find("Psi2sToElPi") != std::string::npos) generator->SetDecayTable(Form("%s/PSI2S.EEPIPI.DEC",pathO2.Data()));
-  else if (configuration.find("JpsiToElRad") != std::string::npos) gen->SetDecayTable(Form("%s/JPSI.EE.DEC",pathO2.Data()));
+  else if (configuration.find("JpsiToElRad") != std::string::npos) generator->SetDecayTable(Form("%s/JPSI.EE.DEC",pathO2.Data()));
   return generator;
 }
 } // namespace
