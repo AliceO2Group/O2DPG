@@ -153,6 +153,12 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
       /** switch off process level **/
       mPythiaGun.readString("ProcessLevel:all off");
 
+      // The gun owns a separate RNG: seeding the inherited mPythia does not
+      // seed its mass sampler or decays. Derive a valid, nonzero Pythia seed
+      // from ROOT's RNG; explicit decayer configuration can still override it.
+      mPythiaGun.readString("Random:setSeed = on");
+      mPythiaGun.readString("Random:seed = " + std::to_string(1 + gRandom->Integer(900000000)));
+
       auto& param = o2::eventgen::DecayerPythia8Param::Instance();
       LOG(info) << "Init \'GeneratorPythia8LFRapidity\' with following parameters";
       LOG(info) << param;
@@ -175,6 +181,13 @@ class GeneratorPythia8LFRapidity : public o2::eventgen::GeneratorPythia8
         mPythiaGun.readString(std::string("Init:showChangedParticleData on"));
       } else {
         mPythiaGun.readString(std::string("Init:showChangedParticleData off"));
+      }
+
+      LOG(info) << "LF gun RNG: Random:setSeed=" << mPythiaGun.settings.flag("Random:setSeed")
+                << ", Random:seed=" << mPythiaGun.settings.mode("Random:seed");
+      if (!mPythiaGun.settings.flag("Random:setSeed") || mPythiaGun.settings.mode("Random:seed") <= 0) {
+        LOG(warn) << "Decayer configuration overrides the ROOT-derived gun seed; "
+                  << "the gun may use default or time-based seeding";
       }
 
       /** initialise **/
