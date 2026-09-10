@@ -344,7 +344,6 @@ fi
 
 # -- CREATE THE MC JOB DESCRIPTION ANCHORED TO RUN --
 
-MODULES="--skipModules ZDC"
 
 # publish MCPRODINFO for first few jobs of a production
 # if external script exported PUBLISH_MCPRODINFO, it will be published anyways
