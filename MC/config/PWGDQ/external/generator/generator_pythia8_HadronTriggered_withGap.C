@@ -19,14 +19,14 @@ class GeneratorPythia8HadronTriggeredWithGap : public o2::eventgen::GeneratorPyt
 public:
   
   /// constructor
-  GeneratorPythia8HadronTriggeredWithGap(int inputTriggerRatio = 5)  {
+  GeneratorPythia8HadronTriggeredWithGap(int inputTriggerRatio = 5, bool useOniaShower = false)  {
 
     mGeneratedEvents = 0;
     mInverseTriggerRatio = inputTriggerRatio;
     // define minimum bias event generator
     auto seed = (gRandom->TRandom::GetSeed() % 900000000);
     // main physics option for the min bias pythia events: SoftQCD:Inelastic
-    TString pathconfigMB = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/generator/pythia8_inel_triggerGap.cfg");
+    TString pathconfigMB = useOniaShower ? gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/generator/pythia8_oniaAll_triggerGap.cfg") : gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/generator/pythia8_inel_triggerGap.cfg");
     pythiaMBgen.readFile(pathconfigMB.Data());
     pythiaMBgen.readString("Random:setSeed on");
     pythiaMBgen.readString("Random:seed " + std::to_string(seed));
@@ -221,7 +221,7 @@ GeneratorInclusiveJpsiPsi2SChiC_EvtGenMidY(int triggerGap, double rapidityMin = 
     gen->addHadronPDGs(443);
     gen->addHadronPDGs(100443);
     gen->addHadronPDGs(445);
-    gen->addHadronPDGs(200443);
+    gen->addHadronPDGs(20443);
     gen->setVerbose(verbose);
 
     TString pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffJpsi.cfg");
@@ -232,10 +232,73 @@ GeneratorInclusiveJpsiPsi2SChiC_EvtGenMidY(int triggerGap, double rapidityMin = 
     gen->SetSizePdg(4);
     gen->AddPdg(443, 0);
     gen->AddPdg(100443, 1);
-    gen->AddPdg(443, 2);
-    gen->AddPdg(100443, 3);
+    gen->AddPdg(445, 2);
+    gen->AddPdg(20443, 3);
 
     gen->SetForceDecay(kEvtDiElectron);
+
+    // set random seed
+    gen->readString("Random:setSeed on");
+    uint random_seed;
+    unsigned long long int random_value = 0;
+    ifstream urandom("/dev/urandom", ios::in | ios::binary);
+    urandom.read(reinterpret_cast<char *>(&random_value), sizeof(random_seed));
+    gen->readString(Form("Random:seed = %llu", random_value % 900000001));
+
+    // print debug
+    // gen->PrintDebug();
+
+    return gen;
+}
+FairGenerator *
+GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double rapidityMin = -1.0, double rapidityMax = 1.0, bool verbose = false)
+{
+    auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8HadronTriggeredWithGap>(triggerGap, true);
+    gen->setTriggerGap(triggerGap);
+    gen->setRapidityRange(rapidityMin, rapidityMax);
+    gen->addHadronPDGs(443); // Jpsi
+    gen->addHadronPDGs(100443); // psi(2S)
+    gen->addHadronPDGs(10441); // chic0
+    gen->addHadronPDGs(20443); // chic1
+    gen->addHadronPDGs(445); // chic2
+    gen->addHadronPDGs(553); // upsilon(1S)
+    gen->addHadronPDGs(100553); // upsilon(2S)
+    gen->addHadronPDGs(200553); // upsilon(3S)
+    // we also add B hadrons to trigger correct rapidity range (e.g. B is within |y|<1 but non-prompt J/psi has |y|>1)
+    gen->addHadronPDGs(511); // B0
+    gen->addHadronPDGs(521); // B+
+    gen->addHadronPDGs(531); // Bs
+    gen->addHadronPDGs(541); // Bc
+    gen->addHadronPDGs(5122); // Lambdab
+    gen->addHadronPDGs(5132); // Xib+
+    gen->addHadronPDGs(5232); // Xib0
+    gen->addHadronPDGs(5332); // Omegab
+    gen->setVerbose(verbose);
+
+    TString pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffAllQuarkonia.cfg");
+    gen->readFile(pathO2table.Data());
+    gen->setConfigMBdecays(pathO2table);
+    gen->PrintDebug(true);
+
+    gen->SetSizePdg(16);
+    gen->AddPdg(443, 0);
+    gen->AddPdg(100443, 1);
+    gen->AddPdg(10441, 2);
+    gen->AddPdg(20443, 3);
+    gen->AddPdg(445, 4);
+    gen->AddPdg(553, 5);
+    gen->AddPdg(100553, 6);
+    gen->AddPdg(200553, 7);
+    gen->AddPdg(511, 8);
+    gen->AddPdg(521, 9);
+    gen->AddPdg(531, 10);
+    gen->AddPdg(541, 11);
+    gen->AddPdg(5122, 12);
+    gen->AddPdg(5132, 13);
+    gen->AddPdg(5232, 14);
+    gen->AddPdg(5332, 15);
+    
+    gen->SetForceDecay(kEvtBPsiAndJpsiDiElectron);
 
     // set random seed
     gen->readString("Random:setSeed on");
