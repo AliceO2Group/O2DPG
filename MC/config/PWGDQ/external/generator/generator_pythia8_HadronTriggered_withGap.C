@@ -19,14 +19,14 @@ class GeneratorPythia8HadronTriggeredWithGap : public o2::eventgen::GeneratorPyt
 public:
   
   /// constructor
-  GeneratorPythia8HadronTriggeredWithGap(int inputTriggerRatio = 5, bool useOniaShower = false)  {
+  GeneratorPythia8HadronTriggeredWithGap(int inputTriggerRatio = 5)  {
 
     mGeneratedEvents = 0;
     mInverseTriggerRatio = inputTriggerRatio;
     // define minimum bias event generator
     auto seed = (gRandom->TRandom::GetSeed() % 900000000);
     // main physics option for the min bias pythia events: SoftQCD:Inelastic
-    TString pathconfigMB = useOniaShower ? gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/generator/pythia8_oniaAll_triggerGap.cfg") : gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/generator/pythia8_inel_triggerGap.cfg");
+    TString pathconfigMB = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/generator/pythia8_inel_triggerGap.cfg");
     pythiaMBgen.readFile(pathconfigMB.Data());
     pythiaMBgen.readString("Random:setSeed on");
     pythiaMBgen.readString("Random:seed " + std::to_string(seed));
@@ -39,7 +39,23 @@ public:
   ///  Destructor
   ~GeneratorPythia8HadronTriggeredWithGap() = default;
 
-  void addHadronPDGs(int pdg) { mHadronsPDGs.push_back(pdg); };
+  void addHadronPDGs(int pdg) { mHadronsPDGs.push_back(pdg); mRejFactorPrompt.push_back(1.0); mRejFactorNonPrompt.push_back(1.0);}
+  
+  void setRejFactorPrompt(int pdg, float rejFactor) {
+    for (size_t i = 0; i < mHadronsPDGs.size(); i++) {
+      if (pdg == mHadronsPDGs[i]) {
+        mRejFactorPrompt[i] = rejFactor;
+      }
+    }
+  }
+  
+  void setRejFactorNonPrompt(int pdg, float rejFactor) {
+    for (size_t i = 0; i < mHadronsPDGs.size(); i++) {
+      if (pdg == mHadronsPDGs[i]) {
+        mRejFactorNonPrompt[i] = rejFactor;
+      }
+    }
+  }
 
   void setRapidityRange(double valMin, double valMax)
   {
@@ -93,28 +109,72 @@ bool Init() override {
   addSubGenerator(1, "Hadron triggered");
 	GeneratorPythia8::Init();
   pythiaMBgen.init();
+  
+  for (size_t i = 0; i < mHadronsPDGs.size(); i++) {
+    LOGF(info, "triggering hadron %d with rejection factor (prompt/non-prompt) %f/%f", mHadronsPDGs[i], mRejFactorPrompt[i], mRejFactorNonPrompt[i]);
+  }
+  
   return true;
 } 
 
+
+bool isOpenBhadron(int pdg) {
+  // all open beauty hadrons, no upsilon
+  return ((abs(pdg) >= 500 && abs(pdg) < 599) || (abs(pdg) >= 5000 && abs(pdg) < 5999)) && pdg != 553;
+}
+
 // search for the presence of at least one of the required hadrons in a selected rapidity window
 bool findHadrons(Pythia8::Event& event) { 
-   
+  int ihad = 0;
   for (int ipa = 0; ipa < event.size(); ++ipa) {
     
     auto daughterList = event[ipa].daughterList();
   
     for (auto ida : daughterList) {
+      ihad = 0;
       for (int pdg : mHadronsPDGs) {   // check that at least one of the pdg code is found in the event
         if (event[ida].id() == pdg) {
           if ((event[ida].y() > mRapidityMin) && (event[ida].y() < mRapidityMax)) {
-            cout << "============= Found jpsi y,pt " <<  event[ida].y() << ", " << event[ida].pT() << endl;
+            cout << "============= Found jpsi y,pt,pdg " <<  event[ida].y() << ", " << event[ida].pT() << ", " << event[ida].pdg() << endl;
             std::vector<int> daughters = event[ida].daughterList();
             for (int d : daughters) {
               cout << "###### daughter " << d << ": code " << event[d].id() << ", pt " << event[d].pT() << endl;
             }
-            return true;
+
+            // check whether particle is prompt or non-prompt, since rejection factor can depend on it
+            bool isNonPrompt = false;
+            if (isOpenBhadron(pdg)) {
+              isNonPrompt = true;
+              cout << "particle is non-prompt" << endl
+            } else {
+              // we check the mother
+              int mother = event[ida].mother1();
+              if (mother >= 0 && isOpenBhadron(event[mother].id())) {
+                isNonPrompt = true;
+                cout << "particle is non-prompt, mother pdg: " << event[mother].id() << endl;
+              }
+              if (mother >= 0 && !isOpenBhadron(event[mother].id())) {
+                // we check the grand-mother
+                int grandmother = event[mother].mother1();
+                if (grandmother >= 0 && isOpenBhadron(event[grandmother].id())) {
+                  isNonPrompt = true;
+                  cout << "particle is non-prompt, mother pdg: " << event[mother].id() << ", grand-mother pdg: "<< event[grandmother].id() << endl;
+                }
+                if (grandmother >= 0 && !isOpenBhadron(event[grandmother].id())) {
+                  isNonPrompt = false;
+                  cout << "particle is prompt, mother pdg: " << event[mother].id() << ", grand-mother pdg: "<< event[grandmother].id() << endl;
+                }
+              }
+            }
+
+            // rejection factor given in the ini file
+            float randomNumber = gRandom->Rndm();
+            if ((isPrompt && (randomNumber <= mRejFactorPrompt[ihad])) || (isNonPrompt && (randomNumber <= mRejFactorNonPrompt[ihad]))) {
+              return true;
+            }
           }
         }
+        ihad++;
       }
     }
   }
@@ -133,6 +193,8 @@ private:
   Pythia8::Pythia pythiaMBgen; // minimum bias event  
   TString mConfigMBdecays;		
   std::vector<int> mHadronsPDGs;
+  std::vector<float> mRejFactorPrompt; // rejection factors for possibility to trigger a given particle only a fraction of the time, 1 by default
+  std::vector<float> mRejFactorNonPrompt;
   double mRapidityMin; 
   double mRapidityMax;
   bool mVerbose;
@@ -251,52 +313,97 @@ GeneratorInclusiveJpsiPsi2SChiC_EvtGenMidY(int triggerGap, double rapidityMin = 
     return gen;
 }
 FairGenerator *
-GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double rapidityMin = -1.0, double rapidityMax = 1.0, bool verbose = false)
+GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double rapidityMin = -1.0, double rapidityMax = 1.0, TString rejFactors = "", bool verbose = false)
 {
-    auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8HadronTriggeredWithGap>(triggerGap, true);
+
+    int particleList[16] = {443, // Jpsi
+      100443, // psi(2S)
+      10441, // chic0
+      20443, // chic1
+      445, // chic2
+      553, // upsilon(1S)
+      100553, // upsilon(2S)
+      200553, // upsilon(3S)
+      // we also add B hadrons to trigger correct rapidity range (e.g. B is within |y|<1 but non-prompt J/psi has |y|>1)
+      511, // B0
+      521, // B+
+      531, // Bs
+      541, // Bc
+      5122, // Lambdab
+      5132, // Xib+
+      5232, // Xib0
+      5332 // Omegab
+    }; 
+
+    auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8HadronTriggeredWithGap>();
     gen->setTriggerGap(triggerGap);
     gen->setRapidityRange(rapidityMin, rapidityMax);
-    gen->addHadronPDGs(443); // Jpsi
-    gen->addHadronPDGs(100443); // psi(2S)
-    gen->addHadronPDGs(10441); // chic0
-    gen->addHadronPDGs(20443); // chic1
-    gen->addHadronPDGs(445); // chic2
-    gen->addHadronPDGs(553); // upsilon(1S)
-    gen->addHadronPDGs(100553); // upsilon(2S)
-    gen->addHadronPDGs(200553); // upsilon(3S)
-    // we also add B hadrons to trigger correct rapidity range (e.g. B is within |y|<1 but non-prompt J/psi has |y|>1)
-    gen->addHadronPDGs(511); // B0
-    gen->addHadronPDGs(521); // B+
-    gen->addHadronPDGs(531); // Bs
-    gen->addHadronPDGs(541); // Bc
-    gen->addHadronPDGs(5122); // Lambdab
-    gen->addHadronPDGs(5132); // Xib+
-    gen->addHadronPDGs(5232); // Xib0
-    gen->addHadronPDGs(5332); // Omegab
+    // specify particles to be triggered
+    for (int i = 0; i < 16; i++) {
+      gen->addHadronPDGs(particleList[i]);
+    }
     gen->setVerbose(verbose);
+    
+    // possibility to enhance a particle compared to another (or completely reject one particle) using rejection factors configured from a string
+    // the rejection factors can be kept in a comma separated list (e.g. "pdg1:rejFactor1,pdg2:rejFactor2")
+    // also the keywords "prompt" and "non-prompt" can be used to modify all prompt and all non-prompt (e.g. "prompt:rejFactor1,non-prompt:rejFactor2")
+    // or the keyword can be used for only one particle (e.g. "pdg1:rejFactor1:prompt,pdg1:rejFactor2:non-prompt")
+    TObjArray* objArray = rejFactors.Tokenize(",");
+    for (int i = 0; i < objArray->GetEntries(); i++) {
+      TString rejStr = objArray->At(i);
+      TObjArray* objArrayCurrent = rejStr.Tokenize(":");
+      if (objArrayCurrent->GetEntries() != 2 && objArrayCurrent->GetEntries() != 3) {
+        LOGF(fatal, "Problem when configuring string for particle rejection factors: %s, incorrect length", rejStr.Data());
+      }
+      if (!objArrayCurrent[1].IsFloat()) {
+        LOGF(fatal, "Problem when configuring string for particle rejection factors: %s, is not float", rejStr.Data());
+      }
+      if (objArrayCurrent[0].CompareTo("prompt") == 0) {
+        // Common switch for all prompt particles
+        for (int ihad = 0; ihad < 16; i++) {
+          gen->setRejFactorPrompt(particleList[i], objArrayCurrent[1].Atof());
+        }
+        continue;
+      }
+      if (objArrayCurrent[0].CompareTo("non-prompt") == 0) {
+        // Common switch for all non-prompt particles
+        for (int ihad = 0; ihad < 16; i++) {
+          gen->setRejFactorNonPrompt(particleList[i], objArrayCurrent[1].Atof());
+        }
+        continue;
+      }
+      if (objArrayCurrent[0].IsDigit()) {
+        // Setting the rejection factor for a specific particle
+        if (objArrayCurrent->GetEntries() == 2) {
+          gen->setRejFactorPrompt(objArrayCurrent[0].Atoi(), objArrayCurrent[1].Atof());
+          gen->setRejFactorNonPrompt(objArrayCurrent[0].Atoi(), objArrayCurrent[1].Atof());
+          continue;
+        }
+        else {
+          if (objArrayCurrent[2].CompareTo("prompt") == 0) {
+            gen->setRejFactorPrompt(objArrayCurrent[0].Atoi(), objArrayCurrent[1].Atof());
+            continue;
+          }
+          if (objArrayCurrent[2].CompareTo("non-prompt") == 0) {
+            gen->setRejFactorNonPrompt(objArrayCurrent[0].Atoi(), objArrayCurrent[1].Atof());
+            continue;
+          }
+        }
+      }
+      LOGF(fatal, "Problem when configuring string for particle rejection factors: %s, incorrect template", rejStr.Data());
+    }
+    
 
     TString pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffAllQuarkonia.cfg");
     gen->readFile(pathO2table.Data());
     gen->setConfigMBdecays(pathO2table);
     gen->PrintDebug(true);
 
+    // specify particles to be decayed with EvtGen
     gen->SetSizePdg(16);
-    gen->AddPdg(443, 0);
-    gen->AddPdg(100443, 1);
-    gen->AddPdg(10441, 2);
-    gen->AddPdg(20443, 3);
-    gen->AddPdg(445, 4);
-    gen->AddPdg(553, 5);
-    gen->AddPdg(100553, 6);
-    gen->AddPdg(200553, 7);
-    gen->AddPdg(511, 8);
-    gen->AddPdg(521, 9);
-    gen->AddPdg(531, 10);
-    gen->AddPdg(541, 11);
-    gen->AddPdg(5122, 12);
-    gen->AddPdg(5132, 13);
-    gen->AddPdg(5232, 14);
-    gen->AddPdg(5332, 15);
+    for (int i = 0; i < 16; i++) {
+      gen->AddPdg(particleList[i], i);
+    }
     
     gen->SetForceDecay(kEvtBPsiAndJpsiDiElectron);
 

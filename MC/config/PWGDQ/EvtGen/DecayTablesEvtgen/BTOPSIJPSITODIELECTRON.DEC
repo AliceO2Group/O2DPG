@@ -371,7 +371,7 @@ Enddecay
 
 Decay psi(2S)
 0.00795   e+   e-                PHOTOS VLL;
-0.3478 J/psi   pi+     pi-         VVPIPI;
+0.0208  J/psi   pi+     pi-      VVPIPI; # multiplied by J/psi->ee BR to keep relative statistics, since J/psi->ee itself is also enhanced
 Enddecay
 
 Decay J/psi
