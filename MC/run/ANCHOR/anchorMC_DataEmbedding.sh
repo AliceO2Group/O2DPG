@@ -178,9 +178,48 @@ fi
 
 export > env_base.env
 
+# The 2-tag / alternative-reco setup below uses 'module purge' to swap the software
+# environment inside a subshell. If the shell provides no 'module' function, build
+# one on a 'modulecmd' binary. Its location varies by version, so resolve it flexibly
+# (was hardwired to /usr/bin/modulecmd) and verify that it runs. Fail
+# hard -- but only when an alternative-reco tag is set, since single-tag jobs never call
+# 'module' -- instead of silently no-op'ing every 'module' call (cf. O2-7070).
+# The candidate list also resolves symlinks ('readlink -f') and probes the canonical
+# environment-modules install (/usr/share/Modules): on some HPC/container setups
+# /usr/bin/modulecmd is a *dangling* symlink (-> /etc/alternatives -> the real .tcl),
+# which exec's as "No such file or directory"; this recovers when the real binary is
+# still reachable, and otherwise still fails hard (a genuinely missing Modules tree in
+# the job's mount namespace is a site-side problem).
 if ! declare -F module > /dev/null; then
+  MODULECMD_BIN=""
+  for _cand in "${MODULECMD}" "/usr/bin/modulecmd" "$(command -v modulecmd 2>/dev/null)" \
+               "${MODULESHOME:+${MODULESHOME}/libexec/modulecmd}" \
+               "$(readlink -f /usr/bin/modulecmd 2>/dev/null)" \
+               /usr/share/Modules/libexec/modulecmd* /usr/share/Modules/*/libexec/modulecmd*; do
+    if [ -n "${_cand}" ] && [ -x "${_cand}" ] && "${_cand}" bash list > /dev/null 2>&1; then
+      MODULECMD_BIN="${_cand}"
+      break
+    fi
+  done
+  if [ -n "${MODULECMD_BIN}" ]; then
+    echo_info "Using modulecmd at ${MODULECMD_BIN}"
+  elif [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
+    echo_error "Alternative-reco (2-tag) requested (ALIEN_JDL_O2DPG_ASYNC_RECO_TAG=${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG})"
+    echo_error "but no working 'modulecmd' (needed for 'module purge') was found."
+    echo_error "  Looked at: \$MODULECMD='${MODULECMD}', /usr/bin/modulecmd (+readlink -f), PATH,"
+    echo_error "  \$MODULESHOME/libexec/modulecmd, /usr/share/Modules/{,*/}libexec/modulecmd*."
+    echo_error "  Diagnostics: MODULESHOME='${MODULESHOME}' /usr/bin/modulecmd -> '$(readlink -f /usr/bin/modulecmd 2>/dev/null)' PATH='${PATH}'"
+    exit 1
+  else
+    echo_info "No 'modulecmd' found, but no alternative-reco tag is set, so 'module' is not needed; continuing."
+  fi
+  export MODULECMD_BIN
   module() {
-    eval "$(/usr/bin/modulecmd bash "$@")";
+    if [ -z "${MODULECMD_BIN}" ]; then
+      echo_error "'module ${*}' invoked but no usable 'modulecmd' was found (see earlier diagnostics)."
+      return 127
+    fi
+    eval "$("${MODULECMD_BIN}" bash "$@")";
   }
   export -f module
 fi
@@ -205,7 +244,13 @@ fi
       module purge --no-pager
     fi
     echo_info "Using tag ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG} to setup anchored MC"
-    /cvmfs/alice.cern.ch/bin/alienv printenv "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" &> async_environment.env
+    /cvmfs/alice.cern.ch/bin/alienv printenv "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" > async_environment.env 2> async_environment.err
+    # alienv printenv returns 0 also for an unknown tag, so check its output instead
+    if [ ! -s async_environment.env ] || grep -q "ERROR" async_environment.err; then
+      echo_error "Could not set up the software environment for ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}:"
+      cat async_environment.err
+      exit 1
+    fi
     source async_environment.env
     export > env_async.env
   fi
@@ -244,7 +289,7 @@ fi
   touch list.list
 
   # run the async_pass.sh and store output to log file for later inspection and extraction of information
-  ./async_pass.sh ${CTF_TEST_FILE:-""} 2&> async_pass_log.log
+  ./async_pass.sh ${CTF_TEST_FILE:-""} &> async_pass_log.log
   RECO_RC=$?
 
   echo_info "async_pass.sh finished with ${RECO_RC}"
@@ -265,6 +310,9 @@ fi
 export ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG_KEEP
 echo_info "Setting back ALIEN_JDL_LPMPRODUCTIONTAG to $ALIEN_JDL_LPMPRODUCTIONTAG"
 #<----- END OF part that should run under a clean alternative software environment if this was given ------
+
+# the async software environment, referenced from within the per-timeframe workspaces below
+ASYNC_ENV_FILE=${PWD}/env_async.env
 
 # now create the local MC config file --> config-json.json
 # we create the new config output with blacklist functionality
@@ -346,7 +394,7 @@ for external_context in collission_context_*.root; do
   # apply software tagging choice
   # remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}}"
   ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE=${ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE:-RECO}
-  remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${PWD}/env_async.env@${ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE}}"
+  remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${ASYNC_ENV_FILE}@${ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE}}"
   # potentially add CCDB timemachine timestamp
   remainingargs="${remainingargs} ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}}"
   # add external collision context injection
