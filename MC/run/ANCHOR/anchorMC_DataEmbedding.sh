@@ -196,61 +196,61 @@ if [ ! "${MODULEPATH}" ]; then
 fi
 
 #<----- START OF part that should run under a clean alternative software environment if this was given ------
-if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
-  if [ "${LOADEDMODULES}" ]; then
-    printenv > env_before_stashing.printenv
-    echo "Stashing initial modules"
-    module save initial_modules.list # we stash the current modules environment
-    module list --no-pager
-    module purge --no-pager
-    printenv > env_after_stashing.printenv
-    echo "Modules after purge"
-    module list --no-pager
+# It runs in a subshell, so the MC software environment of this shell stays untouched
+# and does not need to be restored afterwards.
+(
+  if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
+    if [ "${LOADEDMODULES}" ]; then
+      echo "Unloading initial modules"
+      module purge --no-pager
+    fi
+    echo_info "Using tag ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG} to setup anchored MC"
+    /cvmfs/alice.cern.ch/bin/alienv printenv "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" &> async_environment.env
+    source async_environment.env
+    export > env_async.env
   fi
-  echo_info "Using tag ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG} to setup anchored MC"
-  /cvmfs/alice.cern.ch/bin/alienv printenv "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" &> async_environment.env
-  source async_environment.env
-  export > env_async.env
-fi
 
-# default async_pass.sh script
-DPGRECO=$O2DPG_ROOT/DATA/production/configurations/asyncReco/async_pass.sh
-# default destenv_extra.sh script
-DPGSETENV=$O2DPG_ROOT/DATA/production/configurations/asyncReco/setenv_extra.sh
+  # default async_pass.sh script
+  DPGRECO=$O2DPG_ROOT/DATA/production/configurations/asyncReco/async_pass.sh
+  # default destenv_extra.sh script
+  DPGSETENV=$O2DPG_ROOT/DATA/production/configurations/asyncReco/setenv_extra.sh
 
-# a specific async_pass.sh script is in the current directory, assume that one should be used
-if [[ -f async_pass.sh ]]; then
-    # the default is executable, however, this may not be, so make it so
-    chmod +x async_pass.sh
-    DPGRECO=./async_pass.sh
-else
-    cp -v $DPGRECO .
-fi
+  # a specific async_pass.sh script is in the current directory, assume that one should be used
+  if [[ -f async_pass.sh ]]; then
+      # the default is executable, however, this may not be, so make it so
+      chmod +x async_pass.sh
+      DPGRECO=./async_pass.sh
+  else
+      cp -v $DPGRECO .
+  fi
 
-# if there is no setenv_extra.sh in this directory (so no special version is "shipped" with this rpodcution), copy the default one
-if [[ ! -f setenv_extra.sh ]] ; then
-    cp ${DPGSETENV} .
-    echo_info "Use default setenv_extra.sh from ${DPGSETENV}."
-else
-    echo_info "setenv_extra.sh was found in the current working directory, use it."
-fi
+  # if there is no setenv_extra.sh in this directory (so no special version is "shipped" with this rpodcution), copy the default one
+  if [[ ! -f setenv_extra.sh ]] ; then
+      cp ${DPGSETENV} .
+      echo_info "Use default setenv_extra.sh from ${DPGSETENV}."
+  else
+      echo_info "setenv_extra.sh was found in the current working directory, use it."
+  fi
 
-chmod u+x setenv_extra.sh
+  chmod u+x setenv_extra.sh
 
-echo_info "Setting up DPGRECO to ${DPGRECO}"
+  echo_info "Setting up DPGRECO to ${DPGRECO}"
 
-# take out line running the workflow (if we don't have data input)
-[ ${CTF_TEST_FILE} ] || sed -i '/WORKFLOWMODE=run/d' async_pass.sh
+  # take out line running the workflow (if we don't have data input)
+  [ ${CTF_TEST_FILE} ] || sed -i '/WORKFLOWMODE=run/d' async_pass.sh
 
-# create workflow ---> creates the file that can be parsed
-export IGNORE_EXISTING_SHMFILES=1
-touch list.list
+  # create workflow ---> creates the file that can be parsed
+  export IGNORE_EXISTING_SHMFILES=1
+  touch list.list
 
-# run the async_pass.sh and store output to log file for later inspection and extraction of information
-./async_pass.sh ${CTF_TEST_FILE:-""} 2&> async_pass_log.log
+  # run the async_pass.sh and store output to log file for later inspection and extraction of information
+  ./async_pass.sh ${CTF_TEST_FILE:-""} 2&> async_pass_log.log
+  RECO_RC=$?
+
+  echo_info "async_pass.sh finished with ${RECO_RC}"
+  exit ${RECO_RC}
+)
 RECO_RC=$?
-
-echo_info "async_pass.sh finished with ${RECO_RC}"
 
 if [[ "${RECO_RC}" != "0" ]] ; then
   exit ${RECO_RC}
@@ -264,26 +264,6 @@ fi
 
 export ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG_KEEP
 echo_info "Setting back ALIEN_JDL_LPMPRODUCTIONTAG to $ALIEN_JDL_LPMPRODUCTIONTAG"
-
-# get rid of the temporary software environment
-if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
-  module purge --no-pager
-  # restore the initial software environment
-  echo "Restoring initial environment"
-  module --no-pager restore initial_modules.list
-  module saverm initial_modules.list
-
-  # Restore overwritten O2DPG variables set by modules but changed by user
-  # (in particular custom O2DPG_ROOT and O2DPG_MC_CONFIG_ROOT)
-  printenv > env_after_restore.printenv
-  comm -12 <(grep '^O2DPG' env_before_stashing.printenv | cut -d= -f1 | sort) \
-         <(grep '^O2DPG' env_after_restore.printenv  | cut -d= -f1 | sort) |
-  while read -r var; do
-    b=$(grep "^$var=" env_before_stashing.printenv | cut -d= -f2-)
-    a=$(grep "^$var=" env_after_restore.printenv  | cut -d= -f2-)
-    [[ "$b" != "$a" ]] && export "$var=$b" && echo "Reapplied: $var to ${b}"
-  done
-fi
 #<----- END OF part that should run under a clean alternative software environment if this was given ------
 
 # now create the local MC config file --> config-json.json
