@@ -146,6 +146,12 @@ protected:
 
     int getNumSignalsForImpactParameter(double impactParameter) const
     {
+        const double photoproductionImpactParameterCut = 4.0; // tmp cut to embed signal > 10% centrality
+        if (impactParameter < photoproductionImpactParameterCut) {
+            std::cout<<"impact parameter: "<<impactParameter<<" fm, below photoproduction cut "
+                     <<photoproductionImpactParameterCut<<" fm; embedding no signal events"<<std::endl;
+            return 0;
+        }
         return std::max(0, static_cast<int>(std::lround(5.0 + 0.886202881 * std::pow(std::max(0.0, 17.5 - impactParameter), 1.7))));
     }
 
