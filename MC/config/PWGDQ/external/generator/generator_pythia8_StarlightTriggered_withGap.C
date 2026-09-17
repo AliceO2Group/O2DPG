@@ -146,7 +146,7 @@ protected:
 
     int getNumSignalsForImpactParameter(double impactParameter) const
     {
-        const double photoproductionImpactParameterCut = 4.0; // tmp cut to embed signal > 10% centrality
+        const double photoproductionImpactParameterCut = 3.5; // tmp cut to embed signal > 10% centrality
         if (impactParameter < photoproductionImpactParameterCut) {
             std::cout<<"impact parameter: "<<impactParameter<<" fm, below photoproduction cut "
                      <<photoproductionImpactParameterCut<<" fm; embedding no signal events"<<std::endl;
