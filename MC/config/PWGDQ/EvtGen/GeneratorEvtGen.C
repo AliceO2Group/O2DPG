@@ -43,7 +43,8 @@ enum DecayModeEvt { kEvtAll = 0,
                     kEvtDiElectronEM,
                     kEvtGammaEM,
                     kEvtBtoPsi2SToJpsiPiPi,
-                    kEvtBeautyUpgrade };
+                    kEvtBeautyUpgrade,
+                    kCharmoniaToJpsiAndDielectron};
 
 namespace o2
 {
@@ -358,6 +359,9 @@ class GeneratorEvtGen : public T
         break;
       case kEvtBtoPsi2SToJpsiPiPi:
         SetDecayTable(Form("%s/BTOPSITOJPSIPIPI.DEC", pathO2.Data()));
+        break;
+      case kCharmoniaToJpsiAndDielectron:
+        SetDecayTable(Form("%s/CHARMONIATOJPSIANDDIELECTRON.DEC", pathO2.Data()));
         break;
     }
     return;
