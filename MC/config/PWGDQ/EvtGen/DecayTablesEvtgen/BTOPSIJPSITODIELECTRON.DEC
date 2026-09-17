@@ -1,9 +1,6 @@
 ###
 Decay B0
 ###
-0.000310000 psi(2S) K_S0                                    SVS; #[Reconstructed PDG2011]
-0.000310000 psi(2S) K_L0                                    SVS; #[Reconstructed PDG2011]
-#
 #
 0.000610000 psi(2S) K*0                                     SVV_HELAMP PKHplus PKphHplus PKHzero PKphHzero PKHminus PKphHminus; #[Reconstructed PDG2011]
 0.0004     psi(2S)  K+  pi-          PHSP;
@@ -15,8 +12,7 @@ Decay B0
 ###
 0.000620000 psi(2S) K0                                      SVS;  #[New mode added] #[Reconstructed PDG2011]
 
-0.000435500 J/psi   K_S0                                    SVS; #[Reconstructed PDG2011]
-0.000435500 J/psi   K_L0                                    SVS; #[Reconstructed PDG2011]
+0.000891000 J/psi   K0                                      SVS; #[Reconstructed PDG2011]
 #
 #
 0.001330000 J/psi   K*0                                     SVV_HELAMP PKHplus PKphHplus PKHzero PKphHzero PKHminus PKphHminus; #[Reconstructed PDG2011]
@@ -56,8 +52,6 @@ Enddecay
 
 Decay anti-B0
 ###
-0.000310000 psi(2S) K_S0                                    SVS; #[Reconstructed PDG2011]
-0.000310000 psi(2S) K_L0                                    SVS; #[Reconstructed PDG2011]
 #
 0.000610000 psi(2S) anti-K*0                                SVV_HELAMP PKHminus PKphHminus PKHzero PKphHzero PKHplus PKphHplus; #[Reconstructed PDG2011]
 0.0004     psi(2S)  K-  pi+          PHSP;
@@ -69,8 +63,7 @@ Decay anti-B0
 ###
 0.000620000 psi(2S) anti-K0                                 SVS;  #[New mode added] #[Reconstructed PDG2011]
 
-0.000435500 J/psi   K_S0                                    SVS; #[Reconstructed PDG2011]
-0.000435500 J/psi   K_L0                                    SVS; #[Reconstructed PDG2011]
+0.000891000 J/psi   anti-K0                                 SVS; #[Reconstructed PDG2011] # updated BR and corrected for double-couting (https://repo.hepforge.org/rEVTGEN16d483d4962aeeb93e857939666a9ba3383bb71f)
 #
 #
 0.001330000 J/psi   anti-K*0                                SVV_HELAMP PKHminus PKphHminus PKHzero PKphHzero PKHplus PKphHplus; #[Reconstructed PDG2011]
@@ -84,7 +77,6 @@ Decay anti-B0
 0.0005     J/psi  anti-K_2*0              PHSP;
 0.000094000 J/psi   phi     anti-K0                         PHSP; #[Reconstructed PDG2011]
 ###
-0.000871000 J/psi   anti-K0                                 SVS;  #[New mode added] #[Reconstructed PDG2011]
 0.000310000 J/psi   omega   anti-K0                         PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000009500 J/psi   eta                                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000019000 J/psi   pi-     pi+                             PHSP;  #[New mode added] #[Reconstructed PDG2011]
@@ -110,32 +102,34 @@ Enddecay
 
 Decay B+
 ###
-0.000646000 psi(2S) K+                                      SVS; #[Reconstructed PDG2011]
-0.000620000 psi(2S) K*+                                     SVV_HELAMP PKHplus PKphHplus PKHzero PKphHzero PKHminus PKphHminus; #[Reconstructed PDG2011]
+0.000625000 psi(2S) K+                                      SVS; #[Reconstructed PDG2011]
+0.000670000 psi(2S) K*+                                     SVV_HELAMP PKHplus PKphHplus PKHzero PKphHzero PKHminus PKphHminus; #[Reconstructed PDG2011]
 0.0004   psi(2S) K0  pi+                   PHSP;
 0.0002   psi(2S) K+  pi0                   PHSP;
-0.001900000 psi(2S) K+      pi-     pi+                     PHSP; #[Reconstructed PDG2011]
+0.000430 psi(2S) K+      pi-     pi+                     PHSP; #[Reconstructed PDG2011]
 0.0001   psi(2S) K+  pi0  pi0              PHSP;
 0.0001   psi(2S) K0  pi+  pi0              PHSP;
 0.0004   psi(2S)  K_1+                     PHSP;
 ###
-0.000025800 psi(2S) pi+                                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000024400 psi(2S) pi+                                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
 
-0.001014000 J/psi   K+                                      SVS; #[Reconstructed PDG2011]
+0.001019000 J/psi   K+                                      SVS; #[Reconstructed PDG2011]
 0.001430000 J/psi   K*+                                     SVV_HELAMP PKHplus PKphHplus PKHzero PKphHzero PKHminus PKphHminus; #[Reconstructed PDG2011]
-0.000049000 J/psi   pi+                                     SVS; #[Reconstructed PDG2011]
-0.000050000 J/psi   rho+                                    SVV_HELAMP PKHplus PKphHplus PKHzero PKphHzero PKHminus PKphHminus; #[Reconstructed PDG2011]
-0.0002   J/psi K0  pi+                    PHSP;
-0.0001   J/psi K+  pi0                    PHSP;
+0.000041000 J/psi   pi+                                     SVS; #[Reconstructed PDG2011]
+0.000041000 J/psi   rho+                                    SVV_HELAMP PKHplus PKphHplus PKHzero PKphHzero PKHminus PKphHminus; #[Reconstructed PDG2011]
+0.00113   J/psi K0  pi+                    PHSP;
+0.0001   J/psi K+  pi0                     PHSP;
 0.0001   J/psi K'_1+                       SVV_HELAMP 0.5 0.0 1.0 0.0 0.5 0.0;
 0.0005   J/psi K_2*+                       PHSP;
 0.001800000 J/psi   K_1+                                    SVV_HELAMP 0.5 0.0 1.0 0.0 0.5 0.0; #[Reconstructed PDG2011]
 0.000052000 J/psi   phi     K+                              PHSP; #[Reconstructed PDG2011]
 #
 ####
-0.001070000 J/psi   K+      pi+     pi-                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
-0.000108000 J/psi   eta     K+                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
-0.000350000 J/psi   omega   K+                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000810000 J/psi   K+      pi+     pi-                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000033700 J/psi   K+      K-      K+                      PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000124000 J/psi   eta     K+                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000031000 J/psi   eta'    K+                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000320000 J/psi   omega   K+                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000011800 J/psi   p+      anti-Lambda0                    PHSP;  #[New mode added] #[Reconstructed PDG2011]
 
 # --- chi_c1 ---
@@ -156,31 +150,33 @@ Enddecay
 
 Decay B-
 ###
-0.000646000 psi(2S) K-                                      SVS; #[Reconstructed PDG2011]
-0.000620000 psi(2S) K*-                                     SVV_HELAMP PKHminus PKphHminus PKHzero PKphHzero PKHplus PKphHplus; #[Reconstructed PDG2011]
+0.000625000 psi(2S) K-                                      SVS; #[Reconstructed PDG2011]
+0.000670000 psi(2S) K*-                                     SVV_HELAMP PKHminus PKphHminus PKHzero PKphHzero PKHplus PKphHplus; #[Reconstructed PDG2011]
 0.0004   psi(2S) anti-K0   pi-                   PHSP;
 0.0002   psi(2S) K-  pi0                   PHSP;
-0.001900000 psi(2S) K-      pi+     pi-                     PHSP; #[Reconstructed PDG2011]
+0.000430 psi(2S) K-      pi+     pi-                     PHSP; #[Reconstructed PDG2011]
 0.0001   psi(2S) K-  pi0  pi0              PHSP;
 0.0001   psi(2S) anti-K0   pi-  pi0              PHSP;
 0.0004     psi(2S)  K_1-              PHSP;
 ###
-0.000025800 psi(2S) pi-                                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000024400 psi(2S) pi-                                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
 
-0.001014000 J/psi   K-                                      SVS; #[Reconstructed PDG2011]
+0.001019000 J/psi   K-                                      SVS; #[Reconstructed PDG2011]
 0.001430000 J/psi   K*-                                     SVV_HELAMP PKHminus PKphHminus PKHzero PKphHzero PKHplus PKphHplus; #[Reconstructed PDG2011]
-0.000049000 J/psi   pi-                                     SVS; #[Reconstructed PDG2011]
-0.000050000 J/psi   rho-                                    SVV_HELAMP PKHminus PKphHminus PKHzero PKphHzero PKHplus PKphHplus; #[Reconstructed PDG2011]
-0.0002   J/psi anti-K0   pi-                    PHSP;
+0.000041000 J/psi   pi-                                     SVS; #[Reconstructed PDG2011]
+0.000041000 J/psi   rho-                                    SVV_HELAMP PKHminus PKphHminus PKHzero PKphHzero PKHplus PKphHplus; #[Reconstructed PDG2011]
+0.00113   J/psi anti-K0   pi-                    PHSP;
 0.0001   J/psi K-  pi0                    PHSP;
 0.0001   J/psi K'_1-                       SVV_HELAMP 0.5 0.0 1.0 0.0 0.5 0.0;
 0.0005   J/psi K_2*-                       PHSP;
 0.001800000 J/psi   K_1-                                    SVV_HELAMP 0.5 0.0 1.0 0.0 0.5 0.0; #[Reconstructed PDG2011]
 0.000052000 J/psi   phi     K-                              PHSP; #[Reconstructed PDG2011]
 #
-0.001070000 J/psi   K-      pi-     pi+                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
-0.000108000 J/psi   eta     K-                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
-0.000350000 J/psi   omega   K-                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000810000 J/psi   K-      pi-     pi+                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000033700 J/psi   K-      K+      K-                      PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000124000 J/psi   eta     K-                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000031000 J/psi   eta'    K-                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
+0.000320000 J/psi   omega   K-                              PHSP;  #[New mode added] #[Reconstructed PDG2011]
 0.000011800 J/psi   anti-p- Lambda0                         PHSP;  #[New mode added] #[Reconstructed PDG2011]
 
 # --- chi_c1 ---
@@ -372,6 +368,9 @@ Enddecay
 Decay psi(2S)
 0.00795   e+   e-                PHOTOS VLL;
 0.0208  J/psi   pi+     pi-      VVPIPI; # multiplied by J/psi->ee BR to keep relative statistics, since J/psi->ee itself is also enhanced
+0.0000819   gamma   chi_c0         PHSP; # * BR(J/psi->ee) * BR(chi_c0->J/psi)
+0.00201     gamma   chi_c1         PHSP; # * BR(J/psi->ee) * BR(chi_c1->J/psi)
+0.00110     gamma   chi_c2         PHSP; # * BR(J/psi->ee) * BR(chi_c2->J/psi)
 Enddecay
 
 Decay J/psi

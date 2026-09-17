@@ -41,6 +41,8 @@ public:
 
   void addHadronPDGs(int pdg) { mHadronsPDGs.push_back(pdg); mRejFactorPrompt.push_back(1.0); mRejFactorNonPrompt.push_back(1.0);}
   
+  void decrementGeneratedEvents() {mGeneratedEvents--;}
+  
   void setRejFactorPrompt(int pdg, float rejFactor) {
     for (size_t i = 0; i < mHadronsPDGs.size(); i++) {
       if (pdg == mHadronsPDGs[i]) {
@@ -68,6 +70,10 @@ public:
   void setConfigMBdecays(TString val){mConfigMBdecays = val;}
 
   void setVerbose(bool val) { mVerbose = val; };
+  
+  int getNGeneratedEvents() { return mGeneratedEvents;}
+    
+  int getTriggerGap() { return mInverseTriggerRatio;}
 
 protected:
 
@@ -123,6 +129,13 @@ bool isOpenBhadron(int pdg) {
   return ((abs(pdg) >= 500 && abs(pdg) < 599) || (abs(pdg) >= 5000 && abs(pdg) < 5999)) && pdg != 553;
 }
 
+bool isCharmonium(int pdg) {
+  int firstQuark = ( abs(pdg) % 100 - abs(pdg) % 10 ) / 10;
+  int secondQuark = ( abs(pdg) % 1000 - abs(pdg) % 100 ) / 100;
+  int thirdQuark = ( abs(pdg) % 10000 - abs(pdg) % 1000 ) / 1000;
+  return ( firstQuark == 4 && secondQuark == 4 && thirdQuark == 0 );
+}
+
 // search for the presence of at least one of the required hadrons in a selected rapidity window
 bool findHadrons(Pythia8::Event& event) { 
   int ihad = 0;
@@ -133,21 +146,42 @@ bool findHadrons(Pythia8::Event& event) {
     for (auto ida : daughterList) {
       ihad = 0;
       for (int pdg : mHadronsPDGs) {   // check that at least one of the pdg code is found in the event
-        if (event[ida].id() == pdg) {
+        if (abs(event[ida].id()) == pdg) {
           if ((event[ida].y() > mRapidityMin) && (event[ida].y() < mRapidityMax)) {
-            cout << "============= Found jpsi y,pt,pdg " <<  event[ida].y() << ", " << event[ida].pT() << ", " << event[ida].pdg() << endl;
+            cout << "============= Found jpsi y,pt,pdg " <<  event[ida].y() << ", " << event[ida].pT() << ", " << event[ida].id() << endl;
             std::vector<int> daughters = event[ida].daughterList();
             for (int d : daughters) {
               cout << "###### daughter " << d << ": code " << event[d].id() << ", pt " << event[d].pT() << endl;
+            }
+            if (event[ida].daughter1() == event[ida].daughter2() && event[ida].daughter1() > 0) {
+              continue; // particle has a carbon-copy as daughter, its daughter will already be considered for triggering
             }
 
             // check whether particle is prompt or non-prompt, since rejection factor can depend on it
             bool isNonPrompt = false;
             if (isOpenBhadron(pdg)) {
               isNonPrompt = true;
-              cout << "particle is non-prompt" << endl
+              LOGF(info, "particle is non-prompt");
             } else {
-              // we check the mother
+              // check history
+              int currentIdx = ida;
+              int currentPdg = pdg;
+              cout << "particle history: ";
+              while (isCharmonium(currentPdg) && currentIdx >= 0) {
+                currentIdx = event[currentIdx].mother1();
+                if (currentIdx < 0) {
+                  break;
+                }
+                currentPdg = abs(event[currentIdx].id());
+                cout << currentPdg << "  ";
+                if (isOpenBhadron(currentPdg)) {
+                  isNonPrompt = true;
+                  LOGF(info, "particle is non-prompt");
+                  break;
+                }
+              }
+              cout << endl;
+              /*// we check the mother
               int mother = event[ida].mother1();
               if (mother >= 0 && isOpenBhadron(event[mother].id())) {
                 isNonPrompt = true;
@@ -164,12 +198,14 @@ bool findHadrons(Pythia8::Event& event) {
                   isNonPrompt = false;
                   cout << "particle is prompt, mother pdg: " << event[mother].id() << ", grand-mother pdg: "<< event[grandmother].id() << endl;
                 }
-              }
+              }*/
             }
 
             // rejection factor given in the ini file
             float randomNumber = gRandom->Rndm();
-            if ((isPrompt && (randomNumber <= mRejFactorPrompt[ihad])) || (isNonPrompt && (randomNumber <= mRejFactorNonPrompt[ihad]))) {
+            cout << randomNumber << " rej factor: " << (isNonPrompt ? mRejFactorNonPrompt[ihad] : mRejFactorPrompt[ihad]) << endl;
+            if ((!isNonPrompt && (randomNumber <= mRejFactorPrompt[ihad])) || (isNonPrompt && (randomNumber <= mRejFactorNonPrompt[ihad]))) {
+              cout << "event triggered " << endl;
               return true;
             }
           }
@@ -203,6 +239,25 @@ private:
 }
 
 }
+
+
+o2::eventgen::Trigger triggerPDGRap(double rapMin, double rapMax, int pdg, GeneratorPythia8HadronTriggeredWithGap* gen) {
+  auto trigger = [rapMin, rapMax, pdg, gen](const std::vector<TParticle>& particles) -> bool {
+    if (gen->getTriggerGap() != 1 && gen->getNGeneratedEvents() % gen->getTriggerGap() != 1) {
+      // this is a MB event
+      return true;
+    }
+    for (const auto& p : particles) {
+      if (p.Y() > rapMin && p.Y() < rapMax && std::abs(p.GetPdgCode()) == pdg) {
+        return true;
+      }
+    }
+    return false;
+  };
+  return trigger;
+}
+
+
 
 // Predefined generators:
 FairGenerator*
@@ -337,7 +392,9 @@ GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double rapidityMin = -
 
     auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8HadronTriggeredWithGap>();
     gen->setTriggerGap(triggerGap);
-    gen->setRapidityRange(rapidityMin, rapidityMax);
+    // this is a trigger before EvtGen decays, after which the rapidities of the particles are modified.
+    // The rapidity cut is then only applied in the triggerEvent after the decays
+    gen->setRapidityRange(rapidityMin - 1., rapidityMax + 1.);
     // specify particles to be triggered
     for (int i = 0; i < 16; i++) {
       gen->addHadronPDGs(particleList[i]);
@@ -350,42 +407,45 @@ GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double rapidityMin = -
     // or the keyword can be used for only one particle (e.g. "pdg1:rejFactor1:prompt,pdg1:rejFactor2:non-prompt")
     TObjArray* objArray = rejFactors.Tokenize(",");
     for (int i = 0; i < objArray->GetEntries(); i++) {
-      TString rejStr = objArray->At(i);
+      TString rejStr = TString(objArray->At(i)->GetName());
       TObjArray* objArrayCurrent = rejStr.Tokenize(":");
       if (objArrayCurrent->GetEntries() != 2 && objArrayCurrent->GetEntries() != 3) {
         LOGF(fatal, "Problem when configuring string for particle rejection factors: %s, incorrect length", rejStr.Data());
       }
-      if (!objArrayCurrent[1].IsFloat()) {
+      TString str0 = TString(objArrayCurrent->At(0)->GetName());
+      TString str1 = TString(objArrayCurrent->At(1)->GetName());
+      if (!str1.IsFloat()) {
         LOGF(fatal, "Problem when configuring string for particle rejection factors: %s, is not float", rejStr.Data());
       }
-      if (objArrayCurrent[0].CompareTo("prompt") == 0) {
+      if (str0.CompareTo("prompt") == 0) {
         // Common switch for all prompt particles
-        for (int ihad = 0; ihad < 16; i++) {
-          gen->setRejFactorPrompt(particleList[i], objArrayCurrent[1].Atof());
+        for (int ihad = 0; ihad < 16; ihad++) {
+          gen->setRejFactorPrompt(particleList[ihad], str1.Atof());
         }
         continue;
       }
-      if (objArrayCurrent[0].CompareTo("non-prompt") == 0) {
+      if (str0.CompareTo("non-prompt") == 0) {
         // Common switch for all non-prompt particles
-        for (int ihad = 0; ihad < 16; i++) {
-          gen->setRejFactorNonPrompt(particleList[i], objArrayCurrent[1].Atof());
+        for (int ihad = 0; ihad < 16; ihad++) {
+          gen->setRejFactorNonPrompt(particleList[ihad], str1.Atof());
         }
         continue;
       }
-      if (objArrayCurrent[0].IsDigit()) {
+      if (str0.IsDigit()) {
         // Setting the rejection factor for a specific particle
         if (objArrayCurrent->GetEntries() == 2) {
-          gen->setRejFactorPrompt(objArrayCurrent[0].Atoi(), objArrayCurrent[1].Atof());
-          gen->setRejFactorNonPrompt(objArrayCurrent[0].Atoi(), objArrayCurrent[1].Atof());
+          gen->setRejFactorPrompt(str0.Atoi(), str1.Atof());
+          gen->setRejFactorNonPrompt(str0.Atoi(), str1.Atof());
           continue;
         }
         else {
-          if (objArrayCurrent[2].CompareTo("prompt") == 0) {
-            gen->setRejFactorPrompt(objArrayCurrent[0].Atoi(), objArrayCurrent[1].Atof());
+          TString str2 = TString(objArrayCurrent->At(2)->GetName());
+          if (str2.CompareTo("prompt") == 0) {
+            gen->setRejFactorPrompt(str0.Atoi(), str1.Atof());
             continue;
           }
-          if (objArrayCurrent[2].CompareTo("non-prompt") == 0) {
-            gen->setRejFactorNonPrompt(objArrayCurrent[0].Atoi(), objArrayCurrent[1].Atof());
+          if (str2.CompareTo("non-prompt") == 0) {
+            gen->setRejFactorNonPrompt(str0.Atoi(), str1.Atof());
             continue;
           }
         }
@@ -417,6 +477,19 @@ GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double rapidityMin = -
 
     // print debug
     // gen->PrintDebug();
+    
+    // add trigger on the correct rapidity range after EvtGen decays
+    gen->setTriggerMode(Generator::kTriggerOR);
+    for (int i = 0; i < 16; i++) {
+      gen->addTrigger(triggerPDGRap(rapidityMin, rapidityMax, particleList[i], gen));
+    }
+    
+    // what to do if the trigger was rejected
+    gen->setTriggerFalseHook(
+      [gen](std::vector<TParticle> const& p, int eventCount) {
+        gen->decrementGeneratedEvents();
+      }
+    );
 
     return gen;
 }
