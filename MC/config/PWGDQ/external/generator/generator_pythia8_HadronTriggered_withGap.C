@@ -146,70 +146,79 @@ bool isCharmonium(int pdg) {
 // search for the presence of at least one of the required hadrons in a selected rapidity window
 bool findHadrons(Pythia8::Event& event) {
   int ihad = 0;
-  for (int ipa = 0; ipa < event.size(); ++ipa) {
-    
-    auto daughterList = event[ipa].daughterList();
-  
-    for (auto ida : daughterList) {
-      ihad = 0;
-      for (int pdg : mHadronsPDGs) {   // check that at least one of the pdg code is found in the event
-        if (abs(event[ida].id()) == pdg) {
-          if ((event[ida].y() > mRapidityMin) && (event[ida].y() < mRapidityMax)) {
-            cout << "============= Found jpsi y,pt,pdg " << event[ida].y()
-                 << ", " << event[ida].pT() << ", " << event[ida].id() << endl;
-            std::vector<int> daughters = event[ida].daughterList();
-            for (int d : daughters) {
-              cout << "###### daughter " << d << ": code " << event[d].id() << ", pt " << event[d].pT() << endl;
-            }
-            if (event[ida].daughter1() == event[ida].daughter2() &&
-                event[ida].daughter1() > 0) {
-              continue; // particle has a carbon-copy as daughter, its daughter
-                        // will already be considered for triggering
-            }
+  for (int ida = 0; ida < event.size(); ++ida) {
+    //auto daughterList = event[ipa].daughterList();
+    //for (auto ida : daughterList) {
+    ihad = 0;
+    for (int pdg : mHadronsPDGs) {   // check that at least one of the pdg code is found in the event
+      if (abs(event[ida].id()) == pdg) {
+        if ((event[ida].y() > mRapidityMin) && (event[ida].y() < mRapidityMax)) {
+          cout << "============= Found jpsi y,pt,pdg " << event[ida].y()  << ", " << event[ida].pT() << ", " << event[ida].id() << endl;
+          std::vector<int> daughters = event[ida].daughterList();
+          for (int d : daughters) {
+            cout << "###### daughter " << d << ": code " << event[d].id() << ", pt " << event[d].pT() << endl;
+          }
+          if (event[ida].daughter1() == event[ida].daughter2() && event[ida].daughter1() > 0) {
+            continue; // particle has a carbon-copy as daughter, its daughter will already be considered for triggering
+          }
 
-            // check whether particle is prompt or non-prompt, since rejection
-            // factor can depend on it
-            bool isNonPrompt = false;
-            if (isOpenBhadron(pdg)) {
-              isNonPrompt = true;
-              LOGF(info, "particle is non-prompt");
-            } else {
-              // check history
-              int currentIdx = ida;
-              int currentPdg = pdg;
-              cout << "particle history: ";
-              while (isCharmonium(currentPdg) && currentIdx >= 0) {
-                currentIdx = event[currentIdx].mother1();
-                if (currentIdx < 0) {
-                  break;
-                }
-                currentPdg = abs(event[currentIdx].id());
-                cout << currentPdg << "  ";
-                if (isOpenBhadron(currentPdg)) {
-                  isNonPrompt = true;
-                  LOGF(info, "particle is non-prompt");
-                  break;
+          // check whether particle is prompt or non-prompt, since rejection
+          // factor can depend on it
+          bool isNonPrompt = false;
+          if (isOpenBhadron(pdg)) {
+            isNonPrompt = true;
+            LOGF(info, "particle is non-prompt");
+            
+            // if the B hadron decays to something else than a charmonia, we don't trigger it
+            bool hasCharmoniaDecay = false;
+            if (daughters.size() == 0) {
+              // in this case B is left undecayed and will be decayed to enhanced charmonia BR with EVTGEN
+              hasCharmoniaDecay = true;
+            }
+            else {
+              for (int d : daughters) {
+                if (isCharmonium(event[d].id())) {
+                  hasCharmoniaDecay = true;
                 }
               }
-              cout << endl;
             }
+            if (!hasCharmoniaDecay) {
+              continue;
+            }
+          } else {
+            // check history
+            int currentIdx = ida;
+            int currentPdg = pdg;
+            cout << "particle history: ";
+            while (isCharmonium(currentPdg) && currentIdx >= 0) {
+              currentIdx = event[currentIdx].mother1();
+              if (currentIdx < 0) {
+                break;
+              }
+              currentPdg = abs(event[currentIdx].id());
+              cout << currentPdg << "  ";
+              if (isOpenBhadron(currentPdg)) {
+                isNonPrompt = true;
+                LOGF(info, "particle is non-prompt");
+                break;
+              }
+            }
+            cout << endl;
+          }
 
-            // rejection factor given in the ini file
-            float randomNumber = gRandom->Rndm();
-            cout << randomNumber << " rej factor: "
-                 << (isNonPrompt ? mRejFactorNonPrompt[ihad]
-                                 : mRejFactorPrompt[ihad])
-                 << endl;
-            if ((!isNonPrompt && (randomNumber <= mRejFactorPrompt[ihad])) ||
-                (isNonPrompt && (randomNumber <= mRejFactorNonPrompt[ihad]))) {
-              cout << "event triggered " << endl;
-              return true;
-            }
+          // rejection factor given in the ini file
+          float randomNumber = gRandom->Rndm();
+          cout << randomNumber << " rej factor: " << (isNonPrompt ? mRejFactorNonPrompt[ihad] : mRejFactorPrompt[ihad]) << endl;
+          if ((!isNonPrompt && (randomNumber <= mRejFactorPrompt[ihad])) ||
+              (isNonPrompt && (randomNumber <= mRejFactorNonPrompt[ihad]))) {
+            cout << "event triggered " << endl;
+            return true;
           }
         }
-        ihad++;
       }
+      ihad++;
     }
+    //}
   }
 
   return false;
@@ -239,13 +248,9 @@ private:
 
 }
 
-o2::eventgen::Trigger
-triggerPDGRap(double rapMin, double rapMax, int pdg,
-              GeneratorPythia8HadronTriggeredWithGap *gen) {
-  auto trigger = [rapMin, rapMax, pdg,
-                  gen](const std::vector<TParticle> &particles) -> bool {
-    if (gen->getTriggerGap() != 1 &&
-        gen->getNGeneratedEvents() % gen->getTriggerGap() != 1) {
+o2::eventgen::Trigger triggerPDGRap(double rapMin, double rapMax, int pdg, GeneratorPythia8HadronTriggeredWithGap *gen) {
+  auto trigger = [rapMin, rapMax, pdg, gen](const std::vector<TParticle> &particles) -> bool {
+    if (gen->getTriggerGap() != 1 && gen->getNGeneratedEvents() % gen->getTriggerGap() != 1) {
       // this is a MB event
       return true;
     }
@@ -346,11 +351,11 @@ GeneratorInclusiveJpsiPsi2SChiC_EvtGenMidY(int triggerGap, double rapidityMin = 
     gen->setConfigMBdecays(pathO2table);
     gen->PrintDebug(true);
 
-    gen->SetSizePdg(4);
+    gen->SetSizePdg(2);
     gen->AddPdg(443, 0);
     gen->AddPdg(100443, 1);
-    gen->AddPdg(445, 2);
-    gen->AddPdg(20443, 3);
+    //gen->AddPdg(445, 2);
+    //gen->AddPdg(20443, 3);
 
     gen->SetForceDecay(kEvtDiElectron);
 
@@ -367,17 +372,33 @@ GeneratorInclusiveJpsiPsi2SChiC_EvtGenMidY(int triggerGap, double rapidityMin = 
 
     return gen;
 }
-FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double rapidityMin = -1.0, double rapidityMax = 1.0, TString rejFactors = "", bool verbose = false) {
+FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double rapidityMin = -1.0, double rapidityMax = 1.0, TString rejFactors = "", int decayMode = 0, bool verbose = false) {
+
+  // This generator allow to choose from the ini file which decay file is to be used (decayMode parameter) and implement rejection factors in order to enhance one particle with respect to others by randomly rejecting trigger (configured through a string)
+  // The rapidity cut triggers both on the B hadrons rapidities and on quarkonia rapidities
+  
+  // This generator should be able to satisfy any needs, although you might have to add some other decayModes and additional particles in the particleList to be triggered
+
+  // decay mode: 0 = enhance B hadrons decays + charmonia to charmonia decays + dileptons decay
+  // decay mode: 1 = enhance charmonia to charmonia decays + dileptons decays
+  // decay mode: 2 = enhance only dilepton decays
+  
+  // rejFactors string:
+  // possibility to enhance a particle compared to another (or completely reject one particle) using rejection factors configured from a string 
+  // The rejection factors can be kept in a comma separated list (e.g. "pdg1:rejFactor1,pdg2:rejFactor2") 
+  // The keywords "prompt" and "non-prompt" can be used to modify all prompt and all non-prompt (e.g. "prompt:rejFactor1,non-prompt:rejFactor2") 
+  // The keyword can be used for only one particle (e.g. "pdg1:rejFactor1:prompt,pdg1:rejFactor2:non-prompt")
+  // Example if you want only to trigger on a given particle p: "prompt:0,non-prompt:0,p:1"
 
   int particleList[16] = {
       443,    // Jpsi
       100443, // psi(2S)
-      10441,  // chic0
-      20443,  // chic1
-      445,    // chic2
       553,    // upsilon(1S)
       100553, // upsilon(2S)
       200553, // upsilon(3S)
+      10441,  // chic0
+      20443,  // chic1
+      445,    // chic2
       // we also add B hadrons to trigger correct rapidity range (e.g. B is
       // within |y|<1 but non-prompt J/psi has |y|>1)
       511,  // B0
@@ -392,20 +413,21 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
 
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8HadronTriggeredWithGap>();
   gen->setTriggerGap(triggerGap);
-  // this is a trigger before EvtGen decays, after which the rapidities of the
-  // particles are modified. The rapidity cut is then only applied in the
-  // triggerEvent after the decays
-  gen->setRapidityRange(rapidityMin - 1., rapidityMax + 1.);
+  // this is a trigger before EvtGen decays. After EVTGEN decay the rapidities of the particles are modified. 
+  // There is therefore a loose rapidity cut before EVTGEN, and the correct rapidity cut after EVTGEN decay
+  if (decayMode == 2) {
+    // In this case EvtGen will not affect charmonia rapidities, so no need to start with a looser rapidity cut
+    gen->setRapidityRange(rapidityMin, rapidityMax);
+  }
+  else {
+    gen->setRapidityRange(rapidityMin - 1., rapidityMax + 1.);
+  }
   // specify particles to be triggered
   for (int i = 0; i < 16; i++) {
     gen->addHadronPDGs(particleList[i]);
   }
   gen->setVerbose(verbose);
 
-  // possibility to enhance a particle compared to another (or completely reject one particle) using rejection factors configured from a string 
-  // The rejection factors can be kept in a comma separated list (e.g. "pdg1:rejFactor1,pdg2:rejFactor2") 
-  // The keywords "prompt" and "non-prompt" can be used to modify all prompt and all non-prompt (e.g. "prompt:rejFactor1,non-prompt:rejFactor2") 
-  // The keyword can be used for only one particle (e.g. "pdg1:rejFactor1:prompt,pdg1:rejFactor2:non-prompt")
   TObjArray *objArray = rejFactors.Tokenize(",");
   for (int i = 0; i < objArray->GetEntries(); i++) {
     TString rejStr = TString(objArray->At(i)->GetName());
@@ -453,12 +475,20 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
         }
       }
     }
-    LOGF(fatal,
-         "Problem when configuring string for particle rejection factors: %s, incorrect template",
+    LOGF(fatal, "Problem when configuring string for particle rejection factors: %s, incorrect template",
          rejStr.Data());
   }
 
-  TString pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffAllQuarkonia.cfg");
+  TString pathO2table;
+  if (decayMode == 0) {
+    pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffAllQuarkoniaAndBhadrons.cfg");
+  }
+  if (decayMode == 1) {
+    pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffAllQuarkonia.cfg");
+  }
+  if (decayMode == 2) {
+    pathO2table = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/pythia8/decayer/switchOffJpsiUpsilon.cfg");
+  }
   gen->readFile(pathO2table.Data());
   gen->setConfigMBdecays(pathO2table);
   gen->PrintDebug(true);
@@ -466,10 +496,21 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
   // specify particles to be decayed with EvtGen
   gen->SetSizePdg(16);
   for (int i = 0; i < 16; i++) {
-    gen->AddPdg(particleList[i], i);
+    // Decay only what was left undecayed by Pythia
+    if (decayMode == 0 || (i <= 7 && decayMode == 1) || (i <= 4 && decayMode == 2)) {
+      gen->AddPdg(particleList[i], i);
+    }
   }
 
-  gen->SetForceDecay(kEvtBPsiAndJpsiDiElectron);
+  if (decayMode == 0) {
+    gen->SetForceDecay(kEvtBPsiAndJpsiDiElectron);
+  }
+  if (decayMode == 1) {
+    gen->SetForceDecay(kCharmoniaToJpsiAndDielectron);
+  }
+  if (decayMode == 2) {
+    gen->SetForceDecay(kEvtDiElectron);
+  }
 
   // set random seed
   gen->readString("Random:setSeed on");
@@ -483,16 +524,20 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
   // gen->PrintDebug();
 
   // add trigger on the correct rapidity range after EvtGen decays
-  gen->setTriggerMode(Generator::kTriggerOR);
-  for (int i = 0; i < 16; i++) {
-    gen->addTrigger(triggerPDGRap(rapidityMin, rapidityMax, particleList[i], gen));
-  }
+  if (decayMode != 2) {
+    // In this case EvtGen will not affect charmonia rapidities, so no need to start with a looser rapidity cut, first trigger already does the job
+    gen->setTriggerMode(Generator::kTriggerOR);
+    for (int i = 0; i < 16; i++) {
+      // we trigger either on B hadron rapidity or on charmonia rapidity
+      gen->addTrigger(triggerPDGRap(rapidityMin, rapidityMax, particleList[i], gen));
+    }
 
-  // what to do if the trigger was rejected
-  gen->setTriggerFalseHook(
-      [gen](std::vector<TParticle> const &p, int eventCount) {
-        gen->decrementGeneratedEvents();
-      });
+    // what to do if the trigger was rejected
+    gen->setTriggerFalseHook(
+        [gen](std::vector<TParticle> const &p, int eventCount) {
+          gen->decrementGeneratedEvents();
+        });
+  }
 
   return gen;
 }
