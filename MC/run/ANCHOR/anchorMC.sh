@@ -180,10 +180,10 @@ fi
 
 export > env_base.env
 
-# The 2-tag / alternative-reco setup below uses 'module save/purge/restore' to stash
-# and swap the software environment. If the shell provides no 'module' function, build
+# The 2-tag / alternative-reco setup below uses 'module purge' to swap the software
+# environment inside a subshell. If the shell provides no 'module' function, build
 # one on a 'modulecmd' binary. Its location varies by version, so resolve it flexibly
-# (was hardwired to /usr/bin/modulecmd) and verify it supports saved collections. Fail
+# (was hardwired to /usr/bin/modulecmd) and verify that it runs. Fail
 # hard -- but only when an alternative-reco tag is set, since single-tag jobs never call
 # 'module' -- instead of silently no-op'ing every 'module' call (cf. O2-7070).
 # The candidate list also resolves symlinks ('readlink -f') and probes the canonical
@@ -198,7 +198,7 @@ if ! declare -F module > /dev/null; then
                "${MODULESHOME:+${MODULESHOME}/libexec/modulecmd}" \
                "$(readlink -f /usr/bin/modulecmd 2>/dev/null)" \
                /usr/share/Modules/libexec/modulecmd* /usr/share/Modules/*/libexec/modulecmd*; do
-    if [ -n "${_cand}" ] && [ -x "${_cand}" ] && "${_cand}" bash savelist > /dev/null 2>&1; then
+    if [ -n "${_cand}" ] && [ -x "${_cand}" ] && "${_cand}" bash list > /dev/null 2>&1; then
       MODULECMD_BIN="${_cand}"
       break
     fi
@@ -207,7 +207,7 @@ if ! declare -F module > /dev/null; then
     echo_info "Using modulecmd at ${MODULECMD_BIN}"
   elif [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
     echo_error "Alternative-reco (2-tag) requested (ALIEN_JDL_O2DPG_ASYNC_RECO_TAG=${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG})"
-    echo_error "but no 'modulecmd' supporting saved collections (save/restore) was found."
+    echo_error "but no working 'modulecmd' (needed for 'module purge') was found."
     echo_error "  Looked at: \$MODULECMD='${MODULECMD}', /usr/bin/modulecmd (+readlink -f), PATH,"
     echo_error "  \$MODULESHOME/libexec/modulecmd, /usr/share/Modules/{,*/}libexec/modulecmd*."
     echo_error "  Diagnostics: MODULESHOME='${MODULESHOME}' /usr/bin/modulecmd -> '$(readlink -f /usr/bin/modulecmd 2>/dev/null)' PATH='${PATH}'"
@@ -237,61 +237,67 @@ if [ ! "${MODULEPATH}" ]; then
 fi
 
 #<----- START OF part that should run under a clean alternative software environment if this was given ------
-if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
-  if [ "${LOADEDMODULES}" ]; then
-    printenv > env_before_stashing.printenv
-    echo "Stashing initial modules"
-    module save initial_modules.list # we stash the current modules environment
-    module list --no-pager
-    module purge --no-pager
-    printenv > env_after_stashing.printenv
-    echo "Modules after purge"
-    module list --no-pager
+# It runs in a subshell, so the MC software environment of this shell stays untouched
+# and does not need to be restored afterwards.
+(
+  if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
+    if [ "${LOADEDMODULES}" ]; then
+      echo "Unloading initial modules"
+      module purge --no-pager
+    fi
+    echo_info "Using tag ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG} to setup anchored MC"
+    /cvmfs/alice.cern.ch/bin/alienv printenv "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" > async_environment.env 2> async_environment.err
+    # alienv printenv returns 0 also for an unknown tag, so check its output instead
+    if [ ! -s async_environment.env ] || grep -q "ERROR" async_environment.err; then
+      echo_error "Could not set up the software environment for ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}:"
+      cat async_environment.err
+      exit 1
+    fi
+    source async_environment.env
+    export > env_async.env
   fi
-  echo_info "Using tag ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG} to setup anchored MC"
-  /cvmfs/alice.cern.ch/bin/alienv printenv "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" &> async_environment.env
-  source async_environment.env
-  export > env_async.env
-fi
 
-# default async_pass.sh script
-DPGRECO=$O2DPG_ROOT/DATA/production/configurations/asyncReco/async_pass.sh
-# default destenv_extra.sh script
-DPGSETENV=$O2DPG_ROOT/DATA/production/configurations/asyncReco/setenv_extra.sh
+  # default async_pass.sh script
+  DPGRECO=$O2DPG_ROOT/DATA/production/configurations/asyncReco/async_pass.sh
+  # default destenv_extra.sh script
+  DPGSETENV=$O2DPG_ROOT/DATA/production/configurations/asyncReco/setenv_extra.sh
 
-# a specific async_pass.sh script is in the current directory, assume that one should be used
-if [[ -f async_pass.sh ]]; then
-    # the default is executable, however, this may not be, so make it so
-    chmod +x async_pass.sh
-    DPGRECO=./async_pass.sh
-else
-    cp -v $DPGRECO .
-fi
+  # a specific async_pass.sh script is in the current directory, assume that one should be used
+  if [[ -f async_pass.sh ]]; then
+      # the default is executable, however, this may not be, so make it so
+      chmod +x async_pass.sh
+      DPGRECO=./async_pass.sh
+  else
+      cp -v $DPGRECO .
+  fi
 
-# if there is no setenv_extra.sh in this directory (so no special version is "shipped" with this rpodcution), copy the default one
-if [[ ! -f setenv_extra.sh ]] ; then
-    cp ${DPGSETENV} .
-    echo_info "Use default setenv_extra.sh from ${DPGSETENV}."
-else
-    echo_info "setenv_extra.sh was found in the current working directory, use it."
-fi
+  # if there is no setenv_extra.sh in this directory (so no special version is "shipped" with this rpodcution), copy the default one
+  if [[ ! -f setenv_extra.sh ]] ; then
+      cp ${DPGSETENV} .
+      echo_info "Use default setenv_extra.sh from ${DPGSETENV}."
+  else
+      echo_info "setenv_extra.sh was found in the current working directory, use it."
+  fi
 
-chmod u+x setenv_extra.sh
+  chmod u+x setenv_extra.sh
 
-echo_info "Setting up DPGRECO to ${DPGRECO}"
+  echo_info "Setting up DPGRECO to ${DPGRECO}"
 
-# take out line running the workflow (if we don't have data input)
-[ ${CTF_TEST_FILE} ] || sed -i '/WORKFLOWMODE=run/d' async_pass.sh
+  # take out line running the workflow (if we don't have data input)
+  [ ${CTF_TEST_FILE} ] || sed -i '/WORKFLOWMODE=run/d' async_pass.sh
 
-# create workflow ---> creates the file that can be parsed
-export IGNORE_EXISTING_SHMFILES=1
-touch list.list
+  # create workflow ---> creates the file that can be parsed
+  export IGNORE_EXISTING_SHMFILES=1
+  touch list.list
 
-# run the async_pass.sh and store output to log file for later inspection and extraction of information
-./async_pass.sh ${CTF_TEST_FILE:-""} 2&> async_pass_log.log
+  # run the async_pass.sh and store output to log file for later inspection and extraction of information
+  ./async_pass.sh ${CTF_TEST_FILE:-""} &> async_pass_log.log
+  RECO_RC=$?
+
+  echo_info "async_pass.sh finished with ${RECO_RC}"
+  exit ${RECO_RC}
+)
 RECO_RC=$?
-
-echo_info "async_pass.sh finished with ${RECO_RC}"
 
 if [[ "${RECO_RC}" != "0" ]] ; then
   exit ${RECO_RC}
@@ -305,29 +311,6 @@ fi
 
 export ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG_KEEP
 echo_info "Setting back ALIEN_JDL_LPMPRODUCTIONTAG to $ALIEN_JDL_LPMPRODUCTIONTAG"
-
-# get rid of the temporary software environment
-if [ "${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}" ]; then
-  module purge --no-pager
-  # restore the initial software environment
-  echo "Restoring initial environment"
-  module --no-pager restore initial_modules.list
-  module saverm initial_modules.list
-
-  # Restore overwritten O2DPG variables set by modules but changed by user
-  # (in particular custom O2DPG_ROOT and O2DPG_MC_CONFIG_ROOT)
-  # We must avoid piping into a while loop (otherwise the internal export is executed in sub-shell)
-  printenv > env_after_restore.printenv
-  while read -r var; do
-    b=$(grep "^$var=" env_before_stashing.printenv | cut -d= -f2-)
-    a=$(grep "^$var=" env_after_restore.printenv  | cut -d= -f2-)
-    [[ "$b" != "$a" ]] && export "$var=$b" && echo "Reapplied: $var to ${b}"
-  done < <(
-    comm -12 \
-      <(grep '^O2DPG' env_before_stashing.printenv | cut -d= -f1 | sort) \
-      <(grep '^O2DPG' env_after_restore.printenv  | cut -d= -f1 | sort))
-
-fi
 #<----- END OF part that should run under a clean alternative software environment if this was given ------
 
 # now create the local MC config file --> config-json.json
