@@ -3,6 +3,7 @@
 import sys
 from os.path import join, exists, basename
 from os import makedirs
+import os
 from copy import deepcopy
 import argparse
 import re
@@ -63,9 +64,16 @@ METRIC_NAME_CPU = "cpu"
 METRIC_NAME_USS = "uss"
 METRIC_NAME_PSS = "pss"
 METRIC_NAME_TIME = "time"
+METRIC_NAME_CGROUP_CPU = "cgroup_cpu"
+METRIC_NAME_CGROUP_MEM = "cgroup_mem"
 
 # metrics that are extracted by the o2_dpg_workflow_runner and put in pipeline_metric*.log
 METRICS = [METRIC_NAME_CPU, METRIC_NAME_USS, METRIC_NAME_PSS, METRIC_NAME_TIME]
+# additional cgroup-based metrics produced when runner uses --systemd-run
+CGROUP_METRICS = [METRIC_NAME_CGROUP_CPU, METRIC_NAME_CGROUP_MEM]
+
+# task names matching this pattern are internal runner markers, not real tasks
+_INTERNAL_NAME_PREFIX = "__"
 
 # some features of MC runs, these can be extracted from the meta information
 # use these when multiple pipelines are given and we want to extract comparison plots for those based on these features
@@ -149,6 +157,12 @@ class Resources:
     self.name = None
     # use this as an id in the dataframe later
     self.timestamp = int(time_ns() / 1000)
+    # actual elapsed walltime derived from log timestamps (more accurate than
+    # iter_count × monitor_interval, which ignores per-pass overhead)
+    self.wall_time_s = None
+    # cgroup global entries (iter → {cpu_pct, mem_mb}); populated when the
+    # metric log contains __cgroup_global__ rows from the systemd-run backend
+    self.cgroup_global_rows = []
 
     if pipeline_path:
       self.extract_from_pipeline(pipeline_path)
@@ -202,15 +216,19 @@ class Resources:
 
   def clean_cpu(self):
     """
-    Sometimes we have negative CPU values, set them to 0
+    Sometimes we have negative CPU values, set them to 0.
+    Also normalise cgroup_cpu by the same factor (100) so it is in #cores.
     """
-    if METRIC_NAME_CPU not in self.dict_for_df:
-      return
-
-    cpu_list = self.dict_for_df[METRIC_NAME_CPU]
-    for i, value in enumerate(cpu_list):
-      # if negative, set to 0; in addition, divide by 100 since we are counting number of CPUs while psutil is doing in %
-      cpu_list[i] = max(0, value) / 100
+    for col in (METRIC_NAME_CPU, METRIC_NAME_CGROUP_CPU):
+      cpu_list = self.dict_for_df.get(col)
+      if cpu_list is None:
+        continue
+      for i, value in enumerate(cpu_list):
+        # if negative, set to 0; divide by 100 to convert % → #cores
+        if value is None:
+          cpu_list[i] = None
+        else:
+          cpu_list[i] = max(0, value) / 100
 
   def compute_time_delta(self):
     """
@@ -256,6 +274,10 @@ class Resources:
     and
     derive the timeframe and parent category as well
     """
+    # Skip internal runner markers (e.g. __cgroup_global__, __global_init_task__)
+    if str(iteration.get("name", "")).startswith(_INTERNAL_NAME_PREFIX):
+      return
+
     for key, value in iteration.items():
       if key == "name":
         try:
@@ -294,8 +316,16 @@ class Resources:
           continue
 
         if "iter" in d:
-          # That is an iteration, add it to the dictionary
-          self.add_iteration(d)
+          # Intercept __cgroup_global__ rows before they reach add_iteration.
+          # These carry slice-level CPU (% units) and memory.current (MB).
+          if str(d.get("name", "")) == "__cgroup_global__":
+            self.cgroup_global_rows.append({
+                'iter':    d.get('iter'),
+                'cpu_pct': d.get('cpu'),   # % (100 = 1 core)
+                'mem_mb':  d.get('pss'),   # memory.current in MB
+            })
+          else:
+            self.add_iteration(d)
           continue
         if not self.meta:
           # at this point, the only other line in the pipeline_metric is the meta info, so when we end up here, we know that it is meta info
@@ -307,6 +337,13 @@ class Resources:
 
     if not self.check():
       return False
+
+    # Capture actual elapsed walltime from absolute log timestamps before
+    # compute_time_delta overwrites them with per-task deltas.
+    raw_times = [t for t in self.dict_for_df.get(METRIC_NAME_TIME, [])
+                 if t is not None and isinstance(t, (int, float))]
+    if len(raw_times) >= 2:
+      self.wall_time_s = max(raw_times) - min(raw_times)
 
     self.add_meta()
     self.convert_columns_to_float_if_possible()
@@ -856,11 +893,20 @@ def print_statistics(resource_object):
   dframe = resource_object.df
   meta = resource_object.meta
 
-  # estimate runtime from iteration count
   max_iter = dframe['iter'].max()
-  print ("Iterations: ", max_iter)
-  # each iteration takes 5 seconds in the pipeline runner --> should be made dynamic and adaptive
-  print ("Estimated runtime (s): ", max_iter * 5)
+  print("Iterations: ", max_iter)
+  # Prefer actual walltime from log timestamps (last ts - first ts); fall
+  # back to iter_count × monitor_interval when timestamps are unavailable.
+  if getattr(resource_object, 'wall_time_s', None) is not None:
+    print("Actual walltime (s): ", round(resource_object.wall_time_s, 1))
+  else:
+    monitor_interval = 5
+    if meta and 'monitor_interval_cpu' in meta:
+      try:
+        monitor_interval = float(meta['monitor_interval_cpu'])
+      except (TypeError, ValueError):
+        pass
+    print("Estimated runtime (s): ", max_iter * monitor_interval)
 
   #(a) PSS memory
   summed_pss_per_iter=dframe.groupby("iter")['pss'].sum()
@@ -869,13 +915,30 @@ def print_statistics(resource_object):
   print ("Mean-PSS (MB): ", mean_pss)
   print ("Max-PSS (MB): ", max_pss)
 
-  #(b) CPU consumption
-  summed_cpu_per_iter=dframe.groupby("iter")['cpu'].sum()
-  mean_cpu = summed_cpu_per_iter.mean()
-  max_cpu = summed_cpu_per_iter.max()
-  print ("Mean-CPU (cores): ", mean_cpu)
-  print ("Max-CPU (cores): ", max_cpu)
-  print ("CPU-efficiency: ", mean_cpu / meta["cpu_limit"])
+  #(b) CPU consumption — prefer cgroup global (slice-level, immune to
+  # per-task psutil sampling artefacts) over the psutil per-task sum.
+  cg_rows = resource_object.cgroup_global_rows
+  if cg_rows:
+    cg_df = pd.DataFrame(cg_rows).dropna(subset=['cpu_pct'])
+    cg_by_iter = cg_df.groupby('iter')['cpu_pct'].mean()
+    mean_cpu = cg_by_iter.mean() / 100.0   # % → cores
+    max_cpu  = cg_by_iter.max()  / 100.0
+    print ("Mean-CPU (cores, cgroup): ", mean_cpu)
+    print ("Max-CPU  (cores, cgroup): ", max_cpu)
+    print ("CPU-efficiency (cgroup):  ", mean_cpu / meta["cpu_limit"])
+    # also print cgroup memory if available
+    cg_mem_df = pd.DataFrame(cg_rows).dropna(subset=['mem_mb'])
+    if not cg_mem_df.empty:
+      cg_mem = cg_mem_df.groupby('iter')['mem_mb'].mean()
+      print ("Mean-mem (MB, cgroup):   ", cg_mem.mean())
+      print ("Max-mem  (MB, cgroup):   ", cg_mem.max())
+  else:
+    summed_cpu_per_iter=dframe.groupby("iter")['cpu'].sum()
+    mean_cpu = summed_cpu_per_iter.mean()
+    max_cpu = summed_cpu_per_iter.max()
+    print ("Mean-CPU (cores): ", mean_cpu)
+    print ("Max-CPU (cores): ", max_cpu)
+    print ("CPU-efficiency: ", mean_cpu / meta["cpu_limit"])
 
   #(c) Top N memory consumers by name
   top_n = 5
@@ -916,57 +979,49 @@ def produce_json_stat(resource_object):
   # to adjust the resource estimates in o2dpg_workflow_runner.py
   #
   resource_json = {}
-  # group by 'name' and compute all needed stats for each metric
-  stats = (
-    dframe
-    .groupby('name')
-    .agg({
-        'pss': ['min', 'max', 'mean'],
-        'uss': ['min', 'max', 'mean'],
-        'cpu': ['min', 'max', 'mean']
-    })
-  )
+  # group by 'name' and compute all needed stats for each metric.
+  # Include cgroup metrics when present (runner with --systemd-run).
+  agg_spec = {
+      'pss': ['min', 'max', 'mean'],
+      'uss': ['min', 'max', 'mean'],
+      'cpu': ['min', 'max', 'mean'],
+  }
+  for cg_col in CGROUP_METRICS:
+    if cg_col in dframe.columns and dframe[cg_col].notna().any():
+      agg_spec[cg_col] = ['min', 'max', 'mean']
+
+  stats = dframe.groupby('name').agg(agg_spec)
 
   # turn the multi-level columns into flat names
   stats.columns = [f"{col[0]}_{col[1]}" for col in stats.columns]
   stats = stats.reset_index()
 
-  # ----- compute lifetime ~ walltime per (timeframe, name) -----
-  # ------------------------------------------------
-  # Filter out unrealistic timeframes (nice == 19) because it's not the realistic runtime
+  # ----- compute lifetime (walltime in seconds) per (timeframe, name) -----
+  # Use the 'time' column which compute_time_delta() already converted to
+  # seconds elapsed since the first observation of each (task, timeframe).
+  # max(time) for a group therefore equals the observed walltime in seconds.
+  # Filter out nice==19 tasks because they run at background priority and
+  # would inflate walltime estimates for the foreground scheduling budget.
   df_nice_filtered = dframe[dframe['nice'] != 19].copy()
 
-  # the calculates of mean runtime should be averaged over timeframes
   lifetime_per_tf = (
     df_nice_filtered
-    .groupby(['timeframe', 'name'])['iter']
-    .agg(lambda x: x.max() - x.min() + 1)   # +1 to include both ends
+    .groupby(['timeframe', 'name'])['time']
+    .max()   # time is delta from task start → max = observed walltime [s]
     .reset_index(name='lifetime')
   )
 
-  # now average over timeframes for each name
-  mean_lifetime = (
-    lifetime_per_tf
-    .groupby('name')['lifetime']
-    .mean()
-  )
-  max_lifetime = (
-    lifetime_per_tf
-    .groupby('name')['lifetime']
-    .max()
-  )
-  min_lifetime = (
-    lifetime_per_tf
-    .groupby('name')['lifetime']
-    .max()
-  )
+  mean_lifetime = lifetime_per_tf.groupby('name')['lifetime'].mean()
+  max_lifetime  = lifetime_per_tf.groupby('name')['lifetime'].max()
+  min_lifetime  = lifetime_per_tf.groupby('name')['lifetime'].min()
+  std_lifetime  = lifetime_per_tf.groupby('name')['lifetime'].std().fillna(0.0)
 
   resource_json["count"] = 1 # basic sample size
 
   # convert to nested dictionary
   for _, row in stats.iterrows():
     name = row['name']
-    resource_json[name] = {
+    entry = {
         'pss': {
             'min': r3(row['pss_min']),
             'max': r3(row['pss_max']),
@@ -985,9 +1040,20 @@ def produce_json_stat(resource_object):
         'lifetime': {
             'min' : r3(float(min_lifetime.get(name, np.nan))),
             'max' : r3(float(max_lifetime.get(name, np.nan))),
-            'mean' : r3(float(mean_lifetime.get(name, np.nan)))
+            'mean': r3(float(mean_lifetime.get(name, np.nan))),
+            'std' : r3(float(std_lifetime.get(name, 0.0))),
         }
     }
+    # include cgroup metrics when available
+    for cg_col in CGROUP_METRICS:
+      min_col = f"{cg_col}_min"
+      if min_col in row.index:
+        entry[cg_col] = {
+            'min':  r3(row[f"{cg_col}_min"]),
+            'max':  r3(row[f"{cg_col}_max"]),
+            'mean': r3(row[f"{cg_col}_mean"]),
+        }
+    resource_json[name] = entry
   return resource_json
 
 def stat(args):
@@ -1029,15 +1095,281 @@ def build_meta_header(arg):
     print ("Unsupported Meta input type")
   return meta
 
-def json_stat_impl(pipelines, output, header_data):
+def _read_log_time_file(fpath):
+  """Parse a *.log_time file written by GNU time via taskwrapper.
+
+  Returns a dict with 'walltime' [s], 'cpu_cores', 'maxmem_mb', or None
+  if the file cannot be parsed.
+
+  GNU time has ~10ms wall-clock resolution, so sub-10ms tasks report
+  walltime=0.00.  When that happens we fall back to usertime (CPU time in
+  user space) which sometimes captures the real duration better.  The
+  effective walltime is max(walltime, usertime) so we never under-count.
+  """
+  result = {}
+  try:
+    with open(fpath) as f:
+      for line in f:
+        line = line.strip().lstrip('#')
+        parts = line.split()
+        if not parts:
+          continue
+        key = parts[0]
+        if key == 'walltime' and len(parts) > 1:
+          result['walltime'] = float(parts[1])
+        elif key == 'usertime' and len(parts) > 1:
+          result['usertime'] = float(parts[1])
+        elif key == 'CPU' and len(parts) > 1:
+          result['cpu_cores'] = float(parts[1].rstrip('%')) / 100.0
+        elif key == 'maxmem' and len(parts) > 1:
+          result['maxmem_mb'] = float(parts[1]) / 1024.0   # KB -> MB
+  except (OSError, ValueError, IndexError):
+    return None
+  if 'walltime' not in result:
+    return None
+  # Only fall back to usertime when walltime rounded to 0 (GNU time has ~10ms
+  # resolution).  Do NOT use max(walltime, usertime): for multithreaded tasks
+  # usertime = sum of CPU time across all workers >> walltime, so max() would
+  # replace a correct 45s wall time with an incorrect 116s usertime.
+  if result['walltime'] == 0.0:
+    result['walltime'] = result.get('usertime', 0.0)
+  return result
+
+
+def _collect_log_times(search_path):
+  """Collect *.log_time files from search_path and one level of subdirectories.
+
+  Returns {base_task_name: [measurement_dict, ...]} where each measurement
+  dict has the keys returned by _read_log_time_file().
+  """
+  import glob
+  collected = {}
+  patterns = [
+    os.path.join(search_path, '*.log_time'),
+    os.path.join(search_path, '*', '*.log_time'),
+  ]
+  for pattern in patterns:
+    for fpath in sorted(glob.glob(pattern)):
+      fname = os.path.basename(fpath).replace('.log_time', '')
+      # Strip timeframe suffix _N to get base task name
+      parts = fname.split('_')
+      base = '_'.join(parts[:-1]) if (parts and parts[-1].isdigit() and len(parts) > 1) else fname
+      data = _read_log_time_file(fpath)
+      if data is not None:
+        collected.setdefault(base, []).append(data)
+  return collected
+
+
+def _stats_dict(values):
+  """Build a min/max/mean/std/count dict from a list of floats.
+
+  std is None when n=1 (sample std is undefined, not zero).
+  """
+  n = len(values)
+  if n == 0:
+    return None
+  mean = sum(values) / n
+  std = round((sum((x - mean) ** 2 for x in values) / (n - 1)) ** 0.5, 3) if n > 1 else None
+  return {
+    'min':  round(min(values), 3),
+    'max':  round(max(values), 3),
+    'mean': round(mean, 3),
+    'std':  std,
+    'M2': 0.0, 'count': n,
+  }
+
+
+def incorporate_log_times(json_path, search_path):
+  """Update a json-stat file with walltime (and cpu/mem) from *.log_time files.
+
+  For tasks already in the stat: overwrite lifetime with log_time walltime
+  (GNU time is more accurate than 1 Hz psutil sampling, especially for
+  short-lived tasks that only appear in one or two monitoring windows).
+
+  For tasks absent from the stat (finished before the first monitor sample):
+  add a new entry with walltime, approximate cpu, and approximate pss from
+  maxmem (RSS ≈ PSS for short-lived tasks).
+  """
+  log_times = _collect_log_times(search_path)
+  if not log_times:
+    print(f'  No *.log_time files found under {search_path}', file=sys.stderr)
+    return
+
+  with open(json_path) as f:
+    stat = json.load(f)
+
+  n_updated = n_added = 0
+  for base_name, measurements in sorted(log_times.items()):
+    walltimes  = [m['walltime']   for m in measurements]
+    cpu_cores  = [m['cpu_cores']  for m in measurements if 'cpu_cores'  in m]
+    maxmem_mbs = [m['maxmem_mb']  for m in measurements if 'maxmem_mb'  in m]
+
+    lifetime_entry = _stats_dict(walltimes)
+
+    if base_name in stat:
+      # Task is in the stat: replace lifetime with ground-truth log_time values.
+      stat[base_name]['lifetime'] = lifetime_entry
+      n_updated += 1
+    else:
+      # Task is absent (too short for monitor sampling): create a minimal entry.
+      entry = {'lifetime': lifetime_entry}
+      cpu_entry = _stats_dict(cpu_cores)
+      if cpu_entry:
+        entry['cpu'] = cpu_entry
+      mem_entry = _stats_dict(maxmem_mbs)
+      if mem_entry:
+        # maxmem (RSS) is a reasonable PSS proxy for short-lived tasks
+        entry['pss'] = mem_entry
+        entry['uss'] = mem_entry   # same approximation
+      stat[base_name] = entry
+      n_added += 1
+
+  with open(json_path, 'w') as f:
+    json.dump(stat, f, indent=2)
+
+  print(f'  log_time: updated lifetime for {n_updated} tasks, '
+        f'added {n_added} new tasks from {search_path}')
+
+
+_NWORKER_CMD_PATTERNS = [
+    re.compile(r'\$\{O2DPG_DYNAMIC_NWORKER_OVERWRITE:-(\d+)\}'),  # ${VAR:-N} — default value
+    re.compile(r'(?<![A-Za-z_])-j\s+(\d+)'),                      # -j N
+    re.compile(r'--tpc-lanes\s+(\d+)'),                            # --tpc-lanes N
+]
+
+
+def _extract_n_workers_from_cmd(cmd):
+  """Return the worker count embedded in a task command string, or None."""
+  for pat in _NWORKER_CMD_PATTERNS:
+    m = pat.search(cmd)
+    if m:
+      return int(m.group(1))
+  return None
+
+
+def _build_amdahl_model(walltime_ref, cpu_mean_ref, n_ref, min_workers=1, max_workers=None):
+  """Compute Amdahl model parameters from a single measurement point.
+
+  Given a task measured at n_ref workers with walltime_ref [s] and
+  cpu_mean_ref cores, solves for the serial and parallel components:
+
+    t_serial       = walltime_ref * (n_ref - cpu_mean_ref) / (n_ref - 1)
+    t_parallel_tot = walltime_ref * n_ref * (cpu_mean_ref - 1) / (n_ref - 1)
+    walltime(n)    = t_serial + t_parallel_tot / n
+
+  Returns None when the model cannot be derived (e.g. n_ref <= 1).
+  """
+  if n_ref <= 1 or walltime_ref <= 0 or cpu_mean_ref <= 0:
+    return None
+  # Amdahl's law assumes the observed mean CPU lies within the physically
+  # meaningful range [1, n_ref].  Outside that interval, the fitted serial
+  # component would go negative or the parallel term would be nonsensical.
+  if cpu_mean_ref < 1.0 or cpu_mean_ref > n_ref:
+    return None
+  t_serial = walltime_ref * (n_ref - cpu_mean_ref) / (n_ref - 1)
+  t_parallel_tot = max(0.0, walltime_ref * n_ref * (cpu_mean_ref - 1) / (n_ref - 1))
+  return {
+    't_serial':       round(t_serial, 3),
+    't_parallel_tot': round(t_parallel_tot, 3),
+    'n_ref':          n_ref,
+    'cpu_mean_ref':   round(cpu_mean_ref, 3),
+    'min_workers':    int(min_workers),
+    'max_workers':    int(max_workers if max_workers is not None else n_ref),
+  }
+
+
+def incorporate_amdahl_models(json_path, workflow_path):
+  """Build Amdahl scaling models and add them to the json-stat file.
+
+  Reads the original workflow.json to obtain n_ref (the worker count used
+  during the measurement run, i.e. the pre-update resources.cpu value for
+  tasks that carry O2DPG_DYNAMIC_NWORKER_OVERWRITE or a 'scaling' block).
+  Combines with cpu.mean and lifetime.mean from the json-stat to derive
+  t_serial and t_parallel_tot for each scalable task.
+  """
+  try:
+    with open(workflow_path) as f:
+      wf_raw = json.load(f)
+  except (OSError, json.JSONDecodeError) as e:
+    print(f'  WARNING: could not read workflow {workflow_path}: {e}', file=sys.stderr)
+    return
+
+  stages = wf_raw.get('stages', [])
+
+  # Collect n_ref and bounds per base task name from the workflow.
+  scalable = {}
+  for task in stages:
+    cmd = task.get('cmd', '')
+    res = task.get('resources', {}) or {}
+    scaling = res.get('scaling')
+    is_scalable = (
+        res.get('amdahl_scalable', False) or
+        'O2DPG_DYNAMIC_NWORKER_OVERWRITE' in cmd or
+        scaling is not None
+    )
+    if not is_scalable:
+      continue
+    name = task['name']
+    tf = task.get('timeframe', -1)
+    base = '_'.join(name.split('_')[:-1]) if (tf >= 1 and name.split('_')[-1].isdigit()) else name
+    if base in scalable:
+      continue  # use the first TF instance as representative
+
+    # n_ref = actual worker count used during the measurement run.
+    # Read from the cmd string (the ground truth) rather than resources.cpu
+    # which is a scheduler booking estimate and may be fractional/rounded.
+    n_ref_cmd = _extract_n_workers_from_cmd(cmd)
+    n_ref = n_ref_cmd if n_ref_cmd else max(1, int(round(float(res.get('cpu', 1)))))
+
+    min_w, max_w = 1, n_ref
+    if scaling:
+      min_w = int(scaling.get('min_workers', 1))
+      max_w = int(scaling.get('max_workers', n_ref))
+    scalable[base] = {'n_ref': n_ref, 'min_workers': min_w, 'max_workers': max_w}
+
+  with open(json_path) as f:
+    stat = json.load(f)
+
+  n_built = 0
+  for base_name, info in scalable.items():
+    if base_name not in stat:
+      continue
+    entry = stat[base_name]
+    cpu_mean = (entry.get('cpu') or {}).get('mean')
+    walltime_ref = (entry.get('lifetime') or {}).get('mean')
+    if cpu_mean is None or walltime_ref is None or walltime_ref <= 0:
+      continue
+    model = _build_amdahl_model(
+      walltime_ref, cpu_mean, info['n_ref'],
+      info['min_workers'], info['max_workers'],
+    )
+    if model:
+      stat[base_name]['amdahl'] = model
+      n_built += 1
+
+  with open(json_path, 'w') as f:
+    json.dump(stat, f, indent=2)
+
+  print(f'  Amdahl models built for {n_built}/{len(scalable)} scalable task(s).')
+
+
+def json_stat_impl(pipelines, output, header_data, log_time_path=None, workflow_path=None):
   resources = extract_resources(pipelines)
   all_stats = [produce_json_stat(res) for res in resources]
-
   merge_stats_into(all_stats, output, build_meta_header(header_data))
+
+  if log_time_path:
+    incorporate_log_times(output, log_time_path)
+
+  if workflow_path:
+    incorporate_amdahl_models(output, workflow_path)
 
 
 def json_stat(args):
-  json_stat_impl(args.pipelines, args.output, args.header_data)
+  log_time_path = getattr(args, 'log_time_path', None)
+  workflow_path = getattr(args, 'workflow_path', None)
+  json_stat_impl(args.pipelines, args.output, args.header_data,
+                 log_time_path=log_time_path, workflow_path=workflow_path)
 
 def merge_json_stats(args):
   all_stats = []
@@ -1300,6 +1632,21 @@ def main():
   json_stat_parser.add_argument("-p", "--pipelines", nargs="*", help="Pipeline_metric files from o2_dpg_workflow_runner; Merges information", required=True)
   json_stat_parser.add_argument("-o", "--output", type=str, help="Output json filename", required=True)
   json_stat_parser.add_argument("-hd", "--header-data", type=str, default='', help="Some meta-data headers to be included in the JSON")
+  json_stat_parser.add_argument("-w", "--workflow", dest="workflow_path", default=None,
+                                metavar="WORKFLOW_JSON",
+                                help="Original workflow.json used for the measurement run. "
+                                     "When provided, Amdahl scaling models are computed for "
+                                     "tasks that carry O2DPG_DYNAMIC_NWORKER_OVERWRITE or a "
+                                     "'scaling' block, using the original resources.cpu as "
+                                     "n_ref combined with learned cpu.mean and lifetime.mean.")
+  json_stat_parser.add_argument("--log-time-path", dest="log_time_path", default=None,
+                                metavar="DIR",
+                                help="Directory to search for *.log_time files written by "
+                                     "taskwrapper (GNU time). Searched recursively one level "
+                                     "deep (covers tf1/, tf2/, ... subdirs). When provided, "
+                                     "lifetime values are replaced with the more accurate "
+                                     "GNU-time walltime, and tasks too short to appear in the "
+                                     "1 Hz monitor log are added from the log_time data.")
 
   merge_stat_parser = sub_parsers.add_parser("merge-json-stats", help="Merge information from json-stats into an aggregated stat")
   merge_stat_parser.set_defaults(func=merge_json_stats)
