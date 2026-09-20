@@ -1,0 +1,104 @@
+{
+  "stages": [
+    {
+      "name": "__global_init_task__",
+      "cmd": "NO-COMMAND",
+      "needs": [],
+      "cwd": "./",
+      "timeframe": -1,
+      "labels": [],
+      "resources": {"cpu": 1, "mem": 100, "relative_cpu": null},
+      "env": {"FOO": "bar"}
+    },
+    {
+      "name": "bkg",
+      "cmd": "echo bkg > out.dat",
+      "needs": [],
+      "cwd": "./",
+      "timeframe": -1,
+      "labels": ["SIM"],
+      "resources": {"cpu": 2, "mem": 500, "relative_cpu": null}
+    },
+    {
+      "name": "sgnsim_1",
+      "cmd": "echo sgnsim_1",
+      "needs": ["bkg"],
+      "cwd": "./tf1",
+      "timeframe": 1,
+      "labels": ["SIM"],
+      "resources": {"cpu": 4, "mem": 2000, "relative_cpu": 1.0}
+    },
+    {
+      "name": "digi_1",
+      "cmd": "echo digi_1",
+      "needs": ["sgnsim_1"],
+      "cwd": "./tf1",
+      "timeframe": 1,
+      "labels": ["DIGI"],
+      "resources": {"cpu": 2, "mem": 1000, "relative_cpu": 1.0}
+    },
+    {
+      "name": "reco_1",
+      "cmd": "echo reco_1",
+      "needs": ["digi_1"],
+      "cwd": "./tf1",
+      "timeframe": 1,
+      "labels": ["RECO"],
+      "resources": {"cpu": 4, "mem": 1500, "relative_cpu": 1.0}
+    },
+    {
+      "name": "qc_1",
+      "cmd": "echo qc_1",
+      "needs": ["reco_1"],
+      "cwd": "./tf1",
+      "timeframe": 1,
+      "labels": ["QC"],
+      "resources": {"cpu": 1, "mem": 500, "relative_cpu": 1.0}
+    },
+    {
+      "name": "sgnsim_2",
+      "cmd": "echo sgnsim_2",
+      "needs": ["bkg"],
+      "cwd": "./tf2",
+      "timeframe": 2,
+      "labels": ["SIM"],
+      "resources": {"cpu": 4, "mem": 2000, "relative_cpu": 1.0}
+    },
+    {
+      "name": "digi_2",
+      "cmd": "echo digi_2",
+      "needs": ["sgnsim_2"],
+      "cwd": "./tf2",
+      "timeframe": 2,
+      "labels": ["DIGI"],
+      "resources": {"cpu": 2, "mem": 1000, "relative_cpu": 1.0}
+    },
+    {
+      "name": "reco_2",
+      "cmd": "echo reco_2",
+      "needs": ["digi_2"],
+      "cwd": "./tf2",
+      "timeframe": 2,
+      "labels": ["RECO"],
+      "resources": {"cpu": 4, "mem": 1500, "relative_cpu": 1.0}
+    },
+    {
+      "name": "qc_2",
+      "cmd": "echo qc_2",
+      "needs": ["reco_2"],
+      "cwd": "./tf2",
+      "timeframe": 2,
+      "labels": ["QC"],
+      "resources": {"cpu": 1, "mem": 500, "relative_cpu": 1.0}
+    },
+    {
+      "name": "aod",
+      "cmd": "echo aod",
+      "needs": ["reco_1", "reco_2"],
+      "cwd": "./",
+      "timeframe": -1,
+      "labels": ["AOD"],
+      "resources": {"cpu": 2, "mem": 800, "relative_cpu": 1.0}
+    }
+  ]
+}
