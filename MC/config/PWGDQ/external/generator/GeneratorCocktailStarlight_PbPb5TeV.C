@@ -32,9 +32,13 @@ o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorStarlight_class>* makeStarl
                                                                std::string extraParams = "",
                                                                std::string dpmjetconf = "")
 {
-  auto generator = makeStarlightGenerator(configuration, energyCM, beam1Z, beam1A, beam2Z, beam2A, extraParams, dpmjetconf);
+  auto generator = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorStarlight_class>();
+  generator->selectConfiguration(configuration);
+  generator->setCollisionSystem(energyCM, beam1Z, beam1A, beam2Z, beam2A);
+  generator->setExtraParams(extraParams);
+  // generator->setupDpmjet(dpmjetconf);
   generator->SetPolarization(1); //Transversal
-    generator->SetSizePdg(2);
+  generator->SetSizePdg(2);
   generator->AddPdg(443,0);
   generator->AddPdg(100443,1);
     TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGUD/external/generator/DecayTablesEvtGen");
