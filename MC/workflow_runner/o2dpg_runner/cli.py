@@ -8,17 +8,16 @@ are preserved; new flags are additive and default-compatible.
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import os
 import shutil
-import subprocess
 import sys
 from typing import Optional, Tuple
 
 import psutil
 
 from .config import RunnerConfig
+from .filegraph import BACKENDS as FILEGRAPH_BACKENDS, FileGraphManager
 from .workflow import build_workflow, load_json
 from .executor import WorkflowExecutor
 
@@ -100,6 +99,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--retry-on-failure", type=int, default=0)
     p.add_argument("--no-rootinit-speedup", action="store_true")
     p.add_argument("--remove-files-early", type=str, default="")
+    p.add_argument("--filegraph-backends", type=str,
+                   default=os.getenv("O2DPG_FILEGRAPH_BACKENDS", ""),
+                   help="comma-separated file-IO-graph backends to learn the "
+                        "file dependencies with: "
+                        + ", ".join(sorted(FILEGRAPH_BACKENDS)))
 
     # Accept-and-ignore for backward compatibility of call sites
     # that still pass these flags. They have no effect.
@@ -154,6 +158,7 @@ def _args_to_config(ns: argparse.Namespace) -> RunnerConfig:
         retry_on_failure=ns.retry_on_failure,
         no_rootinit_speedup=ns.no_rootinit_speedup,
         remove_files_early=ns.remove_files_early,
+        filegraph_backends=ns.filegraph_backends,
         stdout_on_failure=ns.stdout_on_failure,
         production_mode=ns.production_mode,
         action_logfile=ns.action_logfile,
@@ -341,22 +346,6 @@ def _maybe_draw_workflow(raw_spec):
     dot.render("workflow.gv")
 
 
-def _launch_fileaccess_sidecar(actionlogger_file: str):
-    """Start the fanotify-based file-IO graph sidecar if requested."""
-    exe = os.getenv("O2DPG_PRODUCE_FILEGRAPH")
-    if not exe:
-        return None, None, None
-    env = os.environ.copy()
-    env["FILEACCESS_MON_ROOTPATH"] = os.getcwd()
-    env["MAXMOTHERPID"] = f"{os.getpid()}"
-    log_file = f"pipeline_fileaccess_{os.getpid()}.log"
-    fh = open(log_file, "w")
-    proc = subprocess.Popen(
-        [exe], stdout=fh, stderr=subprocess.STDOUT, env=env,
-    )
-    return proc, fh, log_file
-
-
 def main(argv=None) -> int:
     ns = build_parser().parse_args(argv)
     _maybe_reexec_in_slice(ns)  # may replace this process; returns only if not re-execing
@@ -409,6 +398,7 @@ def main(argv=None) -> int:
         "systemd_run_spec": cfg.systemd_run_spec,
         "in_systemd_slice": cfg.in_systemd_slice,
         "monitor_interval_cpu": cfg.monitor_interval_cpu,
+        "filegraph_backends": cfg.filegraph_backends,
     })
     metric_logger.info(meta)
 
@@ -429,37 +419,19 @@ def main(argv=None) -> int:
     for k, v in wf.global_env.items():
         os.environ.setdefault(k, str(v))
 
-    # Optional file-access sidecar
-    fileaccess_proc, fileaccess_fh, fileaccess_log_file = _launch_fileaccess_sidecar(action_log)
+    filegraph = FileGraphManager.from_config(
+        cfg.filegraph_backends, os.getcwd(), os.getpid(), action_log, action_logger)
+    filegraph.start()
 
     rc = 0
     try:
-        execer = WorkflowExecutor(cfg, wf, action_logger, metric_logger)
+        execer = WorkflowExecutor(cfg, wf, action_logger, metric_logger,
+                                  filegraph=filegraph)
         rc = int(execer.execute())
     finally:
-        if fileaccess_proc is not None:
-            fileaccess_proc.terminate()
-            try:
-                fileaccess_proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                fileaccess_proc.kill()
-            if fileaccess_fh is not None:
-                fileaccess_fh.close()
-            o2dpg_root = os.getenv("O2DPG_ROOT")
-            if o2dpg_root and fileaccess_log_file:
-                analyse_cmd = [
-                    sys.executable,
-                    f"{o2dpg_root}/UTILS/FileIOGraph/analyse_FileIO_v2.py",
-                    "--actionFile", action_log,
-                    "--monitorFile", fileaccess_log_file,
-                    "-o", f"pipeline_fileaccess_report_{os.getpid()}.json",
-                    "--basedir", os.getcwd(),
-                ]
-                print(f"Producing FileIOGraph with command {analyse_cmd}")
-                try:
-                    subprocess.run(analyse_cmd, check=True)
-                except subprocess.CalledProcessError as e:
-                    print(f"FileIOGraph analysis failed: {e}", file=sys.stderr)
+        filegraph.stop()
+        for backend, path in filegraph.analyse().items():
+            print(f"FileIOGraph[{backend}] -> {path}")
 
     return rc
 

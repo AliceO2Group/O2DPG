@@ -54,6 +54,7 @@ class RunnerConfig:
     retry_on_failure: int = 0
     no_rootinit_speedup: bool = False
     remove_files_early: str = ""
+    filegraph_backends: str = ""
     stdout_on_failure: bool = False
     production_mode: bool = False
 

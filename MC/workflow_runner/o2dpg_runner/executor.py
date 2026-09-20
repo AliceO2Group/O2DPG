@@ -34,10 +34,11 @@ from .workflow import Workflow, update_resource_estimates
 from .graph import descendants, longest_path_length, kahn_topological_order
 from .resources import ResourceManager, ResourceLimitExceeded
 from .monitoring import MonitorThread, PsutilBackend, _read_cgroup_v2_dir
+from .filegraph import FileGraphManager
 from .scheduler import get_policy
 from .scheduler.base import SchedulerState
 from .scheduler.timeframe import TimeframeFirstPolicy
-from .cache import TaskCache, compute_fingerprint, remove_done_flag, done_path
+from .cache import TaskCache, compute_fingerprint, remove_done_flag
 from .alienv import get_alienv_software_environment
 from .cleanup import EarlyFileRemover, archive_task_logs
 
@@ -90,8 +91,10 @@ class WorkflowExecutor:
         workflow: Workflow,
         action_logger: logging.Logger,
         metric_logger: logging.Logger,
+        filegraph=None,
     ):
         self.cfg = config
+        self.filegraph = filegraph or FileGraphManager([], os.getpid(), action_logger)
         self.wf = workflow
         self.actionlog = action_logger
         self.metriclog = metric_logger
@@ -366,16 +369,23 @@ class WorkflowExecutor:
                 slice_name if slice_name.endswith(".slice") else f"{slice_name}.slice"
             )
             unit = _unit_name(task["name"], tid)
-            launch_argv = [
+            prefix = [
                 "systemd-run", "--user", "--scope", "--collect",
                 "--expand-environment=no",  # suppress the $VAR warning; bash handles expansion
-                f"--unit={unit}", f"--slice={systemd_slice}",
-                "--", "/bin/bash", "-c", cmd,
+                f"--unit={unit}", f"--slice={systemd_slice}", "--",
             ]
+        else:
+            prefix = []
+
+        # a tracer has to sit inside any systemd scope, or it would only ever
+        # see systemd-run itself
+        inner_argv = self.filegraph.wrap(["/bin/bash", "-c", cmd], task["name"], tid)
+        launch_argv = prefix + inner_argv
+
+        if use_scope:
             p = psutil.Popen(launch_argv, cwd=workdir, env=env, stderr=subprocess.PIPE)
             _start_stderr_drainer(p.stderr, self.actionlog, task["name"])
         else:
-            launch_argv = ["/bin/bash", "-c", cmd]
             p = psutil.Popen(launch_argv, cwd=workdir, env=env)
         try:
             p.nice(nice)

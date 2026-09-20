@@ -120,6 +120,20 @@ jobs:
         working-directory: MC/workflow_runner
         run: pytest o2dpg_runner/tests -q
 
+  filegraph-tests:
+    name: File-IO-graph unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install prerequisites
+        run: pip install psutil
+
+      - name: Run the FileIOGraph test suite
+        run: python3 -m unittest discover -s UTILS/FileIOGraph/tests -t UTILS/FileIOGraph/tests
+
   pylint:
     name: Pylint
     runs-on: ubuntu-latest
