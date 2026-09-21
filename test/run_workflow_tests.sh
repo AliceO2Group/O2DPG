@@ -293,7 +293,7 @@ fi
 # prepare our local test directory for bin tests
 # global return code for PWGs
 ret_analysis_qc=0
-if [[ "${changed_analysis_qc}" != "" ]] ; then
+if [[ "${changed_analysis_qc}" != "" || "${changed_sim_bin}" != "" ]] ; then
     rm -rf ${TEST_PARENT_DIR_BIN} 2>/dev/null
     mkdir -p ${TEST_PARENT_DIR_BIN} 2>/dev/null
     pushd ${TEST_PARENT_DIR_BIN} > /dev/null
@@ -336,7 +336,7 @@ if [[ "${changed_anchored}" != "" ]] ; then
     popd > /dev/null
 fi
 
-RET=$(( ret_analysis_qc + ret_global_anchored ))
+RET=$(( ret_global_pwg + ret_analysis_qc + ret_global_anchored ))
 
 echo
 [[ "${RET}" != "0" ]] && echo_red "There were errors, please check!" || echo_green "All required workflow tests successful"

@@ -134,6 +134,24 @@ jobs:
       - name: Run the FileIOGraph test suite
         run: python3 -m unittest discover -s UTILS/FileIOGraph/tests -t UTILS/FileIOGraph/tests
 
+  bash-harnesses:
+    name: Test-harness unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run the offline test harnesses
+        run: |
+          error=0
+          for t in test/tests/*.sh ; do
+            echo "::group::$t"
+            bash "$t" || error=1
+            echo "::endgroup::"
+          done
+          exit "$error"
+
   pylint:
     name: Pylint
     runs-on: ubuntu-latest
