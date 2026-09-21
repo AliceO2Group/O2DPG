@@ -50,8 +50,8 @@ FairGenerator*
   else if (configuration.find("JpsiToElRad") != std::string::npos) gen->SetDecayTable(Form("%s/JPSI.EE.DEC",pathO2.Data()));
   else if (configuration.find("ToL+3Pi") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.LP3PI.DEC",pathO2.Data()));
   else if (configuration.find("ToL-3Pi") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.LN3PI.DEC",pathO2.Data()));
-  else if (configuration.find("ToPi+3Pi") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.LP3PI.DEC",pathO2.Data()));
-  else if (configuration.find("ToPi-3Pi") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.LN3PI.DEC",pathO2.Data()));
+  else if (configuration.find("ToPi+3Pi") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.PP3PI.DEC",pathO2.Data()));
+  else if (configuration.find("ToPi-3Pi") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.PN3PI.DEC",pathO2.Data()));
   else if (configuration.find("To6Pi") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.6PI.DEC",pathO2.Data()));
   else if (configuration.find("ToElMu") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.ELMU.DEC",pathO2.Data()));
   else if (configuration.find("ToElPiPi0") != std::string::npos) gen->SetDecayTable(Form("%s/TAUTAU.ELPI.DEC",pathO2.Data()));
