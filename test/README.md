@@ -7,7 +7,7 @@ At the moment, the tests focus on generator configurations and custom generators
 
 Tests are run via
 ```bash
-${O2DPG_ROOT}/test/run_tests.sh [--fail-immediately]
+${O2DPG_ROOT}/test/run_tests.sh [--fail-immediately] [--keep-artifacts] [SUBTEST...]
 ```
 
 Tests are run for changed
@@ -56,7 +56,32 @@ O2DPG_TEST_REPO_DIR=</path/to/source/O2DPG> ${O2DPG_ROOT}/test/run_tests.sh [--f
 ```
 If you are inside the source directory, you can simply run
 ```bash
-${O2DPG_ROOT}/test/run_tests.sh [--fail-immediately]
+${O2DPG_ROOT}/test/run_tests.sh [--fail-immediately] [--keep-artifacts] [SUBTEST...]
+```
+If the change you are testing is to a test script itself (`run_tests.sh` or
+any `run_*_tests.sh`), invoke the checkout's own entrypoint instead, e.g.
+`bash test/run_tests.sh` from inside the checkout: `run_tests.sh` finds its
+sub-scripts next to itself, so calling `${O2DPG_ROOT}/test/run_tests.sh`
+tests the *released* copy of the script you just edited, not your change,
+even with `O2DPG_TEST_REPO_DIR` pointed at the checkout.
+
+### Running a subset
+
+`run_tests.sh` runs the generator, workflow and RelVal sub-tests. To run only
+some of them, name them:
+
+```bash
+${O2DPG_ROOT}/test/run_tests.sh generator relval
+```
+
+The offline harnesses under `test/tests/` check the entrypoint's selection,
+exit-code aggregation and O2PDPSuite tag resolution without needing an O2
+environment:
+
+```bash
+bash test/tests/run_tests_selection.sh
+bash test/tests/exit_code_aggregation.sh
+bash test/tests/resolve_tag.sh
 ```
 
 ### Keeping all test artifacts
@@ -74,24 +99,33 @@ ${O2DPG_ROOT}/test/run_tests.sh -h
 ```
 which will give you
 ```
-usage: run_tests.sh [--fail-immediately] [--keep-artifacts]
+
+usage: run_tests.sh [--fail-immediately] [--keep-artifacts] [SUBTEST...]
+
+  SUBTEST : one or more of: generator workflow relval (default: all)
 
   FLAGS:
 
-  --fail-immediately : abort as soon as the first tests fails
-  --keep-artifacts : keep simulation and tests artifacts, by default everything but the logs is removed after each test
+  --fail-immediately : stop after the first failing sub-test
+  --keep-artifacts   : keep simulation artifacts, not just the logs
 
   ENVIRONMENT VARIABLES:
 
-  O2DPG_TEST_REPO_DIR : Point to the source repository you want to test.
-  O2DPG_TEST_HASH_BASE : The base hash you want to use for comparison (optional)
-  O2DPG_TEST_HASH_HEAD : The head hash you want to use for comparison (optional)
+  O2DPG_TEST_REPO_DIR  : the source repository to test
+  O2DPG_TEST_HASH_BASE : base hash for the changed-file diff (optional)
+  O2DPG_TEST_HASH_HEAD : head hash for the changed-file diff (optional)
 
-  If O2DPG_TEST_HASH_BASE is not set, it will be looked for ALIBUILD_BASE_HASH.
-  If also not set, this will be set to HEAD~1. However, if there are unstaged
-  changes, it will be set to HEAD.
-
-  If O2DPG_TEST_HASH_HEAD is not set, it will be looked for ALIBUILD_HEAD_HASH.
-  If also not set, this will be set to HEAD. However, if there are unstaged
-  changes, it will left blank.
 ```
+
+## When your change needs an unreleased O2
+
+The `Simulation tests against CVMFS` check runs against a published
+`O2PDPSuite` release, so a change that depends on an unmerged or unreleased O2
+commit cannot pass it. Two escape hatches, in order of preference:
+
+1. If the O2 change is already in a published daily, pin it: add a line
+   `sim-tests-tag: daily-YYYYMMDD-HHMM-1` to the pull request description.
+2. If it is not published anywhere yet, touch `test/needs-o2-dev` with a
+   one-line reason and a link to the O2 pull request. That enables
+   `build/O2DPG/sim/o2dev`, which builds O2 from source against `dev`. It is
+   much slower, so it is opt-in.

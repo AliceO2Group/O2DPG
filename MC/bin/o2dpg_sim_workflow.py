@@ -5,6 +5,7 @@
 # It aims to handle the different MC possible configurations
 # It just creates a workflow.json txt file, to execute the workflow one must execute right after
 #   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
+# The tests covering this script are described in test/README.md.
 #
 # Execution examples:
 #  - pp PYTHIA jets, 2 events, triggered on high pT decay photons on all barrel calorimeters acceptance, eCMS 13 TeV
