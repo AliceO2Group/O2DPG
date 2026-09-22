@@ -1,6 +1,6 @@
 int External()
 {
-    const std::string path{"/home/sawan/alice/practice/testMC/PhiPhi/o2sim_Kine.root"};
+    const std::string path{"o2sim_Kine.root"};
 
     TFile file(path.c_str(), "READ");
     if (file.IsZombie())
