@@ -1,61 +1,6 @@
-#if !defined(__CLING__) || defined(__ROOTCLING__)
-#include "FairGenerator.h"
-#include "TDatabasePDG.h"
-#include "TFile.h"
-#include "TMath.h"
-#include "TSystem.h"
-#include "TTree.h"
-#include "SimulationDataFormat/MCTrack.h"
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#endif
-
-// Include the underlying rapidity generator header/macro
-#include "generator_pythia8_LF_rapidity.C"
-
-/// Entry point to configure the particle gun generator for resonance simulation
-FairGenerator *generatePhiResonanceGun(int pdg = 999999, // Custom PDG or specific target PDG
-                                       float ptMin = 0.0,
-                                       float ptMax = 50.0,
-                                       float yMin = -1.0,
-                                       float yMax = 1.0,
-                                       std::string pythiaCfg = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/pythia8_inel_136tev.cfg",
-                                       int nInject = 3)
-{
-    // Configure particle parameters (PDG, count, ptMin, ptMax, yMin, yMax)
-    GeneratorPythia8LFRapidity::ConfigContainer cfg(pdg, nInject, ptMin, ptMax, yMin, yMax);
-
-    std::vector<GeneratorPythia8LFRapidity::ConfigContainer> cfgVec;
-    std::vector<GeneratorPythia8LFRapidity::ConfigContainer> cfgVecGenDecayed;
-
-    // Let Pythia generator handle decays internally
-    cfgVecGenDecayed.push_back(cfg);
-
-    return generateLFRapidity(cfgVec, cfgVecGenDecayed,
-                              /*injectOnePDGPerEvent=*/true,
-                              /*gapBetweenInjection=*/0,
-                              /*useTrigger=*/false,
-                              /*useRapidity=*/true,
-                              /*pythiaCfgMb=*/pythiaCfg,
-                              /*pythiaCfgSignal=*/"");
-}
-
-/// Validation function to analyze o2sim_Kine.root post-simulation
 int External()
 {
-    std::string path{"o2sim_Kine.root"};
-    int numberOfGapEvents{0};
-    int numberOfEventsProcessed{0};
-    int numberOfEventsProcessedWithoutInjection{0};
-
-    // Target PDG state and decaying daughters (e.g. Phi -> K+ K-)
-    std::vector<int> injectedPDGs = {999999}; 
-    std::vector<std::vector<int>> decayDaughters = {
-        {333, 333} // Decaying into phi-phi (PDG 333, 333)
-    };
-
-    auto nInjection = injectedPDGs.size();
+    const std::string path{"/home/sawan/alice/practice/testMC/PhiPhi/o2sim_Kine.root"};
 
     TFile file(path.c_str(), "READ");
     if (file.IsZombie())
@@ -74,83 +19,150 @@ int External()
     std::vector<o2::MCTrack> *tracks{};
     tree->SetBranchAddress("MCTrack", &tracks);
 
-    std::vector<int> nSignal(nInjection, 0);
-    std::vector<std::vector<int>> nDecays;
-    std::vector<int> nNotDecayed(nInjection, 0);
+    // Counters
+    int nResonance999999 = 0;
+    int nNotDecayed999999 = 0;
+    int nPhiFromResonance = 0;
 
-    for (size_t i = 0; i < nInjection; i++)
+    // Decay counts into K+ K- (PDG 321, -321)
+    int nKPlusFromResonancePhi = 0;
+    int nKMinusFromResonancePhi = 0;
+
+    int nDirectInjectedPhi = 0;
+    int nMBPhi = 0;
+
+    int nKPlusFromDirectPhi = 0;
+    int nKMinusFromDirectPhi = 0;
+    int nKPlusFromMBPhi = 0;
+    int nKMinusFromMBPhi = 0;
+
+    int numberOfEventsProcessed = 0;
+    int numberOfEventsProcessedWithoutInjection = 0;
+
+    for (Long64_t i = 0; i < tree->GetEntries(); ++i)
     {
-        nDecays.push_back(std::vector<int>(decayDaughters[i].size(), 0));
-    }
-
-    auto nEvents = tree->GetEntries();
-    bool hasInjection = false;
-
-    for (int i = 0; i < nEvents; i++)
-    {
-        hasInjection = false;
-        numberOfEventsProcessed++;
         tree->GetEntry(i);
+        ++numberOfEventsProcessed;
+        bool hasInjection = false;
 
-        for (size_t idxMCTrack = 0; idxMCTrack < tracks->size(); ++idxMCTrack)
+        for (size_t idx = 0; idx < tracks->size(); ++idx)
         {
-            auto track = tracks->at(idxMCTrack);
-            auto pdg = track.GetPdgCode();
-            auto it = std::find(injectedPDGs.begin(), injectedPDGs.end(), pdg);
+            const auto &track = tracks->at(idx);
+            const auto pdg = track.GetPdgCode();
 
-            if (it != injectedPDGs.end())
+            // 1. Process Custom Resonance 999999
+            if (pdg == 999999)
             {
-                int index = std::distance(injectedPDGs.begin(), it);
-                nSignal[index]++;
+                ++nResonance999999;
+                hasInjection = true;
 
                 if (track.getFirstDaughterTrackId() < 0)
                 {
-                    nNotDecayed[index]++;
+                    ++nNotDecayed999999;
                     continue;
                 }
 
-                for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j)
+                // Loop through daughters of 999999 (Phi mesons)
+                for (int j = track.getFirstDaughterTrackId(); j <= track.getLastDaughterTrackId(); ++j)
                 {
-                    auto pdgDau = tracks->at(j).GetPdgCode();
-                    bool foundDau = false;
-
-                    for (size_t idxDaughter = 0; idxDaughter < decayDaughters[index].size(); ++idxDaughter)
+                    const auto &phiTrack = tracks->at(j);
+                    if (phiTrack.GetPdgCode() == 333)
                     {
-                        if (pdgDau == decayDaughters[index][idxDaughter])
+                        ++nPhiFromResonance;
+
+                        // Check daughters of this Phi (granddaughters of 999999)
+                        if (phiTrack.getFirstDaughterTrackId() >= 0)
                         {
-                            nDecays[index][idxDaughter]++;
-                            foundDau = true;
-                            hasInjection = true;
-                            break;
+                            for (int k = phiTrack.getFirstDaughterTrackId(); k <= phiTrack.getLastDaughterTrackId(); ++k)
+                            {
+                                auto grandDauPdg = tracks->at(k).GetPdgCode();
+                                if (grandDauPdg == 321) ++nKPlusFromResonancePhi;
+                                if (grandDauPdg == -321) ++nKMinusFromResonancePhi;
+                            }
                         }
                     }
-                    if (!foundDau)
+                }
+            }
+
+            // 2. Process Phi (333) Mesons
+            else if (pdg == 333)
+            {
+                int motherId = track.getMotherTrackId();
+                int motherPdg = (motherId >= 0 && motherId < (int)tracks->size()) ? tracks->at(motherId).GetPdgCode() : 0;
+
+                // Skip Phi from 999999 here as it was handled above
+                if (motherPdg == 999999)
+                {
+                    continue;
+                }
+
+                bool isDirectInjected = (motherId < 0);
+
+                if (isDirectInjected)
+                {
+                    ++nDirectInjectedPhi;
+                    hasInjection = true;
+
+                    if (track.getFirstDaughterTrackId() >= 0)
                     {
-                        std::cerr << "Decay daughter not found: " << pdg << " -> " << pdgDau << "\n";
+                        for (int j = track.getFirstDaughterTrackId(); j <= track.getLastDaughterTrackId(); ++j)
+                        {
+                            auto dauPdg = tracks->at(j).GetPdgCode();
+                            if (dauPdg == 321) ++nKPlusFromDirectPhi;
+                            if (dauPdg == -321) ++nKMinusFromDirectPhi;
+                        }
+                    }
+                }
+                else
+                {
+                    // Minimum Bias Phi
+                    ++nMBPhi;
+
+                    if (track.getFirstDaughterTrackId() >= 0)
+                    {
+                        for (int j = track.getFirstDaughterTrackId(); j <= track.getLastDaughterTrackId(); ++j)
+                        {
+                            auto dauPdg = tracks->at(j).GetPdgCode();
+                            if (dauPdg == 321) ++nKPlusFromMBPhi;
+                            if (dauPdg == -321) ++nKMinusFromMBPhi;
+                        }
                     }
                 }
             }
         }
+
         if (!hasInjection)
         {
-            numberOfEventsProcessedWithoutInjection++;
+            ++numberOfEventsProcessedWithoutInjection;
         }
     }
 
     std::cout << "--------------------------------\n";
-    std::cout << "# Events: " << nEvents << "\n";
-    for (size_t i = 0; i < nInjection; i++)
-    {
-        std::cout << "# Mother PDG " << injectedPDGs[i] << " generated: "
-                  << nSignal[i] << ", " << nNotDecayed[i] << " did not decay\n";
-        for (size_t j = 0; j < decayDaughters[i].size(); j++)
-        {
-            std::cout << "# Daughter PDG " << decayDaughters[i][j] << ": " << nDecays[i][j] << "\n";
-        }
-    }
+    std::cout << "Total Events Processed: " << tree->GetEntries() << "\n\n";
+
+    std::cout << "--- 1. INJECTED RESONANCE (999999) ---\n";
+    std::cout << "Total Injected Resonance 999999: " << nResonance999999 << "\n";
+    std::cout << "Resonances not decayed: " << nNotDecayed999999 << "\n";
+    std::cout << "Daughter Phi (333) produced from 999999: " << nPhiFromResonance << "\n";
+    std::cout << "  -> Decayed to K+: " << nKPlusFromResonancePhi << "\n";
+    std::cout << "  -> Decayed to K-: " << nKMinusFromResonancePhi << "\n\n";
+
+    std::cout << "--- 2. DIRECTLY INJECTED PHI (333) ---\n";
+    std::cout << "Total Directly Injected Phi (333): " << nDirectInjectedPhi << "\n";
+    std::cout << "  -> Decayed to K+: " << nKPlusFromDirectPhi << "\n";
+    std::cout << "  -> Decayed to K-: " << nKMinusFromDirectPhi << "\n\n";
+
+    std::cout << "--- 3. MINIMUM BIAS PHI (333) ---\n";
+    std::cout << "Total Minimum Bias Phi (333): " << nMBPhi << "\n";
+    std::cout << "  -> Decayed to K+: " << nKPlusFromMBPhi << "\n";
+    std::cout << "  -> Decayed to K-: " << nKMinusFromMBPhi << "\n";
     std::cout << "--------------------------------\n";
+    std::cout << "Events processed without signal injection: " << numberOfEventsProcessedWithoutInjection << "\n";
 
     return 0;
 }
 
-void GeneratorLF_phiphi2() { External(); }
+void GeneratorLF_phiphi2()
+{
+    External();
+}
