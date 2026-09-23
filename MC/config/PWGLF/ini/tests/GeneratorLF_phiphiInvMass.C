@@ -162,7 +162,7 @@ int External()
     return 0;
 }
 
-void GeneratorLF_phiphi2()
+void GeneratorLF_phiphiInvMass()
 {
     External();
 }
