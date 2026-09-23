@@ -20,7 +20,7 @@ CCDBPATH1="http://o2-ccdb.internal"
 CCDBPATH2="$DCSCCDBSERVER_PERS"
 if [[ $RUNTYPE == "SYNTHETIC" || "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" || ! -z $ISTEST ]]; then
   CCDBPATH1="http://ccdb-test.cern.ch:8080"
-  CCDBPATH2="http://ccdb-test.cern.ch:8080"
+  CCDBPATH2="$DCSCCDBSERVER_PERS"
 fi
 
 WORKFLOW=
