@@ -218,7 +218,7 @@ Decay B_s0
 
 0.000353     J/psi       eta'                               SVS;
 0.000445     J/psi       eta                                SVS;
-0.00026     J/psi        f'2                                SVS;
+0.00026     J/psi        f'_2                                SVS;
 0.001010000 J/psi   phi                                     SVV_HELAMP  1.0 0.0 1.0 0.0 1.0 0.0; #[Reconstructed PDG2011]
 0.0000384   J/psi       K0                                 SVS;
 0.00079     J/psi       K-          K+                     PHSP;
@@ -266,7 +266,7 @@ Decay anti-B_s0
 ###
 0.000353   J/psi   eta'               SVS;
 0.000445   J/psi   eta                SVS;
-0.00026   J/psi        f'2                                SVS;
+0.00026   J/psi        f'_2                                SVS;
 0.001010000 J/psi   phi                                     SVV_HELAMP  1.0 0.0 1.0 0.0 1.0 0.0; #[Reconstructed PDG2011]
 0.0000384   J/psi   K0                 SVS;
 0.00079   J/psi   K-       K+        PHSP;
