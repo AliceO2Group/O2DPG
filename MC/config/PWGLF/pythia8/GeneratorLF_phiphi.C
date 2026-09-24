@@ -6,7 +6,7 @@
 #include "Pythia8/Pythia.h"
 #include "TRandom3.h"
 #include "TMath.h"
-#include "TF1.h"
+// #include "TF1.h"
 #include "TParticle.h"
 #include "TSystem.h"
 #if __has_include("SimulationDataFormat/MCGenStatus.h")
@@ -21,12 +21,12 @@
 #include <string>
 #endif
 
-Double_t FuncLavy(Double_t *x, Double_t *par)
-{
+// Double_t FuncLavy(Double_t *x, Double_t *par)
+// {
 
-    Double_t p = (par[0] - 1) * (par[0] - 2) * par[1] * x[0] / (((pow((1 + (((sqrt((par[2] * par[2]) + (x[0] * x[0]))) - par[2]) / (par[0] * par[3]))), par[0]) * (par[0] * par[3] * ((par[0] * par[3]) + (par[2] * (par[0] - 2)))))));
-    return (p);
-}
+//     Double_t p = (par[0] - 1) * (par[0] - 2) * par[1] * x[0] / (((pow((1 + (((sqrt((par[2] * par[2]) + (x[0] * x[0]))) - par[2]) / (par[0] * par[3]))), par[0]) * (par[0] * par[3] * ((par[0] * par[3]) + (par[2] * (par[0] - 2)))))));
+//     return (p);
+// }
 
 class GeneratorPhiResonance : public o2::eventgen::GeneratorPythia8
 {
@@ -77,15 +77,15 @@ public:
         // // Thermal pT distribution for phi-phi resonance
         // mThermal = new TF1("mThermal", "x*sqrt(x*x+[0]*[0])*exp(-sqrt(x*x+[0]*[0])/[1])", mPtMin, mPtMaxPhiPhi);
 
-        // Lévy-Tsallis pT distribution for direct phi
-        mLevyTsallis = new TF1("mLevyTsallis", FuncLavy, mPtMin, 100.0, 4);
+        // // Lévy-Tsallis pT distribution for direct phi
+        // mLevyTsallis = new TF1("mLevyTsallis", FuncLavy, mPtMin, 100.0, 4);
 
-        mLevyTsallis->SetParameters(
-            7.60279,   // n
-            0.0374237, // dN/dy
-            1.01946,   // mass
-            0.338379   // T
-        );
+        // mLevyTsallis->SetParameters(
+        //     7.60279,   // n
+        //     0.0374237, // dN/dy
+        //     1.01946,   // mass
+        //     0.338379   // T
+        // );
     }
 
     Bool_t generateEvent() override
@@ -193,7 +193,8 @@ private:
             }
             else
             {
-                pt = mLevyTsallis->GetRandom();
+                // pt = mLevyTsallis->GetRandom();
+                pt = gRandom->Uniform(mPtMin, 100.0); // Falling back to flat pT due to low statistics in high pT
             }
 
             const double px = pt * std::cos(phi);
@@ -227,7 +228,7 @@ private:
     Pythia8::Pythia pythiaObjectMinimumBias;
 
     // TF1 *mThermal;
-    TF1 *mLevyTsallis;
+    // TF1 *mLevyTsallis;
 };
 
 /// Entry point for o2-sim
