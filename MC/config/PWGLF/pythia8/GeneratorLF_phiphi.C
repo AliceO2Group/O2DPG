@@ -25,11 +25,11 @@ class GeneratorPhiResonance : public o2::eventgen::GeneratorPythia8
 {
 public:
     GeneratorPhiResonance(int resoPDG = 999999,
-                          float ptMin = 0.0, float ptMax = 50.0,
+                          float ptMin = 0.0, float ptMax = 50.0, float ptMaxPhi = 100.0,
                           float yMin = -1.0, float yMax = 1.0,
                           std::string pythiaCfgMb = "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/pythia8/generator/pythia8_inel_136tev.cfg",
                           int signalInterval = 3)
-        : GeneratorPythia8(), mResoPDG(resoPDG), mPtMin(ptMin), mPtMaxPhiPhi(ptMax), mYMin(yMin), mYMax(yMax), mSignalInterval(signalInterval)
+        : GeneratorPythia8(), mResoPDG(resoPDG), mPtMin(ptMin), mPtMaxPhiPhi(ptMax), mPtMaxPhi(ptMaxPhi), mYMin(yMin), mYMax(yMax), mSignalInterval(signalInterval)
     {
 
         // 1. Define Custom Signal Resonance (PDG: 999999) decay into standard Phis (333 333)
@@ -178,7 +178,7 @@ private:
             }
             else
             {
-                pt = gRandom->Uniform(mPtMin, 100.0);
+                pt = gRandom->Uniform(mPtMin, mPtMaxPhi);
             }
 
             const double px = pt * std::cos(phi);
@@ -207,14 +207,14 @@ private:
     int mEventCounter = 0;
     int mResoPDG;
     int mSignalInterval;
-    float mPtMin, mPtMaxPhiPhi, mYMin, mYMax;
+    float mPtMin, mPtMaxPhiPhi, mPtMaxPhi, mYMin, mYMax;
 
     Pythia8::Pythia mPythiaGun;
     Pythia8::Pythia pythiaObjectMinimumBias;
 };
 
 /// Entry point for o2-sim
-FairGenerator *generatePhiResonanceGun(int resoPDG = 999999, float ptMin = 0.0, float ptMax = 50.0, float yMin = -1.0, float yMax = 1.0, std::string pythiaCfgMb = "", int signalInterval = 3)
+FairGenerator *generatePhiResonanceGun(int resoPDG = 999999, float ptMin = 0.0, float ptMax = 50.0, float ptMaxPhi = 100.0, float yMin = -1.0, float yMax = 1.0, std::string pythiaCfgMb = "", int signalInterval = 3)
 {
-    return new GeneratorPhiResonance(resoPDG, ptMin, ptMax, yMin, yMax, pythiaCfgMb, signalInterval);
+    return new GeneratorPhiResonance(resoPDG, ptMin, ptMax, ptMaxPhi, yMin, yMax, pythiaCfgMb, signalInterval);
 }
