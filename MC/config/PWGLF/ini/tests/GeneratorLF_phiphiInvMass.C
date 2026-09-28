@@ -76,10 +76,30 @@ int External()
                             for (int k = phiTrack.getFirstDaughterTrackId(); k <= phiTrack.getLastDaughterTrackId(); ++k)
                             {
                                 auto grandDauPdg = tracks->at(k).GetPdgCode();
-                                if (grandDauPdg == 321) ++nKPlusFromResonancePhi;
-                                if (grandDauPdg == -321) ++nKMinusFromResonancePhi;
+                                if (grandDauPdg == 321)
+                                    ++nKPlusFromResonancePhi;
+                                if (grandDauPdg == -321)
+                                    ++nKMinusFromResonancePhi;
                             }
                         }
+                    }
+                }
+            }
+
+            else if (pdg == 888888)
+            {
+                ++nDirectInjectedPhi;
+                hasInjection = true;
+
+                if (track.getFirstDaughterTrackId() >= 0)
+                {
+                    for (int j = track.getFirstDaughterTrackId(); j <= track.getLastDaughterTrackId(); ++j)
+                    {
+                        auto dauPdg = tracks->at(j).GetPdgCode();
+                        if (dauPdg == 321)
+                            ++nKPlusFromDirectPhi;
+                        if (dauPdg == -321)
+                            ++nKMinusFromDirectPhi;
                     }
                 }
             }
@@ -96,36 +116,18 @@ int External()
                     continue;
                 }
 
-                bool isDirectInjected = (motherId < 0);
+                // Minimum Bias Phi
+                ++nMBPhi;
 
-                if (isDirectInjected)
+                if (track.getFirstDaughterTrackId() >= 0)
                 {
-                    ++nDirectInjectedPhi;
-                    hasInjection = true;
-
-                    if (track.getFirstDaughterTrackId() >= 0)
+                    for (int j = track.getFirstDaughterTrackId(); j <= track.getLastDaughterTrackId(); ++j)
                     {
-                        for (int j = track.getFirstDaughterTrackId(); j <= track.getLastDaughterTrackId(); ++j)
-                        {
-                            auto dauPdg = tracks->at(j).GetPdgCode();
-                            if (dauPdg == 321) ++nKPlusFromDirectPhi;
-                            if (dauPdg == -321) ++nKMinusFromDirectPhi;
-                        }
-                    }
-                }
-                else
-                {
-                    // Minimum Bias Phi
-                    ++nMBPhi;
-
-                    if (track.getFirstDaughterTrackId() >= 0)
-                    {
-                        for (int j = track.getFirstDaughterTrackId(); j <= track.getLastDaughterTrackId(); ++j)
-                        {
-                            auto dauPdg = tracks->at(j).GetPdgCode();
-                            if (dauPdg == 321) ++nKPlusFromMBPhi;
-                            if (dauPdg == -321) ++nKMinusFromMBPhi;
-                        }
+                        auto dauPdg = tracks->at(j).GetPdgCode();
+                        if (dauPdg == 321)
+                            ++nKPlusFromMBPhi;
+                        if (dauPdg == -321)
+                            ++nKMinusFromMBPhi;
                     }
                 }
             }
