@@ -218,7 +218,7 @@ Decay B_s0
 
 0.000353     J/psi       eta'                               SVS;
 0.000445     J/psi       eta                                SVS;
-0.00026     J/psi        f'_2                                SVS;
+0.00026     J/psi        f'_2                               PHSP;
 0.001010000 J/psi   phi                                     SVV_HELAMP  1.0 0.0 1.0 0.0 1.0 0.0; #[Reconstructed PDG2011]
 0.0000384   J/psi       K0                                 SVS;
 0.00079     J/psi       K-          K+                     PHSP;
@@ -266,7 +266,7 @@ Decay anti-B_s0
 ###
 0.000353   J/psi   eta'               SVS;
 0.000445   J/psi   eta                SVS;
-0.00026   J/psi        f'_2                                SVS;
+0.00026   J/psi        f'_2           PHSP;
 0.001010000 J/psi   phi                                     SVV_HELAMP  1.0 0.0 1.0 0.0 1.0 0.0; #[Reconstructed PDG2011]
 0.0000384   J/psi   K0                 SVS;
 0.00079   J/psi   K-       K+        PHSP;
@@ -298,10 +298,10 @@ Decay Lambda_b0
 0.00015    Lambda0         psi(2S)                      PHSP;
 0.0003     Lambda0         J/psi                         PHSP;
 0.000012   Lambda0         J/psi   phi                 PHSP;
-0.000026   p          J/psi   pi-                 PHSP;
-0.00032    p          J/psi   K-                 PHSP;
-0.000066   p          J/psi   pi-  pi+  K-        PHSP;
-0.000066    p          psi(2S)   K-                 PHSP;
+0.000026   p+          J/psi   pi-                 PHSP;
+0.00032    p+          J/psi   K-                 PHSP;
+0.000066   p+          J/psi   pi-  pi+  K-        PHSP;
+0.000066    p+          psi(2S)   K-                 PHSP;
   0.0000760   chi_c1   p+       K-      PHSP;
   0.0000050   chi_c1   p+       pi-     PHSP;
   0.0000770   chi_c2   p+       K-      PHSP;
@@ -313,10 +313,10 @@ Decay anti-Lambda_b0
 0.00015    anti-Lambda0    psi(2S)                      PHSP;
 0.0003    anti-Lambda0    J/psi                        PHSP;
 0.000012    Lambda0         J/psi   phi                 PHSP;
-0.000026   anti-p          J/psi   pi+                 PHSP;
-0.00032    anti-p          J/psi   K+                 PHSP;
-0.000066   anti-p          J/psi   pi-  pi+  K+        PHSP;
-0.000066   anti-p          psi(2S)   K+                 PHSP;
+0.000026   anti-p-     J/psi   pi+                 PHSP;
+0.00032    anti-p-     J/psi   K+                 PHSP;
+0.000066   anti-p-     J/psi   pi-  pi+  K+        PHSP;
+0.000066   anti-p-     psi(2S)   K+                 PHSP;
   0.0000760   chi_c1   anti-p-  K+      PHSP;
   0.0000050   chi_c1   anti-p-  pi+     PHSP;
   0.0000770   chi_c2   anti-p-  K+      PHSP;
