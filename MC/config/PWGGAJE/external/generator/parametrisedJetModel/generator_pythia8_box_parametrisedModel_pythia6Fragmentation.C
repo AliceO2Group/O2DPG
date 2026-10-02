@@ -26,7 +26,8 @@ using namespace Pythia8;
 // #include "SimulationDataFormat/MCEventHeader.h"
 
 // Input to simulation:
-// inputFilePathName file is expected to be a json file with the structure like so:
+// inputFilePathName file is expected to be a json file with the structure like
+// so:
 //  {
 //    "simLog": false,
 //    "sglGenRAA": 0.45,
@@ -37,7 +38,10 @@ using namespace Pythia8;
 //    "fallSpecterAffinePowerConstantTerm": -5.476804,
 //    "fallSpecterAffinePowerSlope": 0.001110,
 //    "bkgAveragePt": 0.670,
-//    "collTotalMultWithBkg": 2000
+//    "collMultPowerLawAmplitude": ?,
+//    "collMultPowerLawExponent": ?,
+//    "collMultMin": ?,
+//    "collMultMax": ?
 //  }
 // can be uploaded to grid using for example: alien.py cp
 // file:/local/path/parametrisedModel_PbPb_5p36TeV_cent0010.json
@@ -120,7 +124,14 @@ public:
     mFallSpecterAffinePowerConstantTerm = jsonDocument[mConfigurableSimParameterNames.at(5).c_str()].GetDouble();
     mFallSpecterAffinePowerSlope = jsonDocument[mConfigurableSimParameterNames.at(6).c_str()].GetDouble();
     mBkgAveragePt = jsonDocument[mConfigurableSimParameterNames.at(7).c_str()].GetDouble();
-    mCollTotalMultWithBkg = jsonDocument[mConfigurableSimParameterNames.at(8).c_str()].GetDouble();
+    mCollMultPowerLawAmplitude =
+        jsonDocument[mConfigurableSimParameterNames.at(8).c_str()].GetDouble();
+    mCollMultPowerLawExponent =
+        jsonDocument[mConfigurableSimParameterNames.at(9).c_str()].GetDouble();
+    mCollMultMin =
+        jsonDocument[mConfigurableSimParameterNames.at(10).c_str()].GetInt();
+    mCollMultMax =
+        jsonDocument[mConfigurableSimParameterNames.at(11).c_str()].GetInt();
 
     // clean up
     std::fclose(fjson);
@@ -133,13 +144,24 @@ public:
     cout << "param retrieved: mFallSpecterAffinePowerConstantTerm = " << mFallSpecterAffinePowerConstantTerm << endl;
     cout << "param retrieved: mFallSpecterAffinePowerSlope = " << mFallSpecterAffinePowerSlope << endl;
     cout << "param retrieved: mBkgAveragePt = " << mBkgAveragePt << endl;
-    cout << "param retrieved: mCollTotalMultWithBkg = " << mCollTotalMultWithBkg << endl;
+    cout << "param retrieved: mCollMultPowerLawAmplitude = "
+         << mCollMultPowerLawAmplitude << endl;
+    cout << "param retrieved: mCollMultPowerLawExponent = "
+         << mCollMultPowerLawExponent << endl;
+    cout << "param retrieved: mcollMultMin = " << mCollMultMin << endl;
+    cout << "param retrieved: mcollMultMax = " << mCollMultMax << endl;
 
-    // thermal background function
+    // thermal background pdf
     mBoltzmannPDF = new TF1("f1", "[0]*[0]*x*exp(-[0]*x)", mBkgGenPtMin, mPtInfinity);
     mBoltzmannPDF->SetParameter(0, 2. / mBkgAveragePt);
 
-    // jet signal function
+    // collision multiplicity pdf
+    mCollisionMultPDF =
+        new TF1("f1", "exp([0])*pow(x,[1])", mCollMultMin, mCollMultMax);
+    mCollisionMultPDF->SetParameter(0, mCollMultPowerLawAmplitude);
+    mCollisionMultPDF->SetParameter(1, mCollMultPowerLawExponent);
+
+    // jet signal pdf
     // this thesis says that the jet distrib used to sample parton pt is
     // actually full jet -> solves neutral particle fragments issue (better than
     // scaling) https://drupal.star.bnl.gov/STAR/files/phd_thesis_rusnak.pdf for
@@ -295,7 +317,24 @@ public:
       if (mDebug) {
         cout << "####################### Adding Thermal Background #######################" << endl;
       }
-      for (int iBkg{0}; iBkg < mCollTotalMultWithBkg - nHardParticles; ++iBkg) {
+
+      int mCollTotalMultWithBkg = 0;
+      if (std::abs(mCollMultMax - mCollMultMin) == 0) {
+        mCollTotalMultWithBkg = mCollMultMin;
+      } else {
+        mCollTotalMultWithBkg =
+            mCollisionMultPDF->GetRandom(mCollMultMin, mCollMultMax);
+      }
+
+      if (mDebug) {
+        cout << "mCollTotalMultWithBkg = " << mCollTotalMultWithBkg << endl;
+      }
+
+      int nBkgParticles = (mCollTotalMultWithBkg - nHardParticles) > 0
+                              ? mCollTotalMultWithBkg - nHardParticles
+                              : 0;
+
+      for (int iBkg{0}; iBkg < nBkgParticles; ++iBkg) {
         const double bkgPt = mBoltzmannPDF->GetRandom(mBkgGenPtMin, mPtInfinity);
         const double bkgEta = gRandom->Uniform(mGenMinEta, mGenMaxEta);
         const double bkgPhi = gRandom->Uniform(0, o2::constants::math::TwoPI);
@@ -347,8 +386,20 @@ private:
 
   const double mPtInfinity = 300; // maximum pt (in GeV/c) for generated particles, and upper pT limit for integral and TF1 purposes; too high and GetRandom struggles
   const double mGenMinEta = -0.9; /// minimum pseudorapidity for generated particles
-  const double mGenMaxEta = +0.9; /// maximum pseudorapidity for generated particles
-  int mCollTotalMultWithBkg; /// total multiplicity of the collision
+  const double mGenMaxEta =
+      +0.9; /// maximum pseudorapidity for generated particles
+
+  TF1 *mCollisionMultPDF; /// TF1 to store pdf function from which collision
+                          /// multiplicity is drawn
+  double mCollMultPowerLawAmplitude; /// collision total multiplicity: power law
+                                     /// amplitude of the PDF
+  double mCollMultPowerLawExponent;  /// collision total multiplicity: power law
+                                     /// exponent of the PDF
+  int mCollMultMin; /// collision total multiplicity: minimum abscissa of the
+                    /// PDF
+  int mCollMultMax; /// collision total multiplicity: maximum abscissa of the
+                    /// PDF
+
   bool mGenerateSignal = true; /// boolean to request (or not) the generation of the jet signal
   bool mGenerateUE = false; /// boolean to request (or not) embedding of the jet signal inside underlying event modelled by a thermal background; if mGenerateSignal = false, only the UE is generated
   const std::vector<std::string> mConfigurableSimParameterNames = {
@@ -360,7 +411,10 @@ private:
       "fallSpecterAffinePowerConstantTerm",
       "fallSpecterAffinePowerSlope",
       "bkgAveragePt",
-      "collTotalMultWithBkg"};
+      "collMultPowerLawAmplitude",
+      "collMultPowerLawExponent",
+      "collMultMin",
+      "collMultMax"};
 
   /////////////////////////////////////////////
   /////// Thermal background parameters ///////
