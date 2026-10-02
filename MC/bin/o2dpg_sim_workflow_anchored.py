@@ -327,7 +327,7 @@ def milliseconds_to_orbits(milliseconds):
     """
     return int(math.ceil(1000. * milliseconds / LHCOrbitMUS))
 
-def shift_anchor_past_ITS_rampup(run_start, first_orbit, ITS_rampup):
+def shift_anchor_past_ITS_rampup(run_start, first_orbit, orbitsPerTF, ITS_rampup):
     """
     Moves the anchoring point past the ITS ramp-up period, in both of its
     coordinates, and returns the pair (start of run in ms, first orbit).
@@ -336,7 +336,10 @@ def shift_anchor_past_ITS_rampup(run_start, first_orbit, ITS_rampup):
     timestamp leaves a job at production offset 0 inside the ramp, where the ITS
     time-dead map masks every chip.
     """
-    return run_start + ITS_rampup, first_orbit + milliseconds_to_orbits(ITS_rampup)
+    # convert ITS_rampup to orbits multiple to orbitsPerTF
+    rampupOrbits = ((milliseconds_to_orbits(ITS_rampup) + orbitsPerTF - 1) // orbitsPerTF ) * orbitsPerTF
+    
+    return run_start + int(rampupOrbits * LHCOrbitMUS / 1000.), first_orbit + rampupOrbits
 
 def retrieve_MinBias_CTPScaler_Rate(raw_rate_at, finaltime, trig_eff_arg, NBunches, ColSystem, eCM, run_number = -1):
     """
@@ -611,7 +614,7 @@ def main():
     # Adjust the anchoring point using the ITS ramp-up period
     ITS_rampup = retrieve_ITS_RampDuration(ccdbreader, run_start)
     print(f"ITS ramp-up time: {ITS_rampup} ms")
-    effective_run_start, effective_first_orbit = shift_anchor_past_ITS_rampup(run_start, GLOparams["FirstOrbit"], ITS_rampup)
+    effective_run_start, effective_first_orbit = shift_anchor_past_ITS_rampup(run_start, GLOparams["FirstOrbit"], GLOparams["OrbitsPerTF"], ITS_rampup)
     mid_run_timestamp = (effective_run_start + run_end) // 2
 
     # --------
