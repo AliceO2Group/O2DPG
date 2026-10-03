@@ -28,11 +28,8 @@ int External()
     int nKPlusFromResonancePhi = 0;
     int nKMinusFromResonancePhi = 0;
 
-    int nDirectInjectedPhi = 0;
     int nMBPhi = 0;
 
-    int nKPlusFromDirectPhi = 0;
-    int nKMinusFromDirectPhi = 0;
     int nKPlusFromMBPhi = 0;
     int nKMinusFromMBPhi = 0;
 
@@ -86,24 +83,6 @@ int External()
                 }
             }
 
-            else if (pdg == 888888)
-            {
-                ++nDirectInjectedPhi;
-                hasInjection = true;
-
-                if (track.getFirstDaughterTrackId() >= 0)
-                {
-                    for (int j = track.getFirstDaughterTrackId(); j <= track.getLastDaughterTrackId(); ++j)
-                    {
-                        auto dauPdg = tracks->at(j).GetPdgCode();
-                        if (dauPdg == 321)
-                            ++nKPlusFromDirectPhi;
-                        if (dauPdg == -321)
-                            ++nKMinusFromDirectPhi;
-                    }
-                }
-            }
-
             // 2. Process Phi (333) Mesons
             else if (pdg == 333)
             {
@@ -149,12 +128,7 @@ int External()
     std::cout << "  -> Decayed to K+: " << nKPlusFromResonancePhi << "\n";
     std::cout << "  -> Decayed to K-: " << nKMinusFromResonancePhi << "\n\n";
 
-    std::cout << "--- 2. DIRECTLY INJECTED PHI (333) ---\n";
-    std::cout << "Total Directly Injected Phi (333): " << nDirectInjectedPhi << "\n";
-    std::cout << "  -> Decayed to K+: " << nKPlusFromDirectPhi << "\n";
-    std::cout << "  -> Decayed to K-: " << nKMinusFromDirectPhi << "\n\n";
-
-    std::cout << "--- 3. MINIMUM BIAS PHI (333) ---\n";
+    std::cout << "--- 2. MINIMUM BIAS PHI (333) ---\n";
     std::cout << "Total Minimum Bias Phi (333): " << nMBPhi << "\n";
     std::cout << "  -> Decayed to K+: " << nKPlusFromMBPhi << "\n";
     std::cout << "  -> Decayed to K-: " << nKMinusFromMBPhi << "\n";
