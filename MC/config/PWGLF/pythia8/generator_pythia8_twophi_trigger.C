@@ -71,7 +71,7 @@ protected:
 
     bool generateEvent() override
     {
-        fmt::printf(">> Generating event %d\n", mGeneratedEvents);
+        // fmt::printf(">> Generating event %d\n", mGeneratedEvents);
 
         bool genOk = false;
         int localCounter{0};
@@ -82,7 +82,7 @@ protected:
         if (mGapSize > 0 && (mGeneratedEvents % (mGapSize + 1) < mGapSize))
         {
             genOk = GeneratorPythia8::generateEvent();
-            fmt::printf(">> Gap-event (no phi check)\n");
+            // fmt::printf(">> Gap-event (no phi check)\n");
         }
         else
         {
@@ -99,7 +99,7 @@ protected:
                 fmt::printf("Failed to generate triggered event after %d tries\n", kMaxTries);
                 return false;
             }
-            fmt::printf(">> Triggered event: event accepted after %d iterations (double phi(1020))\n", localCounter);
+            // fmt::printf(">> Triggered event: event accepted after %d iterations (double phi(1020))\n", localCounter);
         }
 
         notifySubGenerator(0);

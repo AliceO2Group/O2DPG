@@ -98,6 +98,11 @@ public:
             // Resonant signal -> Decays into 333 333
             injectParticle(mResoPDG, 1);
         }
+        else if (mSignalInterval <= 0)
+        {
+            // Continuous signal -> Decays into 333 333
+            injectParticle(mResoPDG, 1);
+        }
 
         // 4. Force Decay of injected particles using Pythia's Decayer
         mPythiaGun.moreDecays();
