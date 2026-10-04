@@ -86,11 +86,9 @@ def ccdb_cross_check(path, not_after, timeout=15):
 
     as_of = [o for o in objects if o.get("Created", 0) <= not_after]
     newest = max(objects, key=lambda o: o.get("Created", 0))
-    result = {"newest": newest, "as_of": None, "outdated": False}
-    if as_of:
-        result["as_of"] = max(as_of, key=lambda o: o.get("Created", 0))
-        result["outdated"] = newest["Created"] > result["as_of"]["Created"]
-    return result
+    pinned = max(as_of, key=lambda o: o.get("Created", 0)) if as_of else None
+    outdated = pinned is not None and newest["Created"] > pinned["Created"]
+    return {"newest": newest, "as_of": pinned, "outdated": outdated}
 
 
 def describe_object(o):
