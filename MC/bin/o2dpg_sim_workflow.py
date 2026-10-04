@@ -242,9 +242,15 @@ if args.overwrite_config != '':
    merge_dicts(anchorConfig, config_overwrite)
 
 async_envfile = 'env_async.env' if environ.get('ALIEN_JDL_O2DPG_ASYNC_RECO_TAG') is not None else None
-# Check if either ITS or MFT are in the staggered mode (either from the async reco workflow or imposed externally)
+
+# Check if either ITS or MFT are in the staggered mode (either from the async reco workflow or imposed externally).
+# Note thas some QC tracks at the moment need to be suppressed in this mode
 staggITS = ' --enable-its-staggering ' if environ.get('ALIEN_JDL_ITS_STAGGERED') == '1' and option_if_available('o2-its-reco-workflow', '--enable-its-staggering', envfile=async_envfile) != '' else ''
-staggMFT = ' --enable-mft-staggering ' if environ.get('ALIEN_JDL_MFT_STAGGERED') == '1' and option_if_available('o2-mft-reco-workflow', '--enable-mft-staggering', envfile=async_envfile) != '' else ''
+# MFT still needs to update its reconstruction to account for per-layer input, uncomment line below whtb it is ready and remove "Ignoring ..." stuff.
+#staggMFT = ' --enable-mft-staggering ' if environ.get('ALIEN_JDL_MFT_STAGGERED') == '1' and option_if_available('o2-mft-reco-workflow', '--enable-mft-staggering', envfile=async_envfile) != '' else ''
+#if environ.get('ALIEN_JDL_MFT_STAGGERED') == '1':
+#   print ("Ignoring ALIEN_JDL_MFT_STAGGERED as the MFT reconstruction is not yet ready to take it")
+staggMFT = ''
 
 # We still may need adjust configurations manually for consistency:
 #
@@ -1954,13 +1960,14 @@ for tf in range(1, NTIMEFRAMES + 1):
      ### MFT
 
      # to be enabled once MFT Digits should run 5 times with different configurations
-     if isActive("MFT"):
+     # At the moment QC does not support per-layer digits/clusters, disable these tasks if staggering is requested
+     if isActive("MFT") and not staggMFT:
        for flp in range(5):
          addQCPerTF(taskName='mftDigitsQC' + str(flp),
-                    needs=[getDigiTaskName("MFT")],
-                    readerCommand='o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root',
-                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-digits-' + str(flp) + '.json',
-                    objectsFile='mftDigitsQC.root')
+                  needs=[getDigiTaskName("MFT")],
+                  readerCommand='o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root' + staggMFT,
+                  configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-digits-' + str(flp) + '.json',
+                  objectsFile='mftDigitsQC.root')
        addQCPerTF(taskName='mftClustersQC',
                 needs=[MFTRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types none --cluster-types MFT' + staggMFT,
@@ -2085,10 +2092,12 @@ for tf in range(1, NTIMEFRAMES + 1):
                 readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"' + staggITS,
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
 
-     addQCPerTF(taskName='ITSTracksClustersQC',
-                needs=[ITSRECOtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"' + staggITS,
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json')
+     # At the moment QC does not support per-layer digits/clusters, disable these tasks if staggering is requested
+     if not staggITS:
+         addQCPerTF(taskName='ITSTracksClustersQC',
+                    needs=[ITSRECOtask['name']],
+                    readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"' + staggITS,
+                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json')
 
      ### CPV
      if isActive('CPV'):
