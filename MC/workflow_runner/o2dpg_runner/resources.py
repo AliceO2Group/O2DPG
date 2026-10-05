@@ -182,7 +182,7 @@ class ResourceManager:
         procs_parallel_max: int = 100,
         n_backfill_max: int = 1,
         backfill_cpu_factor: float = 1.5,
-        backfill_mem_factor: float = 1.5,
+        backfill_mem_factor: float = 1.0,
         dynamic_resources: bool = False,
         optimistic_resources: bool = False,
     ):
@@ -308,12 +308,12 @@ class ResourceManager:
         return self.boundaries.cpu_limit - self.cpu_booked
 
     def mem_free_default(self) -> float:
-        return self.boundaries.mem_limit - self.mem_booked
+        return self.boundaries.mem_limit - self.mem_booked - self.mem_booked_backfill
 
     def fits_default(self, res: TaskResources) -> bool:
         return (
             self.cpu_booked + res.cpu_assigned <= self.boundaries.cpu_limit
-            and self.mem_booked + res.mem_assigned <= self.boundaries.mem_limit
+            and self.mem_booked + self.mem_booked_backfill + res.mem_assigned <= self.boundaries.mem_limit
         )
 
     def fits_backfill(
