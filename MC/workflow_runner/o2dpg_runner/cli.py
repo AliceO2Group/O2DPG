@@ -60,6 +60,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--dynamic-resources", dest="dynamic_resources", action="store_true")
     p.add_argument("--optimistic-resources", dest="optimistic_resources", action="store_true")
     p.add_argument("--n-backfill", dest="n_backfill", type=int, default=1)
+    p.add_argument("--backfill-mem-factor", dest="backfill_mem_factor", type=float, default=1.0,
+                   help="memory over-commit allowed for backfill tasks, as a factor of --mem-limit")
     p.add_argument("--mem-limit", type=float, default=default_mem, help="in MB")
     p.add_argument("--cpu-limit", type=float, default=8)
 
@@ -135,6 +137,7 @@ def _args_to_config(ns: argparse.Namespace) -> RunnerConfig:
         mem_limit=ns.mem_limit,
         cpu_limit=ns.cpu_limit,
         n_backfill=ns.n_backfill,
+        backfill_mem_factor=ns.backfill_mem_factor,
         update_resources=ns.update_resources,
         dynamic_resources=ns.dynamic_resources,
         optimistic_resources=ns.optimistic_resources,
