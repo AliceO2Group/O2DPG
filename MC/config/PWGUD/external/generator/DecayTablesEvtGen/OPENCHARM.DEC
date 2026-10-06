@@ -50,4 +50,9 @@ Decay anti-K*0
 1.0      K-  pi+                        VSS;
 Enddecay
 
+Decay J/psi
+0.5     mu+  mu-                      PHOTOS   VLL;
+0.5     e+   e-                       PHOTOS   VLL;
+Enddecay
+
 End
