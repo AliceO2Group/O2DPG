@@ -32,7 +32,7 @@ using namespace Pythia8;
 //    "simLog": false,
 //    "sglGenRAA": 0.45,
 //    "sglGenTAA": 23.38,
-//    "sglCutoffSteepNess": 15,
+//    "sglCutoffSteepness": 15,
 //    "sglCutoffAbscissa": 10,
 //    "fallSpecterSlopeLog": 10.833274,
 //    "fallSpecterAffinePowerConstantTerm": -5.476804,
@@ -50,36 +50,40 @@ using namespace Pythia8;
 class GeneratorParametrisedJetModel : public o2::eventgen::GeneratorPythia8 {
 public:
   /// constructor
-  GeneratorParametrisedJetModel(std::string inputSimParametersPath, std::string inputSimParametersFileName, bool generateUE, bool generateSignal = true) : mInputSimParametersPath{inputSimParametersPath}, mInputSimParametersFileName{inputSimParametersFileName}, mGenerateUE{generateUE}, mGenerateSignal{generateSignal} {
+  GeneratorParametrisedJetModel(std::string inputSimParametersFileName, bool generateUE, bool generateSignal = true) : mInputSimParametersFileName{inputSimParametersFileName}, mGenerateUE{generateUE}, mGenerateSignal{generateSignal} {
 
     if (!generateUE && !generateSignal) {
       cout << "Both the UE and the signal generation should not be off at the same time" << endl;
       exit(1);
     }
 
-    std::string inputFilePathName = "alien://" + inputSimParametersPath + inputSimParametersFileName;
-    if (!gGrid) {
-      TGrid::Connect("alien://");
-      if (!gGrid) {
-        LOG(fatal) << "AliEn connection failed, check token.";
-        exit(1);
-      }
-    }
-    // fetch and copy the .json file to the sim work directory
-    std::string outputPath = "./";
-    TString aliencp = Form("alien_cp alien://%s%s file:%s%s", inputSimParametersPath.c_str(),
-                            inputSimParametersFileName.c_str(), outputPath.c_str(), 
-                            inputSimParametersFileName.c_str()); // an internal operation in ROOT that discards the
-                                                                 // JSON file directly (smaller than 300 bytes and if
-                                                                 // a bit bigger it would discard the file because it
-                                                                 // understands it's not a ROOT file), thus one
-                                                                 // cannot use TFile::Cp()
-    if (gSystem->Exec(aliencp.Data()) != 0) {
-      cout << "Error: Sim parameters .json file " << inputFilePathName << " does not exist!" << endl;
-      exit(1);
-    }
+    // old: retrieving from GRID; very flexible but to be avoided because poor reproduceability if file is changed etc for CI tests and analyses
+    // std::string inputFilePathName = "alien://" + inputSimParametersPath + inputSimParametersFileName;
+    // if (!gGrid) {
+    //   TGrid::Connect("alien://");
+    //   if (!gGrid) {
+    //     LOG(fatal) << "AliEn connection failed, check token.";
+    //     exit(1);
+    //   }
+    // }
+    // // fetch and copy the .json file to the sim work directory
+    // std::string outputPath = "./";
+    // TString aliencp = Form("alien_cp alien://%s%s file:%s%s", inputSimParametersPath.c_str(),
+    //                         inputSimParametersFileName.c_str(), outputPath.c_str(), 
+    //                         inputSimParametersFileName.c_str()); // an internal operation in ROOT that discards the
+    //                                                              // JSON file directly (smaller than 300 bytes and if
+    //                                                              // a bit bigger it would discard the file because it
+    //                                                              // understands it's not a ROOT file), thus one
+    //                                                              // cannot use TFile::Cp()
+    // if (gSystem->Exec(aliencp.Data()) != 0) {
+    //   cout << "Error: Sim parameters .json file " << inputFilePathName << " does not exist!" << endl;
+    //   exit(1);
+    // }
+    std::string O2DPG_ROOT(getenv("O2DPG_MC_CONFIG_ROOT"));
+    std::string inputSimParametersPath = O2DPG_ROOT+"/MC/config/PWGGAJE/external/generator/parametrisedJetModel/paramConfigs/";
+    std::string inputFilePathName = inputSimParametersPath + inputSimParametersFileName;
     // open the file
-    std::FILE *fjson = std::fopen(inputSimParametersFileName.c_str(), "r");
+    std::FILE *fjson = std::fopen(inputFilePathName.c_str(), "r");
     if (!fjson) {
       cout << "Could not open sim parameters file " << inputFilePathName << endl;
       exit(1);
@@ -118,7 +122,7 @@ public:
     // get parameters for sim
     mSglGenRAA = jsonDocument[mConfigurableSimParameterNames.at(0).c_str()].GetDouble();
     mSglGenTAA = jsonDocument[mConfigurableSimParameterNames.at(1).c_str()].GetDouble();
-    mSglCutoffSteepNess = jsonDocument[mConfigurableSimParameterNames.at(2).c_str()].GetDouble();
+    msglCutoffSteepness = jsonDocument[mConfigurableSimParameterNames.at(2).c_str()].GetDouble();
     mSglCutoffAbscissa = jsonDocument[mConfigurableSimParameterNames.at(3).c_str()].GetDouble();
     mFallSpecterSlopeLog = jsonDocument[mConfigurableSimParameterNames.at(4).c_str()].GetDouble();
     mFallSpecterAffinePowerConstantTerm = jsonDocument[mConfigurableSimParameterNames.at(5).c_str()].GetDouble();
@@ -138,7 +142,7 @@ public:
 
     cout << "param retrieved: mSglGenRAA = " << mSglGenRAA << endl;
     cout << "param retrieved: mSglGenTAA = " << mSglGenTAA << endl;
-    cout << "param retrieved: mSglCutoffSteepNess = " << mSglCutoffSteepNess << endl;
+    cout << "param retrieved: msglCutoffSteepness = " << msglCutoffSteepness << endl;
     cout << "param retrieved: mSglCutoffAbscissa = " << mSglCutoffAbscissa << endl;
     cout << "param retrieved: mFallSpecterSlopeLog = " << mFallSpecterSlopeLog << endl;
     cout << "param retrieved: mFallSpecterAffinePowerConstantTerm = " << mFallSpecterAffinePowerConstantTerm << endl;
@@ -173,7 +177,7 @@ public:
     mJetYieldFit = new TF1("f2", "[0]*[1]*exp(-exp(-[2]*(x-[3]))) * exp([4])*pow(x, [5]+[6]*x)", 0, mPtInfinity); // RAA * TAA * sigmoid(cutoff at [2])  * fit to fulljetSpectrum in pp PYTHIA
     mJetYieldFit->SetParameter(0, mSglGenRAA); // rAA (single value for all pt)
     mJetYieldFit->SetParameter(1, mSglGenTAA); // <tAA>
-    mJetYieldFit->SetParameter(2, mSglCutoffSteepNess); // steepness for the cutoff shape; higher is
+    mJetYieldFit->SetParameter(2, msglCutoffSteepness); // steepness for the cutoff shape; higher is
                                                         // steeper, but looks more and more like a
                                                         // Heavyside step function as it gets to 50 or 100
     mJetYieldFit->SetParameter(3, mSglCutoffAbscissa); // cutoffpoint of hard population, in GeV/c
@@ -378,7 +382,7 @@ public:
 
 private:
   bool mDebug = false; // setting to true will display particle lists
-  std::string mInputSimParametersPath, mInputSimParametersFileName; // input path and file name of .json used to read simulation parameters
+  std::string mInputSimParametersFileName; // input path and file name of .json used to read simulation parameters
 
   ////////////////////////////////////////////////
   ///////// Common signal and background parameters ////////
@@ -405,7 +409,7 @@ private:
   const std::vector<std::string> mConfigurableSimParameterNames = {
       "sglGenRAA",
       "sglGenTAA",
-      "sglCutoffSteepNess",
+      "sglCutoffSteepness",
       "sglCutoffAbscissa",
       "fallSpecterSlopeLog",
       "fallSpecterAffinePowerConstantTerm",
@@ -437,7 +441,7 @@ private:
   // signal fit
   double mSglGenRAA;
   double mSglGenTAA;
-  double mSglCutoffSteepNess; /// steepness for the cutoff shape; higher is  steeper, but looks more and more like a Heavyside step function as it gets to 50 or 100
+  double msglCutoffSteepness; /// steepness for the cutoff shape; higher is  steeper, but looks more and more like a Heavyside step function as it gets to 50 or 100
   double mSglCutoffAbscissa;  /// minimum pt (in GeV/c) for jet signal distribution; it's a smooth cutoff
   double mFallSpecterSlopeLog;
   double mFallSpecterAffinePowerConstantTerm;
@@ -452,8 +456,7 @@ private:
 };
 
 ///___________________________________________________________
-FairGenerator *generateParametrisedJetModel(std::string inputSimParametersPath, 
-                                            std::string inputSimParametersFileName, 
+FairGenerator *generateParametrisedJetModel(std::string inputSimParametersFileName, 
                                             bool generateUE, bool generateSignal = true) {
-  return new GeneratorParametrisedJetModel(inputSimParametersPath, inputSimParametersFileName, generateUE, generateSignal);
+  return new GeneratorParametrisedJetModel(inputSimParametersFileName, generateUE, generateSignal);
 }
