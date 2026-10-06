@@ -18,7 +18,7 @@ FairGenerator*
     gen->AddPdg(-15,1);
   }
   else if(configuration.find("kDpmjet") != std::string::npos){
-    gen->SetSizePdg(14);
+    gen->SetSizePdg(15);
     gen->AddPdg( 411,0);
     gen->AddPdg(-411,1);
     gen->AddPdg( 421,2);
@@ -33,6 +33,7 @@ FairGenerator*
     gen->AddPdg(-333,11);
     gen->AddPdg( 313,12);
     gen->AddPdg(-313,13);
+    gen->AddPdg( 443,14);
   }
   else{
     gen->SetPolarization(1); //Transversal
