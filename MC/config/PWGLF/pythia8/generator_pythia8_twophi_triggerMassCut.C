@@ -13,11 +13,12 @@
 #include <cmath>
 #include <fstream>
 #include <string>
+#include "TLorentzVector.h"
 #include <vector>
 using namespace Pythia8;
 #endif
 
-/// Event generator using Pythia ropes (Adapted from task generator_pythia8_doubleLambdas.C)
+/// Event generator using Pythia ropes
 /// Triggers events containing at least two generated phi(1020) mesons.
 
 class GeneratorPythia8DoublePhi : public o2::eventgen::GeneratorPythia8
@@ -75,7 +76,7 @@ protected:
 
         bool genOk = false;
         int localCounter{0};
-        constexpr int kMaxTries{100000};
+        constexpr int kMaxTries{300000};
 
         // If mGapSize <= 0, filter ALL events to contain two phis.
         // Otherwise, generate mGapSize gap events before 1 triggered event.
@@ -99,7 +100,7 @@ protected:
                 fmt::printf("Failed to generate triggered event after %d tries\n", kMaxTries);
                 return false;
             }
-            // fmt::printf(">> Triggered event: event accepted after %d iterations (double phi(1020))\n", localCounter);
+            fmt::printf(">> Triggered event: event accepted after %d iterations (double phi(1020))\n", localCounter);
         }
 
         notifySubGenerator(0);
@@ -109,7 +110,7 @@ protected:
 
     bool selectEvent(Pythia8::Event &event)
     {
-        int nPhi{0};
+        std::vector<TLorentzVector> phiCandidates;
 
         for (int i = 0; i < event.size(); i++)
         {
@@ -137,12 +138,30 @@ protected:
                 continue;
             }
 
-            nPhi++;
+            TLorentzVector phi;
+            phi.SetPtEtaPhiM(p.pT(), p.eta(), p.phi(), p.m());
+
+            phiCandidates.push_back(phi);
         }
-        if (nPhi < 2)
+        if (phiCandidates.size() < 2)
             return false;
 
-        return true;
+        // Check all possible phi-phi pairs
+        for (size_t i = 0; i < phiCandidates.size(); i++)
+        {
+            for (size_t j = i + 1; j < phiCandidates.size(); j++)
+            {
+                TLorentzVector phiPhi = phiCandidates[i] + phiCandidates[j];
+
+                double mass = phiPhi.M();
+                double pt = phiPhi.Pt();
+
+                if (mass > 2.4 && pt > 4.0)
+                    return true;
+            }
+        }
+
+        return false;
     }
 
 private:
