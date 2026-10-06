@@ -3,7 +3,7 @@
   "sglGenRAA": 0.45,
   "sglGenTAA": 23.38,
   "sglCutoffSteepness": 15,
-  "sglCutoffAbscissa": 7,
+  "sglCutoffAbscissa": 4,
   "fallSpecterSlopeLog": 6.619076,
   "fallSpecterAffinePowerConstantTerm": -3.918165,
   "fallSpecterAffinePowerSlope": -0.002032,
