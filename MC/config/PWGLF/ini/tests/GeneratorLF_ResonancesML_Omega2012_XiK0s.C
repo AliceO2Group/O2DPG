@@ -1,4 +1,4 @@
-// Test of the single-channel ML signal samples GeneratorLF_ResonancesML_*_pp1360.ini that redirect here.
+// Test of the single-channel ML signal samples GeneratorLF_ResonancesML_*.ini (all collision systems) that redirect here.
 // Every event carries exactly one injected parent (no gap); the parent and the intermediate resonances decayed by the
 // generator must follow the forced chain (charge conjugated for the negative-PDG parent). Parents with a mother come
 // from the underlying Pythia event, decay with the default table, and are only counted.
@@ -6,8 +6,8 @@ int External()
 {
   const std::string path{"o2sim_Kine.root"};
   const int parentPDG{123334};
-  const std::vector<int> daughtersOfPositive{3324, -321};
-  const std::map<int, std::vector<int>> intermediateDecaysOfPositive{{3324, {3312, 211}}};
+  const std::vector<int> daughtersOfPositive{3312, 310};
+  const std::map<int, std::vector<int>> intermediateDecaysOfPositive{};
   const std::set<int> selfConjugate{111, 113, 310};
   auto conjugate = [&](int pdg, int sign) { return (sign > 0 || selfConjugate.count(pdg)) ? pdg : -pdg; };
   auto sorted = [](std::vector<int> v) { std::sort(v.begin(), v.end()); return v; };
