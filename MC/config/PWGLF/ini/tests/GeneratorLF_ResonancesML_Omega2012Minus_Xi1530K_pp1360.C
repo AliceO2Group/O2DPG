@@ -1,4 +1,4 @@
-// Test of the single-channel ML signal samples GeneratorLF_ResonancesML_*.ini of this channel (both charges, all collision systems; the others redirect here).
+// Test of the single-channel ML signal samples GeneratorLF_ResonancesML_*.ini of this channel (both charges, pp 13.6 and 5.36 TeV; the others redirect here).
 // Every event carries exactly one injected parent (no gap); the parent and the intermediate resonances decayed by the
 // generator must follow the forced chain (charge conjugated for the negative-PDG parent). Parents with a mother come
 // from the underlying Pythia event, decay with the default table, and are only counted.
