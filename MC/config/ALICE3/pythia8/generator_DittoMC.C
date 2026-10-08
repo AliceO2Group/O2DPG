@@ -11,9 +11,9 @@
 // Ditto event generator
 class GeneratorDittoMC : public o2::eventgen::GeneratorPythia8
 {
- public:
+public:
   /// Constructor
-  explicit GeneratorDittoMC(const TString& tuneFile) : mGenerator(makeConfig(tuneFile))
+  explicit GeneratorDittoMC(const TString &tuneFile, const TString &signalFile) : mGenerator(makeConfig(tuneFile, signalFile))
   {
     // We use the Pythia8 event only as the container passed to the O2
     // GeneratorPythia8 machinery. Particle production is handled by Ditto.
@@ -31,22 +31,27 @@ class GeneratorDittoMC : public o2::eventgen::GeneratorPythia8
   /// Destructor
   ~GeneratorDittoMC() override = default;
 
- private:
+private:
   /// Build the Ditto runtime configuration.
-  static Ditto::Config makeConfig(const TString& tuneFile)
+  static Ditto::Config makeConfig(const TString &tuneFile, const TString &signalFile)
   {
-    if (tuneFile.IsNull()) {
+    if (tuneFile.IsNull())
+    {
       throw std::runtime_error("Ditto tune file must be specified");
     }
 
     Ditto::Config config;
     config.mTuneFile = tuneFile.Data();
+    config.mSignalFile = signalFile.Data();
 
     // Use the Grid process ID as the Ditto seed when available.
     // Outside the Grid, seed 0 is used.
-    if (const char* alienProcId = std::getenv("ALIEN_PROC_ID")) {
+    if (const char *alienProcId = std::getenv("ALIEN_PROC_ID"))
+    {
       config.mSeed = static_cast<std::uint64_t>(std::strtoull(alienProcId, nullptr, 10));
-    } else {
+    }
+    else
+    {
       config.mSeed = static_cast<std::uint64_t>(std::time(nullptr));
     }
 
@@ -58,7 +63,7 @@ class GeneratorDittoMC : public o2::eventgen::GeneratorPythia8
   Ditto::Generator mGenerator;
 };
 
-FairGenerator* generator_DittoMC(const TString& tuneFile)
+FairGenerator *generator_DittoMC(const TString &tuneFile, const TString &signalFile = "")
 {
-  return new GeneratorDittoMC(tuneFile);
+  return new GeneratorDittoMC(tuneFile, signalFile);
 }
