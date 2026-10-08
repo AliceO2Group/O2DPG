@@ -21,6 +21,7 @@ class RunnerConfig:
     mem_limit: float = 0.0  # MB; 0 means "auto from psutil"
     cpu_limit: float = 8.0
     n_backfill: int = 1
+    backfill_mem_factor: float = 1.0
     update_resources: Optional[str] = None
     dynamic_resources: bool = False
     optimistic_resources: bool = False

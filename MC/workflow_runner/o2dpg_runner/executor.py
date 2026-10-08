@@ -112,6 +112,7 @@ class WorkflowExecutor:
             mem_limit=config.mem_limit,
             procs_parallel_max=config.maxjobs,
             n_backfill_max=config.n_backfill,
+            backfill_mem_factor=config.backfill_mem_factor,
             dynamic_resources=config.dynamic_resources,
             optimistic_resources=config.optimistic_resources,
         )

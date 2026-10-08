@@ -135,3 +135,30 @@ def test_at_proc_cap():
         rm.resources[i].nice_value = rm.nice_default
         rm.book(i, rm.nice_default)
     assert rm.at_proc_cap()
+
+
+def test_default_gate_counts_memory_booked_in_backfill():
+    """Memory held by a backfill task must count against the default-tier gate."""
+    rm = _make_rm(cpu=8, mem=16000)
+    rm.add_task("a", None, 1, 1, 11000)
+    rm.add_task("b", None, 1, 1, 11000)
+    rm.resources[0].nice_value = rm.nice_backfill
+    rm.book(0, rm.nice_backfill)
+    assert rm.mem_booked == 0 and rm.mem_booked_backfill == 11000
+    assert not rm.fits_default(rm.resources[1])
+    assert rm.mem_free_default() == 5000
+
+
+def test_backfill_mem_factor_default_does_not_overcommit_memory():
+    rm = _make_rm(cpu=8, mem=16000)
+    rm.add_task("a", None, 1, 1, 9000)
+    rm.add_task("b", None, 1, 1, 9000)
+    rm.resources[0].nice_value = rm.nice_default
+    rm.book(0, rm.nice_default)
+    assert not rm.fits_backfill(rm.resources[1])
+    rm15 = _make_rm(cpu=8, mem=16000, backfill_mem_factor=1.5)
+    rm15.add_task("a", None, 1, 1, 9000)
+    rm15.add_task("b", None, 1, 1, 9000)
+    rm15.resources[0].nice_value = rm15.nice_default
+    rm15.book(0, rm15.nice_default)
+    assert rm15.fits_backfill(rm15.resources[1])
