@@ -280,7 +280,7 @@ Bool_t importParticles() override
 
         /// Establish if this particle comes from charm or beauty
         /// If not, ignore this particle and increase the number of discarded particles from the pp event
-        if(!(nEvsHF == 0 && iPart < 1) && !isFromCharmOrBeauty(iPart, particlesHfEvent)) {
+        if(!isFromCharmOrBeauty(iPart, particlesHfEvent)) {
             continue;
         }
         /// if we arrive here, then the current particle is from charm or beauty, keep it!
@@ -319,8 +319,8 @@ Bool_t importParticles() override
                 if(idLastMother != idFirstMotherOrig) {
                     idLastMother = findKey(mapHfParticles, idLastMother);
                     if(idLastMother < 0) {
-                        // second mother not found, we set it to 0
-                        idLastMother = 0;
+                        // second mother not found, we set it to -1
+                        idLastMother = -1;
                     }
                 } else {
                     /// idLastMother is equal to idFirstMother
@@ -352,10 +352,10 @@ Bool_t importParticles() override
                     foundAnyMother = true;
                 }
             }
-            // set last mother to 0 if no mother has been found so far
+            // set last mother to -1 if no mother has been found so far
             if (!foundAnyMother) {
-                idLastMother = 0;
-                idFirstMother = 0;
+                idLastMother = -1;
+                idFirstMother = -1;
             }
         }
 
@@ -364,10 +364,10 @@ Bool_t importParticles() override
         idLastDaughter = findKey(mapHfParticles, idLastDaughter);
 
         /// adjust the particle mother and daughter indices
-        particle.SetFirstMother((idFirstMother > 0) ? idFirstMother + offset : idFirstMother);
-        particle.SetLastMother((idLastMother > 0) ? idLastMother + offset : idLastMother);
-	    particle.SetFirstDaughter((idFirstDaughter > 0) ? idFirstDaughter + offset : idFirstDaughter);
-	    particle.SetLastDaughter((idLastDaughter > 0) ? idLastDaughter + offset : idLastDaughter);
+        particle.SetFirstMother((idFirstMother >= 0) ? idFirstMother + offset : idFirstMother);
+        particle.SetLastMother((idLastMother >= 0) ? idLastMother + offset : idLastMother);
+	    particle.SetFirstDaughter((idFirstDaughter >= 0) ? idFirstDaughter + offset : idFirstDaughter);
+	    particle.SetLastDaughter((idLastDaughter >= 0) ? idLastDaughter + offset : idLastDaughter);
 
         /// copy inside this.mParticles from mGeneratorEvHF.mParticles, i.e. the particles generated in mGeneratorEvHF
         mParticles.push_back(particle);
