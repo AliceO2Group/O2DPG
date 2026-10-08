@@ -25,14 +25,17 @@ class GeneratorPythia8DoublePhi : public o2::eventgen::GeneratorPythia8
 {
 public:
     /// Constructor
-    GeneratorPythia8DoublePhi(int gapSize = 0, double minPt = 0.0, double maxPt = 100.0, double maxEta = 0.8)
+    GeneratorPythia8DoublePhi(int gapSize = 0, double minPt = 0.0, double maxPt = 100.0, double maxEta = 0.8, double minPairMass = 2.4, double minPairPt = 6.0)
         : o2::eventgen::GeneratorPythia8(),
           mGapSize(gapSize),
           mMinPt(minPt),
           mMaxPt(maxPt),
-          mMaxEta(maxEta)
+          mMaxEta(maxEta),
+          mMinPairMass(minPairMass),
+          mMinPairPt(minPairPt)
     {
-        fmt::printf(">> Pythia8 generator: two phi(1020) mesons, gap = %d, minPtPhi = %f, maxPtPhi = %f, |etaPhi| < %f\n", gapSize, minPt, maxPt, maxEta);
+        fmt::printf(">> Pythia8 generator: two phi(1020) mesons, gap = %d, minPtPhi = %f, maxPtPhi = %f, |etaPhi| < %f, minPairMass = %f, minPairPt = %f\n",
+                    gapSize, minPt, maxPt, maxEta, minPairMass, minPairPt);
     }
     /// Destructor
     ~GeneratorPythia8DoublePhi() = default;
@@ -156,7 +159,7 @@ protected:
                 double mass = phiPhi.M();
                 double pt = phiPhi.Pt();
 
-                if (mass > 2.4 && pt > 4.0)
+                if (mass > mMinPairMass && pt > mMinPairPt)
                     return true;
             }
         }
@@ -169,13 +172,15 @@ private:
     double mMinPt{0.0};
     double mMaxPt{100.0};
     double mMaxEta{0.8};
+    double mMinPairMass{2.4};
+    double mMinPairPt{6.0};
     uint64_t mGeneratedEvents{0};
 };
 
 ///___________________________________________________________
-FairGenerator *generateDoublePhi(int gap = 0, double minPt = 0.0, double maxPt = 100.0, double maxEta = 0.8)
+FairGenerator *generateDoublePhi(int gap = 0, double minPt = 0.0, double maxPt = 100.0, double maxEta = 0.8, double minPairMass = 2.4, double minPairPt = 6.0)
 {
-    auto myGenerator = new GeneratorPythia8DoublePhi(gap, minPt, maxPt, maxEta);
+    auto myGenerator = new GeneratorPythia8DoublePhi(gap, minPt, maxPt, maxEta, minPairMass, minPairPt);
 
     myGenerator->readString("333:onMode = off");
     myGenerator->readString("333:onIfMatch = 321 -321");
