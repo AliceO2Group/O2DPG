@@ -73,8 +73,6 @@ class GeneratorHGPythia8 : public GeneratorPythia8
   void setSigmaHard(double sigma) { mSigmaHardIn = sigma; }
   /// Soft NN cross-section in mb
   void setSigmaSoft(double sigma) { mSigmaSoft = sigma; }
-  /// Impact-parameter dependent shadowing of the hard cross-section
-  void setShadowing(bool val) { mShadowing = val; }
   /// Include elastic NN scattering in the eikonal
   void setElastic(bool val) { mElastic = val; }
 
@@ -128,8 +126,7 @@ class GeneratorHGPythia8 : public GeneratorPythia8
 
     LOG(info) << "GeneratorHGPythia8: A = " << mA << ", B = " << mB << ", sqrt(s_NN) = " << energy
               << " GeV, sigma_hard = " << mSigmaHard << " mb, sigma_soft = " << mSigmaSoft
-              << " mb, b in [" << mBMin << ", " << mBMax << "] fm, shadowing " << mShadowing
-              << ", elastic " << mElastic;
+              << " mb, b in [" << mBMin << ", " << mBMax << "] fm, elastic " << mElastic;
     return true;
   }
 
@@ -212,13 +209,6 @@ class GeneratorHGPythia8 : public GeneratorPythia8
   /// Hard cross-section (pT > 2 GeV) in mb as a function of sqrt(s_NN), from the reference implementation
   double sigmaHardFromTable(double energy) const
   {
-    if (mShadowing) {
-      if (energy < 201) return 7.71968269;
-      if (energy < 2800) return 39.5451393;
-      if (energy < 5100) return 54.2068253;
-      if (energy < 8100) return 69.7713470;
-      return -1;
-    }
     if (energy < 20) return 0.161440969;
     if (energy < 40) return 1.07414019;
     if (energy < 64) return 2.32993174;
@@ -228,6 +218,7 @@ class GeneratorHGPythia8 : public GeneratorPythia8
     if (energy < 5500) return 130.82;
     if (energy < 6400) return 144.17;
     if (energy < 8100) return 166.184998;
+    if (energy < 9700) return 180.87;
     return -1;
   }
 
@@ -323,11 +314,7 @@ class GeneratorHGPythia8 : public GeneratorPythia8
         std::fill(mWounded[j].begin(), mWounded[j].end(), 0);
         std::fill(mWoundedBlackDisc[j].begin(), mWoundedBlackDisc[j].end(), 0);
       }
-      // shadowing of the hard cross-section depends on b only
-      const double rrb = TMath::Min(1., b * b / 35.2 / 1.44);
-      const double aphx = 0.1 * 4. / 3. * 4.92 * TMath::Sqrt(1. - rrb);
-      const double sigHS = mShadowing ? mSigmaHard - aphx * 103.65 : mSigmaHard;
-      const double gstot0 = mElastic ? 2. * (1. - TMath::Exp(-(mSigmaSoft + sigHS) / mSigmaSoft * eikonal(0.001))) : 1.;
+      const double gstot0 = mElastic ? 2. * (1. - TMath::Exp(-(mSigmaSoft + mSigmaHard) / mSigmaSoft * eikonal(0.001))) : 1.;
 
       mImpactParameter = b;
       mNcoll = mNcollHard = mNhard = mNcollBlackDisc = 0;
@@ -348,7 +335,7 @@ class GeneratorHGPythia8 : public GeneratorPythia8
           r2 /= b02;
           r2 /= gstot0;
           const double chi = eikonal(TMath::Sqrt(r2));
-          const double gs = 1. - TMath::Exp(-2. * (mSigmaSoft + sigHS) / mSigmaSoft * chi);
+          const double gs = 1. - TMath::Exp(-2. * (mSigmaSoft + mSigmaHard) / mSigmaSoft * chi);
           const double gstot = 2. * (1. - TMath::Sqrt(1. - gs));
           const double rantot = mRandom->Rndm() * gstot0;
           if (rantot > gstot && mElastic) {
@@ -361,7 +348,7 @@ class GeneratorHGPythia8 : public GeneratorPythia8
           mWounded[1][j] = 1;
           mNcoll++;
           // minijets
-          const double tt = 2. * chi * sigHS / mSigmaSoft;
+          const double tt = 2. * chi * mSigmaHard / mSigmaSoft;
           const double ts = 2. * chi;
           if (rantot < TMath::Exp(-tt) * (1. - TMath::Exp(-ts))) {
             nMPI[0]++;
@@ -416,7 +403,6 @@ class GeneratorHGPythia8 : public GeneratorPythia8
   double mSigmaHardIn = -1.;
   double mSigmaHard = -1.;
   double mSigmaSoft = 57.;
-  bool mShadowing = false;
   bool mElastic = false;
 
   // Glauber state
@@ -448,13 +434,12 @@ class GeneratorHGPythia8 : public GeneratorPythia8
 /// sigmaHard < 0: hard cross-section from the built-in sqrt(s_NN) table (up to 8.1 TeV).
 FairGenerator* generateHGPythia8(int A = 208, int B = 208, double bMin = 0., double bMax = -1.,
                                  double sigmaHard = -1., double sigmaSoft = 57.,
-                                 bool shadowing = false, bool elastic = false)
+                                 bool elastic = false)
 {
   auto gen = new o2::eventgen::GeneratorHGPythia8(A, B);
   gen->setImpactParameterRange(bMin, bMax);
   gen->setSigmaHard(sigmaHard);
   gen->setSigmaSoft(sigmaSoft);
-  gen->setShadowing(shadowing);
   gen->setElastic(elastic);
   return gen;
 }
