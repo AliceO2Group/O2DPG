@@ -797,6 +797,26 @@ if [[ $ADD_CALIB == "1" ]]; then
       export TPCTIMESERIES_MULT_MAX=$ALIEN_JDL_TPCTIMESERIESMULTMAX
     fi
   fi
+
+  # cosmic muons in collision data: matcher (TPC-only legs) + raw clusters of each cosmic -> o2_cosmics_full.root
+  if [[ -n ${ALIEN_JDL_EXTRACTCOSMICS:-} ]] ; then
+    echo "Adding cosmics matching and raw-cluster output in setenv_extra.sh"
+    export CALIB_ASYNC_EXTRACTCOSMICS=$ALIEN_JDL_EXTRACTCOSMICS
+    if [[ -n ${ALIEN_JDL_COSMICSPRESET:-} ]]; then
+      export COSMICS_PRESET=$ALIEN_JDL_COSMICSPRESET
+    fi
+    # optional: matcher settings on top of the preset (e.g. cosmicsMatch.minSeedDCAxyTOF=0), extra options (e.g. --debug-tree), and
+    # COSMICSPVVETO=0 to switch off the veto of legs belonging to primary-vertex contributors (on by default in calib-workflow.sh)
+    if [[ -n ${ALIEN_JDL_COSMICSCONFIG:-} ]]; then
+      export CONFIG_EXTRA_PROCESS_o2_cosmics_match_workflow+=";$ALIEN_JDL_COSMICSCONFIG"
+    fi
+    if [[ -n ${ALIEN_JDL_COSMICSARGS:-} ]]; then
+      export ARGS_EXTRA_PROCESS_o2_cosmics_match_workflow+=" $ALIEN_JDL_COSMICSARGS"
+    fi
+    if [[ -n ${ALIEN_JDL_COSMICSPVVETO:-} ]]; then
+      export COSMICS_PV_VETO=$ALIEN_JDL_COSMICSPVVETO
+    fi
+  fi
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
     export CCDB_POPULATOR_UPLOAD_PATH="file://$PWD"
   fi
