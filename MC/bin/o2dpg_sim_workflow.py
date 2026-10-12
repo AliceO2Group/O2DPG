@@ -534,6 +534,8 @@ includeLocalQC=args.include_local_qc=='True' or args.include_local_qc==True
 includeAnalysis = args.include_analysis
 includeTPCResiduals=True if environ.get('ALIEN_JDL_DOTPCRESIDUALEXTRACTION') == '1' else False
 includeTPCSyncMode=True if environ.get('ALIEN_JDL_DOTPCSYNCMODE') == '1' else False
+# store the MC truth of the residual tracks (branch trkMC of the trackData tree); needs an O2 version with --enable-mc
+includeTPCResidualsMC=True if environ.get('ALIEN_JDL_DOTPCRESIDUALEXTRACTIONMC') == '1' else False
 
 qcdir = "QC"
 if (includeLocalQC or includeFullQC) and not isdir(qcdir):
@@ -1875,7 +1877,8 @@ for tf in range(1, NTIMEFRAMES + 1):
            '--tracking-sources ' + scdcalib_track_sources,
            '--tracking-sources-map-extraction ' + scdcalib_track_extraction,
            '--sec-per-slot 1 ',
-           '--send-track-data'
+           '--send-track-data',
+           '--enable-mc' if includeTPCResidualsMC else ''
         ])
       workflow['stages'].append(SCDCALIBtask)
 
@@ -1898,7 +1901,8 @@ for tf in range(1, NTIMEFRAMES + 1):
            '--enable-track-input',
            '--output-dir ./',
            '--output-type ' +  scdaggreg_outputtype,
-           '--meta-output-dir /dev/null'
+           '--meta-output-dir /dev/null',
+           '--enable-mc' if includeTPCResidualsMC else ''
          ])
       workflow['stages'].append(SCDAGGREGtask)
 
