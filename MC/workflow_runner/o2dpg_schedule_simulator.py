@@ -261,7 +261,7 @@ def _build_rm(
     cpu_overrides: Optional[Dict[int, float]] = None,
     n_backfill_max: int = 0,
     backfill_cpu_factor: float = 1.5,
-    backfill_mem_factor: float = 1.5,
+    backfill_mem_factor: float = 1.0,
     maxjobs: int = 10_000,
 ) -> Tuple[ResourceManager, Set[int]]:
     """Fresh ResourceManager with no backfill tier and unlimited job slots.
@@ -374,7 +374,7 @@ def simulate(
     backfill_model: str = "off",
     n_backfill: int = 1,
     backfill_cpu_factor: float = 1.5,
-    backfill_mem_factor: float = 1.5,
+    backfill_mem_factor: float = 1.0,
     backfill_slowdown_factor: float = 1.15,
     maxjobs: int = 10_000,
 ) -> SimResult:
@@ -802,7 +802,7 @@ def optimize_workers(
     backfill_model: str = "off",
     n_backfill: int = 1,
     backfill_cpu_factor: float = 1.5,
-    backfill_mem_factor: float = 1.5,
+    backfill_mem_factor: float = 1.0,
     backfill_slowdown_factor: float = 1.15,
     maxjobs: int = 10_000,
 ) -> Tuple[Dict[str, int], float]:
@@ -911,7 +911,7 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Maximum concurrent backfill tasks when backfill simulation is enabled.")
     p.add_argument("--backfill-cpu-factor", type=float, default=1.5, metavar="X",
                    help="Total CPU oversubscription factor allowed for backfill admission.")
-    p.add_argument("--backfill-mem-factor", type=float, default=1.5, metavar="X",
+    p.add_argument("--backfill-mem-factor", type=float, default=1.0, metavar="X",
                    help="Total memory oversubscription factor allowed for backfill admission.")
     p.add_argument("--backfill-slowdown-factor", type=float, default=1.15, metavar="X",
                    help="Walltime multiplier applied to backfill tasks in "
