@@ -26,7 +26,6 @@ DVX=0.01
 DVY=0.01
 DVZ=6.00
 
-MODULES="--skipModules ZDC"
 
 # create workflow
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py \
@@ -37,7 +36,6 @@ ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py \
   -ns ${NSIGPTF} \
   -tf ${NTIMEFRAMES} \
   -e TGeant4 \
-  -mod "${MODULES}" \
   -interactionRate ${SIGINTRATE} \
   -confKey "HepMC.fileName="${FHEPMC}";HepMC.version=3;Diamond.width[0]="${DVX}";Diamond.width[1]="${DVY}";Diamond.width[2]="${DVZ}""
   

@@ -45,7 +45,7 @@ fi
 ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM ${CONFIG_ENERGY} -col pp -gen external -proc "jets"           \
                                             -ptHatMin ${PTHATMIN} -ptHatMax ${PTHATMAX}                       \
                                             -tf ${NTIMEFRAMES} -ns ${NSIGEVENTS} -e ${SIMENGINE}              \
-                                            -j ${NWORKERS} -mod "--skipModules ZDC"                           \
+                                            -j ${NWORKERS}                           \
                                             -interactionRate 500000 -confKey "Diamond.width[2]=6." ${SEED}    \
                                             -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHFTrigger_bbbar.ini \
                                             -weightPow ${WEIGHTPOW}

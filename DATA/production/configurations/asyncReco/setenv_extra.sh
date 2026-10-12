@@ -29,11 +29,15 @@ if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]] || [[ -z $RUN_BFIELD ]]; then
   export RUN_BFIELD=`cat BField.txt`
   export RUN_DETECTOR_LIST=`cat DetList.txt`
 fi
+
+BABSI=$(printf "%.0f" "${RUN_BFIELD#-}")
+[[ "$BABSI" -lt 12500 && "$BABSI" -gt 11500 ]] && LOWFIELD=1 || LOWFIELD=0
+
 echo -e "\n"
 echo "Printing run features"
 echo "DETECTOR LIST for current run ($RUNNUMBER) = $RUN_DETECTOR_LIST"
 echo "DURATION for current run ($RUNNUMBER) = $RUN_DURATION"
-echo "B FIELD for current run ($RUNNUMBER) = $RUN_BFIELD"
+echo "B FIELD for current run ($RUNNUMBER) = $RUN_BFIELD (LOWFIELD = ${LOWFIELD})"
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
 if (( $(echo "$RUN_IR <= 0" | bc -l) )); then
   echo "Changing run IR to 1 Hz, because $RUN_IR makes no sense"
@@ -147,8 +151,7 @@ fi
 # other settings
 echo RUN = $RUNNUMBER
 if [[ $RUNNUMBER -ge 521889 ]]; then
-  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --its-digits --mft-digits"
-  export DISABLE_DIGIT_CLUSTER_INPUT="--digits-from-upstream"
+  export ITSMFT_RECO_RERUN_CLUSTERIZER=1
   MAXBCDIFFTOMASKBIAS_ITS="ITSClustererParam.maxBCDiffToMaskBias=-10"    # this explicitly disables ITS masking
   MAXBCDIFFTOSQUASHBIAS_ITS="ITSClustererParam.maxBCDiffToSquashBias=10" # this explicitly enables ITS squashing
   MAXBCDIFFTOMASKBIAS_MFT="MFTClustererParam.maxBCDiffToMaskBias=-10"    # this explicitly disables MFT masking
@@ -286,7 +289,7 @@ isFT0inDataTaking=`echo $RUN_DETECTOR_LIST | grep FT0`
 # For runs shorter than 10 minutes we have only a single slot.
 # In that case we have to adopt the slot length in order to
 # set the maximum number of processed tracks per TF correctly
-if (( RUN_DURATION < 600 )); then
+if (( RUN_DURATION < 300 )); then
   export CALIB_TPC_SCDCALIB_SLOTLENGTH=$RUN_DURATION
 fi
 
@@ -332,6 +335,8 @@ if [[ "0$OLDVERSION" == "01" ]] && [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" ||
     fi
   fi
 fi
+
+EXTRA_PRIMVTX_TimeMargin=""
 
 # some settings in common between workflows and affecting ITS-TPC matching
 : ${CUT_MATCH_CHI2:=250}
@@ -392,6 +397,10 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
 
   if [[ -n "$ALIEN_JDL_TPCCLUSTERFILTER" ]]; then
     CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.tpcUseOldCPUDecoding=1;GPU_proc.tpcApplyClusterFilterOnCPU=$ALIEN_JDL_TPCCLUSTERFILTER;"
+  fi
+
+  if [[ -n "$ALIEN_JDL_TPCMEMORYSCALING" ]]; then
+    CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.memoryScalingFactor=$ALIEN_JDL_TPCMEMORYSCALING;"
   fi
 
   if [[ -n "$ALIEN_JDL_TPCCHICUTOPT" ]]; then # 0 or 1 to disable or enable (default) the chi2 cut both on one-side and smoothed Kalman chi2
@@ -531,7 +540,6 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   TRACKTUNETPCINNER="trackTuneParams.tpcCovInnerType=2;trackTuneParams.tpcCovInner[0]=0.05;trackTuneParams.tpcCovInner[1]=0.2;trackTuneParams.tpcCovInner[2]=0.0003;trackTuneParams.tpcCovInner[3]=0.0013;trackTuneParams.tpcCovInner[4]=0.0059300284;trackTuneParams.tpcCovInnerSlope[0]=1.4794650254467986e-08;trackTuneParams.tpcCovInnerSlope[1]=5.9178601017871944e-08;trackTuneParams.tpcCovInnerSlope[2]=8.87679015268079e-11;trackTuneParams.tpcCovInnerSlope[3]=3.846609066161676e-10;trackTuneParams.tpcCovInnerSlope[4]=1.7546539235412473e-09;"
   TRACKTUNETPCOUTER="trackTuneParams.tpcCovOuterType=2;trackTuneParams.tpcCovOuter[0]=0.05;trackTuneParams.tpcCovOuter[1]=0.2;trackTuneParams.tpcCovOuter[2]=0.0003;trackTuneParams.tpcCovOuter[3]=0.0013;trackTuneParams.tpcCovOuter[4]=0.0059300284;trackTuneParams.tpcCovOuterSlope[0]=1.4794650254467986e-08;trackTuneParams.tpcCovOuterSlope[1]=5.9178601017871944e-08;trackTuneParams.tpcCovOuterSlope[2]=8.87679015268079e-11;trackTuneParams.tpcCovOuterSlope[3]=3.846609066161676e-10;trackTuneParams.tpcCovOuterSlope[4]=1.7546539235412473e-09;"
 
-
 fi
 
 TRACKTUNETPC=${TPCEXTRAERR-}
@@ -544,14 +552,21 @@ export ITSEXTRAERR="ITSCATrackerParam.sysErrY2[0]=$ERRIB;ITSCATrackerParam.sysEr
 # ad-hoc options for ITS reco workflow
 EXTRA_ITSRECO_CONFIG=
 if [[ $BEAMTYPE == "PbPb" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSCATrackerParam.deltaRof=0;ITSVertexerParam.clusterContributorsCut=16;ITSVertexerParam.lowMultBeamDistCut=0;ITSCATrackerParam.nROFsPerIterations=12;ITSCATrackerParam.perPrimaryVertexProcessing=false;ITSCATrackerParam.fataliseUponFailure=false;ITSCATrackerParam.dropTFUponFailure=true"
+  # tracker memory
+  EXTRA_ITSRECO_CONFIG=";ITSCATrackerParam.perPrimaryVertexProcessing=false;ITSCATrackerParam.fataliseUponFailure=false;ITSCATrackerParam.dropTFUponFailure=true;ITSCATrackerParam.maxMemory=21474836480;"
   if [[ -z "$ALIEN_JDL_DISABLE_UPC" || $ALIEN_JDL_DISABLE_UPC != 1 ]]; then
     EXTRA_ITSRECO_CONFIG+=";ITSVertexerParam.nIterations=2;ITSCATrackerParam.doUPCIteration=true;"
   fi
+  if [[ $LOWFIELD == "1" ]]; then
+    EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPt=2.5;" # disables B-field scaling
+  fi
 elif [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
-  EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
-  EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.startLayerMask[0]=127;ITSCATrackerParam.startLayerMask[1]=127;ITSCATrackerParam.startLayerMask[2]=127;"
+  # allowed start layers
+  EXTRA_ITSRECO_CONFIG=";ITSCATrackerParam.startLayerMask[0]=127;ITSCATrackerParam.startLayerMask[1]=127;ITSCATrackerParam.startLayerMask[2]=127;"
+  # low pt-cutoffs
   EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPtIterLgt[0]=0.05;ITSCATrackerParam.minPtIterLgt[1]=0.05;ITSCATrackerParam.minPtIterLgt[2]=0.05;ITSCATrackerParam.minPtIterLgt[3]=0.05;ITSCATrackerParam.minPtIterLgt[4]=0.05;ITSCATrackerParam.minPtIterLgt[5]=0.05;ITSCATrackerParam.minPtIterLgt[6]=0.05;ITSCATrackerParam.minPtIterLgt[7]=0.05;ITSCATrackerParam.minPtIterLgt[8]=0.05;ITSCATrackerParam.minPtIterLgt[9]=0.09;ITSCATrackerParam.minPtIterLgt[10]=0.167;ITSCATrackerParam.minPtIterLgt[11]=0.125;"
+  # enable delta-rof tracking
+  EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.addTimeError[0]=30;ITSCATrackerParam.addTimeError[1]=30;ITSCATrackerParam.addTimeError[2]=30;ITSCATrackerParam.addTimeError[3]=30;ITSCATrackerParam.addTimeError[4]=30;ITSCATrackerParam.addTimeError[5]=30;ITSCATrackerParam.addTimeError[6]=30;ITSVertexerParam.seedMemberRadiusTime=1;"
 #  this is to impose old pp pT cuts (overriding hardcoded pbpb24 apass1 settings)
 #  EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPtIterLgt[0]=0.05;ITSCATrackerParam.minPtIterLgt[1]=0.05;ITSCATrackerParam.minPtIterLgt[2]=0.05;ITSCATrackerParam.minPtIterLgt[3]=0.05;ITSCATrackerParam.minPtIterLgt[4]=0.05;ITSCATrackerParam.minPtIterLgt[5]=0.05;ITSCATrackerParam.minPtIterLgt[6]=0.05;ITSCATrackerParam.minPtIterLgt[7]=0.05;ITSCATrackerParam.minPtIterLgt[8]=0.05;ITSCATrackerParam.minPtIterLgt[9]=0.05;ITSCATrackerParam.minPtIterLgt[10]=0.05;ITSCATrackerParam.minPtIterLgt[11]=0.05;"
 fi
@@ -580,7 +595,6 @@ export ARGS_EXTRA_PROCESS_o2_tof_reco_workflow+=" --use-ccdb"
 # following comment https://alice.its.cern.ch/jira/browse/O2-2691?focusedCommentId=278262&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-278262
 #export PVERTEXER="pvertexer.acceptableScale2=9;pvertexer.minScale2=2.;pvertexer.nSigmaTimeTrack=4.;pvertexer.timeMarginTrackTime=0.5;pvertexer.timeMarginVertexTime=7.;pvertexer.nSigmaTimeCut=10;pvertexer.dbscanMaxDist2=36;pvertexer.dcaTolerance=3.;pvertexer.pullIniCut=100;pvertexer.addZSigma2=0.1;pvertexer.tukey=20.;pvertexer.addZSigma2Debris=0.01;pvertexer.addTimeSigma2Debris=1.;pvertexer.maxChi2Mean=30;pvertexer.timeMarginReattach=3.;pvertexer.addTimeSigma2Debris=1.;pvertexer.dbscanDeltaT=24;pvertexer.maxChi2TZDebris=100;pvertexer.maxMultRatDebris=1.;pvertexer.dbscanAdaptCoef=20.;pvertexer.timeMarginVertexTime=1.3"
 # updated on 7 Sept 2022
-EXTRA_PRIMVTX_TimeMargin=""
 if [[ $BEAMTYPE == "PbPb" || $PERIOD == "MAY" || $PERIOD == "JUN" || $PERIOD == LHC22* || $PERIOD == LHC23* ]]; then
   EXTRA_PRIMVTX_TimeMargin="pvertexer.timeMarginVertexTime=1.3"
 fi
@@ -630,6 +644,14 @@ fi
 
 # ad-hoc settings for TRD matching
 export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$TRACKTUNETPC;$VDRIFTPARAMOPTION;GPU_rec_trd.minTrackPt=0.3;"
+
+# Pb26 reconstruction uses improved alignment with shifted ITS (mean vertex)
+if [[ $RUNNUMBER -ge 572013 ]] ; then
+  export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";GPU_rec_trd.trkltResRPhiIdeal=0.2;GPU_rec_trd.trkltResVsTanPhiMisalign=1.;"
+  if [[ -z $ALIEN_JDL_MVBIAS ]]; then
+     export O2_DPL_MVBIAS=";mvbias.xyz[0]=0.0332;mvbias.xyz[1]=-0.1825;mvbias.xyz[2]=-0.2846;mvbias.slopeX=-4.27e-05;mvbias.slopeY=-6.96e-05;";
+  fi
+fi
 
 # ad-hoc settings for FT0
 export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow+=" --ft0-reconstructor"
@@ -701,17 +723,26 @@ if [[ $ADD_CALIB == "1" ]]; then
   export CALIB_TOF_INTEGRATEDCURR=0
   export CALIB_ITS_DEADMAP_TIME=0
   export CALIB_MFT_DEADMAP_TIME=0
-  if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
+  if [[ -n "$DO_TPC_RESIDUAL_EXTRACTION" && $DO_TPC_RESIDUAL_EXTRACTION != "0" ]]; then
+    : ${ALIEN_JDL_TPCRESIDUALTRKSOURCESMAPEXTRACTION:="ITS-TPC"}
+    : ${ALIEN_JDL_TPCRESIDUALMAXTRACKSPERSLOT:=-1}
+    : ${ALIEN_JDL_TPCRESIDUALADDTRACKSMAP:=35000000}
+    : ${ALIEN_JDL_TPCRESIDUAL_WRITEUNFILTERED:=1}
+    : ${ALIEN_JDL_TPCRESIDUAL_KEEPREJECTEDRES:=1}
     export CALIB_TPC_SCDCALIB=1
     export CALIB_TPC_SCDCALIB_SENDTRKDATA=1
-    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=";scdcalib.additionalTracksMap=35000000;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=6;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=90;scdcalib.minTOFTRDPVContributors=2"
-    : ${TPC_RESIDUAL_TRK_SOURCES_MAP_EXTRACTION:="ITS-TPC"}
-    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=" --tracking-sources-map-extraction $TPC_RESIDUAL_TRK_SOURCES_MAP_EXTRACTION"
-    # ad-hoc settings for TPC residual extraction
-    export ARGS_EXTRA_PROCESS_o2_calibration_residual_aggregator+=" --output-type trackParams,unbinnedResid"
-    if [[ $ALIEN_JDL_DEBUGRESIDUALEXTRACTION == "1" ]]; then
-      export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=";scdcalib.maxTracksPerCalibSlot=-1;scdcalib.minPtNoOuterPoint=0.8;scdcalib.minTPCNClsNoOuterPoint=120"
-      export ARGS_EXTRA_PROCESS_o2_trd_global_tracking+=" --enable-qc"
+    export CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=";scdcalib.maxTracksPerCalibSlot=$ALIEN_JDL_TPCRESIDUALMAXTRACKSPERSLOT;scdcalib.additionalTracksMap=$ALIEN_JDL_TPCRESIDUALADDTRACKSMAP;scdcalib.minPtNoOuterPoint=0.2;scdcalib.maxQ2Pt=5;scdcalib.minITSNClsNoOuterPoint=6;scdcalib.minITSNCls=4;scdcalib.minTPCNClsNoOuterPoint=50;scdcalib.minTOFTRDPVContributors=2;"
+    CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=$([[ "$ALIEN_JDL_TPCRESIDUAL_WRITEUNFILTERED" == "1" ]] && printf "scdcalib.writeUnfiltered=true;" || printf "scdcalib.writeUnfiltered=false;")
+    CONFIG_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=$([[ "$ALIEN_JDL_TPCRESIDUAL_KEEPREJECTEDRES" == "1" ]] && printf "scdcalib.keepRejectedResiduals=true;" || printf "scdcalib.keepRejectedResiduals=false;")
+
+    export ARGS_EXTRA_PROCESS_o2_tpc_scdcalib_interpolation_workflow+=" --tracking-sources-map-extraction $ALIEN_JDL_TPCRESIDUALTRKSOURCESMAPEXTRACTION"
+    if [[ ! $DO_TPC_RESIDUAL_EXTRACTION =~ "NOEXTCLROAD" ]]; then
+      clusterErrors=";GPU_rec_tpc.clusterError2AdditionalY=0.3;GPU_rec_tpc.clusterError2AdditionalZ=0.3"
+
+      export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";$clusterErrors"
+      export CONFIG_EXTRA_PROCESS_o2_tpcits_match_workflow+=";$clusterErrors"
+      export CONFIG_EXTRA_PROCESS_o2_tof_matcher_workflow+=";$clusterErrors"
+      export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$clusterErrors"
     fi
   fi
   export CALIB_EMC_ASYNC_RECALIB="$ALIEN_JDL_DOEMCCALIB"
@@ -753,9 +784,51 @@ if [[ $ADD_CALIB == "1" ]]; then
     if [[ -n $ALIEN_JDL_SAMPLINGFACTORTIMESERIES ]]; then
       export CALIB_ASYNC_SAMPLINGFACTORTIMESERIES=$ALIEN_JDL_SAMPLINGFACTORTIMESERIES
     fi
+    if [[ -n $ALIEN_JDL_TPCTIMESERIESMINMOMENTUM ]]; then
+      export TPCTIMESERIES_MIN_MOMENTUM=$ALIEN_JDL_TPCTIMESERIESMINMOMENTUM
+    fi
+    if [[ -n $ALIEN_JDL_TPCTIMESERIESMINCLUSTER ]]; then
+      export TPCTIMESERIES_MIN_CLUSTER=$ALIEN_JDL_TPCTIMESERIESMINCLUSTER
+    fi
+    if [[ -n $ALIEN_JDL_TPCTIMESERIESMAXTGL ]]; then
+      export TPCTIMESERIES_MAX_TGL=$ALIEN_JDL_TPCTIMESERIESMAXTGL
+    fi
+    if [[ -n $ALIEN_JDL_TPCTIMESERIESMULTMAX ]]; then
+      export TPCTIMESERIES_MULT_MAX=$ALIEN_JDL_TPCTIMESERIESMULTMAX
+    fi
+  fi
+
+  # cosmic muons in collision data: matcher (TPC-only legs) + raw clusters of each cosmic -> o2_cosmics_full.root
+  if [[ -n ${ALIEN_JDL_EXTRACTCOSMICS:-} ]] ; then
+    echo "Adding cosmics matching and raw-cluster output in setenv_extra.sh"
+    export CALIB_ASYNC_EXTRACTCOSMICS=$ALIEN_JDL_EXTRACTCOSMICS
+    if [[ -n ${ALIEN_JDL_COSMICSPRESET:-} ]]; then
+      export COSMICS_PRESET=$ALIEN_JDL_COSMICSPRESET
+    fi
+    # optional: matcher settings on top of the preset (e.g. cosmicsMatch.minSeedDCAxyTOF=0), extra options (e.g. --debug-tree), and
+    # COSMICSPVVETO=0 to switch off the veto of legs belonging to primary-vertex contributors (on by default in calib-workflow.sh)
+    if [[ -n ${ALIEN_JDL_COSMICSCONFIG:-} ]]; then
+      export CONFIG_EXTRA_PROCESS_o2_cosmics_match_workflow+=";$ALIEN_JDL_COSMICSCONFIG"
+    fi
+    if [[ -n ${ALIEN_JDL_COSMICSARGS:-} ]]; then
+      export ARGS_EXTRA_PROCESS_o2_cosmics_match_workflow+=" $ALIEN_JDL_COSMICSARGS"
+    fi
+    if [[ -n ${ALIEN_JDL_COSMICSPVVETO:-} ]]; then
+      export COSMICS_PV_VETO=$ALIEN_JDL_COSMICSPVVETO
+    fi
   fi
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
     export CCDB_POPULATOR_UPLOAD_PATH="file://$PWD"
+  fi
+
+  # enable time gain calibration
+  if [[ $ALIEN_JDL_DOTPCTIMEGAINCALIB == 1 ]]; then
+    echo "Enabling TPC time gain calibration"
+    export CALIB_TPC_TIMEGAIN=1
+    export ARGS_EXTRA_PROCESS_o2_tpc_calibrator_dedx+=" --dump-histograms 1 --min-entries 1" # write full calibration objects for time gain without rejecting low statistics timeslots
+    export ARGS_EXTRA_PROCESS_o2_tpc_miptrack_filter+=" --use-global-tracks"
+    export SCALEEVENTS_TPC_TIMEGAIN=${SCALEEVENTS_TPC_TIMEGAIN:-1} # use all TFs
+    export SCALETRACKS_TPC_TIMEGAIN=${SCALETRACKS_TPC_TIMEGAIN:--1} # use all tracks
   fi
 fi
 
@@ -801,6 +874,20 @@ fi
 
 if [[ $ALIEN_JDL_PREPROPAGATE == "1" ]] ; then
   export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --propagate-tracks --propagate-tracks-max-xiu 5"
+fi
+
+if [[ $ALIEN_JDL_CONFIG2AODMETA == "1" ]] ; then
+  export ARGS_EXTRA_PROCESS_o2_aod_producer_workflow+=" --collect-config-files"
+fi
+
+
+# possibility to bias the MeanVertex from the CCDB, see https://github.com/AliceO2Group/AliceO2/pull/15549
+if [[ -n $ALIEN_JDL_MVBIAS ]]; then
+  export O2_DPL_MVBIAS=$ALIEN_JDL_MVBIAS
+fi
+
+if [[ $ALIEN_JDL_LPMANCHORYEAR -ge 2025 ]] ; then
+  export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+=";GPU_rec_tpc.minTrackdEdxMax2Tot=-1.;"
 fi
 
 # Enabling QC

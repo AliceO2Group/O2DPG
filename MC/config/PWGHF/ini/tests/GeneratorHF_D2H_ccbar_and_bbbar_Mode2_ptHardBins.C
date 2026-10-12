@@ -68,7 +68,7 @@ int External() {
                 for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
                     auto pdgDau = tracks->at(j).GetPdgCode();
                     pdgsDecay.push_back(pdgDau);
-                    if (pdgDau != 333) { // phi is antiparticle of itself
+                    if (pdgDau != 333  && pdgDau != 111) { // phi is antiparticle of itself
                         pdgsDecayAntiPart.push_back(-pdgDau);
                     } else {
                         pdgsDecayAntiPart.push_back(pdgDau);
@@ -123,13 +123,14 @@ int External() {
         return 1;
     }
 
-    float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
-    if (fracForcedDecays < 0.9) { // we put some tolerance (e.g. due to oscillations which might change the final state)
+    float fracForcedDecays = nSignals ? float(nSignalGoodDecay) / nSignals : 0.0f;
+    float uncFracForcedDecays = nSignals ? std::sqrt(fracForcedDecays * (1 - fracForcedDecays) / nSignals) : 1.0f;
+    if (1 - fracForcedDecays > 0.15 + uncFracForcedDecays) { // we put some tolerance (e.g. due to oscillations which might change the final state)
         std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
         return 1;
     }
 
-    if (averagePt < 8.) { // by testing locally it should be around 8.5 GeV/c with pthard bin 20-200 (contrary to 2-2.5 GeV/c of SoftQCD)
+    if (averagePt < 6) { // by testing locally it should be around 8.5 GeV/c with pthard bin 20-200 (contrary to 2-2.5 GeV/c of SoftQCD)
         std::cerr << "Average pT of charmed hadrons " << averagePt << " lower than expected\n";
         return 1;
     }

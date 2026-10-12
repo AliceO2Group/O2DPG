@@ -1,0 +1,59 @@
+#!/bin/bash
+
+#
+# Steering script for HF enhanced dielectron MC anchored to LHC25ae
+#
+
+# example anchoring
+
+export ALIEN_JDL_LPMANCHORPASSNAME=apass2
+export ALIEN_JDL_MCANCHOR=apass2
+export ALIEN_JDL_CPULIMIT=8
+export ALIEN_JDL_LPMRUNNUMBER=564356
+export ALIEN_JDL_LPMPRODUCTIONTYPE=MC
+export ALIEN_JDL_LPMINTERACTIONTYPE=pp
+export ALIEN_JDL_LPMPRODUCTIONTAG=LHC26a2
+export ALIEN_JDL_LPMANCHORRUN=564356
+export ALIEN_JDL_LPMANCHORPRODUCTION=LHC25ae
+export ALIEN_JDL_LPMANCHORYEAR=2025
+export ALIEN_JDL_OUTPUT=*.dat@disk=1,*.txt@disk=1,*.root@disk=2
+
+export NTIMEFRAMES=1
+export NSIGEVENTS=20
+export SPLITID=100
+export PRODSPLIT=153
+export CYCLE=0
+
+# on the GRID, this is set and used as seed; when set, it takes precedence over SEED
+#export ALIEN_PROC_ID=2963436952
+export SEED=0
+
+# for pp and 50 events per TF, we launch only 4 workers.
+export NWORKERS=2
+
+# define the generator via ini file
+# use 30/70 sampling for different generators
+# No forced beauty decays as we have observed biases
+
+# generate random number
+RNDSIG=$(($RANDOM % 100))
+
+
+if [[ $RNDSIG -ge 0 && $RNDSIG -lt 30 ]];
+then
+        CONFIGNAME="GeneratorHFGapTriggered_Charm_Gap2_OO_electron.ini"
+elif [[ $RNDSIG -ge 30 && $RNDSIG -lt 100 ]];
+then
+        CONFIGNAME="GeneratorHFGapTriggered_BeautyNoForcedDecay_Gap2_OO_electron.ini"
+fi
+
+export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen external -ini $O2DPG_ROOT/MC/config/PWGEM/ini/$CONFIGNAME"
+
+# run the central anchor steering script; this includes
+# * derive timestamp
+# * derive interaction rate
+# * extract and prepare configurations (which detectors are contained in the run etc.)
+# * run the simulation (and QC)
+# To disable QC, uncomment the following line
+#export DISABLE_QC=1
+${O2DPG_ROOT}/MC/run/ANCHOR/anchorMC.sh

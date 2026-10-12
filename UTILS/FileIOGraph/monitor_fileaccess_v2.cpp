@@ -180,7 +180,12 @@ int main(int argc, char **argv)
       {
         if (metadata->mask & FAN_Q_OVERFLOW)
         {
-          fprintf(stderr, "Queue overflow!\n");
+          // 'continue' here would re-test the same event forever, because it
+          // skips FAN_EVENT_NEXT; report and advance instead.
+          printf("#OVERFLOW\n");
+          fflush(stdout);
+          fprintf(stderr, "Queue overflow! events were dropped\n");
+          metadata = FAN_EVENT_NEXT(metadata, buflen);
           continue;
         }
         snprintf(fdpath, sizeof(fdpath), "/proc/self/fd/%d", metadata->fd);

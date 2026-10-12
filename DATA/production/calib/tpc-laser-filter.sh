@@ -4,7 +4,7 @@ source common/setenv.sh
 
 source common/getCommonArgs.sh
 
-source common/gen_topo_helper_functions.sh 
+source common/gen_topo_helper_functions.sh
 
 FILEWORKDIR="/home/wiechula/processData/inputFilesTracking/triggeredLaser"
 
@@ -63,7 +63,7 @@ REMAP="--condition-remap \"file://${FILEWORKDIR}=GLO/Config/GRPECS,GLO/Config/GR
 RECO_CONFIG="NameConf.mDirGRP=$FILEWORKDIR;"
 RECO_CONFIG+="NameConf.mDirGeom=$FILEWORKDIR2;"
 RECO_CONFIG+="NameConf.mDirCollContext=$FILEWORKDIR;"
-RECO_CONFIG+="NameConf.mDirMatLUT=$FILEWORKDIR;"   
+RECO_CONFIG+="NameConf.mDirMatLUT=$FILEWORKDIR;"
 RECO_CONFIG+="align-geom.mDetectors=none;"
 RECO_CONFIG+="GPU_global.deviceType=$GPUTYPE;"
 RECO_CONFIG+="GPU_proc.tpcIncreasedMinClustersPerRow=500000;"
@@ -81,7 +81,8 @@ RECO_CONFIG+="GPU_rec_tpc.trackFollowingMaxRowGap=15;GPU_rec_tpc.trackFollowingM
 WORKFLOW=
 add_W o2-dpl-raw-proxy "--dataspec \"$PROXY_INSPEC\" --inject-missing-data --channel-config \"name=readout-proxy,type=pull,method=connect,address=ipc://@tf-builder-pipe-0,transport=shmem,rateLogging=1\"" "" 0
 add_W o2-tpc-raw-to-digits-workflow "--ignore-grp --input-spec \"$CALIB_INSPEC\" --remove-duplicates --pipeline tpc-raw-to-digits-0:20 --send-ce-digits " "${RAWDIGIT_CONFIG}"
-add_W o2-tpc-reco-workflow " ${TPC_CORR_SCALING:-} --disable-ctp-lumi-request --input-type digitizer --output-type \"tracks,disable-writer,clusters\" --disable-mc --pipeline tpc-zsEncoder:20,tpc-tracker:8 ${GPU_CONFIG} ${REMAP} " "${RECO_CONFIG}"
+add_W o2-tpc-scaler-workflow "--disable-IDC-scalers --disable-ctp-lumi-request"
+add_W o2-tpc-reco-workflow " --input-type digitizer --output-type \"tracks,disable-writer,clusters\" --disable-mc --pipeline tpc-zsEncoder:20,tpc-tracker:8 ${GPU_CONFIG} ${REMAP} " "${RECO_CONFIG}"
 add_W o2-tpc-laser-track-filter "" "" 0
 add_W o2-dpl-output-proxy " --proxy-name tpc-laser-input-proxy --proxy-channel-name tpc-laser-input-proxy --dataspec \"$PROXY_OUTSPEC\" --channel-config \"name=tpc-laser-input-proxy,method=connect,type=push,transport=zeromq,rateLogging=0\" " "" 0
 add_QC_from_apricot "${QC_CONFIG}" "--local --host localhost"

@@ -1,0 +1,192 @@
+---
+name: Simulation tests
+
+'on':
+  pull_request: {}
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'O2PDPSuite tag to test against (default: newest daily)'
+        type: string
+        required: false
+
+permissions: {}
+
+concurrency:
+  group: sim-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sim-tests:
+    name: Simulation tests against CVMFS
+    runs-on: [self-hosted, cvmfs]
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # The changed-file logic diffs against the merge base, so the full
+          # history is needed, not a shallow clone.
+          fetch-depth: 0
+
+      - name: Resolve the diff base
+        id: base
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+          git rev-parse --verify "$BASE_SHA^{commit}" >/dev/null || {
+            echo "::error title=Cannot resolve diff base::pull request base commit $BASE_SHA does not resolve in this checkout"
+            exit 1
+          }
+          git rev-parse --verify "$HEAD_SHA^{commit}" >/dev/null || {
+            echo "::error title=Cannot resolve diff head::pull request head commit $HEAD_SHA does not resolve in this checkout"
+            exit 1
+          }
+          merge_base=$(git merge-base "$BASE_SHA" "$HEAD_SHA") || {
+            echo "::error title=Cannot compute diff base::git merge-base failed"
+            exit 1
+          }
+          [ -n "$merge_base" ] || {
+            echo "::error title=Cannot compute diff base::merge base is empty"
+            exit 1
+          }
+          echo "sha=$merge_base" >> "$GITHUB_OUTPUT"
+
+      - name: Skip when not relevant or opted into the source build
+        id: gate
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ steps.base.outputs.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+          changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          # Opting in means *editing* the existing sentinel, so only count it
+          # when it is Modified. A pull request that Adds it — which is what the
+          # pull request introducing the sentinel does — would otherwise trip its
+          # own opt-out and pass without testing anything.
+          opted=$(git diff --name-only --diff-filter=M "$BASE_SHA" "$HEAD_SHA")
+          if grep -qx 'test/needs-o2-dev' <<< "$opted" ; then
+            echo "::notice title=Skipped::this pull request touches test/needs-o2-dev, so it is tested by build/O2DPG/sim/o2dev against O2 dev instead"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif ! grep -qE '^(DATA/|MC/|test/|RelVal/)' <<< "$changed" ; then
+            echo "::notice title=Skipped::no changed file matches DATA/, MC/, test/ or RelVal/"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check the CVMFS environment
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          set -eu
+          test -d /cvmfs/alice.cern.ch || {
+            echo "::error title=CVMFS unavailable::/cvmfs/alice.cern.ch is not mounted on this runner"
+            exit 1
+          }
+          test -x /cvmfs/alice.cern.ch/bin/alienv || {
+            echo "::error title=CVMFS unavailable::/cvmfs/alice.cern.ch/bin/alienv is missing"
+            exit 1
+          }
+
+      - name: Check the AliEn token
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          JALIEN_TOKEN_CERT: /run/alien-ci/tokencert.pem
+          JALIEN_TOKEN_KEY: /run/alien-ci/tokenkey.pem
+        run: |
+          set -eu
+          # DPL's CCDB backend refuses to talk to alice-ccdb.cern.ch without a
+          # token and aborts the whole device, so check up front rather than
+          # letting it surface as a confusing task crash deep in a workflow.
+          for f in "$JALIEN_TOKEN_CERT" "$JALIEN_TOKEN_KEY" ; do
+            test -r "$f" || {
+              echo "::error title=No AliEn token::$f is missing or unreadable. On the runner host: systemctl start alien-ci-token.service"
+              exit 1
+            }
+          done
+          if ! openssl x509 -in "$JALIEN_TOKEN_CERT" -noout -checkend 3600 >/dev/null 2>&1 ; then
+            echo "::error title=AliEn token expiring::the token expires within the hour. On the runner host: systemctl start alien-ci-token.service"
+            exit 1
+          fi
+          echo "AliEn token valid until $(openssl x509 -in "$JALIEN_TOKEN_CERT" -noout -enddate | cut -d= -f2)"
+
+      - name: Resolve the O2PDPSuite tag
+        id: tag
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          REQUESTED_TAG: ${{ inputs.tag }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -eu
+          # shellcheck source=test/ci/resolve_tag.sh
+          . test/ci/resolve_tag.sh
+          moduledir=/cvmfs/alice.cern.ch/el9-x86_64/Modules/modulefiles/O2PDPSuite
+          requested=$REQUESTED_TAG
+          if [ -z "$requested" ]; then
+            # A PR can pin the release with a line "sim-tests-tag: <tag>".
+            requested=$(printf '%s\n' "$PR_BODY" |
+                          sed -n 's/^[[:space:]]*sim-tests-tag:[[:space:]]*//p' | head -n 1 |
+                          tr -d '[:space:]')
+          fi
+          tag=$(resolve_o2pdpsuite_tag "$moduledir" "$requested") || {
+            echo "::error title=No usable O2PDPSuite release::see the message above"
+            exit 1
+          }
+          echo "Testing against O2PDPSuite::$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Run the O2DPG tests
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          O2PDPSUITE_TAG: ${{ steps.tag.outputs.tag }}
+          O2DPG_TEST_HASH_BASE: ${{ steps.base.outputs.sha }}
+          O2DPG_TEST_HASH_HEAD: ${{ github.event.pull_request.head.sha }}
+          JOBS: 8
+          # o2dpg_sim_workflow.py calls JAlien(['whoami']) purely to fill the
+          # AOD's --created-by field, and only when JALIEN_USER is unset. Setting
+          # it keeps the tests from needing a GRID credential at all, which
+          # matters here: anything readable by this account is readable by the
+          # fork-pull-request code that runs as it.
+          JALIEN_USER: alien-ci
+          # DPL's CCDB backend needs a GRID token for alice-ccdb.cern.ch. These
+          # are *paths* to a short-lived token minted from a service certificate
+          # by a root-owned timer on the runner host; the certificate itself is
+          # never readable by this account. Verified that paths work — the same
+          # variables also accept PEM content, which is what ali-bot passes.
+          JALIEN_TOKEN_CERT: /run/alien-ci/tokencert.pem
+          JALIEN_TOKEN_KEY: /run/alien-ci/tokenkey.pem
+        run: |
+          set -eu
+          # Everything after "-c" is joined into one string and re-evaluated
+          # by the CVMFS alienv via "bash -c \"$*\"". Quoting here is applied
+          # once then discarded, so it is safe for the runner's workspace path,
+          # but a path with a space or "$" would break or double-evaluate.
+          /cvmfs/alice.cern.ch/bin/alienv setenv "O2PDPSuite/$O2PDPSUITE_TAG" -c \
+            env O2DPG_ROOT="$PWD" O2DPG_MC_CONFIG_ROOT="$PWD" \
+                O2DPG_TEST_REPO_DIR="$PWD" \
+                O2DPG_TEST_HASH_BASE="$O2DPG_TEST_HASH_BASE" \
+                O2DPG_TEST_HASH_HEAD="$O2DPG_TEST_HASH_HEAD" \
+                JOBS="$JOBS" \
+                bash test/run_tests.sh
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: o2dpg-test-logs
+          path: |
+            o2dpg_tests/**/*.log
+            o2dpg_tests/**/*serverlog*
+            o2dpg_tests/**/*workerlog*
+            o2dpg_tests/**/*mergerlog*
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Prune test artifacts
+        if: always()
+        run: find o2dpg_tests -type f ! -name '*.log' ! -name '*serverlog*' ! -name '*workerlog*' ! -name '*mergerlog*' -delete || true

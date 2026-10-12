@@ -3,11 +3,13 @@
 #include "Pythia8/Pythia.h"
 #include "TRandom.h"
 #include <fairlogger/Logger.h>
+#include <algorithm>
 #include <string>
 #include <vector>
 
 R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT)
 #include "MC/config/common/external/generator/CoalescencePythia8.h"
+#include "MC/config/PWGHF/pythia8/hooks/pythia8_userhooks_qqbar.C"
 
 using namespace Pythia8;
 
@@ -59,6 +61,16 @@ class GeneratorPythia8HFHadToNuclei : public o2::eventgen::GeneratorPythia8
   {
     addSubGenerator(0, "Minimum bias");
     addSubGenerator(1, "HF + Coalescence");
+
+    // Bias parton-level generation towards bbbar production at midrapidity, but only
+    // while generating the triggered events. Without this, finding the requested b-hadron 
+    // can stall the jobs for a very long time
+    mBbbarBiasHook = new UserHooks_qqbar();
+    mBbbarBiasHook->setPDG(5);
+    mBbbarBiasHook->setRapidity(mHadRapidityMin, mHadRapidityMax);
+    mBbbarBiasHook->setActive(false);
+    setUserHooks(mBbbarBiasHook);
+
     return o2::eventgen::GeneratorPythia8::Init();
   }
 
@@ -92,11 +104,13 @@ class GeneratorPythia8HFHadToNuclei : public o2::eventgen::GeneratorPythia8
 
       // Generate event of interest
       bool genOk = false;
+      mBbbarBiasHook->setActive(true);
       while (!genOk) {
         if (GeneratorPythia8::generateEvent()) {
           genOk = selectEvent(mPythia.event);
         }
       }
+      mBbbarBiasHook->setActive(false);
       notifySubGenerator(1);
     } else {
       // Generate minimum-bias event
@@ -119,18 +133,45 @@ class GeneratorPythia8HFHadToNuclei : public o2::eventgen::GeneratorPythia8
       int id = std::abs(event[iPart].id());
       float rap = event[iPart].y();
       if (id == mHadronPdg && rap > mHadRapidityMin && rap < mHadRapidityMax) {
+          
+        int d1 = event[iPart].daughter1();
+        int d2 = event[iPart].daughter2();
+
+        // Protection for invalid index of daughter 1
+        if (d1 < 0 || d1 >= event.size()) {
+          LOG(info) << "Invalid daughter index 1! d1 = " << d1;
+          continue;
+        }
+
+        // Protection for invalid index of daughter 2
+        if (d2 < 0 || d2 >= event.size()) {
+          LOG(info) << "Invalid daughter index 2! d2 = " << d2;
+          continue;
+        }
+
+        // Swap order
+        if (d1 > d2) {
+          std::swap(d1, d2);
+        }
+        
+        // No daughters
+        if (d1 == 0 && d2 == 0) {
+          LOG(info) << "No daughters (0,0). Skipping.";
+          continue;
+        }
+
         LOG(debug) << "-----------------------------------------------------";
-        LOG(debug) << "Found hadron " << event[iPart].id() << " with rapidity " << rap << " and daughters " << event[iPart].daughter1() << " " << event[iPart].daughter2();
+        LOG(debug) << "Found hadron " << event[iPart].id() << " with rapidity " << rap << " and daughters " << d1 << " " << d2;
         // print pdg code of daughters
         LOG(debug) << "Daughters: ";
-        for (int iDau = event[iPart].daughter1(); iDau <= event[iPart].daughter2(); ++iDau) {
+        for (int iDau = d1; iDau <= d2; ++iDau) {
           LOG(debug) << "Daughter " << iDau << ": " << event[iDau].id();
         }
-        bool isCoalDone = CoalescencePythia8(event, mNucleiPdgList, mTrivialCoal, mCoalMomentum, event[iPart].daughter1(), event[iPart].daughter2());
+        bool isCoalDone = CoalescencePythia8(event, mNucleiPdgList, mTrivialCoal, mCoalMomentum, d1, d2);
         if (isCoalDone) {
-          LOG(debug) << "Coalescence process found for hadron " << event[iPart].id() << " with daughters " << event[iPart].daughter1() << " " << event[iPart].daughter2();
+          LOG(debug) << "Coalescence process found for hadron " << event[iPart].id() << " with daughters " << d1 << " " << d2;
           LOG(debug) << "Check updated daughters: ";
-          for (int iDau = event[iPart].daughter1(); iDau <= event[iPart].daughter2(); ++iDau) {
+          for (int iDau = d1; iDau <= d2; ++iDau) {
             LOG(debug) << "Daughter " << iDau << ": " << event[iDau].id();
           }
           return true;
@@ -149,6 +190,9 @@ class GeneratorPythia8HFHadToNuclei : public o2::eventgen::GeneratorPythia8
   float mHadRapidityMin;
   float mHadRapidityMax;
   unsigned int mUsedSeed;
+
+  // Bias towards bbbar at midrapidity, active only while generating HF-triggered events
+  UserHooks_qqbar* mBbbarBiasHook{nullptr};
 
   // Control gap-triggering
   unsigned long long mGeneratedEvents;

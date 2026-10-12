@@ -1,0 +1,9 @@
+Decay tau-
+0.5 pi-     pi-     pi+     nu_tau                  TAUHADNU -0.108 0.775 0.149 1.364 0.400 1.23 0.4; #[Reconstructed PDG2011]
+0.5 nu_tau pi- pi+ pi- pi0                          PHSP;
+Enddecay
+Decay tau+
+0.5 e+      anti-nu_tau nu_e                        PHOTOS TAULNUNU; #[Reconstructed PDG2011]
+0.5 mu+     anti-nu_tau nu_mu                       PHOTOS TAULNUNU; #[Reconstructed PDG2011]
+Enddecay
+End

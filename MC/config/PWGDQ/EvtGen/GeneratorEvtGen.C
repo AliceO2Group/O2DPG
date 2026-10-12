@@ -43,7 +43,8 @@ enum DecayModeEvt { kEvtAll = 0,
                     kEvtDiElectronEM,
                     kEvtGammaEM,
                     kEvtBtoPsi2SToJpsiPiPi,
-                    kEvtBeautyUpgrade };
+                    kEvtBeautyUpgrade,
+                    kCharmoniaToJpsiAndDielectron};
 
 namespace o2
 {
@@ -106,10 +107,10 @@ class GeneratorEvtGen : public T
   {
     auto nparticles = T::mParticles.size();
     for (Int_t iparticle = 0; iparticle < nparticles; ++iparticle) {
-      auto particle = (TParticle)T::mParticles.at(iparticle);
+      const auto& particle = T::mParticles.at(iparticle);
       if (checkPdg(particle.GetPdgCode())) {
         if (mDebug)
-          std::cout << "particles in the array (before decay): PDG " << particle.GetPdgCode() << " STATUS " << particle.GetStatusCode() << " position in the array" << iparticle << " First daughter" << particle.GetFirstDaughter() << " Last daughter " << particle.GetLastDaughter() << std::endl;
+          std::cout << "particles in the array (before decay): PDG " << particle.GetPdgCode() << " STATUS " << particle.GetStatusCode() << " position in the array " << iparticle << " First daughter " << particle.GetFirstDaughter() << " Last daughter " << particle.GetLastDaughter() << std::endl;
         TLorentzVector* momentum = new TLorentzVector();
         momentum->SetPxPyPzE(particle.Px(), particle.Py(), particle.Pz(), particle.Energy());
         DecayEvtGen(particle.GetPdgCode(), momentum, mPolarization);
@@ -118,7 +119,7 @@ class GeneratorEvtGen : public T
           return kFALSE;
         }
         if (mDebug)
-          std::cout << "particles in the array (after decay): PDG " << particle.GetPdgCode() << " STATUS " << particle.GetStatusCode() << " position in the array" << iparticle << " First daughter" << particle.GetFirstDaughter() << " Last daughter " << particle.GetLastDaughter() << std::endl;
+          std::cout << "particles in the array (after decay): PDG " << particle.GetPdgCode() << " STATUS " << particle.GetStatusCode() << " position in the array " << iparticle << " First daughter " << particle.GetFirstDaughter() << " Last daughter " << particle.GetLastDaughter() << std::endl;
       }
     }
     return kTRUE;
@@ -358,6 +359,9 @@ class GeneratorEvtGen : public T
         break;
       case kEvtBtoPsi2SToJpsiPiPi:
         SetDecayTable(Form("%s/BTOPSITOJPSIPIPI.DEC", pathO2.Data()));
+        break;
+      case kCharmoniaToJpsiAndDielectron:
+        SetDecayTable(Form("%s/CHARMONIATOJPSIANDDIELECTRON.DEC", pathO2.Data()));
         break;
     }
     return;

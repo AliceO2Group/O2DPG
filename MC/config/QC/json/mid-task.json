@@ -35,7 +35,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-              "query": "digits:MID/DATA;digits_rof:MID/DATAROF"
+              "query": "digits:MID/DATA/0;digits_rof:MID/DATAROF/0"
         }
       },
       "MIDClusters": {
@@ -47,7 +47,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-              "query": "clusters:MID/TRACKCLUSTERS;clusterrofs:MID/TRCLUSROFS"
+              "query": "clusters:MID/TRACKCLUSTERS/0;clusterrofs:MID/TRCLUSROFS/0"
         }
       },
       "MIDTracks": {
@@ -59,7 +59,7 @@
         "cycleDurationSeconds": "60",
         "dataSource": {
           "type": "direct",
-              "query": "tracks:MID/TRACKS;trackrofs:MID/TRACKROFS"
+              "query": "tracks:MID/TRACKS/0;trackrofs:MID/TRACKROFS/0"
         }
       }
     },

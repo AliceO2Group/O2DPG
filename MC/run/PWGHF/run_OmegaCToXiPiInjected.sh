@@ -25,7 +25,7 @@ SYSTEM=${SYSTEM:-pp}
 ENERGY=${ENERGY:-13600}
 [[ ${SPLITID} != "" ]] && SEED="-seed ${SPLITID}" || SEED=""
 
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -e ${SIMENGINE} ${SEED} -eCM 13600 -col pp -colBkg pp -gen external -genBkg pythia8 -procBkg inel -j ${NWORKERS} -ns ${NSIGEVENTS} -nb ${NBKGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 500000 -confKey "Diamond.width[2]=6." -mod "--skipModules ZDC" \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -e ${SIMENGINE} ${SEED} -eCM 13600 -col pp -colBkg pp -gen external -genBkg pythia8 -procBkg inel -j ${NWORKERS} -ns ${NSIGEVENTS} -nb ${NBKGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 500000 -confKey "Diamond.width[2]=6." \
         --embedding -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHFOmegaCToXiPiEmb.ini 
 
 

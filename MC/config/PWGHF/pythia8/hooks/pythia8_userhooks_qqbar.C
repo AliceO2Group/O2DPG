@@ -16,6 +16,10 @@ class UserHooks_qqbar : public Pythia8::UserHooks
   bool canVetoPartonLevel() override { return true; };
   bool doVetoPartonLevel(const Pythia8::Event& event) override
   {
+    // Veto runtime condition
+    if (!mActive) {
+      return false;
+    }
     // search for c-cbar mother with at least one c at midrapidity
     for (int ipa = 0; ipa < event.size(); ++ipa) {
       auto daughterList = event[ipa].daughterList();
@@ -40,11 +44,15 @@ class UserHooks_qqbar : public Pythia8::UserHooks
     mRapidityMin = valMin;
     mRapidityMax = valMax;
   };
+  // Allows the veto to be switched on/off at run time, e.g. so that a generator
+  // alternating between biased and unbiased events can apply the bias selectively.
+  void setActive(bool val) { mActive = val; };
 
  private:
   int mPDG = 4;
   double mRapidityMin = -1.5;
   double mRapidityMax = 1.5;
+  bool mActive = true;
 };
 
 Pythia8::UserHooks*

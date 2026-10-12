@@ -24,10 +24,10 @@ print_help() {
     - param1: rawtf input file list
     - param2: output directory
     - param3: number of TFs to process
-    - param4: tfCounter id of first TF to process 
+    - param4: tfCounter id of first TF to process
     - param5: number of Blocks to be expected per TF to select only TFs with all inputs / detectors present
           - if number of inputs is irrelevant, it can be set to 0 to be ignored
-  
+
   Example usage:
 
   source $O2DPG_ROOT/UTILS/rawTF2raw/generate_rawtf_indices.sh rawtflist_LHC25ab_563041.txt 2025-05-19-pp-750khz-replay-LHC25ab-563041 125 3500 14
@@ -81,7 +81,7 @@ sort_tfs() {
   fi
   firstTFtmp=${firstTF}
   while true; do
-    firstLine=$(grep -nr tfCounter:${firstTFtmp} ${tfs_sorted} | awk -F ':' '{print $1}')
+    firstLine=$(grep -nr "tfCounter:${firstTFtmp} " ${tfs_sorted} | awk -F ':' '{print $1}')
     [[ ! -z ${firstLine} ]] && break
     firstTFtmp=$((firstTFtmp+1))
   done

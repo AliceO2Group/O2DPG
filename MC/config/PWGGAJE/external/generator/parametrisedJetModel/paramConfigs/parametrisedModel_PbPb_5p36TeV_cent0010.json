@@ -1,0 +1,15 @@
+{
+  "simLog": false,
+  "sglGenRAA": 0.45,
+  "sglGenTAA": 23.38,
+  "sglCutoffSteepness": 15,
+  "sglCutoffAbscissa": 4,
+  "fallSpecterSlopeLog": 6.619076,
+  "fallSpecterAffinePowerConstantTerm": -3.918165,
+  "fallSpecterAffinePowerSlope": -0.002032,
+  "bkgAveragePt": 0.764567,
+  "collMultPowerLawAmplitude": 20.66,
+  "collMultPowerLawExponent": -1.26971,
+  "collMultMin": 1681,
+  "collMultMax": 2400
+}

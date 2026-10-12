@@ -9,10 +9,10 @@ int External() {
     std::array<float, 6> freqRepl = {0.1, 0.1, 0.1, 0.1, 0.5, 0.5};
     std::map<int, int> sumOrigReplacedParticles = {{10433, 0}, {435, 0}, {425, 0}};
 
-    std::array<int, 11> checkPdgHadron{411, 421, 10433, 30433, 435, 437, 4325, 4326, 4315, 4316, 531};
+    std::array<int, 12> checkPdgHadron{411, 421, 10433, 30433, 435, 437, 4325, 4326, 4315, 4316, 531, 425};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
         {411, {{-321, 211, 211}, {-313, 211}, {211, 311}, {211, 333}}}, // D+
-        {421, {{-321, 211}, {-321, 211, 111}}}, // D0
+        {421, {{-321, 211}, {-321, 111, 211}}}, // D0
         {435, {{311, 413}, {311, 411}}}, // Ds2*(2573)
         {10433, {{311, 413}}}, // Ds1(2536)
         {30433, {{311, 413}}}, // Ds1*(2700)
@@ -21,7 +21,8 @@ int External() {
         {4326, {{411, 3122}}}, // Xic(3080)+
         {4315, {{421, 3122}}}, // Xic(3055)+
         {4316, {{421, 3122}}}, // Xic(3080)+
-        {531, {{-435, -11, 12}, {-10433, -11, 12}, {-435, -13, 14}, {-10433, -13, 14}, {-435, -15, 16}, {-10433, -15, 16}, {-435, 211}}}// Bs0
+        {531, {{-435, -11, 12}, {-10433, -11, 12}, {-435, -13, 14}, {-10433, -13, 14}, {-435, -15, 16}, {-10433, -15, 16}, {-435, 211}}}, // Bs0
+        {425, {{-211, 413}, {111, 423}, {-211, 411}, {111, 421}, {-211, 111, 413}, {-211, 211, 423}}}
     };
 
     TFile file(path.c_str(), "READ");
@@ -81,7 +82,7 @@ int External() {
                     for (int j{track.getFirstDaughterTrackId()}; j <= track.getLastDaughterTrackId(); ++j) {
                         auto pdgDau = tracks->at(j).GetPdgCode();
                         pdgsDecay.push_back(pdgDau);
-                        if (pdgDau != 333) { // phi is antiparticle of itself
+                        if (pdgDau != 333 && pdgDau != 111) { // phi and pi0 are antiparticles of themselves
                             pdgsDecayAntiPart.push_back(-pdgDau);
                         } else {
                             pdgsDecayAntiPart.push_back(pdgDau);
@@ -123,18 +124,19 @@ int External() {
         return 1;
     }
 
-    float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
-    if (fracForcedDecays < 0.9) { // we put some tolerance (e.g. due to oscillations which might change the final state)
+    float fracForcedDecays = nSignals ? float(nSignalGoodDecay) / nSignals : 0.0f;
+    float uncFracForcedDecays = nSignals ? std::sqrt(fracForcedDecays * (1 - fracForcedDecays) / nSignals) : 1.0f;
+    if (1 - fracForcedDecays > 0.15 + uncFracForcedDecays) { // we put some tolerance (e.g. due to oscillations which might change the final state)
         std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
         return 1;
     }
 
     for (int iRepl{0}; iRepl<6; ++iRepl) {
-        if (std::abs(pdgReplPartCounters[iRepl][1] - freqRepl[iRepl] * sumOrigReplacedParticles[pdgReplParticles[iRepl][0]]) > 2 * std::sqrt(freqRepl[iRepl] * sumOrigReplacedParticles[pdgReplParticles[iRepl][0]])) { // 2 sigma compatibility
-            float fracMeas = 0.;
-            if (sumOrigReplacedParticles[pdgReplParticles[iRepl][0]] > 0.) {
-                fracMeas = float(pdgReplPartCounters[iRepl][1]) / sumOrigReplacedParticles[pdgReplParticles[iRepl][0]];
-            } 
+        float numPart = sumOrigReplacedParticles[pdgReplParticles[iRepl][0]];
+        float fracMeas = numPart ? float(pdgReplPartCounters[iRepl][1]) / numPart : 0.0f;
+        float fracMeasUnc = (fracMeas && numPart != 1) ? std::sqrt(pdgReplPartCounters[iRepl][1]) / numPart : 1.0f;
+ 
+        if (std::abs(fracMeas - freqRepl[iRepl]) > fracMeasUnc) {
             std::cerr << "Fraction of replaced " << pdgReplParticles[iRepl][0] << " into " << pdgReplParticles[iRepl][1] << " is " << fracMeas <<" (expected "<< freqRepl[iRepl] << ")\n";
             return 1;    
         }

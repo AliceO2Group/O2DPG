@@ -25,11 +25,11 @@ RecycleBase=""
 for ((i = 0; i < job_number; i++)); do
   jobid=${FAILEDSUBJOBIDS[i]}
   if [ ! "${RecycleBase}" ]; then
-    RecycleOutputDir=$(alien.py ps --trace ${jobid} | awk '/Going to uploadOutputFiles/' | sed 's/.*outputDir=//' | sed 's/)//')
+    RecycleOutputDir=$(alien.py ps --trace ${jobid} | awk '/Going to uploadOutputFiles/' | sed 's/.*outputDir=//' | sed 's/)//' | sort -u | head -n1)
     # /alice/cern.ch/user/a/aliprod/recycle/alien-job-2974093751
     RecycleBase=${RecycleOutputDir%-${jobid}} # Removes the ${jobid} and yields the recycle base path
   fi
-  $(alien.py registerOutput ${jobid}) 2> /dev/null
+  alien.py registerOutput ${jobid} > /dev/null 2>&1
 done
 
 # wait a bit to allow propagation of "registerOutput"

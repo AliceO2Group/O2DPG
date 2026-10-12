@@ -83,7 +83,7 @@
           "query": "inputTracks:TPC/TRACKS/0;inputClusters:TPC/CLUSTERNATIVE;inputClusRefs:TPC/CLUSREFS/0"
         },
         "taskParameters": {
-          "cutAbsEta": "1.",
+          "cutAbsEta": "1.5",
           "cutMinNCluster": "60",
           "cutMindEdxTot": "20.",
           "seed": "0",

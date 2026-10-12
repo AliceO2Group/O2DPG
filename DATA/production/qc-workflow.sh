@@ -77,9 +77,9 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
         QC_JSON_TOF=apricot://o2/components/qc/ANY/any/tof-full-epn-qcmn-on-epn
       fi
     fi
-    [[ -z "${QC_JSON_FDD:-}" ]] && QC_JSON_FDD=apricot://o2/components/qc/ANY/any/fdd-digits-qc-epn
-    [[ -z "${QC_JSON_FT0:-}" ]] && QC_JSON_FT0=apricot://o2/components/qc/ANY/any/ft0-digits-qc-epn
-    [[ -z "${QC_JSON_FV0:-}" ]] && QC_JSON_FV0=apricot://o2/components/qc/ANY/any/fv0-digits-qc-epn
+    [[ -z "${QC_JSON_FDD:-}" ]] && QC_JSON_FDD=apricot://o2/components/qc/ANY/any/fdd-digits-qcmn-epn
+    [[ -z "${QC_JSON_FT0:-}" ]] && QC_JSON_FT0=apricot://o2/components/qc/ANY/any/ft0-digits-qcmn-epn
+    [[ -z "${QC_JSON_FV0:-}" ]] && QC_JSON_FV0=apricot://o2/components/qc/ANY/any/fv0-digits-qcmn-epn
     if [[ -z "${QC_JSON_EMC:-}" ]]; then
       if [[ "$BEAMTYPE" == "PbPb" ]]; then
         if has_detector CTP; then
@@ -117,6 +117,7 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
     [[ -z "${QC_JSON_CPV:-}" ]] && QC_JSON_CPV=apricot://o2/components/qc/ANY/any/cpv-physics-qcmn-epn
     [[ -z "${QC_JSON_TRD:-}" ]] && QC_JSON_TRD=apricot://o2/components/qc/ANY/any/trd-full-qcmn
     [[ -z "${QC_JSON_PHS:-}" ]] && QC_JSON_PHS=apricot://o2/components/qc/ANY/any/phos-raw-clusters-epn
+    [[ -z "${QC_JSON_CTP:-}" ]] && QC_JSON_CTP=apricot://o2/components/qc/ANY/any/ctp-raw-qc-epn
     [[ -z "${QC_JSON_GLO_PRIMVTX:-}" ]] && QC_JSON_GLO_PRIMVTX=apricot://o2/components/qc/ANY/any/glo-vtx-qcmn-epn
     [[ -z "${QC_JSON_GLO_ITSTPC:-}" ]] && QC_JSON_GLO_ITSTPC=apricot://o2/components/qc/ANY/any/glo-itstpc-mtch-qcmn-epn
     if [[ -z "${QC_JSON_TOF_MATCH:-}" ]]; then
@@ -310,9 +311,9 @@ elif [[ -z ${QC_JSON_FROM_OUTSIDE:-} ]]; then
               ITSTPCMatchQuery+=";matchTPCTRDTOF/TOF/MTC_TPCTRD/0"
               TRACKSOURCESK0+=",TPC-TRD-TOF"
             fi
-            if has_secvtx_source TOF; then
+            if has_detector_in_secvtx_sources TOF; then
               ITSTPCMatchQuery+=";tofcluster:TOF/CLUSTERS/0"
-              TRACKSOURCESK0+=",TOF"
+              has_secvtx_source TOF && TRACKSOURCESK0+=",TOF"
             fi
             if has_secvtx_source TRD; then
               TRACKSOURCESK0+=",TRD"

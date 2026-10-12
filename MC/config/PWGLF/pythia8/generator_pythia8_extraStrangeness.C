@@ -10,13 +10,14 @@
 #include "TDatabasePDG.h"
 
 #include <map>
+#include <ctime>
 #include <unordered_set>
 
 class GeneratorPythia8ExtraStrangeness : public o2::eventgen::GeneratorPythia8
 {
 public:
   /// Constructor
-  GeneratorPythia8ExtraStrangeness() {
+  GeneratorPythia8ExtraStrangeness(double enhancementXi, double enhancementOmega) {
     genMinPt=0.0;
     genMaxPt=20.0;
     genminY=-1.0;
@@ -35,8 +36,10 @@ public:
     xProd=0;
     yProd=0;
     zProd=0;
-    xProd=0.; yProd=0.; zProd=0.;
-    
+
+    fEnhancementXi = enhancementXi;
+    fEnhancementOmega = enhancementOmega;
+
     fLVHelper = std::make_unique<TLorentzVector>();
 
     fSpectrumXi = std::make_unique<TF1>("fSpectrumXi", this, &GeneratorPythia8ExtraStrangeness::boltzPlusPower, 0., genMaxPt, 5, "GeneratorPythia8ExtraStrangeness", "boltzPlusPower");
@@ -60,7 +63,7 @@ public:
     Double_t mt = TMath::Sqrt(mass * mass + pt * pt);
     return TMath::ASinH(mt / pt * TMath::SinH(y));
   }
-  
+
   /// set 4-momentum
   void set4momentum(double input_px, double input_py, double input_pz){
     px = input_px;
@@ -206,7 +209,7 @@ Double_t boltzPlusPower(const Double_t *x, const Double_t *p)
 //   Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
     //Adjust relative abundance of multi-strange particles by injecting some
     Double_t lExpectedXiToPion = TMath::Max(4.74929e-03 - 4.08255e-03*TMath::Exp(-nChargedParticlesAtMidRap/4.76660e+00) - 0.00211334,0.);
-    Double_t lExpectedXi = 5.0*nPionsAtMidRap*lExpectedXiToPion; // extra rich, factor 5
+    Double_t lExpectedXi = fEnhancementXi*nPionsAtMidRap*lExpectedXiToPion; // extra rich, factor 5
     Int_t lXiYield = gRandom->Poisson(3*lExpectedXi); //factor 3: fix the rapidity acceptance
     m = 1.32171;
     pdg = 3312;
@@ -227,7 +230,7 @@ Double_t boltzPlusPower(const Double_t *x, const Double_t *p)
     // OMEGA ABUNDANCE FIX
     //Adjust relative abundance of multi-strange particles by injecting some
     Double_t lExpectedOmegaToPion = TMath::Max(8.55057e-04 - 7.38732e-04*TMath::Exp(-nChargedParticlesAtMidRap/2.40545e+01) - 6.56785e-05,0.);
-    Double_t lExpectedOmega = 30.0*nPionsAtMidRap*lExpectedOmegaToPion; // extra rich, factor 30 (omega -> rarer -> smaller Nch bias -> ok to enrich more)
+    Double_t lExpectedOmega = fEnhancementOmega*nPionsAtMidRap*lExpectedOmegaToPion; // extra rich, factor 30 (omega -> rarer -> smaller Nch bias -> ok to enrich more)
     Int_t lOmegaYield = gRandom->Poisson(3*lExpectedOmega); //factor 3: fix the rapidity acceptance
     m = 1.67245;
     pdg = 3334;
@@ -270,16 +273,22 @@ private:
   double xProd;      /// x-coordinate position production vertex [cm]
   double yProd;      /// y-coordinate position production vertex [cm]
   double zProd;      /// z-coordinate position production vertex [cm]
-  
+
+  double fEnhancementXi;     /// Enhancement factor for Xi
+  double fEnhancementOmega;  /// Enhancement factor for Omega
+
   std::unique_ptr<TLorentzVector> fLVHelper;
   std::unique_ptr<TF1> fSpectrumXi;
   std::unique_ptr<TF1> fSpectrumOm;
 };
 
- FairGenerator *generator_extraStrangeness()
+ FairGenerator *generator_extraStrangeness(double enhancementXi = 5.0, double enhancementOmega = 30.0)
  {
-  auto generator = new GeneratorPythia8ExtraStrangeness();
-  gRandom->SetSeed(0);
+  auto generator = new GeneratorPythia8ExtraStrangeness(enhancementXi,enhancementOmega);
+  //gRandom->SetSeed(0);
+
+  // Initialize ROOT random number generator with a time-dependent seed to get different sequences each run
+  gRandom->SetSeed(static_cast<UInt_t>(time(nullptr)));
   generator->readString("Random:setSeed = on");
   generator->readString("Random:seed =" + std::to_string(gRandom->Integer(900000000 - 2) + 1));
   return generator;

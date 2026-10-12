@@ -29,5 +29,5 @@ erroredjobs=${tokens[8]}
 echo "MasterID $masterid"
 echo "TotalJobs $totaljobs"
 echo "DoneJobs $donejobs"
-echo "RunningJobs $donejobs"
+echo "RunningJobs $runningjobs"
 echo "ErroredJobs $erroredjobs"

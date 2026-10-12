@@ -208,7 +208,7 @@ while [ $# -gt 0 ] ; do
         --cores) CPUCORES=$2; shift 2 ;; # allow to specify the CPU cores (check compatibility with partition !)
         --dry) DRYRUN="ON"; shift 1 ;; # do a try run and not actually interact with the GRID (just produce local jdl file)
         --o2tag) O2TAG=$2; shift 2 ;; #
-	--packagespec) PACKAGESPEC=$2; shift 2 ;; # the alisw, cvmfs package list (command separated - example: '"VO_ALICE@FLUKA_VMC::4-1.1-vmc3-1","VO_ALICE@O2::daily-20230628-0200-1"')
+        --packagespec) PACKAGESPEC=$2; shift 2 ;; # the alisw, cvmfs package list (command separated - example: '"VO_ALICE@FLUKA_VMC::4-1.1-vmc3-1","VO_ALICE@O2::daily-20230628-0200-1"')
         --asuser) ASUSER=$2; shift 2 ;; #
         --label) JOBLABEL=$2; shift 2 ;; # label identifying the production (e.g. as a production identifier)
         --mattermost) MATTERMOSTHOOK=$2; shift 2 ;; # if given, status and metric information about the job will be sent to this hook
@@ -218,7 +218,8 @@ while [ $# -gt 0 ] ; do
         --wait) WAITFORALIEN=ON; shift 1 ;; #wait for alien jobs to finish
         --wait-any) WAITFORALIENANY=ON; WAITFORALIEN=ON; shift 1 ;; #wait for any good==done alien jobs to return
         --outputspec) OUTPUTSPEC=$2; shift 2 ;; #provide comma separate list of JDL file specs to be put as part of JDL Output field (example '"*.log@disk=1","*.root@disk=2"')
-	-h) Usage ; exit ;;
+        --split-on-collection) DATACOLLECTION=$2; shift 2 ;; # this will split the jobs on InputDataCollection and "file" mode
+        -h) Usage ; exit ;;
         --help) Usage ; exit ;;
         --fetch-output) FETCHOUTPUT=ON; shift 1 ;; # if to fetch all JOB output locally (to make this job as if it ran locally); only works when we block until all JOBS EXIT
         *) break ;;
@@ -229,7 +230,13 @@ export JOBLABEL
 export MATTERMOSTHOOK
 export CONTROLSERVER
 
-[[ $PRODSPLIT -gt 100 ]] && echo "Production split needs to be smaller than 100 for the moment" && exit 1
+# Validate the production split level and derive the zero-padding width used for the
+# per-subjob OutputDir counter (#alien_counter_<W>i#) and for local fetching. The width
+# adapts to PRODSPLIT (minimum 3, so existing 3-digit layouts are unchanged), which lifts
+# the former hard cap of 100 while keeping OutputDir naming consistent at any scale.
+[[ ! $PRODSPLIT =~ ^[0-9]+$ || $PRODSPLIT -lt 1 ]] && echo "Production split must be a positive integer (got '${PRODSPLIT}')" && exit 1
+COUNTERWIDTH=${#PRODSPLIT}
+[[ $COUNTERWIDTH -lt 3 ]] && COUNTERWIDTH=3
 
 # check for presence of jq (needed in code path to fetch output files)
 [[ "$FETCHOUTPUT" ]] && { which jq &> /dev/null || { echo "Could not find jq command. Please load or install" && exit 1; }; }
@@ -355,14 +362,22 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
   cd "${GRID_SUBMIT_WORKDIR}"
 
   QUOT='"'
+  SPLITMODE="production:1-${PRODSPLIT}"
+  if [ "${DATACOLLECTION}" ]; then
+    SPLITMODE="file"
+  fi
   # ---- Generate JDL ----------------
   # TODO: Make this configurable or read from a preamble section in the jobfile
   cat > "${MY_JOBNAMEDATE}.jdl" <<EOF
 Executable = "${MY_BINDIR}/${MY_JOBNAMEDATE}.sh";
 Arguments = "${CONTINUE_WORKDIR:+"-c ${CONTINUE_WORKDIR}"} --local ${O2TAG:+--o2tag ${O2TAG}} --ttl ${JOBTTL} --label ${JOBLABEL:-label} --prodsplit ${PRODSPLIT} ${MATTERMOSTHOOK:+--mattermost ${MATTERMOSTHOOK}} ${CONTROLSERVER:+--controlserver ${CONTROLSERVER}}";
 InputFile = "LF:${MY_JOBWORKDIR}/alien_jobscript.sh";
-${PRODSPLIT:+Split = ${QUOT}production:1-${PRODSPLIT}${QUOT};}
-OutputDir = "${MY_JOBWORKDIR}/${PRODSPLIT:+#alien_counter_03i#}";
+${DATACOLLECTION:+InputDataList = ${QUOT}input.list${QUOT};}
+${DATACOLLECTION:+InputDataListFormat = ${QUOT}txt-list${QUOT};}
+${DATACOLLECTION:+InputDataCollection = ${QUOT}LF:${MY_JOBWORKDIR}/collection.xml,nodownload${QUOT};}
+${PRODSPLIT:+Split = ${QUOT}${SPLITMODE}${QUOT};}
+${DATACOLLECTION:+SplitMaxInputFileNumber = 1;}
+OutputDir = "${MY_JOBWORKDIR}/${PRODSPLIT:+#alien_counter_0${COUNTERWIDTH}i#}";
 Requirements = member(other.GridPartitions,"${GRIDPARTITION:-multicore_8}");
 CPUCores = "${CPUCORES}";
 MemorySize = "60GB";
@@ -382,6 +397,15 @@ EOF
   if [ ! "${DRYRUN}" ]; then
     command_file="alien_commands.txt"
 
+    if [ "$DATACOLLECTION" ]; then
+      pok "Preparing data collection XML file"
+      alien.py toXml $(cat ${DATACOLLECTION}) > collection.xml
+      if [ "$?" != "0" ]; then
+        per "Problem with data collection preparation"
+        exit 1
+      fi
+    fi
+
     pok "Preparing job \"$MY_JOBNAMEDATE\""
     (
       # assemble all GRID interaction in a single script / transaction
@@ -396,6 +420,9 @@ EOF
       echo "rm ${MY_BINDIR}/${MY_JOBNAMEDATE}.sh" >> ${command_file}    # remove current job script
       echo "cp file:${PWD}/${MY_JOBNAMEDATE}.jdl alien://${MY_JOBWORKDIR}/${MY_JOBNAMEDATE}.jdl@DISK=1" >> ${command_file}  # copy the jdl
       echo "cp file:${THIS_SCRIPT} alien://${MY_BINDIR}/${MY_JOBNAMEDATE}.sh@DISK=1" >> ${command_file}  # copy current job script to AliEn
+      if [ "${DATACOLLECTION}" ]; then
+        echo "cp file:collection.xml alien://${MY_JOBWORKDIR}/collection.xml"  >> ${command_file}
+      fi
       [ ! "${CONTINUE_WORKDIR}" ] && echo "cp file:${MY_JOBSCRIPT} alien://${MY_JOBWORKDIR}/alien_jobscript.sh" >> ${command_file}
     ) > alienlog.txt 2>&1
 
@@ -483,7 +510,7 @@ EOF
             THIS_JOB=${SUBJOBIDS[jobindex]}
             echo "Fetching for job ${THIS_JOB}"
             if [ "${THIS_STATUS}" == "DONE" ]; then
-               SPLITOUTDIR=$(printf "%03d" ${splitcounter})
+               SPLITOUTDIR=$(printf "%0${COUNTERWIDTH}d" ${splitcounter})
                [ ! -f ${SPLITOUTDIR} ] && mkdir ${SPLITOUTDIR}
                echo "Fetching result files for subjob ${splitcounter} into ${PWD}"
 	             CPCMD="alien.py cp ${MY_JOBWORKDIR}/${SPLITOUTDIR}/* file:./${SPLITOUTDIR}"
@@ -578,6 +605,7 @@ cat /proc/meminfo > alien_meminfo.log
 # ----------- PREPARE SOME ALIEN ENV -- useful for the job -----------
 
 if [ "${ONGRID}" = "1" ]; then
+  export ALIENPY_JCENTRAL=alice-jcentral.cern.ch
   notify_mattermost "STARTING GRID ${ALIEN_PROC_ID} CHECK $(which alien.py)"
   alien.py ps --jdl ${ALIEN_PROC_ID} > this_jdl.jdl
   ALIEN_JOB_OUTPUTDIR=$(grep "OutputDir" this_jdl.jdl | awk '//{print $3}' | sed 's/"//g' | sed 's/;//')

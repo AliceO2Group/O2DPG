@@ -1,7 +1,12 @@
+R__LOAD_LIBRARY(EvtGen)
+R__ADD_INCLUDE_PATH($EVTGEN_ROOT/include)
+
 #include "FairGenerator.h"
 #include "Generators/GeneratorPythia8.h"
 #include "Generators/GeneratorPythia8Param.h"
+#include "EvtGen/EvtGen.hh"
 #include "Pythia8/Pythia.h"
+#include "Pythia8Plugins/EvtGen.h"
 #include "TRandom.h"
 #include "TDatabasePDG.h"
 #include <fairlogger/Logger.h>
@@ -33,8 +38,11 @@ public:
     mHadronPdgList = hadronPdgList;
     mPartPdgToReplaceList = partPdgToReplaceList;
     mFreqReplaceList = freqReplaceList;
-    // Ds1*(2700), Ds1*(2860), Ds3*(2860), Xic(3055)+, Xic(3080)+, Xic(3055)0, Xic(3080)0, LambdaC(2625), LambdaC(2595)
-    mCustomPartPdgs = {30433, 40433, 437, 4315, 4316, 4325, 4326, 4124, 14122};
+    mEvtGen = nullptr;
+    mUseEvtGen = false;
+    mEvtGenDecTable = "";
+    // Ds1*(2700), Ds1*(2860), Ds3*(2860), Xic(3055)+, Xic(3080)+, Xic(3055)0, Xic(3080)0, LambdaC(2625), LambdaC(2595), LambdaC(2860), LambdaC(2880), LambdaC(2940), ThetaC(3100)
+    mCustomPartPdgs = {30433, 40433, 437, 4315, 4316, 4325, 4326, 4124, 14122, 24124, 24126, 4125, 9422111};
     mCustomPartMasses[30433] = 2.714f;
     mCustomPartMasses[40433] =  2.859f;
     mCustomPartMasses[437] = 2.860f;
@@ -44,6 +52,10 @@ public:
     mCustomPartMasses[4326] = 3.0772f;
     mCustomPartMasses[4124] = 2.62810f;
     mCustomPartMasses[14122] = 2.59225f;
+    mCustomPartMasses[24124] = 2.8561f;
+    mCustomPartMasses[24126] = 2.8816;
+    mCustomPartMasses[4125] = 2.9396f;
+    mCustomPartMasses[9422111] = 3.099f;
     mCustomPartWidths[30433] = 0.122f;
     mCustomPartWidths[40433] =  0.160f;
     mCustomPartWidths[437] = 0.053f;
@@ -53,6 +65,10 @@ public:
     mCustomPartWidths[4326] = 0.0036f;
     mCustomPartWidths[4124] = 0.00052f;
     mCustomPartWidths[14122] = 0.0026f;
+    mCustomPartWidths[24124] = 0.0676f;
+    mCustomPartWidths[24126] = 0.0056f;
+    mCustomPartWidths[4125] = 0.017f;
+    mCustomPartWidths[9422111] = 0.0000083f;
     Print();
   }    
 
@@ -106,6 +122,10 @@ public:
       pdgToReplace.push_back(mPartPdgToReplaceList[iRepl].at(0));
     }
 
+    if (mUseEvtGen) {
+      mEvtGen = new Pythia8::EvtGenDecays(&mPythia, mEvtGenDecTable.data(), gSystem->ExpandPathName("$EVTGEN_ROOT/share/EvtGen/evt.pdl"));
+    }
+
     return o2::eventgen::GeneratorPythia8::Init();
   }
 
@@ -127,6 +147,14 @@ public:
   {
     return mUsedSeed;
   };
+  void setUseEvtGenDecayer(std::string evtGenDecTable = "") {
+    mUseEvtGen = true;
+    if (evtGenDecTable.empty()) {
+      mEvtGenDecTable = gSystem->ExpandPathName("$EVTGEN_ROOT/share/EvtGen/DECAY.DEC");
+    } else {
+      mEvtGenDecTable = gSystem->ExpandPathName(evtGenDecTable.data());
+    }
+  }
 
 protected:
   //__________________________________________________________________
@@ -159,6 +187,10 @@ protected:
       {
         if (GeneratorPythia8::generateEvent())
         {
+          if (mUseEvtGen) {
+            mEvtGen->decay();
+            checkConsistency();
+          }
           genOk = selectEvent();
         }
       }
@@ -171,6 +203,12 @@ protected:
       while (!genOk)
       {
         genOk = GeneratorPythia8::generateEvent();
+        if (genOk) {
+          if (mUseEvtGen) {
+            mEvtGen->decay();
+            checkConsistency();
+          }
+        }
       }
       notifySubGenerator(0);
     }
@@ -189,6 +227,8 @@ protected:
 
     for (auto iPart{0}; iPart < mPythia.event.size(); ++iPart)
     {
+
+
       // search for Q-Qbar mother with at least one Q in rapidity window
       if (!isGoodAtPartonLevel)
       {
@@ -258,16 +298,13 @@ protected:
 
   bool replaceParticle(int iPartToReplace, int pdgCodeNew) {
 
-    auto mothers = mPythia.event[iPartToReplace].motherList();
-
-    std::array<int, 25> pdgDiquarks = {1103, 2101, 2103, 2203, 3101, 3103, 3201, 3203, 3303, 4101, 4103, 4201, 4203, 4301, 4303, 4403, 5101, 5103, 5201, 5203, 5301, 5303, 5401, 5403, 5503};
-
-    for (auto const& mother: mothers) {
-      auto pdgMother = std::abs(mPythia.event[mother].id());
-      if (pdgMother > 100 && std::find(pdgDiquarks.begin(), pdgDiquarks.end(), pdgMother) == pdgDiquarks.end()) {
-        return false;
-      }
+    // Check status code: particles with status 91-99 come from decays and should not be replaced
+    int statusMother = std::abs(mPythia.event[iPartToReplace].status());
+    if (statusMother >= 91 && statusMother <= 99) {
+      return false;
     }
+
+    auto mothers = mPythia.event[iPartToReplace].motherList();
 
     int charge = mPythia.event[iPartToReplace].id() / std::abs(mPythia.event[iPartToReplace].id());
     float px = mPythia.event[iPartToReplace].px();
@@ -347,11 +384,22 @@ protected:
     return true;
   }
 
+  void checkConsistency() {
+    for (int iPart{1}; iPart<mPythia.event.size(); ++iPart) {
+      // verify if all particles of decay chain are in the TDatabasePDG
+      // taken from https://github.com/AliceO2Group/O2DPG/blob/master/MC/config/PWGDQ/EvtGen/GeneratorEvtGen.C
+      if (!TDatabasePDG::Instance()->GetParticle(abs(mPythia.event[iPart].id()))) {
+        // std::cout << "Particle code non known in TDatabasePDG " << mPythia.event[iPart].id() << " - set pdg = 89" << std::endl;
+        mPythia.event[iPart].id(89);
+      }
+    }
+  }
+
   private:
   // Interface to override import particles
   Pythia8::Event mOutputEvent;
 
-  // Properties of selection
+// Properties of selection
   int mQuarkPdg;
   float mQuarkRapidityMin;
   float mQuarkRapidityMax;
@@ -374,6 +422,12 @@ protected:
 
   // Control alternate trigger on different hadrons
   std::vector<int> mHadronPdgList = {};
+
+  // EVTGEN decayer from PYTHIA8 plugins
+  Pythia8::EvtGenDecays *mEvtGen;
+  bool mUseEvtGen;
+  std::string mEvtGenDecTable;
+
 };
 
 // Predefined generators:
@@ -439,5 +493,22 @@ FairGenerator *GeneratorPythia8GapHF(int inputTriggerRatio, float yQuarkMin = -1
   myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
   myGen->setHadronRapidity(yHadronMin, yHadronMax);
 
+  return myGen;
+}
+
+// Beauty-enriched with EvtGen decayer
+FairGenerator *GeneratorPythia8GapTriggeredBeautyWithEvtGen(int inputTriggerRatio, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {}, std::vector<std::array<int, 2>> partPdgToReplaceList = {}, std::vector<float> freqReplaceList = {}, std::string decayTable = "")
+{
+  auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, std::vector<int>{5}, hadronPdgList, partPdgToReplaceList, freqReplaceList);
+  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
+  myGen->setUsedSeed(seed);
+  myGen->readString("Random:setSeed on");
+  myGen->readString("Random:seed " + std::to_string(seed));
+  myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
+  if (hadronPdgList.size() != 0)
+  {
+    myGen->setHadronRapidity(yHadronMin, yHadronMax);
+  }
+  myGen->setUseEvtGenDecayer(decayTable);
   return myGen;
 }

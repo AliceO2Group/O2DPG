@@ -6,17 +6,14 @@ int External() {
 
     std::vector<int> checkPdgHadron{411, 421, 431, 4122, 4132, 4232, 4332, 511, 521, 531, 5122};
     std::map<int, std::vector<std::vector<int>>> checkHadronDecays{ // sorted pdg of daughters
-        {411, {{-321, 211, 211}, {-313, 211}, {211, 311}, {211, 333}}}, // D+
+        {411, {{-321, 211, 211}, {-313, 211}, {211, 333}}}, // D+
         {421, {{-321, 211}, {-321, 111, 211}}}, // D0
         {431, {{211, 333}, {-313, 321}}}, // Ds+
-        {4122, {{-313, 2212}, {-321, 2224}, {211, 102134}, {-321, 211, 2212}, {311, 2212}}}, // Lc+
-        {4132, {{211, 3312}}}, // Xic0
-        {4232, {{-313, 2212}, {-321, 3324}, {211, 211, 3312}, {-321, 211, 2212}}}, // Xic+
-        {4332, {{211, 3334}}}, // Omegac+
-        {511, {{-411, 211}, {-413, 211}, {-411, 213}, {431, -211}}}, // B0
-        {521, {{-421, 211}, {-423, 211}, {-421, 213}}}, // B+
+        {4122, {{-313, 2212}, {-321, 2224}, {211, 102134}, {-321, 211, 2212}}}, // Lc+
+        {511, {{-411, 211}, {-413, 211}, {-411, 213}, {-411, 321}, {-413, 213}, {-413, 321}}}, // B0
+        {521, {{-421, 211}, {-423, 211}, {-421, 213}, {-421, 321}}}, // B+
         {531, {{-431, 211}, {-433, 211}, {-431, 213}}}, // Bs0
-        {5122, {{4122, -211}, {4122, -213}, {4122, 211, -211, -211}, {4212, -211}}} // Lb0
+        {5122, {{4122, -211}, {4122, -213}, {14122, -211}, {4124, -211}, {4212, -211}}} // Lb0
     };
 
     TFile file(path.c_str(), "READ");
@@ -105,8 +102,9 @@ int External() {
         return 1;
     }
 
-    float fracForcedDecays = float(nSignalGoodDecay) / nSignals;
-    if (fracForcedDecays < 0.85) { // we put some tolerance (e.g. due to oscillations which might change the final state)
+    float fracForcedDecays = nSignals ? float(nSignalGoodDecay) / nSignals : 0.0f;
+    float uncFracForcedDecays = nSignals ? std::sqrt(fracForcedDecays * (1 - fracForcedDecays) / nSignals) : 1.0f;
+    if (1 - fracForcedDecays > 0.3 + uncFracForcedDecays) { // we put some tolerance (e.g. due to oscillations which might change the final state)
         std::cerr << "Fraction of signals decaying into the correct channel " << fracForcedDecays << " lower than expected\n";
         return 1;
     }

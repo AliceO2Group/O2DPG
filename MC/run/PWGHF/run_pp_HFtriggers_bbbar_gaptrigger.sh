@@ -20,7 +20,7 @@ NTIMEFRAMES=${NTIMEFRAMES:-1}
 # create workflow
 
 #ccbar filter
-${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -col pp -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 500000 -confKey "Diamond.width[2]=6.;" -e ${SIMENGINE} ${SEED} -mod "--skipModules ZDC" \
+${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py -eCM 13600 -col pp -gen external -j ${NWORKERS} -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate 500000 -confKey "Diamond.width[2]=6.;" -e ${SIMENGINE} ${SEED} \
         -ini $O2DPG_ROOT/MC/config/PWGHF/ini/GeneratorHFTrigger_bbbar.ini \
 
 # run workflow

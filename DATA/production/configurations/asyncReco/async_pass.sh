@@ -205,6 +205,14 @@ if [[ "$ALIEN_JDL_EXTRACTTIMESERIES" == "1" ]]; then
   export ADD_CALIB=1
 fi
 
+if [[ "${ALIEN_JDL_EXTRACTCOSMICS:-}" == "1" ]]; then
+  export ADD_CALIB=1
+fi
+
+if [[ "$ALIEN_JDL_DOTPCTIMEGAINCALIB" == "1" ]]; then
+  export ADD_CALIB=1
+fi
+
 # AOD file size
 if [[ -n "$ALIEN_JDL_AODFILESIZE" ]]; then
   export AOD_FILE_SIZE="$ALIEN_JDL_AODFILESIZE"
@@ -280,16 +288,13 @@ fi
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
 ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
 
-# TFDELAY and throttling
-export TFDELAYSECONDS=40
-if [[ -n "$ALIEN_JDL_TFDELAYSECONDS" ]]; then
-  TFDELAYSECONDS="$ALIEN_JDL_TFDELAYSECONDS"
-# ...otherwise, it depends on whether we have throttling
-elif [[ -n "$ALIEN_JDL_USETHROTTLING" ]]; then
-  TFDELAYSECONDS=1
-  if [[ -n "$ALIEN_JDL_NOTFDELAY" ]]; then
-    TFDELAYSECONDS=0
-  fi
+# throttling and TF-delay
+: ${TFDELAYSECONDS:=0}
+if [[ -n "$ALIEN_JDL_NOTFDELAY" ]] && [[ "$ALIEN_JDL_NOTFDELAY" -gt 0 ]] ; then
+  TFDELAYSECONDS=0
+fi
+  
+if [[ -n "$ALIEN_JDL_USETHROTTLING" ]] && [[ -z "$TIMEFRAME_RATE_LIMIT" ]] ; then
   export TIMEFRAME_RATE_LIMIT=1
 fi
 
@@ -307,7 +312,7 @@ fi
 if [[ $ALIEN_JDL_DOEMCCALIB == "1" ]]; then
   SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_emcal_emc_offline_calib_workflow= "
 fi
-if [[ $DO_TPC_RESIDUAL_EXTRACTION == "1" ]]; then
+if [[ -n "$DO_TPC_RESIDUAL_EXTRACTION" && $DO_TPC_RESIDUAL_EXTRACTION != "0" ]]; then
   SETTING_ROOT_OUTPUT+="ENABLE_ROOT_OUTPUT_o2_calibration_residual_aggregator= "
 fi
 if [[ $ALIEN_JDL_DOTRDVDRIFTEXBCALIB == "1" ]]; then
@@ -417,7 +422,7 @@ if [[ $ASYNC_PASS_NO_OPTIMIZED_DEFAULTS != 1 ]]; then
   if [[ $ALIEN_JDL_USEGPUS == 1 ]] ; then
     echo "Enabling GPUS"
     if [[ -z $ALIEN_JDL_SITEARCH ]]; then echo "ERROR: Must set ALIEN_JDL_SITEARCH to define GPU architecture!"; exit 1; fi
-    if [[ $ALIEN_JDL_SITEARCH == "NERSC" ]]; then # Disable mlock / ulimit / gpu memory registration - has performance impact, but doesn't work at NERSC for now
+    if [[ $ALIEN_JDL_SITEARCH == "NERSC" || $ALIEN_JDL_SITEARCH == "GENERIC_NVIDIA" || $ALIEN_JDL_SITEARCH == "GENERIC_AMD" ]]; then # Disable mlock / ulimit / gpu memory registration - has performance impact, but doesn't work at NERSC for now
       export SETENV_NO_ULIMIT=1
       export CONFIG_EXTRA_PROCESS_o2_gpu_reco_workflow+="GPU_proc.noGPUMemoryRegistration=1;"
     fi
@@ -428,7 +433,11 @@ if [[ $ASYNC_PASS_NO_OPTIMIZED_DEFAULTS != 1 ]]; then
     elif [[ $ALIEN_JDL_SITEARCH == "EPN_MI50" ]]; then
       ALIEN_JDL_SITEARCH_TMP=EPN
     fi
-    if [[ "ALIEN_JDL_USEFULLNUMADOMAIN" == 0 ]]; then
+    if [[ $ALIEN_JDL_SITEARCH == "GENERIC_NVIDIA" ]]; then
+      export OPTIMIZED_PARALLEL_ASYNC=8cpu_NVIDIA
+    elif [[ $ALIEN_JDL_SITEARCH == "GENERIC_AMD" ]]; then
+      export OPTIMIZED_PARALLEL_ASYNC=8cpu_AMD
+    elif [[ "ALIEN_JDL_USEFULLNUMADOMAIN" == 0 ]]; then
       if [[ $keep -eq 0 ]]; then
         if [[ $ALIEN_JDL_UNOPTIMIZEDGPUSETTINGS != 1 ]]; then
           export OPTIMIZED_PARALLEL_ASYNC=pp_1gpu_${ALIEN_JDL_SITEARCH_TMP} # (16 cores, 1 gpu per job, pp)
@@ -440,9 +449,17 @@ if [[ $ASYNC_PASS_NO_OPTIMIZED_DEFAULTS != 1 ]]; then
       fi
     else
       if [[ $BEAMTYPE == "pp" ]]; then
-        export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA, 4 gpu per job, pp)
+        if [[ $ALIEN_JDL_SITEARCH =~ ^EPN ]]; then
+          export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA, 4 gpu per job, pp)
+        else
+          export OPTIMIZED_PARALLEL_ASYNC=pp_gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 gpu per job, pp)
+        fi
       else  # PbPb
-        export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA 4 gpu per job, PbPb)
+        if [[ $ALIEN_JDL_SITEARCH =~ ^EPN ]]; then
+          export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA 4 gpu per job, PbPb)
+        else
+          export OPTIMIZED_PARALLEL_ASYNC=PbPb_gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 gpu per job, PbPb)
+        fi
       fi
     fi
   else
@@ -479,6 +496,12 @@ WORKFLOW_DETECTORS_EXCLUDE_QC_SCRIPT=${ALIEN_JDL_WORKFLOWDETECTORSEXCLUDEQC:-}
 # print workflow
 if [[ $ALIEN_JDL_SSPLITWF != "1" ]]; then
   env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS_EXCLUDE_QC=$WORKFLOW_DETECTORS_EXCLUDE_QC_SCRIPT ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list > workflowconfig.log
+  exitcode=$?
+  if [[ $exitcode -ne 0 ]]; then
+    echo "exit code from printing workflow is $exitcode" > validation_error.message
+    echo "exit code from printing workflow is $exitcode"
+    exit $exitcode
+  fi
   # run it
   if [[ "0$RUN_WORKFLOW" != "00" ]]; then
     timeStart=`date +%s`
@@ -519,6 +542,12 @@ else
       export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
     done
     env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC,CTP WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    exitcode=$?
+    if [[ $exitcode -ne 0 ]]; then
+      echo "exit code from printing workflow (Step 1) is $exitcode" > validation_error.message
+      echo "exit code from printing workflow (Step 1) is $exitcode"
+      exit $exitcode
+    fi
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
@@ -557,6 +586,12 @@ else
       export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
     done
     env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC,$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    exitcode=$?
+    if [[ $exitcode -ne 0 ]]; then
+      echo "exit code from printing workflow (Step 2) is $exitcode" > validation_error.message
+      echo "exit code from printing workflow (Step 2) is $exitcode"
+      exit $exitcode
+    fi
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
@@ -642,6 +677,12 @@ else
       STEP_3_ROOT_OUTPUT=$SETTING_ROOT_OUTPUT
     fi
     env $STEP_3_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=$READ_TRACKS WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=$READ_CLUSTERS WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS=HMP WORKFLOW_DETECTORS_EXCLUDE_QC=$WORKFLOW_DETECTORS_EXCLUDE_QC_SCRIPT,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    exitcode=$?
+    if [[ $exitcode -ne 0 ]]; then
+      echo "exit code from printing workflow (Step 3) is $exitcode" > validation_error.message
+      echo "exit code from printing workflow (Step 3) is $exitcode"
+      exit $exitcode
+    fi
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
@@ -680,6 +721,12 @@ else
       WORKFLOW_DETECTORS_EXCLUDE_QC_SCRIPT+=",CPV"
       echo "QC_JSON_FROM_OUTSIDE = $QC_JSON_FROM_OUTSIDE"
       env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=$READ_TRACKS WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=$READ_CLUSTERS WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS= WORKFLOW_DETECTORS_EXCLUDE_QC=$WORKFLOW_DETECTORS_EXCLUDE_QC_SCRIPT,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+      exitcode=$?
+      if [[ $exitcode -ne 0 ]]; then
+        echo "exit code from printing workflow (Step 4) is $exitcode" > validation_error.message
+        echo "exit code from printing workflow (Step 4) is $exitcode"
+        exit $exitcode
+      fi
       # run it
       if [[ "0$RUN_WORKFLOW" != "00" ]]; then
         timeStart=`date +%s`

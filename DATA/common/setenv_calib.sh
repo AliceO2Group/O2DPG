@@ -20,7 +20,7 @@ if has_detector_calib TOF && has_detector_reco TOF && ( ( has_detectors_reco ITS
 if has_detector_calib TPC && has_detectors ITS TPC && has_detector_matching ITSTPC; then CAN_DO_CALIB_TPC_SCDCALIB=1; else CAN_DO_CALIB_TPC_SCDCALIB=0; fi
 if has_detector_calib TPC && has_processing_step TPC_DEDX; then CAN_DO_CALIB_TPC_TIMEGAIN=1; CAN_DO_CALIB_TPC_RESPADGAIN=1; else CAN_DO_CALIB_TPC_TIMEGAIN=0; CAN_DO_CALIB_TPC_RESPADGAIN=0; fi
 if has_detector_calib TPC && has_detectors ITS TPC && has_detector_matching ITSTPC; then CAN_DO_CALIB_TPC_VDRIFTTGL=1; else CAN_DO_CALIB_TPC_VDRIFTTGL=0; fi
-if has_detector_calib TPC; then CAN_DO_CALIB_TPC_IDC=1; CAN_DO_CALIB_TPC_SAC=1; else CAN_DO_CALIB_TPC_IDC=0; CAN_DO_CALIB_TPC_SAC=0; fi
+if has_detector_calib TPC; then CAN_DO_CALIB_TPC_IDC=1; CAN_DO_CALIB_TPC_SAC=1; CAN_DO_CALIB_TPC_CMV=1; else CAN_DO_CALIB_TPC_IDC=0; CAN_DO_CALIB_TPC_SAC=0; CAN_DO_CALIB_TPC_CMV=0; fi
 if [[ ! -z ${FLP_IDS:-} && ! $FLP_IDS =~ (^|,)"145"(,|$) ]] || [[ "${GEN_TOPO_DEPLOYMENT_TYPE:-}" == "ALICE_STAGING" ]]; then CAN_DO_CALIB_TPC_SAC=0; fi
 if has_detector_calib TRD && has_detectors ITS TPC TRD && has_detector_matching ITSTPCTRD; then CAN_DO_CALIB_TRD_VDRIFTEXB=1; CAN_DO_CALIB_TRD_GAIN=1; CAN_DO_CALIB_TRD_T0=1; else CAN_DO_CALIB_TRD_VDRIFTEXB=0; CAN_DO_CALIB_TRD_GAIN=0; CAN_DO_CALIB_TRD_T0=0; fi
 if has_detector_calib EMC && has_detector_reco EMC; then CAN_DO_CALIB_EMC_BADCHANNELCALIB=1; CAN_DO_CALIB_EMC_TIMECALIB=1; else CAN_DO_CALIB_EMC_BADCHANNELCALIB=0; CAN_DO_CALIB_EMC_TIMECALIB=0; fi
@@ -34,13 +34,14 @@ if [[ $SYNCMODE == 1 ]] && has_processing_step ENTROPY_ENCODER && [[ ! -z "$WORK
 # for async recalibration
 if has_detector_calib EMC && has_detector_reco EMC && [[ $SYNCMODE != 1 ]]; then CAN_DO_CALIB_EMC_ASYNC_RECALIB=1; else CAN_DO_CALIB_EMC_ASYNC_RECALIB=0; fi
 if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC; then CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS=1; else CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS=0; fi
-if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC && has_detector_reco ITS && has_detector_reco FT0; then CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=1; else CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=0; fi
+if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC; then CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=1; else CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=0; fi
+if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC; then CAN_DO_CALIB_ASYNC_EXTRACTCOSMICS=1; else CAN_DO_CALIB_ASYNC_EXTRACTCOSMICS=0; fi
 
 # additional individual settings for calibration workflows
 if has_detector CTP; then export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"; else export CALIB_TPC_SCDCALIB_CTP_INPUT=""; fi
 if [[ ${DISABLE_TRD_PH:-} == 1 ]]; then CAN_DO_CALIB_TRD_T0=0; fi
 
-: ${CALIB_TPC_SCDCALIB_SLOTLENGTH:=600} # the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
+: ${CALIB_TPC_SCDCALIB_SLOTLENGTH:=300} # the slot length needs to be known both on the aggregator and the processing nodes, therefore it is defined (in seconds!) here
 : ${CALIB_TPC_SCDCALIB_SENDTRKDATA:=1}  # by default, we want to write the track information in addition to unbinned residuals to allow finer filtering offline
 
 if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then # Calibrations enabled in non-COSMIC runs
@@ -51,17 +52,17 @@ if [[ $BEAMTYPE != "cosmic" ]] || [[ ${FORCECALIBRATIONS:-} == 1 ]] ; then # Cal
   if [[ $CAN_DO_CALIB_PRIMVTX_MEANVTX == 1 ]]; then
     if [[ -z ${CALIB_PRIMVTX_MEANVTX+x} ]]; then CALIB_PRIMVTX_MEANVTX=1; fi
   fi
-  
+
   # calibrations for ITS
   if [[ $CAN_DO_CALIB_ITS_DEADMAP_TIME == 1 ]]; then
     if [[ -z ${CALIB_ITS_DEADMAP_TIME+x} ]]; then CALIB_ITS_DEADMAP_TIME=1; fi
   fi
-  
+
   # calibrations for MFT
   if [[ $CAN_DO_CALIB_MFT_DEADMAP_TIME == 1 ]]; then
     if [[ -z ${CALIB_MFT_DEADMAP_TIME+x} ]]; then CALIB_MFT_DEADMAP_TIME=1; fi
   fi
-  
+
   # calibrations for TOF
   if [[ $CAN_DO_CALIB_TOF_DIAGNOSTICS == 1 ]]; then
     if [[ -z ${CALIB_TOF_DIAGNOSTICS+x} ]]; then CALIB_TOF_DIAGNOSTICS=1; fi
@@ -178,6 +179,12 @@ if [[ $CAN_DO_CALIB_TPC_SAC == 1 ]]; then
     fi
   fi
 fi
+# CMV (be default, it is always disabled for now)
+if [[ $CAN_DO_CALIB_TPC_CMV == 1 ]]; then
+  if [[ -z ${CALIB_TPC_CMV+x} ]]; then
+		CALIB_TPC_CMV=0;
+  fi
+fi
 
 ( [[ -z ${CALIB_FT0_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_FT0_INTEGRATEDCURR == 0 ]] ) && CALIB_FT0_INTEGRATEDCURR=0
 ( [[ -z ${CALIB_FV0_INTEGRATEDCURR:-} ]] || [[ $CAN_DO_CALIB_FV0_INTEGRATEDCURR == 0 ]] ) && CALIB_FV0_INTEGRATEDCURR=0
@@ -193,6 +200,7 @@ fi
 ( [[ -z ${CALIB_TPC_RESPADGAIN:-} ]] || [[ $CAN_DO_CALIB_TPC_RESPADGAIN == 0 ]] ) && CALIB_TPC_RESPADGAIN=0
 ( [[ -z ${CALIB_TPC_IDC:-} ]] || [[ $CAN_DO_CALIB_TPC_IDC == 0 ]] ) && CALIB_TPC_IDC=0
 ( [[ -z ${CALIB_TPC_SAC:-} ]] || [[ $CAN_DO_CALIB_TPC_SAC == 0 ]] ) && CALIB_TPC_SAC=0
+( [[ -z ${CALIB_TPC_CMV:-} ]] || [[ $CAN_DO_CALIB_TPC_CMV == 0 ]] ) && CALIB_TPC_CMV=0
 ( [[ -z ${CALIB_TPC_VDRIFTTGL:-} ]] || [[ $CAN_DO_CALIB_TPC_VDRIFTTGL == 0 ]] ) && CALIB_TPC_VDRIFTTGL=0
 ( [[ -z ${CALIB_TRD_VDRIFTEXB:-} ]] || [[ $CAN_DO_CALIB_TRD_VDRIFTEXB == 0 ]] ) && CALIB_TRD_VDRIFTEXB=0
 ( [[ -z ${CALIB_TRD_GAIN:-} ]] || [[ $CAN_DO_CALIB_TRD_GAIN == 0 ]] ) && CALIB_TRD_GAIN=0
@@ -215,6 +223,7 @@ fi
 ( [[ -z ${CALIB_ASYNC_DISABLE3DCURRENTS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_DISABLE3DCURRENTS == 0 ]] ) && CALIB_ASYNC_DISABLE3DCURRENTS=0
 : ${ON_SKIMMED_DATA:=0}
 ( [[ -z ${CALIB_ASYNC_EXTRACTTIMESERIES:-} ]] || [[ $CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES == 0 ]] ) && CALIB_ASYNC_EXTRACTTIMESERIES=0
+( [[ -z ${CALIB_ASYNC_EXTRACTCOSMICS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_EXTRACTCOSMICS == 0 ]] ) && CALIB_ASYNC_EXTRACTCOSMICS=0
 
 
 if [[ "0${GEN_TOPO_VERBOSE:-}" == "01" ]]; then
@@ -256,11 +265,14 @@ if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   if [[ $CALIB_PRIMVTX_MEANVTX == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "pvtx:GLO/PVTX/0"; fi
 
   # ITS
-  if [[ $CALIB_ITS_DEADMAP_TIME == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "itsChipStatus:ITS/CHIPSSTATUS/0"; fi
+  if [[ $CALIB_ITS_DEADMAP_TIME == 1 ]]; then
+		add_semicolon_separated CALIBDATASPEC_BARREL_TF "itsChipStatus:ITS/CHIPSSTATUS/0"
+		add_semicolon_separated CALIBDATASPEC_BARREL_TF "itsErrorInfo:ITS/ErrorInfo/0"
+  fi
 
   # MFT
   if [[ $CALIB_MFT_DEADMAP_TIME == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "mftChipStatus:MFT/CHIPSSTATUS/0"; fi
-  
+
   # TOF
   if [[ $CALIB_TOF_LHCPHASE == 1 ]] || [[ $CALIB_TOF_CHANNELOFFSETS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "calibTOF:TOF/CALIBDATA/0"; fi
   if [[ $CALIB_TOF_DIAGNOSTICS == 1 ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "diagWords:TOF/DIAFREQ/0"; fi
@@ -268,6 +280,7 @@ if [[ -z ${CALIBDATASPEC_BARREL_TF:-} ]]; then
   # TPC
   if [[ $CALIB_TPC_SCDCALIB == 1 ]]; then
     add_semicolon_separated CALIBDATASPEC_BARREL_TF "unbinnedTPCResiduals:GLO/UNBINNEDRES/0"
+    add_semicolon_separated CALIBDATASPEC_BARREL_TF "detectorInfoResiduals:GLO/DETINFORES/0"
     add_semicolon_separated CALIBDATASPEC_BARREL_TF "trackReferences:GLO/TRKREFS/0"
   fi
   if [[ $CALIB_TPC_SCDCALIB == 1 ]] && [[ ${CALIB_TPC_SCDCALIB_SENDTRKDATA:-} == "1" ]]; then add_semicolon_separated CALIBDATASPEC_BARREL_TF "tpcInterpTrkData:GLO/TRKDATA/0"; fi
@@ -305,6 +318,14 @@ fi
 if [[ -z ${CALIBDATASPEC_TPCIDC_C:-} ]]; then
   # TPC
   if [[ $CALIB_TPC_IDC == 1 ]]; then add_semicolon_separated CALIBDATASPEC_TPCIDC_C "idcsgroupc:TPC/IDCGROUPC"; fi
+fi
+# define spec for proxy for TPC CMVs
+if [[ -z ${CALIBDATASPEC_TPCCMV:-} ]]; then
+  # TPC
+  if [[ $CALIB_TPC_CMV == 1 ]];  then
+		add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvgroup:TPC/CMVGROUP";
+		add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvorbit:TPC/CMVORBITINFO";
+	fi
 fi
 
 # define spec for proxy for TPC SAC

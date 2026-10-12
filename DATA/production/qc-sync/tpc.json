@@ -106,7 +106,7 @@
           "name": "tpc-tracks"
         },
         "taskParameters": {
-          "cutAbsEta": "1.",
+          "cutAbsEta": "1.5",
           "cutMinNCluster": "60",
           "cutMindEdxTot": "20."
         },
