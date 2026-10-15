@@ -68,11 +68,7 @@ def human(ts_ms):
     return datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
 
-def ccdb_cross_check(path, not_after, timeout=15):
-    """Report which object a correctly time-machine-pinned query at not_after
-    would actually resolve to, and flag if CCDB has since been updated for the
-    same validity window. Never raises; returns None on any failure."""
-    url = f"{CCDB_HOST}/browse/{path}/{not_after}"
+def get_ccdb_objects(url, timeout = 15):
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -81,14 +77,33 @@ def ccdb_cross_check(path, not_after, timeout=15):
         return {"error": str(exc)}
 
     objects = data.get("objects", [])
+    return objects
+
+
+def get_run_start_tf(run):
+    run_info_url = f"{CCDB_HOST}/browse/RCT/Info/RunInformation/{run}"
+    objects = get_ccdb_objects(run_info_url)
+
+    return objects[0]["STF"]
+
+
+def ccdb_cross_check(run, path, not_after, timeout=15):
+    """Report which object a correctly time-machine-pinned query at not_after
+    would actually resolve to, and flag if CCDB has since been updated for the
+    same validity window. Never raises; returns None on any failure."""
+    timestamp = get_run_start_tf(run)
+    url = f"{CCDB_HOST}/browse/{path}/{timestamp}"
+    objects = get_ccdb_objects(url)
     if not objects:
         return {"error": "no CCDB object covers this instant"}
 
     as_of = [o for o in objects if o.get("Created", 0) <= not_after]
     newest = max(objects, key=lambda o: o.get("Created", 0))
-    pinned = max(as_of, key=lambda o: o.get("Created", 0)) if as_of else None
-    outdated = pinned is not None and newest["Created"] > pinned["Created"]
-    return {"newest": newest, "as_of": pinned, "outdated": outdated}
+    result = {"timestamp": timestamp, "newest": newest, "as_of": None, "outdated": False}
+    if as_of:
+        result["as_of"] = max(as_of, key=lambda o: o.get("Created", 0))
+        result["outdated"] = newest["Created"] > result["as_of"]["Created"]
+    return result
 
 
 def describe_object(o):
@@ -126,17 +141,17 @@ def get_CCDBTimeMachineTS(year, period, run, passname, samples=9, ccdb_check_pat
           file=sys.stderr)
 
     if ccdb_check:
-        check = ccdb_cross_check(ccdb_check_path, not_after)
+        check = ccdb_cross_check(run, ccdb_check_path, not_after)
         if check is None or "error" in check:
             reason = check["error"] if check else "unknown error"
-            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path} skipped: {reason}",
+            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path}/{check["timestamp"]} skipped: {reason}",
                   file=sys.stderr)
         elif check["as_of"] is None:
-            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path}: no object "
+            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path}/{check["timestamp"]}: no object "
                   f"existed yet at the recommended timestamp (earliest is {describe_object(check['newest'])})",
                   file=sys.stderr)
         else:
-            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path}: as-of object is "
+            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path}/{check["timestamp"]}: as-of object is "
                   f"{describe_object(check['as_of'])}", file=sys.stderr)
             if check["outdated"]:
                 print(f"[getCCDBTimeMachineTimestamp]   note: CCDB's current object for this window is newer "
