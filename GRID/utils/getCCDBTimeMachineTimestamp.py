@@ -96,40 +96,17 @@ def describe_object(o):
             f"comment=\"{o.get('comment', '')}\"")
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Estimate a CCDB TimeMachine not-after timestamp for a run+pass, "
-                    "from AliEn catalog timestamps of that pass's own reco output.")
-    parser.add_argument("--year", default=os.environ.get("ALIEN_JDL_LPMANCHORYEAR"),
-                         help="data-taking year, e.g. 2023 (default: $ALIEN_JDL_LPMANCHORYEAR)")
-    parser.add_argument("--period", default=os.environ.get("ALIEN_JDL_LPMANCHORPRODUCTION"),
-                         help="period name, e.g. LHC23s (default: $ALIEN_JDL_LPMANCHORPRODUCTION)")
-    parser.add_argument("--run", default=os.environ.get("ALIEN_JDL_LPMANCHORRUN"),
-                         help="run number (default: $ALIEN_JDL_LPMANCHORRUN)")
-    parser.add_argument("--pass", dest="passname", default=os.environ.get("ALIEN_JDL_LPMANCHORPASSNAME"),
-                         help="pass name, e.g. apass4 (default: $ALIEN_JDL_LPMANCHORPASSNAME)")
-    parser.add_argument("--samples", type=int, default=9,
-                         help="number of per-timeframe output files to sample (default: 9)")
-    parser.add_argument("--ccdb-check-path", default="TPC/Calib/CorrectionMapV2",
-                         help="CCDB path to cross-check the estimate against (default: TPC/Calib/CorrectionMapV2)")
-    parser.add_argument("--no-ccdb-check", action="store_true",
-                         help="skip the CCDB cross-check")
-    args = parser.parse_args()
-
-    missing = [n for n in ("year", "period", "run", "passname") if not getattr(args, n)]
-    if missing:
-        parser.error("missing required value(s): " + ", ".join(missing))
-
-    pass_dir = f"/alice/data/{args.year}/{args.period}/{args.run}/{args.passname}/"
+def get_CCDBTimeMachineTS(year, period, run, passname, samples=9, ccdb_check_path="TPC/Calib/CorrectionMapV2", ccdb_check=True):
+    pass_dir = f"/alice/data/{year}/{period}/{run}/{passname}/"
     print(f"[getCCDBTimeMachineTimestamp] Looking for TF output under {pass_dir}", file=sys.stderr)
 
-    matches = find_tf_output_files(pass_dir, args.run)
+    matches = find_tf_output_files(pass_dir, run)
     if not matches:
-        sys.exit(f"[getCCDBTimeMachineTimestamp] No o2_ctf_run{int(args.run):08d}_orbit* output found "
-                  f"under {pass_dir}. Check year/period/run/pass, or this run+pass may not use this "
-                  f"catalog layout. Refusing to guess a timestamp.")
+        sys.exit(f"[getCCDBTimeMachineTimestamp] No o2_ctf_run{int(run):08d}_orbit* output found "
+                 f"under {pass_dir}. Check year/period/run/pass, or this run+pass may not use this "
+                 f"catalog layout. Refusing to guess a timestamp.")
 
-    sampled = sample_evenly(matches, args.samples)
+    sampled = sample_evenly(matches, samples)
     ctimes = []
     for lfn in sampled:
         ctime = stat_ctime(lfn)
@@ -139,7 +116,7 @@ def main():
 
     if len(ctimes) < 2:
         sys.exit(f"[getCCDBTimeMachineTimestamp] Only got {len(ctimes)} usable timestamp(s) out of "
-                  f"{len(sampled)} sampled files ({len(matches)} found in total); refusing to guess.")
+                 f"{len(sampled)} sampled files ({len(matches)} found in total); refusing to guess.")
 
     not_after = int(statistics.median(ctimes))
     spread_h = (max(ctimes) - min(ctimes)) / 3.6e6
@@ -148,23 +125,53 @@ def main():
     print(f"[getCCDBTimeMachineTimestamp] Recommended not-after: {not_after} ({human(not_after)})",
           file=sys.stderr)
 
-    if not args.no_ccdb_check:
-        check = ccdb_cross_check(args.ccdb_check_path, not_after)
+    if ccdb_check:
+        check = ccdb_cross_check(ccdb_check_path, not_after)
         if check is None or "error" in check:
             reason = check["error"] if check else "unknown error"
-            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {args.ccdb_check_path} skipped: {reason}",
+            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path} skipped: {reason}",
                   file=sys.stderr)
         elif check["as_of"] is None:
-            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {args.ccdb_check_path}: no object "
+            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path}: no object "
                   f"existed yet at the recommended timestamp (earliest is {describe_object(check['newest'])})",
                   file=sys.stderr)
         else:
-            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {args.ccdb_check_path}: as-of object is "
+            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path}: as-of object is "
                   f"{describe_object(check['as_of'])}", file=sys.stderr)
             if check["outdated"]:
                 print(f"[getCCDBTimeMachineTimestamp]   note: CCDB's current object for this window is newer "
                       f"({describe_object(check['newest'])}) - it postdates this pass's processing and was "
                       f"not what this run actually saw.", file=sys.stderr)
+
+    return not_after
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Estimate a CCDB TimeMachine not-after timestamp for a run+pass, "
+                    "from AliEn catalog timestamps of that pass's own reco output.")
+    parser.add_argument("--year", default=os.environ.get("ALIEN_JDL_LPMANCHORYEAR"),
+                        help="data-taking year, e.g. 2023 (default: $ALIEN_JDL_LPMANCHORYEAR)")
+    parser.add_argument("--period", default=os.environ.get("ALIEN_JDL_LPMANCHORPRODUCTION"),
+                        help="period name, e.g. LHC23s (default: $ALIEN_JDL_LPMANCHORPRODUCTION)")
+    parser.add_argument("--run", default=os.environ.get("ALIEN_JDL_LPMANCHORRUN"),
+                        help="run number (default: $ALIEN_JDL_LPMANCHORRUN)")
+    parser.add_argument("--pass", dest="passname", default=os.environ.get("ALIEN_JDL_LPMANCHORPASSNAME"),
+                        help="pass name, e.g. apass4 (default: $ALIEN_JDL_LPMANCHORPASSNAME)")
+    parser.add_argument("--samples", type=int, default=9,
+                        help="number of per-timeframe output files to sample (default: 9)")
+    parser.add_argument("--ccdb-check-path", default="TPC/Calib/CorrectionMapV2",
+                        help="CCDB path to cross-check the estimate against (default: TPC/Calib/CorrectionMapV2)")
+    parser.add_argument("--no-ccdb-check", action="store_true",
+                        help="skip the CCDB cross-check")
+    args = parser.parse_args()
+
+    missing = [n for n in ("year", "period", "run", "passname") if not getattr(args, n)]
+    if missing:
+        parser.error("missing required value(s): " + ", ".join(missing))
+
+    not_after = get_CCDBTimeMachineTS(args.year, args.period, args.run, args.passname, args.samples,
+                                      args.ccdb_check_path, not args.no_ccdb_check)
 
     print(not_after)
 
