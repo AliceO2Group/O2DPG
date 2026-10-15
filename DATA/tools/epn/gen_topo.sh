@@ -4,7 +4,7 @@
 # Author: David Rohr
 
 # This script is developed within O2DPG: https://github.com/AliceO2Group/O2DPG/blob/master/DATA/tools/epn/gen_topo.sh
-# It is installed as package GenTopo to the updateable RPM path /opt/alisw/el9/GenTopo/bin/ on the EPNs
+# It is installed as package GenTopo to the updateable RPM path /opt/alisw/el10/GenTopo/bin/ on the EPNs
 
 # The purpose of this script is to separate the topology generation (which is in O2DPG) from the setting of the EPN-related settings
 # This script contains only the EPN related settings
@@ -55,7 +55,7 @@ else
   fi
 fi
 # Run stage 2 of GenTopo, which does the PDP part, still from hardcoded updatable RPM path
-/opt/alisw/el9/GenTopo/bin/gen_topo_o2dpg.sh
+/opt/alisw/el10/GenTopo/bin/gen_topo_o2dpg.sh
 if [ $? != 0 ]; then
   exit 1
 fi
