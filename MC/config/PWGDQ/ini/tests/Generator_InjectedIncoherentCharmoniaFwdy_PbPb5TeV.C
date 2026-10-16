@@ -15,7 +15,7 @@ int External() {
     tree->SetBranchAddress("MCTrack", &tracks);
 
     int checkPdgSignal[2] = {443, 100443};
-    int checkPdgDecay = 11;
+    int checkPdgDecay = 13;
     double rapiditymin = 2.0; double rapiditymax = 4.5;
 
     int nLeptons{};

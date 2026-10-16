@@ -91,8 +91,8 @@ FairGenerator* GeneratorCocktailStarlightCoherentFwdy_PbPb5TeV(float energyCM = 
   configureEvtGen(genCocktailEvtGen, false);
   auto genCohJpsi = makeStarlightGenerator("kCohJpsiToMu", energyCM, beam1Z, beam1A, beam2Z, beam2A, extrapars, dpmjetconf);
   genCocktailEvtGen->AddGenerator(genCohJpsi, 1);
-  auto genTwoGammaToEl = makeStarlightGenerator("kTwoGammaToMuLow", energyCM, beam1Z, beam1A, beam2Z, beam2A, extrapars, dpmjetconf);
-  genCocktailEvtGen->AddGenerator(genTwoGammaToEl, 1);
+  auto genTwoGammaToMu = makeStarlightGenerator("kTwoGammaToMuLow", energyCM, beam1Z, beam1A, beam2Z, beam2A, extrapars, dpmjetconf);
+  genCocktailEvtGen->AddGenerator(genTwoGammaToMu, 1);
   auto genCohPsi2S = makeStarlightGenerator("kCohPsi2sToMuPi", energyCM, beam1Z, beam1A, beam2Z, beam2A, extrapars, dpmjetconf);
   genCocktailEvtGen->AddGenerator(genCohPsi2S, 1);
 
