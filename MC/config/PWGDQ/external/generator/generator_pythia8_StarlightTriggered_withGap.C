@@ -196,3 +196,17 @@ FairGenerator*
 //   gen->readString("Random:seed " + std::to_string(seed));
   return gen;
 }
+
+FairGenerator*
+  GeneratorPhotoproductionFwd(int triggerGap, int gentype = 0, double rapidityMin = -1.5, double rapidityMax = 1.5)
+{
+  auto gen = new o2::eventgen::GeneratorPythia8StarlightTriggeredWithGap(triggerGap, gentype);
+  gen->setRapidityRange(rapidityMin, rapidityMax);
+  gen->addSignalPDGs(443); // J/Psi
+  gen->addSignalPDGs(100443); // Psi(2S)
+  gen->addSignalPDGs(13); // mu
+//   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
+//   gen->readString("Random:setSeed on");
+//   gen->readString("Random:seed " + std::to_string(seed));
+  return gen;
+}
