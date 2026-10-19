@@ -454,6 +454,13 @@ EOF
   fi
 
 
+  # true while a subjob is not final; ERROR_A (resubmitted) and a failed query count as active
+  subjobs_active() {
+    jq -e '(.results | length) == 0 or (.results | any(.status | IN("INSERTING", "SPLITTING", "WAITING", "ASSIGNED", "STARTED", "RUNNING", "SAVING", "SAVED", "ERROR_A")))' \
+      <<<"$1" >/dev/null
+    [ $? -ne 1 ]
+  }
+
   # wait here until all ALIEN jobs have returned
   spin[3]="-"
   spin[2]="/"
@@ -488,11 +495,15 @@ EOF
       else
         # check if there are still jobs running/waiting; if not also finish
         # this could happen when all jobs are zombies (in which case we also finish)
-        if ! jq -e '.results | any(.status == "WAITING" or .status == "RUNNING" or .status == "SAVING" or .status == "INSERTING")' \
-            <<<"${DETAILED_STATUS_JSON}" >/dev/null; then
+        if ! subjobs_active "${DETAILED_STATUS_JSON}"; then
               JOBSTATUS="D"  # some job finished successfully
               echo "No remaining good job"
         fi
+      fi
+    elif [ "${JOBSTATUS}" == "D" ]; then
+      # the masterjob can briefly show DONE while an ERROR_A subjob is resubmitted
+      if subjobs_active "$(ALIENPY_JSON=true alien.py ps -a -m "${MY_JOBID}")"; then
+        JOBSTATUS="S"
       fi
     fi
 
