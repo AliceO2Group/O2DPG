@@ -35,6 +35,7 @@ if [[ $SYNCMODE == 1 ]] && has_processing_step ENTROPY_ENCODER && [[ ! -z "$WORK
 if has_detector_calib EMC && has_detector_reco EMC && [[ $SYNCMODE != 1 ]]; then CAN_DO_CALIB_EMC_ASYNC_RECALIB=1; else CAN_DO_CALIB_EMC_ASYNC_RECALIB=0; fi
 if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC; then CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS=1; else CAN_DO_CALIB_ASYNC_EXTRACTTPCCURRENTS=0; fi
 if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC; then CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=1; else CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES=0; fi
+if [[ $SYNCMODE != 1 ]] && has_detector_reco TPC; then CAN_DO_CALIB_ASYNC_EXTRACTCOSMICS=1; else CAN_DO_CALIB_ASYNC_EXTRACTCOSMICS=0; fi
 
 # additional individual settings for calibration workflows
 if has_detector CTP; then export CALIB_TPC_SCDCALIB_CTP_INPUT="--enable-ctp"; else export CALIB_TPC_SCDCALIB_CTP_INPUT=""; fi
@@ -222,6 +223,7 @@ fi
 ( [[ -z ${CALIB_ASYNC_DISABLE3DCURRENTS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_DISABLE3DCURRENTS == 0 ]] ) && CALIB_ASYNC_DISABLE3DCURRENTS=0
 : ${ON_SKIMMED_DATA:=0}
 ( [[ -z ${CALIB_ASYNC_EXTRACTTIMESERIES:-} ]] || [[ $CAN_DO_CALIB_ASYNC_EXTRACTTIMESERIES == 0 ]] ) && CALIB_ASYNC_EXTRACTTIMESERIES=0
+( [[ -z ${CALIB_ASYNC_EXTRACTCOSMICS:-} ]] || [[ $CAN_DO_CALIB_ASYNC_EXTRACTCOSMICS == 0 ]] ) && CALIB_ASYNC_EXTRACTCOSMICS=0
 
 
 if [[ "0${GEN_TOPO_VERBOSE:-}" == "01" ]]; then

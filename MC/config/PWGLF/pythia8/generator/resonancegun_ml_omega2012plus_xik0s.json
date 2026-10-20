@@ -1,0 +1,13 @@
+{
+    "Omega(2012)+": {
+        "pdg": -123334,
+        "n": 1,
+        "ptMin": 0.0,
+        "ptMax": 15.0,
+        "etaMin": -0.7,
+        "etaMax": 0.7,
+        "rapidityMin": -0.7,
+        "rapidityMax": 0.7,
+        "genDecayed": true
+    }
+}

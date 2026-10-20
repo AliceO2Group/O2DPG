@@ -259,7 +259,8 @@ FairGenerator*
   TString pathO2 = gSystem->ExpandPathName("${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
   //gen->SetDecayTable(Form("%s/BPLUSTOKAONJPSITOELE.DEC", pathO2.Data()));
   //gen->SetDecayTable(Form("%s/BPLUSTOKAONJPSITOELEALLMODES.DEC", pathO2.Data())); // decay table including decay modes for correlated background
-  gen->SetDecayTable(Form("%s/BTOJPSITOELE.DEC", pathO2.Data())); // decay table including decay modes for correlated background
+  //gen->SetDecayTable(Form("%s/BTOJPSITOELE.DEC", pathO2.Data())); // decay table including decay modes for correlated background
+	gen->SetDecayTable(Form("%s/BTOPSIJPSITODIELECTRON.DEC", pathO2.Data())); // decay table including decay modes for correlated background and jpsi feeddown
   // print debug
   // gen->PrintDebug();
   // set random seed

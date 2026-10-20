@@ -126,8 +126,12 @@ class GeneratorStarlight_class : public Generator
     {"kCohPsi2sToEl",        2,  444011,   20, -1.0, -1.0,  100443, 0 }, //
     {"kCohPsi2sToMuPi",      2,  444013,   20, -1.0, -1.0,  100443, 1 }, //
     {"kCohPsi2sToElPi",      2,  444011,   20, -1.0, -1.0,  100443, 1 }, //
-    {"kCohUpsilonToMu",      2,  553013,   20, -1.0, -1.0,  553, 0 }, //
-    {"kCohUpsilonToEl",      2,  553011,   20, -1.0, -1.0,  553, 0 }, //
+    {"kCohUpsilon1SToMu",    2,  553013,   20, -1.0, -1.0,  553, 0 }, //
+    {"kCohUpsilon1SToEl",    2,  553011,   20, -1.0, -1.0,  553, 0 }, //
+    {"kCohUpsilon2SToMu",    2,  554013,   20, -1.0, -1.0,  554, 0 }, //
+    {"kCohUpsilon2SToEl",    2,  554011,   20, -1.0, -1.0,  554, 0 }, //
+    {"kCohUpsilon3SToMu",    2,  555013,   20, -1.0, -1.0,  555, 0 }, //
+    {"kCohUpsilon3SToEl",    2,  555011,   20, -1.0, -1.0,  555, 0 }, //
     {"kIncohRhoToPi",        4,     113, 1200, -1.0, -1.0,  113, 0 }, //
     {"kIncohRhoToElEl",      4,  113011, 1200, -1.0, -1.0,  113, 0 }, //
     {"kIncohRhoToMuMu",      4,  113013, 1200, -1.0, -1.0,  113, 0 }, //
@@ -147,8 +151,12 @@ class GeneratorStarlight_class : public Generator
     {"kIncohPsi2sToEl",      4,  444011,   20, -1.0, -1.0,  100443, 0 }, //
     {"kIncohPsi2sToMuPi",    4,  444013,   20, -1.0, -1.0,  100443, 1 }, //
     {"kIncohPsi2sToElPi",    4,  444011,   20, -1.0, -1.0,  100443, 1 }, //
-    {"kIncohUpsilonToMu",    4,  553013,   20, -1.0, -1.0,  553, 0 }, //
-    {"kIncohUpsilonToEl",    4,  553011,   20, -1.0, -1.0,  553, 0 }, //
+    {"kIncohUpsilon1SToMu",  4,  553013,   20, -1.0, -1.0,  553, 0 }, //
+    {"kIncohUpsilon1SToEl",  4,  553011,   20, -1.0, -1.0,  553, 0 }, //
+    {"kIncohUpsilon2SToMu",  4,  554013,   20, -1.0, -1.0,  554, 0 }, //
+    {"kIncohUpsilon2SToEl",  4,  554011,   20, -1.0, -1.0,  554, 0 }, //
+    {"kIncohUpsilon3SToMu",  4,  555013,   20, -1.0, -1.0,  555, 0 }, //
+    {"kIncohUpsilon3SToEl",  4,  555011,   20, -1.0, -1.0,  555, 0 }, //
     {"kDpmjetSingleA",        5,  113,   20, -1.0, -1.0,  -1, 0 }, //
     {"kDpmjetSingleC",        5,  113,   20, -1.0, -1.0,  -1, 0 }, //
     {"kTauLowToL+3Pi",       1,      15,  990,  3.5, 20.0,  -1, 1 }, // from 0.4 to 15 GeV

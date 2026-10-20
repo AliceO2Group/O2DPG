@@ -9,6 +9,7 @@
 
 R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT)
 #include "MC/config/common/external/generator/CoalescencePythia8.h"
+#include "MC/config/PWGHF/pythia8/hooks/pythia8_userhooks_qqbar.C"
 
 using namespace Pythia8;
 
@@ -60,6 +61,16 @@ class GeneratorPythia8HFHadToNuclei : public o2::eventgen::GeneratorPythia8
   {
     addSubGenerator(0, "Minimum bias");
     addSubGenerator(1, "HF + Coalescence");
+
+    // Bias parton-level generation towards bbbar production at midrapidity, but only
+    // while generating the triggered events. Without this, finding the requested b-hadron 
+    // can stall the jobs for a very long time
+    mBbbarBiasHook = new UserHooks_qqbar();
+    mBbbarBiasHook->setPDG(5);
+    mBbbarBiasHook->setRapidity(mHadRapidityMin, mHadRapidityMax);
+    mBbbarBiasHook->setActive(false);
+    setUserHooks(mBbbarBiasHook);
+
     return o2::eventgen::GeneratorPythia8::Init();
   }
 
@@ -93,11 +104,13 @@ class GeneratorPythia8HFHadToNuclei : public o2::eventgen::GeneratorPythia8
 
       // Generate event of interest
       bool genOk = false;
+      mBbbarBiasHook->setActive(true);
       while (!genOk) {
         if (GeneratorPythia8::generateEvent()) {
           genOk = selectEvent(mPythia.event);
         }
       }
+      mBbbarBiasHook->setActive(false);
       notifySubGenerator(1);
     } else {
       // Generate minimum-bias event
@@ -177,6 +190,9 @@ class GeneratorPythia8HFHadToNuclei : public o2::eventgen::GeneratorPythia8
   float mHadRapidityMin;
   float mHadRapidityMax;
   unsigned int mUsedSeed;
+
+  // Bias towards bbbar at midrapidity, active only while generating HF-triggered events
+  UserHooks_qqbar* mBbbarBiasHook{nullptr};
 
   // Control gap-triggering
   unsigned long long mGeneratedEvents;

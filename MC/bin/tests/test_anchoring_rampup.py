@@ -21,6 +21,7 @@ except ImportError as exc:                             # pragma: no cover
 FIRST_ORBIT = 20505888
 SOR = 1778806732526
 ITS_RAMPUP_MS = 5000
+ORBITS_PER_TF = 128
 FIRST_ALIVE_ORBIT = 20539968
 
 
@@ -36,32 +37,40 @@ class TestRampUpShift(unittest.TestCase):
 
     def test_both_coordinates_move(self):
         """A ramp-up of a few seconds must move the orbit as well as the timestamp."""
-        start, orbit = anchored.shift_anchor_past_ITS_rampup(SOR, FIRST_ORBIT, ITS_RAMPUP_MS)
-        self.assertEqual(start, SOR + ITS_RAMPUP_MS)
+        start, orbit = anchored.shift_anchor_past_ITS_rampup(SOR, FIRST_ORBIT, ORBITS_PER_TF, ITS_RAMPUP_MS)
+        self.assertGreaterEqual(start, SOR + ITS_RAMPUP_MS)
         self.assertGreater(orbit, FIRST_ORBIT)
+        self.assertEqual((orbit - FIRST_ORBIT) % ORBITS_PER_TF, 0)
 
     def test_nothing_moves_without_a_ramp(self):
-        self.assertEqual(anchored.shift_anchor_past_ITS_rampup(SOR, FIRST_ORBIT, 0),
+        self.assertEqual(anchored.shift_anchor_past_ITS_rampup(SOR, FIRST_ORBIT, ORBITS_PER_TF, 0),
                          (SOR, FIRST_ORBIT))
 
     def test_shifted_orbit_is_never_inside_the_ramp(self):
         """The shifted orbit must sit at or after the shifted timestamp, never before."""
         for ramp_ms in (0, 1, 500, ITS_RAMPUP_MS, 30000):
-            start, orbit = anchored.shift_anchor_past_ITS_rampup(SOR, FIRST_ORBIT, ramp_ms)
+            start, orbit = anchored.shift_anchor_past_ITS_rampup(SOR, FIRST_ORBIT, ORBITS_PER_TF, ramp_ms)
             time_of_orbit = SOR + (orbit - FIRST_ORBIT) * anchored.LHCOrbitMUS / 1000.
             self.assertGreaterEqual(time_of_orbit, start,
                                     f"orbit shift falls short of the ramp for {ramp_ms} ms")
 
     def test_shift_agrees_with_the_timestamp_to_orbit_conversion(self):
         """Closure: the shifted orbit is what main() derives from the shifted timestamp."""
-        start, orbit = anchored.shift_anchor_past_ITS_rampup(SOR, FIRST_ORBIT, ITS_RAMPUP_MS)
+        start, orbit = anchored.shift_anchor_past_ITS_rampup(SOR, FIRST_ORBIT, ORBITS_PER_TF, ITS_RAMPUP_MS)
         # this is the conversion main() uses for the exclude_timestamp() check
         derived = FIRST_ORBIT + int((start - SOR) / (anchored.LHCOrbitMUS / 1000.))
-        self.assertLessEqual(abs(orbit - derived), 1)
+        # the timestamp has millisecond resolution, which is about 11 orbits
+        self.assertLessEqual(abs(orbit - derived), anchored.milliseconds_to_orbits(1))
+
+    def test_timestamp_is_not_inside_the_ramp_at_a_tf_boundary(self):
+        """Regression: a ramp ending just below a TF boundary must not be cut short by the ms truncation."""
+        ramp_ms = 12928 * anchored.LHCOrbitMUS / 1000. - 0.001
+        start, _ = anchored.shift_anchor_past_ITS_rampup(SOR, FIRST_ORBIT, ORBITS_PER_TF, ramp_ms)
+        self.assertGreaterEqual(start - SOR, ramp_ms)
 
     def test_split_id_one_clears_the_its_dead_window(self):
         """Regression: the first job of a production must not sample the dead window."""
-        _, orbit = anchored.shift_anchor_past_ITS_rampup(SOR, FIRST_ORBIT, ITS_RAMPUP_MS)
+        _, orbit = anchored.shift_anchor_past_ITS_rampup(SOR, FIRST_ORBIT, ORBITS_PER_TF, ITS_RAMPUP_MS)
         self.assertGreater(orbit, FIRST_ALIVE_ORBIT)
 
 

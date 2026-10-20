@@ -4,7 +4,7 @@
 # Author: David Rohr
 
 # This script is developed within O2DPG: https://github.com/AliceO2Group/O2DPG/blob/master/DATA/tools/epn/gen_topo.sh
-# It is installed as package GenTopo to the updateable RPM path /opt/alisw/el9/GenTopo/bin/ on the EPNs
+# It is installed as package GenTopo to the updateable RPM path /opt/alisw/el10/GenTopo/bin/ on the EPNs
 
 # The purpose of this script is to separate the topology generation (which is in O2DPG) from the setting of the EPN-related settings
 # This script contains only the EPN related settings
@@ -31,12 +31,12 @@ if [[ "0$GEN_TOPO_ONTHEFLY" == "01" ]]; then export SHM_MANAGER_SHMID=1 ;fi
 
 # Command for topology merging
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_CMD" ]]; then
-  export GEN_TOPO_ODC_EPN_TOPO_CMD='env - PYTHONPATH+=/usr/local/lib/python3.9/site-packages:/usr/local/lib64/python3.9/site-packages /usr/local/bin/epn-topo-merger'
+  export GEN_TOPO_ODC_EPN_TOPO_CMD='env - PYTHONPATH+=/usr/local/lib/python3.12/site-packages:/usr/local/lib64/python3.12/site-packages /usr/local/bin/epn-topo-merger'
 fi
 
 # Command for postprocessing of topology generation after topology caching
 if [[ -z "$GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD" ]]; then
-  export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD='env - PYTHONPATH+=/usr/local/lib/python3.9/site-packages:/usr/local/lib64/python3.9/site-packages /usr/local/bin/epn-topo-alloc'
+  export GEN_TOPO_ODC_EPN_TOPO_POST_CACHING_CMD='env - PYTHONPATH+=/usr/local/lib/python3.12/site-packages:/usr/local/lib64/python3.12/site-packages /usr/local/bin/epn-topo-alloc'
 fi
 
 # Extra arguments for topology merger
@@ -55,7 +55,7 @@ else
   fi
 fi
 # Run stage 2 of GenTopo, which does the PDP part, still from hardcoded updatable RPM path
-/opt/alisw/el9/GenTopo/bin/gen_topo_o2dpg.sh
+/opt/alisw/el10/GenTopo/bin/gen_topo_o2dpg.sh
 if [ $? != 0 ]; then
   exit 1
 fi

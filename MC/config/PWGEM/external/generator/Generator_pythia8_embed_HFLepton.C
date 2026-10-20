@@ -92,10 +92,10 @@ public:
 
         /// number of events to be embedded in a background event
         // gen->setFormula("max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.))");
-        //mNumSigEvs = static_cast<int>(std::lround(5.0 + 0.886202881 * std::pow(std::max(0.0f, 17.5f - x), 1.7)));
-        mNumSigEvs = static_cast<int>(std::max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.)));
-	//mNumSigEvs = 1;
-	LOG(info) << "[notifyEmbedding] ----- generating " << mNumSigEvs << " signal events " << std::endl;
+        mNumSigEvs = static_cast<int>(std::lround(5.0 + 0.886202881 * std::pow(std::max(0.0f, 17.5f - x), 1.7)));
+        //mNumSigEvs = static_cast<int>(std::max(1.,120.*(x<5.)+80.*(1.-x/20.)*(x>5.)*(x<11.)+240.*(1.-x/13.)*(x>11.)));
+        //mNumSigEvs = 1;
+        LOG(info) << "[notifyEmbedding] ----- generating " << mNumSigEvs << " signal events " << std::endl;
     };
 
 protected:

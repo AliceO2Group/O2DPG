@@ -5,6 +5,7 @@
 # It aims to handle the different MC possible configurations
 # It just creates a workflow.json txt file, to execute the workflow one must execute right after
 #   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json
+# The tests covering this script are described in test/README.md.
 #
 # Execution examples:
 #  - pp PYTHIA jets, 2 events, triggered on high pT decay photons on all barrel calorimeters acceptance, eCMS 13 TeV
@@ -110,7 +111,7 @@ parser.add_argument('-j', '--n-workers', dest='n_workers', help='number of worke
 parser.add_argument('--force-n-workers', dest='force_n_workers', action='store_true', help='by default, number of workers is re-computed '
                                                                                            'for given interaction rate; '
                                                                                            'pass this to avoid that')
-parser.add_argument('--skipModules',nargs="*", help="List of modules to skip in geometry budget (and therefore processing)", default=["ZDC"])
+parser.add_argument('--skipModules',nargs="*", help="List of modules to skip in geometry budget (and therefore processing)", default=[])
 parser.add_argument('--skipReadout',nargs="*", help="List of modules to take out from readout", default=[""])
 parser.add_argument('--with-ZDC', action='store_true', help='Enable ZDC in workflow')
 parser.add_argument('-seed',help='random seed number', default=None)
@@ -240,10 +241,20 @@ if args.overwrite_config != '':
    # merge the dictionaries into anchorConfig, the latter takes precedence
    merge_dicts(anchorConfig, config_overwrite)
 
+async_envfile = 'env_async.env' if environ.get('ALIEN_JDL_O2DPG_ASYNC_RECO_TAG') is not None else None
+
+# Check if either ITS or MFT are in the staggered mode (either from the async reco workflow or imposed externally).
+# Note thas some QC tracks at the moment need to be suppressed in this mode
+staggITS = ' --enable-its-staggering ' if environ.get('ALIEN_JDL_ITS_STAGGERED') == '1' and option_if_available('o2-its-reco-workflow', '--enable-its-staggering', envfile=async_envfile) != '' else ''
+# MFT still needs to update its reconstruction to account for per-layer input, uncomment line below whtb it is ready and remove "Ignoring ..." stuff.
+#staggMFT = ' --enable-mft-staggering ' if environ.get('ALIEN_JDL_MFT_STAGGERED') == '1' and option_if_available('o2-mft-reco-workflow', '--enable-mft-staggering', envfile=async_envfile) != '' else ''
+#if environ.get('ALIEN_JDL_MFT_STAGGERED') == '1':
+#   print ("Ignoring ALIEN_JDL_MFT_STAGGERED as the MFT reconstruction is not yet ready to take it")
+staggMFT = ''
+
 # We still may need adjust configurations manually for consistency:
 #
 # * Force simpler TPC digitization of if TPC reco does not have the mc-time-gain option or remap to a different CCDB object if we are anchored to 2023:
-async_envfile = 'env_async.env' if environ.get('ALIEN_JDL_O2DPG_ASYNC_RECO_TAG') is not None else None
 tpcreco_mctimegain = option_if_available('o2-tpc-reco-workflow', '--tpc-mc-time-gain', envfile=async_envfile)
 if tpcreco_mctimegain == '':
    # TODO: Upload all MC time gain objects to TestReco and remove year dependence
@@ -273,18 +284,12 @@ with open(config_key_param_path, "w") as f:
    print(f"INFO: Written additional config key parameters to JSON {config_key_param_path}")
    json.dump(anchorConfig, f, indent=2)
 
-# Processing skipped material budget (modules):
-# - If user did NOT specify --with-ZDC
-# - AND ZDC is not already in the list
-# --> append ZDC automatically
-if args.with_ZDC:
-   # User wants ZDC to *not* be skipped → ensure it's removed
-   args.skipModules = [m for m in args.skipModules if m != "ZDC"]
-else:
-   # If user did not request --with-ZDC,
-   # auto-append ZDC unless already present
-   if "ZDC" not in args.skipModules:
-      args.skipModules.append("ZDC")
+# The ZDC geometry is the +-113 m beam line, its magnets, ZN, ZP and ZEM. What it
+# costs in transport time is the beam line; ZEM sits at z = 7.6 m and carries
+# 217 kg of material inside the FIT and FDD acceptance. Without --with-ZDC we
+# therefore drop the beam line and keep ZEM, instead of dropping the whole module
+# -- see ZDCSimParam.buildBeamLine in create_geant_config(). ZDC stays out of the
+# readout either way, which the deactivate_detector('ZDC') below takes care of.
 
 # with this we can tailor the workflow to the presence of
 # certain detectors
@@ -1208,6 +1213,10 @@ for tf in range(1, NTIMEFRAMES + 1):
          detlist = ','.join(smallsensorlist)
          detlist = cleanDetectorInputList(detlist)
          t['cmd'] += commondigicmd + ' --onlyDet ' + detlist
+         if 'ITS' in detlist:
+            t['cmd'] += staggITS
+         if 'MFT' in detlist:
+            t['cmd'] += staggMFT
          t['cmd'] += ' --ccdb-tof-sa --forceSelectedDets '
          t['cmd'] += (' --combine-devices ','')[args.no_combine_dpl_devices]
          t['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
@@ -1220,6 +1229,10 @@ for tf in range(1, NTIMEFRAMES + 1):
          t = createTask(name=name, needs=tneeds, tf=tf, cwd=timeframeworkdir, lab=["DIGI","SMALLDIGI"], cpu='1')
          t['cmd'] = ('','ln -nfs ../bkg_Hits' + str(det) + '.root . ;')[doembedding]
          t['cmd'] += commondigicmd + ' --onlyDet ' + str(det)
+         if det == 'ITS':
+            t['cmd'] += staggITS
+         if det == 'MFT':
+            t['cmd'] += staggMFT
          t['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
          if det == 'TOF':
             t['cmd'] += ' --ccdb-tof-sa'
@@ -1379,7 +1392,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       TPCSyncRECOtask['cmd'] = '${O2_ROOT}/bin/o2-tpc-reco-workflow ' + getDPL_global_options(bigshm=True, ccdbbackend=False, runcommand=False) \
                                + '--input-type clusters --output-type clusters,disable-writer ' \
                                + putConfigValues()
-      TPCSyncRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-gpu-reco-workflow' + getDPL_global_options(bigshm=True, ccdbbackend=True, runcommand=False) \
+      TPCSyncRECOtask['cmd'] += ' | ${O2_ROOT}/bin/o2-gpu-reco-workflow ' + getDPL_global_options(bigshm=True, ccdbbackend=True, runcommand=False) \
                                 + '--input-type clusters --output-type compressed-clusters-flat,clusters,send-clusters-per-sector --filtered-output-specs ' \
                                 + tpc_corr_scaling_options + ' ' + tpc_corr_options_mc \
                                 + putConfigValues(["TPCGasParam", "TPCCorrMap", "trackTuneParams"],
@@ -1419,6 +1432,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    ITSRECOtask['cmd'] = task_finalizer([
      "${O2_ROOT}/bin/o2-its-reco-workflow" if args.detectorList == 'ALICE2' else "${O2_ROOT}/bin/o2-its3-reco-workflow",
      getDPL_global_options(bigshm=havePbPb),
+     staggITS,
      '--tracking-mode async',
      putConfigValues(["ITSVertexerParam",
                       "ITSAlpideParam",
@@ -1444,6 +1458,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    ITSTPCMATCHtask=createTask(name='itstpcMatch_'+str(tf), needs=[TPCRECOtask['name'], ITSRECOtask['name'], FT0RECOtask['name'] if isActive("FT0") else None], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='8000', relative_cpu=3/8)
    ITSTPCMATCHtask["cmd"] = task_finalizer([
      '${O2_ROOT}/bin/o2-tpcits-match-workflow',
+     staggITS,
      getDPL_global_options(bigshm=True),
      ' --tpc-track-reader tpctracks.root',
      '--tpc-native-cluster-reader \"--infile tpc-native-clusters.root\"',
@@ -1479,6 +1494,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    TRDTRACKINGtask2['cmd'] = task_finalizer([
       '${O2_ROOT}/bin/o2-trd-global-tracking',
       getDPL_global_options(bigshm=True),
+      staggITS,
       ('',' --disable-mc')[args.no_mc_labels],
       putConfigValues(['ITSClustererParam',
                        'ITSCATrackerParam',
@@ -1542,6 +1558,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    MFTRECOtask['cmd'] += task_finalizer([
       '${O2_ROOT}/bin/o2-mft-reco-workflow',
       getDPL_global_options(),
+      staggMFT,
       putConfigValues(['MFTTracking',
                        'MFTAlpideParam',
                        'ITSClustererParam',
@@ -1669,6 +1686,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    MFTMCHMATCHtask = createTask(name='mftmchMatch_'+str(tf), needs=forwardmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
    MFTMCHMATCHtask['cmd'] = task_finalizer(
       ['${O2_ROOT}/bin/o2-globalfwd-matcher-workflow',
+        staggMFT,
         putConfigValues(['ITSAlpideConfig',
                          'MFTAlpideConfig',
                          'FwdMatching'],{"FwdMatching.useMIDMatch": "true" if isActive("MID") else "false"}),
@@ -1684,7 +1702,7 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    if args.fwdmatching_save_trainingdata == True:
       MFTMCHMATCHTraintask = createTask(name='mftmchMatchTrain_'+str(tf), needs=[MCHMIDMATCHtask['name'], MFTRECOtask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1500')
-      MFTMCHMATCHTraintask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + putConfigValues(['ITSAlpideConfig','MFTAlpideConfig'],{"FwdMatching.useMIDMatch":"true"})
+      MFTMCHMATCHTraintask['cmd'] = '${O2_ROOT}/bin/o2-globalfwd-matcher-workflow ' + staggMFT + putConfigValues(['ITSAlpideConfig','MFTAlpideConfig'],{"FwdMatching.useMIDMatch":"true"})
       MFTMCHMATCHTraintask['cmd']+= getDPL_global_options()
       workflow['stages'].append(MFTMCHMATCHTraintask)
 
@@ -1774,6 +1792,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    SVFINDERtask = createTask(name='svfinder_'+str(tf), needs=[PVFINDERtask['name'], FT0FV0EMCCTPDIGItask['name']], tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=svfinder_cpu, mem='5000')
    SVFINDERtask['cmd'] = task_finalizer(
    [ '${O2_ROOT}/bin/o2-secondary-vertexing-workflow',
+      staggITS,
       getDPL_global_options(bigshm=True),
       svfinder_threads,
       putConfigValues(['svertexer', 'TPCCorrMap', 'GlobalParams'], {"NameConf.mDirMatLUT" : ".."} | tpcLocalCFreco),
@@ -1830,6 +1849,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    AODtask['cmd'] += '[ -f AO2D.root ] && rm AO2D.root; '
    AODtask['cmd'] += task_finalizer([
       "${O2_ROOT}/bin/o2-aod-producer-workflow",
+      staggITS,
+      staggMFT,
       "--reco-mctracks-only 1",
       "--aod-writer-keep dangling",
       "--aod-writer-resfile AO2D",
@@ -1939,24 +1960,25 @@ for tf in range(1, NTIMEFRAMES + 1):
      ### MFT
 
      # to be enabled once MFT Digits should run 5 times with different configurations
-     if isActive("MFT"):
+     # At the moment QC does not support per-layer digits/clusters, disable these tasks if staggering is requested
+     if isActive("MFT") and not staggMFT:
        for flp in range(5):
          addQCPerTF(taskName='mftDigitsQC' + str(flp),
-                    needs=[getDigiTaskName("MFT")],
-                    readerCommand='o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root',
-                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-digits-' + str(flp) + '.json',
-                    objectsFile='mftDigitsQC.root')
+                  needs=[getDigiTaskName("MFT")],
+                  readerCommand='o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root' + staggMFT,
+                  configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-digits-' + str(flp) + '.json',
+                  objectsFile='mftDigitsQC.root')
        addQCPerTF(taskName='mftClustersQC',
                 needs=[MFTRECOtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types none --cluster-types MFT',
+                readerCommand='o2-global-track-cluster-reader --track-types none --cluster-types MFT' + staggMFT,
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-clusters.json')
        addQCPerTF(taskName='mftTracksQC',
                 needs=[MFTRECOtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types MFT --cluster-types MFT',
+                readerCommand='o2-global-track-cluster-reader --track-types MFT --cluster-types MFT' + staggMFT,
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks.json')
        addQCPerTF(taskName='mftMCTracksQC',
                 needs=[MFTRECOtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types MFT --cluster-types MFT',
+                readerCommand='o2-global-track-cluster-reader --track-types MFT --cluster-types MFT' + staggMFT,
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-tracks-mc.json')
 
      ### TPC
@@ -2067,13 +2089,15 @@ for tf in range(1, NTIMEFRAMES + 1):
      ### ITS
      addQCPerTF(taskName='ITSTrackSimTaskQC',
                 needs=[ITSRECOtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
+                readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"' + staggITS,
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-mc-tracks-qc.json')
 
-     addQCPerTF(taskName='ITSTracksClustersQC',
-                needs=[ITSRECOtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"',
-                configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json')
+     # At the moment QC does not support per-layer digits/clusters, disable these tasks if staggering is requested
+     if not staggITS:
+         addQCPerTF(taskName='ITSTracksClustersQC',
+                    needs=[ITSRECOtask['name']],
+                    readerCommand='o2-global-track-cluster-reader --track-types "ITS" --cluster-types "ITS"' + staggITS,
+                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/its-clusters-tracks-qc.json')
 
      ### CPV
      if isActive('CPV'):
@@ -2130,12 +2154,12 @@ for tf in range(1, NTIMEFRAMES + 1):
      if isActive('MCH') and isActive('MID') and isActive('MFT') :
         addQCPerTF(taskName='MUONTracksMFTTaskQC',
                 needs=[MFTMCHMATCHtask['name'], MCHMIDMATCHtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "MFT,MCH,MID,MCH-MID,MFT-MCH,MFT-MCH-MID" --cluster-types "MCH,MID,MFT"',
+                readerCommand='o2-global-track-cluster-reader --track-types "MFT,MCH,MID,MCH-MID,MFT-MCH,MFT-MCH-MID" --cluster-types "MCH,MID,MFT"' + staggMFT,
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mftmchmid-tracks-task.json')
      elif isActive('MCH') and isActive('MFT') :
         addQCPerTF(taskName='MCHMFTTaskQC',
                 needs=[MFTMCHMATCHtask['name']],
-                readerCommand='o2-global-track-cluster-reader --track-types "MCH,MFT,MFT-MCH" --cluster-types "MCH,MFT"',
+                readerCommand='o2-global-track-cluster-reader --track-types "MCH,MFT,MFT-MCH" --cluster-types "MCH,MFT"' + staggMFT,
                 configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mftmch-tracks-task.json')
 
 
@@ -2152,7 +2176,9 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCTStask = createTask(name='tpctimeseries_'+str(tf), needs=tpctsneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='2000', cpu='1')
    TPCTStask['cmd'] = 'o2-global-track-cluster-reader --disable-mc --cluster-types "FT0,TOF,TPC" --track-types "ITS,TPC,ITS-TPC,ITS-TPC-TOF,ITS-TPC-TRD-TOF"'
    TPCTStask['cmd'] += ' --primary-vertices '
+   TPCTStask['cmd'] += staggITS
    TPCTStask['cmd'] += ' | o2-tpc-time-series-workflow --enable-unbinned-root-output --sample-unbinned-tsallis --sampling-factor 0.01 '
+   TPCTStask['cmd'] += staggITS
    TPCTStask['cmd'] += putConfigValues() + ' ' + getDPL_global_options(bigshm=True)
    # could be relaxed or changed once the timerseries worklow is more reactive to input cluster- and track-types
    addWhenActive("TOF,TPC,FT0", workflow['stages'], TPCTStask)

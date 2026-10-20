@@ -1,0 +1,5 @@
+Touch this file in a pull request that cannot be tested against a published
+O2PDPSuite release because it depends on an unreleased change in O2.
+Replace this text with a one-line reason and a link to the O2 pull request.
+Touching it enables the build/O2DPG/sim/o2dev check, which builds O2 from
+source against AliceO2Group/AliceO2 dev.
