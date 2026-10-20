@@ -1892,6 +1892,9 @@ for tf in range(1, NTIMEFRAMES + 1):
                                                          '--tracking-sources-map-extraction',
                                                          default_value='ITS-TPC'))
 
+      # store the MC truth of the residual tracks (branch trkMC of the trackData tree) whenever MC labels are available
+      scdcalib_mc_option = '' if args.no_mc_labels else option_if_available('o2-tpc-scdcalib-interpolation-workflow', '--enable-mc', envfile=async_envfile)
+
       SCDCALIBtask = createTask(name='scdcalib_'+str(tf), needs=[PVFINDERtask['name']], tf=tf, cwd=timeframeworkdir, lab=["CALIB"], mem='4000')
       SCDCALIBtask['cmd'] = task_finalizer(
          [ '${O2_ROOT}/bin/o2-tpc-scdcalib-interpolation-workflow',
@@ -1901,7 +1904,8 @@ for tf in range(1, NTIMEFRAMES + 1):
            '--tracking-sources ' + scdcalib_track_sources,
            '--tracking-sources-map-extraction ' + scdcalib_track_extraction,
            '--sec-per-slot 1 ',
-           '--send-track-data'
+           '--send-track-data',
+           scdcalib_mc_option
         ])
       workflow['stages'].append(SCDCALIBtask)
 
@@ -1924,7 +1928,8 @@ for tf in range(1, NTIMEFRAMES + 1):
            '--enable-track-input',
            '--output-dir ./',
            '--output-type ' +  scdaggreg_outputtype,
-           '--meta-output-dir /dev/null'
+           '--meta-output-dir /dev/null',
+           scdcalib_mc_option
          ])
       workflow['stages'].append(SCDAGGREGtask)
 
