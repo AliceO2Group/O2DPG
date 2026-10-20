@@ -224,7 +224,7 @@ def query_CCDBTimeMachineTS(base_url, user, period, passname):
     print(f"[getCCDBTimeMachineTimestamp] Checking if CCDBTimeMachineTS already exists: {url}", file=sys.stderr)
 
     response = requests.get(url, cert=(cert_path, key_path), verify=False)
-    if response.status_code != 404:
+    if response.status_code == 200:
         meta = extract_metadata_blocks_from_CCDB(response.content.decode('utf-8'))
         if (len(meta) > 0):
           def filter_known_fields(cls, data: dict) -> dict:
@@ -271,7 +271,8 @@ def upload_CCDBTimeMachineTS(base_url, user, keys):
 
     os.remove(empty_file)
 
-    return response
+    if response.status_code != 201:
+        print(f"[getCCDBTimeMachineTimestamp] Upload failed, response: {response.status_code}", file=sys.stderr)
 
 
 def get_CCDBTimeMachineTS(production_tag, year, period, run, passname,
