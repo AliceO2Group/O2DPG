@@ -1,7 +1,7 @@
 int External() {
     std::string path{"o2sim_Kine.root"};
 
-    float ratioTrigger = 1./11; // one event triggered out of 5
+    float ratioTrigger = 1./11; // one event triggered out of 11
 
 
     TFile file(path.c_str(), "READ");
