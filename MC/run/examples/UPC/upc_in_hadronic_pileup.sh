@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
-#JDL_PACKAGE=VO_ALICE@O2PDPSuite::MC-prod-2026-v11-1
+#JDL_PACKAGE=VO_ALICE@O2PDPSuite::MC-prod-2026-v13-1
 #JDL_OUTPUT=AO2D.root@disk=2,debug_log_archive.tgz@disk=2
 #JDL_ERROROUTPUT=debug_log_archive.tgz@disk=2
 
-# Anchored Pb-Pb MC: STARlight UPC events embedded in hadronic (Pythia8 Angantyr) pile-up
-# at the interaction rate of the anchor run.
+# Anchored Pb-Pb MC: STARlight UPC events on top of hadronic (Pythia8 Angantyr) pile-up.
 #
-# Every UPC_EVERY_N-th collision of the anchor run's collision sequence is replaced by a
-# UPC event in its own bunch crossing; all other collisions are hadronic Pb-Pb collisions.
-# The interaction-rate dependence is obtained by choosing anchor runs at different rates.
+# The hadronic Pb-Pb collisions follow the interaction rate of the anchor run. On top of them,
+# UPC events are injected as an independent random stream at UPC_RATE, each in its own bunch
+# crossing. The interaction-rate dependence is obtained by choosing anchor runs at different rates.
 # In the AOD, the UPC collisions have generator ID 51 (mcCollision.getGeneratorId()).
 #
 # Knobs:
 #   UPC_PROCESS    STARlight process (as in makeStarlightConfig.py)
-#   UPC_EVERY_N    every N-th collision is a UPC event;
-#                  the hadronic pile-up density is (N-1)/N of the real one
-#   NBKG           distinct Angantyr events per job; should exceed the number of
-#                  hadronic collisions in one timeframe, so that none repeats within it
+#   UPC_RATE       rate of the UPC stream in Hz; 67000 is about one per ITS readout frame
+#   NBKG           distinct Angantyr events per job, reused in turn; a repeated event
+#                  appears milliseconds later, far beyond an ITS readout frame or the TPC drift time
 #   ANCHOR_RUN     anchor run; the interaction rate is taken from its CTP scalers
 #   NTIMEFRAMES    timeframes per job; the background is simulated once per job,
 #                  so more timeframes per job is cheaper than many short jobs
@@ -25,12 +23,15 @@
 # Do not force longer timeframes with ALIEN_JDL_MC_ORBITS_PER_TF: with realistic
 # hadronic pile-up, TPC digitisation then exceeds the memory of a GRID slot.
 #
+# Use MC-prod-2026-v12-1 or later: older tags anchor the first job at the start of the run,
+# where the ITS dead map masks all chips and the AOD has no ITS and no collisions.
+#
 # Submit to the GRID with
 #   ${O2DPG_ROOT}/GRID/utils/grid_submit.sh --script upc_in_hadronic_pileup.sh --jobname upc --cores 8 --ttl 43200
 
 UPC_PROCESS=${UPC_PROCESS:-kCohJpsiToMu}
-UPC_EVERY_N=${UPC_EVERY_N:-10}
-NBKG=${NBKG:-150}
+UPC_RATE=${UPC_RATE:-67000}
+NBKG=${NBKG:-30}
 ANCHOR_RUN=${ANCHOR_RUN:-544868}
 
 export O2DPG_MC_CONFIG_ROOT=${O2DPG_MC_CONFIG_ROOT:-${O2DPG_ROOT}}
@@ -74,7 +75,7 @@ ${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGUD/ini/makeStarlightConfig.py --process ${U
 
 export ALIEN_JDL_ANCHOR_SIM_OPTIONS="-gen external -trigger external -ini ../GenStarlight.ini \
  -confKey 'PrimaryGenerator.id=51;SimCutParams.stepTrackRefHook=true' \
- --embedding -genBkg pythia8 -procBkg heavy_ion -nb ${NBKG} --embeddPattern r0:e${UPC_EVERY_N} \
+ --embedding -genBkg pythia8 -procBkg heavy_ion -nb ${NBKG} --embeddPattern ${UPC_RATE},1000000:1000000 \
  --overwrite-config simconfig.json --no-tpc-digitchunking --tpc-distortion-type 2 --tpc-corrmap-lumi-mode 2"
 
 ${O2DPG_ROOT}/MC/run/ANCHOR/anchorMC.sh
