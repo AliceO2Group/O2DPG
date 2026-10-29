@@ -125,7 +125,17 @@ commit cannot pass it. Two escape hatches, in order of preference:
 
 1. If the O2 change is already in a published daily, pin it: add a line
    `sim-tests-tag: daily-YYYYMMDD-HHMM-1` to the pull request description.
-2. If it is not published anywhere yet, touch `test/needs-o2-dev` with a
-   one-line reason and a link to the O2 pull request. That enables
-   `build/O2DPG/sim/o2dev`, which builds O2 from source against `dev`. It is
-   much slower, so it is opt-in.
+2. If it is not published anywhere yet, run the tests against your own build:
+
+```bash
+aliBuild build O2DPG-sim-tests
+```
+
+   This builds the O2sim stack from your work area and runs `run_tests.sh`
+   against your O2DPG checkout, so it covers O2 changes that are not committed
+   anywhere yet. It needs O2DPG as a development package (`aliBuild init
+   O2DPG`); without one, the sub-tests stop with `is not a git repository`.
+
+   Touching `test/needs-o2-dev` makes the CVMFS check skip, which is useful to
+   keep a pull request from being gated by a check that cannot pass for it. No
+   check replaces it, so pair it with the command above.

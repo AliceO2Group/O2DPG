@@ -51,18 +51,6 @@ if [[ -n "${G4INSTALL:-}" ]] ; then
               sed -e 's/[^ ]* //' -e 's/G4/export G4/' -e 's/DATA /DATA=/')"
 fi
 
-# O2's CCDB dictionary payload includes <curl/curl.h>. An aliBuild build
-# environment has curl's headers; a plain runtime environment from CVMFS does
-# not, and cling then dies compiling the payload. Derive the prefix from
-# curl-config rather than hardcoding a version.
-if command -v curl-config > /dev/null 2>&1 ; then
-    curl_include=$(curl-config --prefix 2>/dev/null)/include
-    if [[ -f "${curl_include}/curl/curl.h" && ":${ROOT_INCLUDE_PATH:-}:" != *":${curl_include}:"* ]] ; then
-        export ROOT_INCLUDE_PATH="${curl_include}${ROOT_INCLUDE_PATH:+:${ROOT_INCLUDE_PATH}}"
-        echo "Added ${curl_include} to ROOT_INCLUDE_PATH for the CCDB dictionary"
-    fi
-fi
-
 # LHAPDF data, needed by several generator configurations.
 if [[ -z "${LHAPDF_DATA_PATH:-}" && -n "${LHAPDF_ROOT:-}" ]] ; then
     export LHAPDF_DATA_PATH="${LHAPDF_ROOT}/share/LHAPDF:${LHAPDF_PDFSETS_ROOT:-}/share/LHAPDF"
