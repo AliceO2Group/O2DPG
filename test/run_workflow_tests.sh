@@ -26,6 +26,20 @@ get_git_repo_directory()
 }
 
 
+first_nonzero()
+{
+    # Echo the first non-zero argument, or 0. Used instead of summing exit
+    # codes: a sum can land on a multiple of 256 and exit 0 -- two phases
+    # failing with 128 each would report success -- and it also loses which
+    # phase failed.
+    local code
+    for code in "$@" ; do
+        [[ "${code}" != "0" ]] && { echo "${code}" ; return ; }
+    done
+    echo 0
+}
+
+
 test_single_wf()
 {
     local wf_script=${1}
@@ -55,7 +69,7 @@ test_single_wf()
         # use -k|--keep-going feature to not stop after the first failure but see, if there are more
         [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels QC ${memlimit} -k >> ${LOG_FILE_WF} 2>&1 ; ret_this_qc=${?} ; }
         [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels Analysis ${memlimit} -k >> ${LOG_FILE_WF} 2>&1 ; ret_this_analysis=${?} ; }
-        ret_this=$((ret_this + ret_this_qc + ret_this_analysis))
+        ret_this=$(first_nonzero "${ret_this}" "${ret_this_qc}" "${ret_this_analysis}")
         [[ "${ret_this}" != "0" ]] && echo "[FATAL]: O2DPG_TEST Workflow execution failed" >> ${LOG_FILE_WF} || echo_green " -> PASSED"
     else
         echo_green " -> PASSED"
@@ -241,7 +255,7 @@ else
     [[ "${changed_workflows}" != "" ]] && echo "  - The creation of simulation workflows from changed run scripts (sub-sect of MC/run/**/*.sh) will be tested."
 fi
 
-if [[ "${changed_analysis_qc}" != "" || "${changed_sim_bin}" ]] ; then
+if [[ "${changed_analysis_qc}" != "" ]] ; then
     for p in $(find "MC/bin/tests" -name "*.sh") ; do
         execute_workflows+="$(realpath ${p}) "
     done
@@ -293,7 +307,7 @@ fi
 # prepare our local test directory for bin tests
 # global return code for PWGs
 ret_analysis_qc=0
-if [[ "${changed_analysis_qc}" != "" || "${changed_sim_bin}" != "" ]] ; then
+if [[ "${changed_analysis_qc}" != "" ]] ; then
     rm -rf ${TEST_PARENT_DIR_BIN} 2>/dev/null
     mkdir -p ${TEST_PARENT_DIR_BIN} 2>/dev/null
     pushd ${TEST_PARENT_DIR_BIN} > /dev/null
@@ -336,7 +350,7 @@ if [[ "${changed_anchored}" != "" ]] ; then
     popd > /dev/null
 fi
 
-RET=$(( ret_global_pwg + ret_analysis_qc + ret_global_anchored ))
+RET=$(first_nonzero "${ret_global_pwg}" "${ret_analysis_qc}" "${ret_global_anchored}")
 
 echo
 [[ "${RET}" != "0" ]] && echo_red "There were errors, please check!" || echo_green "All required workflow tests successful"
