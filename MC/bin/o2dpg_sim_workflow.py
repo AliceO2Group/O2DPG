@@ -528,6 +528,22 @@ BCPATTERN=args.bcPatternFile
 COLTYPEBKG=args.colBkg
 havePbPb = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb"))
 
+# TPC loopers are a background continuous in time: with embedding they are generated
+# by the background transport only, otherwise background and signal both cover the timeframe
+if doembedding:
+   def loopersKeys(confkey):
+      return [kv.strip() for kv in confkey.split(';') if kv.strip().startswith('GenTPCLoopers.')]
+   def loopersVetoed(confkey):
+      return any(kv.split('=')[0].strip() == 'GenTPCLoopers.loopersVeto' and kv.split('=')[1].strip().lower() in ('true', '1')
+                 for kv in loopersKeys(confkey))
+   if loopersVetoed(args.confKey) or loopersVetoed(args.confKeyBkg):
+      print('o2dpg_sim_workflow: TPC loopers switched off for background and signal')
+      args.confKeyBkg = args.confKeyBkg + ';GenTPCLoopers.loopersVeto=true'
+   else:
+      # loopers settings given for the signal apply to the background; the background's own settings take precedence
+      args.confKeyBkg = ';'.join(loopersKeys(args.confKey) + ['GenTPCLoopers.colsys=' + COLTYPEBKG, args.confKeyBkg])
+   args.confKey = args.confKey + ';GenTPCLoopers.loopersVeto=true'
+
 workflow={}
 workflow['stages'] = []
 
