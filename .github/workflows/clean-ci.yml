@@ -14,10 +14,6 @@ name: Clean PR builds
       # Warning: the check_* keys are magic and must consist of the string
       # "check_" followed by the applicable check name exactly. The
       # "description" field is only the human-readable label for the input.
-      'check_build/O2DPG/sim/o2':
-        description: build/O2DPG/sim/o2
-        type: boolean
-        default: true
       'check_build/O2DPG/O2fst/o2':
         description: build/O2DPG/O2fst/o2
         type: boolean
