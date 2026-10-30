@@ -528,8 +528,7 @@ BCPATTERN=args.bcPatternFile
 COLTYPEBKG=args.colBkg
 havePbPb = (COLTYPE == 'PbPb' or (doembedding and COLTYPEBKG == "PbPb"))
 
-# TPC loopers are a background continuous in time: with embedding they are generated
-# by the background transport only, otherwise background and signal both cover the timeframe
+# TPC loopers are a background effect: with embedding, background and signal get consistent loopers settings
 if doembedding:
    def loopersKeys(confkey):
       return [kv.strip() for kv in confkey.split(';') if kv.strip().startswith('GenTPCLoopers.')]
@@ -539,10 +538,13 @@ if doembedding:
    if loopersVetoed(args.confKey) or loopersVetoed(args.confKeyBkg):
       print('o2dpg_sim_workflow: TPC loopers switched off for background and signal')
       args.confKeyBkg = args.confKeyBkg + ';GenTPCLoopers.loopersVeto=true'
+      args.confKey = args.confKey + ';GenTPCLoopers.loopersVeto=true'
    else:
-      # loopers settings given for the signal apply to the background; the background's own settings take precedence
+      # Loopers settings given for the signal apply to the background as well; the background's own
+      # settings take precedence. Both transports take colsys from -colBkg, as the loopers are a background effect.
+      # Which transport generates the loopers of a given collision is decided in O2, from the collision context itself.
       args.confKeyBkg = ';'.join(loopersKeys(args.confKey) + ['GenTPCLoopers.colsys=' + COLTYPEBKG, args.confKeyBkg])
-   args.confKey = args.confKey + ';GenTPCLoopers.loopersVeto=true'
+      args.confKey = ';'.join(['GenTPCLoopers.colsys=' + COLTYPEBKG, args.confKey])
 
 workflow={}
 workflow['stages'] = []
