@@ -354,7 +354,29 @@ remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config 
 ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE=${ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE:-RECO}
 remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${PWD}/env_async.env@${ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE}}"
 # potentially add CCDB timemachine timestamp
-remainingargs="${remainingargs} ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}}"
+if [[ -n ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER} ]]; then
+  # override CCDB time machine timestamp by hand, use e.g. 3385078236000 to effectively disable it
+  ARG_CONDITION_NOT_AFTER="--condition-not-after ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}"
+else
+  # options to set CCDB url, disable upload and force overwrite of an existing timestamp; default to production CCDB, uploading the object and not overwriting
+  : ${CCDBTIMEMACHINE_CCDB_URL:=https://alice-ccdb.cern.ch}
+  [[ ${CCDBTIMEMACHINE_SKIP_UPLOAD:-} != "1" ]] && CCDBTIMEMACHINE_OPTIONS+=" --publish-to-ccdb"
+  [[ ${CCDBTIMEMACHINE_FORCE_OVERWRITE:-} == "1" ]] && CCDBTIMEMACHINE_OPTIONS+=" --force-overwrite"
+
+  # obtain CCDB time machine timestamp from CCDB or, if not available, estimate it from the creation time of the reconstruction output files
+  CCDBTIMEMACHINE_CMD="${O2DPG_ROOT}/GRID/utils/getCCDBTimeMachineTimestamp.py --ccdb-url $CCDBTIMEMACHINE_CCDB_URL ${CCDBTIMEMACHINE_OPTIONS:-}"
+  echo "Running command to obtain CCDB time machine timestamp: ${CCDBTIMEMACHINE_CMD}"
+  CCDBTIMEMACHINE_TS=$(${CCDBTIMEMACHINE_CMD})
+
+  # return an error if the timestamp could not be obtained
+  if [[ -n ${CCDBTIMEMACHINE_TS} ]]; then
+    ARG_CONDITION_NOT_AFTER="--condition-not-after ${CCDBTIMEMACHINE_TS}"
+  else
+    echo_error "Could not obtain CCDB time machine timestamp. Exiting."
+    exit 1
+  fi
+fi
+remainingargs="${remainingargs} ${ARG_CONDITION_NOT_AFTER:-}"
 
 echo_info "baseargs passed to o2dpg_sim_workflow_anchored.py: ${baseargs}"
 echo_info "remainingargs forwarded to o2dpg_sim_workflow.py: ${remainingargs}"

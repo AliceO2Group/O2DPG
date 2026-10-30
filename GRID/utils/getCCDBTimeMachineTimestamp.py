@@ -211,7 +211,7 @@ def query_CCDBTimeMachineTS(base_url, user, period, passname):
     Queries CCDBTimeMachineTS from CCDB for a given period and pass.
 
     Returns:
-        obtained NotAfter timestamp (int) or None
+        (tuple) (obtained NotAfter timestamp (int), True) or (None, False)
     """
     # Construct user ID-specific cert and key paths
     cert_path, key_path = make_cert_paths()
@@ -235,9 +235,9 @@ def query_CCDBTimeMachineTS(base_url, user, period, passname):
           print(f"[getCCDBTimeMachineTimestamp] Found object for {clean_meta['Period']}, Pass: {clean_meta['Pass']}, "
                 f"NotAfter: {clean_meta['NotAfter']} ({human(clean_meta['NotAfter'])}), uploaded by LPMProductionTag {clean_meta['LPMProductionTag']}",
                 file=sys.stderr)
-          return clean_meta['NotAfter']
+          return clean_meta['NotAfter'], True
 
-    return None
+    return None, False
 
 
 def upload_CCDBTimeMachineTS(base_url, user, keys):
@@ -288,20 +288,27 @@ def get_CCDBTimeMachineTS(production_tag, year, period, run, passname,
     Returns:
         int: Either the queried or the estimated NotAfter timestamp
     """
+    found = False
     if not skip_ccdb_query:
-        not_after = query_CCDBTimeMachineTS(ccdb_url, username, period, passname)
-    else:
-        not_after = None
+        not_after, found = query_CCDBTimeMachineTS(ccdb_url, username, period, passname)
 
-    if not_after is not None and force_overwrite == True:
-        print("[getCCDBTimeMachineTimestamp] Existing object will be overwritten", file=sys.stderr)
-
-    if not_after == None or force_overwrite == True:
+    if not found or force_overwrite:
         print("[getCCDBTimeMachineTimestamp] Estimating CCDBTimeMachineTS for "
               f"LPMProductionTag: {production_tag}, Period: {period}, Pass: {passname}", file=sys.stderr)
         not_after = get_NotAfter(year, period, run, passname, samples, ccdb_check_path, ccdb_check)
-        time_machine_ts = CCDBTimeMachineTS(production_tag, period, passname, not_after)
+
         if publish_to_ccdb:
+            if not found:
+                # check again in case another subjob uploaded an object in the meantime
+                not_after_q, found = query_CCDBTimeMachineTS(ccdb_url, username, period, passname)
+
+            if found:
+                if force_overwrite:
+                    print("[getCCDBTimeMachineTimestamp] Existing object will be overwritten", file=sys.stderr)
+                else:
+                    return not_after_q
+
+            time_machine_ts = CCDBTimeMachineTS(production_tag, period, passname, not_after)
             upload_CCDBTimeMachineTS(ccdb_url, username, dataclasses.asdict(time_machine_ts))
 
     return not_after
@@ -335,11 +342,11 @@ def main():
                         help="overwrite the current CCDBTimeMachineTS object in the CCDB if one exists")
     parser.add_argument("--ccdb-url", default="https://alice-ccdb.cern.ch",
                         help="ccdb host for the upload")
-    parser.add_argument("--username", default="aliprod",
+    parser.add_argument("--username", default=os.environ.get("JALIEN_USER"),
                         help="username to be used for the upload to CCDB")
     args = parser.parse_args()
 
-    missing = [n for n in ("year", "period", "run", "passname") if not getattr(args, n)]
+    missing = [n for n in ("production_tag", "year", "period", "run", "passname", "username") if not getattr(args, n)]
     if missing:
         parser.error("missing required value(s): " + ", ".join(missing))
 
