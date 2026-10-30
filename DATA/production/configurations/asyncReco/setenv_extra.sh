@@ -426,6 +426,7 @@ elif [[ $ALIGNLEVEL == 1 ]]; then
   if [[ $ALIEN_JDL_LPMANCHORYEAR == "2022" ]]; then
     INST_IR_FOR_TPC=${ALIEN_JDL_INSTIRFORTPC-CTPCCDB} # by default override inst.IR by the mean IR from CCDB and use it for scaling
   fi
+
   if [[ $PERIOD == "LHC22s" ]]; then
     TPC_SCALING_SOURCE=${ALIEN_JDL_TPCSCALINGSOURCE-NO_SCALING}  # in this way, only TPC/Calib/CorrectionMaps is applied, and we know that for 22s it is the same as TPC/Calib/CorrectionMapsRef;
   elif [[ $PERIOD == @(LHC22c|LHC22d|LHC22e|JUN|LHC22f) ]]; then
@@ -645,13 +646,19 @@ fi
 # ad-hoc settings for TRD matching
 export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";$ITSEXTRAERR;$TRACKTUNETPC;$VDRIFTPARAMOPTION;GPU_rec_trd.minTrackPt=0.3;"
 
-# Pb26 reconstruction uses improved alignment with shifted ITS (mean vertex)
-if [[ $RUNNUMBER -ge 572013 ]] ; then
+# 2025/2026 are covered by better ITS alignment and it requires mean vertex. Also the TRD errors are improved
+case "$PERIOD:$ANCHORED_PASS_NUMBER" in
+  "LHC26ak:1" |                                                         \
+  "LHC26ah:2" | "LHC26aj:2" |                                           \
+  "LHC25an:2" | "LHC25ap:2" | "LHC25aq:2" | "LHC25ar:2" | "LHC25as:2" | \
+  "LHC25ao:3" |                                                         \
+  "LHC25aj:3" | "LHC25ak:3" | "LHC25al:3" |                             \
+  "LHC25ad:3" | "LHC25ae:3" | "LHC25af:3" )
   export CONFIG_EXTRA_PROCESS_o2_trd_global_tracking+=";GPU_rec_trd.trkltResRPhiIdeal=0.2;GPU_rec_trd.trkltResVsTanPhiMisalign=1.;"
   if [[ -z $ALIEN_JDL_MVBIAS ]]; then
      export O2_DPL_MVBIAS=";mvbias.xyz[0]=0.0332;mvbias.xyz[1]=-0.1825;mvbias.xyz[2]=-0.2846;mvbias.slopeX=-4.27e-05;mvbias.slopeY=-6.96e-05;";
   fi
-fi
+esac
 
 # ad-hoc settings for FT0
 export ARGS_EXTRA_PROCESS_o2_ft0_reco_workflow+=" --ft0-reconstructor"
