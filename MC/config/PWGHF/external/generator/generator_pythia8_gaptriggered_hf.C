@@ -479,6 +479,22 @@ FairGenerator *GeneratorPythia8GapTriggeredCharmAndBeauty(int inputTriggerRatio,
   return myGen;
 }
 
+// Charm and beauty enriched (2/3 charm 1/3 beauty)
+FairGenerator *GeneratorPythia8GapTriggeredCharmBeautyCharm(int inputTriggerRatio, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> hadronPdgList = {}, std::vector<std::array<int, 2>> partPdgToReplaceList = {}, std::vector<float> freqReplaceList = {})
+{
+  auto myGen = new GeneratorPythia8GapTriggeredHF(inputTriggerRatio, std::vector<int>{4, 5, 4}, hadronPdgList, partPdgToReplaceList, freqReplaceList);
+  auto seed = (gRandom->TRandom::GetSeed() % 900000000);
+  myGen->setUsedSeed(seed);
+  myGen->readString("Random:setSeed on");
+  myGen->readString("Random:seed " + std::to_string(seed));
+  myGen->setQuarkRapidity(yQuarkMin, yQuarkMax);
+  if (hadronPdgList.size() != 0)
+  {
+    myGen->setHadronRapidity(yHadronMin, yHadronMax);
+  }
+  return myGen;
+}
+
 FairGenerator *GeneratorPythia8GapHF(int inputTriggerRatio, float yQuarkMin = -1.5, float yQuarkMax = 1.5, float yHadronMin = -1.5, float yHadronMax = 1.5, std::vector<int> quarkPdgList = {}, std::vector<int> hadronPdgList = {}, std::vector<std::array<int, 2>> partPdgToReplaceList = {}, std::vector<float> freqReplaceList = {})
 {
   if (hadronPdgList.size() == 0 && quarkPdgList.size() == 0)
