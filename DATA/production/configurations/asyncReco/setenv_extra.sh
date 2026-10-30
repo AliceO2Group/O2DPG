@@ -583,6 +583,10 @@ elif [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
 fi
 export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow+=";$MAXBCDIFFTOMASKBIAS_ITS;$MAXBCDIFFTOSQUASHBIAS_ITS;$EXTRA_ITSRECO_CONFIG;"
 
+if [[ -n $ALIEN_JDL_ITSRECOARGS ]] ; then
+  export ARGS_EXTRA_PROCESS_o2_its_reco_workflow+="$ALIEN_JDL_ITSRECOARGS"
+fi
+
 # in the ALIGNLEVEL there was inconsistency between the internal errors of sync_misaligned and ITSEXTRAERR
 if [[ $ALIGNLEVEL != 0 ]]; then
  export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow+=";$ITSEXTRAERR;"
