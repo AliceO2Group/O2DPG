@@ -540,11 +540,12 @@ if doembedding:
       args.confKeyBkg = args.confKeyBkg + ';GenTPCLoopers.loopersVeto=true'
       args.confKey = args.confKey + ';GenTPCLoopers.loopersVeto=true'
    else:
-      # Loopers settings given for the signal apply to the background as well; the background's own
-      # settings take precedence. Both transports take colsys from -colBkg, as the loopers are a background effect.
+      # Loopers settings given for either transport apply to both; the background's own settings take precedence.
+      # Both transports take colsys from -colBkg, as the loopers are a background effect.
       # Which transport generates the loopers of a given collision is decided in O2, from the collision context itself.
-      args.confKeyBkg = ';'.join(loopersKeys(args.confKey) + ['GenTPCLoopers.colsys=' + COLTYPEBKG, args.confKeyBkg])
-      args.confKey = ';'.join(['GenTPCLoopers.colsys=' + COLTYPEBKG, args.confKey])
+      signalLoopersKeys, bkgLoopersKeys = loopersKeys(args.confKey), loopersKeys(args.confKeyBkg)
+      args.confKeyBkg = ';'.join(signalLoopersKeys + ['GenTPCLoopers.colsys=' + COLTYPEBKG, args.confKeyBkg])
+      args.confKey = ';'.join(['GenTPCLoopers.colsys=' + COLTYPEBKG, args.confKey] + bkgLoopersKeys)
 
 workflow={}
 workflow['stages'] = []
