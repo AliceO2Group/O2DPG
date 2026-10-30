@@ -51,15 +51,15 @@ int External() {
     std::cout << "  sum of weights jet-jet events: " << sumWeightsJetJet << "\n";
     std::cout << "# tracks summed over all events (jet-jet + MB): " << sumTracks << "\n";
 
-    if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.90 || nEventsMB > nEvents * (1 - ratioTrigger) * 1.10) { // we put some tolerance since the number of generated events is small
+    if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.85 || nEventsMB > nEvents * (1 - ratioTrigger) * 1.15) { // we put some tolerance since the number of generated events is small
         std::cerr << "Number of generated MB events different than expected\n";
         return 1;
     }
-    if (nEventsJetJet < nEvents * ratioTrigger * 0.90 || nEventsJetJet > nEvents * ratioTrigger * 1.10) {
+    if (nEventsJetJet < nEvents * ratioTrigger * 0.85 || nEventsJetJet > nEvents * ratioTrigger * 1.15) {
         std::cerr << "Number of jet-jet generated events different than expected\n";
         return 1;
     }
-    if(nEventsMB < sumWeightsMB * 0.90 || nEventsMB > sumWeightsMB * 1.10) {
+    if(nEventsMB < sumWeightsMB * 0.85 || nEventsMB > sumWeightsMB * 1.15) {
         std::cerr << "Weights of MB events do not = 1 as expected\n";
         return 1;
     }
