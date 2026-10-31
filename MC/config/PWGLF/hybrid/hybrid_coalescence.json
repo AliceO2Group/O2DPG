@@ -1,0 +1,24 @@
+
+{
+  "mode": "sequential",
+  "generators": [
+    {
+      "name": "pythia8",
+      "config": {
+        "config": "${O2_ROOT}/share/Generators/egconfig/pythia8_inel.cfg",
+        "hooksFileName": "",
+        "hooksFuncName": "",
+        "includePartonEvent": false,
+        "particleFilter": "",
+        "verbose": 0
+      }
+    },
+    {
+      "name": "external",
+      "config": {
+        "iniFile": "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/ini/GeneratorAntideuteronCoalescenceJet.ini"
+      }
+    }
+  ],
+  "fractions": [4, 1]
+}
