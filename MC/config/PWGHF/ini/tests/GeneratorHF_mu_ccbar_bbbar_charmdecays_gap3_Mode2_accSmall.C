@@ -57,7 +57,7 @@ int External() {
 
     for (auto &track : *tracks) {
       auto pdg = track.GetPdgCode();
-      if (std::abs(pdg) == checkPdgQuark) {
+      if (std::abs(pdg) == checkPdgQuarkOne || std::abs(pdg) == checkPdgQuarkTwo) {
         nQuarks++;
         continue;
       } // pdgquark
