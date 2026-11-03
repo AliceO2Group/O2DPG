@@ -12,7 +12,7 @@ int External() {
     float ratioTrigger = 1./5.; // one event triggered out of 5
     std::array<std::array<int, 2>, 2> pdgReplParticles = {std::array{413, 14122}, std::array{413, 4124}};
     std::array<std::array<int, 2>, 2> pdgReplPartCounters = {std::array{0, 0}, std::array{0, 0}};
-    std::array<float, 2> freqRepl = {0.5, 0.5};
+    std::array<float, 2> freqRepl = {0.35, 0.35};
     std::map<int, int> sumOrigReplacedParticles = {{413, 0}};
 
     std::array<int, 3> checkPdgHadron{413, 14122, 4124};

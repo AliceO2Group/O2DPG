@@ -97,12 +97,12 @@ int External() {
     return 1;
   }
   if ((nEventsInjOne + nEventsInjTwo) < nEvents * ratioTrigger * 0.95 ||
-      (nEventsInjOne + nEventsInjOne) > nEvents * ratioTrigger * 1.05) {
+      (nEventsInjOne + nEventsInjTwo) > nEvents * ratioTrigger * 1.05) {
     std::cerr << "Number of generated events injected with " << checkPdgQuarkOne << " and " << checkPdgQuarkTwo
               << " different than expected\n";
     return 1;
   }
-  if (std::abs(float(nEventsInjOne) / nEventsInjOne - ratioQuarkOneTwo) / ratioQuarkOneTwo > 0.1) {
+  if (std::abs(float(nEventsInjOne) / nEventsInjTwo - ratioQuarkOneTwo) / ratioQuarkOneTwo > 0.1) {
     std::cerr << "Ratio between quark " << checkPdgQuarkOne << " and quark " << checkPdgQuarkTwo
               << " different than expected\n";
     return 1;
