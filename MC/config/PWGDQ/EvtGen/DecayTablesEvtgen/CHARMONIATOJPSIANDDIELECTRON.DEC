@@ -39,4 +39,9 @@ Decay Upsilon(3S)
 1.000 e+   e-                PHOTOS VLL;
 Enddecay
 
+Decay X_1(3872)
+#### Breit-Wigner function for the pion distribution (S-Wave approximation)
+1.000 J/psi   pi+     pi-         XJPSIRHO0PIPI_S;
+Enddecay
+
 End

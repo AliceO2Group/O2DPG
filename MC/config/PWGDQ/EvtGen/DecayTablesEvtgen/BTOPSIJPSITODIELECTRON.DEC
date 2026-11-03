@@ -36,18 +36,22 @@ Decay B0
 0.000660000 J/psi   K*0     pi+     pi-                     PHSP;  #[New mode added] #[Reconstructed PDG2011]
 
 # --- chi_c1 ---
-  0.000011200   chi_c1   pi0              PHSP;
-  0.000395000   chi_c1   K0               SVS;
-  0.000497000   chi_c1   K+   pi-         PHSP;
-  0.000320000   chi_c1   K0   pi+  pi-    PHSP;
-  0.000350000   chi_c1   K+   pi0  pi-    PHSP;
+0.000011200   chi_c1   pi0              PHSP;
+0.000395000   chi_c1   K0               SVS;
+0.000497000   chi_c1   K+   pi-         PHSP;
+0.000320000   chi_c1   K0   pi+  pi-    PHSP;
+0.000350000   chi_c1   K+   pi0  pi-    PHSP;
 
 # --- chi_c2 ---
-  0.000015000   chi_c2   K0               STS;
-  0.000049000   chi_c2   K*0              PHSP;
-  0.000072000   chi_c2   K+   pi-         PHSP;
-  0.000174000   chi_c2   pi+  pi-  K0     PHSP;
-  0.000074000   chi_c2   pi-  pi0  K+     PHSP;
+0.000015000   chi_c2   K0               STS;
+0.000049000   chi_c2   K*0              PHSP;
+0.000072000   chi_c2   K+   pi-         PHSP;
+0.000174000   chi_c2   pi+  pi-  K0     PHSP;
+0.000074000   chi_c2   pi-  pi0  K+     PHSP;
+
+# --- chi_c1(3872) ---
+0.000110000   X_1(3872) K0              SVS;
+0.000180000   X_1(3872) K+  pi-         PHSP;
 Enddecay
 
 Decay anti-B0
@@ -87,18 +91,23 @@ Decay anti-B0
 0.000660000 J/psi   anti-K*0 pi-     pi+                    PHSP;  #[New mode added] #[Reconstructed PDG2011]
 
 # --- chi_c1 ---
-  0.000011200   chi_c1   pi0              PHSP;
-  0.000395000   chi_c1   anti-K0          SVS;
-  0.000497000   chi_c1   K-   pi+         PHSP;
-  0.000320000   chi_c1   anti-K0 pi- pi+  PHSP;
-  0.000350000   chi_c1   K-   pi0  pi+    PHSP;
+0.000011200   chi_c1   pi0              PHSP;
+0.000395000   chi_c1   anti-K0          SVS;
+0.000497000   chi_c1   K-   pi+         PHSP;
+0.000320000   chi_c1   anti-K0 pi- pi+  PHSP;
+0.000350000   chi_c1   K-   pi0  pi+    PHSP;
 
 # --- chi_c2 ---
-  0.000015000   chi_c2   anti-K0          STS;
-  0.000049000   chi_c2   anti-K*0         PHSP;
-  0.000072000   chi_c2   K-   pi+         PHSP;
-  0.000174000   chi_c2   pi-  pi+ anti-K0 PHSP;
-  0.000074000   chi_c2   pi+  pi0  K-     PHSP;
+0.000015000   chi_c2   anti-K0          STS;
+0.000049000   chi_c2   anti-K*0         PHSP;
+0.000072000   chi_c2   K-   pi+         PHSP;
+0.000174000   chi_c2   pi-  pi+ anti-K0 PHSP;
+0.000074000   chi_c2   pi+  pi0  K-     PHSP;
+  
+# --- chi_c1(3872) ---
+0.000110000   X_1(3872) anti-K0         SVS;
+0.000180000   X_1(3872) K-  pi+         PHSP;
+
 Enddecay
 
 Decay B+
@@ -134,19 +143,23 @@ Decay B+
 0.000011800 J/psi   p+      anti-Lambda0                    PHSP;  #[New mode added] #[Reconstructed PDG2011]
 
 # --- chi_c1 ---
-  0.000022000   chi_c1   pi+              PHSP;
-  0.000474000   chi_c1   K+               SVS;
-  0.000300000   chi_c1   K*+              SVV_HELAMP PKHplus PKphHplus PKHzero PKphHzero PKHminus PKphHminus;
-  0.000329000   chi_c1   K+   pi0         PHSP;
-  0.000580000   chi_c1   K0   pi+         PHSP;
-  0.000374000   chi_c1   K+   pi+  pi-    PHSP;
+0.000022000   chi_c1   pi+              PHSP;
+0.000474000   chi_c1   K+               SVS;
+0.000300000   chi_c1   K*+              SVV_HELAMP PKHplus PKphHplus PKHzero PKphHzero PKHminus PKphHminus;
+0.000329000   chi_c1   K+   pi0         PHSP;
+0.000580000   chi_c1   K0   pi+         PHSP;
+0.000374000   chi_c1   K+   pi+  pi-    PHSP;
 
 # --- chi_c2 ---
-  0.000110000   chi_c2   K+               STS;
-  0.000120000   chi_c2   K*+              PHSP;
-  0.000062000   chi_c2   K+   pi0         PHSP;
-  0.000124000   chi_c2   K0   pi+         PHSP;
-  0.000134000   chi_c2   K+   pi+  pi-    PHSP;
+0.000110000   chi_c2   K+               STS;
+0.000120000   chi_c2   K*+              PHSP;
+0.000062000   chi_c2   K+   pi0         PHSP;
+0.000124000   chi_c2   K0   pi+         PHSP;
+0.000134000   chi_c2   K+   pi+  pi-    PHSP;
+
+# --- chi_c1(3872) ---
+0.000190000   X_1(3872) K+              SVS;
+0.000240000   X_1(3872) K0  pi+         PHSP;
 Enddecay
 
 Decay B-
@@ -181,19 +194,24 @@ Decay B-
 0.000011800 J/psi   anti-p- Lambda0                         PHSP;  #[New mode added] #[Reconstructed PDG2011]
 
 # --- chi_c1 ---
-  0.000022000   chi_c1   pi-              PHSP;
-  0.000474000   chi_c1   K-               SVS;
-  0.000300000   chi_c1   K*-              SVV_HELAMP PKHminus PKphHminus PKHzero PKphHzero PKHplus PKphHplus;
-  0.000329000   chi_c1   K-   pi0         PHSP;
-  0.000580000   chi_c1   anti-K0 pi-      PHSP;
-  0.000374000   chi_c1   K-   pi-  pi+    PHSP;
+0.000022000   chi_c1   pi-              PHSP;
+0.000474000   chi_c1   K-               SVS;
+0.000300000   chi_c1   K*-              SVV_HELAMP PKHminus PKphHminus PKHzero PKphHzero PKHplus PKphHplus;
+0.000329000   chi_c1   K-   pi0         PHSP;
+0.000580000   chi_c1   anti-K0 pi-      PHSP;
+0.000374000   chi_c1   K-   pi-  pi+    PHSP;
 
 # --- chi_c2 ---
-  0.000110000   chi_c2   K-               STS;
-  0.000120000   chi_c2   K*-              PHSP;
-  0.000062000   chi_c2   K-   pi0         PHSP;
-  0.000124000   chi_c2   anti-K0 pi-      PHSP;
-  0.000134000   chi_c2   K-   pi-  pi+    PHSP;
+0.000110000   chi_c2   K-               STS;
+0.000120000   chi_c2   K*-              PHSP;
+0.000062000   chi_c2   K-   pi0         PHSP;
+0.000124000   chi_c2   anti-K0 pi-      PHSP;
+0.000134000   chi_c2   K-   pi-  pi+    PHSP;
+
+# --- chi_c1(3872) ---
+0.000190000   X_1(3872) K-              SVS;
+0.000240000   X_1(3872) K0  pi-         PHSP;
+
 Enddecay
 
 Decay B_s0
@@ -242,7 +260,13 @@ Decay B_s0
 0.0000023   phi    e+     e-                   BTOSLLALI;
 
 # --- chi_c1 ---
-  0.0001920   chi_c1   phi   SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+0.0001920   chi_c1   phi             SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+  
+# --- chi_c1(3872) ---
+0.000096000   X_1(3872) phi          SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+0.000076000   X_1(3872) K+  K-       PHSP;
+0.000037000   X_1(3872) pi+  pi-     PHSP;
+
 Enddecay
 
 Decay anti-B_s0
@@ -290,7 +314,12 @@ Decay anti-B_s0
 0.0000023   phi    e-     e+                   BTOSLLALI;
 
 # --- chi_c1 ---
-  0.0001970   chi_c1   phi   SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+0.0001970   chi_c1   phi   SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+
+# --- chi_c1(3872) ---
+0.000096000   X_1(3872) phi          SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;
+0.000076000   X_1(3872) K+  K-       PHSP;
+0.000037000   X_1(3872) pi+  pi-     PHSP;
 Enddecay
 
 Decay Lambda_b0
@@ -302,10 +331,14 @@ Decay Lambda_b0
 0.00032    p+          J/psi   K-                 PHSP;
 0.000066   p+          J/psi   pi-  pi+  K-        PHSP;
 0.000066    p+          psi(2S)   K-                 PHSP;
-  0.0000760   chi_c1   p+       K-      PHSP;
-  0.0000050   chi_c1   p+       pi-     PHSP;
-  0.0000770   chi_c2   p+       K-      PHSP;
-  0.0000048   chi_c2   p+       pi-     PHSP;
+0.0000760   chi_c1   p+       K-      PHSP;
+0.0000050   chi_c1   p+       pi-     PHSP;
+0.0000770   chi_c2   p+       K-      PHSP;
+0.0000048   chi_c2   p+       pi-     PHSP;
+
+# --- chi_c1(3872) ---
+0.0000280   X_1(3872)  p+    K-       PHSP;
+0.0000160   X_1(3872)  Lambda(1520)0  PHSP;
 Enddecay
 
 Decay anti-Lambda_b0
@@ -317,10 +350,14 @@ Decay anti-Lambda_b0
 0.00032    anti-p-     J/psi   K+                 PHSP;
 0.000066   anti-p-     J/psi   pi-  pi+  K+        PHSP;
 0.000066   anti-p-     psi(2S)   K+                 PHSP;
-  0.0000760   chi_c1   anti-p-  K+      PHSP;
-  0.0000050   chi_c1   anti-p-  pi+     PHSP;
-  0.0000770   chi_c2   anti-p-  K+      PHSP;
-  0.0000048   chi_c2   anti-p-  pi+     PHSP;
+0.0000760   chi_c1   anti-p-  K+      PHSP;
+0.0000050   chi_c1   anti-p-  pi+     PHSP;
+0.0000770   chi_c2   anti-p-  K+      PHSP;
+0.0000048   chi_c2   anti-p-  pi+     PHSP;
+  
+# --- chi_c1(3872) ---
+0.0000280   X_1(3872)  anti-p-    K+       PHSP;
+0.0000160   X_1(3872)  anti-Lambda(1520)0  PHSP;
 Enddecay
 
 Decay Xi_b-
@@ -408,6 +445,11 @@ Enddecay
 
 Decay Upsilon(3S)
 1.000 e+   e-                PHOTOS VLL;
+Enddecay
+
+Decay X_1(3872)
+#### Breit-Wigner function for the pion distribution (S-Wave approximation)
+1.000 J/psi   pi+     pi-         XJPSIRHO0PIPI_S;
 Enddecay
 
 End
