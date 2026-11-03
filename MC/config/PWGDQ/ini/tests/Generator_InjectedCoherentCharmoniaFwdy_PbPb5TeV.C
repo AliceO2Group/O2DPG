@@ -58,6 +58,17 @@ int External() {
                 }
                 int child0Id = track.getFirstDaughterTrackId();
                 int child1Id = track.getLastDaughterTrackId();
+                if (child0Id < 0 || child1Id < child0Id ||
+                    child1Id >= static_cast<int>(tracks->size())) {
+                    std::cout << "Skip charmonium without valid daughters:"
+                              << " pdg=" << pdg
+                              << " mother=" << idMoth
+                              << " firstDaughter=" << child0Id
+                              << " lastDaughter=" << child1Id
+                              << " y=" << rapidity << '\n';
+                    continue;
+                }
+                
                 for (int iDaugh = child0Id; iDaugh <= child1Id; iDaugh++) {
                     auto daugh = tracks->at(iDaugh);
                     if (daugh.GetPdgCode() == 22) {
