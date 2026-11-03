@@ -1,4 +1,3 @@
-
 #include "Pythia8/Pythia.h"
 #include "Pythia8/HeavyIons.h"
 #include "FairGenerator.h"
@@ -19,14 +18,25 @@ public:
   GeneratorPythia8ExtraStrangeness() = default;
 
   /// Constructor
-  GeneratorPythia8ExtraStrangeness(int input_pdg) 
+  GeneratorPythia8ExtraStrangeness(int input_pdg, int inputTriggerRatio)
   {
+
+    if (inputTriggerRatio <= 0) {
+      throw std::invalid_argument("inputTriggerRatio must be positive");
+    }
+
+    LOG(info) << "Gap trigger ratio N = " << inputTriggerRatio << " events";
+  
+
+    mGeneratedEvents = 0;
+    mTriggerRatio = inputTriggerRatio;
+
     genMinPt=0.0;
-    genMaxPt=12.0;
-    genminY=-1.5;
-    genmaxY=1.5;
-    genminEta=-1.5;
-    genmaxEta=1.5;
+    genMaxPt=10.0;
+    genminY=-1.0;
+    genmaxY=1.0;
+    genminEta=-2.5;
+    genmaxEta=2.5;
     
     pdg=input_pdg;
     m = 0;
@@ -40,14 +50,8 @@ public:
     xProd=0.; yProd=0.; zProd=0.;
     
     fLVHelper = std::make_unique<TLorentzVector>();
-
-    randomizePDGsign = false;
-
-    fSpectra = makeLevySpectrum("fSpectra", genMinPt, genMaxPt, mPythia.particleData.m0(input_pdg), 0.30, 7.);
   }
 
-  /// randomize the PDG code sign of core particle
-  void setRandomizePDGsign() { randomizePDGsign = true; }
 
   Double_t y2eta(Double_t pt, Double_t mass, Double_t y){
     Double_t mt = TMath::Sqrt(mass * mass + pt * pt);
@@ -108,22 +112,19 @@ TF1* makeLevySpectrum(const char* name, double ptMin, double ptMax, double mass,
   //_________________________________________________________________________________
   /// generate uniform eta and uniform momentum
   void genSpectraMomentumEta(double minPt, double maxPt, double minY, double maxY){
-    // random generator
-    std::unique_ptr<TRandom3> ranGenerator { new TRandom3() };
-    ranGenerator->SetSeed(0);
-    
+
     // generate transverse momentum
     //const double gen_pT = ranGenerator->Uniform(minPt, maxPt);
-    const double gen_pT = fSpectra->GetRandom(minPt,maxPt);
+    const double gen_pT = fSpectra->GetRandom(minPt, maxPt, &mRandom);
     
     //Actually could be something else without loss of generality but okay
-    const double gen_phi = ranGenerator->Uniform(0,2*TMath::Pi());
+    const double gen_phi = mRandom.Uniform(0,2*TMath::Pi());
     
     // sample flat in rapidity, calculate eta
     Double_t gen_Y=10, gen_eta=10;
     
     while( gen_eta>genmaxEta || gen_eta<genminEta ){
-      gen_Y = ranGenerator->Uniform(minY,maxY);
+      gen_Y = mRandom.Uniform(minY,maxY);
       gen_eta = y2eta(gen_pT, m, gen_Y);
     }
     
@@ -132,10 +133,10 @@ TF1* makeLevySpectrum(const char* name, double ptMin, double ptMax, double mass,
   }
 
   //__________________________________________________________________
-  Pythia8::Particle createParticle(){
+  Pythia8::Particle createParticle(int id){
     //std::cout << "createParticle() mass " << m << " pdgCode " << pdg << std::endl;
     Pythia8::Particle myparticle;
-    myparticle.id(pdg);
+    myparticle.id(id);
     myparticle.status(11);
     myparticle.px(px);
     myparticle.py(py);
@@ -149,46 +150,92 @@ TF1* makeLevySpectrum(const char* name, double ptMin, double ptMax, double mass,
     return myparticle;
   }
 
-  //__________________________________________________________________
-  int randomizeSign()
-  {
-    std::unique_ptr<TRandom3> gen_random{new TRandom3(0)};
-    const float n = gen_random->Uniform(-1, 1);
-
-    return n / abs(n);
-  }
   
+  //__________________________________________________________________
+  // look for final-state (anti)Lambdas in the event; if there are any, remove one
+  // (chosen at random) from the event record and return the Lambda id, otherwise return 0
+  int removeLambda()
+  {
+    int kLambdaPdg = 3122;
+    auto& event = mPythia.event;
+
+    std::vector<int> candidates;
+    for (int i = 0; i < event.size(); ++i) {
+      bool isFromDecay = event[i].status() >= 91 && event[i].status() <= 99;
+      bool isAcc = std::abs(event[i].y()) < genmaxY;
+
+      if (event[i].idAbs() == kLambdaPdg && event[i].isFinal() && isAcc && !isFromDecay) {
+        // not considering lambdas that are the first daughter in the event record.
+        bool isEdge = false;
+        for (int mom : event[i].motherList()) {
+          if (i == event[mom].daughter1() || i == event[mom].daughter2()) isEdge = true;
+        }
+
+        if (!isEdge) {
+          candidates.push_back(i);
+        }
+      }
+    }
+    if (candidates.empty()) {
+      return 0;
+    }
+
+    const int idx = candidates[static_cast<int>(mRandom.Uniform(0,candidates.size()))];
+    const int lambdaId = event[idx].id();
+
+    // remove the entry and shift the indices of the others
+    event.remove(idx, idx, true);
+
+    return lambdaId;
+  }
+
   //__________________________________________________________________
   Bool_t generateEvent() override {
     // Generate PYTHIA event
     
-    mPythia.event.reset();
-
-    /// go to next Pythia event
-    Bool_t lPythiaOK = kFALSE;
-    while (!lPythiaOK){
-      lPythiaOK = mPythia.next();
+    if (!fSpectra) {
+      fSpectra = makeLevySpectrum("fSpectra", genMinPt, genMaxPt, mPythia.particleData.m0(pdg), 0.3942, 9.943);
     }
 
-    /// reset event
-    //mPythia.event.reset();
+    mPythia.event.reset();
+    Bool_t lPythiaOK = kFALSE;
 
-    /// create and append the desired particle
-    m = sampleMass(pdg);
-    genSpectraMomentumEta(genMinPt, genMaxPt, genminY, genmaxY);
+    mGeneratedEvents++;
+    if (mGeneratedEvents % mTriggerRatio == 0) {
+      int lambdaId = 0;
 
-    if (randomizePDGsign)
-      pdg *= randomizeSign();
+      // regenerate until the event contains a Lambda or an anti-Lambda, which is removed
+      while (lambdaId == 0)
+      {
+        lPythiaOK = mPythia.next();
+        if (lPythiaOK) {
+          lambdaId = removeLambda();
+        }
+      }
 
-    Pythia8::Particle particle = createParticle();
-    mPythia.event.append(particle);
-    mPythia.moreDecays();
+      m = sampleMass(pdg);
+      genSpectraMomentumEta(genMinPt, genMaxPt, genminY, genmaxY);
 
+      // Lambda -> Lambda*, anti-Lambda -> anti-Lambda*
+      const int sign = lambdaId > 0 ? 1 : -1;
+
+      Pythia8::Particle particle = createParticle(sign*pdg);
+      int idxL = mPythia.event.append(particle);
+      mPythia.moreDecays(idxL);
+    } else {
+      while (!lPythiaOK){
+        lPythiaOK = mPythia.next();
+      }
+    }
     return true;
   }
+
   
 private:
-  
+
+  unsigned long long mGeneratedEvents;
+  int mTriggerRatio;
+
   double genMinPt;      /// minimum 3-momentum for generated particles
   double genMaxPt;      /// maximum 3-momentum for generated particles
   double genminY;    /// minimum pseudorapidity for generated particles
@@ -211,16 +258,14 @@ private:
   double xProd;      /// x-coordinate position production vertex [cm]
   double yProd;      /// y-coordinate position production vertex [cm]
   double zProd;      /// z-coordinate position production vertex [cm]
-
-  bool randomizePDGsign; /// bool to randomize the PDG code of the core particle
   
   TF1 *fSpectra = nullptr; /// TF1 to store more realistic shape of spectrum
   std::unique_ptr<TLorentzVector> fLVHelper;
+  TRandom3 mRandom{0};
 };
 
- FairGenerator *generator_Lstar()
+ FairGenerator *generator_Lstar(int inputTriggerRatio = 3)
  {
-  auto myGen = new GeneratorPythia8ExtraStrangeness(3124);
-  myGen->setRandomizePDGsign(); // randomization of PDG switched on
+  auto myGen = new GeneratorPythia8ExtraStrangeness(3124, inputTriggerRatio);
   return myGen;
  }
