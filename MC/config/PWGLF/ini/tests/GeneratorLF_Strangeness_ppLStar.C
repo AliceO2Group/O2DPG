@@ -1,7 +1,8 @@
 int External()
 {
     std::string path{"o2sim_Kine.root"};
-    const int pdgMother = 3124;   // Lambda(1520)0 (sign randomized by the generator)
+    const int pdgMother = 3124;   // Lambda(1520)0
+    const int triggerRatio = 5;   // must match generator_Lstar(N) in the .ini file
 
     TFile file(path.c_str(), "READ");
     if (file.IsZombie()) {
@@ -20,10 +21,18 @@ int External()
     int nMother = 0;
     int nNotDecayed = 0;
     int nBadDecay = 0;         // mothers not decaying exactly to Lambda + gamma
-    int nEventsWrongCount = 0; // events without exactly one injected mother
+    int nEventsWrongCount = 0; // events with the wrong number of injected mothers
+    int nGapEvents = 0;        // events expected to contain the injected mother
 
     for (int i = 0; i < nEvents; i++) {
         tree->GetEntry(i);
+
+        // the generator injects in every triggerRatio-th event (it counts events from 1)
+        const bool isGapEvent = ((i + 1) % triggerRatio == 0);
+        if (isGapEvent) {
+            nGapEvents++;
+        }
+
         int nInEvent = 0;
         for (auto &track : *tracks) {
             const int pdg = track.GetPdgCode();
@@ -50,21 +59,30 @@ int External()
                 std::cerr << "Unexpected decay of " << pdg << " (" << nDau << " daughters)\n";
             }
         }
-        if (nInEvent != 1) {
+
+        const int nExpected = isGapEvent ? 1 : 0;
+        if (nInEvent != nExpected) {
             nEventsWrongCount++;
+            std::cerr << "Event " << i << ": found " << nInEvent
+                      << " Lambda(1520), expected " << nExpected << "\n";
         }
     }
 
     std::cout << "--------------------------------\n";
     std::cout << "# Events:                  " << nEvents << "\n";
+    std::cout << "# Gap-trigger events:      " << nGapEvents << " (ratio " << triggerRatio << ")\n";
     std::cout << "# Lambda(1520) + anti:     " << nMother << "\n";
     std::cout << "# not decayed:             " << nNotDecayed << "\n";
     std::cout << "# unexpected decays:       " << nBadDecay << "\n";
-    std::cout << "# events with != 1 mother: " << nEventsWrongCount << "\n";
+    std::cout << "# events wrong count:      " << nEventsWrongCount << "\n";
     std::cout << "--------------------------------\n";
 
+    if (nMother != nGapEvents) {
+        std::cerr << "Expected one injected Lambda(1520) per gap-trigger event\n";
+        return 1;
+    }
     if (nEventsWrongCount > 0) {
-        std::cerr << "Each event must contain exactly one injected Lambda(1520)\n";
+        std::cerr << "Lambda(1520) must appear in every gap-triggered events\n";
         return 1;
     }
     if (nNotDecayed > 0 || nBadDecay > 0) {
