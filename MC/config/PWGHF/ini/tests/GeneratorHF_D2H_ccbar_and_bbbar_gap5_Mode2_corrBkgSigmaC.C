@@ -120,7 +120,15 @@ int External() {
                         /// check that among the mothers there is a c/cbar quark
                         /// This means that the charm hadron comes from the c-quark hadronization, where the c/cbar quark
                         /// comes from a c-cbar pair present in the current event, tagged with a b-bbar (e.g. double-parton scattering)
-                        if(std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 4) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -4) == motherPdgCodes.end()) {
+                        /// we check also if it comes from a charmed diquark
+                        if(std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 4) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -4) == motherPdgCodes.end()
+                           && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 4101) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -4101) == motherPdgCodes.end()
+                           && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 4103) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -4103) == motherPdgCodes.end()
+                           && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 4201) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -4201) == motherPdgCodes.end()
+                           && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 4203) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -4203) == motherPdgCodes.end()
+                           && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 4301) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -4301) == motherPdgCodes.end()
+                           && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 4303) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -4303) == motherPdgCodes.end()
+                           && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 4403) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -4403) == motherPdgCodes.end()){
                             /// if we arrive here, it means that the hadron comes from the decay of a beauty hadron.
                             /// This can happen if and only if this is not a replaced one (i.e. native from Lambdab0 decay)
                             if (std::find(motherPdgCodes.begin(), motherPdgCodes.end(), 5122) == motherPdgCodes.end() && std::find(motherPdgCodes.begin(), motherPdgCodes.end(), -5122) == motherPdgCodes.end()) {
