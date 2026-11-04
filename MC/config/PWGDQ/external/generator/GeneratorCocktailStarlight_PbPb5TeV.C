@@ -33,10 +33,15 @@ void configureEvtGen(o2::eventgen::GeneratorEvtGen<GeneratorCocktail>* generator
     TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
     generator->SetDecayTable(Form("%s/PSITOJPSIPIPI.DEC", pathO2.Data()));
   } else {
-    generator->SetSizePdg(1);
-    generator->AddPdg(100443, 0);
-    TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGUD/external/generator/DecayTablesEvtGen");
-    generator->SetDecayTable(Form("%s/PSI2S.MUMUPIPI.DEC", pathO2.Data()));
+    // generator->SetSizePdg(1);
+    // generator->AddPdg(100443, 0);
+    generator->SetSizePdg(2);
+    generator->AddPdg(443, 0);
+    generator->AddPdg(100443, 1);
+    TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
+    generator->SetDecayTable(Form("%s/PSITOJPSITOMU.DEC", pathO2.Data()));
+    // TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGUD/external/generator/DecayTablesEvtGen");
+    // generator->SetDecayTable(Form("%s/PSI2S.MUMUPIPI.DEC", pathO2.Data()));
   }
 }
 } // namespace
@@ -89,7 +94,7 @@ FairGenerator* GeneratorCocktailStarlightCoherentFwdy_PbPb5TeV(float energyCM = 
 {
   auto genCocktailEvtGen = new o2::eventgen::GeneratorEvtGen<GeneratorCocktail>();
   configureEvtGen(genCocktailEvtGen, false);
-  auto genCohJpsi = makeStarlightGenerator("kCohJpsiToMu", energyCM, beam1Z, beam1A, beam2Z, beam2A, extrapars, dpmjetconf);
+  auto genCohJpsi = makeStarlightGenerator("kCohJpsiToElRad", energyCM, beam1Z, beam1A, beam2Z, beam2A, extrapars, dpmjetconf);
   genCocktailEvtGen->AddGenerator(genCohJpsi, 1);
   auto genTwoGammaToMu = makeStarlightGenerator("kTwoGammaToMuLow", energyCM, beam1Z, beam1A, beam2Z, beam2A, extrapars, dpmjetconf);
   genCocktailEvtGen->AddGenerator(genTwoGammaToMu, 1);
@@ -103,7 +108,7 @@ FairGenerator* GeneratorCocktailStarlightIncoherentFwdy_PbPb5TeV(float energyCM 
 {
   auto genCocktailEvtGen = new o2::eventgen::GeneratorEvtGen<GeneratorCocktail>();
   configureEvtGen(genCocktailEvtGen, false);
-  auto genIncohJpsi = makeStarlightGenerator("kIncohJpsiToMu", energyCM, beam1Z, beam1A, beam2Z, beam2A, extrapars, dpmjetconf);
+  auto genIncohJpsi = makeStarlightGenerator("kIncohJpsiToElRad", energyCM, beam1Z, beam1A, beam2Z, beam2A, extrapars, dpmjetconf);
   genCocktailEvtGen->AddGenerator(genIncohJpsi, 1);
   auto genIncohPsi2S = makeStarlightGenerator("kIncohPsi2sToMuPi", energyCM, beam1Z, beam1A, beam2Z, beam2A, extrapars, dpmjetconf);
   genCocktailEvtGen->AddGenerator(genIncohPsi2S, 1);

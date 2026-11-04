@@ -31,11 +31,13 @@ int External() {
     int nPhotonsFromJPsi{};
     int nSignalJpsiWithinAcc{};
     int nSignalPsi2SWithinAcc{};
+    int nDaughtersWithWrongMother{};
 
     auto nEvents = tree->GetEntries();
     for (int i = 0; i < nEvents; i++) {
         tree->GetEntry(i);
         for (auto& track : *tracks) {
+            int trackId = static_cast<int>(&track - tracks->data());
             auto pdg = track.GetPdgCode();
             auto rapidity = track.GetRapidity();
             auto idMoth = track.getMotherTrackId();
@@ -58,8 +60,27 @@ int External() {
                 }
                 int child0Id = track.getFirstDaughterTrackId();
                 int child1Id = track.getLastDaughterTrackId();
+                if (child0Id < 0 || child1Id < child0Id ||
+                    child1Id >= static_cast<int>(tracks->size())) {
+                    std::cout << "Skip charmonium without valid daughters:"
+                              << " pdg=" << pdg
+                              << " mother=" << idMoth
+                              << " firstDaughter=" << child0Id
+                              << " lastDaughter=" << child1Id
+                              << " y=" << rapidity << '\n';
+                    continue;
+                }
                 for (int iDaugh = child0Id; iDaugh <= child1Id; iDaugh++) {
-                    auto daugh = tracks->at(iDaugh);
+                    const auto& daugh = tracks->at(iDaugh);
+                    if (daugh.getMotherTrackId() != trackId) {
+                        nDaughtersWithWrongMother++;
+                        std::cerr << "Daughter does not point back to charmonium:"
+                                  << " daughter=" << iDaugh
+                                  << " daughterPdg=" << daugh.GetPdgCode()
+                                  << " mother=" << daugh.getMotherTrackId()
+                                  << " expectedMother=" << trackId
+                                  << " expectedMotherPdg=" << pdg << '\n';
+                    }
                     if (daugh.GetPdgCode() == 22) {
                         if (pdg == checkPdgSignal[0]) {
                             nPhotonsFromJPsi++;
@@ -98,7 +119,13 @@ int External() {
               << "#signal (prompt Psi(2S)): " << nSignalPsi2S << "; within acceptance " << rapiditymin << " < y < " << rapiditymax << " : " << nSignalPsi2SWithinAcc << "\n"
               << "#photons from Jpsi: " << nPhotonsFromJPsi  <<" #photons from Psi(2S): "<< nPhotonsFromPsi<<"\n"
               << "#pions from Psi(2S): "<< nPions<<"\n"
+              << "#daughters with wrong mother: " << nDaughtersWithWrongMother << "\n"
               << "#lepton pairs: " << nLeptonPairs  <<" #lepton pairs to be done: "<< nLeptonPairsToBeDone<<"\n";
+
+    if (nDaughtersWithWrongMother != 0) {
+        std::cerr << "Some charmonium daughters do not point back to their expected mother.\n";
+        return 1;
+    }
 
     return 0;
 }
