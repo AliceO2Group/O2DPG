@@ -52,8 +52,7 @@ public:
 protected:
   bool generateEvent() override
   {
-    fmt::printf(">> Generating event %llu\n",
-                static_cast<unsigned long long>(mGeneratedEvents));
+    fmt::printf(">> Generating event %llu\n", static_cast<unsigned long long>(mGeneratedEvents));
 
     // Simple straightforward check to alternate generators
     if (mGeneratedEvents % mInverseTriggerRatio == 0)
