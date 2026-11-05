@@ -34,7 +34,6 @@ public:
     mRapidityMin = -1.;
     mRapidityMax = 1.;
     mVerbose = false;
-    mUseExternalGenerator = false;
   }
 
   ///  Destructor
@@ -71,20 +70,14 @@ public:
   };
 
   void setTriggerGap(int triggerGap) {mInverseTriggerRatio = triggerGap;}
-
   void setConfigMBdecays(TString val){mConfigMBdecays = val;}
-
   void setVerbose(bool val) { mVerbose = val; };
 
   int getNGeneratedEvents() { return mGeneratedEvents; }
-
   int getTriggerGap() { return mInverseTriggerRatio; }
-  
-  void setExternalGenerator(GeneratorPythia8* gen, float prob) { 
-    mExternalGenerator = gen;
-    mUseExternalGen = true;
-    mProbExternalGen = prob;
-  }
+  int getHadronPDG(int i) { return mHadronsPDGs[i]; }
+  float getRejFactorPrompt(int i) { return mRejFactorPrompt[i]; }
+  float getRejFactorNonPrompt(int i) { return mRejFactorNonPrompt[i]; }
 
 protected:
 
@@ -119,34 +112,54 @@ bool generateEvent() override {
 
 bool importParticles() override
   {
-    // Possibility to make more actions after particles are imported, such as injected additional particles on top
-    // or modifying some PDG values
+    // Possibility to make more actions after particles are imported, such as modifying some PDG values (for chi_c1)
     if (!GeneratorPythia8::importParticles()) {
       return false;
     }
-    bool genOk = false;
-    // we use the external generator to simulate independent particles to be added on top
-    if (mUseExternalGenerator && mGeneratedEvents % mInverseTriggerRatio == 0){
-      bool genOk = false;
-      while (!genOk){    
-        genOk = (mExternalGenerator->generateEvent() && mExternalGenerator->importParticles()) ? true : false ;
-      }
-      int originalSize = mParticles.size();
-      for(int ipart = 0; ipart < mExternalGenerator->getParticles().size(); ipart++){
-        TParticle part = TParticle(mExternalGenerator->getParticles().at(ipart));
-        if(part.GetFirstMother() >= 0) part.SetFirstMother(part.GetFirstMother() + originalSize);
-        if(part.GetFirstDaughter() >= 0) part.SetFirstDaughter(part.GetFirstDaughter() + originalSize);
-        if(part.GetLastDaughter() >= 0) part.SetLastDaughter(part.GetLastDaughter() + originalSize);
-        mParticles.push_back(part); 
-      }	   
-      mExternalGenerator->clearParticles(); 
+
+    if (!(mInverseTriggerRatio == 1 || mGeneratedEvents % mInverseTriggerRatio == 1) || !mHasChic1){
+      return true; // This is a min bias event or event without prompt chi_c1
     }
 
-    mGeneratedEvents++;
-    
-    if (!makeEvtGenDecays()) {
-      return false;
+    // Since chi_c1(3872) is not produced in PYTHIA we replace prompt chi_c1(1P) with prompt chi_c1(3872) with a given probabiliyt (from the rejFactor)
+    int iChic3872 = -1;
+    for (int ihad = 0; ihad < mHadronsPDGs.size(); ihad++) {
+      if (mHadronsPDGs[ihad] == 9920443 && mRejFactorPrompt[ihad] > 1e-8) {
+        iChic3872 = ihad;
+      }
     }
+    if (iChic3872 == -1) {
+      return true; // In this case we don't request any chi_c1(3872)
+    }
+    if (gRandom->Rndm() > mRejFactorPrompt[iChic3872]) {
+      return true;
+    }
+
+    for (int idx = 0; idx < mParticles.size(); idx++) {
+      if (mParticles[idx].GetPdgCode() != 20443) {
+        continue;
+      }
+    
+      LOGF(info, "replacing one chi_c1(1P) with pt=%.3f and y=%.3f by a chi_c1(3872)", mParticles[idx].Pt(), mParticles[idx].Y());
+      if (mParticles[idx].GetFirstDaughter() >= 0) {
+        LOGF(info, "particle has already been decayed, we do not replace it");
+        return true;
+      }
+      
+      // modify e and pz to conserve rapidity and modify the mass
+      float pz_new = 0.;
+      float e_new = sqrt(3.87164*3.87164 - 3.51067*3.51067 + mParticles[idx].Energy()*mParticles[idx].Energy());
+      if (std::fabs(mParticles[idx].Pz()) > 1e-8) {
+        pz_new = sqrt(3.87164*3.87164 - 3.51067*3.51067 + mParticles[idx].Energy()*mParticles[idx].Energy() - mParticles[idx].Pz()*mParticles[idx].Pz()) / sqrt(mParticles[idx].Energy()*mParticles[idx].Energy()/mParticles[idx].Pz()/mParticles[idx].Pz() - 1.);
+        e_new = mParticles[idx].Energy() / mParticles[idx].Pz() * pz_new;
+      }
+      mParticles[idx].SetMomentum(mParticles[idx].Px(), mParticles[idx].Py(), pz_new, e_new);
+      
+      mParticles[idx].SetPdgCode(9920443);
+      
+      break;      
+    }
+
     return true;
   }
 
@@ -185,6 +198,7 @@ bool isCharmonium(int pdg) {
 
 // search for the presence of at least one of the required hadrons in a selected rapidity window
 bool findHadrons(Pythia8::Event& event) {
+  mHasChic1 = false;
   int ihad = 0;
   for (int ida = 0; ida < event.size(); ++ida) {
     //auto daughterList = event[ipa].daughterList();
@@ -245,6 +259,8 @@ bool findHadrons(Pythia8::Event& event) {
             }
             cout << endl;
           }
+          
+          if (event[ida].id() == 20443 && !isNonPrompt) mHasChic1 = true;
 
           // rejection factor given in the ini file
           float randomNumber = gRandom->Rndm();
@@ -260,7 +276,6 @@ bool findHadrons(Pythia8::Event& event) {
     }
     //}
   }
-
   return false;
 };
 
@@ -279,15 +294,10 @@ private:
       mRejFactorPrompt; // rejection factors for possibility to trigger a given
                         // particle only a fraction of the time, 1 by default
   std::vector<float> mRejFactorNonPrompt;
-  double mRapidityMin; 
+  double mRapidityMin;
   double mRapidityMax;
   bool mVerbose;
-  // external generator to inject particles which are not generated by Pythia (e.g. chi_c1(3872))
-  bool mUseExternalGen;
-  GeneratorPythia8* mExternalGenerator;
-  float mProbExternalGen;     // we call this generator only for a fraction of events
-  bool mEventFlagExternalGen; // the decision on whether to use the generator is done in the event findHadrons loop, 
-                              // so we use this flag to keep track of it at the time we can inject new particles 
+  bool mHasChic1;       // in case we want to replace chi_c1(1P) by chi_c1(3872), avoid to recheck the full stack of particles if unnecessary
 };
 
 }
@@ -435,6 +445,8 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
   // The keywords "prompt" and "non-prompt" can be used to modify all prompt and all non-prompt (e.g. "prompt:rejFactor1,non-prompt:rejFactor2") 
   // The keyword can be used for only one particle (e.g. "pdg1:rejFactor1:prompt,pdg1:rejFactor2:non-prompt")
   // Example if you want only to trigger on a given particle p: "prompt:0,non-prompt:0,p:1"
+  
+  // For particle which are not produced by default in Pythia (chi_c1(3872)), the rejFactors string should be understood as a probabiliy to inject it (default being 0.)
 
   int particleList[17] = {
       443,    // Jpsi
@@ -472,6 +484,10 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
   // specify particles to be triggered
   for (int i = 0; i < 17; i++) {
     gen->addHadronPDGs(particleList[i]);
+    if (particleList[i] == 9920443) {
+      // chi_c1(3872) is by default not produced
+      gen->setRejFactorPrompt(particleList[i], 0.);
+    }
   }
   gen->setVerbose(verbose);
 
