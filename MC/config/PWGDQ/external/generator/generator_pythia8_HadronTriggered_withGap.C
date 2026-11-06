@@ -2,6 +2,7 @@
 #include "Generators/GeneratorPythia8.h"
 #include "Pythia8/Pythia.h"
 #include "TRandom.h"
+#include "CommonConstants/PhysicsConstants.h"
 
 R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen)
 #include "GeneratorEvtGen.C"
@@ -33,7 +34,7 @@ public:
     mConfigMBdecays = "";
     mRapidityMin = -1.;
     mRapidityMax = 1.;
-    mVerbose = false; 
+    mVerbose = false;
   }
 
   ///  Destructor
@@ -70,14 +71,14 @@ public:
   };
 
   void setTriggerGap(int triggerGap) {mInverseTriggerRatio = triggerGap;}
-
   void setConfigMBdecays(TString val){mConfigMBdecays = val;}
-
   void setVerbose(bool val) { mVerbose = val; };
 
   int getNGeneratedEvents() { return mGeneratedEvents; }
-
   int getTriggerGap() { return mInverseTriggerRatio; }
+  int getHadronPDG(int i) { return mHadronsPDGs[i]; }
+  float getRejFactorPrompt(int i) { return mRejFactorPrompt[i]; }
+  float getRejFactorNonPrompt(int i) { return mRejFactorNonPrompt[i]; }
 
 protected:
 
@@ -109,6 +110,69 @@ bool generateEvent() override {
   }
   return true;
 }
+
+bool importParticles() override
+  {
+    // Possibility to make more actions after particles are imported, such as modifying some PDG values (for chi_c1)
+    if (!GeneratorPythia8::importParticles()) {
+      return false;
+    }
+
+    if (!(mInverseTriggerRatio == 1 || mGeneratedEvents % mInverseTriggerRatio == 1) || !mHasChic1){
+      return true; // This is a min bias event or event without prompt chi_c1
+    }
+
+    // Since chi_c1(3872) is not produced in PYTHIA we replace prompt chi_c1(1P) with prompt chi_c1(3872) with a given probabiliyt (from the rejFactor)
+    int iChic3872 = -1;
+    for (int ihad = 0; ihad < mHadronsPDGs.size(); ihad++) {
+      if (mHadronsPDGs[ihad] == 9920443 && mRejFactorPrompt[ihad] > 1e-8) {
+        iChic3872 = ihad;
+      }
+    }
+    if (iChic3872 == -1) {
+      return true; // In this case we don't request any chi_c1(3872)
+    }
+    if (gRandom->Rndm() > mRejFactorPrompt[iChic3872]) {
+      return true;
+    }
+
+    for (int idx = 0; idx < mParticles.size(); idx++) {
+      if (mParticles[idx].GetPdgCode() != 20443 || mParticles[idx].Y() < mRapidityMin || mParticles[idx].Y() > mRapidityMax) {
+        continue;
+      }
+    
+      LOGF(info, "replacing one chi_c1(1P) with pt=%.3f and y=%.3f by a chi_c1(3872)", mParticles[idx].Pt(), mParticles[idx].Y());
+      if (mParticles[idx].GetFirstDaughter() >= 0) {
+        LOGF(info, "particle has already been decayed, we do not replace it");
+        return true;
+      }
+      
+      // modify e and pz to conserve rapidity and modify the mass
+      float deltaMassSquared = o2::constants::physics::MassX3872 * o2::constants::physics::MassX3872 - o2::constants::physics::MassChiC1 * o2::constants::physics::MassChiC1;
+      float pz_old = mParticles[idx].Pz();
+      float e_old = mParticles[idx].Energy();
+      float pz_new = 0.;
+      float e_new = sqrt(deltaMassSquared + e_old*e_old);
+      if (std::fabs(pz_old) > 1e-8) {
+        if (e_old*e_old <= pz_old*pz_old) {
+          LOGF(error, "|E| <= |p_z|, this is not expected, so we don't replace the chi_c1");
+          break;
+        }
+        pz_new = sqrt(deltaMassSquared + e_old*e_old - pz_old*pz_old) / sqrt(e_old*e_old/pz_old/pz_old - 1.);
+        if (pz_old < 0.) {
+          pz_new = -pz_new;
+        }
+        e_new = e_old / pz_old * pz_new;
+      }
+      mParticles[idx].SetMomentum(mParticles[idx].Px(), mParticles[idx].Py(), pz_new, e_new);
+      
+      mParticles[idx].SetPdgCode(9920443);
+
+      break;      
+    }
+
+    return true;
+  }
 
 bool Init() override {
         
@@ -145,6 +209,7 @@ bool isCharmonium(int pdg) {
 
 // search for the presence of at least one of the required hadrons in a selected rapidity window
 bool findHadrons(Pythia8::Event& event) {
+  mHasChic1 = false;
   int ihad = 0;
   for (int ida = 0; ida < event.size(); ++ida) {
     //auto daughterList = event[ipa].daughterList();
@@ -167,7 +232,6 @@ bool findHadrons(Pythia8::Event& event) {
           bool isNonPrompt = false;
           if (isOpenBhadron(pdg)) {
             isNonPrompt = true;
-            LOGF(info, "particle is non-prompt");
             
             // if the B hadron decays to something else than a charmonia, we don't trigger it
             bool hasCharmoniaDecay = false;
@@ -199,19 +263,18 @@ bool findHadrons(Pythia8::Event& event) {
               cout << currentPdg << "  ";
               if (isOpenBhadron(currentPdg)) {
                 isNonPrompt = true;
-                LOGF(info, "particle is non-prompt");
                 break;
               }
             }
             cout << endl;
           }
+          
+          if (event[ida].id() == 20443 && !isNonPrompt) mHasChic1 = true;
 
           // rejection factor given in the ini file
           float randomNumber = gRandom->Rndm();
-          cout << randomNumber << " rej factor: " << (isNonPrompt ? mRejFactorNonPrompt[ihad] : mRejFactorPrompt[ihad]) << endl;
           if ((!isNonPrompt && (randomNumber <= mRejFactorPrompt[ihad])) ||
               (isNonPrompt && (randomNumber <= mRejFactorNonPrompt[ihad]))) {
-            cout << "event triggered " << endl;
             return true;
           }
         }
@@ -220,7 +283,6 @@ bool findHadrons(Pythia8::Event& event) {
     }
     //}
   }
-
   return false;
 };
 
@@ -239,9 +301,10 @@ private:
       mRejFactorPrompt; // rejection factors for possibility to trigger a given
                         // particle only a fraction of the time, 1 by default
   std::vector<float> mRejFactorNonPrompt;
-  double mRapidityMin; 
+  double mRapidityMin;
   double mRapidityMax;
   bool mVerbose;
+  bool mHasChic1;       // in case we want to replace chi_c1(1P) by chi_c1(3872), avoid to recheck the full stack of particles if unnecessary
 };
 
 }
@@ -389,8 +452,10 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
   // The keywords "prompt" and "non-prompt" can be used to modify all prompt and all non-prompt (e.g. "prompt:rejFactor1,non-prompt:rejFactor2") 
   // The keyword can be used for only one particle (e.g. "pdg1:rejFactor1:prompt,pdg1:rejFactor2:non-prompt")
   // Example if you want only to trigger on a given particle p: "prompt:0,non-prompt:0,p:1"
+  
+  // For particle which are not produced by default in Pythia (chi_c1(3872)), the rejFactors string should be understood as a probabiliy to inject it (default being 0.)
 
-  int particleList[16] = {
+  std::vector<int> particleList = {
       443,    // Jpsi
       100443, // psi(2S)
       553,    // upsilon(1S)
@@ -399,6 +464,7 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
       10441,  // chic0
       20443,  // chic1
       445,    // chic2
+      9920443, // chic1(3872)
       // we also add B hadrons to trigger correct rapidity range (e.g. B is
       // within |y|<1 but non-prompt J/psi has |y|>1)
       511,  // B0
@@ -410,6 +476,9 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
       5232, // Xib0
       5332  // Omegab
   };
+  
+  int nCharmonia = 9;
+  int nCharmoniaWoChic = 5;
 
   auto gen = new o2::eventgen::GeneratorEvtGen<o2::eventgen::GeneratorPythia8HadronTriggeredWithGap>();
   gen->setTriggerGap(triggerGap);
@@ -423,8 +492,12 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
     gen->setRapidityRange(rapidityMin - 1., rapidityMax + 1.);
   }
   // specify particles to be triggered
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < particleList.size(); i++) {
     gen->addHadronPDGs(particleList[i]);
+    if (particleList[i] == 9920443) {
+      // chi_c1(3872) is by default not produced
+      gen->setRejFactorPrompt(particleList[i], 0.);
+    }
   }
   gen->setVerbose(verbose);
 
@@ -445,14 +518,14 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
     }
     if (str0.CompareTo("prompt") == 0) {
       // Common switch for all prompt particles
-      for (int ihad = 0; ihad < 16; ihad++) {
+      for (int ihad = 0; ihad < particleList.size(); ihad++) {
         gen->setRejFactorPrompt(particleList[ihad], str1.Atof());
       }
       continue;
     }
     if (str0.CompareTo("non-prompt") == 0) {
       // Common switch for all non-prompt particles
-      for (int ihad = 0; ihad < 16; ihad++) {
+      for (int ihad = 0; ihad < particleList.size(); ihad++) {
         gen->setRejFactorNonPrompt(particleList[ihad], str1.Atof());
       }
       continue;
@@ -494,10 +567,10 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
   gen->PrintDebug(true);
 
   // specify particles to be decayed with EvtGen
-  gen->SetSizePdg(16);
-  for (int i = 0; i < 16; i++) {
+  gen->SetSizePdg(particleList.size());
+  for (int i = 0; i < particleList.size(); i++) {
     // Decay only what was left undecayed by Pythia
-    if (decayMode == 0 || (i <= 7 && decayMode == 1) || (i <= 4 && decayMode == 2)) {
+    if (decayMode == 0 || (i < nCharmonia && decayMode == 1) || (i < nCharmoniaWoChic && decayMode == 2)) {
       gen->AddPdg(particleList[i], i);
     }
   }
@@ -525,9 +598,9 @@ FairGenerator *GeneratorInclusiveAllQuarkonia_EvtGenMidY(int triggerGap, double 
 
   // add trigger on the correct rapidity range after EvtGen decays
   if (decayMode != 2) {
-    // In this case EvtGen will not affect charmonia rapidities, so no need to start with a looser rapidity cut, first trigger already does the job
+    // If decayMode == 2, EvtGen will not affect charmonia rapidities, so no need to start with a looser rapidity cut, first trigger already does the job
     gen->setTriggerMode(Generator::kTriggerOR);
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < particleList.size(); i++) {
       // we trigger either on B hadron rapidity or on charmonia rapidity
       gen->addTrigger(triggerPDGRap(rapidityMin, rapidityMax, particleList[i], gen));
     }
