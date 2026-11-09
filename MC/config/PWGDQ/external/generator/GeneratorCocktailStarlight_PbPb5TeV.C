@@ -26,19 +26,23 @@ o2::eventgen::GeneratorStarlight_class* makeStarlightGenerator(std::string confi
 void configureEvtGen(o2::eventgen::GeneratorEvtGen<GeneratorCocktail>* generator, bool midrapidity)
 {
   generator->SetPolarization(1); // Transverse
+  generator->SetSizePdg(2);
+  generator->AddPdg(443, 0);
+  generator->AddPdg(100443, 1);
+  TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
   if (midrapidity) {
-    generator->SetSizePdg(2);
-    generator->AddPdg(443, 0);
-    generator->AddPdg(100443, 1);
-    TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
+    // generator->SetSizePdg(2);
+    // generator->AddPdg(443, 0);
+    // generator->AddPdg(100443, 1);
+    // TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
     generator->SetDecayTable(Form("%s/PSITOJPSIPIPI.DEC", pathO2.Data()));
   } else {
     // generator->SetSizePdg(1);
     // generator->AddPdg(100443, 0);
-    generator->SetSizePdg(2);
-    generator->AddPdg(443, 0);
-    generator->AddPdg(100443, 1);
-    TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
+    // generator->SetSizePdg(2);
+    // generator->AddPdg(443, 0);
+    // generator->AddPdg(100443, 1);
+    // TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGDQ/EvtGen/DecayTablesEvtgen");
     generator->SetDecayTable(Form("%s/PSITOJPSITOMU.DEC", pathO2.Data()));
     // TString pathO2 = gSystem->ExpandPathName("$O2DPG_MC_CONFIG_ROOT/MC/config/PWGUD/external/generator/DecayTablesEvtGen");
     // generator->SetDecayTable(Form("%s/PSI2S.MUMUPIPI.DEC", pathO2.Data()));
