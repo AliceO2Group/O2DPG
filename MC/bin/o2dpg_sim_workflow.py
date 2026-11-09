@@ -1378,13 +1378,13 @@ for tf in range(1, NTIMEFRAMES + 1):
    if not isActive('CTP'):
       # CTP digits won't be produced for this timeframe (CTP not in the readout detector list)
       tpc_corr_scaling_options += ' --disable-ctp-lumi-request'
-      
+
    # why not simply?
    # tpc_corr_scaling_options = ('--lumi-type 1', '')[tpcDistortionType != 0]
 
    # at the moment MC is not ready for the sector edge fluctuations (RS: and does not use IDC but --disable-IDC-scalers can be added only once it is added by the CorrectionMapsOptions::addGlobalOptions)
    tpc_corr_scaling_options += option_if_available('o2-tpc-reco-workflow', '--disable-sec-edge-fluc-correction', envfile=async_envfile)
-   
+
    #<--------- TPC reco task
    if includeTPCSyncMode:
       tpcSyncreconeeds = tpcreconeeds.copy()
@@ -1745,6 +1745,10 @@ for tf in range(1, NTIMEFRAMES + 1):
    pvfinder_matching_sources = cleanDetectorInputList(pvfinder_matching_sources)
 
    pvfinderneeds = [TRDTRACKINGtask2['name'] if isActive("TRD") else None,
+                    ITSRECOtask['name'] if isActive("ITS") else None,
+                    TPCRECOtask['name'] if isActive("TPC") else None,
+                    MFTRECOtask['name'] if isActive("MFT") else None,
+                    MCHRECOtask['name'] if isActive("MCH") else None,
                     FT0RECOtask['name'] if isActive("FT0") else None,
                     FV0RECOtask['name'] if isActive("FV0") else None,
                     EMCRECOtask['name'] if isActive("EMC") else None,
@@ -1757,7 +1761,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                     TOFTPCMATCHERtask['name'] if isActive("TPC") and isActive("TOF") else None,
                     MFTMCHMATCHtask['name'] if isActive("MFT") and isActive("MCH") else None,
                     MCHMIDMATCHtask['name'] if isActive("MCH") and isActive("MID") else None]
-   pvfinderneeds = [ p for p in pvfinderneeds if p != None ]
+   pvfinderneeds = [p for p in pvfinderneeds if p != None]
 
    PVFINDERtask = createTask(name='pvfinder_'+str(tf), needs=pvfinderneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu=NWORKERS_TF, mem='4000')
    PVFINDERtask['cmd'] = task_finalizer(
@@ -1810,7 +1814,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    aod_info_souces_default = 'ITS-TPC,TPC-TRD,ITS-TPC-TRD,TPC-TOF,ITS-TPC-TOF,TPC-TRD-TOF,ITS-TPC-TRD-TOF,MFT-MCH,MCH-MID,ITS,MFT,TPC,TOF,FT0,MID,EMC,PHS,CPV,ZDC,FDD,HMP,FV0,TRD,MCH,CTP'
    aodinfosources = dpl_option_from_config(anchorConfig, 'o2-aod-producer-workflow', '--info-sources', default_value=aod_info_souces_default)
    aodinfosources = cleanDetectorInputList(aodinfosources)
-   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name']]
+   aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'],
+               MIDRECOtask['name'] if isActive("MID") else None]
 
    if usebkgcache:
      aodneeds += [ BKG_KINEDOWNLOADER_TASK['name'] ]
