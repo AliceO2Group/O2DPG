@@ -1160,6 +1160,8 @@ for tf in range(1, NTIMEFRAMES + 1):
       tpcLocalCF['TPCCorrMap.lumiInst'] = str(CTPSCALER * lumiInstFactor)
 
    tpcdigimem = 12000 if havePbPb else 9000
+   # the scaled distortions are computed once per job and shared through a file by all digitizers
+   tpcDistortionFile = tpcDistortionType == 2 and option_if_available('o2-sim-digitizer-workflow', '--tpc-distortion-file') != ''
    TPCDigitask=createTask(name='tpcdigi_'+str(tf), needs=tpcdigineeds,
                           tf=tf, cwd=timeframeworkdir, lab=["DIGI"], cpu=NWORKERS_TF, mem=str(tpcdigimem))
    TPCDigitask['cmd'] = ('','ln -nfs ../bkg_HitsTPC.root . ;')[doembedding]
@@ -1169,9 +1171,12 @@ for tf in range(1, NTIMEFRAMES + 1):
                          + ' --onlyDet TPC --TPCuseCCDB --interactionRate ' + str(INTRATE) + '  --tpc-lanes ' + str(NWORKERS_TF)             \
                          + ' --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini --early-forward-policy always --forceSelectedDets ' \
                          + ' --tpc-distortion-type ' + str(tpcDistortionType)                                                             \
-                         + ' --n-threads-distortions 1 '                                                                                  \
+                         + ' --n-threads-distortions ' + (str(NWORKERS_TF) if tpcDistortionFile else '1') + ' '                          \
                          + putConfigValues(["TPCGasParam","TPCGEMParam","TPCEleParam","TPCITCorr","TPCDetParam"],
                                               localCF=tpcLocalCF)
+   if tpcDistortionFile:
+      # only one lane computes the distortions while the others wait, so it gets all threads
+      TPCDigitask['cmd'] += ' --tpc-distortion-file ../tpc_scaled_distortions.root'
    TPCDigitask['cmd'] += (' --tpc-chunked-writer','')[args.no_tpc_digitchunking]
    TPCDigitask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    # we add any other extra command line options (power user customization) with an environment variable
