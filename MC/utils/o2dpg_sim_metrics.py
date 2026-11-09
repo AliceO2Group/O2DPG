@@ -1235,6 +1235,7 @@ _NWORKER_CMD_PATTERNS = [
     re.compile(r'\$\{O2DPG_DYNAMIC_NWORKER_OVERWRITE:-(\d+)\}'),  # ${VAR:-N} — default value
     re.compile(r'(?<![A-Za-z_])-j\s+(\d+)'),                      # -j N
     re.compile(r'--tpc-lanes\s+(\d+)'),                            # --tpc-lanes N
+    re.compile(r'--tpc-digi-threads\s+(\d+)'),                     # --tpc-digi-threads N
 ]
 
 
