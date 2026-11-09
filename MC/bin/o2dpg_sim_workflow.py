@@ -163,6 +163,8 @@ parser.add_argument('--mft-assessment-full', action='store_true', help='enables 
 parser.add_argument('--tpc-distortion-type', default=0, type=int, help='Simulate distortions in the TPC (0=no distortions, 1=distortions without scaling, 2=distortions with CTP scaling)')
 parser.add_argument('--tpc-corrmap-lumi-mode', default=2, type=int, help='TPC corrections mode (0=linear, 1=derivative, 2=derivative for special MC maps')
 parser.add_argument('--ctp-scaler', default=0, type=float, help='CTP raw scaler value used for distortion simulation')
+parser.add_argument('--tpc-mt-digitizer', action='store_true', help='Digitize TPC in one multithreaded device instead of one process per lane (needs TPC digit chunking)')
+parser.add_argument('--tpc-sector-seeding', action='store_true', help='Seed the TPC digitizer per sector so that the digits do not depend on the number of lanes')
 # Global Forward reconstruction configuration
 parser.add_argument('--fwdmatching-assessment-full', action='store_true', help='enables complete assessment of global forward reco')
 parser.add_argument('--fwdmatching-4-param', action='store_true', help='excludes q/pt from matching parameters')
@@ -476,6 +478,12 @@ GENERATOR=args.gen
 if GENERATOR =='':
    print('o2dpg_sim_workflow: Error! generator name not provided')
    exit(1)
+
+if args.tpc_mt_digitizer and args.no_tpc_digitchunking:
+   print('o2dpg_sim_workflow: Error! --tpc-mt-digitizer needs TPC digit chunking')
+   exit(1)
+if args.tpc_mt_digitizer and args.tpc_sector_seeding:
+   print('o2dpg_sim_workflow: --tpc-sector-seeding is implied by --tpc-mt-digitizer')
 
 INIFILE=''
 if args.ini!= '':
@@ -1166,12 +1174,17 @@ for tf in range(1, NTIMEFRAMES + 1):
    TPCDigitask['cmd'] += '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p TPC/Config/RunInfoV2 --timestamp '   \
                          + str(args.timestamp) + ' --created-not-after ' + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE} ; '
    TPCDigitask['cmd'] += '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options(bigshm=True) + ' -n ' + str(args.ns) + simsoption       \
-                         + ' --onlyDet TPC --TPCuseCCDB --interactionRate ' + str(INTRATE) + '  --tpc-lanes ' + str(NWORKERS_TF)             \
+                         + ' --onlyDet TPC --TPCuseCCDB --interactionRate ' + str(INTRATE)                                                \
                          + ' --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini --early-forward-policy always --forceSelectedDets ' \
                          + ' --tpc-distortion-type ' + str(tpcDistortionType)                                                             \
-                         + ' --n-threads-distortions 1 '                                                                                  \
                          + putConfigValues(["TPCGasParam","TPCGEMParam","TPCEleParam","TPCITCorr","TPCDetParam"],
                                               localCF=tpcLocalCF)
+   if args.tpc_mt_digitizer:
+      # one device with NWORKERS_TF threads; it always seeds per sector
+      TPCDigitask['cmd'] += ' --tpc-digi-threads ' + str(NWORKERS_TF) + ' --n-threads-distortions ' + str(NWORKERS_TF)
+   else:
+      TPCDigitask['cmd'] += ' --tpc-lanes ' + str(NWORKERS_TF) + ' --n-threads-distortions 1'
+      TPCDigitask['cmd'] += ('',' --tpc-sector-seeding')[args.tpc_sector_seeding]
    TPCDigitask['cmd'] += (' --tpc-chunked-writer','')[args.no_tpc_digitchunking]
    TPCDigitask['cmd'] += ('',' --disable-mc')[args.no_mc_labels]
    # we add any other extra command line options (power user customization) with an environment variable
