@@ -1755,8 +1755,6 @@ for tf in range(1, NTIMEFRAMES + 1):
                     PHSRECOtask['name'] if isActive("PHS") else None,
                     CPVRECOtask['name'] if isActive("CPV") else None,
                     FDDRECOtask['name'] if isActive("FDD") else None,
-                    ZDCRECOtask['name'] if isActive("ZDC") else None,
-                    HMPMATCHtask['name'] if isActive("HMP") else None,
                     ITSTPCMATCHtask['name'] if isActive("ITS") and isActive("TPC") else None,
                     TOFTPCMATCHERtask['name'] if isActive("TPC") and isActive("TOF") else None,
                     MFTMCHMATCHtask['name'] if isActive("MFT") and isActive("MCH") else None,
@@ -1815,6 +1813,8 @@ for tf in range(1, NTIMEFRAMES + 1):
    aodinfosources = dpl_option_from_config(anchorConfig, 'o2-aod-producer-workflow', '--info-sources', default_value=aod_info_souces_default)
    aodinfosources = cleanDetectorInputList(aodinfosources)
    aodneeds = [PVFINDERtask['name'], SVFINDERtask['name'],
+               HMPMATCHtask['name'] if isActive("HMP") else None,
+               ZDCRECOtask['name'] if isActive("ZDC") else None,
                MIDRECOtask['name'] if isActive("MID") else None]
 
    if usebkgcache:
