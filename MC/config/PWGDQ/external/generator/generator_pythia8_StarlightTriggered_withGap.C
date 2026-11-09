@@ -122,16 +122,16 @@ protected:
     }
 
     bool findSignalInAcceptance() {
-        std::cout<<"loop over" << mGeneratorParam->getParticles().size()<<" particles"<<std::endl;
+        // std::cout<<"loop over" << mGeneratorParam->getParticles().size()<<" particles"<<std::endl;
         for (int pdg : mSignalsPDGs) {
-            std::cout<<"signal pdg: "<<pdg<<std::endl;
+            // std::cout<<"signal pdg: "<<pdg<<std::endl;
         }
         for (int ipart = 0; ipart < mGeneratorParam->getParticles().size(); ipart++) {
             TParticle part = TParticle(mGeneratorParam->getParticles().at(ipart));
             // make sure all signals are in the acceptance
             for (int pdg : mSignalsPDGs) {
                 if (part.GetPdgCode() == pdg) {
-                    std::cout<<"found signal with pdg: "<<part.GetPdgCode()<<", mother: "<<part.GetFirstMother()<<std::endl;
+                    // std::cout<<"found signal with pdg: "<<part.GetPdgCode()<<", mother: "<<part.GetFirstMother()<<std::endl;
                     if (part.GetFirstMother() == -1) {
                         if (part.Y() < mHadronRapidityMin || part.Y() > mHadronRapidityMax) {
                             return false;
@@ -146,19 +146,19 @@ protected:
 
     int getNumSignalsForImpactParameter(double impactParameter) const
     {
-        const double photoproductionImpactParameterCut = 3.5; // tmp cut to embed signal > 10% centrality
-        if (impactParameter < photoproductionImpactParameterCut) {
-            std::cout<<"impact parameter: "<<impactParameter<<" fm, below photoproduction cut "
-                     <<photoproductionImpactParameterCut<<" fm; embedding no signal events"<<std::endl;
-            return 0;
-        }
+        // const double photoproductionImpactParameterCut = 3.5; // tmp cut to embed signal > 10% centrality
+        // if (impactParameter < photoproductionImpactParameterCut) {
+        //     std::cout<<"impact parameter: "<<impactParameter<<" fm, below photoproduction cut "
+        //              <<photoproductionImpactParameterCut<<" fm; embedding no signal events"<<std::endl;
+        //     return 0;
+        // }
         return std::max(0, static_cast<int>(std::lround(5.0 + 0.886202881 * std::pow(std::max(0.0, 17.5 - impactParameter), 1.7))));
     }
 
     void appendCurrentSignalParticles(int signalIndex)
     {
         int originalSize = mParticles.size();
-        std::cout<<"adding "<<mGeneratorParam->getParticles().size()<<" particles from signal event "<<signalIndex<<" to the stack"<<std::endl;
+        // std::cout<<"adding "<<mGeneratorParam->getParticles().size()<<" particles from signal event "<<signalIndex<<" to the stack"<<std::endl;
         for(size_t ipart=0; ipart < mGeneratorParam->getParticles().size(); ipart++){
             TParticle part = TParticle(mGeneratorParam->getParticles().at(ipart));
             if(part.GetFirstMother() >= 0) part.SetFirstMother(part.GetFirstMother() + originalSize);
