@@ -596,7 +596,7 @@ else
 fi
 
 # fetch the global alignment geometry
-${{O2_ROOT}}/bin/o2-create-aligned-geometry-workflow ${{ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after $ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}} \
+${{O2_ROOT}}/bin/o2-create-aligned-geometry-workflow --condition-not-after {args.condition_not_after} \
       --configKeyValues "HBFUtils.startTime={args.timestamp}" -b --run ${{REMAP_OPT}}
 
 # copy the object into the CCDB cache
@@ -1378,13 +1378,13 @@ for tf in range(1, NTIMEFRAMES + 1):
    if not isActive('CTP'):
       # CTP digits won't be produced for this timeframe (CTP not in the readout detector list)
       tpc_corr_scaling_options += ' --disable-ctp-lumi-request'
-      
+
    # why not simply?
    # tpc_corr_scaling_options = ('--lumi-type 1', '')[tpcDistortionType != 0]
 
    # at the moment MC is not ready for the sector edge fluctuations (RS: and does not use IDC but --disable-IDC-scalers can be added only once it is added by the CorrectionMapsOptions::addGlobalOptions)
    tpc_corr_scaling_options += option_if_available('o2-tpc-reco-workflow', '--disable-sec-edge-fluc-correction', envfile=async_envfile)
-   
+
    #<--------- TPC reco task
    if includeTPCSyncMode:
       tpcSyncreconeeds = tpcreconeeds.copy()
