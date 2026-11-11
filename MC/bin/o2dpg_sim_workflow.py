@@ -461,6 +461,9 @@ NWORKERS=args.n_workers
 
 SKIPMODULES = " ".join(["--skipModules"] + args.skipModules) if len(args.skipModules) > 0 else ""
 SIMENGINE=args.e
+# Geant4 is loaded by dlopen and needs a glibc static TLS reserve. It is set per task, because the global
+# environment does not replace a GLIBC_TUNABLES that already exists, as it does truncated in GRID jobs.
+GEANT4_TASK_ENV={'GLIBC_TUNABLES': 'glibc.rtld.optional_static_tls=32768'}
 BFIELD=args.field
 RNDSEED=args.seed # typically the argument should be the jobid, but if we get None the current time is used for the initialisation
 random.seed(RNDSEED)
@@ -787,6 +790,7 @@ if doembedding:
 
         if not isActive('all'):
            BKGtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
+        BKGtask['env'] = dict(GEANT4_TASK_ENV)
 
         workflow['stages'].append(BKGtask)
 
@@ -991,6 +995,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                      + ' --seed ' + str(TFSEED) + ' -n ' + str(NSIGEVENTS)                            \
                      + ' --detectorList ' + args.detectorList                                         \
                      + ' --fromCollContext collisioncontext.root:' + signalprefix
+   SGNGENtask['env'] = dict(GEANT4_TASK_ENV)
    if GENERATOR=="hepmc":
       SGNGENtask['cmd'] += "; RC=$?; ${O2DPG_ROOT}/UTILS/UpdateHepMCEventSkip.sh ../HepMCEventSkip.json " + str(tf) + '; [[ ${RC} == 0 ]]'
    if sep_event_mode == True:
@@ -1021,6 +1026,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       SGNtask['cmd'] += ' --readoutDetectors ' + " ".join(activeDetectors)
 
    SGNtask['cmd'] += ' --fromCollContext collisioncontext.root'
+   SGNtask['env'] = dict(GEANT4_TASK_ENV)
    workflow['stages'].append(SGNtask)
 
    # some tasks further below still want geometry + grp in fixed names, so we provide it here
