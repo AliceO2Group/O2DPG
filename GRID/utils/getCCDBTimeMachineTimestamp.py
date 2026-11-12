@@ -113,30 +113,35 @@ def get_ccdb_objects(url, timeout = 15):
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.load(resp)
     except Exception as exc:
-        return {"error": str(exc)}
+        print_warning(f"Request to {url} failed: {exc}")
+        return None
 
-    objects = data.get("objects", [])
-    return objects
+    return data.get("objects", []) if isinstance(data, dict) else None
 
 
 def get_run_start_tf(run):
     run_info_url = f"{CCDB_HOST}/browse/RCT/Info/RunInformation/{run}"
     objects = get_ccdb_objects(run_info_url)
 
-    return objects[0]["STF"]
+    return objects[0].get("STF", 0) if objects else None
 
 
 def ccdb_cross_check(run, path, not_after):
     """Report which object a correctly time-machine-pinned query at not_after
     would actually resolve to, and flag if CCDB has since been updated for the
-    same validity window. Never raises; returns None on any failure."""
+    same validity window. Never raises."""
     timestamp = get_run_start_tf(run)
+    if not timestamp:
+        print_warning(f"CCDB cross-check on {path} skipped: "
+                      "failed to obtain run start timestamp")
+        return
+
     url = f"{CCDB_HOST}/browse/{path}/{timestamp}"
 
     objects = get_ccdb_objects(url)
     if not objects:
         print_warning(f"CCDB cross-check on {path}/{timestamp} skipped: "
-                      "no CCDB object covers this instant")
+                      f"{'CCDB request failed' if objects is None else 'no CCDB object covers this instant'}")
         return
 
     as_of_candidates = [o for o in objects if o.get("Created", 0) <= not_after]
@@ -363,7 +368,10 @@ def main():
                                       args.samples, args.ccdb_url, args.username,
                                       args.force_overwrite, args.publish_to_ccdb, args.skip_ccdb_query)
     if not args.no_ccdb_check:
-        ccdb_cross_check(args.run, args.ccdb_check_path, not_after)
+        try:
+            ccdb_cross_check(args.run, args.ccdb_check_path, not_after)
+        except Exception as exc:
+            print_warning(f"CCDB cross-check failed with unforeseen exception: {exc}")
 
     print(not_after)
 
