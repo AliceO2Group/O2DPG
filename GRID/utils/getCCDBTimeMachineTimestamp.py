@@ -177,11 +177,9 @@ def make_cert_paths(cert_dir="/tmp"):
     return cert_path, key_path
 
 
-def get_NotAfter(year, period, run, passname, samples=9, ccdb_check_path="TPC/Calib/CorrectionMapV2", ccdb_check=True):
+def get_NotAfter(year, period, run, passname, samples=9):
     """
     Estimates the CCDBTimeMachine NotAfter timestamp from the output of the production of a given period/run/pass.
-    Cross-checks the estimated NotAfter timestamp vs the creation time of a CCDB object which is currently
-    valid for the given run.
 
     Returns:
         int: CCDBTimeMachineTS NotAfter timestamp
@@ -214,9 +212,6 @@ def get_NotAfter(year, period, run, passname, samples=9, ccdb_check_path="TPC/Ca
     print_info(f"{len(ctimes)} samples out of {len(matches)} TF outputs found; "
                f"span {human(min(ctimes))} .. {human(max(ctimes))} ({spread_h:.1f} h)")
     print_info(f"Recommended NotAfter: {not_after} ({human(not_after)})")
-
-    if ccdb_check:
-        ccdb_cross_check(run, ccdb_check_path, not_after)
 
     return not_after
 
@@ -291,8 +286,7 @@ def upload_CCDBTimeMachineTS(base_url, user, keys):
 
 
 def get_CCDBTimeMachineTS(production_tag, year, period, run, passname,
-                          samples=9, ccdb_check_path="TPC/Calib/CorrectionMapV2", ccdb_check=True,
-                          ccdb_url="https://alice-ccdb.cern.ch", username="aliprod",
+                          samples=9, ccdb_url="https://alice-ccdb.cern.ch", username="aliprod",
                           force_overwrite=False, publish_to_ccdb=True, skip_ccdb_query=False):
     """
     Makes a query to CCDB for a CCDBTimeMachineTS for given period and pass.
@@ -310,7 +304,7 @@ def get_CCDBTimeMachineTS(production_tag, year, period, run, passname,
     if not found or force_overwrite:
         print_info("Estimating CCDBTimeMachineTS for "
                    f"LPMProductionTag: {production_tag}, period: {period}, rass: {passname}, run: {run}")
-        not_after = get_NotAfter(year, period, run, passname, samples, ccdb_check_path, ccdb_check)
+        not_after = get_NotAfter(year, period, run, passname, samples)
 
         if publish_to_ccdb:
             if skip_ccdb_query:
@@ -368,8 +362,11 @@ def main():
         parser.error("missing required value(s): " + ", ".join(missing))
 
     not_after = get_CCDBTimeMachineTS(args.production_tag, args.year, args.period, args.run, args.passname,
-                          args.samples, args.ccdb_check_path, not args.no_ccdb_check, args.ccdb_url, args.username,
-                          args.force_overwrite, args.publish_to_ccdb, args.skip_ccdb_query)
+                                      args.samples, args.ccdb_url, args.username,
+                                      args.force_overwrite, args.publish_to_ccdb, args.skip_ccdb_query)
+    if not args.no_ccdb_check:
+        ccdb_cross_check(args.run, args.ccdb_check_path, not_after)
+
     print(not_after)
 
 
