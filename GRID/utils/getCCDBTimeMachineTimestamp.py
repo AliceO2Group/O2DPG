@@ -91,6 +91,22 @@ def human(ts_ms):
     return datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
 
+def print_log(severity, message, file):
+    print(f"[getCCDBTimeMachineTimestamp] [{severity}] {message}", file=file)
+
+
+def print_info(message, file=sys.stderr):
+    print_log("Info", message, file)
+
+
+def print_warning(message, file=sys.stderr):
+    print_log("Warning", message, file)
+
+
+def print_error(message, file=sys.stderr):
+    print_log("Error", message, file)
+
+
 def get_ccdb_objects(url, timeout = 15):
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
     try:
@@ -120,7 +136,7 @@ def ccdb_cross_check(run, path, not_after, timeout=15):
 
     objects = get_ccdb_objects(url)
     if not objects:
-        return {**result, "error": "no CCDB object covers this instant"}
+        result.update({"error": "no CCDB object covers this instant"})
 
     as_of = [o for o in objects if o.get("Created", 0) <= not_after]
     newest = max(objects, key=lambda o: o.get("Created", 0))
@@ -128,7 +144,21 @@ def ccdb_cross_check(run, path, not_after, timeout=15):
     if as_of:
         result["as_of"] = max(as_of, key=lambda o: o.get("Created", 0))
         result["outdated"] = newest["Created"] > result["as_of"]["Created"]
-    return result
+
+    check_timestamp = f"/{result['timestamp']}" if result else ""
+    if result is None or "error" in result:
+        reason = result["error"] if result else "unknown error"
+        print_warning(f"CCDB cross-check on {path}{check_timestamp} skipped: {reason}")
+    elif result["as_of"] is None:
+        print_info(f"CCDB cross-check on {path}{check_timestamp}: no object existed "
+                   f"yet at the recommended timestamp (newest is {describe_object(result['newest'])})")
+    else:
+        print_info(f"CCDB cross-check on {path}{check_timestamp}: as-of object is "
+                   f"{describe_object(result['as_of'])}")
+        if result["outdated"]:
+            print_info(f"CCDB's current object for this window is newer "
+                       f"({describe_object(result['newest'])}) - it postdates this pass's processing and "
+                       f"was not what this run actually saw.")
 
 
 def describe_object(o):
@@ -157,13 +187,14 @@ def get_NotAfter(year, period, run, passname, samples=9, ccdb_check_path="TPC/Ca
         int: CCDBTimeMachineTS NotAfter timestamp
     """
     pass_dir = f"/alice/data/{year}/{period}/{run}/{passname}/"
-    print(f"[getCCDBTimeMachineTimestamp] Looking for TF output under {pass_dir}", file=sys.stderr)
+    print_info(f"Looking for TF output under {pass_dir}")
 
     matches = find_tf_output_files(pass_dir, run)
     if not matches:
-        sys.exit(f"[getCCDBTimeMachineTimestamp] No o2_ctf_run{int(run):08d}_orbit* output found "
-                 f"under {pass_dir}. Check year/period/run/pass, or this run+pass may not use this "
-                 f"catalog layout. Refusing to guess a timestamp.")
+        print_error(f"No o2_ctf_run{int(run):08d}_orbit* output found under {pass_dir}. "
+                    f"Check year/period/run/pass, or this run+pass may not use this "
+                    f"catalog layout. Refusing to guess a timestamp. Exiting...")
+        sys.exit(1)
 
     sampled = sample_evenly(matches, samples)
     ctimes = []
@@ -171,37 +202,21 @@ def get_NotAfter(year, period, run, passname, samples=9, ccdb_check_path="TPC/Ca
         ctime = stat_ctime(lfn)
         if ctime is not None:
             ctimes.append(ctime)
-            print(f"[getCCDBTimeMachineTimestamp]   {human(ctime)}  {lfn}", file=sys.stderr)
+            print_info(f"{human(ctime)}  {lfn}")
 
     if len(ctimes) < 2:
-        sys.exit(f"[getCCDBTimeMachineTimestamp] Only got {len(ctimes)} usable timestamp(s) out of "
-                 f"{len(sampled)} sampled files ({len(matches)} found in total); refusing to guess.")
+        print_error(f"Only got {len(ctimes)} usable timestamp(s) out of {len(sampled)} "
+                    f"sampled files ({len(matches)} found in total); refusing to guess. Exiting...")
+        sys.exit(1)
 
     not_after = int(statistics.median(ctimes))
     spread_h = (max(ctimes) - min(ctimes)) / 3.6e6
-    print(f"[getCCDBTimeMachineTimestamp] {len(ctimes)} samples out of {len(matches)} TF outputs found; "
-          f"span {human(min(ctimes))} .. {human(max(ctimes))} ({spread_h:.1f} h)", file=sys.stderr)
-    print(f"[getCCDBTimeMachineTimestamp] Recommended NotAfter: {not_after} ({human(not_after)})",
-          file=sys.stderr)
+    print_info(f"{len(ctimes)} samples out of {len(matches)} TF outputs found; "
+               f"span {human(min(ctimes))} .. {human(max(ctimes))} ({spread_h:.1f} h)")
+    print_info(f"Recommended NotAfter: {not_after} ({human(not_after)})")
 
     if ccdb_check:
-        check = ccdb_cross_check(run, ccdb_check_path, not_after)
-        check_timestamp = f"/{check['timestamp']}" if check else ""
-        if check is None or "error" in check:
-            reason = check["error"] if check else "unknown error"
-            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path}{check_timestamp} skipped: {reason}",
-                  file=sys.stderr)
-        elif check["as_of"] is None:
-            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path}{check_timestamp}: no object "
-                  f"existed yet at the recommended timestamp (earliest is {describe_object(check['newest'])})",
-                  file=sys.stderr)
-        else:
-            print(f"[getCCDBTimeMachineTimestamp] CCDB cross-check on {ccdb_check_path}{check_timestamp}: as-of object is "
-                  f"{describe_object(check['as_of'])}", file=sys.stderr)
-            if check["outdated"]:
-                print(f"[getCCDBTimeMachineTimestamp]   note: CCDB's current object for this window is newer "
-                      f"({describe_object(check['newest'])}) - it postdates this pass's processing and was "
-                      f"not what this run actually saw.", file=sys.stderr)
+        ccdb_cross_check(run, ccdb_check_path, not_after)
 
     return not_after
 
@@ -221,7 +236,7 @@ def query_CCDBTimeMachineTS(base_url, user, period, passname):
     user_path = 'Users/' + user[0] + '/' + user
     url = f"{base_url}/browse/{user_path}/CCDBTimeMachineTS/{query}"
 
-    print(f"[getCCDBTimeMachineTimestamp] Checking if CCDBTimeMachineTS already exists: {url}", file=sys.stderr)
+    print_info(f"Checking if CCDBTimeMachineTS already exists: {url}")
 
     response = requests.get(url, cert=(cert_path, key_path), verify=False)
     if response.status_code == 200:
@@ -232,9 +247,9 @@ def query_CCDBTimeMachineTS(base_url, user, period, passname):
             return {k: v for k, v in data.items() if k in valid_keys}
 
           clean_meta = filter_known_fields(CCDBTimeMachineTS, meta[0])
-          print(f"[getCCDBTimeMachineTimestamp] Found object for {clean_meta['Period']}, Pass: {clean_meta['Pass']}, "
-                f"NotAfter: {clean_meta['NotAfter']} ({human(clean_meta['NotAfter'])}), uploaded by LPMProductionTag {clean_meta['LPMProductionTag']}",
-                file=sys.stderr)
+          print_info(f"Found object for {clean_meta['Period']}, Pass: {clean_meta['Pass']}, "
+                     f"NotAfter: {clean_meta['NotAfter']} ({human(clean_meta['NotAfter'])}), "
+                     f"uploaded by LPMProductionTag {clean_meta['LPMProductionTag']}")
           return clean_meta['NotAfter'], True
 
     return None, False
@@ -262,7 +277,7 @@ def upload_CCDBTimeMachineTS(base_url, user, keys):
     stop = start + 1
     url = f"{base_url}/{user_path}/CCDBTimeMachineTS/{start}/{stop}/{query}"
 
-    print(f"[getCCDBTimeMachineTimestamp] Uploading CCDBTimeMachineTS: {url}", file=sys.stderr)
+    print_info(f"Uploading CCDBTimeMachineTS: {url}")
 
     # Prepare request
     with open(empty_file, 'rb') as f:
@@ -272,7 +287,7 @@ def upload_CCDBTimeMachineTS(base_url, user, keys):
     os.remove(empty_file)
 
     if response.status_code != 201:
-        print(f"[getCCDBTimeMachineTimestamp] Upload failed, response: {response.status_code}", file=sys.stderr)
+        print_warning(f"Upload failed, response: {response.status_code}")
 
 
 def get_CCDBTimeMachineTS(production_tag, year, period, run, passname,
@@ -293,22 +308,20 @@ def get_CCDBTimeMachineTS(production_tag, year, period, run, passname,
         not_after, found = query_CCDBTimeMachineTS(ccdb_url, username, period, passname)
 
     if not found or force_overwrite:
-        print("[getCCDBTimeMachineTimestamp] Estimating CCDBTimeMachineTS for "
-              f"LPMProductionTag: {production_tag}, Period: {period}, Pass: {passname}", file=sys.stderr)
+        print_info("Estimating CCDBTimeMachineTS for "
+                   f"LPMProductionTag: {production_tag}, period: {period}, rass: {passname}, run: {run}")
         not_after = get_NotAfter(year, period, run, passname, samples, ccdb_check_path, ccdb_check)
 
         if publish_to_ccdb:
             if skip_ccdb_query:
-                print("[getCCDBTimeMachineTimestamp] CCDB query was skipped, a newer object may be "
-                      "uploaded on top of an existing one", file=sys.stderr)
+                print_info("CCDB query was skipped, a newer object may be uploaded on top of an existing one")
             elif not found:
                 # check again in case another subjob uploaded an object in the meantime
                 not_after_q, found = query_CCDBTimeMachineTS(ccdb_url, username, period, passname)
 
             if found:
                 if force_overwrite:
-                    print("[getCCDBTimeMachineTimestamp] Forcing upload of a newer object "
-                          "on top of the existing one", file=sys.stderr)
+                    print_info("Forcing upload of a newer object on top of the existing one")
                 else:
                     return not_after_q
 
