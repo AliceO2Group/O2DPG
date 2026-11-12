@@ -358,10 +358,12 @@ if [[ -n ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER} ]]; then
   # override CCDB time machine timestamp by hand, use e.g. 3385078236000 to effectively disable it
   ARG_CONDITION_NOT_AFTER="--condition-not-after ${ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}"
 else
-  # options to set CCDB url, disable upload and force overwrite of an existing timestamp; default to production CCDB, uploading the object and not overwriting
+  # options to set CCDB url and force overwrite of an existing timestamp; default to production CCDB and not overwriting
   : ${CCDBTIMEMACHINE_CCDB_URL:=https://alice-ccdb.cern.ch}
-  [[ ${CCDBTIMEMACHINE_SKIP_UPLOAD:-} != "1" ]] && CCDBTIMEMACHINE_OPTIONS+=" --publish-to-ccdb"
   [[ ${CCDBTIMEMACHINE_FORCE_OVERWRITE:-} == "1" ]] && CCDBTIMEMACHINE_OPTIONS+=" --force-overwrite"
+
+  # only upload new objects if running a GRID job as aliprod
+  [[ ${JALIEN_USER:-} == "aliprod" ]] && [[ ${CCDBTIMEMACHINE_SKIP_UPLOAD:-} != "1" ]] && CCDBTIMEMACHINE_OPTIONS+=" --publish-to-ccdb"
 
   # obtain CCDB time machine timestamp from CCDB or, if not available, estimate it from the creation time of the reconstruction output files
   CCDBTIMEMACHINE_CMD="${O2DPG_ROOT}/GRID/utils/getCCDBTimeMachineTimestamp.py --ccdb-url $CCDBTIMEMACHINE_CCDB_URL ${CCDBTIMEMACHINE_OPTIONS:-}"
