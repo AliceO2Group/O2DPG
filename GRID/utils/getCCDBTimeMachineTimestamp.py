@@ -364,12 +364,12 @@ def main():
     parser.add_argument("--force-overwrite", action="store_true",
                         help="overwrite the current CCDBTimeMachineTS object in the CCDB if one exists")
     parser.add_argument("--ccdb-url", default="https://alice-ccdb.cern.ch",
-                        help="ccdb host for the upload")
-    parser.add_argument("--username", default=os.environ.get("JALIEN_USER"),
-                        help="username to be used for the upload to CCDB")
+                        help="ccdb host for the object query and upload")
+    parser.add_argument("--username", default="aliprod",
+                        help="username to be used for the object's CCDB path")
     args = parser.parse_args()
 
-    missing = [n for n in ("production_tag", "year", "period", "run", "passname", "username") if not getattr(args, n)]
+    missing = [n for n in ("production_tag", "year", "period", "run", "passname") if not getattr(args, n)]
     if missing:
         parser.error("missing required value(s): " + ", ".join(missing))
 
