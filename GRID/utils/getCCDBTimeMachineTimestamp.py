@@ -126,43 +126,41 @@ def get_run_start_tf(run):
     return objects[0]["STF"]
 
 
-def ccdb_cross_check(run, path, not_after, timeout=15):
+def ccdb_cross_check(run, path, not_after):
     """Report which object a correctly time-machine-pinned query at not_after
     would actually resolve to, and flag if CCDB has since been updated for the
     same validity window. Never raises; returns None on any failure."""
     timestamp = get_run_start_tf(run)
     url = f"{CCDB_HOST}/browse/{path}/{timestamp}"
-    result = {"timestamp": timestamp}
 
     objects = get_ccdb_objects(url)
     if not objects:
-        result.update({"error": "no CCDB object covers this instant"})
+        print_warning(f"CCDB cross-check on {path}/{timestamp} skipped: "
+                      "no CCDB object covers this instant")
+        return
 
-    as_of = [o for o in objects if o.get("Created", 0) <= not_after]
+    as_of_candidates = [o for o in objects if o.get("Created", 0) <= not_after]
     newest = max(objects, key=lambda o: o.get("Created", 0))
-    result.update({"newest": newest, "as_of": None, "outdated": False})
-    if as_of:
-        result["as_of"] = max(as_of, key=lambda o: o.get("Created", 0))
-        result["outdated"] = newest["Created"] > result["as_of"]["Created"]
+    as_of = None
+    outdated = False
+    if as_of_candidates:
+        as_of = max(as_of_candidates, key=lambda o: o.get("Created", 0))
+        outdated = newest.get("Created", 0) > as_of.get("Created", 0)
 
-    check_timestamp = f"/{result['timestamp']}" if result else ""
-    if result is None or "error" in result:
-        reason = result["error"] if result else "unknown error"
-        print_warning(f"CCDB cross-check on {path}{check_timestamp} skipped: {reason}")
-    elif result["as_of"] is None:
-        print_info(f"CCDB cross-check on {path}{check_timestamp}: no object existed "
-                   f"yet at the recommended timestamp (newest is {describe_object(result['newest'])})")
+    if as_of is None:
+        print_info(f"CCDB cross-check on {path}/{timestamp}: no object existed "
+                   f"yet at the recommended timestamp (newest is {describe_object(newest)})")
     else:
-        print_info(f"CCDB cross-check on {path}{check_timestamp}: as-of object is "
-                   f"{describe_object(result['as_of'])}")
-        if result["outdated"]:
+        print_info(f"CCDB cross-check on {path}/{timestamp}: as-of object is "
+                   f"{describe_object(as_of)}")
+        if outdated:
             print_info(f"CCDB's current object for this window is newer "
-                       f"({describe_object(result['newest'])}) - it postdates this pass's processing and "
+                       f"({describe_object(newest)}) - it postdates this pass's processing and "
                        f"was not what this run actually saw.")
 
 
 def describe_object(o):
-    return (f"Created {human(o['Created'])}, JIRA={o.get('JIRA', '?')}, "
+    return (f"Created {human(o.get('Created', 0))}, JIRA={o.get('JIRA', '?')}, "
             f"comment=\"{o.get('comment', '')}\"")
 
 
