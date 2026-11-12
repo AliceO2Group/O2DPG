@@ -236,7 +236,12 @@ def query_CCDBTimeMachineTS(base_url, user, period, passname):
 
     print_info(f"Checking if CCDBTimeMachineTS already exists: {url}")
 
-    response = requests.get(url, cert=(cert_path, key_path), verify=False)
+    try:
+        response = requests.get(url, cert=(cert_path, key_path), verify=False, timeout=15)
+    except (requests.RequestException, OSError) as exc:
+        print_warning(f"CCDB query failed with {type(exc).__name__}: {exc}")
+        return None, False
+
     if response.status_code == 200:
         meta = extract_metadata_blocks_from_CCDB(response.content.decode('utf-8'))
         if (len(meta) > 0):
@@ -278,14 +283,18 @@ def upload_CCDBTimeMachineTS(base_url, user, keys):
     print_info(f"Uploading CCDBTimeMachineTS: {url}")
 
     # Prepare request
-    with open(empty_file, 'rb') as f:
-        files = {'blob': f}
-        response = requests.post(url, files=files, cert=(cert_path, key_path), verify=False)
-
-    os.remove(empty_file)
+    try:
+        with open(empty_file, 'rb') as f:
+            files = {'blob': f}
+            response = requests.post(url, files=files, cert=(cert_path, key_path), verify=False, timeout=15)
+    except (requests.RequestException, OSError) as exc:
+        print_warning(f"CCDB upload failed with {type(exc).__name__}: {exc}")
+        return
+    finally:
+        os.remove(empty_file)
 
     if response.status_code != 201:
-        print_warning(f"Upload failed, response: {response.status_code}")
+        print_warning(f"CCDB upload failed, response: {response.status_code}")
 
 
 def get_CCDBTimeMachineTS(production_tag, year, period, run, passname,
