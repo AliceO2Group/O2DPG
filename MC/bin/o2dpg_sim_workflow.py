@@ -163,7 +163,8 @@ parser.add_argument('--mft-assessment-full', action='store_true', help='enables 
 parser.add_argument('--tpc-distortion-type', default=0, type=int, help='Simulate distortions in the TPC (0=no distortions, 1=distortions without scaling, 2=distortions with CTP scaling)')
 parser.add_argument('--tpc-corrmap-lumi-mode', default=2, type=int, help='TPC corrections mode (0=linear, 1=derivative, 2=derivative for special MC maps')
 parser.add_argument('--ctp-scaler', default=0, type=float, help='CTP raw scaler value used for distortion simulation')
-parser.add_argument('--tpc-mt-digitizer', action='store_true', help='Digitize TPC in one multithreaded device instead of one process per lane (needs TPC digit chunking)')
+parser.add_argument('--no-tpc-mt-digitizer', action='store_true', help='Digitize TPC with one process per lane instead of one multithreaded device')
+parser.add_argument('--tpc-mt-digitizer', action='store_true', help=argparse.SUPPRESS) # the default now; kept for compatibility
 parser.add_argument('--tpc-sector-seeding', action='store_true', help='Seed the TPC digitizer per sector so that the digits do not depend on the number of lanes')
 # Global Forward reconstruction configuration
 parser.add_argument('--fwdmatching-assessment-full', action='store_true', help='enables complete assessment of global forward reco')
@@ -482,10 +483,12 @@ if GENERATOR =='':
    print('o2dpg_sim_workflow: Error! generator name not provided')
    exit(1)
 
-if args.tpc_mt_digitizer and args.no_tpc_digitchunking:
-   print('o2dpg_sim_workflow: Error! --tpc-mt-digitizer needs TPC digit chunking')
+# the multithreaded TPC digitizer is the default; it needs TPC digit chunking
+tpc_mt_digitizer = not args.no_tpc_mt_digitizer and not args.no_tpc_digitchunking
+if args.tpc_mt_digitizer and not tpc_mt_digitizer:
+   print('o2dpg_sim_workflow: Error! --tpc-mt-digitizer conflicts with --no-tpc-mt-digitizer or --no-tpc-digitchunking')
    exit(1)
-if args.tpc_mt_digitizer and args.tpc_sector_seeding:
+if tpc_mt_digitizer and args.tpc_sector_seeding:
    print('o2dpg_sim_workflow: --tpc-sector-seeding is implied by --tpc-mt-digitizer')
 
 INIFILE=''
@@ -1185,7 +1188,7 @@ for tf in range(1, NTIMEFRAMES + 1):
                          + ' --tpc-distortion-type ' + str(tpcDistortionType)                                                             \
                          + putConfigValues(["TPCGasParam","TPCGEMParam","TPCEleParam","TPCITCorr","TPCDetParam"],
                                               localCF=tpcLocalCF)
-   if args.tpc_mt_digitizer:
+   if tpc_mt_digitizer:
       # one device with NWORKERS_TF threads; it always seeds per sector
       TPCDigitask['cmd'] += ' --tpc-digi-threads ' + str(NWORKERS_TF) + ' --n-threads-distortions ' + str(NWORKERS_TF)
    else:
