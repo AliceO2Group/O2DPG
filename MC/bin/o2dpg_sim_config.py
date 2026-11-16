@@ -190,6 +190,9 @@ def create_geant_config(args, externalConfigString):
     if not getattr(args, "with_ZDC", False) and "ZDC" not in getattr(args, "skipModules", []):
         add(config, {"ZDCSimParam.buildBeamLine" : "false"})
     add(config, {"GenTPCLoopers.colsys" : args.col})
+    # MC-DATA embedding simulates small signals at the data collisions; no TPC loopers
+    if len(getattr(args, "data_anchoring", "")) > 0:
+        add(config, {"GenTPCLoopers.loopersVeto" : "true"})
 
     # ----- apply external overwrites from command line -------
     for keyval in externalConfigString.split(";"):
@@ -198,6 +201,15 @@ def create_geant_config(args, externalConfigString):
           add(config, {key : val})
 
     return config
+
+def qed_included(pdga, pdgb, with_qed, no_qed, data_anchoring):
+    """
+    Whether to add the QED background. On by default for same-species heavy-ion collisions,
+    off for MC-DATA embedding (the data already carries it). --with-qed forces it on,
+    --no-qed forces it off and wins over everything.
+    """
+    default = pdga == pdgb and pdga != 2212 and len(data_anchoring) == 0
+    return (default or with_qed) and not no_qed
 
 def constructConfigKeyArg(config):
     # flattens dictionary constructed in create_geant_config

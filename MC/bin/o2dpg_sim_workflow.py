@@ -43,7 +43,7 @@ sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
 from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers, merge_dicts
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
-from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg, option_if_available, overwrite_config
+from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg, option_if_available, overwrite_config, qed_included
 from o2dpg_dpl_config_tools import dpl_option_from_config, TaskFinalizer, quote_if_needed
 
 # for some JAliEn interaction
@@ -643,11 +643,9 @@ if len(CONFKEYMV) > 0:
 
 workflow['stages'].append(GRP_TASK)
 
-# QED background is enabled by default only for same-species (heavy-ion) collisions.
-# --with-qed forces it on; --no-qed forces it off and wins over both the default and --with-qed
-# (the two flags are mutually exclusive at the argparse level, so they can never both be set).
-QED_enabled = True if (PDGA==PDGB and PDGA!=2212) else False
-includeQED = (QED_enabled or args.with_qed) and not args.no_qed
+# QED background: on by default for same-species heavy-ion collisions, off for MC-DATA embedding;
+# --with-qed forces it on, --no-qed forces it off (see qed_included)
+includeQED = qed_included(PDGA, PDGB, args.with_qed, args.no_qed, args.data_anchoring)
 signalprefix='sgn'
 
 # No vertexing for event pool generation; otherwise the vertex comes from CCDB and later from CollContext
@@ -714,6 +712,10 @@ PreCollContextTask['cmd'] = task_finalizer([
       ' --nontrivial-mu-distribution ccdb://https://alice-ccdb.cern.ch/FT0/Calib/EventsPerBc',
       f'--QEDinteraction {qedspec}' if includeQED else None
       ], configname = 'precollcontext')
+if len(args.data_anchoring) > 0:
+   # contexts taken from data carry no interaction rate; store the one used for this production
+   PreCollContextTask['cmd'] += ' && python3 ${O2DPG_ROOT}/MC/utils/o2dpg_data_embedding_utils.py --set-interaction-rate ' + str(INTRATE) \
+                                + ' --context ' + ' '.join(f'tf{tf}/collisioncontext.root' for tf in range(1, NTIMEFRAMES + 1))
 workflow['stages'].append(PreCollContextTask)
 
 if doembedding:
