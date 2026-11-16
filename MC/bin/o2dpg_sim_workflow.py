@@ -41,7 +41,7 @@ except (ImportError, ValueError):  # ARM architecture has problems with pandas +
 
 sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
-from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers, merge_dicts
+from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers, merge_dicts, restrict_to_detector_list
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
 from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg, option_if_available, overwrite_config
 from o2dpg_dpl_config_tools import dpl_option_from_config, TaskFinalizer, quote_if_needed
@@ -310,8 +310,23 @@ elif readout_detectors != 'all' and activeDetectors != 'all':
     activeDetectors = ','.join(r & a)
 # the last case: simply take what comes from the anchored config
 
-# convert to set/hashmap
-activeDetectors = { det:1 for det in activeDetectors.split(',') if det not in args.skipModules and det not in args.skipReadout}
+# convert to set/hashmap, keeping only detectors that the chosen detector list builds (e.g. no TRD in ALICE2.1)
+try:
+    builtModules = restrict_to_detector_list(args.detectorList)
+except (OSError, ValueError, KeyError, TypeError) as e:
+    print(f"Error: cannot read detector list {args.detectorList}: {e!r}")
+    sys.exit(1)
+# IT3 replaces ITS when the detector list builds it
+useIT3 = 'IT3' in builtModules
+skipped = {det for det in args.skipModules + args.skipReadout + ([] if args.with_ZDC else ['ZDC'])}
+requested = [det for det in activeDetectors.split(',') if det]
+dropped = [det for det in requested if det != 'all' and det not in builtModules]
+if dropped:
+    print(f"Detectors {dropped} are not built by detector list {args.detectorList}; dropped")
+activeDetectors = { det:1 for det in requested if det not in dropped and det not in skipped }
+if not activeDetectors:
+    print(f"Error: no active detector left after applying detector list {args.detectorList} and the skip options")
+    sys.exit(1)
 for det in activeDetectors:
     activate_detector(det)
 for det in args.skipModules:
@@ -832,7 +847,7 @@ if doembedding:
 
 # a list of smaller sensors (used to construct digitization tasks in a parametrized way)
 smallsensorlist = [ "ITS", "TOF", "FDD", "MCH", "MID", "MFT", "HMP", "PHS", "CPV", "ZDC" ]
-if args.detectorList == 'ALICE2.1':
+if useIT3:
     smallsensorlist = ['IT3' if sensor == 'ITS' else sensor for sensor in smallsensorlist]
 
 # a list of detectors that serve as input for the trigger processor CTP --> these need to be processed together for now
@@ -892,9 +907,7 @@ for tf in range(1, NTIMEFRAMES + 1):
      # determine final conf key for QED simulation
      QEDBaseConfig = "GeneratorExternal.fileName=$O2_ROOT/share/Generators/external/QEDLoader.C;QEDGenParam.yMin=-7;QEDGenParam.yMax=7;QEDGenParam.ptMin=0.001;QEDGenParam.ptMax=1.;QEDGenParam.xSectionHad="+str(XSecSys[COLTYPE])+";QEDGenParam.Z="+str(Zsys[COLTYPE])+";QEDGenParam.cmEnergy="+str(ECMS)+";Diamond.width[2]=6.;"
      QEDCONFKEY = constructConfigKeyArg(create_geant_config(args, QEDBaseConfig + args.confKeyQED))
-     qed_detectorlist = ' ITS MFT FT0 FV0 FDD '
-     if args.detectorList == 'ALICE2.1':
-         qed_detectorlist = qed_detectorlist.replace('ITS', 'IT3')
+     qed_detectorlist = ' ' + ' '.join(det for det in ['IT3' if useIT3 else 'ITS', 'MFT', 'FT0', 'FV0', 'FDD'] if det in builtModules) + ' '
      QED_task['cmd'] = 'o2-sim -e TGeant3 --field ccdb -j ' + str('1') +  ' -o qed'                                   \
                         + ' -n ' + str(NEventsQED) + ' -m ' + qed_detectorlist                                        \
                         + ('', ' --timestamp ' + str(args.timestamp))[args.timestamp!=-1] + ' --run ' + str(args.run) \
@@ -1221,7 +1234,7 @@ for tf in range(1, NTIMEFRAMES + 1):
         tneeds += [QED_task['name']]
       commondigicmd = '${O2_ROOT}/bin/o2-sim-digitizer-workflow ' + getDPL_global_options() + ' -n ' + str(args.ns) + simsoption \
                       + ' --interactionRate ' + str(INTRATE) + '  --incontext ' + str(CONTEXTFILE) + ' --disable-write-ini'      \
-                      + putConfigValues(["MFTAlpideParam", "ITSAlpideParam", "ITSDigitizerParam" if args.detectorList == 'ALICE2' else "IT3DigitizerParam"],
+                      + putConfigValues(["MFTAlpideParam", "ITSAlpideParam", "IT3DigitizerParam" if useIT3 else "ITSDigitizerParam"],
                                            localCF={"DigiParams.seed" : str(TFSEED), "MCHDigitizer.seed" : str(TFSEED)}) + QEDdigiargs
 
       if det=='ALLSMALLER': # here we combine all smaller digits in one DPL workflow
@@ -1449,10 +1462,10 @@ for tf in range(1, NTIMEFRAMES + 1):
 
    #<--------- ITS reco task
    ITSMemEstimate = 12000 if havePbPb else 2000 # PbPb has much large mem requirement for now (in worst case)
-   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("ITS" if args.detectorList == 'ALICE2' else "IT3")],
+   ITSRECOtask=createTask(name='itsreco_'+str(tf), needs=[getDigiTaskName("IT3" if useIT3 else "ITS")],
                           tf=tf, cwd=timeframeworkdir, lab=["RECO"], cpu='1', mem=str(ITSMemEstimate))
    ITSRECOtask['cmd'] = task_finalizer([
-     "${O2_ROOT}/bin/o2-its-reco-workflow" if args.detectorList == 'ALICE2' else "${O2_ROOT}/bin/o2-its3-reco-workflow",
+     "${O2_ROOT}/bin/o2-its3-reco-workflow" if useIT3 else "${O2_ROOT}/bin/o2-its-reco-workflow",
      getDPL_global_options(bigshm=havePbPb),
      staggITS,
      '--tracking-mode async',

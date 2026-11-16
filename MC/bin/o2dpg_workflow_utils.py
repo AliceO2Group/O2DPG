@@ -8,6 +8,8 @@ import json
 # List of active detectors
 ACTIVE_DETECTORS = ["all"]
 INACTIVE_DETECTORS = []
+# Modules built by the o2-sim detector list, None if unknown
+BUILT_DETECTORS = None
 
 def activate_detector(det):
     try:
@@ -21,9 +23,21 @@ def activate_detector(det):
 def deactivate_detector(det):
     INACTIVE_DETECTORS.append(det)
 
+def restrict_to_detector_list(detector_list):
+    """Restricts isActive() to the modules of an o2-sim detector list (name, or name:path to a custom file) and returns them."""
+    global BUILT_DETECTORS
+    name, sep, path = detector_list.partition(':')
+    with open(path if sep else f"{environ['O2_ROOT']}/share/config/o2simdefaultdetectorlist.json") as f:
+        modules = json.load(f)[name]
+    if not isinstance(modules, list) or not all(isinstance(m, str) for m in modules):
+        raise ValueError(f"detector list {name} is not a list of module names")
+    BUILT_DETECTORS = set(modules)
+    return BUILT_DETECTORS
+
 def isActive(det):
     def check(detector):
-        return detector not in INACTIVE_DETECTORS and ("all" in ACTIVE_DETECTORS or detector in ACTIVE_DETECTORS)
+        built = BUILT_DETECTORS is None or detector == "all" or detector in BUILT_DETECTORS
+        return built and detector not in INACTIVE_DETECTORS and ("all" in ACTIVE_DETECTORS or detector in ACTIVE_DETECTORS)
 
     if det == "ITS": # special remapping for upgrade only needed in one direction since IT3 output pretends to be ITS
         return check("ITS") or check("IT3")
