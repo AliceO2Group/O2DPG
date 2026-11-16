@@ -341,6 +341,16 @@ def shift_anchor_past_ITS_rampup(run_start, first_orbit, orbitsPerTF, ITS_rampup
     rampupOrbits = -(-milliseconds_to_orbits(math.ceil(ITS_rampup)) // orbitsPerTF) * orbitsPerTF
     return run_start + int(rampupOrbits * LHCOrbitMUS / 1000.), first_orbit + rampupOrbits
 
+def anchor_origin(run_start, first_orbit, orbitsPerTF, ITS_rampup, explicit_timeframe):
+    """
+    Returns the (start of run in ms, first orbit) from which timeframes are counted.
+    An explicit timeframe ID (MC-DATA embedding) names a timeframe of the data, counted
+    from the run's first orbit, so it is not moved past the ITS ramp-up.
+    """
+    if explicit_timeframe:
+        return run_start, first_orbit
+    return shift_anchor_past_ITS_rampup(run_start, first_orbit, orbitsPerTF, ITS_rampup)
+
 def retrieve_MinBias_CTPScaler_Rate(raw_rate_at, finaltime, trig_eff_arg, NBunches, ColSystem, eCM, run_number = -1):
     """
     Turns the raw CTP counting rate at finaltime (in milliseconds) into the interaction rate for
@@ -506,8 +516,25 @@ def determine_timestamp_from_timeframeID(sor, eor, timeframeID, HBF_per_timefram
     # this is a closure test. If we had perfect floating point precision everywhere, it wouldn't fail.
     # But since we don't have that and there are some int casts as well, better check again.
     assert (timestamp_of_production >= sor)
-    assert (timestamp_of_production <= eor)
+    # no upper bound: a timeframe taken from data may start after the end of run recorded in CCDB
     return int(timestamp_of_production)
+
+def conditions_timestamp(timestamp, eor):
+    """
+    The timestamp for condition lookups of a timeframe taken from data. A timeframe starting after
+    the recorded end of run keeps its position in the run, but its conditions are read just before
+    the end of run, where the run's objects are still valid.
+    """
+    return min(timestamp, eor - 1)
+
+def rate_lookup_time(timestamp, run_start, collisions_end, explicit_timeframe):
+    """
+    The time at which to read the CTP interaction rate. For a timeframe taken from data, which
+    may lie past the last CTP scaler record, this is clamped to just before the collisions end.
+    """
+    if explicit_timeframe:
+        return max(run_start, min(timestamp, collisions_end - 1000))
+    return timestamp
 
 def exclude_timestamp(ts, orbit, run, filename, global_run_params):
     """
@@ -614,7 +641,7 @@ def main():
     # Adjust the anchoring point using the ITS ramp-up period
     ITS_rampup = retrieve_ITS_RampDuration(ccdbreader, run_start)
     print(f"ITS ramp-up time: {ITS_rampup} ms")
-    effective_run_start, effective_first_orbit = shift_anchor_past_ITS_rampup(run_start, GLOparams["FirstOrbit"], GLOparams["OrbitsPerTF"], ITS_rampup)
+    effective_run_start, effective_first_orbit = anchor_origin(run_start, GLOparams["FirstOrbit"], GLOparams["OrbitsPerTF"], ITS_rampup, args.timeframeID != -1)
     mid_run_timestamp = (effective_run_start + run_end) // 2
 
     # --------
@@ -685,9 +712,10 @@ def main():
     timestamp = 0
     prod_offset = 0
     if args.timeframeID != -1:
-      # an explicit timeframe is a fixed position in the run, so bound it by the run as recorded;
-      # if it falls past the collisions the rate below is zero and the job is excluded
+      # an explicit timeframe comes from data: it exists even past the recorded end of run,
+      # and its interaction rate is read at the last time the CTP counted collisions
       timestamp = determine_timestamp_from_timeframeID(effective_run_start, GLOparams["EOR"], args.timeframeID, GLOparams["OrbitsPerTF"])
+      timestamp = conditions_timestamp(timestamp, GLOparams["EOR"])
       prod_offset = args.timeframeID
     else:
       timestamp, prod_offset = determine_timestamp(effective_run_start, run_end, [args.split_id - 1, args.prod_split], args.cycle, args.tf, GLOparams["OrbitsPerTF"])
@@ -720,7 +748,8 @@ def main():
     ctp_local_rate_raw = None
 
     if args.ccdb_IRate == True:
-       rate, ctp_local_rate_raw = retrieve_MinBias_CTPScaler_Rate(raw_rate_at, timestamp, args.trig_eff, grplhcif.getBunchFilling().getNBunches(), ColSystem, eCM, args.run_number)
+       rate_time = rate_lookup_time(timestamp, effective_run_start, run_end, args.timeframeID != -1)
+       rate, ctp_local_rate_raw = retrieve_MinBias_CTPScaler_Rate(raw_rate_at, rate_time, args.trig_eff, grplhcif.getBunchFilling().getNBunches(), ColSystem, eCM, args.run_number)
 
        # no collisions here, so nothing to simulate: treat it like any other excluded timestamp
        if rate == None and ctp_local_rate_raw == 0:
