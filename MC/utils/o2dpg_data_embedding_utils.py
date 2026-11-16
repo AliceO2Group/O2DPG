@@ -14,6 +14,7 @@ import pandas as pd
 import re
 from ROOT import o2 # for CCDB
 import argparse
+import json
 import sys
 
 class lhc_constants:
@@ -150,7 +151,8 @@ def get_timeframe_structure(filepath, run_info, max_folders=1, include_dataframe
         
     folders = { k.split("/")[0] : 1 for k in raw_keys if "O2bc_001" in k }
     folders = [ k for k in folders.keys() ] 
-    folders = folders[:max_folders]  
+    if max_folders is not None:
+        folders = folders[:max_folders]
 
     print ("have ", len(raw_keys), f" in file {filepath}")
 
@@ -178,11 +180,15 @@ def get_timeframe_structure(filepath, run_info, max_folders=1, include_dataframe
         
         # do the actual timeframe structure calculation; we only take collisions with a trigger decision attached
         triggered = combined[combined["fTriggerMask"] != 0]
+        folderkey = folder + '@' + filepath
+        if triggered.empty:
+            # a DF without triggered collisions has no timeframe to embed
+            merged[folderkey] = pd.DataFrame({'timeframeID': [], 'position_vectors': []})
+            continue
         timeframe_structure = triggered.groupby('timeframeID').apply(
         lambda g: list(zip(g['fGlobalBC'], g['fPosX'], g['fPosY'], g['fPosZ'], g['orbit'], g['bc_within_orbit'], g['fCollisionTime']))
         ).reset_index(name='position_vectors')
         
-        folderkey = folder + '@' + filepath
         merged[folderkey] = timeframe_structure # data per folder
         if include_dataframe:
             merged["data"] = combined
@@ -247,11 +253,21 @@ def fetch_bccoll_to_localFile(alien_file, local_filename):
   return True
 
 
+def time_ordered_collisions(collisions):
+    """
+    Sorts collisions (globalBC, x, y, z, orbit, bc, collisionTime[ns]) by their time, BC plus
+    collision time. The digitizers need time-ordered interactions; the AO2D order is by BC only,
+    and a negative collision time can move a collision before one in an earlier BC.
+    """
+    return sorted(collisions, key=lambda c: c[0] * lhc_constants.LHCBunchSpacingNS + c[6])
+
+
 def convert_to_digicontext(aod_timeframe, df_folder, timeframeID=-1):
     """
     converts AOD collision information from AO2D to collision context
     which can be used for MC
     """
+    aod_timeframe = time_ordered_collisions(aod_timeframe)
     # we create the digitization context object
     digicontext=o2.steer.DigitizationContext()
     
@@ -301,44 +317,126 @@ def convert_to_digicontext(aod_timeframe, df_folder, timeframeID=-1):
     digicontext.saveToFile(f"collission_context_{df_folder}:{timeframeID}.root")
 
 
-def process_data_AO2D(file_name, run_number, upper_limit = -1):
+def units_from_timeframe_structure(merged):
     """
-    Creates all the collision contexts 
+    DF folder name -> sorted list of timeframe IDs with at least one triggered collision,
+    from the output of get_timeframe_structure. A DF without such collisions maps to [].
     """
-    timeframe_data = []
+    units = {}
+    for key, frame in merged.items():
+        df = key.split('@')[0]
+        units[df] = sorted(int(tf) for tf in frame['timeframeID']) if len(frame) > 0 else []
+    return units
 
+
+def select_folders(merged, dfs):
+    """Restricts the get_timeframe_structure output to the given DF folder names."""
+    wanted = set(dfs)
+    return {key: frame for key, frame in merged.items() if key.split('@')[0] in wanted}
+
+
+def expectation_mismatches(units, expected):
+    """
+    Compares the timeframes found per DF with the ones the planner recorded.
+    Returns a list of human-readable mismatches (empty when they agree).
+    """
+    problems = []
+    for df in sorted(expected):
+        if df not in units:
+            problems.append(f"{df}: expected {sorted(expected[df])}, found none")
+        elif sorted(units[df]) != sorted(expected[df]):
+            problems.append(f"{df}: expected {sorted(expected[df])}, found {sorted(units[df])}")
+    return problems
+
+
+def read_timeframe_structure(file_name, run_number):
+    """Fetches the BC and collision tables of a (possibly remote) AO2D and returns the timeframe structure."""
     local_filename = "local.root"
-    fetch_bccoll_to_localFile(file_name, local_filename)
-
-    # fetch run_info object
+    if not fetch_bccoll_to_localFile(file_name, local_filename):
+        raise RuntimeError(f"Could not fetch BC/collision tables from {file_name}")
     run_info = retrieve_Aggregated_RunInfos(run_number)
-    merged = get_timeframe_structure(local_filename, run_info, max_folders=1000)
+    return get_timeframe_structure(local_filename, run_info, max_folders=None)
+
+
+def units_from_file(file_name, run_number):
+    """DF folder name -> list of timeframe IDs to embed, for one data AO2D."""
+    return units_from_timeframe_structure(read_timeframe_structure(file_name, run_number))
+
+
+def set_context_interaction_rate(context_file, rate):
+    """
+    Stores the interaction rate (Hz) in a collision context taken from data. The contexts built
+    from data carry no rate, but the TPC looper generator and the digitizers read it from there.
+    """
+    if rate <= 0:
+        raise ValueError(f"invalid interaction rate {rate}")
+    context = o2.steer.DigitizationContext.loadFromFile(context_file)
+    context.setDigitizerInteractionRate(float(rate))
+    context.saveToFile(context_file)
+
+
+def process_data_AO2D(file_name, run_number, upper_limit = -1, dfs = None, expected = None):
+    """
+    Creates the collision contexts, one per (DF folder, timeframe).
+    dfs restricts this to the given DF folders; expected (DF -> timeframe IDs) is checked first
+    and a disagreement exits with code 3, so a job never embeds something else than planned.
+    """
+    merged = read_timeframe_structure(file_name, run_number)
     print ("Got " + str(len(merged)) + " datasets")
-    timeframe_data.append(merged)
+    if dfs is not None:
+        merged = select_folders(merged, dfs)
+    if expected is not None:
+        problems = expectation_mismatches(units_from_timeframe_structure(merged), expected)
+        if problems:
+            for p in problems:
+                print (f"ERROR: timeframe structure differs from the plan: {p}")
+            sys.exit(3)
 
     counter = 0
-    for d in timeframe_data:
-        for key in d:
-            result = d[key]
-            for index, row in result.iterrows():
-                if upper_limit >= 0 and counter >= upper_limit:
-                    break
-                tf = row['timeframeID']
-                cols = row['position_vectors']
-                df = key.split('@')[0] # this is the DF folder name
-                convert_to_digicontext(cols, df, tf)
-                counter = counter + 1
+    for key in merged:
+        result = merged[key]
+        for index, row in result.iterrows():
+            if upper_limit >= 0 and counter >= upper_limit:
+                break
+            tf = row['timeframeID']
+            cols = row['position_vectors']
+            df = key.split('@')[0] # this is the DF folder name
+            convert_to_digicontext(cols, df, tf)
+            counter = counter + 1
 
 
 def main():
     parser = argparse.ArgumentParser(description='Extracts collision contexts from reconstructed AO2D')
 
-    parser.add_argument("--run-number", type=int, help="Run number to anchor to", required=True)
-    parser.add_argument("--aod-file", type=str, help="Data AO2D file (can be on AliEn)", required=True)
+    parser.add_argument("--run-number", type=int, help="Run number to anchor to")
+    parser.add_argument("--aod-file", type=str, help="Data AO2D file (can be on AliEn)")
     parser.add_argument("--limit", type=int, default=-1, help="Upper limit of timeframes to be extracted (-1 is no limit)")
+    parser.add_argument("--dfs", type=str, default=None, help="Comma-separated DF folders to treat (default: all)")
+    parser.add_argument("--expect-tfs", type=str, default=None, help="JSON file DF -> timeframe IDs the plan expects; exit 3 on a difference")
+    parser.add_argument("--list-units", type=str, default=None, help="Only write DF -> timeframe IDs as JSON to this file")
+    parser.add_argument("--set-interaction-rate", type=float, default=None, help="Only store this interaction rate (Hz) in the contexts given by --context")
+    parser.add_argument("--context", type=str, nargs="+", default=[], help="Collision context files for --set-interaction-rate")
     args = parser.parse_args()
 
-    process_data_AO2D(args.aod_file, args.run_number, args.limit)
+    if args.set_interaction_rate is not None:
+        for c in args.context:
+            set_context_interaction_rate(c, args.set_interaction_rate)
+        return 0
+    if args.run_number is None or args.aod_file is None:
+        parser.error("--run-number and --aod-file are required")
+
+    if args.list_units:
+        with open(args.list_units, "w") as f:
+            json.dump(units_from_file(args.aod_file, args.run_number), f, indent=1)
+        return 0
+
+    dfs = args.dfs.split(",") if args.dfs else None
+    expected = None
+    if args.expect_tfs:
+        with open(args.expect_tfs) as f:
+            expected = json.load(f)
+    process_data_AO2D(args.aod_file, args.run_number, args.limit, dfs, expected)
+    return 0
 
 if __name__ == "__main__":
   sys.exit(main())
