@@ -129,6 +129,15 @@ export ALIEN_JDL_ADDTIMESERIESINMC=${ALIEN_JDL_ADDTIMESERIESINMC:-1}
 [ -z "${ALIEN_JDL_LPMANCHORPRODUCTION}" ] && { echo_error "Set ALIEN_JDL_LPMANCHORPRODUCTION or ANCHORPRODUCTION" ; exit 1 ; }
 [ -z "${ALIEN_JDL_LPMANCHORYEAR}" ] && { echo_error "Set ALIEN_JDL_LPMANCHORYEAR or ANCHORYEAR" ; exit 1 ; }
 
+# MC-DATA embedding: one timeframe per data timeframe, placed by its ID, not by split
+if [ "${ALIEN_JDL_MC_DATA_EMBEDDING_TABLE}" ] || [ "${ALIEN_JDL_MC_DATA_EMBEDDING_AO2D}" ]; then
+  NTIMEFRAMES=${NTIMEFRAMES:-1}
+  SPLITID=${SPLITID:-1}
+  PRODSPLIT=${PRODSPLIT:-1}
+  # the MC timeframes must have the length of the data timeframes
+  [ "${ALIEN_JDL_MC_ORBITS_PER_TF}" ] && { echo_error "ALIEN_JDL_MC_ORBITS_PER_TF cannot be used for MC-DATA embedding" ; exit 1 ; }
+fi
+
 [ -z "${NTIMEFRAMES}" ] && { echo_error "Set NTIMEFRAMES" ; exit 1 ; }
 [ -z "${SPLITID}" ] && { echo_error "Set SPLITID" ; exit 1 ; }
 [ -z "${PRODSPLIT}" ] && { echo_error "Set PRODSPLIT" ; exit 1 ; }
@@ -339,6 +348,19 @@ else
 fi
 PUBLISH_MCPRODINFO_OPTION=""
 
+EMBEDDING_DIR=${O2DPG_ROOT}/MC/run/ANCHOR/dataembedding
+EMBEDDING_SELECTION=""
+# with a work table, this job treats one row of it: a data AO2D and a set of whole DF folders
+if [ "${ALIEN_JDL_MC_DATA_EMBEDDING_TABLE}" ]; then
+  ROWINFO=$(python3 ${EMBEDDING_DIR}/embedding_row.py --table ${ALIEN_JDL_MC_DATA_EMBEDDING_TABLE} \
+                                                      --expect-out embedding_expected_tfs.json --manifest embedding_row.json)
+  [ $? != 0 ] && { echo_error "Could not determine the embedding row of this job" ; exit 1 ; }
+  read -r AOD_FROM_TABLE EMBEDDING_DFS <<< "${ROWINFO}"
+  export ALIEN_JDL_MC_DATA_EMBEDDING_AO2D=${AOD_FROM_TABLE}
+  EMBEDDING_SELECTION="--dfs ${EMBEDDING_DFS} --expect-tfs embedding_expected_tfs.json"
+  echo_info "Embedding into ${EMBEDDING_DFS} of ${AOD_FROM_TABLE}"
+fi
+
 # let's take the input data AO2D from a JDL variable
 AOD_DATA_FILE=${ALIEN_JDL_MC_DATA_EMBEDDING_AO2D}
 if [ "${ALIEN_JDL_MC_DATA_EMBEDDING_AO2D}" ]; then
@@ -346,8 +368,34 @@ if [ "${ALIEN_JDL_MC_DATA_EMBEDDING_AO2D}" ]; then
   NWORKERS=1 # these embedding jobs process only light pp type signals ... the parallelism will come via parallel workflows
 fi
 
+# a limit would drop planned timeframes; without a table the old default of 8 timeframes stays
+if [ "${ALIEN_JDL_MC_DATA_EMBEDDING_TABLE}" ]; then
+  [ "${DATA_EMBEDDING_LIMIT}" ] && { echo_error "DATA_EMBEDDING_LIMIT cannot be used with a work table" ; exit 1 ; }
+  EMBEDDING_LIMIT_OPTION=""
+else
+  EMBEDDING_LIMIT_OPTION="--limit ${DATA_EMBEDDING_LIMIT:-8}"
+fi
+
 # call the python script to extract all collision contexts
-python3 ${O2DPG_ROOT}/MC/utils/o2dpg_data_embedding_utils.py --aod-file ${AOD_DATA_FILE} --run-number ${ALIEN_JDL_LPMRUNNUMBER} --limit ${DATA_EMBEDDING_LIMIT:-8}
+python3 ${O2DPG_ROOT}/MC/utils/o2dpg_data_embedding_utils.py --aod-file ${AOD_DATA_FILE} --run-number ${ALIEN_JDL_LPMRUNNUMBER} \
+        ${EMBEDDING_LIMIT_OPTION} ${EMBEDDING_SELECTION}
+CONTEXT_RC=$?
+if [ "${CONTEXT_RC}" != "0" ]; then
+  echo_error "Extraction of the collision contexts failed with ${CONTEXT_RC}"
+  exit ${CONTEXT_RC}
+fi
+if ! compgen -G "collission_context_*.root" > /dev/null; then
+  echo_error "No collision context was extracted from ${AOD_DATA_FILE}"
+  exit 1
+fi
+
+# concurrent per-timeframe workflows; each runner gets its share of the CPU and memory of the job
+EMBEDDING_PARALLEL=${ALIEN_JDL_MC_DATA_EMBEDDING_PARALLEL:-8}
+RUNNER_CPU=$(( ${ALIEN_JDL_CPULIMIT:-8} / EMBEDDING_PARALLEL ))
+[ "${RUNNER_CPU}" -lt 1 ] && RUNNER_CPU=1
+# ALICE GRID slots provide 2 GB per core unless told otherwise
+RUNNER_MEM=$(( ${ALIEN_JDL_MC_DATA_EMBEDDING_MEMORY_MB:-$(( 2000 * ${ALIEN_JDL_CPULIMIT:-8} ))} / EMBEDDING_PARALLEL ))
+echo_info "Running ${EMBEDDING_PARALLEL} timeframe workflows in parallel, each with ${RUNNER_CPU} CPU and ${RUNNER_MEM} MB"
 
 parallel_job_count=0
 failed_count=0
@@ -364,14 +412,14 @@ for external_context in collission_context_*.root; do
   echo "Treating timeframe ${anchoring_tf} coming from folder ${df_folder}"
 
   # we do it in a separate workspace
-  workspace="TF_${anchoring_tf}"
+  workspace="${df_folder}_TF_${anchoring_tf}"
   mkdir "${workspace}"; cd "${workspace}"
   # fetch the apass reco anchoring config
   cp ../*.json .
 
-  # we need to adjust the SEED for each job
-  JOBSEED=$SEED
-  [ "$JOBSEED" != "-1" ] && let JOBSEED=JOBSEED+anchoring_tf
+  # seed per timeframe from the job id (SEED, normally ALIEN_PROC_ID), the DF folder and the timeframe
+  JOBSEED=$(python3 ${EMBEDDING_DIR}/embedding_plan_lib.py seed "${SEED}" "${df_folder}" "${anchoring_tf}")
+  [ -z "${JOBSEED}" ] && { echo_error "Could not compute the seed of timeframe ${anchoring_tf}" ; exit 1 ; }
   echo "TF ${anchoring_tf} got seed ${JOBSEED}"
 
   # these arguments will be digested by o2dpg_sim_workflow_anchored.py
@@ -406,18 +454,29 @@ for external_context in collission_context_*.root; do
 
   anchoringLogFile=timestampsampling_${ALIEN_JDL_LPMRUNNUMBER}.log
   # query CCDB has changed, w/o "_"
-  ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs} &> ${anchoringLogFile}
-  WF_RC="${?}"
+  # a second attempt covers transient failures (CCDB, slow tools on a busy node)
+  for attempt in 1 2; do
+    ${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow_anchored.py ${baseargs} -- ${remainingargs} &> ${anchoringLogFile}
+    WF_RC="${?}"
+    [ "${WF_RC}" == "0" ] && break
+    echo_info "Workflow creation of timeframe ${anchoring_tf} failed with ${WF_RC} (attempt ${attempt})"
+    cp ${anchoringLogFile} ${anchoringLogFile}.attempt${attempt}
+  done
   if [ "${WF_RC}" != "0" ] ; then
-    echo_error "Problem during anchor timestamp sampling and workflow creation. Exiting."
-    exit ${WF_RC}
+    # count it as a failed timeframe and go on, so that the job still writes its status and logs
+    echo_error "Problem during anchor timestamp sampling and workflow creation of timeframe ${anchoring_tf} (${df_folder}):"
+    tail -n 20 ${anchoringLogFile}
+    ((failed_count++))
+    cd ..
+    continue
   fi
 
   TIMESTAMP=`grep "Determined timestamp to be" ${anchoringLogFile} | awk '//{print $6}'`
   echo_info "TIMESTAMP IS ${TIMESTAMP}"
 
   if [ "${ONLY_WORKFLOW_CREATION}" ]; then
-    continue # or exit
+    cd ..
+    continue
   fi
 
   # check if this job is exluded because it falls inside a bad data-taking period
@@ -426,7 +485,9 @@ for external_context in collission_context_*.root; do
     # we can quit here; there is nothing to do
     # (apart from maybe creating a fake empty AO2D.root file or the like)
     echo "Timestamp is excluded from run. Nothing to do here"
-    continue # or exit 0
+    touch EXCLUDED # the final merge reports it as excluded, not as failed
+    cd ..
+    continue
   fi
 
   # -- RUN THE MC WORKLOAD TO PRODUCE TARGETS --
@@ -459,13 +520,13 @@ for external_context in collission_context_*.root; do
   echo_info "Workflow will run with target specification ${targetString}"
 
   ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json -tt ${targetString} -j 1                             \
-                                               --cpu-limit ${ALIEN_JDL_CPULIMIT:-8} --dynamic-resources                \
+                                               --cpu-limit ${RUNNER_CPU} --mem-limit ${RUNNER_MEM} --optimistic-resources --dynamic-resources --retry-on-failure ${ALIEN_JDL_MC_DATA_EMBEDDING_RETRIES:-2}                \
                                                ${ALIEN_O2DPG_FILEGRAPH:+--remove-files-early ${ALIEN_O2DPG_FILEGRAPH}} \
                                                ${ALIEN_O2DPG_ADDITIONAL_WORKFLOW_RUNNER_ARGS} &> pipeline_log &
 
   ((parallel_job_count++))
   # If limit reached, wait for one job to finish
-  if ((parallel_job_count >= 8)); then
+  if ((parallel_job_count >= EMBEDDING_PARALLEL)); then
     if ! wait -n; then
       ((failed_count++))
     fi
@@ -481,10 +542,40 @@ while ((parallel_job_count > 0)); do
   ((parallel_job_count--))
 done
 
-if [ "${ALIEN_JDL_MC_DATA_EMBEDDING_AO2D}" ]; then
+MERGE_RC=0
+missing_aods=0
+# only the default targets produce an AO2D per timeframe
+if [ "${ALIEN_JDL_MC_DATA_EMBEDDING_AO2D}" ] && [ -z "${ONLY_WORKFLOW_CREATION}" ] && [ -z "${ALIEN_JDL_O2DPGWORKFLOWTARGET}" ]; then
   # produce the final merged AO2D
-  find ./ -maxdepth 2 -mindepth 2 -name "AO2D.root" > aod_inputs.txt
-  o2-aod-merger --input aod_inputs.txt --output AO2D.root --merge-by-name  # --merge-by-name restricts merging to folders of same name
+  # sort by DF folder, then numerically by timeframe (from collission_context_<DF>:<TF>.root),
+  # so --merge-by-name sees same-named folders one after another and timeframes stay in time order
+  : > embedding_status.tsv
+  : > aod_unsorted.tsv
+  for ctx in collission_context_*.root; do
+    name="${ctx#collission_context_}"
+    df="${name%%:*}"
+    tf="${name##*:}"
+    tf="${tf%.root}"
+    aod="./${df}_TF_${tf}/AO2D.root"
+    if [ -f "./${df}_TF_${tf}/EXCLUDED" ]; then
+      printf '%s\t%s\texcluded\n' "${df}" "${tf}" >> embedding_status.tsv
+    elif [ -f "${aod}" ]; then
+      printf '%s\t%s\t%s\n' "${df}" "${tf}" "${aod}" >> aod_unsorted.tsv
+      printf '%s\t%s\tdone\n' "${df}" "${tf}" >> embedding_status.tsv
+    else
+      echo_error "No AO2D for timeframe ${tf} of ${df}"
+      printf '%s\t%s\tfailed\n' "${df}" "${tf}" >> embedding_status.tsv
+      ((missing_aods++))
+    fi
+  done
+  sort -t $'\t' -k1,1 -k2,2n aod_unsorted.tsv | cut -f3 > aod_inputs.txt
+  if [ -s aod_inputs.txt ]; then
+    # a huge --max-size: a size-triggered flush would make the next folder of the same name collide
+    o2-aod-merger --input aod_inputs.txt --output AO2D.root --merge-by-name --max-size 1000000000000
+    MERGE_RC=$?
+  else
+    echo_info "No AO2D to merge: all timeframes of this job were excluded or failed"
+  fi
 fi
 
 #
@@ -495,4 +586,10 @@ if [[ -n "$ALIEN_PROC_ID" ]]; then
   if [[ "$ALIEN_JDL_CREATE_TAR_IN_MC" == "1" ]]; then
     find ./ \( -name "*.log*" -o -name "*mergerlog*" -o -name "*serverlog*" -o -name "*workerlog*" -o -name "*.root" \) | tar -czvf debug_full_archive.tgz -T -
   fi
+fi
+
+# a job with a failed timeframe fails as a whole, so that it is resubmitted
+if [ "${ALIEN_JDL_MC_DATA_EMBEDDING_AO2D}" ] && (( failed_count > 0 || missing_aods > 0 || MERGE_RC != 0 )); then
+  echo_error "Embedding incomplete: ${failed_count} failed workflows, ${missing_aods} missing AO2Ds, merger exit code ${MERGE_RC}"
+  exit 1
 fi
