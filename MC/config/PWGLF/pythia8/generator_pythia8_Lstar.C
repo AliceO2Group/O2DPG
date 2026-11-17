@@ -1,3 +1,7 @@
+#include "Framework/Logger.h"
+
+#if !defined(__CLING__) || defined(__ROOTCLING__)
+
 #include "Pythia8/Pythia.h"
 #include "Pythia8/HeavyIons.h"
 #include "FairGenerator.h"
@@ -5,11 +9,10 @@
 #include "Generators/GeneratorPythia8.h"
 #include "TF1.h"
 #include "TRandom3.h"
-//#include "TParticlePDG.h"
-//#include "TDatabasePDG.h"
-
 #include <map>
 #include <unordered_set>
+
+#endif
 
 class GeneratorPythia8ExtraStrangeness : public o2::eventgen::GeneratorPythia8
 {
