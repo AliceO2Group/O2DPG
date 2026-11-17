@@ -59,6 +59,7 @@ test_single_wf()
     local ret_this=${?}
     local ret_this_qc=0
     local ret_this_analysis=0
+    local ret_this_analysis_split=0
     if [[ "${ret_this}" != "0" ]] ; then
         echo_red " -> FAILED"
         echo "[FATAL]: O2DPG_TEST Workflow creation failed" >> ${LOG_FILE_WF}
@@ -69,7 +70,10 @@ test_single_wf()
         # use -k|--keep-going feature to not stop after the first failure but see, if there are more
         [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels QC ${memlimit} -k >> ${LOG_FILE_WF} 2>&1 ; ret_this_qc=${?} ; }
         [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow.json --cpu-limit 8 --target-labels Analysis ${memlimit} -k >> ${LOG_FILE_WF} 2>&1 ; ret_this_analysis=${?} ; }
-        ret_this=$(first_nonzero "${ret_this}" "${ret_this_qc}" "${ret_this_analysis}")
+        # each analysis on its own, to check that it brings all the tasks it needs
+        [[ "${ret_this}" == "0" ]] && { ${O2DPG_ROOT}/MC/analysis_testing/o2dpg_analysis_test_workflow.py -f AO2D.root --is-mc --split-analyses -a AnalysisSplit -o workflow_analysis_split.json >> ${LOG_FILE_WF} 2>&1 && \
+                                        ${O2DPG_ROOT}/MC/bin/o2_dpg_workflow_runner.py -f workflow_analysis_split.json --cpu-limit 8 ${memlimit} -k >> ${LOG_FILE_WF} 2>&1 ; ret_this_analysis_split=${?} ; }
+        ret_this=$(first_nonzero "${ret_this}" "${ret_this_qc}" "${ret_this_analysis}" "${ret_this_analysis_split}")
         [[ "${ret_this}" != "0" ]] && echo "[FATAL]: O2DPG_TEST Workflow execution failed" >> ${LOG_FILE_WF} || echo_green " -> PASSED"
     else
         echo_green " -> PASSED"
