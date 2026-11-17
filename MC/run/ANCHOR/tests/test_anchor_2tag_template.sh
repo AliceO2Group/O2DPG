@@ -44,6 +44,8 @@ export ALIEN_JDL_ADDTIMESERIESINMC=0
 export DISABLE_QC=1
 export ALIEN_JDL_MC_ORBITS_PER_TF=10000:10000000:2 # puts just 2 orbit for large enough interaction rates
 export ALIEN_JDL_O2DPGWORKFLOWTARGET="aod"
+# run the AnalysisQC on the produced AO2D
+export ALIEN_JDL_RUNANALYSISQC=1
 
 # select anchoring points
 export PRODSPLIT=${ALIEN_O2DPG_GRIDSUBMIT_PRODSPLIT:-100}
