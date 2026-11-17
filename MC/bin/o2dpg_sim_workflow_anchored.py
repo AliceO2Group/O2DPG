@@ -707,6 +707,9 @@ def main():
        if determined_orbits != -1:
          print("Adjusting orbitsPerTF from " + str(GLOparams["OrbitsPerTF"]) + " to " + str(determined_orbits))
          GLOparams["OrbitsPerTF"] = determined_orbits
+         # the ramp-up shift must be a multiple of the final orbitsPerTF
+         effective_run_start, effective_first_orbit = anchor_origin(run_start, GLOparams["FirstOrbit"], GLOparams["OrbitsPerTF"], ITS_rampup, args.timeframeID != -1)
+         mid_run_timestamp = (effective_run_start + run_end) // 2
 
     # determine timestamp, and production offset for the final MC job to run
     timestamp = 0
@@ -807,7 +810,8 @@ def main():
                               Col = ColSystem,
                               IntRate =rate,
                               RunNumber = args.run_number,
-                              OrbitsPerTF = GLOparams["OrbitsPerTF"])
+                              OrbitsPerTF = GLOparams["OrbitsPerTF"],
+                              FirstOrbitMC = effective_first_orbit)
             publish_MCProdInfo(info, username = grid_user_name, ccdb_url = mcprod_ccdb_server)
           else:
             print("No production tag or GRID user name known. Not publishing MCProdInfo")
