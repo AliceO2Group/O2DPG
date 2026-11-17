@@ -62,6 +62,7 @@ print_help()
   echo "ALIEN_O2DPG_FILEGRAPH=FILE, delete intermediate files early, using a FileIOGraph report"
   echo "ALIEN_O2DPG_RESOURCES=FILE, use resource estimates learned by a pilot run instead of sampling them"
   echo "DISABLE_QC, set this to disable QC, e.g. to 1"
+  echo "ALIEN_JDL_RUNANALYSISQC=1, run the AnalysisQC on the produced AO2D (needs O2Physics in the environment)"
   echo "CYCLE, to set a cycle number different than 0"
   echo "NSIGEVENTS, to enforce a specific upper limit of events in a timeframe (not counting orbit-early) events"
 }
@@ -349,6 +350,15 @@ remainingargs="${remainingargs} -productionTag ${ALIEN_JDL_LPMPRODUCTIONTAG:-ali
 # prepend(!) ALIEN_JDL_ANCHOR_SIM_OPTIONS
 # since the last passed argument wins, e.g. -productionTag cannot be overwritten by the user
 remainingargs="${ALIEN_JDL_ANCHOR_SIM_OPTIONS} ${remainingargs} --anchor-config config-json.json"
+# AnalysisQC on the produced AO2D
+if [[ "${ALIEN_JDL_RUNANALYSISQC}" == "1" ]]; then
+  if [[ -n "${O2PHYSICS_ROOT}" ]]; then
+    remainingargs="${remainingargs} --include-analysis"
+  else
+    echo_info "ALIEN_JDL_RUNANALYSISQC=1 but O2Physics is not loaded, not running AnalysisQC"
+    unset ALIEN_JDL_RUNANALYSISQC
+  fi
+fi
 # apply software tagging choice
 # remainingargs="${remainingargs} ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG:+--alternative-reco-software ${ALIEN_JDL_O2DPG_ASYNC_RECO_TAG}}"
 ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE=${ALIEN_JDL_O2DPG_ASYNC_RECO_FROMSTAGE:-RECO}
@@ -411,6 +421,10 @@ else
    if [[ -z "${DISABLE_QC}" && "${remainingargs}" == *"--include-local-qc"* ]]; then
      targetString="${targetString} '^.*QC.*'" # QC tasks should have QC in the name
    fi
+fi
+# -) AnalysisQC tasks, without the QCDB upload tasks
+if [[ "${ALIEN_JDL_RUNANALYSISQC}" == "1" ]]; then
+  targetString="${targetString} '^Analysis_(?!finalize_).*'"
 fi
 echo_info "Workflow will run with target specification ${targetString}"
 
