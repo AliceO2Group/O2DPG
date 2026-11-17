@@ -811,6 +811,7 @@ def main():
                               IntRate =rate,
                               RunNumber = args.run_number,
                               OrbitsPerTF = GLOparams["OrbitsPerTF"],
+                              McTag = os.getenv("ALIEN_JDL_PACKAGES"),
                               FirstOrbitMC = effective_first_orbit)
             publish_MCProdInfo(info, username = grid_user_name, ccdb_url = mcprod_ccdb_server)
           else:

@@ -1,6 +1,7 @@
 import json
 import os
 import requests
+import urllib.parse
 import subprocess
 
 import dataclasses # to define the MCProdInfo data layout and convert it to dict
@@ -22,6 +23,7 @@ class MCProdInfo:
     Comment: Optional[str] = None
     McTag: Optional[str] = None # main software tag used 
     RecoTag: Optional[str] = None # RecoTag (if any)
+    FirstOrbitMC: Optional[int] = None # first orbit used by the MC; its TFs start at FirstOrbitMC + k * OrbitsPerTF
     Hash: Optional[str] = field(default=None)
 
     def __post_init__(self):
@@ -87,7 +89,9 @@ def query_mcprodinfo(base_url, user, run_number, lpm_prod_tag, cert_dir="/tmp"):
     url = f"{base_url}/browse/{user_path}/MCProdInfo/{lpm_prod_tag}/{start}/{stop}"
 
     response = requests.get(url, cert=(cert_path, key_path), verify=False)
-    if response.status_code != 404:
+    if response.status_code not in (200, 404):
+        raise RuntimeError(f"CCDB query {url} failed with HTTP {response.status_code}")
+    if response.status_code == 200:
         meta = extract_metadata_blocks_from_CCDB(response.content.decode('utf-8'))
         if (len(meta) > 0):
           def filter_known_fields(cls, data: dict) -> dict:
@@ -95,6 +99,9 @@ def query_mcprodinfo(base_url, user, run_number, lpm_prod_tag, cert_dir="/tmp"):
             return {k: v for k, v in data.items() if k in valid_keys}
         
           clean_meta = filter_known_fields(MCProdInfo, meta[0])
+          # an object may lack fields that are required here (not every writer sets all of them)
+          for f in fields(MCProdInfo):
+            clean_meta.setdefault(f.name, None)
           return MCProdInfo(**clean_meta)
        
     return None
@@ -127,7 +134,8 @@ def upload_mcprodinfo_meta(base_url, user, run_number, lpm_prod_tag, keys, cert_
        key_path = os.path.join(cert_dir, f"tokenkey_{uid}.pem")
     
     # Build full URL
-    query = "/".join(f"{k}={v}" for k, v in keys.items())
+    optional = {f.name for f in fields(MCProdInfo) if f.default is not dataclasses.MISSING}
+    query = "/".join(f"{k}={urllib.parse.quote(str(v), safe='@:,')}" for k, v in keys.items() if v is not None or k not in optional)
     user_path = 'Users/' + user[0] + '/' + user
     start = run_number
     stop = run_number + 1 
@@ -153,8 +161,28 @@ def publish_MCProdInfo(mc_prod_info, ccdb_url = "https://alice-ccdb.cern.ch", us
        return
 
    # see if this already has meta-data uploaded, otherwise do nothing
-   mc_prod_info_q = query_mcprodinfo(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag)
-   if mc_prod_info_q == None or force_overwrite == True:
+   try:
+     mc_prod_info_q = query_mcprodinfo(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag)
+   except (RuntimeError, requests.RequestException) as e:
+     print(f"Not publishing MCProdInfo, the existing one could not be read: {e}")
+     return None
+   # optional fields the writer leaves empty (e.g. FirstOrbitMC for the harvester) keep their stored values
+   if mc_prod_info_q != None:
+     kept = {f.name: getattr(mc_prod_info_q, f.name) for f in fields(MCProdInfo)
+             if f.name != "Hash" and f.default is not dataclasses.MISSING
+             and getattr(mc_prod_info, f.name) == None and getattr(mc_prod_info_q, f.name) != None}
+     if kept:
+       mc_prod_info = dataclasses.replace(mc_prod_info, Hash = None, **kept)
+   # a stored first orbit is never replaced, since it describes the data already produced for this run;
+   # only force_overwrite (e.g. mcprodinfo_firstorbit.py apply) replaces it
+   stored_first_orbit = mc_prod_info_q.FirstOrbitMC if mc_prod_info_q != None else None
+   if stored_first_orbit != None and mc_prod_info.FirstOrbitMC != None and stored_first_orbit != mc_prod_info.FirstOrbitMC:
+     action = "overwriting it (forced)" if force_overwrite else "keeping the stored value"
+     print(f"WARNING: MCProdInfo of {mc_prod_info.LPMProductionTag} run {mc_prod_info.RunNumber} has FirstOrbitMC {stored_first_orbit}, "
+           f"this job uses {mc_prod_info.FirstOrbitMC}; its timeframes will be misaligned in analysis. {action}")
+   # publish when there is no object yet, or when the stored one lacks the first orbit
+   adds_first_orbit = mc_prod_info_q != None and stored_first_orbit == None and mc_prod_info.FirstOrbitMC != None
+   if mc_prod_info_q == None or force_overwrite == True or adds_first_orbit:
     # could make this depend on hash values in future
-    upload_mcprodinfo_meta(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag, dataclasses.asdict(mc_prod_info))
+    return upload_mcprodinfo_meta(ccdb_url, username, mc_prod_info.RunNumber, mc_prod_info.LPMProductionTag, dataclasses.asdict(mc_prod_info))
 
