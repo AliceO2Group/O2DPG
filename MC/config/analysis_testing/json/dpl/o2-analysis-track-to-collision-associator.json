@@ -3,7 +3,7 @@
         "nSigmaForTimeCompat": "4",
         "timeMargin": "500",
         "setTrackSelections": "1",
-        "usePVAssociation": "true",
+        "usePVAssociation": "1",
         "includeUnassigned": "true",
         "fillTableOfCollIdsPerTrack": "false",
         "bcWindowForOneSigma": "60",
