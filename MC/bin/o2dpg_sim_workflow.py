@@ -1996,10 +1996,10 @@ for tf in range(1, NTIMEFRAMES + 1):
      if isActive("MFT") and not staggMFT:
        for flp in range(5):
          addQCPerTF(taskName='mftDigitsQC' + str(flp),
-                  needs=[getDigiTaskName("MFT")],
-                  readerCommand='o2-qc-mft-digits-root-file-reader --mft-digit-infile=mftdigits.root' + staggMFT,
-                  configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-digits-' + str(flp) + '.json',
-                  objectsFile='mftDigitsQC.root')
+                    needs=[getDigiTaskName("MFT")],
+                    readerCommand='o2-itsmft-digit-reader-workflow --runmft --disable-mc --suppress-triggers-output --mft-digit-infile mftdigits.root' + staggMFT,
+                    configFilePath='json://${O2DPG_ROOT}/MC/config/QC/json/mft-digits-' + str(flp) + '.json',
+                    objectsFile='mftDigitsQC.root')
        addQCPerTF(taskName='mftClustersQC',
                 needs=[MFTRECOtask['name']],
                 readerCommand='o2-global-track-cluster-reader --track-types none --cluster-types MFT' + staggMFT,
