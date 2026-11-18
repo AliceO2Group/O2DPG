@@ -1,0 +1,21 @@
+{
+  "comment": "Single monopoles, flat in pT and eta: the configuration to use for acceptance and tracking studies. Matching transport keys: G4.monopole=1;G4.monopoleMass=50;G4.monopoleMagneticCharge=1",
+  "mode": "single",
+  "verbose": 1,
+  "nParticles": { "dist": "uniform", "min": 1, "max": 4, "integer": true },
+  "particle": {
+    "species": "symm",
+    "mass": 50.0,
+    "magneticCharge": 1.0,
+    "chargeSign": "random"
+  },
+  "kinematics": {
+    "pt": { "dist": "uniform", "min": 1.0, "max": 100.0 },
+    "eta": { "dist": "uniform", "min": -0.9, "max": 0.9 },
+    "phi": { "dist": "uniform", "min": 0.0, "max": 6.283185307179586 }
+  },
+  "transport": {
+    "check": true,
+    "onMismatch": "fatal"
+  }
+}
