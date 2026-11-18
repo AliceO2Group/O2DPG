@@ -1,0 +1,33 @@
+{
+  "comment": "Every configurable parameter in one file. The mass is drawn once per run from a weighted list (the transport knows a single mass, so sampleOnce is mandatory for anything but a fixed value); a seed-dependent drawn-once value cannot be known before the run, so prefer a fixed mass for production and derive the transport keys with MonopolesTransportKeys(). The energy range has to be compatible with every mass the list can give: etot >= mass*cosh(y) must have a solution, otherwise the generator stops.",
+  "mode": "schwinger",
+  "verbose": 1,
+  "generatorId": 7,
+  "nPairs": { "dist": "poisson", "mean": 1.5, "min": 1 },
+  "particle": {
+    "species": "asymm",
+    "mass": { "values": [100.0, 200.0, 500.0], "weights": [2, 1, 1], "sampleOnce": true },
+    "magneticCharge": { "value": 3.0 }
+  },
+  "kinematics": {
+    "etot": { "dist": "formula", "formula": "x*x*exp(-x/200.)", "min": 500.0, "max": 4000.0 },
+    "y": { "dist": "gaus", "mean": 0.0, "sigma": 1.5, "min": -4.0, "max": 4.0 },
+    "phi": { "dist": "uniform", "min": 0.0, "max": 6.283185307179586 }
+  },
+  "vertex": {
+    "x": { "dist": "gaus", "mean": 0.0, "sigma": 0.01 },
+    "y": { "dist": "gaus", "mean": 0.0, "sigma": 0.01 },
+    "z": { "dist": "uniform", "min": -5.0, "max": 5.0 },
+    "t": 0.0,
+    "perObject": false
+  },
+  "pairRecoil": {
+    "pt": { "dist": "exp", "tau": 0.5, "max": 5.0 },
+    "pz": { "dist": "gaus", "mean": 0.0, "sigma": 1.0 }
+  },
+  "transport": {
+    "check": true,
+    "onMismatch": "warn",
+    "tolerance": 1e-4
+  }
+}

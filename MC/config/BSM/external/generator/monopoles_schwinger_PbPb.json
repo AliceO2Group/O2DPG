@@ -1,0 +1,20 @@
+{
+  "comment": "Schwinger monopole-antimonopole pair production in PbPb, reproducing PbPb_MMs_mass100GeV_g1_N1000000.hepmc. Matching transport keys: G4.monopole=1;G4.monopoleMass=100;G4.monopoleMagneticCharge=1",
+  "mode": "schwinger",
+  "verbose": 1,
+  "nPairs": 1,
+  "particle": {
+    "species": "symm",
+    "mass": 100.0,
+    "magneticCharge": 1.0
+  },
+  "kinematics": {
+    "p": { "dist": "thermal", "temperature": 18.37 },
+    "costheta": { "dist": "uniform", "min": -1.0, "max": 1.0 },
+    "phi": { "dist": "uniform", "min": 0.0, "max": 6.283185307179586 }
+  },
+  "transport": {
+    "check": true,
+    "onMismatch": "fatal"
+  }
+}
