@@ -988,7 +988,7 @@ for tf in range(1, NTIMEFRAMES + 1):
        if eventOffset == None:
         eventOffset = 0
        cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/InitHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(eventOffset) + ');'
-     elif tf > 1:
+     else:
        # determine the skip number
        cmd = 'export HEPMCEVENTSKIP=$(${O2DPG_ROOT}/UTILS/ReadHepMCEventSkip.sh ../HepMCEventSkip.json ' + str(tf) + ');'
      SGNGENtask['cmd'] = cmd

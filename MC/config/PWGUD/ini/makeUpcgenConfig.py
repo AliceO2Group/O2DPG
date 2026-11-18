@@ -27,13 +27,8 @@ parser.add_argument('--output', default='GenUpcgen.ini',
 
 args = parser.parse_args()
 
-if 'PbPb' in args.collType:
-    pZ = 82
-    pA = 208
-
-if 'OO' in args.collType:
-    pZ = 8
-    pA = 16
+# (projectile Z, A) for each collision system
+pZ, pA = {'PbPb': (82, 208), 'OO': (8, 16)}[args.collType]
 
 ### open output file
 fout = open(args.output, 'w')
