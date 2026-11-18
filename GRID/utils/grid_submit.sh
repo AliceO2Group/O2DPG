@@ -25,7 +25,7 @@ function per() { printf "\033[31m$1\033[m\n" >&2; }
 function pok() { printf "\033[32m$1\033[m\n" >&2; }
 function banner() { echo ; echo ==================== $1 ==================== ; }
 
-function Usage() { echo "$0 --script scriptname | -c WORKDIR_RELATIVE_TO_TOP [ --jobname JOBNAME ] [ --topworkdir WORKDIR (ON TOP OF HOME) ] "; }
+function Usage() { echo "$0 --script scriptname | -c WORKDIR_RELATIVE_TO_TOP [ --jobname JOBNAME ] [ --topworkdir WORKDIR (ON TOP OF HOME) ] [ --price PRICE (JDL Price, i.e. job priority; overrides #JDL_PRICE) ] "; }
 
 notify_mattermost() {
   set +x
@@ -219,6 +219,7 @@ while [ $# -gt 0 ] ; do
         --wait-any) WAITFORALIENANY=ON; WAITFORALIEN=ON; shift 1 ;; #wait for any good==done alien jobs to return
         --outputspec) OUTPUTSPEC=$2; shift 2 ;; #provide comma separate list of JDL file specs to be put as part of JDL Output field (example '"*.log@disk=1","*.root@disk=2"')
         --split-on-collection) DATACOLLECTION=$2; shift 2 ;; # this will split the jobs on InputDataCollection and "file" mode
+        --price) PRICESPEC=$2; shift 2 ;; # JDL Price (job priority; higher starts sooner). Overrides a #JDL_PRICE= preamble. Not set means the AliEn default.
         --inputfile) INPUTFILES+=("$2"); shift 2 ;; # extra file to pre-stage via JDL InputFile (repeatable). Accepts a bare LFN or "LF:<lfn>". Staged by AliEn before the job starts, so it is NOT charged to job CPU/walltime (unlike an in-job 'alien.py cp').
         -h) Usage ; exit ;;
         --help) Usage ; exit ;;
@@ -325,6 +326,16 @@ if [[ "${IS_ALIEN_JOB_SUBMITTER}" ]]; then
   [[ ! ${IMAGESPEC} ]] && IMAGESPEC=$(grep "^#JDL_IMAGE=" ${SCRIPT} | sed 's/#JDL_IMAGE=//')
   echo "Found Container Image to be ${IMAGESPEC}"
 
+  # -) Price (job priority)
+  [[ ! ${PRICESPEC} ]] && PRICESPEC=$(grep "^#JDL_PRICE=" ${SCRIPT} | sed 's/#JDL_PRICE=//')
+  if [ "${PRICESPEC}" ]; then
+    if [[ ! ${PRICESPEC} =~ ^[0-9]+([.][0-9]+)?$ ]] || ! awk -v p="${PRICESPEC}" 'BEGIN { exit !(p > 0) }'; then
+      per "JDL Price must be a positive number (got '${PRICESPEC}')"
+      exit 1
+    fi
+    echo "Found Price to be ${PRICESPEC}"
+  fi
+
   # -) Requirements-Spec
   REQUIRESPEC=$(grep "^#JDL_REQUIRE=" ${SCRIPT} | sed 's/#JDL_REQUIRE=//')
   if [ ! "${REQUIRESPEC}" ]; then
@@ -397,6 +408,7 @@ EOF
   [ $ERROROUTPUTSPEC ] && echo "OutputErrorE = {"${ERROROUTPUTSPEC}"};" >> "${MY_JOBNAMEDATE}.jdl"   # add error output files
   [ $IMAGESPEC ] && echo "DebugTag = {\"${IMAGESPEC}\"};" >> "${MY_JOBNAMEDATE}.jdl"   # use special singularity image to run job
   # echo "Requirements = {"${REQUIREMENTSSPEC}"} >> "${MY_JOBNAMEDATE}.jdl"
+  [ "$PRICESPEC" ] && echo "Price = ${PRICESPEC};" >> "${MY_JOBNAMEDATE}.jdl"   # job priority (AliEn default when absent)
   [ "$REQUIRESPEC" ] && echo "Requirements = ${REQUIRESPEC}" >> "${MY_JOBNAMEDATE}.jdl"
 
 # "output_arch.zip:output/*@disk=2",
