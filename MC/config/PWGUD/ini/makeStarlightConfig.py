@@ -39,46 +39,18 @@ args = parser.parse_args()
 if args.nOOn:
     args.extraPars = 'BREAKUP_MODE = 4'
 
-if 'PbPb' in args.collType:
-    pZ = 82
-    pA = 208
-    tZ = 82
-    tA = 208
-if 'pPb' in args.collType:
-    pZ = 1
-    pA = 1
-    tZ = 82
-    tA = 208
-if 'Pbp' in args.collType:
-    pZ = 82
-    pA = 208
-    tZ = 1
-    tA = 1
-if 'pp' in args.collType:
-    pZ = 1
-    pA = 1
-    tZ = 1
-    tA = 1
-if 'OO' in args.collType:
-    pZ = 8
-    pA = 16
-    tZ = 8
-    tA = 16
-if 'pO' in args.collType:
-    pZ = 1
-    pA = 1
-    tZ = 8
-    tA = 16
-if 'Op' in args.collType:
-    pZ = 8
-    pA = 16
-    tZ = 1
-    tA = 1
-if 'NeNe' in args.collType:
-    pZ = 10
-    pA = 20
-    tZ = 10
-    tA = 20
+# (projectile Z, A, target Z, A) for each collision system
+beams = {
+    'PbPb': (82, 208, 82, 208),
+    'pPb':  (1, 1, 82, 208),
+    'Pbp':  (82, 208, 1, 1),
+    'pp':   (1, 1, 1, 1),
+    'OO':   (8, 16, 8, 16),
+    'pO':   (1, 1, 8, 16),
+    'Op':   (8, 16, 1, 1),
+    'NeNe': (10, 20, 10, 20),
+}
+pZ, pA, tZ, tA = beams[args.collType]
 
 ### open output file
 fout = open(args.output, 'w')

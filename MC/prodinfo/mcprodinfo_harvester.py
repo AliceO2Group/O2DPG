@@ -82,6 +82,7 @@ def extract_from_zip(local_zip_path):
 
 def build_info(prod_tag, run_number, wf_data, env_vars):
     meta=wf_data.get("meta")
+    int_rate = col_system = orbits_per_tf = None
     if meta != None:
         int_rate = meta.get("interactionRate")
         col_system = meta.get("col")
