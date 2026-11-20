@@ -45,7 +45,14 @@ public:
   void setVerbose(bool v) { mVerbose = v; }
 
   protected:
-
+  Bool_t Init() override
+  {
+    addSubGenerator(0, "Minimum bias");
+    addSubGenerator(1, "Like-sign dimuon injected");
+    GeneratorPythia8::Init();
+    pythiaMBgen.init();
+    return true;
+  }
   Bool_t generateEvent() override
   {
     if (mGeneratedEvents % mInverseTriggerRatio == 0) {
@@ -56,22 +63,17 @@ public:
         genOk = GeneratorPythia8::generateEvent();
         if (genOk) genOk = selectLikeSignDimuon(mPythia.event);
       }
+      notifySubGenerator(1);
     } else {
       // minimum-bias event from the independent generator
       bool genOk = false;
       pythiaMBgen.event.reset();
       while (!genOk) genOk = pythiaMBgen.next();
       mPythia.event = pythiaMBgen.event;
+      notifySubGenerator(0);
     }
     mGeneratedEvents++;
     if (mVerbose) mOutputEvent.list();
-    return true;
-  }
-
-  Bool_t Init() override
-  {
-    GeneratorPythia8::Init();
-    pythiaMBgen.init();
     return true;
   }
 
