@@ -1,5 +1,6 @@
 int External()
 {
+  const int ratioTrigger = 1./3;
   std::string path{"o2sim_Kine.root"};
   TFile file(path.c_str(), "READ");
   if (file.IsZombie()) {
@@ -11,60 +12,76 @@ int External()
   std::vector<o2::MCTrack>* tracks{};
   tree->SetBranchAddress("MCTrack", &tracks);
 
-  int nMuons{};
-  int nMuonsInAcc{};
-  int nMuonsToBeDone{};
-  int nLikeSignPairs{};
-  int nLikeSignPairsInAcc{};
-  int nLikeSignPairsToBeDone{};
+  o2::dataformats::MCEventHeader* eventHeader = nullptr;
+  tree->SetBranchAddress("MCEventHeader.", &eventHeader);
+
   int nEvents = tree->GetEntries();
+  int nEventsMB = 0;
+  int nEventsSignal = 0;
+  int nEventsWithLSM = 0;
+  int nMuonsInAcceptance = 0;
+  int nLSMPairs = 0;
 
   for (int i = 0; i < nEvents; i++) {
     tree->GetEntry(i);
-    int nPos = 0, nNeg = 0;
-    int nPosAcc = 0, nNegAcc = 0;
-    int nPosToBeDone = 0, nNegToBeDone = 0;
+    if (eventHeader->hasInfo(o2::mcgenid::GeneratorProperty::SUBGENERATORID)) {
+      bool isValid = false;
+      int subGeneratorId = eventHeader->getInfo<int>(
+        o2::mcgenid::GeneratorProperty::SUBGENERATORID, isValid);
+        if (subGeneratorId == 0) {
+          nEventsMB++;
+        } else if (subGeneratorId == 1) {
+          nEventsSignal++;
+        }
+    }
 
-    for (auto& track : *tracks) {
-      int pdg = track.GetPdgCode();
-      if (std::abs(pdg) != 13) continue;
+    std::vector<int> muonPDGs;
+    for (const auto& track : *tracks) {
+      if (std::abs(track.GetPdgCode()) != 13) {
+        continue;
+      }
       double y = track.GetRapidity();
-      bool inAcc = (y > -4.3 && y < -2.2);
-      bool toBeDone = track.getToBeDone();
-
-      if (pdg == -13) { // mu+
-        nPos++;
-        if (inAcc) nPosAcc++;
-        if (toBeDone) nPosToBeDone++;
-      } else { // mu-
-        nNeg++;
-        if (inAcc) nNegAcc++;
-        if (toBeDone) nNegToBeDone++;
+      if (y > -4.3 && y < -2.2) {
+        muonPDGs.push_back(track.GetPdgCode());
+        nMuonsInAcceptance++;
       }
     }
-    nMuons += nPos + nNeg;
-    nMuonsInAcc += nPosAcc + nNegAcc;
-    nMuonsToBeDone += nPosToBeDone + nNegToBeDone;
-
-    nLikeSignPairs += nPos * (nPos - 1) / 2 + nNeg * (nNeg - 1) / 2;
-    nLikeSignPairsInAcc += nPosAcc * (nPosAcc - 1) / 2 + nNegAcc * (nNegAcc - 1) / 2;
-    nLikeSignPairsToBeDone += nPosToBeDone * (nPosToBeDone - 1) / 2 + nNegToBeDone * (nNegToBeDone - 1) / 2;
+    if (muonPDGs.size() < 2) {
+      continue;
+    }
+    int nLsmPairsEvent = 0;
+    for (size_t j = 0; j < muonPDGs.size(); j++) {
+      for (size_t k = j + 1; k < muonPDGs.size(); k++) {
+        if (muonPDGs[j] * muonPDGs[k] > 0) {
+          nLsmPairsEvent++;
+        }
+      }
+    }
+    if (nLsmPairsEvent > 0) {
+      nEventsWithLSM++;
+      nLSMPairs += nLsmPairsEvent;
+    }
   }
 
   std::cout << "#events: " << nEvents << "\n"
-            << "#muons: " << nMuons << "\n"
-            << "#muons in acceptance: " << nMuonsInAcc << "\n"
-            << "#muons to be done: " << nMuonsToBeDone << "\n"
-            << "#like-sign muon pairs: " << nLikeSignPairs << "\n"
-            << "#like-sign muon pairs in acceptance: " << nLikeSignPairsInAcc << "\n"
-            << "#like-sign muon pairs to be done: " << nLikeSignPairsToBeDone << "\n";
+            << "#minimum bias events: " << nEventsMB << "\n"
+            << "#trigger events: " << nEventsSignal << "\n"
+            << "#events with like-sign muons: " << nEventsWithLSM << "\n"
+            << "#muons in acceptance: " << nMuonsInAcceptance << "\n"
+            << "#like-sign dimuon pairs in acceptance: " << nLSMPairs << "\n";
 
-  if (nLikeSignPairs == 0) {
+  if (nLSMPairs == 0) {
     std::cerr << "Number of like-sign muon pairs should be greater than 0.\n";
     return 1;
   }
-  if (nLikeSignPairs != nLikeSignPairsToBeDone) {
-    std::cerr << "The number of muon pairs should be the same as the number of muon pairs which should be transported.\n";
+  if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.95 ||
+      nEventsMB > nEvents * (1 - ratioTrigger) * 1.05) { // we put some tolerance since the number of generated events is small
+    std::cerr << "Number of generated MB events different than expected\n";
+    return 1;
+  }
+  if (nEventsSignal < nEvents * ratioTrigger * 0.95 ||
+      nEventsSignal > nEvents * ratioTrigger * 1.05) {
+    std::cerr << "Number of generated events injected different than expected\n";
     return 1;
   }
 
