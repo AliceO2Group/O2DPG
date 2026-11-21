@@ -610,7 +610,7 @@ else
 fi
 
 # fetch the global alignment geometry
-${{O2_ROOT}}/bin/o2-create-aligned-geometry-workflow ${{ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after $ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}} \
+${{O2_ROOT}}/bin/o2-create-aligned-geometry-workflow --condition-not-after {args.condition_not_after} \
       --configKeyValues "HBFUtils.startTime={args.timestamp}" -b --run ${{REMAP_OPT}}
 
 # copy the object into the CCDB cache
