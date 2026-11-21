@@ -315,11 +315,11 @@ if [[ ! -f workflowconfig.log ]]; then
   echo "Workflowconfig.log file not found"
   exit 1
 fi
-# each reco step must have its workflow printout, otherwise the MC would run without the anchored reco settings
+# each reco step must have its complete workflow printout (ending with o2-dpl-run), otherwise the MC would run without the anchored reco settings
 NRECOSTEPS=$(grep -c "^Step [0-9])" workflowconfig.log)
 [[ ${NRECOSTEPS} -eq 0 ]] && NRECOSTEPS=1
-if [[ $(grep -c "#Workflow command" workflowconfig.log) -lt ${NRECOSTEPS} ]]; then
-  echo_error "workflowconfig.log does not contain the reco workflow of every step. Exiting."
+if [[ $(grep -c "#Workflow command" workflowconfig.log) -lt ${NRECOSTEPS} || $(grep -c "^o2-dpl-run " workflowconfig.log) -lt ${NRECOSTEPS} ]]; then
+  echo_error "workflowconfig.log does not contain the complete reco workflow of every step. Exiting."
   exit 1
 fi
 
