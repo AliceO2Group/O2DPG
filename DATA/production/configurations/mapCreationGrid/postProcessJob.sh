@@ -230,13 +230,27 @@ cmd="(time root.exe -b -q -l -x '${QA_MACRO_PATH}+Og(\"ls ${OUTPUT_MAP_SMOOTH}\"
 echo "$(date) ${cmd}"
 eval "${cmd}" || echo "WARNING: voxResQA.C failed for this slot -- QA plots will be missing, but this doesn't affect ${OUTPUT_MAP_SMOOTH} itself" >&2
 
+# voxResQA.C names its c1D/c2D canvases (and so their PNGs) "c1D_<fileIDName><QA_SUFFIX>", where
+# fileIDName is derived from the input file name and just repeats what QA_SUFFIX already says. That
+# pushes the full LFN (OutputDir + file name) past AliEn's 255-character limit for two-digit TD
+# indices: upload succeeds, catalogue registration fails, and the subjob ends in ERROR_SV. Drop the
+# redundant part, same naming as cdXZvsRow<QA_SUFFIX>.png.
+for prefix in c1D c2D; do
+  for png in "${prefix}"_*"${QA_SUFFIX}.png"; do
+    [[ -f "${png}" ]] && mv -f "${png}" "${prefix}${QA_SUFFIX}.png"
+  done
+done
+
 QA_FILE_1D="voxResQA${QA_SUFFIX}_1D.root"
 QA_FILE_2D="voxResQA${QA_SUFFIX}_2D.root"
 
 # --- [2/2] Final O2 FastTransform ---
 OUTPUT_FT="FT_${OUTPUT_MAP_SMOOTH}"
 
-cmd="(time root.exe -b -q -l -x '${FASTTRANSFORM_MACRO_PATH}+Og(\"${OUTPUT_MAP_SMOOTH}\", \"${OUTPUT_FT}\", ${USE_SMOOTHED}, ${USE_CTP_LUMI})')"
+# One thread: the job requests a single core (submitPostProcess.sh --cores 1), and the macro's default is
+# nThreads=8. invertSigns/meanIDC/meanCTP/debug are passed only to reach nThreads, at the macro's defaults.
+FT_NTHREADS=1
+cmd="(time root.exe -b -q -l -x '${FASTTRANSFORM_MACRO_PATH}+Og(\"${OUTPUT_MAP_SMOOTH}\", \"${OUTPUT_FT}\", ${USE_SMOOTHED}, ${USE_CTP_LUMI}, true, 0, 0, 0, ${FT_NTHREADS})')"
 echo "$(date) ${cmd}"
 eval "${cmd}"
 
@@ -254,6 +268,71 @@ if ! alien.py cp -f "file:${OUTPUT_FT}" "${ALIEN_OUTPUT_DIR}/${OUTPUT_FT}"; then
   exit 1
 fi
 echo "Staged ${OUTPUT_FT} to ${ALIEN_OUTPUT_DIR}"
+
+# --- Per-slot metadata (mapMeta.txt): one key=value per line, for downstream bookkeeping without opening
+# any ROOT file. Rates are read from the SMOOTHED map's UserInfo (the stage-1 map still carries the
+# meanIDC/medianIDC=0 placeholders; SmoothingExtrapolate.C joins in the real values), timestamps are the
+# manifest window (same values as in the file names; 0 0 for MC), fill number from GLO/Config/GRPLHCIF at
+# the window start (for MC at the map's meanTimeMS, i.e. the anchor run). Written after the FT is staged, so a mapMeta.txt never points at an FT that doesn't exist.
+# Generated inline rather than shipped as a separate .C: grid_submit.sh only ships this one script.
+# Non-fatal, like stage1Source.txt -- bookkeeping, not a deliverable.
+MAP_META_FILE="mapMeta.txt"
+cat > writeMapMeta.C <<'EOF'
+#include <fstream>
+#include <string>
+#include "TFile.h"
+#include "TTree.h"
+#include "TList.h"
+#include "CCDB/BasicCCDBManager.h"
+#include "DataFormatsParameters/GRPLHCIFData.h"
+
+void writeMapMeta(const char* mapFile, const char* outFile, const char* stage1, const char* stage2, long tsStart, long tsEnd)
+{
+  TFile f(mapFile);
+  TTree* t = nullptr;
+  f.GetObject("voxResTree", t);
+  TList* userInfo = t ? t->GetUserInfo() : nullptr;
+  auto get = [userInfo](const char* key) {
+    auto* o = userInfo ? userInfo->FindObject(key) : nullptr;
+    return o ? std::string(o->GetTitle()) : std::string("NA");
+  };
+
+  auto& ccdbmgr = o2::ccdb::BasicCCDBManager::instance();
+  ccdbmgr.setURL("http://alice-ccdb.cern.ch");
+  ccdbmgr.setFatalWhenNull(false);
+  // MC windows are 0 0 (no time label); the CCDB at timestamp 0 returns the first GRPLHCIF ever stored,
+  // i.e. a wrong fill. Use the map's mean time (the anchor run's) instead, and -1 if that is missing too.
+  long tsFill = tsStart;
+  if (tsFill <= 0) {
+    const std::string meanTime = get("meanTimeMS");
+    tsFill = (meanTime == "NA") ? 0 : std::stol(meanTime);
+  }
+  auto* grpLHC = (tsFill > 0) ? ccdbmgr.getForTimeStamp<o2::parameters::GRPLHCIFData>("GLO/Config/GRPLHCIF", tsFill) : nullptr;
+  const int fill = grpLHC ? grpLHC->getFillNumber() : -1;
+
+  std::ofstream out(outFile);
+  out << "stage1=" << stage1 << "\n"
+      << "stage2=" << stage2 << "\n"
+      << "meanIDC=" << get("meanIDC") << "\n"
+      << "medianIDC=" << get("medianIDC") << "\n"
+      << "meanCTP=" << get("meanCTP") << "\n"
+      << "medianCTP=" << get("medianCTP") << "\n"
+      << "tsStart=" << tsStart << "\n"
+      << "tsEnd=" << tsEnd << "\n"
+      << "fill=" << fill << "\n";
+}
+EOF
+cmd="root.exe -b -q -l -x 'writeMapMeta.C+(\"${OUTPUT_MAP_SMOOTH}\", \"${MAP_META_FILE}\", \"${STAGE1_OUTPUT_LOCATION}/${STAGE1_OUTPUT_FILE}\", \"${ALIEN_OUTPUT_DIR}/${OUTPUT_FT}\", ${firstTSIter}, ${lastTSIter})'"
+echo "$(date) ${cmd}"
+if eval "${cmd}" && [[ -s "${MAP_META_FILE}" ]]; then
+  cat "${MAP_META_FILE}"
+  alien.py cp -f "file:${MAP_META_FILE}" "${ALIEN_OUTPUT_DIR}/${MAP_META_FILE}" || \
+    echo "WARNING: failed to stage ${MAP_META_FILE} -- metadata only, not fatal" >&2
+else
+  echo "WARNING: writeMapMeta.C failed -- ${MAP_META_FILE} will be missing for this slot, not fatal" >&2
+fi
+# Same *.txt JDL_OUTPUT collision as stage1Source.txt above -- remove the local copy once staged.
+rm -f "${MAP_META_FILE}"
 
 # QA plots -- non-fatal staging, same reasoning as the non-fatal QA run itself above: if voxResQA.C
 # failed or produced nothing, there's nothing to stage, and that shouldn't fail this otherwise-good slot.

@@ -76,9 +76,34 @@ def parse_args(argv):
                         "including ones left from an earlier batch, which would be recalibrated from "
                         "scratch at hours per slot. Naming a run that has no lists is an error.")
     p.add_argument("--slot-length-min", type=float, default=0,
-                   help="target length of ONE map, in minutes. 0 = one window per run.")
+                   help="target length of ONE map, in minutes. 0 = one window per run. With --hybrid, "
+                        "this is the FINE length (see --hybrid).")
     p.add_argument("--overlap-margin-ms", type=int, default=1000,
                    help="a file whose label overlaps a window by <= this is not assigned to it")
+    p.add_argument("--hybrid", action="store_true",
+                   help="hybrid time sampling (pp): --slot-length-min windows for the first "
+                        "--fine-window-min minutes of each FILL, --slot-length-min-coarse windows for "
+                        "the rest of that fill. The cutoff is anchored to the FILL's start (earliest "
+                        "SOR among that fill's runs present under --lists-dir), not each run's own "
+                        "start -- a pp fill routinely spans several runs, and the space-charge "
+                        "build-up this targets is a fill-level effect. Needs a <run>.fillinfo.txt "
+                        "sidecar (one line, '<fill> <startTimestampMs>') next to every selected run's "
+                        "index, written by discoverResiduals.sh when its batch file carries the "
+                        "optional fill/SOR columns -- missing for a selected run is a hard error.")
+    p.add_argument("--slot-length-min-coarse", type=float, default=None,
+                   help="COARSE window length in minutes, for the part of a fill at or after "
+                        "--fine-window-min. Required with --hybrid (no default -- forces a deliberate "
+                        "choice); same '0 = one window' semantics as --slot-length-min, applied "
+                        "independently within the coarse region. Ignored without --hybrid.")
+    p.add_argument("--fine-window-min", type=float, default=60,
+                   help="duration of the fine-sampling window, in minutes, measured from the FILL's "
+                        "start. Only used with --hybrid.")
+    p.add_argument("--mc", action="store_true",
+                   help="MC input (discoverResiduals.sh --mc). MC residual files carry no time label, "
+                        "so there is nothing to window on: each run becomes ONE window holding all of "
+                        "its files, with bounds 0 0, which switches off staticMapCreatorCPM.C's per-TF "
+                        "time cut (it only applies for firstTFTime > 0). --slot-length-min is ignored; "
+                        "--hybrid is an error. A list with time-labelled (data) files is an error too.")
     p.add_argument("--window-lists", action="store_true",
                    help="also write one plain file list per window, for inspecting which files a "
                         "window got. OFF by default: on Lustre each is a metadata round trip and 120 "
@@ -105,13 +130,13 @@ def read_slot_files(index_path):
     return out
 
 
-def plan_windows(run_first, run_last, slot_ms, margin_ms):
-    """Whole steps of slot_ms across [run_first, run_last].
+def plan_windows_region(seg_first, seg_last, slot_ms, margin_ms):
+    """Whole steps of slot_ms across [seg_first, seg_last].
 
     A trailing remainder shorter than half a step is absorbed into the last window rather than left as
-    a runt that would fail minTracksPerSlice. Returns [(winFirst, winLast, effectiveMargin)].
+    a runt that would fail minTracksPerSlice. Returns [(winFirst, winLast, effectiveMargin, slot_ms)].
     """
-    span = run_last - run_first
+    span = seg_last - seg_first
     if slot_ms <= 0 or span <= 0:
         n_win = 1
     else:
@@ -122,21 +147,47 @@ def plan_windows(run_first, run_last, slot_ms, margin_ms):
     wins = []
     for w in range(n_win):
         if n_win == 1:
-            ws, we = run_first, run_last
+            ws, we = seg_first, seg_last
         else:
-            ws = run_first + w * slot_ms
-            we = run_last if w + 1 == n_win else run_first + (w + 1) * slot_ms - 1
+            ws = seg_first + w * slot_ms
+            we = seg_last if w + 1 == n_win else seg_first + (w + 1) * slot_ms - 1
         # Clamp the margin to a tenth of the window so a short window can never be emptied by it.
-        wins.append((ws, we, min(margin_ms, (we - ws) // 10)))
+        wins.append((ws, we, min(margin_ms, (we - ws) // 10), slot_ms))
     return wins
 
 
-def assign(paths, wins, run_first, slot_ms):
+def plan_windows(run_first, run_last, slot_ms, margin_ms, fine_cutoff_ts=None, slot_ms_coarse=None):
+    """Whole steps across [run_first, run_last]. Returns [(winFirst, winLast, effectiveMargin, slot_ms)].
+
+    Without fine_cutoff_ts this is exactly the old single-region behavior (one call to
+    plan_windows_region at slot_ms). With it, the run is split into up to two independent regions --
+    [run_first, cutoff) at slot_ms (FINE) and [cutoff, run_last] at slot_ms_coarse (COARSE) -- each
+    planned on its own, so each region's own short trailing remainder is absorbed into that region's
+    own last window and never crosses the fine/coarse boundary. cutoff is clamped into
+    [run_first, run_last + 1] so a run entirely before/after its fill's fine cutoff correctly collapses
+    to a single all-fine or all-coarse region instead of producing an empty one.
+    """
+    if fine_cutoff_ts is None:
+        return plan_windows_region(run_first, run_last, slot_ms, margin_ms)
+
+    cutoff = max(run_first, min(run_last + 1, fine_cutoff_ts))
+    wins = []
+    if cutoff > run_first:
+        wins += plan_windows_region(run_first, min(run_last, cutoff - 1), slot_ms, margin_ms)
+    if cutoff <= run_last:
+        wins += plan_windows_region(cutoff, run_last, slot_ms_coarse, margin_ms)
+    return wins
+
+
+def assign(paths, wins):
     """Fan every file out to the windows its label overlaps by more than that window's margin.
 
-    Only the windows a label can possibly touch are examined, derived directly from the label bounds,
-    rather than scanning all of them per file: with 10-minute labels and 5-minute windows that is 2-3
-    candidates instead of the whole run's worth. Returns (buckets, grazed, orphans).
+    Scans every window per file rather than deriving a candidate index range from a uniform stride:
+    with --hybrid, a run's windows are no longer an even step from run_first (the fine and coarse
+    regions each have their own slot_ms), so that arithmetic shortcut no longer applies. Windows per
+    run are few enough (order 10s-100s) for the brute-force scan to cost nothing measurable -- it also
+    collapses the hybrid and non-hybrid paths into one, simpler code to trust. Returns
+    (buckets, grazed, orphans).
     """
     n_win = len(wins)
     buckets = [[] for _ in range(n_win)]
@@ -144,17 +195,8 @@ def assign(paths, wins, run_first, slot_ms):
     orphans = []
 
     for lo, hi, line in paths:
-        if slot_ms > 0 and n_win > 1:
-            # Windows are contiguous steps of slot_ms from run_first, so a label maps to an index
-            # range. +/-1 guards the boundaries and the last window, which extends to run_last.
-            first = max(0, (lo - run_first) // slot_ms - 1)
-            last = min(n_win - 1, (hi - run_first) // slot_ms + 1)
-        else:
-            first, last = 0, n_win - 1
-
         hit = False
-        for i in range(first, last + 1):
-            ws, we, margin = wins[i]
+        for i, (ws, we, margin, _slot_ms) in enumerate(wins):
             if hi < ws or lo > we:
                 continue
             if min(hi, we) - max(lo, ws) > margin:
@@ -166,6 +208,20 @@ def assign(paths, wins, run_first, slot_ms):
             orphans.append(line)
 
     return buckets, grazed, orphans
+
+
+def read_fillinfo(path):
+    """Parse a <run>.fillinfo.txt sidecar: one line, '<fill> <startTimestampMs>'. Returns (fill, sor)
+    as (str, int), or None if the file is missing/malformed."""
+    if not path.is_file():
+        return None
+    parts = path.read_text().split()
+    if len(parts) != 2:
+        return None
+    fill, sor = parts
+    if not sor.isdigit():
+        return None
+    return fill, int(sor)
 
 
 def main(argv):
@@ -183,6 +239,47 @@ def main(argv):
 
     slot_ms = int(round(args.slot_length_min * 60_000))
     wanted = [r for r in args.runs.split(",") if r] if args.runs else []
+
+    if args.mc and args.hybrid:
+        log("ERROR: --mc and --hybrid are exclusive -- MC residual files carry no time label to window on")
+        return 1
+    if args.mc and args.slot_length_min:
+        log(f"NOTE: --mc -- ignoring --slot-length-min {args.slot_length_min}, one window per run")
+
+    if args.hybrid and args.slot_length_min_coarse is None:
+        log("ERROR: --hybrid requires --slot-length-min-coarse (no default -- pass 0 explicitly if you "
+            "really want a single coarse window per fill's post-fine tail)")
+        return 1
+    slot_ms_coarse = int(round(args.slot_length_min_coarse * 60_000)) if args.hybrid else None
+    fine_ms = int(round(args.fine_window_min * 60_000))
+
+    # --hybrid: read every selected run's <run>.fillinfo.txt sidecar (written by discoverResiduals.sh
+    # when its batch file carries the optional fill/SOR columns) and derive each FILL's start as the
+    # earliest SOR among that fill's runs seen HERE, under --lists-dir -- i.e. among the runs this
+    # invocation is actually processing (see --runs), same scoping RUNS_FILTER already uses elsewhere
+    # in this pipeline. A run missing its sidecar is a hard error, not a silent fall-back to per-run
+    # windowing: that would silently change the physics (see the module-level --hybrid help text).
+    fill_of_run = {}
+    fill_start = {}
+    if args.hybrid:
+        missing_fillinfo = []
+        for idx in index_files:
+            run = idx.name[: -len(".residuals_lists.txt")]
+            if wanted and run not in wanted:
+                continue
+            info = read_fillinfo(idx.parent / f"{run}.fillinfo.txt")
+            if info is None:
+                missing_fillinfo.append(run)
+                continue
+            fill, sor = info
+            fill_of_run[run] = fill
+            fill_start[fill] = min(fill_start.get(fill, sor), sor)
+        if missing_fillinfo:
+            log(f"ERROR: --hybrid needs a <run>.fillinfo.txt sidecar (fill + SOR) for every selected "
+                f"run, missing for: {' '.join(missing_fillinfo)}")
+            log("       Re-run discoverResiduals.sh with the <fill> <startTimestampMs> columns in the "
+                "batch file for these runs.")
+            return 1
 
     # Rebuilt from scratch each time so it always reflects THIS invocation's slot length and margin
     # rather than a stale earlier split.
@@ -221,25 +318,40 @@ def main(argv):
             _text = slot_file.read_text()
             t_read += time.monotonic() - _t
             _t = time.monotonic()
-            parsed = []
-            for line in _text.splitlines():
-                m = SIG_RE.search(line)
-                if m:
-                    parsed.append((int(m.group(1)), int(m.group(2)), line))
-            if not parsed:
-                log(f"  WARNING: no parseable residual signature in {slot_file}, skipping")
-                continue
+            if args.mc:
+                files = [l.strip() for l in _text.splitlines() if l.strip()]
+                # A time label means data: windowing it as MC would silently drop the per-TF time cut
+                # and merge a whole run into one map.
+                if any(SIG_RE.search(l) for l in files):
+                    log(f"ERROR: --mc, but {slot_file} holds time-labelled (data) residual files -- "
+                        f"drop --mc for data")
+                    return 1
+                if not files:
+                    log(f"  WARNING: no residual files in {slot_file}, skipping")
+                    continue
+                wins = [(0, 0, 0, 0)]
+                buckets, grazed, orphans = [files], [0], []
+            else:
+                parsed = []
+                for line in _text.splitlines():
+                    m = SIG_RE.search(line)
+                    if m:
+                        parsed.append((int(m.group(1)), int(m.group(2)), line))
+                if not parsed:
+                    log(f"  WARNING: no parseable residual signature in {slot_file}, skipping "
+                        f"(MC lists need --mc)")
+                    continue
 
-            t_calc += time.monotonic() - _t
-            _t = time.monotonic()
-            run_first = min(p[0] for p in parsed)
-            run_last = max(p[1] for p in parsed)
-            wins = plan_windows(run_first, run_last, slot_ms, args.overlap_margin_ms)
-            buckets, grazed, orphans = assign(parsed, wins, run_first, slot_ms)
+                run_first = min(p[0] for p in parsed)
+                run_last = max(p[1] for p in parsed)
+                fine_cutoff_ts = fill_start[fill_of_run[run]] + fine_ms if args.hybrid else None
+                wins = plan_windows(run_first, run_last, slot_ms, args.overlap_margin_ms,
+                                     fine_cutoff_ts=fine_cutoff_ts, slot_ms_coarse=slot_ms_coarse)
+                buckets, grazed, orphans = assign(parsed, wins)
             n_win = len(wins)
             t_calc += time.monotonic() - _t
 
-            for w, ((ws, we, _), files) in enumerate(zip(wins, buckets)):
+            for w, ((ws, we, _margin, w_slot_ms), files) in enumerate(zip(wins, buckets)):
                 if grazed[w]:
                     log(f"      (skipped {grazed[w]} file(s) grazing this window)")
                 if not files:
@@ -251,7 +363,10 @@ def main(argv):
                     out.write_text("\n".join(files) + "\n")
                     t_write += time.monotonic() - _t
                 manifest_lines.append(f"{run}\t{w}\t{n_win}\t{ws}\t{we}\t{','.join(files)}")
-                log(f"    window {w}/{n_win} [{ws},{we}] {(we - ws) // 1000}s {len(files)} file(s)")
+                kind = f" ({'FINE' if w_slot_ms == slot_ms else 'COARSE'})" if args.hybrid else ""
+                if args.mc:
+                    kind = " (MC, no time cut)"
+                log(f"    window {w}/{n_win} [{ws},{we}] {(we - ws) // 1000}s{kind} {len(files)} file(s)")
                 n_slots_run += 1
 
             # Safety net for the overlap margin: every file must still land in at least one window. It
