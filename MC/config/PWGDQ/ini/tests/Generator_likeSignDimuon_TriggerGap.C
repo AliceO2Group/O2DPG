@@ -1,6 +1,6 @@
 int External()
 {
-  const int ratioTrigger = 1./3;
+  const float ratioTrigger = 1./3;
   std::string path{"o2sim_Kine.root"};
   TFile file(path.c_str(), "READ");
   if (file.IsZombie()) {
