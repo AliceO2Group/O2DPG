@@ -315,6 +315,13 @@ if [[ ! -f workflowconfig.log ]]; then
   echo "Workflowconfig.log file not found"
   exit 1
 fi
+# each reco step must have its workflow printout, otherwise the MC would run without the anchored reco settings
+NRECOSTEPS=$(grep -c "^Step [0-9])" workflowconfig.log)
+[[ ${NRECOSTEPS} -eq 0 ]] && NRECOSTEPS=1
+if [[ $(grep -c "#Workflow command" workflowconfig.log) -lt ${NRECOSTEPS} ]]; then
+  echo_error "workflowconfig.log does not contain the reco workflow of every step. Exiting."
+  exit 1
+fi
 
 export ALIEN_JDL_LPMPRODUCTIONTAG=$ALIEN_JDL_LPMPRODUCTIONTAG_KEEP
 echo_info "Setting back ALIEN_JDL_LPMPRODUCTIONTAG to $ALIEN_JDL_LPMPRODUCTIONTAG"
