@@ -2280,6 +2280,10 @@ if not args.make_evtpool:
       add_analysis_tasks(workflow["stages"], needs=[AOD_merge_task["name"]], is_mc=True, collision_system=COLTYPE)
       if QUALITYCONTROL_ROOT:
          add_analysis_qc_upload_tasks(workflow["stages"], args.productionTag, args.run, "passMC")
+      # analysis always uses the O2Physics of the MC tag, also in 2-tag mode
+      for task in workflow["stages"]:
+         if any(label.startswith("Analysis") for label in task["labels"]):
+            task["alternative_alienv_package"] = "None"
 else:
    wfneeds=['sgngen_' + str(tf) for tf in range(1, NTIMEFRAMES + 1)]
    tfpool=['tf' + str(tf) + '/genevents_Kine.root' for tf in range(1, NTIMEFRAMES + 1)]
