@@ -17,6 +17,11 @@ R__ADD_INCLUDE_PATH($O2DPG_MC_CONFIG_ROOT)
 // for each event type is defined by the user in the .ini 
 // generator file (e.g. GeneratorJE_gapgen5_hook.ini)
 //
+// With emptyGap = true, each cycle of inputTriggerRatio events is
+// MB - JJ - MB followed by (inputTriggerRatio - 3) empty events.
+// Empty events contain only the two (non-transported) beam particles,
+// since o2-sim re-generates events without any primary particle.
+//
 // Author: Jaime Norman (jaime.norman@cern.ch)
 
 // o2-sim-dpl-eventgen --nEvents 10 --generator external --configKeyValues "GeneratorExternal.fileName=generator_pythia8_gaptrigger_jets_pythiabase.C;GeneratorExternal.funcName=getGeneratorPythia8GapGenJE()"
@@ -34,10 +39,14 @@ class GeneratorPythia8GapGenJE : public o2::eventgen::GeneratorPythia8
 {
 public:
   /// default constructor
-  GeneratorPythia8GapGenJE(int inputTriggerRatio = 5,std::string pathMB = "",std::string pathSignal = "") {
+  GeneratorPythia8GapGenJE(int inputTriggerRatio = 5,std::string pathMB = "",std::string pathSignal = "", bool emptyGap = false) {
 
     mGeneratedEvents = 0;
     mInverseTriggerRatio = inputTriggerRatio;
+    mEmptyGap = emptyGap;
+    if (mEmptyGap && mInverseTriggerRatio < 3) {
+      LOG(fatal) << "Empty-gap mode (MB - JJ - MB - empty...) requires inputTriggerRatio >= 3, got " << mInverseTriggerRatio;
+    }
 
     auto seed = (gRandom->TRandom::GetSeed() % 900000000);
 
@@ -61,6 +70,9 @@ public:
     // Add Sub generators
     addSubGenerator(0, "MB generator");
     addSubGenerator(1, "jet-jet generator");
+    if (mEmptyGap) {
+      addSubGenerator(2, "empty generator");
+    }
   }
 
 
@@ -82,7 +94,16 @@ public:
     // Simple straightforward check to alternate generators
     mPythia.event.reset();
 
-    if (mGeneratedEvents % mInverseTriggerRatio == 0) {
+    int posInCycle = mGeneratedEvents % mInverseTriggerRatio;
+    bool isSignal = mEmptyGap ? (posInCycle == 1) : (posInCycle == 0);
+    bool isEmpty = mEmptyGap && posInCycle > 2;
+
+    if (isEmpty) {
+      LOG(info) << "Event " <<  mGeneratedEvents << ", generate empty event";
+      generateEmptyEvent();
+      notifySubGenerator(2);
+    }
+    else if (isSignal) {
       LOG(info) << "Event " <<  mGeneratedEvents << ", generate signal event";
       // Generate event of interest
       Bool_t mGenerationOK = kFALSE;
@@ -110,6 +131,25 @@ public:
     }
     mGeneratedEvents++;
     return true;
+  }
+
+  // event record with only the two beam particles (on top of the system entry
+  // added by reset()); the beams have HepMC status 4, so they are kept in the
+  // record but not transported
+  void generateEmptyEvent() {
+    auto& info = pythiaObjectMinimumBias.info;
+    mPythia.event.append(info.idA(), -12, 0, 0, 0, 0, 0, 0, 0., 0., info.pzA(), info.eA(), info.mA());
+    mPythia.event.append(info.idB(), -12, 0, 0, 0, 0, 0, 0, 0., 0., info.pzB(), info.eB(), info.mB());
+
+    name = "empty";
+    code = 0;
+    weight = 1.;
+    id1pdf = id2pdf = 0;
+    x1pdf = x2pdf = QFac = pdf1 = pdf2 = 0.;
+    sigmaGen = sigmaErr = 0.;
+    QRen = 0.;
+    nMPI = 0;
+    accepted = attempted = 0;
   }
 
   // for testing
@@ -237,6 +277,7 @@ private:
   // Control gap-triggering
   unsigned long long mGeneratedEvents;
   int mInverseTriggerRatio;
+  bool mEmptyGap;
 
   // Handling generators
   Pythia8::Pythia pythiaObjectMinimumBias;
@@ -270,8 +311,8 @@ private:
 
 /** generator instance and settings **/
 
-FairGenerator* getGeneratorPythia8GapGenJE(int inputTriggerRatio = 5, std::string pathMB = "",std::string pathSignal = "") {
-  auto myGen = new o2::eventgen::GeneratorPythia8GapGenJE(inputTriggerRatio, pathMB, pathSignal);
+FairGenerator* getGeneratorPythia8GapGenJE(int inputTriggerRatio = 5, std::string pathMB = "",std::string pathSignal = "", bool emptyGap = false) {
+  auto myGen = new o2::eventgen::GeneratorPythia8GapGenJE(inputTriggerRatio, pathMB, pathSignal, emptyGap);
   auto seed = (gRandom->TRandom::GetSeed() % 900000000);
   myGen->setUsedSeed(seed);
   myGen->readString("Random:setSeed on");
