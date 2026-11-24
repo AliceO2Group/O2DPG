@@ -1,4 +1,3 @@
-
 {
   "mode": "sequential",
   "generators": [
@@ -16,6 +15,8 @@
     {
       "name": "external",
       "config": {
+        "fileName": "",
+        "funcName": "",
         "iniFile": "${O2DPG_MC_CONFIG_ROOT}/MC/config/PWGLF/ini/GeneratorAntideuteronCoalescenceJet.ini"
       }
     }
