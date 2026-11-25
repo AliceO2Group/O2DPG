@@ -1,0 +1,21 @@
+{
+  "comment": "Schwinger monopole-antimonopole pair production in Run 3 PbPb. Adding \"temperature\": T to kinematics.p overrides the automatic calculation of the variable based on sqrtsNN. The field kicks the monopole by +g*k and the antimonopole by -g*k, transverse to the beam in a direction drawn per event, with k = g_0 B / omega per Dirac charge calculated from sqrtsNN; a top-level \"fieldKick\" (GeV per Dirac charge, 0 = off) overrides the calculation. Matching transport keys: G4.monopole=1;G4.monopoleMass=100;G4.monopoleMagneticCharge=1",
+  "mode": "schwinger",
+  "sqrtsNN": 5360.0,
+  "verbose": 1,
+  "nPairs": 1,
+  "particle": {
+    "species": "symm",
+    "mass": 100.0,
+    "magneticCharge": 1.0
+  },
+  "kinematics": {
+    "p": { "dist": "thermal" },
+    "costheta": { "dist": "uniform", "min": -1.0, "max": 1.0 },
+    "phi": { "dist": "uniform", "min": 0.0, "max": 6.283185307179586 }
+  },
+  "transport": {
+    "check": true,
+    "onMismatch": "fatal"
+  }
+}
