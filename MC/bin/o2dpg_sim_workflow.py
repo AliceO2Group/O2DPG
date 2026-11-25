@@ -644,6 +644,16 @@ with open("geomprefetcher_script.sh",'w') as f:
 GEOM_PREFETCH_TASK['cmd'] = 'chmod +x ${PWD}/geomprefetcher_script.sh; ${PWD}/geomprefetcher_script.sh'
 workflow['stages'].append(GEOM_PREFETCH_TASK)
 
+# Fix (residual) geometry alignment for simulation stage
+# Detectors that prefer to apply special alignments (for example residual effects) should be listed here and download these files.
+# These object will take precedence over ordinary align objects **and** will only be applied in transport simulation
+# and digitization (Det/Calib/Align is only read in simulation since reconstruction tasks use GLO/Config/AlignedGeometry automatically).
+SIM_ALIGNMENT_PREFETCH_TASK = createTask(name='sim_alignment', needs=['geomprefetch'], cpu='0')
+SIM_ALIGNMENT_PREFETCH_TASK['cmd'] = '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p MID/MisCalib/Align --timestamp ' + str(args.timestamp) + ' --created-not-after '  \
+                                      + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE}/MID/Calib/Align --no-preserve-path ; '
+SIM_ALIGNMENT_PREFETCH_TASK['cmd'] += '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p MCH/MisCalib/Align --timestamp ' + str(args.timestamp) + ' --created-not-after ' \
+                                      + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE}/MCH/Calib/Align --no-preserve-path '
+workflow['stages'].append(SIM_ALIGNMENT_PREFETCH_TASK)
 
 # create/publish the GRPs and other GLO objects for consistent use further down the pipeline
 orbitsPerTF=int(args.orbitsPerTF)
@@ -669,7 +679,7 @@ vtxmode_precoll = 'kNoVertex' if args.make_evtpool else 'kCCDB'
 vtxmode_sgngen = 'kNoVertex' if args.make_evtpool else 'kCollContext'
 
 # preproduce the collision context / timeframe structure for all timeframes at once
-precollneeds=[GRP_TASK['name']]
+precollneeds=[GRP_TASK['name'], SIM_ALIGNMENT_PREFETCH_TASK['name']]
 # max number of QED events simulated per timeframe.
 # A large pool of QED events (0.6*INTRATE) is needed to avoid repetition of events in the same or
 # neighbouring ITS readout frames, which would fire already activated pixel, discarding the event.
@@ -872,17 +882,6 @@ if usebkgcache:
 
 # We download some binary files, necessary for processing
 # Eventually, these files/objects should be queried directly from within these tasks?
-
-# Fix (residual) geometry alignment for simulation stage
-# Detectors that prefer to apply special alignments (for example residual effects) should be listed here and download these files.
-# These object will take precedence over ordinary align objects **and** will only be applied in transport simulation
-# and digitization (Det/Calib/Align is only read in simulation since reconstruction tasks use GLO/Config/AlignedGeometry automatically).
-SIM_ALIGNMENT_PREFETCH_TASK = createTask(name='sim_alignment', cpu='0')
-SIM_ALIGNMENT_PREFETCH_TASK['cmd'] = '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p MID/MisCalib/Align --timestamp ' + str(args.timestamp) + ' --created-not-after '  \
-                                      + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE}/MID/Calib/Align --no-preserve-path ; '
-SIM_ALIGNMENT_PREFETCH_TASK['cmd'] += '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p MCH/MisCalib/Align --timestamp ' + str(args.timestamp) + ' --created-not-after ' \
-                                      + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE}/MCH/Calib/Align --no-preserve-path '
-workflow['stages'].append(SIM_ALIGNMENT_PREFETCH_TASK)
 
 # query initial configKey args for signal transport; mainly used to setup generators
 simInitialConfigKeys = create_geant_config(args, args.confKey)
