@@ -63,6 +63,7 @@ print_help()
   echo "ALIEN_O2DPG_RESOURCES=FILE, use resource estimates learned by a pilot run instead of sampling them"
   echo "DISABLE_QC, set this to disable QC, e.g. to 1"
   echo "ALIEN_JDL_RUNANALYSISQC=1, run the AnalysisQC on the produced AO2D (needs O2Physics in the environment)"
+  echo "ALIEN_JDL_DISABLE_MCPRODINFO=1, do not publish MCProdInfo to CCDB, e.g. for validation jobs that reuse a production tag"
   echo "CYCLE, to set a cycle number different than 0"
   echo "NSIGEVENTS, to enforce a specific upper limit of events in a timeframe (not counting orbit-early) events"
 }
@@ -338,7 +339,10 @@ fi
 
 # publish MCPRODINFO for first few jobs of a production
 # if external script exported PUBLISH_MCPRODINFO, it will be published anyways
-if [ -z "$PUBLISH_MCPRODINFO" ] && [ "$SPLITID" -lt 20 ]; then
+# ALIEN_JDL_DISABLE_MCPRODINFO switches publishing off in any case
+if [ "${ALIEN_JDL_DISABLE_MCPRODINFO:-0}" != "0" ]; then
+  echo "Will not publish MCProdInfo (disabled by ALIEN_JDL_DISABLE_MCPRODINFO)"
+elif [ -z "$PUBLISH_MCPRODINFO" ] && [ "$SPLITID" -lt 20 ]; then
   PUBLISH_MCPRODINFO_OPTION="--publish-mcprodinfo"
   echo "Will publish MCProdInfo"
 else

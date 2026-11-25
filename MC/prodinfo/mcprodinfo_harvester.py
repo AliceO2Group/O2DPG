@@ -14,7 +14,7 @@ import re
 import os
 import argparse
 
-from mcprodinfo_ccdb_upload import MCProdInfo, publish_MCProdInfo  
+from mcprodinfo_ccdb_upload import MCProdInfo, publish_MCProdInfo, production_output_dir
 
 
 def alien_find(path, pattern="*"):
@@ -66,21 +66,24 @@ def extract_from_zip(local_zip_path):
             candidates = [n for n in zf.namelist() if n.startswith("stdout")]
             if candidates:
                 with zf.open(candidates[0]) as so:
-                    text = so.read().decode(errors="ignore")
-                    for key in [
-                        "ALIEN_JDL_PACKAGES",
-                        "ALIEN_JDL_O2DPG_ASYNC_RECO_TAG",
-                        "ALIEN_MASTERJOB",
-                    ]:
-                        m = re.search(rf"{key}=(.*)", text)
-                        if m:
-                            env_vars[key] = m.group(1).strip()
+                    env_vars.update(env_from_stdout(so.read().decode(errors="ignore")))
     except Exception as e:
         print(f"⚠️ Failed to extract from {local_zip_path}: {e}")
     return wf_data, env_vars
 
 
-def build_info(prod_tag, run_number, wf_data, env_vars):
+def env_from_stdout(text):
+    """Job environment variables from the environment dump at the start of a job's stdout."""
+    env_vars = {}
+    for key in ["ALIEN_JDL_PACKAGES", "ALIEN_JDL_O2DPG_ASYNC_RECO_TAG", "ALIEN_MASTERJOB", "ALIEN_MASTERJOB_ID"]:
+        # only lines of the dump, not script lines that mention the variable
+        m = re.search(rf"^{key}=(.*)", text, re.M)
+        if m:
+            env_vars[key] = m.group(1).strip()
+    return env_vars
+
+
+def build_info(prod_tag, run_number, wf_data, env_vars, zip_path=None):
     meta=wf_data.get("meta")
     int_rate = col_system = orbits_per_tf = None
     if meta != None:
@@ -95,7 +98,9 @@ def build_info(prod_tag, run_number, wf_data, env_vars):
         RunNumber=run_number,
         OrbitsPerTF=orbits_per_tf,        
         McTag=env_vars.get("ALIEN_JDL_PACKAGES"),
-        RecoTag=env_vars.get("ALIEN_JDL_O2DPG_ASYNC_RECO_TAG")
+        RecoTag=env_vars.get("ALIEN_JDL_O2DPG_ASYNC_RECO_TAG") or None,
+        OutputDir=production_output_dir(os.path.dirname(zip_path), run_number) if zip_path else None,
+        MasterJobID=int(env_vars["ALIEN_MASTERJOB_ID"]) if env_vars.get("ALIEN_MASTERJOB_ID", "").isdigit() else None
     )
 
 
@@ -126,7 +131,7 @@ def pick_split(prod_tag, run_number, candidates, ascending=True):
             pass
         
         if wf_data:
-            info = build_info(prod_tag, run_number, wf_data, env_vars)
+            info = build_info(prod_tag, run_number, wf_data, env_vars, zip_path)
             return info, cycle, split, zip_path
         print (f"Failed")
     
@@ -185,6 +190,7 @@ def process_prod_tag(prod_tag, year="2025", ccdb_url=None, username=None, overwr
             if info_min.OrbitsPerTF != info_max.OrbitsPerTF:
                 print(f"❌ OrbitsPerTF mismatch for run {run_number}")
 
+        # without --overwrite only empty fields of an existing object are filled
         publish_MCProdInfo(info_min, username=username, ccdb_url=ccdb_url, force_overwrite=overwrite)
         print (info_min)
 
@@ -197,7 +203,7 @@ def main():
     parser.add_argument("--ccdb", required=False, default="https://alice-ccdb.cern.ch", help="CCDB server URL")
     parser.add_argument("--username", required=False, help="GRID username (needs appropriate AliEn token initialized)")
     parser.add_argument("--year", default="2025", help="Production year (default: 2025)")
-    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing entries")
+    parser.add_argument("--overwrite", action="store_true", help="Upload also entries whose content is unchanged")
     args = parser.parse_args()
 
     process_prod_tag(args.prod_tag, year=args.year, ccdb_url=args.ccdb, username=args.username, overwrite=args.overwrite)

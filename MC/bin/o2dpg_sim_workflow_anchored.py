@@ -23,7 +23,7 @@ if o2dpg_root is None:
   raise EnvironmentError("O2DPG_ROOT is not set in the environment.")
 mc_prodinfo_path = os.path.abspath(os.path.join(o2dpg_root, "MC", "prodinfo"))
 sys.path.append(mc_prodinfo_path)
-from mcprodinfo_ccdb_upload import MCProdInfo, publish_MCProdInfo
+from mcprodinfo_ccdb_upload import MCProdInfo, publish_MCProdInfo, production_output_dir, publishing_disabled
 import dataclasses
 
 # Creates a time anchored MC workflow; positioned within a given run-number (as function of production size etc)
@@ -799,7 +799,9 @@ def main():
         print (output)
 
         # when we get here, we can publish info about the production (optionally)
-        if args.publish_mcprodinfo == True or os.getenv("PUBLISH_MCPRODINFO") != None:
+        if publishing_disabled():
+          print("MCProdInfo publishing disabled by ALIEN_JDL_DISABLE_MCPRODINFO")
+        elif args.publish_mcprodinfo == True or os.getenv("PUBLISH_MCPRODINFO") != None:
           prod_tag = os.getenv("ALIEN_JDL_LPMPRODUCTIONTAG")
           grid_user_name = os.getenv("JALIEN_USER")
           mcprod_ccdb_server = os.getenv("PUBLISH_MCPRODINFO_CCDBSERVER")
@@ -812,8 +814,17 @@ def main():
                               RunNumber = args.run_number,
                               OrbitsPerTF = GLOparams["OrbitsPerTF"],
                               McTag = os.getenv("ALIEN_JDL_PACKAGES"),
-                              FirstOrbitMC = effective_first_orbit)
-            publish_MCProdInfo(info, username = grid_user_name, ccdb_url = mcprod_ccdb_server)
+                              RecoTag = os.getenv("ALIEN_JDL_O2DPG_ASYNC_RECO_TAG") or None,
+                              FirstOrbitMC = effective_first_orbit,
+                              OutputDir = production_output_dir(os.getenv("ALIEN_JDL_OUTPUTDIR"), args.run_number),
+                              MasterJobID = int(os.getenv("ALIEN_MASTERJOB_ID")) if (os.getenv("ALIEN_MASTERJOB_ID") or "").isdigit() else None)
+            # a failure to publish is reported but does not stop the job
+            try:
+              r = publish_MCProdInfo(info, username = grid_user_name, ccdb_url = mcprod_ccdb_server, complete = True)
+              if r is not None and not 200 <= r.status_code < 300:
+                print(f"WARNING: MCProdInfo was not published (HTTP {r.status_code})")
+            except Exception as e:
+              print(f"WARNING: MCProdInfo was not published: {e}")
           else:
             print("No production tag or GRID user name known. Not publishing MCProdInfo")
 
