@@ -82,6 +82,7 @@
 #include <fstream>
 #include <functional>
 #include <limits>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <iostream>
@@ -122,6 +123,25 @@ namespace o2::eventgen
 constexpr int kMonopolePdgSymm = o2::sim::MonopolePdgSymm;   ///< equal electric and magnetic charge
 constexpr int kMonopolePdgAsymm = o2::sim::MonopolePdgAsymm; ///< opposite electric and magnetic charge
 constexpr double kMonopoleMassDefaultGeV = o2::sim::MonopoleMassDefaultGeV;
+/// Default of G4.monopoleMagneticCharge in o2::conf::G4Params, for which O2 has no named constant.
+constexpr double kMonopoleMagneticChargeDefault = 1.;
+
+/// Reject unknown keys, so that a typo is an error instead of a silently ignored setting.
+inline void checkKeys(const rapidjson::Value& node, const std::string& prefix,
+                      const std::vector<std::string>& allowed)
+{
+  for (auto it = node.MemberBegin(); it != node.MemberEnd(); ++it) {
+    const std::string k = it->name.GetString();
+    if (std::find(allowed.begin(), allowed.end(), k) == allowed.end()) {
+      std::ostringstream os;
+      os << "unknown key \"" << (prefix.empty() ? k : prefix + "." + k) << "\". Known keys here:";
+      for (const auto& a : allowed) {
+        os << " " << a;
+      }
+      throw std::runtime_error(os.str());
+    }
+  }
+}
 
 /// Temperature of the Maxwell-Juettner spectrum fitted to the reference PbPb
 /// Schwinger HepMC samples, in GeV.
@@ -237,12 +257,14 @@ class MonoValue
     }
 
     if (hasValue) {
+      checkKeys(node, name, {"value", "sampleOnce", "integer"});
       mKind = kFixed;
       mValue = getNumber(node, "value");
       return;
     }
 
     if (hasValues) {
+      checkKeys(node, name, {"values", "weights", "sampleOnce", "integer"});
       mKind = kList;
       const auto& arr = node["values"];
       if (!arr.IsArray() || arr.Empty()) {
@@ -288,6 +310,25 @@ class MonoValue
       throw std::runtime_error(name + ".dist: expected a string");
     }
     const std::string dist = node["dist"].GetString();
+    // the keys each distribution reads, on top of dist/min/max/sampleOnce/integer:
+    // a misspelt optional parameter would otherwise silently keep its default
+    static const std::map<std::string, std::vector<std::string>> kDistKeys = {
+      {"uniform", {}},
+      {"loguniform", {}},
+      {"gaus", {"mean", "sigma"}},
+      {"gauss", {"mean", "sigma"}},
+      {"normal", {"mean", "sigma"}},
+      {"exp", {"tau"}},
+      {"exponential", {"tau"}},
+      {"powerlaw", {"exponent"}},
+      {"poisson", {"mean"}},
+      {"thermal", {"temperature", "mass"}},
+      {"formula", {"formula"}}};
+    if (const auto known = kDistKeys.find(dist); known != kDistKeys.end()) {
+      std::vector<std::string> allowed{"dist", "min", "max", "sampleOnce", "integer"};
+      allowed.insert(allowed.end(), known->second.begin(), known->second.end());
+      checkKeys(node, name, allowed);
+    }
     mMin = getNumber(node, "min", -std::numeric_limits<double>::infinity());
     mMax = getNumber(node, "max", std::numeric_limits<double>::infinity());
     if (!(mMax > mMin)) {
@@ -723,7 +764,8 @@ class GeneratorMonopolesImpl : public Generator
     setPositionUnit(1.);
     setTimeUnit(1.);
   }
-  ~GeneratorMonopolesImpl() override = default;
+
+  ~GeneratorMonopolesImpl() override { finalMomentumReport(); }
 
   /// The path may contain shell variables: O2 hands the argument of funcName to
   /// the macro verbatim, and the O2DPG ini files write the path as
@@ -739,7 +781,7 @@ class GeneratorMonopolesImpl : public Generator
   {
     try {
       readConfig();
-      mCheckTransport = false; // only report: never read or adopt the transport values
+      mReportOnly = true; // only report: never read or adopt the transport values
       finaliseConfig();
     } catch (const std::exception& e) {
       LOG(error) << "GeneratorMonopoles: " << e.what();
@@ -767,14 +809,28 @@ class GeneratorMonopolesImpl : public Generator
       std::cout << "\n[PrimaryGenerator]\n"
                 << "id = " << mGeneratorId << "\n";
     }
-    if (!mMass.isFixedSpec() || !mCharge.isFixedSpec()) {
-      std::cout << "\n# note: mass [" << mMass.describe() << "] and magnetic charge ["
-                << mCharge.describe() << "] are not fixed values. The numbers above are the ones\n"
-                << "# drawn by this call; any other value the specification allows works too, the\n"
-                << "# generator adopts G4.monopoleMass / G4.monopoleMagneticCharge at startup.\n";
-    }
+    printOpenValueNote("mass", kG4MassKey, mMass, mMassFromTransport,
+                       mMassFromG4 ? "transport.massFromG4 is set" : "it is not set in the configuration");
+    printOpenValueNote("magnetic charge", kG4ChargeKey, mCharge, mChargeFromTransport,
+                       "it is not set in the configuration");
     std::cout << std::endl;
     return 0;
+  }
+
+  /// Explains a transport value printed by printTransportKeys() that the JSON
+  /// does not fix, for the mass and the charge separately. @param reason why the
+  /// generator takes the value from the transport key, when fromTransport is set
+  static void printOpenValueNote(const char* what, const char* key, const MonoValue& spec,
+                                 bool fromTransport, const char* reason)
+  {
+    if (fromTransport) {
+      std::cout << "\n# note: the generator takes the " << what << " from " << key << " (" << reason << ").\n"
+                << "# The value above is the O2 default; set " << key << " to the " << what << " you want.\n";
+    } else if (!spec.isFixedSpec()) {
+      std::cout << "\n# note: the " << what << " [" << spec.describe() << "] is not a fixed value. The\n"
+                << "# number above is the one drawn by this call; any other value the specification\n"
+                << "# allows works too, the generator adopts " << key << " at startup.\n";
+    }
   }
 
   //----------------------------------------------------------------------------
@@ -891,6 +947,7 @@ class GeneratorMonopolesImpl : public Generator
                 << ", magnetic charge " << mLastCharge << " g_D"
                 << valueOrigin(mCharge, mLastCharge, g4MonopoleMagneticCharge(), kG4ChargeKey);
     }
+    finalMomentumReport();
   }
 
   /// Where the value used for the run comes from, for the summary line: nothing
@@ -1156,7 +1213,12 @@ class GeneratorMonopolesImpl : public Generator
   void finaliseConfig()
   {
     // mass: explicit, from the transport, or the O2 default
-    if (!mMass.isSet() || mMassFromG4) {
+    if ((!mMass.isSet() || mMassFromG4) && mReportOnly) {
+      // report mode reads no transport setting: outside o2-sim even asking for
+      // the provenance of a G4 key aborts in ConfigurableParamHelper
+      mMass = MonoValue(kMonopoleMassDefaultGeV);
+      mMassFromTransport = true;
+    } else if (!mMass.isSet() || mMassFromG4) {
       const double g4mass = g4MonopoleMass();
       if (transportKeyWasSet(kG4MassKey) && g4mass > 0.) {
         mMass = MonoValue(g4mass);
@@ -1170,7 +1232,10 @@ class GeneratorMonopolesImpl : public Generator
                   << "using the O2 default of " << kMonopoleMassDefaultGeV << " GeV";
       }
     }
-    if (!mCharge.isSet()) {
+    if (!mCharge.isSet() && mReportOnly) {
+      mCharge = MonoValue(kMonopoleMagneticChargeDefault);
+      mChargeFromTransport = true;
+    } else if (!mCharge.isSet()) {
       mCharge = MonoValue(g4MonopoleMagneticCharge());
     }
     if (!mNObjects.isSet()) {
@@ -1202,7 +1267,7 @@ class GeneratorMonopolesImpl : public Generator
     // consistent by construction. A mass scan then just varies
     // G4.monopoleMass over one JSON file. transport.check == false means "do
     // not look at the transport at all", so it switches this off as well.
-    if (mCheckTransport) {
+    if (mCheckTransport && !mReportOnly) {
       adoptFromTransport("mass", kG4MassKey, mMass, g4MonopoleMass(), mLastMass);
       adoptFromTransport("magneticCharge", kG4ChargeKey, mCharge, g4MonopoleMagneticCharge(), mLastCharge);
     }
@@ -1444,6 +1509,7 @@ class GeneratorMonopolesImpl : public Generator
   {
     constexpr int kMaxTries = 10000;
     for (int trial = 0; trial < kMaxTries; ++trial) {
+      countMomentumDraw(trial > 0);
       const double phi = mPhi.sample();
       const double a = mAngle.sample();
 
@@ -1520,6 +1586,52 @@ class GeneratorMonopolesImpl : public Generator
                << "magnitude (" << mMagVar << ") and direction (" << mAngleVar
                << ") after " << kMaxTries << " tries; the two ranges are probably incompatible";
     return false;
+  }
+
+  /// Every draw drawMomentum() throws away reshapes the configured distributions,
+  /// so the rejections are counted and reported instead of passing silently
+  /// At 100, 1000, 10000... draws, and once more at the end of the run (stop()
+  /// or the destructor) so that short runs are covered too, a warning gives the
+  /// fraction rejected so far when it is above kMaxRejectedFraction.
+  void countMomentumDraw(bool previousRejected) const
+  {
+    ++mMomentumDraws;
+    if (previousRejected) {
+      ++mMomentumRejected;
+    }
+    if (mMomentumDraws < mNextRejectionReport) {
+      return;
+    }
+    mNextRejectionReport *= 10;
+    reportMomentumRejections("the first ");
+  }
+
+  void finalMomentumReport()
+  {
+    if (!mFinalMomentumReportDone) {
+      mFinalMomentumReportDone = true;
+      reportMomentumRejections("all ");
+    }
+  }
+
+  void reportMomentumRejections(const char* which) const
+  {
+    static constexpr double kMaxRejectedFraction = 0.01;
+    if (mMomentumRejected == 0) {
+      return;
+    }
+    const double fraction = double(mMomentumRejected) / double(mMomentumDraws);
+    std::ostringstream msg;
+    msg << "GeneratorMonopoles: " << mMomentumRejected << " of " << which << mMomentumDraws
+        << " momentum draws (" << 100. * fraction << "%) were kinematically impossible for "
+        << "the configured magnitude (" << mMagVar << ") and direction (" << mAngleVar
+        << ") and were redrawn";
+    if (fraction > kMaxRejectedFraction) {
+      LOG(warning) << msg.str() << ", so the generated distributions are narrower than the "
+                   << "configured ones. Make the two ranges compatible (e.g. etot >= mass*cosh(y))";
+    } else {
+      LOG(info) << msg.str();
+    }
   }
 
   void drawVertex(double& x, double& y, double& z, double& t) const
@@ -1622,24 +1734,6 @@ class GeneratorMonopolesImpl : public Generator
     return "unknown";
   }
 
-  /// Reject unknown keys, so that a typo is an error instead of a silently
-  /// ignored setting.
-  static void checkKeys(const rapidjson::Value& node, const std::string& prefix,
-                        const std::vector<std::string>& allowed)
-  {
-    for (auto it = node.MemberBegin(); it != node.MemberEnd(); ++it) {
-      const std::string k = it->name.GetString();
-      if (std::find(allowed.begin(), allowed.end(), k) == allowed.end()) {
-        std::ostringstream os;
-        os << "unknown key \"" << (prefix.empty() ? k : prefix + "." + k) << "\". Known keys here:";
-        for (const auto& a : allowed) {
-          os << " " << a;
-        }
-        throw std::runtime_error(os.str());
-      }
-    }
-  }
-
   //--------------------------------------------------------------------------
   std::string mConfigFile;
   int mVerbose = 1;
@@ -1660,6 +1754,14 @@ class GeneratorMonopolesImpl : public Generator
   Bool_t mSetupOk = kFALSE;
 
   bool mCheckTransport = true;
+  bool mReportOnly = false; ///< MonopolesTransportKeys(): parse and print, never touch the transport
+  bool mMassFromTransport = false;   ///< report mode: the JSON leaves the mass to G4.monopoleMass
+  bool mChargeFromTransport = false; ///< report mode: the JSON leaves the charge to G4.monopoleMagneticCharge
+  // momentum draws rejected by drawMomentum(), see countMomentumDraw()
+  mutable long mMomentumDraws = 0;
+  mutable long mMomentumRejected = 0;
+  mutable long mNextRejectionReport = 100;
+  bool mFinalMomentumReportDone = false;
   bool mMassFromG4 = false;
   EOnMismatch mOnMismatch = kFatal;
   double mTolerance = 1e-4;
