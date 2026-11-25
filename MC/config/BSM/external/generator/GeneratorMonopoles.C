@@ -21,14 +21,18 @@
 /// Production modes ("mode" in the JSON):
 ///   "schwinger" : monopole / antimonopole pair, back-to-back in the pair rest
 ///                 frame, as produced by the Schwinger mechanism in the field of
-///                 an ultraperipheral heavy-ion collision. The defaults
-///                 reproduce the PbPb HepMC samples
-///                 (PbPb_MMs_mass<M>GeV_g<G>_N*.hepmc): isotropic emission and
-///                 a Maxwell-Juettner momentum spectrum
-///                     dN/dp propto p^2 exp(-sqrt(p^2+m^2)/T),  T = 18.37 GeV
-///                 which was obtained by an unbinned maximum-likelihood fit to
-///                 those files (chi2/ndf ~ 1.0 for m = 100 and 200 GeV, g = 1
-///                 and 3; the spectrum does not depend on the magnetic charge).
+///                 an ultraperipheral heavy-ion collision. By default the
+///                 emission is isotropic with a Maxwell-Juettner momentum spectrum
+///                     dN/dp propto p^2 exp(-sqrt(p^2+m^2)/T),  T = omega/4,
+///                 where omega = c_w gamma / R_Pb is the characteristic frequency
+///                 of the field pulse and gamma = sqrt(s_NN) / (2 m_p) (see
+///                 schwingerTemperature()). sqrt(s_NN) is the "sqrtsNN" JSON key,
+///                 by default the Run 3 PbPb energy of 5.36 TeV (T = 19.58 GeV);
+///                 5.02 TeV gives T = 18.34 GeV, which matches Run 2 PbPb configuration
+///                 On top of that the field kicks the pair: the monopole gets a
+///                 transverse momentum +g k and the antimonopole -g k, along a
+///                 direction drawn per event, with k = g_0 B / omega per unit
+///                 Dirac charge, calculated from sqrtsNN (fieldKickPerCharge()).
 ///   "single"    : independent single monopoles, charge sign fixed or random.
 ///
 /// New modes only need a new entry in the EMode enum, in parseMode() and in
@@ -143,9 +147,42 @@ inline void checkKeys(const rapidjson::Value& node, const std::string& prefix,
   }
 }
 
-/// Temperature of the Maxwell-Juettner spectrum fitted to the reference PbPb
-/// Schwinger HepMC samples, in GeV.
-constexpr double kSchwingerTemperatureGeV = 18.37;
+/// Default nucleon-nucleon centre-of-mass energy: Run 3 PbPb, in GeV.
+constexpr double kSqrtsNNDefaultGeV = 5360.;
+
+/// Temperature of the Maxwell-Juettner spectrum of Schwinger pairs produced in
+/// the field of an ultraperipheral PbPb collision at @p sqrtsNN (GeV):
+///   T = omega / 4,  omega = c_w gamma / R_Pb,  gamma = sqrt(s_NN) / (2 m_p)
+/// with c_w = 0.92 and R_Pb = 33.5484 GeV^-1, the values of the notebook the
+/// reference samples were produced with (Gould, Ho, Rajantie, PRD 104, 015033).
+/// 5.02 TeV gives 18.34 GeV, 5.36 TeV gives 19.58 GeV.
+inline double schwingerTemperature(double sqrtsNN)
+{
+  constexpr double kProtonMassGeV = 0.9382720813;
+  constexpr double kFieldPulseCw = 0.92;
+  constexpr double kPbRadiusInvGeV = 33.5484;
+  const double gamma = sqrtsNN / (2. * kProtonMassGeV);
+  const double omega = kFieldPulseCw * gamma / kPbRadiusInvGeV;
+  return omega / 4.;
+}
+
+/// Transverse momentum (GeV) the field of an ultraperipheral PbPb collision at
+/// @p sqrtsNN (GeV) gives a monopole per unit Dirac charge: k = g_0 B / omega,
+/// with g_0 = 2 pi / e the Dirac charge in natural units and the peak field B
+/// and pulse frequency omega of the authors' notebook, B = 8.1 GeV^2 and
+/// omega = 80 GeV at the Run 3 energy of 5.36 TeV. Both grow linearly with the
+/// Lorentz factor, so both are scaled with sqrt(s_NN); their ratio, and with it
+/// k, is then the same at every energy. The value used is printed at startup.
+inline double fieldKickPerCharge(double sqrtsNN)
+{
+  constexpr double kAlpha = 1. / 137.035999139;
+  constexpr double kSqrtsNNRun3GeV = 5360.;
+  constexpr double kPeakFieldRun3GeV2 = 8.1;
+  constexpr double kPulseFrequencyRun3GeV = 80.;
+  const double g0 = 2. * M_PI / std::sqrt(4. * M_PI * kAlpha);
+  const double scale = sqrtsNN / kSqrtsNNRun3GeV;
+  return g0 * (kPeakFieldRun3GeV2 * scale) / (kPulseFrequencyRun3GeV * scale);
+}
 
 /// The transport keys this generator has to agree with.
 constexpr const char* kG4MassKey = "G4.monopoleMass";
@@ -186,9 +223,10 @@ inline double g4MonopoleMagneticCharge() { return o2::conf::G4Params::Instance()
 ///   {"dist":"exp",        "tau":t [,"min":a,"max":b]}     propto exp(-x/t)
 ///   {"dist":"powerlaw",   "exponent":n, "min":a,"max":b}  propto x^n
 ///   {"dist":"poisson",    "mean":m [,"min":a,"max":b]}
-///   {"dist":"thermal",    "temperature":T [,"mass":m,"min":a,"max":b]}
+///   {"dist":"thermal"   [,"temperature":T,"mass":m,"min":a,"max":b]}
 ///                                                        propto x^2 exp(-sqrt(x^2+m^2)/T)
-///                                                        mass defaults to the monopole mass
+///                                                        mass defaults to the monopole mass,
+///                                                        T to schwingerTemperature(sqrtsNN)
 ///   {"dist":"formula",    "formula":"x*x*exp(-x/10)", "min":a,"max":b}
 ///
 /// Any spec accepts
@@ -379,8 +417,8 @@ class MonoValue
       mInteger = true;
     } else if (dist == "thermal") {
       mKind = kThermal;
-      mPar1 = getNumber(node, "temperature", kSchwingerTemperatureGeV);
-      if (!(mPar1 > 0.)) {
+      mPar1 = getNumber(node, "temperature", -1.); // < 0 => from sqrtsNN, see init()
+      if (node.HasMember("temperature") && !(mPar1 > 0.)) {
         throw std::runtime_error(name + ": \"temperature\" must be positive");
       }
       mPar2 = getNumber(node, "mass", -1.); // < 0 => take the monopole mass
@@ -403,10 +441,15 @@ class MonoValue
 
   /// Build the tabulated inverse CDF where needed and draw the sampleOnce value.
   /// @param defaultMass mass used by a "thermal" spec that does not give its own
-  void init(double defaultMass)
+  /// @param defaultTemperature temperature used by a "thermal" spec that does not
+  ///        give its own (the one of the configured sqrtsNN)
+  void init(double defaultMass, double defaultTemperature)
   {
     switch (mKind) {
       case kThermal: {
+        if (mPar1 < 0.) {
+          mPar1 = defaultTemperature;
+        }
         const double mass = mPar2 >= 0. ? mPar2 : defaultMass;
         const double T = mPar1;
         if (!std::isfinite(mMax)) {
@@ -990,7 +1033,7 @@ class GeneratorMonopolesImpl : public Generator
     if (!doc.IsObject()) {
       throw std::runtime_error("\"" + mConfigFile + "\": the top level must be a JSON object");
     }
-    checkKeys(doc, "", {"mode", "verbose", "generatorId", "nPairs", "nParticles", "particle",
+    checkKeys(doc, "", {"mode", "verbose", "generatorId", "sqrtsNN", "fieldKick", "nPairs", "nParticles", "particle",
                         "kinematics", "vertex", "pairRecoil", "transport", "comment"});
 
     if (doc.HasMember("mode")) {
@@ -998,6 +1041,25 @@ class GeneratorMonopolesImpl : public Generator
         throw std::runtime_error("\"mode\" must be a string");
       }
       mMode = parseMode(doc["mode"].GetString());
+    }
+    // "sqrtsNN": nucleon-nucleon centre-of-mass energy in GeV, sets the
+    // temperature of every "thermal" spec that does not give its own
+    if (doc.HasMember("sqrtsNN")) {
+      if (!doc["sqrtsNN"].IsNumber() || !(doc["sqrtsNN"].GetDouble() > 0.)) {
+        throw std::runtime_error("\"sqrtsNN\" must be a positive number (GeV)");
+      }
+      mSqrtsNN = doc["sqrtsNN"].GetDouble();
+    }
+    mThermalTemperature = schwingerTemperature(mSqrtsNN);
+    // "fieldKick": transverse momentum per unit Dirac charge (GeV) the field
+    // gives a Schwinger pair, instead of the one calculated from sqrtsNN; 0
+    // switches it off
+    mFieldKickPerCharge = fieldKickPerCharge(mSqrtsNN);
+    if (doc.HasMember("fieldKick")) {
+      if (!doc["fieldKick"].IsNumber() || doc["fieldKick"].GetDouble() < 0.) {
+        throw std::runtime_error("\"fieldKick\" must be a non-negative number (GeV per Dirac charge)");
+      }
+      mFieldKickPerCharge = doc["fieldKick"].GetDouble();
     }
     if (doc.HasMember("verbose")) {
       if (!doc["verbose"].IsInt()) {
@@ -1241,12 +1303,12 @@ class GeneratorMonopolesImpl : public Generator
     if (!mNObjects.isSet()) {
       mNObjects = MonoValue(1.);
     }
-    mNObjects.init(0.);
+    mNObjects.init(0., mThermalTemperature);
 
     // mass and magnetic charge have to stay constant: the transport knows a
     // single value for the whole run
-    mMass.init(0.);
-    mCharge.init(0.);
+    mMass.init(0., mThermalTemperature);
+    mCharge.init(0., mThermalTemperature);
     if (!mMass.isConstant()) {
       throw std::runtime_error("particle.mass varies event by event, which the transport cannot "
                                "follow (it uses the single value G4.monopoleMass). Add "
@@ -1279,9 +1341,9 @@ class GeneratorMonopolesImpl : public Generator
     // kinematics defaults
     if (!mMagnitude.isSet()) {
       if (mMode == kSchwinger) {
-        // the Maxwell-Juettner spectrum of the reference PbPb HepMC samples
+        // the Maxwell-Juettner spectrum at the temperature of the configured sqrtsNN
         rapidjson::Document d;
-        d.Parse("{\"dist\":\"thermal\",\"temperature\":18.37}");
+        d.Parse("{\"dist\":\"thermal\"}");
         mMagnitude.parse(d, "kinematics.p");
         mMagVar = "p";
       } else {
@@ -1301,19 +1363,19 @@ class GeneratorMonopolesImpl : public Generator
       mPhi.parse(d, "kinematics.phi");
     }
 
-    mMagnitude.init(mLastMass);
-    mAngle.init(mLastMass);
-    mPhi.init(mLastMass);
+    mMagnitude.init(mLastMass, mThermalTemperature);
+    mAngle.init(mLastMass, mThermalTemperature);
+    mPhi.init(mLastMass, mThermalTemperature);
     for (auto* v : {&mVx, &mVy, &mVz, &mVt, &mRecoilPt, &mRecoilPz, &mRecoilPhi}) {
       if (v->isSet()) {
-        v->init(mLastMass);
+        v->init(mLastMass, mThermalTemperature);
       }
     }
     if (mRecoilPt.isSet() && !mRecoilPhi.isSet()) {
       rapidjson::Document d;
       d.Parse("{\"dist\":\"uniform\",\"min\":0.0,\"max\":6.283185307179586}");
       mRecoilPhi.parse(d, "pairRecoil.phi");
-      mRecoilPhi.init(mLastMass);
+      mRecoilPhi.init(mLastMass, mThermalTemperature);
     }
 
     // a pt-based magnitude with eta is fine, but pt with costheta/theta needs
@@ -1329,6 +1391,11 @@ class GeneratorMonopolesImpl : public Generator
     LOG(info) << "=== GeneratorMonopoles configuration ===";
     LOG(info) << "  config file        : " << (mConfigFile.empty() ? std::string("<defaults>") : mConfigFile);
     LOG(info) << "  mode               : " << modeName(mMode);
+    LOG(info) << "  sqrt(s_NN)         : " << mSqrtsNN << " GeV (default thermal T = " << mThermalTemperature << " GeV)";
+    if (mMode == kSchwinger) {
+      LOG(info) << "  field kick         : " << mFieldKickPerCharge << " GeV per g_D, "
+                << mFieldKickPerCharge * std::abs(mLastCharge) << " GeV per monopole, random transverse direction";
+    }
     LOG(info) << "  species / |pdg|    : " << (mPdg == kMonopolePdgSymm ? "symm" : "asymm") << " / " << mPdg;
     LOG(info) << "  mass               : " << mLastMass << " GeV  [" << mMass.describe() << "]";
     LOG(info) << "  magnetic charge    : " << mLastCharge << " g_D  [" << mCharge.describe() << "]";
@@ -1649,6 +1716,15 @@ class GeneratorMonopolesImpl : public Generator
     if (!drawMomentum(m, px, py, pz)) {
       return false;
     }
+    // The field of the passing nuclei kicks the monopole along the field and
+    // the antimonopole the other way. The field direction follows the event
+    // plane, so it is drawn per event, transverse to the beam.
+    const double kick = mFieldKickPerCharge * std::abs(mLastCharge);
+    if (kick > 0.) {
+      const double phiKick = gRandom->Uniform(0., 2. * M_PI);
+      px += kick * std::cos(phiKick);
+      py += kick * std::sin(phiKick);
+    }
     // optional net momentum of the pair; zero by default, which is the
     // back-to-back topology of the reference HepMC samples
     double rx = 0., ry = 0., rz = 0.;
@@ -1737,6 +1813,9 @@ class GeneratorMonopolesImpl : public Generator
   //--------------------------------------------------------------------------
   std::string mConfigFile;
   int mVerbose = 1;
+  double mSqrtsNN = kSqrtsNNDefaultGeV;                                ///< GeV
+  double mThermalTemperature = schwingerTemperature(kSqrtsNNDefaultGeV); ///< GeV, from mSqrtsNN
+  double mFieldKickPerCharge = fieldKickPerCharge(kSqrtsNNDefaultGeV);   ///< GeV per g_D
   int mGeneratorId = -1; ///< wanted PrimaryGenerator.id, -1 = not requested
   EMode mMode = kSchwinger;
   int mPdg = kMonopolePdgSymm;
