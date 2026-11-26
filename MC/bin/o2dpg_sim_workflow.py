@@ -627,6 +627,11 @@ fi
 # fetch the global alignment geometry
 ${{O2_ROOT}}/bin/o2-create-aligned-geometry-workflow ${{ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after $ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}} \
       --configKeyValues "HBFUtils.startTime={args.timestamp}" -b --run ${{REMAP_OPT}}
+GEOM_RC="$?"
+if [ ! "${{GEOM_RC}}" == "0" ]; then
+  echo "Problem during creation of the aligned geometry. Exiting."
+  exit ${{GEOM_RC}}
+fi
 
 # copy the object into the CCDB cache
 mkdir -p $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned
@@ -649,10 +654,23 @@ workflow['stages'].append(GEOM_PREFETCH_TASK)
 # These object will take precedence over ordinary align objects **and** will only be applied in transport simulation
 # and digitization (Det/Calib/Align is only read in simulation since reconstruction tasks use GLO/Config/AlignedGeometry automatically).
 SIM_ALIGNMENT_PREFETCH_TASK = createTask(name='sim_alignment', needs=['geomprefetch'], cpu='0')
-SIM_ALIGNMENT_PREFETCH_TASK['cmd'] = '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p MID/MisCalib/Align --timestamp ' + str(args.timestamp) + ' --created-not-after '  \
-                                      + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE}/MID/Calib/Align --no-preserve-path ; '
-SIM_ALIGNMENT_PREFETCH_TASK['cmd'] += '${O2_ROOT}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p MCH/MisCalib/Align --timestamp ' + str(args.timestamp) + ' --created-not-after ' \
-                                      + str(args.condition_not_after) + ' -d ${ALICEO2_CCDB_LOCALCACHE}/MCH/Calib/Align --no-preserve-path '
+sim_align_cmd = f'''
+for DET in MCH MID; do
+  TARGETDIR=${{ALICEO2_CCDB_LOCALCACHE}}/${{DET}}/Calib/Align
+  NEWFILE=snapshot.root.new.$$
+  ${{O2_ROOT}}/bin/o2-ccdb-downloadccdbfile --host http://alice-ccdb.cern.ch -p ${{DET}}/MisCalib/Align --timestamp {args.timestamp} \
+     --created-not-after {args.condition_not_after} -d ${{TARGETDIR}} --no-preserve-path -o ${{NEWFILE}}
+  if [ -f ${{TARGETDIR}}/${{NEWFILE}} ]; then
+    mv -f ${{TARGETDIR}}/${{NEWFILE}} ${{TARGETDIR}}/snapshot.root
+    echo "Simulation uses ${{DET}}/MisCalib/Align"
+  else
+    echo "No ${{DET}}/MisCalib/Align found for timestamp {args.timestamp}; simulation uses ${{DET}}/Calib/Align"
+  fi
+done
+'''
+with open("sim_alignment_script.sh",'w') as f:
+   f.write(sim_align_cmd)
+SIM_ALIGNMENT_PREFETCH_TASK['cmd'] = 'chmod +x ${PWD}/sim_alignment_script.sh; ${PWD}/sim_alignment_script.sh'
 workflow['stages'].append(SIM_ALIGNMENT_PREFETCH_TASK)
 
 # create/publish the GRPs and other GLO objects for consistent use further down the pipeline
