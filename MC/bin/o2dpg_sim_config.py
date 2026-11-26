@@ -222,6 +222,39 @@ def create_geant_config(args, externalConfigString):
 
     return config
 
+def sim_align_detectors(confKey):
+    """
+    Value of align-geom.mDetectors in a configKeyValues string, trimmed as ConfigurableParam does; "all" when absent.
+    """
+    value = "all"
+    for keyval in confKey.split(";"):
+        key, sep, val = keyval.partition("=")
+        if sep and key.strip() == "align-geom.mDetectors":
+            value = val.strip()
+    return value
+
+def aligned_in_transport(alignDetectors, det):
+    """
+    Whether o2-sim aligns detector det when align-geom.mDetectors=alignDetectors ("all", "none" or a list).
+    """
+    if "none" in alignDetectors:
+        return False
+    if "all" in alignDetectors:
+        return True
+    return det in re.split(r"[ ,]+", alignDetectors)
+
+def geom_align_configkey(alignDetectors):
+    """
+    The align-geom part of the configKeyValues for o2-create-aligned-geometry-workflow; empty for the default "all".
+    """
+    return "" if alignDetectors == "all" else f";align-geom.mDetectors={alignDetectors}"
+
+def its_ideal_in_transport(withParallelWorld, alignDetectors):
+    """
+    Whether ITS is ideal in transport: without the parallel world the ideal ITS object is used, else when ITS is not aligned.
+    """
+    return not withParallelWorld or not aligned_in_transport(alignDetectors, "ITS")
+
 def qed_included(pdga, pdgb, with_qed, no_qed, data_anchoring):
     """
     Whether to add the QED background. On by default for same-species heavy-ion collisions,
