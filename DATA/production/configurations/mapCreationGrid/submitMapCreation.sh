@@ -15,6 +15,10 @@
 #
 # Slot windowing: stageSlotsForGrid.py cuts each run into windows of ~SLOT_LENGTH_MIN and writes ONE
 # manifest line per window, carrying the window bounds and exactly the files that can contribute to it.
+# With MAKE_HYBRID_MAPS=true (pp), it instead cuts SLOT_LENGTH_MIN-length windows for the first
+# FINE_WINDOW_MIN minutes of each FILL and SLOT_LENGTH_MIN_COARSE-length windows for the rest of it --
+# see the config block below. Either way the manifest line format is unchanged, and mapCreationJob.sh
+# does not need to know or care which regime produced a given window.
 # A subjob index therefore identifies a (run, window) pair on its own, so this is a SINGLE submission --
 # no loop over TimeDivisionIndex, no TIME_DIVISION placeholders substituted into the payload, and one
 # stage1Workdir pointer instead of one per index. (With a fixed window length, runs of different length
@@ -99,7 +103,7 @@ BAD_RANGES_NAME="Merge_BadIntervals_LHC26_PbPb_DCA-0P300.txt"
                        # Set to "" to disable bad-ranges filtering entirely for this submission
                        # (staticMapCreatorCPM.C treats an empty badRangeList argument that way) -- a
                        # deliberate opt-out, not the same as forgetting to set it.
-BAD_RANGES_LOCAL=""   # optional: local path to the bad-time-ranges file to (re-)upload this run (real
+BAD_RANGES_LOCAL=""    # optional: local path to the bad-time-ranges file to (re-)upload this run (real
                        # source for the PbPb26 list above:
                        # /lustre/alice/tpcdata/Run3/SCDprodTests/lists/badRange/PbPb26/). Leave empty to
                        # skip the upload and just use the copy already at
@@ -121,7 +125,33 @@ SLOT_LENGTH_MIN=5      # target length of ONE map, in minutes. Each run is cut i
                        # one map per run (no splitting). This replaces the old TIME_DIVISION count: with
                        # a fixed length, a 20 min run gives 4 maps and a 60 min run gives 12, instead of
                        # the same count regardless of run length. Stage 2 does not need this value -- it
-                       # reuses stage 1's manifest, which already carries the windows.
+                       # reuses stage 1's manifest, which already carries the windows. With
+                       # MAKE_HYBRID_MAPS=true, this is reused as the FINE map length (see below).
+MAKE_HYBRID_MAPS=false # true/false. When true, submits HYBRID time sampling instead of a uniform
+                       # SLOT_LENGTH_MIN everywhere: SLOT_LENGTH_MIN-length ("fine") windows for the
+                       # first FINE_WINDOW_MIN minutes of each FILL, SLOT_LENGTH_MIN_COARSE-length
+                       # ("coarse") windows for the rest of that fill. The cutoff is anchored to the
+                       # FILL's own start (earliest startTimestampMs among that fill's runs present
+                       # under listsDir), not each run's own start -- a pp fill routinely spans several
+                       # runs, and the space-charge build-up this targets is a fill-level effect, not a
+                       # per-run one. Mirrors the old SLURM-era makeStaggerd.py/combinedSampling.py
+                       # hybrid logic. Needs every selected run's discoverResiduals.sh batch-file line
+                       # to have carried the optional <fill> <startTimestampMs> columns -- if any
+                       # selected run is missing that sidecar, stageSlotsForGrid.py fails fast, before
+                       # anything is submitted, listing exactly which run(s).
+SLOT_LENGTH_MIN_COARSE=60  # only used when MAKE_HYBRID_MAPS=true: target length of one COARSE map, in
+                       # minutes, for the part of a fill at or after FINE_WINDOW_MIN. Same "0 = one
+                       # window" and trailing-remainder-absorption semantics as SLOT_LENGTH_MIN, applied
+                       # independently within the coarse region -- a fine/coarse boundary never leaves a
+                       # runt window on either side of it.
+FINE_WINDOW_MIN=60     # only used when MAKE_HYBRID_MAPS=true: duration, in minutes, of the fine
+                       # sampling window measured from the FILL's start.
+MC_MODE=false          # true/false. true for lists built by discoverResiduals.sh --mc: MC residual files
+                       # carry no time label, so each run becomes ONE map over all of its files, with
+                       # window bounds 0 0 (switches off the macro's per-TF time cut). SLOT_LENGTH_MIN is
+                       # ignored, MAKE_HYBRID_MAPS=true is an error. BAD_RANGES_NAME still applies, by the
+                       # anchor run's orbits -- set it to "" unless you want the data's bad ranges cut
+                       # from the MC too.
 # ---------------------------------------------------------------------------
 
 MACRO_ALIEN_DIR="alien://${MACRO_ALIEN_DIR_BARE}"
@@ -165,14 +195,28 @@ fi
 # lists/config) silently overwrite the first's manifest, breaking any already-running job that re-reads
 # it and desyncing stage 2's later subjob-index -> slot lookup.
 MANIFEST_NAME="mapSlots.${JOBNAME}.tsv"
+STAGE_ARGS=(
+  --lists-dir          "${LISTS_DIR}"
+  --alien-dir          "${MACRO_ALIEN_DIR_BARE}"
+  --manifest-name      "${MANIFEST_NAME}"
+  --runs               "${RUNS_FILTER}"
+  --slot-length-min    "${SLOT_LENGTH_MIN}"
+  --overlap-margin-ms  "${OVERLAP_MARGIN_MS}"
+)
+if [[ "${MAKE_HYBRID_MAPS}" == "true" ]]; then
+  STAGE_ARGS+=(
+    --hybrid
+    --slot-length-min-coarse "${SLOT_LENGTH_MIN_COARSE}"
+    --fine-window-min        "${FINE_WINDOW_MIN}"
+  )
+  echo "== MAKE_HYBRID_MAPS=true -- fine=${SLOT_LENGTH_MIN}min for the first ${FINE_WINDOW_MIN}min of each fill, coarse=${SLOT_LENGTH_MIN_COARSE}min for the rest =="
+fi
+if [[ "${MC_MODE}" == "true" ]]; then
+  STAGE_ARGS+=(--mc)
+  echo "== MC_MODE=true -- one map per run, no time cut (BAD_RANGES_NAME='${BAD_RANGES_NAME}') =="
+fi
 echo "== Building + uploading slot manifest from ${LISTS_DIR} (as ${MANIFEST_NAME}) =="
-N=$("${SCRIPT_DIR}/stageSlotsForGrid.py" \
-       --lists-dir          "${LISTS_DIR}" \
-       --alien-dir          "${MACRO_ALIEN_DIR_BARE}" \
-       --manifest-name      "${MANIFEST_NAME}" \
-       --runs               "${RUNS_FILTER}" \
-       --slot-length-min    "${SLOT_LENGTH_MIN}" \
-       --overlap-margin-ms  "${OVERLAP_MARGIN_MS}")
+N=$("${SCRIPT_DIR}/stageSlotsForGrid.py" "${STAGE_ARGS[@]}")
 echo "N=${N} slot(s) == map(s) to be produced"
 [[ "${N}" -gt 0 ]] || { echo "ERROR: no slots found under ${LISTS_DIR}" >&2; exit 1; }
 

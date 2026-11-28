@@ -145,6 +145,7 @@ GRID_SUBMIT_ARGS=(
   --jobname "${JOBNAME}"
   --topworkdir "${TOPWORKDIR}"
   --prodsplit "${N}"
+  --cores 1              # smoothing/QA macros are single-threaded and the FastTransform runs with 1 thread (postProcessJob.sh); grid_submit.sh's 8-core default trips the JobAgent CPU monitor
   --packagespec "${PACKAGESPEC}"
   --asuser "${ASUSER}"
 )

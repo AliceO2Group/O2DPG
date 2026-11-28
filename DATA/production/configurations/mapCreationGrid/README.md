@@ -20,10 +20,24 @@ left as-is.
 1. **Build the slot lists** (local, once per batch of runs):
 
    ```bash
-   ./discoverResiduals.sh <batch_file>
+   ./discoverResiduals.sh <batch_file> --calib-pass <cpass>
    ```
 
-   `<batch_file>` lists one run per line: `<period> <run>`, e.g. `LHC26ak 572557`.
+   `<batch_file>` lists one run per line: `<period> <run>`, e.g. `LHC26ak 572557`. (pp only, and only if
+   you'll set `MAKE_HYBRID_MAPS=true` in step 2: add `<fill> <startTimestampMs>` — see "Hybrid time
+   sampling (pp)" under step 2.)
+
+   **MC:** use `--mc` instead of `--calib-pass`, with the MC production tag in place of the period:
+
+   ```bash
+   printf 'LHC26j19_residuals %s\n' 568336 568337 568338 > batch_mc.txt   # <prodTag> <anchorRun>
+   ./discoverResiduals.sh batch_mc.txt --mc
+   ```
+
+   This searches `/alice/sim/<year>/<prodTag>/0/<run>/ResidualTPCmerging/Stage_0/` for the production's
+   merged residuals, falling back to the per-job files under `/alice/sim/<year>/<prodTag>/0/<run>/` with
+   a warning when there are none (`--mc-cycle <n>` for a production cycle other than `0`). In step 2, also set `MC_MODE=true` and `BAD_RANGES_NAME=""`. Details: "MC productions" in
+   "The chain, in order" below.
 
 2. **Submit stage 1 (map creation).** In `submitMapCreation.sh`, set:
    - `BAD_RANGES_NAME` — the bad-time-ranges file for this data period (keep the default if it still
@@ -42,6 +56,39 @@ left as-is.
 
    This takes hours per map — watch progress on alimonitor and wait for it to finish (or mostly finish)
    before continuing.
+
+   **pp hybrid production** (fine-length maps early in each fill, coarse-length for the rest — see
+   "Hybrid time sampling (pp)" below): also set `MAKE_HYBRID_MAPS=true`, `SLOT_LENGTH_MIN_COARSE`,
+   `FINE_WINDOW_MIN`, and it's worth pinning `RUNS_FILTER` explicitly since `./lists/` accumulates across
+   batches. For example:
+
+   ```bash
+   JOBNAME="mapcreation-pp-lowfield-v1"          # unique per submission
+   BAD_RANGES_NAME="<your pp bad-ranges file>"   # or "" to disable -- the default is PbPb-specific
+   RUNS_FILTER="566139,566159,566160,566161,566188,566189,566190,566191"
+   MAKE_HYBRID_MAPS=true
+   SLOT_LENGTH_MIN=5          # fine length (first FINE_WINDOW_MIN min of each fill)
+   SLOT_LENGTH_MIN_COARSE=60  # coarse length (rest of the fill)
+   FINE_WINDOW_MIN=60
+   ```
+
+   Needs step 1's batch file to have carried `<fill> <startTimestampMs>` for these runs (see step 1
+   above) — `submitMapCreation.sh` fails fast, before submitting anything, if any run named in
+   `RUNS_FILTER` is missing that.
+
+   **MC production** (lists from `discoverResiduals.sh --mc` in step 1): set `MC_MODE=true`. Each run
+   then becomes one map over all of its files, with no time cut. `SLOT_LENGTH_MIN` is ignored, and
+   `MAKE_HYBRID_MAPS` must stay `false`. For example:
+
+   ```bash
+   JOBNAME="mapcreation-MC-LHC26j19-v1"   # unique per submission
+   BAD_RANGES_NAME=""                     # the data's bad-ranges list does not apply to MC
+   MC_MODE=true
+   MAKE_HYBRID_MAPS=false
+   ```
+
+   It should report `MC_MODE=true -- one map per run, no time cut` and one slot per run. Step 3 is the
+   same as for data.
 
 3. **Submit stage 2 (smoothing + FastTransform).** In `submitPostProcess.sh`, set `STAGE1_JOBNAME_TAG`
    to the exact `JOBNAME` used in step 2, then:
@@ -117,12 +164,20 @@ without redoing the expensive stage-1 work for that slot.
 ./discoverResiduals.sh <batch_file> [--calib-pass cpass2_residuals]
 ```
 
-`<batch_file>` is one run per line: `<period_token> <run>`, e.g.:
+`<batch_file>` is one run per line: `<period_token> <run> [<fill> <startTimestampMs>]`, e.g.:
 
 ```
 LHC26ak 572557
 LHC26ak 572558
 ```
+
+The last two columns are **optional** and only needed for **hybrid map creation** (see below) — omit them
+for a normal, non-hybrid production. When given, both must be present together: `<fill>` is the LHC fill
+number (shared by every run in it) and `<startTimestampMs>` is that run's start-of-run (SOR) timestamp,
+UTC milliseconds (13 digits) — the same metadata columns the old SLURM-era hybrid tooling
+(`makeStaggerd.py`/`combinedSampling.py`) used. When present, `discoverResiduals.sh` writes them to a
+`<run>.fillinfo.txt` sidecar next to that run's slot-list index, which `stageSlotsForGrid.py --hybrid`
+reads later, at submission time.
 
 This queries AliEn (`/alice/data/<year>/<period>/<run>/<calib-pass>/`) for `o2tpc_residuals_*.root`
 files and writes per-run slot lists under `./lists/<run>/`. Runs in parallel (`N_PARALLEL=8` in the
@@ -221,6 +276,44 @@ it adds to it, and Step 2 by default puts *everything* under `./lists/` into the
 silently recalibrates the earlier batch from scratch at hours per slot. Either use a fresh `listsDir`
 per batch, or set `RUNS_FILTER` in the Step-2 wrapper (see below).
 
+#### MC productions
+
+MC residuals live under `/alice/sim/<year>/<prodTag>/<cycle>/<anchorRun>/<NNN>/o2tpc_residuals.root`,
+not under a data period's calib pass. Use `--mc`, with the production tag in place of the period:
+
+```bash
+cat > batch_mc.txt <<EOF
+LHC26j19_residuals 568336
+LHC26j19_residuals 568337
+EOF
+./discoverResiduals.sh batch_mc.txt --mc               # cycle 0; --mc-cycle <n> for another one
+```
+
+The year is taken from the tag (`LHC26…` → 2026). `--calib-pass` is rejected with `--mc`, since the MC
+path has no such level.
+
+The production also merges the per-job files, about 150 jobs into one
+`<anchorRun>/ResidualTPCmerging/Stage_0/<NNN>/o2tpc_residuals.root` (same trees, ~15 GB). When any
+merged file exists, the run's list holds **only** the merged files. A search over the whole run
+directory would list every residual twice, once per-job and once merged, and each `alien://` open costs
+~7 s in stage 1, so a few dozen merged files beat thousands of per-job ones. A `Stage_0/<NNN>/` without
+the file is a merge job that failed or is still running: its share of the statistics is missing,
+and discovery prints a `WARNING: only <n>/<m> merge jobs produced o2tpc_residuals.root` for that run.
+Wait for the merging, or accept the smaller sample. A run with no merged file at all falls back to the
+per-job files, with a warning.
+
+MC file names carry no `<firstTS>_<lastTS>` label, so there is nothing to cut windows from:
+`makeResidualLists.sh` writes one list per run (`residuals.all.<run>.txt`), and Step 2 needs
+`MC_MODE=true`. Each run then becomes **one** map over all of its files, with window bounds `0 0`, which
+switches off the macro's per-TF time cut (`firstTFTime > 0` is its condition). `MAX_TRACKS_PER_SLICE`
+still caps the statistics. MC paths carry no `_orbit` field, so `mapCreationJob.sh` leaves the file order
+as listed. Staging refuses to mix the two kinds: data lists with `--mc`, or `MAKE_HYBRID_MAPS=true` with
+`MC_MODE=true`, are errors, and MC lists without `--mc` are skipped with a warning naming the flag.
+
+Two things work differently in stage 2: `mapMeta.txt` gets `tsStart=0`, `tsEnd=0`, and `fill=-1`. The
+bad-time-ranges list is applied by the anchor run's orbits, so set `BAD_RANGES_NAME=""` unless you want
+the data's bad ranges cut from the MC too.
+
 ### Step 2 — configure and submit stage 1 (map creation)
 
 Edit the config block at the top of **`submitMapCreation.sh`**:
@@ -229,7 +322,11 @@ Edit the config block at the top of **`submitMapCreation.sh`**:
 |---|---|
 | `JOBNAME` | Identifies this production. Tags the AliEn manifest (`mapSlots.<JOBNAME>.tsv`) and the small `stage1Workdir.<JOBNAME>.txt` pointer file (see Step 3) — **must be unique per submission** so concurrent/repeated productions don't clobber each other's manifest or pointer. Stage 2 needs to know this value (see Step 4). |
 | `TOPWORKDIR` | Static top-level bucket under your GRID home for this job's working directory (replaces `grid_submit.sh`'s generic `selfjobs` default with something identifiable). |
-| `SLOT_LENGTH_MIN` | Target length of **one map**, in minutes. Each run is cut into whole steps of this length; a trailing remainder shorter than half a step is absorbed into the last window rather than left as a runt that would fail `MIN_TRACKS_PER_SLICE`. `0` = one map per run. A 20 min run at `5` gives 4 maps, a 60 min run gives 12 — the count follows the run length instead of being fixed. |
+| `SLOT_LENGTH_MIN` | Target length of **one map**, in minutes. Each run is cut into whole steps of this length; a trailing remainder shorter than half a step is absorbed into the last window rather than left as a runt that would fail `MIN_TRACKS_PER_SLICE`. `0` = one map per run. A 20 min run at `5` gives 4 maps, a 60 min run gives 12 — the count follows the run length instead of being fixed. With `MAKE_HYBRID_MAPS=true`, this is reused as the **fine** map length (see below). |
+| `MAKE_HYBRID_MAPS` | `true`/`false` (default `false`). Hybrid time sampling for pp: `SLOT_LENGTH_MIN`-length ("fine") maps for the first `FINE_WINDOW_MIN` minutes of each **fill**, `SLOT_LENGTH_MIN_COARSE`-length ("coarse") maps for the rest of that fill — see "Hybrid time sampling (pp)" below. |
+| `SLOT_LENGTH_MIN_COARSE` | Only used when `MAKE_HYBRID_MAPS=true`: target length of one **coarse** map, in minutes. Same `0`/trailing-remainder semantics as `SLOT_LENGTH_MIN`, applied independently within the coarse region. |
+| `FINE_WINDOW_MIN` | Only used when `MAKE_HYBRID_MAPS=true`: duration, in minutes, of the fine-sampling window measured from the fill's start (default `60`). |
+| `MC_MODE` | `true`/`false` (default `false`). `true` for lists from `discoverResiduals.sh --mc`: one map per run, no time cut, `SLOT_LENGTH_MIN` ignored — see "MC productions" under Step 1. |
 | `PACKAGESPEC` | O2/O2DPG software tag to run under — set this to the async-reco tag matching your data. Also determines whether `MACRO_SOURCE=official` can find the macros (see "Where the macros come from" above). |
 | `ASUSER` | AliEn account this job runs/is charged as, e.g. `pwg_pp` (your account must already be a member of that group) instead of your own personal account/quota. Determines both which quota pays for the job and where its `${ALIEN_JDL_OUTPUTDIR}` lands (see Step 3). Verify on alimonitor that the first job is really attributed correctly before relying on it for a big batch. |
 | `MACRO_SOURCE` / `MACRO_LOCAL_PATH` | See "Where the macros come from" above. |
@@ -258,6 +355,32 @@ that gets overwritten per submission):
 Note: the macro no longer reads IDC scalers from CCDB directly (`useCTPLumi`/`nScalerRanges`/`useScalerRange`
 are gone from its signature) — luminosity values are joined back offline by `SmoothingExtrapolate.C` in
 stage 2 instead (its own `USE_CTP_LUMI`, see Step 4).
+
+#### Hybrid time sampling (pp)
+
+pp fills need denser time sampling right after the fill starts, while space charge is still building up,
+than for the rest of the fill — the same physics motivation as the old SLURM-era
+`makeStaggerd.py`/`combinedSampling.py` hybrid tooling this mirrors. Set `MAKE_HYBRID_MAPS=true` and
+`stageSlotsForGrid.py` cuts `SLOT_LENGTH_MIN`-length ("fine") windows for the first `FINE_WINDOW_MIN`
+minutes of each **fill**, `SLOT_LENGTH_MIN_COARSE`-length ("coarse") windows for the rest of it — instead
+of `SLOT_LENGTH_MIN` uniformly everywhere.
+
+The cutoff is anchored to the **fill's own start**, not each run's — deliberately, since a pp fill
+routinely spans several runs, and the build-up being sampled densely is a property of the fill, not of
+where a run happens to start within it. Concretely: the fill's start is the earliest `startTimestampMs`
+among that fill's runs present under `listsDir` for *this* submission (same "what's actually in this
+production" scoping `RUNS_FILTER` already uses elsewhere in this doc) — so a run that starts 70 minutes
+into its fill gets windowed entirely coarse, even though it is only 10 minutes old itself, while a run
+straddling the cutoff gets fine windows before it and coarse windows after, with no runt window on either
+side of the boundary (each region absorbs its own short trailing remainder independently, same as the
+non-hybrid case).
+
+This needs every selected run's `discoverResiduals.sh` batch-file line to have carried the optional
+`<fill> <startTimestampMs>` columns (see Step 1) — that's what produces each run's `<run>.fillinfo.txt`
+sidecar. If any selected run is missing it, `stageSlotsForGrid.py` fails loudly and locally, before
+anything is submitted, listing exactly which run(s) — not a silent fall-back to per-run windowing, which
+would silently change the physics. A non-hybrid submission (`MAKE_HYBRID_MAPS=false`, the default) needs
+none of this — plain 2-column batch-file rows are enough, same as before this feature existed.
 
 Then:
 
@@ -378,7 +501,32 @@ logical slot:
     FT_voxRes.<run>_<firstTS>_<lastTS>.TD<w>of<W>.it0.GausSmooth.Extrapolation.root
     voxResQA.voxRes.<run>_<firstTS>_<lastTS>.TD<w>of<W>.it0.GausSmooth.Extrapolation_1D.root
     voxResQA.voxRes.<run>_<firstTS>_<lastTS>.TD<w>of<W>.it0.GausSmooth.Extrapolation_2D.root
+    stage1Source.txt
+    mapMeta.txt
 ```
+
+`stage1Source.txt` is a one-line pointer to the stage-1 map this slot was built from (written right
+after smoothing, so it exists even if the FastTransform step fails). `mapMeta.txt` is the per-slot
+summary, one `key=value` per line, written only once `FT_*.root` is staged:
+
+```
+stage1=<alien path of the stage-1 map>
+stage2=<alien path of FT_*.root>
+meanIDC=...
+medianIDC=...
+meanCTP=...
+medianCTP=...
+tsStart=<firstTS>
+tsEnd=<lastTS>
+fill=<fill number>
+```
+
+The IDC values come from the smoothed map's UserInfo (offline IDC join in `SmoothingExtrapolate.C`) and
+the CTP values from stage 1. `tsStart`/`tsEnd` are the manifest window in ms, the same values as in the
+file names. `fill` is looked up in `GLO/Config/GRPLHCIF` at `tsStart`; it is `-1` if the CCDB lookup
+failed.
+
+Both files are non-fatal: if writing or staging one fails, the slot still succeeds.
 
 Stage 1's and stage 2's output for the same slot are *not* grouped under one tidy parent directory —
 that's the direct cost of letting the JDL own output placement instead of managing it ourselves (see
