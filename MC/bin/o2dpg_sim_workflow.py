@@ -43,7 +43,7 @@ sys.path.append(join(dirname(__file__), '.', 'o2dpg_workflow_utils'))
 
 from o2dpg_workflow_utils import createTask, createGlobalInitTask, dump_workflow, adjust_RECO_environment, isActive, activate_detector, deactivate_detector, compute_n_workers, merge_dicts, restrict_to_detector_list
 from o2dpg_qc_finalization_workflow import include_all_QC_finalization
-from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg, option_if_available, overwrite_config, qed_included
+from o2dpg_sim_config import create_sim_config, create_geant_config, constructConfigKeyArg, option_if_available, overwrite_config, qed_included, sim_align_detectors, geom_align_configkey, its_ideal_in_transport
 from o2dpg_dpl_config_tools import dpl_option_from_config, TaskFinalizer, quote_if_needed
 
 # for some JAliEn interaction
@@ -620,9 +620,14 @@ GEOM_PREFETCH_TASK = createTask(name='geomprefetch', cpu='0')
 # We need to query the config if this is done with or without parallel world. This needs to be improved
 # as it could be defaulted in the ConfigKey system
 with_parallel_world = 1 if args.confKey.find("useParallelWorld=1") != -1 else 0
+# The reconstruction geometry is aligned for the same detectors as the transport (align-geom.mDetectors)
+sim_align_dets = sim_align_detectors(args.confKey)
+geom_align_confkey = geom_align_configkey(sim_align_dets)
+its_ideal = 1 if its_ideal_in_transport(with_parallel_world, sim_align_dets) else 0
 geom_cmd = f'''
 # -- Create aligned geometry using ITS ideal alignment to avoid overlaps in geant
 ENABLEPW={with_parallel_world}
+ITS_IDEAL={its_ideal}
 
 # when parallel world processing is disabled we need to switch off ITS alignment
 if [ "${{ENABLEPW}}" == "0" ]; then
@@ -645,12 +650,12 @@ fi
 
 # fetch the global alignment geometry
 ${{O2_ROOT}}/bin/o2-create-aligned-geometry-workflow ${{ALIEN_JDL_CCDB_CONDITION_NOT_AFTER:+--condition-not-after $ALIEN_JDL_CCDB_CONDITION_NOT_AFTER}} \
-      --configKeyValues "HBFUtils.startTime={args.timestamp}" -b --run ${{REMAP_OPT}}
+      --configKeyValues "HBFUtils.startTime={args.timestamp}{geom_align_confkey}" -b --run ${{REMAP_OPT}}
 
 # copy the object into the CCDB cache
 mkdir -p $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned
 ln -s -f $PWD/o2sim_geometry-aligned.root $ALICEO2_CCDB_LOCALCACHE/GLO/Config/GeometryAligned/snapshot.root
-if [ "$ENABLEPW" == "0" ]; then
+if [ "$ITS_IDEAL" == "1" ]; then
    [[ -f $PWD/its_GeometryTGeo.root ]] && mkdir -p $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry && ln -s -f $PWD/its_GeometryTGeo.root $ALICEO2_CCDB_LOCALCACHE/ITS/Config/Geometry/snapshot.root
 fi
 
